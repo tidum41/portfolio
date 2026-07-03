@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Mockup — Mudit Mahajan</title>
+<style>
+/* ─── Grid System ────────────────────────────────────────────────── */
+:root {
+  --grid-columns:  12;
+  --grid-margin:   40px;
+  --grid-gutter:   24px;
+  --grid-unit:     8px;
+  --grid-max-w:    1440px;
+
+  /* Typography */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono: "Söhne Mono", "SF Mono", ui-monospace, monospace;
+
+  /* Type scale */
+  --fs-hero:    48px;
+  --fs-h1:      42px;
+  --fs-h2:      30px;
+  --fs-h3:      20px;
+  --fs-body:    15px;
+  --fs-label:   12px;
+  --fs-meta:    13px;
+  --fs-nav:     15px;
+
+  /* Letter spacing */
+  --ls-hero:   -0.5px;
+  --ls-h1:     -0.5px;
+  --ls-h2:     -0.3px;
+  --ls-label:   0.08em;
+
+  /* Line heights */
+  --lh-hero:   1.1;
+  --lh-h2:     1.15;
+  --lh-body:   1.72;
+
+  /* Colors — light mode */
+  --bg:          #FBFBFB;
+  --text:        #2E2E2E;
+  --text-sub:    #575757;
+  --text-muted:  #ADADAD;
+  --text-meta:   #767676;
+  --placeholder: #EBEBEB;
+  --border:      rgba(0,0,0,0.08);
+  --accent:      #9590C2;
+
+  /* Spacing landmarks */
+  --nav-h:       56px;
+  --section-gap: 80px;
+  --hero-pt:     80px;
+  --hero-pb:     64px;
+  --card-gap:    24px;
+}
+
+@media (max-width: 1279px) {
+  :root {
+    --grid-columns: 8;
+    --grid-margin:  24px;
+    --grid-gutter:  16px;
+    --fs-hero:      38px;
+    --fs-h1:        32px;
+    --fs-h2:        24px;
+    --section-gap:  64px;
+    --hero-pt:      56px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --grid-columns: 4;
+    --grid-margin:  20px;
+    --grid-gutter:  16px;
+    --fs-hero:      28px;
+    --fs-h1:        26px;
+    --fs-h2:        20px;
+    --section-gap:  48px;
+    --hero-pt:      40px;
+    --hero-pb:      40px;
+  }
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--text); }
+body { font-family: var(--font-sans); font-size: var(--fs-body); line-height: var(--lh-body); }
+
+/* ─── Grid container ─────────────────────────────────────────────── */
+.grid-container {
+  max-width: var(--grid-max-w);
+  margin: 0 auto;
+  padding-left: var(--grid-margin);
+  padding-right: var(--grid-margin);
+}
+
+/* 12-col CSS grid — spans via .col-N and .col-start-N */
+.grid-row {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+  align-items: start;
+}
+
+/* Column spans */
+.col-1  { grid-column: span 1; }
+.col-2  { grid-column: span 2; }
+.col-3  { grid-column: span 3; }
+.col-4  { grid-column: span 4; }
+.col-5  { grid-column: span 5; }
+.col-6  { grid-column: span 6; }
+.col-7  { grid-column: span 7; }
+.col-8  { grid-column: span 8; }
+.col-9  { grid-column: span 9; }
+.col-10 { grid-column: span 10; }
+.col-11 { grid-column: span 11; }
+.col-12 { grid-column: span 12; }
+
+/* Column start positions */
+.col-start-2  { grid-column-start: 2; }
+.col-start-3  { grid-column-start: 3; }
+.col-start-4  { grid-column-start: 4; }
+.col-start-5  { grid-column-start: 5; }
+.col-start-7  { grid-column-start: 7; }
+.col-start-8  { grid-column-start: 8; }
+
+/* Responsive overrides */
+@media (max-width: 1279px) {
+  .col-7  { grid-column: span 8; }  /* hero spans full tablet width */
+  .col-6  { grid-column: span 4; }  /* project cards: 2-col */
+  .col-start-7 { grid-column-start: 5; }
+  .toc-col { display: none; }
+  .cs-content { grid-column: span 8; }
+  .cs-spacer  { display: none; }
+}
+
+@media (max-width: 767px) {
+  .grid-row { grid-template-columns: repeat(4, 1fr); }
+  .col-7, .col-6, .col-8, .col-5 { grid-column: span 4; }
+  .col-start-7, .col-start-3 { grid-column-start: 1; }
+  .toc-col  { display: none; }
+  .cs-content { grid-column: span 4; }
+  .cs-spacer  { display: none; }
+  .card-right { grid-column: span 4; }
+}
+
+/* ─── Grid overlay ───────────────────────────────────────────────── */
+#grid-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+#grid-overlay.on { display: block; }
+#grid-overlay .go-inner {
+  max-width: var(--grid-max-w);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+}
+#grid-overlay .go-col {
+  background: rgba(99, 59, 223, 0.06);
+  border-left: 1px solid rgba(99, 59, 223, 0.18);
+  border-right: 1px solid rgba(99, 59, 223, 0.18);
+}
+
+/* ─── Controls bar ───────────────────────────────────────────────── */
+#controls {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: rgba(20,20,20,0.88);
+  border-radius: 100px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+}
+.ctrl-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 100px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, color 0.15s;
+}
+.ctrl-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+.ctrl-btn.active { background: rgba(255,255,255,0.18); color: white; }
+.ctrl-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.15); margin: 0 8px; }
+#bp-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-mono);
+  padding: 0 8px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* ─── Pages ──────────────────────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── Nav ────────────────────────────────────────────────────────── */
+/* Nav container spans full grid width via .grid-container padding.
+   Inside: flexbox — name anchors left edge, links anchor right edge.
+   Grid governs the container boundaries; flexbox governs items within. */
+.site-nav {
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-name {
+  font-size: var(--fs-nav);
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+}
+.nav-links li a, .nav-links li span {
+  font-size: var(--fs-nav);
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-toggle { font-size: 14px; color: var(--text); }
+
+/* ─── Section label ──────────────────────────────────────────────── */
+.section-label {
+  font-size: var(--fs-label);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-label);
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.section-label span {
+  color: var(--accent);
+  margin-right: 8px;
+}
+
+/* ─── Placeholder image ──────────────────────────────────────────── */
+.ph {
+  background: var(--placeholder);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ─── HOME PAGE ──────────────────────────────────────────────────── */
+
+/* Hero */
+.hero-section {
+  padding-top: var(--hero-pt);
+  padding-bottom: var(--hero-pb);
+}
+.hero-text {
+  font-size: var(--fs-hero);
+  font-weight: 500;
+  line-height: var(--lh-hero);
+  letter-spacing: var(--ls-hero);
+  color: var(--text);
+}
+.hero-text em {
+  font-style: italic;
+  font-weight: 400;
+}
+.hero-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+.hero-sub a { color: var(--text-sub); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Work section */
+.work-section {
+  padding-bottom: var(--section-gap);
+}
+
+/* Project card */
+.project-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.card-image { border-radius: 4px; }
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  gap: 8px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.card-tag {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.card-sub {
+  font-size: 13px;
+  color: var(--text-meta);
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+
+/* Grid gap between card rows */
+.cards-grid { row-gap: 40px; }
+
+/* Footer — same pattern as nav: flexbox within grid-container.
+   Name anchors left edge (col 1), links anchor right edge (col 12). */
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+.footer-name { font-size: 15px; color: var(--text-muted); }
+.footer-links { display: flex; gap: 16px; }
+.footer-links a { font-size: 15px; color: var(--text); text-decoration: none; }
+
+/* ─── CASE STUDY PAGE ─────────────────────────────────────────────── */
+.cs-layout {
+  padding-top: 40px;
+  padding-bottom: 120px;
+  align-items: start;
+}
+
+/* TOC sidebar */
+.toc-col {
+  grid-column: span 2;
+  position: sticky;
+  top: 80px;
+  padding-right: 16px;
+}
+.toc-back {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.toc-list { list-style: none; }
+.toc-list li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 8px 0 8px 16px;
+  border-left: 2px solid var(--border);
+  cursor: pointer;
+}
+.toc-list li.active {
+  border-left-color: var(--text);
+  color: var(--text);
+}
+
+/* CS Content */
+.cs-content { grid-column: span 8; }
+.cs-spacer  { grid-column: span 2; }
+
+.cs-hero-img {
+  border-radius: 4px;
+  margin-bottom: 32px;
+}
+
+.cs-h1 {
+  font-size: var(--fs-h1);
+  font-weight: 500;
+  letter-spacing: var(--ls-h1);
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 32px;
+}
+
+.cs-meta-row {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-bottom: 64px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 767px) {
+  .cs-meta-row { grid-template-columns: repeat(2, 1fr); }
+}
+.cs-meta-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.cs-meta-val {
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* CS section */
+.cs-section { margin-bottom: 64px; }
+.cs-h2 {
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  letter-spacing: var(--ls-h2);
+  line-height: var(--lh-h2);
+  color: var(--text);
+  margin-bottom: 24px;
+}
+.cs-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-sub);
+  max-width: 64ch;
+}
+.cs-body + .cs-body { margin-top: 16px; }
+.cs-img {
+  border-radius: 4px;
+  margin: 32px 0;
+}
+
+/* Pain points */
+.pain-list { list-style: none; margin-top: 24px; }
+.pain-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+.pain-list li:first-child { border-top: 1px solid var(--border); }
+.pain-x {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(149,144,194,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+/* Stats */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin: 32px 0;
+}
+@media (max-width: 767px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+.stat-num {
+  font-size: 40px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--text-meta);
+  line-height: 1.5;
+  max-width: 160px;
+}
+
+/* Reflection */
+.reflection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px 56px;
+  margin-top: 24px;
+}
+@media (max-width: 767px) { .reflection-grid { grid-template-columns: 1fr; gap: 32px; } }
+.reflection-item h3 {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.reflection-item p {
+  font-size: 15px;
+  color: var(--text-sub);
+  line-height: var(--lh-body);
+}
+
+/* ─── Annotation tooltips (spacing annotations) ──────────────────── */
+body.show-ann .ann {
+  position: relative;
+}
+body.show-ann .ann::after {
+  content: attr(data-ann);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 9px;
+  background: rgba(99,59,223,0.85);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9998;
+}
+</style>
+</head>
+<body>
+
+<!-- Grid overlay -->
+<div id="grid-overlay">
+  <div class="go-inner" id="go-inner"></div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <button class="ctrl-btn active" onclick="showPage('home',this)">Home</button>
+  <button class="ctrl-btn" onclick="showPage('casestudy',this)">Case study</button>
+  <div class="ctrl-divider"></div>
+  <button class="ctrl-btn" id="grid-btn" onclick="toggleGrid(this)">Grid</button>
+  <div class="ctrl-divider"></div>
+  <span id="bp-label">— px</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- HOME PAGE                                                        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- Nav — same grid-container as content, border runs full-bleed on the outer nav -->
+  <nav style="border-bottom: 1px solid var(--border);">
+    <div class="grid-container site-nav">
+      <a class="nav-name" href="#">Mudit Mahajan</a>
+      <ul class="nav-links">
+        <li><a href="#">work</a></li>
+        <li><a href="#">playground</a></li>
+        <li><a href="#">about</a></li>
+        <li><span class="nav-toggle">☀</span></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero — cols 1–7 of 12 -->
+  <div class="grid-container">
+    <div class="hero-section">
+      <div class="grid-row">
+        <div class="col-7" style="display:flex; flex-direction:column; justify-content:flex-end;">
+          <p class="hero-text">
+            product designer focused on
+            <em>clarity</em> + human behaviour 🐇
+          </p>
+          <p class="hero-sub">
+            currently at <a href="#">Agentation</a> &nbsp;·&nbsp;
+            prev. <a href="#">UCLA sublease</a> &nbsp;·&nbsp;
+            <a href="#">sviz</a>
+          </p>
+        </div>
+        <!-- cols 8–12 intentionally empty — breathing room -->
+        <div class="col-5" style="display:flex; align-items:flex-end; padding-bottom: 4px;">
+          <div style="font-size:13px; color: var(--text-muted); line-height:1.8; font-family: var(--font-mono);">
+            <div style="margin-bottom:4px; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); opacity:0.6">cols 8–12 · breathing room</div>
+            cognitive science<br>
+            UCLA '25<br>
+            based in LA
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Work section -->
+    <div class="work-section">
+      <p class="section-label">selected work</p>
+
+      <!-- Row 1 -->
+      <div class="grid-row cards-grid">
+        <div class="col-6 project-card">
+          <div class="ph card-image" style="aspect-ratio:16/10;">image — Agentation</div>
+          <div class="card-meta">
+            <span class="card-title">Agentation</span>
+            <span class="card-tag">annotation · 2025</span>
+          </div>
+          <p class="card-sub">Feedback toolbar for AI-assisted design</p>
+        </div>
+        <div class="col-6 project-card card-right">
+          <div class="ph card-image" style="aspect-ratio:16/10;">image — UCLA Sublease</div>
+          <div class="card-meta">
+            <span class="card-title">UCLA Sublease</span>
+            <span class="card-tag">housing · 2024</span>
+          </div>
+          <p class="card-sub">Simplifying how students find housing</p>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="col-6 project-card">
+          <div class="ph card-image" style="aspect-ratio:16/10;">image — sviz</div>
+          <div class="card-meta">
+            <span class="card-title">sviz</span>
+            <span class="card-tag">keyboards · 2024</span>
+          </div>
+          <p class="card-sub">YouTube channel for keyboard enthusiasts</p>
+        </div>
+        <div class="col-6 project-card card-right">
+          <div class="ph card-image" style="aspect-ratio:16/10;">image — CD Player</div>
+          <div class="card-meta">
+            <span class="card-title">CD Player</span>
+            <span class="card-tag">interaction · 2024</span>
+          </div>
+          <p class="card-sub">Drag-and-drop music player concept</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer — grid-container for single-source margin; border runs full-bleed on outer footer -->
+  <footer style="border-top: 1px solid var(--border);">
+    <div class="grid-container site-footer">
+      <span class="footer-name">Mudit Mahajan</span>
+      <nav class="footer-links">
+        <a href="#">linkedin</a>
+        <a href="#">x</a>
+        <a href="#">email</a>
+        <a href="#">resume</a>
+      </nav>
+    </div>
+  </footer>
+
+</div><!-- /page-home -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CASE STUDY PAGE                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="page-casestudy" class="page">
+
+  <!-- Nav -->
+  <nav style="border-bottom: 1px solid var(--border);">
+    <div class="grid-container site-nav">
+      <a class="nav-name" href="#">Mudit Mahajan</a>
+      <ul class="nav-links">
+        <li><a href="#">work</a></li>
+        <li><a href="#">playground</a></li>
+        <li><a href="#">about</a></li>
+        <li><span class="nav-toggle">☀</span></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- 12-col layout: [2 TOC] [8 content] [2 spacer] -->
+  <div class="grid-container">
+    <div class="grid-row cs-layout">
+
+      <!-- TOC — cols 1–2 -->
+      <aside class="toc-col">
+        <a class="toc-back" href="#">← work</a>
+        <ul class="toc-list">
+          <li class="active">Overview</li>
+          <li>Problem</li>
+          <li>Research</li>
+          <li>Decision 1</li>
+          <li>Decision 2</li>
+          <li>Decision 3</li>
+          <li>Decision 4</li>
+          <li>Reflection</li>
+        </ul>
+      </aside>
+
+      <!-- Content — cols 3–10 (span 8) -->
+      <main class="cs-content">
+
+        <!-- Hero image -->
+        <div class="ph cs-hero-img" style="aspect-ratio:16/9;">hero image — UCLA Sublease app</div>
+
+        <!-- H1 -->
+        <h1 class="cs-h1">UCLA Sublease — simplifying the way UCLA students find housing</h1>
+
+        <!-- Metadata row -->
+        <div class="cs-meta-row">
+          <div>
+            <p class="cs-meta-label">Role</p>
+            <p class="cs-meta-val">Lead designer</p>
+          </div>
+          <div>
+            <p class="cs-meta-label">Timeline</p>
+            <p class="cs-meta-val">Jun – Dec 2024</p>
+          </div>
+          <div>
+            <p class="cs-meta-label">Platform</p>
+            <p class="cs-meta-val">Web + mobile</p>
+          </div>
+          <div>
+            <p class="cs-meta-label">Status</p>
+            <p class="cs-meta-val">Shipped</p>
+          </div>
+        </div>
+
+        <!-- 01 Overview -->
+        <section class="cs-section">
+          <p class="section-label"><span>01</span> Overview</p>
+          <h2 class="cs-h2">Finding housing near UCLA is broken</h2>
+          <p class="cs-body">Students rely on scattered Facebook groups, Reddit threads, and word-of-mouth to find sublease listings — with no standardized pricing, dates, or verification. This created a clear opportunity for a purpose-built platform.</p>
+          <p class="cs-body">UCLA Sublease is a housing platform that connects students looking to sublease their apartments with others searching for short-term housing near campus. I led design from 0→1 over six months.</p>
+        </section>
+
+        <!-- 02 Problem -->
+        <section class="cs-section">
+          <p class="section-label"><span>02</span> Problem</p>
+          <h2 class="cs-h2">Three pain points, one broken flow</h2>
+          <ul class="pain-list">
+            <li>
+              <span class="pain-x">✕</span>
+              <span><strong>No standardized information.</strong> Posts vary wildly — some have prices, some don't. No consistent format for dates, amenities, or contact info.</span>
+            </li>
+            <li>
+              <span class="pain-x">✕</span>
+              <span><strong>No trust layer.</strong> Students can't verify listings or lessors. Scams are common and there's no accountability system in place.</span>
+            </li>
+            <li>
+              <span class="pain-x">✕</span>
+              <span><strong>Fragmented across platforms.</strong> Listings live in Facebook groups, ULoop, Reddit, and group chats simultaneously — impossible to browse comprehensively.</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 03 Research -->
+        <section class="cs-section">
+          <p class="section-label"><span>03</span> Research</p>
+          <h2 class="cs-h2">What the data showed</h2>
+          <div class="stats-row">
+            <div>
+              <p class="stat-num">87%</p>
+              <p class="stat-label">of students used Facebook groups as primary search method</p>
+            </div>
+            <div>
+              <p class="stat-num">3.4×</p>
+              <p class="stat-label">longer search time vs. non-UCLA students using Zillow</p>
+            </div>
+            <div>
+              <p class="stat-num">12</p>
+              <p class="stat-label">platforms checked on average before finding a listing</p>
+            </div>
+          </div>
+          <div class="ph cs-img" style="aspect-ratio:16/8;">research — competitive analysis map</div>
+          <p class="cs-body">We interviewed 24 UCLA students who had subleased or attempted to sublease in the past year. We mapped their full journey and identified the key breakpoints where friction was highest.</p>
+        </section>
+
+        <!-- 04 Decision -->
+        <section class="cs-section">
+          <p class="section-label"><span>04</span> Design decisions</p>
+          <h2 class="cs-h2">Standardized listing format</h2>
+          <p class="cs-body">The core hypothesis: if we enforce a consistent listing schema, search becomes dramatically easier for renters and lessors spend less time writing and more time getting matches.</p>
+          <div class="ph cs-img" style="aspect-ratio:16/9;">decision 1 — listing card iterations (initial → condensed → final)</div>
+          <p class="cs-body">After three rounds of testing, the condensed card with a price-first hierarchy performed best. Renters scanned price in under 0.3s, vs. 1.4s for the initial layout.</p>
+          <div class="ph cs-img" style="aspect-ratio:9/16; max-width:280px; margin:32px auto;">decision 2 — phone mockup: filter experience</div>
+        </section>
+
+        <!-- Reflection -->
+        <section class="cs-section">
+          <p class="section-label"><span>05</span> Reflection</p>
+          <h2 class="cs-h2">What I'd do differently</h2>
+          <div class="reflection-grid">
+            <div class="reflection-item">
+              <h3>Ship faster, test earlier</h3>
+              <p>We spent too long in wireframe fidelity before getting screens in front of real users. The listing card we thought was worst turned out to be clearest in testing.</p>
+            </div>
+            <div class="reflection-item">
+              <h3>Involve lessors from day one</h3>
+              <p>Our early research skewed toward renters. The friction for lessors creating listings was discovered late and required a late-stage redesign of the creation flow.</p>
+            </div>
+            <div class="reflection-item">
+              <h3>Trust signals matter most</h3>
+              <p>Post-launch data showed that the verification badge on listings drove the highest click-through rate — more than price, location, or photos.</p>
+            </div>
+            <div class="reflection-item">
+              <h3>Design for the desperate case</h3>
+              <p>UCLA housing is seasonal and urgent. Designing for a calm, exploratory browse was wrong. The real use case is a stressed student who needs something in two weeks.</p>
+            </div>
+          </div>
+        </section>
+
+      </main><!-- /cs-content -->
+
+      <!-- Right spacer — cols 11–12 -->
+      <div class="cs-spacer"></div>
+
+    </div><!-- /grid-row -->
+  </div><!-- /grid-container -->
+
+</div><!-- /page-casestudy -->
+
+
+<script>
+// Page switcher
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// Grid overlay
+let gridOn = false;
+function toggleGrid(btn) {
+  gridOn = !gridOn;
+  document.getElementById('grid-overlay').classList.toggle('on', gridOn);
+  btn.classList.toggle('active', gridOn);
+}
+
+// Build grid columns dynamically based on current CSS var
+function buildGrid() {
+  const inner = document.getElementById('go-inner');
+  inner.innerHTML = '';
+  const cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-columns').trim()) || 12;
+  for (let i = 0; i < cols; i++) {
+    const col = document.createElement('div');
+    col.className = 'go-col';
+    inner.appendChild(col);
+  }
+}
+
+// Breakpoint label
+function updateBpLabel() {
+  const w = window.innerWidth;
+  const label = document.getElementById('bp-label');
+  if (w >= 1280) label.textContent = `desktop · ${w}px`;
+  else if (w >= 768) label.textContent = `tablet · ${w}px`;
+  else label.textContent = `mobile · ${w}px`;
+  buildGrid();
+}
+
+window.addEventListener('resize', updateBpLabel);
+updateBpLabel();
+buildGrid();
+</script>
+</body>
+</html>
