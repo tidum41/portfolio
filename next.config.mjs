@@ -10,6 +10,7 @@ const nextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
   },
+  serverExternalPackages: ["sanity", "next-sanity", "@sanity/client", "@sanity/ui"],
   experimental: {
     optimizePackageImports: ["framer-motion", "@mux/mux-player-react"],
   },
