@@ -15,14 +15,14 @@ export default function Footer() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 24px 40px;
+          padding: 24px var(--page-px);
         }
         @media (max-width: 640px) {
           .footer-inner {
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            padding: 24px 20px;
+            padding: 24px var(--page-px);
           }
         }
       `}</style>

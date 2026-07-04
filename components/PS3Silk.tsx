@@ -173,7 +173,7 @@ export default function PS3Silk({
 
     // Defer shader compilation so the navigation animation stays smooth
     const initTimer = setTimeout(() => {
-      const _glNullable = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
+      const _glNullable = canvas.getContext("webgl", { alpha: true });
       if (!_glNullable) return;
       const gl = _glNullable as WebGLRenderingContext;
       glRef = gl;
@@ -269,13 +269,14 @@ void main() {
     float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
     vec3  dotColor  = uWaveColor * 0.55;
     float vis       = smoothstep(0.02, 0.08, waveLight);
-    gl_FragColor = vec4(dotColor, dotVal * vis);
+    float a         = dotVal * vis;
+    gl_FragColor = vec4(dotColor * a, a);
     return;
   }
 
   vec3  darkWave = uWaveColor * 0.78;
   float alpha    = clamp(waveLight * 1.1, 0.0, 1.0);
-  gl_FragColor = vec4(darkWave, alpha);
+  gl_FragColor = vec4(darkWave * alpha, alpha);
 }`;
 
       function compile(src: string, type: number) {
@@ -363,7 +364,6 @@ void main() {
         width: "100%", height: "100%",
         pointerEvents: "none",
         opacity: 0,
-        willChange: "opacity",
       }}
     >
       <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", background: "transparent" }} />

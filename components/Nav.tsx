@@ -15,7 +15,7 @@ export default function Nav() {
 
   return (
     <header style={{ background: "transparent", position: "relative", zIndex: 40 }}>
-      <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto", paddingLeft: 40, paddingRight: 40 }}>
+      <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <nav
           className="flex items-center justify-end"
           style={{ gap: 40, paddingTop: 24, paddingBottom: 24 }}
