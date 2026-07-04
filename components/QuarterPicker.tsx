@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, CSSProperties } from "react";
+import InteractiveBadge from "@/components/InteractiveBadge";
 
 // ── Design tokens ─────────────────────────────────────────────────────────
 const C = {
@@ -166,31 +167,6 @@ function DateCard({ date, onChange }: { date: string | null; onChange: (iso: str
     )
 }
 
-function InteractiveBadge() {
-    return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "5px 10px",
-                background: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: 99,
-                fontSize: 12,
-                color: "#64748b",
-                fontFamily: C.font,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                pointerEvents: "none",
-                userSelect: "none",
-                whiteSpace: "nowrap",
-            }}
-        >
-            <span style={{ fontSize: 10 }}>✦</span>
-            <span>Interactive</span>
-        </div>
-    )
-}
 
 export default function QuarterPicker({
     defaultQuarter = "summer",
@@ -210,7 +186,7 @@ export default function QuarterPicker({
         const el = containerRef.current
         if (!el) return
         const ro = new ResizeObserver(([entry]) => {
-            setScale(entry.contentRect.width / 393)
+            setScale((entry.contentRect.width / 393) * 0.3)
         })
         ro.observe(el)
         return () => ro.disconnect()
