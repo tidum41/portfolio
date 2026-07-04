@@ -21,7 +21,7 @@ export const DS_DEFAULTS: Required<DesignSystemData> = {
   fsDisplay: 56, fsHero: 48, fsH2: 30, fwHero: 50, fwH2: 50, fwCardTitle: 50, fsSectionLabel: 15,
   fsH3: 20, fsBody: 15, fsLabel: 16, fsMeta: 14, fsCaption: 12, fsStat: 44, fsCardTitle: 18,
   lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
-  sectionGap: 80, sectionPb: 64, pagePx: 40, contentMaxW: 750, cardRadius: 4,
+  sectionGap: 80, sectionPb: 64, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
   colorTextTertiary: "#767676", colorTextMuted: "#ADADAD", colorPlaceholder: "#EBEBEB",
   colorBorderSubtle: "#E8E4F0", colorAccent: "#9590C2",

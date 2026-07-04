@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Agentation } from "agentation";
 import { DialRoot } from "dialkit";
+import LayoutDials from "./LayoutDials";
 
 export default function DevToolbar() {
   const [show, setShow] = useState(false);
@@ -19,6 +20,7 @@ export default function DevToolbar() {
   return (
     <>
       <Agentation />
+      <LayoutDials />
       <DialRoot defaultOpen={false} />
     </>
   );
