@@ -284,6 +284,8 @@ html[data-theme="dark"] .project-image {
    Mobile   : [content 1fr] — TOC hidden
    ─────────────────────────────────────────────────────────────────── */
 .cs-layout {
+  max-width: var(--grid-max-w);
+  margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   align-items: start;
