@@ -4,7 +4,7 @@ import { useDialKit } from "dialkit";
 
 export default function LayoutDials() {
   const dk = useDialKit("Layout", {
-    pagePx: [24, 0, 80],
+    pagePx: [12, 0, 80],
   });
 
   useEffect(() => {
