@@ -23,6 +23,8 @@ export default function MuxVideoEmbed({
   const containerRef = useRef<HTMLDivElement>(null);
   const [playerReady, setPlayerReady] = useState(false);
   const [shouldLoad, setShouldLoad]   = useState(false);
+  const [playing, setPlaying]         = useState(true);
+  const [hovered, setHovered]         = useState(false);
 
   const dk = useDialKit("MuxVideoEmbed", {
     blurAmount:      [24,  0,  80],
@@ -54,6 +56,18 @@ export default function MuxVideoEmbed({
     return () => { obs.disconnect(); clearTimeout(timer); clearTimeout(fallback); };
   }, [delay]);
 
+  function togglePlay() {
+    const video = containerRef.current?.querySelector("video");
+    if (!video) return;
+    if (playing) {
+      video.pause();
+      setPlaying(false);
+    } else {
+      video.play().catch(() => {});
+      setPlaying(true);
+    }
+  }
+
   return (
     <div
       ref={containerRef}
@@ -64,6 +78,8 @@ export default function MuxVideoEmbed({
         isolation: "isolate",
         ...style,
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Blur placeholder crossfades out when player is ready */}
       <img
@@ -97,6 +113,46 @@ export default function MuxVideoEmbed({
             onCanPlay={() => setPlayerReady(true)}
           />
         </div>
+      )}
+
+      {/* Custom play/pause overlay button */}
+      {playerReady && (
+        <button
+          onClick={togglePlay}
+          aria-label={playing ? "Pause" : "Play"}
+          style={{
+            position: "absolute",
+            bottom: 14,
+            right: 14,
+            zIndex: 10,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            border: hovered ? "1.5px solid var(--color-text-primary)" : "1.5px solid transparent",
+            background: "var(--color-bg)",
+            color: "var(--color-text-primary)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            padding: 0,
+            transition: "border-color 0.2s ease, color 0.2s ease, background 0.2s ease",
+            opacity: 0.9,
+          }}
+        >
+          {playing ? (
+            // Pause icon
+            <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
+              <rect x="1" y="1" width="3.5" height="12" rx="1" fill="currentColor" />
+              <rect x="7.5" y="1" width="3.5" height="12" rx="1" fill="currentColor" />
+            </svg>
+          ) : (
+            // Play icon (slightly offset right for optical center)
+            <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true" style={{ marginLeft: 2 }}>
+              <path d="M1 1.5L11 7L1 12.5V1.5Z" fill="currentColor" />
+            </svg>
+          )}
+        </button>
       )}
     </div>
   );

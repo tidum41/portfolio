@@ -225,11 +225,14 @@ function findAndWrap(node: Node): HTMLElement | null {
         const trigger = document.createElement("span");
         trigger.id = "rh-trigger";
         trigger.style.cssText = `
+            color: inherit;
             text-decoration: underline;
             text-decoration-thickness: 2px;
             text-underline-offset: 4px;
+            text-decoration-color: inherit;
             cursor: crosshair;
             white-space: nowrap;
+            transition: color 0.2s ease, text-decoration-color 0.2s ease;
         `;
 
         const splitAt = TARGET.lastIndexOf(" ") + 1;
@@ -239,12 +242,15 @@ function findAndWrap(node: Node): HTMLElement | null {
         holesAnchor.id = "rh-holes-anchor";
         holesAnchor.textContent = TARGET.slice(splitAt);
         holesAnchor.style.cssText = `
+            color: inherit;
             position: relative;
             display: inline-block;
             vertical-align: baseline;
             text-decoration: underline;
             text-decoration-thickness: 2px;
             text-underline-offset: 4px;
+            text-decoration-color: inherit;
+            transition: color 0.2s ease, text-decoration-color 0.2s ease;
         `;
         trigger.appendChild(holesAnchor);
 
@@ -315,6 +321,14 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             let cleanupBlink: (() => void) | null = null;
             let resizeCleanup: (() => void) | null = null;
             let hopper: ReturnType<typeof createHopController> | null = null;
+
+            // Remove a stale rh-trigger left in the DOM by an exiting page instance
+            // (AnimatePresence keeps the old page mounted during its exit animation)
+            const stale = document.getElementById("rh-trigger");
+            if (stale && !root.contains(stale)) {
+                stale.parentNode?.insertBefore(document.createTextNode(TARGET), stale);
+                stale.remove();
+            }
 
             const holesAnchor = findAndWrap(textEl);
             if (!holesAnchor) return;

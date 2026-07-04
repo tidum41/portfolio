@@ -88,17 +88,17 @@ const ITEMS = [
 const FOOTER_H = 69;
 
 // Solid-then-eased gradient: solid bg-color for [solidPct]% of the height,
-// then an ease-out dissolve to transparent. This creates the "hard wall" at the
-// nav/footer edge that softens as it moves into the gallery content.
+// then a very gradual dissolve to transparent.
 const solidEdgeGradient = (dir: "bottom" | "top", solidPct: number) => {
-    const t = solidPct; // start of dissolve
+    const t = solidPct;
     return [
         `linear-gradient(to ${dir},`,
         `  var(--color-bg) 0%,`,
         `  var(--color-bg) ${t}%,`,
-        `  color-mix(in srgb, var(--color-bg) 82%, transparent) ${t + (100 - t) * 0.25}%,`,
-        `  color-mix(in srgb, var(--color-bg) 52%, transparent) ${t + (100 - t) * 0.55}%,`,
-        `  color-mix(in srgb, var(--color-bg) 20%, transparent) ${t + (100 - t) * 0.82}%,`,
+        `  color-mix(in srgb, var(--color-bg) 60%, transparent) ${t + (100 - t) * 0.30}%,`,
+        `  color-mix(in srgb, var(--color-bg) 32%, transparent) ${t + (100 - t) * 0.58}%,`,
+        `  color-mix(in srgb, var(--color-bg) 12%, transparent) ${t + (100 - t) * 0.80}%,`,
+        `  color-mix(in srgb, var(--color-bg) 3%, transparent) ${t + (100 - t) * 0.94}%,`,
         `  transparent 100%`,
         `)`,
     ].join("");
@@ -160,16 +160,16 @@ export default function PlaygroundPage() {
                 <div style={{ position: "absolute", inset: 0, background: solidEdgeGradient("bottom", 45) }} />
             </div>
 
-            {/* Bottom: small solid seam, long soft dissolve upward */}
-            <div style={{ ...fadeBase, bottom: 0, height: 110 }}>
+            {/* Bottom: tiny solid seam, very long soft dissolve upward */}
+            <div style={{ ...fadeBase, bottom: 0, height: 160 }}>
                 <div style={{
                     position: "absolute", inset: 0,
                     backdropFilter: "blur(5px)",
                     WebkitBackdropFilter: "blur(5px)",
-                    maskImage: "linear-gradient(to top, black 0%, black 18%, rgba(0,0,0,0.2) 58%, transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to top, black 0%, black 18%, rgba(0,0,0,0.2) 58%, transparent 100%)",
+                    maskImage: "linear-gradient(to top, black 0%, black 8%, rgba(0,0,0,0.15) 45%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to top, black 0%, black 8%, rgba(0,0,0,0.15) 45%, transparent 100%)",
                 }} />
-                <div style={{ position: "absolute", inset: 0, background: solidEdgeGradient("top", 18) }} />
+                <div style={{ position: "absolute", inset: 0, background: solidEdgeGradient("top", 5) }} />
             </div>
         </div>
     );

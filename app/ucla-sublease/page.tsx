@@ -2,13 +2,27 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { getCaseStudy } from "@/lib/sanity/queries";
-import type { CompRow as CompRowData, TocItem } from "@/lib/sanity/queries";
+import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 
-const CaseStudyTOC  = dynamic(() => import("@/components/CaseStudyTOC"));
-const MuxVideoEmbed = dynamic(() => import("@/components/MuxVideoEmbed"));
-const PhoneMockup   = dynamic(() => import("@/components/PhoneMockup"));
-const QuarterPicker = dynamic(() => import("@/components/QuarterPicker"));
-const DevNavigator  = dynamic(() => import("@/components/DevNavigator"));
+function pp(pos: PhonePos | undefined) {
+  if (!pos) return {};
+  const { videoX, videoY, videoScale, insetTop, insetBottom, insetSide, screenRadius } = pos;
+  return {
+    ...(videoX     != null && { videoX }),
+    ...(videoY     != null && { videoY }),
+    ...(videoScale != null && { videoScale }),
+    ...(insetTop   != null && { insetTop }),
+    ...(insetBottom!= null && { insetBottom }),
+    ...(insetSide  != null && { insetSide }),
+    ...(screenRadius != null && { screenRadius }),
+  };
+}
+
+const CaseStudyTOC       = dynamic(() => import("@/components/CaseStudyTOC"));
+const PhoneMockup        = dynamic(() => import("@/components/PhoneMockup"));
+const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
+const QuarterPicker      = dynamic(() => import("@/components/QuarterPicker"));
+const DevNavigator       = dynamic(() => import("@/components/DevNavigator"));
 
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
@@ -124,7 +138,7 @@ function NeutralIcon() {
 function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <span style={{ color: "var(--color-text-primary)", fontSize: 19, lineHeight: 1, marginTop: 4, flexShrink: 0, fontWeight: 400 }}>•</span>
+      <span style={{ color: "var(--color-text-secondary)", fontSize: 20, lineHeight: 1, marginTop: 3, flexShrink: 0, fontWeight: 400 }}>•</span>
       <p style={{ fontSize: 15, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
   );
@@ -281,6 +295,11 @@ export default async function BruinLeasePage() {
     ueTestingVideo:         undefined as string | undefined,
     oldFlowVideo:           undefined as string | undefined,
     decision1Video:         undefined as string | undefined,
+    heroPhonePos:           undefined as import("@/lib/sanity/queries").PhonePos | undefined,
+    d2PhonePos:             undefined as import("@/lib/sanity/queries").PhonePos | undefined,
+    d3BeforePhonePos:       undefined as import("@/lib/sanity/queries").PhonePos | undefined,
+    d3AfterPhonePos:        undefined as import("@/lib/sanity/queries").PhonePos | undefined,
+    solutionPhonePos:       undefined as import("@/lib/sanity/queries").PhonePos | undefined,
     ...Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null && (Array.isArray(v) ? v.length > 0 : v !== ""))),
   };
 
@@ -299,6 +318,7 @@ export default async function BruinLeasePage() {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <DevNavigator />
+      <PhoneMockupDevPanel />
       <div className="cs-layout">
 
         <aside className="cs-aside">
@@ -308,7 +328,7 @@ export default async function BruinLeasePage() {
         <div style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
 
           {/* ── Hero ───────────────────────────────────────────────────── */}
-          <header style={{ marginBottom: 64 }}>
+          <header className="cs-hero-header" style={{ marginBottom: 64 }}>
             <p style={{
               fontFamily: "var(--font-sans)",
               fontSize: 14,
@@ -332,14 +352,18 @@ export default async function BruinLeasePage() {
             </h1>
 
             <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", padding: "40px 24px", display: "flex", justifyContent: "center" }}>
-              <div style={{ width: "45%", maxWidth: 280, aspectRatio: "9/19.5" }}>
-                <MuxVideoEmbed playbackId={cs.heroMuxId!} />
+              <div className="pm-hero-wrap" style={{ width: "45%", maxWidth: 280 }}>
+                <PhoneMockup
+                  muxPlaybackId={cs.heroMuxId}
+                  instanceKey="hero"
+                  {...pp(cs.heroPhonePos)}
+                />
               </div>
             </div>
 
             {/* Metadata — 4-column, no border */}
             {metadata.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
+              <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
                 {metadata.map(({ _key, label, values }) => (
                   <div key={_key} style={{ padding: "0 24px 0 0" }}>
                     <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
@@ -376,10 +400,10 @@ export default async function BruinLeasePage() {
 
               {/* Stats box with internal dividers */}
               <div style={{ position: "relative", width: "100%", margin: "32px 0 24px" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 24, padding: 20, borderRadius: 4 }}>
+                <div className="cs-stats-row" style={{ display: "flex", flexWrap: "wrap", gap: 24, padding: 20, borderRadius: 4 }}>
                   {stats.map(({ _key, value, label }, i) => (
                     <React.Fragment key={_key}>
-                      {i > 0 && <div style={{ width: 1, flexShrink: 0, background: "var(--color-border-subtle)", borderRadius: 8, alignSelf: "stretch" }} />}
+                      {i > 0 && <div className="cs-stats-divider" style={{ width: 1, flexShrink: 0, background: "var(--color-border-subtle)", borderRadius: 8, alignSelf: "stretch" }} />}
                       <div style={{ display: "flex", flexBasis: 0, flexGrow: 1, flexShrink: 0, minWidth: 120 }}>
                         <Stat value={value} label={label} />
                       </div>
@@ -445,7 +469,14 @@ export default async function BruinLeasePage() {
               <Body>{cs.d2Body}</Body>
               {cs.ueTestingVideo && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                  <PhoneMockup videoSrc={cs.ueTestingVideo} showFrame style={{ width: "55%", maxWidth: 280 }} />
+                  <div className="pm-d2-wrap" style={{ width: "72%", maxWidth: 364 }}>
+                    <PhoneMockup
+                      videoSrc={cs.ueTestingVideo}
+                      showFrame
+                      instanceKey="d2"
+                      {...pp(cs.d2PhonePos)}
+                    />
+                  </div>
                 </div>
               )}
             </Section>
@@ -456,20 +487,28 @@ export default async function BruinLeasePage() {
               <H2>{cs.d3Heading}</H2>
               <Body>{cs.d3Body}</Body>
 
-              <div style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
+              <div className="pm-d3-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
                 {cs.oldFlowVideo && (
-                  <div style={{ flex: 1, maxWidth: 260, display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ borderRadius: 8, border: "2px solid transparent", overflow: "hidden" }}>
-                      <PhoneMockup videoSrc={cs.oldFlowVideo} showFrame />
-                    </div>
+                  <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <PhoneMockup
+                      videoSrc={cs.oldFlowVideo}
+                      showFrame
+                      instanceKey="d3-before"
+                      {...pp(cs.d3BeforePhonePos)}
+                      style={{ border: "2px solid transparent" }}
+                    />
                     <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>before</p>
                   </div>
                 )}
                 {cs.decision1Video && (
-                  <div style={{ flex: 1, maxWidth: 260, display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ borderRadius: 8, background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}`, overflow: "hidden" }}>
-                      <PhoneMockup videoSrc={cs.decision1Video} showFrame />
-                    </div>
+                  <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <PhoneMockup
+                      videoSrc={cs.decision1Video}
+                      showFrame
+                      instanceKey="d3-after"
+                      {...pp(cs.d3AfterPhonePos)}
+                      style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
+                    />
                     <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>after</p>
                   </div>
                 )}
@@ -484,8 +523,8 @@ export default async function BruinLeasePage() {
               <H2>{cs.d4Heading}</H2>
               <Body>{cs.d4Body}</Body>
               {cs.homepageComparison
-                ? <img src={cs.homepageComparison} alt="BruinLease homepage comparison" style={{ width: "100%", borderRadius: "var(--radius-card)", margin: "24px 0", border: "1.5px solid var(--color-border-subtle)", display: "block" }} />
-                : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0", border: "1.5px solid var(--color-border-subtle)" }} />
+                ? <img src={cs.homepageComparison} alt="BruinLease homepage comparison" style={{ width: "108%", marginLeft: "-4%", display: "block", marginTop: 24, marginBottom: 24 }} />
+                : <div style={{ width: "108%", marginLeft: "-4%", aspectRatio: "16/9", background: "var(--color-placeholder)", marginTop: 24, marginBottom: 24 }} />
               }
             </Section>
 
@@ -495,7 +534,13 @@ export default async function BruinLeasePage() {
               <H2>{cs.solutionHeading}</H2>
               <Body>{cs.solutionBody}</Body>
               <div style={{ display: "flex", justifyContent: "center", background: cs.solutionBg, borderRadius: "var(--radius-card)", padding: "48px 24px", margin: "32px 0" }}>
-                <PhoneMockup muxPlaybackId={cs.solutionMuxId ?? cs.heroMuxId} style={{ width: "45%", maxWidth: 240 }} />
+                <div className="pm-solution-wrap" style={{ width: "45%", maxWidth: 240 }}>
+                  <PhoneMockup
+                    muxPlaybackId={cs.solutionMuxId ?? cs.heroMuxId}
+                    instanceKey="solution"
+                    {...pp(cs.solutionPhonePos)}
+                  />
+                </div>
               </div>
             </Section>
 

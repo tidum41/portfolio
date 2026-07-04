@@ -4,7 +4,6 @@ import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./src/sanity/schemaTypes";
 
 export default defineConfig({
-  name: "muditm-studio",
   title: "Mudit Mahajan — Studio",
 
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "replace-me",

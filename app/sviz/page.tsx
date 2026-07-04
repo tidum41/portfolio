@@ -1,7 +1,22 @@
 "use client";
 
+import { motion } from "framer-motion";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import MuxVideoEmbed from "@/components/MuxVideoEmbed";
+import { ScrollReveal } from "@/components/ScrollReveal";
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+function fadeUp(delay = 0) {
+  return {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0 },
+    transition: {
+      opacity: { duration: 0.32, ease: EASE, delay },
+      y:       { duration: 0.44, ease: EASE, delay },
+    },
+  };
+}
 
 const TOC_ITEMS = [
   { id: "overview",  label: "Overview"  },
@@ -87,23 +102,23 @@ export default function SvizPage() {
       {/* ── Hero ── */}
       <header style={{ marginBottom: 64 }}>
         {/* Title — HN Medium 48px per Framer source */}
-        <h1 style={{
-          fontSize: 48,
+        <motion.h1 {...fadeUp(0)} style={{
+          fontSize: "clamp(32px, 6vw, 48px)",
           fontWeight: 500,
-          lineHeight: "52.8px",
+          lineHeight: 1.1,
           letterSpacing: "-0.5px",
           color: "var(--color-text-primary)",
           margin: "0 0 32px",
-        }}>sviz</h1>
+        }}>sviz</motion.h1>
 
         {/* Hero video */}
-        <div style={{ width: "100%", aspectRatio: "16/9", borderRadius: "var(--radius-card)", overflow: "hidden", boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset" }}>
+        <motion.div {...fadeUp(0.08)} style={{ width: "100%", aspectRatio: "16/9", borderRadius: "var(--radius-card)", overflow: "hidden", boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset" }}>
           <MuxVideoEmbed playbackId={SVIZ_MUX_ID} />
-        </div>
+        </motion.div>
         <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginTop: 12, textWrap: "balance" }}>keyboards · sonic experiences · building community</p>
 
         {/* Metadata grid — below hero */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 40px", marginTop: 40 }}>
+        <motion.div {...fadeUp(0.16)} style={{ display: "flex", flexWrap: "wrap", gap: "12px 40px", marginTop: 40 }}>
           {[
             { label: "Type",      value: "YouTube, Personal" },
             { label: "Started",   value: "2020 – Present" },
@@ -115,11 +130,12 @@ export default function SvizPage() {
               <p style={{ fontSize: 14, color: "var(--color-text-primary)", margin: 0, letterSpacing: "-0.25px" }}>{value}</p>
             </div>
           ))}
-        </div>
+        </motion.div>
       </header>
 
       {/* ── TOC (fixed) + Body ── */}
         <article style={{ minWidth: 0 }}>
+          <ScrollReveal>
           <Section id="overview">
             <H2>Custom keyboards were impossible to learn about</H2>
             <Body>
@@ -132,10 +148,12 @@ export default function SvizPage() {
               quality, focused on what actually matters to builders.
             </Body>
           </Section>
+          </ScrollReveal>
 
+          <ScrollReveal>
           <Section id="research">
             <H2>Keyboard content was scattered. No single voice existed.</H2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px 40px", margin: "32px 0 32px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "32px 40px", margin: "32px 0 32px" }}>
               <Stat value="500K+" label="views on first upload, organic" />
               <Stat value="700+"  label="NorCal Keyboard Group members" />
               <Stat value="4"     label="brand collabs (SteelSeries, DROP, Glorious, KBDFans)" />
@@ -145,7 +163,9 @@ export default function SvizPage() {
               something more durable: a community of builders who actually talk to each other.
             </Body>
           </Section>
+          </ScrollReveal>
 
+          <ScrollReveal>
           <Section id="channel">
             <H2>Digestible reviews with real production quality</H2>
             <Body>
@@ -166,10 +186,12 @@ export default function SvizPage() {
               isn&apos;t, the pacing is wrong.
             </Body>
           </Section>
+          </ScrollReveal>
 
+          <ScrollReveal>
           <Section id="impact">
             <H2>500K views and a community that outlasts any video</H2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "32px 40px", margin: "32px 0 32px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "32px 40px", margin: "32px 0 32px" }}>
               <Stat value="500K+" label="views on first upload" />
               <Stat value="1.5×"  label="watchable speed constraint" />
             </div>
@@ -178,7 +200,9 @@ export default function SvizPage() {
               The channel became a reference point for the NorCal keyboard community.
             </Body>
           </Section>
+          </ScrollReveal>
 
+          <ScrollReveal>
           <Section id="community">
             <H2>Founded the NorCal Keyboard Group</H2>
             <Body>
@@ -200,6 +224,7 @@ export default function SvizPage() {
               ))}
             </div>
           </Section>
+          </ScrollReveal>
         </article>
         </div>
       </div>

@@ -4,6 +4,8 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
 import { getProjects } from "@/lib/sanity/queries";
 
+export const revalidate = 60;
+
 const PS3Silk         = dynamic(() => import("@/components/PS3Silk"));
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
@@ -91,8 +93,8 @@ export default async function Home() {
           position: "relative",
           maxWidth: "var(--grid-max-w)",
           marginInline: "auto",
-          paddingLeft: 40,
-          paddingRight: 40,
+          paddingLeft: "var(--page-px)",
+          paddingRight: "var(--page-px)",
           display: "flex",
           flexDirection: "column",
           gap: 24,
@@ -102,7 +104,7 @@ export default async function Home() {
       </section>
 
       {/* ── Project grid ── */}
-      <div style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: 40, paddingRight: 40 }}>
+      <div style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
       <ScrollReveal>
         <section
           aria-label="Portfolio"
@@ -150,7 +152,7 @@ export default async function Home() {
 
             {/* CDPlayer — always in left column after Sanity projects */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "1296 / 1080" }}>
+              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-placeholder)" }}>
                 <CDPlayer />
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />

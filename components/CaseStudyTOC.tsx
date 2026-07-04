@@ -9,7 +9,6 @@ interface TocItem {
 
 const COLOR_ACTIVE   = "var(--color-text-primary)";
 const COLOR_INACTIVE = "var(--color-text-muted)";
-const TRACK_COLOR    = "var(--color-toc-track)";
 
 const NO_TAP_HIGHLIGHT = {
   WebkitTapHighlightColor: "transparent",
@@ -24,7 +23,6 @@ export default function CaseStudyTOC({
   backHref?: string;
 }) {
   const rafRef  = useRef<number | null>(null);
-  const fillRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState("");
   const [isMobile,      setIsMobile]      = useState(false);
   const [backHovered,   setBackHovered]   = useState(false);
@@ -54,18 +52,10 @@ export default function CaseStudyTOC({
 
     const tick = () => {
       const y = window.scrollY;
-
-      if (fillRef.current) {
-        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-        const pct = scrollable > 0 ? Math.min((y / scrollable) * 100, 100) : 0;
-        fillRef.current.style.height = `${pct}%`;
-      }
-
       if (y !== lastScrollY) {
         lastScrollY = y;
         updateActive();
       }
-
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -101,11 +91,12 @@ export default function CaseStudyTOC({
         onMouseLeave={() => setBackHovered(false)}
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "inline-flex", alignItems: "center",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          minWidth: 44, minHeight: 44,
+          marginLeft: -12, /* compensate so chevron visually aligns with content edge */
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
-          marginBottom: 24,
         }}
       >
         {backArrow}
@@ -113,10 +104,10 @@ export default function CaseStudyTOC({
     );
   }
 
-  // Desktop: sticky sidebar, rendered in normal document flow
+  // Desktop: sticky sidebar
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* Back button — centered over the 2px track */}
+      {/* Back button — left-aligned with labels, wide hit area */}
       <a
         href={backHref}
         onMouseEnter={() => setBackHovered(true)}
@@ -124,64 +115,45 @@ export default function CaseStudyTOC({
         style={{
           ...NO_TAP_HIGHLIGHT,
           display: "flex", alignItems: "center",
+          minHeight: 44,
+          paddingRight: 16, /* extend hit area rightward toward nav labels */
+          marginLeft: -8,   /* let chevron visually align with labels */
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
-          marginBottom: 24,
-          marginLeft: -8,
+          marginBottom: 16,
         }}
       >
         {backArrow}
       </a>
 
-      {/* Track + section labels */}
       {activeSections.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 8 }}>
-          {/* Progress track */}
-          <div
-            style={{
-              position: "relative", width: 2, flexShrink: 0,
-              borderRadius: 999, backgroundColor: TRACK_COLOR, overflow: "hidden",
-            }}
-          >
-            <div
-              ref={fillRef}
-              style={{
-                position: "absolute", top: 0, left: 0,
-                width: "100%", height: "0%",
-                backgroundColor: COLOR_ACTIVE, borderRadius: 999,
-              }}
-            />
+        <nav aria-label="Table of contents">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {activeSections.map(({ id, label }) => {
+              const isActive = activeSection === label;
+              return (
+                <button
+                  key={label}
+                  onClick={() => scrollTo(id, label)}
+                  style={{
+                    ...NO_TAP_HIGHLIGHT,
+                    background: "none", border: "none", padding: 0,
+                    cursor: "pointer", textAlign: "left",
+                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    fontSize: 14, letterSpacing: "0.1px", lineHeight: 1.5,
+                    color: isActive ? COLOR_ACTIVE : COLOR_INACTIVE,
+                    fontWeight: 400,
+                    transition: "color 0.2s ease, font-weight 0.2s ease",
+                    whiteSpace: "normal",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
-
-          {/* Section labels */}
-          <nav aria-label="Table of contents">
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {activeSections.map(({ id, label }) => {
-                const isActive = activeSection === label;
-                return (
-                  <button
-                    key={label}
-                    onClick={() => scrollTo(id, label)}
-                    style={{
-                      ...NO_TAP_HIGHLIGHT,
-                      background: "none", border: "none", padding: 0,
-                      cursor: "pointer", textAlign: "left",
-                      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                      fontSize: 14, letterSpacing: "-0.25px", lineHeight: 1.5,
-                      color: isActive ? COLOR_ACTIVE : COLOR_INACTIVE,
-                      fontWeight: 400,
-                      transition: "color 0.2s ease, font-weight 0.2s ease",
-                      whiteSpace: "normal",
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-        </div>
+        </nav>
       )}
     </div>
   );

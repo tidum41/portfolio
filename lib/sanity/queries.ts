@@ -96,6 +96,16 @@ export interface ToolItem{ _key: string; tool: string; desc: string }
 export interface TocItem { _key: string; id: string; label: string }
 export interface ReflectionItem { _key: string; heading: string; body: string }
 
+export interface PhonePos {
+  videoX?: number;
+  videoY?: number;
+  videoScale?: number;
+  insetTop?: number;
+  insetBottom?: number;
+  insetSide?: number;
+  screenRadius?: number;
+}
+
 export interface CaseStudyData {
   // identity
   slug: string;
@@ -106,6 +116,7 @@ export interface CaseStudyData {
   heroTitle?: string;
   heroBg?: string;
   heroMuxId?: string;
+  heroPhonePos?: PhonePos;
   metadata?: MetaItem[];
 
   // problem
@@ -146,6 +157,7 @@ export interface CaseStudyData {
   d2Heading?: string;
   d2Body?: string;
   ueTestingVideo?: string;
+  d2PhonePos?: PhonePos;
 
   // decision 3
   d3Label?: string;
@@ -153,6 +165,8 @@ export interface CaseStudyData {
   d3Body?: string;
   oldFlowVideo?: string;
   decision1Video?: string;
+  d3BeforePhonePos?: PhonePos;
+  d3AfterPhonePos?: PhonePos;
 
   // decision 4
   d4Label?: string;
@@ -166,17 +180,21 @@ export interface CaseStudyData {
   solutionBody?: string;
   solutionBg?: string;
   solutionMuxId?: string;
+  solutionPhonePos?: PhonePos;
 
   // reflection
   reflectionLabel?: string;
   reflectionItems?: ReflectionItem[];
 }
 
+const PHONE_POS_FRAGMENT = `{ videoX, videoY, videoScale, insetTop, insetBottom, insetSide, screenRadius }`;
+
 const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
   slug,
   tocItems[]{ _key, id, label },
 
   heroTagline, heroTitle, heroBg, heroMuxId,
+  heroPhonePos ${PHONE_POS_FRAGMENT},
   metadata[]{ _key, label, values },
 
   problemLabel, problemHeading, problemBody, problemImageCaption,
@@ -201,15 +219,19 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 
   d2Label, d2Heading, d2Body,
   ueTestingVideo { asset->{ url } },
+  d2PhonePos ${PHONE_POS_FRAGMENT},
 
   d3Label, d3Heading, d3Body,
   oldFlowVideo { asset->{ url } },
   decision1Video { asset->{ url } },
+  d3BeforePhonePos ${PHONE_POS_FRAGMENT},
+  d3AfterPhonePos ${PHONE_POS_FRAGMENT},
 
   d4Label, d4Heading, d4Body,
   homepageComparison { asset->{ url } },
 
   solutionLabel, solutionHeading, solutionBody, solutionBg, solutionMuxId,
+  solutionPhonePos ${PHONE_POS_FRAGMENT},
 
   reflectionLabel,
   reflectionItems[]{ _key, heading, body }

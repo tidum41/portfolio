@@ -104,7 +104,7 @@
   --grid-gutter:     24px;
 
   /* Spacing landmarks */
-  --page-px:         40px;
+  --page-px:         24px;
   --content-max-w:   750px;
   --section-gap:     80px;
   --section-pb:      64px;
@@ -304,13 +304,53 @@ html[data-theme="dark"] .project-image {
   }
   .cs-aside { padding-right: 16px; }
 }
-/* Mobile: single column, no TOC */
+/* Mobile: single column, back button only (no nav labels) */
 @media (max-width: 767px) {
   .cs-layout {
     grid-template-columns: 1fr;
-    padding-top: 24px;
+    padding-top: 16px;
   }
-  .cs-aside { display: none; }
+  /* Show aside so back button is visible — TOC component hides labels on mobile */
+  .cs-aside {
+    position: static; /* not sticky on mobile — just sits above content */
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* ─── Case study hero header ─────────────────────────────────────── */
+@media (max-width: 767px) {
+  .cs-hero-header { margin-bottom: 32px !important; }
+}
+
+/* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
+@media (max-width: 767px) {
+  .cs-meta-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px 0 !important;
+  }
+}
+
+/* ─── Case study stats — vertical stack on mobile ────────────────── */
+@media (max-width: 767px) {
+  .cs-stats-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .cs-stats-divider {
+    width: 100% !important;
+    height: 1px !important;
+    align-self: auto !important;
+  }
+}
+
+/* ─── Case study phone mockup responsive sizing (1.43×) ───────────── */
+@media (max-width: 767px) {
+  .pm-hero-wrap     { width: 64% !important; max-width: 400px !important; }
+  .pm-d2-wrap       { width: 100% !important; max-width: none !important; }
+  .pm-d3-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
+  .pm-d3-wrap       { width: 64% !important; max-width: 280px !important; flex: none !important; }
+  .pm-solution-wrap { width: 64% !important; max-width: 344px !important; }
 }
 
 /* ─── Reflection 2-col grid — collapses to 1-col on mobile ──────── */
@@ -325,7 +365,7 @@ html[data-theme="dark"] .project-image {
 
 /* ─── Responsive page padding ────────────────────────────────────── */
 @media (max-width: 640px) {
-  :root { --page-px: 20px; }
+  :root { --page-px: 16px; }
 }
 
 /* ─── Portfolio grid — 1-col on mobile ───────────────────────────── */

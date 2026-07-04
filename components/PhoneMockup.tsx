@@ -34,6 +34,8 @@ interface Props {
   autoPlay?: boolean;
   loop?: boolean;
   showFrame?: boolean;
+  /** Unique key used for dialkit controls — allows per-instance tuning */
+  instanceKey?: string;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -53,6 +55,7 @@ export default function PhoneMockup({
   autoPlay = true,
   loop = true,
   showFrame = false,
+  instanceKey = "default",
   className,
   style,
 }: Props) {
@@ -63,10 +66,12 @@ export default function PhoneMockup({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
   const [frameLoaded, setFrameLoaded] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
-  // Live controls via DialKit — prop overrides take precedence
-  const dk = useDialKit("PhoneMockup", {
+  // Per-instance dialkit key so each phone can be tuned independently
+  const dialKey = `PhoneMockup/${instanceKey}`;
+  const dk = useDialKit(dialKey, {
     insetTop:     [1.5,  0, 15,  0.01],
     insetBottom:  [1.5,  0, 15,  0.01],
     insetSide:    [4.0,  0, 15,  0.01],
@@ -109,15 +114,30 @@ export default function PhoneMockup({
 
   useEffect(() => {
     setFrameLoaded(false);
+    setVideoReady(false);
     if (!frameSrc) return;
     const img = imgRef.current;
     if (img?.complete && img?.naturalWidth > 0) setFrameLoaded(true);
   }, [frameSrc]);
 
+  // Fallback: show after 1.2s if frame or video stalls
+  useEffect(() => {
+    if (!shouldLoad) return;
+    const t = setTimeout(() => {
+      setFrameLoaded(true);
+      setVideoReady(true);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [shouldLoad]);
+
   const scale = containerWidth / REF_W;
   const intrinsicHeight = containerWidth * (REF_H / REF_W);
   const hasVideo = !!(muxPlaybackId || videoSrc);
-  const isVisible = !frameSrc || frameLoaded;
+
+  // Both frame and video (if any) must be loaded before revealing
+  const frameOk = !frameSrc || frameLoaded;
+  const videoOk = !hasVideo || videoReady;
+  const isVisible = frameOk && videoOk;
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -135,21 +155,22 @@ export default function PhoneMockup({
       style={{
         position: "absolute", top: 8, right: 8, zIndex: 10,
         width: 32, height: 32, borderRadius: "50%",
-        background: isHovered ? "#E2E2E2" : "#F0F0F0",
-        boxShadow: isHovered ? "inset 0 0 0 1.5px rgba(0,0,0,0.1)" : "none",
+        background: "var(--color-placeholder)",
+        boxShadow: isHovered ? "inset 0 0 0 1.5px var(--color-text-muted)" : "none",
         border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
         flexShrink: 0, outline: "none",
+        transition: "box-shadow 150ms ease",
       }}
     >
       {isPlaying ? (
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-          <rect x="1.5" y="1.5" width="3" height="8" rx="1" fill="rgba(0,0,0,0.45)" />
-          <rect x="6.5" y="1.5" width="3" height="8" rx="1" fill="rgba(0,0,0,0.45)" />
+          <rect x="1.5" y="1.5" width="3" height="8" rx="1" fill="var(--color-text-secondary)" />
+          <rect x="6.5" y="1.5" width="3" height="8" rx="1" fill="var(--color-text-secondary)" />
         </svg>
       ) : (
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true" style={{ marginLeft: 1 }}>
-          <path d="M2 1.5 L9.5 5.5 L2 9.5 Z" fill="rgba(0,0,0,0.45)" />
+          <path d="M2 1.5 L9.5 5.5 L2 9.5 Z" fill="var(--color-text-secondary)" />
         </svg>
       )}
     </button>
@@ -167,7 +188,7 @@ export default function PhoneMockup({
         maxWidth: REF_W,
         height: intrinsicHeight,
         opacity: isVisible ? 1 : 0,
-        transition: "opacity 150ms ease",
+        transition: isVisible ? "opacity 200ms ease" : "none",
       }}
     >
       <div
@@ -209,6 +230,7 @@ export default function PhoneMockup({
                   playbackId={muxPlaybackId}
                   autoPlay="muted"
                   loop muted playsInline nohotkeys
+                  onCanPlay={() => setVideoReady(true)}
                   style={{
                     display: "block", width: "100%", height: "100%", objectFit: "cover",
                     // @ts-ignore CSS custom property
@@ -225,6 +247,7 @@ export default function PhoneMockup({
                   loop={loop}
                   muted playsInline
                   preload="none"
+                  onCanPlay={() => setVideoReady(true)}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
@@ -270,7 +293,7 @@ export default function PhoneMockup({
         position: "relative",
         background: "var(--color-placeholder)",
         borderRadius: 8,
-        padding: "20px 16px",
+        padding: "12px 16px",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",

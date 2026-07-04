@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Source: CDPlayer.tsx (Framer).
-// 1296×1080 iframe (cdplayer-peach.vercel.app).
-// Lazy-loaded. Desktop: pointer-forward overlay. Touch: native pointer events.
-const DESIGN_W = 1296;
-const DESIGN_H = 1080;
+// 900×900 design canvas — keeps the player visually ~2.3× larger than the old 1296 frame.
+const DESIGN_W = 900;
+const DESIGN_H = 900;
 const IFRAME_SRC = "https://cdplayer-peach.vercel.app/";
 
 export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
@@ -38,6 +36,23 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
     obs.observe(el);
     return () => { obs.disconnect(); clearTimeout(fallback); };
   }, []);
+
+  const sendTheme = () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: "theme", value: isDark ? "dark" : "light" },
+      "*",
+    );
+  };
+
+  // Observe theme changes (works for future toggles)
+  useEffect(() => {
+    if (!ready) return;
+    const mo = new MutationObserver(sendTheme);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
 
   const s = cw / DESIGN_W;
 
@@ -79,6 +94,7 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
           style={{ border: "none", display: "block", pointerEvents: isTouch ? "auto" : "none" }}
           allow="autoplay"
           title="CD Player"
+          onLoad={sendTheme}
         />
       </div>
 

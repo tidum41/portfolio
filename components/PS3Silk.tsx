@@ -173,7 +173,7 @@ export default function PS3Silk({
 
     // Defer shader compilation so the navigation animation stays smooth
     const initTimer = setTimeout(() => {
-      const _glNullable = canvas.getContext("webgl", { premultipliedAlpha: false });
+      const _glNullable = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
       if (!_glNullable) return;
       const gl = _glNullable as WebGLRenderingContext;
       glRef = gl;
@@ -366,7 +366,7 @@ void main() {
         willChange: "opacity",
       }}
     >
-      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
+      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", background: "transparent" }} />
     </div>
   );
 }

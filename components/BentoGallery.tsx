@@ -260,9 +260,9 @@ export default function BentoGallery({
         loadedCountRef.current++;
         if (loadedCountRef.current >= totalImages) setReady(true);
     }, [totalImages]);
-    // Fallback: show after 2.5s even if some images stall
+    // Fallback: show after 800ms even if some images stall
     useEffect(() => {
-        const t = setTimeout(() => setReady(true), 2500);
+        const t = setTimeout(() => setReady(true), 800);
         return () => clearTimeout(t);
     }, []);
 
@@ -877,7 +877,8 @@ export default function BentoGallery({
                 touchAction: "none",
                 userSelect: "none",
                 opacity: ready ? 1 : 0,
-                transition: ready ? "opacity 0.45s ease" : "none",
+                transform: ready ? "translateY(0)" : "translateY(10px)",
+                transition: ready ? "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)" : "none",
             }}
         >
             {/* ── Canvas ── */}
@@ -1031,13 +1032,13 @@ export default function BentoGallery({
                 }}
             />
 
-            {/* ── Hint pill ── */}
+            {/* ── Hint pill — top center ── */}
             <div
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    bottom: 62,
+                    top: 14,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
@@ -1076,13 +1077,13 @@ export default function BentoGallery({
                 }}>tap to focus</span>
             </div>
 
-            {/* ── Zoom slider ── */}
+            {/* ── Zoom slider — where hint pill used to be ── */}
             <div
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    bottom: 16,
+                    bottom: 20,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
