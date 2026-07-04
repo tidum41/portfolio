@@ -264,8 +264,8 @@ const FB = {
   d3Heading: "The academic calendar is built-in.",
   d3Body: "Subleasing demand follows UCLA's academic calendar, not arbitrary calendar windows. One tap eliminates an initial barrier by filtering date ranges that work for you.",
   d4Label: "Design Decision",
-  d4Heading: "In-app messaging keeps everything in one place.",
-  d4Body: "Students were context-switching between Instagram DMs, texts, and email threads to coordinate a single sublease. Bringing messaging into the platform closes the loop and makes the lister-leaser handoff traceable.",
+  d4Heading: "Guiding listing creation",
+  d4Body: "Creating a listing requires a lot of manual selection. I landed on two listing flows that I would love to A/B test. While both have drawbacks, I landed on the stepped creation as it provides structure that reduces cognitive load by dividing sections.",
   solutionLabel: "Solution",
   solutionHeading: "BruinLease is a dedicated subleasing platform built specifically for UCLA students.",
   solutionBody: "Digestible listings, quarter-based search, verified identities, and in-app messaging.",
@@ -487,34 +487,39 @@ export default async function BruinLeasePage() {
               <H2>{cs.d3Heading}</H2>
               <Body>{cs.d3Body}</Body>
 
-              <div className="pm-d3-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
-                {cs.oldFlowVideo && (
-                  <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
-                    <PhoneMockup
-                      videoSrc={cs.oldFlowVideo}
-                      showFrame
-                      instanceKey="d3-before"
-                      {...pp(cs.d3BeforePhonePos)}
-                      style={{ border: "2px solid transparent" }}
-                    />
-                    <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>before</p>
-                  </div>
-                )}
-                {cs.decision1Video && (
-                  <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
-                    <PhoneMockup
-                      videoSrc={cs.decision1Video}
-                      showFrame
-                      instanceKey="d3-after"
-                      {...pp(cs.d3AfterPhonePos)}
-                      style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
-                    />
-                    <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>after</p>
-                  </div>
-                )}
-              </div>
+              <div style={{ marginTop: 24 }}><QuarterPicker /></div>
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
+                Selecting a quarter autofills exact move-in and move-out dates.
+              </p>
 
-              <div style={{ marginTop: 8 }}><QuarterPicker /></div>
+              {(cs.oldFlowVideo || cs.decision1Video) && (
+                <div className="pm-d3-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
+                  {cs.oldFlowVideo && (
+                    <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                      <PhoneMockup
+                        videoSrc={cs.oldFlowVideo}
+                        showFrame
+                        instanceKey="d3-before"
+                        {...pp(cs.d3BeforePhonePos)}
+                        style={{ border: "2px solid transparent" }}
+                      />
+                      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>before</p>
+                    </div>
+                  )}
+                  {cs.decision1Video && (
+                    <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                      <PhoneMockup
+                        videoSrc={cs.decision1Video}
+                        showFrame
+                        instanceKey="d3-after"
+                        {...pp(cs.d3AfterPhonePos)}
+                        style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
+                      />
+                      <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>after</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </Section>
 
             {/* ── Decision 4 ───────────────────────────────────────────── */}
