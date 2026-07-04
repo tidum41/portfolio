@@ -117,7 +117,6 @@ export default function CaseStudyTOC({
           display: "flex", alignItems: "center",
           minHeight: 44,
           paddingRight: 16, /* extend hit area rightward toward nav labels */
-          marginLeft: -8,   /* let chevron visually align with labels */
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",

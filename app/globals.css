@@ -296,8 +296,6 @@ html[data-theme="dark"] .project-image {
   top: 60px;
   align-self: start;
   padding-right: 24px; /* breathing room between TOC and content */
-  display: flex;
-  justify-content: flex-end; /* TOC right-aligns in its column, next to content */
 }
 /* Tablet: right spacer col gone, TOC gets fixed 160px */
 @media (max-width: 1100px) {
@@ -317,7 +315,6 @@ html[data-theme="dark"] .project-image {
     position: static; /* not sticky on mobile — just sits above content */
     padding-right: 0;
     padding-bottom: 0;
-    justify-content: flex-start; /* back button left-aligns on mobile */
   }
 }
 
