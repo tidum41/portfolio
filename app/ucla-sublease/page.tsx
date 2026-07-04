@@ -275,8 +275,8 @@ const FB = {
   reflectionItems: [
     { _key: "r1", heading: "Verification works if scaled",                   body: "Verified badges are meaningful callouts, filtering legitimate UCLA students. But right now, our backend only accepts ucla.edu emails. Without opening it to all, the badge adds visual and cognitive noise." },
     { _key: "r2", heading: "Minimalist doesn't mean boring",                 body: "I prioritized information clarity. But the UI ended up flatter than I wanted, resulting in loose hierarchy. More visual texture would make the experience feel less like a prototype and more like a product." },
-    { _key: "r3", heading: "Prototyping real time closed the feedback loop", body: "Using Claude Code, I found interaction problems quickly that would have taken longer to workaround in Figma. I could refine micro-interactions and visual details through real time code manipulation." },
-    { _key: "r4", heading: "If I could do it differently",                   body: "With a bigger time window, I would have ran usability tests to measure how long it takes listers to match with leasers, how friction is reduced or added, and feedback from a large user audience to help push iteration." },
+    { _key: "r3", heading: "Prototyping real time closed the feedback loop", body: "Using Claude Code, I found interaction problems quickly that would have taken longer to work around in Figma. I could refine micro-interactions and visual details through real time code manipulation." },
+    { _key: "r4", heading: "If I could do it differently",                   body: "With a bigger time window, I would have run usability tests to measure how long it takes listers to match with leasers, how friction is reduced or added, and feedback from a large user audience to help push iteration." },
   ],
 };
 
