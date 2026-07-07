@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
@@ -11,6 +12,7 @@ const PS3Silk         = dynamic(() => import("@/components/PS3Silk"));
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
+const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
 // ─── Card label ────────────────────────────────────────────────────────
 function CardLabel({ title, sub }: { title: string; sub?: string }) {
@@ -95,24 +97,26 @@ export default async function Home() {
               .filter((_, i) => i % 2 === 0)
               .map((p) =>
                 p.mediaType === "video" && p.muxPlaybackId ? (
-                  <MuxAutoplayCard
-                    key={p._id}
-                    playbackId={p.muxPlaybackId}
-                    href={p.href}
-                    title={p.title}
-                    sub={p.subtitle}
-                    aspectRatio={p.aspectRatio}
-                  />
+                  <div key={p._id} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                    <MuxAutoplayCard
+                      playbackId={p.muxPlaybackId}
+                      href={p.href}
+                      title={p.title}
+                      sub={p.subtitle}
+                      aspectRatio={p.aspectRatio}
+                    />
+                  </div>
                 ) : p.image?.asset?.url ? (
-                  <div key={p._id} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div key={p._id} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                      <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                        <img
+                      <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                        <Image
                           src={p.image.asset.url}
                           alt={p.title}
-                          loading="lazy"
+                          fill
                           className="project-image"
-                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          style={{ objectFit: "cover" }}
+                          sizes="(max-width: 768px) 100vw, 50vw"
                         />
                       </div>
                     </Link>
@@ -122,8 +126,8 @@ export default async function Home() {
               )}
 
             {/* CDPlayer — always in left column after Sanity projects */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-placeholder)" }}>
+            <div data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3" }}>
                 <CDPlayer />
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
@@ -139,24 +143,26 @@ export default async function Home() {
               .filter((_, i) => i % 2 === 1)
               .map((p) =>
                 p.mediaType === "video" && p.muxPlaybackId ? (
-                  <MuxAutoplayCard
-                    key={p._id}
-                    playbackId={p.muxPlaybackId}
-                    href={p.href}
-                    title={p.title}
-                    sub={p.subtitle}
-                    aspectRatio={p.aspectRatio}
-                  />
+                  <div key={p._id} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                    <MuxAutoplayCard
+                      playbackId={p.muxPlaybackId}
+                      href={p.href}
+                      title={p.title}
+                      sub={p.subtitle}
+                      aspectRatio={p.aspectRatio}
+                    />
+                  </div>
                 ) : p.image?.asset?.url ? (
-                  <div key={p._id} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div key={p._id} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                      <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                        <img
+                      <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                        <Image
                           src={p.image.asset.url}
                           alt={p.title}
-                          loading="lazy"
+                          fill
                           className="project-image"
-                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          style={{ objectFit: "cover" }}
+                          sizes="(max-width: 768px) 100vw, 50vw"
                         />
                       </div>
                     </Link>
@@ -165,15 +171,17 @@ export default async function Home() {
                 ) : null
               )}
 
-            {/* Habit tracker placeholder — always in right column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-warm-bg)", position: "relative" }}>
-                <div style={{ display: "flex", justifyContent: "flex-end", padding: 5 }}>
+            {/* Habit tracker — phone embed */}
+            <div data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative" }}>
+                <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", paddingBottom: 10 }}>
-                  <div style={{ width: 200, height: 360, background: "var(--color-warm-inner)", borderRadius: 24 }} />
-                </div>
+                <PhoneEmbed
+                  url="https://sprightly-stroopwafel-8f1061.netlify.app/"
+                  frameSrcLight="/phonemockup-light.webp"
+                  frameSrcDark="/phonemockup-dark.webp"
+                />
               </div>
               <CardLabel title="dumb habit tracker" sub="product design + frontend" />
             </div>

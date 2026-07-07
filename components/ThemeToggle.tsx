@@ -39,8 +39,11 @@ export default function ThemeToggle() {
     const newDark = !isDark;
     setIsDark(newDark);
     const theme = newDark ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
+    const html = document.documentElement;
+    html.classList.add("theme-switching");
+    html.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
+    setTimeout(() => html.classList.remove("theme-switching"), 300);
   };
 
   return (

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useDialKit } from "dialkit";
-import type { ReactNode, CSSProperties, ElementType } from "react";
+import type { ReactNode, CSSProperties } from "react";
 
 const PS3_EASE: [number, number, number, number]    = [0.22, 1, 0.36, 1];
 const PS3_OPACITY: [number, number, number, number] = [0.16, 1, 0.3,  1];
