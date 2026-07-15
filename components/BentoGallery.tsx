@@ -314,7 +314,8 @@ export default function BentoGallery({
         const th = thumbRef.current;
         if (!th) return;
         const thumbX = scaleToThumbX(tx.current.s, zMinRef.current, zMaxRef.current);
-        th.style.left = TRACK_PADH + thumbX - 4 + "px";
+        th.style.left = TRACK_PADH + thumbX + "px";
+        th.style.transform = "translate(-50%, -50%)";
     }, []);
 
     // ── Grid geometry ─────────────────────────────────────────────────────────
@@ -481,7 +482,8 @@ export default function BentoGallery({
             const th = thumbRef.current;
             if (th) {
                 const thumbX = scaleToThumbX(s, zMinRef.current, zMaxRef.current);
-                th.style.left = TRACK_PADH + thumbX - 4 + "px";
+                th.style.left = TRACK_PADH + thumbX + "px";
+                th.style.transform = "translate(-50%, -50%)";
             }
         },
         [vw, vh]
@@ -678,6 +680,59 @@ export default function BentoGallery({
             setTimeout(() => snapToBounds("spring"), 500);
         },
         [zoomToCenter, snapToBounds]
+    );
+
+    const onTrackPointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            if ((e.target as HTMLElement) === thumbRef.current) return;
+            e.stopPropagation();
+            e.preventDefault();
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const px = clamp(e.clientX - rect.left - TRACK_PADH, 0, TRACK_W);
+            const zm = zMaxRef.current;
+            const ns = thumbXToScale(px, zMinRef.current, zm);
+            const { x, y, s } = tx.current;
+            const cx = vw / 2;
+            const cy = vh / 2;
+            const ratio = ns / Math.max(s, 0.001);
+            const nx = cx - (cx - x) * ratio;
+            const ny = cy - (cy - y) * ratio;
+            const b = getBounds(ns);
+            applyTransform(
+                clamp(nx, b.minX, b.maxX),
+                clamp(ny, b.minY, b.maxY),
+                ns,
+                "none"
+            );
+
+            const startX = e.clientX;
+            const startPx = px;
+
+            const onMove = (ev: PointerEvent) => {
+                const newPx = clamp(startPx + (ev.clientX - startX), 0, TRACK_W);
+                const nextScale = thumbXToScale(newPx, zMinRef.current, zm);
+                const { x: cx2, y: cy2, s: cs } = tx.current;
+                const ratio2 = nextScale / Math.max(cs, 0.001);
+                const nxx = cx - (cx - cx2) * ratio2;
+                const nyy = cy - (cy - cy2) * ratio2;
+                const bb = getBounds(nextScale);
+                applyTransform(
+                    clamp(nxx, bb.minX, bb.maxX),
+                    clamp(nyy, bb.minY, bb.maxY),
+                    nextScale,
+                    "none"
+                );
+            };
+            const onUp = () => {
+                window.removeEventListener("pointermove", onMove);
+                window.removeEventListener("pointerup", onUp);
+                snapToBounds("spring");
+            };
+            window.addEventListener("pointermove", onMove);
+            window.addEventListener("pointerup", onUp);
+        },
+        [vw, vh, getBounds, applyTransform, snapToBounds]
     );
 
     // ── Init / resize — always "none" to avoid jarring scale-in ──────────────
@@ -1212,11 +1267,11 @@ export default function BentoGallery({
 
             {/* ── Hint pill — top center ── */}
             <div
+                className="bento-hint-pill"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    top: 46,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
@@ -1257,18 +1312,17 @@ export default function BentoGallery({
 
             {/* ── Zoom slider — where hint pill used to be ── */}
             <div
+                className="bento-zoom-panel"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    bottom: 40,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "stretch",
-                    height: 36,
                     ...panelBase,
                 }}
             >
@@ -1290,14 +1344,16 @@ export default function BentoGallery({
                 <div style={{ width: 1, background: dividerColor, flexShrink: 0 }} />
 
                 <div
+                    className="bento-zoom-track"
                     onClick={onTrackClick}
+                    onPointerDown={onTrackPointerDown}
                     style={{
                         position: "relative",
                         width: TRACK_W + TRACK_PADH * 2,
                         height: "100%",
                         cursor: "ew-resize",
                         flexShrink: 0,
-                        overflow: "hidden",
+                        overflow: "visible",
                         outline: "none",
                         WebkitTapHighlightColor: "transparent",
                     } as CSSProperties}
@@ -1314,12 +1370,13 @@ export default function BentoGallery({
                     }} />
                     <div
                         ref={thumbRef}
+                        className="bento-zoom-thumb"
                         onPointerDown={onThumbDown}
                         style={{
                             position: "absolute",
                             top: "50%",
-                            transform: "translateY(-50%)",
-                            left: TRACK_PADH - 4,
+                            transform: "translate(-50%, -50%)",
+                            left: TRACK_PADH,
                             width: 8,
                             height: 20,
                             borderRadius: 4,
