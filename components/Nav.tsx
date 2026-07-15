@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
 const links = [
-  { href: "/",           label: "home" },
-  { href: "/playground", label: "playground" },
+  { href: "/",           label: "work" },
+  { href: "/playground", label: "play" },
   { href: "/about",      label: "about" },
 ];
 
@@ -14,7 +14,7 @@ export default function Nav() {
   const pathname = usePathname();
 
   return (
-    <header style={{ background: "transparent", position: "relative", zIndex: 40 }}>
+    <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>
       <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <nav
           className="flex items-center justify-end"

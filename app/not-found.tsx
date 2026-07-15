@@ -15,7 +15,7 @@ export default function NotFound() {
       <p style={{ fontSize: 14, color: "var(--color-text-muted)", margin: "0 0 12px", letterSpacing: "0.04em" }}>404</p>
       <p style={{ fontSize: 15, color: "var(--color-text-secondary)", margin: "0 0 32px" }}>this page doesn&rsquo;t exist.</p>
       <Link href="/" style={{ fontSize: 14, color: "var(--color-text-secondary)", textDecoration: "underline" }}>
-        back home
+        back to work
       </Link>
     </div>
   );
