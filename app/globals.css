@@ -67,6 +67,7 @@
   --color-badge-bg:       #FFFFFF;
   --color-warm-bg:        #EBE6DF;
   --color-warm-inner:     #D4CFC8;
+  --color-phone-bg:       #E4E4E4;
   --color-hero-tint:      #dde6ef;
 
   /* Typography scale */
@@ -101,10 +102,10 @@
 
   /* Grid system */
   --grid-max-w:      1440px;
-  --grid-gutter:     24px;
+  --grid-gutter:     var(--page-px);
 
   /* Spacing landmarks */
-  --page-px:         12px;
+  --page-px:         24px;
   --content-max-w:   750px;
   --section-gap:     80px;
   --section-pb:      64px;
@@ -134,6 +135,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "kern" 1, "liga" 1;
+  font-synthesis: none;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   scroll-behavior: smooth;
@@ -146,29 +148,61 @@ body {
   font-size: 15px;
   font-weight: 400;
   line-height: 1.72;
+  overflow-wrap: break-word;
 }
 
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
-a           { text-underline-offset: 3px; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
+a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
 ::selection {
   background-color: var(--color-text-primary);
   color: var(--color-bg);
 }
 
-/* ─── Theme transition — smooth 1s color shift on mode toggle ─────── */
-/* Applied to * so every element's color/bg transitions on theme change.
-   Does NOT include opacity/transform so scroll-reveal and framer-motion
-   animations are unaffected. Components with explicit transitions
-   re-declare bg/color alongside their own props below. */
-*, *::before, *::after {
+/* ─── First-load intro — hero-only moment before rest of UI appears ── */
+/* IntroOrchestrator sets data-intro="playing" before first paint,
+   swaps to "done" after 1.2s triggering the fade-in, then removes it. */
+html[data-intro="playing"] .intro-hide {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  /* Keep transition defined in both states so the browser can use it
+     when switching "playing" → "done". transition:none would cause a snap. */
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+html[data-intro="done"] .intro-hide {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ─── Theme transition — smooth color shift on mode toggle only ───── */
+/* Scoped to html.theme-switching so transitions only fire during an
+   actual theme toggle, not on every hover/animation/style change.
+   ThemeToggle adds the class, removes it after 300ms (> 200ms duration). */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease,
     fill 0.2s ease,
-    stroke 0.2s ease;
+    stroke 0.2s ease !important;
+}
+
+/* Hero heading + injected rabbit icon are excluded from the transition above
+   (higher specificity wins). At this size/prominence, a 200ms color morph
+   across a whole serif headline (plus the rabbit's fill trailing it on a
+   separate timer) reads as a flicker rather than a smooth shift — instant is
+   cleaner here, matching the instant CSS-variable flip everything else in
+   the tree is already doing under the hood. */
+html.theme-switching .hero-heading,
+html.theme-switching .hero-heading *,
+html.theme-switching #rh-trigger,
+html.theme-switching #rh-rabbit,
+html.theme-switching #rh-rabbit * {
+  transition: none !important;
 }
 
 /* ─── Reduced motion ──────────────────────────────────────────────── */
@@ -213,18 +247,41 @@ nav a {
   min-height: 44px;
 }
 
-/* ─── Project card hover — dim the hovered card only ────────────── */
-.project-card {
-  transition: opacity 180ms ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+/* ─── Project card hover ─────────────────────────────────────────── */
+/* Light mode: dim the whole card */
+html:not([data-theme="dark"]) .project-card {
+  transition: opacity 180ms ease;
 }
-.project-card:hover {
-  opacity: 0.70;
-  transition: opacity 80ms ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+@media (hover: hover) and (pointer: fine) {
+  html:not([data-theme="dark"]) .project-card:hover {
+    opacity: 0.70;
+    transition: opacity 80ms ease;
+  }
+}
+
+/* Dark mode: white overlay on image only, card label stays crisp */
+.project-img-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0);
+  transition: background 180ms ease;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="dark"] .project-card:hover .project-img-wrap::after {
+    background: rgba(255, 255, 255, 0.18);
+    transition: background 80ms ease;
+  }
 }
 
 /* ─── Nav link hover — smooth color fade, no underline ──────────── */
 .nav-link { transition: color 0.25s ease, background-color 1s ease, border-color 1s ease; }
-.nav-link:hover { color: var(--color-text-muted) !important; }
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover { color: var(--color-text-muted) !important; }
+}
 
 /* ─── Scroll-reveal — used by useScrollReveal hook ───────────────── */
 .reveal {
@@ -365,14 +422,34 @@ html[data-theme="dark"] .project-image {
   .reflection-grid { grid-template-columns: 1fr; gap: 40px; }
 }
 
-/* ─── Responsive page padding ────────────────────────────────────── */
-@media (max-width: 640px) {
-  :root { --page-px: 16px; }
+/* ─── Page padding is fixed at --page-px across all breakpoints ──── */
+/* (no responsive override — matches rachelchen.tech's approach of a
+   single constant padding value, so it never has to "catch up" with
+   the grid gutter at some in-between width) */
+
+/* ─── Portfolio grid — stays 2-col through tablet; only collapses to
+       1-col at the mobile breakpoint (matches the .cs-layout mobile
+       cutoff and CaseStudyTOC's isMobile check) ── */
+@media (max-width: 767px) {
+  .portfolio-grid { grid-template-columns: 1fr !important; }
 }
 
-/* ─── Portfolio grid — 1-col on mobile ───────────────────────────── */
-@media (max-width: 720px) {
-  .portfolio-grid { grid-template-columns: 1fr !important; }
+/* ─── About page hero — bio + bento side by side on desktop ─────────
+   Desktop : [bio] [bento column (bento hero + social links stacked)]
+   Mobile  : bento column first (bento hero, then links), bio after —
+   achieved via `order` on the same two DOM children, matching the
+   .cs-layout / .portfolio-grid mobile cutoff. ── */
+.about-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+.about-hero-bio { flex: 1 1 0; min-width: 0; order: 1; }
+.about-hero-bento-col { flex: 1 1 0; max-width: 320px; order: 2; }
+@media (max-width: 767px) {
+  .about-hero { flex-direction: column; gap: 0; }
+  .about-hero-bio { order: 2; }
+  .about-hero-bento-col { order: 1; max-width: none; width: 100%; }
 }
 
 /* ─── Mux player — fill + hide controls ─────────────────────────── */
@@ -387,8 +464,10 @@ html[data-theme="dark"] .project-image {
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
 html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.28) !important; }
-html[data-theme="dark"] .ps3cp-ibtn:hover { color: rgba(255,255,255,0.65) !important; }
-html[data-theme="dark"] .ps3cp-mode-btn:hover { background: rgba(255,255,255,0.07) !important; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="dark"] .ps3cp-ibtn:hover { color: rgba(255,255,255,0.65) !important; }
+  html[data-theme="dark"] .ps3cp-mode-btn:hover { background: rgba(255,255,255,0.07) !important; }
+}
 html[data-theme="dark"] .ps3cp input[type=range]::-webkit-slider-thumb { background: rgba(255,255,255,0.88) !important; }
 html[data-theme="dark"] .ps3cp input[type=range]::-moz-range-thumb { background: rgba(255,255,255,0.88) !important; }
 
@@ -414,6 +493,7 @@ html[data-theme="dark"] {
   --color-badge-bg:       #1E2226;
   --color-warm-bg:        #1E1C19;
   --color-warm-inner:     #252220;
+  --color-phone-bg:       #2A2A2A;
   --color-hero-tint:      #17202a;
 }
 

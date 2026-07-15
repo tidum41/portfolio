@@ -19,19 +19,17 @@ const PICKER_MAX_H = 180;
 const BODY_H = 620;
 
 const POS_KEY         = "ps3cp_pos";
-const CURSOR_COLOR_KEY = "ps3cp_cursor_color";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
 const DEFAULT_INTENSITY_HT = 0.14; // halftone mode default
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
-const DEFAULT_YOFFSET      = 15;
+const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
 const DEFAULT_SPEED        = 1.0;
-const DEFAULT_CURSOR_COLOR = "#999999";
 
 const PRESETS = [
   { swatch: "#CBCBCB", wave: [1.0, 1.0, 1.0] as [number,number,number] },
@@ -49,8 +47,6 @@ const PRESETS = [
 ];
 
 // ── Persistence ────────────────────────────────────────────────────────────
-function readCursorColor() { try { return sessionStorage.getItem(CURSOR_COLOR_KEY) || DEFAULT_CURSOR_COLOR; } catch { return DEFAULT_CURSOR_COLOR; } }
-function saveCursorColor(hex: string) { try { sessionStorage.setItem(CURSOR_COLOR_KEY, hex); } catch {} }
 function readWaveColor(): [number,number,number] { try { const r = sessionStorage.getItem(WAVE_COLOR_KEY); return r ? JSON.parse(r) : DEFAULT_WAVE_COLOR; } catch { return DEFAULT_WAVE_COLOR; } }
 function saveWaveColor(c: [number,number,number]) { try { sessionStorage.setItem(WAVE_COLOR_KEY, JSON.stringify(c)); } catch {} }
 function readMode() { try { const r = sessionStorage.getItem(MODE_KEY); return r !== null ? parseInt(r, 10) : DEFAULT_MODE; } catch { return DEFAULT_MODE; } }
@@ -86,7 +82,8 @@ function getGeometry(pillPos: {x:number;y:number}, isOpen: boolean, flipped: boo
   const clampedBodyH = Math.min(BODY_H, maxBodyH);
   const w = isOpen ? PANEL_W : PILL_W;
   const maxH = isOpen ? PILL_H + clampedBodyH : PILL_H;
-  const r = isOpen ? 12 : PILL_H / 2;
+  // PS3 XMB feel: rectangular button (not pill) when closed, gently rounded panel when open.
+  const r = isOpen ? 14 : 8;
   const rightEdge = pillPos.x + PILL_W;
   const left = Math.max(EDGE_PAD, Math.min(rightEdge - w, docW - w - EDGE_PAD));
   const top = flipped && isOpen
@@ -178,8 +175,8 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const isDragging = useRef(false);
 
-  const [hsl, setHsl]         = useState<[number,number,number]>(() => hexToHsl(value || DEFAULT_CURSOR_COLOR));
-  const [hexDraft, setHexDraft] = useState((value || DEFAULT_CURSOR_COLOR).toUpperCase());
+  const [hsl, setHsl]         = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
+  const [hexDraft, setHexDraft] = useState((value || "#999999").toUpperCase());
 
   useEffect(() => { if (value) { setHsl(hexToHsl(value)); setHexDraft(value.toUpperCase()); } }, [value]);
 
@@ -291,28 +288,31 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 const PANEL_CSS = `
 .ps3cp,.ps3cp * { cursor: none !important; }
 .ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent!important;outline:none;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
-.ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px; }
-.ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:4px;height:12px;border-radius:2px;background:rgba(0,0,0,0.88);margin-top:-5px; }
+.ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
+.ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
+html[data-theme=dark] .ps3cp input[type=range]::-webkit-slider-thumb { background:rgba(255,255,255,0.72); }
 .ps3cp input[type=range]::-moz-range-track { height:2px;border-radius:1px;background:transparent; }
-.ps3cp input[type=range]::-moz-range-thumb { width:4px;height:12px;border-radius:2px;background:rgba(0,0,0,0.88);border:none; }
+.ps3cp input[type=range]::-moz-range-thumb { width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);border:none;margin-top:-4px; }
+html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rgba(255,255,255,0.72); }
 .ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.28);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
 .ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
-.ps3cp-ibtn:active { transform:scale(0.88); }
+.ps3cp-ibtn:active { transform:scale(0.96); }
 .ps3cp-swatch-btn { position:relative;border:none;padding:0;outline:none;transition:transform 150ms ease,border-color 150ms ease; }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-6px; }
-.ps3cp-swatch-btn:active { transform:scale(0.85)!important; }
+.ps3cp-swatch-btn:active { transform:scale(0.96)!important; }
 .ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; }
 .ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
 .ps3cp-mode-btn:active { transform:scale(0.96); }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
-.ps3cp-color-swatch:active { transform:scale(0.88)!important; }
+.ps3cp-color-swatch:active { transform:scale(0.96)!important; }
 `;
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset: [0, -4, 4, 0.5],
-    pillGap:       [5, 2, 10, 0.5],
+    chevronOffset:  [-1,   -4, 4, 0.5],
+    pillGap:        [4,    2, 10, 0.5],
+    menuTextOffset: [-2.5, -4, 4, 0.5],
   });
 
   const panelRef       = useRef<HTMLDivElement>(null);
@@ -355,10 +355,7 @@ export default function PS3ControlPanel() {
   const [isDark, setIsDark] = useState(() =>
     typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") === "dark" : true
   );
-  const [cursorColor,  setCursorColor]  = useState(() =>
-    typeof window !== "undefined" ? readCursorColor() : DEFAULT_CURSOR_COLOR
-  );
-  const [openColorPicker, setOpenColorPicker] = useState<"pattern"|"cursor"|null>(null);
+  const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
 
   // Portal setup
   useEffect(() => {
@@ -494,16 +491,10 @@ export default function PS3ControlPanel() {
     dispatch(payload);
   }
 
-  function handleCursorColorChange(hex: string) {
-    startTransition(() => setCursorColor(hex)); saveCursorColor(hex);
-    window.dispatchEvent(new CustomEvent("ps3-cursor-update", { detail: { color: hex } }));
-  }
-
   function handleReset(e: React.MouseEvent) {
     e.stopPropagation();
     startTransition(() => { setIntensityHt(DEFAULT_INTENSITY_HT); setIntensityWv(DEFAULT_INTENSITY_WV); });
     setAndDispatch({ intensity: DEFAULT_MODE === 1 ? DEFAULT_INTENSITY_HT : DEFAULT_INTENSITY_WV, mouseStrength: DEFAULT_MOUSE_STR, yOffset: DEFAULT_YOFFSET, waveColor: DEFAULT_WAVE_COLOR, mode: DEFAULT_MODE, halftoneSize: DEFAULT_HALFTONE_SIZE, speed: DEFAULT_SPEED });
-    handleCursorColorChange(DEFAULT_CURSOR_COLOR);
     setOpenColorPicker(null);
   }
 
@@ -563,14 +554,20 @@ export default function PS3ControlPanel() {
   const isDefaultWave = waveColor[0] > 0.9 && waveColor[1] > 0.9 && waveColor[2] > 0.9;
   const wr = Math.round(waveColor[0] * 255), wg = Math.round(waveColor[1] * 255), wb = Math.round(waveColor[2] * 255);
   const tintAmt = isDefaultWave ? 0 : 0.06;
-  const baseBg = isDark ? 16 : 252;
-  const bgR = Math.round(baseBg * (1 - tintAmt) + wr * tintAmt);
-  const bgG = Math.round(baseBg * (1 - tintAmt) + wg * tintAmt);
-  const bgB = Math.round(baseBg * (1 - tintAmt) + wb * tintAmt);
-  const pillBg     = `rgba(${bgR},${bgG},${bgB},${isDark ? "0.90" : "0.82"})`;
+  // PS3 base: deep midnight blue-black (6,8,18) vs flat near-black (16,16,16).
+  // The subtle blue undertone is characteristic of PS3 XMB's dark void aesthetic.
+  const [baseBgR, baseBgG, baseBgB] = isDark ? [20, 20, 20] : [252, 252, 252];
+  const bgR = Math.round(baseBgR * (1 - tintAmt) + wr * tintAmt);
+  const bgG = Math.round(baseBgG * (1 - tintAmt) + wg * tintAmt);
+  const bgB = Math.round(baseBgB * (1 - tintAmt) + wb * tintAmt);
+  const pillBg     = `rgba(${bgR},${bgG},${bgB},${isDark ? "0.93" : "0.82"})`;
   const pillBorder = isDark
-    ? "rgba(255,255,255,0.12)"
-    : (isDefaultWave ? "rgba(0,0,0,0.30)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
+    ? "rgba(255,255,255,0.14)"
+    : (isDefaultWave ? "rgba(0,0,0,0.28)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
+  // PS3 glass sheen: thin inset highlight on the top edge only — flat, no drop shadow.
+  const pillShadow = isDark
+    ? "inset 0 1px 0 rgba(255,255,255,0.10)"
+    : "inset 0 1px 0 rgba(255,255,255,0.60)";
   const accentCol  = isDark ? "rgba(255,255,255,0.62)" : "rgba(0,0,0,0.62)";
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
@@ -588,18 +585,19 @@ export default function PS3ControlPanel() {
     transition: "border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
   });
 
-  const sliderWrap: React.CSSProperties = { position: "relative" };
+  const sliderWrap: React.CSSProperties = { position: "relative", overflow: "visible" };
 
   const panelMarkup = (
-    <div ref={panelRef} className="ps3cp" style={{
+    <div ref={panelRef} className="ps3cp intro-hide" style={{
       position: "absolute", left: geo.left, top: geo.top,
       width: geo.w, height: "auto", maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
       transition: morphT,
       backgroundColor: pillBg,
-      backdropFilter: "blur(18px) saturate(130%)",
-      WebkitBackdropFilter: "blur(18px) saturate(130%)",
-      border: `1.4px solid ${pillBorder}`,
+      backdropFilter: "blur(28px) saturate(180%)",
+      WebkitBackdropFilter: "blur(28px) saturate(180%)",
+      border: `1px solid ${pillBorder}`,
+      boxShadow: pillShadow,
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
@@ -613,7 +611,7 @@ export default function PS3ControlPanel() {
             <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
               <ChevronDown color={accentCol} size={10} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1 }}>menu</span>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
           </div>
         </div>
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: "opacity 150ms" }}>
@@ -712,19 +710,6 @@ export default function PS3ControlPanel() {
               onChange={e => setAndDispatch({ mouseStrength: parseFloat(e.target.value) })}
               style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
           </div>
-        </div>
-
-        {/* Pointer color */}
-        <div style={{ padding: "6px 16px 14px" }}>
-          <div style={rowH}>
-            <span style={labelSt}>pointer color</span>
-            <div className="ps3cp-color-swatch" onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "cursor" ? null : "cursor"); }} style={swatchSt(openColorPicker === "cursor", cursorColor)} />
-          </div>
-          <ExpandSection open={openColorPicker === "cursor"} maxH={PICKER_MAX_H}>
-            <div style={{ paddingTop: 10 }}>
-              <PS3ColorPicker value={cursorColor} onChange={handleCursorColorChange} />
-            </div>
-          </ExpandSection>
         </div>
 
       </div>

@@ -17,14 +17,6 @@ export default function Footer() {
           justify-content: space-between;
           padding: 24px var(--page-px);
         }
-        @media (max-width: 640px) {
-          .footer-inner {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            padding: 24px var(--page-px);
-          }
-        }
       `}</style>
       <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto" }}>
         <div className="footer-inner">

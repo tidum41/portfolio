@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 function SunIcon() {
   return (
@@ -28,6 +29,7 @@ function MoonIcon() {
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(true);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -39,9 +41,21 @@ export default function ThemeToggle() {
     const newDark = !isDark;
     setIsDark(newDark);
     const theme = newDark ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", theme);
+    const html = document.documentElement;
+    html.classList.add("theme-switching");
+    html.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
+    setTimeout(() => html.classList.remove("theme-switching"), 300);
   };
+
+  // Reduced-motion: keep the opacity crossfade (aids comprehension), drop
+  // scale and blur (position/filter changes removed per prefers-reduced-motion).
+  const spring = reduced
+    ? { duration: 0.15 }
+    : { type: "spring" as const, duration: 0.3, bounce: 0 };
+
+  const visibleAnim   = { opacity: 1, scale: 1,                       filter: "blur(0px)" };
+  const hiddenAnim    = { opacity: 0, scale: reduced ? 1 : 0.25,      filter: reduced ? "blur(0px)" : "blur(4px)" };
 
   return (
     <button
@@ -59,9 +73,30 @@ export default function ThemeToggle() {
         lineHeight: 0,
         transition: "color 0.25s ease",
         WebkitTapHighlightColor: "transparent",
+        // Fixed size so stacked absolute icons don't shift layout
+        position: "relative",
+        width: 15,
+        height: 15,
       }}
     >
-      {isDark ? <SunIcon /> : <MoonIcon />}
+      <motion.span
+        aria-hidden
+        style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+        initial={false}
+        animate={isDark ? visibleAnim : hiddenAnim}
+        transition={spring}
+      >
+        <SunIcon />
+      </motion.span>
+      <motion.span
+        aria-hidden
+        style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+        initial={false}
+        animate={isDark ? hiddenAnim : visibleAnim}
+        transition={spring}
+      >
+        <MoonIcon />
+      </motion.span>
     </button>
   );
 }

@@ -21,7 +21,7 @@ export const DS_DEFAULTS: Required<DesignSystemData> = {
   fsDisplay: 56, fsHero: 48, fsH2: 30, fwHero: 50, fwH2: 50, fwCardTitle: 50, fsSectionLabel: 15,
   fsH3: 20, fsBody: 15, fsLabel: 16, fsMeta: 14, fsCaption: 12, fsStat: 44, fsCardTitle: 18,
   lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
-  sectionGap: 80, sectionPb: 64, pagePx: 12, contentMaxW: 750, cardRadius: 4,
+  sectionGap: 80, sectionPb: 64, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
   colorTextTertiary: "#767676", colorTextMuted: "#ADADAD", colorPlaceholder: "#EBEBEB",
   colorBorderSubtle: "#E8E4F0", colorAccent: "#9590C2",
@@ -75,12 +75,13 @@ export interface SanityProject {
   aspectRatio: string;
   order?: number;
   featured: boolean;
+  caseStudy?: boolean;
 }
 
 const PROJECTS_QUERY = `*[_type == "project" && featured == true] | order(order asc) {
   _id, title, subtitle, href, mediaType, muxPlaybackId,
   image { asset->{ url }, hotspot },
-  aspectRatio, order, featured
+  aspectRatio, order, featured, caseStudy
 }`;
 
 export async function getProjects(): Promise<SanityProject[]> {
@@ -116,6 +117,7 @@ export interface CaseStudyData {
   heroTitle?: string;
   heroBg?: string;
   heroMuxId?: string;
+  heroImage?: string;
   heroPhonePos?: PhonePos;
   metadata?: MetaItem[];
 
@@ -138,6 +140,7 @@ export interface CaseStudyData {
   processHeading?: string;
   processBody?: string;
   processTools?: ToolItem[];
+  processImage?: string;
 
   // decision 1
   d1Label?: string;
@@ -173,6 +176,7 @@ export interface CaseStudyData {
   d4Heading?: string;
   d4Body?: string;
   homepageComparison?: string;
+  figmaComparison?: string;
 
   // solution
   solutionLabel?: string;
@@ -180,7 +184,13 @@ export interface CaseStudyData {
   solutionBody?: string;
   solutionBg?: string;
   solutionMuxId?: string;
+  solutionVideo?: string;
   solutionPhonePos?: PhonePos;
+
+  // impact
+  impactLabel?: string;
+  impactHeading?: string;
+  impactBody?: string;
 
   // reflection
   reflectionLabel?: string;
@@ -194,6 +204,7 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
   tocItems[]{ _key, id, label },
 
   heroTagline, heroTitle, heroBg, heroMuxId,
+  heroImage { asset->{ url } },
   heroPhonePos ${PHONE_POS_FRAGMENT},
   metadata[]{ _key, label, values },
 
@@ -206,6 +217,8 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 
   processLabel, processHeading, processBody,
   processTools[]{ _key, tool, desc },
+  figmaComparison { asset->{ url } },
+  processImage { asset->{ url } },
 
   d1Label, d1Heading, d1Body,
   d1CardLabels,
@@ -231,7 +244,10 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
   homepageComparison { asset->{ url } },
 
   solutionLabel, solutionHeading, solutionBody, solutionBg, solutionMuxId,
+  solutionVideo { asset->{ url } },
   solutionPhonePos ${PHONE_POS_FRAGMENT},
+
+  impactLabel, impactHeading, impactBody,
 
   reflectionLabel,
   reflectionItems[]{ _key, heading, body }
@@ -258,13 +274,69 @@ export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
     decision1CardCondensed:img("decision1CardCondensed"),
     decision1CardFinal:    img("decision1CardFinal"),
     homepageComparison:    img("homepageComparison"),
+    figmaComparison:       img("figmaComparison"),
+    heroImage:             img("heroImage"),
+    processImage:          img("processImage"),
     ueTestingVideo:        file("ueTestingVideo"),
     oldFlowVideo:          file("oldFlowVideo"),
     decision1Video:        file("decision1Video"),
+    solutionVideo:         file("solutionVideo"),
   } as CaseStudyData;
 }
 
 // Legacy shim — keeps old imports working
 export async function getCaseStudyAssets(slug: string) {
   return getCaseStudy(slug);
+}
+
+// ── Playground Gallery (BentoGallery on /playground) ───────────────────────────
+
+export interface PlaygroundGalleryItem {
+  key: string;
+  src: string;
+  alt?: string;
+  caption?: string;
+  link?: string;
+  colSpan: 1 | 2;
+  rowSpan: 1 | 2;
+}
+
+// Maps the Studio-friendly "shape" field to BentoGallery's grid units.
+const SHAPE_TO_SPAN: Record<string, { colSpan: 1 | 2; rowSpan: 1 | 2 }> = {
+  square: { colSpan: 1, rowSpan: 1 },
+  tall:   { colSpan: 1, rowSpan: 2 },
+  wide:   { colSpan: 2, rowSpan: 1 },
+  large:  { colSpan: 2, rowSpan: 2 },
+};
+
+const PLAYGROUND_GALLERY_QUERY = `*[_type == "playgroundGallery"][0]{
+  items[]{ _key, caption, alt, link, shape, image{ asset->{ url } } }
+}`;
+
+interface RawPlaygroundItem {
+  _key: string;
+  caption?: string;
+  alt?: string;
+  link?: string;
+  shape?: string;
+  image?: { asset?: { url?: string } };
+}
+
+export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
+  const raw = await sanityClient.fetch<{ items?: RawPlaygroundItem[] } | null>(
+    PLAYGROUND_GALLERY_QUERY,
+    {},
+    { next: { revalidate: 60 } }
+  );
+  const items = raw?.items ?? [];
+  return items
+    .filter((it) => it.image?.asset?.url)
+    .map((it) => ({
+      key: it._key,
+      src: it.image!.asset!.url!,
+      alt: it.alt || it.caption,
+      caption: it.caption,
+      link: it.link,
+      ...(SHAPE_TO_SPAN[it.shape ?? "square"] ?? SHAPE_TO_SPAN.square),
+    }));
 }
