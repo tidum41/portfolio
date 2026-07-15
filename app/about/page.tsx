@@ -5,12 +5,13 @@ import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 
+const LOGO_SCALE = 1.375;
 const EXPERIENCE = [
   { company: "JOOLA",               role: "Product Design Intern",       dates: "Summer 2026", description: "pioneers in pickleball & table tennis equipment", logo: "/images/about/logos/joola.avif" },
   { company: "Beacons AI",          role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/beacons-ai.avif" },
   { company: "Dialogue AI",         role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/dialogue-ai.avif" },
   { company: "Soka Records",        role: "Creative Intern",             dates: "2025",         description: "keshi, boywithuke, starfall, yel",                  logo: "/images/about/logos/soka-records.avif" },
-  { company: "The Mousepad Company", role: "Visual Designer",            dates: "2020 – 2022",  description: "mousepads and social media",                        logo: "/images/about/logos/mousepad-company.avif" },
+  { company: "The Mousepad Company", role: "Visual Designer",            dates: "2020 – 2022",  description: "mousepads and social media",                        logo: "/images/about/logos/mousepad-company.avif", logoScale: LOGO_SCALE * 1.15 },
 ];
 
 const ORGS = [
@@ -174,7 +175,7 @@ export default function AboutPage() {
       }}>
         <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-          {EXPERIENCE.map(({ company, role, dates, description, logo }) => (
+          {EXPERIENCE.map(({ company, role, dates, description, logo, logoScale }) => (
             <StaggerItem key={company} style={{
               display: "flex",
               alignItems: "flex-start",
@@ -196,7 +197,7 @@ export default function AboutPage() {
                     alt={`${company} logo`}
                     fill
                     sizes="40px"
-                    style={{ objectFit: "contain", padding: 5, transform: "scale(1.375)" }}
+                    style={{ objectFit: "contain", padding: 5, transform: `scale(${logoScale ?? LOGO_SCALE})` }}
                   />
                 </div>
                 <div>
