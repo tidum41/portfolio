@@ -245,7 +245,11 @@ export default async function SvizPage() {
           />
         </aside>
 
-        <div style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
 
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           {/* Staggers in top-to-bottom on route arrival, own "Case Study
@@ -266,8 +270,8 @@ export default async function SvizPage() {
                 </p>
               </EntranceItem>
 
-              <EntranceItem>
-                <h1 style={{
+              <EntranceItem className="cs-hero-title-wrap">
+                <h1 className="cs-hero-title" style={{
                   fontFamily: "var(--font-sans-medium)",
                   fontSize: "var(--fs-hero)",
                   fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
@@ -280,7 +284,7 @@ export default async function SvizPage() {
                 </h1>
               </EntranceItem>
 
-              <EntranceItem>
+              <EntranceItem className="cs-hero-media-wrap">
                 <MediaCard>
                   <Image
                     src={heroImageSrc}

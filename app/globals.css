@@ -363,7 +363,8 @@ html[data-theme="dark"] .project-image {
   }
   .cs-aside { padding-right: 16px; }
 }
-/* Mobile: single column, back button only (no nav labels) */
+/* Mobile: single column. Aside (desktop TOC) is hidden; the back control
+   lives inside .cs-content so it shares the hero media's left edge. */
 @media (max-width: 767px) {
   .cs-layout {
     grid-template-columns: 1fr;
@@ -372,46 +373,60 @@ html[data-theme="dark"] .project-image {
   .cs-layout > * {
     min-width: 0;
   }
-  /* Show aside so back button is visible — TOC component hides labels on mobile */
   .cs-aside {
-    position: static; /* not sticky on mobile — just sits above content */
-    padding-right: 0;
-    padding-bottom: 0;
+    display: none !important;
   }
 }
 
-/* ─── Case study hero header ─────────────────────────────────────── */
+/* ─── Case study hero header / shared left lane ──────────────────── */
+.cs-content {
+  min-width: 0;
+}
+.cs-mobile-back {
+  display: none;
+}
 .cs-hero-header {
   text-align: left;
 }
-.cs-hero-tagline {
+.cs-hero-tagline,
+.cs-hero-title {
   text-align: left;
   width: 100%;
   margin-left: 0;
   padding-left: 0;
 }
-.cs-hero-tagline-wrap {
+.cs-hero-tagline-wrap,
+.cs-hero-title-wrap,
+.cs-hero-media-wrap {
   display: block;
   width: 100%;
-  margin-left: 0;
-  padding-left: 0;
+  margin: 0;
+  padding: 0;
   text-align: left;
 }
 @media (max-width: 767px) {
-  .cs-hero-header { margin-bottom: 32px !important; }
-  /* Keep tagline flush with the rest of the case-study content column —
-     EntranceItem/motion wrappers can otherwise read slightly inset next to
-     the optically-aligned mobile back chevron. */
-  .cs-hero-header,
-  .cs-hero-tagline-wrap,
-  .cs-hero-tagline {
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    text-align: left !important;
+  .cs-mobile-back {
+    display: block;
+    margin: 0 0 4px;
+    padding: 0;
   }
   .cs-back-mobile {
-    /* Hit area stays 44px; glyph optically shares the content left edge. */
-    margin-left: -6px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .cs-hero-header { margin-bottom: 32px !important; }
+  /* One lane with the hero media: no horizontal inset on back, copy, or wraps. */
+  .cs-hero-header,
+  .cs-hero-tagline-wrap,
+  .cs-hero-title-wrap,
+  .cs-hero-media-wrap,
+  .cs-hero-tagline,
+  .cs-hero-title {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: left !important;
   }
 }
 
