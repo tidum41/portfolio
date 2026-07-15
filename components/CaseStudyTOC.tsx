@@ -127,11 +127,15 @@ export default function CaseStudyTOC({
         onClick={handleBack}
         onMouseEnter={() => setBackHovered(true)}
         onMouseLeave={() => setBackHovered(false)}
+        className="cs-back-mobile"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          // flex-start (not center): the chevron glyph sits mid-SVG (~7.5px
+          // inset in a 20px icon), so starting the icon at the content edge
+          // and nudging left by that inset lines the stroke up with body copy.
+          display: "inline-flex", alignItems: "center", justifyContent: "flex-start",
           minWidth: 44, minHeight: 44,
-          marginLeft: -12, /* compensate so chevron visually aligns with content edge */
+          marginLeft: -8,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
