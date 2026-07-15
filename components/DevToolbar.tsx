@@ -5,6 +5,7 @@ import { Agentation } from "agentation";
 import { DialRoot } from "dialkit";
 import LayoutDials from "./LayoutDials";
 import IntroDials from "./IntroDials";
+import CaseStudyAlignDials from "./CaseStudyAlignDials";
 
 export default function DevToolbar() {
   const [show, setShow] = useState(false);
@@ -23,6 +24,7 @@ export default function DevToolbar() {
       <Agentation />
       <LayoutDials />
       <IntroDials />
+      <CaseStudyAlignDials />
       <DialRoot defaultOpen={false} />
     </>
   );

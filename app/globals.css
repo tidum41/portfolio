@@ -378,7 +378,18 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study hero header / shared left lane ──────────────────── */
+/* ─── Case study hero header / shared left lane ────────────────────
+   Horizontal offsets are driven by --cs-align-* CSS vars from
+   CaseStudyAlignDials (DialKit panel "CS Align"). Defaults below match
+   the last hard-coded optical nudges; tweak live, then lock in code. */
+:root {
+  --cs-align-m-back:    0px;
+  --cs-align-m-tagline: -1px;
+  --cs-align-m-title:   -2px;
+  --cs-align-d-back:    0px;
+  --cs-align-d-tagline: 0px;
+  --cs-align-d-title:   0px;
+}
 .cs-content {
   min-width: 0;
 }
@@ -404,6 +415,18 @@ html[data-theme="dark"] .project-image {
   padding: 0;
   text-align: left;
 }
+
+/* Desktop nudges (≥768) */
+.cs-back-desktop {
+  transform: translateX(var(--cs-align-d-back));
+}
+.cs-hero-tagline {
+  transform: translateX(var(--cs-align-d-tagline));
+}
+.cs-hero-title {
+  transform: translateX(var(--cs-align-d-title));
+}
+
 @media (max-width: 767px) {
   .cs-mobile-back {
     display: block;
@@ -413,9 +436,10 @@ html[data-theme="dark"] .project-image {
   .cs-back-mobile {
     margin: 0 !important;
     padding: 0 !important;
+    transform: translateX(var(--cs-align-m-back));
   }
   .cs-hero-header { margin-bottom: 32px !important; }
-  /* One lane with the hero media: no horizontal inset on back, copy, or wraps. */
+  /* One lane with the hero media: no horizontal inset on wraps. */
   .cs-hero-header,
   .cs-hero-tagline-wrap,
   .cs-hero-title-wrap,
@@ -428,9 +452,8 @@ html[data-theme="dark"] .project-image {
     padding-right: 0 !important;
     text-align: left !important;
   }
-  /* Optical nudge so Helvetica glyphs sit on the hero media edge. */
-  .cs-hero-tagline { margin-left: -1px !important; }
-  .cs-hero-title   { margin-left: -2px !important; }
+  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline)); }
+  .cs-hero-title   { transform: translateX(var(--cs-align-m-title)); }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
