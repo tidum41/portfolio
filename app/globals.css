@@ -428,6 +428,9 @@ html[data-theme="dark"] .project-image {
     padding-right: 0 !important;
     text-align: left !important;
   }
+  /* Optical nudge so Helvetica glyphs sit on the hero media edge. */
+  .cs-hero-tagline { margin-left: -1px !important; }
+  .cs-hero-title   { margin-left: -2px !important; }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
