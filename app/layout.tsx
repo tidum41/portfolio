@@ -30,8 +30,19 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
-        {/* Flash prevention: apply saved theme before first paint */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light")})()` }} />
+        {/* Runs synchronously before first paint:
+            1. Applies saved light/dark theme from localStorage.
+            2. Clears sessionStorage so cursor-color, wave-color, PS3 mode, etc.
+               reset on every hard load (they persist only across client-side navigations).
+            3. On the homepage, sets data-intro-pending so the inline <style> below
+               hides nav/footer/below-hero until HomeIntroGate lifts the gate. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname==="/")document.documentElement.setAttribute("data-intro-pending","");})()` }} />
+        {/* Intro gate — inline so it is guaranteed to apply in the same paint as the
+            script above, with no stylesheet-load race. Hides the nav, footer, and the
+            below-hero wrapper (project grid + PS3 pill) until data-intro-pending is
+            removed. The transition rule must sit on the element itself so it fires the
+            instant the attribute disappears. */}
+        <style dangerouslySetInnerHTML={{ __html: `html[data-intro-pending]>body>header,html[data-intro-pending]>body>footer,html[data-intro-pending] .below-hero{opacity:0!important;pointer-events:none!important}body>header,body>footer,.below-hero{transition-property:opacity;transition-duration:500ms;transition-timing-function:cubic-bezier(.16,1,.3,1)}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />

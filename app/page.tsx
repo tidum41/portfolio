@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
 import InteractiveBadge from "@/components/InteractiveBadge";
+import HomeIntroGate from "@/components/HomeIntroGate";
 import { getProjects } from "@/lib/sanity/queries";
 
 export const revalidate = 60;
@@ -47,6 +48,7 @@ export default async function Home() {
 
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
+      <HomeIntroGate />
 
       {/* ── Hero — full-viewport width, no max-width constraint ── */}
       <section
@@ -77,7 +79,7 @@ export default async function Home() {
       </section>
 
       {/* ── Project grid ── */}
-      <div style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      <div className="below-hero" style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
       <ScrollReveal>
         <section
           aria-label="Portfolio"

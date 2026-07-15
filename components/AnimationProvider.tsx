@@ -2,17 +2,30 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
-// Provides page enter/exit animations keyed by route.
-// Lives in layout.tsx (persistent) so AnimatePresence survives navigations.
-// template.tsx is kept as a passthrough for Next.js scroll-reset behaviour.
+// Module-level flag: true on the very first hard load, flipped to false after
+// the component mounts. Resets to true on browser reload (JS module re-evaluates).
+//
+// On hard load: initial={false} → page content is visible immediately (no fade-in),
+// so the hero text and PS3 pattern have their own moment before the gate lifts.
+//
+// On client-side navigation: _firstRender is already false → the motion.div's
+// initial={{ opacity: 0, y: 8 }} fires normally for the enter/exit transition.
+let _firstRender = true;
+
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    _firstRender = false;
+  }, []);
+
   return (
-    <AnimatePresence mode="sync" initial={false}>
+    <AnimatePresence mode="sync">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 8 }}
+        initial={_firstRender ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, transition: { duration: 0.12, ease: [0.4, 0, 1, 1] } }}
         transition={{
