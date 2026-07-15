@@ -1,10 +1,25 @@
 import React from "react";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
+import { SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "BruinLease",
+  description:
+    "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
+  alternates: { canonical: `${SITE_URL}/ucla-sublease` },
+  openGraph: {
+    title: "BruinLease — mudit mahajan",
+    description:
+      "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
+    url: `${SITE_URL}/ucla-sublease`,
+  },
+};
 
 function pp(pos: PhonePos | undefined) {
   if (!pos) return {};
