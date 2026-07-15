@@ -4,15 +4,15 @@ import Image from "next/image";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
-import type { Stat as StatData } from "@/lib/sanity/queries";
+import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
-const TOC_ITEMS = [
-  { id: "problem",  label: "Problem"  },
-  { id: "solution", label: "Solution" },
-  { id: "process",  label: "Process"  },
-  { id: "impact",   label: "Impact"   },
+const TOC_ITEMS: TocItem[] = [
+  { _key: "t1", id: "problem",  label: "Problem"  },
+  { _key: "t2", id: "solution", label: "Solution" },
+  { _key: "t3", id: "process",  label: "Process"  },
+  { _key: "t4", id: "impact",   label: "Impact"   },
 ];
 
 // ── Layout primitives — match ucla-sublease exactly ───────────────────────────
@@ -175,6 +175,9 @@ const METADATA = [
 // ── Fallback content — real copy, source of truth until authored in Sanity Studio ──
 
 const FB = {
+  tocItems: TOC_ITEMS,
+  heroTagline: "YouTube · Personal · 2021",
+  heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",
   problemBody:
@@ -237,7 +240,7 @@ export default async function SvizPage() {
 
         <aside className="cs-aside">
           <CaseStudyTOC
-            items={cs.tocItems?.length ? cs.tocItems.map((t: { id: string; label: string }) => ({ id: t.id, label: t.label })) : TOC_ITEMS}
+            items={(cs.tocItems?.length ? cs.tocItems : TOC_ITEMS).map((t) => ({ id: t.id, label: t.label }))}
             backHref="/"
           />
         </aside>
@@ -259,7 +262,7 @@ export default async function SvizPage() {
                   color: "var(--color-text-muted)",
                   margin: "0 0 16px",
                 }}>
-                  {cs.heroTagline ?? "YouTube · Personal · 2021"}
+                  {cs.heroTagline}
                 </p>
               </EntranceItem>
 
@@ -273,7 +276,7 @@ export default async function SvizPage() {
                   color: "var(--color-text-primary)",
                   margin: "0 0 20px",
                 }}>
-                  {cs.heroTitle ?? "Personal YouTube, 1M+ views"}
+                  {cs.heroTitle}
                 </h1>
               </EntranceItem>
 
