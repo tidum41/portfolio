@@ -3,8 +3,8 @@ import Link from "next/link";
 const links = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
   { label: "x",        href: "https://x.com/muditm14" },
-  { label: "email",    href: "mailto:mudit14.mahajan@gmail.com" },
-  { label: "resume",   href: "https://drive.google.com/file/d/1i4Phseyq472yu9PTt1V5-Q0-mV6HCl9y/view?usp=sharing" },
+  { label: "email",    href: "mailto:muditmahajan@g.ucla.edu" },
+  { label: "resume",   href: "https://drive.google.com/file/d/1SFiqIjwtzkeJ4TEHE7z9_UNWtkyb1ixm/view?usp=sharing" },
 ];
 
 export default function Footer() {

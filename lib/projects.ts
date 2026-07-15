@@ -53,7 +53,7 @@ export const projects: ProjectData[] = [
   },
   {
     slug: "habit-tracker",
-    title: "interactive | dumb habit tracker",
+    title: "Dumb Habit Tracker",
     category: "product design + frontend",
     aspectRatio: "4/5",
     imageBg: "#f0f0f0",

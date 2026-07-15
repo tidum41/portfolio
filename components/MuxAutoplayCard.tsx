@@ -60,32 +60,41 @@ export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRa
     else player.pause?.();
   }, [active]);
 
+  const video = (
+    <div className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+      <MuxPlayer
+        ref={playerRef}
+        playbackId={playbackId}
+        autoPlay="muted"
+        loop
+        muted
+        playsInline
+        nohotkeys
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          // @ts-ignore CSS custom properties
+          "--controls": "none",
+          "--media-background-color": "transparent",
+        }}
+      />
+    </div>
+  );
+
+  const linkStyle = { textDecoration: "none", display: "block" } as const;
+  const external = href.startsWith("http");
+
   return (
     <div className="project-card" style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}>
-      <Link href={href} prefetch style={{ textDecoration: "none", display: "block" }}>
-        <div className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-          <MuxPlayer
-            ref={playerRef}
-            playbackId={playbackId}
-            autoPlay="muted"
-            loop
-            muted
-            playsInline
-            nohotkeys
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              // @ts-ignore CSS custom properties
-              "--controls": "none",
-              "--media-background-color": "transparent",
-            }}
-          />
-        </div>
-      </Link>
+      {external ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
+      ) : (
+        <Link href={href} prefetch style={linkStyle}>{video}</Link>
+      )}
       <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} />
     </div>
   );
