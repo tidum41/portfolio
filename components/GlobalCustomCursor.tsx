@@ -532,19 +532,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     if (style !== lastTrailStyle) paintEchoAppearance(style);
 
     const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 5 : 6))));
-    const opacityBase = tc.opacity ?? (style === "xmb" ? 0.3 : 0.55);
-    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.4 : 0.78);
+    const opacityBase = tc.opacity ?? (style === "xmb" ? 0.18 : 0.55);
+    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.5  : 0.78);
 
     let allSettled = true;
 
     if (style === "xmb") {
       // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
       const lifetime = tc.lifetime ?? 360;
-      const driftMs  = Math.max(1, tc.driftMs ?? 95);
-      const spawnGap = tc.spawnGap ?? 26;
-      const scatter  = tc.scatter  ?? 0;
-      const popAmt   = tc.pop      ?? 0;
-      const varAmt   = tc.variance ?? 0;
+      const driftMs  = Math.max(1, tc.driftMs ?? 40);
+      const spawnGap = tc.spawnGap ?? 48;
+      const scatter  = tc.scatter  ?? 0.95;
+      const popAmt   = tc.pop      ?? 0.5;
+      const varAmt   = tc.variance ?? 0.9;
 
       // Spawn stamps along travel — left behind at gaps, never chasing the tip.
       if (mouse.inside && count > 0 && vel > 0.4) {
@@ -840,21 +840,18 @@ export default function GlobalCustomCursor({
   // the new XMB trail.
   const dk = useDialKit("Cursor", {
     size: [20, 8, 48],
-    // Toggle the PS3/XMB trail language vs the classic solid echo trail.
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
-    // Base trail = your tuned JSON. Interest knobs default to 0 so this is
-    // the clean starting feel — nudge scatter/pop/variance only after.
     Trail: {
-      echoCount: [5,   1,   8,   1],
-      lifetime:  [360, 80,  500, 10],
-      driftMs:   [95,  0,   160, 5],
-      spawnGap:  [26,  6,   48,  1],
-      opacity:   [0.3, 0.1, 1,   0.01],
-      scale:     [0.4, 0.2, 1.1, 0.01],
-      scatter:   [0,   0,   1.5, 0.05], // freeze nudge off by default
-      pop:       [0,   0,   1,   0.05], // spawn scale pop off by default
-      variance:  [0,   0,   1,   0.05], // stamp rhythm off by default
+      echoCount: [5,    1,   8,   1],
+      lifetime:  [360,  80,  500, 10],
+      driftMs:   [40,   0,   160, 5],
+      spawnGap:  [48,   6,   64,  1],
+      opacity:   [0.18, 0.05, 1,  0.01],
+      scale:     [0.5,  0.2, 1.1, 0.01],
+      scatter:   [0.95, 0,   1.5, 0.05],
+      pop:       [0.5,  0,   1,   0.05],
+      variance:  [0.9,  0,   1,   0.05],
     },
 
     Dot: {
@@ -866,6 +863,16 @@ export default function GlobalCustomCursor({
       morphDuration: [260, 60, 900, 10],
       fillEffect: { type: "select", options: ["solid", "frosted", "ringFlash"], default: "solid" },
     },
+  });
+
+  // Single serialized snapshot keeps the useEffect dep array length stable
+  // across HMR when DialKit knobs are added/removed (avoids React's
+  // "final argument [deps] changed size" console error).
+  const dialSnapshot = JSON.stringify({
+    trailStyle: dk.trailStyle,
+    Trail: dk.Trail,
+    Dot: dk.Dot,
+    Pill: dk.Pill,
   });
 
   useEffect(() => {
@@ -899,9 +906,7 @@ export default function GlobalCustomCursor({
       frostedSaturate:  180,
       frostedAlpha:     0.55,
     };
-  }, [dk.Pill.morphDuration, dk.Pill.fillEffect]);
 
-  useEffect(() => {
     window.gc_dotConfig = {
       restOpacity:      dk.Dot.restOpacity,
       pressScaleAmount: dk.Dot.pressScale,
@@ -910,9 +915,7 @@ export default function GlobalCustomCursor({
       idleFadeDuration: 220,
       wrapFadeDuration: 180,
     };
-  }, [dk.Dot.restOpacity, dk.Dot.pressScale]);
 
-  useEffect(() => {
     window.gc_trailConfig = {
       style:             dk.trailStyle === "classic" ? "classic" : "xmb",
       echoCount:         dk.Trail.echoCount,
@@ -931,9 +934,7 @@ export default function GlobalCustomCursor({
       lerpMin:           0.08,
       speedDivisor:      4,
     };
-  }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lifetime, dk.Trail.driftMs,
-      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale, dk.Trail.scatter,
-      dk.Trail.pop, dk.Trail.variance]);
+  }, [dialSnapshot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);
