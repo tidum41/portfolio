@@ -44,6 +44,7 @@ declare global {
       spawnGap: number;   // px of travel between stamps
       opacity: number;
       scale: number;
+      scatter: number;     // perpendicular push on freeze (0–1)
       // Classic follow-chain knobs
       lag: number;
       stretch: number;
@@ -132,9 +133,17 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     vx: number; vy: number;
     born: number;
     frozen: boolean;
+    /** Spawn scale pop — settles to 1 over the drift window. */
+    pop: number;
+    /** Per-stamp size/opacity rhythm (deterministic). */
+    variance: number;
+    /** Path direction at spawn — used for perpendicular scatter on freeze. */
+    dirX: number;
+    dirY: number;
   };
   const stamps: Stamp[] = Array.from({ length: MAX_ECHO }, () => ({
     active: false, x: 0, y: 0, vx: 0, vy: 0, born: 0, frozen: false,
+    pop: 1, variance: 1, dirX: 1, dirY: 0,
   }));
   let stampCursor = 0;
   let lastStampX = 0;
@@ -142,15 +151,13 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let stampTravel = 0;
   let lastTrailStyle: "classic" | "xmb" | "" = "";
 
-  // Slightly dimmer solid fill for XMB stamps — flat hard disks, no glow.
-  const xmbStampColor = () => withAlpha(currentColor, 0.62);
-
   const paintEchoAppearance = (style: "classic" | "xmb") => {
     echoEls.forEach((el) => {
       el.style.backgroundImage = "none";
       el.style.boxShadow = "none";
       el.style.mixBlendMode = "normal";
-      el.style.backgroundColor = style === "xmb" ? xmbStampColor() : currentColor;
+      // Flat hard disk — XMB dimness comes from stamp opacity, not glow/gradients.
+      el.style.backgroundColor = currentColor;
     });
     lastTrailStyle = style;
   };
@@ -522,17 +529,18 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const style = tc.style === "classic" ? "classic" : "xmb";
     if (style !== lastTrailStyle) paintEchoAppearance(style);
 
-    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 4 : 6))));
-    const opacityBase = tc.opacity ?? (style === "xmb" ? 0.45 : 0.55);
-    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.72 : 0.78);
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 5 : 6))));
+    const opacityBase = tc.opacity ?? (style === "xmb" ? 0.3 : 0.55);
+    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.4 : 0.78);
 
     let allSettled = true;
 
     if (style === "xmb") {
       // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
-      const lifetime = tc.lifetime ?? 150;
-      const driftMs  = tc.driftMs  ?? 40;
-      const spawnGap = tc.spawnGap ?? 18;
+      const lifetime = tc.lifetime ?? 360;
+      const driftMs  = Math.max(1, tc.driftMs ?? 95);
+      const spawnGap = tc.spawnGap ?? 26;
+      const scatter  = tc.scatter ?? 0.35;
 
       // Spawn stamps along travel — left behind at gaps, never chasing the tip.
       if (mouse.inside && count > 0 && vel > 0.4) {
@@ -545,18 +553,26 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         if (stampTravel >= spawnGap && step > 0.01) {
           stampTravel = 0;
           const slot = stampCursor % count;
-          stampCursor++;
+          const gen = stampCursor++;
           const s = stamps[slot];
           const inv = 1 / step;
-          // Drop just behind the cursor along the move direction.
+          const dirX = dx * inv;
+          const dirY = dy * inv;
+          // Deterministic rhythm — alternating stamps feel slightly different.
+          const variance = 0.82 + ((gen * 37) % 10) / 50; // 0.82–1.0
           s.active = true;
           s.frozen = false;
           s.born = now;
-          s.x = mouse.x - dx * inv * 5;
-          s.y = mouse.y - dy * inv * 5;
+          s.x = mouse.x - dirX * 5;
+          s.y = mouse.y - dirY * 5;
           // Whisper of path velocity — slight drift, then freeze.
-          s.vx = dx * inv * Math.min(vel, 7) * 0.2;
-          s.vy = dy * inv * Math.min(vel, 7) * 0.2;
+          s.vx = dirX * Math.min(vel, 7) * 0.2;
+          s.vy = dirY * Math.min(vel, 7) * 0.2;
+          s.dirX = dirX;
+          s.dirY = dirY;
+          s.variance = variance;
+          // Brief scale pop on drop — settles across the drift window.
+          s.pop = 1.18;
         }
       } else {
         lastStampX = mouse.x;
@@ -587,11 +603,21 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
             s.y += s.vy;
             s.vx *= 0.86;
             s.vy *= 0.86;
+            // Settle the spawn pop toward 1.
+            s.pop += (1 - s.pop) * 0.18;
             allSettled = false;
           } else {
             s.frozen = true;
             s.vx = 0;
             s.vy = 0;
+            s.pop = 1;
+            // Perpendicular scatter on freeze — left-behind debris, still flat/2D.
+            if (scatter > 0.01) {
+              const sign = ((i * 13 + stampCursor) % 2) === 0 ? 1 : -1;
+              const amt = scatter * (1.2 + s.variance) * sign;
+              s.x += -s.dirY * amt;
+              s.y +=  s.dirX * amt;
+            }
           }
         }
 
@@ -601,9 +627,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         const dissolve = age01 <= hold
           ? 1
           : 1 - Math.pow((age01 - hold) / (1 - hold), 1.55);
-        const op = opacityBase * dissolve * idleFade;
-        // Shrink slightly as they age.
-        const sc = scaleBase * (1 - 0.28 * age01);
+        // Faster movement at spawn reads a hair brighter via variance band.
+        const op = opacityBase * dissolve * idleFade * (0.88 + 0.12 * s.variance);
+        // Shrink with age + settle spawn pop + per-stamp variance.
+        const sc = scaleBase * s.pop * s.variance * (1 - 0.28 * age01);
 
         const rx = Math.round(s.x * 2) / 2;
         const ry = Math.round(s.y * 2) / 2;
@@ -815,12 +842,13 @@ export default function GlobalCustomCursor({
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
     Trail: {
-      echoCount: [4,   1,   8,   1],     // short fixed stamp chain
-      lifetime:  [150, 80,  400, 10],    // ms drop → die
-      driftMs:   [40,  0,   120, 5],     // ms of slight path drift before freeze
-      spawnGap:  [18,  6,   48,  1],     // px travel between stamps
-      opacity:   [0.45, 0.1, 1,  0.01],  // dimmer than the cursor
-      scale:     [0.72, 0.3, 1.1, 0.01], // shrinks further as stamps age
+      echoCount: [5,    1,   8,   1],
+      lifetime:  [360,  80,  500, 10],
+      driftMs:   [95,   0,   160, 5],
+      spawnGap:  [26,   6,   48,  1],
+      opacity:   [0.3,  0.1, 1,   0.01],
+      scale:     [0.4,  0.2, 1.1, 0.01],
+      scatter:   [0.35, 0,   1.5, 0.05], // perpendicular nudge on freeze
     },
 
     Dot: {
@@ -887,6 +915,7 @@ export default function GlobalCustomCursor({
       spawnGap:          dk.Trail.spawnGap,
       opacity:           dk.Trail.opacity,
       scale:             dk.Trail.scale,
+      scatter:           dk.Trail.scatter,
       lag:               0.5,
       stretch:           0.28,
       velocityDecay:     0.78,
@@ -895,7 +924,7 @@ export default function GlobalCustomCursor({
       speedDivisor:      4,
     };
   }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lifetime, dk.Trail.driftMs,
-      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale]);
+      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale, dk.Trail.scatter]);
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);
