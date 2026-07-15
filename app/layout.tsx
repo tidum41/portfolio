@@ -3,24 +3,48 @@ import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import { getDesignSystem, designSystemToCss, getProjects } from "@/lib/sanity/queries";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "mudit mahajan",
-    template: "%s — mudit mahajan",
+    default: SITE_NAME,
+    template: `%s — ${SITE_NAME}`,
   },
-  description:
-    "Portfolio of Mudit Mahajan — product design student at UCLA, designing for the communities I'm obsessed with.",
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "Mudit Mahajan",
+    "product design",
+    "UCLA",
+    "portfolio",
+    "UI UX",
+    "frontend",
+  ],
+  authors: [{ name: "Mudit Mahajan", url: SITE_URL }],
+  creator: "Mudit Mahajan",
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "mudit mahajan",
-    description: "Portfolio of Mudit Mahajan — product design student at UCLA.",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
     type: "website",
-    siteName: "mudit mahajan",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -43,6 +67,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine){*{cursor:none!important}}` }} />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
+        <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         <a href="#main-content" className="skip-link">Skip to content</a>

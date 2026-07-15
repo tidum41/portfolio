@@ -1,10 +1,25 @@
 import React from "react";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
+import { SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "sviz",
+  description:
+    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+  alternates: { canonical: `${SITE_URL}/sviz` },
+  openGraph: {
+    title: "sviz — mudit mahajan",
+    description:
+      "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
+    url: `${SITE_URL}/sviz`,
+  },
+};
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 

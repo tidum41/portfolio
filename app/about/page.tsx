@@ -4,6 +4,7 @@ import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import { FOOTER_LINKS } from "@/lib/site";
 
 const LOGO_SCALE = 1.375;
 const EXPERIENCE = [
@@ -19,12 +20,7 @@ const ORGS = [
   { name: "Campus Events Commission", role: "Media Production Director" },
 ];
 
-const SOCIALS = [
-  { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
-  { label: "x",        href: "https://x.com/muditm14" },
-  { label: "email",    href: "mailto:muditmahajan@ucla.edu" },
-  { label: "resume",   href: "https://drive.google.com/file/d/1SFiqIjwtzkeJ4TEHE7z9_UNWtkyb1ixm/view?usp=drive_link" },
-];
+const SOCIALS = FOOTER_LINKS;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -141,7 +137,7 @@ export default function AboutPage() {
               <a
                 key={label}
                 href={href}
-                target={href.startsWith("mailto") || href === "#" ? undefined : "_blank"}
+                target={href.startsWith("mailto") ? undefined : "_blank"}
                 rel="noopener noreferrer"
                 className="nav-link"
                 style={{
