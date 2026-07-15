@@ -38,14 +38,15 @@ declare global {
     gc_trailConfig?: {
       style: "classic" | "xmb";
       echoCount: number;
-      lag: number;
-      stretch: number;
-      fadePower: number;
+      // XMB stamp trail
+      lifetime: number;   // ms — full drop→die window
+      driftMs: number;    // ms of slight path drift before freeze
+      spawnGap: number;   // px of travel between stamps
       opacity: number;
       scale: number;
-      glow: number;
-      drift: number;
-      // Kept as derived/internal knobs so the RAF loop stays stable.
+      // Classic follow-chain knobs
+      lag: number;
+      stretch: number;
       velocityDecay: number;
       velocitySmoothing: number;
       lerpMin: number;
@@ -106,8 +107,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   styleEl.textContent = "* { cursor: none !important; }";
   document.head.appendChild(styleEl);
 
-  // Echo trail — full pool always created; tick() shows/animates only the
-  // first N per the live "echoCount" dial.
+  // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
+  // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
   const echoEls: HTMLDivElement[] = [];
   for (let i = 0; i < MAX_ECHO; i++) {
     const el = document.createElement("div");
@@ -117,8 +118,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       backgroundColor: currentColor, borderRadius: "50%",
       pointerEvents: "none", zIndex: `${zIndex - 1 - i}`,
       opacity: "0", willChange: "auto",
-      // Soft dissolve without hard disk edges (XMB sparkles are additive
-      // point-sprites — radial fill approximates that on the web).
       backgroundImage: "none",
       boxShadow: "none",
       mixBlendMode: "normal",
@@ -127,36 +126,33 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     echoEls.push(el);
   }
 
-  // Per-echo settle offsets — XMB particles don't snap off; they gently fall
-  // out of the wake when motion calms (friction / "wind" residue).
-  const echoDrift = Array.from({ length: MAX_ECHO }, () => 0);
+  type Stamp = {
+    active: boolean;
+    x: number; y: number;
+    vx: number; vy: number;
+    born: number;
+    frozen: boolean;
+  };
+  const stamps: Stamp[] = Array.from({ length: MAX_ECHO }, () => ({
+    active: false, x: 0, y: 0, vx: 0, vy: 0, born: 0, frozen: false,
+  }));
+  let stampCursor = 0;
+  let lastStampX = 0;
+  let lastStampY = 0;
+  let stampTravel = 0;
   let lastTrailStyle: "classic" | "xmb" | "" = "";
-  let lastGlowPaint = -1;
+
+  // Slightly dimmer solid fill for XMB stamps — flat hard disks, no glow.
+  const xmbStampColor = () => withAlpha(currentColor, 0.62);
 
   const paintEchoAppearance = (style: "classic" | "xmb") => {
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const glow = window.gc_trailConfig?.glow ?? 0.45;
-    echoEls.forEach((el, i) => {
-      if (style === "xmb") {
-        // Soft luminous orb: bright core → transparent edge, with a faint
-        // bloom. plus-lighter on dark themes mimics XMB additive sparkles;
-        // normal blend on light keeps contrast readable.
-        el.style.backgroundColor = "transparent";
-        el.style.backgroundImage =
-          `radial-gradient(circle at 50% 45%, ${withAlpha(currentColor, 0.95)} 0%, ${withAlpha(currentColor, 0.45)} 38%, ${withAlpha(currentColor, 0)} 70%)`;
-        el.style.boxShadow = glow > 0.01
-          ? `0 0 ${Math.round(8 + i * 1.2)}px ${withAlpha(currentColor, 0.22 * glow)}`
-          : "none";
-        el.style.mixBlendMode = isDark ? "plus-lighter" : "normal";
-      } else {
-        el.style.backgroundImage = "none";
-        el.style.backgroundColor = currentColor;
-        el.style.boxShadow = "none";
-        el.style.mixBlendMode = "normal";
-      }
+    echoEls.forEach((el) => {
+      el.style.backgroundImage = "none";
+      el.style.boxShadow = "none";
+      el.style.mixBlendMode = "normal";
+      el.style.backgroundColor = style === "xmb" ? xmbStampColor() : currentColor;
     });
     lastTrailStyle = style;
-    lastGlowPaint = glow;
   };
 
   // ph: pill height when expanded — 4px taller than the resting dot.
@@ -524,77 +520,130 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
 
     const style = tc.style === "classic" ? "classic" : "xmb";
-    const glowNow = tc.glow ?? 0.45;
-    if (style !== lastTrailStyle || (style === "xmb" && glowNow !== lastGlowPaint)) {
-      paintEchoAppearance(style);
-    }
+    if (style !== lastTrailStyle) paintEchoAppearance(style);
 
-    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 8 : 6))));
-    const lag         = tc.lag         ?? (style === "xmb" ? 0.38 : 0.5);
-    const stretch     = tc.stretch     ?? (style === "xmb" ? 0.22 : 0.28);
-    const fadePower   = tc.fadePower   ?? (style === "xmb" ? 1.65 : 1);
-    const opacityBase = tc.opacity     ?? (style === "xmb" ? 0.5  : 0.55);
-    const scaleBase   = tc.scale       ?? (style === "xmb" ? 0.9  : 0.78);
-    const driftAmt    = tc.drift       ?? (style === "xmb" ? 0.18 : 0);
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 4 : 6))));
+    const opacityBase = tc.opacity ?? (style === "xmb" ? 0.45 : 0.55);
+    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.72 : 0.78);
 
     let allSettled = true;
-    for (let i = 0; i < MAX_ECHO; i++) {
-      const el = echoEls[i];
-      if (!el) continue;
-      if (i >= count) {
-        if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
-        echoDrift[i] *= 0.85;
-        continue;
-      }
-      const tx    = i === 0 ? mouse.x : echoes[i - 1].x;
-      const ty    = i === 0 ? mouse.y : echoes[i - 1].y;
-      // XMB lag is softer: follow speed eases with index so the wake trails
-      // out instead of stacking as stiff clones. Classic keeps the old spread.
-      const lerpF = style === "xmb"
-        ? Math.max(lerpMin, lag * Math.pow(0.72, i) * (0.55 + 0.45 * speedFactor))
-        : Math.max(lerpMin, lag - i * stretch * speedFactor);
-      echoes[i].x += (tx - echoes[i].x) * lerpF;
-      echoes[i].y += (ty - echoes[i].y) * lerpF;
 
-      const t = count <= 1 ? 1 : (i + 1) / count;
-      // Eased dissolve: higher fadePower keeps near-cursor orbs fuller, then
-      // tips drop off more suddenly — reads closer to XMB sparkle falloff
-      // than a linear opacity ramp.
-      const fadeT = Math.pow(t, fadePower);
-      const sc = style === "xmb"
-        ? scaleBase * (1 - fadeT * 0.62)
-        : scaleBase - t * 0.56;
+    if (style === "xmb") {
+      // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
+      const lifetime = tc.lifetime ?? 150;
+      const driftMs  = tc.driftMs  ?? 40;
+      const spawnGap = tc.spawnGap ?? 18;
 
-      // Layered fading for the XMB look:
-      //  1) position falloff (fadeT)
-      //  2) velocity breath — trail blooms when you move, softens when still
-      //  3) tip-first idle wink — farthest echoes die out a hair earlier
-      //  4) shared idleFade for leaving the window
-      let op = opacityBase * (1 - fadeT);
-      if (style === "xmb") {
-        const velBreath = 0.28 + 0.72 * Math.pow(speedFactor, 0.65);
-        const tipDelay  = i * 28; // ms — tip dissolves first when you pause
-        const tipIdle   = msSinceMove < fadeDelay + tipDelay
-          ? 1
-          : Math.max(0, 1 - (msSinceMove - fadeDelay - tipDelay) / Math.max(40, fadeDur * 0.85));
-        op *= velBreath * tipIdle * idleFade;
-        // Residual settle: when motion calms, orbs gently drift down/out of
-        // the wake (PS3 particles have friction + wind residue, not a hard
-        // stop). While speeding, that residue bleeds off.
-        const settle = driftAmt * (0.12 + t * 0.55) * (1 - speedFactor);
-        echoDrift[i] = echoDrift[i] * (0.96 - 0.08 * speedFactor) + settle;
+      // Spawn stamps along travel — left behind at gaps, never chasing the tip.
+      if (mouse.inside && count > 0 && vel > 0.4) {
+        const dx = mouse.x - lastStampX;
+        const dy = mouse.y - lastStampY;
+        const step = Math.hypot(dx, dy);
+        stampTravel += step;
+        lastStampX = mouse.x;
+        lastStampY = mouse.y;
+        if (stampTravel >= spawnGap && step > 0.01) {
+          stampTravel = 0;
+          const slot = stampCursor % count;
+          stampCursor++;
+          const s = stamps[slot];
+          const inv = 1 / step;
+          // Drop just behind the cursor along the move direction.
+          s.active = true;
+          s.frozen = false;
+          s.born = now;
+          s.x = mouse.x - dx * inv * 5;
+          s.y = mouse.y - dy * inv * 5;
+          // Whisper of path velocity — slight drift, then freeze.
+          s.vx = dx * inv * Math.min(vel, 7) * 0.2;
+          s.vy = dy * inv * Math.min(vel, 7) * 0.2;
+        }
       } else {
-        op *= idleFade;
-        echoDrift[i] *= 0.8;
+        lastStampX = mouse.x;
+        lastStampY = mouse.y;
+        stampTravel = 0;
       }
 
-      const rx = Math.round(echoes[i].x * 2) / 2;
-      const ry = Math.round((echoes[i].y + echoDrift[i]) * 2) / 2;
-      const tr = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${Math.max(0.08, sc)})`;
-      if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
-      const opR = Math.round(op * 100) / 100;
-      if (opR !== lastOpacity[i]) { el.style.opacity = String(opR); lastOpacity[i] = opR; }
-      if (Math.abs(echoes[i].x - tx) > 0.1 || Math.abs(echoes[i].y - ty) > 0.1) allSettled = false;
+      for (let i = 0; i < MAX_ECHO; i++) {
+        const el = echoEls[i];
+        const s = stamps[i];
+        if (!el) continue;
+        if (i >= count || !s.active) {
+          if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+          s.active = false;
+          continue;
+        }
+
+        const age = now - s.born;
+        if (age >= lifetime) {
+          s.active = false;
+          if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+          continue;
+        }
+
+        if (!s.frozen) {
+          if (age < driftMs) {
+            s.x += s.vx;
+            s.y += s.vy;
+            s.vx *= 0.86;
+            s.vy *= 0.86;
+            allSettled = false;
+          } else {
+            s.frozen = true;
+            s.vx = 0;
+            s.vy = 0;
+          }
+        }
+
+        const age01 = age / lifetime;
+        // Soft dissolve: hold presence, then ease off (PS3-ish, not linear).
+        const hold = 0.32;
+        const dissolve = age01 <= hold
+          ? 1
+          : 1 - Math.pow((age01 - hold) / (1 - hold), 1.55);
+        const op = opacityBase * dissolve * idleFade;
+        // Shrink slightly as they age.
+        const sc = scaleBase * (1 - 0.28 * age01);
+
+        const rx = Math.round(s.x * 2) / 2;
+        const ry = Math.round(s.y * 2) / 2;
+        const tr = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${Math.max(0.08, sc)})`;
+        if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
+        const opR = Math.round(op * 100) / 100;
+        if (opR !== lastOpacity[i]) { el.style.opacity = String(opR); lastOpacity[i] = opR; }
+        if (s.active && !s.frozen) allSettled = false;
+        if (s.active && opR > 0.01) allSettled = false;
+      }
+    } else {
+      // ── Classic: follow-chain echoes ──
+      const lag     = tc.lag     ?? 0.5;
+      const stretch = tc.stretch ?? 0.28;
+
+      for (let i = 0; i < MAX_ECHO; i++) {
+        const el = echoEls[i];
+        if (!el) continue;
+        if (i >= count) {
+          if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+          continue;
+        }
+        const tx = i === 0 ? mouse.x : echoes[i - 1].x;
+        const ty = i === 0 ? mouse.y : echoes[i - 1].y;
+        const lerpF = Math.max(lerpMin, lag - i * stretch * speedFactor);
+        echoes[i].x += (tx - echoes[i].x) * lerpF;
+        echoes[i].y += (ty - echoes[i].y) * lerpF;
+
+        const t = count <= 1 ? 1 : (i + 1) / count;
+        const sc = scaleBase - t * 0.56;
+        const op = opacityBase * (1 - t) * idleFade;
+
+        const rx = Math.round(echoes[i].x * 2) / 2;
+        const ry = Math.round(echoes[i].y * 2) / 2;
+        const tr = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${Math.max(0.08, sc)})`;
+        if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
+        const opR = Math.round(op * 100) / 100;
+        if (opR !== lastOpacity[i]) { el.style.opacity = String(opR); lastOpacity[i] = opR; }
+        if (Math.abs(echoes[i].x - tx) > 0.1 || Math.abs(echoes[i].y - ty) > 0.1) allSettled = false;
+      }
     }
 
     const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
@@ -698,8 +747,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const tc = getTextColor();
     textSpan.style.color = tc;
     arrowEl.style.color  = tc;
-    // Force a repaint of echo appearance so radial fills / glow pick up the
-    // new color even if trail style itself hasn't changed.
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
@@ -768,14 +815,12 @@ export default function GlobalCustomCursor({
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
     Trail: {
-      echoCount: [8,    0,    16,  1],     // denser default suits soft XMB orbs
-      lag:       [0.38, 0.08, 0.9, 0.01],  // follow speed — lower = silkier wake
-      stretch:   [0.22, 0,    0.6, 0.01],  // classic spacing (xmb uses lag curve)
-      fadePower: [1.65, 0.6,  3,   0.05],  // >1 = stay bright, soft tip dissolve
-      opacity:   [0.5,  0,    1,   0.01],
-      scale:     [0.9,  0.3,  1.2, 0.01],
-      glow:      [0.45, 0,    1,   0.01],  // bloom amount (xmb only)
-      drift:     [0.18, 0,    0.8, 0.01],  // residual settle / "fall off"
+      echoCount: [4,   1,   8,   1],     // short fixed stamp chain
+      lifetime:  [150, 80,  400, 10],    // ms drop → die
+      driftMs:   [40,  0,   120, 5],     // ms of slight path drift before freeze
+      spawnGap:  [18,  6,   48,  1],     // px travel between stamps
+      opacity:   [0.45, 0.1, 1,  0.01],  // dimmer than the cursor
+      scale:     [0.72, 0.3, 1.1, 0.01], // shrinks further as stamps age
     },
 
     Dot: {
@@ -837,20 +882,20 @@ export default function GlobalCustomCursor({
     window.gc_trailConfig = {
       style:             dk.trailStyle === "classic" ? "classic" : "xmb",
       echoCount:         dk.Trail.echoCount,
-      lag:               dk.Trail.lag,
-      stretch:           dk.Trail.stretch,
-      fadePower:         dk.Trail.fadePower,
+      lifetime:          dk.Trail.lifetime,
+      driftMs:           dk.Trail.driftMs,
+      spawnGap:          dk.Trail.spawnGap,
       opacity:           dk.Trail.opacity,
       scale:             dk.Trail.scale,
-      glow:              dk.Trail.glow,
-      drift:             dk.Trail.drift,
+      lag:               0.5,
+      stretch:           0.28,
       velocityDecay:     0.78,
       velocitySmoothing: 0.4,
       lerpMin:           0.08,
       speedDivisor:      4,
     };
-  }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lag, dk.Trail.stretch,
-      dk.Trail.fadePower, dk.Trail.opacity, dk.Trail.scale, dk.Trail.glow, dk.Trail.drift]);
+  }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lifetime, dk.Trail.driftMs,
+      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale]);
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);
