@@ -120,11 +120,9 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
-  // Tip sits at x≈1 so the stroke’s leftmost pixel lands on the content /
-  // hero-media left edge when the parent has no negative margin.
   const backArrow = (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="10 18 2 12 10 6" />
+      <polyline points="15 18 9 12 15 6" />
     </svg>
   );
 
