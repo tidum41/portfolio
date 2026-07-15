@@ -11,16 +11,16 @@ import { getDesignSystem, designSystemToCss, getProjects } from "@/lib/sanity/qu
 
 export const metadata: Metadata = {
   title: {
-    default: "Mudit Mahajan — Product Design",
-    template: "%s — Mudit Mahajan",
+    default: "mudit mahajan",
+    template: "%s — mudit mahajan",
   },
   description:
     "Portfolio of Mudit Mahajan — product design student at UCLA, designing for the communities I'm obsessed with.",
   openGraph: {
-    title: "Mudit Mahajan — Product Design",
+    title: "mudit mahajan",
     description: "Portfolio of Mudit Mahajan — product design student at UCLA.",
     type: "website",
-    siteName: "Mudit Mahajan",
+    siteName: "mudit mahajan",
   },
 };
 

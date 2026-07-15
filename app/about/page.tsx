@@ -22,8 +22,8 @@ const ORGS = [
 const SOCIALS = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
   { label: "x",        href: "https://x.com/muditm14" },
-  { label: "email",    href: "mailto:muditmahajan@g.ucla.edu" },
-  { label: "resume",   href: "https://drive.google.com/file/d/1SFiqIjwtzkeJ4TEHE7z9_UNWtkyb1ixm/view?usp=sharing" },
+  { label: "email",    href: "mailto:muditmahajan@ucla.edu" },
+  { label: "resume",   href: "https://drive.google.com/file/d/1SFiqIjwtzkeJ4TEHE7z9_UNWtkyb1ixm/view?usp=drive_link" },
 ];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
