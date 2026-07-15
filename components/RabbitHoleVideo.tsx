@@ -308,6 +308,18 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
 
             ensureMuxLoaded();
 
+            // The whole feature is built by hand-mutating the DOM (splitting the
+            // text node, injecting the SVG, wiring listeners) — none of it is
+            // visible to React's virtual DOM. If anything causes this subtree to
+            // re-render (e.g. a theme toggle rippling through the tree), React
+            // reconciles against what it thinks is still a plain text node and
+            // stomps our injected spans back to plain text — the feature just
+            // silently disappears, since this effect only runs once on mount.
+            // A MutationObserver below detects that and re-runs setup() to heal it.
+            type Teardown = (() => void) | null;
+            let teardown: Teardown = null;
+
+            const setup = (): Teardown => {
             const textEl =
                 root.querySelector<HTMLElement>("h1, h2, h3, h4, p") ??
                 (root.firstElementChild as HTMLElement) ??
@@ -331,7 +343,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             }
 
             const holesAnchor = findAndWrap(textEl);
-            if (!holesAnchor) return;
+            if (!holesAnchor) return null;
 
             cleanupBlink = injectRabbit(holesAnchor);
             const svg = document.getElementById("rh-rabbit") as SVGSVGElement | null;
@@ -401,7 +413,6 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 opacity: 0; left: -9999px; top: -9999px;
                 transform: scale(0.96);
                 transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.34,1.2,0.64,1);
-                transform-origin: bottom center;
                 width: 360px; aspect-ratio: 16/9;
                 border-radius: 3px; overflow: hidden;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.12); background: #000;
@@ -443,10 +454,14 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 const popH = Math.round((popW * 9) / 16);
                 const ideal = rect.left + rect.width / 2 - popW / 2;
                 const left = Math.max(12, Math.min(ideal, vw - popW - 12));
-                const top = rect.top > popH + 24 ? rect.top - popH - 16 : rect.bottom + 8;
+                const isAbove = rect.top > popH + 24;
+                const top = isAbove ? rect.top - popH - 16 : rect.bottom + 8;
                 win.style.width = `${popW}px`;
                 win.style.left = `${left}px`;
                 win.style.top = `${top}px`;
+                // Scale from the edge nearest the trigger word so the popup
+                // feels spatially anchored to where it came from.
+                win.style.transformOrigin = isAbove ? "bottom center" : "top center";
             }
 
             function open() {
@@ -515,6 +530,25 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     trigger.parentNode.insertBefore(document.createTextNode(TARGET), trigger);
                     trigger.parentNode.removeChild(trigger);
                 }
+            };
+            };
+
+            teardown = setup();
+
+            // Self-heal: if #rh-trigger ever goes missing while this component is
+            // still mounted (React reconciliation wiped it), tear down whatever's
+            // left and set back up. The idempotent guards in setup()/injectRabbit
+            // make this safe to also fire (as a no-op) from setup()'s own mutations.
+            const observer = new MutationObserver(() => {
+                if (document.getElementById("rh-trigger")) return;
+                teardown?.();
+                teardown = setup();
+            });
+            observer.observe(root, { childList: true, subtree: true });
+
+            return () => {
+                observer.disconnect();
+                teardown?.();
             };
         }, []);
 

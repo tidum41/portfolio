@@ -1,6 +1,8 @@
 import React from "react";
 import dynamic from "next/dynamic";
-import { ScrollReveal } from "@/components/ScrollReveal";
+import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
+import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 
@@ -18,22 +20,26 @@ function pp(pos: PhonePos | undefined) {
   };
 }
 
-const CaseStudyTOC       = dynamic(() => import("@/components/CaseStudyTOC"));
-const PhoneMockup        = dynamic(() => import("@/components/PhoneMockup"));
+const CaseStudyTOC        = dynamic(() => import("@/components/CaseStudyTOC"));
+const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
-const QuarterPicker      = dynamic(() => import("@/components/QuarterPicker"));
-const DevNavigator       = dynamic(() => import("@/components/DevNavigator"));
-
+const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
+const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
+const MuxHero             = dynamic(() => import("@/components/MuxHero"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
 const COLOR_NEUTRAL = "#757575";
 
 // ── Layout primitives ─────────────────────────────────────────────────────────
 
-function Section({ id, children }: { id: string; children: React.ReactNode }) {
+// `noReveal` — above-the-fold section (right after the hero, which itself
+// skips ScrollReveal): the page-level crossfade already reveals it, so its
+// own ScrollReveal would double-fade and read as a flicker.
+function Section({ id, children, noReveal = false }: { id: string; children: React.ReactNode; noReveal?: boolean }) {
+  const inner = noReveal ? <>{children}</> : <ScrollReveal>{children}</ScrollReveal>;
   return (
     <section id={id} style={{ scrollMarginTop: 120, paddingBottom: "var(--section-pb)", marginBottom: "var(--section-gap)" }}>
-      <ScrollReveal>{children}</ScrollReveal>
+      {inner}
     </section>
   );
 }
@@ -84,26 +90,43 @@ function Body({ children, style }: { children: React.ReactNode; style?: React.CS
   );
 }
 
+// Colors that sit next to the lilac accent (#9590C2) without competing with it —
+// rose for stress, teal for trust, soft amber for outreach across platforms.
+const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>; color: string }> = {
+  "75%": { Icon: Frown,          color: "#C4899A" }, // dusty rose — stress / frustration
+  "83%": { Icon: BadgeCheck,     color: "#6FA8A0" }, // soft teal  — trust / safety
+  "70%": { Icon: MessagesSquare, color: "#C4A878" }, // soft amber — multi-platform outreach
+};
+
 function Stat({ value, label }: { value: string; label: string }) {
+  const meta = STAT_ICON_META[value];
+  const Icon = meta?.Icon;
   return (
-    <div>
-      <p style={{
-        fontFamily: "var(--font-sans)",
-        fontSize: "var(--fs-stat)",
-        fontWeight: 400,
-        lineHeight: 1,
-        letterSpacing: "-0.5px",
-        color: "var(--color-text-primary)",
-        margin: "0 0 8px",
-      }}>
-        {value}
-      </p>
+    <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {Icon && (
+          <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
+            <Icon size={28} strokeWidth={1.5} aria-hidden={true} />
+          </span>
+        )}
+        <p style={{
+          fontFamily: "var(--font-sans-medium)",
+          fontSize: "var(--fs-stat)",
+          fontWeight: 500,
+          lineHeight: 1,
+          letterSpacing: "-0.5px",
+          fontVariantNumeric: "tabular-nums",
+          color: "var(--color-text-primary)",
+          margin: 0,
+        }}>
+          {value}
+        </p>
+      </div>
       <p style={{
         fontSize: "var(--fs-meta)",
         lineHeight: 1.5,
         color: "var(--color-text-secondary)",
         margin: 0,
-        maxWidth: 200,
       }}>
         {label}
       </p>
@@ -138,7 +161,7 @@ function NeutralIcon() {
 function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <span style={{ color: "var(--color-text-secondary)", fontSize: 20, lineHeight: 1, marginTop: 3, flexShrink: 0, fontWeight: 400 }}>•</span>
+      <XIcon />
       <p style={{ fontSize: 15, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
   );
@@ -174,10 +197,61 @@ function CompRow({ type, text }: { type: string; text: string }) {
   );
 }
 
+function FigmaLogo() {
+  // Official Figma icon mark — 5 segments, brand colors
+  return (
+    <svg width="9" height="14" viewBox="0 0 38 57" fill="none">
+      <path fill="#F24E1E" d="M19 0h9.5a9.5 9.5 0 0 1 0 19H19V0z" />
+      <path fill="#FF7262" d="M19 0v19H9.5a9.5 9.5 0 0 1 0-19H19z" />
+      <path fill="#A259FF" d="M0 28.5A9.5 9.5 0 0 1 9.5 19H19v19H9.5A9.5 9.5 0 0 1 0 28.5z" />
+      <path fill="#1ABCFE" d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" />
+      <path fill="#0ACF83" d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0z" />
+    </svg>
+  );
+}
+function VercelLogo() {
+  // Official Vercel triangle — simple-icons path
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="m12 1.608 12 20.784H0Z" />
+    </svg>
+  );
+}
+function ClaudeCodeLogo() {
+  return (
+    <svg height="14" style={{ flex: "none", lineHeight: 1 }} viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+      <title>Claude</title>
+      <path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#D97757" fillRule="nonzero" />
+    </svg>
+  );
+}
+function GoogleLogo() {
+  // Official Google G — simple-icons path, brand colors
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    </svg>
+  );
+}
+
+const TOOL_LOGOS: Record<string, React.ReactNode> = {
+  "Figma":         <FigmaLogo />,
+  "Google Stitch": <GoogleLogo />,
+  "Claude Code":   <ClaudeCodeLogo />,
+  "Vercel":        <VercelLogo />,
+};
+
 function ToolCard({ tool, desc }: { tool: string; desc: string }) {
+  const logo = TOOL_LOGOS[tool];
   return (
     <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "12px 16px" }}>
-      <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: "0 0 4px" }}>{tool}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        {logo && <span style={{ display: "flex", flexShrink: 0, lineHeight: 0 }}>{logo}</span>}
+        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{tool}</p>
+      </div>
       <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--color-text-secondary)", margin: 0 }}>{desc}</p>
     </div>
   );
@@ -199,7 +273,7 @@ const FB = {
   ] as TocItem[],
   heroTagline:   "Product Design  ·  Case Study  ·  2026",
   heroTitle:     "Simplifying UCLA subleasing",
-  heroBg:        "var(--color-hero-tint)",
+  heroBg:        "#C6DDF2",
   heroMuxId:     "XpkQyhqkEwMLrhDAhNEB2aRWS3wP023sbdbsS2zbY02eg",
   metadata: [
     { _key: "m1", label: "Role",          values: ["Product Designer", "& Frontend"] },
@@ -219,6 +293,8 @@ const FB = {
   researchLabel: "Research Insights",
   researchHeading: "We surveyed 60 UCLA students across all years and living situations, then conducted 8 interviews with seekers and renters.",
   researchBody: "My subleasing story turned out to be less unique than I thought, deja vu from conversations with friends scrambling to find a last-minute spot. Seekers lacked confidence in listings, going through multiple points of entry. Listers had no idea why people weren't responding.",
+  researchBodyPre: "My subleasing story turned out to be less unique than I thought, deja vu from conversations with friends scrambling to find a last-minute spot.",
+  researchCallout: "Seekers lacked confidence in listings, going through multiple points of entry. Listers had no idea why people weren't responding.",
   stats: [
     { _key: "s1", value: "75%", label: "rated the subleasing process as highly stressful, even students who hadn't done it yet" },
     { _key: "s2", value: "83%", label: "said trust and clear listing information were their top priorities" },
@@ -267,8 +343,13 @@ const FB = {
   d4Heading: "Guiding listing creation",
   d4Body: "Creating a listing requires a lot of manual selection. I landed on two listing flows that I would love to A/B test. While both have drawbacks, I landed on the stepped creation as it provides structure that reduces cognitive load by dividing sections.",
   solutionLabel: "Solution",
-  solutionHeading: "BruinLease is a dedicated subleasing platform built specifically for UCLA students.",
-  solutionBody: "Digestible listings, quarter-based search, verified identities, and in-app messaging.",
+  solutionHeading: "BruinLease is a dedicated subleasing platform built specifically for UCLA students. Digestible listings, quarter-based search, verified identities, and in-app messaging in one place.",
+  solutionBody: "",
+  solutionBullets: [
+    "Every listing captures the same upfront info, price, room type, distance, bathroom. Students don't need to ask for the bare minimum",
+    "Filtering by quarter, verified badges, familiar room terminology built around how UCLA students actually think",
+    "Property insights from Reddit and Bruinwalk are matched based on address, so seekers can vet a building before they reach out to a lister",
+  ],
   solutionBg: "var(--color-hero-tint)",
   solutionMuxId: "XpkQyhqkEwMLrhDAhNEB2aRWS3wP023sbdbsS2zbY02eg",
   reflectionLabel: "Reflection",
@@ -292,6 +373,7 @@ export default async function BruinLeasePage() {
     decision1CardCondensed: undefined as string | undefined,
     decision1CardFinal:     undefined as string | undefined,
     homepageComparison:     undefined as string | undefined,
+    figmaComparison:        undefined as string | undefined,
     ueTestingVideo:         undefined as string | undefined,
     oldFlowVideo:           undefined as string | undefined,
     decision1Video:         undefined as string | undefined,
@@ -328,63 +410,73 @@ export default async function BruinLeasePage() {
         <div style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
 
           {/* ── Hero ───────────────────────────────────────────────────── */}
+          {/* Staggers in top-to-bottom on route arrival (tagline, title, video,
+              metadata) on its own "Case Study Entrance" DialKit panel — subtler
+              slide + barely-there blur than the shared work-grid/about-page
+              "Entrance" panel. The TOC (aside, above) deliberately never
+              participates: it's position:sticky, and animating it alongside
+              the rest previously read as buggy/jittery rather than elegant. */}
           <header className="cs-hero-header" style={{ marginBottom: 64 }}>
-            <p style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 14,
-              fontWeight: 400,
-              letterSpacing: "0.01em",
-              color: "var(--color-text-muted)",
-              margin: "0 0 16px",
-            }}>
-              {cs.heroTagline}
-            </p>
-            <h1 style={{
-              fontFamily: "var(--font-sans-medium)",
-              fontSize: "var(--fs-hero)",
-              fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
-              lineHeight: 1.1,
-              letterSpacing: "var(--ls-hero)",
-              color: "var(--color-text-primary)",
-              margin: "0 0 36px",
-            }}>
-              {cs.heroTitle}
-            </h1>
+            <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
+              <EntranceItem>
+                <p style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  fontWeight: 400,
+                  letterSpacing: "0.01em",
+                  color: "var(--color-text-muted)",
+                  margin: "0 0 16px",
+                }}>
+                  {cs.heroTagline}
+                </p>
+              </EntranceItem>
+              <EntranceItem>
+                <h1 style={{
+                  fontFamily: "var(--font-sans-medium)",
+                  fontSize: "var(--fs-hero)",
+                  fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
+                  lineHeight: 1.1,
+                  letterSpacing: "var(--ls-hero)",
+                  color: "var(--color-text-primary)",
+                  margin: "0 0 36px",
+                }}>
+                  {cs.heroTitle}
+                </h1>
+              </EntranceItem>
 
-            <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", padding: "40px 24px", display: "flex", justifyContent: "center" }}>
-              <div className="pm-hero-wrap" style={{ width: "45%", maxWidth: 280 }}>
-                <PhoneMockup
-                  muxPlaybackId={cs.heroMuxId}
-                  instanceKey="hero"
-                  {...pp(cs.heroPhonePos)}
-                />
-              </div>
-            </div>
+              <EntranceItem>
+                <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+                  <MuxHero playbackId={cs.heroMuxId} />
+                </div>
+              </EntranceItem>
 
-            {/* Metadata — 4-column, no border */}
-            {metadata.length > 0 && (
-              <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
-                {metadata.map(({ _key, label, values }) => (
-                  <div key={_key} style={{ padding: "0 24px 0 0" }}>
-                    <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
-                    {values.map((v) => <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>{v}</p>)}
+              {/* Metadata — 4-column, no border */}
+              {metadata.length > 0 && (
+                <EntranceItem>
+                  <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
+                    {metadata.map(({ _key, label, values }) => (
+                      <div key={_key} style={{ padding: "0 24px 0 0" }}>
+                        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
+                        {values.map((v) => <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>{v}</p>)}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </EntranceItem>
+              )}
+            </EntranceStagger>
           </header>
 
           <article style={{ minWidth: 0 }}>
 
             {/* ── Problem ──────────────────────────────────────────────── */}
-            <Section id="problem">
+            <Section id="problem" noReveal>
               <SectionLabel>{cs.problemLabel}</SectionLabel>
               <H2>{cs.problemHeading}</H2>
               <Body>{cs.problemBody}</Body>
 
               {cs.problemImage
-                ? <img src={cs.problemImage} alt="Fragmented subleasing platforms" style={{ width: "100%", aspectRatio: "16/7", objectFit: "cover", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px" }} />
-                : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
+                ? <img src={cs.problemImage} alt="Fragmented subleasing platforms" style={{ width: "100%", aspectRatio: "16/7", objectFit: "cover", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
+                : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 28 }}>{cs.problemImageCaption}</p>
 
@@ -398,22 +490,16 @@ export default async function BruinLeasePage() {
               <SectionLabel>{cs.researchLabel}</SectionLabel>
               <H2>{cs.researchHeading}</H2>
 
-              {/* Stats box with internal dividers */}
-              <div style={{ position: "relative", width: "100%", margin: "32px 0 24px" }}>
-                <div className="cs-stats-row" style={{ display: "flex", flexWrap: "wrap", gap: 24, padding: 20, borderRadius: 4 }}>
-                  {stats.map(({ _key, value, label }, i) => (
-                    <React.Fragment key={_key}>
-                      {i > 0 && <div className="cs-stats-divider" style={{ width: 1, flexShrink: 0, background: "var(--color-border-subtle)", borderRadius: 8, alignSelf: "stretch" }} />}
-                      <div style={{ display: "flex", flexBasis: 0, flexGrow: 1, flexShrink: 0, minWidth: 120 }}>
-                        <Stat value={value} label={label} />
-                      </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div style={{ position: "absolute", inset: 0, border: "1.5px solid var(--color-border-subtle)", borderRadius: 4, pointerEvents: "none" }} />
+              <Body>{cs.researchBodyPre}</Body>
+
+              {/* Stats — 3 individual cards matching ToolCard style */}
+              <div className="cs-stats-row" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, margin: "24px 0" }}>
+                {stats.map(({ _key, value, label }) => (
+                  <Stat key={_key} value={value} label={label} />
+                ))}
               </div>
 
-              <Body>{cs.researchBody}</Body>
+              <Body style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>{cs.researchCallout}</Body>
             </Section>
 
             {/* ── Process ──────────────────────────────────────────────── */}
@@ -422,7 +508,13 @@ export default async function BruinLeasePage() {
               <H2>{cs.processHeading}</H2>
               <Body>{cs.processBody}</Body>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 24 }}>
+              {cs.figmaComparison
+                ? <img src={cs.figmaComparison} alt="Early layout exploration in Figma" style={{ width: "100%", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px" }} />
+                : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
+              }
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {processTools.map(({ _key, tool, desc }) => (
                   <ToolCard key={_key} tool={tool} desc={desc} />
                 ))}
@@ -455,7 +547,7 @@ export default async function BruinLeasePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {d1Insights.map((point, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", width: "90%" }}>
-                    <span style={{ color: "var(--color-accent)", fontSize: 19, lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
+                    <span style={{ color: "var(--color-text-secondary)", fontSize: 19, lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
                     <p style={{ fontSize: 14, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0 }}>{point}</p>
                   </div>
                 ))}
@@ -491,15 +583,21 @@ export default async function BruinLeasePage() {
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
                 Selecting a quarter autofills exact move-in and move-out dates.
               </p>
+            </Section>
 
+            {/* ── Decision 4 ───────────────────────────────────────────── */}
+            <Section id="decision-4">
+              <SectionLabel>{cs.d4Label}</SectionLabel>
+              <H2>{cs.d4Heading}</H2>
+              <Body>{cs.d4Body}</Body>
               {(cs.oldFlowVideo || cs.decision1Video) && (
-                <div className="pm-d3-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
+                <div className="pm-d4-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
                   {cs.oldFlowVideo && (
-                    <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.oldFlowVideo}
                         showFrame
-                        instanceKey="d3-before"
+                        instanceKey="d4-before"
                         {...pp(cs.d3BeforePhonePos)}
                         style={{ border: "2px solid transparent" }}
                       />
@@ -507,11 +605,11 @@ export default async function BruinLeasePage() {
                     </div>
                   )}
                   {cs.decision1Video && (
-                    <div className="pm-d3-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.decision1Video}
                         showFrame
-                        instanceKey="d3-after"
+                        instanceKey="d4-after"
                         {...pp(cs.d3AfterPhonePos)}
                         style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
                       />
@@ -522,26 +620,16 @@ export default async function BruinLeasePage() {
               )}
             </Section>
 
-            {/* ── Decision 4 ───────────────────────────────────────────── */}
-            <Section id="decision-4">
-              <SectionLabel>{cs.d4Label}</SectionLabel>
-              <H2>{cs.d4Heading}</H2>
-              <Body>{cs.d4Body}</Body>
-              {cs.homepageComparison
-                ? <img src={cs.homepageComparison} alt="BruinLease homepage comparison" style={{ width: "108%", marginLeft: "-4%", display: "block", marginTop: 24, marginBottom: 24 }} />
-                : <div style={{ width: "108%", marginLeft: "-4%", aspectRatio: "16/9", background: "var(--color-placeholder)", marginTop: 24, marginBottom: 24 }} />
-              }
-            </Section>
-
             {/* ── Solution ─────────────────────────────────────────────── */}
             <Section id="solution">
               <SectionLabel>{cs.solutionLabel}</SectionLabel>
               <H2>{cs.solutionHeading}</H2>
-              <Body>{cs.solutionBody}</Body>
-              <div style={{ display: "flex", justifyContent: "center", background: cs.solutionBg, borderRadius: "var(--radius-card)", padding: "48px 24px", margin: "32px 0" }}>
-                <div className="pm-solution-wrap" style={{ width: "45%", maxWidth: 240 }}>
+              {cs.solutionBody && <Body>{cs.solutionBody}</Body>}
+              <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
+                <div className="pm-solution-wrap" style={{ width: "72%", maxWidth: 364 }}>
                   <PhoneMockup
-                    muxPlaybackId={cs.solutionMuxId ?? cs.heroMuxId}
+                    videoSrc="/solution.mp4"
+                    showFrame
                     instanceKey="solution"
                     {...pp(cs.solutionPhonePos)}
                   />

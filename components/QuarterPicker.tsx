@@ -178,6 +178,7 @@ export default function QuarterPicker({
     const containerRef = useRef<HTMLDivElement>(null)
     const innerRef = useRef<HTMLDivElement>(null)
     const [scale, setScale] = useState(1)
+    const [offsetX, setOffsetX] = useState(0)
     const [naturalHeight, setNaturalHeight] = useState(0)
 
     useEffect(() => { injectDateInputStyles() }, [])
@@ -186,7 +187,10 @@ export default function QuarterPicker({
         const el = containerRef.current
         if (!el) return
         const ro = new ResizeObserver(([entry]) => {
-            setScale((entry.contentRect.width / 393) * 0.3)
+            const w = entry.contentRect.width
+            const s = (w / 393) * 0.46
+            setScale(s)
+            setOffsetX((w - 393 * s) / 2)
         })
         ro.observe(el)
         return () => ro.disconnect()
@@ -228,7 +232,10 @@ export default function QuarterPicker({
                     width: "100%",
                     height: naturalHeight ? naturalHeight * scale : "auto",
                     overflow: "hidden",
-                    borderRadius: 4,
+                    borderRadius: 8,
+                    // translateZ forces a compositing layer so overflow:hidden
+                    // correctly clips the transformed child's rounded corners.
+                    transform: "translateZ(0)",
                 }}
             >
                 <div
@@ -236,8 +243,10 @@ export default function QuarterPicker({
                     style={{
                         width: 393,
                         transformOrigin: "top left",
-                        transform: `scale(${scale})`,
+                        transform: `translateX(${offsetX}px) scale(${scale})`,
                         background: C.background,
+                        // Scale-compensated radius so corners read as ~8px after scaling
+                        borderRadius: scale > 0 ? Math.round(8 / scale) : 8,
                         padding: "24px 20px",
                         boxSizing: "border-box",
                         display: "flex",
