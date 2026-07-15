@@ -410,14 +410,15 @@ html[data-theme="dark"] .project-image {
     grid-template-columns: 1fr !important;
     gap: 8px !important;
   }
-  .cs-d1-cards {
+  .cs-d1-columns {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
-    margin: 28px 0 20px !important;
+    gap: 28px !important;
   }
-  .cs-d1-comp {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
+  .cs-d1-card-img {
+    border-radius: var(--radius-card) !important;
+  }
+  .cs-d1-comp-col {
+    padding-right: 0 !important;
   }
   .cs-process-tools {
     grid-template-columns: 1fr !important;
@@ -429,15 +430,15 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study phone mockup responsive sizing (1.43×) ───────────── */
+/* ─── Case study phone mockup responsive sizing (~20% up from prior mobile) ─ */
 @media (max-width: 767px) {
-  .pm-hero-wrap     { width: 64% !important; max-width: 400px !important; }
-  .pm-d2-wrap       { width: 100% !important; max-width: none !important; }
+  .pm-hero-wrap     { width: 77% !important; max-width: 480px !important; }
+  .pm-d2-wrap       { width: 100% !important; max-width: 440px !important; margin-inline: auto !important; }
   .pm-d3-row,
   .pm-d4-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
   .pm-d3-wrap,
-  .pm-d4-wrap       { width: 64% !important; max-width: 280px !important; flex: none !important; }
-  .pm-solution-wrap { width: 64% !important; max-width: 344px !important; }
+  .pm-d4-wrap       { width: 77% !important; max-width: 336px !important; flex: none !important; }
+  .pm-solution-wrap { width: 77% !important; max-width: 413px !important; }
 }
 
 /* ─── Reflection 2-col grid — collapses to 1-col on mobile ──────── */
