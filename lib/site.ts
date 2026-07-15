@@ -3,7 +3,7 @@ export const SITE_URL = "https://www.muditm.com";
 export const SITE_NAME = "mudit mahajan";
 
 export const SITE_DESCRIPTION =
-  "Portfolio of Mudit Mahajan — UCLA product design student. Case studies in product design, frontend, and creative work.";
+  "I'm Mudit, a product designer with a love for craft, curiosity, and rabbit holes. Currently @ JOOLA | cognitive science @ UCLA";
 
 export const FOOTER_LINKS = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
