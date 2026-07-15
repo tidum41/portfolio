@@ -44,7 +44,9 @@ declare global {
       spawnGap: number;   // px of travel between stamps
       opacity: number;
       scale: number;
-      scatter: number;     // perpendicular push on freeze (0–1)
+      scatter: number;     // perpendicular push on freeze (0 = off)
+      pop: number;         // spawn scale overshoot (0 = off)
+      variance: number;    // per-stamp size/opacity rhythm (0 = off)
       // Classic follow-chain knobs
       lag: number;
       stretch: number;
@@ -540,7 +542,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       const lifetime = tc.lifetime ?? 360;
       const driftMs  = Math.max(1, tc.driftMs ?? 95);
       const spawnGap = tc.spawnGap ?? 26;
-      const scatter  = tc.scatter ?? 0.35;
+      const scatter  = tc.scatter  ?? 0;
+      const popAmt   = tc.pop      ?? 0;
+      const varAmt   = tc.variance ?? 0;
 
       // Spawn stamps along travel — left behind at gaps, never chasing the tip.
       if (mouse.inside && count > 0 && vel > 0.4) {
@@ -558,21 +562,22 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
           const inv = 1 / step;
           const dirX = dx * inv;
           const dirY = dy * inv;
-          // Deterministic rhythm — alternating stamps feel slightly different.
-          const variance = 0.82 + ((gen * 37) % 10) / 50; // 0.82–1.0
+          // Variance dial: 0 = uniform; 1 = up to ~18% size/opacity rhythm.
+          const rhythm = varAmt > 0.01
+            ? 1 - varAmt * (0.18 * (((gen * 37) % 10) / 10))
+            : 1;
           s.active = true;
           s.frozen = false;
           s.born = now;
           s.x = mouse.x - dirX * 5;
           s.y = mouse.y - dirY * 5;
-          // Whisper of path velocity — slight drift, then freeze.
           s.vx = dirX * Math.min(vel, 7) * 0.2;
           s.vy = dirY * Math.min(vel, 7) * 0.2;
           s.dirX = dirX;
           s.dirY = dirY;
-          s.variance = variance;
-          // Brief scale pop on drop — settles across the drift window.
-          s.pop = 1.18;
+          s.variance = rhythm;
+          // Pop dial: 0 = no overshoot; 1 ≈ 18% spawn scale pop.
+          s.pop = 1 + 0.18 * popAmt;
         }
       } else {
         lastStampX = mouse.x;
@@ -603,15 +608,14 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
             s.y += s.vy;
             s.vx *= 0.86;
             s.vy *= 0.86;
-            // Settle the spawn pop toward 1.
-            s.pop += (1 - s.pop) * 0.18;
+            if (popAmt > 0.01) s.pop += (1 - s.pop) * 0.18;
             allSettled = false;
           } else {
             s.frozen = true;
             s.vx = 0;
             s.vy = 0;
             s.pop = 1;
-            // Perpendicular scatter on freeze — left-behind debris, still flat/2D.
+            // Perpendicular scatter on freeze — off when scatter dial is 0.
             if (scatter > 0.01) {
               const sign = ((i * 13 + stampCursor) % 2) === 0 ? 1 : -1;
               const amt = scatter * (1.2 + s.variance) * sign;
@@ -627,9 +631,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         const dissolve = age01 <= hold
           ? 1
           : 1 - Math.pow((age01 - hold) / (1 - hold), 1.55);
-        // Faster movement at spawn reads a hair brighter via variance band.
-        const op = opacityBase * dissolve * idleFade * (0.88 + 0.12 * s.variance);
-        // Shrink with age + settle spawn pop + per-stamp variance.
+        const op = opacityBase * dissolve * idleFade * s.variance;
         const sc = scaleBase * s.pop * s.variance * (1 - 0.28 * age01);
 
         const rx = Math.round(s.x * 2) / 2;
@@ -841,14 +843,18 @@ export default function GlobalCustomCursor({
     // Toggle the PS3/XMB trail language vs the classic solid echo trail.
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
+    // Base trail = your tuned JSON. Interest knobs default to 0 so this is
+    // the clean starting feel — nudge scatter/pop/variance only after.
     Trail: {
-      echoCount: [5,    1,   8,   1],
-      lifetime:  [360,  80,  500, 10],
-      driftMs:   [95,   0,   160, 5],
-      spawnGap:  [26,   6,   48,  1],
-      opacity:   [0.3,  0.1, 1,   0.01],
-      scale:     [0.4,  0.2, 1.1, 0.01],
-      scatter:   [0.35, 0,   1.5, 0.05], // perpendicular nudge on freeze
+      echoCount: [5,   1,   8,   1],
+      lifetime:  [360, 80,  500, 10],
+      driftMs:   [95,  0,   160, 5],
+      spawnGap:  [26,  6,   48,  1],
+      opacity:   [0.3, 0.1, 1,   0.01],
+      scale:     [0.4, 0.2, 1.1, 0.01],
+      scatter:   [0,   0,   1.5, 0.05], // freeze nudge off by default
+      pop:       [0,   0,   1,   0.05], // spawn scale pop off by default
+      variance:  [0,   0,   1,   0.05], // stamp rhythm off by default
     },
 
     Dot: {
@@ -916,6 +922,8 @@ export default function GlobalCustomCursor({
       opacity:           dk.Trail.opacity,
       scale:             dk.Trail.scale,
       scatter:           dk.Trail.scatter,
+      pop:               dk.Trail.pop,
+      variance:          dk.Trail.variance,
       lag:               0.5,
       stretch:           0.28,
       velocityDecay:     0.78,
@@ -924,7 +932,8 @@ export default function GlobalCustomCursor({
       speedDivisor:      4,
     };
   }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lifetime, dk.Trail.driftMs,
-      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale, dk.Trail.scatter]);
+      dk.Trail.spawnGap, dk.Trail.opacity, dk.Trail.scale, dk.Trail.scatter,
+      dk.Trail.pop, dk.Trail.variance]);
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);
