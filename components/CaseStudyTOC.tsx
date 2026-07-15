@@ -160,6 +160,7 @@ export default function CaseStudyTOC({
         onClick={handleBack}
         onMouseEnter={() => setBackHovered(true)}
         onMouseLeave={() => setBackHovered(false)}
+        className="cs-back-desktop"
         style={{
           ...NO_TAP_HIGHLIGHT,
           display: "flex", alignItems: "flex-start", gap: 2,
