@@ -24,9 +24,12 @@ const NO_TAP_HIGHLIGHT = {
 export default function CaseStudyTOC({
   items = [],
   backHref = "/",
+  /** Always render the mobile back chevron (used in the content-lane slot). */
+  mobileBackOnly = false,
 }: {
   items?: TocItem[];
   backHref?: string;
+  mobileBackOnly?: boolean;
 }) {
   const router  = useRouter();
   const rafRef  = useRef<number | null>(null);
@@ -67,7 +70,9 @@ export default function CaseStudyTOC({
   // paints — a regular effect runs after paint, so the TOC would render with
   // nothing highlighted for one frame, then visibly snap to the right item
   // once the effect caught up. That was the flicker on page load.
+  // Skipped for the mobile-back-only instance (no section labels to track).
   useLayoutEffect(() => {
+    if (mobileBackOnly) return;
     let lastScrollY = -1;
 
     const tick = () => {
@@ -82,14 +87,15 @@ export default function CaseStudyTOC({
     updateActive();
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
-  }, [updateActive]);
+  }, [updateActive, mobileBackOnly]);
 
   useEffect(() => {
+    if (mobileBackOnly) return;
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", check);
     check();
     return () => window.removeEventListener("resize", check);
-  }, []);
+  }, [mobileBackOnly]);
 
   const scrollTo = (id: string, label: string) => {
     setActiveSection(label);
@@ -114,13 +120,15 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
+  // Tip sits at x≈1 so the stroke’s leftmost pixel lands on the content /
+  // hero-media left edge when the parent has no negative margin.
   const backArrow = (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="10 18 2 12 10 6" />
     </svg>
   );
 
-  if (isMobile) {
+  if (mobileBackOnly || isMobile) {
     return (
       <a
         href={backHref}
@@ -128,14 +136,13 @@ export default function CaseStudyTOC({
         onMouseEnter={() => setBackHovered(true)}
         onMouseLeave={() => setBackHovered(false)}
         className="cs-back-mobile"
+        aria-label="Back"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          // flex-start (not center): the chevron glyph sits mid-SVG (~7.5px
-          // inset in a 20px icon), so starting the icon at the content edge
-          // and nudging left by that inset lines the stroke up with body copy.
           display: "inline-flex", alignItems: "center", justifyContent: "flex-start",
           minWidth: 44, minHeight: 44,
-          marginLeft: -6,
+          margin: 0,
+          padding: 0,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
@@ -159,7 +166,7 @@ export default function CaseStudyTOC({
           ...NO_TAP_HIGHLIGHT,
           display: "flex", alignItems: "flex-start", gap: 2,
           minHeight: 40,
-          marginLeft: -6,
+          marginLeft: 0,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
