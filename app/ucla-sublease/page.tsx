@@ -175,7 +175,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
     : "0";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
           ? <img src={src} alt={alt} style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
@@ -531,16 +531,20 @@ export default async function BruinLeasePage() {
               <H2>{cs.d1Heading}</H2>
               <Body>{cs.d1Body}</Body>
 
-              <div className="cs-d1-cards" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 20px" }}>
-                <CardBox src={cs.decision1CardInitial}   alt="Initial card"   label={d1CardLabels[0] ?? "initial"}   position="left" />
-                <CardBox src={cs.decision1CardCondensed} alt="Condensed card" label={d1CardLabels[1] ?? "condensed"} position="middle" />
-                <CardBox src={cs.decision1CardFinal}     alt="Final card"     label={d1CardLabels[2] ?? "final"}     position="right" />
-              </div>
-
-              <div className="cs-d1-comp" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, margin: "16px 0 28px" }}>
-                {[d1CompCol1, d1CompCol2, d1CompCol3].map((col, ci) => (
-                  <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}
+              {/* Each column owns its image + comparison points so mobile stacking
+                  keeps comparisons under the matching caption instead of dumping
+                  all text after all images. */}
+              <div className="cs-d1-columns" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 28px" }}>
+                {[
+                  { src: cs.decision1CardInitial,   alt: "Initial card",   label: d1CardLabels[0] ?? "initial",   position: "left" as const,   col: d1CompCol1 },
+                  { src: cs.decision1CardCondensed, alt: "Condensed card", label: d1CardLabels[1] ?? "condensed", position: "middle" as const, col: d1CompCol2 },
+                  { src: cs.decision1CardFinal,     alt: "Final card",     label: d1CardLabels[2] ?? "final",     position: "right" as const,  col: d1CompCol3 },
+                ].map(({ src, alt, label, position, col }) => (
+                  <div key={label} className="cs-d1-column" style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
+                    <CardBox src={src} alt={alt} label={label} position={position} />
+                    <div className="cs-d1-comp-col" style={{ display: "flex", flexDirection: "column", gap: 8, paddingRight: 12 }}>
+                      {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -583,7 +587,7 @@ export default async function BruinLeasePage() {
               <H2>{cs.d3Heading}</H2>
               <Body>{cs.d3Body}</Body>
 
-              <div style={{ marginTop: 24 }}><QuarterPicker /></div>
+              <div className="cs-quarter-picker" style={{ marginTop: 24 }}><QuarterPicker /></div>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
                 Selecting a quarter autofills exact move-in and move-out dates.
               </p>

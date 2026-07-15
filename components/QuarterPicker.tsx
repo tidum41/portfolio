@@ -188,7 +188,10 @@ export default function QuarterPicker({
         if (!el) return
         const ro = new ResizeObserver(([entry]) => {
             const w = entry.contentRect.width
-            const s = (w / 393) * 0.46
+            // Desktop keeps the compact ~0.46 width; mobile needs the control
+            // large enough to thumb — target at least ~0.7 of the content column.
+            const factor = w <= 520 ? 0.72 : 0.46
+            const s = (w / 393) * factor
             setScale(s)
             setOffsetX((w - 393 * s) / 2)
         })
