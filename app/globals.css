@@ -383,12 +383,12 @@ html[data-theme="dark"] .project-image {
    CaseStudyAlignDials (DialKit panel "CS Align"). Defaults below match
    the last hard-coded optical nudges; tweak live, then lock in code. */
 :root {
-  --cs-align-m-back:    0px;
-  --cs-align-m-tagline: -1px;
+  --cs-align-m-back:    -6px;
+  --cs-align-m-tagline: 0px;
   --cs-align-m-title:   -2px;
-  --cs-align-d-back:    0px;
+  --cs-align-d-back:    -6px;
   --cs-align-d-tagline: 0px;
-  --cs-align-d-title:   0px;
+  --cs-align-d-title:   -2px;
 }
 .cs-content {
   min-width: 0;
