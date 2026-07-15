@@ -135,7 +135,7 @@ export default function CaseStudyTOC({
           // and nudging left by that inset lines the stroke up with body copy.
           display: "inline-flex", alignItems: "center", justifyContent: "flex-start",
           minWidth: 44, minHeight: 44,
-          marginLeft: -8,
+          marginLeft: -6,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
