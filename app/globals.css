@@ -411,7 +411,7 @@ html[data-theme="dark"] .project-image {
   }
   .cs-back-mobile {
     /* Hit area stays 44px; glyph optically shares the content left edge. */
-    margin-left: -8px !important;
+    margin-left: -6px !important;
   }
 }
 
