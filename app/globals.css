@@ -416,15 +416,18 @@ html[data-theme="dark"] .project-image {
   text-align: left;
 }
 
-/* Desktop nudges (≥768) */
+/* Desktop nudges (≥768) — CaseStudyAlignDials injects live !important
+   overrides on top of these var-based fallbacks. */
 .cs-back-desktop {
-  transform: translateX(var(--cs-align-d-back));
+  transform: translateX(var(--cs-align-d-back, 0px));
 }
-.cs-hero-tagline {
-  transform: translateX(var(--cs-align-d-tagline));
-}
-.cs-hero-title {
-  transform: translateX(var(--cs-align-d-title));
+@media (min-width: 768px) {
+  .cs-hero-tagline {
+    transform: translateX(var(--cs-align-d-tagline, 0px));
+  }
+  .cs-hero-title {
+    transform: translateX(var(--cs-align-d-title, 0px));
+  }
 }
 
 @media (max-width: 767px) {
@@ -436,7 +439,7 @@ html[data-theme="dark"] .project-image {
   .cs-back-mobile {
     margin: 0 !important;
     padding: 0 !important;
-    transform: translateX(var(--cs-align-m-back));
+    transform: translateX(var(--cs-align-m-back, 0px));
   }
   .cs-hero-header { margin-bottom: 32px !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
@@ -452,8 +455,8 @@ html[data-theme="dark"] .project-image {
     padding-right: 0 !important;
     text-align: left !important;
   }
-  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline)); }
-  .cs-hero-title   { transform: translateX(var(--cs-align-m-title)); }
+  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline, 0px)); }
+  .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
