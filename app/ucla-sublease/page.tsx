@@ -399,8 +399,12 @@ export default async function BruinLeasePage() {
 
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
-      <DevNavigator />
-      <PhoneMockupDevPanel />
+      {process.env.NODE_ENV === "development" && (
+        <>
+          <DevNavigator />
+          <PhoneMockupDevPanel />
+        </>
+      )}
       <div className="cs-layout">
 
         <aside className="cs-aside">
@@ -418,8 +422,8 @@ export default async function BruinLeasePage() {
               the rest previously read as buggy/jittery rather than elegant. */}
           <header className="cs-hero-header" style={{ marginBottom: 64 }}>
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem>
-                <p style={{
+              <EntranceItem className="cs-hero-tagline-wrap">
+                <p className="cs-hero-tagline" style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 400,
@@ -514,7 +518,7 @@ export default async function BruinLeasePage() {
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }} className="cs-process-tools">
                 {processTools.map(({ _key, tool, desc }) => (
                   <ToolCard key={_key} tool={tool} desc={desc} />
                 ))}
@@ -527,13 +531,13 @@ export default async function BruinLeasePage() {
               <H2>{cs.d1Heading}</H2>
               <Body>{cs.d1Body}</Body>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 20px" }}>
+              <div className="cs-d1-cards" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 20px" }}>
                 <CardBox src={cs.decision1CardInitial}   alt="Initial card"   label={d1CardLabels[0] ?? "initial"}   position="left" />
                 <CardBox src={cs.decision1CardCondensed} alt="Condensed card" label={d1CardLabels[1] ?? "condensed"} position="middle" />
                 <CardBox src={cs.decision1CardFinal}     alt="Final card"     label={d1CardLabels[2] ?? "final"}     position="right" />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, margin: "16px 0 28px" }}>
+              <div className="cs-d1-comp" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, margin: "16px 0 28px" }}>
                 {[d1CompCol1, d1CompCol2, d1CompCol3].map((col, ci) => (
                   <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}

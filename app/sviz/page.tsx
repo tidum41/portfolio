@@ -253,8 +253,8 @@ export default async function SvizPage() {
               full rationale. TOC (aside, above) never participates. */}
           <header className="cs-hero-header" style={{ marginBottom: 64 }}>
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem>
-                <p style={{
+              <EntranceItem className="cs-hero-tagline-wrap">
+                <p className="cs-hero-tagline" style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 400,

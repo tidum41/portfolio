@@ -369,6 +369,9 @@ html[data-theme="dark"] .project-image {
     grid-template-columns: 1fr;
     padding-top: 16px;
   }
+  .cs-layout > * {
+    min-width: 0;
+  }
   /* Show aside so back button is visible — TOC component hides labels on mobile */
   .cs-aside {
     position: static; /* not sticky on mobile — just sits above content */
@@ -378,6 +381,17 @@ html[data-theme="dark"] .project-image {
 }
 
 /* ─── Case study hero header ─────────────────────────────────────── */
+.cs-hero-header {
+  text-align: left;
+}
+.cs-hero-tagline {
+  text-align: left;
+  width: 100%;
+}
+.cs-hero-tagline-wrap {
+  width: 100%;
+  align-self: stretch;
+}
 @media (max-width: 767px) {
   .cs-hero-header { margin-bottom: 32px !important; }
 }
@@ -390,11 +404,23 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study stats — vertical stack on mobile ────────────────── */
+/* ─── Case study stats — single column on mobile ─────────────────── */
 @media (max-width: 767px) {
   .cs-stats-row {
-    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .cs-d1-cards {
+    grid-template-columns: 1fr !important;
     gap: 16px !important;
+    margin: 28px 0 20px !important;
+  }
+  .cs-d1-comp {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .cs-process-tools {
+    grid-template-columns: 1fr !important;
   }
   .cs-stats-divider {
     width: 100% !important;
@@ -407,8 +433,10 @@ html[data-theme="dark"] .project-image {
 @media (max-width: 767px) {
   .pm-hero-wrap     { width: 64% !important; max-width: 400px !important; }
   .pm-d2-wrap       { width: 100% !important; max-width: none !important; }
-  .pm-d3-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
-  .pm-d3-wrap       { width: 64% !important; max-width: 280px !important; flex: none !important; }
+  .pm-d3-row,
+  .pm-d4-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
+  .pm-d3-wrap,
+  .pm-d4-wrap       { width: 64% !important; max-width: 280px !important; flex: none !important; }
   .pm-solution-wrap { width: 64% !important; max-width: 344px !important; }
 }
 
@@ -448,8 +476,36 @@ html[data-theme="dark"] .project-image {
 .about-hero-bento-col { flex: 1 1 0; max-width: 320px; order: 2; }
 @media (max-width: 767px) {
   .about-hero { flex-direction: column; gap: 0; }
-  .about-hero-bio { order: 2; }
+  .about-hero-bio { order: 2; margin-top: 48px; }
   .about-hero-bento-col { order: 1; max-width: none; width: 100%; }
+}
+
+/* ─── Playground gallery controls — mobile positioning & touch targets ── */
+.bento-hint-pill {
+  top: 46px;
+}
+.bento-zoom-panel {
+  bottom: 40px;
+  height: 36px;
+}
+.bento-zoom-track {
+  touch-action: none;
+}
+.bento-zoom-thumb {
+  touch-action: none;
+}
+@media (max-width: 767px) {
+  .bento-hint-pill { top: 88px; }
+  .bento-zoom-panel { bottom: 56px; height: 44px; }
+  .bento-zoom-track {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .bento-zoom-thumb {
+    width: 14px !important;
+    height: 28px !important;
+  }
 }
 
 /* ─── Mux player — fill + hide controls ─────────────────────────── */
