@@ -6,7 +6,7 @@ import { useDialKit } from "dialkit";
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
 // first N (per dial) are ever animated/shown, the rest sit hidden.
-const MAX_ECHO = 12;
+const MAX_ECHO = 16;
 const CURSOR_COLOR_KEY = "ps3cp_cursor_color";
 const CURSOR_POS_KEY   = "ps3cp_cursor_pos";
 
@@ -36,17 +36,20 @@ declare global {
       wrapFadeDuration: number;
     };
     gc_trailConfig?: {
+      style: "classic" | "xmb";
       echoCount: number;
+      lag: number;
+      stretch: number;
+      fadePower: number;
+      opacity: number;
+      scale: number;
+      glow: number;
+      drift: number;
+      // Kept as derived/internal knobs so the RAF loop stays stable.
       velocityDecay: number;
       velocitySmoothing: number;
-      lerpBase: number;
-      lerpSpread: number;
       lerpMin: number;
       speedDivisor: number;
-      scaleStart: number;
-      scaleFalloff: number;
-      opacityStart: number;
-      opacityFalloff: number;
     };
   }
 }
@@ -114,10 +117,47 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       backgroundColor: currentColor, borderRadius: "50%",
       pointerEvents: "none", zIndex: `${zIndex - 1 - i}`,
       opacity: "0", willChange: "auto",
+      // Soft dissolve without hard disk edges (XMB sparkles are additive
+      // point-sprites — radial fill approximates that on the web).
+      backgroundImage: "none",
+      boxShadow: "none",
+      mixBlendMode: "normal",
     });
     document.body.appendChild(el);
     echoEls.push(el);
   }
+
+  // Per-echo settle offsets — XMB particles don't snap off; they gently fall
+  // out of the wake when motion calms (friction / "wind" residue).
+  const echoDrift = Array.from({ length: MAX_ECHO }, () => 0);
+  let lastTrailStyle: "classic" | "xmb" | "" = "";
+  let lastGlowPaint = -1;
+
+  const paintEchoAppearance = (style: "classic" | "xmb") => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const glow = window.gc_trailConfig?.glow ?? 0.45;
+    echoEls.forEach((el, i) => {
+      if (style === "xmb") {
+        // Soft luminous orb: bright core → transparent edge, with a faint
+        // bloom. plus-lighter on dark themes mimics XMB additive sparkles;
+        // normal blend on light keeps contrast readable.
+        el.style.backgroundColor = "transparent";
+        el.style.backgroundImage =
+          `radial-gradient(circle at 50% 45%, ${withAlpha(currentColor, 0.95)} 0%, ${withAlpha(currentColor, 0.45)} 38%, ${withAlpha(currentColor, 0)} 70%)`;
+        el.style.boxShadow = glow > 0.01
+          ? `0 0 ${Math.round(8 + i * 1.2)}px ${withAlpha(currentColor, 0.22 * glow)}`
+          : "none";
+        el.style.mixBlendMode = isDark ? "plus-lighter" : "normal";
+      } else {
+        el.style.backgroundImage = "none";
+        el.style.backgroundColor = currentColor;
+        el.style.boxShadow = "none";
+        el.style.mixBlendMode = "normal";
+      }
+    });
+    lastTrailStyle = style;
+    lastGlowPaint = glow;
+  };
 
   // ph: pill height when expanded — 4px taller than the resting dot.
   const ph = size + 4;
@@ -455,9 +495,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const msSinceMove = now - lastMove;
     const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
     const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
-    const fastLerp    = tc.lerpBase   ?? 0.5;
-    const spread      = tc.lerpSpread ?? 0.28;
-    const lerpMin     = tc.lerpMin    ?? 0.08;
+    const lerpMin     = tc.lerpMin ?? 0.08;
     pressScale += (pressTarget - pressScale) * (dc.pressLerp ?? 0.28);
 
     const wrapFadeMs = dc.wrapFadeDuration ?? 180;
@@ -485,11 +523,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       if (pillVisible) { pillVisible = false; morphToRest(); }
     }
 
-    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? 6)));
-    const scaleStart    = tc.scaleStart    ?? 0.78;
-    const scaleFalloff  = tc.scaleFalloff  ?? 0.56;
-    const opacityStart  = tc.opacityStart  ?? 0.55;
-    const opacityFalloff = tc.opacityFalloff ?? 0.45;
+    const style = tc.style === "classic" ? "classic" : "xmb";
+    const glowNow = tc.glow ?? 0.45;
+    if (style !== lastTrailStyle || (style === "xmb" && glowNow !== lastGlowPaint)) {
+      paintEchoAppearance(style);
+    }
+
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 8 : 6))));
+    const lag         = tc.lag         ?? (style === "xmb" ? 0.38 : 0.5);
+    const stretch     = tc.stretch     ?? (style === "xmb" ? 0.22 : 0.28);
+    const fadePower   = tc.fadePower   ?? (style === "xmb" ? 1.65 : 1);
+    const opacityBase = tc.opacity     ?? (style === "xmb" ? 0.5  : 0.55);
+    const scaleBase   = tc.scale       ?? (style === "xmb" ? 0.9  : 0.78);
+    const driftAmt    = tc.drift       ?? (style === "xmb" ? 0.18 : 0);
 
     let allSettled = true;
     for (let i = 0; i < MAX_ECHO; i++) {
@@ -497,18 +543,54 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       if (!el) continue;
       if (i >= count) {
         if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+        echoDrift[i] *= 0.85;
         continue;
       }
       const tx    = i === 0 ? mouse.x : echoes[i - 1].x;
       const ty    = i === 0 ? mouse.y : echoes[i - 1].y;
-      const lerpF = Math.max(lerpMin, fastLerp - i * spread * speedFactor);
+      // XMB lag is softer: follow speed eases with index so the wake trails
+      // out instead of stacking as stiff clones. Classic keeps the old spread.
+      const lerpF = style === "xmb"
+        ? Math.max(lerpMin, lag * Math.pow(0.72, i) * (0.55 + 0.45 * speedFactor))
+        : Math.max(lerpMin, lag - i * stretch * speedFactor);
       echoes[i].x += (tx - echoes[i].x) * lerpF;
       echoes[i].y += (ty - echoes[i].y) * lerpF;
-      const t   = (i + 1) / (count + 1);
-      const sc  = scaleStart - t * scaleFalloff;
-      const op  = (opacityStart - t * opacityFalloff) * idleFade;
-      const rx  = Math.round(echoes[i].x * 2) / 2, ry = Math.round(echoes[i].y * 2) / 2;
-      const tr  = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${sc})`;
+
+      const t = count <= 1 ? 1 : (i + 1) / count;
+      // Eased dissolve: higher fadePower keeps near-cursor orbs fuller, then
+      // tips drop off more suddenly — reads closer to XMB sparkle falloff
+      // than a linear opacity ramp.
+      const fadeT = Math.pow(t, fadePower);
+      const sc = style === "xmb"
+        ? scaleBase * (1 - fadeT * 0.62)
+        : scaleBase - t * 0.56;
+
+      // Layered fading for the XMB look:
+      //  1) position falloff (fadeT)
+      //  2) velocity breath — trail blooms when you move, softens when still
+      //  3) tip-first idle wink — farthest echoes die out a hair earlier
+      //  4) shared idleFade for leaving the window
+      let op = opacityBase * (1 - fadeT);
+      if (style === "xmb") {
+        const velBreath = 0.28 + 0.72 * Math.pow(speedFactor, 0.65);
+        const tipDelay  = i * 28; // ms — tip dissolves first when you pause
+        const tipIdle   = msSinceMove < fadeDelay + tipDelay
+          ? 1
+          : Math.max(0, 1 - (msSinceMove - fadeDelay - tipDelay) / Math.max(40, fadeDur * 0.85));
+        op *= velBreath * tipIdle * idleFade;
+        // Residual settle: when motion calms, orbs gently drift down/out of
+        // the wake (PS3 particles have friction + wind residue, not a hard
+        // stop). While speeding, that residue bleeds off.
+        const settle = driftAmt * (0.12 + t * 0.55) * (1 - speedFactor);
+        echoDrift[i] = echoDrift[i] * (0.96 - 0.08 * speedFactor) + settle;
+      } else {
+        op *= idleFade;
+        echoDrift[i] *= 0.8;
+      }
+
+      const rx = Math.round(echoes[i].x * 2) / 2;
+      const ry = Math.round((echoes[i].y + echoDrift[i]) * 2) / 2;
+      const tr = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${Math.max(0.08, sc)})`;
       if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
       const opR = Math.round(op * 100) / 100;
       if (opR !== lastOpacity[i]) { el.style.opacity = String(opR); lastOpacity[i] = opR; }
@@ -616,7 +698,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const tc = getTextColor();
     textSpan.style.color = tc;
     arrowEl.style.color  = tc;
-    echoEls.forEach(el => { el.style.backgroundColor = color; });
+    // Force a repaint of echo appearance so radial fills / glow pick up the
+    // new color even if trail style itself hasn't changed.
+    lastTrailStyle = "";
+    paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
@@ -640,6 +725,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // Only auto-switch if no manual override, or override was one of the two theme defaults
     if (!persisted || persisted === lightColor || persisted === darkColor) {
       applyColor(themeColor);
+    } else {
+      // Color stays, but blend mode (plus-lighter vs normal) still needs a paint.
+      lastTrailStyle = "";
+      paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
     }
   });
   themeObserver.observe(document.documentElement, {
@@ -669,147 +758,99 @@ export default function GlobalCustomCursor({
   size?:      number;
   zIndex?:    number;
 }) {
+  // Slim panel: style toggle + the few knobs that actually change the feel.
+  // Pill beziers / sheen / ring-flash / frost micro-params are hard-coded to
+  // their prior defaults so the DialKit surface stays usable while tuning
+  // the new XMB trail.
   const dk = useDialKit("Cursor", {
     size: [20, 8, 48],
+    // Toggle the PS3/XMB trail language vs the classic solid echo trail.
+    trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
-    // Dot — the resting cursor shape, independent of the trail behind it.
-    Dot: {
-      restOpacity:      [0.88, 0.2,  1,   0.01],
-      pressScaleAmount: [0.6,  0.3,  1,   0.01], // scale target while a pointer button is held
-      pressLerp:        [0.28, 0.05, 0.6, 0.01], // follow speed back to rest scale
-      idleFadeDelay:    [150,  0,    500, 5],    // ms after last move before the idle fade starts
-      idleFadeDuration: [200,  20,   800, 10],   // ms for that fade to complete
-      wrapFadeDuration: [180,  20,   600, 10],   // ms for the whole cursor's enter/leave opacity
-    },
-
-    // Trail — the echo dots following the cursor.
     Trail: {
-      echoCount:         [6,    0,    12,  1],    // visible echoes (pool is always 12)
-      velocityDecay:      [0.78, 0.5,  0.98, 0.01], // per-frame decay of tracked speed
-      velocitySmoothing:  [0.4,  0.05, 1,    0.01], // blend weight for new pointer speed samples
-      lerpBase:           [0.5,  0.05, 1,    0.01], // base follow speed for echo 0
-      lerpSpread:         [0.28, 0,    1,    0.01], // how much slower each further echo follows
-      lerpMin:            [0.08, 0.01, 0.3,  0.01], // floor so trailing echoes never fully stall
-      speedDivisor:       [4,    1,    20,   0.5],  // higher = speed-based lag kicks in later
-      scaleStart:         [0.78, 0.2,  1.2,  0.01], // size of the first echo, relative to the dot
-      scaleFalloff:       [0.56, 0,    1,    0.01], // how much smaller each further echo gets
-      opacityStart:       [0.55, 0,    1,    0.01], // opacity of the first echo
-      opacityFalloff:     [0.45, 0,    1,    0.01], // how much fainter each further echo gets
+      echoCount: [8,    0,    16,  1],     // denser default suits soft XMB orbs
+      lag:       [0.38, 0.08, 0.9, 0.01],  // follow speed — lower = silkier wake
+      stretch:   [0.22, 0,    0.6, 0.01],  // classic spacing (xmb uses lag curve)
+      fadePower: [1.65, 0.6,  3,   0.05],  // >1 = stay bright, soft tip dissolve
+      opacity:   [0.5,  0,    1,   0.01],
+      scale:     [0.9,  0.3,  1.2, 0.01],
+      glow:      [0.45, 0,    1,   0.01],  // bloom amount (xmb only)
+      drift:     [0.18, 0,    0.8, 0.01],  // residual settle / "fall off"
     },
 
-    // PS3 XMB pacing — slow enough to read as graceful, not sluggish.
-    morphDuration:  [260,   60,   900,  10],
-    textDelay:      [100,   0,    600,  10],
-    collapseDur:    [300,   10,   3000, 10],
-    textFadeDur:    [150,   10,   400,  10],
-    textOffsetX:    [0,     -20,  20,   0.5],
-    textOffsetY:    [0,     -20,  20,   0.5],
-    // Slow-mo: 1 = real speed, 0.05 = 20× slower for fine-tuning
-    timeScale:      [1,     0.05, 1,    0.05],
-    // Expand cubic-bezier — Material "standard" ease: smooth deceleration
-    // into place, no overshoot past the target.
-    expandX1:       [0.4,   0,    1,    0.01],
-    expandY1:       [0,     0,    1,    0.01],
-    expandX2:       [0.2,   0,    1,    0.01],
-    expandY2:       [1,     0,    1,    0.01],
-    // Collapse cubic-bezier — same graceful curve, mirrored — smooth
-    // acceleration away, decisive but never abrupt.
-    collapseX1:     [0.4,   0,    1,    0.01],
-    collapseY1:     [0,     0,    1,    0.01],
-    collapseX2:     [0.2,   0,    1,    0.01],
-    collapseY2:     [1,     0,    1,    0.01],
+    Dot: {
+      restOpacity: [0.88, 0.2,  1,   0.01],
+      pressScale:  [0.6,  0.3,  1,   0.01],
+    },
 
-    // Pill fill effect — swap between looks without touching the morph timing.
-    fillEffect: { type: "select", options: ["solid", "gradient", "ringFlash", "frosted"], default: "solid" },
-    // "solid" — opaque fill, brightness bump only (no blur, no shadow)
-    solidSaturate:   [100, 100, 220, 5],
-    solidBrightness: [114,  90, 130, 1],
-    // "gradient" — diagonal highlight sheen faded in via opacity (gradients
-    // themselves don't CSS-transition, so the sheen is a separate overlay)
-    sheenAngle:  [125,  0,   360, 1],
-    sheenAlpha:  [0.35, 0,   1,   0.02],
-    sheenSpread: [55,   20,  100, 1],
-    // "ringFlash" — a bright ring pops in on expand, then eases back to the
-    // resting subtle stroke — an accent flash instead of a shape bounce.
-    ringFlashColor: { type: "color", default: "#ffffff" },
-    ringFlashWidth: [3,    1,   8,   0.5],
-    ringFlashAlpha: [0.9,  0.3, 1,   0.02],
-    ringFlashDur:   [220,  60,  600, 10],
-    // "frosted" — translucent blurred glass (the original look), now tunable
-    frostedBlur:     [18,   0,   40,  1],
-    frostedSaturate: [180, 100, 260,  5],
-    frostedAlpha:    [0.55, 0.2,  1,  0.01],
+    Pill: {
+      morphDuration: [260, 60, 900, 10],
+      fillEffect: { type: "select", options: ["solid", "frosted", "ringFlash"], default: "solid" },
+    },
   });
 
   useEffect(() => {
     window.gc_morphConfig = {
-      duration:    dk.morphDuration,
-      textDelay:   dk.textDelay,
-      collapseDur: dk.collapseDur,
-      textFadeDur: dk.textFadeDur,
-      textOffsetX: dk.textOffsetX,
-      textOffsetY: dk.textOffsetY,
-      timeScale:   dk.timeScale,
-      expandX1:    dk.expandX1,
-      expandY1:    dk.expandY1,
-      expandX2:    dk.expandX2,
-      expandY2:    dk.expandY2,
-      collapseX1:  dk.collapseX1,
-      collapseY1:  dk.collapseY1,
-      collapseX2:  dk.collapseX2,
-      collapseY2:  dk.collapseY2,
-      fillEffect:      dk.fillEffect,
-      solidSaturate:   dk.solidSaturate,
-      solidBrightness: dk.solidBrightness,
-      sheenAngle:      dk.sheenAngle,
-      sheenAlpha:      dk.sheenAlpha,
-      sheenSpread:     dk.sheenSpread,
-      ringFlashColor:  dk.ringFlashColor,
-      ringFlashWidth:  dk.ringFlashWidth,
-      ringFlashAlpha:  dk.ringFlashAlpha,
-      ringFlashDur:    dk.ringFlashDur,
-      frostedBlur:     dk.frostedBlur,
-      frostedSaturate: dk.frostedSaturate,
-      frostedAlpha:    dk.frostedAlpha,
+      duration:         dk.Pill.morphDuration,
+      textDelay:        100,
+      collapseDur:      300,
+      textFadeDur:      150,
+      textOffsetX:      0,
+      textOffsetY:      0,
+      timeScale:        1,
+      expandX1:         0.4,
+      expandY1:         0,
+      expandX2:         0.2,
+      expandY2:         1,
+      collapseX1:       0.4,
+      collapseY1:       0,
+      collapseX2:       0.2,
+      collapseY2:       1,
+      fillEffect:       dk.Pill.fillEffect,
+      solidSaturate:    100,
+      solidBrightness:  114,
+      sheenAngle:       125,
+      sheenAlpha:       0.35,
+      sheenSpread:      55,
+      ringFlashColor:   "#ffffff",
+      ringFlashWidth:   3,
+      ringFlashAlpha:   0.9,
+      ringFlashDur:     220,
+      frostedBlur:      18,
+      frostedSaturate:  180,
+      frostedAlpha:     0.55,
     };
-  }, [dk.morphDuration, dk.textDelay, dk.collapseDur, dk.textFadeDur,
-      dk.textOffsetX, dk.textOffsetY, dk.timeScale,
-      dk.expandX1, dk.expandY1, dk.expandX2, dk.expandY2,
-      dk.collapseX1, dk.collapseY1, dk.collapseX2, dk.collapseY2,
-      dk.fillEffect, dk.solidSaturate, dk.solidBrightness,
-      dk.sheenAngle, dk.sheenAlpha, dk.sheenSpread,
-      dk.ringFlashColor, dk.ringFlashWidth, dk.ringFlashAlpha, dk.ringFlashDur,
-      dk.frostedBlur, dk.frostedSaturate, dk.frostedAlpha]);
+  }, [dk.Pill.morphDuration, dk.Pill.fillEffect]);
 
   useEffect(() => {
     window.gc_dotConfig = {
       restOpacity:      dk.Dot.restOpacity,
-      pressScaleAmount: dk.Dot.pressScaleAmount,
-      pressLerp:        dk.Dot.pressLerp,
-      idleFadeDelay:    dk.Dot.idleFadeDelay,
-      idleFadeDuration: dk.Dot.idleFadeDuration,
-      wrapFadeDuration: dk.Dot.wrapFadeDuration,
+      pressScaleAmount: dk.Dot.pressScale,
+      pressLerp:        0.28,
+      idleFadeDelay:    150,
+      idleFadeDuration: 220,
+      wrapFadeDuration: 180,
     };
-  }, [dk.Dot.restOpacity, dk.Dot.pressScaleAmount, dk.Dot.pressLerp,
-      dk.Dot.idleFadeDelay, dk.Dot.idleFadeDuration, dk.Dot.wrapFadeDuration]);
+  }, [dk.Dot.restOpacity, dk.Dot.pressScale]);
 
   useEffect(() => {
     window.gc_trailConfig = {
+      style:             dk.trailStyle === "classic" ? "classic" : "xmb",
       echoCount:         dk.Trail.echoCount,
-      velocityDecay:     dk.Trail.velocityDecay,
-      velocitySmoothing: dk.Trail.velocitySmoothing,
-      lerpBase:          dk.Trail.lerpBase,
-      lerpSpread:        dk.Trail.lerpSpread,
-      lerpMin:           dk.Trail.lerpMin,
-      speedDivisor:      dk.Trail.speedDivisor,
-      scaleStart:        dk.Trail.scaleStart,
-      scaleFalloff:      dk.Trail.scaleFalloff,
-      opacityStart:      dk.Trail.opacityStart,
-      opacityFalloff:    dk.Trail.opacityFalloff,
+      lag:               dk.Trail.lag,
+      stretch:           dk.Trail.stretch,
+      fadePower:         dk.Trail.fadePower,
+      opacity:           dk.Trail.opacity,
+      scale:             dk.Trail.scale,
+      glow:              dk.Trail.glow,
+      drift:             dk.Trail.drift,
+      velocityDecay:     0.78,
+      velocitySmoothing: 0.4,
+      lerpMin:           0.08,
+      speedDivisor:      4,
     };
-  }, [dk.Trail.echoCount, dk.Trail.velocityDecay, dk.Trail.velocitySmoothing,
-      dk.Trail.lerpBase, dk.Trail.lerpSpread, dk.Trail.lerpMin, dk.Trail.speedDivisor,
-      dk.Trail.scaleStart, dk.Trail.scaleFalloff, dk.Trail.opacityStart, dk.Trail.opacityFalloff]);
+  }, [dk.trailStyle, dk.Trail.echoCount, dk.Trail.lag, dk.Trail.stretch,
+      dk.Trail.fadePower, dk.Trail.opacity, dk.Trail.scale, dk.Trail.glow, dk.Trail.drift]);
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);

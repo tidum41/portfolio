@@ -387,13 +387,32 @@ html[data-theme="dark"] .project-image {
 .cs-hero-tagline {
   text-align: left;
   width: 100%;
+  margin-left: 0;
+  padding-left: 0;
 }
 .cs-hero-tagline-wrap {
+  display: block;
   width: 100%;
-  align-self: stretch;
+  margin-left: 0;
+  padding-left: 0;
+  text-align: left;
 }
 @media (max-width: 767px) {
   .cs-hero-header { margin-bottom: 32px !important; }
+  /* Keep tagline flush with the rest of the case-study content column —
+     EntranceItem/motion wrappers can otherwise read slightly inset next to
+     the optically-aligned mobile back chevron. */
+  .cs-hero-header,
+  .cs-hero-tagline-wrap,
+  .cs-hero-tagline {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-align: left !important;
+  }
+  .cs-back-mobile {
+    /* Hit area stays 44px; glyph optically shares the content left edge. */
+    margin-left: -8px !important;
+  }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
