@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect as _useLayoutEffect, useRef } from "react";
 import { useDialKit } from "dialkit";
 import { FRAME_RECTS, FRAME_VIEWBOX, type RabbitFrame } from "./rabbitSpriteData";
 import { FILLED_FRAME_RECTS } from "./rabbitSpriteFill";
+import { introTimings } from "@/lib/introTimings";
 
 const useSyncEffect =
     typeof window !== "undefined" ? _useLayoutEffect : useEffect;
@@ -48,7 +49,24 @@ function ensureMuxLoaded(): void {
     document.head.appendChild(s);
 }
 
-function createRabbitSprite(filled: boolean): SVGSVGElement {
+// Position/flip/optical-size transform shared by every place the sprite's
+// on-screen transform is (re)established — the hop tick, stop/reset, redraw
+// on filled/theme/scale changes, and the very first paint.
+function computeSpriteTransform(
+    translateX: number,
+    direction: 1 | -1,
+    filled: boolean,
+    filledScale: number,
+): string {
+    // A solid silhouette optically reads smaller than the same-size outline
+    // (the eye judges outlines by their outer contour, solids by their
+    // mass) — filledScale compensates that illusion, applied only when the
+    // filled render is actually showing.
+    const s = filled ? filledScale : 1;
+    return `translateX(${translateX.toFixed(1)}px) scaleX(${(direction * s).toFixed(3)}) scaleY(${s.toFixed(3)})`;
+}
+
+function createRabbitSprite(filled: boolean, filledScale: number): SVGSVGElement {
     const NS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(NS, "svg") as SVGSVGElement;
     svg.setAttribute("fill", "none");
@@ -58,11 +76,15 @@ function createRabbitSprite(filled: boolean): SVGSVGElement {
     svg.id = "rh-rabbit";
     // Fixed height + aspect-locked width so pose swaps never resize the
     // layout box (the discontinuity came from height:em + per-frame viewBox).
+    // shape-rendering:crispEdges disables anti-aliasing on the rect edges —
+    // without it, the many small adjacent rects in the filled render blur
+    // together and lose fine cutout detail (eye, thin lines).
     svg.style.cssText = `
         display: block; height: 1.15em; width: calc(1.15em * ${FRAME_ASPECT});
         color: inherit; pointer-events: none; opacity: 0;
-        overflow: visible;
+        overflow: visible; shape-rendering: crispEdges;
     `;
+    svg.style.transform = computeSpriteTransform(0, 1, filled, filledScale);
     setSpriteFrame(svg, HOP_SEQUENCE[0], filled);
     return svg;
 }
@@ -105,6 +127,7 @@ function createHopAnimator(
     getHopDist: () => number,
     getMaxTravel: () => number,
     getFilled: () => boolean,
+    getFilledScale: () => number,
     onFrame?: (frame: RabbitFrame, translateX: number, direction: 1 | -1) => void,
 ) {
     let seqIndex = 0;
@@ -114,7 +137,7 @@ function createHopAnimator(
     let running = false;
 
     function render() {
-        svg.style.transform = `translateX(${translateX.toFixed(1)}px) scaleX(${direction})`;
+        svg.style.transform = computeSpriteTransform(translateX, direction, getFilled(), getFilledScale());
     }
 
     function apply(i: number) {
@@ -146,6 +169,24 @@ function createHopAnimator(
         running = true;
         intervalId = window.setInterval(tick, getFrameMs());
     }
+    // Plays exactly one full hop-out-and-back patrol on its own, then stops
+    // (settling back to idle) — the autoplay CTA. Shares `running`/`start`'s
+    // guard with everything else, so a real hover/click firing mid-autoplay
+    // (which calls start()) is simply a no-op here and open()/close() take
+    // over via the same underlying interval — no special-casing needed.
+    function startOnce(onComplete?: () => void) {
+        if (running) return;
+        let sawFarEnd = false;
+        running = true;
+        intervalId = window.setInterval(() => {
+            tick();
+            if (direction === -1) sawFarEnd = true;
+            if (sawFarEnd && direction === 1 && translateX === 0) {
+                stop();
+                onComplete?.();
+            }
+        }, getFrameMs());
+    }
     function stop() {
         running = false;
         clearInterval(intervalId);
@@ -171,13 +212,16 @@ function createHopAnimator(
         translateX = Math.min(translateX, maxTravel);
         render();
     }
-    // Redraws the currently-shown frame with the latest getFilled() value —
-    // called when the DialKit "filled" toggle changes, so it takes effect
-    // immediately instead of waiting for the next hop tick or open/close.
+    // Redraws the currently-shown frame (and its transform, for filledScale)
+    // with the latest getFilled()/getFilledScale() — called when the
+    // DialKit "filled"/"filledScale" dials or the theme change, so it takes
+    // effect immediately instead of waiting for the next hop tick or
+    // open/close.
     function redraw() {
         setSpriteFrame(svg, HOP_SEQUENCE[seqIndex], getFilled());
+        render();
     }
-    return { start, stop, pause, resume, resync, redraw };
+    return { start, startOnce, stop, pause, resume, resync, redraw };
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -238,9 +282,9 @@ function findAndWrap(node: Node): HTMLElement | null {
     return null;
 }
 
-function injectRabbit(holesAnchor: HTMLElement, filled: boolean): void {
+function injectRabbit(holesAnchor: HTMLElement, filled: boolean, filledScale: number): void {
     if (document.getElementById("rh-rabbit")) return;
-    const rabbit = createRabbitSprite(filled);
+    const rabbit = createRabbitSprite(filled, filledScale);
 
     const container = document.createElement("span");
     container.id = "rh-rabbit-container";
@@ -271,10 +315,14 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             // Local experiment: solid-fill silhouette with the line art cut
             // out as transparent gaps, instead of the outline-only render.
             filled: false,
+            // Solid shapes optically read smaller than same-size outlines —
+            // this compensates, applied only while the filled render is on.
+            filledScale: [1.1, 1.0, 1.3, 0.01],
         });
         const frameMsRef = useRef(dk.frameMs);
         const hopDistRef = useRef(dk.hopDist);
         const filledRef = useRef(dk.filled);
+        const filledScaleRef = useRef(dk.filledScale);
         // The filled treatment is a dark-mode-only preview — light mode must
         // stay exactly the original outline sprite regardless of the dial.
         const isDarkRef = useRef(
@@ -290,6 +338,10 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             hopperRef.current?.redraw();
         }, [dk.filled]);
         useEffect(() => {
+            filledScaleRef.current = dk.filledScale;
+            hopperRef.current?.redraw();
+        }, [dk.filledScale]);
+        useEffect(() => {
             const readTheme = () => {
                 isDarkRef.current = document.documentElement.getAttribute("data-theme") === "dark";
                 hopperRef.current?.redraw();
@@ -297,6 +349,47 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             const mo = new MutationObserver(readTheme);
             mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
             return () => mo.disconnect();
+        }, []);
+
+        // Autoplay CTA: as the hero H1 finishes fading in on the homepage,
+        // do one full hop-out-and-back on its own — a passive cue that
+        // "rabbit holes" is interactive — then behave exactly as usual.
+        // Once per browser session (sessionStorage, cleared on every hard
+        // reload by the inline script in layout.tsx, same convention as
+        // cursor-color/wave-color/PS3 mode). No video popup, no special
+        // interrupt-handling: startOnce() shares start()/stop()'s `running`
+        // guard with real hover/click, so a real interaction firing
+        // mid-autoplay just takes over via the normal open()/close() path.
+        useEffect(() => {
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+            let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+            const schedule = (skipSessionCheck: boolean) => {
+                if (!document.documentElement.hasAttribute("data-intro")) return;
+                if (!skipSessionCheck && sessionStorage.getItem("rh-cta-played") === "1") return;
+                sessionStorage.setItem("rh-cta-played", "1");
+                // Start right as the H1 begins fading in (heroDelay), not
+                // after it finishes — so the hop is already mid-motion well
+                // before the text settles, instead of only starting then.
+                const delay = introTimings.heroDelay * 1000;
+                timeoutId = setTimeout(() => {
+                    hopperRef.current?.startOnce();
+                }, delay);
+            };
+
+            schedule(false);
+
+            const onReplay = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                schedule(true);
+            };
+            window.addEventListener("intro-replay", onReplay);
+
+            return () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                window.removeEventListener("intro-replay", onReplay);
+            };
         }, []);
 
         useSyncEffect(() => {
@@ -343,7 +436,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             const holesAnchor = findAndWrap(textEl);
             if (!holesAnchor) return null;
 
-            injectRabbit(holesAnchor, filledRef.current && isDarkRef.current);
+            injectRabbit(holesAnchor, filledRef.current && isDarkRef.current, filledScaleRef.current);
             const svg = document.getElementById("rh-rabbit") as SVGSVGElement | null;
             let hoverZone: HTMLSpanElement | null = null;
 
@@ -398,6 +491,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     () => hopDistRef.current,
                     getMaxTravel,
                     () => filledRef.current && isDarkRef.current,
+                    () => filledScaleRef.current,
                 );
                 hopperRef.current = hopper;
 
