@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
+import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 
 function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string; labelFontSize: number }) {
@@ -36,20 +38,34 @@ interface Props {
   title: string;
   sub?: string;
   aspectRatio: string;
+  /** Whether this card is on the currently-visible route. Defaults to true
+   *  for standalone use; the persistent work shell passes this so background
+   *  cards pause (rather than reload) while a case study is open. */
+  active?: boolean;
 }
 
-export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio }: Props) {
+export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio, active = true }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
     cardGap:       [6,  0, 24],
     labelFontSize: [18, 10, 32],
   });
 
+  const playerRef = useRef<MuxPlayerRefAttributes>(null);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (active) player.play?.().catch(() => {});
+    else player.pause?.();
+  }, [active]);
+
   return (
     <div className="project-card" style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}>
       <Link href={href} prefetch style={{ textDecoration: "none", display: "block" }}>
-        <div className="project-image" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+        <div className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
           <MuxPlayer
+            ref={playerRef}
             playbackId={playbackId}
             autoPlay="muted"
             loop

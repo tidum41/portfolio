@@ -27,18 +27,33 @@ export const caseStudy = defineType({
     { name: "problem",    title: "Problem" },
     { name: "research",   title: "Research" },
     { name: "process",    title: "Process" },
-    { name: "decision1",  title: "Decision 1" },
-    { name: "decision2",  title: "Decision 2" },
-    { name: "decision3",  title: "Decision 3" },
-    { name: "decision4",  title: "Decision 4" },
+    { name: "decision1",  title: "Decision 1", hidden: ({ document }: { document?: Record<string, unknown> }) => document?.pageType !== "product-design" },
+    { name: "decision2",  title: "Decision 2", hidden: ({ document }: { document?: Record<string, unknown> }) => document?.pageType !== "product-design" },
+    { name: "decision3",  title: "Decision 3", hidden: ({ document }: { document?: Record<string, unknown> }) => document?.pageType !== "product-design" },
+    { name: "decision4",  title: "Decision 4", hidden: ({ document }: { document?: Record<string, unknown> }) => document?.pageType !== "product-design" },
     { name: "solution",   title: "Solution" },
-    { name: "reflection", title: "Reflection" },
+    { name: "impact",     title: "Impact" },
+    { name: "reflection", title: "Reflection", hidden: ({ document }: { document?: Record<string, unknown> }) => document?.pageType !== "product-design" },
     { name: "toc",        title: "TOC / Meta" },
   ],
   fields: [
     // ── Identity ────────────────────────────────────────────────────────────
     defineField({ name: "title", type: "string", title: "Title", group: "toc" }),
     defineField({ name: "slug",  type: "string", title: "Slug (e.g. ucla-sublease)", group: "toc" }),
+
+    defineField({
+      name: "pageType",
+      title: "Page type",
+      type: "string",
+      group: "toc",
+      options: {
+        list: [
+          { title: "Product Design", value: "product-design" },
+          { title: "YouTube / Personal", value: "youtube-channel" },
+        ],
+      },
+      initialValue: "product-design",
+    }),
 
     defineField({
       name: "tocItems", title: "TOC items", type: "array", group: "toc",
@@ -57,6 +72,7 @@ export const caseStudy = defineType({
     defineField({ name: "heroTitle",   type: "string", title: "Hero title",             group: "hero" }),
     defineField({ name: "heroBg",      type: "string", title: "Hero background color (CSS value)", group: "hero" }),
     defineField({ name: "heroMuxId",   type: "string", title: "Hero Mux Playback ID",   group: "hero" }),
+    defineField({ name: "heroImage",   type: "image",  title: "Hero image (static, used instead of Mux video when set)", group: "hero", options: { hotspot: true } }),
     phonePos("heroPhonePos", "Hero phone positioning"),
 
     defineField({
@@ -113,6 +129,8 @@ export const caseStudy = defineType({
         preview: { select: { title: "tool", subtitle: "desc" } },
       }],
     }),
+    defineField({ name: "figmaComparison", type: "image", title: "Figma comparison image", group: "process", options: { hotspot: true } }),
+    defineField({ name: "processImage",    type: "image", title: "Process image",           group: "process", options: { hotspot: true } }),
 
     // ── Decision 1 ──────────────────────────────────────────────────────────
     defineField({ name: "d1Label",   type: "string", title: "Section label", group: "decision1" }),
@@ -191,7 +209,13 @@ export const caseStudy = defineType({
     defineField({ name: "solutionBody",    type: "text",   title: "Body text",     group: "solution" }),
     defineField({ name: "solutionBg",      type: "string", title: "Background color (CSS value)", group: "solution" }),
     defineField({ name: "solutionMuxId",   type: "string", title: "Solution Mux Playback ID", group: "solution" }),
+    defineField({ name: "solutionVideo",   type: "file",   title: "Solution video (local file, no caption)", group: "solution", options: { accept: "video/*" } }),
     phonePos("solutionPhonePos", "Solution phone positioning"),
+
+    // ── Impact ──────────────────────────────────────────────────────────────
+    defineField({ name: "impactLabel",   type: "string", title: "Section label", group: "impact" }),
+    defineField({ name: "impactHeading", type: "string", title: "Heading",       group: "impact" }),
+    defineField({ name: "impactBody",    type: "text",   title: "Body text (blank line between paragraphs)", group: "impact" }),
 
     // ── Reflection ──────────────────────────────────────────────────────────
     defineField({ name: "reflectionLabel", type: "string", title: "Section label", group: "reflection" }),

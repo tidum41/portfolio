@@ -10,12 +10,17 @@ import {
     startTransition,
     type CSSProperties,
 } from "react";
+import { useDialKit } from "dialkit";
+import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
+
+const ENTRANCE_EASE_CSS = `cubic-bezier(${EASE_Y.join(",")})`;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface GalleryItem {
     src: string;
     alt?: string;
     caption?: string;
+    link?: string;
     colSpan?: 1 | 2;
     rowSpan?: 1 | 2;
 }
@@ -180,7 +185,7 @@ function Crosshair({ show, isDark }: { show: boolean; isDark: boolean }) {
     );
 }
 
-function PanIcon({ isDark }: { isDark: boolean }) {
+function PanIcon() {
     return (
         <svg
             viewBox="0 0 20 20"
@@ -193,7 +198,7 @@ function PanIcon({ isDark }: { isDark: boolean }) {
                 d="M 7.5 4.583 L 9.117 2.967 C 9.605 2.479 10.395 2.479 10.883 2.967 L 12.5 4.583 M 4.583 7.5 L 2.967 9.117 C 2.479 9.605 2.479 10.395 2.967 10.883 L 4.583 12.5 M 15.417 7.5 L 17.033 9.117 C 17.521 9.605 17.521 10.395 17.033 10.883 L 15.417 12.5 M 12.5 15.417 L 10.883 17.033 C 10.395 17.521 9.605 17.521 9.117 17.033 L 7.5 15.417 M 10 3.333 L 10 10 M 10 10 L 10 16.667 M 10 10 L 3.333 10 M 10 10 L 16.667 10"
                 fill="none"
                 strokeWidth="1.5"
-                stroke={isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)"}
+                stroke="var(--color-text-secondary)"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
@@ -201,20 +206,39 @@ function PanIcon({ isDark }: { isDark: boolean }) {
     );
 }
 
-function TapIcon({ isDark }: { isDark: boolean }) {
+function TapIcon() {
+    const c = "var(--color-text-secondary)";
     return (
         <svg
-            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 256 256"
             width="13"
             height="13"
+            style={{ display: "block", flexShrink: 0 }}
+        >
+            <path d="M64,76a52,52,0,0,1,104,0" fill="none" stroke={c} strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M72,224,42.68,174a20,20,0,0,1,34.64-20L96,184V76a20,20,0,0,1,40,0v56a20,20,0,0,1,40,0v16a20,20,0,0,1,40,0v36c0,24-8,40-8,40" fill="none" stroke={c} strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
+// Small external-link glyph for captions with an attached `link` — sits
+// beside the caption text, independently clickable (stopPropagation keeps
+// it from also triggering the cell's focus/zoom onClick).
+function LinkIcon() {
+    return (
+        <svg
             xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            width="10"
+            height="10"
             style={{ display: "block", flexShrink: 0 }}
         >
             <path
-                d="M 10 2 L 10 11 M 10 11 L 7 8.5 M 10 11 L 13 8.5 M 7 14 C 7 15.657 8.343 17 10 17 C 11.657 17 13 15.657 13 14 L 13 11 C 13 11 12 10.5 10 10.5 C 8 10.5 7 11 7 11 Z"
+                d="M8.333 4.167H4.167a1.667 1.667 0 0 0-1.667 1.666v10a1.667 1.667 0 0 0 1.667 1.667h10a1.667 1.667 0 0 0 1.666-1.667v-4.166M12.5 2.5h5v5M8.333 11.667 17.5 2.5"
                 fill="none"
-                strokeWidth="1.5"
-                stroke={isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)"}
+                stroke="currentColor"
+                strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
@@ -302,6 +326,20 @@ export default function BentoGallery({
         clamp(cs, 1, columns) * colUnit + (clamp(cs, 1, columns) - 1) * gap;
     const cImgH = (rs: number) => rs * imgUnitH + (rs - 1) * gap;
 
+    // Kept in sync every render (not just on focus/layout changes) so the
+    // selector-resize call inside applyTransform always reads fresh geometry
+    // without needing to be in that callback's own dependency array.
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
+    const columnsRef = useRef(columns);
+    columnsRef.current = columns;
+    const colUnitRef = useRef(colUnit);
+    colUnitRef.current = colUnit;
+    const gapRef = useRef(gap);
+    gapRef.current = gap;
+    const imgUnitHRef = useRef(imgUnitH);
+    imgUnitHRef.current = imgUnitH;
+
     const positions = useMemo(
         () =>
             packMasonry(
@@ -315,6 +353,40 @@ export default function BentoGallery({
             ),
         [items, columns, colUnit, imgUnitH, hasCaps, gap]
     );
+    const positionsRef = useRef(positions);
+    positionsRef.current = positions;
+
+    // Entrance stagger — reads the same "Entrance" dialkit panel as
+    // EntranceStagger/EntranceItem (components/ScrollReveal.tsx) so one
+    // panel tunes both, even though this component stays framer-motion-free
+    // (plain CSS transitions, matching its existing hand-rolled style).
+    // Rank is by visual position (top, then left) rather than array index,
+    // since packMasonry's layout doesn't preserve item order.
+    const dk = useDialKit("Entrance", {
+        y:         [ENTRANCE_DEFAULTS.y,         0,   80],
+        duration:  [ENTRANCE_DEFAULTS.duration,  0.1, 2],
+        stagger:   [ENTRANCE_DEFAULTS.stagger,   0,   0.4],
+        maxSpread: [ENTRANCE_DEFAULTS.maxSpread, 0,   2],
+    });
+    const reducedMotionRef = useRef(false);
+    useEffect(() => {
+        reducedMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }, []);
+
+    const staggerRank = useMemo(() => {
+        const order = positions
+            .map((pos, i) => (pos ? { i, pos } : null))
+            .filter((x): x is { i: number; pos: PixPos } => x !== null)
+            .sort((a, b) => a.pos.top - b.pos.top || a.pos.left - b.pos.left);
+        const rank: Record<number, number> = {};
+        order.forEach(({ i }, r) => { rank[i] = r; });
+        return rank;
+    }, [positions]);
+
+    const revealedCount = staggerRank ? Object.keys(staggerRank).length : 0;
+    const perItemStagger = revealedCount > 1
+        ? Math.min(dk.stagger, dk.maxSpread / (revealedCount - 1))
+        : dk.stagger;
 
     const canvasW = columns * colUnit + (columns - 1) * gap;
     const canvasH = useMemo(() => {
@@ -344,6 +416,36 @@ export default function BentoGallery({
         [canvasW, canvasH, vw, vh]
     );
 
+    // Keeps the focused-tile selector border locked to the actual on-screen
+    // box of its tile through every zoom-changing gesture — not just the
+    // moment it was first focused. Earlier this only resized the selector
+    // (assuming the focused tile always stays centered in the viewport,
+    // true for the zoom slider/zoomToCenter), but ctrl/cmd+wheel and pinch
+    // zoom around the cursor/touch midpoint instead — the focused tile
+    // drifts off-center, and a CSS-centered selector drifted with it. Fixed
+    // by computing the selector's real screen position directly from the
+    // tile's canvas-space position (`positionsRef`) and the just-applied
+    // transform, rather than assuming center alignment. Reads only refs so
+    // it can be called from applyTransform without joining that callback's
+    // deps, and takes an explicit idx (rather than always reading
+    // focusedRef) since focusCell needs to sync the box for the tile it's
+    // *about* to focus, before the async setFocusedIdx/focusedRef commit.
+    const syncSelectorBox = (idx: number) => {
+        const sel = selectorRef.current;
+        const item = itemsRef.current[idx];
+        const pos = positionsRef.current[idx];
+        if (!sel || !item || !pos) return;
+        const { x, y, s } = tx.current;
+        const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
+        const rs = item.rowSpan ?? 1;
+        const iw = cs * colUnitRef.current + (cs - 1) * gapRef.current;
+        const ih = rs * imgUnitHRef.current + (rs - 1) * gapRef.current;
+        sel.style.left = x + pos.left * s + "px";
+        sel.style.top = y + pos.top * s + "px";
+        sel.style.width = iw * s + "px";
+        sel.style.height = ih * s + "px";
+    };
+
     // ── Apply transform ───────────────────────────────────────────────────────
     const applyTransform = useCallback(
         (
@@ -353,6 +455,8 @@ export default function BentoGallery({
             easing: "none" | "focus" | "snap" | "spring" | "flow" = "none"
         ) => {
             tx.current = { x, y, s };
+            const fi = focusedRef.current;
+            if (fi !== null) syncSelectorBox(fi);
             const el = canvasRef.current;
             if (!el) return;
 
@@ -365,6 +469,14 @@ export default function BentoGallery({
             };
             el.style.transition = DUR[easing];
             el.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+
+            if (easing !== "none") {
+                el.style.willChange = "transform";
+                el.addEventListener("transitionend", function onEnd() {
+                    el.style.willChange = "auto";
+                    el.removeEventListener("transitionend", onEnd);
+                }, { once: true });
+            }
 
             const th = thumbRef.current;
             if (th) {
@@ -438,21 +550,26 @@ export default function BentoGallery({
         (idx: number, animate: boolean) => {
             const sel = selectorRef.current;
             if (!sel) return;
-            const item = items[idx];
-            if (!item) return;
-            const t = getFocusT(idx);
-            const cs = clamp(item.colSpan ?? 1, 1, columns);
-            const rs = item.rowSpan ?? 1;
-            const iw = cs * colUnit + (cs - 1) * gap;
-            const ih = rs * imgUnitH + (rs - 1) * gap;
-            sel.style.transition = animate
-                ? `width 1.5s ${FOCUS_E}, height 1.5s ${FOCUS_E}, opacity 0.4s ease`
-                : "none";
-            sel.style.width = iw * t.s + "px";
-            sel.style.height = ih * t.s + "px";
-            sel.style.opacity = "1";
+            // Position/size come from syncSelectorBox, which reads tx.current —
+            // by the time showSelector is called (always right after
+            // applyTransform with the matching focus transform), that's
+            // already the correct just-applied transform.
+            syncSelectorBox(idx);
+            sel.style.transition = "none";
+            if (animate) {
+                sel.style.transform = "scale(0, 0)";
+                sel.style.opacity = "0";
+                requestAnimationFrame(() => {
+                    sel.style.transition = `transform 1.5s ${FOCUS_E}, opacity 0.4s ease`;
+                    sel.style.transform = "scale(1, 1)";
+                    sel.style.opacity = "1";
+                });
+            } else {
+                sel.style.transform = "scale(1, 1)";
+                sel.style.opacity = "1";
+            }
         },
-        [getFocusT, items, columns, colUnit, gap, imgUnitH]
+        []
     );
 
     const hideSelector = useCallback((animate = true) => {
@@ -689,6 +806,7 @@ export default function BentoGallery({
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
+            if (canvasRef.current) canvasRef.current.style.willChange = "transform";
             ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (ptrs.current.size === 1) {
                 const g = gst.current;
@@ -781,6 +899,8 @@ export default function BentoGallery({
                 // Canvas rests wherever it lands — no snap-to-bounds or auto-focus
                 if (rootRef.current) rootRef.current.style.cursor = "crosshair";
                 setTimeout(() => { gst.current.moved = false; }, 0);
+                // Demote after snap/spring animations settle (~800ms)
+                setTimeout(() => { if (canvasRef.current) canvasRef.current.style.willChange = "auto"; }, 800);
             }
         },
         []
@@ -822,10 +942,11 @@ export default function BentoGallery({
         WebkitBackdropFilter: "blur(8px)",
     };
 
-    const hintTextColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)";
+    const hintTextColor = "var(--color-text-secondary)";
     const dividerColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)";
-    const thumbColor = isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)";
-    const thumbHoverColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)";
+    const thumbBase = isDark ? "#ffffff" : "#000000";
+    const thumbNormalOpacity = isDark ? 0.62 : 0.55;
+    const thumbHoverOpacityVal = isDark ? 0.85 : 0.8;
     const zpBtnColor = isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)";
     const zpBtnHoverColor = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)";
     const trackLineColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
@@ -876,9 +997,14 @@ export default function BentoGallery({
                 cursor: "crosshair",
                 touchAction: "none",
                 userSelect: "none",
-                opacity: ready ? 1 : 0,
-                transform: ready ? "translateY(0)" : "translateY(10px)",
-                transition: ready ? "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)" : "none",
+                // Hold interaction off until every image has decoded, or 800ms
+                // elapses — then each tile reveals itself individually (fade-up
+                // + slide-up, staggered by visual position) rather
+                // than the whole gallery fading in as one flat block. The root
+                // itself no longer animates opacity — that's the per-tile job
+                // below, avoiding a double-fade between this and the tiles.
+                pointerEvents: ready ? "auto" : "none",
+                transform: "none",
             }}
         >
             {/* ── Canvas ── */}
@@ -891,7 +1017,6 @@ export default function BentoGallery({
                     width: canvasW,
                     height: canvasH,
                     transformOrigin: "top left",
-                    willChange: "transform",
                 }}
             >
                 {items.map((item, i) => {
@@ -905,12 +1030,36 @@ export default function BentoGallery({
                     const isHovered = hoveredIdx === i && !isActive && !zoomed;
                     const dimmed = zoomed && !isActive;
 
+                    // Entrance (fade-up + slide-up, staggered by
+                    // visual position) lives on this outer wrapper — a
+                    // separate concern from the inner div's zoom-dim opacity,
+                    // so replaying one never fights the other.
+                    const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
+                    const entranceInstant = reducedMotionRef.current;
+
                     return (
                         <div
                             key={i}
+                            style={{
+                                position: "absolute",
+                                left: pos.left,
+                                top: pos.top,
+                                width: iw,
+                                opacity: ready ? 1 : 0,
+                                transform: ready ? "translateY(0px)" : `translateY(${dk.y}px)`,
+                                pointerEvents: ready ? undefined : "none",
+                                // Delay folded into the shorthand itself (not a separate
+                                // transitionDelay longhand) — mixing the two in one style
+                                // object is ambiguous across re-renders and React warns on it.
+                                transition: entranceInstant
+                                    ? "none"
+                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_CSS} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_CSS} ${entranceDelay}s`,
+                            }}
+                        >
+                        <div
                             onClick={(e) => onCellClick(e, i)}
                             onMouseEnter={() => {
-                                if (!gst.current.moved) setHoveredIdx(i);
+                                if (!gst.current.moved && window.matchMedia("(hover: hover)").matches) setHoveredIdx(i);
                             }}
                             onMouseLeave={() => setHoveredIdx(null)}
                             role="button"
@@ -921,10 +1070,6 @@ export default function BentoGallery({
                                     onCellClick(e as unknown as React.MouseEvent, i);
                             }}
                             style={{
-                                position: "absolute",
-                                left: pos.left,
-                                top: pos.top,
-                                width: iw,
                                 cursor: dimmed ? "default" : "crosshair",
                                 opacity: dimmed ? 0.42 : 1,
                                 transition: "opacity .65s cubic-bezier(.4,0,.2,1)",
@@ -987,26 +1132,55 @@ export default function BentoGallery({
                                         paddingTop: 7,
                                         height: CAPTION_H,
                                         overflow: "hidden",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 5,
                                         fontFamily:
                                             "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
                                         fontSize: 11,
                                         fontWeight: isActive ? 500 : 400,
                                         letterSpacing: "0.01em",
+                                        textTransform: "lowercase",
                                         color: isActive
                                             ? captionActive
                                             : isHovered
                                               ? captionHovered
                                               : captionBase,
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        lineHeight: 1,
-                                        pointerEvents: "none",
-                                        transition: "color .3s ease, font-weight .3s ease",
+                                        transition: "color .3s ease",
                                     }}
                                 >
-                                    {item.caption ?? ""}
+                                    <span
+                                        style={{
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            lineHeight: 1,
+                                            pointerEvents: "none",
+                                        }}
+                                    >
+                                        {item.caption ?? ""}
+                                    </span>
+                                    {item.link && (
+                                        <a
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={`Watch: ${item.caption ?? "video"}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            style={{
+                                                flexShrink: 0,
+                                                display: "inline-flex",
+                                                color: "inherit",
+                                                pointerEvents: "auto",
+                                            }}
+                                        >
+                                            <LinkIcon />
+                                        </a>
+                                    )}
                                 </div>
                             )}
+                        </div>
                         </div>
                     );
                 })}
@@ -1015,14 +1189,18 @@ export default function BentoGallery({
             {/* ── Crosshair ── */}
             <Crosshair show={!zoomed} isDark={isDark} />
 
-            {/* ── Selector border ── */}
+            {/* ── Selector border — left/top/width/height are set imperatively
+                 by syncSelectorBox to the focused tile's real on-screen box
+                 (not assumed-centered), so it tracks the tile correctly even
+                 through off-center zoom gestures like ctrl+wheel/pinch. ── */}
             <div
                 ref={selectorRef}
                 style={{
                     position: "absolute",
-                    left: "50%",
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
+                    left: 0,
+                    top: 0,
+                    transformOrigin: "center center",
+                    transform: "scale(0, 0)",
                     width: 0,
                     height: 0,
                     border: `1px solid ${selectorBorderColor}`,
@@ -1038,7 +1216,7 @@ export default function BentoGallery({
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    top: 14,
+                    top: 46,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
@@ -1053,7 +1231,7 @@ export default function BentoGallery({
                     ...panelBase,
                 }}
             >
-                <PanIcon isDark={isDark} />
+                <PanIcon />
                 <span style={{
                     fontFamily: "var(--font-sans, system-ui, sans-serif)",
                     fontSize: 11,
@@ -1067,7 +1245,7 @@ export default function BentoGallery({
                     background: dividerColor,
                     flexShrink: 0,
                 }} />
-                <TapIcon isDark={isDark} />
+                <TapIcon />
                 <span style={{
                     fontFamily: "var(--font-sans, system-ui, sans-serif)",
                     fontSize: 11,
@@ -1083,7 +1261,7 @@ export default function BentoGallery({
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
                     position: "absolute",
-                    bottom: 20,
+                    bottom: 40,
                     left: "50%",
                     transform: "translateX(-50%)",
                     zIndex: 60,
@@ -1099,13 +1277,14 @@ export default function BentoGallery({
                     onClick={() => zoomBy(1 / 1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
+                        if (window.matchMedia("(hover: hover)").matches)
+                            (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
                     }}
                     onMouseLeave={(e) => {
                         (e.currentTarget as HTMLElement).style.color = zpBtnColor;
                     }}
                 >
-                    −
+                    <span style={{ display: "inline-block", transform: "translateY(-2px) translateX(-0.5px)", pointerEvents: "none" }}>−</span>
                 </button>
 
                 <div style={{ width: 1, background: dividerColor, flexShrink: 0 }} />
@@ -1144,17 +1323,19 @@ export default function BentoGallery({
                             width: 8,
                             height: 20,
                             borderRadius: 4,
-                            background: thumbColor,
+                            background: thumbBase,
+                            opacity: thumbNormalOpacity,
                             cursor: "ew-resize",
-                            transition: "background .15s ease",
+                            transition: "opacity .15s ease",
                             outline: "none",
                             WebkitTapHighlightColor: "transparent",
                         } as CSSProperties}
                         onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = thumbHoverColor;
+                            if (window.matchMedia("(hover: hover)").matches)
+                                (e.currentTarget as HTMLElement).style.opacity = String(thumbHoverOpacityVal);
                         }}
                         onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = thumbColor;
+                            (e.currentTarget as HTMLElement).style.opacity = String(thumbNormalOpacity);
                         }}
                     />
                 </div>
@@ -1166,13 +1347,14 @@ export default function BentoGallery({
                     onClick={() => zoomBy(1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
+                        if (window.matchMedia("(hover: hover)").matches)
+                            (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
                     }}
                     onMouseLeave={(e) => {
                         (e.currentTarget as HTMLElement).style.color = zpBtnColor;
                     }}
                 >
-                    +
+                    <span style={{ display: "inline-block", transform: "translateY(-2px) translateX(-0.5px)", pointerEvents: "none" }}>+</span>
                 </button>
             </div>
         </div>

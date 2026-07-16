@@ -3,7 +3,10 @@
 import { useEffect } from "react";
 import { useDialKit } from "dialkit";
 
-const ECHO_COUNT = 6;
+// Pool size for the echo trail — always allocated in full so the Trail
+// "echoCount" dial can be tuned live without remounting the cursor; only the
+// first N (per dial) are ever animated/shown, the rest sit hidden.
+const MAX_ECHO = 12;
 const CURSOR_COLOR_KEY = "ps3cp_cursor_color";
 const CURSOR_POS_KEY   = "ps3cp_cursor_pos";
 
@@ -23,6 +26,27 @@ declare global {
       sheenAngle: number; sheenAlpha: number; sheenSpread: number;
       ringFlashColor: string; ringFlashWidth: number; ringFlashAlpha: number; ringFlashDur: number;
       frostedBlur: number; frostedSaturate: number; frostedAlpha: number;
+    };
+    gc_dotConfig?: {
+      restOpacity: number;
+      pressScaleAmount: number;
+      pressLerp: number;
+      idleFadeDelay: number;
+      idleFadeDuration: number;
+      wrapFadeDuration: number;
+    };
+    gc_trailConfig?: {
+      echoCount: number;
+      velocityDecay: number;
+      velocitySmoothing: number;
+      lerpBase: number;
+      lerpSpread: number;
+      lerpMin: number;
+      speedDivisor: number;
+      scaleStart: number;
+      scaleFalloff: number;
+      opacityStart: number;
+      opacityFalloff: number;
     };
   }
 }
@@ -79,9 +103,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   styleEl.textContent = "* { cursor: none !important; }";
   document.head.appendChild(styleEl);
 
-  // Echo trail
+  // Echo trail — full pool always created; tick() shows/animates only the
+  // first N per the live "echoCount" dial.
   const echoEls: HTMLDivElement[] = [];
-  for (let i = 0; i < ECHO_COUNT; i++) {
+  for (let i = 0; i < MAX_ECHO; i++) {
     const el = document.createElement("div");
     Object.assign(el.style, {
       position: "fixed", top: "0", left: "0",
@@ -131,7 +156,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     overflow: "hidden",
     willChange: "auto",
     transform: "translate(-50%,-50%)",
-    opacity: "0.88",
+    opacity: String(window.gc_dotConfig?.restOpacity ?? 0.88),
   });
   wrap.appendChild(cursorEl);
 
@@ -190,7 +215,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     y: seededPos?.y ?? -999,
     inside: seededPos != null,
   };
-  const echoes = Array.from({ length: ECHO_COUNT }, () => ({ x: mouse.x, y: mouse.y }));
+  const echoes = Array.from({ length: MAX_ECHO }, () => ({ x: mouse.x, y: mouse.y }));
 
   let lastX = mouse.x, lastY = mouse.y, vel = 0;
   let lastMove = seededPos != null ? performance.now() : 0;
@@ -201,8 +226,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
-  const lastOpacity    = new Array(ECHO_COUNT).fill(-1);
-  const lastTransform  = new Array(ECHO_COUNT).fill("");
+  let lastWrapFadeMs = 180;
+  const lastOpacity    = new Array(MAX_ECHO).fill(-1);
+  const lastTransform  = new Array(MAX_ECHO).fill("");
 
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
@@ -376,7 +402,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     cursorEl.style.width   = `${size}px`;
     cursorEl.style.height  = `${size}px`;
     cursorEl.style.padding = "0px";
-    cursorEl.style.opacity = "0.88";
+    cursorEl.style.opacity = String(window.gc_dotConfig?.restOpacity ?? 0.88);
     // Back to a plain flat dot regardless of which effect was active.
     cursorEl.style.filter          = "none";
     cursorEl.style.backgroundColor = currentColor;
@@ -406,7 +432,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     cursorEl.style.width      = `${size}px`;
     cursorEl.style.height     = `${size}px`;
     cursorEl.style.padding    = "0px";
-    cursorEl.style.opacity    = "0.88";
+    cursorEl.style.opacity    = String(window.gc_dotConfig?.restOpacity ?? 0.88);
     cursorEl.style.filter          = "none";
     cursorEl.style.backgroundColor = currentColor;
     cursorEl.style.backdropFilter   = "blur(0px) saturate(100%)";
@@ -419,12 +445,26 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   const tick = () => {
     if (!wrap.isConnected) return; // cursor was cleaned up — stop RAF chain
+    const dc = window.gc_dotConfig   ?? {} as NonNullable<typeof window.gc_dotConfig>;
+    const tc = window.gc_trailConfig ?? {} as NonNullable<typeof window.gc_trailConfig>;
+
     const now = performance.now();
-    vel *= 0.78;
+    vel *= tc.velocityDecay ?? 0.78;
+    const fadeDelay = dc.idleFadeDelay    ?? 150;
+    const fadeDur   = dc.idleFadeDuration ?? 200;
     const msSinceMove = now - lastMove;
-    const idleFade    = msSinceMove < 150 ? 1 : Math.max(0, 1 - (msSinceMove - 150) / 200);
-    const speedFactor = Math.min(1, vel / 4), fastLerp = 0.5, spread = 0.28;
-    pressScale += (pressTarget - pressScale) * 0.28;
+    const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
+    const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
+    const fastLerp    = tc.lerpBase   ?? 0.5;
+    const spread      = tc.lerpSpread ?? 0.28;
+    const lerpMin     = tc.lerpMin    ?? 0.08;
+    pressScale += (pressTarget - pressScale) * (dc.pressLerp ?? 0.28);
+
+    const wrapFadeMs = dc.wrapFadeDuration ?? 180;
+    if (wrapFadeMs !== lastWrapFadeMs) {
+      lastWrapFadeMs = wrapFadeMs;
+      wrap.style.transition = `opacity ${wrapFadeMs}ms ease`;
+    }
 
     if (mouse.inside) {
       const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
@@ -445,18 +485,28 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       if (pillVisible) { pillVisible = false; morphToRest(); }
     }
 
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? 6)));
+    const scaleStart    = tc.scaleStart    ?? 0.78;
+    const scaleFalloff  = tc.scaleFalloff  ?? 0.56;
+    const opacityStart  = tc.opacityStart  ?? 0.55;
+    const opacityFalloff = tc.opacityFalloff ?? 0.45;
+
     let allSettled = true;
-    for (let i = 0; i < ECHO_COUNT; i++) {
+    for (let i = 0; i < MAX_ECHO; i++) {
       const el = echoEls[i];
       if (!el) continue;
+      if (i >= count) {
+        if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+        continue;
+      }
       const tx    = i === 0 ? mouse.x : echoes[i - 1].x;
       const ty    = i === 0 ? mouse.y : echoes[i - 1].y;
-      const lerpF = Math.max(0.08, fastLerp - i * spread * speedFactor);
+      const lerpF = Math.max(lerpMin, fastLerp - i * spread * speedFactor);
       echoes[i].x += (tx - echoes[i].x) * lerpF;
       echoes[i].y += (ty - echoes[i].y) * lerpF;
-      const t   = (i + 1) / (ECHO_COUNT + 1);
-      const sc  = 0.78 - t * 0.56;
-      const op  = (0.55 - t * 0.45) * idleFade;
+      const t   = (i + 1) / (count + 1);
+      const sc  = scaleStart - t * scaleFalloff;
+      const op  = (opacityStart - t * opacityFalloff) * idleFade;
       const rx  = Math.round(echoes[i].x * 2) / 2, ry = Math.round(echoes[i].y * 2) / 2;
       const tr  = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${sc})`;
       if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
@@ -499,7 +549,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
-    vel = vel * 0.6 + Math.sqrt(dx * dx + dy * dy) * 0.4;
+    const smoothing = window.gc_trailConfig?.velocitySmoothing ?? 0.4;
+    vel = vel * (1 - smoothing) + Math.sqrt(dx * dx + dy * dy) * smoothing;
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
@@ -524,7 +575,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
     wakeUp();
   }, { signal: sig });
-  window.addEventListener("pointerdown", () => { pressTarget = 0.6; wakeUp(); }, { signal: sig });
+  window.addEventListener("pointerdown", () => {
+    pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
+    wakeUp();
+  }, { signal: sig });
   window.addEventListener("pointerup",   () => { pressTarget = 1;   wakeUp(); }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
@@ -616,9 +670,33 @@ export default function GlobalCustomCursor({
   zIndex?:    number;
 }) {
   const dk = useDialKit("Cursor", {
-    size:           [20,    8,    48],
-    echoCount:      [6,     0,    12],
-    lerpFactor:     [0.1,   0.01, 0.5],
+    size: [20, 8, 48],
+
+    // Dot — the resting cursor shape, independent of the trail behind it.
+    Dot: {
+      restOpacity:      [0.88, 0.2,  1,   0.01],
+      pressScaleAmount: [0.6,  0.3,  1,   0.01], // scale target while a pointer button is held
+      pressLerp:        [0.28, 0.05, 0.6, 0.01], // follow speed back to rest scale
+      idleFadeDelay:    [150,  0,    500, 5],    // ms after last move before the idle fade starts
+      idleFadeDuration: [200,  20,   800, 10],   // ms for that fade to complete
+      wrapFadeDuration: [180,  20,   600, 10],   // ms for the whole cursor's enter/leave opacity
+    },
+
+    // Trail — the echo dots following the cursor.
+    Trail: {
+      echoCount:         [6,    0,    12,  1],    // visible echoes (pool is always 12)
+      velocityDecay:      [0.78, 0.5,  0.98, 0.01], // per-frame decay of tracked speed
+      velocitySmoothing:  [0.4,  0.05, 1,    0.01], // blend weight for new pointer speed samples
+      lerpBase:           [0.5,  0.05, 1,    0.01], // base follow speed for echo 0
+      lerpSpread:         [0.28, 0,    1,    0.01], // how much slower each further echo follows
+      lerpMin:            [0.08, 0.01, 0.3,  0.01], // floor so trailing echoes never fully stall
+      speedDivisor:       [4,    1,    20,   0.5],  // higher = speed-based lag kicks in later
+      scaleStart:         [0.78, 0.2,  1.2,  0.01], // size of the first echo, relative to the dot
+      scaleFalloff:       [0.56, 0,    1,    0.01], // how much smaller each further echo gets
+      opacityStart:       [0.55, 0,    1,    0.01], // opacity of the first echo
+      opacityFalloff:     [0.45, 0,    1,    0.01], // how much fainter each further echo gets
+    },
+
     // PS3 XMB pacing — slow enough to read as graceful, not sluggish.
     morphDuration:  [260,   60,   900,  10],
     textDelay:      [100,   0,    600,  10],
@@ -702,6 +780,36 @@ export default function GlobalCustomCursor({
       dk.sheenAngle, dk.sheenAlpha, dk.sheenSpread,
       dk.ringFlashColor, dk.ringFlashWidth, dk.ringFlashAlpha, dk.ringFlashDur,
       dk.frostedBlur, dk.frostedSaturate, dk.frostedAlpha]);
+
+  useEffect(() => {
+    window.gc_dotConfig = {
+      restOpacity:      dk.Dot.restOpacity,
+      pressScaleAmount: dk.Dot.pressScaleAmount,
+      pressLerp:        dk.Dot.pressLerp,
+      idleFadeDelay:    dk.Dot.idleFadeDelay,
+      idleFadeDuration: dk.Dot.idleFadeDuration,
+      wrapFadeDuration: dk.Dot.wrapFadeDuration,
+    };
+  }, [dk.Dot.restOpacity, dk.Dot.pressScaleAmount, dk.Dot.pressLerp,
+      dk.Dot.idleFadeDelay, dk.Dot.idleFadeDuration, dk.Dot.wrapFadeDuration]);
+
+  useEffect(() => {
+    window.gc_trailConfig = {
+      echoCount:         dk.Trail.echoCount,
+      velocityDecay:     dk.Trail.velocityDecay,
+      velocitySmoothing: dk.Trail.velocitySmoothing,
+      lerpBase:          dk.Trail.lerpBase,
+      lerpSpread:        dk.Trail.lerpSpread,
+      lerpMin:           dk.Trail.lerpMin,
+      speedDivisor:      dk.Trail.speedDivisor,
+      scaleStart:        dk.Trail.scaleStart,
+      scaleFalloff:      dk.Trail.scaleFalloff,
+      opacityStart:      dk.Trail.opacityStart,
+      opacityFalloff:    dk.Trail.opacityFalloff,
+    };
+  }, [dk.Trail.echoCount, dk.Trail.velocityDecay, dk.Trail.velocitySmoothing,
+      dk.Trail.lerpBase, dk.Trail.lerpSpread, dk.Trail.lerpMin, dk.Trail.speedDivisor,
+      dk.Trail.scaleStart, dk.Trail.scaleFalloff, dk.Trail.opacityStart, dk.Trail.opacityFalloff]);
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);

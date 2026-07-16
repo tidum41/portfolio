@@ -1,34 +1,69 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, useAnimation, useReducedMotion } from "framer-motion";
+import { introTimings } from "@/lib/introTimings";
+import { EASE_OPACITY, EASE_Y } from "@/lib/motion";
 
-type CubicBezier = [number, number, number, number];
-const EASE_OPACITY: CubicBezier = [0.16, 1, 0.3, 1];
-const EASE_Y: CubicBezier = [0.22, 1, 0.36, 1];
-
-const FADE_UP = {
-  initial: { opacity: 0, y: 22 },
-  animate: { opacity: 1, y: 0 },
-  transition: {
-    opacity: { duration: 1.1, ease: EASE_OPACITY },
-    y: { duration: 1.4, ease: EASE_Y },
-  },
-};
+// Module-level: false on fresh page load, true after first mount.
+// Persists across client-side navigation — same pattern as PS3Silk._hasMounted.
+let _animated = false;
 
 export default function HeroText() {
-  const FADE_UP_D = (delay: number) => ({
-    ...FADE_UP,
-    transition: {
-      opacity: { duration: 1.1, ease: EASE_OPACITY, delay },
-      y: { duration: 1.4, ease: EASE_Y, delay },
-    },
-  });
+  const instant = typeof window !== "undefined" && _animated;
+  const [subReady, setSubReady] = useState(instant);
+  const h1Controls = useAnimation();
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    _animated = true;
+
+    if (instant) return;
+
+    function animateH1(delay = introTimings.heroDelay, dur = introTimings.heroDuration) {
+      h1Controls.set({ opacity: 0, y: 22 });
+      h1Controls.start({
+        opacity: 1,
+        y: 0,
+        transition: {
+          opacity: { duration: reduced ? 0 : dur,         ease: EASE_OPACITY, delay: reduced ? 0 : delay },
+          y:       { duration: reduced ? 0 : dur * 2.375, ease: EASE_Y,       delay: reduced ? 0 : delay },
+        },
+      });
+    }
+
+    animateH1();
+
+    function onDone() { setSubReady(true); }
+    window.addEventListener("intro-done", onDone, { once: true });
+
+    function onReplay() {
+      _animated = false;
+      setSubReady(false);
+      animateH1(introTimings.heroDelay, introTimings.heroDuration);
+      // Re-register so subtitle animates in after the replayed intro-done
+      window.addEventListener("intro-done", onDone, { once: true });
+    }
+    window.addEventListener("intro-replay", onReplay);
+
+    return () => {
+      window.removeEventListener("intro-done", onDone);
+      window.removeEventListener("intro-replay", onReplay);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const h1Initial = instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 };
+  const subTx = instant || reduced
+    ? { duration: 0 }
+    : { opacity: { duration: 1.5, ease: EASE_OPACITY }, y: { duration: 1.9, ease: EASE_Y } };
 
   return (
     <>
       <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: 340 }}>
         <motion.h1
-          {...FADE_UP}
+          initial={h1Initial}
+          animate={h1Controls}
+          className="hero-heading"
           style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
             fontSize: "clamp(26px, 2.8vw, 36px)",
@@ -44,13 +79,15 @@ export default function HeroText() {
       </div>
 
       <motion.p
-        {...FADE_UP_D(0.25)}
+        initial={{ opacity: 0, y: 22 }}
+        animate={subReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
+        transition={subTx}
         style={{
           position: "relative",
           zIndex: 1,
           fontFamily: "var(--font-sans)",
           fontSize: 17,
-          lineHeight: "25.5px",
+          lineHeight: 1.5,
           color: "var(--color-text-secondary)",
           margin: 0,
         }}
