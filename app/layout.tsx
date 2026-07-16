@@ -21,6 +21,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Mudit Mahajan",
   },
+  icons: {
+    icon: [
+      // Dark glyph for light OS/browser chrome, light glyph for dark chrome
+      { url: "/favicon-light.png", media: "(prefers-color-scheme: light)" },
+      { url: "/favicon-dark.png", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
