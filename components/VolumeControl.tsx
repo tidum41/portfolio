@@ -3,9 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
+const ICON_SIZE = 17;
+const SLIDER_WIDTH = 72;
+const GAP = 8;
+
 function VolumeIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
@@ -15,7 +19,7 @@ function VolumeIcon() {
 
 function MutedIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
       <line x1="23" y1="9" x2="17" y2="15" />
       <line x1="17" y1="9" x2="23" y2="15" />
@@ -85,14 +89,25 @@ export default function VolumeControl() {
       className="volume-control"
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      style={{ alignItems: "center", gap: 8 }}
+      style={{
+        alignItems: "center",
+        justifyContent: "flex-end",
+        gap: GAP,
+        // Fixed at the fully-expanded width (icon + gap + slider) even while
+        // collapsed, so the hover hitbox already covers the space the slider
+        // reveals into — moving the mouse from the icon toward where the
+        // slider is about to appear stays inside this box the whole time,
+        // instead of exiting a hitbox that was only ever icon-sized and
+        // collapsing the slider before it can be reached.
+        width: ICON_SIZE + GAP + SLIDER_WIDTH,
+      }}
     >
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop autoPlay preload="auto" />
       <motion.div
         initial={false}
-        animate={{ width: hovered ? 72 : 0, opacity: hovered ? 1 : 0 }}
+        animate={{ width: hovered ? SLIDER_WIDTH : 0, opacity: hovered ? 1 : 0 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        style={{ overflow: "hidden", display: "flex", alignItems: "center" }}
+        style={{ overflow: "hidden", display: "flex", alignItems: "center", flexShrink: 0 }}
       >
         <input
           type="range"
@@ -126,8 +141,9 @@ export default function VolumeControl() {
           transition: "color 0.25s ease",
           WebkitTapHighlightColor: "transparent",
           position: "relative",
-          width: 15,
-          height: 15,
+          width: ICON_SIZE,
+          height: ICON_SIZE,
+          flexShrink: 0,
         }}
       >
         <motion.span
