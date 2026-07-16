@@ -1,103 +1,137 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
 
-// Smoothstep-shaped falloff (zero derivative at both t=0 and t=1) instead of
-// a hard 2-stop linear ramp. A plain 2-stop radial-gradient has a visible
-// "seam" right where the fade starts and another right where it ends — this
-// spreads the same fade across several stops following an eased curve so
-// there's no perceptible edge at either end, just a smooth dome.
-const CURVE_STEPS = [0, 0.16, 0.34, 0.54, 0.74, 0.9, 1] as const;
+// SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
+const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
+
 const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
-// Fading a color to the bare `transparent` keyword doesn't just drop alpha —
-// `transparent` is rgba(0,0,0,0), so the RGB channels drift toward black as
-// they fade too, which is the other classic source of visible muddying/
-// banding in fade-to-transparent gradients. color-mix() keeps every stop on
-// --color-bg's own hue and only varies alpha, which is what actually reads
-// as "this looks like it has less opacity" rather than "a shadow appeared."
-// This is most visible in dark mode: --color-bg is near-black (#101214), so
-// any residual 8-bit alpha step is far more perceptible there (Weber's law —
-// small absolute steps show up much more at low luminance) and gets amplified
-// further by compositing on top of PS3Silk's moving, high-contrast pattern.
-function scrimGradient(width: number, height: number, x: number, y: number, feather: number, opacity: number) {
-  const stops = CURVE_STEPS.map((t) => {
-    const alphaPct = (1 - smoothstep(t)) * opacity * 100;
-    return `color-mix(in oklab, var(--color-bg) ${alphaPct.toFixed(1)}%, transparent) ${(t * feather).toFixed(1)}%`;
-  }).join(", ");
-  return `radial-gradient(ellipse ${width}% ${height}% at ${x}% ${y}%, ${stops})`;
+// Cheap deterministic per-pixel hash (the classic GLSL sin-hash) — good enough
+// for dithering, since we only need noise, not real randomness or cross-run
+// reproducibility, and it costs nothing extra to compute inline in the pixel loop.
+function hash(x: number, y: number) {
+  const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return s - Math.floor(s);
 }
 
-// Tiny tileable alpha noise (feTurbulence) that dithers away whatever 8-bit
-// alpha-quantization banding the smooth gradient above still leaves on the
-// framebuffer. This is the standard fix for gradient banding: it doesn't add
-// real bit depth, it just randomizes the quantization error spatially so the
-// eye reads smooth gradation instead of discrete rings. A single small static
-// raster the browser rasterizes once and tiles — no per-frame cost, and it
-// never touches PS3Silk's WebGL canvas.
-const NOISE_TILE =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+// Renders the falloff as a pre-dithered raster instead of a CSS gradient.
+//
+// A CSS radial-gradient — no matter how many color-mix() stops you sample it
+// at, and no matter how much you blur the result afterwards — still gets
+// quantized into an 8-bit-per-channel framebuffer before it reaches the
+// screen. Blurring an already-banded layer only softens the edges of bands
+// that are already there; it doesn't add back the bit depth that produced
+// them, and a static, low-opacity noise overlay is too weak to fully mask a
+// large step. The standard fix (the one behind every "buttery smooth"
+// gradient on a polished site) is to stop asking the GPU to interpolate the
+// gradient at all: compute the falloff yourself, one pixel at a time, and
+// dither the rounding error into each pixel's alpha *before* it gets
+// quantized — the same trick a proper image editor uses when exporting a
+// gradient to a lossy format. The browser then just positions and scales a
+// finished bitmap, which is exactly as cheap to composite as the gradient
+// was.
+//
+// This only needs to happen once per parameter change, not per frame — same
+// performance profile as the CSS version, just computed up front instead of
+// by the GPU's gradient rasterizer.
+const CANVAS_SIZE = 512;
+
+function generateDitheredFalloff(feather: number, opacity: number, grain: number, bg: string) {
+  const canvas = document.createElement("canvas");
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // Resolve the CSS custom property to concrete RGB — a canvas pixel buffer
+  // can't reference var(--color-bg) the way the old gradient string could,
+  // so we bake in whichever value is active (light/dark) at generation time
+  // and regenerate when the theme flips (see the effect below).
+  const probe = document.createElement("div");
+  probe.style.color = bg;
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  document.body.removeChild(probe);
+  const [r, g, b] = resolved.match(/\d+/g)!.map(Number);
+
+  const featherFrac = feather / 100;
+  const ditherAmount = grain * 6; // ± a handful of 8-bit levels at grain=1
+  const half = CANVAS_SIZE / 2;
+
+  const image = ctx.createImageData(CANVAS_SIZE, CANVAS_SIZE);
+  const data = image.data;
+  for (let py = 0; py < CANVAS_SIZE; py++) {
+    const ny = (py - half) / half;
+    for (let px = 0; px < CANVAS_SIZE; px++) {
+      const nx = (px - half) / half;
+      const dist = Math.sqrt(nx * nx + ny * ny);
+      const u = featherFrac > 0 ? Math.min(dist / featherFrac, 1) : 1;
+      const alpha = (1 - smoothstep(u)) * opacity * 255;
+      const dithered = alpha + (hash(px, py) - 0.5) * ditherAmount;
+      const i = (py * CANVAS_SIZE + px) * 4;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+      data[i + 3] = Math.max(0, Math.min(255, Math.round(dithered)));
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  return canvas.toDataURL();
+}
 
 export default function HeroLegibilityScrim() {
   const dk = useDialKit("Hero Scrim", {
-    opacity: [0.6, 0, 1, 0.01],
-    width: [59, 20, 100, 1],
-    height: [85, 20, 150, 1],
+    opacity: [0.58, 0, 1, 0.01],
+    width: [64, 20, 100, 1],
+    height: [109, 20, 150, 1],
     x: [14, 0, 100, 1],
-    y: [50, 0, 100, 1],
-    feather: [61, 20, 100, 1],
-    // Dither strength — masked to the scrim's own footprint below, so it
-    // only ever shows up exactly where the dimming is visible, never beyond it.
-    grain: [0.35, 0, 1, 0.01],
-    // A slight blur on the gradient layer (not the grain layer — see below)
-    // erases residual 8-bit alpha-quantization banding directly rather than
-    // just camouflaging it: a low-pass filter mathematically averages
-    // neighboring quantization steps into a continuous-looking transition.
-    // The masked noise below helps too, but its own mask is this same
-    // gradient, so any banding baked into it "shows through" the mask at the
-    // same spots — the blur is what actually removes it at the source.
-    blur: [46, 0, 64, 1],
+    y: [67, 0, 100, 1],
+    feather: [69, 20, 100, 1],
+    // Dither amount — spread into each pixel's alpha at generation time (see
+    // generateDitheredFalloff above), not a visible overlay layer, so this
+    // now controls real quantization-error diffusion rather than a texture.
+    grain: [0.19, 0, 1, 0.01],
   });
 
-  // Memoized so tuning `grain`/`blur` alone (which don't affect the gradient
-  // shape itself) doesn't regenerate this string and repaint the base layer.
-  const gradient = useMemo(
-    () => scrimGradient(dk.width, dk.height, dk.x, dk.y, dk.feather, dk.opacity),
-    [dk.width, dk.height, dk.x, dk.y, dk.feather, dk.opacity],
-  );
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const themeRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    const generate = () => {
+      const theme = document.documentElement.getAttribute("data-theme") ?? "dark";
+      themeRef.current = theme;
+      setDataUrl(generateDitheredFalloff(dk.feather, dk.opacity, dk.grain, "var(--color-bg)"));
+    };
+    generate();
+
+    // Regenerate on a light/dark switch — the bitmap has a concrete color
+    // baked in, unlike the old gradient string which read the CSS variable
+    // live, so a theme flip needs a fresh bitmap to match.
+    const observer = new MutationObserver(() => {
+      const theme = document.documentElement.getAttribute("data-theme") ?? "dark";
+      if (theme !== themeRef.current) generate();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, [dk.feather, dk.opacity, dk.grain]);
 
   return (
-    <>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          background: gradient,
-          filter: dk.blur > 0 ? `blur(${dk.blur}px)` : undefined,
-        }}
-      />
-      {dk.grain > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            backgroundImage: NOISE_TILE,
-            backgroundSize: "64px 64px",
-            backgroundRepeat: "repeat",
-            // Reuse the exact same gradient as a mask, so the dither only
-            // appears in proportion to the scrim's own alpha at every point —
-            // full strength at the center, gone by the feather edge, never
-            // visible past where the dimming itself would be.
-            WebkitMaskImage: gradient,
-            maskImage: gradient,
-            opacity: dk.grain,
-            mixBlendMode: "overlay",
-          }}
-        />
-      )}
-    </>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        backgroundImage: dataUrl ? `url(${dataUrl})` : undefined,
+        backgroundRepeat: "no-repeat",
+        // Width/height/x/y stay pure CSS percentages against the section's
+        // own box — exactly like the old radial-gradient's own ellipse
+        // sizing — so layout responsiveness costs nothing and doesn't need
+        // the bitmap regenerated on resize.
+        backgroundSize: `${dk.width}% ${dk.height}%`,
+        backgroundPosition: `${dk.x}% ${dk.y}%`,
+      }}
+    />
   );
 }
