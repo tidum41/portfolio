@@ -306,6 +306,7 @@ html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rg
 .ps3cp-mode-btn:active { transform:scale(0.96); }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
 .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
+@media (pointer:coarse) { .ps3cp-header { min-height:44px; } }
 `;
 
 export default function PS3ControlPanel() {
@@ -605,7 +606,7 @@ export default function PS3ControlPanel() {
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
       {/* Header / pill */}
-      <div ref={headerRef} style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" aria-label="Drag or click to toggle panel">
+      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" aria-label="Drag or click to toggle panel">
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap }}>
             <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>

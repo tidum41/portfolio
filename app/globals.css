@@ -283,6 +283,23 @@ html:not([data-theme="dark"]) .project-card {
   .nav-link:hover { color: var(--color-text-muted) !important; }
 }
 
+/* ─── Touch hit-target expansion (no visual change) ─────────────── */
+@media (pointer: coarse) {
+  a.nav-link {
+    position: relative;
+  }
+  a.nav-link::before {
+    content: "";
+    position: absolute;
+    inset: -12px 0;
+  }
+  .theme-toggle-btn::before {
+    content: "";
+    position: absolute;
+    inset: -16px;
+  }
+}
+
 /* ─── Scroll-reveal — used by useScrollReveal hook ───────────────── */
 .reveal {
   opacity: 0;
