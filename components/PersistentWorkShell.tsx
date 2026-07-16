@@ -142,6 +142,30 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     if (isWorkRoute) clearInstantBack();
   }, [isWorkRoute]);
 
+  // Replay intro when the user returns to this tab from outside the site.
+  // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
+  // (navigated away in same tab and pressed Back). Neither event fires during
+  // client-side navigation, so /about → / remains instant with no delay.
+  useEffect(() => {
+    const replay = () => {
+      if (!isWorkRoute) return;
+      document.documentElement.setAttribute("data-intro", "playing");
+      window.dispatchEvent(new CustomEvent("intro-replay"));
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") replay();
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) replay();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [isWorkRoute]);
+
   // Continuously track scroll position while visible, so it's always current
   // by the moment we're hidden. Suppressed after a navigating click (see
   // below) — without that guard, this alone isn't enough: AnimationProvider's
