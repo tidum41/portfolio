@@ -287,10 +287,72 @@ html:not([data-theme="dark"]) .project-card {
 /* ─── "ucla" hover accent ────────────────────────────────────────── */
 .hero-ucla {
   color: inherit;
+  font-weight: 500;
   transition: color 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .hero-ucla:hover { color: rgb(53, 121, 204); }
+}
+
+/* ─── "JOOLA" hover accent — a real link ─────────────────────────── */
+.hero-joola {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-joola:hover { color: #fef633; }
+}
+
+/* ─── Hero subtitle middle dot — a touch larger than body text ──── */
+.hero-dot {
+  font-size: 1.3em;
+  line-height: 1;
+}
+
+/* ─── Nav volume control — desktop only ──────────────────────────
+   Backstop for the brief window before VolumeControl's own mount-time
+   matchMedia check resolves; the real gate (skipping the <audio> mount,
+   and its download, on mobile) lives in the component itself. */
+.volume-control { display: flex; }
+@media (max-width: 767px) {
+  .volume-control { display: none; }
+}
+
+/* Minimal slider to match the nav's plain icon language — slim track,
+   small round thumb, tinted with the same color the icon already uses. */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 15px;
+  background: transparent;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-text-muted);
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  margin-top: -3.5px;
+}
+.volume-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-text-muted);
+}
+.volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-text-primary);
 }
 
 /* ─── Touch hit-target expansion (no visual change) ─────────────── */

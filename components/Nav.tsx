@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import VolumeControl from "./VolumeControl";
 
 const links = [
   { href: "/",           label: "work" },
@@ -21,6 +22,7 @@ export default function Nav() {
           style={{ gap: 40, paddingTop: 24, paddingBottom: 24 }}
           aria-label="Main navigation"
         >
+          <VolumeControl />
           <ThemeToggle />
           {links.map(({ href, label }) => {
             const isActive =

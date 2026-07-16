@@ -7,9 +7,6 @@ export const SITE_NAME = "mudit mahajan";
 export const HERO_HEADLINE =
   "I'm Mudit, a product designer with a love for craft, curiosity, and rabbit holes";
 
-/** Hero subtitle before the styled "ucla" span. */
-export const HERO_SUBTITLE_BEFORE_UCLA = "Currently @ JOOLA · cognitive science at ";
-
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
  * isn't stitching mismatched phrases from separate strings.

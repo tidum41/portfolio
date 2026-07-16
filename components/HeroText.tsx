@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, EASE_Y } from "@/lib/motion";
-import { HERO_HEADLINE, HERO_SUBTITLE_BEFORE_UCLA } from "@/lib/site";
+import { HERO_HEADLINE } from "@/lib/site";
 
 // Module-level: false on fresh page load, true after first mount.
 // Persists across client-side navigation — same pattern as PS3Silk._hasMounted.
@@ -97,7 +97,19 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        {HERO_SUBTITLE_BEFORE_UCLA}<span className="hero-ucla">ucla</span>
+        {"currently @ "}
+        <a
+          href="https://joola.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hero-joola"
+        >
+          JOOLA
+        </a>
+        {" "}
+        <span className="hero-dot">·</span>
+        {" cognitive science at "}
+        <span className="hero-ucla">ucla</span>
       </motion.p>
     </>
   );
