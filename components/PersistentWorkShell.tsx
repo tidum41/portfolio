@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState } from
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
+import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
@@ -246,6 +247,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           active={isWorkRoute}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
         />
+        <HeroLegibilityScrim />
         <EntranceItem active={isWorkRoute} instant={heroInstant} delay={0} style={{
           position: "relative",
           maxWidth: "var(--grid-max-w)",
