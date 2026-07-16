@@ -60,10 +60,9 @@ function computeNavAlignedPos(): {x:number;y:number} | null {
   if (!navLink) return null;
   const navRect = navLink.getBoundingClientRect();
   const w = window.innerWidth;
-  const leftPad = w > 768 ? 40 : w > 360 ? 32 : 24;
-  const containerLeft = w > MAX_W ? (w - MAX_W) / 2 : 0;
+  const containerLeft = w > 1440 ? (w - 1440) / 2 : 0;
   return {
-    x: Math.round(containerLeft + leftPad + window.scrollX),
+    x: Math.round(containerLeft + 24 + window.scrollX),
     y: Math.round(navRect.top + navRect.height / 2 - PILL_H / 2 + window.scrollY),
   };
 }
@@ -306,7 +305,6 @@ html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rg
 .ps3cp-mode-btn:active { transform:scale(0.96); }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
 .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
-@media (pointer:coarse) { .ps3cp-header { min-height:44px; } }
 `;
 
 export default function PS3ControlPanel() {
