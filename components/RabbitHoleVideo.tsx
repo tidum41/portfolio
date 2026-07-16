@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { useEffect, useLayoutEffect as _useLayoutEffect, useRef } from "react";
 import { useDialKit } from "dialkit";
 import { FRAME_RECTS, FRAME_VIEWBOX, type RabbitFrame } from "./rabbitSpriteData";
+import { FILLED_FRAME_RECTS } from "./rabbitSpriteFill";
 
 const useSyncEffect =
     typeof window !== "undefined" ? _useLayoutEffect : useEffect;
@@ -24,10 +25,10 @@ const FRAMES_PER_CYCLE = 4;
 const PATROL_CYCLES_DESKTOP = 2;
 const PATROL_CYCLES_MOBILE = 1;
 
-// Playback order — starts on frame 3 (the previous cycle's last pose) and
-// rotates through the rest, so the sequence reads 3→0→1→2→3… instead of
-// 0→1→2→3. Frame 3 is also the idle/resting pose.
-const HOP_SEQUENCE: readonly RabbitFrame[] = [3, 0, 1, 2];
+// Playback order — starts on frame 2 (leap up) and rotates through the
+// rest, so the sequence reads 2→3→0→1→2… instead of 0→1→2→3. Frame 2 is
+// also the idle/resting pose.
+const HOP_SEQUENCE: readonly RabbitFrame[] = [2, 3, 0, 1];
 
 // Below this viewport width the sprite is allowed to travel edge-to-edge;
 // at or above it, travel is capped to half the viewport width.
@@ -47,7 +48,7 @@ function ensureMuxLoaded(): void {
     document.head.appendChild(s);
 }
 
-function createRabbitSprite(): SVGSVGElement {
+function createRabbitSprite(filled: boolean): SVGSVGElement {
     const NS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(NS, "svg") as SVGSVGElement;
     svg.setAttribute("fill", "none");
@@ -62,11 +63,11 @@ function createRabbitSprite(): SVGSVGElement {
         color: inherit; pointer-events: none; opacity: 0;
         overflow: visible;
     `;
-    setSpriteFrame(svg, HOP_SEQUENCE[0]);
+    setSpriteFrame(svg, HOP_SEQUENCE[0], filled);
     return svg;
 }
 
-function setSpriteFrame(svg: SVGSVGElement, frame: RabbitFrame): void {
+function setSpriteFrame(svg: SVGSVGElement, frame: RabbitFrame, filled = false): void {
     const NS = "http://www.w3.org/2000/svg";
     const [w, h] = FRAME_VIEWBOX[frame];
     // Bottom-center each tight crop inside the shared canvas so feet stay
@@ -76,7 +77,8 @@ function setSpriteFrame(svg: SVGSVGElement, frame: RabbitFrame): void {
     svg.setAttribute("viewBox", `0 0 ${FRAME_CANVAS_W} ${FRAME_CANVAS_H}`);
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const frag = document.createDocumentFragment();
-    for (const [x, y, rw, rh] of FRAME_RECTS[frame]) {
+    const rects = filled ? FILLED_FRAME_RECTS[frame] : FRAME_RECTS[frame];
+    for (const [x, y, rw, rh] of rects) {
         const rect = document.createElementNS(NS, "rect");
         rect.setAttribute("x", String(x + ox));
         rect.setAttribute("y", String(y + oy));
@@ -102,6 +104,7 @@ function createHopAnimator(
     getFrameMs: () => number,
     getHopDist: () => number,
     getMaxTravel: () => number,
+    getFilled: () => boolean,
     onFrame?: (frame: RabbitFrame, translateX: number, direction: 1 | -1) => void,
 ) {
     let seqIndex = 0;
@@ -117,7 +120,7 @@ function createHopAnimator(
     function apply(i: number) {
         seqIndex = i;
         const f = HOP_SEQUENCE[seqIndex];
-        setSpriteFrame(svg, f);
+        setSpriteFrame(svg, f, getFilled());
 
         const maxTravel = Math.max(0, getMaxTravel());
         let next = translateX + direction * getHopDist();
@@ -149,7 +152,7 @@ function createHopAnimator(
         seqIndex = 0;
         translateX = 0;
         direction = 1;
-        setSpriteFrame(svg, HOP_SEQUENCE[0]);
+        setSpriteFrame(svg, HOP_SEQUENCE[0], getFilled());
         render();
         onFrame?.(HOP_SEQUENCE[0], 0, 1);
     }
@@ -168,7 +171,13 @@ function createHopAnimator(
         translateX = Math.min(translateX, maxTravel);
         render();
     }
-    return { start, stop, pause, resume, resync };
+    // Redraws the currently-shown frame with the latest getFilled() value —
+    // called when the DialKit "filled" toggle changes, so it takes effect
+    // immediately instead of waiting for the next hop tick or open/close.
+    function redraw() {
+        setSpriteFrame(svg, HOP_SEQUENCE[seqIndex], getFilled());
+    }
+    return { start, stop, pause, resume, resync, redraw };
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -229,9 +238,9 @@ function findAndWrap(node: Node): HTMLElement | null {
     return null;
 }
 
-function injectRabbit(holesAnchor: HTMLElement): void {
+function injectRabbit(holesAnchor: HTMLElement, filled: boolean): void {
     if (document.getElementById("rh-rabbit")) return;
-    const rabbit = createRabbitSprite();
+    const rabbit = createRabbitSprite(filled);
 
     const container = document.createElement("span");
     container.id = "rh-rabbit-container";
@@ -259,13 +268,36 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             // Shorter steps: patrol length is hopDist × 4 × cycleCount, so
             // desktop (~2 cycles) and mobile (~1) stay compact by default.
             hopDist: [16, 4, 80, 1],
+            // Local experiment: solid-fill silhouette with the line art cut
+            // out as transparent gaps, instead of the outline-only render.
+            filled: false,
         });
         const frameMsRef = useRef(dk.frameMs);
         const hopDistRef = useRef(dk.hopDist);
+        const filledRef = useRef(dk.filled);
+        // The filled treatment is a dark-mode-only preview — light mode must
+        // stay exactly the original outline sprite regardless of the dial.
+        const isDarkRef = useRef(
+            typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark",
+        );
+        const hopperRef = useRef<ReturnType<typeof createHopAnimator> | null>(null);
         useEffect(() => {
             frameMsRef.current = dk.frameMs;
             hopDistRef.current = dk.hopDist;
         }, [dk.frameMs, dk.hopDist]);
+        useEffect(() => {
+            filledRef.current = dk.filled;
+            hopperRef.current?.redraw();
+        }, [dk.filled]);
+        useEffect(() => {
+            const readTheme = () => {
+                isDarkRef.current = document.documentElement.getAttribute("data-theme") === "dark";
+                hopperRef.current?.redraw();
+            };
+            const mo = new MutationObserver(readTheme);
+            mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+            return () => mo.disconnect();
+        }, []);
 
         useSyncEffect(() => {
             const root = wrapRef.current;
@@ -311,7 +343,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             const holesAnchor = findAndWrap(textEl);
             if (!holesAnchor) return null;
 
-            injectRabbit(holesAnchor);
+            injectRabbit(holesAnchor, filledRef.current && isDarkRef.current);
             const svg = document.getElementById("rh-rabbit") as SVGSVGElement | null;
             let hoverZone: HTMLSpanElement | null = null;
 
@@ -341,7 +373,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     // patrol stays close to the trigger word instead of
                     // wandering across the whole hero.
                     const isMobileViewport = window.innerWidth < MOBILE_BREAKPOINT;
-                    maxTravel = isMobileViewport
+                    edgeTravel = isMobileViewport
                         ? edgeLimit
                         : Math.min(edgeLimit, window.innerWidth * 0.5);
                 };
@@ -365,7 +397,9 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     () => frameMsRef.current,
                     () => hopDistRef.current,
                     getMaxTravel,
+                    () => filledRef.current && isDarkRef.current,
                 );
+                hopperRef.current = hopper;
 
                 hoverZone = document.createElement("span");
                 hoverZone.id = "rh-hover-zone";
@@ -563,6 +597,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             return () => {
                 resizeCleanup?.();
                 hopper?.stop();
+                if (hopperRef.current === hopper) hopperRef.current = null;
                 document.removeEventListener("mousedown", onDocTap);
                 document.removeEventListener("touchstart", onDocTap);
                 win.remove();

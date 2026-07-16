@@ -60,7 +60,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="nav-link"
+      className="nav-link theme-toggle-btn"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
         background: "none",
