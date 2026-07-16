@@ -62,6 +62,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             3. On the homepage, sets data-intro="playing" so the intro gate hides
                nav/footer/project grid until IntroOrchestrator lifts the gate. */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname==="/")document.documentElement.setAttribute("data-intro","playing")})()` }} />
+        {/* Intro gate CSS — must be inline, not in globals.css. The blocking script
+            above sets data-intro="playing" synchronously, but globals.css is an
+            external stylesheet that loads separately over the network. On production
+            there is a gap between when the script runs and when the external CSS
+            arrives, during which .intro-hide elements are briefly visible (the flash).
+            Inlining these rules here guarantees they apply in the same paint as the
+            script. globals.css keeps a copy as a fallback. */}
+        <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         {/* Hide system cursor immediately on pointer:fine devices — before JS
             hydration — so there's no flash of the default arrow on load. */}
