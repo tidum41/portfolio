@@ -298,15 +298,20 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 // CSS transforms don't affect the parent's layout box, so
                 // wrapper's own rect stays the sprite's static (untransformed)
                 // origin no matter how far the svg has translated inside it.
+                // Desktop: patrol at most half the viewport width. Mobile:
+                // keep going all the way to the screen edge, then bounce.
                 let maxTravel = 0;
                 const recomputeMaxTravel = () => {
                     const spriteHeight = svg.getBoundingClientRect().height;
                     const staticLeft = wrapper.getBoundingClientRect().left;
                     const maxFrameWidthPx = spriteHeight * MAX_FRAME_ASPECT;
-                    maxTravel = Math.max(
+                    const edgeTravel = Math.max(
                         0,
                         window.innerWidth - staticLeft - maxFrameWidthPx - VIEWPORT_MARGIN,
                     );
+                    maxTravel = isMobile()
+                        ? edgeTravel
+                        : Math.min(edgeTravel, window.innerWidth * 0.5);
                 };
 
                 const syncHoverZoneWidth = () => {
@@ -479,10 +484,41 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 else isOpen ? close() : open();
             });
 
+            // Mobile: tap outside the trigger/rabbit closes the popup. The
+            // synthetic click that follows would also hit PS3Silk's
+            // click-to-cycle handler (hero is under the tap), so swallow the
+            // next window click in capture phase after a dismiss.
+            function swallowNextClick() {
+                const swallow = (ev: Event) => {
+                    ev.stopPropagation();
+                    window.removeEventListener("click", swallow, true);
+                };
+                window.addEventListener("click", swallow, true);
+                // Safety: drop the listener if no click arrives (e.g. touch
+                // cancel) so we never permanently block PS3 cycling.
+                window.setTimeout(() => {
+                    window.removeEventListener("click", swallow, true);
+                }, 500);
+            }
+
             function onDocTap(e: MouseEvent | TouchEvent) {
                 if (!isOpen || !isMobile()) return;
                 const t = e.target as Node;
-                if (!win.contains(t) && t !== trigger) close();
+                if (
+                    win.contains(t) ||
+                    trigger.contains(t) ||
+                    hoverZone?.contains(t)
+                ) {
+                    return;
+                }
+                close();
+                // Only swallow the follow-up click when the tap is on inert
+                // chrome (hero / wave). Taps on links/buttons still close the
+                // popup but must keep their own click so navigation works.
+                const el = e.target as Element | null;
+                if (!el?.closest?.("a, button, [role='button']")) {
+                    swallowNextClick();
+                }
             }
             document.addEventListener("mousedown", onDocTap, { passive: true });
             document.addEventListener("touchstart", onDocTap, { passive: true });
