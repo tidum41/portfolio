@@ -11,11 +11,18 @@ const useSyncEffect =
 const PLAYBACK_ID = "Bnxef00RI4GizGZ028BWXYJtW00x554PmovqLgVZYrphiU";
 const TARGET = "rabbit holes";
 
-// Widest frame's aspect ratio — used to reserve enough room for the hop
-// corridor so the sprite can never overflow the viewport at any breakpoint,
-// regardless of which pose happens to be showing at the far edge.
-const MAX_FRAME_ASPECT = Math.max(...FRAME_VIEWBOX.map(([w, h]) => w / h));
+// Shared canvas for every pose so the SVG's on-screen box never jumps when
+// frames swap. Tight-cropped viewBoxes differ a lot in aspect; drawing into
+// a fixed max-W × max-H canvas (bottom-centered) keeps feet planted and the
+// body scale continuous. Corridor reservation uses that same fixed aspect.
+const FRAME_CANVAS_W = Math.max(...FRAME_VIEWBOX.map(([w]) => w));
+const FRAME_CANVAS_H = Math.max(...FRAME_VIEWBOX.map(([, h]) => h));
+const FRAME_ASPECT = FRAME_CANVAS_W / FRAME_CANVAS_H;
 const VIEWPORT_MARGIN = 16;
+const FRAMES_PER_CYCLE = 4;
+/** Desktop: ~2 full hop cycles out, then turn. Mobile: ~1 cycle. */
+const PATROL_CYCLES_DESKTOP = 2;
+const PATROL_CYCLES_MOBILE = 1;
 
 function ensureMuxLoaded(): void {
     const id = "mux-player-script";
@@ -36,11 +43,15 @@ function createRabbitSprite(): SVGSVGElement {
     const svg = document.createElementNS(NS, "svg") as SVGSVGElement;
     svg.setAttribute("fill", "none");
     svg.setAttribute("xmlns", NS);
+    svg.setAttribute("viewBox", `0 0 ${FRAME_CANVAS_W} ${FRAME_CANVAS_H}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
     svg.id = "rh-rabbit";
-    // display:block + opacity:0 — fades in after DOM settles to avoid flash
+    // Fixed height + aspect-locked width so pose swaps never resize the
+    // layout box (the discontinuity came from height:em + per-frame viewBox).
     svg.style.cssText = `
-        display: block; height: 1.15em; width: auto;
+        display: block; height: 1.15em; width: calc(1.15em * ${FRAME_ASPECT});
         color: inherit; pointer-events: none; opacity: 0;
+        overflow: visible;
     `;
     setSpriteFrame(svg, 0);
     return svg;
@@ -49,13 +60,17 @@ function createRabbitSprite(): SVGSVGElement {
 function setSpriteFrame(svg: SVGSVGElement, frame: RabbitFrame): void {
     const NS = "http://www.w3.org/2000/svg";
     const [w, h] = FRAME_VIEWBOX[frame];
-    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    // Bottom-center each tight crop inside the shared canvas so feet stay
+    // grounded and the hop reads as motion, not a scale pop.
+    const ox = (FRAME_CANVAS_W - w) / 2;
+    const oy = FRAME_CANVAS_H - h;
+    svg.setAttribute("viewBox", `0 0 ${FRAME_CANVAS_W} ${FRAME_CANVAS_H}`);
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const frag = document.createDocumentFragment();
     for (const [x, y, rw, rh] of FRAME_RECTS[frame]) {
         const rect = document.createElementNS(NS, "rect");
-        rect.setAttribute("x", String(x));
-        rect.setAttribute("y", String(y));
+        rect.setAttribute("x", String(x + ox));
+        rect.setAttribute("y", String(y + oy));
         rect.setAttribute("width", String(rw));
         rect.setAttribute("height", String(rh));
         rect.setAttribute("fill", "currentColor");
@@ -231,7 +246,9 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
 
         const dk = useDialKit("Rabbit Sprite", {
             frameMs: [140, 40, 400, 5],
-            hopDist: [22, 4, 80, 1],
+            // Shorter steps: patrol length is hopDist × 4 × cycleCount, so
+            // desktop (~2 cycles) and mobile (~1) stay compact by default.
+            hopDist: [16, 4, 80, 1],
         });
         const frameMsRef = useRef(dk.frameMs);
         const hopDistRef = useRef(dk.hopDist);
@@ -298,36 +315,38 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 // CSS transforms don't affect the parent's layout box, so
                 // wrapper's own rect stays the sprite's static (untransformed)
                 // origin no matter how far the svg has translated inside it.
-                // Desktop: patrol at most half the viewport width. Mobile:
-                // keep going all the way to the screen edge, then bounce.
-                let maxTravel = 0;
-                const recomputeMaxTravel = () => {
-                    const spriteHeight = svg.getBoundingClientRect().height;
+                // Patrol length ≈ N full 4-frame cycles (desktop 2 / mobile 1),
+                // always capped so the sprite can't leave the viewport.
+                let edgeTravel = 0;
+                const recomputeEdgeTravel = () => {
+                    const spriteHeight = svg.getBoundingClientRect().height || 18;
+                    const spriteWidthPx = spriteHeight * FRAME_ASPECT;
                     const staticLeft = wrapper.getBoundingClientRect().left;
-                    const maxFrameWidthPx = spriteHeight * MAX_FRAME_ASPECT;
-                    const edgeTravel = Math.max(
+                    edgeTravel = Math.max(
                         0,
-                        window.innerWidth - staticLeft - maxFrameWidthPx - VIEWPORT_MARGIN,
+                        window.innerWidth - staticLeft - spriteWidthPx - VIEWPORT_MARGIN,
                     );
-                    maxTravel = isMobile()
-                        ? edgeTravel
-                        : Math.min(edgeTravel, window.innerWidth * 0.5);
+                };
+                const getMaxTravel = () => {
+                    const cycles = isMobile() ? PATROL_CYCLES_MOBILE : PATROL_CYCLES_DESKTOP;
+                    const cycleTravel = hopDistRef.current * FRAMES_PER_CYCLE * cycles;
+                    return Math.min(edgeTravel, cycleTravel);
                 };
 
                 const syncHoverZoneWidth = () => {
                     if (!hoverZone) return;
-                    const spriteHeight = svg.getBoundingClientRect().height;
-                    const maxFrameWidthPx = spriteHeight * MAX_FRAME_ASPECT;
-                    hoverZone.style.width = `${maxTravel + maxFrameWidthPx + 24}px`;
+                    const spriteHeight = svg.getBoundingClientRect().height || 18;
+                    const spriteWidthPx = spriteHeight * FRAME_ASPECT;
+                    hoverZone.style.width = `${getMaxTravel() + spriteWidthPx + 24}px`;
                 };
 
-                recomputeMaxTravel();
+                recomputeEdgeTravel();
 
                 hopper = createHopAnimator(
                     svg,
                     () => frameMsRef.current,
                     () => hopDistRef.current,
-                    () => maxTravel,
+                    getMaxTravel,
                 );
 
                 hoverZone = document.createElement("span");
@@ -344,7 +363,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     requestAnimationFrame(() => {
                         svg.style.transition = "opacity 0.15s ease";
                         svg.style.opacity = "1";
-                        recomputeMaxTravel();
+                        recomputeEdgeTravel();
                         syncHoverZoneWidth();
                     })
                 );
@@ -367,7 +386,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 const onResize = () => {
                     cancelAnimationFrame(resizeRaf);
                     resizeRaf = requestAnimationFrame(() => {
-                        recomputeMaxTravel();
+                        recomputeEdgeTravel();
                         hopper?.resync();
                         syncHoverZoneWidth();
                     });
