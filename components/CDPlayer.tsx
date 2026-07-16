@@ -1,18 +1,48 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useDialKit } from "dialkit";
 
-// 900×900 design canvas — keeps the player visually ~2.3× larger than the old 1296 frame.
-const DESIGN_W = 900;
-const DESIGN_H = 900;
 const IFRAME_SRC = "https://cdplayer-peach.vercel.app/";
 
-export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const iframeRef     = useRef<HTMLIFrameElement>(null);
-  const [cw, setCw]          = useState(DESIGN_W);
-  const [isTouch, setIsTouch]   = useState(false);
-  const [ready, setReady]       = useState(false);
+export default function CDPlayer({
+  style,
+  dialKitKey = "CDPlayer",
+  defaults,
+}: {
+  style?: React.CSSProperties;
+  dialKitKey?: string;
+  defaults?: {
+    zoom?: number; offsetX?: number; offsetY?: number;
+    cardW?: number; cardH?: number;
+    canvasW?: number; canvasH?: number;
+    iframeW?: number; iframeH?: number;
+  };
+}) {
+  const dk = useDialKit(dialKitKey, {
+    // ── Scale & pan ─────────────────────────────────────────────────────────
+    zoom:    [defaults?.zoom    ?? 1.35,  0.2,  3.0,  0.01],
+    offsetX: [defaults?.offsetX ?? 0,    -600,  600,  1],
+    offsetY: [defaults?.offsetY ?? 0,    -600,  600,  1],
+
+    // ── Outer card aspect ratio ─────────────────────────────────────────────
+    cardW:   [defaults?.cardW   ?? 1296,  200,  2400, 1],
+    cardH:   [defaults?.cardH   ?? 1080,  200,  2400, 1],
+
+    // ── Design canvas (virtual viewport) ───────────────────────────────────
+    canvasW: [defaults?.canvasW ?? 1296,  300,  2400, 1],
+    canvasH: [defaults?.canvasH ?? 1080,  300,  2400, 1],
+
+    // ── Iframe viewport ─────────────────────────────────────────────────────
+    iframeW: [defaults?.iframeW ?? 1296,  300,  2400, 1],
+    iframeH: [defaults?.iframeH ?? 1080,  300,  2400, 1],
+  });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef    = useRef<HTMLIFrameElement>(null);
+  const [cw, setCw]           = useState(dk.canvasW);
+  const [isTouch, setIsTouch] = useState(false);
+  const [ready, setReady]     = useState(false);
 
   useEffect(() => { setIsTouch(window.matchMedia("(hover: none)").matches); }, []);
 
@@ -24,7 +54,7 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
     return () => obs.disconnect();
   }, []);
 
-  // Lazy load
+  // Lazy-load iframe until near viewport
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -40,12 +70,10 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
   const sendTheme = () => {
     const isDark = document.documentElement.getAttribute("data-theme") === "dark";
     iframeRef.current?.contentWindow?.postMessage(
-      { type: "theme", value: isDark ? "dark" : "light" },
-      "*",
+      { type: "theme", value: isDark ? "dark" : "light" }, "*",
     );
   };
 
-  // Observe theme changes (works for future toggles)
   useEffect(() => {
     if (!ready) return;
     const mo = new MutationObserver(sendTheme);
@@ -54,13 +82,20 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
-  const s = cw / DESIGN_W;
+  // s = how many screen-pixels per design-canvas pixel
+  const s = (cw / dk.canvasW) * dk.zoom;
 
-  const forward = (e: React.PointerEvent, type: string) => {
+  // Coordinate inversion for the transform:
+  //   scale(s) translate(offsetX, offsetY) with transformOrigin center
+  // screen offset from container center → design coords:
+  //   design_x = (screenDx / s) - offsetX + canvasW/2
+  const forwardEvent = (clientX: number, clientY: number, type: string) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect || !iframeRef.current?.contentWindow) return;
-    const x = (e.clientX - rect.left - (rect.width  - DESIGN_W * s) / 2) / s;
-    const y = (e.clientY - rect.top  - (rect.height - DESIGN_H * s) / 2) / s;
+    const dx = clientX - (rect.left + rect.width  / 2);
+    const dy = clientY - (rect.top  + rect.height / 2);
+    const x  = dx / s - dk.offsetX + dk.canvasW / 2;
+    const y  = dy / s - dk.offsetY + dk.canvasH / 2;
     iframeRef.current.contentWindow.postMessage({ type, x, y }, "*");
   };
 
@@ -70,7 +105,7 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
       style={{
         ...style,
         width: "100%",
-        aspectRatio: `${DESIGN_W} / ${DESIGN_H}`,
+        aspectRatio: `${dk.cardW} / ${dk.cardH}`,
         overflow: "hidden",
         position: "relative",
         display: "flex",
@@ -78,19 +113,25 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
         justifyContent: "center",
       }}
     >
+      {/* Inner div is always canvasW × canvasH in layout, then visually scaled.
+          flexShrink:0 prevents flex from squeezing it before the scale applies.
+          This is the same pattern as the original Framer component — the iframe
+          always renders at full size and is scaled down to fit, so its background
+          naturally fills the container at any breakpoint. */}
       <div
         style={{
-          width: DESIGN_W, height: DESIGN_H,
-          transform: `scale(${s})`,
+          width:           dk.canvasW,
+          height:          dk.canvasH,
+          transform:       `scale(${s}) translate(${dk.offsetX}px, ${dk.offsetY}px)`,
           transformOrigin: "center center",
-          flexShrink: 0,
+          flexShrink:      0,
         }}
       >
         <iframe
           ref={iframeRef}
           src={ready ? IFRAME_SRC : undefined}
-          width={DESIGN_W}
-          height={DESIGN_H}
+          width={dk.iframeW}
+          height={dk.iframeH}
           style={{ border: "none", display: "block", pointerEvents: isTouch ? "auto" : "none" }}
           allow="autoplay"
           title="CD Player"
@@ -98,11 +139,13 @@ export default function CDPlayer({ style }: { style?: React.CSSProperties }) {
         />
       </div>
 
+      {/* Overlay captures all pointer events and forwards them with corrected coordinates */}
       {!isTouch && (
         <div
-          onPointerDown={(e)  => forward(e, "framer-pointerdown")}
-          onPointerMove={(e)  => forward(e, "framer-pointermove")}
-          onPointerUp={(e)    => forward(e, "framer-pointerup")}
+          onPointerDown={(e) => forwardEvent(e.clientX, e.clientY, "framer-pointerdown")}
+          onPointerMove={(e) => forwardEvent(e.clientX, e.clientY, "framer-pointermove")}
+          onPointerUp={(e)   => forwardEvent(e.clientX, e.clientY, "framer-pointerup")}
+          onClick={(e)       => forwardEvent(e.clientX, e.clientY, "framer-click")}
           style={{ position: "absolute", inset: 0 }}
         />
       )}

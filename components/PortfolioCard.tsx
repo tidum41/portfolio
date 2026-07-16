@@ -45,7 +45,7 @@ export default function PortfolioCard({
       exit={{ opacity: 0, scale: 0.98 }}
       whileHover={{ scale: 1.015 }}
       whileTap={{ scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      transition={{ type: "spring", duration: 0.3, bounce: 0 }}
       style={{ originX: 0.5, originY: 0.5 }}
       className={[
         "group flex flex-col gap-2",

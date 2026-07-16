@@ -1,4 +1,16 @@
-// Studio layout — opt out of the main site's template animation and nav
+// Studio layout — hides all site chrome so Sanity Studio renders full-screen.
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <style>{`
+        /* Hide site header/footer inside /studio */
+        header.intro-hide, footer { display: none !important; }
+        /* Restore default cursor — root layout forces cursor:none globally */
+        * { cursor: auto !important; }
+        /* Hide the skip-link */
+        .skip-link { display: none !important; }
+      `}</style>
+      {children}
+    </>
+  );
 }

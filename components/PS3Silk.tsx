@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, startTransition } from "react";
 import { useDialKit } from "dialkit";
+import { introTimings } from "@/lib/introTimings";
 
 // Module-level flag: persists during client-side nav, resets on page reload
 let _hasMounted = false;
 
-const FADE_DURATION = 3500;
 const FRAME_MS = 1000 / 30; // 30fps cap
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -47,19 +47,27 @@ export interface PS3SilkProps {
   waveColor?: string;
   mode?: number;
   style?: React.CSSProperties;
+  /** When false (work shell hidden via display:none), pause rendering and
+   *  never write a 0×0 drawing buffer — that path is what flattened the
+   *  pattern after navigating away from "/" and coming back. */
+  active?: boolean;
 }
 
 export default function PS3Silk({
   intensity = 0.1,
   mouseStrength = 0.11,
-  yOffset = 10,
+  yOffset = 49,
   waveColor = "#ffffff",
   mode: initialMode = 1,
   style,
+  active = true,
 }: PS3SilkProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const modeRef = useRef(initialMode);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
   const [mode, setMode] = useState(initialMode);
 
   const dk = useDialKit("PS3Silk", {
@@ -68,6 +76,7 @@ export default function PS3Silk({
     yOffset:       [yOffset,        -50,  100],
     halftoneSize:  [3.0,            1,    20],
     speed:         [1.0,            0,    4],
+    endOpacity:    [0.15,           0,    0.5,  0.01],
   });
 
   const intensityRef    = useRef(intensity);
@@ -76,6 +85,7 @@ export default function PS3Silk({
   const waveColorRef    = useRef<[number, number, number]>(hexToRgb(waveColor));
   const halftSizeRef    = useRef(3.0);
   const speedRef        = useRef(1.0);
+  const endOpacityRef   = useRef(0.15);
 
   // Sync DialKit live values into refs each frame
   useEffect(() => { intensityRef.current = dk.intensity; }, [dk.intensity]);
@@ -83,8 +93,17 @@ export default function PS3Silk({
   useEffect(() => { yOffsetRef.current = dk.yOffset; }, [dk.yOffset]);
   useEffect(() => { halftSizeRef.current = dk.halftoneSize; }, [dk.halftoneSize]);
   useEffect(() => { speedRef.current = dk.speed; }, [dk.speed]);
+  useEffect(() => { endOpacityRef.current = dk.endOpacity; }, [dk.endOpacity]);
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
+
+  // Wake (or pause) the WebGL loop when the work route's visibility flips —
+  // forces a real-sized resize + restores resting opacity on return; stops the
+  // RAF entirely while hidden so we aren't burning frames into a dead canvas.
+  useEffect(() => {
+    if (active) lifecycleRef.current?.wake();
+    else lifecycleRef.current?.pause();
+  }, [active]);
 
   // ps3-update event
   useEffect(() => {
@@ -141,27 +160,27 @@ export default function PS3Silk({
 
     const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
     let rafId = 0, lastT = 0;
-    const START_OPACITY = 0.5, END_OPACITY = 0.2;
-    let currentOpacity = START_OPACITY, targetOpacity = START_OPACITY;
+    const START_OPACITY = 0.5;
+    let currentOpacity = 0, targetOpacity = START_OPACITY;
 
     const isFirstLoad = !_hasMounted;
     if (isFirstLoad) _hasMounted = true;
-    let fadeDone = !isFirstLoad;
 
-    if (isFirstLoad) {
-      wrapper.style.transition = "none";
+    // Reduced motion: keep the slow ambient wave loop (low-amplitude, not the
+    // kind of motion this preference is meant to suppress), but skip the
+    // entrance fade and the cursor-reactive ripple/warp below — those are the
+    // faster, more attention-grabbing pieces.
+    const reducedMotion = typeof window !== "undefined"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // First-ever mount this session: start transparent, RAF loop fades in slowly.
+    // Every later page nav: appear at full resting opacity immediately — no fade, no gap.
+    if (isFirstLoad && !reducedMotion) {
       wrapper.style.opacity = "0";
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          wrapper.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
-          wrapper.style.opacity = String(START_OPACITY);
-          setTimeout(() => { wrapper.style.transition = "none"; fadeDone = true; }, FADE_DURATION + 100);
-        })
-      );
     } else {
-      wrapper.style.transition = "none";
+      currentOpacity = START_OPACITY;
+      targetOpacity  = START_OPACITY;
       wrapper.style.opacity = String(START_OPACITY);
-      fadeDone = true;
     }
 
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -170,43 +189,128 @@ export default function PS3Silk({
     let removeListeners = () => {};
     let glRef: WebGLRenderingContext | null = null;
     let glProg: WebGLProgram | null = null;
+    let running = false;
 
-    // Defer shader compilation so the navigation animation stays smooth
+    // Defer shader compilation on first load only, so it doesn't compete with the
+    // page-transition animation. On repeat navigations, init immediately — the
+    // shader is already GPU/driver-cached from the earlier compile, so there's
+    // no jank to protect against, and any delay would just read as a stutter.
     const initTimer = setTimeout(() => {
-      const _glNullable = canvas.getContext("webgl", { alpha: true });
+      const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
       if (!_glNullable) return;
       const gl = _glNullable as WebGLRenderingContext;
       glRef = gl;
       const glCtx = gl;
 
+      // Intro fade-in: linear ease-in-out from 0 → START_OPACITY over 1.2s, first load only.
+      // Uses time-based interpolation (not lerp) so it reaches exactly START_OPACITY at t=duration.
+      const INTRO_DURATION = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
+      let introPhaseStart = performance.now();
+      let introPhaseEnd = introPhaseStart + INTRO_DURATION;
+
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
         if (!rect || !canvas) return;
-        canvas.width = rect.width; canvas.height = rect.height;
-        glCtx.viewport(0, 0, rect.width, rect.height);
+        // Never write a 0×0 (or near-zero) drawing buffer. The persistent work
+        // shell hides via display:none on non-/ routes, which reports 0×0 here;
+        // assigning that size is what made the pattern go flat/empty on return.
+        const w = Math.max(0, Math.floor(rect.width));
+        const h = Math.max(0, Math.floor(rect.height));
+        if (w < 2 || h < 2) return;
+        if (canvas.width === w && canvas.height === h) {
+          glCtx.viewport(0, 0, w, h);
+          return;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        glCtx.viewport(0, 0, w, h);
       }
 
       function updateTarget() {
-        const fadeStart = window.innerHeight * 0.04, fadeEnd = window.innerHeight * 0.12;
-        const sy = window.scrollY || 0;
-        targetOpacity = START_OPACITY + (END_OPACITY - START_OPACITY) *
-          ease3(clamp((sy - fadeStart) / (fadeEnd - fadeStart), 0, 1));
+        const scrollY    = window.scrollY || 0;
+        const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
+        const fadeEnd    = window.innerHeight * 0.12;  // ~108px
+        const endOp      = endOpacityRef.current;
+        targetOpacity = START_OPACITY + (endOp - START_OPACITY) *
+          ease3(clamp((scrollY - fadeStart) / (fadeEnd - fadeStart), 0, 1));
       }
 
       function onMouseMove(e: MouseEvent) {
+        if (!activeRef.current) return;
         const rect = wrapperRef.current?.getBoundingClientRect();
-        if (!rect) return;
+        if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
         mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
       }
 
+      function onPopState() {
+        targetOpacity = currentOpacity = START_OPACITY;
+        if (wrapper) wrapper.style.opacity = String(START_OPACITY);
+      }
+
+      function onReplay() {
+        const dur = introTimings.patternDuration * 1000;
+        currentOpacity = 0;
+        if (wrapper) wrapper.style.opacity = "0";
+        introPhaseStart = performance.now();
+        introPhaseEnd   = introPhaseStart + dur;
+      }
+
+      // Declared early so wake/start helpers (assigned after GL setup) can close
+      // over them; filled in once the program + quad buffer exist.
+      let posLoc = -1;
+      let buf: WebGLBuffer | null = null;
+
+      function startLoop() {
+        if (running) return;
+        running = true;
+        lastT = 0;
+        rafId = requestAnimationFrame(frame);
+      }
+
+      function stopLoop() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+
+      // ResizeObserver catches the wrapper going from 0×0 (display:none) back
+      // to its real size when the work route becomes active again — window.resize
+      // alone doesn't fire on route-change visibility toggles. We still refuse
+      // to apply the 0×0 measurement itself (see resize()).
+      const ro = new ResizeObserver(() => {
+        if (!activeRef.current) return;
+        resize();
+        if (canvas.width >= 2 && canvas.height >= 2) startLoop();
+      });
+      ro.observe(wrapper);
+
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        stopLoop();
+      };
+      const onContextRestored = () => {
+        lifecycleRef.current?.wake();
+      };
+      canvas.addEventListener("webglcontextlost", onContextLost, false);
+      canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+
       window.addEventListener("resize", resize);
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", updateTarget, { passive: true });
+      window.addEventListener("popstate", onPopState);
+      window.addEventListener("intro-replay", onReplay);
       removeListeners = () => {
+        ro.disconnect();
+        lifecycleRef.current = null;
+        stopLoop();
+        canvas.removeEventListener("webglcontextlost", onContextLost, false);
+        canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
         window.removeEventListener("resize", resize);
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("scroll", updateTarget);
+        window.removeEventListener("popstate", onPopState);
+        window.removeEventListener("intro-replay", onReplay);
       };
 
       const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos,0.0,1.0); }`;
@@ -293,46 +397,91 @@ void main() {
       gl.useProgram(prog);
       glProg = prog;
 
-      const posLoc        = gl.getAttribLocation(prog, "aPos");
-      const uTimeLoc      = gl.getUniformLocation(prog, "uTime");
-      const uResLoc       = gl.getUniformLocation(prog, "uResolution");
-      const uMouseLoc     = gl.getUniformLocation(prog, "uMouse");
-      const uIntLoc       = gl.getUniformLocation(prog, "uIntensity");
-      const uMStrLoc      = gl.getUniformLocation(prog, "uMouseStrength");
-      const uAspLoc       = gl.getUniformLocation(prog, "uAspect");
-      const uYOfsLoc      = gl.getUniformLocation(prog, "uYOffsetPx");
-      const uModeLoc      = gl.getUniformLocation(prog, "uMode");
-      const uHtSizeLoc    = gl.getUniformLocation(prog, "uHalftoneSize");
-      const uWaveColorLoc = gl.getUniformLocation(prog, "uWaveColor");
-      const uSpeedLoc     = gl.getUniformLocation(prog, "uSpeed");
+      posLoc                  = gl.getAttribLocation(prog, "aPos");
+      const uTimeLoc          = gl.getUniformLocation(prog, "uTime");
+      const uResLoc           = gl.getUniformLocation(prog, "uResolution");
+      const uMouseLoc         = gl.getUniformLocation(prog, "uMouse");
+      const uIntLoc           = gl.getUniformLocation(prog, "uIntensity");
+      const uMStrLoc          = gl.getUniformLocation(prog, "uMouseStrength");
+      const uAspLoc           = gl.getUniformLocation(prog, "uAspect");
+      const uYOfsLoc          = gl.getUniformLocation(prog, "uYOffsetPx");
+      const uModeLoc          = gl.getUniformLocation(prog, "uMode");
+      const uHtSizeLoc        = gl.getUniformLocation(prog, "uHalftoneSize");
+      const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
+      const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
 
-      const buf = gl.createBuffer();
+      buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(posLoc);
       gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
       gl.clearColor(0, 0, 0, 0);
 
+      // Called when the work route becomes visible again (and once at init if
+      // already active). Re-measure against a real box and rebind GL state so
+      // the pattern keeps intensity / halftone / aspect after a round-trip.
+      const wake = () => {
+        if (glCtx.isContextLost()) return;
+        resize();
+        updateTarget();
+        // Snap opacity to the scroll-derived target — no leftover intro/
+        // hidden-state value that would wash the pattern out.
+        if (!(isFirstLoad && !reducedMotion && performance.now() < introPhaseEnd)) {
+          currentOpacity = targetOpacity;
+          if (wrapper) wrapper.style.opacity = String(Math.max(0, Math.min(1, currentOpacity)));
+        }
+        if (glProg && buf) {
+          glCtx.useProgram(glProg);
+          glCtx.bindBuffer(glCtx.ARRAY_BUFFER, buf);
+          glCtx.enableVertexAttribArray(posLoc);
+          glCtx.vertexAttribPointer(posLoc, 2, glCtx.FLOAT, false, 0, 0);
+        }
+        startLoop();
+      };
+      lifecycleRef.current = { wake, pause: stopLoop };
+
       function frame(ms: number) {
+        if (!running) return;
         rafId = requestAnimationFrame(frame);
+
+        // Pause draws while the work shell is hidden (or still 0-sized). Keep
+        // the RAF chain alive only while active so wake() doesn't need to
+        // fight a skipped loop; when inactive, stopLoop() clears it entirely.
+        if (!activeRef.current) {
+          stopLoop();
+          return;
+        }
+        if (canvas.width < 2 || canvas.height < 2 || glCtx.isContextLost()) {
+          resize();
+          if (canvas.width < 2 || canvas.height < 2 || glCtx.isContextLost()) return;
+        }
+
         if (ms - lastT < FRAME_MS) return;
         lastT = ms;
 
         mouse.x += (mouse.tx - mouse.x) * 0.042;
         mouse.y += (mouse.ty - mouse.y) * 0.042;
 
-        if (fadeDone) {
-          const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.015;
+        updateTarget();
+        const isIntro = ms < introPhaseEnd;
+        if (isIntro && INTRO_DURATION > 0) {
+          // Time-based ease-in-out: reaches exactly START_OPACITY at introPhaseEnd
+          const rawT = (ms - introPhaseStart) / (introPhaseEnd - introPhaseStart);
+          const t = Math.min(rawT, 1);
+          const eased = t * t * (3 - 2 * t); // smoothstep
+          currentOpacity = eased * START_OPACITY;
+        } else {
+          const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.035; // dim fast, recover medium
           currentOpacity += (targetOpacity - currentOpacity) * lerpSpeed;
-          if (wrapper) wrapper.style.opacity = String(currentOpacity);
         }
+        if (wrapper) wrapper.style.opacity = String(Math.max(0, Math.min(1, currentOpacity)));
 
         const wc = waveColorRef.current;
         gl.uniform1f(uTimeLoc, ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
         gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
         gl.uniform1f(uIntLoc, intensityRef.current);
-        gl.uniform1f(uMStrLoc, mouseStrRef.current);
+        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
         gl.uniform1f(uYOfsLoc, yOffsetRef.current);
         gl.uniform1i(uModeLoc, modeRef.current);
@@ -343,14 +492,20 @@ void main() {
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
 
-      requestAnimationFrame(() => { resize(); updateTarget(); rafId = requestAnimationFrame(frame); });
-    }, 150);
+      // Start only if we're currently the visible work route; otherwise wait
+      // for the active→true wake. Avoids the old path of sizing to 0×0 on
+      // about/play first-paint and then permanently flattening the pattern.
+      if (activeRef.current) {
+        requestAnimationFrame(() => lifecycleRef.current?.wake());
+      }
+    }, isFirstLoad ? 150 : 0);
 
     return () => {
       clearTimeout(initTimer);
+      lifecycleRef.current = null;
       cancelAnimationFrame(rafId);
       removeListeners();
-      if (glRef && glProg) glRef.deleteProgram(glProg);
+      if (glRef && glProg && !glRef.isContextLost()) glRef.deleteProgram(glProg);
     };
   }, []);
 
