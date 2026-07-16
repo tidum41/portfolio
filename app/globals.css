@@ -161,8 +161,10 @@ a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transi
 }
 
 /* ─── First-load intro — hero-only moment before rest of UI appears ── */
-/* IntroOrchestrator sets data-intro="playing" before first paint,
-   swaps to "done" after 1.2s triggering the fade-in, then removes it. */
+/* data-intro="playing" is unconditionally present in the server-rendered
+   HTML (app/layout.tsx) on every route, removed by an inline script off the
+   homepage. IntroOrchestrator swaps it to "done" after introTimings.gateDuration
+   (default 1.9s) triggering the fade-in above, then removes it entirely. */
 html[data-intro="playing"] .intro-hide {
   opacity: 0 !important;
   pointer-events: none !important;
