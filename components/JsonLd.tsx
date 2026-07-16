@@ -18,8 +18,13 @@ export default function JsonLd() {
         "@id": `${SITE_URL}/#person`,
         name: "Mudit Mahajan",
         url: SITE_URL,
+        description: SITE_DESCRIPTION,
         email: "muditmahajan@ucla.edu",
-        jobTitle: "Product Design Student",
+        jobTitle: "Product Design Intern",
+        worksFor: {
+          "@type": "Organization",
+          name: "JOOLA",
+        },
         affiliation: {
           "@type": "CollegeOrUniversity",
           name: "UCLA",
