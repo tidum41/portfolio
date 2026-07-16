@@ -9,7 +9,7 @@ const links = [
 
 export default function Footer() {
   return (
-    <footer>
+    <footer className="intro-hide">
       <style>{`
         .footer-inner {
           display: flex;
