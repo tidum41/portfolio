@@ -166,6 +166,14 @@ export default function PS3Silk({
     const START_OPACITY = 0.5;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
 
+    // StrictMode-safety: in dev, React mounts this effect, tears it straight
+    // back down, then mounts it again for real — without capturing/restoring
+    // the pre-mount value here, that phantom first invocation would flip
+    // _hasMounted permanently, making the real, persisting invocation always
+    // compute isFirstLoad=false and silently skip the intro fade on every
+    // dev reload. In production StrictMode double-invoke doesn't happen, so
+    // this is a no-op there. Matches the same guard IntroOrchestrator uses.
+    const hadMountedBefore = _hasMounted;
     const isFirstLoad = !_hasMounted;
     if (isFirstLoad) _hasMounted = true;
 
@@ -194,6 +202,27 @@ export default function PS3Silk({
     let glProg: WebGLProgram | null = null;
     let running = false;
 
+    // Intro fade-in: linear ease-in-out from 0 → START_OPACITY over
+    // patternDuration, first load only. Uses time-based interpolation (not
+    // lerp) so it reaches exactly START_OPACITY at t=duration. Declared out
+    // here (not inside the deferred GL-init timer below) so onReplay — armed
+    // synchronously, immediately below — can reset it even if a replay fires
+    // before shader init has run; every other intro-timed piece
+    // (IntroOrchestrator/HeroText/GridFirstLoad/RabbitHoleVideo) arms its
+    // own intro-replay listener synchronously at mount for the same reason.
+    const INTRO_DURATION = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
+    let introPhaseStart = performance.now();
+    let introPhaseEnd = introPhaseStart + INTRO_DURATION;
+
+    function onReplay() {
+      const dur = introTimings.patternDuration * 1000;
+      currentOpacity = 0;
+      wrapper.style.opacity = "0";
+      introPhaseStart = performance.now();
+      introPhaseEnd   = introPhaseStart + dur;
+    }
+    window.addEventListener("intro-replay", onReplay);
+
     // Defer shader compilation on first load only, so it doesn't compete with the
     // page-transition animation. On repeat navigations, init immediately — the
     // shader is already GPU/driver-cached from the earlier compile, so there's
@@ -204,12 +233,6 @@ export default function PS3Silk({
       const gl = _glNullable as WebGLRenderingContext;
       glRef = gl;
       const glCtx = gl;
-
-      // Intro fade-in: linear ease-in-out from 0 → START_OPACITY over 1.2s, first load only.
-      // Uses time-based interpolation (not lerp) so it reaches exactly START_OPACITY at t=duration.
-      const INTRO_DURATION = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
-      let introPhaseStart = performance.now();
-      let introPhaseEnd = introPhaseStart + INTRO_DURATION;
 
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
@@ -249,14 +272,6 @@ export default function PS3Silk({
       function onPopState() {
         targetOpacity = currentOpacity = START_OPACITY;
         if (wrapper) wrapper.style.opacity = String(START_OPACITY);
-      }
-
-      function onReplay() {
-        const dur = introTimings.patternDuration * 1000;
-        currentOpacity = 0;
-        if (wrapper) wrapper.style.opacity = "0";
-        introPhaseStart = performance.now();
-        introPhaseEnd   = introPhaseStart + dur;
       }
 
       // Declared early so wake/start helpers (assigned after GL setup) can close
@@ -302,7 +317,6 @@ export default function PS3Silk({
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", updateTarget, { passive: true });
       window.addEventListener("popstate", onPopState);
-      window.addEventListener("intro-replay", onReplay);
       removeListeners = () => {
         ro.disconnect();
         lifecycleRef.current = null;
@@ -313,7 +327,6 @@ export default function PS3Silk({
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("scroll", updateTarget);
         window.removeEventListener("popstate", onPopState);
-        window.removeEventListener("intro-replay", onReplay);
       };
 
       const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos,0.0,1.0); }`;
@@ -504,6 +517,8 @@ void main() {
     }, isFirstLoad ? 150 : 0);
 
     return () => {
+      _hasMounted = hadMountedBefore;
+      window.removeEventListener("intro-replay", onReplay);
       clearTimeout(initTimer);
       lifecycleRef.current = null;
       cancelAnimationFrame(rafId);

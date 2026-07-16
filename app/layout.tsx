@@ -54,15 +54,36 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const dsStyle = designSystemToCss(ds);
 
   return (
-    <html lang="en" data-theme="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="dark"
+      data-scroll-behavior="smooth"
+      // Unconditionally "playing" in the static, server-rendered HTML — not
+      // set by a client script checking location.pathname. This is a fixed
+      // JSX attribute (same value on every route, computed at build time,
+      // not per-request), so it doesn't opt any route out of static
+      // rendering/ISR the way reading the request pathname via headers()
+      // in this shared layout would. The homepage's intro-hidden state is
+      // therefore baked directly into the HTML bytes the server sends —
+      // zero JS execution required to establish it, so it can't silently
+      // fail to gate. The inline script below does the inverse: on any
+      // OTHER route, it removes the attribute so Nav/Footer (which also
+      // render there) aren't stuck hidden. If that removal script were to
+      // ever fail, the failure mode is nav/footer briefly not reappearing
+      // on a non-homepage route — much lower-stakes than the previous
+      // failure mode, where the whole homepage intro sequence could fail
+      // wide open with no gating at all.
+      data-intro="playing"
+      suppressHydrationWarning
+    >
       <head>
         {/* Runs synchronously before first paint:
             1. Applies saved light/dark theme from localStorage.
             2. Clears sessionStorage so cursor-color, wave-color, PS3 mode, etc.
                reset on every hard load (they persist only across client-side navigations).
-            3. On the homepage, sets data-intro="playing" so the intro gate hides
-               nav/footer/project grid until IntroOrchestrator lifts the gate. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname==="/")document.documentElement.setAttribute("data-intro","playing")})()` }} />
+            3. Off the homepage, removes data-intro="playing" (see the comment on <html>
+               above for why it starts present on every route instead of being added here). */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()` }} />
         {/* Intro gate CSS — must be inline, not in globals.css. The blocking script
             above sets data-intro="playing" synchronously, but globals.css is an
             external stylesheet that loads separately over the network. On production
