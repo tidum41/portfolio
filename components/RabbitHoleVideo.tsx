@@ -485,10 +485,11 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
 
                 recomputeEdgeTravel();
 
+                const onMobile = () => window.innerWidth < MOBILE_BREAKPOINT;
                 hopper = createHopAnimator(
                     svg,
-                    () => frameMsRef.current,
-                    () => hopDistRef.current,
+                    () => onMobile() ? Math.round(frameMsRef.current * 1.25) : frameMsRef.current,
+                    () => onMobile() ? Math.round(hopDistRef.current * 0.75) : hopDistRef.current,
                     getMaxTravel,
                     () => filledRef.current && isDarkRef.current,
                     () => filledScaleRef.current,
