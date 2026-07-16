@@ -22,13 +22,6 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Mudit Mahajan",
   },
-  icons: {
-    icon: [
-      // Dark glyph for light OS/browser chrome, light glyph for dark chrome
-      { url: "/favicon-light.png", media: "(prefers-color-scheme: light)" },
-      { url: "/favicon-dark.png", media: "(prefers-color-scheme: dark)" },
-    ],
-  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -49,6 +42,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* Hide system cursor immediately on pointer:fine devices — before JS
             hydration — so there's no flash of the default arrow on load. */}
         <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine){*{cursor:none!important}}` }} />
+        {/* Theme-aware favicons: dark glyph on light chrome, light glyph on dark chrome */}
+        <link rel="icon" type="image/png" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
