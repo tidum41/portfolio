@@ -1,11 +1,5 @@
 import Link from "next/link";
-
-const links = [
-  { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
-  { label: "x",        href: "https://x.com/muditm14" },
-  { label: "email",    href: "mailto:mudit14.mahajan@gmail.com" },
-  { label: "resume",   href: "https://drive.google.com/file/d/1i4Phseyq472yu9PTt1V5-Q0-mV6HCl9y/view?usp=sharing" },
-];
+import { FOOTER_LINKS } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -35,7 +29,7 @@ export default function Footer() {
 
           <nav aria-label="Social links">
             <ul style={{ display: "flex", alignItems: "center", gap: 16, listStyle: "none", margin: 0, padding: 0 }}>
-              {links.map(({ label, href }) => (
+              {FOOTER_LINKS.map(({ label, href }) => (
                 <li key={label}>
                   <a
                     href={href}

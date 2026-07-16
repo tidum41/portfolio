@@ -188,7 +188,10 @@ export default function QuarterPicker({
         if (!el) return
         const ro = new ResizeObserver(([entry]) => {
             const w = entry.contentRect.width
-            const s = (w / 393) * 0.46
+            // Desktop keeps the compact ~0.46 width; mobile matches the phone
+            // mockup frame width used elsewhere on the case study (~77%).
+            const factor = w <= 520 ? 0.77 : 0.46
+            const s = (w / 393) * factor
             setScale(s)
             setOffsetX((w - 393 * s) / 2)
         })

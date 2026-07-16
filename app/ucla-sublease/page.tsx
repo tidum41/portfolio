@@ -1,10 +1,25 @@
 import React from "react";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
+import { SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "BruinLease",
+  description:
+    "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
+  alternates: { canonical: `${SITE_URL}/ucla-sublease` },
+  openGraph: {
+    title: "BruinLease — mudit mahajan",
+    description:
+      "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
+    url: `${SITE_URL}/ucla-sublease`,
+  },
+};
 
 function pp(pos: PhonePos | undefined) {
   if (!pos) return {};
@@ -175,7 +190,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
     : "0";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
           ? <img src={src} alt={alt} style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
@@ -399,15 +414,25 @@ export default async function BruinLeasePage() {
 
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
-      <DevNavigator />
-      <PhoneMockupDevPanel />
+      {process.env.NODE_ENV === "development" && (
+        <>
+          <DevNavigator />
+          <PhoneMockupDevPanel />
+        </>
+      )}
       <div className="cs-layout">
 
         <aside className="cs-aside">
           <CaseStudyTOC items={tocItems.map(t => ({ id: t.id, label: t.label }))} backHref="/" />
         </aside>
 
-        <div style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+
+          {/* Mobile back lives in the content lane (aside is hidden ≤767px) so
+              the chevron, tagline, title, and hero media share one left edge. */}
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
 
           {/* ── Hero ───────────────────────────────────────────────────── */}
           {/* Staggers in top-to-bottom on route arrival (tagline, title, video,
@@ -418,8 +443,8 @@ export default async function BruinLeasePage() {
               the rest previously read as buggy/jittery rather than elegant. */}
           <header className="cs-hero-header" style={{ marginBottom: 64 }}>
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem>
-                <p style={{
+              <EntranceItem className="cs-hero-tagline-wrap">
+                <p className="cs-hero-tagline" style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 400,
@@ -430,8 +455,8 @@ export default async function BruinLeasePage() {
                   {cs.heroTagline}
                 </p>
               </EntranceItem>
-              <EntranceItem>
-                <h1 style={{
+              <EntranceItem className="cs-hero-title-wrap">
+                <h1 className="cs-hero-title" style={{
                   fontFamily: "var(--font-sans-medium)",
                   fontSize: "var(--fs-hero)",
                   fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
@@ -444,7 +469,7 @@ export default async function BruinLeasePage() {
                 </h1>
               </EntranceItem>
 
-              <EntranceItem>
+              <EntranceItem className="cs-hero-media-wrap">
                 <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
                   <MuxHero playbackId={cs.heroMuxId} />
                 </div>
@@ -514,7 +539,7 @@ export default async function BruinLeasePage() {
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }} className="cs-process-tools">
                 {processTools.map(({ _key, tool, desc }) => (
                   <ToolCard key={_key} tool={tool} desc={desc} />
                 ))}
@@ -527,16 +552,20 @@ export default async function BruinLeasePage() {
               <H2>{cs.d1Heading}</H2>
               <Body>{cs.d1Body}</Body>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 20px" }}>
-                <CardBox src={cs.decision1CardInitial}   alt="Initial card"   label={d1CardLabels[0] ?? "initial"}   position="left" />
-                <CardBox src={cs.decision1CardCondensed} alt="Condensed card" label={d1CardLabels[1] ?? "condensed"} position="middle" />
-                <CardBox src={cs.decision1CardFinal}     alt="Final card"     label={d1CardLabels[2] ?? "final"}     position="right" />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, margin: "16px 0 28px" }}>
-                {[d1CompCol1, d1CompCol2, d1CompCol3].map((col, ci) => (
-                  <div key={ci} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}
+              {/* Each column owns its image + comparison points so mobile stacking
+                  keeps comparisons under the matching caption instead of dumping
+                  all text after all images. */}
+              <div className="cs-d1-columns" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, margin: "28px 0 28px" }}>
+                {[
+                  { src: cs.decision1CardInitial,   alt: "Initial card",   label: d1CardLabels[0] ?? "initial",   position: "left" as const,   col: d1CompCol1 },
+                  { src: cs.decision1CardCondensed, alt: "Condensed card", label: d1CardLabels[1] ?? "condensed", position: "middle" as const, col: d1CompCol2 },
+                  { src: cs.decision1CardFinal,     alt: "Final card",     label: d1CardLabels[2] ?? "final",     position: "right" as const,  col: d1CompCol3 },
+                ].map(({ src, alt, label, position, col }) => (
+                  <div key={label} className="cs-d1-column" style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
+                    <CardBox src={src} alt={alt} label={label} position={position} />
+                    <div className="cs-d1-comp-col" style={{ display: "flex", flexDirection: "column", gap: 8, paddingRight: 12 }}>
+                      {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -579,7 +608,7 @@ export default async function BruinLeasePage() {
               <H2>{cs.d3Heading}</H2>
               <Body>{cs.d3Body}</Body>
 
-              <div style={{ marginTop: 24 }}><QuarterPicker /></div>
+              <div className="cs-quarter-picker" style={{ marginTop: 24 }}><QuarterPicker /></div>
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
                 Selecting a quarter autofills exact move-in and move-out dates.
               </p>
