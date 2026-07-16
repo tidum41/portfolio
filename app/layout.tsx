@@ -10,6 +10,7 @@ import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import { getDesignSystem, designSystemToCss, getProjects } from "@/lib/sanity/queries";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -95,6 +96,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </main>
         <Footer />
         {process.env.NODE_ENV === "development" && <DevToolbar />}
+        <Analytics />
       </body>
     </html>
   );
