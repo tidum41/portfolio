@@ -3,7 +3,7 @@ import { FOOTER_LINKS } from "@/lib/site";
 
 export default function Footer() {
   return (
-    <footer>
+    <footer className="intro-hide">
       <style>{`
         .footer-inner {
           display: flex;

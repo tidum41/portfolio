@@ -25,6 +25,7 @@
     "next": "^16.2.10",
     "next-mdx-remote": "^6.0.0",
     "next-sanity": "^13.1.1",
+    "posthog-js": "^1.402.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "sanity": "^6.3.0",

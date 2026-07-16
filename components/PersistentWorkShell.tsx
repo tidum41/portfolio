@@ -237,7 +237,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </section>
 
       {/* ── Project grid ── */}
-      <div style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      <div className="intro-hide" style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"
