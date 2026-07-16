@@ -147,21 +147,46 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
   // (navigated away in same tab and pressed Back). Neither event fires during
   // client-side navigation, so /about → / remains instant with no delay.
+  //
+  // Exception: a target="_blank" link click fires the exact same
+  // hidden→visible sequence on this tab as a genuine tab-switch-away-and-back
+  // (the new tab steals focus, then the user switches back). To tell those
+  // apart, track the last click time and, if this tab went hidden within 1s
+  // of a click, treat that as "a link on the page opened a new tab" and skip
+  // the next replay — a real away-and-back (another app, an already-open
+  // tab, idle-then-return) has no such recent click and still replays.
   useEffect(() => {
+    const lastClickAtRef = { current: 0 };
+    const hiddenByClickRef = { current: false };
     const replay = () => {
       if (!isWorkRoute) return;
       document.documentElement.setAttribute("data-intro", "playing");
       window.dispatchEvent(new CustomEvent("intro-replay"));
     };
+    const onClick = () => {
+      lastClickAtRef.current = Date.now();
+    };
     const onVisibility = () => {
-      if (document.visibilityState === "visible") replay();
+      if (document.visibilityState === "hidden") {
+        hiddenByClickRef.current = Date.now() - lastClickAtRef.current < 1000;
+        return;
+      }
+      if (document.visibilityState === "visible") {
+        if (hiddenByClickRef.current) {
+          hiddenByClickRef.current = false;
+          return;
+        }
+        replay();
+      }
     };
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) replay();
     };
+    document.addEventListener("click", onClick, true);
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pageshow", onPageShow);
     return () => {
+      document.removeEventListener("click", onClick, true);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
@@ -229,6 +254,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)" }}
       aria-hidden={!isWorkRoute}
       inert={!isWorkRoute}
+      // When this shell is hidden on other routes, its hero + grid still sit in
+      // the DOM — exclude all of it from Google snippets so project titles like
+      // "Simplifying UCLA subleasing" don't get stitched onto the homepage blurb.
+      {...(!isWorkRoute ? { "data-nosnippet": true } : {})}
     >
       <IntroOrchestrator />
 
@@ -262,8 +291,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         </EntranceItem>
       </section>
 
-      {/* ── Project grid ── */}
-      <div className="intro-hide" style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      {/* ── Project grid — data-nosnippet keeps card titles out of the Google
+          blurb; the meta description + hero above should be the only candidates. */}
+      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"
