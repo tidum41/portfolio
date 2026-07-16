@@ -24,6 +24,15 @@ const FRAMES_PER_CYCLE = 4;
 const PATROL_CYCLES_DESKTOP = 2;
 const PATROL_CYCLES_MOBILE = 1;
 
+// Playback order — starts on frame 3 (the previous cycle's last pose) and
+// rotates through the rest, so the sequence reads 3→0→1→2→3… instead of
+// 0→1→2→3. Frame 3 is also the idle/resting pose.
+const HOP_SEQUENCE: readonly RabbitFrame[] = [3, 0, 1, 2];
+
+// Below this viewport width the sprite is allowed to travel edge-to-edge;
+// at or above it, travel is capped to half the viewport width.
+const MOBILE_BREAKPOINT = 768;
+
 function ensureMuxLoaded(): void {
     const id = "mux-player-script";
     if (
@@ -53,7 +62,7 @@ function createRabbitSprite(): SVGSVGElement {
         color: inherit; pointer-events: none; opacity: 0;
         overflow: visible;
     `;
-    setSpriteFrame(svg, 0);
+    setSpriteFrame(svg, HOP_SEQUENCE[0]);
     return svg;
 }
 
@@ -95,7 +104,7 @@ function createHopAnimator(
     getMaxTravel: () => number,
     onFrame?: (frame: RabbitFrame, translateX: number, direction: 1 | -1) => void,
 ) {
-    let frame: RabbitFrame = 0;
+    let seqIndex = 0;
     let translateX = 0;
     let direction: 1 | -1 = 1;
     let intervalId = 0;
@@ -105,8 +114,9 @@ function createHopAnimator(
         svg.style.transform = `translateX(${translateX.toFixed(1)}px) scaleX(${direction})`;
     }
 
-    function apply(f: RabbitFrame) {
-        frame = f;
+    function apply(i: number) {
+        seqIndex = i;
+        const f = HOP_SEQUENCE[seqIndex];
         setSpriteFrame(svg, f);
 
         const maxTravel = Math.max(0, getMaxTravel());
@@ -125,7 +135,7 @@ function createHopAnimator(
     }
 
     function tick() {
-        apply(((frame + 1) % 4) as RabbitFrame);
+        apply((seqIndex + 1) % HOP_SEQUENCE.length);
     }
 
     function start() {
@@ -136,12 +146,12 @@ function createHopAnimator(
     function stop() {
         running = false;
         clearInterval(intervalId);
-        frame = 0;
+        seqIndex = 0;
         translateX = 0;
         direction = 1;
-        setSpriteFrame(svg, 0);
+        setSpriteFrame(svg, HOP_SEQUENCE[0]);
         render();
-        onFrame?.(0, 0, 1);
+        onFrame?.(HOP_SEQUENCE[0], 0, 1);
     }
     function pause() {
         if (!running) return;
@@ -322,10 +332,18 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     const spriteHeight = svg.getBoundingClientRect().height || 18;
                     const spriteWidthPx = spriteHeight * FRAME_ASPECT;
                     const staticLeft = wrapper.getBoundingClientRect().left;
-                    edgeTravel = Math.max(
+                    const edgeLimit = Math.max(
                         0,
                         window.innerWidth - staticLeft - spriteWidthPx - VIEWPORT_MARGIN,
                     );
+                    // Mobile can hop all the way to the viewport edge; larger
+                    // breakpoints cap travel at half the viewport width so the
+                    // patrol stays close to the trigger word instead of
+                    // wandering across the whole hero.
+                    const isMobileViewport = window.innerWidth < MOBILE_BREAKPOINT;
+                    maxTravel = isMobileViewport
+                        ? edgeLimit
+                        : Math.min(edgeLimit, window.innerWidth * 0.5);
                 };
                 const getMaxTravel = () => {
                     const cycles = isMobile() ? PATROL_CYCLES_MOBILE : PATROL_CYCLES_DESKTOP;
