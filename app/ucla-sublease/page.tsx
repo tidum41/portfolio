@@ -366,7 +366,7 @@ const FB = {
     "Property insights from Reddit and Bruinwalk are matched based on address, so seekers can vet a building before they reach out to a lister",
   ],
   solutionBg: "var(--color-hero-tint)",
-  solutionMuxId: "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
+  solutionMuxId: "XpkQyhqkEwMLrhDAhNEB2aRWS3wP023sbdbsS2zbY02eg",
   reflectionLabel: "Reflection",
   reflectionItems: [
     { _key: "r1", heading: "Verification works if scaled",                   body: "Verified badges are meaningful callouts, filtering legitimate UCLA students. But right now, our backend only accepts ucla.edu emails. Without opening it to all, the badge adds visual and cognitive noise." },
