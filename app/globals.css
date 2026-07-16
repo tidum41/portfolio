@@ -285,6 +285,15 @@ html:not([data-theme="dark"]) .project-card {
   .nav-link:hover { color: var(--color-text-muted) !important; }
 }
 
+/* ─── "ucla" hover accent ────────────────────────────────────────── */
+.hero-ucla {
+  color: inherit;
+  transition: color 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-ucla:hover { color: rgb(53, 121, 204); }
+}
+
 /* ─── Touch hit-target expansion (no visual change) ─────────────── */
 @media (pointer: coarse) {
   a.nav-link {

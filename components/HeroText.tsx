@@ -92,7 +92,7 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        cognitive science at <span style={{ color: "rgb(53, 121, 204)", fontWeight: 500 }}>ucla</span>
+        cognitive science at <span className="hero-ucla">ucla</span>
       </motion.p>
     </>
   );
