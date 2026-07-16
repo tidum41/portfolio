@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, EASE_Y } from "@/lib/motion";
+import { HERO_HEADLINE, HERO_SUBTITLE_BEFORE_UCLA } from "@/lib/site";
 
 // Module-level: false on fresh page load, true after first mount.
 // Persists across client-side navigation — same pattern as PS3Silk._hasMounted.
@@ -78,7 +79,7 @@ export default function HeroText() {
             margin: 0,
           }}
         >
-          {"I'm Mudit, a product designer with a love for details, curiosity, and rabbit holes"}
+          {HERO_HEADLINE}
         </motion.h1>
       </div>
 
@@ -96,7 +97,7 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        cognitive science at <span className="hero-ucla">ucla</span>
+        {HERO_SUBTITLE_BEFORE_UCLA}<span className="hero-ucla">ucla</span>
       </motion.p>
     </>
   );

@@ -1,9 +1,21 @@
 /** Canonical site config for metadata, sitemap, and structured data. */
+
 export const SITE_URL = "https://www.muditm.com";
 export const SITE_NAME = "mudit mahajan";
 
+/** Visible homepage hero — single source of truth for on-page + SEO copy. */
+export const HERO_HEADLINE =
+  "I'm Mudit, a product designer with a love for craft, curiosity, and rabbit holes";
+
+/** Hero subtitle before the styled "ucla" span. */
+export const HERO_SUBTITLE_BEFORE_UCLA = "Currently @ JOOLA · cognitive science at ";
+
+/**
+ * Meta description / OG / JSON-LD — composed from the hero copy so Google
+ * isn't stitching mismatched phrases from separate strings.
+ */
 export const SITE_DESCRIPTION =
-  "I'm Mudit, a product designer with a love for craft, curiosity, and rabbit holes. Currently @ JOOLA | cognitive science @ UCLA";
+  `${HERO_HEADLINE}. Currently @ JOOLA | cognitive science @ UCLA`;
 
 export const FOOTER_LINKS = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
