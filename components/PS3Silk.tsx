@@ -129,11 +129,14 @@ export default function PS3Silk({
     return () => window.removeEventListener("ps3-update", handler);
   }, []);
 
-  // click-to-cycle mode
+  // click-to-cycle mode — ignore rabbit-holes trigger/hover (and any click
+  // already swallowed by RabbitHoleVideo's mobile dismiss handler) so opening
+  // or closing the video popup never flips the wave pattern.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (!wrapperRef.current) return;
-      if ((e.target as Element).closest("a, button, [role='button']")) return;
+      const el = e.target as Element | null;
+      if (el?.closest?.("a, button, [role='button'], #rh-trigger, #rh-hover-zone, #rh-rabbit-wrapper")) return;
       const rect = wrapperRef.current.getBoundingClientRect();
       if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
         startTransition(() => {
