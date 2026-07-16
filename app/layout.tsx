@@ -55,16 +55,20 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" data-theme="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        {/* Flash prevention: apply saved theme before first paint */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light")})()` }} />
-        {/* Intro gate: hide non-hero elements immediately on home page load/reload.
-            Runs before React hydration so there's zero flash. IntroOrchestrator
-            detects this attribute and fires the 1.2s timer to reveal everything. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if(location.pathname==="/")document.documentElement.setAttribute("data-intro","playing")})()` }} />
+        {/* Runs synchronously before first paint:
+            1. Applies saved light/dark theme from localStorage.
+            2. Clears sessionStorage so cursor-color, wave-color, PS3 mode, etc.
+               reset on every hard load (they persist only across client-side navigations).
+            3. On the homepage, sets data-intro="playing" so the intro gate hides
+               nav/footer/project grid until IntroOrchestrator lifts the gate. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname==="/")document.documentElement.setAttribute("data-intro","playing")})()` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         {/* Hide system cursor immediately on pointer:fine devices — before JS
             hydration — so there's no flash of the default arrow on load. */}
         <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine){*{cursor:none!important}}` }} />
+        {/* Theme-aware favicons: dark glyph on light chrome, light glyph on dark chrome */}
+        <link rel="icon" type="image/png" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
         <JsonLd />
