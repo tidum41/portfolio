@@ -21,6 +21,13 @@ const NO_TAP_HIGHLIGHT = {
   outline: "none",
 } as const;
 
+// Touch devices fire mouseenter on tap with no matching mouseleave, which
+// would otherwise leave links/buttons stuck in their "hovered" color until
+// the next tap elsewhere. Guard every hover-driven state set with this.
+function canHover() {
+  return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 export default function CaseStudyTOC({
   items = [],
   backHref = "/",
@@ -131,7 +138,7 @@ export default function CaseStudyTOC({
       <a
         href={backHref}
         onClick={handleBack}
-        onMouseEnter={() => setBackHovered(true)}
+        onMouseEnter={() => { if (canHover()) setBackHovered(true); }}
         onMouseLeave={() => setBackHovered(false)}
         className="cs-back-mobile"
         aria-label="Back"
@@ -158,7 +165,7 @@ export default function CaseStudyTOC({
       <a
         href={backHref}
         onClick={handleBack}
-        onMouseEnter={() => setBackHovered(true)}
+        onMouseEnter={() => { if (canHover()) setBackHovered(true); }}
         onMouseLeave={() => setBackHovered(false)}
         className="cs-back-desktop"
         style={{
@@ -186,7 +193,7 @@ export default function CaseStudyTOC({
                 <button
                   key={label}
                   onClick={() => scrollTo(id, label)}
-                  onMouseEnter={() => setHoveredSection(label)}
+                  onMouseEnter={() => { if (canHover()) setHoveredSection(label); }}
                   onMouseLeave={() => setHoveredSection(null)}
                   style={{
                     ...NO_TAP_HIGHLIGHT,

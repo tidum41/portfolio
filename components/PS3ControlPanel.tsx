@@ -12,7 +12,6 @@ const PILL_W  = 72;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
-const EASE_IN = "cubic-bezier(0.4, 0, 1, 1)";
 const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
 const FADE_MS = 2000;
 const PICKER_MAX_H = 180;
@@ -160,7 +159,7 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
       opacity: open ? 1 : 0,
       transition: open
         ? `max-height 320ms ${EXPAND_EASE}, opacity 220ms ease`
-        : `max-height 240ms ${EASE_IN}, opacity 160ms ease`,
+        : `max-height 240ms ${EXPAND_EASE}, opacity 160ms ease`,
       pointerEvents: open ? "auto" : "none",
     }}>
       {children}
@@ -537,11 +536,13 @@ export default function PS3ControlPanel() {
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [isDragging, isOpen, pillPos.y]);
 
-  // Derived styling
-  const dur = isOpen ? `320ms ${EXPAND_EASE}` : `200ms ${EASE_IN}`;
+  // Derived styling — close is faster than open (snappy dismissal) but keeps
+  // the same ease-out family; ease-in would delay the start of the collapse,
+  // the exact moment the user's eye is on it.
+  const dur = isOpen ? `320ms ${EXPAND_EASE}` : `200ms ${EXPAND_EASE}`;
   const baseMorphParts = [
     `width ${dur}`, `height ${dur}`, `max-height ${dur}`,
-    `border-radius ${isOpen ? `300ms ${EXPAND_EASE}` : `180ms ${EASE_IN}`}`,
+    `border-radius ${isOpen ? `300ms ${EXPAND_EASE}` : `180ms ${EXPAND_EASE}`}`,
     `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
   ];
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
