@@ -289,7 +289,7 @@ const FB = {
   heroTagline:   "Product Design  ·  Case Study  ·  2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
-  heroMuxId:     "XpkQyhqkEwMLrhDAhNEB2aRWS3wP023sbdbsS2zbY02eg",
+  heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
   metadata: [
     { _key: "m1", label: "Role",          values: ["Product Designer", "& Frontend"] },
     { _key: "m2", label: "Timeline",      values: ["5 Weeks"] },
@@ -366,7 +366,7 @@ const FB = {
     "Property insights from Reddit and Bruinwalk are matched based on address, so seekers can vet a building before they reach out to a lister",
   ],
   solutionBg: "var(--color-hero-tint)",
-  solutionMuxId: "XpkQyhqkEwMLrhDAhNEB2aRWS3wP023sbdbsS2zbY02eg",
+  solutionMuxId: "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
   reflectionLabel: "Reflection",
   reflectionItems: [
     { _key: "r1", heading: "Verification works if scaled",                   body: "Verified badges are meaningful callouts, filtering legitimate UCLA students. But right now, our backend only accepts ucla.edu emails. Without opening it to all, the badge adds visual and cognitive noise." },
