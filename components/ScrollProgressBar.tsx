@@ -15,7 +15,7 @@ export default function ScrollProgressBar() {
       const total = el.scrollHeight - el.clientHeight;
       const pct = total > 0 ? Math.min(100, (scrolled / total) * 100) : 0;
       if (fillRef.current) {
-        fillRef.current.style.width = `${pct}%`;
+        fillRef.current.style.transform = `scaleX(${pct / 100})`;
       }
     };
     const onScroll = () => {
@@ -48,9 +48,11 @@ export default function ScrollProgressBar() {
         ref={fillRef}
         style={{
           height: "100%",
-          width: "0%",
+          width: "100%",
+          transformOrigin: "left",
+          transform: "scaleX(0)",
           background: "var(--color-text-primary)",
-          transition: "width 80ms linear",
+          transition: "transform 80ms linear",
         }}
       />
     </div>

@@ -21,13 +21,17 @@ export default function HeroText() {
     if (instant) return;
 
     function animateH1(delay = introTimings.heroDelay, dur = introTimings.heroDuration) {
-      h1Controls.set({ opacity: 0, y: 22 });
+      // Full `transform` string rather than the `y` shorthand — the shorthand
+      // runs on the main thread via rAF, while `transform` stays on the
+      // compositor. This entrance fires at the busiest possible moment
+      // (page load/hydration), so it's the one place that matters most.
+      h1Controls.set({ opacity: 0, transform: "translateY(22px)" });
       h1Controls.start({
         opacity: 1,
-        y: 0,
+        transform: "translateY(0px)",
         transition: {
-          opacity: { duration: reduced ? 0 : dur,         ease: EASE_OPACITY, delay: reduced ? 0 : delay },
-          y:       { duration: reduced ? 0 : dur * 2.375, ease: EASE_Y,       delay: reduced ? 0 : delay },
+          opacity:   { duration: reduced ? 0 : dur,         ease: EASE_OPACITY, delay: reduced ? 0 : delay },
+          transform: { duration: reduced ? 0 : dur * 2.375, ease: EASE_Y,       delay: reduced ? 0 : delay },
         },
       });
     }
@@ -52,10 +56,10 @@ export default function HeroText() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const h1Initial = instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 };
+  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: "translateY(22px)" };
   const subTx = instant || reduced
     ? { duration: 0 }
-    : { opacity: { duration: 1.5, ease: EASE_OPACITY }, y: { duration: 1.9, ease: EASE_Y } };
+    : { opacity: { duration: 1.5, ease: EASE_OPACITY }, transform: { duration: 1.9, ease: EASE_Y } };
 
   return (
     <>
@@ -74,13 +78,13 @@ export default function HeroText() {
             margin: 0,
           }}
         >
-          {"I'm Mudit, a product designer with a love for craft, curiosity, and rabbit holes"}
+          {"I'm Mudit, a product designer with a love for details, curiosity, and rabbit holes"}
         </motion.h1>
       </div>
 
       <motion.p
-        initial={{ opacity: 0, y: 22 }}
-        animate={subReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
+        initial={{ opacity: 0, transform: "translateY(22px)" }}
+        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: "translateY(22px)" }}
         transition={subTx}
         style={{
           position: "relative",

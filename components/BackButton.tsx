@@ -14,7 +14,11 @@ export default function BackButton({ href = "/" }: { href?: string }) {
   return (
     <button
       onClick={() => router.push(href)}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => {
+        // Touch devices fire mouseenter on tap with no matching mouseleave,
+        // which would otherwise leave this stuck in its "hovered" color.
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setHovered(true);
+      }}
       onMouseLeave={() => setHovered(false)}
       aria-label="Back to home"
       className="back-btn"

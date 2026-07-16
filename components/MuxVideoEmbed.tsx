@@ -78,7 +78,11 @@ export default function MuxVideoEmbed({
         isolation: "isolate",
         ...style,
       }}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => {
+        // Touch devices fire mouseenter on tap with no matching mouseleave,
+        // which would otherwise leave the play/pause button's hover ring stuck on.
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setHovered(true);
+      }}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Blur placeholder crossfades out when player is ready */}

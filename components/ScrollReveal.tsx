@@ -27,12 +27,15 @@ export function ScrollReveal({ children, delay = 0, style, className, y: yProp }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // Full `transform` string rather than the `y` shorthand, so this stays
+      // on the compositor instead of running via rAF on the main thread —
+      // this primitive backs nearly every scroll reveal on the site.
+      initial={{ opacity: 0, transform: `translateY(${y}px)` }}
+      whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: `${dk.viewportMargin}px` }}
       transition={{
-        opacity: { duration: reduced ? 0 : dk.opacityDuration, ease: PS3_OPACITY, delay: reduced ? 0 : delay },
-        y:       { duration: reduced ? 0 : dk.yDuration,       ease: PS3_EASE,    delay: reduced ? 0 : delay },
+        opacity:   { duration: reduced ? 0 : dk.opacityDuration, ease: PS3_OPACITY, delay: reduced ? 0 : delay },
+        transform: { duration: reduced ? 0 : dk.yDuration,       ease: PS3_EASE,    delay: reduced ? 0 : delay },
       }}
       style={style}
       className={className}
@@ -79,8 +82,8 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
   return (
     <motion.div
       variants={{
-        hidden:  { opacity: 0, y: 16 },
-        visible: { opacity: 1, y: 0, transition: { duration: reduced ? 0 : 0.7, ease: PS3_EASE } },
+        hidden:  { opacity: 0, transform: "translateY(16px)" },
+        visible: { opacity: 1, transform: "translateY(0px)", transition: { duration: reduced ? 0 : 0.7, ease: PS3_EASE } },
       }}
       style={style}
       className={className}
@@ -193,11 +196,11 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       variants={{
         hidden: {
           opacity: 0,
-          y: reduced ? 0 : y,
+          transform: reduced ? "translateY(0px)" : `translateY(${y}px)`,
         },
         visible: {
           opacity: 1,
-          y: 0,
+          transform: "translateY(0px)",
           // `delay` only set in self-driven mode, where there's no parent
           // EntranceStagger to inject it via staggerChildren/delayChildren.
           // In nested mode, an explicit delay here (even 0) would override

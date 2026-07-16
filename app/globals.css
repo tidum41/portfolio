@@ -116,7 +116,6 @@
 
   /* Easing curves — exact from MotionWrappers.tsx */
   --ease-out:       cubic-bezier(0.0, 0.0, 0.2, 1);
-  --ease-in:        cubic-bezier(0.4, 0.0, 1.0, 1);
   --spring-panel:   cubic-bezier(0.16, 1, 0.3, 1);
   --expand-ease:    cubic-bezier(0.25, 0, 0, 1);
   --subtitle-ease:  cubic-bezier(0.4, 0, 0.2, 1);
