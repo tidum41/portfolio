@@ -84,8 +84,16 @@ const PROJECTS_QUERY = `*[_type == "project" && featured == true] | order(order 
   aspectRatio, order, featured, caseStudy
 }`;
 
+const PROJECT_HREF_OVERRIDES: Record<string, string> = {
+  "project-todolist": "https://allinone-demo-amber.vercel.app/",
+};
+
 export async function getProjects(): Promise<SanityProject[]> {
-  return sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY, {}, { next: { revalidate: 60 } });
+  const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY, {}, { next: { revalidate: 60 } });
+  return projects.map((p) => ({
+    ...p,
+    href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
+  }));
 }
 
 // ── Case Study ────────────────────────────────────────────────────────────────

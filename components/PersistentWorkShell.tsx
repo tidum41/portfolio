@@ -352,7 +352,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   />
                 )}
               </div>
-              <CardLabel title="dumb habit tracker" sub="product design + frontend" />
+              <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" />
             </EntranceItem>
           </div>
         </section>

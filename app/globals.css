@@ -363,23 +363,100 @@ html[data-theme="dark"] .project-image {
   }
   .cs-aside { padding-right: 16px; }
 }
-/* Mobile: single column, back button only (no nav labels) */
+/* Mobile: single column. Aside (desktop TOC) is hidden; the back control
+   lives inside .cs-content so it shares the hero media's left edge. */
 @media (max-width: 767px) {
   .cs-layout {
     grid-template-columns: 1fr;
     padding-top: 16px;
   }
-  /* Show aside so back button is visible — TOC component hides labels on mobile */
+  .cs-layout > * {
+    min-width: 0;
+  }
   .cs-aside {
-    position: static; /* not sticky on mobile — just sits above content */
-    padding-right: 0;
-    padding-bottom: 0;
+    display: none !important;
   }
 }
 
-/* ─── Case study hero header ─────────────────────────────────────── */
+/* ─── Case study hero header / shared left lane ────────────────────
+   Horizontal offsets are driven by --cs-align-* CSS vars from
+   CaseStudyAlignDials (DialKit panel "CS Align"). Defaults below match
+   the last hard-coded optical nudges; tweak live, then lock in code. */
+:root {
+  --cs-align-m-back:    -6px;
+  --cs-align-m-tagline: 0px;
+  --cs-align-m-title:   -2px;
+  --cs-align-d-back:    -6px;
+  --cs-align-d-tagline: 0px;
+  --cs-align-d-title:   -2px;
+}
+.cs-content {
+  min-width: 0;
+}
+.cs-mobile-back {
+  display: none;
+}
+.cs-hero-header {
+  text-align: left;
+}
+.cs-hero-tagline,
+.cs-hero-title {
+  text-align: left;
+  width: 100%;
+  margin-left: 0;
+  padding-left: 0;
+}
+.cs-hero-tagline-wrap,
+.cs-hero-title-wrap,
+.cs-hero-media-wrap {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* Desktop nudges (≥768) — CaseStudyAlignDials injects live !important
+   overrides on top of these var-based fallbacks. */
+.cs-back-desktop {
+  transform: translateX(var(--cs-align-d-back, 0px));
+}
+@media (min-width: 768px) {
+  .cs-hero-tagline {
+    transform: translateX(var(--cs-align-d-tagline, 0px));
+  }
+  .cs-hero-title {
+    transform: translateX(var(--cs-align-d-title, 0px));
+  }
+}
+
 @media (max-width: 767px) {
+  .cs-mobile-back {
+    display: block;
+    margin: 0 0 4px;
+    padding: 0;
+  }
+  .cs-back-mobile {
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateX(var(--cs-align-m-back, 0px));
+  }
   .cs-hero-header { margin-bottom: 32px !important; }
+  /* One lane with the hero media: no horizontal inset on wraps. */
+  .cs-hero-header,
+  .cs-hero-tagline-wrap,
+  .cs-hero-title-wrap,
+  .cs-hero-media-wrap,
+  .cs-hero-tagline,
+  .cs-hero-title {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: left !important;
+  }
+  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline, 0px)); }
+  .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
@@ -390,11 +467,24 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study stats — vertical stack on mobile ────────────────── */
+/* ─── Case study stats — single column on mobile ─────────────────── */
 @media (max-width: 767px) {
   .cs-stats-row {
-    flex-direction: column !important;
-    gap: 16px !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .cs-d1-columns {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+  .cs-d1-card-img {
+    border-radius: var(--radius-card) !important;
+  }
+  .cs-d1-comp-col {
+    padding-right: 0 !important;
+  }
+  .cs-process-tools {
+    grid-template-columns: 1fr !important;
   }
   .cs-stats-divider {
     width: 100% !important;
@@ -403,13 +493,15 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study phone mockup responsive sizing (1.43×) ───────────── */
+/* ─── Case study phone mockup responsive sizing (~20% up from prior mobile) ─ */
 @media (max-width: 767px) {
-  .pm-hero-wrap     { width: 64% !important; max-width: 400px !important; }
-  .pm-d2-wrap       { width: 100% !important; max-width: none !important; }
-  .pm-d3-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
-  .pm-d3-wrap       { width: 64% !important; max-width: 280px !important; flex: none !important; }
-  .pm-solution-wrap { width: 64% !important; max-width: 344px !important; }
+  .pm-hero-wrap     { width: 77% !important; max-width: 480px !important; }
+  .pm-d2-wrap       { width: 100% !important; max-width: 440px !important; margin-inline: auto !important; }
+  .pm-d3-row,
+  .pm-d4-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
+  .pm-d3-wrap,
+  .pm-d4-wrap       { width: 77% !important; max-width: 336px !important; flex: none !important; }
+  .pm-solution-wrap { width: 77% !important; max-width: 413px !important; }
 }
 
 /* ─── Reflection 2-col grid — collapses to 1-col on mobile ──────── */
@@ -448,8 +540,36 @@ html[data-theme="dark"] .project-image {
 .about-hero-bento-col { flex: 1 1 0; max-width: 320px; order: 2; }
 @media (max-width: 767px) {
   .about-hero { flex-direction: column; gap: 0; }
-  .about-hero-bio { order: 2; }
+  .about-hero-bio { order: 2; margin-top: 48px; }
   .about-hero-bento-col { order: 1; max-width: none; width: 100%; }
+}
+
+/* ─── Playground gallery controls — mobile positioning & touch targets ── */
+.bento-hint-pill {
+  top: 46px;
+}
+.bento-zoom-panel {
+  bottom: 40px;
+  height: 36px;
+}
+.bento-zoom-track {
+  touch-action: none;
+}
+.bento-zoom-thumb {
+  touch-action: none;
+}
+@media (max-width: 767px) {
+  .bento-hint-pill { top: 88px; }
+  .bento-zoom-panel { bottom: 56px; height: 44px; }
+  .bento-zoom-track {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .bento-zoom-thumb {
+    width: 14px !important;
+    height: 28px !important;
+  }
 }
 
 /* ─── Mux player — fill + hide controls ─────────────────────────── */

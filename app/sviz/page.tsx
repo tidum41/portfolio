@@ -1,10 +1,25 @@
 import React from "react";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
+import { SITE_URL } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "sviz",
+  description:
+    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+  alternates: { canonical: `${SITE_URL}/sviz` },
+  openGraph: {
+    title: "sviz — mudit mahajan",
+    description:
+      "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
+    url: `${SITE_URL}/sviz`,
+  },
+};
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
@@ -245,7 +260,11 @@ export default async function SvizPage() {
           />
         </aside>
 
-        <div style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
 
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           {/* Staggers in top-to-bottom on route arrival, own "Case Study
@@ -253,8 +272,8 @@ export default async function SvizPage() {
               full rationale. TOC (aside, above) never participates. */}
           <header className="cs-hero-header" style={{ marginBottom: 64 }}>
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem>
-                <p style={{
+              <EntranceItem className="cs-hero-tagline-wrap">
+                <p className="cs-hero-tagline" style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 400,
@@ -266,8 +285,8 @@ export default async function SvizPage() {
                 </p>
               </EntranceItem>
 
-              <EntranceItem>
-                <h1 style={{
+              <EntranceItem className="cs-hero-title-wrap">
+                <h1 className="cs-hero-title" style={{
                   fontFamily: "var(--font-sans-medium)",
                   fontSize: "var(--fs-hero)",
                   fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
@@ -280,7 +299,7 @@ export default async function SvizPage() {
                 </h1>
               </EntranceItem>
 
-              <EntranceItem>
+              <EntranceItem className="cs-hero-media-wrap">
                 <MediaCard>
                   <Image
                     src={heroImageSrc}

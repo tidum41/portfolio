@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function StudioLayout({
+export default function DevLayout({
   children,
 }: {
   children: React.ReactNode;
