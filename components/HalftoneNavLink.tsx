@@ -20,7 +20,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
   // Spring physics: Fast morph in, slow morph out
   const springConfig = {
-    type: "spring",
+    type: "spring" as const,
     stiffness: isEffectActive ? (dk.stiffnessIn ?? 150) : (dk.stiffnessOut ?? 40),
     damping: isEffectActive ? (dk.dampingIn ?? 15) : (dk.dampingOut ?? 12),
   };
