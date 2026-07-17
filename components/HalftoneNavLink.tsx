@@ -59,7 +59,13 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         userSelect: "none",
         WebkitTapHighlightColor: "transparent"
       }}
-      onMouseEnter={() => setIsHovered(true)}
+      // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
+      // touch devices can trigger a synthetic mouseenter with no matching
+      // mouseleave ever firing (no cursor to leave), leaving isHovered
+      // stuck true forever and the link permanently dimmed/halftoned.
+      onMouseEnter={() => {
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
+      }}
       onMouseLeave={() => {
         setIsHovered(false);
         setIsTapped(false);

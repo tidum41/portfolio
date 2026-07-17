@@ -2,6 +2,7 @@
 
 import { Children } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
@@ -182,6 +183,12 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
 export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, dialKitName = "Entrance", defaults, ...rest }: {
   children: ReactNode; style?: CSSProperties; className?: string; y?: number; instant?: boolean;
   active?: boolean; delay?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
+  // Passed straight through to the underlying motion.div via ...rest below —
+  // framer-motion merges whileHover with the entrance animate/variants state
+  // fine on its own, this just widens the prop type so callers (e.g. the
+  // project-card hover) can pass them without a TS error.
+  whileHover?: TargetAndTransition;
+  transition?: Transition;
   [key: `data-${string}`]: unknown;
 }) {
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));

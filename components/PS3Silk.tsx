@@ -250,6 +250,29 @@ export default function PS3Silk({
         canvas.width = w;
         canvas.height = h;
         glCtx.viewport(0, 0, w, h);
+        // Reassigning canvas.width/height clears the WebGL drawing buffer to
+        // transparent — the only thing that ever repaints it otherwise is the
+        // 30fps-throttled frame() loop below, which can lag up to a frame (or
+        // more, if resize events keep arriving faster than it catches up)
+        // behind. That gap between "buffer cleared" and "next scheduled
+        // redraw" is what read as a flicker during a drag-resize. Redrawing
+        // synchronously, right here, closes it — draw() is only defined once
+        // the program/buffer exist (below), guarded via `buf`.
+        if (buf && posLoc >= 0) draw(performance.now());
+      }
+
+      // Native `resize` fires many times per second during a drag; coalescing
+      // to at most once per animation frame avoids redundant clear+redraws
+      // stacking up faster than the browser can paint them, without adding
+      // any debounce delay — the canvas still resizes live, every frame.
+      let resizeScheduled = false;
+      function scheduledResize() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+        requestAnimationFrame(() => {
+          resizeScheduled = false;
+          resize();
+        });
       }
 
       function updateTarget() {
@@ -313,7 +336,7 @@ export default function PS3Silk({
       canvas.addEventListener("webglcontextlost", onContextLost, false);
       canvas.addEventListener("webglcontextrestored", onContextRestored, false);
 
-      window.addEventListener("resize", resize);
+      window.addEventListener("resize", scheduledResize);
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", updateTarget, { passive: true });
       window.addEventListener("popstate", onPopState);
@@ -323,7 +346,7 @@ export default function PS3Silk({
         stopLoop();
         canvas.removeEventListener("webglcontextlost", onContextLost, false);
         canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
-        window.removeEventListener("resize", resize);
+        window.removeEventListener("resize", scheduledResize);
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("scroll", updateTarget);
         window.removeEventListener("popstate", onPopState);
@@ -426,6 +449,28 @@ void main() {
       const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
 
+      // Sets every uniform from current state and paints one frame. Shared by
+      // frame()'s regular throttled loop and resize()'s immediate post-resize
+      // repaint (see resize() above) — both just need "paint whatever the
+      // current state is right now," so there's one definition of what that
+      // means instead of two copies drifting apart.
+      function draw(ms: number) {
+        const wc = waveColorRef.current;
+        gl.uniform1f(uTimeLoc, ms * 0.001);
+        gl.uniform2f(uResLoc, canvas.width, canvas.height);
+        gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
+        gl.uniform1f(uIntLoc, intensityRef.current);
+        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
+        gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
+        gl.uniform1f(uYOfsLoc, yOffsetRef.current);
+        gl.uniform1i(uModeLoc, modeRef.current);
+        gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
+        gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
+        gl.uniform1f(uSpeedLoc, speedRef.current);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+
       buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
@@ -492,20 +537,7 @@ void main() {
         }
         if (wrapper) wrapper.style.opacity = String(Math.max(0, Math.min(1, currentOpacity)));
 
-        const wc = waveColorRef.current;
-        gl.uniform1f(uTimeLoc, ms * 0.001);
-        gl.uniform2f(uResLoc, canvas.width, canvas.height);
-        gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
-        gl.uniform1f(uIntLoc, intensityRef.current);
-        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
-        gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
-        gl.uniform1f(uYOfsLoc, yOffsetRef.current);
-        gl.uniform1i(uModeLoc, modeRef.current);
-        gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
-        gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
-        gl.uniform1f(uSpeedLoc, speedRef.current);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        draw(ms);
       }
 
       // Start only if we're currently the visible work route; otherwise wait
