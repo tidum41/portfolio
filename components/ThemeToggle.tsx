@@ -29,6 +29,7 @@ function MoonIcon() {
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -60,6 +61,8 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className="nav-link theme-toggle-btn"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
@@ -67,7 +70,7 @@ export default function ThemeToggle() {
         border: "none",
         cursor: "pointer",
         padding: "4px",
-        color: "var(--color-text-primary)",
+        color: isHovered ? "var(--color-text-primary)" : "var(--color-text-muted)",
         display: "flex",
         alignItems: "center",
         lineHeight: 0,
