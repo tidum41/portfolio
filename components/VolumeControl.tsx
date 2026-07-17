@@ -87,7 +87,12 @@ export default function VolumeControl() {
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
-    if (v > 0) preVolume.current = v;
+    if (v > 0) {
+      preVolume.current = v;
+      // Slider moved above 0 — start playback if the initial autoplay was
+      // blocked (this gesture satisfies the browser's interaction requirement).
+      audioRef.current?.play().catch(() => {});
+    }
     setVolume(v > 0 ? v : preVolume.current);
     setMuted(v === 0);
   };
@@ -95,8 +100,10 @@ export default function VolumeControl() {
   const handleMuteToggle = () => {
     setMuted((m) => {
       if (m) {
-        // Unmuting — restore the last non-zero volume.
+        // Unmuting — restore the last non-zero volume and ensure playback
+        // is actually running (may have been blocked on mount).
         setVolume(preVolume.current);
+        audioRef.current?.play().catch(() => {});
       } else {
         // Muting — remember current volume so we can restore it.
         if (volume > 0) preVolume.current = volume;
