@@ -23,8 +23,8 @@ export default function Nav() {
     patternAlphaMult: [1, 0.5, 3, 0.1],
     thresholdMult: [20, 5, 100, 1],
     thresholdOffset: [20, 0, 50, 1],
-    stiffness: [400, 50, 1000, 10],
-    damping: [30, 5, 100, 1],
+    stiffness: [150, 10, 1000, 5],
+    damping: [15, 2, 100, 1],
     hoverScaleBase: [0.95, 0.5, 1, 0.01],
     hoverScaleHalf: [1.05, 1, 1.5, 0.01],
   });
