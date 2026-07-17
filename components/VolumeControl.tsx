@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
 import { useHalftoneMorph } from "./useHalftoneMorph";
+import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
 
 const ICON_SIZE = 17;
@@ -33,15 +34,17 @@ const DEFAULT_MUTED = true;
 const DEFAULT_VOLUME = 0.4;
 
 export default function VolumeControl({ dk }: { dk?: any }) {
-  const [isDesktop, setIsDesktop] = useState(false);
   const [muted, setMuted] = useState(DEFAULT_MUTED);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
-  const [hovered, setHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTapped, setIsTapped] = useState(false);
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMobile = useIsMobile();
   const audioRef = useRef<HTMLAudioElement>(null);
   // Remembers the last non-zero volume so unmuting restores it rather than
-  // leaving the slider at 0 (which would be silent even after unmuting).
   const preVolume = useRef(DEFAULT_VOLUME);
   const reduced = useReducedMotion();
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
@@ -55,7 +58,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   //     render (the first render returns null while the isDesktop check is
   //     still pending), so a `useEffect` keyed on `[muted]`/`[volume]` sees
   //     the same state values across that null→real transition and — since
-  //     nothing "changed" — never fires again to apply them to the newly
+  //     nothing \"changed\" — never fires again to apply them to the newly
   //     created node.
   // Setting both directly here, once, at the moment the real node is
   // created sidesteps both: the effects below then own every *subsequent*
@@ -114,15 +117,13 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     });
   };
 
-  // Only reinforces the muted state on hover — desktop-only by construction
-  // (this whole component returns null below 768px), so no tap trigger is
-  // needed here the way the always-visible nav links/toggle need one.
-  // Computed (and the hooks it feeds) above the isDesktop early return below
-  // — hooks can't run conditionally, so this can't move past that guard.
-  const isEffectActive = muted && hovered && !!dk?.enabled;
-  const { filterId, t } = useHalftoneMorph(dk, isEffectActive);
+  const active = dk?.enabled ? (
+    isMobile ? !isTapped : (isHovered || isTapped)
+  ) : false;
+
+  const { filterId, t } = useHalftoneMorph(dk, active);
   const baseOpacity = useTransform(t, [0, 1], [1, 0]);
-  // |t|, not t — the underdamped "out" spring sends t slightly negative as
+  // |t|, not t — the underdamped \"out\" spring sends t slightly negative as
   // it settles, and without abs() this layer clamps near-invisible for
   // exactly that window, hiding the bubble the undershoot exists to produce.
   const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
@@ -130,9 +131,9 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   if (!isDesktop) return null;
 
   const onEnter = () => {
-    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setHovered(true);
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
   };
-  const onLeave = () => setHovered(false);
+  const onLeave = () => setIsHovered(false);
 
   const spring = reduced
     ? { duration: 0.15 }
@@ -164,7 +165,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop autoPlay preload="auto" />
       <motion.div
         initial={false}
-        animate={{ width: hovered ? SLIDER_WIDTH : 0, opacity: hovered ? 1 : 0 }}
+        animate={{ width: isHovered ? SLIDER_WIDTH : 0, opacity: isHovered ? 1 : 0 }}
         transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 30 }}
         style={{ overflow: "hidden", display: "flex", alignItems: "center", flexShrink: 0 }}
       >

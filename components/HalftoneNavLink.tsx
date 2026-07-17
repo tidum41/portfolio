@@ -5,6 +5,7 @@ import { motion, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
 import { useHalftoneMorph } from "./useHalftoneMorph";
+import { useIsMobile } from "./useIsMobile";
 
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const [isHovered, setIsHovered] = useState(false);
@@ -13,11 +14,18 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
+  const isMobile = useIsMobile();
+  
   // isHovered drives desktop; isTapped (pointerdown → pointerup/cancel/leave)
   // is the touch equivalent — there's no hover state on mobile to piggyback
   // on, so activation needs its own explicit touch-and-hold trigger. If
   // it's already the active page, don't show the effect either way.
-  const active = !isActive && (isHovered || isTapped) && dk.enabled;
+  // ON MOBILE: Invert the logic. Inactive = Halftone on, Active = Solid off.
+  // Tap triggers the solid state temporarily before navigation.
+  const active = dk.enabled ? (
+    isMobile ? (!isActive && !isTapped) : (!isActive && (isHovered || isTapped))
+  ) : false;
+  
   const { filterId, t } = useHalftoneMorph(dk, active);
 
   // Both layers' opacity/scale are pure functions of the same `t` that also
