@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
+import HalftoneNavLink from "./HalftoneNavLink";
+import { useDialKit } from "dialkit";
 
 const links = [
   { href: "/",           label: "work" },
@@ -13,6 +14,20 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname();
+
+  const dk = useDialKit("Nav Links", {
+    enabled: true,
+    dotSize: [4, 2, 12, 1],
+    blurAmount: [1.5, 0, 5, 0.1],
+    textAlphaMult: [1.2, 0.5, 3, 0.1],
+    patternAlphaMult: [1, 0.5, 3, 0.1],
+    thresholdMult: [8, 2, 20, 0.5],
+    thresholdOffset: [45, 10, 90, 1],
+    stiffness: [400, 50, 1000, 10],
+    damping: [30, 5, 100, 1],
+    hoverScaleBase: [0.95, 0.5, 1, 0.01],
+    hoverScaleHalf: [1.05, 1, 1.5, 0.01],
+  });
 
   return (
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>
@@ -28,23 +43,13 @@ export default function Nav() {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
-              <Link
+              <HalftoneNavLink
                 key={href}
                 href={href}
-                prefetch
-                aria-current={isActive ? "page" : undefined}
-                className="nav-link"
-                style={{
-                  fontSize: 16,
-                  fontWeight: 400,
-                  lineHeight: "24px",
-                  color: isActive ? "var(--color-text-muted)" : "var(--color-text-primary)",
-                  textDecoration: "none",
-                  transition: "color 0.25s ease",
-                }}
-              >
-                {label}
-              </Link>
+                label={label}
+                isActive={isActive}
+                dk={dk}
+              />
             );
           })}
         </nav>
