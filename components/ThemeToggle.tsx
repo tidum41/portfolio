@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
 import { useHalftoneMorph } from "./useHalftoneMorph";
+import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
 
 function SunIcon() {
@@ -33,6 +34,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMobile = useIsMobile();
   const reduced = useReducedMotion();
 
   const baseColor = "var(--color-text-muted)";
@@ -44,7 +46,10 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   // ~200ms "in" spring becomes visible, so tying deactivation to it would
   // cut the effect off before it's ever seen. Instead this plays as a
   // fixed-duration one-shot flash, timed in the pointerdown handler below.
-  const active = (isHovered || isTapped) && !!dk?.enabled;
+  // Active is when hovered/tapped on desktop. On mobile, inactive (untapped) is halftoned.
+  const active = dk?.enabled ? (
+    isMobile ? !isTapped : (isHovered || isTapped)
+  ) : false;
   const { filterId, t } = useHalftoneMorph(dk, active);
 
   const baseOpacity = useTransform(t, [0, 1], [1, 0]);
