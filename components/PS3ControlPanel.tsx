@@ -8,7 +8,7 @@ import { useDialKit } from "dialkit";
 let _ps3cpHasLoaded = false;
 
 const PANEL_W = 240;
-const PILL_W  = 72;
+const PILL_W  = 70;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
@@ -127,18 +127,46 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Slider fill helper ──────────────────────────────────────────────────────
-const THUMB_HALF = 0;
-function trackFill(val: number, min: number, max: number, dark = false): React.CSSProperties {
-  const pct = ((val - min) / (max - min)) * 100;
-  const filled = dark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)";
-  const empty  = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-  return {
-    position: "absolute", top: "50%", left: THUMB_HALF, right: THUMB_HALF,
-    height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none",
-    background: `linear-gradient(to right,${filled} 0%,${filled} ${pct}%,${empty} ${pct}%,${empty} 100%)`,
-  };
-}
+// ── Custom Slider ──────────────────────────────────────────────────────────
+// Visually identical to the old input[type=range] style (2px track,
+// 5px×14px thumb) but built on pointer events + setPointerCapture so the
+// thumb reliably follows the finger on mobile — native range inputs lose the
+// drag if touch briefly leaves the element or the parent steals the event.
+const Slider = memo(function Slider({
+  min, max, step, value, onChange, isDark,
+}: {
+  min: number; max: number; step: number; value: number;
+  onChange: (v: number) => void; isDark: boolean;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const valueFromClientX = useCallback((clientX: number) => {
+    const el = trackRef.current;
+    if (!el) return value;
+    const rect = el.getBoundingClientRect();
+    const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const raw  = min + pct * (max - min);
+    const snapped = min + Math.round((raw - min) / step) * step;
+    return parseFloat(Math.max(min, Math.min(max, snapped)).toFixed(10));
+  }, [min, max, step, value]);
+  const pct    = ((value - min) / (max - min)) * 100;
+  const filled = isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)";
+  const empty  = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+  const thumb  = isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)";
+  return (
+    <div ref={trackRef}
+      style={{ position: "relative", height: 44, display: "flex", alignItems: "center", touchAction: "none", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
+      onPointerDown={e => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); onChange(valueFromClientX(e.clientX)); }}
+      onPointerMove={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; onChange(valueFromClientX(e.clientX)); }}
+      onPointerUp={e => e.currentTarget.releasePointerCapture(e.pointerId)}
+      onPointerCancel={e => e.currentTarget.releasePointerCapture(e.pointerId)}
+    >
+      {/* Track */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: `linear-gradient(to right,${filled} 0%,${filled} ${pct}%,${empty} ${pct}%,${empty} 100%)` }} />
+      {/* Thumb */}
+      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: 5, height: 14, borderRadius: 2, backgroundColor: thumb, transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+    </div>
+  );
+});
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 function ChevronDown({ size = 10, color = "currentColor" }) {
@@ -585,7 +613,6 @@ export default function PS3ControlPanel() {
     transition: "border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
   });
 
-  const sliderWrap: React.CSSProperties = { position: "relative", overflow: "visible" };
 
   const panelMarkup = (
     <div ref={panelRef} className="ps3cp intro-hide" style={{
@@ -659,57 +686,37 @@ export default function PS3ControlPanel() {
         <ExpandSection open={mode === 1} maxH={72}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
-            <div style={sliderWrap}>
-              <div style={trackFill(halftoneSize, 2, 10, isDark)} />
-              <input type="range" min={2} max={10} step={0.5} value={halftoneSize}
-                onChange={e => setAndDispatch({ halftoneSize: parseFloat(e.target.value) })}
-                style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
-            </div>
+            <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark}
+              onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
 
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
-          <div style={sliderWrap}>
-            <div style={trackFill(intensity, 0, 0.4, isDark)} />
-            <input type="range" min={0} max={0.4} step={0.01} value={intensity}
-              onChange={e => setAndDispatch({ intensity: parseFloat(e.target.value) })}
-              style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
-          </div>
+          <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark}
+            onChange={v => setAndDispatch({ intensity: v })} />
         </div>
 
         {/* Speed */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
-          <div style={sliderWrap}>
-            <div style={trackFill(speed, 0.2, 2.5, isDark)} />
-            <input type="range" min={0.2} max={2.5} step={0.05} value={speed}
-              onChange={e => setAndDispatch({ speed: parseFloat(e.target.value) })}
-              style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
-          </div>
+          <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark}
+            onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
         {/* Y offset */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
-          <div style={sliderWrap}>
-            <div style={trackFill(yOffset, -200, 200, isDark)} />
-            <input type="range" min={-200} max={200} step={1} value={yOffset}
-              onChange={e => setAndDispatch({ yOffset: parseFloat(e.target.value) })}
-              style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
-          </div>
+          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark}
+            onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
         {/* Cursor reactivity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>cursor reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
-          <div style={sliderWrap}>
-            <div style={trackFill(mouseStr, 0, 0.3, isDark)} />
-            <input type="range" min={0} max={0.3} step={0.005} value={mouseStr}
-              onChange={e => setAndDispatch({ mouseStrength: parseFloat(e.target.value) })}
-              style={{ position: "relative", zIndex: 1, width: "100%", background: "transparent" }} />
-          </div>
+          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark}
+            onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>
 
       </div>
