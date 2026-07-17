@@ -83,16 +83,20 @@ function generateDitheredFalloff(feather: number, opacity: number, grain: number
 
 export default function HeroLegibilityScrim() {
   const dk = useDialKit("Hero Scrim", {
-    opacity: [0.58, 0, 1, 0.01],
-    width: [64, 20, 100, 1],
-    height: [109, 20, 150, 1],
-    x: [14, 0, 100, 1],
-    y: [67, 0, 100, 1],
-    feather: [69, 20, 100, 1],
+    opacity: [0.69, 0, 1, 0.01],
+    width: [86, 20, 100, 1],
+    height: [111, 20, 150, 1],
+    x: [24, 0, 100, 1],
+    y: [53, 0, 100, 1],
+    feather: [87, 20, 100, 1],
     // Dither amount — spread into each pixel's alpha at generation time (see
     // generateDitheredFalloff above), not a visible overlay layer, so this
     // now controls real quantization-error diffusion rather than a texture.
     grain: [0.19, 0, 1, 0.01],
+    // Outlines the ellipse this shape occupies (dashed) and the edge the
+    // falloff actually fades to transparent by (solid) — a tuning aid for
+    // width/height/x/y/feather, no effect on the rendered scrim itself.
+    debug: true,
   });
 
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -117,21 +121,42 @@ export default function HeroLegibilityScrim() {
     return () => observer.disconnect();
   }, [dk.feather, dk.opacity, dk.grain]);
 
+  // `left/top: X%/Y%` + `translate(-50%,-50%)` centers the element's own
+  // middle at X%,Y% of the section — matching the old radial-gradient's
+  // `at X% Y%` semantics. (`background-position: X% Y%` on its own does
+  // NOT mean this — its offset scales with background-size, so the same
+  // 14%/64% pair used to visibly land the center around 37% instead.)
+  // Every outline below shares these exact four properties so they can
+  // never drift out of sync with what's actually rendered.
+  const centered = (widthPct: number, heightPct: number): React.CSSProperties => ({
+    position: "absolute",
+    left: `${dk.x}%`,
+    top: `${dk.y}%`,
+    width: `${widthPct}%`,
+    height: `${heightPct}%`,
+    transform: "translate(-50%, -50%)",
+    pointerEvents: "none",
+  });
+
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        backgroundImage: dataUrl ? `url(${dataUrl})` : undefined,
-        backgroundRepeat: "no-repeat",
-        // Width/height/x/y stay pure CSS percentages against the section's
-        // own box — exactly like the old radial-gradient's own ellipse
-        // sizing — so layout responsiveness costs nothing and doesn't need
-        // the bitmap regenerated on resize.
-        backgroundSize: `${dk.width}% ${dk.height}%`,
-        backgroundPosition: `${dk.x}% ${dk.y}%`,
-      }}
-    />
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <img
+        src={dataUrl ?? undefined}
+        alt=""
+        style={{ ...centered(dk.width, dk.height), objectFit: "fill" }}
+      />
+      {dk.debug && (
+        <>
+          {/* Full ellipse this shape occupies — width%/height% at their
+              nominal 100% extent, regardless of feather. */}
+          <div style={{ ...centered(dk.width, dk.height), border: "1px dashed rgba(255,64,64,0.7)", borderRadius: "50%" }} />
+          {/* Where the falloff actually reaches transparent — feather% of
+              that same ellipse, i.e. the edge of the visible shadow. */}
+          <div style={{ ...centered(dk.width * dk.feather / 100, dk.height * dk.feather / 100), border: "1.5px solid rgba(255,64,64,0.9)", borderRadius: "50%" }} />
+          {/* Center point. */}
+          <div style={{ ...centered(0, 0), width: 6, height: 6, borderRadius: "50%", background: "rgba(255,64,64,0.9)" }} />
+        </>
+      )}
+    </div>
   );
 }
