@@ -68,9 +68,9 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
               in="blurredText" 
               in2="pattern" 
               operator="arithmetic" 
-              k1="0" 
-              k2={dk.textAlphaMult ?? 1.2} 
-              k3={dk.patternAlphaMult ?? 1} 
+              k1="1" 
+              k2="0" 
+              k3="0" 
               k4="0" 
               result="added" 
             />
@@ -79,7 +79,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
               0 0 0 0 1
               0 0 0 0 1
               0 0 0 0 1
-              0 0 0 ${dk.thresholdMult ?? 8} -${(dk.thresholdOffset ?? 45) / 100}
+              0 0 0 ${dk.thresholdMult ?? 20} -${(dk.thresholdOffset ?? 20) / 10}
             `} result="halftoneMask" />
             
             <feFlood floodColor="currentColor" result="flood" />
