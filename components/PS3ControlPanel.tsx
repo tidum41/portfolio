@@ -336,9 +336,9 @@ html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rg
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset:  [-1,   -4, 4, 0.5],
+    chevronOffset:  [-1.5, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [-2.5, -4, 4, 0.5],
+    menuTextOffset: [-3.5, -4, 4, 0.5],
   });
 
   const panelRef       = useRef<HTMLDivElement>(null);
@@ -634,7 +634,7 @@ export default function PS3ControlPanel() {
       {/* Header / pill */}
       <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" aria-label="Drag or click to toggle panel">
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap }}>
+          <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
             <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
               <ChevronDown color={accentCol} size={10} />
             </div>
