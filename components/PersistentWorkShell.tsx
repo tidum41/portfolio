@@ -11,6 +11,7 @@ import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
 import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
+import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "@/components/cardHover";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -322,11 +323,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
+                        hoverScale={p._id !== "project-todolist"}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                       <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                         <Image
@@ -372,11 +374,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
+                        hoverScale={p._id !== "project-todolist"}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                       <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                         <Image

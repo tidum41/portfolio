@@ -37,11 +37,21 @@ function hash(x: number, y: number) {
 // performance profile as the CSS version, just computed up front instead of
 // by the GPU's gradient rasterizer.
 const CANVAS_SIZE = 512;
+// Mobile devices commonly run devicePixelRatio 2-3 vs. many desktop monitors
+// at 1 — rendering this bitmap at a flat 512px with no DPR scaling meant the
+// *device*-pixel magnification (CSS stretch × DPR) mobile actually saw was
+// well beyond what desktop saw, which is exactly where an already-dithered-
+// but-still-8-bit bitmap starts showing its quantization steps again.
+// Clamped at 2x since generation is one-time (per param/theme change, not
+// per frame) but still not worth paying for a 3x's extra pixels.
+const MAX_DPR_SCALE = 2;
 
 function generateDitheredFalloff(feather: number, opacity: number, grain: number, bg: string) {
+  const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR_SCALE);
+  const size = Math.round(CANVAS_SIZE * dpr);
   const canvas = document.createElement("canvas");
-  canvas.width = CANVAS_SIZE;
-  canvas.height = CANVAS_SIZE;
+  canvas.width = size;
+  canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
@@ -58,19 +68,19 @@ function generateDitheredFalloff(feather: number, opacity: number, grain: number
 
   const featherFrac = feather / 100;
   const ditherAmount = grain * 6; // ± a handful of 8-bit levels at grain=1
-  const half = CANVAS_SIZE / 2;
+  const half = size / 2;
 
-  const image = ctx.createImageData(CANVAS_SIZE, CANVAS_SIZE);
+  const image = ctx.createImageData(size, size);
   const data = image.data;
-  for (let py = 0; py < CANVAS_SIZE; py++) {
+  for (let py = 0; py < size; py++) {
     const ny = (py - half) / half;
-    for (let px = 0; px < CANVAS_SIZE; px++) {
+    for (let px = 0; px < size; px++) {
       const nx = (px - half) / half;
       const dist = Math.sqrt(nx * nx + ny * ny);
       const u = featherFrac > 0 ? Math.min(dist / featherFrac, 1) : 1;
       const alpha = (1 - smoothstep(u)) * opacity * 255;
       const dithered = alpha + (hash(px, py) - 0.5) * ditherAmount;
-      const i = (py * CANVAS_SIZE + px) * 4;
+      const i = (py * size + px) * 4;
       data[i] = r;
       data[i + 1] = g;
       data[i + 2] = b;

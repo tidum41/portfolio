@@ -5,6 +5,8 @@ import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
+import { motion } from "framer-motion";
+import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "./cardHover";
 
 function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string; labelFontSize: number }) {
   return (
@@ -42,9 +44,12 @@ interface Props {
    *  for standalone use; the persistent work shell passes this so background
    *  cards pause (rather than reload) while a case study is open. */
   active?: boolean;
+  /** Opt out of the hover press-in scale — e.g. an external-link card that
+   *  redirects immediately doesn't benefit from the "press and settle" feel. */
+  hoverScale?: boolean;
 }
 
-export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio, active = true }: Props) {
+export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio, active = true, hoverScale = true }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
     cardGap:       [6,  0, 24],
@@ -89,13 +94,17 @@ export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRa
   const external = href.startsWith("http");
 
   return (
-    <div className="project-card" style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}>
+    <motion.div
+      className="project-card"
+      {...(hoverScale ? { whileHover: { scale: CARD_HOVER_SCALE }, transition: CARD_HOVER_SPRING } : {})}
+      style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}
+    >
       {external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
       ) : (
         <Link href={href} prefetch style={linkStyle}>{video}</Link>
       )}
       <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} />
-    </div>
+    </motion.div>
   );
 }

@@ -43,10 +43,18 @@ export function HalftoneFilterDef({ id, dk, hoverColor, t }: HalftoneFilterDefPr
 
   const isMobile = useIsMobile();
 
-  // Mobile aesthetic overrides: user requested "smaller halftone dots for the mobile breakpoint"
-  // Keep the dotSize the same or slightly smaller, but increase the threshold offset so the alpha crop eats more of the dot.
-  const effectiveDotSize = isMobile ? Math.max(1, dotSize * 0.8) : dotSize;
-  const effectiveThreshOffActive = isMobile ? threshOffActive * 1.5 : threshOffActive;
+  // Mobile aesthetic override: slightly smaller halftone dots on mobile, but
+  // not by much — at these dial defaults the tile is already only ~2 SVG
+  // user-units, a handful of raster pixels at mobile scale, where
+  // anti-aliasing coverage (not the alpha-threshold math) is what actually
+  // determines whether a dot reads as visible at all. Shrinking it further
+  // (previously *0.8) pushed it below that floor, and the extra threshold
+  // crush (previously *1.5) compounded it by eating into the little bit of
+  // dot that was left — combined, dots were reading as barely-there,
+  // worse in light mode. Kept just barely smaller than desktop, and the
+  // threshold no longer gets any extra mobile-specific crush.
+  const effectiveDotSize = isMobile ? Math.max(1, dotSize * 0.95) : dotSize;
+  const effectiveThreshOffActive = threshOffActive;
 
 
   // Sweeps three primitives together as `progress` moves 0→1:

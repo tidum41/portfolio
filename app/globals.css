@@ -297,6 +297,7 @@ html:not([data-theme="dark"]) .project-card {
 /* ─── "JOOLA" hover accent — a real link ─────────────────────────── */
 .hero-joola {
   color: inherit;
+  font-weight: 500;
   text-decoration: none;
   transition: color 0.3s ease;
 }
