@@ -36,6 +36,9 @@ export default function VolumeControl() {
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [hovered, setHovered] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  // Remembers the last non-zero volume so unmuting restores it rather than
+  // leaving the slider at 0 (which would be silent even after unmuting).
+  const preVolume = useRef(DEFAULT_VOLUME);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -55,21 +58,52 @@ export default function VolumeControl() {
   // Setting both directly here, once, at the moment the real node is
   // created sidesteps both: the effects below then own every *subsequent*
   // update, which are genuine value changes and fire correctly.
+  // We also call .play() explicitly — browsers allow autoplay for muted
+  // audio, but only if play() is initiated; the `autoPlay` attribute alone
+  // is frequently blocked until a user gesture occurs.
   const setAudioNode = useCallback((node: HTMLAudioElement | null) => {
     audioRef.current = node;
     if (node) {
       node.muted = DEFAULT_MUTED;
       node.volume = DEFAULT_VOLUME;
+      node.play().catch(() => {
+        // Autoplay was blocked (no user gesture yet). The audio will start
+        // as soon as the user interacts with the page (e.g. clicks unmute).
+      });
     }
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.muted = muted;
+    if (!audioRef.current) return;
+    audioRef.current.muted = muted;
   }, [muted]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
+
+  // Slider value: show 0 when muted, actual volume when unmuted.
+  const sliderValue = muted ? 0 : volume;
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value);
+    if (v > 0) preVolume.current = v;
+    setVolume(v > 0 ? v : preVolume.current);
+    setMuted(v === 0);
+  };
+
+  const handleMuteToggle = () => {
+    setMuted((m) => {
+      if (m) {
+        // Unmuting — restore the last non-zero volume.
+        setVolume(preVolume.current);
+      } else {
+        // Muting — remember current volume so we can restore it.
+        if (volume > 0) preVolume.current = volume;
+      }
+      return !m;
+    });
+  };
 
   if (!isDesktop) return null;
 
@@ -114,19 +148,15 @@ export default function VolumeControl() {
           min={0}
           max={1}
           step={0.01}
-          value={volume}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            setVolume(v);
-            if (muted) setMuted(false);
-          }}
+          value={sliderValue}
+          onChange={handleSliderChange}
           className="volume-slider"
           aria-label="Volume"
           style={{ width: 64 }}
         />
       </motion.div>
       <button
-        onClick={() => setMuted((m) => !m)}
+        onClick={handleMuteToggle}
         className="nav-link theme-toggle-btn"
         aria-label={muted ? "Unmute background audio" : "Mute background audio"}
         style={{
