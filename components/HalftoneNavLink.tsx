@@ -22,9 +22,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   // it's already the active page, don't show the effect either way.
   // ON MOBILE: Invert the logic. Inactive = Halftone on, Active = Solid off.
   // Tap triggers the solid state temporarily before navigation.
-  const active = dk.enabled ? (
-    isMobile ? (!isActive && !isTapped) : (!isActive && (isHovered || isTapped))
-  ) : false;
+  const active = dk.enabled ? (!isActive && (isHovered || isTapped)) : false;
   
   const { filterId, t } = useHalftoneMorph(dk, active);
 
