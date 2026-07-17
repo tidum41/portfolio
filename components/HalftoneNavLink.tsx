@@ -1,32 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { useState, useId } from "react";
+import { motion, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
+import { useHalftoneMorph } from "./useHalftoneMorph";
 
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
-  const rawId = useId();
-  const filterId = "halftone-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
-  // The effect plays on hover. If it's already the active page, don't show the hover effect.
-  // We use `isHovered` for desktop, and because mobile Safari treats a tap as a hover (which persists until nav),
-  // this automatically covers the "animate on tap then reverse" requirement for mobile.
-  const isEffectActive = !isActive && isHovered && dk.enabled;
+  // isHovered drives desktop; isTapped (pointerdown → pointerup/cancel/leave)
+  // is the touch equivalent — there's no hover state on mobile to piggyback
+  // on, so activation needs its own explicit touch-and-hold trigger. If
+  // it's already the active page, don't show the effect either way.
+  const active = !isActive && (isHovered || isTapped) && dk.enabled;
+  const { filterId, t } = useHalftoneMorph(dk, active);
 
-  // Spring physics: Fast morph in, slow morph out
-  const springConfig = {
-    type: "spring" as const,
-    stiffness: isEffectActive ? (dk.stiffnessIn ?? 150) : (dk.stiffnessOut ?? 40),
-    damping: isEffectActive ? (dk.dampingIn ?? 15) : (dk.dampingOut ?? 12),
-  };
-
-  // --- SVG Filter Pipeline ---
-  const dotSize = dk.dotSize ?? 4;
+  // Both layers' opacity/scale are pure functions of the same `t` that also
+  // drives the filter's own dot/blur/threshold sweep (see HalftoneFilterDef)
+  // — the overlay is never a static end-state fading in, it's visibly
+  // changing shape as it becomes visible, which is what actually reads as a
+  // morph instead of a crossfade.
+  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
+  const baseScale = useTransform(t, [0, 1], [1, dk.hoverScaleBase ?? 1]);
+  // Uses |t|, not t, and a floor above 0 — the deliberately underdamped
+  // "out" spring (see Nav.tsx) sends t slightly negative as it settles, and
+  // without abs() this layer would clamp near-invisible for exactly that
+  // window, hiding the bubble effect the undershoot is there to produce.
+  // The floor itself avoids a rasterization cold-start flicker the first
+  // time this layer becomes visible again, same guard the original
+  // crossfade used.
+  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
+  const overlayScale = useTransform(t, [0, 1], [1, dk.hoverScaleHalf ?? 1]);
 
   return (
     <Link
@@ -49,22 +58,33 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         setIsHovered(false);
         setIsTapped(false);
       }}
-      onPointerDown={() => setIsTapped(true)}
-      onPointerUp={() => setIsTapped(false)}
-      onPointerCancel={() => setIsTapped(false)}
+      // A real tap fires pointerup (often <150ms after pointerdown) and then
+      // click/navigation almost immediately after that — well before the
+      // ~200ms "in" spring has become visible. Resetting isTapped on
+      // pointerup cut the effect off before it could ever be seen. Instead,
+      // leave it active through the tap: navigating flips `isActive` true
+      // for this link, which naturally deactivates it via the `!isActive`
+      // gate above once the new page renders. The timeout is just a
+      // failsafe in case navigation doesn't happen (e.g. a modifier-click
+      // opening a new tab), so this can't get stuck active forever.
+      onPointerDown={() => {
+        setIsTapped(true);
+        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
+      }}
+      onPointerCancel={() => {
+        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+        setIsTapped(false);
+      }}
     >
       {/* SVG Filter Definition */}
-      <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />
+      <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />
 
       {/* Base Text (Solid) */}
       <motion.span
-        initial={false}
-        animate={{
-          opacity: isEffectActive ? 0 : 1,
-          scale: isEffectActive ? (dk.hoverScaleBase ?? 0.95) : 1,
-        }}
-        transition={springConfig}
         style={{
+          opacity: baseOpacity,
+          scale: baseScale,
           color: baseColor,
           position: "relative",
           zIndex: 1,
@@ -79,25 +99,21 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       {/* Halftone Overlay Text (Filtered) */}
       <motion.span
         aria-hidden
-        initial={false}
-        animate={{
-          opacity: isEffectActive ? 1 : 0.0001,
-          scale: isEffectActive ? (dk.hoverScaleHalf ?? 1.05) : 1,
-        }}
-        transition={springConfig}
         style={{
+          opacity: overlayOpacity,
+          scale: overlayScale,
           position: "absolute",
           inset: 0,
           zIndex: 2,
           pointerEvents: "none",
-          
+
           // Apply the SVG Filter
           filter: `url(#${filterId})`,
-          
+
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center", // ensure alignment matches
-          
+
           color: hoverColor, // fallback/source color
           willChange: "transform, opacity, filter",
         }}
