@@ -12,18 +12,17 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
-  
-  // Spring physics
-  const springConfig = {
-    type: "spring",
-    stiffness: dk.stiffness ?? 400,
-    damping: dk.damping ?? 30,
-  };
-  
   // The effect plays on hover. If it's already the active page, don't show the hover effect.
   // We use `isHovered` for desktop, and because mobile Safari treats a tap as a hover (which persists until nav),
   // this automatically covers the "animate on tap then reverse" requirement for mobile.
   const isEffectActive = !isActive && isHovered && dk.enabled;
+
+  // Spring physics: Fast morph in, slow morph out
+  const springConfig = {
+    type: "spring",
+    stiffness: isEffectActive ? (dk.stiffnessIn ?? 150) : (dk.stiffnessOut ?? 40),
+    damping: isEffectActive ? (dk.dampingIn ?? 15) : (dk.dampingOut ?? 12),
+  };
 
   // --- SVG Filter Pipeline ---
   const dotSize = dk.dotSize ?? 4;
