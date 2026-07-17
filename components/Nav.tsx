@@ -27,8 +27,8 @@ export default function Nav() {
     offsetY: [0, -10, 10, 0.1],
     stiffnessIn: [150, 10, 1000, 5],
     dampingIn: [15, 2, 100, 1],
-    stiffnessOut: [40, 5, 1000, 1],
-    dampingOut: [12, 2, 100, 1],
+    stiffnessOut: [15, 1, 1000, 1],
+    dampingOut: [10, 1, 100, 1],
     hoverScaleBase: [1, 0.5, 1.5, 0.01],
     hoverScaleHalf: [1, 0.5, 1.5, 0.01],
   });
@@ -41,8 +41,8 @@ export default function Nav() {
           style={{ gap: 40, paddingTop: 24, paddingBottom: 24 }}
           aria-label="Main navigation"
         >
-          <VolumeControl />
-          <ThemeToggle />
+          <VolumeControl dk={dk} />
+          <ThemeToggle dk={dk} />
           {links.map(({ href, label }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);

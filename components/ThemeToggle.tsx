@@ -1,6 +1,6 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
+import { HalftoneFilterDef } from "./HalftoneFilterDef";
 import { motion, useReducedMotion } from "framer-motion";
 
 function SunIcon() {
@@ -27,10 +27,22 @@ function MoonIcon() {
   );
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ dk }: { dk?: any }) {
   const [isDark, setIsDark] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const reduced = useReducedMotion();
+  const rawId = useId();
+  const filterId = "halftone-theme-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
+
+  const baseColor = "var(--color-text-muted)";
+  const hoverColor = "var(--color-text-primary)";
+  const isEffectActive = isHovered && dk?.enabled;
+  
+  const springConfig = {
+    type: "spring",
+    stiffness: isEffectActive ? (dk?.stiffnessIn ?? 150) : (dk?.stiffnessOut ?? 40),
+    damping: isEffectActive ? (dk?.dampingIn ?? 15) : (dk?.dampingOut ?? 12),
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -70,11 +82,9 @@ export default function ThemeToggle() {
         border: "none",
         cursor: "pointer",
         padding: "4px",
-        color: isHovered ? "var(--color-text-primary)" : "var(--color-text-muted)",
         display: "flex",
         alignItems: "center",
         lineHeight: 0,
-        transition: "color 0.25s ease",
         WebkitTapHighlightColor: "transparent",
         // Fixed size so stacked absolute icons don't shift layout
         position: "relative",
@@ -82,24 +92,67 @@ export default function ThemeToggle() {
         height: 15,
       }}
     >
-      <motion.span
-        aria-hidden
-        style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+      {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />}
+      
+      {/* Base Icon */}
+      <motion.div
         initial={false}
-        animate={isDark ? visibleAnim : hiddenAnim}
-        transition={spring}
+        animate={{ opacity: isEffectActive ? 0 : 1 }}
+        transition={springConfig}
+        style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
       >
-        <SunIcon />
-      </motion.span>
-      <motion.span
-        aria-hidden
-        style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+        <motion.span
+          aria-hidden
+          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          initial={false}
+          animate={isDark ? visibleAnim : hiddenAnim}
+          transition={spring}
+        >
+          <SunIcon />
+        </motion.span>
+        <motion.span
+          aria-hidden
+          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          initial={false}
+          animate={isDark ? hiddenAnim : visibleAnim}
+          transition={spring}
+        >
+          <MoonIcon />
+        </motion.span>
+      </motion.div>
+
+      {/* Halftone Overlay Icon */}
+      <motion.div
         initial={false}
-        animate={isDark ? hiddenAnim : visibleAnim}
-        transition={spring}
+        animate={{ opacity: isEffectActive ? 1 : 0.0001 }}
+        transition={springConfig}
+        style={{ 
+          position: "absolute", 
+          inset: 0, 
+          color: hoverColor, 
+          filter: `url(#${filterId})`,
+          willChange: "opacity, filter" 
+        }}
       >
-        <MoonIcon />
-      </motion.span>
+        <motion.span
+          aria-hidden
+          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          initial={false}
+          animate={isDark ? visibleAnim : hiddenAnim}
+          transition={spring}
+        >
+          <SunIcon />
+        </motion.span>
+        <motion.span
+          aria-hidden
+          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          initial={false}
+          animate={isDark ? hiddenAnim : visibleAnim}
+          transition={spring}
+        >
+          <MoonIcon />
+        </motion.span>
+      </motion.div>
     </button>
   );
 }

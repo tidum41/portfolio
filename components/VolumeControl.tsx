@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useId } from "react";
+import { HalftoneFilterDef } from "./HalftoneFilterDef";
 import { motion, useReducedMotion } from "framer-motion";
 
 const ICON_SIZE = 17;
@@ -30,8 +31,10 @@ function MutedIcon() {
 const DEFAULT_MUTED = true;
 const DEFAULT_VOLUME = 0.4;
 
-export default function VolumeControl() {
+export default function VolumeControl({ dk }: { dk?: any }) {
   const [isDesktop, setIsDesktop] = useState(false);
+  const rawId = useId();
+  const filterId = "halftone-vol-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
   const [muted, setMuted] = useState(DEFAULT_MUTED);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [hovered, setHovered] = useState(false);
@@ -125,6 +128,16 @@ export default function VolumeControl() {
   const visibleAnim = { opacity: 1, scale: 1, filter: "blur(0px)" };
   const hiddenAnim = { opacity: 0, scale: reduced ? 1 : 0.25, filter: reduced ? "blur(0px)" : "blur(4px)" };
 
+  const baseColor = muted ? "var(--color-text-muted)" : "var(--color-text-primary)";
+  const hoverColor = "var(--color-text-primary)";
+  const isEffectActive = muted && hovered && dk?.enabled;
+  
+  const filterSpring = {
+    type: "spring",
+    stiffness: isEffectActive ? (dk?.stiffnessIn ?? 150) : (dk?.stiffnessOut ?? 40),
+    damping: isEffectActive ? (dk?.dampingIn ?? 15) : (dk?.dampingOut ?? 12),
+  };
+
   return (
     <div
       className="volume-control"
@@ -147,7 +160,7 @@ export default function VolumeControl() {
       <motion.div
         initial={false}
         animate={{ width: hovered ? SLIDER_WIDTH : 0, opacity: hovered ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 30 }}
         style={{ overflow: "hidden", display: "flex", alignItems: "center", flexShrink: 0 }}
       >
         <input
@@ -171,11 +184,9 @@ export default function VolumeControl() {
           border: "none",
           cursor: "pointer",
           padding: "4px",
-          color: muted ? (hovered ? "var(--color-text-primary)" : "var(--color-text-muted)") : "var(--color-text-primary)",
           display: "flex",
           alignItems: "center",
           lineHeight: 0,
-          transition: "color 0.25s ease",
           WebkitTapHighlightColor: "transparent",
           position: "relative",
           width: ICON_SIZE,
@@ -183,24 +194,67 @@ export default function VolumeControl() {
           flexShrink: 0,
         }}
       >
-        <motion.span
-          aria-hidden
-          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+        {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />}
+        
+        {/* Base Icon */}
+        <motion.div
           initial={false}
-          animate={muted ? hiddenAnim : visibleAnim}
-          transition={spring}
+          animate={{ opacity: isEffectActive ? 0 : 1 }}
+          transition={filterSpring}
+          style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
         >
-          <VolumeIcon />
-        </motion.span>
-        <motion.span
-          aria-hidden
-          style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+          <motion.span
+            aria-hidden
+            style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+            initial={false}
+            animate={muted ? hiddenAnim : visibleAnim}
+            transition={spring}
+          >
+            <VolumeIcon />
+          </motion.span>
+          <motion.span
+            aria-hidden
+            style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+            initial={false}
+            animate={muted ? visibleAnim : hiddenAnim}
+            transition={spring}
+          >
+            <MutedIcon />
+          </motion.span>
+        </motion.div>
+
+        {/* Halftone Overlay Icon */}
+        <motion.div
           initial={false}
-          animate={muted ? visibleAnim : hiddenAnim}
-          transition={spring}
+          animate={{ opacity: isEffectActive ? 1 : 0.0001 }}
+          transition={filterSpring}
+          style={{ 
+            position: "absolute", 
+            inset: 0, 
+            color: hoverColor, 
+            filter: `url(#${filterId})`,
+            willChange: "opacity, filter" 
+          }}
         >
-          <MutedIcon />
-        </motion.span>
+          <motion.span
+            aria-hidden
+            style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+            initial={false}
+            animate={muted ? hiddenAnim : visibleAnim}
+            transition={spring}
+          >
+            <VolumeIcon />
+          </motion.span>
+          <motion.span
+            aria-hidden
+            style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+            initial={false}
+            animate={muted ? visibleAnim : hiddenAnim}
+            transition={spring}
+          >
+            <MutedIcon />
+          </motion.span>
+        </motion.div>
       </button>
     </div>
   );

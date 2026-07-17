@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useId } from "react";
+import { HalftoneFilterDef } from "./HalftoneFilterDef";
 
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const [isHovered, setIsHovered] = useState(false);
@@ -26,11 +27,6 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
   // --- SVG Filter Pipeline ---
   const dotSize = dk.dotSize ?? 4;
-  
-  // Generate soft dot pattern
-  const svgPattern = `<svg width="${dotSize}" height="${dotSize}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-opacity="1" stop-color="white" /><stop offset="100%" stop-opacity="0" stop-color="white" /></radialGradient></defs><circle cx="${dotSize / 2}" cy="${dotSize / 2}" r="${dotSize / 2}" fill="url(#g)" /></svg>`;
-  
-  const dataUri = `data:image/svg+xml,${encodeURIComponent(svgPattern)}`;
 
   return (
     <Link
@@ -58,37 +54,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       onPointerCancel={() => setIsTapped(false)}
     >
       {/* SVG Filter Definition */}
-      <svg width="0" height="0" style={{ position: "absolute", pointerEvents: "none", color: hoverColor }}>
-        <defs>
-          <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceGraphic" stdDeviation={dk.blurAmount ?? 1.5} result="blurredText" />
-            
-            <feImage href={dataUri} x={dk.offsetX ?? 0} y={dk.offsetY ?? 0} width={dotSize} height={dotSize} preserveAspectRatio="none" result="dot" />
-            <feTile in="dot" result="pattern" />
-            
-            <feComposite 
-              in="blurredText" 
-              in2="pattern" 
-              operator="arithmetic" 
-              k1="1" 
-              k2="0" 
-              k3="0" 
-              k4="0" 
-              result="added" 
-            />
-            
-            <feColorMatrix type="matrix" in="added" values={`
-              0 0 0 0 1
-              0 0 0 0 1
-              0 0 0 0 1
-              0 0 0 ${dk.thresholdMult ?? 20} -${(dk.thresholdOffset ?? 20) / 10}
-            `} result="halftoneMask" />
-            
-            <feFlood floodColor="currentColor" result="flood" />
-            <feComposite in="flood" in2="halftoneMask" operator="in" />
-          </filter>
-        </defs>
-      </svg>
+      <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />
 
       {/* Base Text (Solid) */}
       <motion.span
