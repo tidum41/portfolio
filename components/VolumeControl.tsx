@@ -171,7 +171,7 @@ export default function VolumeControl() {
           border: "none",
           cursor: "pointer",
           padding: "4px",
-          color: "var(--color-text-primary)",
+          color: muted ? (hovered ? "var(--color-text-primary)" : "var(--color-text-muted)") : "var(--color-text-primary)",
           display: "flex",
           alignItems: "center",
           lineHeight: 0,
