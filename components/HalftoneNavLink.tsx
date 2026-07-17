@@ -102,6 +102,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           zIndex: 1,
           display: "inline-flex",
           alignItems: "center",
+          willChange: "transform, opacity",
         }}
       >
         {label}
@@ -112,7 +113,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         aria-hidden
         initial={false}
         animate={{
-          opacity: isEffectActive ? 1 : 0,
+          opacity: isEffectActive ? 1 : 0.0001,
           scale: isEffectActive ? (dk.hoverScaleHalf ?? 1.05) : 1,
         }}
         transition={springConfig}
@@ -130,6 +131,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           justifyContent: "center", // ensure alignment matches
           
           color: hoverColor, // fallback/source color
+          willChange: "transform, opacity, filter",
         }}
       >
         {label}
