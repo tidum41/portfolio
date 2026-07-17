@@ -47,9 +47,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   // cut the effect off before it's ever seen. Instead this plays as a
   // fixed-duration one-shot flash, timed in the pointerdown handler below.
   // Active is when hovered/tapped on desktop. On mobile, inactive (untapped) is halftoned.
-  const active = dk?.enabled ? (
-    isMobile ? !isTapped : (isHovered || isTapped)
-  ) : false;
+  const active = (isHovered || isTapped) && !!dk?.enabled;
   const { filterId, t } = useHalftoneMorph(dk, active);
 
   const baseOpacity = useTransform(t, [0, 1], [1, 0]);

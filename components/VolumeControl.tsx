@@ -117,9 +117,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     });
   };
 
-  const active = dk?.enabled ? (
-    isMobile ? !isTapped : (isHovered || isTapped)
-  ) : false;
+  const active = (isHovered || isTapped) && !!dk?.enabled;
 
   const { filterId, t } = useHalftoneMorph(dk, active);
   const baseOpacity = useTransform(t, [0, 1], [1, 0]);

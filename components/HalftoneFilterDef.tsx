@@ -42,10 +42,10 @@ export function HalftoneFilterDef({ id, dk, hoverColor, t }: HalftoneFilterDefPr
   const offsetY = dk?.offsetY ?? 0;
 
   const isMobile = useIsMobile();
-  const gyroShiftRef = useRef({ x: 0, y: 0 });
 
-  // Mobile aesthetic overrides
-  const effectiveDotSize = isMobile ? dotSize * 1.5 : dotSize;
+  // Mobile aesthetic overrides: user requested "smaller halftone dots for the mobile breakpoint"
+  // Keep the dotSize the same or slightly smaller, but increase the threshold offset so the alpha crop eats more of the dot.
+  const effectiveDotSize = isMobile ? Math.max(1, dotSize * 0.8) : dotSize;
   const effectiveThreshOffActive = isMobile ? threshOffActive * 1.5 : threshOffActive;
 
 
@@ -83,8 +83,8 @@ export function HalftoneFilterDef({ id, dk, hoverColor, t }: HalftoneFilterDefPr
 
     dotRef.current?.setAttribute("width", String(size));
     dotRef.current?.setAttribute("height", String(size));
-    dotRef.current?.setAttribute("x", String(offsetX + gyroShiftRef.current.x));
-    dotRef.current?.setAttribute("y", String(offsetY + gyroShiftRef.current.y));
+    dotRef.current?.setAttribute("x", String(offsetX));
+    dotRef.current?.setAttribute("y", String(offsetY));
     blurRef.current?.setAttribute("stdDeviation", String(blur));
     matrixRef.current?.setAttribute(
       "values",
@@ -96,43 +96,12 @@ export function HalftoneFilterDef({ id, dk, hoverColor, t }: HalftoneFilterDefPr
 
   // useMotionValueEvent only fires when `t` itself changes — if a dial value
   // (e.g. dotSize) is tuned while sitting idle at rest, nothing above would
-  // reapply it until the next hover. Re-run the same sweep at the current
-  // Re-run the same sweep at the current
+  // reapply it until the next hover.  // Re-run the same sweep at the current
   // progress whenever any endpoint value changes so DialKit tuning is live.
   useEffect(() => {
     applyAt(t.get());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dotSizeRest, dotSize, blurRest, blurActive, threshMultRest, threshMultActive, threshOffRest, threshOffActive, offsetX, offsetY, isMobile]);
-
-  useEffect(() => {
-    if (!isMobile) return;
-    
-    // Request permission for iOS 13+ devices if needed (usually requires user interaction though)
-    // We bind it passively. If permission was granted, it works.
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const { gamma, beta } = e;
-      if (gamma === null || beta === null) return;
-
-      // gamma: left/right [-90, 90]
-      // beta: front/back [-180, 180]
-      // Constrain and map to roughly +/- 15px shift
-      const shiftX = (gamma / 90) * 15;
-      // Clamp beta to prevent extreme flipping when holding phone flat
-      const clampedBeta = Math.max(-90, Math.min(90, beta));
-      const shiftY = (clampedBeta / 90) * 15;
-
-      gyroShiftRef.current = { x: shiftX, y: shiftY };
-
-      // Apply directly to bypass React render cycle
-      if (dotRef.current) {
-        dotRef.current.setAttribute("x", String(offsetX + shiftX));
-        dotRef.current.setAttribute("y", String(offsetY + shiftY));
-      }
-    };
-
-    window.addEventListener("deviceorientation", handleOrientation);
-    return () => window.removeEventListener("deviceorientation", handleOrientation);
-  }, [isMobile, offsetX, offsetY]);
 
   return (
     <svg width="0" height="0" style={{ position: "absolute", pointerEvents: "none", color: hoverColor }}>
