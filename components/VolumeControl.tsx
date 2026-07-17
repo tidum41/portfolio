@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useId } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
-import { motion, useReducedMotion } from "framer-motion";
+import { useHalftoneMorph } from "./useHalftoneMorph";
+import { motion, useReducedMotion, useTransform } from "framer-motion";
 
 const ICON_SIZE = 17;
 const SLIDER_WIDTH = 72;
@@ -33,8 +34,6 @@ const DEFAULT_VOLUME = 0.4;
 
 export default function VolumeControl({ dk }: { dk?: any }) {
   const [isDesktop, setIsDesktop] = useState(false);
-  const rawId = useId();
-  const filterId = "halftone-vol-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
   const [muted, setMuted] = useState(DEFAULT_MUTED);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [hovered, setHovered] = useState(false);
@@ -115,6 +114,19 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     });
   };
 
+  // Only reinforces the muted state on hover — desktop-only by construction
+  // (this whole component returns null below 768px), so no tap trigger is
+  // needed here the way the always-visible nav links/toggle need one.
+  // Computed (and the hooks it feeds) above the isDesktop early return below
+  // — hooks can't run conditionally, so this can't move past that guard.
+  const isEffectActive = muted && hovered && !!dk?.enabled;
+  const { filterId, t } = useHalftoneMorph(dk, isEffectActive);
+  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
+  // |t|, not t — the underdamped "out" spring sends t slightly negative as
+  // it settles, and without abs() this layer clamps near-invisible for
+  // exactly that window, hiding the bubble the undershoot exists to produce.
+  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
+
   if (!isDesktop) return null;
 
   const onEnter = () => {
@@ -130,13 +142,6 @@ export default function VolumeControl({ dk }: { dk?: any }) {
 
   const baseColor = muted ? "var(--color-text-muted)" : "var(--color-text-primary)";
   const hoverColor = "var(--color-text-primary)";
-  const isEffectActive = muted && hovered && dk?.enabled;
-  
-  const filterSpring = {
-    type: "spring" as const,
-    stiffness: isEffectActive ? (dk?.stiffnessIn ?? 150) : (dk?.stiffnessOut ?? 40),
-    damping: isEffectActive ? (dk?.dampingIn ?? 15) : (dk?.dampingOut ?? 12),
-  };
 
   return (
     <div
@@ -194,14 +199,11 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           flexShrink: 0,
         }}
       >
-        {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />}
-        
+        {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />}
+
         {/* Base Icon */}
         <motion.div
-          initial={false}
-          animate={{ opacity: isEffectActive ? 0 : 1 }}
-          transition={filterSpring}
-          style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
+          style={{ position: "absolute", inset: 0, color: baseColor, opacity: baseOpacity, willChange: "opacity" }}
         >
           <motion.span
             aria-hidden
@@ -225,15 +227,13 @@ export default function VolumeControl({ dk }: { dk?: any }) {
 
         {/* Halftone Overlay Icon */}
         <motion.div
-          initial={false}
-          animate={{ opacity: isEffectActive ? 1 : 0.0001 }}
-          transition={filterSpring}
-          style={{ 
-            position: "absolute", 
-            inset: 0, 
-            color: hoverColor, 
+          style={{
+            position: "absolute",
+            inset: 0,
+            color: hoverColor,
             filter: `url(#${filterId})`,
-            willChange: "opacity, filter" 
+            opacity: overlayOpacity,
+            willChange: "opacity, filter"
           }}
         >
           <motion.span

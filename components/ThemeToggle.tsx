@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect, useId } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HalftoneFilterDef } from "./HalftoneFilterDef";
-import { motion, useReducedMotion } from "framer-motion";
+import { useHalftoneMorph } from "./useHalftoneMorph";
+import { motion, useReducedMotion, useTransform } from "framer-motion";
 
 function SunIcon() {
   return (
@@ -30,19 +31,27 @@ function MoonIcon() {
 export default function ThemeToggle({ dk }: { dk?: any }) {
   const [isDark, setIsDark] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isTapped, setIsTapped] = useState(false);
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reduced = useReducedMotion();
-  const rawId = useId();
-  const filterId = "halftone-theme-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
 
   const baseColor = "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)";
-  const isEffectActive = isHovered && dk?.enabled;
-  
-  const springConfig = {
-    type: "spring" as const,
-    stiffness: isEffectActive ? (dk?.stiffnessIn ?? 150) : (dk?.stiffnessOut ?? 40),
-    damping: isEffectActive ? (dk?.dampingIn ?? 15) : (dk?.dampingOut ?? 12),
-  };
+  // isHovered drives desktop. isTapped is the touch equivalent, but unlike
+  // HalftoneNavLink this button never navigates away, so there's no
+  // "isActive flips true" event to naturally end it — a real tap's
+  // pointerup fires almost immediately (often <150ms), well before the
+  // ~200ms "in" spring becomes visible, so tying deactivation to it would
+  // cut the effect off before it's ever seen. Instead this plays as a
+  // fixed-duration one-shot flash, timed in the pointerdown handler below.
+  const active = (isHovered || isTapped) && !!dk?.enabled;
+  const { filterId, t } = useHalftoneMorph(dk, active);
+
+  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
+  // |t|, not t — the underdamped "out" spring sends t slightly negative as
+  // it settles, and without abs() this layer clamps near-invisible for
+  // exactly that window, hiding the bubble the undershoot exists to produce.
+  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -74,7 +83,19 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
     <button
       onClick={toggle}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsTapped(false);
+      }}
+      onPointerDown={() => {
+        setIsTapped(true);
+        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 350);
+      }}
+      onPointerCancel={() => {
+        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+        setIsTapped(false);
+      }}
       className="nav-link theme-toggle-btn"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
@@ -92,14 +113,11 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         height: 15,
       }}
     >
-      {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} />}
-      
+      {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />}
+
       {/* Base Icon */}
       <motion.div
-        initial={false}
-        animate={{ opacity: isEffectActive ? 0 : 1 }}
-        transition={springConfig}
-        style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
+        style={{ position: "absolute", inset: 0, color: baseColor, opacity: baseOpacity, willChange: "opacity" }}
       >
         <motion.span
           aria-hidden
@@ -123,15 +141,13 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
 
       {/* Halftone Overlay Icon */}
       <motion.div
-        initial={false}
-        animate={{ opacity: isEffectActive ? 1 : 0.0001 }}
-        transition={springConfig}
-        style={{ 
-          position: "absolute", 
-          inset: 0, 
-          color: hoverColor, 
+        style={{
+          position: "absolute",
+          inset: 0,
+          color: hoverColor,
           filter: `url(#${filterId})`,
-          willChange: "opacity, filter" 
+          opacity: overlayOpacity,
+          willChange: "opacity, filter"
         }}
       >
         <motion.span

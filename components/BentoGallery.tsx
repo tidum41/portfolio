@@ -57,18 +57,24 @@ const elastic = (v: number, lo: number, hi: number, k = 0.22) =>
     v < lo ? lo + (v - lo) * k : v > hi ? hi + (v - hi) * k : v;
 
 // ── Slider geometry (horizontal) ──────────────────────────────────────────────
+// Desktop base geometry. Mobile scales every dimension by MOBILE_SCALE — the
+// same factor the thumb was already bumped by in globals.css (28px / 20px
+// height) — so the track and flanking buttons grow together with the thumb
+// instead of the thumb standing out against an unchanged-size track.
 const TRACK_W = 110;
 const TRACK_PADH = 12;
+const ZOOM_BTN_W = 34;
+const MOBILE_SCALE = 1.4;
 
-const scaleToThumbX = (s: number, zMin: number, zMax: number) => {
+const scaleToThumbX = (s: number, zMin: number, zMax: number, trackW: number) => {
     const lMin = Math.log(zMin),
         lMax = Math.log(zMax);
-    return ((Math.log(clamp(s, zMin, zMax)) - lMin) / (lMax - lMin)) * TRACK_W;
+    return ((Math.log(clamp(s, zMin, zMax)) - lMin) / (lMax - lMin)) * trackW;
 };
-const thumbXToScale = (px: number, zMin: number, zMax: number) => {
+const thumbXToScale = (px: number, zMin: number, zMax: number, trackW: number) => {
     const lMin = Math.log(zMin),
         lMax = Math.log(zMax);
-    return Math.exp(lMin + (clamp(px, 0, TRACK_W) / TRACK_W) * (lMax - lMin));
+    return Math.exp(lMin + (clamp(px, 0, trackW) / trackW) * (lMax - lMin));
 };
 
 // ── Masonry packer ─────────────────────────────────────────────────────────────
@@ -276,6 +282,16 @@ export default function BentoGallery({
     const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
+    // One-time breakpoint check, matching the pattern used elsewhere in this
+    // codebase (e.g. VolumeControl.tsx) — not a resize listener, since the
+    // zoom panel doesn't need to re-scale live as the window resizes.
+    const [isMobile] = useState(
+        () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+    );
+    const trackW = isMobile ? TRACK_W * MOBILE_SCALE : TRACK_W;
+    const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
+    const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
+
     // Fade-in once all images are loaded
     const [ready, setReady] = useState(false);
     const loadedCountRef = useRef(0);
@@ -313,10 +329,10 @@ export default function BentoGallery({
     useLayoutEffect(() => {
         const th = thumbRef.current;
         if (!th) return;
-        const thumbX = scaleToThumbX(tx.current.s, zMinRef.current, zMaxRef.current);
-        th.style.left = TRACK_PADH + thumbX + "px";
+        const thumbX = scaleToThumbX(tx.current.s, zMinRef.current, zMaxRef.current, trackW);
+        th.style.left = trackPadH + thumbX + "px";
         th.style.transform = "translate(-50%, -50%)";
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Grid geometry ─────────────────────────────────────────────────────────
     const colUnit = Math.max(80, (vw - (columns - 1) * gap) / columns);
@@ -481,12 +497,12 @@ export default function BentoGallery({
 
             const th = thumbRef.current;
             if (th) {
-                const thumbX = scaleToThumbX(s, zMinRef.current, zMaxRef.current);
-                th.style.left = TRACK_PADH + thumbX + "px";
+                const thumbX = scaleToThumbX(s, zMinRef.current, zMaxRef.current, trackW);
+                th.style.left = trackPadH + thumbX + "px";
                 th.style.transform = "translate(-50%, -50%)";
             }
         },
-        [vw, vh]
+        [vw, vh, trackW, trackPadH]
     );
 
     const snapToBounds = useCallback(
@@ -639,11 +655,11 @@ export default function BentoGallery({
             e.preventDefault();
             const startX = e.clientX;
             const zm = zMaxRef.current;
-            const startPx = scaleToThumbX(tx.current.s, zMinRef.current, zm);
+            const startPx = scaleToThumbX(tx.current.s, zMinRef.current, zm, trackW);
 
             const onMove = (ev: PointerEvent) => {
-                const newPx = clamp(startPx + (ev.clientX - startX), 0, TRACK_W);
-                const ns = thumbXToScale(newPx, zMinRef.current, zm);
+                const newPx = clamp(startPx + (ev.clientX - startX), 0, trackW);
+                const ns = thumbXToScale(newPx, zMinRef.current, zm, trackW);
                 const { x, y, s } = tx.current;
                 const cx = vw / 2,
                     cy = vh / 2;
@@ -666,7 +682,7 @@ export default function BentoGallery({
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", onUp);
         },
-        [vw, vh, getBounds, applyTransform, snapToBounds]
+        [vw, vh, trackW, getBounds, applyTransform, snapToBounds]
     );
 
     const onTrackClick = useCallback(
@@ -675,11 +691,11 @@ export default function BentoGallery({
             const rect = (
                 e.currentTarget as HTMLElement
             ).getBoundingClientRect();
-            const px = clamp(e.clientX - rect.left - TRACK_PADH, 0, TRACK_W);
-            zoomToCenter(thumbXToScale(px, zMinRef.current, zMaxRef.current), "snap");
+            const px = clamp(e.clientX - rect.left - trackPadH, 0, trackW);
+            zoomToCenter(thumbXToScale(px, zMinRef.current, zMaxRef.current, trackW), "snap");
             setTimeout(() => snapToBounds("spring"), 500);
         },
-        [zoomToCenter, snapToBounds]
+        [zoomToCenter, snapToBounds, trackW, trackPadH]
     );
 
     const onTrackPointerDown = useCallback(
@@ -689,9 +705,9 @@ export default function BentoGallery({
             e.stopPropagation();
             e.preventDefault();
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-            const px = clamp(e.clientX - rect.left - TRACK_PADH, 0, TRACK_W);
+            const px = clamp(e.clientX - rect.left - trackPadH, 0, trackW);
             const zm = zMaxRef.current;
-            const ns = thumbXToScale(px, zMinRef.current, zm);
+            const ns = thumbXToScale(px, zMinRef.current, zm, trackW);
             const { x, y, s } = tx.current;
             const cx = vw / 2;
             const cy = vh / 2;
@@ -710,8 +726,8 @@ export default function BentoGallery({
             const startPx = px;
 
             const onMove = (ev: PointerEvent) => {
-                const newPx = clamp(startPx + (ev.clientX - startX), 0, TRACK_W);
-                const nextScale = thumbXToScale(newPx, zMinRef.current, zm);
+                const newPx = clamp(startPx + (ev.clientX - startX), 0, trackW);
+                const nextScale = thumbXToScale(newPx, zMinRef.current, zm, trackW);
                 const { x: cx2, y: cy2, s: cs } = tx.current;
                 const ratio2 = nextScale / Math.max(cs, 0.001);
                 const nxx = cx - (cx - cx2) * ratio2;
@@ -732,7 +748,7 @@ export default function BentoGallery({
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", onUp);
         },
-        [vw, vh, getBounds, applyTransform, snapToBounds]
+        [vw, vh, trackW, trackPadH, getBounds, applyTransform, snapToBounds]
     );
 
     // ── Init / resize — always "none" to avoid jarring scale-in ──────────────
@@ -1013,7 +1029,7 @@ export default function BentoGallery({
     const captionBase = isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)";
 
     const zpBtn: CSSProperties = {
-        width: 34,
+        width: zoomBtnW,
         height: "100%",
         background: "transparent",
         border: "none",
@@ -1349,7 +1365,7 @@ export default function BentoGallery({
                     onPointerDown={onTrackPointerDown}
                     style={{
                         position: "relative",
-                        width: TRACK_W + TRACK_PADH * 2,
+                        width: trackW + trackPadH * 2,
                         height: "100%",
                         cursor: "ew-resize",
                         flexShrink: 0,
@@ -1362,8 +1378,8 @@ export default function BentoGallery({
                         position: "absolute",
                         top: "50%",
                         transform: "translateY(-50%)",
-                        left: TRACK_PADH,
-                        right: TRACK_PADH,
+                        left: trackPadH,
+                        right: trackPadH,
                         height: 1.5,
                         background: trackLineColor,
                         pointerEvents: "none",
@@ -1376,7 +1392,7 @@ export default function BentoGallery({
                             position: "absolute",
                             top: "50%",
                             transform: "translate(-50%, -50%)",
-                            left: TRACK_PADH,
+                            left: trackPadH,
                             width: 8,
                             height: 20,
                             borderRadius: 4,
