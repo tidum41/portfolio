@@ -96,7 +96,7 @@ export default function HeroLegibilityScrim() {
     // Outlines the ellipse this shape occupies (dashed) and the edge the
     // falloff actually fades to transparent by (solid) — a tuning aid for
     // width/height/x/y/feather, no effect on the rendered scrim itself.
-    debug: true,
+    debug: false,
   });
 
   const [dataUrl, setDataUrl] = useState<string | null>(null);
