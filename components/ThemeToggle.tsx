@@ -39,7 +39,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const isEffectActive = isHovered && dk?.enabled;
   
   const springConfig = {
-    type: "spring",
+    type: "spring" as const,
     stiffness: isEffectActive ? (dk?.stiffnessIn ?? 150) : (dk?.stiffnessOut ?? 40),
     damping: isEffectActive ? (dk?.dampingIn ?? 15) : (dk?.dampingOut ?? 12),
   };
