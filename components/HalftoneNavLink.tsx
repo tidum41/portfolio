@@ -10,7 +10,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const rawId = useId();
   const filterId = "halftone-" + rawId.replace(/[^a-zA-Z0-9]/g, "");
 
-  const baseColor = isActive ? "var(--color-text-muted)" : "var(--color-text-primary)";
+  const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
   
   // Spring physics
@@ -20,7 +20,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     damping: dk.damping ?? 30,
   };
   
-  const isEffectActive = isHovered && !isTapped && dk.enabled;
+  // The effect plays on hover. If it's already the active page, don't show the hover effect.
+  // We use `isHovered` for desktop, and because mobile Safari treats a tap as a hover (which persists until nav),
+  // this automatically covers the "animate on tap then reverse" requirement for mobile.
+  const isEffectActive = !isActive && isHovered && dk.enabled;
 
   // --- SVG Filter Pipeline ---
   const dotSize = dk.dotSize ?? 4;
@@ -61,7 +64,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
             <feGaussianBlur in="SourceGraphic" stdDeviation={dk.blurAmount ?? 1.5} result="blurredText" />
             
-            <feImage href={dataUri} x="0" y="0" width={dotSize} height={dotSize} preserveAspectRatio="none" result="dot" />
+            <feImage href={dataUri} x={dk.offsetX ?? 0} y={dk.offsetY ?? 0} width={dotSize} height={dotSize} preserveAspectRatio="none" result="dot" />
             <feTile in="dot" result="pattern" />
             
             <feComposite 

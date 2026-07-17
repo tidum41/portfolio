@@ -17,16 +17,18 @@ export default function Nav() {
 
   const dk = useDialKit("Nav Links", {
     enabled: true,
-    dotSize: [4, 2, 12, 1],
-    blurAmount: [1.5, 0, 5, 0.1],
-    textAlphaMult: [1.2, 0.5, 3, 0.1],
-    patternAlphaMult: [1, 0.5, 3, 0.1],
-    thresholdMult: [20, 5, 100, 1],
-    thresholdOffset: [20, 0, 50, 1],
+    dotSize: [2, 1, 12, 1],
+    blurAmount: [0.5, 0, 5, 0.1],
+    textAlphaMult: [1.1, 0.5, 3, 0.1],
+    patternAlphaMult: [1.3, 0.5, 3, 0.1],
+    thresholdMult: [48, 5, 100, 1],
+    thresholdOffset: [28, 0, 50, 1],
+    offsetX: [0, -10, 10, 0.5],
+    offsetY: [0, -10, 10, 0.5],
     stiffness: [150, 10, 1000, 5],
     damping: [15, 2, 100, 1],
-    hoverScaleBase: [0.95, 0.5, 1, 0.01],
-    hoverScaleHalf: [1.05, 1, 1.5, 0.01],
+    hoverScaleBase: [1, 0.5, 1.5, 0.01],
+    hoverScaleHalf: [1, 0.5, 1.5, 0.01],
   });
 
   return (
