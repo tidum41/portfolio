@@ -35,9 +35,31 @@ const DS_QUERY = `*[_type == "designSystem"][0]{
   colorTextMuted,colorPlaceholder,colorBorderSubtle,colorAccent
 }`;
 
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
+
+// designSystemToCss interpolates every field directly into an inline <style>
+// tag rendered on every route (app/layout.tsx). Sanity content is
+// user-editable, so each field must be constrained to the shape it's
+// interpolated as before it can reach that sink: colorFoo fields to a strict
+// hex color, everything else to a finite number. Anything malformed is
+// dropped in favor of DS_DEFAULTS rather than risk breaking out of the
+// <style> tag.
+function sanitizeDesignSystem(raw: DesignSystemData | null): DesignSystemData {
+  if (!raw) return {};
+  const clean: DesignSystemData = {};
+  for (const [key, value] of Object.entries(raw) as [keyof DesignSystemData, unknown][]) {
+    if (key.startsWith("color")) {
+      if (typeof value === "string" && HEX_COLOR_RE.test(value)) (clean[key] as string) = value;
+    } else if (typeof value === "number" && Number.isFinite(value)) {
+      (clean[key] as number) = value;
+    }
+  }
+  return clean;
+}
+
 export async function getDesignSystem(): Promise<Required<DesignSystemData>> {
   const raw = await sanityClient.fetch<DesignSystemData | null>(DS_QUERY, {}, { next: { revalidate: 60 } });
-  return { ...DS_DEFAULTS, ...(raw ?? {}) };
+  return { ...DS_DEFAULTS, ...sanitizeDesignSystem(raw) };
 }
 
 /** Convert a DesignSystemData to a CSS :root{} override block */

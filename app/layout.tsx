@@ -8,7 +8,7 @@ import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
-import { getDesignSystem, designSystemToCss, getProjects } from "@/lib/sanity/queries";
+import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
 
@@ -50,7 +50,14 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [ds, projects] = await Promise.all([getDesignSystem(), getProjects()]);
+  // A Sanity outage/misconfig must not take the whole site down — every route
+  // renders through this layout, so a bare await here is a single point of
+  // failure. Fall back to the shipped defaults and an empty project list,
+  // matching the .catch() pattern already used for case-study fetches
+  // (app/sviz/page.tsx).
+  const [ds, projects] = await Promise.all([getDesignSystem(), getProjects()]).catch(
+    () => [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
+  );
   const dsStyle = designSystemToCss(ds);
 
   return (

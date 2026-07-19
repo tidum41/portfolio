@@ -4,15 +4,15 @@ import { createClient } from "@sanity/client";
 import type { DesignSystemData } from "@/lib/sanity/queries";
 
 const client = createClient({
-  projectId: "9vl5qk61",
-  dataset: "production",
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "placeholder",
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production",
   apiVersion: "2026-06-28",
-  token: process.env.SANITY_WRITE_TOKEN,
+  token: process.env.SANITY_API_WRITE_TOKEN,
   useCdn: false,
 });
 
 function requireToken() {
-  if (!process.env.SANITY_WRITE_TOKEN) throw new Error("No SANITY_WRITE_TOKEN in .env.local");
+  if (!process.env.SANITY_API_WRITE_TOKEN) throw new Error("No SANITY_API_WRITE_TOKEN in .env.local");
 }
 
 // Patch a subset of fields on a case study document
