@@ -128,7 +128,7 @@ export default function Nav() {
       // = normal speed) so the transition can be watched frame by frame
       // instead of happening in a blink. Does not affect showDurationMs/
       // hideDurationMs above, only the Bounce Physics group below.
-      slowMotion: [20, 1, 30, 1],
+      slowMotion: [1, 1, 30, 1],
     },
 
     bouncePhysics: {
