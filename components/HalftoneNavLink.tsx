@@ -1,11 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
-import { HalftoneFilterDef } from "./HalftoneFilterDef";
+import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
+
+// Shared between the base span's own inline style and the dot-field's mask
+// bake, so the two can't drift apart (see useHalftoneMorph.ts's comment on
+// how exactly this kind of duplication caused the old opacity bug).
+// lineHeightPx matters for alignment too — the bake uses it to reproduce
+// the exact baseline position CSS line-height centering puts the real text
+// at, see halftoneMask.ts's buildTextMask.
+const TEXT_STYLE = { fontWeight: 400, fontSizePx: 16, lineHeightPx: 24 };
 
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const [isHovered, setIsHovered] = useState(false);
@@ -22,26 +30,34 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   // it's already the active page, don't show the effect either way.
   // ON MOBILE: Invert the logic. Inactive = Halftone on, Active = Solid off.
   // Tap triggers the solid state temporarily before navigation.
-  const active = dk.enabled ? (!isActive && (isHovered || isTapped)) : false;
-  
-  const { filterId, t } = useHalftoneMorph(dk, active);
+  // dk.keepEffectOn (DialKit dev panel) forces the effect active regardless
+  // of real hover/tap — including overriding the !isActive gate, since
+  // without that override the current page's own nav link would stay
+  // permanently untunable while standing on it. Lets the mouse move to the
+  // (separately positioned) DialKit panel and drag a slider while the
+  // effect stays pinned visible, instead of losing hover the moment the
+  // cursor leaves this link.
+  const active = dk.enabled ? (dk.keepEffectOn || (!isActive && (isHovered || isTapped))) : false;
 
-  // Both layers' opacity/scale are pure functions of the same `t` that also
-  // drives the filter's own dot/blur/threshold sweep (see HalftoneFilterDef)
-  // — the overlay is never a static end-state fading in, it's visibly
-  // changing shape as it becomes visible, which is what actually reads as a
-  // morph instead of a crossfade.
-  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
-  const baseScale = useTransform(t, [0, 1], [1, dk.hoverScaleBase ?? 1]);
-  // Uses |t|, not t, and a floor above 0 — the deliberately underdamped
-  // "out" spring (see Nav.tsx) sends t slightly negative as it settles, and
-  // without abs() this layer would clamp near-invisible for exactly that
-  // window, hiding the bubble effect the undershoot is there to produce.
-  // The floor itself avoids a rasterization cold-start flicker the first
-  // time this layer becomes visible again, same guard the original
-  // crossfade used.
-  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
-  const overlayScale = useTransform(t, [0, 1], [1, dk.hoverScaleHalf ?? 1]);
+  const { filterId, t } = useHalftoneMorph(dk, active);
+  const reduced = useReducedMotion();
+
+  // Scale is still a pure function of the same `t` that drives the dot
+  // field's own per-dot sweep (see HalftoneDotField) — the overlay is never a
+  // static end-state fading in, it's visibly changing shape as it becomes
+  // visible, which is what actually reads as a morph instead of a crossfade.
+  const baseScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.textEndScale ?? 1]);
+  const overlayScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.dotsEndScale ?? 1]);
+
+  // Fixed-duration, active-driven crossfade — NOT derived from `t`. See
+  // useHalftoneMorph.ts's doc comment: base and overlay always share this
+  // exact duration and start together, a strict complementary pair
+  // (opacity: active?0:1 vs active?1:0), which is what guarantees the crisp
+  // text and the halftone dots are never both substantially gone at once.
+  // Reduced-motion collapses it to a near-instant swap (kept nonzero, not
+  // 0, so it still reads as a crossfade rather than a hard cut).
+  const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
+  const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
 
   return (
     <Link
@@ -89,48 +105,48 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         setIsTapped(false);
       }}
     >
-      {/* SVG Filter Definition */}
-      <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />
-
       {/* Base Text (Solid) */}
       <motion.span
         style={{
-          opacity: baseOpacity,
           scale: baseScale,
           color: baseColor,
+          fontWeight: TEXT_STYLE.fontWeight,
+          fontSize: TEXT_STYLE.fontSizePx,
           position: "relative",
           zIndex: 1,
           display: "inline-flex",
           alignItems: "center",
           willChange: "transform, opacity",
         }}
+        initial={false}
+        animate={{ opacity: active ? 0 : 1 }}
+        transition={crossfadeTransition}
       >
         {label}
       </motion.span>
 
-      {/* Halftone Overlay Text (Filtered) */}
+      {/* Halftone Overlay (independently-animated dots, see HalftoneDotField) */}
       <motion.span
         aria-hidden
         style={{
-          opacity: overlayOpacity,
           scale: overlayScale,
           position: "absolute",
           inset: 0,
           zIndex: 2,
           pointerEvents: "none",
-
-          // Apply the SVG Filter
-          filter: `url(#${filterId})`,
-
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center", // ensure alignment matches
-
-          color: hoverColor, // fallback/source color
-          willChange: "transform, opacity, filter",
+          willChange: "transform, opacity",
         }}
+        initial={false}
+        animate={{ opacity: active ? 1 : 0 }}
+        transition={crossfadeTransition}
       >
-        {label}
+        <HalftoneDotField
+          id={filterId}
+          dk={dk}
+          hoverColor={hoverColor}
+          t={t}
+          content={{ type: "text", text: label, fontWeight: TEXT_STYLE.fontWeight, fontSizePx: TEXT_STYLE.fontSizePx, lineHeightPx: TEXT_STYLE.lineHeightPx }}
+        />
       </motion.span>
     </Link>
   );

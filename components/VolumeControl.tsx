@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HalftoneFilterDef } from "./HalftoneFilterDef";
+import { HalftoneDotField } from "./HalftoneDotField";
+import { VOLUME_MASK_SVG, MUTED_MASK_SVG, VOLUME_CLONE_INNER, MUTED_CLONE_INNER } from "./halftoneIconMasks";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
-import { motion, useReducedMotion, useTransform } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const ICON_SIZE = 17;
 const SLIDER_WIDTH = 72;
@@ -117,14 +118,19 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     });
   };
 
-  const active = (isHovered || isTapped) && !!dk?.enabled;
+  // dk.keepEffectOn (DialKit dev panel) pins the effect active regardless
+  // of real hover/tap — see HalftoneNavLink.tsx's matching comment for why.
+  const active = !!dk?.enabled && (!!dk?.keepEffectOn || isHovered || isTapped);
 
   const { filterId, t } = useHalftoneMorph(dk, active);
-  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
-  // |t|, not t — the underdamped \"out\" spring sends t slightly negative as
-  // it settles, and without abs() this layer clamps near-invisible for
-  // exactly that window, hiding the bubble the undershoot exists to produce.
-  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
+
+  // Fixed-duration, active-driven crossfade — NOT derived from `t`. See
+  // useHalftoneMorph.ts's doc comment: base and overlay always share this
+  // exact duration and start together, a strict complementary pair, which
+  // is what guarantees the crisp icon and the halftone dots are never both
+  // substantially gone at once.
+  const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
+  const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
 
   if (!isDesktop) return null;
 
@@ -198,11 +204,12 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           flexShrink: 0,
         }}
       >
-        {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />}
-
         {/* Base Icon */}
         <motion.div
-          style={{ position: "absolute", inset: 0, color: baseColor, opacity: baseOpacity, willChange: "opacity" }}
+          style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
+          initial={false}
+          animate={{ opacity: active ? 0 : 1 }}
+          transition={crossfadeTransition}
         >
           <motion.span
             aria-hidden
@@ -224,16 +231,16 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           </motion.span>
         </motion.div>
 
-        {/* Halftone Overlay Icon */}
+        {/* Halftone Overlay Icon (independently-animated dots, see HalftoneDotField) */}
         <motion.div
           style={{
             position: "absolute",
             inset: 0,
-            color: hoverColor,
-            filter: `url(#${filterId})`,
-            opacity: overlayOpacity,
-            willChange: "opacity, filter"
+            willChange: "opacity"
           }}
+          initial={false}
+          animate={{ opacity: active ? 1 : 0 }}
+          transition={crossfadeTransition}
         >
           <motion.span
             aria-hidden
@@ -242,7 +249,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             animate={muted ? hiddenAnim : visibleAnim}
             transition={spring}
           >
-            <VolumeIcon />
+            <HalftoneDotField id={filterId + "-volume"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: VOLUME_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: VOLUME_CLONE_INNER }} />
           </motion.span>
           <motion.span
             aria-hidden
@@ -251,7 +258,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             animate={muted ? visibleAnim : hiddenAnim}
             transition={spring}
           >
-            <MutedIcon />
+            <HalftoneDotField id={filterId + "-muted"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: MUTED_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: MUTED_CLONE_INNER }} />
           </motion.span>
         </motion.div>
       </button>
