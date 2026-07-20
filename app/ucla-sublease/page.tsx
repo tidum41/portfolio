@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
@@ -59,9 +60,9 @@ function Section({ id, children, noReveal = false }: { id: string; children: Rea
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, as: Tag = "p" }: { children: React.ReactNode; as?: "p" | "h2" }) {
   return (
-    <p style={{
+    <Tag style={{
       fontFamily: "var(--font-sans)",
       fontSize: "var(--fs-section-label)",
       fontWeight: 400,
@@ -70,7 +71,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       margin: "0 0 16px",
     }}>
       {children}
-    </p>
+    </Tag>
   );
 }
 
@@ -534,7 +535,16 @@ export default async function BruinLeasePage() {
               <Body>{cs.processBody}</Body>
 
               {cs.figmaComparison
-                ? <img src={cs.figmaComparison} alt="Early layout exploration in Figma" style={{ width: "100%", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px" }} />
+                ? (
+                  // Matches the fallback's 16/9 below — the CMS field is a
+                  // plain URL string with no known intrinsic dimensions, so
+                  // fill+a fixed aspect-ratio wrapper is what actually
+                  // reserves layout space ahead of the real image loading
+                  // (a bare width:100% <img> has no height until it does).
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px" }}>
+                    <Image src={cs.figmaComparison} alt="Early layout exploration in Figma" fill style={{ objectFit: "cover" }} />
+                  </div>
+                )
                 : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
@@ -668,7 +678,11 @@ export default async function BruinLeasePage() {
 
             {/* ── Reflection ───────────────────────────────────────────── */}
             <Section id="reflection">
-              <SectionLabel>{cs.reflectionLabel}</SectionLabel>
+              {/* Unlike every other section, Reflection has no separate long-form
+                  H2 heading — this label is the section's only heading-level
+                  text, so it renders as a real <h2> to own the <h3>s below
+                  (they'd otherwise read as children of the prior section's H2). */}
+              <SectionLabel as="h2">{cs.reflectionLabel}</SectionLabel>
               <div className="reflection-grid" style={{ marginTop: 8 }}>
                 {reflectionItems.map(({ _key, heading, body }) => (
                   <div key={_key}>

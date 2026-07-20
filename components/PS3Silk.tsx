@@ -234,8 +234,16 @@ export default function PS3Silk({
       glRef = gl;
       const glCtx = gl;
 
+      // Cached on resize/scroll and reused by onMouseMove below, instead of
+      // calling getBoundingClientRect() on every raw mousemove event — that
+      // forces a synchronous layout read well over 60x/second on a modern
+      // trackpad/high-poll mouse, exactly while a visitor is interacting
+      // with the hero.
+      let wrapperRect: DOMRect | null = null;
+
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
+        wrapperRect = rect ?? null;
         if (!rect || !canvas) return;
         // Never write a 0×0 (or near-zero) drawing buffer. The persistent work
         // shell hides via display:none on non-/ routes, which reports 0×0 here;
@@ -276,6 +284,13 @@ export default function PS3Silk({
       }
 
       function updateTarget() {
+        // getBoundingClientRect() is viewport-relative, so the resize-only
+        // cache above would go stale as soon as the page scrolls without the
+        // wrapper's own size changing. This already runs once per scroll
+        // event (far less often than raw mousemove), so refreshing it here
+        // keeps onMouseMove's cached rect correct without reintroducing a
+        // per-mousemove layout read.
+        wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
@@ -286,7 +301,7 @@ export default function PS3Silk({
 
       function onMouseMove(e: MouseEvent) {
         if (!activeRef.current) return;
-        const rect = wrapperRef.current?.getBoundingClientRect();
+        const rect = wrapperRect;
         if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
         mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
@@ -456,7 +471,11 @@ void main() {
       // means instead of two copies drifting apart.
       function draw(ms: number) {
         const wc = waveColorRef.current;
-        gl.uniform1f(uTimeLoc, ms * 0.001);
+        // Reduced-motion: freeze the shader's time input instead of feeding
+        // it the running clock, so the wave pattern still renders (just as a
+        // static frame) rather than keeping the animation loop's only
+        // visible effect running at full speed regardless of the preference.
+        gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
         gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
         gl.uniform1f(uIntLoc, intensityRef.current);

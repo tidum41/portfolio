@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
@@ -56,37 +56,64 @@ export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRa
     labelFontSize: [18, 10, 32],
   });
 
-  const playerRef = useRef<MuxPlayerRefAttributes>(null);
+  const playerRef    = useRef<MuxPlayerRefAttributes>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  // Same viewport-gated mount as MuxVideoEmbed.tsx — without this, every
+  // video project card downloads and autoplays its stream (plus the shared
+  // hls.js/mux-embed/media-chrome player infrastructure) as soon as the grid
+  // mounts, including cards well below the fold a visitor may never reach.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const reveal = () => setShouldLoad(true);
+    const fallback = setTimeout(reveal, 1500);
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          clearTimeout(fallback);
+          reveal();
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px 400px 0px" },
+    );
+    obs.observe(container);
+    return () => { obs.disconnect(); clearTimeout(fallback); };
+  }, []);
 
   useEffect(() => {
     const player = playerRef.current;
     if (!player) return;
     if (active) player.play?.().catch(() => {});
     else player.pause?.();
-  }, [active]);
+  }, [active, shouldLoad]);
 
   const video = (
-    <div className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-      <MuxPlayer
-        ref={playerRef}
-        playbackId={playbackId}
-        autoPlay="muted"
-        loop
-        muted
-        playsInline
-        nohotkeys
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-          // @ts-ignore CSS custom properties
-          "--controls": "none",
-          "--media-background-color": "transparent",
-        }}
-      />
+    <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+      {shouldLoad && (
+        <MuxPlayer
+          ref={playerRef}
+          playbackId={playbackId}
+          autoPlay="muted"
+          loop
+          muted
+          playsInline
+          nohotkeys
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            // @ts-ignore CSS custom properties
+            "--controls": "none",
+            "--media-background-color": "transparent",
+          }}
+        />
+      )}
     </div>
   );
 

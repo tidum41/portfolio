@@ -18,7 +18,6 @@ const COLOR_HOVER    = "var(--color-text-primary)";
 
 const NO_TAP_HIGHLIGHT = {
   WebkitTapHighlightColor: "transparent",
-  outline: "none",
 } as const;
 
 // Touch devices fire mouseenter on tap with no matching mouseleave, which

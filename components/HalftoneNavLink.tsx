@@ -71,7 +71,6 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         fontSize: 16,
         fontWeight: 400,
         lineHeight: "24px",
-        outline: "none",
         userSelect: "none",
         WebkitTapHighlightColor: "transparent"
       }}

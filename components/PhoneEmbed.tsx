@@ -12,6 +12,7 @@ const IFRAME_H = 844;
 
 interface Props {
   url?:            string;
+  title?:          string;
   frameSrcLight?:  string;
   frameSrcDark?:   string;
   postMessageKey?: string;
@@ -21,6 +22,7 @@ interface Props {
 
 export default function PhoneEmbed({
   url            = "",
+  title          = "Embedded project preview",
   frameSrcLight,
   frameSrcDark,
   postMessageKey = "theme",
@@ -173,6 +175,7 @@ export default function PhoneEmbed({
               <iframe
                 ref={iframeRef}
                 src={isSrcReady ? url : undefined}
+                title={title}
                 style={{
                   position: "absolute",
                   top: `${dk.iframeOffsetY}%`,

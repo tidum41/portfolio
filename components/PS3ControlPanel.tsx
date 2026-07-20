@@ -133,12 +133,13 @@ function hslToHex(h: number, s: number, l: number) {
 // thumb reliably follows the finger on mobile — native range inputs lose the
 // drag if touch briefly leaves the element or the parent steals the event.
 const Slider = memo(function Slider({
-  min, max, step, value, onChange, isDark,
+  min, max, step, value, onChange, isDark, label,
 }: {
   min: number; max: number; step: number; value: number;
-  onChange: (v: number) => void; isDark: boolean;
+  onChange: (v: number) => void; isDark: boolean; label: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const clamp = useCallback((v: number) => parseFloat(Math.max(min, Math.min(max, v)).toFixed(10)), [min, max]);
   const valueFromClientX = useCallback((clientX: number) => {
     const el = trackRef.current;
     if (!el) return value;
@@ -146,19 +147,32 @@ const Slider = memo(function Slider({
     const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const raw  = min + pct * (max - min);
     const snapped = min + Math.round((raw - min) / step) * step;
-    return parseFloat(Math.max(min, Math.min(max, snapped)).toFixed(10));
-  }, [min, max, step, value]);
+    return clamp(snapped);
+  }, [min, max, step, value, clamp]);
   const pct    = ((value - min) / (max - min)) * 100;
   const filled = isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)";
   const empty  = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
   const thumb  = isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)";
   return (
     <div ref={trackRef}
+      className="ps3cp-slider-track"
+      role="slider"
+      tabIndex={0}
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
       style={{ position: "relative", height: 44, display: "flex", alignItems: "center", touchAction: "none", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
       onPointerDown={e => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); onChange(valueFromClientX(e.clientX)); }}
       onPointerMove={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; onChange(valueFromClientX(e.clientX)); }}
       onPointerUp={e => e.currentTarget.releasePointerCapture(e.pointerId)}
       onPointerCancel={e => e.currentTarget.releasePointerCapture(e.pointerId)}
+      onKeyDown={e => {
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(clamp(value + step)); }
+        else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(clamp(value - step)); }
+        else if (e.key === "Home") { e.preventDefault(); onChange(min); }
+        else if (e.key === "End") { e.preventDefault(); onChange(max); }
+      }}
     >
       {/* Track */}
       <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: `linear-gradient(to right,${filled} 0%,${filled} ${pct}%,${empty} ${pct}%,${empty} 100%)` }} />
@@ -279,7 +293,8 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
       <div style={{ position: "relative", height: 44, display: "flex", alignItems: "center", marginBottom: 6 }}>
         <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 5, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: "linear-gradient(to right,hsl(0,90%,52%),hsl(30,90%,52%),hsl(60,90%,52%),hsl(90,90%,52%),hsl(120,90%,52%),hsl(150,90%,52%),hsl(180,90%,52%),hsl(210,90%,52%),hsl(240,90%,52%),hsl(270,90%,52%),hsl(300,90%,52%),hsl(330,90%,52%),hsl(360,90%,52%))" }} />
         <input type="range" min={0} max={360} step={1} value={Math.round(hsl[0])}
-          style={{ position: "relative", zIndex: 1, width: "100%", height: 44, background: "transparent", appearance: "none", WebkitAppearance: "none", outline: "none", margin: 0, padding: 0, touchAction: "none" }}
+          aria-label="Hue"
+          style={{ position: "relative", zIndex: 1, width: "100%", height: 44, background: "transparent", appearance: "none", WebkitAppearance: "none", margin: 0, padding: 0, touchAction: "none" }}
           onPointerDown={e => e.stopPropagation()}
           onChange={e => {
             const h = parseFloat(e.target.value);
@@ -292,8 +307,9 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: "0.09em", color: "rgba(0,0,0,0.28)", flexShrink: 0 }}>HEX</span>
+        <label htmlFor="ps3cp-hex-input" style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: "0.09em", color: "rgba(0,0,0,0.28)", flexShrink: 0 }}>HEX</label>
         <input
+          id="ps3cp-hex-input"
           value={hexDraft}
           onChange={e => {
             const raw = e.target.value.replace(/[^0-9a-fA-F#]/g, "");
@@ -303,7 +319,7 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
           }}
           onPointerDown={e => e.stopPropagation()}
           maxLength={7} spellCheck={false}
-          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", outline: "none", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
+          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
         />
       </div>
     </div>
@@ -313,25 +329,35 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
 .ps3cp,.ps3cp * { cursor: none !important; }
-.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent!important;outline:none;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
+.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
 .ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
 html[data-theme=dark] .ps3cp input[type=range]::-webkit-slider-thumb { background:rgba(255,255,255,0.72); }
 .ps3cp input[type=range]::-moz-range-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-moz-range-thumb { width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);border:none;margin-top:-4px; }
 html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rgba(255,255,255,0.72); }
+.ps3cp input[type=range]:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp input[type=range]:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-slider-track:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 4px; border-radius: 2px; }
+html[data-theme=dark] .ps3cp-slider-track:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-header:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: -3px; border-radius: 999px; }
+html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.28);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
 .ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
 .ps3cp-ibtn:active { transform:scale(0.96); }
-.ps3cp-swatch-btn { position:relative;border:none;padding:0;outline:none;transition:transform 150ms ease,border-color 150ms ease; }
+.ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 150ms ease,border-color 150ms ease; }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-6px; }
 .ps3cp-swatch-btn:active { transform:scale(0.96)!important; }
+.ps3cp-swatch-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; }
 .ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
 .ps3cp-mode-btn:active { transform:scale(0.96); }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
 .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
+.ps3cp-color-swatch:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
 export default function PS3ControlPanel() {
@@ -632,7 +658,14 @@ export default function PS3ControlPanel() {
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
       {/* Header / pill */}
-      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" aria-label="Drag or click to toggle panel">
+      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" tabIndex={0} aria-label="Drag or click to toggle panel" aria-expanded={isOpen}
+        onKeyDown={e => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          if (isOpen) startTransition(() => setIsOpen(false));
+          else startTransition(() => { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); });
+        }}
+      >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
             <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
@@ -654,12 +687,16 @@ export default function PS3ControlPanel() {
         <div style={{ padding: "6px 16px 10px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
             <span style={labelSt}>pattern color</span>
-            <div className="ps3cp-color-swatch" onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }} style={swatchSt(openColorPicker === "pattern", rgbToHex(waveColor))} />
+            <div className="ps3cp-color-swatch" role="button" tabIndex={0} aria-label="Pattern color" aria-expanded={openColorPicker === "pattern"}
+              onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
+              style={swatchSt(openColorPicker === "pattern", rgbToHex(waveColor))} />
           </div>
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
             {PRESETS.map((p, i) => (
               <button key={i} className="ps3cp-swatch-btn" onClick={() => setAndDispatch({ waveColor: p.wave })}
-                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, border: activePreset === i ? "2px solid rgba(0,0,0,0.55)" : "1.5px solid rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, outline: "none", transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
+                aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
+                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, border: activePreset === i ? "2px solid rgba(0,0,0,0.55)" : "1.5px solid rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
             ))}
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
@@ -686,7 +723,7 @@ export default function PS3ControlPanel() {
         <ExpandSection open={mode === 1} maxH={72}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
-            <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark}
+            <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
@@ -694,28 +731,28 @@ export default function PS3ControlPanel() {
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
-          <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark}
+          <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark} label="Intensity"
             onChange={v => setAndDispatch({ intensity: v })} />
         </div>
 
         {/* Speed */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
-          <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark}
+          <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
         {/* Y offset */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
-          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark}
+          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
         {/* Cursor reactivity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>cursor reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
-          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark}
+          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark} label="Cursor reactivity"
             onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>
 

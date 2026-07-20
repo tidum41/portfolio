@@ -101,8 +101,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         {/* Hide system cursor immediately on pointer:fine devices — before JS
-            hydration — so there's no flash of the default arrow on load. */}
-        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine){*{cursor:none!important}}` }} />
+            hydration — so there's no flash of the default arrow on load.
+            Scoped out of prefers-reduced-motion: bootCursor() (GlobalCustomCursor.tsx)
+            never mounts its replacement animation for those visitors, so hiding
+            the native cursor here would otherwise leave them with no cursor at all. */}
+        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){*{cursor:none!important}}` }} />
         {/* Theme-aware favicons: dark glyph on light chrome, light glyph on dark chrome */}
         <link rel="icon" type="image/png" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
         <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
