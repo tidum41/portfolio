@@ -74,7 +74,7 @@ export default function MuxVideoEmbed({
       style={{
         width: "100%", height: "100%",
         overflow: "hidden", position: "relative",
-        backgroundColor: "#EBEBEB",
+        backgroundColor: "var(--color-placeholder)",
         isolation: "isolate",
         ...style,
       }}

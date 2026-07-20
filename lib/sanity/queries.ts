@@ -23,7 +23,12 @@ export const DS_DEFAULTS: Required<DesignSystemData> = {
   lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
   sectionGap: 80, sectionPb: 64, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
-  colorTextTertiary: "#767676", colorTextMuted: "#ADADAD", colorPlaceholder: "#EBEBEB",
+  // Kept in sync with app/globals.css's @theme block — these are a second,
+  // independent fallback used to inline-override the CSS when Sanity has no
+  // (or invalid) designSystem doc. Originally #767676/#ADADAD (2.17:1 /
+  // 4.39:1 against colorBg, both failing WCAG AA); this is what was actually
+  // winning the cascade over the globals.css fix until this was found.
+  colorTextTertiary: "#6C6C6C", colorTextMuted: "#727272", colorPlaceholder: "#EBEBEB",
   colorBorderSubtle: "#E8E4F0", colorAccent: "#9590C2",
 };
 

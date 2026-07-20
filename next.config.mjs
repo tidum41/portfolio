@@ -12,9 +12,6 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
-  compiler: {
-    styledComponents: true,
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "image.mux.com" },

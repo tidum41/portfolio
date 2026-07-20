@@ -55,8 +55,14 @@
   --color-bg:             #FBFBFB;
   --color-text-primary:   #2E2E2E;
   --color-text-secondary: #575757;
-  --color-text-tertiary:  #767676;
-  --color-text-muted:     #ADADAD;
+  /* text-tertiary/text-muted darkened from #767676/#ADADAD — the originals
+     computed to 4.39:1 and 2.17:1 against --color-bg, both failing WCAG AA's
+     4.5:1 minimum for body text (they were used as such: nav footer link,
+     about-page bio copy, homepage card labels, case-study captions). These
+     clear 4.5:1 with margin (~5.08:1 / ~4.65:1) while keeping muted visibly
+     lighter than tertiary. */
+  --color-text-tertiary:  #6C6C6C;
+  --color-text-muted:     #727272;
   --color-text-card-sub:  #4D4D4D;
   --color-placeholder:    #EBEBEB;
   --color-border-subtle:  #E8E4F0;
@@ -72,8 +78,12 @@
 
   /* Typography scale */
   --font-display:     Georgia, 'Times New Roman', serif;
-  --fs-display:       56px;
-  --fs-hero:          48px;
+  /* clamp() so .cs-hero-title (both case-study pages) scales down on narrow
+     viewports instead of holding a flat 48px with no mobile override — the
+     home hero already does the equivalent (see HeroText.tsx's inline
+     clamp(26px, 2.8vw, 36px)). Caps at exactly 48px from ~800px width up,
+     matching the previous flat value there unchanged. */
+  --fs-hero:          clamp(32px, 6vw, 48px);
   --fs-h2:            30px;
   /* Slider 10–50 × 10 = CSS font-weight 100–500. Max 50 = CSS 500 (Medium). */
   --fw-hero:          500;
@@ -109,10 +119,6 @@
   --content-max-w:   750px;
   --section-gap:     80px;
   --section-pb:      64px;
-  --toc-w:           120px;
-  --toc-sticky-top:  100px;
-  --toc-fixed-left:  40px;
-  --toc-fixed-top:   132px;
 
   /* Easing curves — exact from MotionWrappers.tsx */
   --ease-out:       cubic-bezier(0.0, 0.0, 0.2, 1);
@@ -370,6 +376,11 @@ html:not([data-theme="dark"]) .project-card {
     content: "";
     position: absolute;
     inset: -16px;
+  }
+  .phone-mockup-play-btn::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
   }
 }
 

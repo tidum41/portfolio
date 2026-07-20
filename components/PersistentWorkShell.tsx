@@ -406,6 +406,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 {hasEverBeenActive && (
                   <PhoneEmbed
                     url="https://sprightly-stroopwafel-8f1061.netlify.app/"
+                    title="Dumb Habit Tracker interactive preview"
                     frameSrcLight="/phonemockup-light.webp"
                     frameSrcDark="/phonemockup-dark.webp"
                   />

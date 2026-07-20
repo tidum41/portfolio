@@ -61,6 +61,12 @@ declare global {
 function bootCursor(lightColor: string, darkColor: string, size: number, zIndex: number): (() => void) | undefined {
   if (typeof window === "undefined") return;
   if (window.matchMedia("(pointer: coarse)").matches) return;
+  // Reduced-motion: never mount the replacement cursor at all — this whole
+  // system is a continuous rAF trail/echo/spring-morph animation with no
+  // way to render a single static frame. Bailing out here (rather than the
+  // native-cursor-hiding rule in layout.tsx, which is scoped out of
+  // reduced-motion to match) leaves these visitors with the real OS cursor.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const getThemeColor = () =>
     document.documentElement.getAttribute("data-theme") === "dark" ? darkColor : lightColor;

@@ -1040,7 +1040,6 @@ export default function BentoGallery({
         lineHeight: 1,
         cursor: "pointer",
         padding: 0,
-        outline: "none",
         WebkitTapHighlightColor: "transparent",
         display: "flex",
         alignItems: "center",

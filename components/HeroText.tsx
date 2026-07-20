@@ -64,7 +64,11 @@ export default function HeroText() {
 
   return (
     <>
-      <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: 340 }}>
+      {/* minWidth caps at 100% of the available width via min() — a bare
+          340px floor overflowed the section's overflow:hidden ancestor on
+          viewports under ~388px (iPhone SE, common Android widths), clipping
+          the headline instead of just letting it wrap a bit tighter. */}
+      <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: "min(340px, 100%)" }}>
         <motion.h1
           initial={h1Initial}
           animate={h1Controls}

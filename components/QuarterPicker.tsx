@@ -72,6 +72,11 @@ function injectDateInputStyles() {
         .qfm-date-card:focus-within {
             box-shadow: 0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05);
         }
+        .qfm-quarter-chip:focus-visible {
+            outline: 2px solid #2d68c4;
+            outline-offset: 2px;
+            border-radius: 9999px;
+        }
     `
     document.head.appendChild(el)
 }
@@ -105,8 +110,15 @@ function CalendarIcon({ active = false }: { active?: boolean }) {
     )
 }
 
-function DateCard({ date, onChange }: { date: string | null; onChange: (iso: string) => void }) {
+function DateCard({ date, onChange, label, scale }: { date: string | null; onChange: (iso: string) => void; label: string; scale: number }) {
     const [focused, setFocused] = useState(false)
+    // The whole widget is visually shrunk via transform:scale() on an ancestor
+    // (see QuarterPicker below) — without this, the input's real hit-tested
+    // box shrinks right along with it, well under the 44px accessible minimum
+    // at mobile widths. Countering the scale here inflates just this
+    // invisible input's own rendered box back to a true 44px+ on screen,
+    // with no visual change (it's already opacity:0).
+    const inverseScale = scale > 0 ? 1 / scale : 1
 
     const card: CSSProperties = {
         background: C.white,
@@ -146,6 +158,7 @@ function DateCard({ date, onChange }: { date: string | null; onChange: (iso: str
             <CalendarIcon active={focused} />
             <input
                 type="date"
+                aria-label={label}
                 className="qfm-date-input"
                 value={date ?? ""}
                 onChange={(e) => { if (e.target.value) onChange(e.target.value) }}
@@ -161,6 +174,7 @@ function DateCard({ date, onChange }: { date: string | null; onChange: (iso: str
                     zIndex: 2,
                     fontSize: 16,
                     WebkitTapHighlightColor: "transparent",
+                    transform: `scale(${inverseScale})`,
                 } as CSSProperties}
             />
         </div>
@@ -262,8 +276,8 @@ export default function QuarterPicker({
                         <span style={{ fontSize: 12, color: C.slateGray, fontFamily: C.font }}>Move Out</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                        <DateCard date={moveIn} onChange={(iso) => setManualMoveIn(iso)} />
-                        <DateCard date={moveOut} onChange={(iso) => setManualMoveOut(iso)} />
+                        <DateCard date={moveIn} onChange={(iso) => setManualMoveIn(iso)} label="Move In date" scale={scale} />
+                        <DateCard date={moveOut} onChange={(iso) => setManualMoveOut(iso)} label="Move Out date" scale={scale} />
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {QUARTERS.map((q) => {
@@ -278,16 +292,39 @@ export default function QuarterPicker({
                                 fontSize: 14,
                                 fontFamily: C.font,
                                 lineHeight: "20px",
-                                cursor: "pointer",
-                                transition: "background 0.08s ease, border-color 0.08s ease, color 0.08s ease",
-                                outline: "none",
                                 whiteSpace: "nowrap",
                                 userSelect: "none",
-                                WebkitTapHighlightColor: "transparent",
                             }
+                            // The visible pill above stays exactly the size it's always
+                            // been — this outer button carries the real click/focus
+                            // target, inflated by 1/scale so its on-screen size clears
+                            // the 44px minimum regardless of how compressed the whole
+                            // widget currently is (see the ancestor transform:scale()
+                            // in QuarterPicker below). Since the ambient scale applies
+                            // to this whole subtree uniformly, the inner pill still
+                            // renders at its original, unchanged on-screen size.
+                            const hitSize = scale > 0 ? 44 / scale : 44
                             return (
-                                <button key={q.value} style={chip} onClick={() => handleToggle(q.value)}>
-                                    {q.label}
+                                <button
+                                    key={q.value}
+                                    type="button"
+                                    className="qfm-quarter-chip"
+                                    aria-pressed={isSelected}
+                                    onClick={() => handleToggle(q.value)}
+                                    style={{
+                                        background: "transparent",
+                                        border: "none",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        minWidth: hitSize,
+                                        minHeight: hitSize,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        WebkitTapHighlightColor: "transparent",
+                                    }}
+                                >
+                                    <span style={chip}>{q.label}</span>
                                 </button>
                             )
                         })}

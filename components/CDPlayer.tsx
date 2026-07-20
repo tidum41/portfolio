@@ -40,6 +40,11 @@ export default function CDPlayer({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef    = useRef<HTMLIFrameElement>(null);
+  // Cached and refreshed on resize/scroll, reused by forwardEvent below —
+  // calling getBoundingClientRect() directly from the onPointerMove handler
+  // forces a synchronous layout read on every event while dragging, which is
+  // exactly when a visitor is actively interacting with this card.
+  const rectRef = useRef<DOMRect | null>(null);
   const [cw, setCw]           = useState(dk.canvasW);
   const [isTouch, setIsTouch] = useState(false);
   const [ready, setReady]     = useState(false);
@@ -49,9 +54,12 @@ export default function CDPlayer({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const obs = new ResizeObserver(([e]) => setCw(e.contentRect.width));
+    const updateRect = () => { rectRef.current = el.getBoundingClientRect(); };
+    const obs = new ResizeObserver(([e]) => { setCw(e.contentRect.width); updateRect(); });
     obs.observe(el);
-    return () => obs.disconnect();
+    updateRect();
+    window.addEventListener("scroll", updateRect, { passive: true });
+    return () => { obs.disconnect(); window.removeEventListener("scroll", updateRect); };
   }, []);
 
   // Lazy-load iframe until near viewport
@@ -90,7 +98,7 @@ export default function CDPlayer({
   // screen offset from container center → design coords:
   //   design_x = (screenDx / s) - offsetX + canvasW/2
   const forwardEvent = (clientX: number, clientY: number, type: string) => {
-    const rect = containerRef.current?.getBoundingClientRect();
+    const rect = rectRef.current;
     if (!rect || !iframeRef.current?.contentWindow) return;
     const dx = clientX - (rect.left + rect.width  / 2);
     const dy = clientY - (rect.top  + rect.height / 2);
