@@ -21,7 +21,7 @@ const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
-const DEFAULT_INTENSITY_HT = 0.14; // halftone mode default
+const DEFAULT_INTENSITY_HT = 0.18; // halftone mode default
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
 const DEFAULT_YOFFSET      = 49;
@@ -29,6 +29,13 @@ const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
 const DEFAULT_SPEED        = 1.0;
+// First-pick intensity for any colored preset (index >= 1 in PRESETS below —
+// index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
+// above). Only applied the first time a given preset is picked in a given
+// mode; after that, whatever intensity was last active for that preset+mode
+// (default or user-adjusted) is what's remembered — see presetIntensity state.
+const PRESET_INTENSITY_HT = 0.33;
+const PRESET_INTENSITY_WV = 0.16;
 
 const PRESETS = [
   { swatch: "#CBCBCB", wave: [1.0, 1.0, 1.0] as [number,number,number] },
@@ -392,6 +399,15 @@ export default function PS3ControlPanel() {
 
   const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT); // halftone
   const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV); // wave
+  // Remembers the last-active intensity per colored-preset-per-mode (key is
+  // `${mode}:${presetIndex}`, preset index >= 1 only — index 0 is the
+  // white/default swatch and never goes through this map). Seeded with
+  // PRESET_INTENSITY_HT/WV the first time a given preset+mode is picked;
+  // overwritten whenever the intensity slider is adjusted while that
+  // preset+mode is active, so a later re-pick restores what the user set
+  // rather than re-applying the seed default. Session-only, not persisted
+  // to sessionStorage — matches intensityHt/intensityWv's own behavior.
+  const [presetIntensity, setPresetIntensity] = useState<Record<string, number>>({});
   const [mouseStr,     setMouseStr]     = useState(DEFAULT_MOUSE_STR);
   const [yOffset,      setYOffset]      = useState(DEFAULT_YOFFSET);
   const [waveColor,    setWaveColor]    = useState<[number,number,number]>(() =>
@@ -626,6 +642,22 @@ export default function PS3ControlPanel() {
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
 
+  // Selecting a preset: index 0 (white/default) never touches intensity, same
+  // as before. Colored presets (index >= 1) restore whatever intensity was
+  // last active for this preset+mode, or seed PRESET_INTENSITY_HT/WV the
+  // first time this exact preset+mode combo is picked.
+  const pickPreset = (i: number) => {
+    const preset = PRESETS[i];
+    if (i === 0) { setAndDispatch({ waveColor: preset.wave }); return; }
+    const key = `${mode}:${i}`;
+    const remembered = presetIntensity[key];
+    const nextIntensity = remembered ?? (mode === 1 ? PRESET_INTENSITY_HT : PRESET_INTENSITY_WV);
+    if (remembered === undefined) {
+      setPresetIntensity(prev => ({ ...prev, [key]: nextIntensity }));
+    }
+    setAndDispatch({ waveColor: preset.wave, intensity: nextIntensity });
+  };
+
   const labelSt: React.CSSProperties = { fontSize: 11, color: isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.42)", letterSpacing: "0.01em" };
   const valueSt: React.CSSProperties = { fontSize: 11, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.28)", fontFamily: "monospace" };
   const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 4 };
@@ -694,7 +726,7 @@ export default function PS3ControlPanel() {
           </div>
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
             {PRESETS.map((p, i) => (
-              <button key={i} className="ps3cp-swatch-btn" onClick={() => setAndDispatch({ waveColor: p.wave })}
+              <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
                 aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
                 style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, border: activePreset === i ? "2px solid rgba(0,0,0,0.55)" : "1.5px solid rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
             ))}
@@ -732,7 +764,14 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
           <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark} label="Intensity"
-            onChange={v => setAndDispatch({ intensity: v })} />
+            onChange={v => {
+              // A colored preset is active — remember this as the intensity
+              // to restore next time this exact preset+mode is picked.
+              if (activePreset >= 1) {
+                setPresetIntensity(prev => ({ ...prev, [`${mode}:${activePreset}`]: v }));
+              }
+              setAndDispatch({ intensity: v });
+            }} />
         </div>
 
         {/* Speed */}
