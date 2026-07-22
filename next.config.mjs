@@ -12,6 +12,13 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Required for Sanity Studio (mounted at /studio, a real production route)
+  // — @sanity/ui and the sanity package both use styled-components
+  // internally at runtime, this isn't for our own app code. This transform
+  // also fixes styled-components class-name hydration mismatches under SSR.
+  compiler: {
+    styledComponents: true,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "image.mux.com" },
