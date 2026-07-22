@@ -290,10 +290,11 @@ html:not([data-theme="dark"]) .project-card {
   .nav-link:hover { color: var(--color-text-muted) !important; }
 }
 
-/* ─── "ucla" hover accent ────────────────────────────────────────── */
+/* ─── "ucla" hover accent — a real link ──────────────────────────── */
 .hero-ucla {
   color: inherit;
   font-weight: 500;
+  text-decoration: none;
   transition: color 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -362,26 +363,27 @@ html:not([data-theme="dark"]) .project-card {
   background: var(--color-text-primary);
 }
 
-/* ─── Touch hit-target expansion (no visual change) ─────────────── */
-@media (pointer: coarse) {
-  a.nav-link {
-    position: relative;
-  }
-  a.nav-link::before {
-    content: "";
-    position: absolute;
-    inset: -12px -8px;
-  }
-  .theme-toggle-btn::before {
-    content: "";
-    position: absolute;
-    inset: -20px;
-  }
-  .phone-mockup-play-btn::before {
-    content: "";
-    position: absolute;
-    inset: -6px;
-  }
+/* ─── Hit-target expansion (no visual change) ──────────────────────
+   Applies to every pointer type, not just touch (pointer: coarse) —
+   mouse hover near the edge of these controls should also count,
+   not just accidental-tap forgiveness on touchscreens. */
+a.nav-link {
+  position: relative;
+}
+a.nav-link::before {
+  content: "";
+  position: absolute;
+  inset: -12px -8px;
+}
+.theme-toggle-btn::before {
+  content: "";
+  position: absolute;
+  inset: -20px;
+}
+.phone-mockup-play-btn::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
 }
 
 /* ─── Scroll-reveal — used by useScrollReveal hook ───────────────── */

@@ -113,7 +113,14 @@ export default function HeroText() {
         {" "}
         <span className="hero-dot">·</span>
         {" cognitive science at "}
-        <span className="hero-ucla">ucla</span>
+        <a
+          href="https://www.ucla.edu/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hero-ucla"
+        >
+          ucla
+        </a>
       </motion.p>
     </>
   );
