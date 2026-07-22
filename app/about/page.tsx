@@ -5,19 +5,23 @@ import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { FOOTER_LINKS } from "@/lib/site";
+import { useDialKit } from "dialkit";
 
-const LOGO_SCALE = 1.375;
+// `slug` keys into the per-logo DialKit crop/scale controls below — kept
+// separate from `company` (the display name) so renaming a company never
+// silently breaks its dial lookup.
 const EXPERIENCE = [
-  { company: "JOOLA",               role: "Product Design Intern",       dates: "Summer 2026", description: "pioneers in pickleball & table tennis equipment", logo: "/images/about/logos/joola.avif" },
-  { company: "Beacons AI",          role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/beacons-ai.avif" },
-  { company: "Dialogue AI",         role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/dialogue-ai.avif" },
-  { company: "Soka Records",        role: "Creative Intern",             dates: "2025",         description: "keshi, boywithuke, starfall, yel",                  logo: "/images/about/logos/soka-records.avif" },
-  { company: "The Mousepad Company", role: "Visual Designer",            dates: "2020 – 2022",  description: "mousepads and social media",                        logo: "/images/about/logos/mousepad-company.avif", logoScale: LOGO_SCALE * 1.15 * 1.07 },
+  { slug: "cursor",     company: "Cursor",              role: "Campus Ambassador",           dates: "2026",         description: "leading growth at ucla",                            logo: "/images/about/logos/cursor.png" },
+  { slug: "joola",      company: "JOOLA",               role: "Product Design Intern",       dates: "Summer 2026", description: "pioneers in pickleball & table tennis equipment", logo: "/images/about/logos/joola.avif" },
+  { slug: "beaconsAi",  company: "Beacons AI",          role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/beacons-ai.avif" },
+  { slug: "dialogueAi", company: "Dialogue AI",         role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/dialogue-ai.avif" },
+  { slug: "sokaRecords", company: "Soka Records",       role: "Creative Intern",             dates: "2025",         description: "keshi, boywithuke, starfall, yel",                  logo: "/images/about/logos/soka-records.avif" },
+  { slug: "mousepad",   company: "The Mousepad Company", role: "Visual Designer",            dates: "2020 – 2022",  description: "mousepads and social media",                        logo: "/images/about/logos/mousepad-company.avif", hidden: true },
 ];
 
 const ORGS = [
-  { name: "UCLA Product Space",       role: "Product Designer"          },
-  { name: "Campus Events Commission", role: "Media Production Director" },
+  { name: "UCLA Product Space",       role: "Product Designer"            },
+  { name: "Campus Events Commission", role: "Director of Media Production" },
 ];
 
 const SOCIALS = FOOTER_LINKS;
@@ -37,6 +41,20 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AboutPage() {
+  // Per-logo scale + crop (pan) controls. Each logo sits in a circular,
+  // overflow:hidden frame — offsetX/offsetY shift the image within that
+  // frame via transform, and anything pushed past the circle's edge is
+  // clipped by the frame itself, which is what gives these an actual crop
+  // effect rather than just resizing.
+  const logoDk = useDialKit("About Logos", {
+    cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+    joola:       { scale: [1.34, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+    beaconsAi:   { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+    dialogueAi:  { scale: [1.35, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+    sokaRecords: { scale: [1.46, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+    mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
+  });
+
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: 40, paddingBottom: 120 }}>
 
@@ -171,7 +189,9 @@ export default function AboutPage() {
       }}>
         <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-          {EXPERIENCE.map(({ company, role, dates, description, logo, logoScale }) => (
+          {EXPERIENCE.filter((e) => !e.hidden).map(({ slug, company, role, dates, description, logo }) => {
+            const crop = logoDk[slug as keyof typeof logoDk];
+            return (
             <StaggerItem key={company} style={{
               display: "flex",
               alignItems: "flex-start",
@@ -193,7 +213,7 @@ export default function AboutPage() {
                     alt={`${company} logo`}
                     fill
                     sizes="40px"
-                    style={{ objectFit: "contain", padding: 5, transform: `scale(${logoScale ?? LOGO_SCALE})` }}
+                    style={{ objectFit: "contain", padding: 5, transform: `scale(${crop.scale}) translate(${crop.offsetX}px, ${crop.offsetY}px)` }}
                   />
                 </div>
                 <div>
@@ -204,7 +224,7 @@ export default function AboutPage() {
               </div>
               <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{dates}</p>
             </StaggerItem>
-          ))}
+          );})}
         </StaggerReveal>
       </section>
 
