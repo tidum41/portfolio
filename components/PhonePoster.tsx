@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
-const REF_W = 344;
-const REF_H = 614;
 const PHONE_W = 280;
 const PHONE_H = 580;
+const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
+
+function readPageIsDark() {
+  return typeof document !== "undefined"
+    && document.documentElement.getAttribute("data-theme") === "dark";
+}
 
 /** Phone frame only — no iframe. Shown in the grid while the live embed is in the modal. */
-export default function PhonePoster({ style }: { style?: React.CSSProperties }) {
-  const [isDark, setIsDark] = useState(false);
+export default function PhonePoster({ opacity = 1 }: { opacity?: number }) {
+  const [isDark, setIsDark] = useState(readPageIsDark);
 
   useEffect(() => {
-    const read = () => setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+    const read = () => setIsDark(readPageIsDark());
     read();
     const mo = new MutationObserver(read);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
@@ -20,30 +25,23 @@ export default function PhonePoster({ style }: { style?: React.CSSProperties }) 
   }, []);
 
   const frameSrc = isDark ? "/phonemockup-dark.webp" : "/phonemockup-light.webp";
-  const phoneScale = 1;
 
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        maxWidth: REF_W,
-        height: REF_W * (REF_H / REF_W),
-        margin: "0 auto",
-        ...style,
+        position: "absolute",
+        inset: 0,
+        zIndex: 2,
+        pointerEvents: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--color-phone-bg)",
+        opacity,
+        transition: `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          width: PHONE_W,
-          height: PHONE_H,
-          transform: `translate(-50%, -50%) scale(${phoneScale})`,
-          transformOrigin: "center center",
-        }}
-      >
+      <div style={{ position: "relative", width: PHONE_W, height: PHONE_H, flexShrink: 0 }}>
         <div
           style={{
             position: "absolute",

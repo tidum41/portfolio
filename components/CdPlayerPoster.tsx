@@ -1,25 +1,56 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+
+const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
+
+function readPageIsDark() {
+  return typeof document !== "undefined"
+    && document.documentElement.getAttribute("data-theme") === "dark";
+}
 
 /** Static grid-tile stand-in while the live CDPlayer is portaled into the modal. */
-export default function CdPlayerPoster() {
+export default function CdPlayerPoster({ opacity = 1 }: { opacity?: number }) {
+  const [isDark, setIsDark] = useState(readPageIsDark);
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
-    return <div style={{ width: "100%", height: "100%", background: "var(--color-modal-bg)" }} />;
-  }
+  useEffect(() => {
+    const read = () => setIsDark(readPageIsDark());
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+
+  const src = isDark
+    ? "/images/cd-player-poster-dark.webp"
+    : "/images/cd-player-poster-light.webp";
 
   return (
-    <Image
-      src="/images/cd-player-poster.webp"
-      alt=""
-      fill
-      sizes="(max-width: 768px) 100vw, 50vw"
-      style={{ objectFit: "cover" }}
-      onError={() => setFailed(true)}
-      priority={false}
-    />
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 2,
+        pointerEvents: "none",
+        background: "var(--color-modal-bg)",
+        opacity,
+        transition: `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
+      }}
+    >
+      {!failed && (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          style={{ objectFit: "cover" }}
+          onError={() => setFailed(true)}
+          priority={false}
+        />
+      )}
+    </div>
   );
 }
