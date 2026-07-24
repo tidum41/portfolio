@@ -241,9 +241,20 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   });
   cursorEl.appendChild(textSpan);
 
-  // Arrow icon — SVG northeast arrow, fades in with text.
+  // Arrow icon — SVG northeast arrow, fades in with text. Swapped for a
+  // Phosphor "ListMagnifyingGlass" glyph specifically for the "View Case
+  // Study" pill — see morphToPill below — since that pill means "look
+  // closer," not "leave the page," which the arrow implies for every other
+  // label (try demo!, open, click around!).
   // Explicit width/height + translateZ(0) pins it to its own compositor layer
   // so opacity transitions never cause a sub-pixel position jitter.
+  const ARROW_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
+  // Phosphor's "ListMagnifyingGlass" icon, regular weight (256×256 source
+  // viewBox, fill-based rather than stroke-based — see
+  // @phosphor-icons/react/dist/defs/ListMagnifyingGlass for the source this
+  // was copied from; can't use the React component directly here since this
+  // whole cursor is built with imperative DOM, not JSX).
+  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,72h72a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm88,48H40a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16Zm109.66,13.66a8,8,0,0,1-11.32,0L206,177.36A40,40,0,1,1,217.36,166l20.3,20.3A8,8,0,0,1,237.66,197.66ZM184,168a24,24,0,1,0-24-24A24,24,0,0,0,184,168Z"/></svg>`;
   const arrowEl = document.createElement("span");
   Object.assign(arrowEl.style, {
     position: "relative", zIndex: "1",
@@ -258,7 +269,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lineHeight: "1",
     transform: "translateZ(0)",
   });
-  arrowEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
+  arrowEl.innerHTML = ARROW_ICON_SVG;
   cursorEl.appendChild(arrowEl);
 
   const mouse = {
@@ -312,6 +323,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // Always restore arrow to flow first — handles switching from a timed pill
     // (where it was display:none) to a non-timed one without leaving it hidden.
     arrowEl.style.display     = "";
+    arrowEl.innerHTML         = label === "View Case Study" ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
     textSpan.textContent      = label;
     textSpan.style.transition = "none";
     textSpan.style.opacity    = "0";

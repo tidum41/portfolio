@@ -82,7 +82,7 @@ export default function AboutPage() {
               lineHeight: 1.2,
               letterSpacing: "-0.8px",
               color: "var(--color-text-primary)",
-              margin: "0 0 8px",
+              margin: "0 0 4px",
             }}>hello hello, i&apos;m mudit</h1>
           </EntranceItem>
 
@@ -101,7 +101,7 @@ export default function AboutPage() {
               lineHeight: 1.6,
               letterSpacing: "0.1px",
               color: "var(--color-text-secondary)",
-              margin: "0 0 16px",
+              margin: "0 0 32px",
             }}>
               I&apos;m a designer because I love connecting people through thoughtful interactions. I grew up on
               the internet, shaped by communities and rabbit holes that taught me thoughtful craft turns
@@ -115,8 +115,8 @@ export default function AboutPage() {
               fontSize: 15,
               lineHeight: 1.6,
               color: "var(--color-text-secondary)",
-              margin: "0 0 8px",
-            }}>When I&apos;m not building, I&apos;m</p>
+              margin: "0 0 4px",
+            }}>You can find me</p>
           </EntranceItem>
 
           <EntranceItem>
@@ -138,7 +138,7 @@ export default function AboutPage() {
         </div>
 
         <div className="about-hero-bento-col">
-          <EntranceItem style={{ marginBottom: 10 }}>
+          <EntranceItem style={{ marginBottom: 5 }}>
             <BentoHero
               featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
               top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}

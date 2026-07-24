@@ -7,6 +7,7 @@ export default function InteractiveBadge() {
 
   return (
     <motion.div
+      className="interactive-badge"
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, margin: "-20px" }}
@@ -17,7 +18,11 @@ export default function InteractiveBadge() {
         gap: 4,
         padding: "8px 12px",
         background: "var(--color-badge-bg)",
-        border: "1px solid var(--color-border-subtle)",
+        // Neutral grey border (see .interactive-badge in globals.css for the
+        // light/dark values) — lighter than --color-border-subtle so it
+        // still reads as "interactive," without leaning on an accent color.
+        borderWidth: 1,
+        borderStyle: "solid",
         borderRadius: 12,
         boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
         color: "var(--color-text-card-sub)",

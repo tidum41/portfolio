@@ -189,6 +189,14 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   // project-card hover) can pass them without a TS error.
   whileHover?: TargetAndTransition;
   transition?: Transition;
+  // Widened further for callers that make the whole item a click/keyboard
+  // target (e.g. the CD Player / Habit Tracker grid tiles opening a popup)
+  // rather than a plain link.
+  role?: string;
+  tabIndex?: number;
+  "aria-label"?: string;
+  onClick?: (e: React.MouseEvent) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   [key: `data-${string}`]: unknown;
 }) {
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));

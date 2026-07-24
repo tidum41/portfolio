@@ -1243,8 +1243,15 @@ export default function BentoGallery({
                                                 display: "inline-flex",
                                                 color: "inherit",
                                                 pointerEvents: "auto",
+                                                position: "relative",
                                             }}
                                         >
+                                            {/* The glyph itself is 10x10 — too small a target to
+                                                reliably hit precisely, especially next to the
+                                                cell's own much larger click-to-zoom area. Same
+                                                invisible-hit-area-expansion convention used
+                                                elsewhere on the site (see app/globals.css). */}
+                                            <span style={{ position: "absolute", inset: -10 }} />
                                             <LinkIcon />
                                         </a>
                                     )}

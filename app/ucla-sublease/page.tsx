@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
+import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
@@ -108,10 +108,10 @@ function Body({ children, style }: { children: React.ReactNode; style?: React.CS
 
 // Colors that sit next to the lilac accent (#9590C2) without competing with it —
 // rose for stress, teal for trust, soft amber for outreach across platforms.
-const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>; color: string }> = {
-  "75%": { Icon: Frown,          color: "#C4899A" }, // dusty rose — stress / frustration
-  "83%": { Icon: BadgeCheck,     color: "#6FA8A0" }, // soft teal  — trust / safety
-  "70%": { Icon: MessagesSquare, color: "#C4A878" }, // soft amber — multi-platform outreach
+const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; weight?: "thin" | "light" | "regular" | "bold" | "fill" | "duotone"; "aria-hidden"?: boolean }>; color: string }> = {
+  "75%": { Icon: SmileySad, color: "#C4899A" }, // dusty rose — stress / frustration
+  "83%": { Icon: SealCheck, color: "#6FA8A0" }, // soft teal  — trust / safety
+  "70%": { Icon: Chats,     color: "#C4A878" }, // soft amber — multi-platform outreach
 };
 
 function Stat({ value, label }: { value: string; label: string }) {
@@ -122,7 +122,7 @@ function Stat({ value, label }: { value: string; label: string }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Icon && (
           <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
-            <Icon size={28} strokeWidth={1.5} aria-hidden={true} />
+            <Icon size={28} weight="light" aria-hidden={true} />
           </span>
         )}
         <p style={{

@@ -12,6 +12,7 @@ import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "@/components/cardHover";
+import ProjectPopup from "@/components/ProjectPopup";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -38,8 +39,21 @@ const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
+// Northeast arrow, same shape GlobalCustomCursor's own pill icon uses by
+// default (see components/GlobalCustomCursor.tsx's ARROW_ICON_SVG) — one
+// canonical "there's more here" glyph reused site-wide rather than a
+// second, different icon. Sized proportionate to CardLabel's 18px title.
+function OpensInPopupIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }}>
+      <line x1="2" y1="10" x2="10" y2="2" />
+      <polyline points="4,2 10,2 10,8" />
+    </svg>
+  );
+}
+
 // ─── Card label ────────────────────────────────────────────────────────
-function CardLabel({ title, sub }: { title: string; sub?: string }) {
+function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string; showPopupIcon?: boolean }) {
   return (
     <div style={{ padding: 0 }}>
       <p style={{
@@ -49,7 +63,13 @@ function CardLabel({ title, sub }: { title: string; sub?: string }) {
         lineHeight: 1.4,
         color: "var(--color-text-primary)",
         margin: 0,
-      }}>{title}</p>
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}>
+        {title}
+        {showPopupIcon && <OpensInPopupIcon />}
+      </p>
       {sub && (
         <p style={{
           fontFamily: "var(--font-sans)",
@@ -63,6 +83,15 @@ function CardLabel({ title, sub }: { title: string; sub?: string }) {
       )}
     </div>
   );
+}
+
+// External-demo tiles (no in-house case study, e.g. project-todolist) get
+// the same custom-cursor hover-label affordance as real case studies, so
+// hovering signals "this leaves the site" before the click does.
+function cursorLabelAttrs(p: SanityProject): { "data-cursor-label"?: string } {
+  if (p.caseStudy) return { "data-cursor-label": "View Case Study" };
+  if (p._id === "project-todolist") return { "data-cursor-label": "try demo!" };
+  return {};
 }
 
 /** Mounted once, unconditionally, by the root layout — never unmounts across
@@ -91,6 +120,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const isWorkRoute = pathname === "/";
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
+  // Which "play with it in a popup" tile is currently expanded, if any. The
+  // grid's own inline CDPlayer/PhoneEmbed unmounts while its popup is open
+  // (see the `openPopup !== "..."` guards below) rather than rendering a
+  // second concurrent iframe — critical for CDPlayer specifically, since two
+  // live instances would mean two overlapping audio sources.
+  const [openPopup, setOpenPopup] = useState<null | "cd" | "habit">(null);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -314,7 +349,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...cursorLabelAttrs(p)}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -328,7 +363,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...cursorLabelAttrs(p)}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                       <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                         <Image
@@ -346,17 +381,47 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : null;
               })}
 
-            {/* CDPlayer — always in left column after Sanity projects */}
-            <EntranceItem active={gridActive} instant={instant} delay={rankDelay(projects.length)} data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3" }}>
-                {hasEverBeenActive && <CDPlayer dialKitKey="CDPlayerWork" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
+            {/* CDPlayer — always in left column after Sanity projects. No
+                longer directly interactive in-grid: the whole card opens the
+                popup on click, where the real drag-to-play interaction
+                lives. The grid instance stays mounted (pointer-events: none)
+                purely as a visual preview — never unmounted, so the tile
+                never looks like it lost content — but can't itself receive
+                input, so there's no double-audio risk from two interactive
+                copies. */}
+            <EntranceItem
+              active={gridActive}
+              instant={instant}
+              delay={rankDelay(projects.length)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open Drag a CD in a larger view"
+              data-cursor-label="open"
+              onClick={() => setOpenPopup("cd")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenPopup("cd"); } }}
+              style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
+            >
+              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
+                <div style={{ pointerEvents: "none" }}>
+                  {hasEverBeenActive && <CDPlayer dialKitKey="CDPlayerWork" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
+                </div>
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
               </div>
-              <CardLabel title="Drag a CD" sub="exploration" />
+              <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
             </EntranceItem>
           </div>
+
+          {/* Wider than the default 560px — this and the CD player's own
+              aspect ratio (1296:1080) are what "fill more of the viewport"
+              in practice; the panel's own 85vh cap plus overflowY:auto
+              remain the safety net on short viewports. */}
+          <ProjectPopup open={openPopup === "cd"} onClose={() => setOpenPopup(null)} title="Drag a CD" sub="exploration" maxWidth={800} panelBg="var(--color-modal-bg)">
+            <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
+              {openPopup === "cd" && <CDPlayer dialKitKey="CDPlayerPopup" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
+            </div>
+          </ProjectPopup>
 
           {/* ── Right column ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: 48, minWidth: 0 }}>
@@ -365,7 +430,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...cursorLabelAttrs(p)}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -379,7 +444,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...cursorLabelAttrs(p)}>
                     <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                       <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                         <Image
@@ -397,24 +462,60 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : null;
               })}
 
-            {/* Habit tracker — phone embed */}
-            <EntranceItem active={gridActive} instant={instant} delay={rankDelay(projects.length + 1)} data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {/* Habit tracker — phone embed. Same "whole card opens the
+                popup, grid copy is a non-interactive preview" treatment as
+                the CD player above. */}
+            <EntranceItem
+              active={gridActive}
+              instant={instant}
+              delay={rankDelay(projects.length + 1)}
+              role="button"
+              tabIndex={0}
+              aria-label="Open Dumb Habit Tracker in a larger view"
+              data-cursor-label="open"
+              onClick={() => setOpenPopup("habit")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenPopup("habit"); } }}
+              style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
+            >
               <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative" }}>
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                {hasEverBeenActive && (
-                  <PhoneEmbed
-                    url="https://sprightly-stroopwafel-8f1061.netlify.app/"
-                    title="Dumb Habit Tracker interactive preview"
-                    frameSrcLight="/phonemockup-light.webp"
-                    frameSrcDark="/phonemockup-dark.webp"
-                  />
-                )}
+                <div style={{ pointerEvents: "none" }}>
+                  {hasEverBeenActive && (
+                    <PhoneEmbed
+                      url="https://sprightly-stroopwafel-8f1061.netlify.app/"
+                      title="Dumb Habit Tracker interactive preview"
+                      frameSrcLight="/phonemockup-light.webp"
+                      frameSrcDark="/phonemockup-dark.webp"
+                    />
+                  )}
+                </div>
               </div>
-              <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" />
+              <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
             </EntranceItem>
           </div>
+
+          {/* Narrower panel than the CD player's — the phone mockup is
+              tall/narrow, so a narrower panel lets it fill the same 20px
+              gutter edge-to-edge that the wider CD-player panel gets,
+              instead of floating in extra empty space. Sized up from the
+              original 300/260 pairing to actually fill more of the
+              viewport while staying comfortably under the panel's 85vh cap
+              (340px-wide phone → ~607px tall embed). */}
+          <ProjectPopup open={openPopup === "habit"} onClose={() => setOpenPopup(null)} title="Dumb Habit Tracker" sub="product design + frontend" maxWidth={380} panelBg="var(--color-phone-bg)">
+            <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", display: "flex", justifyContent: "center" }}>
+              {openPopup === "habit" && (
+                <PhoneEmbed
+                  url="https://sprightly-stroopwafel-8f1061.netlify.app/"
+                  title="Dumb Habit Tracker interactive preview"
+                  frameSrcLight="/phonemockup-light.webp"
+                  frameSrcDark="/phonemockup-dark.webp"
+                  style={{ maxWidth: 340 }}
+                />
+              )}
+            </div>
+          </ProjectPopup>
         </section>
 
         {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
