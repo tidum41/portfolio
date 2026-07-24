@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useMemo } from "react";
 import { useDialKit } from "dialkit";
+import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
 const REF_W  = 344;
 const REF_H  = 614;
@@ -9,6 +10,7 @@ const PHONE_W  = 280;
 const PHONE_H  = 580;
 const IFRAME_W = 394;
 const IFRAME_H = 844;
+const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
 interface Props {
   url?:            string;
@@ -17,6 +19,7 @@ interface Props {
   frameSrcDark?:   string;
   postMessageKey?: string;
   scale?:          number;
+  eager?:          boolean;
   style?:          React.CSSProperties;
 }
 
@@ -27,12 +30,14 @@ export default function PhoneEmbed({
   frameSrcDark,
   postMessageKey = "theme",
   scale          = 1,
+  eager          = false,
   style,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef    = useRef<HTMLIFrameElement>(null);
   const [containerWidth, setContainerWidth] = useState(REF_W * scale);
   const [isSrcReady, setIsSrcReady] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [pageIsDark, setPageIsDark] = useState(false);
   // Theme reported by the embedded site itself (via postMessage), once it's told us.
   // Falls back to the outer page's theme until then.
@@ -118,9 +123,13 @@ export default function PhoneEmbed({
     return () => ro.disconnect();
   }, [scaledRefW]);
 
-  // Lazy-load iframe on intersection
+  // Lazy-load iframe on intersection — skipped when eager.
   useEffect(() => {
     if (!url) return;
+    if (eager) {
+      setIsSrcReady(true);
+      return;
+    }
     const ready = () => setIsSrcReady(true);
     const t = setTimeout(ready, 300);
     const el = containerRef.current;
@@ -131,7 +140,11 @@ export default function PhoneEmbed({
     );
     obs.observe(el);
     return () => { clearTimeout(t); obs.disconnect(); };
-  }, [url]);
+  }, [url, eager]);
+
+  const onIframeLoad = () => {
+    requestAnimationFrame(() => setRevealed(true));
+  };
 
   const phoneScale   = containerWidth / REF_W;
   const intrinsicH   = containerWidth * (REF_H / REF_W);
@@ -169,6 +182,8 @@ export default function PhoneEmbed({
           left: `${dk.insetSide}%`, right: `${dk.insetSide}%`,
           borderRadius: `${dk.screenRadius}%`,
           overflow: "hidden", background: "#000",
+          opacity: revealed || !url ? 1 : 0,
+          transition: `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
         }}>
           {url ? (
             <>
@@ -176,6 +191,7 @@ export default function PhoneEmbed({
                 ref={iframeRef}
                 src={isSrcReady ? url : undefined}
                 title={title}
+                onLoad={onIframeLoad}
                 style={{
                   position: "absolute",
                   top: `${dk.iframeOffsetY}%`,

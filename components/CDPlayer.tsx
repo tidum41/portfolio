@@ -2,16 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
+import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
 const IFRAME_SRC = "https://cdplayer-peach.vercel.app/";
+const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
 export default function CDPlayer({
   style,
   dialKitKey = "CDPlayer",
   defaults,
+  eager = false,
 }: {
   style?: React.CSSProperties;
   dialKitKey?: string;
+  eager?: boolean;
   defaults?: {
     zoom?: number; offsetX?: number; offsetY?: number;
     cardW?: number; cardH?: number;
@@ -66,8 +70,13 @@ export default function CDPlayer({
     return () => { obs.disconnect(); window.removeEventListener("scroll", updateRect); };
   }, []);
 
-  // Lazy-load iframe until near viewport
+  // Lazy-load iframe until near viewport — skipped when eager (shell-level
+  // instance that should start loading immediately on first "/" visit).
   useEffect(() => {
+    if (eager) {
+      setReady(true);
+      return;
+    }
     const el = containerRef.current;
     if (!el) return;
     const fallback = setTimeout(() => setReady(true), 1500);
@@ -77,7 +86,7 @@ export default function CDPlayer({
     );
     obs.observe(el);
     return () => { obs.disconnect(); clearTimeout(fallback); };
-  }, []);
+  }, [eager]);
 
   const isDarkNow = () => document.documentElement.getAttribute("data-theme") === "dark";
 
@@ -121,14 +130,12 @@ export default function CDPlayer({
   }, [ready]);
 
   // Defensive fallback for whenever the URL param isn't honored (or the
-  // embedded app doesn't support it): stay invisible for one short beat
-  // after load so the first postMessage retry (50ms) has landed and
-  // repainted before we reveal — turns a possible wrong-theme flash into a
-  // deliberate, intentional fade-in instead. No-ops (feels instant) whenever
-  // the URL param already got it right on the first frame.
+  // embedded app doesn't support it): one rAF beat after load lets the
+  // first postMessage retry land before we reveal — turns a possible
+  // wrong-theme flash into a deliberate fade-in instead.
   const onIframeLoad = () => {
     sendTheme();
-    setTimeout(() => setRevealed(true), 120);
+    requestAnimationFrame(() => setRevealed(true));
   };
 
   // s = how many screen-pixels per design-canvas pixel
@@ -175,7 +182,7 @@ export default function CDPlayer({
           transformOrigin: "center center",
           flexShrink:      0,
           opacity:         revealed ? 1 : 0,
-          transition:      "opacity 180ms ease",
+          transition:      `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
         }}
       >
         <iframe

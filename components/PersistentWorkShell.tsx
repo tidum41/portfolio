@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
@@ -38,6 +39,13 @@ const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
+
+type PopupId = "cd" | "habit";
+
+function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
+  if (!container) return null;
+  return createPortal(children, container);
+}
 
 // Northeast arrow, same shape GlobalCustomCursor's own pill icon uses by
 // default (see components/GlobalCustomCursor.tsx's ARROW_ICON_SVG) — one
@@ -120,12 +128,17 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const isWorkRoute = pathname === "/";
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
-  // Which "play with it in a popup" tile is currently expanded, if any. The
-  // grid's own inline CDPlayer/PhoneEmbed unmounts while its popup is open
-  // (see the `openPopup !== "..."` guards below) rather than rendering a
-  // second concurrent iframe — critical for CDPlayer specifically, since two
-  // live instances would mean two overlapping audio sources.
-  const [openPopup, setOpenPopup] = useState<null | "cd" | "habit">(null);
+  // Which embed's popup is active, and whether the modal is visibly open.
+  // openPopup stays set through the exit animation so the single portaled
+  // iframe doesn't unmount until onExitComplete fires.
+  const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
+  const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
+  const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
+  const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
+  const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
+  const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -285,6 +298,38 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     : dk.stagger;
   const rankDelay = (rank: number) => rank * perItemStagger;
 
+  const openPopupHandler = (id: PopupId) => {
+    setOpenPopup(id);
+    setPopupVisible(true);
+  };
+
+  const closePopup = () => setPopupVisible(false);
+
+  const handlePopupExitComplete = (id: PopupId) => {
+    setOpenPopup((prev) => (prev === id ? null : prev));
+  };
+
+  // Switch portal targets only once the destination slot exists — avoids a
+  // frame where the embed unmounts because the popup ref isn't attached yet.
+  useLayoutEffect(() => {
+    if (openPopup === "cd" && popupCdEl) {
+      setCdPortalTarget(popupCdEl);
+    } else if (gridCdEl) {
+      setCdPortalTarget(gridCdEl);
+    }
+  }, [openPopup, popupCdEl, gridCdEl]);
+
+  useLayoutEffect(() => {
+    if (openPopup === "habit" && popupHabitEl) {
+      setHabitPortalTarget(popupHabitEl);
+    } else if (gridHabitEl) {
+      setHabitPortalTarget(gridHabitEl);
+    }
+  }, [openPopup, popupHabitEl, gridHabitEl]);
+
+  const cdDefaults = { zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 } as const;
+  const habitUrl = "https://sprightly-stroopwafel-8f1061.netlify.app/";
+
   return (
     <div
       style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)" }}
@@ -381,14 +426,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : null;
               })}
 
-            {/* CDPlayer — always in left column after Sanity projects. No
-                longer directly interactive in-grid: the whole card opens the
-                popup on click, where the real drag-to-play interaction
-                lives. The grid instance stays mounted (pointer-events: none)
-                purely as a visual preview — never unmounted, so the tile
-                never looks like it lost content — but can't itself receive
-                input, so there's no double-audio risk from two interactive
-                copies. */}
+            {/* CDPlayer — whole card opens the popup; one live instance is
+                portaled between this grid slot and the modal (see below). */}
             <EntranceItem
               active={gridActive}
               instant={instant}
@@ -397,14 +436,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               tabIndex={0}
               aria-label="Open Drag a CD in a larger view"
               data-cursor-label="open"
-              onClick={() => setOpenPopup("cd")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenPopup("cd"); } }}
+              onClick={() => openPopupHandler("cd")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
               <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                <div style={{ pointerEvents: "none" }}>
-                  {hasEverBeenActive && <CDPlayer dialKitKey="CDPlayerWork" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
-                </div>
+                <div ref={setGridCdEl} style={{ pointerEvents: "none", width: "100%", height: "100%" }} />
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
@@ -413,15 +450,21 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             </EntranceItem>
           </div>
 
-          {/* Wider than the default 560px — this and the CD player's own
-              aspect ratio (1296:1080) are what "fill more of the viewport"
-              in practice; the panel's own 85vh cap plus overflowY:auto
-              remain the safety net on short viewports. */}
-          <ProjectPopup open={openPopup === "cd"} onClose={() => setOpenPopup(null)} title="Drag a CD" sub="exploration" maxWidth={800} panelBg="var(--color-modal-bg)">
-            <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-              {openPopup === "cd" && <CDPlayer dialKitKey="CDPlayerPopup" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
-            </div>
-          </ProjectPopup>
+          {openPopup === "cd" && (
+            <ProjectPopup
+              open={popupVisible}
+              onClose={closePopup}
+              onExitComplete={() => handlePopupExitComplete("cd")}
+              title="Drag a CD"
+              sub="exploration"
+              maxWidth={800}
+              panelBg="var(--color-modal-bg)"
+            >
+              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
+                <div ref={setPopupCdEl} style={{ width: "100%", height: "100%" }} />
+              </div>
+            </ProjectPopup>
+          )}
 
           {/* ── Right column ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: 48, minWidth: 0 }}>
@@ -462,9 +505,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : null;
               })}
 
-            {/* Habit tracker — phone embed. Same "whole card opens the
-                popup, grid copy is a non-interactive preview" treatment as
-                the CD player above. */}
+            {/* Habit tracker — same single-instance portal treatment as CD. */}
             <EntranceItem
               active={gridActive}
               instant={instant}
@@ -473,53 +514,57 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               tabIndex={0}
               aria-label="Open Dumb Habit Tracker in a larger view"
               data-cursor-label="open"
-              onClick={() => setOpenPopup("habit")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenPopup("habit"); } }}
+              onClick={() => openPopupHandler("habit")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
               <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative" }}>
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                <div style={{ pointerEvents: "none" }}>
-                  {hasEverBeenActive && (
-                    <PhoneEmbed
-                      url="https://sprightly-stroopwafel-8f1061.netlify.app/"
-                      title="Dumb Habit Tracker interactive preview"
-                      frameSrcLight="/phonemockup-light.webp"
-                      frameSrcDark="/phonemockup-dark.webp"
-                    />
-                  )}
-                </div>
+                <div ref={setGridHabitEl} style={{ pointerEvents: "none", width: "100%" }} />
               </div>
               <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
             </EntranceItem>
           </div>
 
-          {/* Narrower panel than the CD player's — the phone mockup is
-              tall/narrow, so a narrower panel lets it fill the same 20px
-              gutter edge-to-edge that the wider CD-player panel gets,
-              instead of floating in extra empty space. Sized up from the
-              original 300/260 pairing to actually fill more of the
-              viewport while staying comfortably under the panel's 85vh cap
-              (340px-wide phone → ~607px tall embed). */}
-          <ProjectPopup open={openPopup === "habit"} onClose={() => setOpenPopup(null)} title="Dumb Habit Tracker" sub="product design + frontend" maxWidth={380} panelBg="var(--color-phone-bg)">
-            <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", display: "flex", justifyContent: "center" }}>
-              {openPopup === "habit" && (
-                <PhoneEmbed
-                  url="https://sprightly-stroopwafel-8f1061.netlify.app/"
-                  title="Dumb Habit Tracker interactive preview"
-                  frameSrcLight="/phonemockup-light.webp"
-                  frameSrcDark="/phonemockup-dark.webp"
-                  style={{ maxWidth: 340 }}
-                />
-              )}
-            </div>
-          </ProjectPopup>
+          {openPopup === "habit" && (
+            <ProjectPopup
+              open={popupVisible}
+              onClose={closePopup}
+              onExitComplete={() => handlePopupExitComplete("habit")}
+              title="Dumb Habit Tracker"
+              sub="product design + frontend"
+              maxWidth={380}
+              panelBg="var(--color-phone-bg)"
+            >
+              <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", display: "flex", justifyContent: "center" }}>
+                <div ref={setPopupHabitEl} style={{ width: "100%", maxWidth: 340 }} />
+              </div>
+            </ProjectPopup>
+          )}
         </section>
 
         {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
       </div>
+
+      {hasEverBeenActive && (
+        <>
+          <EmbedPortal container={cdPortalTarget}>
+            <CDPlayer dialKitKey="CDPlayerWork" eager defaults={cdDefaults} />
+          </EmbedPortal>
+          <EmbedPortal container={habitPortalTarget}>
+            <PhoneEmbed
+              eager
+              url={habitUrl}
+              title="Dumb Habit Tracker interactive preview"
+              frameSrcLight="/phonemockup-light.webp"
+              frameSrcDark="/phonemockup-dark.webp"
+              style={openPopup === "habit" ? { maxWidth: 340 } : undefined}
+            />
+          </EmbedPortal>
+        </>
+      )}
     </div>
   );
 }
