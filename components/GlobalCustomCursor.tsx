@@ -242,19 +242,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   cursorEl.appendChild(textSpan);
 
   // Arrow icon — SVG northeast arrow, fades in with text. Swapped for a
-  // Phosphor "ListMagnifyingGlass" glyph specifically for the "View Case
-  // Study" pill — see morphToPill below — since that pill means "look
-  // closer," not "leave the page," which the arrow implies for every other
-  // label (try demo!, open, click around!).
-  // Explicit width/height + translateZ(0) pins it to its own compositor layer
-  // so opacity transitions never cause a sub-pixel position jitter.
+  // Phosphor "MagnifyingGlass" glyph specifically for the "View Case Study"
+  // pill — see morphToPill below — since that pill means "look closer," not
+  // "leave the page," which the arrow implies for every other label.
   const ARROW_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
-  // Phosphor's "ListMagnifyingGlass" icon, regular weight (256×256 source
-  // viewBox, fill-based rather than stroke-based — see
-  // @phosphor-icons/react/dist/defs/ListMagnifyingGlass for the source this
-  // was copied from; can't use the React component directly here since this
-  // whole cursor is built with imperative DOM, not JSX).
-  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,72h72a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm88,48H40a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16Zm109.66,13.66a8,8,0,0,1-11.32,0L206,177.36A40,40,0,1,1,217.36,166l20.3,20.3A8,8,0,0,1,237.66,197.66ZM184,168a24,24,0,1,0-24-24A24,24,0,0,0,184,168Z"/></svg>`;
+  // Phosphor "MagnifyingGlass" regular weight (256×256 viewBox, fill-based).
+  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>`;
   const arrowEl = document.createElement("span");
   Object.assign(arrowEl.style, {
     position: "relative", zIndex: "1",
@@ -285,6 +278,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let gpuPromoted = false, lastPosWrite = 0;
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
+  let pillNoIcon = false;
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
@@ -322,8 +316,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
     // Always restore arrow to flow first — handles switching from a timed pill
     // (where it was display:none) to a non-timed one without leaving it hidden.
-    arrowEl.style.display     = "";
-    arrowEl.innerHTML         = label === "View Case Study" ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
+    const hideIcon = pillIsTimed || pillNoIcon;
+    arrowEl.style.display     = hideIcon ? "none" : "";
+    if (!hideIcon) {
+      arrowEl.innerHTML       = label === "View Case Study" ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
+    }
     textSpan.textContent      = label;
     textSpan.style.transition = "none";
     textSpan.style.opacity    = "0";
@@ -340,13 +337,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
     const fillEffect = cfg.fillEffect ?? "solid";
 
-    const pillPad = pillIsTimed ? "0 12px" : "0 10px 0 12px";
-    // For timed pills (no arrow), remove the arrow from layout during
+    const pillPad = (pillIsTimed || pillNoIcon) ? "0 12px" : "0 10px 0 12px";
+    // For timed / no-icon pills, remove the arrow from layout during
     // measurement so max-content doesn't include its invisible width + gap.
-    // Hide arrow from layout for timed pills — keeps it out of max-content
-    // measurement AND out of the flex flow during the expanded state so the
-    // text stays optically centered. Restored in morphToRest.
-    if (pillIsTimed) arrowEl.style.display = "none";
+    if (pillIsTimed || pillNoIcon) arrowEl.style.display = "none";
     cursorEl.style.transition = "none";
     cursorEl.style.padding    = pillPad;
     cursorEl.style.height     = `${ph}px`;
@@ -421,7 +415,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         textSpan.style.transform  = `translate(${c.textOffsetX ?? 0}px,${c.textOffsetY ?? 0}px)`;
         textSpan.style.transition = `opacity ${scaledFade}ms ease`;
         textSpan.style.opacity    = "1";
-        if (!pillIsTimed) {
+        if (!pillIsTimed && !pillNoIcon) {
           arrowEl.style.transition  = `opacity ${scaledFade}ms ease`;
           arrowEl.style.opacity     = "1";
         }
@@ -715,6 +709,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       pillLabel    = newLabel;
       isPill       = !!newLabel;
       pillIsTimed  = newLabel ? (labelEl?.hasAttribute("data-cursor-timed") ?? false) : false;
+      pillNoIcon   = newLabel ? (labelEl?.hasAttribute("data-cursor-no-icon") ?? false) : false;
       clearTimeout(timedPillTimeout);
       if (newLabel && pillIsTimed) {
         timedPillTimeout = window.setTimeout(() => {

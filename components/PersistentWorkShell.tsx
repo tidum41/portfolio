@@ -14,6 +14,9 @@ import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "@/components/cardHover";
 import ProjectPopup from "@/components/ProjectPopup";
+import CdPlayerPoster from "@/components/CdPlayerPoster";
+import PhonePoster from "@/components/PhonePoster";
+import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -47,17 +50,9 @@ function EmbedPortal({ container, children }: { container: HTMLDivElement | null
   return createPortal(children, container);
 }
 
-// Northeast arrow, same shape GlobalCustomCursor's own pill icon uses by
-// default (see components/GlobalCustomCursor.tsx's ARROW_ICON_SVG) — one
-// canonical "there's more here" glyph reused site-wide rather than a
-// second, different icon. Sized proportionate to CardLabel's 18px title.
+// Northeast arrow — shared with MuxAutoplayCard external-link titles.
 function OpensInPopupIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }}>
-      <line x1="2" y1="10" x2="10" y2="2" />
-      <polyline points="4,2 10,2 10,8" />
-    </svg>
-  );
+  return <NortheastArrow size={13} />;
 }
 
 // ─── Card label ────────────────────────────────────────────────────────
@@ -96,9 +91,9 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
 // External-demo tiles (no in-house case study, e.g. project-todolist) get
 // the same custom-cursor hover-label affordance as real case studies, so
 // hovering signals "this leaves the site" before the click does.
-function cursorLabelAttrs(p: SanityProject): { "data-cursor-label"?: string } {
+function cursorLabelAttrs(p: SanityProject): Record<string, string | undefined> {
   if (p.caseStudy) return { "data-cursor-label": "View Case Study" };
-  if (p._id === "project-todolist") return { "data-cursor-label": "try demo!" };
+  if (p._id === "project-todolist") return { "data-cursor-label": "try demo!", "data-cursor-no-icon": "" };
   return {};
 }
 
@@ -135,8 +130,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const [popupVisible, setPopupVisible] = useState(false);
   const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
+  const [warmCdEl, setWarmCdEl] = useState<HTMLDivElement | null>(null);
   const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
+  const [warmHabitEl, setWarmHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
   const scrollYRef = useRef(0);
@@ -309,23 +306,27 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     setOpenPopup((prev) => (prev === id ? null : prev));
   };
 
-  // Switch portal targets only once the destination slot exists — avoids a
-  // frame where the embed unmounts because the popup ref isn't attached yet.
+  // Portal to popup only while visibly open; return to grid immediately on
+  // close so the embed is back under the poster before the exit animation ends.
   useLayoutEffect(() => {
-    if (openPopup === "cd" && popupCdEl) {
+    if (openPopup === "cd" && popupVisible && popupCdEl) {
       setCdPortalTarget(popupCdEl);
     } else if (gridCdEl) {
       setCdPortalTarget(gridCdEl);
+    } else if (warmCdEl) {
+      setCdPortalTarget(warmCdEl);
     }
-  }, [openPopup, popupCdEl, gridCdEl]);
+  }, [openPopup, popupVisible, popupCdEl, gridCdEl, warmCdEl]);
 
   useLayoutEffect(() => {
-    if (openPopup === "habit" && popupHabitEl) {
+    if (openPopup === "habit" && popupVisible && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
     } else if (gridHabitEl) {
       setHabitPortalTarget(gridHabitEl);
+    } else if (warmHabitEl) {
+      setHabitPortalTarget(warmHabitEl);
     }
-  }, [openPopup, popupHabitEl, gridHabitEl]);
+  }, [openPopup, popupVisible, popupHabitEl, gridHabitEl, warmHabitEl]);
 
   const cdDefaults = { zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 } as const;
   const habitUrl = "https://sprightly-stroopwafel-8f1061.netlify.app/";
@@ -404,6 +405,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
                         hoverScale={p._id !== "project-todolist"}
+                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -436,12 +438,34 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               tabIndex={0}
               aria-label="Open Drag a CD in a larger view"
               data-cursor-label="open"
+              data-cursor-no-icon=""
               onClick={() => openPopupHandler("cd")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
               <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                <div ref={setGridCdEl} style={{ pointerEvents: "none", width: "100%", height: "100%" }} />
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 2,
+                    opacity: openPopup === "cd" ? 1 : 0,
+                    pointerEvents: "none",
+                    transition: "opacity 0ms",
+                  }}
+                >
+                  <CdPlayerPoster />
+                </div>
+                <div
+                  ref={setGridCdEl}
+                  style={{
+                    pointerEvents: "none",
+                    width: "100%",
+                    height: "100%",
+                    visibility: openPopup === "cd" ? "hidden" : "visible",
+                  }}
+                />
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
@@ -483,6 +507,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
                         hoverScale={p._id !== "project-todolist"}
+                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -514,6 +539,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               tabIndex={0}
               aria-label="Open Dumb Habit Tracker in a larger view"
               data-cursor-label="open"
+              data-cursor-no-icon=""
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
@@ -522,7 +548,26 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                <div ref={setGridHabitEl} style={{ pointerEvents: "none", width: "100%" }} />
+                <div
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 2,
+                    opacity: openPopup === "habit" ? 1 : 0,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <PhonePoster />
+                </div>
+                <div
+                  ref={setGridHabitEl}
+                  style={{
+                    pointerEvents: "none",
+                    width: "100%",
+                    visibility: openPopup === "habit" ? "hidden" : "visible",
+                  }}
+                />
               </div>
               <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
             </EntranceItem>
@@ -550,6 +595,32 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
       {hasEverBeenActive && (
         <>
+          {/* Offscreen warm slots — popup-sized preload before grid refs exist. */}
+          <div
+            ref={setWarmCdEl}
+            aria-hidden
+            style={{
+              position: "fixed",
+              left: -10000,
+              top: 0,
+              width: 800,
+              aspectRatio: "4 / 3",
+              visibility: "hidden",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            ref={setWarmHabitEl}
+            aria-hidden
+            style={{
+              position: "fixed",
+              left: -10000,
+              top: 0,
+              width: 340,
+              visibility: "hidden",
+              pointerEvents: "none",
+            }}
+          />
           <EmbedPortal container={cdPortalTarget}>
             <CDPlayer dialKitKey="CDPlayerWork" eager defaults={cdDefaults} />
           </EmbedPortal>

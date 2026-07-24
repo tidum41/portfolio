@@ -38,6 +38,7 @@ export default function PhoneEmbed({
   const [containerWidth, setContainerWidth] = useState(REF_W * scale);
   const [isSrcReady, setIsSrcReady] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
   const [pageIsDark, setPageIsDark] = useState(false);
   // Theme reported by the embedded site itself (via postMessage), once it's told us.
   // Falls back to the outer page's theme until then.
@@ -143,8 +144,15 @@ export default function PhoneEmbed({
   }, [url, eager]);
 
   const onIframeLoad = () => {
+    if (hasLoadedOnceRef.current) {
+      setRevealed(true);
+      return;
+    }
+    hasLoadedOnceRef.current = true;
     requestAnimationFrame(() => setRevealed(true));
   };
+
+  const showScreen = revealed || hasLoadedOnceRef.current || !url;
 
   const phoneScale   = containerWidth / REF_W;
   const intrinsicH   = containerWidth * (REF_H / REF_W);
@@ -182,8 +190,8 @@ export default function PhoneEmbed({
           left: `${dk.insetSide}%`, right: `${dk.insetSide}%`,
           borderRadius: `${dk.screenRadius}%`,
           overflow: "hidden", background: "#000",
-          opacity: revealed || !url ? 1 : 0,
-          transition: `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
+          opacity: showScreen ? 1 : 0,
+          transition: hasLoadedOnceRef.current ? "none" : `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
         }}>
           {url ? (
             <>
