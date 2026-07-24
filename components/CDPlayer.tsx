@@ -48,6 +48,10 @@ export default function CDPlayer({
   const [cw, setCw]           = useState(dk.canvasW);
   const [isTouch, setIsTouch] = useState(false);
   const [ready, setReady]     = useState(false);
+  // Hidden until we're confident the embedded app has applied the right
+  // theme — see the `src` / onLoad wiring below for why this can't just be
+  // "instant" from our side alone.
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => { setIsTouch(window.matchMedia("(hover: none)").matches); }, []);
 
@@ -75,20 +79,57 @@ export default function CDPlayer({
     return () => { obs.disconnect(); clearTimeout(fallback); };
   }, []);
 
+  const isDarkNow = () => document.documentElement.getAttribute("data-theme") === "dark";
+
   const sendTheme = () => {
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
     iframeRef.current?.contentWindow?.postMessage(
-      { type: "theme", value: isDark ? "dark" : "light" }, "*",
+      { type: "theme", value: isDarkNow() ? "dark" : "light" }, "*",
     );
   };
 
+  // Theme also travels as a `?theme=` query param on the iframe's initial
+  // src — if the embedded app reads it at boot (same origin app, built
+  // alongside this one), it can paint the right theme on its very first
+  // frame instead of waiting for postMessage at all. Computed once, at the
+  // moment we actually set `src`, from whatever the page's theme is right
+  // then — not before, so a theme toggle that happens while still loading
+  // isn't missed.
+  const initialThemeRef = useRef<"dark" | "light" | null>(null);
+  if (ready && initialThemeRef.current === null) {
+    initialThemeRef.current = isDarkNow() ? "dark" : "light";
+  }
+  const iframeSrc = ready ? `${IFRAME_SRC}?theme=${initialThemeRef.current}` : undefined;
+
+  // The iframe's own `load` event fires once its document is parsed, but the
+  // embedded app's JS (and its message listener) can still be initializing a
+  // beat later — a theme message sent exactly on `onLoad` can arrive before
+  // anything's listening and get silently dropped, leaving the popup's fresh
+  // instance stuck in the wrong theme until the next toggle. Re-send a few
+  // times over the following second to close that race without needing an
+  // ack protocol from the embedded app; harmless to send the same value
+  // more than once. The `?theme=` param above should make this a non-issue
+  // for the *initial* paint if the embedded app reads it; this remains the
+  // mechanism for live toggles while the popup is already open.
   useEffect(() => {
     if (!ready) return;
+    const retryDelays = [50, 200, 500, 1000];
+    const timers = retryDelays.map((ms) => setTimeout(sendTheme, ms));
     const mo = new MutationObserver(sendTheme);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => mo.disconnect();
+    return () => { timers.forEach(clearTimeout); mo.disconnect(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
+
+  // Defensive fallback for whenever the URL param isn't honored (or the
+  // embedded app doesn't support it): stay invisible for one short beat
+  // after load so the first postMessage retry (50ms) has landed and
+  // repainted before we reveal — turns a possible wrong-theme flash into a
+  // deliberate, intentional fade-in instead. No-ops (feels instant) whenever
+  // the URL param already got it right on the first frame.
+  const onIframeLoad = () => {
+    sendTheme();
+    setTimeout(() => setRevealed(true), 120);
+  };
 
   // s = how many screen-pixels per design-canvas pixel
   const s = (cw / dk.canvasW) * dk.zoom;
@@ -133,17 +174,19 @@ export default function CDPlayer({
           transform:       `scale(${s}) translate(${dk.offsetX}px, ${dk.offsetY}px)`,
           transformOrigin: "center center",
           flexShrink:      0,
+          opacity:         revealed ? 1 : 0,
+          transition:      "opacity 180ms ease",
         }}
       >
         <iframe
           ref={iframeRef}
-          src={ready ? IFRAME_SRC : undefined}
+          src={iframeSrc}
           width={dk.iframeW}
           height={dk.iframeH}
           style={{ border: "none", display: "block", pointerEvents: isTouch ? "auto" : "none" }}
           allow="autoplay"
           title="CD Player"
-          onLoad={sendTheme}
+          onLoad={onIframeLoad}
         />
       </div>
 
