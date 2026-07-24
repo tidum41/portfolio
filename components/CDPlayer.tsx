@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
 import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
@@ -120,8 +120,17 @@ export default function CDPlayer({
   // more than once. The `?theme=` param above should make this a non-issue
   // for the *initial* paint if the embedded app reads it; this remains the
   // mechanism for live toggles while the popup is already open.
+  useLayoutEffect(() => {
+    if (!ready) return;
+    sendTheme();
+  // Re-sync theme whenever the portal target resizes (grid ↔ popup) so the
+  // embed doesn't flash the wrong mode after a container width change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cw, ready]);
+
   useEffect(() => {
     if (!ready) return;
+    sendTheme();
     const retryDelays = [50, 200, 500, 1000];
     const timers = retryDelays.map((ms) => setTimeout(sendTheme, ms));
     const mo = new MutationObserver(sendTheme);

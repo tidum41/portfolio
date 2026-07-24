@@ -45,6 +45,8 @@ const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
 type PopupId = "cd" | "habit";
 
+const POPUP_EMBED_MAX_W = 800;
+
 function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
   if (!container) return null;
   return createPortal(children, container);
@@ -136,6 +138,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const [warmHabitEl, setWarmHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
+  const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -296,14 +300,21 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const rankDelay = (rank: number) => rank * perItemStagger;
 
   const openPopupHandler = (id: PopupId) => {
+    if (id === "cd") setCdPosterOpacity(1);
+    else setHabitPosterOpacity(1);
     setOpenPopup(id);
     setPopupVisible(true);
   };
 
-  const closePopup = () => setPopupVisible(false);
+  const closePopup = () => {
+    setPopupVisible(false);
+    // Crossfade poster out as the embed portals back to the grid slot.
+    if (openPopup === "cd") setCdPosterOpacity(0);
+    else if (openPopup === "habit") setHabitPosterOpacity(0);
+  };
 
   const handlePopupExitComplete = (id: PopupId) => {
-    setOpenPopup((prev) => (prev === id ? null : prev));
+    setOpenPopup(null);
   };
 
   // Portal to popup only while visibly open; return to grid immediately on
@@ -375,13 +386,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
-      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: 40 }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"
           style={{
             paddingTop: 48,
-            paddingBottom: 48,
+            paddingBottom: 96,
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
             gap: "var(--grid-gutter)",
@@ -444,26 +455,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
               <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    zIndex: 2,
-                    opacity: openPopup === "cd" ? 1 : 0,
-                    pointerEvents: "none",
-                    transition: "opacity 0ms",
-                  }}
-                >
-                  <CdPlayerPoster />
-                </div>
+                <CdPlayerPoster opacity={cdPosterOpacity} />
                 <div
                   ref={setGridCdEl}
                   style={{
+                    position: "absolute",
+                    inset: 0,
                     pointerEvents: "none",
-                    width: "100%",
-                    height: "100%",
-                    visibility: openPopup === "cd" ? "hidden" : "visible",
+                    visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
                   }}
                 />
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
@@ -481,11 +480,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               onExitComplete={() => handlePopupExitComplete("cd")}
               title="Drag a CD"
               sub="exploration"
-              maxWidth={800}
+              maxWidth={POPUP_EMBED_MAX_W}
               panelBg="var(--color-modal-bg)"
             >
               <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                <div ref={setPopupCdEl} style={{ width: "100%", height: "100%" }} />
+                <div ref={setPopupCdEl} style={{ position: "absolute", inset: 0 }} />
               </div>
             </ProjectPopup>
           )}
@@ -544,28 +543,21 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
-              <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative" }}>
+              <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    zIndex: 2,
-                    opacity: openPopup === "habit" ? 1 : 0,
-                    pointerEvents: "none",
-                  }}
-                >
-                  <PhonePoster />
-                </div>
+                <PhonePoster opacity={habitPosterOpacity} />
                 <div
                   ref={setGridHabitEl}
                   style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     pointerEvents: "none",
-                    width: "100%",
-                    visibility: openPopup === "habit" ? "hidden" : "visible",
+                    visibility: (openPopup === "habit" && popupVisible) ? "hidden" : "visible",
                   }}
                 />
               </div>
@@ -580,11 +572,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               onExitComplete={() => handlePopupExitComplete("habit")}
               title="Dumb Habit Tracker"
               sub="product design + frontend"
-              maxWidth={380}
+              maxWidth={POPUP_EMBED_MAX_W}
               panelBg="var(--color-phone-bg)"
             >
-              <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", display: "flex", justifyContent: "center" }}>
-                <div ref={setPopupHabitEl} style={{ width: "100%", maxWidth: 340 }} />
+              <div style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-phone-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
               </div>
             </ProjectPopup>
           )}
@@ -603,7 +595,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               position: "fixed",
               left: -10000,
               top: 0,
-              width: 800,
+              width: POPUP_EMBED_MAX_W,
               aspectRatio: "4 / 3",
               visibility: "hidden",
               pointerEvents: "none",
@@ -616,7 +608,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               position: "fixed",
               left: -10000,
               top: 0,
-              width: 340,
+              width: POPUP_EMBED_MAX_W,
+              aspectRatio: "4 / 3",
               visibility: "hidden",
               pointerEvents: "none",
             }}
@@ -631,7 +624,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               title="Dumb Habit Tracker interactive preview"
               frameSrcLight="/phonemockup-light.webp"
               frameSrcDark="/phonemockup-dark.webp"
-              style={openPopup === "habit" ? { maxWidth: 340 } : undefined}
             />
           </EmbedPortal>
         </>

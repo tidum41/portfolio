@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useLayoutEffect, useState, useMemo } from "react";
 import { useDialKit } from "dialkit";
 import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
@@ -35,7 +35,7 @@ export default function PhoneEmbed({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef    = useRef<HTMLIFrameElement>(null);
-  const [containerWidth, setContainerWidth] = useState(REF_W * scale);
+  const [containerSize, setContainerSize] = useState({ width: REF_W * scale, height: REF_H * scale });
   const [isSrcReady, setIsSrcReady] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const hasLoadedOnceRef = useRef(false);
@@ -113,16 +113,51 @@ export default function PhoneEmbed({
     return () => { window.removeEventListener("message", onMessage); if (sbTimer) clearTimeout(sbTimer); };
   }, [postMessageKey]);
 
-  // Track container width
+  // Track container width + height so the phone fits inside fixed-aspect slots.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([e]) =>
-      setContainerWidth(Math.min(e.contentRect.width, scaledRefW))
+      setContainerSize({ width: e.contentRect.width, height: e.contentRect.height }),
     );
     ro.observe(el);
     return () => ro.disconnect();
-  }, [scaledRefW]);
+  }, []);
+
+  const isDarkNow = () => document.documentElement.getAttribute("data-theme") === "dark";
+
+  const sendTheme = () => {
+    iframeRef.current?.contentWindow?.postMessage(
+      { [postMessageKey]: isDarkNow() ? "dark" : "light" },
+      "*",
+    );
+  };
+
+  const initialThemeRef = useRef<"dark" | "light" | null>(null);
+  if (isSrcReady && initialThemeRef.current === null) {
+    initialThemeRef.current = isDarkNow() ? "dark" : "light";
+  }
+  const iframeSrc = url && isSrcReady
+    ? `${url}${url.includes("?") ? "&" : "?"}theme=${initialThemeRef.current}`
+    : undefined;
+
+  useLayoutEffect(() => {
+    if (!isSrcReady) return;
+    sendTheme();
+  // Re-sync when the portal target resizes (grid ↔ popup).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [containerSize.width, containerSize.height, isSrcReady]);
+
+  useEffect(() => {
+    if (!isSrcReady) return;
+    sendTheme();
+    const retryDelays = [50, 200, 500, 1000];
+    const timers = retryDelays.map((ms) => setTimeout(sendTheme, ms));
+    const mo = new MutationObserver(sendTheme);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => { timers.forEach(clearTimeout); mo.disconnect(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSrcReady]);
 
   // Lazy-load iframe on intersection — skipped when eager.
   useEffect(() => {
@@ -144,6 +179,7 @@ export default function PhoneEmbed({
   }, [url, eager]);
 
   const onIframeLoad = () => {
+    sendTheme();
     if (hasLoadedOnceRef.current) {
       setRevealed(true);
       return;
@@ -154,8 +190,9 @@ export default function PhoneEmbed({
 
   const showScreen = revealed || hasLoadedOnceRef.current || !url;
 
-  const phoneScale   = containerWidth / REF_W;
-  const intrinsicH   = containerWidth * (REF_H / REF_W);
+  const scaleByW = Math.min(containerSize.width, scaledRefW) / REF_W;
+  const scaleByH = containerSize.height / REF_H;
+  const phoneScale = Math.min(scaleByW, scaleByH);
   const screenLocalW = PHONE_W * (1 - (dk.insetSide * 2) / 100);
   const iframeScale  = screenLocalW / IFRAME_W;
 
@@ -174,7 +211,7 @@ export default function PhoneEmbed({
   return (
     <div
       ref={containerRef}
-      style={{ position: "relative", width: "100%", maxWidth: scaledRefW, height: intrinsicH, margin: "0 auto", ...style }}
+      style={{ position: "relative", width: "100%", height: "100%", maxWidth: scaledRefW, margin: "0 auto", ...style }}
     >
       {/* Phone body */}
       <div style={{
@@ -197,7 +234,7 @@ export default function PhoneEmbed({
             <>
               <iframe
                 ref={iframeRef}
-                src={isSrcReady ? url : undefined}
+                src={iframeSrc}
                 title={title}
                 onLoad={onIframeLoad}
                 style={{
