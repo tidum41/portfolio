@@ -759,7 +759,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     clearTimeout(timedPillTimeout);
     // Collapse pill but keep pillLabel so a stationary mouse doesn't re-trigger
     // on the same element. It re-arms when the mouse leaves and re-enters.
-    isPill = false; pillIsTimed = false; renderedLabel = "";
+    isPill = false; pillIsTimed = false; pillNoIcon = false; renderedLabel = "";
     // A link click is about to trigger real navigation — snap instantly
     // instead of animating, so the collapse doesn't compete with the new
     // page's own mount work (see snapToRest above).
