@@ -113,6 +113,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdplayer-peach.vercel.app" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://sprightly-stroopwafel-8f1061.netlify.app" crossOrigin="anonymous" />
+        <link rel="prefetch" href="https://cdplayer-peach.vercel.app/" crossOrigin="anonymous" />
         <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>

@@ -56,6 +56,7 @@ export default function CDPlayer({
   // theme — see the `src` / onLoad wiring below for why this can't just be
   // "instant" from our side alone.
   const [revealed, setRevealed] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
 
   useEffect(() => { setIsTouch(window.matchMedia("(hover: none)").matches); }, []);
 
@@ -135,8 +136,15 @@ export default function CDPlayer({
   // wrong-theme flash into a deliberate fade-in instead.
   const onIframeLoad = () => {
     sendTheme();
+    if (hasLoadedOnceRef.current) {
+      setRevealed(true);
+      return;
+    }
+    hasLoadedOnceRef.current = true;
     requestAnimationFrame(() => setRevealed(true));
   };
+
+  const showContent = revealed || hasLoadedOnceRef.current;
 
   // s = how many screen-pixels per design-canvas pixel
   const s = (cw / dk.canvasW) * dk.zoom;
@@ -181,8 +189,8 @@ export default function CDPlayer({
           transform:       `scale(${s}) translate(${dk.offsetX}px, ${dk.offsetY}px)`,
           transformOrigin: "center center",
           flexShrink:      0,
-          opacity:         revealed ? 1 : 0,
-          transition:      `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
+          opacity:         showContent ? 1 : 0,
+          transition:      hasLoadedOnceRef.current ? "none" : `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
         }}
       >
         <iframe

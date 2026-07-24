@@ -7,8 +7,19 @@ import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 import { motion } from "framer-motion";
 import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "./cardHover";
+import NortheastArrow from "@/components/icons/NortheastArrow";
 
-function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string; labelFontSize: number }) {
+function CardLabel({
+  title,
+  sub,
+  labelFontSize,
+  showExternalArrow,
+}: {
+  title: string;
+  sub?: string;
+  labelFontSize: number;
+  showExternalArrow?: boolean;
+}) {
   return (
     <div style={{ padding: "3px 2px" }}>
       <p style={{
@@ -18,7 +29,13 @@ function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string;
         lineHeight: 1.4,
         color: "var(--color-text-primary)",
         margin: 0,
-      }}>{title}</p>
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}>
+        {title}
+        {showExternalArrow && <NortheastArrow size={13} />}
+      </p>
       {sub && (
         <p style={{
           fontFamily: "var(--font-sans)",
@@ -47,9 +64,20 @@ interface Props {
   /** Opt out of the hover press-in scale — e.g. an external-link card that
    *  redirects immediately doesn't benefit from the "press and settle" feel. */
   hoverScale?: boolean;
+  /** Northeast arrow after the title — external demos that leave the site. */
+  showExternalArrow?: boolean;
 }
 
-export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio, active = true, hoverScale = true }: Props) {
+export default function MuxAutoplayCard({
+  playbackId,
+  href,
+  title,
+  sub,
+  aspectRatio,
+  active = true,
+  hoverScale = true,
+  showExternalArrow = false,
+}: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
     cardGap:       [6,  0, 24],
@@ -131,7 +159,7 @@ export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRa
       ) : (
         <Link href={href} prefetch style={linkStyle}>{video}</Link>
       )}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} />
+      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
     </motion.div>
   );
 }
