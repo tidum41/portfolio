@@ -2,12 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { EASE_OPACITY } from "@/lib/motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  onExitComplete?: () => void;
   title: string;
   sub?: string;
   description?: string;
@@ -27,15 +28,38 @@ interface Props {
 // case-study page navigation. Portaled to <body> (same pattern as
 // GlobalCustomCursor's own document.body mount) so it sits above the grid's
 // own stacking contexts regardless of where the trigger lives in the tree.
-export default function ProjectPopup({ open, onClose, title, sub, description, tools, maxWidth = 560, panelBg = "var(--color-bg)", children }: Props) {
+export default function ProjectPopup({
+  open,
+  onClose,
+  onExitComplete,
+  title,
+  sub,
+  description,
+  tools,
+  maxWidth = 560,
+  panelBg = "var(--color-bg)",
+  children,
+}: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElRef = useRef<Element | null>(null);
+  const reduced = useReducedMotion();
+
+  const backdropEnter = reduced ? 0.01 : PANEL_DURATION.backdrop.enter;
+  const backdropExit  = reduced ? 0.01 : PANEL_DURATION.backdrop.exit;
+  const panelEnter    = reduced ? 0.01 : PANEL_DURATION.panel.enter;
+  const panelExit     = reduced ? 0.01 : PANEL_DURATION.panel.exit;
+  const panelY        = reduced ? 0 : 10;
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
-  // land somewhere sensible immediately.
+  // land somewhere sensible immediately. Fixed-body scroll lock preserves
+  // the page's scroll position (overflow:hidden alone causes jumps on close
+  // and focus-restore can scroll the trigger back into view).
   useEffect(() => {
     if (!open) return;
+    const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
     triggerElRef.current = document.activeElement;
     panelRef.current?.focus();
 
@@ -60,25 +84,40 @@ export default function ProjectPopup({ open, onClose, title, sub, description, t
       }
     };
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = prevOverflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.paddingRight = prev.paddingRight;
+      window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
       document.removeEventListener("keydown", onKeyDown);
-      (triggerElRef.current as HTMLElement | null)?.focus?.();
+      (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
     };
   }, [open, onClose]);
 
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.22, ease: EASE_OPACITY } }}
-          exit={{ opacity: 0, transition: { duration: 0.16, ease: EASE_OPACITY } }}
+          animate={{ opacity: 1, transition: { duration: backdropEnter, ease: EASE_OPACITY } }}
+          exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
           onClick={onClose}
           style={{
             position: "fixed",
@@ -113,9 +152,9 @@ export default function ProjectPopup({ open, onClose, title, sub, description, t
             // never see a spurious resize mid-animation. Asymmetric timing —
             // slower open, snappier close — mirrors that same precedent
             // (320ms/220ms open vs 240ms/160ms close there).
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.26, ease: EASE_OPACITY } }}
-            exit={{ opacity: 0, y: 10, transition: { duration: 0.16, ease: EASE_OPACITY } }}
+            initial={{ opacity: 0, y: panelY }}
+            animate={{ opacity: 1, y: 0, transition: { duration: panelEnter, ease: EASE_OPACITY } }}
+            exit={{ opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }}
             style={{
               width: `min(${maxWidth}px, 100%)`,
               maxHeight: "85vh",
