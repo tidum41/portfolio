@@ -231,6 +231,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     fontSize: "13.5px",
     fontWeight: "500",
     letterSpacing: "0.01em",
+    lineHeight: "1",
     marginRight: "-0.01em",
     textAlign: "center",
     whiteSpace: "nowrap",
@@ -246,8 +247,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // pill — see morphToPill below — since that pill means "look closer," not
   // "leave the page," which the arrow implies for every other label.
   const ARROW_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
-  // Phosphor "MagnifyingGlass" regular weight (256×256 viewBox, fill-based).
-  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>`;
+  // Phosphor "MagnifyingGlass" stroke variant — slightly heavier than the
+  // northeast arrow (1.6) so the glyph matches the pill label's visual weight.
+  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.25" cy="5.25" r="3.1"/><line x1="7.6" y1="7.6" x2="10.5" y2="10.5"/></svg>`;
   const arrowEl = document.createElement("span");
   Object.assign(arrowEl.style, {
     position: "relative", zIndex: "1",
@@ -279,6 +281,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
   let pillNoIcon = false;
+  // Captured at morph-in time — checkPillHover can reset the live pillNoIcon
+  // flag (mouse already moved to a new target) before morphToRest actually
+  // runs for the PREVIOUS pill, so morphToRest must consult this snapshot
+  // rather than the live flag to know whether to keep the arrow out of flow.
+  let renderedHideIcon = false;
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
@@ -317,6 +324,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // Always restore arrow to flow first — handles switching from a timed pill
     // (where it was display:none) to a non-timed one without leaving it hidden.
     const hideIcon = pillIsTimed || pillNoIcon;
+    // No-icon pills ("open", "try demo!") only have label text — a single line
+    // at flex center reads optically low vs icon+text pills like "View Case Study".
+    const opticalTextY = hideIcon ? -1 : 0;
+    renderedHideIcon = hideIcon;
     arrowEl.style.display     = hideIcon ? "none" : "";
     if (!hideIcon) {
       arrowEl.innerHTML       = label === "View Case Study" ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
@@ -324,7 +335,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     textSpan.textContent      = label;
     textSpan.style.transition = "none";
     textSpan.style.opacity    = "0";
-    textSpan.style.transform  = `translate(${textOffsetX}px,${textOffsetY}px)`;
+    textSpan.style.transform  = `translate(${textOffsetX}px,${textOffsetY + opticalTextY}px)`;
     arrowEl.style.transition  = "none";
     arrowEl.style.opacity     = "0";
 
@@ -412,7 +423,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       showPillTimer = window.setTimeout(() => {
         if (pillGen !== genAtStart) return;
         const c = window.gc_morphConfig ?? {} as NonNullable<typeof window.gc_morphConfig>;
-        textSpan.style.transform  = `translate(${c.textOffsetX ?? 0}px,${c.textOffsetY ?? 0}px)`;
+        textSpan.style.transform  = `translate(${c.textOffsetX ?? 0}px,${(c.textOffsetY ?? 0) + opticalTextY}px)`;
         textSpan.style.transition = `opacity ${scaledFade}ms ease`;
         textSpan.style.opacity    = "1";
         if (!pillIsTimed && !pillNoIcon) {
@@ -466,11 +477,17 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     cursorEl.style.backdropFilter  = "blur(0px) saturate(100%)";
     (cursorEl.style as unknown as { webkitBackdropFilter: string }).webkitBackdropFilter = "blur(0px) saturate(100%)";
     cursorEl.style.boxShadow = noStroke(1);
-    // Restore arrow visibility (was hidden for timed pills during expand)
-    arrowEl.style.display = "";
 
     sheenEl.style.transition = `opacity ${scaledCol}ms ${curve}`;
     sheenEl.style.opacity    = "0";
+    // Restore arrow visibility (was hidden for timed/no-icon pills during
+    // expand) — but only if the pill actually collapsing had an icon in the
+    // first place. For a no-icon pill (e.g. "try demo!"), pillNoIcon may
+    // already have been reset by checkPillHover by the time this runs (the
+    // mouse has moved on), so restoring display here unconditionally would
+    // pop the arrow back into the flex layout mid-collapse and visibly
+    // shift the label text — this is what renderedHideIcon guards against.
+    if (!renderedHideIcon) arrowEl.style.display = "";
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a

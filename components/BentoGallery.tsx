@@ -552,13 +552,20 @@ export default function BentoGallery({
                     )
                 )
             );
+            // Clamp against the same bounds zoomToCenter/onThumbDown enforce —
+            // for tiles near the canvas edges, centering the tile alone can
+            // push x/y outside those bounds. Left unclamped, tx.current
+            // starts focus already out-of-bounds, and the first zoom-out step
+            // (which computes from tx.current, then clamps its result) snaps
+            // it back into bounds as a visible jump.
+            const b = getBounds(s);
             return {
-                x: (vw - iw * s) / 2 - pos.left * s,
-                y: (vh - ih * s) / 2 - pos.top * s,
+                x: clamp((vw - iw * s) / 2 - pos.left * s, b.minX, b.maxX),
+                y: clamp((vh - ih * s) / 2 - pos.top * s, b.minY, b.maxY),
                 s,
             };
         },
-        [positions, items, getOverviewT, vw, vh, colUnit, imgUnitH, gap, columns]
+        [positions, items, getOverviewT, getBounds, vw, vh, colUnit, imgUnitH, gap, columns]
     );
 
     // ── Selector border ───────────────────────────────────────────────────────
@@ -967,14 +974,23 @@ export default function BentoGallery({
             ptrs.current.delete(e.pointerId);
             if (ptrs.current.size < 2) gst.current.p2 = false;
             if (ptrs.current.size === 0) {
-                // Canvas rests wherever it lands — no snap-to-bounds or auto-focus
+                // The drag/pinch itself rests wherever it lands (no auto-focus,
+                // no re-centering) — but `elastic()` deliberately lets x/y/s
+                // overshoot past true bounds during the gesture for a rubber-
+                // band feel, and that overshoot was never corrected afterward.
+                // A subsequent zoom (which computes its new position from this
+                // already-out-of-bounds tx.current, then clamps the RESULT)
+                // would suddenly snap back into bounds — reading as a jump.
+                // Settling back within bounds now, right as the gesture ends,
+                // keeps that correction where the user expects it.
+                snapToBounds("spring");
                 if (rootRef.current) rootRef.current.style.cursor = "crosshair";
                 setTimeout(() => { gst.current.moved = false; }, 0);
                 // Demote after snap/spring animations settle (~800ms)
                 setTimeout(() => { if (canvasRef.current) canvasRef.current.style.willChange = "auto"; }, 800);
             }
         },
-        []
+        [snapToBounds]
     );
 
     const onCellClick = useCallback(

@@ -1,0 +1,77 @@
+/* ── Wrapper — positioning differs by breakpoint ─────────────────────── */
+
+.hint {
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.3s ease;
+}
+
+.hintH {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+}
+
+.hintV {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 28px;
+  align-items: center;
+}
+
+/* ── CTA row ─────────────────────────────────────────────────────────── */
+
+/* Nest under `.hint` so padding beats CdPlayerApp's `.layout * { padding: 0 }`. */
+.hint .row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--cd-hint-accent, #c41212);
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  line-height: 1;
+  font-feature-settings: "ss01" 1;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--cd-hint-accent, #c41212) 35%, transparent);
+}
+
+/* Static direction cue — no motion */
+.arrow {
+  flex-shrink: 0;
+}
+
+/* ── Motion — disc only, very subtle ───────────────────────────────── */
+
+.hintH .disc {
+  flex-shrink: 0;
+  animation: discSlideLeft 4.2s ease-in-out infinite;
+}
+
+.hintV .disc {
+  flex-shrink: 0;
+  animation: discSlideUp 4.2s ease-in-out infinite;
+}
+
+@keyframes discSlideLeft {
+  0%, 72%, 100% { transform: translateX(0); }
+  36%           { transform: translateX(-5px); }
+}
+
+@keyframes discSlideUp {
+  0%, 72%, 100% { transform: translateY(0); }
+  36%           { transform: translateY(-5px); }
+}

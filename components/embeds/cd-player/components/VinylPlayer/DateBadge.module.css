@@ -1,0 +1,193 @@
+.badge {
+  position: absolute;
+  right: 28px;
+  top: 28px;
+  width: 237px;
+  height: 108px;
+  z-index: 10;
+}
+
+/* `.layout * { padding: 0 }` in CdPlayerApp.module.css ties with a lone
+   `.display` rule and wins on bundle order — nest under `.badge` so
+   specificity beats the reset (same class of bug as TransportBar icons). */
+.badge .display {
+  width: 100%;
+  height: 100%;
+  background-color: #1A1A1A;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: rgba(0,0,0,0.3) 0px 2px 0px inset;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.textBlock {
+  width: 100%;
+  animation: slideIn 0.35s ease-out;
+}
+
+.line1 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--cd-date-line1-font-size, 24px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.3px;
+  line-height: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Volume display — speaker icon + percentage, no animation */
+.volBlock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volPct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 38px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+/* Scratch state: icon + time + rate */
+.scratchBlock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.15s ease-out;
+}
+
+.scratchInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.scratchTime {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 26px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.scratchRate {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.50);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.line2Row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.line2 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--cd-date-line2-font-size, 20px);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.3px;
+  line-height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.elapsed {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* --- Loading: equalizer bars (wider, fills more of the display) --- */
+.loadingBlock {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.eqBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 50px;
+  width: 100%;
+}
+
+.eqBar {
+  flex: 1;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.60);
+  height: 8px;
+}
+
+/* Smooth wave — 7 bars fill the width */
+@keyframes eq1 {
+  0%, 100% { height: 8px; }
+  50% { height: 20px; }
+}
+@keyframes eq2 {
+  0%, 100% { height: 10px; }
+  50% { height: 30px; }
+}
+@keyframes eq3 {
+  0%, 100% { height: 12px; }
+  50% { height: 40px; }
+}
+@keyframes eq4 {
+  0%, 100% { height: 16px; }
+  50% { height: 50px; }
+}
+@keyframes eq5 {
+  0%, 100% { height: 12px; }
+  50% { height: 40px; }
+}
+@keyframes eq6 {
+  0%, 100% { height: 10px; }
+  50% { height: 30px; }
+}
+@keyframes eq7 {
+  0%, 100% { height: 8px; }
+  50% { height: 20px; }
+}
+
+.eq1 { animation: eq1 1.4s ease-in-out infinite; animation-delay: 0s; }
+.eq2 { animation: eq2 1.4s ease-in-out infinite; animation-delay: 0.08s; }
+.eq3 { animation: eq3 1.4s ease-in-out infinite; animation-delay: 0.16s; }
+.eq4 { animation: eq4 1.4s ease-in-out infinite; animation-delay: 0.24s; }
+.eq5 { animation: eq5 1.4s ease-in-out infinite; animation-delay: 0.32s; }
+.eq6 { animation: eq6 1.4s ease-in-out infinite; animation-delay: 0.40s; }
+.eq7 { animation: eq7 1.4s ease-in-out infinite; animation-delay: 0.48s; }
