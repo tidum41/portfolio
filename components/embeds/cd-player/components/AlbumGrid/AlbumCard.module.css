@@ -1,0 +1,74 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: grab;
+  user-select: none;
+  min-height: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* let dnd-kit own all touch events */
+}
+
+.card:active { cursor: grabbing; }
+
+.card:focus {
+  outline: none;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--cd-focus-color, #007aff);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.card:focus-visible .art {
+  box-shadow: 0 0 0 2px var(--cd-focus-color, #007aff);
+}
+
+.artWrap {
+  position: relative;
+  flex: 0 0 auto;
+  /* No overflow:visible needed — disc peek is now fixed-position in App.tsx */
+}
+
+.art {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Text below art — constrained to card width */
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: var(--cd-title-font-size, 11px);
+  font-weight: 500;
+  color: var(--cd-title-color, #1a1a1a);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artist {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: var(--cd-artist-font-size, 10px);
+  font-weight: 400;
+  color: var(--cd-artist-color, #888);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

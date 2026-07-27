@@ -1,0 +1,11 @@
+.poster {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: #E0E0E0;
+}
+
+:global(html[data-theme="dark"]) .poster {
+  background: #191b1e;
+}

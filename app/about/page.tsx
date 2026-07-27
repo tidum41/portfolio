@@ -179,7 +179,7 @@ export default function AboutPage() {
           marginBottom: 80,
         }}>
           <SectionLabel>drag my favorite CDs!</SectionLabel>
-          <CDPlayer style={{ marginTop: 16 }} />
+          <CDPlayer style={{ marginTop: 16 }} variant="about" />
         </section>
       </ScrollReveal>
 

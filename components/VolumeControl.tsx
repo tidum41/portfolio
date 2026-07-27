@@ -41,26 +41,33 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMobile = useIsMobile();
+  // Compact (no hover-reveal slider) on touch devices OR a narrow viewport —
+  // `isMobile` alone only catches touch-capable devices; a plain desktop
+  // browser window resized narrow is mouse-capable (isMobile stays false)
+  // but still has no room for a hover-revealed slider and no hover gesture
+  // reliably available at that width either.
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const isCompact = isMobile || isNarrow;
   const audioRef = useRef<HTMLAudioElement>(null);
   // Remembers the last non-zero volume so unmuting restores it rather than
   const preVolume = useRef(DEFAULT_VOLUME);
   const reduced = useReducedMotion();
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
-  }, []);
 
   // Two React quirks meet at this ref, both worth spelling out:
   //  1. `muted` is a controlled media property — React re-asserts a literal
   //     JSX value for it on every re-render (e.g. when Nav re-renders on
   //     route change via usePathname()), which would stomp a real unmute.
-  //  2. The `<audio>` tag itself only mounts on this component's *second*
-  //     render (the first render returns null while the isDesktop check is
-  //     still pending), so a `useEffect` keyed on `[muted]`/`[volume]` sees
-  //     the same state values across that null→real transition and — since
-  //     nothing \"changed\" — never fires again to apply them to the newly
-  //     created node.
+  //  2. The `<audio>` tag itself only mounts on this component's *first*
+  //     real render, so a `useEffect` keyed on `[muted]`/`[volume]` sees
+  //     the same state values on that mount and — since nothing "changed" —
+  //     never fires again to apply them to the newly created node.
   // Setting both directly here, once, at the moment the real node is
   // created sidesteps both: the effects below then own every *subsequent*
   // update, which are genuine value changes and fire correctly.
@@ -132,8 +139,6 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
   const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
 
-  if (!isDesktop) return null;
-
   const onEnter = () => {
     if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
   };
@@ -162,29 +167,33 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         // reveals into — moving the mouse from the icon toward where the
         // slider is about to appear stays inside this box the whole time,
         // instead of exiting a hitbox that was only ever icon-sized and
-        // collapsing the slider before it can be reached.
-        width: ICON_SIZE + GAP + SLIDER_WIDTH,
+        // collapsing the slider before it can be reached. On touch (no
+        // hover), the slider never renders at all, so just the icon's width
+        // keeps the control compact instead of reserving dead space.
+        width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop autoPlay preload="auto" />
-      <motion.div
-        initial={false}
-        animate={{ width: isHovered ? SLIDER_WIDTH : 0, opacity: isHovered ? 1 : 0 }}
-        transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 30 }}
-        style={{ overflow: "hidden", display: "flex", alignItems: "center", flexShrink: 0 }}
-      >
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={sliderValue}
-          onChange={handleSliderChange}
-          className="volume-slider"
-          aria-label="Volume"
-          style={{ width: 64 }}
-        />
-      </motion.div>
+      {!isCompact && (
+        <motion.div
+          initial={false}
+          animate={{ width: isHovered ? SLIDER_WIDTH : 0, opacity: isHovered ? 1 : 0 }}
+          transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 30 }}
+          style={{ overflow: "hidden", display: "flex", alignItems: "center", flexShrink: 0 }}
+        >
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={sliderValue}
+            onChange={handleSliderChange}
+            className="volume-slider"
+            aria-label="Volume"
+            style={{ width: 64 }}
+          />
+        </motion.div>
+      )}
       <button
         onClick={handleMuteToggle}
         className="nav-link theme-toggle-btn"
