@@ -23,7 +23,6 @@ const PHONE_H_BASE = 580;
 // cutout — matches the old iframe's own viewport size (394×844), which is
 // also a near-perfect fit for the widget's own max-w-[393px] content.
 const CONTENT_W = 394;
-const CONTENT_H = 844;
 
 export default function PhoneEmbed({ style, expanded = false, onWidgetThemeChange }: { style?: React.CSSProperties; expanded?: boolean; onWidgetThemeChange?: (theme: 'light' | 'dark') => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,11 +51,13 @@ export default function PhoneEmbed({ style, expanded = false, onWidgetThemeChang
     iframeOffsetY: [-0.41, -10, 10, 0.01],
   });
 
-  const embedScale = expanded ? 1.12 : 1;
-  const REF_W = REF_W_BASE * dk.sizeScale * embedScale;
-  const REF_H = REF_H_BASE * dk.sizeScale * embedScale;
-  const PHONE_W = PHONE_W_BASE * dk.sizeScale * embedScale;
-  const PHONE_H = PHONE_H_BASE * dk.sizeScale * embedScale;
+  const popupBoost = expanded ? 1.15 : 1;
+  const PHONE_W = PHONE_W_BASE * dk.sizeScale * popupBoost;
+  const PHONE_H = PHONE_H_BASE * dk.sizeScale * popupBoost;
+  // Tight reference box in popup so scale-to-fit uses the full slot instead of
+  // leaving ~20% dead margin (REF was intentionally larger than the phone body).
+  const REF_W = expanded ? PHONE_W : REF_W_BASE * dk.sizeScale;
+  const REF_H = expanded ? PHONE_H : REF_H_BASE * dk.sizeScale;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -74,6 +75,10 @@ export default function PhoneEmbed({ style, expanded = false, onWidgetThemeChang
   const phoneScale = Math.min(scaleByW, scaleByH);
 
   const screenLocalW = PHONE_W * (1 - (dk.insetSide * 2) / 100);
+  const screenLocalH = PHONE_H * (1 - dk.insetTop / 100 - dk.insetBottom / 100);
+  // Match content canvas height to the screen cutout aspect ratio so scaling
+  // by width also fills height — avoids the black bezel gap below the app.
+  const contentH = Math.ceil(CONTENT_W * (screenLocalH / screenLocalW));
   const contentScale = screenLocalW / CONTENT_W;
 
   const frameSrc = widgetTheme === 'dark' ? phoneFrameDark.src : phoneFrameLight.src;
@@ -103,7 +108,7 @@ export default function PhoneEmbed({ style, expanded = false, onWidgetThemeChang
               position: "absolute",
               top: `${dk.iframeOffsetY}%`,
               left: `${dk.iframeOffsetX}%`,
-              width: CONTENT_W, height: CONTENT_H,
+              width: CONTENT_W, height: contentH,
               transform: `scale(${contentScale})`,
               transformOrigin: "top left",
             }}

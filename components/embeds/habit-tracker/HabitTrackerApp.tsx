@@ -213,11 +213,12 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
     return `${dayName}, ${monthName} ${day}${suffix}`;
   };
 
-  const formatDayAriaLabel = (date: Date, isSelected: boolean, isFuture: boolean) => {
+  const formatDayAriaLabel = (date: Date, isSelected: boolean, isFuture: boolean, isToday: boolean) => {
     const dateLabel = formatDateDisplay(date);
-    if (isFuture) return `${dateLabel}, unavailable`;
-    if (isSelected) return `${dateLabel}, completed`;
-    return `${dateLabel}, not completed`;
+    const todaySuffix = isToday ? ', today' : '';
+    if (isFuture) return `${dateLabel}, unavailable${todaySuffix}`;
+    if (isSelected) return `${dateLabel}, completed${todaySuffix}`;
+    return `${dateLabel}, not completed${todaySuffix}`;
   };
 
   const isAtCurrentMonth =
@@ -256,7 +257,7 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
           type="button"
           onClick={() => !isFuture && toggleDate(date)}
           disabled={isFuture}
-          aria-label={formatDayAriaLabel(date, isSelected, isFuture)}
+          aria-label={formatDayAriaLabel(date, isSelected, isFuture, isToday)}
           aria-pressed={isSelected}
           className={cellClasses}
         >
