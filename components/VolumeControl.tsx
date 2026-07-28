@@ -58,7 +58,32 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   // Remembers the last non-zero volume so unmuting restores it rather than
   const preVolume = useRef(DEFAULT_VOLUME);
+  // Mirrors React state for the ref callback — deps must stay [] so Nav
+  // re-renders don't detach/reattach the node and reset playback.
+  const mutedRef = useRef(DEFAULT_MUTED);
+  const volumeRef = useRef(DEFAULT_VOLUME);
   const reduced = useReducedMotion();
+
+  const applyAudioState = useCallback((nextMuted: boolean, nextVolume: number) => {
+    mutedRef.current = nextMuted;
+    volumeRef.current = nextVolume;
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = nextMuted;
+    audio.volume = nextVolume;
+  }, []);
+
+  const tryPlay = useCallback((audible = false) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audible) {
+      audio.muted = mutedRef.current;
+      audio.volume = volumeRef.current;
+    }
+    audio.play().catch(() => {
+      // Blocked or not ready yet — canplay handler below retries muted start.
+    });
+  }, []);
 
   // Two React quirks meet at this ref, both worth spelling out:
   //  1. `muted` is a controlled media property — React re-asserts a literal
@@ -76,22 +101,26 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   // is frequently blocked until a user gesture occurs.
   const setAudioNode = useCallback((node: HTMLAudioElement | null) => {
     audioRef.current = node;
-    if (node) {
-      node.muted = DEFAULT_MUTED;
-      node.volume = DEFAULT_VOLUME;
-      node.play().catch(() => {
-        // Autoplay was blocked (no user gesture yet). The audio will start
-        // as soon as the user interacts with the page (e.g. clicks unmute).
-      });
-    }
+    if (!node) return;
+    node.muted = mutedRef.current;
+    node.volume = volumeRef.current;
+    const onCanPlay = () => {
+      if (!node.paused) return;
+      node.play().catch(() => {});
+    };
+    node.addEventListener("canplay", onCanPlay);
+    node.play().catch(() => {});
+    return () => node.removeEventListener("canplay", onCanPlay);
   }, []);
 
   useEffect(() => {
+    mutedRef.current = muted;
     if (!audioRef.current) return;
     audioRef.current.muted = muted;
   }, [muted]);
 
   useEffect(() => {
+    volumeRef.current = volume;
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
@@ -100,29 +129,29 @@ export default function VolumeControl({ dk }: { dk?: any }) {
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
-    if (v > 0) {
-      preVolume.current = v;
-      // Slider moved above 0 — start playback if the initial autoplay was
-      // blocked (this gesture satisfies the browser's interaction requirement).
-      audioRef.current?.play().catch(() => {});
-    }
-    setVolume(v > 0 ? v : preVolume.current);
-    setMuted(v === 0);
+    const nextMuted = v === 0;
+    const nextVolume = v > 0 ? v : preVolume.current;
+    if (v > 0) preVolume.current = v;
+    // Apply on the DOM synchronously inside this gesture — unmute before
+    // play() so audible start isn't deferred to a post-commit effect.
+    applyAudioState(nextMuted, nextVolume);
+    if (!nextMuted) tryPlay(true);
+    setVolume(nextVolume);
+    setMuted(nextMuted);
   };
 
   const handleMuteToggle = () => {
-    setMuted((m) => {
-      if (m) {
-        // Unmuting — restore the last non-zero volume and ensure playback
-        // is actually running (may have been blocked on mount).
-        setVolume(preVolume.current);
-        audioRef.current?.play().catch(() => {});
-      } else {
-        // Muting — remember current volume so we can restore it.
-        if (volume > 0) preVolume.current = volume;
-      }
-      return !m;
-    });
+    if (muted) {
+      const nextVolume = preVolume.current;
+      applyAudioState(false, nextVolume);
+      tryPlay(true);
+      setVolume(nextVolume);
+      setMuted(false);
+    } else {
+      if (volume > 0) preVolume.current = volume;
+      applyAudioState(true, volume);
+      setMuted(true);
+    }
   };
 
   // dk.keepEffectOn (DialKit dev panel) pins the effect active regardless
@@ -173,7 +202,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
-      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop autoPlay preload="auto" />
+      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="auto" />
       {!isCompact && (
         <motion.div
           initial={false}

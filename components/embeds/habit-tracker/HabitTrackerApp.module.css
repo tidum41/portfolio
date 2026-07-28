@@ -10,8 +10,10 @@
   --ht-space-6: 32px;
 
   --ht-cell-size: 44px;
+  --ht-calendar-gap: 4px;
+  --ht-stats-offset: 12px;
   --ht-nav-hit: 44px;
-  --ht-safe-top: 54px;
+  --ht-safe-top: 64px;
   --ht-radius-sm: 6px;
   --ht-radius-md: 8px;
 
@@ -30,21 +32,40 @@
   color: var(--ht-text);
 }
 
-/* PhoneEmbed renders this at 394×844 — tighten vertical rhythm only;
-   calendar cell size stays 44px (user-approved). */
+/* PhoneEmbed renders this at 394×844 — proportional type bump + looser calendar. */
 @container (max-height: 860px) {
   .root {
     --ht-space-4: 12px;
     --ht-space-5: 16px;
     --ht-nav-hit: 40px;
+    --ht-cell-size: 46px;
+    --ht-calendar-gap: 6px;
+    --ht-stats-offset: 28px;
   }
 
   .habitTitle {
-    font-size: 24px;
+    font-size: 30px;
+  }
+
+  .dateLabel {
+    font-size: 14px;
+  }
+
+  .monthLabel {
+    font-size: 13px;
   }
 
   .dayHeader {
-    height: 24px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .streakLabel {
+    font-size: 17px;
+  }
+
+  .progressLabel {
+    font-size: 13px;
   }
 }
 
@@ -58,12 +79,16 @@
   --ht-text-subtle: #6a6a6a;
   --ht-cell-bg: #f3f3f3;
   --ht-cell-future: #ececec;
-  /* Today ring — #9b7ec8 on #f3f3f3 ≈ 3.1:1; on #454545 ≈ 3.4:1 (UI) */
-  --ht-accent: #9b7ec8;
   --ht-cell-selected-bg: #454545;
   --ht-cell-selected-text: #f3f3f3;
   --ht-cell-selected-border: #2e2e2e;
-  --ht-cell-today-bg: #f3f3f3;
+  /* Slightly darker than #f3f3f3 neighbors — quiet today cue */
+  --ht-cell-today-bg: #e0e0e0;
+  /* #5c5c5c on #e0e0e0 ≈ 4.6:1 (today ring + dot) */
+  --ht-cell-today-border: #5c5c5c;
+  --ht-cell-today-dot: #5c5c5c;
+  --ht-cell-today-border-selected: #c7c7cc;
+  --ht-cell-today-dot-selected: #c7c7cc;
   --ht-progress-track: #c4c4c4;
   --ht-progress-fill: #454545;
   --ht-nav-press: rgba(0, 0, 0, 0.08);
@@ -80,12 +105,16 @@
   --ht-text-subtle: #98989d;
   --ht-cell-bg: #2c2c2e;
   --ht-cell-future: #252527;
-  /* Today ring — #b8a0d8 on #2c2c2e ≈ 4.2:1; on #48484a ≈ 3.6:1 (UI) */
-  --ht-accent: #b8a0d8;
   --ht-cell-selected-bg: #48484a;
   --ht-cell-selected-text: #f2f2f7;
   --ht-cell-selected-border: #8e8e93;
-  --ht-cell-today-bg: #2c2c2e;
+  /* Slightly lifted gray vs #2c2c2e neighbors */
+  --ht-cell-today-bg: #363638;
+  /* #aeaeb2 on #363638 ≈ 4.5:1 */
+  --ht-cell-today-border: #aeaeb2;
+  --ht-cell-today-dot: #aeaeb2;
+  --ht-cell-today-border-selected: #d1d1d6;
+  --ht-cell-today-dot-selected: #d1d1d6;
   --ht-progress-track: #3a3a3c;
   --ht-progress-fill: #e0e0e0;
   --ht-nav-press: rgba(255, 255, 255, 0.1);
@@ -118,18 +147,10 @@
   background: var(--ht-nav-press);
 }
 
-@media (hover: hover) {
-  .themeToggle:hover {
-    background: var(--ht-nav-press);
-  }
-}
-
 .content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: var(--ht-space-3) var(--ht-space-5) var(--ht-space-5);
-  min-height: 0;
+  padding: var(--ht-space-4) var(--ht-space-5) var(--ht-space-5);
   gap: var(--ht-space-4);
 }
 
@@ -214,12 +235,6 @@
   cursor: default;
 }
 
-@media (hover: hover) {
-  .navButton:hover:not(:disabled) {
-    background: var(--ht-nav-press);
-  }
-}
-
 .calendarSection {
   display: flex;
   flex-direction: column;
@@ -230,7 +245,7 @@
 .dayHeaders {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--ht-space-1);
+  gap: var(--ht-calendar-gap);
 }
 
 .dayHeader {
@@ -249,7 +264,7 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: var(--ht-space-1);
+  gap: var(--ht-calendar-gap);
   justify-items: center;
 }
 
@@ -260,6 +275,7 @@
 }
 
 .dayCell {
+  position: relative;
   width: var(--ht-cell-size);
   height: var(--ht-cell-size);
   justify-self: center;
@@ -291,10 +307,20 @@
 
 .dayCellToday {
   background: var(--ht-cell-today-bg);
-  color: var(--ht-text);
-  font-weight: 600;
-  /* Inset accent ring — stays inside the cell so neighbors aren't crowded */
-  box-shadow: inset 0 0 0 2px var(--ht-accent);
+  box-shadow: inset 0 0 0 1.5px var(--ht-cell-today-border);
+}
+
+.dayCellToday::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ht-cell-today-dot);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .dayCellSelected {
@@ -303,10 +329,12 @@
   box-shadow: inset 0 0 0 1px var(--ht-cell-selected-border);
 }
 
-.dayCellToday.dayCellSelected {
-  box-shadow:
-    inset 0 0 0 2px var(--ht-accent),
-    inset 0 0 0 3px var(--ht-cell-selected-border);
+.dayCellSelected.dayCellToday {
+  box-shadow: inset 0 0 0 1.5px var(--ht-cell-today-border-selected);
+}
+
+.dayCellSelected.dayCellToday::after {
+  background: var(--ht-cell-today-dot-selected);
 }
 
 .dayNumber {
@@ -324,7 +352,7 @@
   gap: var(--ht-space-2);
   flex-shrink: 0;
   width: 100%;
-  margin-top: var(--ht-space-3);
+  margin-top: var(--ht-stats-offset);
 }
 
 .streakLabel,

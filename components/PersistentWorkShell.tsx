@@ -46,12 +46,14 @@ const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 type PopupId = "cd" | "habit";
 
 const POPUP_EMBED_MAX_W = 800;
+const HABIT_POPUP_MAX_W = 480;
 // Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
 // carousel + drag hint aren't clipped at narrow modal widths.
 const CD_POPUP_EMBED_H = "min(62vh, 680px)";
 // Phone mockup is ~9:19 — a 4:3 popup slot caps height and shrinks the
 // embed; give the habit popup a portrait slot so the phone can scale up.
-const HABIT_POPUP_EMBED_H = "min(78vh, 860px)";
+// Subtract ~100px for popup chrome so the panel stays within 85vh.
+const HABIT_POPUP_EMBED_H = "min(calc(85vh - 80px), 780px)";
 
 // React's reconciler recreates a Portal's entire subtree (destroying its
 // component state) whenever createPortal's target DOM node differs from the
@@ -621,7 +623,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               onExitComplete={() => handlePopupExitComplete("habit")}
               title="Dumb Habit Tracker"
               sub="product design + frontend"
-              maxWidth={POPUP_EMBED_MAX_W}
+              maxWidth={480}
               panelBg="var(--color-phone-bg)"
             >
               <div
@@ -670,7 +672,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               position: "fixed",
               left: -10000,
               top: 0,
-              width: POPUP_EMBED_MAX_W,
+              width: HABIT_POPUP_MAX_W,
               minHeight: HABIT_POPUP_EMBED_H,
               height: HABIT_POPUP_EMBED_H,
               visibility: "hidden",
