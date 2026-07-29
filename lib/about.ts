@@ -1,6 +1,6 @@
 import { FOOTER_LINKS } from "@/lib/site";
 
-/** Shared about-page content — used by `/about` and `/about/v2`. */
+/** Shared about-page content. */
 
 export const EXPERIENCE = [
   {
