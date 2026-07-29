@@ -1,30 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
+import ProductSpacePhotos from "@/components/ProductSpacePhotos";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
-import { FOOTER_LINKS } from "@/lib/site";
+import {
+  ABOUT_BIO,
+  ABOUT_INTERESTS,
+  EXPERIENCE,
+  ORGS,
+  SOCIALS,
+} from "@/lib/about";
 import { useDialKit } from "dialkit";
-
-// `slug` keys into the per-logo DialKit crop/scale controls below — kept
-// separate from `company` (the display name) so renaming a company never
-// silently breaks its dial lookup.
-const EXPERIENCE = [
-  { slug: "cursor",     company: "Cursor",              role: "Campus Ambassador",           dates: "2026",         description: "leading growth at ucla",                            logo: "/images/about/logos/cursor.png" },
-  { slug: "joola",      company: "JOOLA",               role: "Product Design Intern",       dates: "Summer 2026", description: "pioneers in pickleball & table tennis equipment", logo: "/images/about/logos/joola.avif" },
-  { slug: "beaconsAi",  company: "Beacons AI",          role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/beacons-ai.avif" },
-  { slug: "dialogueAi", company: "Dialogue AI",         role: "Product Designer (contract)", dates: "2026",         description: "via Product Space",                                logo: "/images/about/logos/dialogue-ai.avif" },
-  { slug: "sokaRecords", company: "Soka Records",       role: "Creative Intern",             dates: "2025",         description: "keshi, boywithuke, starfall, yel",                  logo: "/images/about/logos/soka-records.avif" },
-  { slug: "mousepad",   company: "The Mousepad Company", role: "Visual Designer",            dates: "2020 – 2022",  description: "mousepads and social media",                        logo: "/images/about/logos/mousepad-company.avif", hidden: true },
-];
-
-const ORGS = [
-  { name: "UCLA Product Space",       role: "Product Designer"            },
-  { name: "Campus Events Commission", role: "Director of Media Production" },
-];
-
-const SOCIALS = FOOTER_LINKS;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -54,6 +43,9 @@ export default function AboutPage() {
     sokaRecords: { scale: [1.46, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
     mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
   });
+
+  const featuredOrg = ORGS.find((o) => "featured" in o && o.featured);
+  const otherOrgs = ORGS.filter((o) => !("featured" in o && o.featured));
 
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: 40, paddingBottom: 120 }}>
@@ -92,7 +84,7 @@ export default function AboutPage() {
               lineHeight: 1.5,
               color: "var(--color-text-muted)",
               margin: "0 0 24px",
-            }}>B.S. Cognitive Science | UCLA &apos;27</p>
+            }}>B.S. Cognitive Science | UCLA &apos;27 · usually mid-rabbit-hole</p>
           </EntranceItem>
 
           <EntranceItem>
@@ -102,11 +94,9 @@ export default function AboutPage() {
               letterSpacing: "0.1px",
               color: "var(--color-text-secondary)",
               margin: "0 0 32px",
+              textWrap: "pretty",
             }}>
-              I&apos;m a designer because I love connecting people through thoughtful interactions. I grew up on
-              the internet, shaped by communities and rabbit holes that taught me thoughtful craft turns
-              ordinary moments into ones worth returning to. What I make is meant to be beautiful and
-              functional, but mostly it&apos;s meant to give people a moment of joy they didn&apos;t expect.
+              {ABOUT_BIO}
             </p>
           </EntranceItem>
 
@@ -128,11 +118,9 @@ export default function AboutPage() {
               paddingLeft: 20,
               listStyleType: "disc",
             }}>
-              <li>shooting concerts for iconic artists and venues 📸</li>
-              <li>building keyboards on youtube (1M+ views!) ⌨️</li>
-              <li>winning a national table tennis title 🏓</li>
-              <li>3D printing functional art</li>
-              <li>running 🏃‍</li>
+              {ABOUT_INTERESTS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </EntranceItem>
         </div>
@@ -189,7 +177,7 @@ export default function AboutPage() {
       }}>
         <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-          {EXPERIENCE.filter((e) => !e.hidden).map(({ slug, company, role, dates, description, logo }) => {
+          {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(({ slug, company, role, dates, description, logo }) => {
             const crop = logoDk[slug as keyof typeof logoDk];
             return (
             <StaggerItem key={company} style={{
@@ -228,13 +216,28 @@ export default function AboutPage() {
         </StaggerReveal>
       </section>
 
-      {/* ── Organizations ── */}
+      {/* ── Organizations — Product Space gets a quiet photo pair ── */}
       <section style={{
         marginBottom: 80,
       }}>
         <ScrollReveal><SectionLabel>i&apos;m part of</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-          {ORGS.map(({ name, role }) => (
+          {featuredOrg && (
+            <StaggerItem style={{ padding: "16px 0 36px" }}>
+              <div style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 16,
+                marginBottom: 20,
+              }}>
+                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0 }}>{featuredOrg.name}</p>
+                <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{featuredOrg.role}</p>
+              </div>
+              <ProductSpacePhotos variant="inline" />
+            </StaggerItem>
+          )}
+          {otherOrgs.map(({ name, role }) => (
             <StaggerItem key={name} style={{
               display: "flex",
               alignItems: "center",
@@ -247,6 +250,30 @@ export default function AboutPage() {
           ))}
         </StaggerReveal>
       </section>
+
+      {/* Quiet door into the editorial archive sheet */}
+      <ScrollReveal>
+        <p style={{
+          fontSize: 13,
+          color: "var(--color-text-muted)",
+          margin: 0,
+          paddingTop: 8,
+          borderTop: "1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent)",
+        }}>
+          prefer the quieter cut?{" "}
+          <Link
+            href="/about/v2"
+            className="nav-link"
+            style={{
+              color: "var(--color-text-secondary)",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
+          >
+            open the archive sheet
+          </Link>
+        </p>
+      </ScrollReveal>
 
     </div>
     </div>

@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
-// Module-level set of active playground mounts (unique symbol per instance).
+// Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
 // React StrictMode double-invokes AND the concurrent-renderer race where a new
 // mount commits before the previous cleanup fires.
@@ -71,7 +71,7 @@ const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, m
 export default function PlaygroundPageClient({ items }: { items: PlaygroundGalleryItem[] }) {
     const instanceKey = useRef<symbol | null>(null);
 
-    const dk = useDialKit("Playground Edge Fade", {
+    const dk = useDialKit("Archive Edge Fade", {
         topHeight:      [160,  40, 320, 1],
         topBlur:        [5,    0,  20,  0.5],
         topStartPct:    [45,   0,  100, 1],
@@ -123,7 +123,7 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
             <BentoGallery
                 items={items}
                 columns={4}
-                gap={24}
+                gap={12}
                 cellAspect={1.25}
                 overviewMode="width"
                 maxZoom={1.5}

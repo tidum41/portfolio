@@ -202,7 +202,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
-      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="auto" />
+      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="none" />
       {!isCompact && (
         <motion.div
           initial={false}

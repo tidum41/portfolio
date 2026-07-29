@@ -193,7 +193,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
-          ? <img src={src} alt={alt} style={{ width: "100%", display: "block", objectFit: "cover" }} />
+          ? <img src={src} alt={alt} loading="lazy" decoding="async" style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
         }
       </div>
@@ -501,7 +501,17 @@ export default async function BruinLeasePage() {
               <Body>{cs.problemBody}</Body>
 
               {cs.problemImage
-                ? <img src={cs.problemImage} alt="Fragmented subleasing platforms" style={{ width: "100%", aspectRatio: "16/7", objectFit: "cover", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
+                ? (
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }}>
+                    <Image
+                      src={cs.problemImage}
+                      alt="Fragmented subleasing platforms"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 750px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                )
                 : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 28 }}>{cs.problemImageCaption}</p>
@@ -542,7 +552,7 @@ export default async function BruinLeasePage() {
                   // reserves layout space ahead of the real image loading
                   // (a bare width:100% <img> has no height until it does).
                   <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px" }}>
-                    <Image src={cs.figmaComparison} alt="Early layout exploration in Figma" fill style={{ objectFit: "cover" }} />
+                    <Image src={cs.figmaComparison} alt="Early layout exploration in Figma" fill sizes="(max-width: 768px) 100vw, 750px" style={{ objectFit: "cover" }} />
                   </div>
                 )
                 : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />

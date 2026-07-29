@@ -52,7 +52,7 @@ const HABIT_POPUP_MAX_W = 480;
 const CD_POPUP_EMBED_H = "min(62vh, 680px)";
 // Phone mockup is ~9:19 — a 4:3 popup slot caps height and shrinks the
 // embed; give the habit popup a portrait slot so the phone can scale up.
-// Subtract ~100px for popup chrome so the panel stays within 85vh.
+// Subtract ~100px for popup chrome so the panel stays within the viewport.
 const HABIT_POPUP_EMBED_H = "min(calc(85vh - 80px), 780px)";
 
 // React's reconciler recreates a Portal's entire subtree (destroying its
@@ -153,7 +153,7 @@ function cursorLabelAttrs(p: SanityProject): Record<string, string | undefined> 
  *     entrance stagger as every other case, giving the hero its moment.
  *   - Case-study "Back" (peekInstantBack()): stays fully instant, exactly as
  *     before — this is the fix that avoids remounting PS3Silk's WebGL canvas.
- *   - Everything else (Nav "work" link, browser back from about/playground,
+ *   - Everything else (Nav "work" link, browser back from about/archive,
  *     etc.): hero settles in first, then the grid cascades in shortly after,
  *     replaying on every such arrival since hero/grid re-hide when you leave. */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
@@ -228,7 +228,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // AnimationProvider reads the instant-back flag once, synchronously, to
   // decide whether the outgoing case study's exit should skip its fade. Clear
   // it shortly after landing back here so it doesn't leak into unrelated,
-  // later transitions (e.g. about -> playground).
+  // later transitions (e.g. about -> archive).
   useEffect(() => {
     if (isWorkRoute) clearInstantBack();
   }, [isWorkRoute]);
@@ -528,8 +528,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   borderRadius: 4,
                   overflow: "hidden",
                   position: "relative",
-                  minHeight: CD_POPUP_EMBED_H,
+                  // Preferred height drives the panel; flex-shrink + minHeight 0
+                  // let it compress when ProjectPopup hits maxHeight.
                   height: CD_POPUP_EMBED_H,
+                  flex: "1 1 auto",
+                  minHeight: 0,
                   background: "var(--color-modal-bg)",
                 }}
               >
@@ -631,8 +634,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   borderRadius: 4,
                   overflow: "hidden",
                   position: "relative",
-                  minHeight: HABIT_POPUP_EMBED_H,
                   height: HABIT_POPUP_EMBED_H,
+                  flex: "1 1 auto",
+                  minHeight: 0,
                   background: "var(--color-phone-bg)",
                   display: "flex",
                   alignItems: "center",

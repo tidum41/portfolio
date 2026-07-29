@@ -3,7 +3,7 @@ import { structureTool, type StructureResolver } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./src/sanity/schemaTypes";
 
-// Playground Gallery is a singleton (one document, fixed ID "playgroundGallery" —
+// Archive Gallery is a singleton (one document, fixed ID "playgroundGallery" —
 // see scripts/seed-playground-gallery.mjs) so its list item opens straight into
 // that document instead of a document-type list. Case studies keep the default
 // list view since there are multiple. Both get their own labeled top-level
@@ -16,7 +16,7 @@ const structure: StructureResolver = (S) =>
         .title("Case Studies")
         .child(S.documentTypeList("caseStudy").title("Case Studies")),
       S.listItem()
-        .title("Playground Gallery")
+        .title("Archive Gallery")
         .child(
           S.document()
             .schemaType("playgroundGallery")

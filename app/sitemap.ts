@@ -13,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/playground`,
+      url: `${SITE_URL}/archive`,
       lastModified,
       changeFrequency: "monthly",
       priority: 0.6,

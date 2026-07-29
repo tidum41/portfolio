@@ -182,7 +182,7 @@ export async function buildTextMask(
   // its descent), so the baked baseline lands at the exact spot within the
   // box the real DOM text's baseline does. Using actualBoundingBox* (tight,
   // per-glyph) here instead made the mask drift vertically depending on
-  // whether a label had descenders ("play") or not ("about"), since a tight
+  // whether a label had descenders ("archive") or not ("about"), since a tight
   // box's own height and top offset vary per string.
   const fontAscent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent || fontSizePx * SUPERSAMPLE * 0.8;
   const fontDescent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || fontSizePx * SUPERSAMPLE * 0.25;

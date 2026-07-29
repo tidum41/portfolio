@@ -23,6 +23,10 @@ interface GalleryItem {
     link?: string;
     colSpan?: 1 | 2;
     rowSpan?: 1 | 2;
+    /** Natural width/height. When set, tile height follows the image instead of rowSpan × cellAspect. */
+    aspectRatio?: number;
+    /** Eager-load + high fetch priority (first-viewport tiles). */
+    priority?: boolean;
 }
 interface PixPos {
     left: number;
@@ -77,6 +81,25 @@ const thumbXToScale = (px: number, zMin: number, zMax: number, trackW: number) =
     return Math.exp(lMin + (clamp(px, 0, trackW) / trackW) * (lMax - lMin));
 };
 
+// ── Per-tile image height ──────────────────────────────────────────────────────
+// Prefer natural aspectRatio (width/height) so uploaded composition is preserved.
+// Falls back to the discrete rowSpan × cellAspect grid when metadata is missing.
+function itemImageHeight(
+    item: GalleryItem,
+    cols: number,
+    colUnit: number,
+    imgUnitH: number,
+    gap: number
+): number {
+    const cs = clamp(item.colSpan ?? 1, 1, cols);
+    const iw = cs * colUnit + (cs - 1) * gap;
+    if (item.aspectRatio && item.aspectRatio > 0) {
+        return iw / item.aspectRatio;
+    }
+    const rs = item.rowSpan ?? 1;
+    return rs * imgUnitH + (rs - 1) * gap;
+}
+
 // ── Masonry packer ─────────────────────────────────────────────────────────────
 function packMasonry(
     items: GalleryItem[],
@@ -88,17 +111,17 @@ function packMasonry(
     gap: number
 ): PixPos[] {
     const colH = new Array(cols).fill(0);
-    const fullH = (rs: number) =>
-        rs * imgUnitH + (rs - 1) * gap + (hasCaps ? captionH : 0);
 
     return items.map((item) => {
         const cs = clamp(item.colSpan ?? 1, 1, cols);
-        const rs = item.rowSpan ?? 1;
+        const fullH =
+            itemImageHeight(item, cols, colUnit, imgUnitH, gap) +
+            (hasCaps ? captionH : 0);
         if (cs === 1) {
             let best = 0;
             for (let c = 1; c < cols; c++) if (colH[c] < colH[best]) best = c;
             const top = colH[best];
-            colH[best] += fullH(rs) + gap;
+            colH[best] += fullH + gap;
             return { left: best * (colUnit + gap), top };
         } else {
             let bestStart = 0,
@@ -112,18 +135,30 @@ function packMasonry(
             }
             const top = bestTop;
             for (let i = 0; i < cs; i++)
-                colH[bestStart + i] = top + fullH(rs) + gap;
+                colH[bestStart + i] = top + fullH + gap;
             return { left: bestStart * (colUnit + gap), top };
         }
     });
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const CAPTION_H = 24;
+// Room for 11px type + descenders (g/y/p) — line-height 1 was clipping bottoms.
+const CAPTION_H = 30;
 const CLICK_PX = 8;
 const EDGE_PAD = 240;  // large pad = canvas can scroll freely past edges
 const ZOOM_MIN = 0.06;
 const ZOOM_ABS = 8;
+/** Matches `app/globals.css` `--page-px` — overview must respect this gutter. */
+const PAGE_PX_FALLBACK = 24;
+
+function readPagePx(): number {
+    if (typeof window === "undefined") return PAGE_PX_FALLBACK;
+    const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue("--page-px")
+        .trim();
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : PAGE_PX_FALLBACK;
+}
 
 // ── Dark mode hook ─────────────────────────────────────────────────────────────
 function useIsDark() {
@@ -276,6 +311,8 @@ export default function BentoGallery({
     const zMaxRef = useRef(zMax);
     zMaxRef.current = zMax;
     const zMinRef = useRef(ZOOM_MIN);
+    // Cancels in-flight focal zoom rAF when a new zoom gesture starts.
+    const zoomAnimRef = useRef<number | null>(null);
 
     const [vw, setVw] = useState(1280);
     const [vh, setVh] = useState(720);
@@ -335,13 +372,18 @@ export default function BentoGallery({
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Grid geometry ─────────────────────────────────────────────────────────
-    const colUnit = Math.max(80, (vw - (columns - 1) * gap) / columns);
+    // Lay out for the site's horizontal content band (`--page-px` gutters), not
+    // the raw viewport — overview then sits at scale ≈ 1 with real page padding.
+    const pagePx = readPagePx();
+    const layoutW = Math.max(1, vw - 2 * pagePx);
+    const colUnit = Math.max(80, (layoutW - (columns - 1) * gap) / columns);
     const imgUnitH = colUnit * cellAspect;
     const hasCaps = items.some((it) => it.caption);
 
     const cW = (cs: number) =>
         clamp(cs, 1, columns) * colUnit + (clamp(cs, 1, columns) - 1) * gap;
-    const cImgH = (rs: number) => rs * imgUnitH + (rs - 1) * gap;
+    const cImgH = (item: GalleryItem) =>
+        itemImageHeight(item, columns, colUnit, imgUnitH, gap);
 
     // Kept in sync every render (not just on focus/layout changes) so the
     // selector-resize call inside applyTransform always reads fresh geometry
@@ -412,26 +454,45 @@ export default function BentoGallery({
             const item = items[i];
             if (!item) return;
             const b =
-                pos.top + cImgH(item.rowSpan ?? 1) + (hasCaps ? CAPTION_H : 0);
+                pos.top + cImgH(item) + (hasCaps ? CAPTION_H : 0);
             if (b > max) max = b;
         });
         return max;
-    }, [positions, items, imgUnitH, hasCaps, gap]);
+    }, [positions, items, imgUnitH, hasCaps, gap, colUnit, columns]);
 
     // ── Bounds ────────────────────────────────────────────────────────────────
+    // When content is larger than the viewport: classic pan limits + EDGE_PAD.
+    // When content fits: allow ±slack around the centered position instead of
+    // locking min==max to dead-center. Forced centering after every zoom step
+    // was crushing focal-point math on zoom-out (canvas jumps toward top-left
+    // as soon as it fits). Slack still keeps content roughly on-screen; gesture
+    // end uses snapToBounds for a soft settle.
     const getBounds = useCallback(
         (s: number): BBox => {
             const cws = canvasW * s,
                 chs = canvasH * s;
-            return {
-                minX: cws > vw ? -(cws - vw) - EDGE_PAD : (vw - cws) / 2,
-                maxX: cws > vw ? EDGE_PAD : (vw - cws) / 2,
-                minY: chs > vh ? -(chs - vh) - EDGE_PAD : (vh - chs) / 2,
-                maxY: chs > vh ? EDGE_PAD : (vh - chs) / 2,
+            const axis = (content: number, view: number): [number, number] => {
+                if (content > view) {
+                    return [-(content - view) - EDGE_PAD, EDGE_PAD];
+                }
+                const center = (view - content) / 2;
+                const slack = Math.min(EDGE_PAD, Math.max(0, (view - content) / 2));
+                return [center - slack, center + slack];
             };
+            const [minX, maxX] = axis(cws, vw);
+            const [minY, maxY] = axis(chs, vh);
+            return { minX, maxX, minY, maxY };
         },
         [canvasW, canvasH, vw, vh]
     );
+
+    // Pointer/client coords → root-local space (matches translate/scale units).
+    const clientToLocal = useCallback((clientX: number, clientY: number) => {
+        const root = rootRef.current;
+        if (!root) return { x: clientX, y: clientY };
+        const r = root.getBoundingClientRect();
+        return { x: clientX - r.left, y: clientY - r.top };
+    }, []);
 
     // Keeps the focused-tile selector border locked to the actual on-screen
     // box of its tile through every zoom-changing gesture — not just the
@@ -454,9 +515,14 @@ export default function BentoGallery({
         if (!sel || !item || !pos) return;
         const { x, y, s } = tx.current;
         const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
-        const rs = item.rowSpan ?? 1;
         const iw = cs * colUnitRef.current + (cs - 1) * gapRef.current;
-        const ih = rs * imgUnitHRef.current + (rs - 1) * gapRef.current;
+        const ih = itemImageHeight(
+            item,
+            columnsRef.current,
+            colUnitRef.current,
+            imgUnitHRef.current,
+            gapRef.current
+        );
         sel.style.left = x + pos.left * s + "px";
         sel.style.top = y + pos.top * s + "px";
         sel.style.width = iw * s + "px";
@@ -506,7 +572,7 @@ export default function BentoGallery({
     );
 
     const snapToBounds = useCallback(
-        (easing: "spring" | "flow" = "spring") => {
+        (easing: "none" | "spring" | "flow" = "spring") => {
             const { x, y, s } = tx.current;
             const b = getBounds(s);
             const nx = clamp(x, b.minX, b.maxX);
@@ -517,30 +583,63 @@ export default function BentoGallery({
         [getBounds, applyTransform]
     );
 
+    const cancelZoomAnim = useCallback(() => {
+        if (zoomAnimRef.current !== null) {
+            cancelAnimationFrame(zoomAnimRef.current);
+            zoomAnimRef.current = null;
+        }
+    }, []);
+
     // ── Overview + Focus ──────────────────────────────────────────────────────
     const getOverviewT = useCallback((): Tx => {
+        const pad = readPagePx();
         if (overviewMode === "fit") {
+            const contentW = Math.max(1, vw - 2 * pad);
             const s =
-                Math.min(vw / Math.max(1, canvasW), vh / Math.max(1, canvasH)) *
-                0.88;
+                Math.min(
+                    contentW / Math.max(1, canvasW),
+                    vh / Math.max(1, canvasH)
+                ) * 0.88;
             return { x: (vw - canvasW * s) / 2, y: (vh - canvasH * s) / 2, s };
         }
-        const s = (vw / Math.max(1, canvasW)) * 0.96;
+        // Canvas is already laid out for `--page-px` content width — fill that
+        // band (scale 1 when layoutW matches), keep L/R gutters, pin to top.
+        const contentW = Math.max(1, vw - 2 * pad);
+        const s = contentW / Math.max(1, canvasW);
         const scaledH = canvasH * s;
-        // Start grid with 48px breathing room from top (consistent with page padding)
-        const y = scaledH <= vh ? (vh - scaledH) / 2 : 48;
-        return { x: (vw - canvasW * s) / 2, y, s };
+        const x = (vw - canvasW * s) / 2;
+        const y = scaledH <= vh ? (vh - scaledH) / 2 : 0;
+        return { x, y, s };
     }, [vw, vh, canvasW, canvasH, overviewMode]);
+
+    /** Overview transform centered on a tile (used when leaving focus). */
+    const getOverviewAroundT = useCallback(
+        (idx: number): Tx => {
+            const ov = getOverviewT();
+            const pos = positions[idx];
+            const item = items[idx];
+            if (!pos || !item) return ov;
+            const cs = item.colSpan ?? 1;
+            const iw = cW(cs);
+            const ih = cImgH(item);
+            const b = getBounds(ov.s);
+            return {
+                x: clamp(vw / 2 - (pos.left + iw / 2) * ov.s, b.minX, b.maxX),
+                y: clamp(vh / 2 - (pos.top + ih / 2) * ov.s, b.minY, b.maxY),
+                s: ov.s,
+            };
+        },
+        [getOverviewT, getBounds, positions, items, vw, vh, colUnit, imgUnitH, gap, columns]
+    );
 
     const getFocusT = useCallback(
         (idx: number): Tx => {
             const pos = positions[idx];
             const item = items[idx];
             if (!pos || !item) return getOverviewT();
-            const cs = item.colSpan ?? 1,
-                rs = item.rowSpan ?? 1;
+            const cs = item.colSpan ?? 1;
             const iw = cW(cs),
-                ih = cImgH(rs);
+                ih = cImgH(item);
             const s_ov = getOverviewT().s;
             const s = Math.max(
                 s_ov * 1.25,
@@ -605,54 +704,140 @@ export default function BentoGallery({
     }, []);
 
     const goOverview = useCallback(() => {
+        cancelZoomAnim();
+        // Re-center overview on the tile we just left — not a jump back to
+        // the initial top-left cover framing.
+        const leaving = focusedRef.current;
         startTransition(() => setFocusedIdx(null));
-        const t = getOverviewT();
+        const t =
+            leaving !== null ? getOverviewAroundT(leaving) : getOverviewT();
         applyTransform(t.x, t.y, t.s, "flow");
         hideSelector();
         if (rootRef.current) rootRef.current.style.cursor = "crosshair";
-    }, [getOverviewT, applyTransform, hideSelector]);
+    }, [getOverviewT, getOverviewAroundT, applyTransform, hideSelector, cancelZoomAnim]);
 
     const focusCell = useCallback(
         (idx: number) => {
+            cancelZoomAnim();
             startTransition(() => setFocusedIdx(idx));
             const t = getFocusT(idx);
             applyTransform(t.x, t.y, t.s, "focus");
             showSelector(idx, true);
             if (rootRef.current) rootRef.current.style.cursor = "crosshair";
         },
-        [getFocusT, applyTransform, showSelector]
+        [getFocusT, applyTransform, showSelector, cancelZoomAnim]
     );
 
     // ── Zoom helpers ──────────────────────────────────────────────────────────
+    // Focal-point zoom for `translate(x,y) scale(s)` with transform-origin
+    // top-left: keep the canvas point under (fx, fy) fixed as scale changes.
+    // CSS transitions on translate+scale interpolate each component independently
+    // and drift toward the origin mid-flight — so eased zooms are rAF'd with
+    // the same focal formula every frame (frozen start → target scale).
+    const zoomAround = useCallback(
+        (
+            fx: number,
+            fy: number,
+            ns: number,
+            easing: "none" | "snap" | "focus" | "spring" | "flow" = "snap",
+            // When set (e.g. slider drag), all frames/steps are computed from this
+            // frozen start so mid-gesture clamps can't accumulate drift.
+            base?: Tx
+        ) => {
+            const zm = zMaxRef.current;
+            ns = clamp(ns, zMinRef.current, zm);
+            cancelZoomAnim();
+
+            const { x: x0, y: y0, s: s0 } = base ?? tx.current;
+            if (s0 <= 0) return;
+
+            const applyAtScale = (s: number) => {
+                const ratio = s / s0;
+                const nx = fx - (fx - x0) * ratio;
+                const ny = fy - (fy - y0) * ratio;
+                const b = getBounds(s);
+                applyTransform(
+                    clamp(nx, b.minX, b.maxX),
+                    clamp(ny, b.minY, b.maxY),
+                    s,
+                    "none"
+                );
+            };
+
+            if (easing === "none") {
+                applyAtScale(ns);
+                return;
+            }
+
+            if (Math.abs(ns - s0) < 1e-6) return;
+
+            // Approximate the former CSS snap/spring curves with a smooth ease-out
+            // so +/- and track clicks still feel animated — without the top-left drift
+            // that CSS translate+scale interpolation causes.
+            const DUR_MS =
+                easing === "focus" ? 1500 : easing === "flow" ? 600 : easing === "spring" ? 500 : 450;
+            const ease =
+                easing === "spring"
+                    ? (t: number) => {
+                          const p = 1 - Math.pow(1 - t, 3);
+                          return p + Math.sin(p * Math.PI) * 0.04 * (1 - p);
+                      }
+                    : (t: number) => 1 - Math.pow(1 - t, 3);
+
+            const t0 = performance.now();
+            const step = (now: number) => {
+                const t = clamp((now - t0) / DUR_MS, 0, 1);
+                applyAtScale(s0 + (ns - s0) * ease(t));
+                if (t < 1) {
+                    zoomAnimRef.current = requestAnimationFrame(step);
+                } else {
+                    zoomAnimRef.current = null;
+                    applyAtScale(ns);
+                }
+            };
+            zoomAnimRef.current = requestAnimationFrame(step);
+        },
+        [getBounds, applyTransform, cancelZoomAnim]
+    );
+
     const zoomToCenter = useCallback(
         (
             ns: number,
             easing: "none" | "snap" | "focus" | "spring" | "flow" = "snap"
         ) => {
-            const zm = zMaxRef.current;
-            ns = clamp(ns, zMinRef.current, zm);
-            const { x, y, s } = tx.current;
-            const cx = vw / 2,
-                cy = vh / 2;
-            const nx = cx - (cx - x) * (ns / s);
-            const ny = cy - (cy - y) * (ns / s);
-            const b = getBounds(ns);
-            applyTransform(
-                clamp(nx, b.minX, b.maxX),
-                clamp(ny, b.minY, b.maxY),
-                ns,
-                easing
-            );
+            // Keep the focused tile (or viewport center) stable — infinite-canvas zoom.
+            const fi = focusedRef.current;
+            let fx = vw / 2;
+            let fy = vh / 2;
+            if (fi !== null) {
+                const pos = positionsRef.current[fi];
+                const item = itemsRef.current[fi];
+                if (pos && item) {
+                    const { x, y, s } = tx.current;
+                    const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
+                    const iw =
+                        cs * colUnitRef.current + (cs - 1) * gapRef.current;
+                    const ih = itemImageHeight(
+                        item,
+                        columnsRef.current,
+                        colUnitRef.current,
+                        imgUnitHRef.current,
+                        gapRef.current
+                    );
+                    fx = x + (pos.left + iw / 2) * s;
+                    fy = y + (pos.top + ih / 2) * s;
+                }
+            }
+            zoomAround(fx, fy, ns, easing);
         },
-        [vw, vh, getBounds, applyTransform]
+        [vw, vh, zoomAround]
     );
 
     const zoomBy = useCallback(
         (factor: number) => {
             zoomToCenter(tx.current.s * factor, "snap");
-            setTimeout(() => snapToBounds("spring"), 500);
         },
-        [zoomToCenter, snapToBounds]
+        [zoomToCenter]
     );
 
     // ── Slider drag ───────────────────────────────────────────────────────────
@@ -660,26 +845,39 @@ export default function BentoGallery({
         (e: React.PointerEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            cancelZoomAnim();
             const startX = e.clientX;
             const zm = zMaxRef.current;
             const startPx = scaleToThumbX(tx.current.s, zMinRef.current, zm, trackW);
+            // Freeze focal at gesture start (focused tile center when selected).
+            const fi = focusedRef.current;
+            let cx = vw / 2;
+            let cy = vh / 2;
+            if (fi !== null) {
+                const pos = positionsRef.current[fi];
+                const item = itemsRef.current[fi];
+                if (pos && item) {
+                    const { x, y, s } = tx.current;
+                    const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
+                    const iw =
+                        cs * colUnitRef.current + (cs - 1) * gapRef.current;
+                    const ih = itemImageHeight(
+                        item,
+                        columnsRef.current,
+                        colUnitRef.current,
+                        imgUnitHRef.current,
+                        gapRef.current
+                    );
+                    cx = x + (pos.left + iw / 2) * s;
+                    cy = y + (pos.top + ih / 2) * s;
+                }
+            }
+            const base = { ...tx.current };
 
             const onMove = (ev: PointerEvent) => {
                 const newPx = clamp(startPx + (ev.clientX - startX), 0, trackW);
                 const ns = thumbXToScale(newPx, zMinRef.current, zm, trackW);
-                const { x, y, s } = tx.current;
-                const cx = vw / 2,
-                    cy = vh / 2;
-                const ratio = ns / Math.max(s, 0.001);
-                const nx = cx - (cx - x) * ratio;
-                const ny = cy - (cy - y) * ratio;
-                const b = getBounds(ns);
-                applyTransform(
-                    clamp(nx, b.minX, b.maxX),
-                    clamp(ny, b.minY, b.maxY),
-                    ns,
-                    "none"
-                );
+                zoomAround(cx, cy, ns, "none", base);
             };
             const onUp = () => {
                 window.removeEventListener("pointermove", onMove);
@@ -689,7 +887,7 @@ export default function BentoGallery({
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", onUp);
         },
-        [vw, vh, trackW, getBounds, applyTransform, snapToBounds]
+        [vw, vh, trackW, zoomAround, cancelZoomAnim, snapToBounds]
     );
 
     const onTrackClick = useCallback(
@@ -700,9 +898,8 @@ export default function BentoGallery({
             ).getBoundingClientRect();
             const px = clamp(e.clientX - rect.left - trackPadH, 0, trackW);
             zoomToCenter(thumbXToScale(px, zMinRef.current, zMaxRef.current, trackW), "snap");
-            setTimeout(() => snapToBounds("spring"), 500);
         },
-        [zoomToCenter, snapToBounds, trackW, trackPadH]
+        [zoomToCenter, trackW, trackPadH]
     );
 
     const onTrackPointerDown = useCallback(
@@ -711,23 +908,35 @@ export default function BentoGallery({
             if ((e.target as HTMLElement) === thumbRef.current) return;
             e.stopPropagation();
             e.preventDefault();
+            cancelZoomAnim();
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
             const px = clamp(e.clientX - rect.left - trackPadH, 0, trackW);
             const zm = zMaxRef.current;
             const ns = thumbXToScale(px, zMinRef.current, zm, trackW);
-            const { x, y, s } = tx.current;
-            const cx = vw / 2;
-            const cy = vh / 2;
-            const ratio = ns / Math.max(s, 0.001);
-            const nx = cx - (cx - x) * ratio;
-            const ny = cy - (cy - y) * ratio;
-            const b = getBounds(ns);
-            applyTransform(
-                clamp(nx, b.minX, b.maxX),
-                clamp(ny, b.minY, b.maxY),
-                ns,
-                "none"
-            );
+            const fi = focusedRef.current;
+            let cx = vw / 2;
+            let cy = vh / 2;
+            if (fi !== null) {
+                const pos = positionsRef.current[fi];
+                const item = itemsRef.current[fi];
+                if (pos && item) {
+                    const { x, y, s } = tx.current;
+                    const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
+                    const iw =
+                        cs * colUnitRef.current + (cs - 1) * gapRef.current;
+                    const ih = itemImageHeight(
+                        item,
+                        columnsRef.current,
+                        colUnitRef.current,
+                        imgUnitHRef.current,
+                        gapRef.current
+                    );
+                    cx = x + (pos.left + iw / 2) * s;
+                    cy = y + (pos.top + ih / 2) * s;
+                }
+            }
+            const base = { ...tx.current };
+            zoomAround(cx, cy, ns, "none", base);
 
             const startX = e.clientX;
             const startPx = px;
@@ -735,17 +944,7 @@ export default function BentoGallery({
             const onMove = (ev: PointerEvent) => {
                 const newPx = clamp(startPx + (ev.clientX - startX), 0, trackW);
                 const nextScale = thumbXToScale(newPx, zMinRef.current, zm, trackW);
-                const { x: cx2, y: cy2, s: cs } = tx.current;
-                const ratio2 = nextScale / Math.max(cs, 0.001);
-                const nxx = cx - (cx - cx2) * ratio2;
-                const nyy = cy - (cy - cy2) * ratio2;
-                const bb = getBounds(nextScale);
-                applyTransform(
-                    clamp(nxx, bb.minX, bb.maxX),
-                    clamp(nyy, bb.minY, bb.maxY),
-                    nextScale,
-                    "none"
-                );
+                zoomAround(cx, cy, nextScale, "none", base);
             };
             const onUp = () => {
                 window.removeEventListener("pointermove", onMove);
@@ -755,12 +954,13 @@ export default function BentoGallery({
             window.addEventListener("pointermove", onMove);
             window.addEventListener("pointerup", onUp);
         },
-        [vw, vh, trackW, trackPadH, getBounds, applyTransform, snapToBounds]
+        [vw, vh, trackW, trackPadH, zoomAround, cancelZoomAnim, snapToBounds]
     );
 
     // ── Init / resize — always "none" to avoid jarring scale-in ──────────────
     useEffect(() => {
         // Recompute dynamic min zoom whenever layout changes
+        cancelZoomAnim();
         if (minZoomFactor > 0) {
             zMinRef.current = Math.max(ZOOM_MIN, getOverviewT().s * minZoomFactor);
         }
@@ -773,7 +973,11 @@ export default function BentoGallery({
             const t = getOverviewT();
             applyTransform(t.x, t.y, t.s, "none");
         }
-    }, [vw, vh, canvasW, canvasH]);
+        snapToBounds("none");
+    }, [vw, vh, canvasW, canvasH, getOverviewT, getFocusT, applyTransform, showSelector, snapToBounds, cancelZoomAnim]);
+
+    // Cancel in-flight zoom rAF on unmount
+    useEffect(() => () => cancelZoomAnim(), [cancelZoomAnim]);
 
 
     // ── Keyboard ──────────────────────────────────────────────────────────────
@@ -800,14 +1004,14 @@ export default function BentoGallery({
             if (!curPos) return;
             const item = items[fi];
             const cx = curPos.left + cW(item?.colSpan ?? 1) / 2;
-            const cy = curPos.top + cImgH(item?.rowSpan ?? 1) / 2;
+            const cy = curPos.top + (item ? cImgH(item) : imgUnitH) / 2;
             let best = fi,
                 bScore = Infinity;
             positions.forEach((p, i) => {
                 if (i === fi) return;
                 const it = items[i];
                 const ex = p.left + cW(it?.colSpan ?? 1) / 2;
-                const ey = p.top + cImgH(it?.rowSpan ?? 1) / 2;
+                const ey = p.top + (it ? cImgH(it) : imgUnitH) / 2;
                 const rX = ex - cx,
                     rY = ey - cy;
                 if (rX * dx + rY * dy <= 0) return;
@@ -837,17 +1041,11 @@ export default function BentoGallery({
             if (e.ctrlKey || e.metaKey) {
                 const factor = e.deltaY < 0 ? 1.07 : 0.93;
                 const ns = clamp(s * factor, zMinRef.current, zm);
-                const nx = e.clientX - (e.clientX - x) * (ns / s);
-                const ny = e.clientY - (e.clientY - y) * (ns / s);
-                const b = getBounds(ns);
-                applyTransform(
-                    clamp(nx, b.minX, b.maxX),
-                    clamp(ny, b.minY, b.maxY),
-                    ns,
-                    "none"
-                );
+                const local = clientToLocal(e.clientX, e.clientY);
+                zoomAround(local.x, local.y, ns, "none");
             } else {
-                // Free scroll — elastic resistance past edges but no hard clamp
+                // Free scroll — elastic resistance past edges, settle on stop
+                cancelZoomAnim();
                 const b = getBounds(s);
                 applyTransform(
                     elastic(x - e.deltaX, b.minX, b.maxX),
@@ -855,15 +1053,16 @@ export default function BentoGallery({
                     s,
                     "none"
                 );
+                clearTimeout(wheelTimer.current);
+                wheelTimer.current = setTimeout(() => snapToBounds("spring"), 150);
             }
-            clearTimeout(wheelTimer.current);
         };
         el.addEventListener("wheel", onWheel, { passive: false });
         return () => {
             el.removeEventListener("wheel", onWheel);
             clearTimeout(wheelTimer.current);
         };
-    }, [applyTransform, getBounds]);
+    }, [applyTransform, getBounds, snapToBounds, clientToLocal, zoomAround, cancelZoomAnim]);
 
     // ── Pointer drag + pinch ──────────────────────────────────────────────────
     const ptrs = useRef(new Map<number, { x: number; y: number }>());
@@ -885,6 +1084,7 @@ export default function BentoGallery({
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
             if (canvasRef.current) canvasRef.current.style.willChange = "transform";
+            cancelZoomAnim();
             ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (ptrs.current.size === 1) {
                 const g = gst.current;
@@ -901,13 +1101,18 @@ export default function BentoGallery({
                 g.moved = true;
                 g.p2dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                 g.p2scale = tx.current.s;
-                g.p2mx = (pts[0].x + pts[1].x) / 2;
-                g.p2my = (pts[0].y + pts[1].y) / 2;
+                // Store pinch midpoint in root-local space (same units as tx).
+                const mid = clientToLocal(
+                    (pts[0].x + pts[1].x) / 2,
+                    (pts[0].y + pts[1].y) / 2
+                );
+                g.p2mx = mid.x;
+                g.p2my = mid.y;
                 g.p2px = tx.current.x;
                 g.p2py = tx.current.y;
             }
         },
-        []
+        [cancelZoomAnim, clientToLocal]
     );
 
     const onPointerMove = useCallback(
@@ -923,16 +1128,18 @@ export default function BentoGallery({
                     pts[1].x - pts[0].x,
                     pts[1].y - pts[0].y
                 );
-                const mid = {
-                    x: (pts[0].x + pts[1].x) / 2,
-                    y: (pts[0].y + pts[1].y) / 2,
-                };
+                const mid = clientToLocal(
+                    (pts[0].x + pts[1].x) / 2,
+                    (pts[0].y + pts[1].y) / 2
+                );
                 const ns = clamp(
                     (g.p2scale * dist) / Math.max(1, g.p2dist),
                     zMinRef.current,
                     zm
                 );
                 const sr = ns / g.p2scale;
+                // Keep the canvas point that was under the initial midpoint fixed
+                // under the current midpoint (pinch + pan).
                 const nx = mid.x - (g.p2mx - g.p2px) * sr;
                 const ny = mid.y - (g.p2my - g.p2py) * sr;
                 const b = getBounds(ns);
@@ -966,7 +1173,7 @@ export default function BentoGallery({
                 }
             }
         },
-        [applyTransform, getBounds]
+        [applyTransform, getBounds, clientToLocal]
     );
 
     const onPointerUp = useCallback(
@@ -1109,9 +1316,8 @@ export default function BentoGallery({
                     const pos = positions[i];
                     if (!pos) return null;
                     const cs = clamp(item.colSpan ?? 1, 1, columns);
-                    const rs = item.rowSpan ?? 1;
                     const iw = cW(cs);
-                    const imgH = cImgH(rs);
+                    const imgH = cImgH(item);
                     const isActive = focusedIdx === i;
                     const isHovered = hoveredIdx === i && !isActive && !zoomed;
                     const dimmed = zoomed && !isActive;
@@ -1159,6 +1365,7 @@ export default function BentoGallery({
                                 cursor: dimmed ? "default" : "crosshair",
                                 opacity: dimmed ? 0.42 : 1,
                                 transition: "opacity .65s cubic-bezier(.4,0,.2,1)",
+                                position: "relative",
                             }}
                         >
                             <div
@@ -1174,7 +1381,11 @@ export default function BentoGallery({
                             >
                                 {item.src ? (
                                     <img
-                                        loading="eager"
+                                        loading={item.priority ? "eager" : "lazy"}
+                                        decoding="async"
+                                        {...(item.priority
+                                            ? { fetchPriority: "high" as const }
+                                            : {})}
                                         src={item.src}
                                         alt={item.alt ?? ""}
                                         draggable={false}
@@ -1182,6 +1393,8 @@ export default function BentoGallery({
                                         style={{
                                             width: "100%",
                                             height: "100%",
+                                            // Cells are sized from natural aspectRatio — cover fills
+                                            // the tile solidly (no letterbox gaps) with minimal crop.
                                             objectFit: "cover",
                                             display: "block",
                                             pointerEvents: "none",
@@ -1215,38 +1428,49 @@ export default function BentoGallery({
                             {hasCaps && (
                                 <div
                                     style={{
-                                        paddingTop: 7,
+                                        // Shared first-line metrics with the focus overlay
+                                        // so entering focus only changes wrap/overflow.
+                                        paddingTop: 8,
+                                        paddingBottom: 2,
                                         height: CAPTION_H,
-                                        overflow: "hidden",
+                                        boxSizing: "border-box",
                                         display: "flex",
-                                        alignItems: "center",
-                                        gap: 5,
+                                        alignItems: "flex-start",
+                                        gap: 6,
                                         fontFamily:
                                             "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
                                         fontSize: 11,
-                                        fontWeight: isActive ? 500 : 400,
-                                        letterSpacing: "0.01em",
+                                        fontWeight: 400,
+                                        letterSpacing: "0.02em",
                                         textTransform: "lowercase",
-                                        color: isActive
-                                            ? captionActive
-                                            : isHovered
+                                        lineHeight: 1.3,
+                                        // Hide truncated preview while focused overlay is up
+                                        visibility: isActive ? "hidden" : "visible",
+                                        color: isHovered
                                               ? captionHovered
                                               : captionBase,
                                         transition: "color .3s ease",
                                     }}
+                                    aria-hidden={isActive}
                                 >
                                     <span
                                         style={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            // Keep the same wrap/overflow keys as the
+                                            // focus span so React never removes one
+                                            // longhand while another conflicting one
+                                            // stays set (textWrap vs whiteSpace).
                                             whiteSpace: "nowrap",
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
-                                            lineHeight: 1,
+                                            overflowWrap: "normal",
                                             pointerEvents: "none",
                                         }}
                                     >
                                         {item.caption ?? ""}
                                     </span>
-                                    {item.link && (
+                                    {item.link && !isActive && (
                                         <a
                                             href={item.link}
                                             target="_blank"
@@ -1257,16 +1481,86 @@ export default function BentoGallery({
                                             style={{
                                                 flexShrink: 0,
                                                 display: "inline-flex",
+                                                alignItems: "center",
                                                 color: "inherit",
                                                 pointerEvents: "auto",
                                                 position: "relative",
+                                                // Optical align with 11px / 1.3 caption line
+                                                marginTop: 1,
                                             }}
                                         >
-                                            {/* The glyph itself is 10x10 — too small a target to
-                                                reliably hit precisely, especially next to the
-                                                cell's own much larger click-to-zoom area. Same
-                                                invisible-hit-area-expansion convention used
-                                                elsewhere on the site (see app/globals.css). */}
+                                            <span style={{ position: "absolute", inset: -10 }} />
+                                            <LinkIcon />
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Focused caption — absolute overlay so wrapping never
+                                pushes masonry / overlaps neighboring tiles.
+                                Anchored at the same top/padding/type as the preview
+                                so the first line does not jump on focus. */}
+                            {hasCaps && isActive && item.caption && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        right: 0,
+                                        top: imgH,
+                                        zIndex: 6,
+                                        paddingTop: 8,
+                                        paddingBottom: 10,
+                                        paddingLeft: 0,
+                                        paddingRight: 0,
+                                        boxSizing: "border-box",
+                                        display: "flex",
+                                        alignItems: "flex-start",
+                                        gap: 6,
+                                        fontFamily:
+                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
+                                        fontSize: 11,
+                                        fontWeight: 400,
+                                        letterSpacing: "0.02em",
+                                        textTransform: "lowercase",
+                                        lineHeight: 1.3,
+                                        color: captionActive,
+                                        // No filled scrim — readability from captionActive
+                                        // contrast alone so captions don't look boxed.
+                                        background: "transparent",
+                                        pointerEvents: "none",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            // Same property set as preview (no textWrap).
+                                            whiteSpace: "normal",
+                                            overflow: "visible",
+                                            textOverflow: "clip",
+                                            overflowWrap: "anywhere",
+                                        }}
+                                    >
+                                        {item.caption}
+                                    </span>
+                                    {item.link && (
+                                        <a
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={`Watch: ${item.caption}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            style={{
+                                                flexShrink: 0,
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                color: "inherit",
+                                                pointerEvents: "auto",
+                                                position: "relative",
+                                                marginTop: 1,
+                                            }}
+                                        >
                                             <span style={{ position: "absolute", inset: -10 }} />
                                             <LinkIcon />
                                         </a>

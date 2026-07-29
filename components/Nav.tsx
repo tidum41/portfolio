@@ -7,9 +7,9 @@ import HalftoneNavLink from "./HalftoneNavLink";
 import { useDialKit } from "dialkit";
 
 const links = [
-  { href: "/",           label: "work" },
-  { href: "/playground", label: "play" },
-  { href: "/about",      label: "about" },
+  { href: "/",         label: "work" },
+  { href: "/archive",  label: "archive" },
+  { href: "/about",    label: "about" },
 ];
 
 export default function Nav() {
