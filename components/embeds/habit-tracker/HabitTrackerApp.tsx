@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FocusEvent } from 'react';
 import { CaretLeft, CaretRight, Sun, Moon, Check } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './HabitTrackerApp.module.css';
@@ -151,13 +151,27 @@ export default function HabitTrackerApp({
     setResolvedTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  const focusHabitTitleAtEnd = () => {
+  const focusHabitTitleForRename = (e: FocusEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    // iOS rename fields select the existing name on focus so the next
+    // keystroke replaces it. Empty fields keep a plain caret + placeholder.
+    if (!input.value) return;
+    requestAnimationFrame(() => {
+      // Re-check in case focus moved away before the frame.
+      if (document.activeElement === input) input.select();
+    });
+  };
+
+  const commitHabitTitle = () => {
     const input = habitInputRef.current;
     if (!input) return;
-    const len = input.value.length;
-    requestAnimationFrame(() => {
-      input.setSelectionRange(len, len);
-    });
+    const trimmed = input.value.trim();
+    if (trimmed !== input.value) {
+      setHabitTitle(trimmed);
+      input.value = trimmed;
+    }
+    if (trimmed) localStorage.setItem('habit-title', trimmed);
+    else localStorage.removeItem('habit-title');
   };
 
   const calculateStreak = () => {
@@ -349,13 +363,26 @@ export default function HabitTrackerApp({
             type="text"
             value={habitTitle}
             placeholder={HABIT_PLACEHOLDER}
+            enterKeyHint="done"
+            autoCapitalize="sentences"
+            autoCorrect="on"
+            spellCheck
+            autoComplete="off"
             onChange={(e) => {
               const value = e.target.value;
               setHabitTitle(value);
               if (value.trim()) localStorage.setItem('habit-title', value);
               else localStorage.removeItem('habit-title');
             }}
-            onFocus={focusHabitTitleAtEnd}
+            onFocus={focusHabitTitleForRename}
+            onBlur={commitHabitTitle}
+            onKeyDown={(e) => {
+              // iOS "Done" / Enter dismisses the keyboard and commits the name.
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (e.currentTarget as HTMLInputElement).blur();
+              }
+            }}
             className={styles.habitTitle}
             aria-label="Habit name"
           />
