@@ -29,7 +29,7 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
     borderRadius:  [4,    0,   40],
     featuredCropX: [55,   0,   100],
     featuredCropY: [0,    0,   100],
-    featuredZoom:  [1,    1,   2.5],
+    featuredZoom:  [1.3,  1,   2.5],
     topCropX:      [50,   0,   100],
     topCropY:      [50,   0,   100],
     topZoom:       [1,    1,   2.5],
@@ -45,9 +45,11 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
     borderRadius,
   });
 
-  // Retina-aware: bento column is up to ~320px; left cell ~50% → ~160–320px
-  // display, but we request enough pixels that cover + crop stay sharp.
-  const imgSizes = "(max-width: 767px) 90vw, 480px";
+  // Side cells: enough for ~320px column @2x.
+  const sideSizes = "(max-width: 767px) 50vw, 480px";
+  // Featured cell is CSS-scaled (~1.3× by default) — request extra pixels so
+  // the magnified crop stays sharp on retina (display × dpr × zoom ≈ 800–900).
+  const featuredSizes = "(max-width: 767px) 100vw, 900px";
 
   return (
     <div
@@ -69,8 +71,8 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
           alt={featured.alt}
           fill
           priority
-          quality={90}
-          sizes={imgSizes}
+          quality={92}
+          sizes={featuredSizes}
           style={{ objectFit: "cover", objectPosition: `${dk.featuredCropX}% ${dk.featuredCropY}%`, transform: `scale(${dk.featuredZoom})` }}
         />
       </div>
@@ -81,7 +83,7 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             alt={top.alt}
             fill
             quality={90}
-            sizes={imgSizes}
+            sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.topCropX}% ${dk.topCropY}%`, transform: `scale(${dk.topZoom})` }}
           />
         </div>
@@ -91,7 +93,7 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             alt={bottom.alt}
             fill
             quality={90}
-            sizes={imgSizes}
+            sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.bottomCropX}% ${dk.bottomCropY}%`, transform: `scale(${dk.bottomZoom})` }}
           />
         </div>
