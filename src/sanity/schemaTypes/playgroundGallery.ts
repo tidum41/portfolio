@@ -1,8 +1,7 @@
 import { defineField, defineType } from "sanity";
 
-// Maps to BentoGallery's discrete masonry grid units (colSpan/rowSpan) —
-// the gallery packs images into grid cells, not continuous aspect ratios,
-// so this reads clearly in Studio without exposing that implementation detail.
+// Maps to BentoGallery column span (wide/large → 2 cols; square/tall → 1).
+// Tile height follows each image's natural aspect ratio from Sanity metadata.
 const SHAPE_OPTIONS = [
   { title: "Square (1×1)", value: "square" },
   { title: "Tall (1×2)",   value: "tall" },
@@ -12,7 +11,7 @@ const SHAPE_OPTIONS = [
 
 export const playgroundGallery = defineType({
   name: "playgroundGallery",
-  title: "Playground Gallery",
+  title: "Archive Gallery",
   type: "document",
   fields: [
     defineField({
@@ -35,6 +34,6 @@ export const playgroundGallery = defineType({
     }),
   ],
   preview: {
-    prepare: () => ({ title: "Playground Gallery" }),
+    prepare: () => ({ title: "Archive Gallery" }),
   },
 });

@@ -561,7 +561,7 @@ void main() {
 
       // Start only if we're currently the visible work route; otherwise wait
       // for the active→true wake. Avoids the old path of sizing to 0×0 on
-      // about/play first-paint and then permanently flattening the pattern.
+      // about/archive first-paint and then permanently flattening the pattern.
       if (activeRef.current) {
         requestAnimationFrame(() => lifecycleRef.current?.wake());
       }

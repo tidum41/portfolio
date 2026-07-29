@@ -157,8 +157,12 @@ export default function ProjectPopup({
             exit={{ opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }}
             style={{
               width: `min(${maxWidth}px, 100%)`,
-              maxHeight: "85vh",
-              overflowY: "auto",
+              // Backdrop uses 24px padding on each edge — keep the whole panel
+              // (header + embed) inside the viewport without page or panel scroll.
+              maxHeight: "calc(100dvh - 48px)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
               background: panelBg,
               borderRadius: "var(--radius-panel)",
               border: "1px solid var(--color-border-subtle)",
@@ -166,7 +170,7 @@ export default function ProjectPopup({
               outline: "none",
             }}
           >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 20px 0" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 20px 0", flexShrink: 0 }}>
               <div>
                 <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
                 {sub && (
@@ -186,12 +190,22 @@ export default function ProjectPopup({
               </button>
             </div>
 
-            <div style={{ padding: 20 }}>
+            <div style={{
+              padding: 20,
+              // basis auto (not 0) so preferred child heights size the panel
+              // when it only has maxHeight; minHeight 0 still lets embeds
+              // shrink once the panel hits the viewport cap.
+              flex: "1 1 auto",
+              minHeight: 0,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}>
               {children}
             </div>
 
             {(description || (tools && tools.length > 0)) && (
-              <div style={{ padding: "0 20px 20px" }}>
+              <div style={{ padding: "0 20px 20px", flexShrink: 0 }}>
                 {description && (
                   <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--color-text-secondary)", margin: "0 0 12px" }}>
                     {description}

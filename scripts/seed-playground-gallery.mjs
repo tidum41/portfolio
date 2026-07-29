@@ -4,19 +4,19 @@
  * Usage:
  *   node scripts/seed-playground-gallery.mjs
  *
- * Requires SANITY_API_WRITE_TOKEN in .env.local (already present).
- * Uploads the 7 local images to Sanity Assets, then creates (or fully
- * replaces) the singleton "playgroundGallery" document with the corrected
- * captions/link/shape. After running, the gallery is editable in Studio —
- * add, remove, reorder, or re-caption images there instead of in code.
+ * Requires SANITY_API_WRITE_TOKEN in .env.local.
+ * Uploads originals from ../cms/playground, then createOrReplace's the
+ * singleton "playgroundGallery" document. Captions = exact filenames
+ * (no extension). Shape maps natural aspect → bento colSpan hint;
+ * BentoGallery sizes tile height from Sanity image metadata.
  */
 
 import { createClient } from "@sanity/client";
-import { readFileSync, existsSync } from "fs";
-import { resolve, extname } from "path";
+import { execFileSync } from "child_process";
+import { readFileSync, existsSync, readdirSync } from "fs";
+import { resolve, extname, basename, join } from "path";
 import { config } from "dotenv";
 
-// Load .env.local
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
@@ -34,118 +34,182 @@ const client = createClient({
   useCdn: false,
 });
 
+const ASSET_DIR = resolve(process.cwd(), "../cms/playground");
+const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+
+const KEYBOARD_CAPTION = "geonworks f1-8x";
+const KEYBOARD_LINK =
+  "https://www.youtube.com/watch?v=DfVodsY4WQk&pp=ygUKc3ZpeiBmMS04eA%3D%3D";
+
+/** Pack order — earlier = more visible in the default viewport. */
+const PRIORITY_CAPTIONS = [
+  "asap rocky",
+  "j. cole",
+  "gunna",
+  "playboi carti",
+  "the marias",
+  "geonworks f1-8x",
+  "singa unikorn",
+];
+
+// Explicit shape overrides (caption → shape). Everything else inferred from
+// dimensions when available, else "square".
+const SHAPE_BY_CAPTION = {
+  "legendaley": "wide",
+  "faze mew": "wide",
+  "designed keycaps and promotional graphics for the #1 esports org and goat of esports": "square",
+  [KEYBOARD_CAPTION]: "tall",
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function mimeFor(filePath) {
   const ext = extname(filePath).toLowerCase();
-  return { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-           ".webp": "image/webp" }[ext] ?? "application/octet-stream";
+  return {
+    ".png":  "image/png",
+    ".jpg":  "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".avif": "image/avif",
+  }[ext] ?? "application/octet-stream";
 }
 
-async function uploadImage(relPath, label) {
-  const abs = resolve(process.cwd(), relPath);
-  if (!existsSync(abs)) { console.warn(`  ⚠  ${label} not found at ${relPath}, skipping`); return undefined; }
-  console.log(`  ↑  Uploading ${label}…`);
-  const buf  = readFileSync(abs);
-  const mime = mimeFor(abs);
-  const asset = await client.assets.upload("image", buf, { filename: relPath.split("/").pop(), contentType: mime });
-  console.log(`  ✓  ${label} → ${asset._id}`);
+function slugKey(caption) {
+  return caption
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 64) || "item";
+}
+
+/** Best-effort width/height for shape inference before upload. */
+function probeAspect(absPath) {
+  try {
+    const out = execFileSync(
+      "ffprobe",
+      ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x", absPath],
+      { encoding: "utf8" }
+    ).trim();
+    const [w, h] = out.split("x").map(Number);
+    if (w > 0 && h > 0) return w / h;
+  } catch {
+    // fall through
+  }
+  // AVIF / other: parse ISO BMFF ispe box
+  try {
+    const buf = readFileSync(absPath);
+    const idx = buf.indexOf("ispe");
+    if (idx >= 0 && idx + 16 <= buf.length) {
+      const w = buf.readUInt32BE(idx + 8);
+      const h = buf.readUInt32BE(idx + 12);
+      if (w > 0 && h > 0 && w < 100000 && h < 100000) return w / h;
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const out = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", absPath], { encoding: "utf8" });
+    const w = Number(out.match(/pixelWidth:\s*(\d+)/)?.[1]);
+    const h = Number(out.match(/pixelHeight:\s*(\d+)/)?.[1]);
+    if (w > 0 && h > 0) return w / h;
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+function shapeFor(caption, aspect) {
+  if (SHAPE_BY_CAPTION[caption]) return SHAPE_BY_CAPTION[caption];
+  if (aspect == null) return "square";
+  if (aspect >= 2.2) return "wide";
+  if (aspect <= 0.72) return "tall";
+  // 4:5 portraits (~0.8) → square cell; natural aspectRatio sizes height.
+  return "square";
+}
+
+async function uploadImage(absPath, filename) {
+  if (!existsSync(absPath)) {
+    console.warn(`  ⚠  not found: ${absPath}, skipping`);
+    return undefined;
+  }
+  console.log(`  ↑  Uploading ${filename}…`);
+  const buf  = readFileSync(absPath);
+  const mime = mimeFor(absPath);
+  const asset = await client.assets.upload("image", buf, {
+    filename,
+    contentType: mime,
+  });
+  console.log(`  ✓  ${filename} → ${asset._id}`);
   return { _type: "image", asset: { _type: "reference", _ref: asset._id } };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(`\nSeeding Playground Gallery → Sanity (${PROJECT_ID}/${DATASET})\n`);
+  console.log(`\nSeeding Playground Gallery → Sanity (${PROJECT_ID}/${DATASET})`);
+  console.log(`Source: ${ASSET_DIR}\n`);
 
-  const items = [
-    {
-      key: "jcole",
-      path: "public/playground/jcole.webp",
-      label: "J. Cole",
-      caption: "j. cole",
-      alt: "J. Cole",
-      shape: "tall",
-    },
-    {
-      key: "keyboard",
-      path: "public/playground/keyboard.webp",
-      label: "Keyboard",
-      caption: "geonworks f1-8x i built",
-      alt: "Geonworks F1-8X mechanical keyboard",
-      link: "https://www.youtube.com/watch?v=DfVodsY4WQk&pp=ygUKc3ZpeiBmMS04eA%3D%3D",
-      shape: "square",
-    },
-    {
-      key: "gunna",
-      path: "public/playground/gunna.webp",
-      label: "Gunna",
-      caption: "gunna",
-      alt: "Gunna",
-      shape: "square",
-    },
-    {
-      key: "theMarias",
-      path: "public/playground/the-marias.webp",
-      label: "The Marías",
-      caption: "the marías",
-      alt: "The Marías",
-      shape: "square",
-    },
-    {
-      key: "omarApollo",
-      path: "public/playground/omar-apollo.webp",
-      label: "Omar Apollo",
-      caption: "omar apollo",
-      alt: "Omar Apollo",
-      shape: "tall",
-    },
-    {
-      key: "hollis",
-      path: "public/playground/2hollis.webp",
-      label: "2 Hollis",
-      caption: "2hollis",
-      alt: "2hollis",
-      shape: "square",
-    },
-    {
-      key: "singaUnikorn",
-      path: "public/playground/concert.webp",
-      label: "Singa Unikorn",
-      caption: "singa unikorn",
-      alt: "Singa Unikorn",
-      shape: "square",
-    },
-  ];
-
-  const docItems = [];
-  for (const it of items) {
-    const image = await uploadImage(it.path, it.label);
-    if (!image) continue;
-    docItems.push({
-      _key: it.key,
-      _type: "object",
-      image,
-      caption: it.caption,
-      alt: it.alt,
-      ...(it.link && { link: it.link }),
-      shape: it.shape,
-    });
+  if (!existsSync(ASSET_DIR)) {
+    throw new Error(`Asset directory not found: ${ASSET_DIR}`);
   }
 
-  // Deterministic _id ("playgroundGallery", matching the singleton pattern
-  // in sanity.config.ts's structure builder) so re-running this is safe.
+  const files = readdirSync(ASSET_DIR)
+    .filter((f) => IMAGE_EXTS.has(extname(f).toLowerCase()) && !f.startsWith("."))
+    .sort((a, b) => {
+      const ca = basename(a, extname(a)).toLowerCase();
+      const cb = basename(b, extname(b)).toLowerCase();
+      const ra = PRIORITY_CAPTIONS.findIndex((p) => ca === p || ca.includes(p));
+      const rb = PRIORITY_CAPTIONS.findIndex((p) => cb === p || cb.includes(p));
+      const na = ra === -1 ? PRIORITY_CAPTIONS.length : ra;
+      const nb = rb === -1 ? PRIORITY_CAPTIONS.length : rb;
+      return na - nb || ca.localeCompare(cb);
+    });
+
+  if (files.length === 0) {
+    throw new Error(`No images found in ${ASSET_DIR}`);
+  }
+
+  console.log(`Found ${files.length} images\n`);
+
+  const docItems = [];
+  for (const filename of files) {
+    const abs = join(ASSET_DIR, filename);
+    const caption = basename(filename, extname(filename));
+    const aspect = probeAspect(abs);
+    const shape = shapeFor(caption, aspect);
+    const image = await uploadImage(abs, filename);
+    if (!image) continue;
+
+    const item = {
+      _key: slugKey(caption),
+      _type: "object",
+      image,
+      caption,
+      alt: caption,
+      shape,
+    };
+    if (caption === KEYBOARD_CAPTION) {
+      item.link = KEYBOARD_LINK;
+    }
+    docItems.push(item);
+    console.log(`     caption="${caption}"  shape=${shape}${aspect != null ? `  ar=${aspect.toFixed(3)}` : ""}${item.link ? "  +link" : ""}`);
+  }
+
   const doc = {
     _id:   "playgroundGallery",
     _type: "playgroundGallery",
     items: docItems,
   };
 
-  console.log("\nWriting document to Sanity…");
+  console.log(`\nWriting document (${docItems.length} items) to Sanity…`);
   await client.createOrReplace(doc);
-  console.log(`\n✓ Done! Playground Gallery is now live in Sanity Studio.\n`);
-  console.log(`  Edit at: http://localhost:3005/studio`);
-  console.log(`  View at: http://localhost:3005/playground\n`);
+  console.log(`\n✓ Done! Playground Gallery reseeded with ${docItems.length} items.\n`);
+  console.log(`  Captions:`);
+  for (const it of docItems) console.log(`    - ${it.caption}`);
+  console.log("");
 }
 
-main().catch((err) => { console.error("\n✗ Seed failed:", err.message); process.exit(1); });
+main().catch((err) => {
+  console.error("\n✗ Seed failed:", err.message);
+  process.exit(1);
+});

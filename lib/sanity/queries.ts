@@ -1,4 +1,10 @@
 import { sanityClient } from "./client";
+import {
+  sanityImageUrl,
+  sanityCdnUrl,
+  SANITY_IMG_WIDTH,
+  SANITY_IMG_WIDTH_WIDE,
+} from "./imageUrl";
 
 // ── Design System (shared across all pages) ───────────────────────────────────
 
@@ -299,7 +305,8 @@ export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
   );
   if (!raw) return { slug };
 
-  const img  = (f: string) => (raw[f] as RawImg)?.asset?.url;
+  const img  = (f: string, width = SANITY_IMG_WIDTH) =>
+    sanityCdnUrl((raw[f] as RawImg)?.asset?.url, { width, quality: 85 });
   const file = (f: string) => (raw[f] as RawFile)?.asset?.url;
 
   return {
@@ -309,8 +316,8 @@ export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
     decision1CardCondensed:img("decision1CardCondensed"),
     decision1CardFinal:    img("decision1CardFinal"),
     homepageComparison:    img("homepageComparison"),
-    figmaComparison:       img("figmaComparison"),
-    heroImage:             img("heroImage"),
+    figmaComparison:       img("figmaComparison", SANITY_IMG_WIDTH_WIDE),
+    heroImage:             img("heroImage", SANITY_IMG_WIDTH_WIDE),
     processImage:          img("processImage"),
     ueTestingVideo:        file("ueTestingVideo"),
     oldFlowVideo:          file("oldFlowVideo"),
@@ -324,7 +331,7 @@ export async function getCaseStudyAssets(slug: string) {
   return getCaseStudy(slug);
 }
 
-// ── Playground Gallery (BentoGallery on /playground) ───────────────────────────
+// ── Archive Gallery (BentoGallery on /archive; Sanity type still playgroundGallery) ──
 
 export interface PlaygroundGalleryItem {
   key: string;
@@ -334,9 +341,15 @@ export interface PlaygroundGalleryItem {
   link?: string;
   colSpan: 1 | 2;
   rowSpan: 1 | 2;
+  /** Natural width/height from Sanity image metadata — drives tile height. */
+  aspectRatio?: number;
+  /** First-viewport tiles — eager + high fetch priority in BentoGallery. */
+  priority?: boolean;
 }
 
 // Maps the Studio-friendly "shape" field to BentoGallery's grid units.
+// When aspectRatio is present, rowSpan is ignored for height — shape mainly
+// controls column span (wide/large → 2 cols; square/tall → 1 col).
 const SHAPE_TO_SPAN: Record<string, { colSpan: 1 | 2; rowSpan: 1 | 2 }> = {
   square: { colSpan: 1, rowSpan: 1 },
   tall:   { colSpan: 1, rowSpan: 2 },
@@ -345,7 +358,16 @@ const SHAPE_TO_SPAN: Record<string, { colSpan: 1 | 2; rowSpan: 1 | 2 }> = {
 };
 
 const PLAYGROUND_GALLERY_QUERY = `*[_type == "playgroundGallery"][0]{
-  items[]{ _key, caption, alt, link, shape, image{ asset->{ url } } }
+  items[]{
+    _key, caption, alt, link, shape,
+    image{
+      asset->{
+        _id,
+        url,
+        metadata { dimensions { width, height, aspectRatio } }
+      }
+    }
+  }
 }`;
 
 interface RawPlaygroundItem {
@@ -354,7 +376,64 @@ interface RawPlaygroundItem {
   alt?: string;
   link?: string;
   shape?: string;
-  image?: { asset?: { url?: string } };
+  image?: {
+    asset?: {
+      _id?: string;
+      url?: string;
+      metadata?: {
+        dimensions?: {
+          width?: number;
+          height?: number;
+          aspectRatio?: number;
+        };
+      };
+    };
+  };
+}
+
+function playgroundImageSrc(it: RawPlaygroundItem): string | undefined {
+  const asset = it.image?.asset;
+  if (!asset?._id && !asset?.url) return undefined;
+  const shape = it.shape ?? "square";
+  const width =
+    shape === "wide" || shape === "large"
+      ? SANITY_IMG_WIDTH_WIDE
+      : SANITY_IMG_WIDTH;
+  if (asset._id) {
+    const url = sanityImageUrl(
+      { asset: { _ref: asset._id } },
+      { width, quality: 85 }
+    );
+    if (url) return url;
+  }
+  return sanityCdnUrl(asset.url, { width, quality: 85 }) ?? asset.url;
+}
+
+function playgroundAspectRatio(it: RawPlaygroundItem): number | undefined {
+  const dims = it.image?.asset?.metadata?.dimensions;
+  if (!dims) return undefined;
+  if (dims.aspectRatio && dims.aspectRatio > 0) return dims.aspectRatio;
+  if (dims.width && dims.height && dims.height > 0) return dims.width / dims.height;
+  return undefined;
+}
+
+/** First in list → packed earliest → most visible in the default viewport. */
+const PLAYGROUND_PRIORITY = [
+  "asap rocky",
+  "j. cole",
+  "gunna",
+  "playboi carti",
+  "the marias",
+  "geonworks f1-8x",
+  "singa unikorn",
+];
+
+function playgroundPriorityRank(caption?: string): number {
+  const key = (caption ?? "").toLowerCase().trim();
+  const idx = PLAYGROUND_PRIORITY.findIndex(
+    (p) => key === p || key.includes(p) || p.includes(key)
+  );
+  return idx === -1 ? PLAYGROUND_PRIORITY.length : idx;
 }
 
 export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
@@ -364,14 +443,28 @@ export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
     { next: { revalidate: 60 } }
   );
   const items = raw?.items ?? [];
-  return items
-    .filter((it) => it.image?.asset?.url)
-    .map((it) => ({
+  const result: PlaygroundGalleryItem[] = [];
+  for (const it of items) {
+    const src = playgroundImageSrc(it);
+    if (!src) continue;
+    const span = SHAPE_TO_SPAN[it.shape ?? "square"] ?? SHAPE_TO_SPAN.square;
+    const rank = playgroundPriorityRank(it.caption);
+    result.push({
       key: it._key,
-      src: it.image!.asset!.url!,
+      src,
       alt: it.alt || it.caption,
       caption: it.caption,
       link: it.link,
-      ...(SHAPE_TO_SPAN[it.shape ?? "square"] ?? SHAPE_TO_SPAN.square),
-    }));
+      aspectRatio: playgroundAspectRatio(it),
+      colSpan: span.colSpan,
+      rowSpan: span.rowSpan,
+      priority: rank < PLAYGROUND_PRIORITY.length,
+    });
+  }
+  result.sort(
+    (a, b) =>
+      playgroundPriorityRank(a.caption) - playgroundPriorityRank(b.caption) ||
+      (a.caption ?? "").localeCompare(b.caption ?? "")
+  );
+  return result;
 }

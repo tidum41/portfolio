@@ -41,7 +41,7 @@ interface Props {
 }
 
 export default function PhoneMockup({
-  frameSrc = "/images/phone-frame.png",
+  frameSrc = "/images/phone-frame.webp",
   videoSrc,
   muxPlaybackId,
   poster,

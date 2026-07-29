@@ -58,7 +58,7 @@ export const albums: Album[] = [
     title: 'dazies',
     artist: 'yeule',
     color: '#A898C0',
-    artUrl: '/music/Yeule-dazies-cover.webp',
+    artUrl: '/music/Yeule-dazies-cover-opt.webp',
     audioUrl: '/music/yeule - dazies.mp3',
   },
   {
@@ -82,7 +82,7 @@ export const albums: Album[] = [
     title: 'Lean 4 Real',
     artist: 'Playboi Carti',
     color: '#5C3A4A',
-    artUrl: '/music/playboicarti-lean4real-cover.jpg',
+    artUrl: '/music/playboicarti-lean4real-cover-opt.jpg',
     audioUrl: '/music/Lean 4 Real.mp3',
   },
   {

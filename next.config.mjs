@@ -30,6 +30,20 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["framer-motion", "@mux/mux-player-react"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/playground",
+        destination: "/archive",
+        permanent: true,
+      },
+      {
+        source: "/playground/:path*",
+        destination: "/archive/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

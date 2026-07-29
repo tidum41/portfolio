@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CaretLeft, CaretRight, Sun, Moon, Check } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './HabitTrackerApp.module.css';
@@ -75,6 +75,14 @@ function ensureMonthSeeded(
   generateMonthSeedDates(year, month, refDate).forEach((key) => selected.add(key));
 }
 
+const HABIT_PLACEHOLDER = 'type habit here';
+
+function normalizeHabitTitle(value: string | null): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  return trimmed.toLowerCase() === HABIT_PLACEHOLDER ? '' : value;
+}
+
 // Ported from the standalone Habit Tracker app (github.com/tidum41/habittracker) —
 // the framer-pointer postMessage forwarding and the parent-window theme sync
 // both only existed for the Framer-iframe embedding case and are gone here.
@@ -94,6 +102,7 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
   });
 
   const [habitTitle, setHabitTitle] = useState('');
+  const habitInputRef = useRef<HTMLInputElement>(null);
   const [direction, setDirection] = useState(1);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
@@ -105,8 +114,12 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
     ensureMonthSeeded(initialMonth, dates, refDate);
     setSelectedDates(dates);
 
-    const savedTitle = localStorage.getItem('habit-title');
-    if (savedTitle) setHabitTitle(savedTitle);
+    const savedTitle = normalizeHabitTitle(localStorage.getItem('habit-title'));
+    if (savedTitle) {
+      setHabitTitle(savedTitle);
+    } else {
+      localStorage.removeItem('habit-title');
+    }
 
     const attr = document.documentElement.getAttribute('data-theme');
     if (attr === 'dark' || attr === 'light') setResolvedTheme(attr);
@@ -118,6 +131,15 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
 
   const toggleTheme = () => {
     setResolvedTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const focusHabitTitleAtEnd = () => {
+    const input = habitInputRef.current;
+    if (!input) return;
+    const len = input.value.length;
+    requestAnimationFrame(() => {
+      input.setSelectionRange(len, len);
+    });
   };
 
   const calculateStreak = () => {
@@ -299,15 +321,17 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
       <div className={styles.content}>
         <div className={styles.titleBlock}>
           <input
+            ref={habitInputRef}
             type="text"
             value={habitTitle}
-            placeholder="type habit here"
+            placeholder={HABIT_PLACEHOLDER}
             onChange={(e) => {
               const value = e.target.value;
               setHabitTitle(value);
-              if (value) localStorage.setItem('habit-title', value);
+              if (value.trim()) localStorage.setItem('habit-title', value);
               else localStorage.removeItem('habit-title');
             }}
+            onFocus={focusHabitTitleAtEnd}
             className={styles.habitTitle}
             aria-label="Habit name"
           />
