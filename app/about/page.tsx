@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import ProductSpacePhotos from "@/components/ProductSpacePhotos";
@@ -250,30 +249,6 @@ export default function AboutPage() {
           ))}
         </StaggerReveal>
       </section>
-
-      {/* Quiet door into the editorial archive sheet */}
-      <ScrollReveal>
-        <p style={{
-          fontSize: 13,
-          color: "var(--color-text-muted)",
-          margin: 0,
-          paddingTop: 8,
-          borderTop: "1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent)",
-        }}>
-          prefer the quieter cut?{" "}
-          <Link
-            href="/about/v2"
-            className="nav-link"
-            style={{
-              color: "var(--color-text-secondary)",
-              textDecoration: "underline",
-              textUnderlineOffset: 3,
-            }}
-          >
-            open the archive sheet
-          </Link>
-        </p>
-      </ScrollReveal>
 
     </div>
     </div>
