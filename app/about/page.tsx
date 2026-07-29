@@ -16,7 +16,7 @@ import { useDialKit } from "dialkit";
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
-      fontFamily: "var(--font-display)",
+      fontFamily: "var(--font-page-title)",
       fontSize: 32,
       fontWeight: 400,
       lineHeight: 1.2,
@@ -43,27 +43,26 @@ export default function AboutPage() {
   });
 
   return (
-    <div style={{ paddingInline: "var(--page-px)", paddingTop: 40, paddingBottom: 120 }}>
+    <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
 
     {/* ── One shared content column for the whole page, same width as
         case-study content (var(--content-max-w), see .cs-layout in
         globals.css) so /about lines up with the rest of the site instead
         of running its own bespoke width. Bio + bento sit side by side
-        within it on desktop, collapsing to bento-on-top/bio-below (via
-        CSS `order`, see .about-hero in globals.css) at the site's
-        standard 767px mobile cutoff. ── */}
+        within it on desktop; on mobile bio comes first (thesis before
+        images). ── */}
     <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
 
       {/* ── Bio + bento hero — one continuous entrance cascade; social
           links sit un-animated, nested inside the bento column so they
           stack directly beneath it at every breakpoint. ── */}
-      <div style={{ marginBottom: 80 }}>
+      <div style={{ marginBottom: "var(--space-7)" }}>
       <EntranceStagger active className="about-hero">
 
         <div className="about-hero-bio">
           <EntranceItem>
             <h1 style={{
-              fontFamily: "var(--font-display)",
+              fontFamily: "var(--font-page-title)",
               fontSize: 32,
               fontWeight: 400,
               lineHeight: 1.2,
@@ -159,7 +158,7 @@ export default function AboutPage() {
       {/* ── CD Player ── */}
       <ScrollReveal>
         <section style={{
-          marginBottom: 80,
+          marginBottom: "var(--space-7)",
         }}>
           <SectionLabel>drag my favorite CDs!</SectionLabel>
           <CDPlayer style={{ marginTop: 16 }} variant="about" />
@@ -168,7 +167,7 @@ export default function AboutPage() {
 
       {/* ── Experience ── */}
       <section style={{
-        marginBottom: 80,
+        marginBottom: "var(--space-7)",
       }}>
         <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
@@ -213,7 +212,7 @@ export default function AboutPage() {
 
       {/* ── Organizations ── */}
       <section style={{
-        marginBottom: 80,
+        marginBottom: "var(--space-7)",
       }}>
         <ScrollReveal><SectionLabel>i&apos;m part of</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>

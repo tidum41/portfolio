@@ -270,7 +270,7 @@ export default async function SvizPage() {
           {/* Staggers in top-to-bottom on route arrival, own "Case Study
               Entrance" DialKit panel — see app/ucla-sublease/page.tsx for the
               full rationale. TOC (aside, above) never participates. */}
-          <header className="cs-hero-header" style={{ marginBottom: 64 }}>
+          <header className="cs-hero-header">
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
               <EntranceItem className="cs-hero-tagline-wrap">
                 <p className="cs-hero-tagline" style={{
@@ -279,7 +279,7 @@ export default async function SvizPage() {
                   fontWeight: 400,
                   letterSpacing: "0.01em",
                   color: "var(--color-text-muted)",
-                  margin: "0 0 16px",
+                  margin: "0 0 var(--space-2)",
                 }}>
                   {cs.heroTagline}
                 </p>
@@ -287,13 +287,13 @@ export default async function SvizPage() {
 
               <EntranceItem className="cs-hero-title-wrap">
                 <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-sans-medium)",
+                  fontFamily: "var(--font-doc-title)",
                   fontSize: "var(--fs-hero)",
                   fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
                   lineHeight: 1.1,
                   letterSpacing: "var(--ls-hero)",
                   color: "var(--color-text-primary)",
-                  margin: "0 0 20px",
+                  margin: "0 0 var(--space-3)",
                 }}>
                   {cs.heroTitle}
                 </h1>
@@ -315,7 +315,7 @@ export default async function SvizPage() {
 
               {/* Metadata — 4-column */}
               <EntranceItem>
-                <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${METADATA.length}, 1fr)`, marginTop: 32 }}>
+                <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${METADATA.length}, 1fr)`, marginTop: "var(--space-4)" }}>
                   {METADATA.map(({ label, values }) => (
                     <div key={label} style={{ padding: "0 24px 0 0" }}>
                       <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
