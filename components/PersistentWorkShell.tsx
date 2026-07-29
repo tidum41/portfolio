@@ -45,15 +45,17 @@ const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
 type PopupId = "cd" | "habit";
 
-const POPUP_EMBED_MAX_W = 800;
-const HABIT_POPUP_MAX_W = 480;
+const POPUP_EMBED_MAX_W = 1100;
+const HABIT_POPUP_MAX_W = 560;
 // Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
-// carousel + drag hint aren't clipped at narrow modal widths.
-const CD_POPUP_EMBED_H = "min(62vh, 680px)";
+// carousel + drag hint aren't clipped at narrow modal widths. Sized to
+// fill more of the viewport while leaving room for panel chrome.
+// Width stays ≥ CDPlayerWork's mobileBreakpoint (1000) so desktop modals
+// keep the horizontal player + grid layout instead of the carousel.
+const CD_POPUP_EMBED_H = "min(76dvh, 880px)";
 // Phone mockup is ~9:19 — a 4:3 popup slot caps height and shrinks the
 // embed; give the habit popup a portrait slot so the phone can scale up.
-// Subtract ~100px for popup chrome so the panel stays within the viewport.
-const HABIT_POPUP_EMBED_H = "min(calc(85vh - 80px), 780px)";
+const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 
 // React's reconciler recreates a Portal's entire subtree (destroying its
 // component state) whenever createPortal's target DOM node differs from the
@@ -602,7 +604,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                   <InteractiveBadge />
                 </div>
-                <PhonePoster opacity={habitPosterOpacity} theme={habitWidgetTheme} />
+                <PhonePoster
+                  opacity={habitPosterOpacity}
+                  theme={habitWidgetTheme}
+                  showScreen={openPopup === "habit"}
+                />
                 <div
                   ref={setGridHabitEl}
                   style={{
@@ -627,7 +633,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               onExitComplete={() => handlePopupExitComplete("habit")}
               title="Dumb Habit Tracker"
               sub="product design + frontend"
-              maxWidth={480}
+              maxWidth={HABIT_POPUP_MAX_W}
               panelBg="var(--color-phone-bg)"
             >
               <div

@@ -131,7 +131,7 @@ export default function ProjectPopup({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 24,
+            padding: "clamp(12px, 2.2vw, 20px)",
             background: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
@@ -157,9 +157,9 @@ export default function ProjectPopup({
             exit={{ opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }}
             style={{
               width: `min(${maxWidth}px, 100%)`,
-              // Backdrop uses 24px padding on each edge — keep the whole panel
-              // (header + embed) inside the viewport without page or panel scroll.
-              maxHeight: "calc(100dvh - 48px)",
+              // Leave a slim margin so the panel fills more of the viewport
+              // across breakpoints without scraping the edges.
+              maxHeight: "calc(100dvh - 2 * clamp(12px, 2.2vw, 20px))",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -170,7 +170,7 @@ export default function ProjectPopup({
               outline: "none",
             }}
           >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 20px 0", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
               <div>
                 <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
                 {sub && (
@@ -191,7 +191,7 @@ export default function ProjectPopup({
             </div>
 
             <div style={{
-              padding: 20,
+              padding: 16,
               // basis auto (not 0) so preferred child heights size the panel
               // when it only has maxHeight; minHeight 0 still lets embeds
               // shrink once the panel hits the viewport cap.
@@ -205,7 +205,7 @@ export default function ProjectPopup({
             </div>
 
             {(description || (tools && tools.length > 0)) && (
-              <div style={{ padding: "0 20px 20px", flexShrink: 0 }}>
+              <div style={{ padding: "0 16px 16px", flexShrink: 0 }}>
                 {description && (
                   <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--color-text-secondary)", margin: "0 0 12px" }}>
                     {description}

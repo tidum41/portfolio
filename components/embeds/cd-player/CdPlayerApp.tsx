@@ -54,7 +54,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     // (see the isVertical effect below) since it's embedded in a prose
     // column whose width doesn't track viewport width at all.
     mobileBreakpoint:   variant === 'about' ? [320, 200, 800, 1] : [1000, 400, 1200, 1],
-    targetPlayerWidth:  variant === 'about' ? [220, 120, 400, 1] : [370, 200, 600,  1],
+    targetPlayerWidth:  variant === 'about' ? [220, 120, 400, 1] : [460, 200, 620,  1],
     albumArtMaxSize:    [120, 60,  200,  1],
     carouselArtSize:    [78,  50,  160,  1],
     gridGap:            [14,  0,   40,   1],
@@ -143,10 +143,11 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
       const floor = W < 520 ? 0.18 : 0.15;
       setScale(Math.max(floor, s));
     } else {
-      // Horizontal: prefer a fixed ~370px (dial-tunable) player width; only shrink for tight viewports
+      // Horizontal: prefer a fixed (dial-tunable) player width; only shrink for tight viewports.
+      // Desktop popup slots are wider now (~960), so allow up to ~58% of the container.
       const targetScale = dk.targetPlayerWidth / PLAYER_W;
-      const maxFromW = (W * 0.50) / PLAYER_W; // never exceed 50% of viewport width
-      const maxFromH = Math.max(0.12, (H - 32) / PLAYER_H); // Player strictly restrained by parent height minus padding
+      const maxFromW = (W * 0.58) / PLAYER_W;
+      const maxFromH = Math.max(0.12, (H - 24) / PLAYER_H);
       const s = Math.min(targetScale, maxFromW, maxFromH);
       setScale(Math.max(0.14, s));
     }

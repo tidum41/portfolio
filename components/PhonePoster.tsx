@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
 import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+import HabitTrackerApp from "@/components/embeds/habit-tracker/HabitTrackerApp";
 // Static imports (see matching comment in PhoneEmbed.tsx) so Next.js
 // content-hashes the served filename instead of a plain public/ path that
 // never changes URL even when the file's bytes are swapped.
@@ -11,22 +12,38 @@ import phoneFrameDark from "@/public/phonemockup-dark.webp";
 
 const PHONE_W_BASE = 280;
 const PHONE_H_BASE = 580;
+const CONTENT_W = 394;
 const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
-/** Phone frame only — no iframe. Shown in the grid while the live embed is in the modal. */
-export default function PhonePoster({ opacity = 1, theme = 'light' }: { opacity?: number; theme?: 'light' | 'dark' }) {
+/**
+ * Grid-tile stand-in while the live PhoneEmbed is portaled into the modal.
+ * Matches PhoneEmbed's scale-to-fit math, and when `showScreen` is on, renders
+ * a non-interactive HabitTrackerApp clone in the screen cutout so the card
+ * doesn't flash an empty black bezel while the live instance is in the popup.
+ */
+export default function PhonePoster({
+  opacity = 1,
+  theme = "light",
+  showScreen = false,
+}: {
+  opacity?: number;
+  theme?: "light" | "dark";
+  showScreen?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: PHONE_W_BASE, height: PHONE_H_BASE });
 
   // Same "PhoneEmbed" dial key as the live component, so the poster always
-  // matches its size exactly — this used to be a fixed 280×580px with no
-  // scale-to-fit at all, so in a grid tile smaller than that it was silently
-  // being center-cropped by the card's own overflow:hidden (looking zoomed
-  // in), while the live embed correctly scaled the whole phone down to fit.
-  // Swapping from the (properly scaled, smaller-looking) live embed to the
-  // (fixed-size, cropped-looking) poster on click read as the card itself
-  // resizing. Giving the poster the identical scale-to-fit math fixes that.
-  const dk = useDialKit("PhoneEmbed", { sizeScale: [1.4, 0.5, 2.5, 0.05] });
+  // matches its size exactly.
+  const dk = useDialKit("PhoneEmbed", {
+    sizeScale: [1.4, 0.5, 2.5, 0.05],
+    insetTop: [3.07, 0, 15, 0.01],
+    insetBottom: [3.64, 0, 15, 0.01],
+    insetSide: [3.3, 0, 15, 0.01],
+    screenRadius: [12.86, 0, 25, 0.01],
+    iframeOffsetX: [0, -10, 10, 0.01],
+    iframeOffsetY: [-0.41, -10, 10, 0.01],
+  });
   const PHONE_W = PHONE_W_BASE * dk.sizeScale;
   const PHONE_H = PHONE_H_BASE * dk.sizeScale;
 
@@ -42,7 +59,12 @@ export default function PhonePoster({ opacity = 1, theme = 'light' }: { opacity?
 
   const scale = Math.min(containerSize.width / PHONE_W, containerSize.height / PHONE_H);
 
-  const frameSrc = theme === 'dark' ? phoneFrameDark.src : phoneFrameLight.src;
+  const screenLocalW = PHONE_W * (1 - (dk.insetSide * 2) / 100);
+  const screenLocalH = PHONE_H * (1 - dk.insetTop / 100 - dk.insetBottom / 100);
+  const contentH = Math.ceil(CONTENT_W * (screenLocalH / screenLocalW));
+  const contentScale = screenLocalW / CONTENT_W;
+
+  const frameSrc = theme === "dark" ? phoneFrameDark.src : phoneFrameLight.src;
 
   return (
     <div
@@ -65,15 +87,31 @@ export default function PhonePoster({ opacity = 1, theme = 'light' }: { opacity?
           style={{
             position: "absolute",
             zIndex: 1,
-            top: "3.07%",
-            bottom: "3.64%",
-            left: "3.3%",
-            right: "3.3%",
-            borderRadius: "12.86%",
+            top: `${dk.insetTop}%`,
+            bottom: `${dk.insetBottom}%`,
+            left: `${dk.insetSide}%`,
+            right: `${dk.insetSide}%`,
+            borderRadius: `${dk.screenRadius}%`,
             overflow: "hidden",
             background: "#000",
           }}
-        />
+        >
+          {showScreen && (
+            <div
+              style={{
+                position: "absolute",
+                top: `${dk.iframeOffsetY}%`,
+                left: `${dk.iframeOffsetX}%`,
+                width: CONTENT_W,
+                height: contentH,
+                transform: `scale(${contentScale})`,
+                transformOrigin: "top left",
+              }}
+            >
+              <HabitTrackerApp forcedTheme={theme} inert />
+            </div>
+          )}
+        </div>
         <img
           src={frameSrc}
           alt=""

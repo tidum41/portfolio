@@ -51,7 +51,7 @@ export default function PhoneEmbed({ style, expanded = false, onWidgetThemeChang
     iframeOffsetY: [-0.41, -10, 10, 0.01],
   });
 
-  const popupBoost = expanded ? 1.15 : 1;
+  const popupBoost = expanded ? 1.28 : 1;
   const PHONE_W = PHONE_W_BASE * dk.sizeScale * popupBoost;
   const PHONE_H = PHONE_H_BASE * dk.sizeScale * popupBoost;
   // Tight reference box in popup so scale-to-fit uses the full slot instead of
