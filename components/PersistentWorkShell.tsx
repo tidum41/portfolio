@@ -391,14 +391,19 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     >
       <IntroOrchestrator />
 
-      {/* ── Hero — full-viewport width, no max-width constraint ── */}
+      {/* ── Hero — fills the first viewport so work/toys start on scroll ── */}
       <section
         aria-label="Introduction"
+        className="work-hero"
         style={{
           position: "relative",
           overflow: "hidden",
           paddingTop: "var(--hero-pt)",
           paddingBottom: "var(--hero-pb)",
+          minHeight: "calc(100svh - var(--nav-h))",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
         }}
       >
         <PS3Silk
@@ -415,7 +420,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           paddingRight: "var(--page-px)",
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: "var(--space-3)",
+          width: "100%",
         }}>
           <HeroTextWithRabbit />
         </EntranceItem>
@@ -423,13 +429,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
-      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: 40 }}>
+      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"
           style={{
-            paddingTop: 48,
-            paddingBottom: 96,
+            paddingTop: "var(--space-5)",
+            paddingBottom: "var(--space-8)",
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
             gap: "var(--grid-gutter)",

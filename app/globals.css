@@ -79,6 +79,9 @@
 
   /* Typography scale */
   --font-display:     Georgia, 'Times New Roman', serif;
+  /* Title roles — Georgia for who/brand (home, about); HN Medium for docs (CS) */
+  --font-page-title:  var(--font-display);
+  --font-doc-title:   var(--font-sans-medium);
   /* clamp() so .cs-hero-title (both case-study pages) scales down on narrow
      viewports instead of holding a flat 48px with no mobile override — the
      home hero already does the equivalent (see HeroText.tsx's inline
@@ -115,11 +118,23 @@
   --grid-max-w:      1440px;
   --grid-gutter:     var(--page-px);
 
-  /* Spacing landmarks */
-  --page-px:         24px;
+  /* Spacing ladder (8px base) — prefer these over orphan px values */
+  --space-1:  8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  48px;
+  --space-6:  64px;
+  --space-7:  80px;
+  --space-8:  96px;
+  --space-9:  120px;
+
+  /* Spacing landmarks (aliases onto the ladder) */
+  --page-px:         24px; /* = --space-3 */
   --content-max-w:   750px;
-  --section-gap:     80px;
-  --section-pb:      64px;
+  --section-gap:     var(--space-7);
+  --section-pb:      var(--space-6);
+  --nav-h:           72px; /* 24+24 pad + ~24 line */
 
   /* Easing curves — exact from MotionWrappers.tsx */
   --ease-out:       cubic-bezier(0.0, 0.0, 0.2, 1);
@@ -136,10 +151,10 @@
   --radius-panel:   14px;
   --radius-logo:    24px;
 
-  /* Hero spacing */
-  --hero-pt:   56px;
-  --hero-pb:   48px;
-  --card-gap:  48px;
+  /* Hero spacing — snapped to ladder (was 56/48) */
+  --hero-pt:   var(--space-5);
+  --hero-pb:   var(--space-5);
+  --card-gap:  var(--space-5);
 }
 
 /* ─── Base reset ──────────────────────────────────────────────────── */
@@ -504,34 +519,31 @@ html[data-theme="dark"] .project-image {
   grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   align-items: start;
   padding-inline: var(--page-px);
-  padding-top: 40px;
-  padding-bottom: 120px;
+  padding-top: var(--space-5);
+  padding-bottom: var(--space-9);
 }
 .cs-aside {
   position: sticky;
   top: 60px;
   align-self: start;
-  padding-right: 24px; /* breathing room between TOC and content */
+  padding-right: var(--space-3); /* breathing room between TOC and content */
 }
 /* Tablet: right spacer col gone, TOC gets fixed 160px */
 @media (max-width: 1100px) {
   .cs-layout {
     grid-template-columns: 160px minmax(0, 1fr);
   }
-  .cs-aside { padding-right: 16px; }
+  .cs-aside { padding-right: var(--space-2); }
 }
 /* Mobile: single column. Aside (desktop TOC) is hidden; the back control
    lives inside .cs-content so it shares the hero media's left edge. */
 @media (max-width: 767px) {
   .cs-layout {
     grid-template-columns: 1fr;
-    padding-top: 16px;
-    /* Section gap/padding-bottom (80px/64px = 144px combined) is tuned for
-       desktop's denser sections; on a 375px-wide phone that reads as a lot
-       of dead scroll, especially after short/text-only sections like
-       Problem. Compress both proportionally rather than per-section. */
-    --section-gap: 48px;
-    --section-pb: 32px;
+    padding-top: var(--space-2);
+    /* Compress section rhythm on narrow viewports (ladder steps down). */
+    --section-gap: var(--space-5);
+    --section-pb: var(--space-4);
   }
   .cs-layout > * {
     min-width: 0;
@@ -541,18 +553,9 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study hero header / shared left lane ────────────────────
-   Horizontal offsets are driven by --cs-align-* CSS vars from
-   CaseStudyAlignDials (DialKit panel "CS Align"). Defaults below match
-   the last hard-coded optical nudges; tweak live, then lock in code. */
-:root {
-  --cs-align-m-back:    -6px;
-  --cs-align-m-tagline: 0px;
-  --cs-align-m-title:   -2px;
-  --cs-align-d-back:    -6px;
-  --cs-align-d-tagline: 0px;
-  --cs-align-d-title:   -2px;
-}
+/* ─── Case study hero — shared left lane with media ────────────────
+   Back (mobile), tagline, title, and hero media share the content
+   column's left edge via the box model. No translateX optical patches. */
 .cs-content {
   min-width: 0;
 }
@@ -561,6 +564,7 @@ html[data-theme="dark"] .project-image {
 }
 .cs-hero-header {
   text-align: left;
+  margin-bottom: var(--space-6);
 }
 .cs-hero-tagline,
 .cs-hero-title {
@@ -568,6 +572,7 @@ html[data-theme="dark"] .project-image {
   width: 100%;
   margin-left: 0;
   padding-left: 0;
+  transform: none;
 }
 .cs-hero-tagline-wrap,
 .cs-hero-title-wrap,
@@ -578,33 +583,23 @@ html[data-theme="dark"] .project-image {
   padding: 0;
   text-align: left;
 }
-
-/* Desktop nudges (≥768) — CaseStudyAlignDials injects live !important
-   overrides on top of these var-based fallbacks. */
-.cs-back-desktop {
-  transform: translateX(var(--cs-align-d-back, 0px));
-}
-@media (min-width: 768px) {
-  .cs-hero-tagline {
-    transform: translateX(var(--cs-align-d-tagline, 0px));
-  }
-  .cs-hero-title {
-    transform: translateX(var(--cs-align-d-title, 0px));
-  }
+.cs-back-desktop,
+.cs-back-mobile {
+  transform: none;
 }
 
 @media (max-width: 767px) {
   .cs-mobile-back {
     display: block;
-    margin: 0 0 4px;
+    margin: 0 0 var(--space-1);
     padding: 0;
   }
   .cs-back-mobile {
     margin: 0 !important;
     padding: 0 !important;
-    transform: translateX(var(--cs-align-m-back, 0px));
+    transform: none !important;
   }
-  .cs-hero-header { margin-bottom: 32px !important; }
+  .cs-hero-header { margin-bottom: var(--space-4) !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
   .cs-hero-header,
   .cs-hero-tagline-wrap,
@@ -617,9 +612,8 @@ html[data-theme="dark"] .project-image {
     padding-left: 0 !important;
     padding-right: 0 !important;
     text-align: left !important;
+    transform: none !important;
   }
-  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline, 0px)); }
-  .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
 /* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
@@ -656,25 +650,49 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* ─── Case study phone mockup responsive sizing (~20% up from prior mobile) ─ */
+/* ─── Case study phone mockups — fractions of the 750 content module ─
+   Desktop: single phones = 1/2 column; paired phones share the row.
+   Mobile: single/paired = 2/3 column, centered. */
+.pm-d2-wrap,
+.pm-solution-wrap {
+  width: 50%;
+  max-width: none;
+}
+.pm-d4-wrap {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: calc(50% - 12px);
+  max-width: calc(50% - 12px);
+}
 @media (max-width: 767px) {
-  .pm-hero-wrap     { width: 77% !important; max-width: 480px !important; }
-  .pm-d2-wrap       { width: 100% !important; max-width: 440px !important; margin-inline: auto !important; }
+  .pm-d2-wrap,
+  .pm-solution-wrap {
+    width: 66.666% !important;
+    max-width: none !important;
+    margin-inline: auto !important;
+  }
   .pm-d3-row,
-  .pm-d4-row        { flex-direction: column !important; align-items: center !important; gap: 24px !important; }
+  .pm-d4-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-3) !important;
+  }
   .pm-d3-wrap,
-  .pm-d4-wrap       { width: 77% !important; max-width: 336px !important; flex: none !important; }
-  .pm-solution-wrap { width: 77% !important; max-width: 413px !important; }
+  .pm-d4-wrap {
+    width: 66.666% !important;
+    max-width: none !important;
+    flex: none !important;
+  }
 }
 
 /* ─── Reflection 2-col grid — collapses to 1-col on mobile ──────── */
 .reflection-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px 56px;
+  gap: var(--space-5) var(--space-6);
 }
 @media (max-width: 680px) {
-  .reflection-grid { grid-template-columns: 1fr; gap: 40px; }
+  .reflection-grid { grid-template-columns: 1fr; gap: var(--space-5); }
 }
 
 /* ─── Page padding is fixed at --page-px across all breakpoints ──── */
@@ -709,20 +727,18 @@ html[data-theme="dark"] .project-image {
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────
    Desktop : [bio] [bento column (bento hero + social links stacked)]
-   Mobile  : bento column first (bento hero, then links), bio after —
-   achieved via `order` on the same two DOM children, matching the
-   .cs-layout / .portfolio-grid mobile cutoff. ── */
+   Mobile  : bio first (thesis), then bento — words before images. ── */
 .about-hero {
   display: flex;
   align-items: flex-start;
-  gap: 40px;
+  gap: var(--space-5);
 }
 .about-hero-bio { flex: 1 1 0; min-width: 0; order: 1; }
 .about-hero-bento-col { flex: 1 1 0; max-width: 320px; order: 2; }
 @media (max-width: 767px) {
-  .about-hero { flex-direction: column; gap: 0; }
-  .about-hero-bio { order: 2; margin-top: 48px; }
-  .about-hero-bento-col { order: 1; max-width: none; width: 100%; }
+  .about-hero { flex-direction: column; gap: var(--space-5); }
+  .about-hero-bio { order: 1; margin-top: 0; }
+  .about-hero-bento-col { order: 2; max-width: none; width: 100%; }
 }
 
 /* Polaroid scrapbook — Product Space on /about */

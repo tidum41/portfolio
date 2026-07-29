@@ -380,7 +380,7 @@ const FB = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function BruinLeasePage() {
-  const raw = await getCaseStudy("ucla-sublease");
+  const raw = await getCaseStudy("ucla-sublease").catch(() => ({ slug: "ucla-sublease" }));
 
   const cs = {
     ...FB,
@@ -442,7 +442,7 @@ export default async function BruinLeasePage() {
               "Entrance" panel. The TOC (aside, above) deliberately never
               participates: it's position:sticky, and animating it alongside
               the rest previously read as buggy/jittery rather than elegant. */}
-          <header className="cs-hero-header" style={{ marginBottom: 64 }}>
+          <header className="cs-hero-header">
             <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
               <EntranceItem className="cs-hero-tagline-wrap">
                 <p className="cs-hero-tagline" style={{
@@ -451,20 +451,20 @@ export default async function BruinLeasePage() {
                   fontWeight: 400,
                   letterSpacing: "0.01em",
                   color: "var(--color-text-muted)",
-                  margin: "0 0 16px",
+                  margin: "0 0 var(--space-2)",
                 }}>
                   {cs.heroTagline}
                 </p>
               </EntranceItem>
               <EntranceItem className="cs-hero-title-wrap">
                 <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-sans-medium)",
+                  fontFamily: "var(--font-doc-title)",
                   fontSize: "var(--fs-hero)",
                   fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
                   lineHeight: 1.1,
                   letterSpacing: "var(--ls-hero)",
                   color: "var(--color-text-primary)",
-                  margin: "0 0 36px",
+                  margin: "0 0 var(--space-4)",
                 }}>
                   {cs.heroTitle}
                 </h1>
@@ -479,7 +479,7 @@ export default async function BruinLeasePage() {
               {/* Metadata — 4-column, no border */}
               {metadata.length > 0 && (
                 <EntranceItem>
-                  <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
+                  <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: "var(--space-4)" }}>
                     {metadata.map(({ _key, label, values }) => (
                       <div key={_key} style={{ padding: "0 24px 0 0" }}>
                         <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
@@ -610,7 +610,7 @@ export default async function BruinLeasePage() {
               <Body>{cs.d2Body}</Body>
               {cs.ueTestingVideo && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                  <div className="pm-d2-wrap" style={{ width: "72%", maxWidth: 364 }}>
+                  <div className="pm-d2-wrap">
                     <PhoneMockup
                       videoSrc={cs.ueTestingVideo}
                       showFrame
@@ -640,9 +640,9 @@ export default async function BruinLeasePage() {
               <H2>{cs.d4Heading}</H2>
               <Body>{cs.d4Body}</Body>
               {(cs.oldFlowVideo || cs.decision1Video) && (
-                <div className="pm-d4-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
+                <div className="pm-d4-row" style={{ display: "flex", gap: "var(--space-3)", justifyContent: "center", margin: "var(--space-4) 0", alignItems: "flex-start" }}>
                   {cs.oldFlowVideo && (
-                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.oldFlowVideo}
                         showFrame
@@ -654,7 +654,7 @@ export default async function BruinLeasePage() {
                     </div>
                   )}
                   {cs.decision1Video && (
-                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.decision1Video}
                         showFrame
@@ -675,7 +675,7 @@ export default async function BruinLeasePage() {
               <H2>{cs.solutionHeading}</H2>
               {cs.solutionBody && <Body>{cs.solutionBody}</Body>}
               <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                <div className="pm-solution-wrap" style={{ width: "72%", maxWidth: 364 }}>
+                <div className="pm-solution-wrap">
                   <PhoneMockup
                     videoSrc="/solution.mp4"
                     showFrame

@@ -74,7 +74,7 @@ export default function HeroText() {
           animate={h1Controls}
           className="hero-heading"
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontFamily: "var(--font-page-title)",
             fontSize: "clamp(26px, 2.8vw, 36px)",
             fontWeight: 400,
             lineHeight: 1.2,
