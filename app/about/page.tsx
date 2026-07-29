@@ -3,7 +3,6 @@
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
-import ProductSpacePhotos from "@/components/ProductSpacePhotos";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,
@@ -43,9 +42,6 @@ export default function AboutPage() {
     mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
   });
 
-  const featuredOrg = ORGS.find((o) => "featured" in o && o.featured);
-  const otherOrgs = ORGS.filter((o) => !("featured" in o && o.featured));
-
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: 40, paddingBottom: 120 }}>
 
@@ -83,7 +79,7 @@ export default function AboutPage() {
               lineHeight: 1.5,
               color: "var(--color-text-muted)",
               margin: "0 0 24px",
-            }}>B.S. Cognitive Science | UCLA &apos;27 · usually mid-rabbit-hole</p>
+            }}>B.S. Cognitive Science | UCLA &apos;27</p>
           </EntranceItem>
 
           <EntranceItem>
@@ -215,28 +211,13 @@ export default function AboutPage() {
         </StaggerReveal>
       </section>
 
-      {/* ── Organizations — Product Space gets a quiet photo pair ── */}
+      {/* ── Organizations ── */}
       <section style={{
         marginBottom: 80,
       }}>
         <ScrollReveal><SectionLabel>i&apos;m part of</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-          {featuredOrg && (
-            <StaggerItem style={{ padding: "16px 0 36px" }}>
-              <div style={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: 16,
-                marginBottom: 20,
-              }}>
-                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0 }}>{featuredOrg.name}</p>
-                <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{featuredOrg.role}</p>
-              </div>
-              <ProductSpacePhotos variant="inline" />
-            </StaggerItem>
-          )}
-          {otherOrgs.map(({ name, role }) => (
+          {ORGS.map(({ name, role }) => (
             <StaggerItem key={name} style={{
               display: "flex",
               alignItems: "center",

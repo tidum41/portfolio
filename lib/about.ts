@@ -55,26 +55,8 @@ export const EXPERIENCE = [
 ] as const;
 
 export const ORGS = [
-  { name: "UCLA Product Space", role: "Product Designer", featured: true as const },
+  { name: "UCLA Product Space", role: "Product Designer" },
   { name: "Campus Events Commission", role: "Director of Media Production" },
-] as const;
-
-/** Photos of UCLA Product Space community (optimized under public/images/about). */
-export const PRODUCT_SPACE_PHOTOS = [
-  {
-    src: "/images/about/product-space/1.webp",
-    alt: "UCLA Product Space crew gathered outdoors under string lights",
-    caption: "string lights & ship nights",
-    width: 1200,
-    height: 1200,
-  },
-  {
-    src: "/images/about/product-space/2.webp",
-    alt: "UCLA Product Space friends celebrating together indoors",
-    caption: "the crew, mid-celebration",
-    width: 1200,
-    height: 1200,
-  },
 ] as const;
 
 export const ABOUT_INTERESTS = [
