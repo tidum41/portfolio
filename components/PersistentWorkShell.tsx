@@ -391,7 +391,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     >
       <IntroOrchestrator />
 
-      {/* ── Hero — fills the first viewport so work/toys start on scroll ── */}
+      {/* ── Hero — more top/bottom breathing room; cards still peek ── */}
       <section
         aria-label="Introduction"
         className="work-hero"
@@ -400,10 +400,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           overflow: "hidden",
           paddingTop: "var(--hero-pt)",
           paddingBottom: "var(--hero-pb)",
-          minHeight: "calc(100svh - var(--nav-h))",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
         }}
       >
         <PS3Silk
@@ -421,7 +417,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           display: "flex",
           flexDirection: "column",
           gap: "var(--space-3)",
-          width: "100%",
         }}>
           <HeroTextWithRabbit />
         </EntranceItem>

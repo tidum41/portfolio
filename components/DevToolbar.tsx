@@ -5,6 +5,7 @@ import { Agentation } from "agentation";
 import { DialRoot, useDialKit } from "dialkit";
 import LayoutDials from "./LayoutDials";
 import IntroDials from "./IntroDials";
+import CaseStudyAlignDials from "./CaseStudyAlignDials";
 import { RulerModeOverlay } from "./ruler-mode";
 
 function RulerDials() {
@@ -33,6 +34,7 @@ export default function DevToolbar() {
       <Agentation />
       <LayoutDials />
       <IntroDials />
+      <CaseStudyAlignDials />
       <DialRoot defaultOpen={false} />
     </>
   );
