@@ -29,7 +29,7 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
     borderRadius:  [4,    0,   40],
     featuredCropX: [55,   0,   100],
     featuredCropY: [0,    0,   100],
-    featuredZoom:  [1.3,  1,   2.5],
+    featuredZoom:  [1,    1,   2.5],
     topCropX:      [50,   0,   100],
     topCropY:      [50,   0,   100],
     topZoom:       [1,    1,   2.5],
@@ -44,6 +44,10 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
     background: "var(--color-placeholder)",
     borderRadius,
   });
+
+  // Retina-aware: bento column is up to ~320px; left cell ~50% → ~160–320px
+  // display, but we request enough pixels that cover + crop stay sharp.
+  const imgSizes = "(max-width: 767px) 90vw, 480px";
 
   return (
     <div
@@ -65,7 +69,8 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
           alt={featured.alt}
           fill
           priority
-          sizes="(max-width: 767px) 50vw, 220px"
+          quality={90}
+          sizes={imgSizes}
           style={{ objectFit: "cover", objectPosition: `${dk.featuredCropX}% ${dk.featuredCropY}%`, transform: `scale(${dk.featuredZoom})` }}
         />
       </div>
@@ -75,7 +80,8 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             src={top.src}
             alt={top.alt}
             fill
-            sizes="(max-width: 767px) 50vw, 220px"
+            quality={90}
+            sizes={imgSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.topCropX}% ${dk.topCropY}%`, transform: `scale(${dk.topZoom})` }}
           />
         </div>
@@ -84,7 +90,8 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             src={bottom.src}
             alt={bottom.alt}
             fill
-            sizes="(max-width: 767px) 50vw, 220px"
+            quality={90}
+            sizes={imgSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.bottomCropX}% ${dk.bottomCropY}%`, transform: `scale(${dk.bottomZoom})` }}
           />
         </div>
