@@ -247,9 +247,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // pill — see morphToPill below — since that pill means "look closer," not
   // "leave the page," which the arrow implies for every other label.
   const ARROW_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
-  // Phosphor "MagnifyingGlass" stroke variant — slightly heavier than the
-  // northeast arrow (1.6) so the glyph matches the pill label's visual weight.
-  const CASE_STUDY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.25" cy="5.25" r="3.1"/><line x1="7.6" y1="7.6" x2="10.5" y2="10.5"/></svg>`;
+  // Magnifier for the "View Case Study" pill. Tuned at 11px so the lens stays
+  // open (old 1.9 stroke at 10px sealed the hole), the handle clears the ring
+  // instead of blobbing into it, and the glyph sits on the text midline.
+  const CASE_STUDY_ICON_SVG = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="4.75" cy="4.75" r="3.25"/><line x1="7.7" y1="7.7" x2="10.9" y2="10.9"/></svg>`;
   const arrowEl = document.createElement("span");
   Object.assign(arrowEl.style, {
     position: "relative", zIndex: "1",
@@ -330,7 +331,17 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     renderedHideIcon = hideIcon;
     arrowEl.style.display     = hideIcon ? "none" : "";
     if (!hideIcon) {
-      arrowEl.innerHTML       = label === "View Case Study" ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
+      const isCaseStudy = label === "View Case Study";
+      arrowEl.innerHTML       = isCaseStudy ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
+      // Mag is 11×11 with a SE handle — give it its own slot and a hair of lift
+      // so the lens (not the bbox) sits on the text midline. Slightly wider gap
+      // than the default 5px keeps "Study" from crowding the circle.
+      arrowEl.style.width     = isCaseStudy ? "11px" : "10px";
+      arrowEl.style.height    = isCaseStudy ? "11px" : "10px";
+      arrowEl.style.transform = isCaseStudy ? "translateY(-0.5px) translateZ(0)" : "translateZ(0)";
+      cursorEl.style.gap      = isCaseStudy ? "6px" : "5px";
+    } else {
+      cursorEl.style.gap = "5px";
     }
     textSpan.textContent      = label;
     textSpan.style.transition = "none";
@@ -453,6 +464,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     textSpan.style.opacity    = "0";
     arrowEl.style.transition  = `opacity ${scaledFade}ms ease`;
     arrowEl.style.opacity     = "0";
+    // Reset case-study mag slot extras so the next (possibly arrow) pill
+    // measures against the default gap / 10×10 icon box.
+    cursorEl.style.gap        = "5px";
+    arrowEl.style.width       = "10px";
+    arrowEl.style.height      = "10px";
+    arrowEl.style.transform   = "translateZ(0)";
 
     // Same element, same transition mechanism as the expand — just animating
     // back to the resting dot size. No swap, so nothing to hand off.
