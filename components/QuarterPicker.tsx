@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, CSSProperties } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, CSSProperties } from "react";
 import InteractiveBadge from "@/components/InteractiveBadge";
 
 // ── Design tokens ─────────────────────────────────────────────────────────
@@ -213,9 +213,19 @@ export default function QuarterPicker({
         return () => ro.disconnect()
     }, [])
 
-    useEffect(() => {
-        if (innerRef.current) setNaturalHeight(innerRef.current.offsetHeight)
-    }, [])
+    // Outer clip height = unscaled inner height × scale. Chip hit-targets use
+    // minHeight: 44/scale, so when scale settles the inner layout grows —
+    // remeasure after every scale change or the overflow:hidden shell clips
+    // the bottom corners (missing border-radius).
+    useLayoutEffect(() => {
+        const el = innerRef.current
+        if (!el) return
+        const measure = () => setNaturalHeight(el.offsetHeight)
+        measure()
+        const ro = new ResizeObserver(measure)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [scale])
 
     const [selected, setSelected] = useState<string[]>([defaultQuarter])
     const [manualMoveIn, setManualMoveIn] = useState<string | null>(null)
