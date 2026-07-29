@@ -37,6 +37,18 @@ const PLAYER_H = 1321;
 const PLATTER_SIZE = 835;
 const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(', ')})`;
 
+/** Compact carousel covers on narrow/short stacks so the vinyl stays fully visible. */
+function carouselArtForWidth(width: number, dialSize: number, height = Infinity): number {
+  let size = dialSize;
+  if (width < 400) size = Math.min(size, 40);
+  else if (width < 520) size = Math.min(size, 46);
+  else if (width < 700) size = Math.min(size, 56);
+  // Short popup / about slots: shrink covers further so the player isn't cropped.
+  if (height < 360) size = Math.min(size, 36);
+  if (height < 280) size = Math.min(size, 32);
+  return size;
+}
+
 export default function CdPlayerApp({ active = true, variant = 'work' }: { active?: boolean; variant?: 'work' | 'about' }) {
   // The /about page's static embed sits inline in a narrow text column, not
   // a full grid tile/popup — it needs its own (smaller) size and its own
@@ -53,10 +65,16 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     // "about" instead compares against this component's OWN container width
     // (see the isVertical effect below) since it's embedded in a prose
     // column whose width doesn't track viewport width at all.
-    mobileBreakpoint:   variant === 'about' ? [320, 200, 800, 1] : [1000, 400, 1200, 1],
+    // About column is ~340–400px on phones — breakpoint must sit above that
+    // so carousel mode engages. Min 480 also invalidates older DialKit saves
+    // that still had 320 (which kept phones in clipped horizontal layout).
+    mobileBreakpoint:   variant === 'about' ? [560, 480, 800, 1] : [1000, 400, 1200, 1],
     targetPlayerWidth:  variant === 'about' ? [220, 120, 400, 1] : [460, 200, 620,  1],
     albumArtMaxSize:    [120, 60,  200,  1],
-    carouselArtSize:    [78,  50,  160,  1],
+    // Mobile carousel default — kept modest so vertical stacks (player +
+    // hint + covers + titles) fit the popup slot without clipping.
+    // Max 64 clamps prior DialKit saves that still had 78.
+    carouselArtSize:    [56,  36,  64,  1],
     gridGap:            [14,  0,   40,   1],
     transportBarHeight: [271, 150, 350,  1],
     titleFontSize:      [11,  8,   18,   0.5],
@@ -103,11 +121,13 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      const w = e.contentRect.width;
+    const sync = () => {
+      const w = el.clientWidth;
       setContainerW(w);
       setIsVertical(w < dk.mobileBreakpoint);
-    });
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
     ro.observe(el);
     return () => ro.disconnect();
   }, [dk.mobileBreakpoint]);
@@ -115,17 +135,14 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const updateScale = useCallback(() => {
     const el = containerRef.current;
     const W = el?.clientWidth  ?? window.innerWidth;
-    const H = el?.offsetHeight ?? window.innerHeight;
+    const H = el?.clientHeight || el?.offsetHeight || window.innerHeight;
     setContainerW(W);
 
     if (isVertical) {
-      // Shrink carousel art at very narrow widths so the player can scale up.
-      const carouselArt =
-        W < 400 ? Math.min(dk.carouselArtSize, 50)
-        : W < 520 ? Math.min(dk.carouselArtSize, 58)
-        : dk.carouselArtSize;
+      // Shrink carousel art at narrow/short widths so the vinyl + covers both fit.
+      const carouselArt = carouselArtForWidth(W, dk.carouselArtSize, H);
       const DRAG_HINT_H = 30;
-      const CAROUSEL_PAD_V = 24;
+      const CAROUSEL_PAD_V = 16;
       const META_H = Math.ceil(dk.titleFontSize * 1.35 * 2 + dk.artistFontSize * 1.35 + 7);
       const GRID_COL_PAD = 4;
       const CONTENT_TOP_PAD = 8;
@@ -138,10 +155,12 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
       const RESERVED_CAROUSEL_H =
         measuredReserve > 0 ? measuredReserve + BUFFER : computedReserve;
       const availW = W * 0.96;
-      const availH = Math.max(120, H - RESERVED_CAROUSEL_H);
+      // Leave a few px so title/artist lines under covers aren't clipped.
+      const availH = Math.max(80, H - RESERVED_CAROUSEL_H - 8);
       const s = Math.min(1, availW / PLAYER_W, availH / PLAYER_H);
-      const floor = W < 520 ? 0.18 : 0.15;
-      setScale(Math.max(floor, s));
+      // Fit-to-slot: no hard floor — a floor larger than available height was
+      // clipping the player and "↑ drag to play" hint inside overflow:hidden.
+      setScale(Math.max(0.08, s));
     } else {
       // Horizontal: prefer a fixed (dial-tunable) player width; only shrink for tight viewports.
       // Desktop popup slots are wider now (~960), so allow up to ~58% of the container.
@@ -398,10 +417,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
 
   if (isVertical) {
     // Vertical: single-row carousel, compact art so player gets more height
-    artSize =
-      containerW < 400 ? Math.min(dk.carouselArtSize, 50)
-      : containerW < 520 ? Math.min(dk.carouselArtSize, 58)
-      : dk.carouselArtSize;
+    artSize = carouselArtForWidth(containerW, dk.carouselArtSize, containerH);
     gridWidth = 0; // Not used in carousel mode
   } else {
     // Horizontal: fixed-width grid so player + grid sit compact and centered together.

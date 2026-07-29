@@ -24,18 +24,19 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
 
   const scrollLeft = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -(artSize + 12), behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: -(artSize + 10), behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: artSize + 12, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: artSize + 10, behavior: 'smooth' });
     }
   };
 
   if (isCarousel) {
-    const arrowTop = 12 + artSize / 2;
+    // Match .carouselContainer vertical padding (8px) so chevrons sit on art midlines.
+    const arrowTop = 8 + artSize / 2;
     return (
       <div style={{ width: '100%' }}>
         {/* Vertical hint lives here — always reserves space so carousel never shifts */}

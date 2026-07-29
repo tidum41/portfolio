@@ -52,37 +52,39 @@
   }
 
   .habitTitle {
-    font-size: 34px;
-    font-weight: 600;
-    letter-spacing: -0.035em;
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.04em;
   }
 
   .dateLabel {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.35;
   }
 
   .monthLabel {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .dayHeader {
     height: 28px;
-    font-size: 12px;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    letter-spacing: 0.06em;
   }
 
   .dayCell {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .streakLabel {
-    font-size: 19px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ht-text-muted);
   }
 
   .progressLabel {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .stats {
@@ -189,17 +191,17 @@
   background: transparent;
   color: var(--ht-text);
   text-align: center;
-  font-size: 30px;
-  font-weight: 600;
+  font-size: 40px;
+  font-weight: 500;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   outline: none;
   padding: 0;
   caret-color: var(--ht-text);
 }
 
 .habitTitle::placeholder {
-  color: var(--ht-text-muted);
+  color: var(--ht-text);
   opacity: 1;
   font-weight: 500;
 }
@@ -385,11 +387,11 @@
 
 .streakLabel {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.25;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--ht-text);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ht-text-muted);
   font-variant-numeric: tabular-nums;
 }
 

@@ -89,6 +89,11 @@
   justify-content: center;
 }
 
+.layoutVertical .gridCol {
+  /* Carousel + titles need room; clipping was cutting covers and meta. */
+  overflow: visible;
+}
+
 /* ── Mobile / Vertical layout (<500px width) ──────────────────────────── */
 
 .layoutVertical {
@@ -98,8 +103,8 @@
   justify-content: flex-start;
   width: 100%;
   min-height: unset;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* Fit-to-slot scale keeps the stack inside the popup — avoid scroll clip. */
+  overflow: hidden;
 }
 
 .contentBoxVertical {
@@ -109,7 +114,8 @@
   justify-content: flex-start;
   gap: 0;
   width: 100%;
-  padding: 8px 0 0;
+  /* Extra bottom pad so album titles/artists aren't clipped under the row. */
+  padding: 8px 0 12px;
 }
 
 .playerColVertical {
@@ -142,14 +148,21 @@
 .carouselContainer {
   display: flex;
   overflow-x: auto;
+  overflow-y: visible;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   width: 100%;
-  padding: 12px 16px;
-  gap: 12px;
+  /* Tighter pad on the vertical stack so covers + titles stay unclipped. */
+  padding: 8px 12px 10px;
+  gap: 10px;
   scrollbar-width: none;
 }
 .carouselContainer::-webkit-scrollbar { display: none; }
+
+.layoutVertical .gridColVertical {
+  /* Don't clip album covers or title lines under the carousel row. */
+  overflow: visible;
+}
 
 .carouselNav {
   position: absolute;
