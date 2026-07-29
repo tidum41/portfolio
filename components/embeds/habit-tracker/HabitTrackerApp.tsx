@@ -93,7 +93,17 @@ function normalizeHabitTitle(value: string | null): string {
 // Theme is applied via data-theme on the root (not Tailwind's `dark:` variant)
 // because that variant resolves against ANY ancestor with data-theme="dark" —
 // including the site's own <html>, which this widget is always nested inside.
-export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (theme: 'light' | 'dark') => void }) {
+export default function HabitTrackerApp({
+  onThemeChange,
+  forcedTheme,
+  inert = false,
+}: {
+  onThemeChange?: (theme: 'light' | 'dark') => void;
+  /** Lock theme to a parent-controlled value (used by the grid poster clone). */
+  forcedTheme?: 'light' | 'dark';
+  /** Non-interactive stand-in — no pointer events, not focusable. */
+  inert?: boolean;
+}) {
   const [currentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -104,7 +114,7 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
   const [habitTitle, setHabitTitle] = useState('');
   const habitInputRef = useRef<HTMLInputElement>(null);
   const [direction, setDirection] = useState(1);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(forcedTheme ?? 'light');
 
   useEffect(() => {
     const refDate = new Date();
@@ -121,15 +131,23 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
       localStorage.removeItem('habit-title');
     }
 
-    const attr = document.documentElement.getAttribute('data-theme');
-    if (attr === 'dark' || attr === 'light') setResolvedTheme(attr);
-  }, []);
+    if (!forcedTheme) {
+      const attr = document.documentElement.getAttribute('data-theme');
+      if (attr === 'dark' || attr === 'light') setResolvedTheme(attr);
+    }
+  }, [forcedTheme]);
 
   useEffect(() => {
+    if (forcedTheme) setResolvedTheme(forcedTheme);
+  }, [forcedTheme]);
+
+  useEffect(() => {
+    if (inert) return;
     onThemeChange?.(resolvedTheme);
-  }, [resolvedTheme, onThemeChange]);
+  }, [resolvedTheme, onThemeChange, inert]);
 
   const toggleTheme = () => {
+    if (inert || forcedTheme) return;
     setResolvedTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
@@ -304,7 +322,13 @@ export default function HabitTrackerApp({ onThemeChange }: { onThemeChange?: (th
   }).length;
 
   return (
-    <div className={styles.root} data-theme={resolvedTheme}>
+    <div
+      className={styles.root}
+      data-theme={resolvedTheme}
+      aria-hidden={inert || undefined}
+      {...(inert ? { inert: true as const } : {})}
+      style={inert ? { pointerEvents: 'none', userSelect: 'none' } : undefined}
+    >
       <header className={styles.header}>
         <button
           type="button"
