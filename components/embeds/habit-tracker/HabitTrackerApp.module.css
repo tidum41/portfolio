@@ -17,7 +17,7 @@
   --ht-radius-sm: 6px;
   --ht-radius-md: 8px;
 
-  font-family: var(--font-sans);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

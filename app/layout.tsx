@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
@@ -13,8 +13,9 @@ import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type Desi
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
 
-// Used only by the CD Player embed's "MM-7" label and "drag to play" hint —
-// site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
+// Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
+// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html
       lang="en"
-      className={geistMono.variable}
+      className={`${geistSans.variable} ${geistMono.variable}`}
       data-theme="dark"
       data-scroll-behavior="smooth"
       // Unconditionally "playing" in the static, server-rendered HTML — not
