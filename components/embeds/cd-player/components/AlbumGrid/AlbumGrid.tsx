@@ -15,11 +15,12 @@ interface AlbumGridProps {
   onAlbumTap?: (album: Album) => void;
   dragDirection?: DragDir;
   showHint?: boolean;
+  entranceKey?: number;
 }
 
 const GRID_GAP = 14;
 
-export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarousel, onAlbumTap, dragDirection, showHint }: AlbumGridProps) {
+export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarousel, onAlbumTap, dragDirection, showHint, entranceKey }: AlbumGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -38,7 +39,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
     // Match .carouselContainer vertical padding (8px) so chevrons sit on art midlines.
     const arrowTop = 8 + artSize / 2;
     return (
-      <div style={{ width: '100%' }}>
+      <div key={entranceKey} style={{ width: '100%' }}>
         {/* Vertical hint lives here — always reserves space so carousel never shifts */}
         <DragHint variant="vertical" visible={showHint} />
 
@@ -48,7 +49,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
           </button>
 
           <div className={appStyles.carouselContainer} ref={scrollRef}>
-            {albums.map(album => (
+            {albums.map((album, i) => (
               <div key={album.id} style={{ scrollSnapAlign: 'center', flexShrink: 0, width: artSize }}>
                 <AlbumCard
                   album={album}
@@ -57,6 +58,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
                   resolvedColor={colorMap?.[album.id]}
                   onTap={onAlbumTap}
                   dragDirection={dragDirection}
+                  entranceIdx={i}
                 />
               </div>
             ))}
@@ -72,7 +74,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
 
   // Original Grid logic
   return (
-    <div style={{
+    <div key={entranceKey} style={{
       display: 'grid',
       gridTemplateColumns: `repeat(3, ${artSize}px)`,
       gridAutoRows: 'auto',
@@ -80,7 +82,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
       width: gridWidth,
       alignContent: 'start',
     }}>
-      {albums.map(album => (
+      {albums.map((album, i) => (
         <AlbumCard
           key={album.id}
           album={album}
@@ -89,6 +91,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
           resolvedColor={colorMap?.[album.id]}
           onTap={onAlbumTap}
           dragDirection={dragDirection}
+          entranceIdx={i}
         />
       ))}
     </div>
