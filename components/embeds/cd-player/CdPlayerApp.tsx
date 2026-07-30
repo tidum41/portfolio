@@ -69,8 +69,8 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     // so carousel mode engages. Min 480 also invalidates older DialKit saves
     // that still had 320 (which kept phones in clipped horizontal layout).
     mobileBreakpoint:   variant === 'about' ? [560, 480, 800, 1] : [1000, 400, 1200, 1],
-    targetPlayerWidth:  variant === 'about' ? [220, 120, 400, 1] : [460, 200, 620,  1],
-    albumArtMaxSize:    [120, 60,  200,  1],
+    targetPlayerWidth:  variant === 'about' ? [320, 120, 500, 1] : [460, 200, 620,  1],
+    albumArtMaxSize:    variant === 'about' ? [100, 60,  200, 1] : [120, 60,  200,  1],
     // Mobile carousel default — kept modest so vertical stacks (player +
     // hint + covers + titles) fit the popup slot without clipping.
     // Max 64 clamps prior DialKit saves that still had 78.
@@ -86,6 +86,26 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const { activeAlbum, isPlaying, loadAlbum, play, pause, eject } = usePlayerState();
   const { loadAndPlay, playAudio, pauseAudio, stopAudio, volumeUp, volumeDown, volume, analyserRef, scratchAudio, primeAudio, audioError, clearAudioError } = useAudio();
   const colorMap = useAlbumColors(albums);
+
+  // Increments each time the popup opens — forces album cards to remount so
+  // the PS3-style entrance animation re-fires. About page is always active so
+  // it fires once on mount (cards animate in on first scroll-reveal).
+  const [entranceKey, setEntranceKey] = useState(0);
+  // Player fades in after the popup panel settles; about page starts visible.
+  const [playerVisible, setPlayerVisible] = useState(active);
+  const entranceActiveRef = useRef(active);
+
+  useEffect(() => {
+    const wasActive = entranceActiveRef.current;
+    entranceActiveRef.current = active;
+    if (active && !wasActive) {
+      setEntranceKey(k => k + 1);
+      const t = setTimeout(() => setPlayerVisible(true), 80);
+      return () => clearTimeout(t);
+    }
+    if (!active) setPlayerVisible(false);
+  }, [active]);
+
   const [scratchRate, setScratchRate] = useState(1);
   const [dragAlbum, setDragAlbum] = useState<Album | null>(null);
   const [dragDirection, setDragDirection] = useState<'left' | 'right' | 'up' | 'down' | null>(null);
@@ -507,7 +527,8 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   // with zero motion) reading as disjointed. Sharing one
                   // timing/easing across the panel and its content settles
                   // them together as a single motion.
-                  transition: `width ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, height ${PANEL_DURATION.panel.enter}s ${EASE_CSS}`,
+                  opacity: (!active || playerVisible) ? 1 : 0,
+                  transition: `width ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, height ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1)`,
                 }}
               >
                 <div style={{
@@ -562,6 +583,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   onAlbumTap={handleAlbumTap}
                   dragDirection={dragDirection}
                   showHint={!activeAlbum}
+                  entranceKey={entranceKey}
                 />
               </div>
             </div>

@@ -1,3 +1,14 @@
+@keyframes cdCardEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+  }
+}
+
 .card {
   display: flex;
   flex-direction: column;
@@ -7,6 +18,8 @@
   min-height: 0;
   -webkit-tap-highlight-color: transparent;
   touch-action: none; /* let dnd-kit own all touch events */
+  animation: cdCardEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--entrance-delay, 0ms);
 }
 
 .card:active { cursor: grabbing; }

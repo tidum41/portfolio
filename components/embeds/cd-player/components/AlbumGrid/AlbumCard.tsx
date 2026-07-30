@@ -11,9 +11,10 @@ interface AlbumCardProps {
   resolvedColor?: string;
   onTap?: (album: Album) => void;
   dragDirection?: DragDir;
+  entranceIdx?: number;
 }
 
-export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, dragDirection }: AlbumCardProps) {
+export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, dragDirection, entranceIdx = 0 }: AlbumCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: album.id,
     data: { album },
@@ -34,6 +35,7 @@ export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, drag
     <div
       ref={setNodeRef}
       className={`${styles.card} ${isDragging ? styles.dragging : ''} ${isActive ? styles.active : ''}`}
+      style={{ '--entrance-delay': `${entranceIdx * 45}ms` } as React.CSSProperties}
       {...attributes}
       {...listeners}
       role="button"
