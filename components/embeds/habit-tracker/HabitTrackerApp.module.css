@@ -11,7 +11,7 @@
 
   --ht-cell-size: 44px;
   --ht-calendar-gap: 4px;
-  --ht-stats-offset: 12px;
+  --ht-stats-offset: 28px;
   --ht-nav-hit: 44px;
   --ht-safe-top: 64px;
   --ht-radius-sm: 6px;
@@ -40,7 +40,7 @@
     --ht-nav-hit: 40px;
     --ht-cell-size: 46px;
     --ht-calendar-gap: 6px;
-    --ht-stats-offset: 24px;
+    --ht-stats-offset: 44px;
   }
 
   .content {
