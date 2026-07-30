@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import { useDialKit } from "dialkit";
+import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -80,15 +81,18 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
 function readSavedPos() { try { const r = sessionStorage.getItem(POS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch {} }
 
-// Matches the site's standard mobile breakpoint (see the @media (max-width:
-// 767px) rules throughout app/globals.css).
-const MOBILE_BP = 767;
-
-function computeMobileHeroPos(): {x:number;y:number} | null {
+// Anchors the pill under the "currently @ JOOLA..." hero line, left-aligned
+// to it at every breakpoint (found via its JOOLA link, since the <p> itself
+// has no stable selector) — that line is an unconstrained-width flex sibling
+// of the heading, so its own left edge already equals the page's real left
+// content edge (page-px in from the true left, whatever --grid-max-w's
+// centering margin is at the current width). Same rule from mobile straight
+// through desktop — instead of the old nav-row-relative logic (docking after
+// "about", or falling back to raw viewport math, or an even earlier version
+// that mirrored to the *right* edge above the mobile breakpoint), which
+// routinely lost that margin or put the pill on the wrong side entirely.
+function computeHeroAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
-  // Anchor off the "currently @ JOOLA..." hero line (found via its JOOLA
-  // link, since the <p> itself has no stable selector) — left-aligned under
-  // it, matching the rest of the page's own left edge.
   const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
   const heroP = joolaLink?.closest("p");
   if (!heroP) return null;
@@ -100,42 +104,7 @@ function computeMobileHeroPos(): {x:number;y:number} | null {
 }
 
 function computeNavAlignedPos(): {x:number;y:number} | null {
-  if (typeof window === "undefined") return null;
-  const vw = window.innerWidth;
-  // On mobile, sitting inline in the nav row means colliding with either the
-  // volume/theme controls (left) or the nav links (right) — the row simply
-  // doesn't have room for a 6th item. Left-aligning it under the hero
-  // subtitle instead keeps it clear of everything in the header entirely.
-  if (vw <= MOBILE_BP) {
-    const heroPos = computeMobileHeroPos();
-    if (heroPos) return heroPos;
-  }
-  const navLink = document.querySelector<HTMLElement>('a[href="/about"]') ?? document.querySelector<HTMLElement>('a[href="./about"]');
-  if (!navLink) return null;
-  const navRect = navLink.getBoundingClientRect();
-  const AFTER_GAP = 12;
-  // Prefer sitting just after "about" — but only when there's actually room:
-  // the pill (PILL_W) is wider than the "about" link itself, so anchoring by
-  // subtracting PILL_W from navRect.right (an earlier version of this fix)
-  // put the pill's left edge *inside* the link's own bounds, covering it
-  // regardless of pill width. And on narrower viewports the nav already runs
-  // flush to the screen edge with no room after "about" at all — in that
-  // case, keep the same row's math from clamping the pill back on top of it.
-  const fitsAfterAbout = navRect.right + AFTER_GAP + PILL_W + EDGE_PAD <= vw;
-  if (fitsAfterAbout) {
-    return {
-      x: Math.round(navRect.right + AFTER_GAP + window.scrollX),
-      y: Math.round(navRect.top + navRect.height / 2 - PILL_H / 2 + window.scrollY),
-    };
-  }
-  // No room after "about" — drop to a new line below the whole header row
-  // instead of overlapping any nav content.
-  const headerEl = navLink.closest("header");
-  const belowY = (headerEl ?? navLink).getBoundingClientRect().bottom + 8;
-  return {
-    x: Math.round(vw - PILL_W - EDGE_PAD + window.scrollX),
-    y: Math.round(belowY + window.scrollY),
-  };
+  return computeHeroAlignedPos();
 }
 
 function shouldFlip(pillY: number) {
@@ -155,7 +124,15 @@ function getGeometry(pillPos: {x:number;y:number}, isOpen: boolean, flipped: boo
   // PS3 XMB feel: rectangular button (not pill) when closed, gently rounded panel when open.
   const r = isOpen ? 14 : 8;
   const rightEdge = pillPos.x + PILL_W;
-  const left = Math.max(EDGE_PAD, Math.min(rightEdge - w, docW - w - EDGE_PAD));
+  // The extra EDGE_PAD margin only matters for the OPEN panel (PANEL_W is
+  // much wider than the pill, and could otherwise land flush against the
+  // true viewport edge with no breathing room). Applying it to the CLOSED
+  // pill too silently shrank a content-anchored x (see computeNavAlignedPos's
+  // "drop below" branch) by another 10px whenever the content itself already
+  // reaches the viewport edge (no --grid-max-w margin at that width) — this
+  // is what produced a several-px-off, "not quite aligned with 'about'"
+  // pill position that only showed up at certain widths.
+  const left = Math.max(EDGE_PAD, Math.min(rightEdge - w, docW - w - (isOpen ? EDGE_PAD : 0)));
   const top = flipped && isOpen
     ? Math.max(EDGE_PAD, pillPos.y + PILL_H - maxH)
     : Math.max(EDGE_PAD, pillPos.y);
@@ -545,10 +522,9 @@ export default function PS3ControlPanel() {
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
-      // Fallback (neither the hero subtitle nor the nav link were ever
-      // found): right-anchor near the edge, same reasoning as
-      // computeNavAlignedPos above — a left-edge anchor would collide with
-      // the mute/theme controls at the start of the nav row.
+      // Fallback (the hero subtitle was never found): right-anchor near the
+      // edge — a left-edge anchor would collide with the mute/theme controls
+      // at the start of the nav row.
       const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
       startTransition(() => { setPillPos({ x: cl + w - PILL_W - EDGE_PAD + window.scrollX, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
     };
@@ -716,9 +692,16 @@ export default function PS3ControlPanel() {
   ];
   const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
   const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
+  // Return-trip reveal (remounting after navigating back to "/") also slides
+  // up by the same distance EntranceItem/hero's own re-entry animation uses
+  // (ENTRANCE_DEFAULTS.y), so it reads as the same "fade + slide up" motion
+  // as everything else on the route rather than a plain opacity-only fade.
+  // The synced first-load reveal stays opacity-only, matching nav's own
+  // intro-hide CSS (also opacity-only) — see FADE_EASE/FADE_MS above.
+  const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}` : "none")
-    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
+    ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
+    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`, `transform ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
 
@@ -787,6 +770,7 @@ export default function PS3ControlPanel() {
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
+      transform: shown ? "translateY(0px)" : `translateY(${slideY}px)`,
       WebkitTapHighlightColor: "transparent",
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
