@@ -15,9 +15,76 @@ import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
 
 const ENTRANCE_EASE_CSS = `cubic-bezier(${EASE_Y.join(",")})`;
 
+/** Full image crossfades over an instant LQIP/blur poster (archive tiles). */
+function BlurUpImage({
+    src,
+    blurDataURL,
+    alt,
+    priority,
+    onLoad,
+}: {
+    src: string;
+    blurDataURL?: string;
+    alt: string;
+    priority?: boolean;
+    onLoad?: () => void;
+}) {
+    const [loaded, setLoaded] = useState(false);
+
+    return (
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            {blurDataURL && (
+                <img
+                    src={blurDataURL}
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        // LQIP is tiny — scale + blur hides pixelation and soft edge.
+                        transform: "scale(1.1)",
+                        filter: blurDataURL.startsWith("data:") ? "blur(16px)" : "blur(8px)",
+                        opacity: loaded ? 0 : 1,
+                        transition: "opacity 420ms ease",
+                        pointerEvents: "none",
+                    }}
+                />
+            )}
+            <img
+                loading={priority ? "eager" : "lazy"}
+                decoding="async"
+                {...(priority ? { fetchPriority: "high" as const } : {})}
+                src={src}
+                alt={alt}
+                draggable={false}
+                onLoad={() => {
+                    setLoaded(true);
+                    onLoad?.();
+                }}
+                style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    pointerEvents: "none",
+                    opacity: loaded ? 1 : 0,
+                    transition: "opacity 420ms ease",
+                }}
+            />
+        </div>
+    );
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface GalleryItem {
     src: string;
+    /** Tiny LQIP / blurred poster — paints instantly under the full image. */
+    blurDataURL?: string;
     alt?: string;
     caption?: string;
     link?: string;
@@ -329,18 +396,12 @@ export default function BentoGallery({
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
     const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
 
-    // Fade-in once all images are loaded
+    // Reveal as soon as layout is ready — LQIP posters already paint the
+    // tiles, so waiting on full-res downloads just left empty holes.
     const [ready, setReady] = useState(false);
-    const loadedCountRef = useRef(0);
-    const totalImages = items.filter((i) => i.src).length;
-    const markLoaded = useCallback(() => {
-        loadedCountRef.current++;
-        if (loadedCountRef.current >= totalImages) setReady(true);
-    }, [totalImages]);
-    // Fallback: show after 800ms even if some images stall
     useEffect(() => {
-        const t = setTimeout(() => setReady(true), 800);
-        return () => clearTimeout(t);
+        const id = requestAnimationFrame(() => setReady(true));
+        return () => cancelAnimationFrame(id);
     }, []);
 
     const focusedRef = useRef<number | null>(null);
@@ -1290,12 +1351,9 @@ export default function BentoGallery({
                 cursor: "crosshair",
                 touchAction: "none",
                 userSelect: "none",
-                // Hold interaction off until every image has decoded, or 800ms
-                // elapses — then each tile reveals itself individually (fade-up
-                // + slide-up, staggered by visual position) rather
-                // than the whole gallery fading in as one flat block. The root
-                // itself no longer animates opacity — that's the per-tile job
-                // below, avoiding a double-fade between this and the tiles.
+                // Hold interaction off for one frame so layout settles, then
+                // each tile entrance-staggers over already-visible LQIP posters.
+                // Full-res images blur-up independently inside each cell.
                 pointerEvents: ready ? "auto" : "none",
                 transform: "none",
             }}
@@ -1374,31 +1432,18 @@ export default function BentoGallery({
                                     height: imgH,
                                     overflow: "hidden",
                                     position: "relative",
+                                    background: "var(--color-placeholder)",
                                     outline: isHovered ? outlineHover : outlineNormal,
                                     outlineOffset: 0,
                                     transition: "outline .2s ease",
                                 }}
                             >
                                 {item.src ? (
-                                    <img
-                                        loading={item.priority ? "eager" : "lazy"}
-                                        decoding="async"
-                                        {...(item.priority
-                                            ? { fetchPriority: "high" as const }
-                                            : {})}
+                                    <BlurUpImage
                                         src={item.src}
+                                        blurDataURL={item.blurDataURL}
                                         alt={item.alt ?? ""}
-                                        draggable={false}
-                                        onLoad={markLoaded}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            // Cells are sized from natural aspectRatio — cover fills
-                                            // the tile solidly (no letterbox gaps) with minimal crop.
-                                            objectFit: "cover",
-                                            display: "block",
-                                            pointerEvents: "none",
-                                        }}
+                                        priority={item.priority}
                                     />
                                 ) : (
                                     <div
