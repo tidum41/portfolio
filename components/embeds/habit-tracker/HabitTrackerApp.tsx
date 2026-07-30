@@ -163,15 +163,12 @@ export default function HabitTrackerApp({
   };
 
   const commitHabitTitle = () => {
-    const input = habitInputRef.current;
-    if (!input) return;
-    const trimmed = input.value.trim();
-    if (trimmed !== input.value) {
-      setHabitTitle(trimmed);
-      input.value = trimmed;
-    }
-    if (trimmed) localStorage.setItem('habit-title', trimmed);
-    else localStorage.removeItem('habit-title');
+    setHabitTitle((prev) => {
+      const trimmed = prev.trim();
+      if (trimmed) localStorage.setItem('habit-title', trimmed);
+      else localStorage.removeItem('habit-title');
+      return trimmed;
+    });
   };
 
   const calculateStreak = () => {
