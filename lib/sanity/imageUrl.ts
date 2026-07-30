@@ -11,6 +11,8 @@ export const SANITY_IMG_WIDTH_WIDE = 2400;
 export type SanityImageOpts = {
   width?: number;
   quality?: number;
+  /** Sanity CDN blur 0–100 — for tiny LQIP-style posters. */
+  blur?: number;
 };
 
 /**
@@ -22,14 +24,11 @@ export function sanityImageUrl(
   opts: SanityImageOpts = {}
 ): string | undefined {
   if (!source) return undefined;
-  const { width = SANITY_IMG_WIDTH, quality = 85 } = opts;
+  const { width = SANITY_IMG_WIDTH, quality = 85, blur } = opts;
   try {
-    const url = builder
-      .image(source)
-      .auto("format")
-      .quality(quality)
-      .width(width)
-      .url();
+    let img = builder.image(source).auto("format").quality(quality).width(width);
+    if (blur != null && blur > 0) img = img.blur(blur);
+    const url = img.url();
     return url ?? undefined;
   } catch {
     return undefined;
@@ -45,13 +44,14 @@ export function sanityCdnUrl(
   opts: SanityImageOpts = {}
 ): string | undefined {
   if (!url) return undefined;
-  const { width = SANITY_IMG_WIDTH, quality = 85 } = opts;
+  const { width = SANITY_IMG_WIDTH, quality = 85, blur } = opts;
   try {
     const u = new URL(url);
     if (!u.hostname.includes("sanity.io")) return url;
     u.searchParams.set("auto", "format");
     u.searchParams.set("q", String(quality));
     u.searchParams.set("w", String(width));
+    if (blur != null && blur > 0) u.searchParams.set("blur", String(blur));
     return u.toString();
   } catch {
     return url;

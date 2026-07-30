@@ -336,6 +336,8 @@ export async function getCaseStudyAssets(slug: string) {
 export interface PlaygroundGalleryItem {
   key: string;
   src: string;
+  /** Tiny LQIP / blurred poster for instant paint + blur-up crossfade. */
+  blurDataURL?: string;
   alt?: string;
   caption?: string;
   link?: string;
@@ -364,7 +366,10 @@ const PLAYGROUND_GALLERY_QUERY = `*[_type == "playgroundGallery"][0]{
       asset->{
         _id,
         url,
-        metadata { dimensions { width, height, aspectRatio } }
+        metadata {
+          lqip,
+          dimensions { width, height, aspectRatio }
+        }
       }
     }
   }
@@ -381,6 +386,7 @@ interface RawPlaygroundItem {
       _id?: string;
       url?: string;
       metadata?: {
+        lqip?: string;
         dimensions?: {
           width?: number;
           height?: number;
@@ -407,6 +413,20 @@ function playgroundImageSrc(it: RawPlaygroundItem): string | undefined {
     if (url) return url;
   }
   return sanityCdnUrl(asset.url, { width, quality: 85 }) ?? asset.url;
+}
+
+/** Instant paint: Sanity LQIP (base64) or a tiny blurred CDN derivative. */
+function playgroundBlurDataURL(it: RawPlaygroundItem): string | undefined {
+  const asset = it.image?.asset;
+  if (!asset) return undefined;
+  if (asset.metadata?.lqip) return asset.metadata.lqip;
+  if (asset._id) {
+    return sanityImageUrl(
+      { asset: { _ref: asset._id } },
+      { width: 24, quality: 20, blur: 50 }
+    );
+  }
+  return sanityCdnUrl(asset.url, { width: 24, quality: 20, blur: 50 });
 }
 
 function playgroundAspectRatio(it: RawPlaygroundItem): number | undefined {
@@ -452,6 +472,7 @@ export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
     result.push({
       key: it._key,
       src,
+      blurDataURL: playgroundBlurDataURL(it),
       alt: it.alt || it.caption,
       caption: it.caption,
       link: it.link,
