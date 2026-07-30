@@ -13,7 +13,27 @@ const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
 const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
-const FADE_MS = 2000;
+// Matches lib/motion.ts's EASE_OPACITY / app/layout.tsx's intro-gate CSS
+// (`transition: opacity 0.7s cubic-bezier(.16,1,.3,1)`) — the pill's first-
+// load fade now rides the exact same curve/duration nav and footer use, and
+// is triggered by the same "intro-done" event (see the posReady effect
+// below), instead of an independently-tuned 2s ease-out that finished long
+// after everything else had already settled and read as a separate, slower
+// reveal bolted onto the page rather than part of it.
+const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+const FADE_MS = 700;
+// This component unmounts whenever the user navigates off "/" (see the
+// `isWorkRoute &&` gate in PersistentWorkShell.tsx) and remounts fresh on
+// return — unlike PS3Silk/hero/the grid, which stay mounted the whole
+// session and are only CSS-hidden. `_ps3cpHasLoaded` (module-level, so it
+// survives the unmount) means every return trip takes the "not very first
+// load" path below. Matches EntranceItem/hero's own re-entry animation
+// (lib/motion.ts's EASE_Y + ENTRANCE_DEFAULTS.duration=0.45s) — used so the
+// pill fades back in as part of the same "content sliding back into view"
+// moment as everything else on the route, instead of popping in at full
+// opacity with zero transition while its neighbors visibly re-enter.
+const RETURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const RETURN_FADE_MS = 450;
 const PICKER_MAX_H = 180;
 const BODY_H = 620;
 
@@ -60,16 +80,61 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
 function readSavedPos() { try { const r = sessionStorage.getItem(POS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch {} }
 
+// Matches the site's standard mobile breakpoint (see the @media (max-width:
+// 767px) rules throughout app/globals.css).
+const MOBILE_BP = 767;
+
+function computeMobileHeroPos(): {x:number;y:number} | null {
+  if (typeof window === "undefined") return null;
+  // Anchor off the "currently @ JOOLA..." hero line (found via its JOOLA
+  // link, since the <p> itself has no stable selector) — left-aligned under
+  // it, matching the rest of the page's own left edge.
+  const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
+  const heroP = joolaLink?.closest("p");
+  if (!heroP) return null;
+  const r = heroP.getBoundingClientRect();
+  return {
+    x: Math.round(r.left + window.scrollX),
+    y: Math.round(r.bottom + 16 + window.scrollY),
+  };
+}
+
 function computeNavAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
+  const vw = window.innerWidth;
+  // On mobile, sitting inline in the nav row means colliding with either the
+  // volume/theme controls (left) or the nav links (right) — the row simply
+  // doesn't have room for a 6th item. Left-aligning it under the hero
+  // subtitle instead keeps it clear of everything in the header entirely.
+  if (vw <= MOBILE_BP) {
+    const heroPos = computeMobileHeroPos();
+    if (heroPos) return heroPos;
+  }
   const navLink = document.querySelector<HTMLElement>('a[href="/about"]') ?? document.querySelector<HTMLElement>('a[href="./about"]');
   if (!navLink) return null;
   const navRect = navLink.getBoundingClientRect();
-  const w = window.innerWidth;
-  const containerLeft = w > 1440 ? (w - 1440) / 2 : 0;
+  const AFTER_GAP = 12;
+  // Prefer sitting just after "about" — but only when there's actually room:
+  // the pill (PILL_W) is wider than the "about" link itself, so anchoring by
+  // subtracting PILL_W from navRect.right (an earlier version of this fix)
+  // put the pill's left edge *inside* the link's own bounds, covering it
+  // regardless of pill width. And on narrower viewports the nav already runs
+  // flush to the screen edge with no room after "about" at all — in that
+  // case, keep the same row's math from clamping the pill back on top of it.
+  const fitsAfterAbout = navRect.right + AFTER_GAP + PILL_W + EDGE_PAD <= vw;
+  if (fitsAfterAbout) {
+    return {
+      x: Math.round(navRect.right + AFTER_GAP + window.scrollX),
+      y: Math.round(navRect.top + navRect.height / 2 - PILL_H / 2 + window.scrollY),
+    };
+  }
+  // No room after "about" — drop to a new line below the whole header row
+  // instead of overlapping any nav content.
+  const headerEl = navLink.closest("header");
+  const belowY = (headerEl ?? navLink).getBoundingClientRect().bottom + 8;
   return {
-    x: Math.round(containerLeft + 24 + window.scrollX),
-    y: Math.round(navRect.top + navRect.height / 2 - PILL_H / 2 + window.scrollY),
+    x: Math.round(vw - PILL_W - EDGE_PAD + window.scrollX),
+    y: Math.round(belowY + window.scrollY),
   };
 }
 
@@ -384,6 +449,9 @@ export default function PS3ControlPanel() {
   const isVeryFirstLoad = useRef(!_ps3cpHasLoaded);
   const savedPos        = useRef<{x:number;y:number} | null>(typeof window !== "undefined" ? readSavedPos() : null);
   const hasDraggedRef   = useRef(savedPos.current !== null);
+  // Which fade config the current reveal should use — set right before
+  // triggering it in the posReady effect below, read by morphT.
+  const revealKindRef   = useRef<"first" | "return">("first");
 
   const [portalEl, setPortalEl]         = useState<HTMLElement | null>(null);
   const [pillPos, setPillPos]           = useState(savedPos.current ?? { x: 0, y: 0 });
@@ -391,7 +459,10 @@ export default function PS3ControlPanel() {
   const [isOpen, setIsOpen]             = useState(false);
   const [flipped, setFlipped]           = useState(false);
   const [isDragging, setIsDragging]     = useState(false);
-  const [shown, setShown]               = useState(!isVeryFirstLoad.current);
+  // Always starts hidden and fades in via the posReady effect below (either
+  // path) — previously started `true` outright on a return remount, which is
+  // what produced the instant "pop in" with no transition at all.
+  const [shown, setShown]               = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [positionSettled, setPositionSettled] = useState(
     savedPos.current !== null && !isVeryFirstLoad.current
@@ -474,8 +545,12 @@ export default function PS3ControlPanel() {
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
-      const w = window.innerWidth, lp = w > 768 ? 40 : w > 360 ? 32 : 24, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
-      startTransition(() => { setPillPos({ x: cl + lp + window.scrollX, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
+      // Fallback (neither the hero subtitle nor the nav link were ever
+      // found): right-anchor near the edge, same reasoning as
+      // computeNavAlignedPos above — a left-edge anchor would collide with
+      // the mute/theme controls at the start of the nav row.
+      const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
+      startTransition(() => { setPillPos({ x: cl + w - PILL_W - EDGE_PAD + window.scrollX, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
     };
     setTimeout(() => findAndPlace(0), 200);
   }, []);
@@ -496,19 +571,43 @@ export default function PS3ControlPanel() {
   useEffect(() => {
     if (!posReady) return;
     if (!isVeryFirstLoad.current) {
-      startTransition(() => setShown(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => setPositionSettled(true)));
+      // Remounting after having already loaded once this session (the
+      // component unmounts whenever the route isn't "/" — see the
+      // `isWorkRoute &&` gate in PersistentWorkShell.tsx). Fade straight in,
+      // matching EntranceItem/hero's own re-entry timing (RETURN_FADE_MS/
+      // RETURN_EASE), instead of the instant snap this used to be.
+      revealKindRef.current = "return";
+      startTransition(() => setShowTransition(true));
+      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
+        setShown(true); setPositionSettled(true);
+      })));
+      setTimeout(() => startTransition(() => setShowTransition(false)), RETURN_FADE_MS + 200);
       return;
     }
-    const t = setTimeout(() => {
+    // Fade in on the same "intro-done" signal (and the same duration/easing,
+    // see FADE_MS/FADE_EASE above) that nav and footer use — rather than an
+    // independently-timed delay, so the pill visibly settles in at the exact
+    // same moment as the rest of the header instead of arriving on its own
+    // separate schedule.
+    revealKindRef.current = "first";
+    function reveal() {
       startTransition(() => setShowTransition(true));
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
       })));
       setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
       _ps3cpHasLoaded = true;
-    }, 400);
-    return () => clearTimeout(t);
+    }
+    // If the intro gate has already lifted by the time this mounts (matches
+    // the defensive check every other intro-timed piece — HeroText, PS3Silk —
+    // performs at mount), reveal immediately instead of waiting forever for
+    // an event that already fired.
+    if (!document.documentElement.hasAttribute("data-intro")) {
+      reveal();
+      return;
+    }
+    window.addEventListener("intro-done", reveal, { once: true });
+    return () => window.removeEventListener("intro-done", reveal);
   }, [posReady]);
 
   // Sync dark mode from html[data-theme]
@@ -615,9 +714,11 @@ export default function PS3ControlPanel() {
     `border-radius ${isOpen ? `300ms ${EXPAND_EASE}` : `180ms ${EXPAND_EASE}`}`,
     `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
   ];
+  const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
+  const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${FADE_MS}ms ease-out` : "none")
-    : (showTransition ? [...baseMorphParts, `opacity ${FADE_MS}ms ease-out`].join(", ") : baseMorphParts.join(", "));
+    ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}` : "none")
+    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
 

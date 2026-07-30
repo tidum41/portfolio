@@ -150,11 +150,20 @@ export default function HeroLegibilityScrim() {
 
   return (
     <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-      <img
-        src={dataUrl ?? undefined}
-        alt=""
-        style={{ ...centered(dk.width, dk.height), objectFit: "fill" }}
-      />
+      {/* Only rendered once a real data URL exists — an <img> with no src but
+          an explicit (and deliberately oversized/off-center, see centered())
+          box still gets the browser's "no image loaded" placeholder box
+          painted. Because 3 of its 4 edges sit off-screen by design, only
+          the 4th (usually the right edge) falls inside the viewport, which
+          on first paint (before the useLayoutEffect below generates dataUrl)
+          showed up as a stray vertical line. */}
+      {dataUrl && (
+        <img
+          src={dataUrl}
+          alt=""
+          style={{ ...centered(dk.width, dk.height), objectFit: "fill" }}
+        />
+      )}
       {dk.debug && (
         <>
           {/* Full ellipse this shape occupies — width%/height% at their
