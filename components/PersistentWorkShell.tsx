@@ -178,6 +178,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
   const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
   const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
+  // Poster opacity transitions only on close (reveal live embed). Open snaps
+  // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
+  const [cdPosterFade, setCdPosterFade] = useState(false);
+  const [habitPosterFade, setHabitPosterFade] = useState(false);
   // Lifted from PhoneEmbed's live HabitTrackerApp instance so PhonePoster (a
   // sibling, not a descendant) can match its frame image to the widget's own
   // theme toggle even while showing instead of the live embed.
@@ -342,8 +346,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const rankDelay = (rank: number) => rank * perItemStagger;
 
   const openPopupHandler = (id: PopupId) => {
-    if (id === "cd") setCdPosterOpacity(1);
-    else setHabitPosterOpacity(1);
+    if (id === "cd") {
+      setCdPosterFade(false);
+      setCdPosterOpacity(1);
+    } else {
+      setHabitPosterFade(false);
+      setHabitPosterOpacity(1);
+    }
     setOpenPopup(id);
     setPopupVisible(true);
   };
@@ -351,8 +360,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const closePopup = () => {
     setPopupVisible(false);
     // Crossfade poster out as the embed portals back to the grid slot.
-    if (openPopup === "cd") setCdPosterOpacity(0);
-    else if (openPopup === "habit") setHabitPosterOpacity(0);
+    if (openPopup === "cd") {
+      setCdPosterFade(true);
+      setCdPosterOpacity(0);
+    } else if (openPopup === "habit") {
+      setHabitPosterFade(true);
+      setHabitPosterOpacity(0);
+    }
   };
 
   const handlePopupExitComplete = (id: PopupId) => {
@@ -497,7 +511,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               style={{ display: "flex", flexDirection: "column", gap: 6, cursor: "pointer" }}
             >
               <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                <CdPlayerPoster opacity={cdPosterOpacity} />
+                <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
                 <div
                   ref={setGridCdEl}
                   style={{
@@ -606,6 +620,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 </div>
                 <PhonePoster
                   opacity={habitPosterOpacity}
+                  fade={habitPosterFade}
                   theme={habitWidgetTheme}
                   showScreen={openPopup === "habit"}
                 />
@@ -695,7 +710,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           </EmbedPortal>
           <EmbedPortal container={habitPortalTarget}>
             <PhoneEmbed
-              expanded={openPopup === "habit" && popupVisible}
+              // Boost only after the phone has moved into the popup slot —
+              // expanding while still in the grid makes the blurred card
+              // behind the modal look like it resized.
+              expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
               onWidgetThemeChange={setHabitWidgetTheme}
             />
           </EmbedPortal>

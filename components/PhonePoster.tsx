@@ -20,13 +20,19 @@ const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
  * Matches PhoneEmbed's scale-to-fit math, and when `showScreen` is on, renders
  * a non-interactive HabitTrackerApp clone in the screen cutout so the card
  * doesn't flash an empty black bezel while the live instance is in the popup.
+ *
+ * `fade` is only for the close crossfade (poster → live). On open, opacity
+ * must snap to 1 with fade=false so the card behind the modal blur doesn't
+ * briefly empty out while the live phone is hidden/portaled.
  */
 export default function PhonePoster({
   opacity = 1,
+  fade = true,
   theme = "light",
   showScreen = false,
 }: {
   opacity?: number;
+  fade?: boolean;
   theme?: "light" | "dark";
   showScreen?: boolean;
 }) {
@@ -79,7 +85,7 @@ export default function PhonePoster({
         justifyContent: "center",
         background: "var(--color-phone-bg)",
         opacity,
-        transition: `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`,
+        transition: fade ? `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}` : "none",
       }}
     >
       <div style={{ position: "relative", width: PHONE_W, height: PHONE_H, flexShrink: 0, transform: `scale(${scale})` }}>

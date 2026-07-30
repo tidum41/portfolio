@@ -88,19 +88,28 @@ export default function ProjectPopup({
     const prev = {
       position: body.style.position,
       top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
       width: body.style.width,
       paddingRight: body.style.paddingRight,
     };
 
+    // Pin left/right (not only width:100%) so the fixed flex body can't pick
+    // a stale static position and shift the grid under the backdrop blur.
+    // paddingRight replaces the disappearing scrollbar so column widths stay put.
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "auto";
     if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
 
     document.addEventListener("keydown", onKeyDown);
     return () => {
       body.style.position = prev.position;
       body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.paddingRight = prev.paddingRight;
       window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
