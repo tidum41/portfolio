@@ -12,6 +12,16 @@ import phoneFrameDark from "@/public/phonemockup-dark.webp";
 
 const PHONE_W_BASE = 280;
 const PHONE_H_BASE = 580;
+// Matches PhoneEmbed's own non-expanded reference box exactly (344×614, ~20%
+// larger than the phone body) — using PHONE_W_BASE/PHONE_H_BASE directly here
+// used to fit the phone tighter to the container than PhoneEmbed does for the
+// same box, rendering the poster's phone graphic ~5.9% larger (614/580) than
+// the live embed. Since the poster crossfades to visible for a brief moment
+// right as the popup opens (before the live embed retargets into the popup —
+// see PersistentWorkShell.tsx's habitPosterOpacity/portal-target effects),
+// that mismatch showed up as the grid card's phone visibly changing size.
+const REF_W_BASE = 344;
+const REF_H_BASE = 614;
 const CONTENT_W = 394;
 const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
@@ -31,7 +41,7 @@ export default function PhonePoster({
   showScreen?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: PHONE_W_BASE, height: PHONE_H_BASE });
+  const [containerSize, setContainerSize] = useState({ width: REF_W_BASE, height: REF_H_BASE });
 
   // Same "PhoneEmbed" dial key as the live component, so the poster always
   // matches its size exactly.
@@ -57,7 +67,14 @@ export default function PhonePoster({
     return () => ro.disconnect();
   }, []);
 
-  const scale = Math.min(containerSize.width / PHONE_W, containerSize.height / PHONE_H);
+  // Scale-to-fit against the same padded reference box PhoneEmbed's
+  // non-expanded state uses (REF_W/REF_H, not the phone's own tighter
+  // PHONE_W/PHONE_H) — see the REF_W_BASE/REF_H_BASE comment above.
+  const REF_W = REF_W_BASE * dk.sizeScale;
+  const REF_H = REF_H_BASE * dk.sizeScale;
+  const scaleByW = Math.min(containerSize.width, REF_W) / REF_W;
+  const scaleByH = containerSize.height / REF_H;
+  const scale = Math.min(scaleByW, scaleByH);
 
   const screenLocalW = PHONE_W * (1 - (dk.insetSide * 2) / 100);
   const screenLocalH = PHONE_H * (1 - dk.insetTop / 100 - dk.insetBottom / 100);
