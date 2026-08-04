@@ -20,6 +20,11 @@ import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
+/** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
+function isExternalHref(href: string) {
+  return /^(https?:|mailto:|tel:)/i.test(href);
+}
+
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
@@ -90,13 +95,25 @@ function EmbedPortal({ container, children }: { container: HTMLDivElement | null
   return createPortal(children, portalEl);
 }
 
-// Northeast arrow — shared with MuxAutoplayCard external-link titles.
+// Northeast arrow — shared glyph. Blue is reserved for external links only;
+// in-page popup tiles use currentColor so they match the title (not a hyperlink).
 function OpensInPopupIcon() {
-  return <NortheastArrow size={13} color="var(--color-link-blue)" />;
+  return <NortheastArrow size={13} />;
 }
 
 // ─── Card label ────────────────────────────────────────────────────────
-function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string; showPopupIcon?: boolean }) {
+function CardLabel({
+  title,
+  sub,
+  showPopupIcon,
+  external,
+}: {
+  title: string;
+  sub?: string;
+  showPopupIcon?: boolean;
+  /** External project link — blue northeast arrow. */
+  external?: boolean;
+}) {
   return (
     <div style={{ padding: 0 }}>
       <p style={{
@@ -111,6 +128,7 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
         gap: 6,
       }}>
         {title}
+        {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
         {showPopupIcon && <OpensInPopupIcon />}
       </p>
       {sub && (
@@ -128,9 +146,8 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
   );
 }
 
-// Northeast arrows on external/popup tiles already signal affordance; the
-// custom-cursor label pills on project cards were retired — they competed
-// with the quieter press-in hover.
+// Northeast arrow blue = external only. Popup tiles keep a neutral arrow;
+// InteractiveBadge already marks the media as explorable.
 
 /** Mounted once, unconditionally, by the root layout — never unmounts across
  *  client-side navigation. Visibility is toggled purely with CSS based on the
@@ -163,20 +180,19 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // iframe doesn't unmount until onExitComplete fires.
   const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  // Mount CD / habit only after the user opens them once — no offscreen warm
-  // preload on first visit to /. After first open, one live instance stays
-  // portaled between grid ↔ popup (same expand/collapse as before).
+  // CD keeps a static poster until first open (real webp art). Habit mounts
+  // with the work shell — its poster is an empty phone bezel without the live
+  // embed, so deferral there just looked blank.
   const [cdMounted, setCdMounted] = useState(false);
-  const [habitMounted, setHabitMounted] = useState(false);
   const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
   const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
-  // Poster stays opaque until first open+close reveals the live embed in-grid.
+  // CD: opaque until first open+close reveals live. Habit: only covers while in popup.
   const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
-  const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
   const [cdPosterFade, setCdPosterFade] = useState(false);
@@ -350,7 +366,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       setCdPosterFade(false);
       setCdPosterOpacity(1);
     } else {
-      setHabitMounted(true);
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
     }
@@ -386,13 +401,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   }, [cdMounted, openPopup, popupVisible, popupCdEl, gridCdEl]);
 
   useLayoutEffect(() => {
-    if (!habitMounted) return;
+    if (!hasEverBeenActive) return;
     if (openPopup === "habit" && popupVisible && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
     } else if (gridHabitEl) {
       setHabitPortalTarget(gridHabitEl);
     }
-  }, [habitMounted, openPopup, popupVisible, popupHabitEl, gridHabitEl]);
+  }, [hasEverBeenActive, openPopup, popupVisible, popupHabitEl, gridHabitEl]);
 
   return (
     <div
@@ -468,7 +483,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
-                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -489,7 +503,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           </div>
                         </Link>
                       </div>
-                      <CardLabel title={p.title} sub={p.subtitle} />
+                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -578,7 +592,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
-                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -599,7 +612,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           </div>
                         </Link>
                       </div>
-                      <CardLabel title={p.title} sub={p.subtitle} />
+                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -684,16 +697,16 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </div>
 
       {/*
-        CD / habit mount on first open only (not on first visit to /).
-        After that, one live instance portals between grid and popup —
-        no offscreen warm iframes/WebAudio before the user shows interest.
+        CD: mount on first open (static poster until then). Habit: mount once
+        "/" visited so the grid shows the live phone, not an empty bezel.
+        Both portal grid ↔ popup; no offscreen warm slots.
       */}
       {cdMounted && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
-      {habitMounted && (
+      {hasEverBeenActive && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
             // Boost only after the phone has moved into the popup slot —

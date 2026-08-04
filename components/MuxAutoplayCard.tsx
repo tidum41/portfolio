@@ -12,12 +12,12 @@ function CardLabel({
   title,
   sub,
   labelFontSize,
-  showExternalArrow,
+  external,
 }: {
   title: string;
   sub?: string;
   labelFontSize: number;
-  showExternalArrow?: boolean;
+  external?: boolean;
 }) {
   return (
     <div style={{ padding: "3px 2px" }}>
@@ -33,7 +33,7 @@ function CardLabel({
         gap: 6,
       }}>
         {title}
-        {showExternalArrow && <NortheastArrow size={13} />}
+        {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
       </p>
       {sub && (
         <p style={{
@@ -60,8 +60,6 @@ interface Props {
    *  for standalone use; the persistent work shell passes this so background
    *  cards pause (rather than reload) while a case study is open. */
   active?: boolean;
-  /** Northeast arrow after the title — external demos that leave the site. */
-  showExternalArrow?: boolean;
 }
 
 export default function MuxAutoplayCard({
@@ -71,7 +69,6 @@ export default function MuxAutoplayCard({
   sub,
   aspectRatio,
   active = true,
-  showExternalArrow = false,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -174,7 +171,9 @@ export default function MuxAutoplayCard({
   );
 
   const linkStyle = { textDecoration: "none", display: "block" } as const;
-  const external = href.startsWith("http");
+  // Blue northeast arrow only when the card leaves the site — derived from
+  // href, not a hard-coded project id.
+  const external = /^(https?:|mailto:|tel:)/i.test(href);
 
   return (
     <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
@@ -184,7 +183,7 @@ export default function MuxAutoplayCard({
         ) : (
           <Link href={href} prefetch style={linkStyle}>{video}</Link>
         )}
-        <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
+        <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
       </ProjectCardLift>
     </div>
   );
