@@ -19,8 +19,8 @@ const SOURCES: Record<UiSoundId, string> = {
   push: "/audio/ui/button-push.wav",
 };
 
-/** UI SFX sit slightly above ambient music when both are audible. */
-const UI_GAIN = 0.62;
+/** UI SFX sit above ambient music; kept under 1.0 at full master volume. */
+const UI_GAIN = 0.88;
 
 type Master = { muted: boolean; volume: number };
 
