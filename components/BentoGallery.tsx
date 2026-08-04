@@ -1492,9 +1492,19 @@ export default function BentoGallery({
                                         lineHeight: 1.3,
                                         // Hide truncated preview while focused overlay is up
                                         visibility: isActive ? "hidden" : "visible",
-                                        color: isHovered
-                                              ? captionHovered
-                                              : captionBase,
+                                        // Linked tiles: blue on focus (and a
+                                        // softer blue on hover) so the caption
+                                        // reads as the outbound affordance.
+                                        // Unlinked tiles keep neutral gray.
+                                        color: item.link
+                                          ? (isActive
+                                              ? "var(--color-link-blue)"
+                                              : isHovered
+                                                ? "color-mix(in srgb, var(--color-link-blue) 72%, transparent)"
+                                                : captionBase)
+                                          : isHovered
+                                            ? captionHovered
+                                            : captionBase,
                                         transition: "color .3s ease",
                                     }}
                                     aria-hidden={isActive}
@@ -1569,8 +1579,10 @@ export default function BentoGallery({
                                         letterSpacing: "0.02em",
                                         textTransform: "lowercase",
                                         lineHeight: 1.3,
-                                        color: captionActive,
-                                        // No filled scrim — readability from captionActive
+                                        color: item.link
+                                          ? "var(--color-link-blue)"
+                                          : captionActive,
+                                        // No filled scrim — readability from caption
                                         // contrast alone so captions don't look boxed.
                                         background: "transparent",
                                         pointerEvents: "none",
