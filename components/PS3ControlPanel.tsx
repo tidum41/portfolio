@@ -176,13 +176,12 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Custom Slider (PS3 Precision & Micro-tactile Touch) ────────────────────
+// ── Custom Slider (Design Engineer Craft & Pixel-Perfect Precision) ────────
 const Slider = memo(function Slider({
-  min, max, step, value, onChange, isDark, label, formatValue,
+  min, max, step, value, onChange, isDark, label,
 }: {
   min: number; max: number; step: number; value: number;
   onChange: (v: number) => void; isDark: boolean; label: string;
-  formatValue?: (v: number) => string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -202,16 +201,11 @@ const Slider = memo(function Slider({
   const pct    = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   const active = isDragging || isHovered;
 
-  const filledGradient = isDark
-    ? "linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.85) 100%)"
-    : "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.80) 100%)";
-  const trackBg = isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.08)";
-  const thumbColor = isDark ? "rgba(255,255,255,0.95)" : "rgba(20,20,20,0.95)";
-  const thumbGlow = active
-    ? (isDark ? "0 0 8px rgba(255,255,255,0.6)" : "0 0 8px rgba(0,0,0,0.3)")
-    : "0 1px 3px rgba(0,0,0,0.2)";
-
-  const formattedStr = formatValue ? formatValue(value) : value.toString();
+  const trackBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)";
+  const filledBg = active
+    ? (isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.85)")
+    : (isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.60)");
+  const thumbColor = isDark ? "rgba(255,255,255,0.95)" : "rgba(15,15,20,0.95)";
 
   return (
     <div
@@ -225,7 +219,7 @@ const Slider = memo(function Slider({
       aria-valuenow={value}
       style={{
         position: "relative",
-        height: 34,
+        height: 24,
         display: "flex",
         alignItems: "center",
         touchAction: "none",
@@ -262,61 +256,32 @@ const Slider = memo(function Slider({
     >
       {/* Background Rail */}
       <div style={{
-        position: "absolute", left: 0, right: 0, top: "50%", height: 3, transform: "translateY(-50%)",
-        borderRadius: 1.5, pointerEvents: "none", background: trackBg,
-        boxShadow: isDark ? "inset 0 1px 1px rgba(0,0,0,0.4)" : "inset 0 1px 1px rgba(0,0,0,0.06)",
+        position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)",
+        borderRadius: 1, pointerEvents: "none", background: trackBg,
       }} />
 
       {/* Filled Rail */}
       <div style={{
-        position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 3, transform: "translateY(-50%)",
-        borderRadius: 1.5, pointerEvents: "none", background: filledGradient,
-        boxShadow: active ? (isDark ? "0 0 6px rgba(255,255,255,0.4)" : "0 0 6px rgba(0,0,0,0.2)") : "none",
-        transition: "width 60ms linear, box-shadow 150ms ease",
+        position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)",
+        borderRadius: 1, pointerEvents: "none", background: filledBg,
+        transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)",
       }} />
 
-      {/* End Tick Notches */}
-      <div style={{ position: "absolute", left: 0, top: "50%", width: 1.5, height: 7, transform: "translateY(-50%)", borderRadius: 1, backgroundColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", right: 0, top: "50%", width: 1.5, height: 7, transform: "translateY(-50%)", borderRadius: 1, backgroundColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)", pointerEvents: "none" }} />
-
-      {/* Floating Drag Tooltip */}
-      {isDragging && (
-        <div style={{
-          position: "absolute",
-          top: -18,
-          left: `${pct}%`,
-          transform: "translateX(-50%)",
-          padding: "1px 5px",
-          borderRadius: 3,
-          fontSize: 9,
-          fontFamily: "monospace",
-          fontWeight: 600,
-          letterSpacing: "0.05em",
-          color: isDark ? "#ffffff" : "#000000",
-          backgroundColor: isDark ? "rgba(35,35,45,0.92)" : "rgba(240,240,245,0.92)",
-          border: isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid rgba(0,0,0,0.15)",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-          pointerEvents: "none",
-          zIndex: 10,
-          whiteSpace: "nowrap",
-        }}>
-          {formattedStr}
-        </div>
-      )}
-
-      {/* Thumb */}
+      {/* Minimalist Thumb */}
       <div style={{
         position: "absolute",
         top: "50%",
         left: `${pct}%`,
-        width: active ? 7 : 5,
-        height: active ? 16 : 13,
-        borderRadius: 2.5,
+        width: active ? 10 : 8,
+        height: active ? 10 : 8,
+        borderRadius: "50%",
         backgroundColor: thumbColor,
-        boxShadow: thumbGlow,
-        transform: "translate(-50%,-50%)",
+        boxShadow: isDark
+          ? "0 0 0 1px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)"
+          : "0 0 0 1px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.15)",
+        transform: `translate(-50%, -50%) scale(${isDragging ? 0.92 : 1})`,
         pointerEvents: "none",
-        transition: "left 60ms linear, width 120ms ease, height 120ms ease, box-shadow 150ms ease, background-color 150ms ease",
+        transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease",
       }} />
     </div>
   );
@@ -465,7 +430,7 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
           }}
           onPointerDown={e => e.stopPropagation()}
           maxLength={7} spellCheck={false}
-          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
+          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
         />
       </div>
     </div>
@@ -508,9 +473,16 @@ html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(25
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset:  [-1.5, -4, 4, 0.5],
+    // Both converge to 0 empirically — measured live via getBoundingClientRect
+    // at each step (0.75/1.75 → 0.37/0.87px real offset remaining, a
+    // consistent ~0.5 ratio from 2x DPR subpixel rounding) rather than eyeballed.
+    // Letting flex's own align-items: center do the work (no manual offset)
+    // is also the more foolproof choice long-term — a hand-tuned pixel hack
+    // can silently drift if the font or line-height ever changes; true
+    // centering can't.
+    chevronOffset:  [0, -4, 4, 0.25],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [-3.5, -4, 4, 0.5],
+    menuTextOffset: [0, -4, 4, 0.25],
   });
 
   const panelRef       = useRef<HTMLDivElement>(null);
@@ -770,12 +742,17 @@ export default function PS3ControlPanel() {
   const bgG = Math.round(baseBgG * (1 - tintAmt) + wg * tintAmt);
   const bgB = Math.round(baseBgB * (1 - tintAmt) + wb * tintAmt);
   const pillBg     = `rgba(${bgR},${bgG},${bgB},${isDark ? "0.93" : "0.82"})`;
-  const pillBorder = isDark
+  // Edge definition rides entirely on box-shadow now — no `border` property —
+  // an inset 1px ring stands in for what used to be a literal border (same
+  // pixel result, but composes with the drop shadow below instead of
+  // fighting it as two separate box-model concepts), plus a soft outer drop
+  // shadow for real elevation off the page instead of a flat bordered line.
+  const pillRing = isDark
     ? "rgba(255,255,255,0.14)"
     : (isDefaultWave ? "rgba(0,0,0,0.28)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
   const pillShadow = isDark
-    ? "inset 0 1px 0 rgba(255,255,255,0.10)"
-    : "inset 0 1px 0 rgba(255,255,255,0.60)";
+    ? `inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px ${pillRing}, 0 8px 24px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2)`
+    : `inset 0 1px 0 rgba(255,255,255,0.60), inset 0 0 0 1px ${pillRing}, 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)`;
   const accentCol  = isDark ? "rgba(255,255,255,0.62)" : "rgba(0,0,0,0.62)";
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
@@ -800,9 +777,14 @@ export default function PS3ControlPanel() {
 
   const swatchSt = (active: boolean, bg: string): React.CSSProperties => ({
     width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-    border: active ? "1.5px solid rgba(0,0,0,0.40)" : "1px solid rgba(0,0,0,0.18)",
-    backgroundColor: bg, boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.10)" : "none",
-    transition: "border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+    backgroundColor: bg,
+    // Inset ring stands in for the old border; the outer ring layers on
+    // top of it when active — both shadow layers, nothing fighting the
+    // box model the way border-plus-boxShadow used to.
+    boxShadow: active
+      ? "inset 0 0 0 1.5px rgba(0,0,0,0.40), 0 0 0 2px rgba(0,0,0,0.10)"
+      : "inset 0 0 0 1px rgba(0,0,0,0.18)",
+    transition: "box-shadow 120ms ease, transform 120ms ease",
   });
 
   const panelMarkup = (
@@ -814,7 +796,6 @@ export default function PS3ControlPanel() {
       backgroundColor: pillBg,
       backdropFilter: "blur(28px) saturate(180%)",
       WebkitBackdropFilter: "blur(28px) saturate(180%)",
-      border: `1px solid ${pillBorder}`,
       boxShadow: pillShadow,
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
@@ -865,7 +846,7 @@ export default function PS3ControlPanel() {
             {PRESETS.map((p, i) => (
               <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
                 aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
-                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, border: activePreset === i ? "2px solid rgba(0,0,0,0.55)" : "1.5px solid rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
+                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, boxShadow: activePreset === i ? "inset 0 0 0 2px rgba(0,0,0,0.55)" : "inset 0 0 0 1.5px rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
             ))}
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
@@ -896,7 +877,6 @@ export default function PS3ControlPanel() {
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
             <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
-              formatValue={v => `${Number(v).toFixed(1)}px`}
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
@@ -905,7 +885,6 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
           <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark} label="Intensity"
-            formatValue={v => Number(v).toFixed(2)}
             onChange={v => {
               if (activePreset >= 1) {
                 setPresetIntensity(prev => ({ ...prev, [`${mode}:${activePreset}`]: v }));
@@ -918,7 +897,6 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
           <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
-            formatValue={v => `${Number(v).toFixed(2)}×`}
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
@@ -926,7 +904,6 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
           <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
-            formatValue={v => `${Math.round(v)}px`}
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
