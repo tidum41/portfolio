@@ -110,32 +110,32 @@ function computeNavAlignedPos(): {x:number;y:number} | null {
 function shouldFlip(pillY: number) {
   if (typeof window === "undefined") return false;
   const vy = pillY - window.scrollY;
-  return window.innerHeight - vy - PILL_H - EDGE_PAD < BODY_H && vy - EDGE_PAD >= BODY_H;
+  const spaceBelow = window.innerHeight - (vy + PILL_H) - EDGE_PAD * 2;
+  const spaceAbove = vy - EDGE_PAD * 2;
+  return spaceBelow < 420 && spaceAbove > spaceBelow;
 }
 
 function getGeometry(pillPos: {x:number;y:number}, isOpen: boolean, flipped: boolean) {
   if (typeof window === "undefined") return { w: PILL_W, maxH: PILL_H, r: PILL_H / 2, left: 0, top: 0, clampedBodyH: BODY_H };
   const docW = document.documentElement.scrollWidth;
   const viewportH = window.innerHeight;
-  const maxBodyH = Math.max(120, viewportH - PILL_H - EDGE_PAD * 3);
-  const clampedBodyH = Math.min(BODY_H, maxBodyH);
+  const vy = pillPos.y - window.scrollY;
+
+  const spaceBelow = Math.max(100, viewportH - (vy + PILL_H) - EDGE_PAD * 2);
+  const spaceAbove = Math.max(100, vy - EDGE_PAD * 2);
+  const availH = flipped ? spaceAbove : spaceBelow;
+  const clampedBodyH = Math.max(140, Math.min(BODY_H, Math.floor(availH)));
+
   const w = isOpen ? PANEL_W : PILL_W;
   const maxH = isOpen ? PILL_H + clampedBodyH : PILL_H;
-  // PS3 XMB feel: rectangular button (not pill) when closed, gently rounded panel when open.
   const r = isOpen ? 14 : 8;
-  const rightEdge = pillPos.x + PILL_W;
-  // The extra EDGE_PAD margin only matters for the OPEN panel (PANEL_W is
-  // much wider than the pill, and could otherwise land flush against the
-  // true viewport edge with no breathing room). Applying it to the CLOSED
-  // pill too silently shrank a content-anchored x (see computeNavAlignedPos's
-  // "drop below" branch) by another 10px whenever the content itself already
-  // reaches the viewport edge (no --grid-max-w margin at that width) — this
-  // is what produced a several-px-off, "not quite aligned with 'about'"
-  // pill position that only showed up at certain widths.
-  const left = Math.max(EDGE_PAD, Math.min(rightEdge - w, docW - w - (isOpen ? EDGE_PAD : 0)));
+
+  const targetLeft = pillPos.x;
+  const left = Math.max(EDGE_PAD, Math.min(targetLeft, docW - w - (isOpen ? EDGE_PAD : 0)));
   const top = flipped && isOpen
     ? Math.max(EDGE_PAD, pillPos.y + PILL_H - maxH)
     : Math.max(EDGE_PAD, pillPos.y);
+
   return { w, maxH, r, left, top, clampedBodyH };
 }
 
@@ -176,18 +176,18 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Custom Slider ──────────────────────────────────────────────────────────
-// Visually identical to the old input[type=range] style (2px track,
-// 5px×14px thumb) but built on pointer events + setPointerCapture so the
-// thumb reliably follows the finger on mobile — native range inputs lose the
-// drag if touch briefly leaves the element or the parent steals the event.
+// ── Custom Slider (PS3 Precision & Micro-tactile Touch) ────────────────────
 const Slider = memo(function Slider({
-  min, max, step, value, onChange, isDark, label,
+  min, max, step, value, onChange, isDark, label, formatValue,
 }: {
   min: number; max: number; step: number; value: number;
   onChange: (v: number) => void; isDark: boolean; label: string;
+  formatValue?: (v: number) => string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
   const clamp = useCallback((v: number) => parseFloat(Math.max(min, Math.min(max, v)).toFixed(10)), [min, max]);
   const valueFromClientX = useCallback((clientX: number) => {
     const el = trackRef.current;
@@ -198,12 +198,24 @@ const Slider = memo(function Slider({
     const snapped = min + Math.round((raw - min) / step) * step;
     return clamp(snapped);
   }, [min, max, step, value, clamp]);
-  const pct    = ((value - min) / (max - min)) * 100;
-  const filled = isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)";
-  const empty  = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-  const thumb  = isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)";
+
+  const pct    = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+  const active = isDragging || isHovered;
+
+  const filledGradient = isDark
+    ? "linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.85) 100%)"
+    : "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.80) 100%)";
+  const trackBg = isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.08)";
+  const thumbColor = isDark ? "rgba(255,255,255,0.95)" : "rgba(20,20,20,0.95)";
+  const thumbGlow = active
+    ? (isDark ? "0 0 8px rgba(255,255,255,0.6)" : "0 0 8px rgba(0,0,0,0.3)")
+    : "0 1px 3px rgba(0,0,0,0.2)";
+
+  const formattedStr = formatValue ? formatValue(value) : value.toString();
+
   return (
-    <div ref={trackRef}
+    <div
+      ref={trackRef}
       className="ps3cp-slider-track"
       role="slider"
       tabIndex={0}
@@ -211,11 +223,36 @@ const Slider = memo(function Slider({
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={value}
-      style={{ position: "relative", height: 44, display: "flex", alignItems: "center", touchAction: "none", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-      onPointerDown={e => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); onChange(valueFromClientX(e.clientX)); }}
-      onPointerMove={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; onChange(valueFromClientX(e.clientX)); }}
-      onPointerUp={e => e.currentTarget.releasePointerCapture(e.pointerId)}
-      onPointerCancel={e => e.currentTarget.releasePointerCapture(e.pointerId)}
+      style={{
+        position: "relative",
+        height: 34,
+        display: "flex",
+        alignItems: "center",
+        touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        cursor: "pointer",
+      } as React.CSSProperties}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
+      onPointerDown={e => {
+        e.stopPropagation();
+        setIsDragging(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onChange(valueFromClientX(e.clientX));
+      }}
+      onPointerMove={e => {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        onChange(valueFromClientX(e.clientX));
+      }}
+      onPointerUp={e => {
+        setIsDragging(false);
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+      }}
+      onPointerCancel={e => {
+        setIsDragging(false);
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+      }}
       onKeyDown={e => {
         if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(clamp(value + step)); }
         else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(clamp(value - step)); }
@@ -223,10 +260,64 @@ const Slider = memo(function Slider({
         else if (e.key === "End") { e.preventDefault(); onChange(max); }
       }}
     >
-      {/* Track */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: `linear-gradient(to right,${filled} 0%,${filled} ${pct}%,${empty} ${pct}%,${empty} 100%)` }} />
+      {/* Background Rail */}
+      <div style={{
+        position: "absolute", left: 0, right: 0, top: "50%", height: 3, transform: "translateY(-50%)",
+        borderRadius: 1.5, pointerEvents: "none", background: trackBg,
+        boxShadow: isDark ? "inset 0 1px 1px rgba(0,0,0,0.4)" : "inset 0 1px 1px rgba(0,0,0,0.06)",
+      }} />
+
+      {/* Filled Rail */}
+      <div style={{
+        position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 3, transform: "translateY(-50%)",
+        borderRadius: 1.5, pointerEvents: "none", background: filledGradient,
+        boxShadow: active ? (isDark ? "0 0 6px rgba(255,255,255,0.4)" : "0 0 6px rgba(0,0,0,0.2)") : "none",
+        transition: "width 60ms linear, box-shadow 150ms ease",
+      }} />
+
+      {/* End Tick Notches */}
+      <div style={{ position: "absolute", left: 0, top: "50%", width: 1.5, height: 7, transform: "translateY(-50%)", borderRadius: 1, backgroundColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", right: 0, top: "50%", width: 1.5, height: 7, transform: "translateY(-50%)", borderRadius: 1, backgroundColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)", pointerEvents: "none" }} />
+
+      {/* Floating Drag Tooltip */}
+      {isDragging && (
+        <div style={{
+          position: "absolute",
+          top: -18,
+          left: `${pct}%`,
+          transform: "translateX(-50%)",
+          padding: "1px 5px",
+          borderRadius: 3,
+          fontSize: 9,
+          fontFamily: "monospace",
+          fontWeight: 600,
+          letterSpacing: "0.05em",
+          color: isDark ? "#ffffff" : "#000000",
+          backgroundColor: isDark ? "rgba(35,35,45,0.92)" : "rgba(240,240,245,0.92)",
+          border: isDark ? "1px solid rgba(255,255,255,0.2)" : "1px solid rgba(0,0,0,0.15)",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+          pointerEvents: "none",
+          zIndex: 10,
+          whiteSpace: "nowrap",
+        }}>
+          {formattedStr}
+        </div>
+      )}
+
       {/* Thumb */}
-      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: 5, height: 14, borderRadius: 2, backgroundColor: thumb, transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: `${pct}%`,
+        width: active ? 7 : 5,
+        height: active ? 16 : 13,
+        borderRadius: 2.5,
+        backgroundColor: thumbColor,
+        boxShadow: thumbGlow,
+        transform: "translate(-50%,-50%)",
+        pointerEvents: "none",
+        transition: "left 60ms linear, width 120ms ease, height 120ms ease, box-shadow 150ms ease, background-color 150ms ease",
+      }} />
     </div>
   );
 });
@@ -240,6 +331,12 @@ function Minus({ size = 11 }) {
 }
 function Reset({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+}
+function PS3TriangleGlyph({ size = 9, color = "currentColor" }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polygon points="12 3 22 21 2 21" /></svg>;
+}
+function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><circle cx="12" cy="12" r="9" /></svg>;
 }
 
 // ── Expand/collapse section ─────────────────────────────────────────────────
@@ -426,8 +523,6 @@ export default function PS3ControlPanel() {
   const isVeryFirstLoad = useRef(!_ps3cpHasLoaded);
   const savedPos        = useRef<{x:number;y:number} | null>(typeof window !== "undefined" ? readSavedPos() : null);
   const hasDraggedRef   = useRef(savedPos.current !== null);
-  // Which fade config the current reveal should use — set right before
-  // triggering it in the posReady effect below, read by morphT.
   const revealKindRef   = useRef<"first" | "return">("first");
 
   const [portalEl, setPortalEl]         = useState<HTMLElement | null>(null);
@@ -436,25 +531,14 @@ export default function PS3ControlPanel() {
   const [isOpen, setIsOpen]             = useState(false);
   const [flipped, setFlipped]           = useState(false);
   const [isDragging, setIsDragging]     = useState(false);
-  // Always starts hidden and fades in via the posReady effect below (either
-  // path) — previously started `true` outright on a return remount, which is
-  // what produced the instant "pop in" with no transition at all.
   const [shown, setShown]               = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [positionSettled, setPositionSettled] = useState(
     savedPos.current !== null && !isVeryFirstLoad.current
   );
 
-  const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT); // halftone
-  const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV); // wave
-  // Remembers the last-active intensity per colored-preset-per-mode (key is
-  // `${mode}:${presetIndex}`, preset index >= 1 only — index 0 is the
-  // white/default swatch and never goes through this map). Seeded with
-  // PRESET_INTENSITY_HT/WV the first time a given preset+mode is picked;
-  // overwritten whenever the intensity slider is adjusted while that
-  // preset+mode is active, so a later re-pick restores what the user set
-  // rather than re-applying the seed default. Session-only, not persisted
-  // to sessionStorage — matches intensityHt/intensityWv's own behavior.
+  const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT);
+  const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV);
   const [presetIntensity, setPresetIntensity] = useState<Record<string, number>>({});
   const [mouseStr,     setMouseStr]     = useState(DEFAULT_MOUSE_STR);
   const [yOffset,      setYOffset]      = useState(DEFAULT_YOFFSET);
@@ -522,11 +606,8 @@ export default function PS3ControlPanel() {
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
-      // Fallback (the hero subtitle was never found): right-anchor near the
-      // edge — a left-edge anchor would collide with the mute/theme controls
-      // at the start of the nav row.
       const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
-      startTransition(() => { setPillPos({ x: cl + w - PILL_W - EDGE_PAD + window.scrollX, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
+      startTransition(() => { setPillPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
     };
     setTimeout(() => findAndPlace(0), 200);
   }, []);
@@ -547,11 +628,6 @@ export default function PS3ControlPanel() {
   useEffect(() => {
     if (!posReady) return;
     if (!isVeryFirstLoad.current) {
-      // Remounting after having already loaded once this session (the
-      // component unmounts whenever the route isn't "/" — see the
-      // `isWorkRoute &&` gate in PersistentWorkShell.tsx). Fade straight in,
-      // matching EntranceItem/hero's own re-entry timing (RETURN_FADE_MS/
-      // RETURN_EASE), instead of the instant snap this used to be.
       revealKindRef.current = "return";
       startTransition(() => setShowTransition(true));
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
@@ -560,11 +636,6 @@ export default function PS3ControlPanel() {
       setTimeout(() => startTransition(() => setShowTransition(false)), RETURN_FADE_MS + 200);
       return;
     }
-    // Fade in on the same "intro-done" signal (and the same duration/easing,
-    // see FADE_MS/FADE_EASE above) that nav and footer use — rather than an
-    // independently-timed delay, so the pill visibly settles in at the exact
-    // same moment as the rest of the header instead of arriving on its own
-    // separate schedule.
     revealKindRef.current = "first";
     function reveal() {
       startTransition(() => setShowTransition(true));
@@ -574,10 +645,6 @@ export default function PS3ControlPanel() {
       setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
       _ps3cpHasLoaded = true;
     }
-    // If the intro gate has already lifted by the time this mounts (matches
-    // the defensive check every other intro-timed piece — HeroText, PS3Silk —
-    // performs at mount), reveal immediately instead of waiting forever for
-    // an event that already fired.
     if (!document.documentElement.hasAttribute("data-intro")) {
       reveal();
       return;
@@ -626,7 +693,6 @@ export default function PS3ControlPanel() {
     if (patch.speed         !== undefined) startTransition(() => setSpeed(patch.speed!));
     if (patch.waveColor     !== undefined) { startTransition(() => setWaveColor(patch.waveColor!)); saveWaveColor(patch.waveColor!); }
     if (patch.mode          !== undefined) { startTransition(() => setMode(patch.mode!)); saveMode(patch.mode!); }
-    // When switching mode without an explicit intensity, dispatch the stored intensity for the new mode
     const payload: Record<string, unknown> = { ...patch as Record<string, unknown> };
     if (patch.mode !== undefined && patch.intensity === undefined) {
       payload.intensity = patch.mode === 1 ? intensityHt : intensityWv;
@@ -660,7 +726,7 @@ export default function PS3ControlPanel() {
       const docW = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
       const cw = isOpen ? PANEL_W : PILL_W;
       const dragged = {
-        x: Math.max(EDGE_PAD + cw - PILL_W, Math.min(dragRef.current.origX + dx, docW - PILL_W - EDGE_PAD)),
+        x: Math.max(EDGE_PAD, Math.min(dragRef.current.origX + dx, docW - cw - EDGE_PAD)),
         y: Math.max(EDGE_PAD, Math.min(dragRef.current.origY + dy, docH - PILL_H - EDGE_PAD)),
       };
       savePos(dragged); hasDraggedRef.current = true;
@@ -681,9 +747,6 @@ export default function PS3ControlPanel() {
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [isDragging, isOpen, pillPos.y]);
 
-  // Derived styling — close is faster than open (snappy dismissal) but keeps
-  // the same ease-out family; ease-in would delay the start of the collapse,
-  // the exact moment the user's eye is on it.
   const dur = isOpen ? `320ms ${EXPAND_EASE}` : `200ms ${EXPAND_EASE}`;
   const baseMorphParts = [
     `width ${dur}`, `height ${dur}`, `max-height ${dur}`,
@@ -692,12 +755,6 @@ export default function PS3ControlPanel() {
   ];
   const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
   const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
-  // Return-trip reveal (remounting after navigating back to "/") also slides
-  // up by the same distance EntranceItem/hero's own re-entry animation uses
-  // (ENTRANCE_DEFAULTS.y), so it reads as the same "fade + slide up" motion
-  // as everything else on the route rather than a plain opacity-only fade.
-  // The synced first-load reveal stays opacity-only, matching nav's own
-  // intro-hide CSS (also opacity-only) — see FADE_EASE/FADE_MS above.
   const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
     ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
@@ -708,8 +765,6 @@ export default function PS3ControlPanel() {
   const isDefaultWave = waveColor[0] > 0.9 && waveColor[1] > 0.9 && waveColor[2] > 0.9;
   const wr = Math.round(waveColor[0] * 255), wg = Math.round(waveColor[1] * 255), wb = Math.round(waveColor[2] * 255);
   const tintAmt = isDefaultWave ? 0 : 0.06;
-  // PS3 base: deep midnight blue-black (6,8,18) vs flat near-black (16,16,16).
-  // The subtle blue undertone is characteristic of PS3 XMB's dark void aesthetic.
   const [baseBgR, baseBgG, baseBgB] = isDark ? [20, 20, 20] : [252, 252, 252];
   const bgR = Math.round(baseBgR * (1 - tintAmt) + wr * tintAmt);
   const bgG = Math.round(baseBgG * (1 - tintAmt) + wg * tintAmt);
@@ -718,7 +773,6 @@ export default function PS3ControlPanel() {
   const pillBorder = isDark
     ? "rgba(255,255,255,0.14)"
     : (isDefaultWave ? "rgba(0,0,0,0.28)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
-  // PS3 glass sheen: thin inset highlight on the top edge only — flat, no drop shadow.
   const pillShadow = isDark
     ? "inset 0 1px 0 rgba(255,255,255,0.10)"
     : "inset 0 1px 0 rgba(255,255,255,0.60)";
@@ -726,10 +780,6 @@ export default function PS3ControlPanel() {
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
 
-  // Selecting a preset: index 0 (white/default) never touches intensity, same
-  // as before. Colored presets (index >= 1) restore whatever intensity was
-  // last active for this preset+mode, or seed PRESET_INTENSITY_HT/WV the
-  // first time this exact preset+mode combo is picked.
   const pickPreset = (i: number) => {
     const preset = PRESETS[i];
     if (i === 0) { setAndDispatch({ waveColor: preset.wave }); return; }
@@ -742,11 +792,11 @@ export default function PS3ControlPanel() {
     setAndDispatch({ waveColor: preset.wave, intensity: nextIntensity });
   };
 
-  const labelSt: React.CSSProperties = { fontSize: 11, color: isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.42)", letterSpacing: "0.01em" };
-  const valueSt: React.CSSProperties = { fontSize: 11, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.28)", fontFamily: "monospace" };
-  const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 4 };
+  const labelSt: React.CSSProperties = { fontSize: 11, color: isDark ? "rgba(255,255,255,0.48)" : "rgba(0,0,0,0.48)", letterSpacing: "0.02em", display: "flex", alignItems: "center", gap: 4 };
+  const valueSt: React.CSSProperties = { fontSize: 10.5, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)", fontFamily: "monospace" };
+  const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 2 };
   const rowH: React.CSSProperties    = { display: "flex", alignItems: "center", justifyContent: "space-between" };
-  const secPad = "4px 16px 8px";
+  const secPad = "3px 16px 5px";
 
   const swatchSt = (active: boolean, bg: string): React.CSSProperties => ({
     width: 20, height: 20, borderRadius: 4, flexShrink: 0,
@@ -754,7 +804,6 @@ export default function PS3ControlPanel() {
     backgroundColor: bg, boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.10)" : "none",
     transition: "border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
   });
-
 
   const panelMarkup = (
     <div ref={panelRef} className="ps3cp intro-hide" style={{
@@ -801,9 +850,12 @@ export default function PS3ControlPanel() {
       <div style={{ pointerEvents: isOpen ? "auto" : "none", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "visible", maxHeight: geo.clampedBodyH, WebkitOverflowScrolling: "touch" }}>
 
         {/* Pattern color */}
-        <div style={{ padding: "6px 16px 10px" }}>
+        <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
-            <span style={labelSt}>pattern color</span>
+            <span style={labelSt}>
+              <PS3CircleGlyph size={8} color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"} />
+              pattern color
+            </span>
             <div className="ps3cp-color-swatch" role="button" tabIndex={0} aria-label="Pattern color" aria-expanded={openColorPicker === "pattern"}
               onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
@@ -824,12 +876,15 @@ export default function PS3ControlPanel() {
         </div>
 
         {/* Pattern mode */}
-        <div style={{ padding: "8px 16px" }}>
-          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern</span>
+        <div style={{ padding: "6px 16px 8px" }}>
+          <span style={{ ...labelSt, display: "flex", marginBottom: 6 }}>
+            <PS3TriangleGlyph size={8} color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"} />
+            pattern mode
+          </span>
           <div style={{ display: "flex", gap: 4 }}>
             {["wave", "halftone"].map((m, i) => (
               <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
-                style={{ flex: 1, height: 28, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.72)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 11, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.01em" }}>
+                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.02em" }}>
                 {m}
               </button>
             ))}
@@ -837,10 +892,11 @@ export default function PS3ControlPanel() {
         </div>
 
         {/* Dot size */}
-        <ExpandSection open={mode === 1} maxH={72}>
+        <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
             <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
+              formatValue={v => `${Number(v).toFixed(1)}px`}
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
@@ -849,9 +905,8 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
           <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark} label="Intensity"
+            formatValue={v => Number(v).toFixed(2)}
             onChange={v => {
-              // A colored preset is active — remember this as the intensity
-              // to restore next time this exact preset+mode is picked.
               if (activePreset >= 1) {
                 setPresetIntensity(prev => ({ ...prev, [`${mode}:${activePreset}`]: v }));
               }
@@ -863,6 +918,7 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
           <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
+            formatValue={v => `${Number(v).toFixed(2)}×`}
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
@@ -870,6 +926,7 @@ export default function PS3ControlPanel() {
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
           <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
+            formatValue={v => `${Math.round(v)}px`}
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
