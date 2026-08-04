@@ -1,4 +1,4 @@
-// Tokens kept for any JS callers; hover no longer scales cards (grid stays
-// optically stable — underlay + Mux wash only).
-export const CARD_HOVER_SCALE = 1;
+// Hover scale is applied in CSS on `.project-card-lift` (see app/globals.css)
+// at 0.98 with the same 90ms-in / 280ms-out timing as the underlay fade.
+export const CARD_HOVER_SCALE = 0.98;
 export const CARD_HOVER_SPRING = { type: "spring" as const, stiffness: 120, damping: 20 };
