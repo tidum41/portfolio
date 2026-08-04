@@ -5,9 +5,8 @@ import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
-import { motion } from "framer-motion";
-import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "./cardHover";
 import NortheastArrow from "@/components/icons/NortheastArrow";
+import ProjectCardLift from "@/components/ProjectCardLift";
 
 function CardLabel({
   title,
@@ -61,9 +60,6 @@ interface Props {
    *  for standalone use; the persistent work shell passes this so background
    *  cards pause (rather than reload) while a case study is open. */
   active?: boolean;
-  /** Opt out of the hover press-in scale — e.g. an external-link card that
-   *  redirects immediately doesn't benefit from the "press and settle" feel. */
-  hoverScale?: boolean;
   /** Northeast arrow after the title — external demos that leave the site. */
   showExternalArrow?: boolean;
 }
@@ -75,7 +71,6 @@ export default function MuxAutoplayCard({
   sub,
   aspectRatio,
   active = true,
-  hoverScale = true,
   showExternalArrow = false,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
@@ -119,29 +114,31 @@ export default function MuxAutoplayCard({
   }, [active, shouldLoad]);
 
   const video = (
-    <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-      {shouldLoad && (
-        <MuxPlayer
-          ref={playerRef}
-          playbackId={playbackId}
-          autoPlay="muted"
-          loop
-          muted
-          playsInline
-          nohotkeys
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-            // @ts-ignore CSS custom properties
-            "--controls": "none",
-            "--media-background-color": "transparent",
-          }}
-        />
-      )}
+    <div className="project-media">
+      <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+        {shouldLoad && (
+          <MuxPlayer
+            ref={playerRef}
+            playbackId={playbackId}
+            autoPlay="muted"
+            loop
+            muted
+            playsInline
+            nohotkeys
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              // @ts-ignore CSS custom properties
+              "--controls": "none",
+              "--media-background-color": "transparent",
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 
@@ -149,17 +146,15 @@ export default function MuxAutoplayCard({
   const external = href.startsWith("http");
 
   return (
-    <motion.div
-      className="project-card"
-      {...(hoverScale ? { whileHover: { scale: CARD_HOVER_SCALE }, transition: CARD_HOVER_SPRING } : {})}
-      style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}
-    >
-      {external ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
-      ) : (
-        <Link href={href} prefetch style={linkStyle}>{video}</Link>
-      )}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
-    </motion.div>
+    <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
+      <ProjectCardLift style={{ gap: dk.cardGap }}>
+        {external ? (
+          <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
+        ) : (
+          <Link href={href} prefetch style={linkStyle}>{video}</Link>
+        )}
+        <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
+      </ProjectCardLift>
+    </div>
   );
 }

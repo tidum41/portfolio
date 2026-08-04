@@ -1,5 +1,5 @@
 /** Northeast arrow — same glyph as GlobalCustomCursor's ARROW_ICON_SVG. */
-export default function NortheastArrow({ size = 13 }: { size?: number }) {
+export default function NortheastArrow({ size = 13, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -7,7 +7,7 @@ export default function NortheastArrow({ size = 13 }: { size?: number }) {
       width={size}
       height={size}
       fill="none"
-      stroke="currentColor"
+      stroke={color}
       strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
