@@ -294,10 +294,10 @@ nav a {
 }
 
 /* ─── Project card hover ───────────────────────────────────────────
-   Quiet PS3-style lift: a soft plate fades in almost instantly behind the
-   card, content scales up slightly, and both ease out slower on leave so
-   moving between cards doesn't flicker. No whole-card color/opacity shift —
-   only Mux video cards get a light screen wash (see --video below). */
+   Soft plate behind the card (fast in / slower out). Press-in scale lives
+   on `.project-card-lift` via a weighted spring in ProjectCardLift — not
+   CSS — so the motion has mass instead of a floaty duration tween.
+   No whole-card color shift; Mux video tiles keep a soft wash only. */
 .project-card {
   position: relative;
   isolation: isolate;
@@ -306,12 +306,12 @@ nav a {
   content: "";
   position: absolute;
   inset: -10px;
-  border-radius: 12px; /* keeps concentric curve with --radius-card (4) + pad */
+  border-radius: 12px; /* concentric with --radius-card (4) + pad */
   background: rgba(46, 46, 46, 0.045);
   opacity: 0;
   z-index: -1;
   pointer-events: none;
-  transition: opacity 260ms var(--spring-panel);
+  transition: opacity 280ms var(--ease-out);
 }
 html[data-theme="dark"] .project-card::before {
   background: rgba(255, 255, 255, 0.055);
@@ -320,18 +320,12 @@ html[data-theme="dark"] .project-card::before {
   display: flex;
   flex-direction: column;
   gap: inherit;
-  transform: scale(1);
   transform-origin: center center;
-  transition: transform 260ms var(--spring-panel);
 }
 @media (hover: hover) and (pointer: fine) {
   .project-card:hover::before {
     opacity: 1;
-    transition: opacity 70ms var(--spring-panel);
-  }
-  .project-card:hover .project-card-lift {
-    transform: scale(1.018);
-    transition: transform 120ms var(--spring-panel);
+    transition: opacity 90ms var(--ease-out);
   }
 }
 
@@ -341,26 +335,22 @@ html[data-theme="dark"] .project-card::before {
   position: absolute;
   inset: 0;
   background: rgba(255, 255, 255, 0);
-  transition: background 260ms var(--spring-panel);
+  transition: background 280ms var(--ease-out);
   pointer-events: none;
   border-radius: inherit;
   z-index: 1;
 }
 @media (hover: hover) and (pointer: fine) {
   .project-card--video:hover .project-img-wrap::after {
-    background: rgba(255, 255, 255, 0.14);
-    transition: background 90ms var(--spring-panel);
+    background: rgba(255, 255, 255, 0.12);
+    transition: background 90ms var(--ease-out);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .project-card::before,
-  .project-card-lift,
   .project-card--video .project-img-wrap::after {
     transition: none !important;
-  }
-  .project-card:hover .project-card-lift {
-    transform: none;
   }
 }
 
