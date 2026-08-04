@@ -61,7 +61,7 @@ const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 // component state) whenever createPortal's target DOM node differs from the
 // previous render — see ReactChildFiber's updatePortal, which only reuses
 // the existing fiber when `containerInfo` is referentially the same. Moving
-// the live embed between grid/popup/warm slots by changing `container`
+// the live embed between grid/popup slots by changing `container`
 // directly would therefore reset it (WebAudio graph, calendar selection,
 // etc.) on every open/close — invisible for the old iframe embeds, where a
 // reload was cheap, but a real bug for native components.
@@ -69,7 +69,7 @@ const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 // Fix: portal into one permanent, off-tree div created once and never swapped
 // (so createPortal's container never changes, and React treats every
 // re-render as a plain update). Move that stable div between the logical
-// grid/popup/warm target elements with a plain DOM appendChild, which the
+// grid/popup target elements with a plain DOM appendChild, which the
 // browser treats as a reparent, not a destroy/recreate.
 function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
@@ -163,16 +163,20 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // iframe doesn't unmount until onExitComplete fires.
   const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
+  // Mount CD / habit only after the user opens them once — no offscreen warm
+  // preload on first visit to /. After first open, one live instance stays
+  // portaled between grid ↔ popup (same expand/collapse as before).
+  const [cdMounted, setCdMounted] = useState(false);
+  const [habitMounted, setHabitMounted] = useState(false);
   const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
-  const [warmCdEl, setWarmCdEl] = useState<HTMLDivElement | null>(null);
   const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
-  const [warmHabitEl, setWarmHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
-  const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
-  const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
+  // Poster stays opaque until first open+close reveals the live embed in-grid.
+  const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
   const [cdPosterFade, setCdPosterFade] = useState(false);
@@ -342,9 +346,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const openPopupHandler = (id: PopupId) => {
     if (id === "cd") {
+      setCdMounted(true);
       setCdPosterFade(false);
       setCdPosterOpacity(1);
     } else {
+      setHabitMounted(true);
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
     }
@@ -371,24 +377,22 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // Portal to popup only while visibly open; return to grid immediately on
   // close so the embed is back under the poster before the exit animation ends.
   useLayoutEffect(() => {
+    if (!cdMounted) return;
     if (openPopup === "cd" && popupVisible && popupCdEl) {
       setCdPortalTarget(popupCdEl);
     } else if (gridCdEl) {
       setCdPortalTarget(gridCdEl);
-    } else if (warmCdEl) {
-      setCdPortalTarget(warmCdEl);
     }
-  }, [openPopup, popupVisible, popupCdEl, gridCdEl, warmCdEl]);
+  }, [cdMounted, openPopup, popupVisible, popupCdEl, gridCdEl]);
 
   useLayoutEffect(() => {
+    if (!habitMounted) return;
     if (openPopup === "habit" && popupVisible && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
     } else if (gridHabitEl) {
       setHabitPortalTarget(gridHabitEl);
-    } else if (warmHabitEl) {
-      setHabitPortalTarget(warmHabitEl);
     }
-  }, [openPopup, popupVisible, popupHabitEl, gridHabitEl, warmHabitEl]);
+  }, [habitMounted, openPopup, popupVisible, popupHabitEl, gridHabitEl]);
 
   return (
     <div
@@ -679,50 +683,26 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
       </div>
 
-      {hasEverBeenActive && (
-        <>
-          {/* Offscreen warm slots — popup-sized preload before grid refs exist. */}
-          <div
-            ref={setWarmCdEl}
-            aria-hidden
-            style={{
-              position: "fixed",
-              left: -10000,
-              top: 0,
-              width: POPUP_EMBED_MAX_W,
-              minHeight: CD_POPUP_EMBED_H,
-              height: CD_POPUP_EMBED_H,
-              visibility: "hidden",
-              pointerEvents: "none",
-            }}
+      {/*
+        CD / habit mount on first open only (not on first visit to /).
+        After that, one live instance portals between grid and popup —
+        no offscreen warm iframes/WebAudio before the user shows interest.
+      */}
+      {cdMounted && (
+        <EmbedPortal container={cdPortalTarget}>
+          <CDPlayer active={openPopup === "cd" && popupVisible} />
+        </EmbedPortal>
+      )}
+      {habitMounted && (
+        <EmbedPortal container={habitPortalTarget}>
+          <PhoneEmbed
+            // Boost only after the phone has moved into the popup slot —
+            // expanding while still in the grid makes the blurred card
+            // behind the modal look like it resized.
+            expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
+            onWidgetThemeChange={setHabitWidgetTheme}
           />
-          <div
-            ref={setWarmHabitEl}
-            aria-hidden
-            style={{
-              position: "fixed",
-              left: -10000,
-              top: 0,
-              width: HABIT_POPUP_MAX_W,
-              minHeight: HABIT_POPUP_EMBED_H,
-              height: HABIT_POPUP_EMBED_H,
-              visibility: "hidden",
-              pointerEvents: "none",
-            }}
-          />
-          <EmbedPortal container={cdPortalTarget}>
-            <CDPlayer active={openPopup === "cd" && popupVisible} />
-          </EmbedPortal>
-          <EmbedPortal container={habitPortalTarget}>
-            <PhoneEmbed
-              // Boost only after the phone has moved into the popup slot —
-              // expanding while still in the grid makes the blurred card
-              // behind the modal look like it resized.
-              expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
-              onWidgetThemeChange={setHabitWidgetTheme}
-            />
-          </EmbedPortal>
-        </>
+        </EmbedPortal>
       )}
     </div>
   );
