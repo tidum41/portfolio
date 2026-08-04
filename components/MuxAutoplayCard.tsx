@@ -34,7 +34,7 @@ function CardLabel({
         gap: 6,
       }}>
         {title}
-        {showExternalArrow && <NortheastArrow size={13} />}
+        {showExternalArrow && <NortheastArrow size={13} color="var(--color-link-blue)" />}
       </p>
       {sub && (
         <p style={{
