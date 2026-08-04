@@ -702,16 +702,17 @@ export default function BentoGallery({
             const iw = cW(cs),
                 ih = cImgH(item);
             const s_ov = getOverviewT().s;
-            const s = Math.max(
-                s_ov * 1.25,
-                Math.min(
-                    s_ov * 3.5,
-                    Math.min(
-                        (vw * 0.38) / Math.max(1, iw),
-                        (vh * 0.5) / Math.max(1, ih)
-                    )
-                )
+            // Respect whatever zoom the user already dialed in (via the
+            // slider or a pinch/scroll gesture) rather than always jumping
+            // to a fixed focus scale — clicking a tile while already zoomed
+            // in keeps that same scale, only clamped to stay within a
+            // sensible focus range and never made to overflow the tile's
+            // reserved on-screen area.
+            const fitCap = Math.min(
+                (vw * 0.38) / Math.max(1, iw),
+                (vh * 0.5) / Math.max(1, ih)
             );
+            const s = clamp(tx.current.s, s_ov * 1.25, Math.min(s_ov * 3.5, fitCap));
             // Clamp against the same bounds zoomToCenter/onThumbDown enforce —
             // for tiles near the canvas edges, centering the tile alone can
             // push x/y outside those bounds. Left unclamped, tx.current
@@ -1019,12 +1020,27 @@ export default function BentoGallery({
     );
 
     // ── Init / resize — always "none" to avoid jarring scale-in ──────────────
+    // canvasH/getFocusT also change on every focus/defocus click now (the
+    // caption-push reflow keys packMasonry off focusedIdx/expandedExtraH),
+    // but that transition is already handled by focusCell/goOverview's own
+    // animated applyTransform call — this effect firing too, with "none"
+    // easing, was clobbering it moments later. Gate the actual resnap on
+    // vw/vh/canvasW (genuine viewport/layout changes) instead of letting
+    // focus-driven churn trigger it.
+    const prevResizeSigRef = useRef<{ vw: number; vh: number; canvasW: number } | null>(null);
     useEffect(() => {
         // Recompute dynamic min zoom whenever layout changes
         cancelZoomAnim();
         if (minZoomFactor > 0) {
             zMinRef.current = Math.max(ZOOM_MIN, getOverviewT().s * minZoomFactor);
         }
+
+        const prevSig = prevResizeSigRef.current;
+        const isGenuineResize =
+            !prevSig || prevSig.vw !== vw || prevSig.vh !== vh || prevSig.canvasW !== canvasW;
+        prevResizeSigRef.current = { vw, vh, canvasW };
+        if (!isGenuineResize) return;
+
         const fi = focusedRef.current;
         if (fi !== null) {
             const t = getFocusT(fi);
