@@ -294,21 +294,22 @@ nav a {
 }
 
 /* ─── Project card hover ───────────────────────────────────────────
-   No scale — keeps the grid optically stable. A tight plate wraps the
-   whole tile (media + label), with pad + radius concentric to the media
-   corners: outerRadius = --radius-card + hoverPad. Mux tiles also get a
-   soft wash on the video only. */
+   Soft plate wraps the whole tile (media + label). Extra horizontal pad
+   for L/R breathing room; radius stays concentric with --radius-card using
+   the horizontal pad. Very slight scale-down (0.98) shares the same
+   fast-in / slower-out timing as the plate — no spring, no bounce. */
 .project-card {
-  --project-hover-pad: 5px;
+  --project-hover-pad-x: 10px;
+  --project-hover-pad-y: 6px;
   position: relative;
   isolation: isolate;
 }
 .project-card::before {
   content: "";
   position: absolute;
-  inset: calc(-1 * var(--project-hover-pad));
-  /* Concentric with the media frame at the top/sides of the tile */
-  border-radius: calc(var(--radius-card) + var(--project-hover-pad));
+  inset: calc(-1 * var(--project-hover-pad-y)) calc(-1 * var(--project-hover-pad-x));
+  /* Concentric with media corners along the wider horizontal pad */
+  border-radius: calc(var(--radius-card) + var(--project-hover-pad-x));
   background: rgba(46, 46, 46, 0.04);
   opacity: 0;
   z-index: -1;
@@ -322,6 +323,9 @@ html[data-theme="dark"] .project-card::before {
   display: flex;
   flex-direction: column;
   gap: inherit;
+  transform: scale(1);
+  transform-origin: center center;
+  transition: transform 280ms var(--spring-panel);
 }
 .project-card .project-media .project-img-wrap {
   border-radius: var(--radius-card);
@@ -330,6 +334,10 @@ html[data-theme="dark"] .project-card::before {
   .project-card:hover::before {
     opacity: 1;
     transition: opacity 90ms var(--spring-panel);
+  }
+  .project-card:hover .project-card-lift {
+    transform: scale(0.98);
+    transition: transform 90ms var(--spring-panel);
   }
 }
 
@@ -353,8 +361,12 @@ html[data-theme="dark"] .project-card::before {
 
 @media (prefers-reduced-motion: reduce) {
   .project-card::before,
+  .project-card-lift,
   .project-card--video .project-img-wrap::after {
     transition: none !important;
+  }
+  .project-card:hover .project-card-lift {
+    transform: none;
   }
 }
 
