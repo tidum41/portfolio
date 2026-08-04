@@ -471,18 +471,20 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : p.image?.asset?.url ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
                     <ProjectCardLift style={{ gap: 8 }}>
-                      <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                        <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                          <Image
-                            src={p.image.asset.url}
-                            alt={p.title}
-                            fill
-                            className="project-image"
-                            style={{ objectFit: "cover" }}
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                          />
-                        </div>
-                      </Link>
+                      <div className="project-media">
+                        <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                            <Image
+                              src={p.image.asset.url}
+                              alt={p.title}
+                              fill
+                              className="project-image"
+                              style={{ objectFit: "cover" }}
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          </div>
+                        </Link>
+                      </div>
                       <CardLabel title={p.title} sub={p.subtitle} />
                     </ProjectCardLift>
                   </EntranceItem>
@@ -505,19 +507,21 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               style={{ gap: 6, cursor: "pointer" }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
-                  <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
-                  <div
-                    ref={setGridCdEl}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      pointerEvents: "none",
-                      visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
-                    }}
-                  />
-                  <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                    <InteractiveBadge />
+                <div className="project-media">
+                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
+                    <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
+                    <div
+                      ref={setGridCdEl}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
+                      }}
+                    />
+                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                      <InteractiveBadge />
+                    </div>
                   </div>
                 </div>
                 <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
@@ -577,18 +581,20 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                 ) : p.image?.asset?.url ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
                     <ProjectCardLift style={{ gap: 8 }}>
-                      <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                        <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                          <Image
-                            src={p.image.asset.url}
-                            alt={p.title}
-                            fill
-                            className="project-image"
-                            style={{ objectFit: "cover" }}
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                          />
-                        </div>
-                      </Link>
+                      <div className="project-media">
+                        <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                            <Image
+                              src={p.image.asset.url}
+                              alt={p.title}
+                              fill
+                              className="project-image"
+                              style={{ objectFit: "cover" }}
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          </div>
+                        </Link>
+                      </div>
                       <CardLabel title={p.title} sub={p.subtitle} />
                     </ProjectCardLift>
                   </EntranceItem>
@@ -610,28 +616,30 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               style={{ gap: 6, cursor: "pointer" }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
-                <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
-                  <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                    <InteractiveBadge />
+                <div className="project-media">
+                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                      <InteractiveBadge />
+                    </div>
+                    <PhonePoster
+                      opacity={habitPosterOpacity}
+                      fade={habitPosterFade}
+                      theme={habitWidgetTheme}
+                      showScreen={openPopup === "habit"}
+                    />
+                    <div
+                      ref={setGridHabitEl}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        pointerEvents: "none",
+                        visibility: (openPopup === "habit" && popupVisible) ? "hidden" : "visible",
+                      }}
+                    />
                   </div>
-                  <PhonePoster
-                    opacity={habitPosterOpacity}
-                    fade={habitPosterFade}
-                    theme={habitWidgetTheme}
-                    showScreen={openPopup === "habit"}
-                  />
-                  <div
-                    ref={setGridHabitEl}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      pointerEvents: "none",
-                      visibility: (openPopup === "habit" && popupVisible) ? "hidden" : "visible",
-                    }}
-                  />
                 </div>
                 <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
               </ProjectCardLift>

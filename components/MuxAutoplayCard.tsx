@@ -114,29 +114,31 @@ export default function MuxAutoplayCard({
   }, [active, shouldLoad]);
 
   const video = (
-    <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-      {shouldLoad && (
-        <MuxPlayer
-          ref={playerRef}
-          playbackId={playbackId}
-          autoPlay="muted"
-          loop
-          muted
-          playsInline
-          nohotkeys
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-            // @ts-ignore CSS custom properties
-            "--controls": "none",
-            "--media-background-color": "transparent",
-          }}
-        />
-      )}
+    <div className="project-media">
+      <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+        {shouldLoad && (
+          <MuxPlayer
+            ref={playerRef}
+            playbackId={playbackId}
+            autoPlay="muted"
+            loop
+            muted
+            playsInline
+            nohotkeys
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              // @ts-ignore CSS custom properties
+              "--controls": "none",
+              "--media-background-color": "transparent",
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 
