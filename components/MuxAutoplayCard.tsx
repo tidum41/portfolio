@@ -5,8 +5,6 @@ import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
-import { motion } from "framer-motion";
-import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "./cardHover";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 
 function CardLabel({
@@ -34,7 +32,7 @@ function CardLabel({
         gap: 6,
       }}>
         {title}
-        {showExternalArrow && <NortheastArrow size={13} color="var(--color-link-blue)" />}
+        {showExternalArrow && <NortheastArrow size={13} />}
       </p>
       {sub && (
         <p style={{
@@ -61,9 +59,6 @@ interface Props {
    *  for standalone use; the persistent work shell passes this so background
    *  cards pause (rather than reload) while a case study is open. */
   active?: boolean;
-  /** Opt out of the hover press-in scale — e.g. an external-link card that
-   *  redirects immediately doesn't benefit from the "press and settle" feel. */
-  hoverScale?: boolean;
   /** Northeast arrow after the title — external demos that leave the site. */
   showExternalArrow?: boolean;
 }
@@ -75,7 +70,6 @@ export default function MuxAutoplayCard({
   sub,
   aspectRatio,
   active = true,
-  hoverScale = true,
   showExternalArrow = false,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
@@ -149,17 +143,15 @@ export default function MuxAutoplayCard({
   const external = href.startsWith("http");
 
   return (
-    <motion.div
-      className="project-card"
-      {...(hoverScale ? { whileHover: { scale: CARD_HOVER_SCALE }, transition: CARD_HOVER_SPRING } : {})}
-      style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}
-    >
-      {external ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
-      ) : (
-        <Link href={href} prefetch style={linkStyle}>{video}</Link>
-      )}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
-    </motion.div>
+    <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
+      <div className="project-card-lift" style={{ gap: dk.cardGap }}>
+        {external ? (
+          <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
+        ) : (
+          <Link href={href} prefetch style={linkStyle}>{video}</Link>
+        )}
+        <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
+      </div>
+    </div>
   );
 }
