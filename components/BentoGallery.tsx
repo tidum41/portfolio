@@ -209,8 +209,8 @@ function packMasonry(
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-// Room for 11px type + descenders (g/y/p) — line-height 1 was clipping bottoms.
-const CAPTION_H = 30;
+// Room for 11px type + descenders (g/y/p) — extra bottom pad prevents clipping.
+const CAPTION_H = 34;
 const CLICK_PX = 8;
 const EDGE_PAD = 240;  // large pad = canvas can scroll freely past edges
 const ZOOM_MIN = 0.06;
@@ -1476,7 +1476,7 @@ export default function BentoGallery({
                                         // Shared first-line metrics with the focus overlay
                                         // so entering focus only changes wrap/overflow.
                                         paddingTop: 8,
-                                        paddingBottom: 2,
+                                        paddingBottom: 6,
                                         height: CAPTION_H,
                                         boxSizing: "border-box",
                                         display: "flex",
