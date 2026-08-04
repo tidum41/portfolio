@@ -6,6 +6,7 @@ import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 import NortheastArrow from "@/components/icons/NortheastArrow";
+import ProjectCardLift from "@/components/ProjectCardLift";
 
 function CardLabel({
   title,
@@ -144,14 +145,14 @@ export default function MuxAutoplayCard({
 
   return (
     <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
-      <div className="project-card-lift" style={{ gap: dk.cardGap }}>
+      <ProjectCardLift style={{ gap: dk.cardGap }}>
         {external ? (
           <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
         ) : (
           <Link href={href} prefetch style={linkStyle}>{video}</Link>
         )}
         <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} showExternalArrow={showExternalArrow} />
-      </div>
+      </ProjectCardLift>
     </div>
   );
 }

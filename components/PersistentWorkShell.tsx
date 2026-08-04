@@ -12,6 +12,7 @@ import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
 import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
+import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
@@ -127,14 +128,9 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
   );
 }
 
-// External-demo tiles (no in-house case study, e.g. project-todolist) get
-// the same custom-cursor hover-label affordance as real case studies, so
-// hovering signals "this leaves the site" before the click does.
-function cursorLabelAttrs(p: SanityProject): Record<string, string | undefined> {
-  if (p.caseStudy) return { "data-cursor-label": "View Case Study" };
-  if (p._id === "project-todolist") return { "data-cursor-label": "try demo!", "data-cursor-no-icon": "" };
-  return {};
-}
+// Northeast arrows on external/popup tiles already signal affordance; the
+// custom-cursor label pills on project cards were retired — they competed
+// with the quieter press-in hover.
 
 /** Mounted once, unconditionally, by the root layout — never unmounts across
  *  client-side navigation. Visibility is toggled purely with CSS based on the
@@ -459,7 +455,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} {...cursorLabelAttrs(p)}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -473,8 +469,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }} {...cursorLabelAttrs(p)}>
-                    <div className="project-card-lift" style={{ gap: 8 }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
                       <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                         <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                           <Image
@@ -488,7 +484,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         </div>
                       </Link>
                       <CardLabel title={p.title} sub={p.subtitle} />
-                    </div>
+                    </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
               })}
@@ -504,13 +500,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               role="button"
               tabIndex={0}
               aria-label="Open Drag a CD in a larger view"
-              data-cursor-label="open"
-              data-cursor-no-icon=""
               onClick={() => openPopupHandler("cd")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
               style={{ gap: 6, cursor: "pointer" }}
             >
-              <div className="project-card-lift" style={{ gap: 6 }}>
+              <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
                   <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
                   <div
@@ -527,7 +521,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   </div>
                 </div>
                 <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
-              </div>
+              </ProjectCardLift>
             </EntranceItem>
           </div>
 
@@ -567,7 +561,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} {...cursorLabelAttrs(p)}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -581,8 +575,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }} {...cursorLabelAttrs(p)}>
-                    <div className="project-card-lift" style={{ gap: 8 }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
                       <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
                         <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                           <Image
@@ -596,7 +590,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         </div>
                       </Link>
                       <CardLabel title={p.title} sub={p.subtitle} />
-                    </div>
+                    </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
               })}
@@ -611,13 +605,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               role="button"
               tabIndex={0}
               aria-label="Open Dumb Habit Tracker in a larger view"
-              data-cursor-label="open"
-              data-cursor-no-icon=""
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ gap: 6, cursor: "pointer" }}
             >
-              <div className="project-card-lift" style={{ gap: 6 }}>
+              <ProjectCardLift style={{ gap: 6 }}>
                 <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
                   <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                     <InteractiveBadge />
@@ -642,7 +634,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   />
                 </div>
                 <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
-              </div>
+              </ProjectCardLift>
             </EntranceItem>
           </div>
 
