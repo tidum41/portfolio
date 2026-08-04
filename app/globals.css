@@ -67,6 +67,10 @@
   --color-placeholder:    #EBEBEB;
   --color-border-subtle:  #E8E4F0;
   --color-ucla-blue:      #2D68C4;
+  /* Standard "open link" blue — the hyperlink-blue tone recognized across
+     the web as "this opens/leaves the page", used for the northeast-arrow
+     glyph on external/popup card links (see NortheastArrow.tsx). */
+  --color-link-blue:      #0B5FFF;
   --color-accent:         #9590C2;
   --color-accent-subtle:  rgba(149,144,194,0.10);
   --color-toc-track:      rgba(173, 173, 173, 0.25);
@@ -927,6 +931,7 @@ html[data-theme="dark"] {
   --color-placeholder:    #1E2226;
   --color-border-subtle:  rgba(255, 255, 255, 0.07);
   --color-ucla-blue:      #5B8FD8;
+  --color-link-blue:      #6EA8FF;
   --color-accent:         #A09DC8;
   --color-accent-subtle:  rgba(160, 157, 200, 0.15);
   --color-toc-track:      rgba(255, 255, 255, 0.10);

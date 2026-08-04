@@ -92,7 +92,7 @@ function EmbedPortal({ container, children }: { container: HTMLDivElement | null
 
 // Northeast arrow — shared with MuxAutoplayCard external-link titles.
 function OpensInPopupIcon() {
-  return <NortheastArrow size={13} />;
+  return <NortheastArrow size={13} color="var(--color-link-blue)" />;
 }
 
 // ─── Card label ────────────────────────────────────────────────────────
