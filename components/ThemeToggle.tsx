@@ -92,6 +92,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   return (
     <button
       onClick={toggle}
+      data-ui-sound="option"
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
       // mouseleave ever firing (no cursor to leave), leaving isHovered

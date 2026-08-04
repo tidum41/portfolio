@@ -6,6 +6,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
+import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
@@ -127,6 +128,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
+        <UiSoundRoot />
         <Nav />
         <main id="main-content">
           {/* Mounted once, unconditionally, for the whole session — never
