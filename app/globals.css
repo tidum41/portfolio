@@ -294,14 +294,17 @@ nav a {
 }
 
 /* ─── Project card hover ───────────────────────────────────────────
-   Soft plate wraps the whole tile (media + label). Asymmetric pad needs an
-   elliptical radius to stay concentric with the media’s --radius-card:
-   rx = r + padX, ry = r + padY. Scale uses the PS3 expand curve with a
-   deliberate settle (not a 90ms snap) — ease-out so motion starts immediately
-   but still has weight. */
+   Soft plate wraps the whole tile (media + label).
+
+   Padding logic: use ONE uniform pad on all sides. Unequal L/R vs T/B
+   forces an elliptical corner (rx ≠ ry), which reads “off” against the
+   media’s circular --radius-card. Uniform pad keeps a circular outer
+   radius that is truly concentric: r_outer = r_media + pad.
+
+   8px sits between the earlier “too tight” 5px and “too wide” 10px sides.
+   Scale uses the PS3 expand curve with a deliberate settle. */
 .project-card {
-  --project-hover-pad-x: 10px;
-  --project-hover-pad-y: 6px;
+  --project-hover-pad: 8px;
   --project-hover-ease: var(--expand-ease); /* PS3 panel curve */
   --project-hover-in: 220ms;
   --project-hover-out: 280ms;
@@ -311,11 +314,9 @@ nav a {
 .project-card::before {
   content: "";
   position: absolute;
-  inset: calc(-1 * var(--project-hover-pad-y)) calc(-1 * var(--project-hover-pad-x));
-  /* True concentric corners with unequal pad: elliptical rx / ry */
-  border-radius:
-    calc(var(--radius-card) + var(--project-hover-pad-x))
-    / calc(var(--radius-card) + var(--project-hover-pad-y));
+  inset: calc(-1 * var(--project-hover-pad));
+  /* Concentric with media: same circular radius family */
+  border-radius: calc(var(--radius-card) + var(--project-hover-pad));
   background: rgba(46, 46, 46, 0.04);
   opacity: 0;
   z-index: -1;
