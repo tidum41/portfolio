@@ -83,27 +83,24 @@ export default function MuxAutoplayCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
-  // Same viewport-gated mount as MuxVideoEmbed.tsx — without this, every
-  // video project card downloads and autoplays its stream (plus the shared
-  // hls.js/mux-embed/media-chrome player infrastructure) as soon as the grid
-  // mounts, including cards well below the fold a visitor may never reach.
+  // Viewport-only mount — no timed force-load. The old 1500ms fallback
+  // spun up every Mux stack (HLS + media-chrome) even for below-fold cards
+  // a visitor never reached, and PersistentWorkShell keeps those players
+  // alive under display:none for the whole session.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const reveal = () => setShouldLoad(true);
-    const fallback = setTimeout(reveal, 1500);
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          clearTimeout(fallback);
-          reveal();
+          setShouldLoad(true);
           obs.disconnect();
         }
       },
-      { rootMargin: "0px 0px 400px 0px" },
+      { rootMargin: "0px 0px 200px 0px" },
     );
     obs.observe(container);
-    return () => { obs.disconnect(); clearTimeout(fallback); };
+    return () => obs.disconnect();
   }, []);
 
   useEffect(() => {
@@ -113,10 +110,43 @@ export default function MuxAutoplayCard({
     else player.pause?.();
   }, [active, shouldLoad]);
 
+  // Poster while the live player isn't mounted — Mux thumbnail is a still,
+  // not a second decoder. Live player only mounts when this card has entered
+  // view AND the work route is active, so leaving "/" releases HLS memory.
+  const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=800`;
+  const showPlayer = shouldLoad && active;
+
   const video = (
     <div className="project-media">
-      <div ref={containerRef} className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-        {shouldLoad && (
+      <div
+        ref={containerRef}
+        className="project-image project-img-wrap"
+        style={{
+          borderRadius: "var(--radius-card)",
+          overflow: "hidden",
+          background: "var(--color-placeholder)",
+          aspectRatio,
+          position: "relative",
+          width: "100%",
+        }}
+      >
+        <img
+          src={posterUrl}
+          alt=""
+          aria-hidden
+          decoding="async"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: showPlayer ? 0 : 1,
+            transition: "opacity 180ms var(--spring-panel)",
+            pointerEvents: "none",
+          }}
+        />
+        {showPlayer && (
           <MuxPlayer
             ref={playerRef}
             playbackId={playbackId}
@@ -125,6 +155,7 @@ export default function MuxAutoplayCard({
             muted
             playsInline
             nohotkeys
+            poster={posterUrl}
             style={{
               position: "absolute",
               inset: 0,
