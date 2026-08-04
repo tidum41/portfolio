@@ -1336,6 +1336,7 @@ export default function BentoGallery({
     return (
         <div
             ref={rootRef}
+            data-ui-sound-scope="archive"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
