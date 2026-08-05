@@ -1,6 +1,15 @@
-import { SAME_AS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  OG_IMAGE_PATH,
+  SAME_AS,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 export default function JsonLd() {
+  const logoUrl = `${SITE_URL}/icon-512.png`;
+  const imageUrl = `${SITE_URL}${OG_IMAGE_PATH}`;
+
   const data = {
     "@context": "https://schema.org",
     "@graph": [
@@ -12,6 +21,7 @@ export default function JsonLd() {
         description: SITE_DESCRIPTION,
         publisher: { "@id": `${SITE_URL}/#person` },
         inLanguage: "en-US",
+        image: imageUrl,
       },
       {
         "@type": "Person",
@@ -21,6 +31,7 @@ export default function JsonLd() {
         description: SITE_DESCRIPTION,
         email: "muditmahajan@ucla.edu",
         jobTitle: "Product Design Intern",
+        image: logoUrl,
         worksFor: {
           "@type": "Organization",
           name: "JOOLA",

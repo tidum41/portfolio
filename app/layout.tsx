@@ -11,13 +11,28 @@ import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  OG_IMAGE_ALT,
+  OG_IMAGE_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
 // Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+
+const OG_IMAGES = [
+  {
+    url: OG_IMAGE_PATH,
+    width: 1200,
+    height: 630,
+    alt: OG_IMAGE_ALT,
+  },
+];
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -37,6 +52,27 @@ export const metadata: Metadata = {
   authors: [{ name: "Mudit Mahajan", url: SITE_URL }],
   creator: "Mudit Mahajan",
   alternates: { canonical: "/" },
+  // Non-media defaults first so Google/Search can pick a stable icon.
+  // Theme-aware 32px variants remain for modern browser tabs.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
+      {
+        url: "/favicon-32-light.png",
+        type: "image/png",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/favicon-32-dark.png",
+        type: "image/png",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   openGraph: {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
@@ -44,11 +80,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
+    images: OG_IMAGES,
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
   },
   robots: {
     index: true,
@@ -114,9 +152,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             never mounts its replacement animation for those visitors, so hiding
             the native cursor here would otherwise leave them with no cursor at all. */}
         <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){*{cursor:none!important}}` }} />
-        {/* Theme-aware favicons: dark glyph on light chrome, light glyph on dark chrome */}
-        <link rel="icon" type="image/png" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
-        <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
+        {/* Icons also declared in `metadata.icons` — keep a plain fallback here
+            for crawlers that only read the first non-media icon link. */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/favicon.png" sizes="48x48" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" type="image/png" href="/favicon-32-light.png" sizes="32x32" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
         <JsonLd />
