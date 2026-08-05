@@ -1,12 +1,14 @@
 "use client";
 
 /**
- * PS3SilkLab v4 — vintage print halftone + cursor morphism.
+ * PS3SilkLab v5 — XMB ribbon physics first, vintage halftone as material.
  *
- * The production silk wave is only a luminance/coverage field (the “photo”
- * being screened). What you see is classic AM halftone dots — and near the
- * cursor those dots melt/fuse (nav HalftoneDotField goo vocabulary) then
- * resolve back to crisp ink. Dev-only; production PS3Silk untouched.
+ * Real XMB (spline.elf): subdivided mesh / continuous translucent ribbons with
+ * fresnel-ish sheet lighting + a SEPARATE particles.elf sparkle pass.
+ * Your site already approximates the ribbons as additive one-sided sine bands
+ * (production PS3Silk). v4 flattened that into AM print coverage and lost the
+ * wrapping sheets. v5 restores continuous silk, then textures it with print
+ * dots (and optional cursor melt) — no floating sparkles.
  */
 
 import { useEffect, useRef } from "react";
@@ -34,28 +36,28 @@ export default function PS3SilkLab() {
     "Vintage Halftone",
     {
       print: {
-        // Classic AM screen — quiet ranges near production density
-        pitch: [3.2, 2.2, 5.5, 0.1],
-        screenAngle: [15, 0, 45, 0.5], // degrees — vintage offset screens
-        contrast: [0.85, 0.45, 1.4, 0.05], // coverage gamma
-        inkSoftness: [1.0, 0.35, 2.2, 0.05], // edge feather (print bleed)
-        inkDensity: [0.58, 0.3, 0.9, 0.01],
-        minDot: [0.04, 0, 0.15, 0.005], // drop empty cells
+        // User-tuned defaults (Aug 2026)
+        pitch: [4.8, 2.2, 6.5, 0.1],
+        screenAngle: [0, 0, 45, 0.5],
+        contrast: [1.1, 0.45, 1.4, 0.05],
+        inkSoftness: [0.7, 0.35, 2.2, 0.05],
+        inkDensity: [0.44, 0.3, 0.9, 0.01],
+        minDot: [0.035, 0, 0.15, 0.005],
         inkColor: { type: "color", default: "#ffffff" },
+        // 0 = pure continuous silk (production physics), 1 = dots only
+        silkMix: [0.42, 0, 1, 0.01],
       },
       morph: {
-        // Cursor melt — same idea as nav goo: blur-ish field + threshold
         enabled: true,
         strength: [0.7, 0, 1, 0.01],
         radius: [0.26, 0.1, 0.5, 0.01],
-        fusion: [0.55, 0.2, 1.1, 0.01], // metaball threshold (lower = more merge)
+        fusion: [0.55, 0.2, 1.1, 0.01],
         softness: [0.14, 0.04, 0.35, 0.01],
-        overlap: [1.2, 0.9, 1.7, 0.05], // radius boost in melt zone
+        overlap: [1.2, 0.9, 1.7, 0.05],
         lag: [0.055, 0.02, 0.14, 0.005],
       },
       plate: {
         _collapsed: true,
-        // Underlying silk plate (coverage only)
         intensity: [0.18, 0.06, 0.4, 0.005],
         mouseNudge: [0.11, 0, 0.28, 0.005],
         speed: [1.0, 0.15, 2.0, 0.01],
@@ -64,9 +66,9 @@ export default function PS3SilkLab() {
       },
     },
     {
-      id: "ps3-vintage-halftone-v4",
+      id: "ps3-vintage-halftone-v5",
       persist: {
-        key: "ps3-vintage-halftone-v4",
+        key: "ps3-vintage-halftone-v5",
         storage: "localStorage",
         presets: true,
       },
@@ -74,13 +76,14 @@ export default function PS3SilkLab() {
   );
 
   const refs = useRef({
-    pitch: 3.2,
-    screenAngle: 15,
-    contrast: 0.85,
-    inkSoftness: 1.0,
-    inkDensity: 0.58,
-    minDot: 0.04,
+    pitch: 4.8,
+    screenAngle: 0,
+    contrast: 1.1,
+    inkSoftness: 0.7,
+    inkDensity: 0.44,
+    minDot: 0.035,
     inkColor: [1, 1, 1] as [number, number, number],
+    silkMix: 0.42,
     morphOn: true,
     morphStrength: 0.7,
     morphRadius: 0.26,
@@ -104,6 +107,7 @@ export default function PS3SilkLab() {
     r.inkDensity = dk.print.inkDensity;
     r.minDot = dk.print.minDot;
     r.inkColor = hexToRgb(dk.print.inkColor);
+    r.silkMix = dk.print.silkMix;
     r.morphOn = dk.morph.enabled;
     r.morphStrength = dk.morph.strength;
     r.morphRadius = dk.morph.radius;
@@ -154,6 +158,7 @@ uniform float uInkSoft;
 uniform float uInkDensity;
 uniform float uMinDot;
 uniform vec3  uInkColor;
+uniform float uSilkMix;
 uniform float uMorphOn;
 uniform float uMorphStrength;
 uniform float uMorphRadius;
@@ -161,7 +166,7 @@ uniform float uMorphFusion;
 uniform float uMorphSoft;
 uniform float uMorphOverlap;
 
-// Production silk plate — coverage only
+// Exact production PS3Silk band — continuous ribbon with one-sided thickness
 float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
   float phase, float cy, float width, float sharp, bool flip) {
   float md = length(uv - uMouse);
@@ -176,7 +181,7 @@ float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
   return pow(s, sharp);
 }
 
-float samplePlate(vec2 uv) {
+float sampleSilk(vec2 uv) {
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
   float c = 0.0;
@@ -191,7 +196,6 @@ float samplePlate(vec2 uv) {
   return clamp(c, 0.0, 1.0);
 }
 
-// Classic print radius curve: sqrt(coverage^gamma)
 float inkRadius(float coverage, float pitch) {
   float t = clamp(coverage, 0.0, 1.0);
   if (t < uMinDot) return 0.0;
@@ -208,43 +212,38 @@ void main() {
   vec2 uv = frag / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
 
-  float plate = samplePlate(uv) * uIntensity * 4.5;
-  // Existing production-style cursor ripple on coverage (subtle)
+  // ── Continuous XMB ribbons (physics / wrapping sheets) ──
+  float silkLuma = sampleSilk(uv);
+  float waveLight = silkLuma * uIntensity * 4.5;
   float mouseDist = length(uv - uMouse);
-  float ripple = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseNudge * 1.6;
-  float coverage = clamp(plate - 0.05 + ripple * 0.22, 0.0, 1.2);
+  float ripple = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
+  float silkA = clamp(waveLight * 1.1 + ripple * 0.12, 0.0, 1.0);
 
-  // Screened coordinate — vintage angled AM screen
+  // ── Halftone material riding ON the silk (not replacing it) ──
   vec2 screenPx = rotate2(frag, uAngleRad);
   float pitch = max(uPitch, 1.5);
-
-  // Morph amount: 0 crisp print → 1 fused ink under cursor
-  float melt = 0.0;
-  if (uMorphOn > 0.5) {
-    melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
-  }
-
-  // ── Crisp vintage dots (far / rest) ──
   vec2 cell = floor(screenPx / pitch);
   vec2 centerScreen = (cell + 0.5) * pitch;
   vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
   vec2 centerUV = centerFrag / uResolution;
   centerUV.y += uYOffsetPx / uResolution.y;
 
-  float cellCov = clamp(samplePlate(centerUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
-  float cellRipple = exp(-pow((length(centerUV - uMouse) - 0.10) / 0.055, 2.0)) * uMouseNudge * 1.6;
-  cellCov = clamp(cellCov + cellRipple * 0.22, 0.0, 1.2);
+  float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
+  float cellRipple = exp(-pow((length(centerUV - uMouse) - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
+  float cellCov = clamp(cellSilk - 0.05 + cellRipple * 0.38, 0.0, 1.2);
+
+  float melt = 0.0;
+  if (uMorphOn > 0.5) {
+    melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
+  }
 
   float rCrisp = inkRadius(cellCov, pitch);
   float dCrisp = length(frag - centerFrag);
-  float soft = uInkSoft;
-  float crispDot = smoothstep(rCrisp + soft, rCrisp - soft, dCrisp);
+  float crispDot = smoothstep(rCrisp + uInkSoft, rCrisp - uInkSoft, dCrisp);
   float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
   float crispA = crispDot * crispVis;
 
-  // ── Morph / melt field (near cursor) — neighbor metaballs + threshold ──
-  // Same spirit as HalftoneDotField goo: overlapping soft discs fuse into
-  // one connected mass, then resolve. Fixed 3×3 for WebGL1.
+  // Cursor melt — soft-merge dots while silk sheet still shows underneath
   float field = 0.0;
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
@@ -253,18 +252,23 @@ void main() {
       vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
       vec2 nUV = nCenterF / uResolution;
       nUV.y += uYOffsetPx / uResolution.y;
-      float nCov = clamp(samplePlate(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
+      float nCov = clamp(sampleSilk(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
       float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
       float nD = length(frag - nCenterF);
       field += (nR * nR) / (nD * nD + 2.0);
     }
   }
   float meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
-  meltA *= smoothstep(uMinDot, uMinDot + 0.05, coverage);
+  meltA *= smoothstep(uMinDot, uMinDot + 0.05, waveLight);
+  float printA = mix(crispA, meltA, melt);
 
-  // Crossfade: morphism only where the hand is — elsewhere stays print
-  float a = mix(crispA, meltA, melt);
-  vec3 col = uInkColor * uInkDensity;
+  // Composite: continuous silk sheet + print texture. silkMix=0 → pure XMB
+  // ribbons; 1 → dots only (old v4 look). Default keeps wrapping readable.
+  float a = mix(silkA, printA, clamp(uSilkMix, 0.0, 1.0));
+  // Keep a whisper of continuous silk even at high silkMix so crests still wrap
+  a = max(a, silkA * (1.0 - clamp(uSilkMix, 0.0, 1.0)) * 0.35 + silkA * 0.12 * step(0.55, uSilkMix));
+
+  vec3 col = uInkColor * mix(0.78, uInkDensity, clamp(uSilkMix, 0.0, 1.0));
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -305,6 +309,7 @@ void main() {
       inkDensity: gl.getUniformLocation(prog, "uInkDensity"),
       minDot: gl.getUniformLocation(prog, "uMinDot"),
       inkColor: gl.getUniformLocation(prog, "uInkColor"),
+      silkMix: gl.getUniformLocation(prog, "uSilkMix"),
       morphOn: gl.getUniformLocation(prog, "uMorphOn"),
       morphStrength: gl.getUniformLocation(prog, "uMorphStrength"),
       morphRadius: gl.getUniformLocation(prog, "uMorphRadius"),
@@ -360,6 +365,7 @@ void main() {
       gl!.uniform1f(L.inkDensity, r.inkDensity);
       gl!.uniform1f(L.minDot, r.minDot);
       gl!.uniform3f(L.inkColor, ic[0], ic[1], ic[2]);
+      gl!.uniform1f(L.silkMix, r.silkMix);
       gl!.uniform1f(L.morphOn, r.morphOn ? 1 : 0);
       gl!.uniform1f(L.morphStrength, r.morphStrength);
       gl!.uniform1f(L.morphRadius, r.morphRadius);
