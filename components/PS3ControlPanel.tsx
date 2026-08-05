@@ -761,7 +761,7 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [isDragging, isOpen, pillPos.y]);
 
-  const dur = isOpen ? `180ms ${OPEN_EASE}` : `300ms ${CLOSE_EASE}`;
+  const dur = isOpen ? `280ms ${OPEN_EASE}` : `240ms ${CLOSE_EASE}`;
   const baseMorphParts = [
     `width ${dur}`, `height ${dur}`, `max-height ${dur}`, `border-radius ${dur}`,
     `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
@@ -816,7 +816,7 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
   const panelMarkup = (
     <div ref={panelRef} className="ps3cp intro-hide" style={{
       position: "absolute", left: geo.left, top: geo.top,
-      width: geo.w, height: "auto", maxHeight: geo.maxH, borderRadius: geo.r,
+      width: geo.w, height: geo.maxH, maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
       transition: morphT,
       backgroundColor: pillBg,
@@ -842,7 +842,7 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform 180ms ${OPEN_EASE}` : `transform 300ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
+            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform 280ms ${OPEN_EASE}` : `transform 240ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
               <ChevronDown color={accentCol} size={10} />
             </div>
             <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
@@ -863,7 +863,7 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
         overflowX: "visible",
         maxHeight: geo.clampedBodyH,
         opacity: isOpen ? 1 : 0,
-        transition: isOpen ? `opacity 160ms ${OPEN_EASE} 30ms` : `opacity 120ms ${CLOSE_EASE}`,
+        transition: isOpen ? `opacity 200ms ${OPEN_EASE} 50ms` : `opacity 140ms ${CLOSE_EASE}`,
         WebkitOverflowScrolling: "touch",
       }}>
 
