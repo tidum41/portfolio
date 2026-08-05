@@ -1,15 +1,17 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { DialRoot } from "dialkit";
-
-const PS3SilkLab = dynamic(() => import("@/components/PS3SilkLab"), { ssr: false });
+import PS3SilkLab from "@/components/PS3SilkLab";
 
 /**
  * DialKit panels are `position: fixed; z-index: 9999` (portaled to body).
  * Keep the lab canvas under that so dials stay visible/clickable. Nav is ~40;
  * PersistentWorkShell is display:none off "/".
+ *
+ * Import PS3SilkLab directly (no next/dynamic ssr:false) — that bailout was
+ * what Next DevTools was surfacing as an "Error" overlay on this page.
+ * WebGL still only inits in useEffect on the client.
  */
 const LAB_Z = 50;
 
