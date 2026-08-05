@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
 import HabitTrackerApp from "@/components/embeds/habit-tracker/HabitTrackerApp";
 // Static imports (not plain "/phonemockup-*.webp" string paths) so Next.js
@@ -24,9 +24,59 @@ const PHONE_H_BASE = 580;
 // also a near-perfect fit for the widget's own max-w-[393px] content.
 const CONTENT_W = 394;
 
+const FRAME_IMG: React.CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  zIndex: 2,
+  pointerEvents: "none",
+  userSelect: "none",
+  // Instant swap — never fade between frames (avoids empty-src flash).
+  transition: "none",
+};
+
+// Warm both bezels so the first toggle never waits on decode.
+if (typeof window !== "undefined") {
+  const warm = (src: string) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  };
+  warm(phoneFrameLight.src);
+  warm(phoneFrameDark.src);
+}
+
 function readSiteTheme(): "light" | "dark" {
   if (typeof document === "undefined") return "light";
   return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function PhoneBezel({ theme }: { theme: "light" | "dark" }) {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={phoneFrameLight.src}
+        alt=""
+        decoding="async"
+        draggable={false}
+        aria-hidden={theme !== "light"}
+        style={{ ...FRAME_IMG, opacity: theme === "light" ? 1 : 0 }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={phoneFrameDark.src}
+        alt=""
+        decoding="async"
+        draggable={false}
+        aria-hidden={theme !== "dark"}
+        style={{ ...FRAME_IMG, opacity: theme === "dark" ? 1 : 0 }}
+      />
+    </>
+  );
 }
 
 export default function PhoneEmbed({
@@ -47,10 +97,12 @@ export default function PhoneEmbed({
   const [widgetTheme, setWidgetTheme] = useState<"light" | "dark">(
     () => initialTheme ?? readSiteTheme(),
   );
-  const handleWidgetThemeChange = (theme: "light" | "dark") => {
+  const onWidgetThemeChangeRef = useRef(onWidgetThemeChange);
+  onWidgetThemeChangeRef.current = onWidgetThemeChange;
+  const handleWidgetThemeChange = useCallback((theme: "light" | "dark") => {
     setWidgetTheme(theme);
-    onWidgetThemeChange?.(theme);
-  };
+    onWidgetThemeChangeRef.current?.(theme);
+  }, []);
 
   const dk = useDialKit("PhoneEmbed", {
     sizeScale: [1.4, 0.5, 2.5, 0.05],
@@ -98,8 +150,6 @@ export default function PhoneEmbed({
   const contentH = Math.ceil(CONTENT_W * (screenLocalH / screenLocalW));
   const contentScale = screenLocalW / CONTENT_W;
 
-  const frameSrc = widgetTheme === "dark" ? phoneFrameDark.src : phoneFrameLight.src;
-
   return (
     <div
       ref={containerRef}
@@ -135,7 +185,7 @@ export default function PhoneEmbed({
             right: `${dk.insetSide}%`,
             borderRadius: `${dk.screenRadius}%`,
             overflow: "hidden",
-            background: "#000",
+            background: widgetTheme === "dark" ? "#0a0a0a" : "#f5f5f0",
           }}
         >
           <div
@@ -156,24 +206,7 @@ export default function PhoneEmbed({
           </div>
         </div>
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={frameSrc}
-          alt=""
-          decoding="async"
-          draggable={false}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            zIndex: 2,
-            pointerEvents: "none",
-            userSelect: "none",
-          }}
-        />
+        <PhoneBezel theme={widgetTheme} />
       </div>
     </div>
   );
