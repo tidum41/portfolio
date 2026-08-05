@@ -1,35 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { DialRoot } from "dialkit";
 
 const PS3SilkLab = dynamic(() => import("@/components/PS3SilkLab"), { ssr: false });
 
+/**
+ * DialKit panels are `position: fixed; z-index: 9999` (portaled to body).
+ * Keep the lab canvas under that so dials stay visible/clickable. Nav is ~40;
+ * PersistentWorkShell is display:none off "/".
+ */
+const LAB_Z = 50;
+
 export default function PS3WaveLabClient() {
-  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const el = document.createElement("div");
-    el.id = "ps3-wave-lab-dialkit";
-    el.style.cssText = "position:relative;z-index:1000001;";
-    document.body.appendChild(el);
-    setPortalEl(el);
-    return () => {
-      el.remove();
-    };
-  }, []);
-
   return (
     <>
+      {/* Force DialKit (and its dropdowns) above anything else on this page */}
+      <style>{`
+        .dialkit-panel,
+        .dialkit-select-dropdown,
+        .dialkit-preset-dropdown,
+        .dialkit-shortcuts-dropdown {
+          z-index: 10050 !important;
+        }
+      `}</style>
+
       <div
         data-theme="dark"
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: 999997,
+          zIndex: LAB_Z,
           background: "#101214",
           overflow: "hidden",
           fontFamily: "var(--font-sans, system-ui, sans-serif)",
@@ -62,8 +64,9 @@ export default function PS3WaveLabClient() {
             (morphism), then they settle back to ink.
           </p>
           <p style={{ margin: "0 0 8px", opacity: 0.65, fontSize: 11 }}>
-            DialKit → <strong style={{ fontWeight: 500 }}>print</strong> +{" "}
-            <strong style={{ fontWeight: 500 }}>morph</strong>. Toggle morph off for pure screen.
+            DialKit (<strong style={{ fontWeight: 500 }}>Vintage Halftone</strong>) should be
+            top-right — open <strong style={{ fontWeight: 500 }}>print</strong> +{" "}
+            <strong style={{ fontWeight: 500 }}>morph</strong>.
           </p>
           <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
             ← work
@@ -71,7 +74,7 @@ export default function PS3WaveLabClient() {
         </div>
       </div>
 
-      {portalEl && createPortal(<DialRoot defaultOpen />, portalEl)}
+      <DialRoot defaultOpen />
     </>
   );
 }
