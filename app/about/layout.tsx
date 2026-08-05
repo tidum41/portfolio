@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     description:
       "About Mudit Mahajan — UCLA product designer. Experience, orgs, and links.",
     url: `${SITE_URL}/about`,
-    images: [{ url: "/og-default.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },
 };
 
