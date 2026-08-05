@@ -12,9 +12,6 @@ export default function PS3WaveLabClient() {
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    // DialKit's own z-index tops out ~10000; this page's canvas overlay sits
-    // far above PersistentWorkShell (~999997). Portal DialRoot above that
-    // or the panel is invisible behind the lab.
     const el = document.createElement("div");
     el.id = "ps3-wave-lab-dialkit";
     el.style.cssText = "position:relative;z-index:1000001;";
@@ -46,7 +43,7 @@ export default function PS3WaveLabClient() {
             position: "absolute",
             left: 20,
             bottom: 20,
-            maxWidth: 280,
+            maxWidth: 260,
             padding: "10px 12px",
             borderRadius: 6,
             background: "rgba(16,18,20,0.55)",
@@ -61,8 +58,8 @@ export default function PS3WaveLabClient() {
             WAVE LAB
           </div>
           <p style={{ margin: "0 0 6px" }}>
-            DialKit → <strong style={{ fontWeight: 500 }}>variation</strong> for quiet presets.
-            Starts at classic (near production).
+            Same silk as production. Dial <strong style={{ fontWeight: 500 }}>flare</strong> for
+            quiet cursor scale on the halftone.
           </p>
           <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
             ← work
@@ -70,8 +67,7 @@ export default function PS3WaveLabClient() {
         </div>
       </div>
 
-      {portalEl &&
-        createPortal(<DialRoot defaultOpen />, portalEl)}
+      {portalEl && createPortal(<DialRoot defaultOpen />, portalEl)}
     </>
   );
 }
