@@ -14,6 +14,13 @@ const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
 const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
+// Morph open/close — Emil ease-out (fast start → settles). Open stays prompt;
+// close runs a touch longer so collapse doesn't feel abrupt.
+const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
+const OPEN_MS = 200;
+const CLOSE_MS = 280;
+const OPEN_EASE = EASE_OUT;
+const CLOSE_EASE = EASE_OUT;
 // Matches lib/motion.ts's EASE_OPACITY / app/layout.tsx's intro-gate CSS
 // (`transition: opacity 0.7s cubic-bezier(.16,1,.3,1)`) — the pill's first-
 // load fade now rides the exact same curve/duration nav and footer use, and
@@ -21,8 +28,6 @@ const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
 // below), instead of an independently-tuned 2s ease-out that finished long
 // after everything else had already settled and read as a separate, slower
 // reveal bolted onto the page rather than part of it.
-const OPEN_EASE  = "cubic-bezier(0.16, 1, 0.3, 1)";
-const CLOSE_EASE = "cubic-bezier(0.25, 1, 0.4, 1)";
 const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const FADE_MS = 700;
 // This component unmounts whenever the user navigates off "/" (see the
@@ -314,8 +319,8 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
       maxHeight: open ? maxH : 0, overflow: "hidden",
       opacity: open ? 1 : 0,
       transition: open
-        ? `max-height 180ms ${OPEN_EASE}, opacity 140ms ease`
-        : `max-height 280ms ${CLOSE_EASE}, opacity 180ms ease`,
+        ? `max-height ${OPEN_MS}ms ${OPEN_EASE}, opacity 120ms ${OPEN_EASE}`
+        : `max-height ${CLOSE_MS}ms ${CLOSE_EASE}, opacity 140ms ${CLOSE_EASE}`,
       pointerEvents: open ? "auto" : "none",
     }}>
       {children}
@@ -751,17 +756,28 @@ export default function PS3ControlPanel() {
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [isDragging, isOpen, pillPos.y]);
 
-  const dur = isOpen ? `280ms ${OPEN_EASE}` : `240ms ${CLOSE_EASE}`;
+  const dur = isOpen ? `${OPEN_MS}ms ${OPEN_EASE}` : `${CLOSE_MS}ms ${CLOSE_EASE}`;
+  // Keep morph transitions on their own string — never share a node with
+  // `.intro-hide` (that class sets `transition: opacity … !important` and
+  // wipes width/height morph). First-load reveal uses `shown` / intro-done.
   const baseMorphParts = [
-    `width ${dur}`, `height ${dur}`, `max-height ${dur}`, `border-radius ${dur}`,
-    `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
+    `width ${dur}`,
+    `height ${dur}`,
+    `max-height ${dur}`,
+    `border-radius ${dur}`,
+    `left ${dur}`,
+    `top ${dur}`,
+    "background-color 200ms ease",
+    "border-color 200ms ease",
   ];
   const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
   const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
   const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
     ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
-    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
+    : (showTransition
+      ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`, `transform ${fadeMs}ms ${fadeEase}`].join(", ")
+      : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
 
@@ -804,7 +820,7 @@ export default function PS3ControlPanel() {
   const isColorLight = (waveColor[0]*0.299 + waveColor[1]*0.587 + waveColor[2]*0.114) > 0.5;
 
   const panelMarkup = (
-    <div ref={panelRef} className="ps3cp intro-hide" style={{
+    <div ref={panelRef} className="ps3cp" style={{
       position: "absolute", left: geo.left, top: geo.top,
       width: geo.w, height: geo.maxH, maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
@@ -832,28 +848,32 @@ export default function PS3ControlPanel() {
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform 280ms ${OPEN_EASE}` : `transform 240ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
+            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
               <ChevronDown color={accentCol} size={10} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 200ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
           </div>
         </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: "opacity 150ms" }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 120ms ${OPEN_EASE} 40ms` : `opacity 90ms ${CLOSE_EASE}` }}>
           <button className="ps3cp-ibtn" onClick={handleReset} title="Reset" aria-label="Reset to defaults"><Reset /></button>
           <button className="ps3cp-ibtn" onClick={() => setIsOpen(false)} title="Minimize" aria-label="Minimize"><Minus /></button>
         </div>
       </div>
 
-      {/* Body */}
+      {/* Body — fades just behind the shell morph so content doesn't pop */}
       <div style={{
         pointerEvents: isOpen ? "auto" : "none",
         display: "flex",
         flexDirection: "column",
+        flex: "1 1 auto",
+        minHeight: 0,
         overflowY: "auto",
-        overflowX: "visible",
+        overflowX: "hidden",
         maxHeight: geo.clampedBodyH,
         opacity: isOpen ? 1 : 0,
-        transition: isOpen ? `opacity 200ms ${OPEN_EASE} 50ms` : `opacity 140ms ${CLOSE_EASE}`,
+        transition: isOpen
+          ? `opacity 140ms ${OPEN_EASE} 40ms`
+          : `opacity 90ms ${CLOSE_EASE}`,
         WebkitOverflowScrolling: "touch",
       }}>
 
