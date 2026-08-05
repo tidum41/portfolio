@@ -19,14 +19,14 @@ export const OG_IMAGE_PATH = "/og-default.png";
 export const OG_IMAGE_ALT =
   "mudit mahajan — product design, people, and rabbit holes";
 
+/** Self-hosted resume (also reachable at /resume). */
+export const RESUME_PATH = "/resume.pdf";
+
 export const FOOTER_LINKS = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
   { label: "x", href: "https://x.com/muditm14" },
   { label: "email", href: "mailto:muditmahajan@ucla.edu" },
-  {
-    label: "resume",
-    href: "https://drive.google.com/file/d/1SFiqIjwtzkeJ4TEHE7z9_UNWtkyb1ixm/view?usp=drive_link",
-  },
+  { label: "resume", href: RESUME_PATH },
 ] as const;
 
 /** Public profile URLs for schema.org sameAs (excludes mailto / resume). */
