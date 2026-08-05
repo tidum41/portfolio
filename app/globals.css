@@ -67,9 +67,9 @@
   --color-placeholder:    #EBEBEB;
   --color-border-subtle:  #E8E4F0;
   --color-ucla-blue:      #2D68C4;
-  /* Standard "open link" blue — the hyperlink-blue tone recognized across
-     the web as "this opens/leaves the page", used for the northeast-arrow
-     glyph on external/popup card links (see NortheastArrow.tsx). */
+  /* Standard "open link" blue — hyperlink tone for external northeast arrows
+     and archive captions when a linked tile is focused. Not used for in-page
+     popup affordances (those stay currentColor). */
   --color-link-blue:      #0B5FFF;
   --color-accent:         #9590C2;
   --color-accent-subtle:  rgba(149,144,194,0.10);
@@ -302,12 +302,13 @@ nav a {
    radius that is truly concentric: r_outer = r_media + pad.
 
    8px sits between the earlier “too tight” 5px and “too wide” 10px sides.
-   Scale uses the PS3 expand curve with a deliberate settle. */
+   Scale is a very slight press (0.99) with a heavier settle so it feels
+   weighted without looking dramatic. */
 .project-card {
   --project-hover-pad: 8px;
   --project-hover-ease: var(--expand-ease); /* PS3 panel curve */
-  --project-hover-in: 220ms;
-  --project-hover-out: 280ms;
+  --project-hover-in: 280ms;
+  --project-hover-out: 360ms;
   position: relative;
   isolation: isolate;
 }
@@ -343,7 +344,7 @@ html[data-theme="dark"] .project-card::before {
     transition: opacity var(--project-hover-in) var(--project-hover-ease);
   }
   .project-card:hover .project-card-lift {
-    transform: scale(0.98);
+    transform: scale(0.99);
     transition: transform var(--project-hover-in) var(--project-hover-ease);
   }
 }

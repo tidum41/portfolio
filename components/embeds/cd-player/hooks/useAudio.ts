@@ -113,6 +113,9 @@ export function useAudio() {
 
   const pauseAudio = useCallback(() => {
     getAudio().pause();
+    // Suspend the graph while paused so a live grid preview isn't keeping
+    // an AudioContext in the running state after the modal closes.
+    void audioCtxRef.current?.suspend?.();
   }, [getAudio]);
 
   const stopAudio = useCallback(() => {
@@ -120,6 +123,7 @@ export function useAudio() {
     audio.pause();
     audio.currentTime = 0;
     audio.src = '';
+    void audioCtxRef.current?.suspend?.();
   }, [getAudio]);
 
   const volumeUp = useCallback(() => {

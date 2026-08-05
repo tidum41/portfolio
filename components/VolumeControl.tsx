@@ -6,6 +6,7 @@ import { VOLUME_MASK_SVG, MUTED_MASK_SVG, VOLUME_CLONE_INNER, MUTED_CLONE_INNER 
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion } from "framer-motion";
+import { playUiSound, setUiSoundMaster, warmUiSounds } from "@/lib/uiSound";
 
 const ICON_SIZE = 17;
 const SLIDER_WIDTH = 72;
@@ -67,11 +68,17 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   const applyAudioState = useCallback((nextMuted: boolean, nextVolume: number) => {
     mutedRef.current = nextMuted;
     volumeRef.current = nextVolume;
+    setUiSoundMaster({ muted: nextMuted, volume: nextVolume });
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = nextMuted;
     audio.volume = nextVolume;
   }, []);
+
+  // Keep UI SFX master aligned even before the first toggle (defaults match).
+  useEffect(() => {
+    setUiSoundMaster({ muted, volume });
+  }, [muted, volume]);
 
   const tryPlay = useCallback((audible = false) => {
     const audio = audioRef.current;
@@ -132,10 +139,15 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     const nextMuted = v === 0;
     const nextVolume = v > 0 ? v : preVolume.current;
     if (v > 0) preVolume.current = v;
+    const wasMuted = mutedRef.current;
     // Apply on the DOM synchronously inside this gesture — unmute before
     // play() so audible start isn't deferred to a post-commit effect.
     applyAudioState(nextMuted, nextVolume);
-    if (!nextMuted) tryPlay(true);
+    if (!nextMuted) {
+      tryPlay(true);
+      warmUiSounds();
+      if (wasMuted) void playUiSound("option");
+    }
     setVolume(nextVolume);
     setMuted(nextMuted);
   };
@@ -145,6 +157,8 @@ export default function VolumeControl({ dk }: { dk?: any }) {
       const nextVolume = preVolume.current;
       applyAudioState(false, nextVolume);
       tryPlay(true);
+      warmUiSounds();
+      void playUiSound("option");
       setVolume(nextVolume);
       setMuted(false);
     } else {

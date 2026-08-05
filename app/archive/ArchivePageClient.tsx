@@ -113,13 +113,16 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
     };
 
     return (
-        <div style={{
+        <div
+            style={{
             position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: FOOTER_H,
-        } as CSSProperties}>
+        } as CSSProperties}
+            data-ui-sound-scope="archive"
+        >
             <BentoGallery
                 items={items}
                 columns={4}

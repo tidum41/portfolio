@@ -26,14 +26,13 @@ const CONTENT_W = 394;
 const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
 /**
- * Grid-tile stand-in while the live PhoneEmbed is portaled into the modal.
- * Matches PhoneEmbed's scale-to-fit math, and when `showScreen` is on, renders
- * a non-interactive HabitTrackerApp clone in the screen cutout so the card
- * doesn't flash an empty black bezel while the live instance is in the popup.
+ * Grid-tile stand-in for Dumb Habit Tracker.
+ * Renders the phone chrome + an inert HabitTrackerApp in the screen cutout
+ * (high-fidelity poster — not an empty bezel). Live PhoneEmbed only mounts
+ * in the popup; this poster is the permanent grid face.
  *
- * `fade` is only for the close crossfade (poster → live). On open, opacity
- * must snap to 1 with fade=false so the card behind the modal blur doesn't
- * briefly empty out while the live phone is hidden/portaled.
+ * `fade` is only for opacity transitions; open snaps opaque so the card
+ * behind the modal blur doesn't briefly empty out.
  */
 export default function PhonePoster({
   opacity = 1,
@@ -138,6 +137,8 @@ export default function PhonePoster({
         <img
           src={frameSrc}
           alt=""
+          decoding="async"
+          draggable={false}
           style={{
             position: "absolute",
             top: 0,
