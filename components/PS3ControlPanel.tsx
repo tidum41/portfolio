@@ -753,8 +753,8 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
       dragRef.current = null; didDragRef.current = false; dragInHeaderRef.current = false;
       if (wasDrag) return;
       if (!wasHeader) return;
-      if (isOpen) startTransition(() => setIsOpen(false));
-      else startTransition(() => { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); });
+      if (isOpen) setIsOpen(false);
+      else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -836,8 +836,8 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
         onKeyDown={e => {
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
-          if (isOpen) startTransition(() => setIsOpen(false));
-          else startTransition(() => { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); });
+          if (isOpen) setIsOpen(false);
+          else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
         }}
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
@@ -850,12 +850,22 @@ export default function PS3ControlPanel({ visible = true }: { visible?: boolean 
         </div>
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: "opacity 150ms" }}>
           <button className="ps3cp-ibtn" onClick={handleReset} title="Reset" aria-label="Reset to defaults"><Reset /></button>
-          <button className="ps3cp-ibtn" onClick={() => startTransition(() => setIsOpen(false))} title="Minimize" aria-label="Minimize"><Minus /></button>
+          <button className="ps3cp-ibtn" onClick={() => setIsOpen(false)} title="Minimize" aria-label="Minimize"><Minus /></button>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ pointerEvents: isOpen ? "auto" : "none", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "visible", maxHeight: geo.clampedBodyH, WebkitOverflowScrolling: "touch" }}>
+      <div style={{
+        pointerEvents: isOpen ? "auto" : "none",
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+        overflowX: "visible",
+        maxHeight: geo.clampedBodyH,
+        opacity: isOpen ? 1 : 0,
+        transition: isOpen ? `opacity 160ms ${OPEN_EASE} 30ms` : `opacity 120ms ${CLOSE_EASE}`,
+        WebkitOverflowScrolling: "touch",
+      }}>
 
         {/* Pattern color */}
         <div style={{ padding: "6px 16px 8px" }}>
