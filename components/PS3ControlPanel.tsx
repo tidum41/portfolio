@@ -378,7 +378,9 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
     const el = hueRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const pad = 7;
+    const availW = Math.max(1, rect.width - pad * 2);
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left - pad) / availW));
     const newHue = Math.round(pct * 360);
     const newHsl: [number,number,number] = [newHue, hsl[1], hsl[2]];
     setHsl(newHsl);
@@ -417,7 +419,7 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
         <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid #ffffff", boxShadow: "0 0 0 1px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
       </div>
 
-      {/* Custom Precision Hue Rail */}
+      {/* Custom Precision Hue Rail (Zero Clipping) */}
       <div
         ref={hueRef}
         style={{
@@ -451,7 +453,7 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
         <div style={{
           position: "absolute",
           top: "50%",
-          left: `${huePct}%`,
+          left: `calc(7px + (${huePct} / 100) * (100% - 14px))`,
           width: 14,
           height: 14,
           borderRadius: "50%",
@@ -793,12 +795,7 @@ export default function PS3ControlPanel() {
   const rowH: React.CSSProperties    = { display: "flex", alignItems: "center", justifyContent: "space-between" };
   const secPad = "4px 16px 6px";
 
-  const swatchSt = (active: boolean, bg: string): React.CSSProperties => ({
-    width: 17, height: 17, borderRadius: 4, flexShrink: 0,
-    border: active ? (isDark ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid rgba(0,0,0,0.85)") : (isDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.18)"),
-    backgroundColor: bg,
-    transition: "border-color 140ms ease, transform 140ms ease",
-  });
+  const isColorLight = (waveColor[0]*0.299 + waveColor[1]*0.587 + waveColor[2]*0.114) > 0.5;
 
   const panelMarkup = (
     <div ref={panelRef} className="ps3cp intro-hide" style={{
@@ -857,28 +854,23 @@ export default function PS3ControlPanel() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 5,
-                height: 20,
-                padding: "0 6px 0 5px",
-                borderRadius: 5,
-                border: openColorPicker === "pattern"
-                  ? (isDark ? "1px solid rgba(255,255,255,0.75)" : "1px solid rgba(0,0,0,0.70)")
-                  : (isDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.16)"),
-                backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                justifyContent: "center",
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                border: "none",
+                backgroundColor: rgbToHex(waveColor),
+                boxShadow: openColorPicker === "pattern"
+                  ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
+                  : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.25)" : "inset 0 0 0 1px rgba(0,0,0,0.20)"),
+                transform: openColorPicker === "pattern" ? "scale(1.08)" : "scale(1)",
                 cursor: "pointer",
-                transition: "all 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+                padding: 0,
+                flexShrink: 0,
+                transition: "transform 140ms cubic-bezier(0.23, 1, 0.32, 1), boxShadow 140ms cubic-bezier(0.23, 1, 0.32, 1)",
               }}
             >
-              <div style={{
-                width: 10, height: 10, borderRadius: 2.5,
-                backgroundColor: rgbToHex(waveColor),
-                boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.25)",
-                flexShrink: 0,
-              }} />
-              <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.02em", color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.70)", lineHeight: 1 }}>
-                custom
-              </span>
-              <Plus size={8} color={isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.50)"} />
+              <Plus size={8} color={isColorLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.90)"} />
             </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, width: "100%" }}>
