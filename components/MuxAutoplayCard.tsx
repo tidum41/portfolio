@@ -113,7 +113,7 @@ export default function MuxAutoplayCard({
   // Poster while the live player isn't mounted — Mux thumbnail is a still,
   // not a second decoder. Live player only mounts when this card has entered
   // view AND the work route is active, so leaving "/" releases HLS memory.
-  const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=800`;
+  const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
   const showPlayer = shouldLoad && active;
 
   const video = (

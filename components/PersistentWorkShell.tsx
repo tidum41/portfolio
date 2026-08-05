@@ -211,11 +211,19 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // wrong variant.
   const wasWorkRouteRef = useRef(isWorkRoute);
   const instantArrivalRef = useRef(false);
+  // Soft return: after the first "/" visit, coming back from about/archive/
+  // case studies skips entrance stagger (same feel as instant-back) so we
+  // don't restack grid animations on top of silk wake + media resume.
+  const softReturnRef = useRef(false);
   if (isWorkRoute && !wasWorkRouteRef.current) {
     instantArrivalRef.current = peekInstantBack();
+    softReturnRef.current = hasEverBeenActive && !instantArrivalRef.current;
+  }
+  if (!isWorkRoute) {
+    softReturnRef.current = false;
   }
   wasWorkRouteRef.current = isWorkRoute;
-  const instant = instantArrivalRef.current;
+  const instant = instantArrivalRef.current || softReturnRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -232,8 +240,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Leaving "/" — drop popup state so CD/habit aren't live under display:none,
-  // and snap the CD poster opaque so the card isn't empty while CD unmounts.
+  // Leaving "/" — force-close popups (no live audio under display:none) and
+  // cover the CD grid slot with its theme poster. CD / habit poster trees
+  // stay mounted so session state survives without a cold remount on return.
   useEffect(() => {
     if (isWorkRoute) return;
     setPopupVisible(false);
@@ -243,7 +252,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     setCdPosterFade(false);
   }, [isWorkRoute]);
 
-  // Once we're back on "/" with a live CD instance, reveal it under the poster.
+  // Back on "/": reveal the kept-alive live CD under the poster (unless the
+  // modal is open — poster stays opaque behind the blur).
   useEffect(() => {
     if (!isWorkRoute || !hasEverBeenActive) return;
     if (openPopup === "cd") return;
@@ -668,9 +678,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                       opacity={habitPosterOpacity}
                       fade={habitPosterFade}
                       theme={habitWidgetTheme}
-                      // Unmount the inert HabitTrackerApp while the shell is
-                      // hidden — phone chrome stays; screen remounts on return.
-                      showScreen={isWorkRoute}
+                      // Keep the inert screen mounted after the first "/" visit
+                      // so the poster reflects this session's habit state across
+                      // navigations (no cold remount flash on return).
+                      showScreen={hasEverBeenActive}
                     />
                   </div>
                 </div>
@@ -709,16 +720,21 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           )}
         </section>
 
-        {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
+        {/* Keep mounted after first "/" visit — remounting the panel on every
+            return was a major source of nav lag. Shell is display:none/inert
+            off-route so it stays cheap while hidden. */}
+        {hasEverBeenActive && <PS3ControlPanel />}
       </div>
 
       {/*
-        CD: live only while "/" is active (poster covers the card off-route).
-        Habit: live PhoneEmbed only while the popup is open on "/".
+        CD stays mounted after first "/" visit (session state + no remount lag).
+        active=true only in the open modal → DateBadge / Disc / transport fully
+        live; active=false in the grid pauses audio and sleeps Disc RAF.
+        Off-route the theme poster covers the card. Habit live embed is popup-only.
       */}
-      {hasEverBeenActive && isWorkRoute && (
+      {hasEverBeenActive && (
         <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={openPopup === "cd" && popupVisible} />
+          <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
       {openPopup === "habit" && isWorkRoute && (

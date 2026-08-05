@@ -556,6 +556,9 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                     scratchRate={scratchRate}
                     onEjectDragMove={handleEjectDragMove}
                     onEjectDragCancel={handleEjectDragCancel}
+                    // Modal open → full live UI (date flip, elapsed, etc.).
+                    // Grid / off-route → pause reactive chrome; Disc RAF already idle-stops.
+                    live={active}
                   />
                 </div>
               </div>
