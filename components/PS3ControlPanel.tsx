@@ -295,6 +295,9 @@ function Minus({ size = 11 }) {
 function Reset({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
 }
+function Plus({ size = 9, color = "currentColor" }: { size?: number; color?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
+}
 function PS3TriangleGlyph({ size = 9, color = "currentColor" }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polygon points="12 3 22 21 2 21" /></svg>;
 }
@@ -841,25 +844,53 @@ export default function PS3ControlPanel() {
       {/* Body */}
       <div style={{ pointerEvents: isOpen ? "auto" : "none", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "visible", maxHeight: geo.clampedBodyH, WebkitOverflowScrolling: "touch" }}>
 
-        {/* Pattern color (Clean Text Label - Zero Icons) */}
+        {/* Pattern color */}
         <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
             <span style={labelSt}>pattern color</span>
-            <div className="ps3cp-color-swatch" role="button" tabIndex={0} aria-label="Pattern color" aria-expanded={openColorPicker === "pattern"}
+            <button
+              className="ps3cp-custom-color-btn"
               onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
-              style={swatchSt(openColorPicker === "pattern", rgbToHex(waveColor))} />
+              aria-label="Custom color picker"
+              aria-expanded={openColorPicker === "pattern"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                height: 20,
+                padding: "0 6px 0 5px",
+                borderRadius: 5,
+                border: openColorPicker === "pattern"
+                  ? (isDark ? "1px solid rgba(255,255,255,0.75)" : "1px solid rgba(0,0,0,0.70)")
+                  : (isDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.16)"),
+                backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                cursor: "pointer",
+                transition: "all 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+              }}
+            >
+              <div style={{
+                width: 10, height: 10, borderRadius: 2.5,
+                backgroundColor: rgbToHex(waveColor),
+                boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.25)",
+                flexShrink: 0,
+              }} />
+              <span style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: "0.02em", color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.70)", lineHeight: 1 }}>
+                custom
+              </span>
+              <Plus size={8} color={isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.50)"} />
+            </button>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, width: "100%" }}>
             {PRESETS.map((p, i) => (
               <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
                 aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
                 style={{
-                  width: 17, height: 17, borderRadius: 4, backgroundColor: p.swatch,
+                  width: "100%", height: 18, borderRadius: 4, backgroundColor: p.swatch,
                   boxShadow: activePreset === i
                     ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
                     : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.15)" : "inset 0 0 0 1px rgba(0,0,0,0.12)"),
-                  transform: activePreset === i ? "scale(1.08)" : "scale(1)",
+                  transform: activePreset === i ? "scale(1.04)" : "scale(1)",
                   padding: 0, flexShrink: 0,
                 }} />
             ))}
