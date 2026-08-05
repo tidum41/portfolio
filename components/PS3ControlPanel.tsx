@@ -866,7 +866,7 @@ export default function PS3ControlPanel() {
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
             <div style={{ paddingTop: 10 }}>
-              <PS3ColorPicker value={rgbToHex(waveColor)} isDark={isDark} onChange={hex => setAndDispatch({ waveColor: hexToRgb01(hex) })} />
+              <PS3ColorPicker value={rgbToHex(waveColor)} onChange={hex => setAndDispatch({ waveColor: hexToRgb01(hex) })} />
             </div>
           </ExpandSection>
         </div>
