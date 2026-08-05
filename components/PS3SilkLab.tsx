@@ -1,9 +1,12 @@
 "use client";
 
 /**
- * PS3SilkLab — near-identical fork of production PS3Silk, with one quiet
- * experiment: local halftone scale follows the cursor.
- * Dev-only (/dev/ps3-wave-lab). Does not change production PS3Silk.
+ * PS3SilkLab v4 — vintage print halftone + cursor morphism.
+ *
+ * The production silk wave is only a luminance/coverage field (the “photo”
+ * being screened). What you see is classic AM halftone dots — and near the
+ * cursor those dots melt/fuse (nav HalftoneDotField goo vocabulary) then
+ * resolve back to crisp ink. Dev-only; production PS3Silk untouched.
  */
 
 import { useEffect, useRef } from "react";
@@ -21,14 +24,6 @@ function hexToRgb(hex: string): [number, number, number] {
   ];
 }
 
-/** 0 original · 1 cell scale near cursor · 2 radius bloom · 3 finer near cursor */
-const FLARE_MAP: Record<string, number> = {
-  original: 0,
-  "cursor cell scale": 1,
-  "cursor radius bloom": 2,
-  "cursor finer grain": 3,
-};
-
 const FRAME_MS = 1000 / 30;
 
 export default function PS3SilkLab() {
@@ -36,65 +31,91 @@ export default function PS3SilkLab() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const dk = useDialKit(
-    "PS3 Wave Lab",
+    "Vintage Halftone",
     {
-      // Production-matching defaults first
-      intensity: [0.18, 0, 0.5, 0.005],
-      mouseStrength: [0.11, 0, 0.35, 0.005],
-      yOffset: [49, -20, 100, 1],
-      halftoneSize: [3.0, 2.0, 6.0, 0.1],
-      speed: [1.0, 0, 2.5, 0.01],
-      waveColor: { type: "color", default: "#ffffff" },
-      mode: {
-        type: "select",
-        options: ["halftone", "smooth"],
-        default: "halftone",
+      print: {
+        // Classic AM screen — quiet ranges near production density
+        pitch: [3.2, 2.2, 5.5, 0.1],
+        screenAngle: [15, 0, 45, 0.5], // degrees — vintage offset screens
+        contrast: [0.85, 0.45, 1.4, 0.05], // coverage gamma
+        inkSoftness: [1.0, 0.35, 2.2, 0.05], // edge feather (print bleed)
+        inkDensity: [0.58, 0.3, 0.9, 0.01],
+        minDot: [0.04, 0, 0.15, 0.005], // drop empty cells
+        inkColor: { type: "color", default: "#ffffff" },
       },
-      flare: {
-        type: "select",
-        options: [
-          "original",
-          "cursor cell scale",
-          "cursor radius bloom",
-          "cursor finer grain",
-        ],
-        default: "cursor cell scale",
+      morph: {
+        // Cursor melt — same idea as nav goo: blur-ish field + threshold
+        enabled: true,
+        strength: [0.7, 0, 1, 0.01],
+        radius: [0.26, 0.1, 0.5, 0.01],
+        fusion: [0.55, 0.2, 1.1, 0.01], // metaball threshold (lower = more merge)
+        softness: [0.14, 0.04, 0.35, 0.01],
+        overlap: [1.2, 0.9, 1.7, 0.05], // radius boost in melt zone
+        lag: [0.055, 0.02, 0.14, 0.005],
       },
-      // How much the cursor may nudge scale — keep modest
-      cursorScaleAmt: [0.35, 0, 0.8, 0.01],
-      cursorScaleRadius: [0.28, 0.1, 0.55, 0.01],
+      plate: {
+        _collapsed: true,
+        // Underlying silk plate (coverage only)
+        intensity: [0.18, 0.06, 0.4, 0.005],
+        mouseNudge: [0.11, 0, 0.28, 0.005],
+        speed: [1.0, 0.15, 2.0, 0.01],
+        yOffset: [49, -20, 100, 1],
+        opacity: [0.55, 0.25, 0.9, 0.01],
+      },
     },
     {
-      id: "ps3-wave-lab-v3",
-      persist: { key: "ps3-wave-lab-v3", storage: "localStorage", presets: true },
+      id: "ps3-vintage-halftone-v4",
+      persist: {
+        key: "ps3-vintage-halftone-v4",
+        storage: "localStorage",
+        presets: true,
+      },
     },
   );
 
   const refs = useRef({
+    pitch: 3.2,
+    screenAngle: 15,
+    contrast: 0.85,
+    inkSoftness: 1.0,
+    inkDensity: 0.58,
+    minDot: 0.04,
+    inkColor: [1, 1, 1] as [number, number, number],
+    morphOn: true,
+    morphStrength: 0.7,
+    morphRadius: 0.26,
+    morphFusion: 0.55,
+    morphSoftness: 0.14,
+    morphOverlap: 1.2,
+    morphLag: 0.055,
     intensity: 0.18,
-    mouseStrength: 0.11,
-    yOffset: 49,
-    halftoneSize: 3,
+    mouseNudge: 0.11,
     speed: 1,
-    waveColor: [1, 1, 1] as [number, number, number],
-    mode: 1,
-    flare: 1,
-    cursorScaleAmt: 0.35,
-    cursorScaleRadius: 0.28,
+    yOffset: 49,
+    opacity: 0.55,
   });
 
   useEffect(() => {
     const r = refs.current;
-    r.intensity = dk.intensity;
-    r.mouseStrength = dk.mouseStrength;
-    r.yOffset = dk.yOffset;
-    r.halftoneSize = dk.halftoneSize;
-    r.speed = dk.speed;
-    r.waveColor = hexToRgb(dk.waveColor);
-    r.mode = dk.mode === "smooth" ? 0 : 1;
-    r.flare = FLARE_MAP[dk.flare] ?? 1;
-    r.cursorScaleAmt = dk.cursorScaleAmt;
-    r.cursorScaleRadius = dk.cursorScaleRadius;
+    r.pitch = dk.print.pitch;
+    r.screenAngle = dk.print.screenAngle;
+    r.contrast = dk.print.contrast;
+    r.inkSoftness = dk.print.inkSoftness;
+    r.inkDensity = dk.print.inkDensity;
+    r.minDot = dk.print.minDot;
+    r.inkColor = hexToRgb(dk.print.inkColor);
+    r.morphOn = dk.morph.enabled;
+    r.morphStrength = dk.morph.strength;
+    r.morphRadius = dk.morph.radius;
+    r.morphFusion = dk.morph.fusion;
+    r.morphSoftness = dk.morph.softness;
+    r.morphOverlap = dk.morph.overlap;
+    r.morphLag = dk.morph.lag;
+    r.intensity = dk.plate.intensity;
+    r.mouseNudge = dk.plate.mouseNudge;
+    r.speed = dk.plate.speed;
+    r.yOffset = dk.plate.yOffset;
+    r.opacity = dk.plate.opacity;
   }, [dk]);
 
   useEffect(() => {
@@ -115,8 +136,6 @@ export default function PS3SilkLab() {
     });
     if (!gl) return;
 
-    // Same wave stack as production PS3Silk — only halftone path gains
-    // optional local scale from cursor (uFlare / uCursorScale*).
     const VS = `attribute vec2 aPos; void main(){ gl_Position = vec4(aPos,0.0,1.0); }`;
     const FS = `
 precision highp float;
@@ -124,21 +143,29 @@ uniform float uTime;
 uniform vec2  uResolution;
 uniform vec2  uMouse;
 uniform float uIntensity;
-uniform float uMouseStrength;
+uniform float uMouseNudge;
 uniform float uAspect;
 uniform float uYOffsetPx;
-uniform int   uMode;
-uniform float uHalftoneSize;
-uniform vec3  uWaveColor;
 uniform float uSpeed;
-uniform int   uFlare;
-uniform float uCursorScaleAmt;
-uniform float uCursorScaleRadius;
+uniform float uPitch;
+uniform float uAngleRad;
+uniform float uContrast;
+uniform float uInkSoft;
+uniform float uInkDensity;
+uniform float uMinDot;
+uniform vec3  uInkColor;
+uniform float uMorphOn;
+uniform float uMorphStrength;
+uniform float uMorphRadius;
+uniform float uMorphFusion;
+uniform float uMorphSoft;
+uniform float uMorphOverlap;
 
-vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
+// Production silk plate — coverage only
+float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
+  float phase, float cy, float width, float sharp, bool flip) {
   float md = length(uv - uMouse);
-  float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
+  float mnudge = smoothstep(0.45, 0.0, md) * uMouseNudge;
   float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
   float wy = sin(angle) * amp + cy;
   float dy = wy - uv.y;
@@ -146,74 +173,99 @@ vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
   if (flip) { if (dy > 0.0) dist *= 4.0; }
   else       { if (dy < 0.0) dist *= 4.0; }
   float s = smoothstep(width * 1.5, 0.0, dist);
-  return min(col * pow(s, sharp), col);
+  return pow(s, sharp);
+}
+
+float samplePlate(vec2 uv) {
+  float aspectScale = uAspect / 2.414;
+  float uvx = uv.x * aspectScale;
+  float c = 0.0;
+  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false) * 0.90;
+  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false) * 0.68;
+  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false) * 0.38;
+  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false) * 0.16;
+  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true) * 0.84;
+  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true) * 0.62;
+  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true) * 0.32;
+  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true) * 0.14;
+  return clamp(c, 0.0, 1.0);
+}
+
+// Classic print radius curve: sqrt(coverage^gamma)
+float inkRadius(float coverage, float pitch) {
+  float t = clamp(coverage, 0.0, 1.0);
+  if (t < uMinDot) return 0.0;
+  return pitch * 0.5 * sqrt(pow(t, uContrast));
+}
+
+vec2 rotate2(vec2 p, float a) {
+  float c = cos(a), s = sin(a);
+  return vec2(c * p.x - s * p.y, s * p.x + c * p.y);
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec2 frag = gl_FragCoord.xy;
+  vec2 uv = frag / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
-  float aspectScale = uAspect / 2.414;
-  float uvx = uv.x * aspectScale;
 
-  vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
-  c = clamp(c,0.0,1.0);
+  float plate = samplePlate(uv) * uIntensity * 4.5;
+  // Existing production-style cursor ripple on coverage (subtle)
+  float mouseDist = length(uv - uMouse);
+  float ripple = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseNudge * 1.6;
+  float coverage = clamp(plate - 0.05 + ripple * 0.22, 0.0, 1.2);
 
-  float waveLuma  = max(max(c.r,c.g),c.b);
-  float waveLight = waveLuma * uIntensity * 4.5;
+  // Screened coordinate — vintage angled AM screen
+  vec2 screenPx = rotate2(frag, uAngleRad);
+  float pitch = max(uPitch, 1.5);
 
-  if (uMode == 1) {
-    // Cursor influence 0..1 within scale radius
-    float near = 1.0 - smoothstep(0.0, uCursorScaleRadius, length(uv - uMouse));
-    float amt = uCursorScaleAmt * near;
-
-    // Local cell size — same grid as production unless flare asks otherwise
-    float cellSize = uHalftoneSize;
-    if (uFlare == 1) {
-      // Slightly larger cells near cursor (scale up ~amt)
-      cellSize = uHalftoneSize * (1.0 + amt);
-    } else if (uFlare == 3) {
-      // Slightly finer grain near cursor (scale down)
-      cellSize = uHalftoneSize * (1.0 - amt * 0.45);
-      cellSize = max(cellSize, uHalftoneSize * 0.55);
-    }
-
-    vec2 cell       = floor(gl_FragCoord.xy / cellSize);
-    vec2 cellCenter = (cell + 0.5) * cellSize;
-    vec2 cellUV     = cellCenter / uResolution;
-    // Match production: mouse in same space as wave uv (incl. y offset)
-    cellUV.y += uYOffsetPx / uResolution.y;
-
-    float mouseDist = length(cellUV - uMouse);
-    float ripple    = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseStrength * 2.8;
-
-    float radiusMul = clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
-    if (uFlare == 2) {
-      // Radius bloom only — grid stays production; dots grow mildly near cursor
-      float bloomNear = 1.0 - smoothstep(0.0, uCursorScaleRadius, mouseDist);
-      radiusMul = clamp(radiusMul * (1.0 + uCursorScaleAmt * bloomNear * 0.55), 0.0, 1.35);
-    }
-
-    float d      = length(gl_FragCoord.xy - cellCenter);
-    float radius = cellSize * 0.5 * radiusMul;
-    float dotVal = smoothstep(radius + 0.8, radius - 0.8, d);
-    vec3  dotColor = uWaveColor * 0.55;
-    float vis = smoothstep(0.02, 0.08, waveLight);
-    float a = dotVal * vis;
-    gl_FragColor = vec4(dotColor * a, a);
-    return;
+  // Morph amount: 0 crisp print → 1 fused ink under cursor
+  float melt = 0.0;
+  if (uMorphOn > 0.5) {
+    melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
   }
 
-  vec3  darkWave = uWaveColor * 0.78;
-  float alpha    = clamp(waveLight * 1.1, 0.0, 1.0);
-  gl_FragColor = vec4(darkWave * alpha, alpha);
+  // ── Crisp vintage dots (far / rest) ──
+  vec2 cell = floor(screenPx / pitch);
+  vec2 centerScreen = (cell + 0.5) * pitch;
+  vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
+  vec2 centerUV = centerFrag / uResolution;
+  centerUV.y += uYOffsetPx / uResolution.y;
+
+  float cellCov = clamp(samplePlate(centerUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
+  float cellRipple = exp(-pow((length(centerUV - uMouse) - 0.10) / 0.055, 2.0)) * uMouseNudge * 1.6;
+  cellCov = clamp(cellCov + cellRipple * 0.22, 0.0, 1.2);
+
+  float rCrisp = inkRadius(cellCov, pitch);
+  float dCrisp = length(frag - centerFrag);
+  float soft = uInkSoft;
+  float crispDot = smoothstep(rCrisp + soft, rCrisp - soft, dCrisp);
+  float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
+  float crispA = crispDot * crispVis;
+
+  // ── Morph / melt field (near cursor) — neighbor metaballs + threshold ──
+  // Same spirit as HalftoneDotField goo: overlapping soft discs fuse into
+  // one connected mass, then resolve. Fixed 3×3 for WebGL1.
+  float field = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 nCell = cell + vec2(float(i), float(j));
+      vec2 nCenterS = (nCell + 0.5) * pitch;
+      vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
+      vec2 nUV = nCenterF / uResolution;
+      nUV.y += uYOffsetPx / uResolution.y;
+      float nCov = clamp(samplePlate(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
+      float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
+      float nD = length(frag - nCenterF);
+      field += (nR * nR) / (nD * nD + 2.0);
+    }
+  }
+  float meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
+  meltA *= smoothstep(uMinDot, uMinDot + 0.05, coverage);
+
+  // Crossfade: morphism only where the hand is — elsewhere stays print
+  float a = mix(crispA, meltA, melt);
+  vec3 col = uInkColor * uInkDensity;
+  gl_FragColor = vec4(col * a, a);
 }`;
 
     function compile(src: string, type: number) {
@@ -237,21 +289,28 @@ void main() {
     gl.useProgram(prog);
 
     const posLoc = gl.getAttribLocation(prog, "aPos");
-    const locs = {
+    const L = {
       time: gl.getUniformLocation(prog, "uTime"),
       res: gl.getUniformLocation(prog, "uResolution"),
       mouse: gl.getUniformLocation(prog, "uMouse"),
       intensity: gl.getUniformLocation(prog, "uIntensity"),
-      mouseStrength: gl.getUniformLocation(prog, "uMouseStrength"),
+      mouseNudge: gl.getUniformLocation(prog, "uMouseNudge"),
       aspect: gl.getUniformLocation(prog, "uAspect"),
       yOffset: gl.getUniformLocation(prog, "uYOffsetPx"),
-      mode: gl.getUniformLocation(prog, "uMode"),
-      htSize: gl.getUniformLocation(prog, "uHalftoneSize"),
-      waveColor: gl.getUniformLocation(prog, "uWaveColor"),
       speed: gl.getUniformLocation(prog, "uSpeed"),
-      flare: gl.getUniformLocation(prog, "uFlare"),
-      scaleAmt: gl.getUniformLocation(prog, "uCursorScaleAmt"),
-      scaleRadius: gl.getUniformLocation(prog, "uCursorScaleRadius"),
+      pitch: gl.getUniformLocation(prog, "uPitch"),
+      angle: gl.getUniformLocation(prog, "uAngleRad"),
+      contrast: gl.getUniformLocation(prog, "uContrast"),
+      inkSoft: gl.getUniformLocation(prog, "uInkSoft"),
+      inkDensity: gl.getUniformLocation(prog, "uInkDensity"),
+      minDot: gl.getUniformLocation(prog, "uMinDot"),
+      inkColor: gl.getUniformLocation(prog, "uInkColor"),
+      morphOn: gl.getUniformLocation(prog, "uMorphOn"),
+      morphStrength: gl.getUniformLocation(prog, "uMorphStrength"),
+      morphRadius: gl.getUniformLocation(prog, "uMorphRadius"),
+      morphFusion: gl.getUniformLocation(prog, "uMorphFusion"),
+      morphSoft: gl.getUniformLocation(prog, "uMorphSoft"),
+      morphOverlap: gl.getUniformLocation(prog, "uMorphOverlap"),
     };
 
     const buf = gl.createBuffer();
@@ -284,21 +343,29 @@ void main() {
 
     function draw(ms: number) {
       const r = refs.current;
-      const wc = r.waveColor;
-      gl!.uniform1f(locs.time, ms * 0.001);
-      gl!.uniform2f(locs.res, canvas!.width, canvas!.height);
-      gl!.uniform2f(locs.mouse, mouse.x, mouse.y);
-      gl!.uniform1f(locs.intensity, r.intensity);
-      gl!.uniform1f(locs.mouseStrength, r.mouseStrength);
-      gl!.uniform1f(locs.aspect, canvas!.height > 0 ? canvas!.width / canvas!.height : 2.414);
-      gl!.uniform1f(locs.yOffset, r.yOffset);
-      gl!.uniform1i(locs.mode, r.mode);
-      gl!.uniform1f(locs.htSize, r.halftoneSize);
-      gl!.uniform3f(locs.waveColor, wc[0], wc[1], wc[2]);
-      gl!.uniform1f(locs.speed, r.speed);
-      gl!.uniform1i(locs.flare, r.flare);
-      gl!.uniform1f(locs.scaleAmt, r.cursorScaleAmt);
-      gl!.uniform1f(locs.scaleRadius, r.cursorScaleRadius);
+      const ic = r.inkColor;
+      wrapper!.style.opacity = String(r.opacity);
+      gl!.uniform1f(L.time, ms * 0.001);
+      gl!.uniform2f(L.res, canvas!.width, canvas!.height);
+      gl!.uniform2f(L.mouse, mouse.x, mouse.y);
+      gl!.uniform1f(L.intensity, r.intensity);
+      gl!.uniform1f(L.mouseNudge, r.mouseNudge);
+      gl!.uniform1f(L.aspect, canvas!.height > 0 ? canvas!.width / canvas!.height : 2.414);
+      gl!.uniform1f(L.yOffset, r.yOffset);
+      gl!.uniform1f(L.speed, r.speed);
+      gl!.uniform1f(L.pitch, r.pitch);
+      gl!.uniform1f(L.angle, (r.screenAngle * Math.PI) / 180);
+      gl!.uniform1f(L.contrast, r.contrast);
+      gl!.uniform1f(L.inkSoft, r.inkSoftness);
+      gl!.uniform1f(L.inkDensity, r.inkDensity);
+      gl!.uniform1f(L.minDot, r.minDot);
+      gl!.uniform3f(L.inkColor, ic[0], ic[1], ic[2]);
+      gl!.uniform1f(L.morphOn, r.morphOn ? 1 : 0);
+      gl!.uniform1f(L.morphStrength, r.morphStrength);
+      gl!.uniform1f(L.morphRadius, r.morphRadius);
+      gl!.uniform1f(L.morphFusion, r.morphFusion);
+      gl!.uniform1f(L.morphSoft, r.morphSoftness);
+      gl!.uniform1f(L.morphOverlap, r.morphOverlap);
       gl!.clear(gl!.COLOR_BUFFER_BIT);
       gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
     }
@@ -308,14 +375,14 @@ void main() {
       rafId = requestAnimationFrame(frame);
       if (ms - lastT < FRAME_MS) return;
       lastT = ms;
-      // Same lag as production PS3Silk
-      mouse.x += (mouse.tx - mouse.x) * 0.042;
-      mouse.y += (mouse.ty - mouse.y) * 0.042;
+      const lag = refs.current.morphLag;
+      mouse.x += (mouse.tx - mouse.x) * lag;
+      mouse.y += (mouse.ty - mouse.y) * lag;
       draw(ms);
     }
 
     resize();
-    wrapper.style.opacity = "0.5"; // production START_OPACITY
+    wrapper.style.opacity = "0.55";
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMouseMove);
     rafId = requestAnimationFrame(frame);
@@ -338,7 +405,7 @@ void main() {
         width: "100%",
         height: "100%",
         pointerEvents: "none",
-        opacity: 0.5,
+        opacity: 0.55,
       }}
     >
       <canvas

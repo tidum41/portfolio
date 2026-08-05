@@ -43,7 +43,7 @@ export default function PS3WaveLabClient() {
             position: "absolute",
             left: 20,
             bottom: 20,
-            maxWidth: 260,
+            maxWidth: 300,
             padding: "10px 12px",
             borderRadius: 6,
             background: "rgba(16,18,20,0.55)",
@@ -55,11 +55,15 @@ export default function PS3WaveLabClient() {
           }}
         >
           <div style={{ opacity: 0.5, marginBottom: 4, letterSpacing: "0.04em", fontSize: 11 }}>
-            WAVE LAB
+            VINTAGE HALFTONE · MORPH
           </div>
           <p style={{ margin: "0 0 6px" }}>
-            Same silk as production. Dial <strong style={{ fontWeight: 500 }}>flare</strong> for
-            quiet cursor scale on the halftone.
+            Silk is only the plate. What you see is print dots — move the cursor to melt them
+            (morphism), then they settle back to ink.
+          </p>
+          <p style={{ margin: "0 0 8px", opacity: 0.65, fontSize: 11 }}>
+            DialKit → <strong style={{ fontWeight: 500 }}>print</strong> +{" "}
+            <strong style={{ fontWeight: 500 }}>morph</strong>. Toggle morph off for pure screen.
           </p>
           <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
             ← work
