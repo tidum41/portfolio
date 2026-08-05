@@ -92,32 +92,15 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     });
   }, []);
 
-  // Two React quirks meet at this ref, both worth spelling out:
-  //  1. `muted` is a controlled media property — React re-asserts a literal
-  //     JSX value for it on every re-render (e.g. when Nav re-renders on
-  //     route change via usePathname()), which would stomp a real unmute.
-  //  2. The `<audio>` tag itself only mounts on this component's *first*
-  //     real render, so a `useEffect` keyed on `[muted]`/`[volume]` sees
-  //     the same state values on that mount and — since nothing "changed" —
-  //     never fires again to apply them to the newly created node.
-  // Setting both directly here, once, at the moment the real node is
-  // created sidesteps both: the effects below then own every *subsequent*
-  // update, which are genuine value changes and fire correctly.
-  // We also call .play() explicitly — browsers allow autoplay for muted
-  // audio, but only if play() is initiated; the `autoPlay` attribute alone
-  // is frequently blocked until a user gesture occurs.
+  // Setting muted/volume on the real node sidesteps React re-asserting
+  // controlled media props. Do NOT call play() here — browsers allow muted
+  // autoplay, but that still downloads/decodes the full ~7.6MB ambient bed
+  // for the whole session. Start only on unmute (tryPlay in the gesture).
   const setAudioNode = useCallback((node: HTMLAudioElement | null) => {
     audioRef.current = node;
     if (!node) return;
     node.muted = mutedRef.current;
     node.volume = volumeRef.current;
-    const onCanPlay = () => {
-      if (!node.paused) return;
-      node.play().catch(() => {});
-    };
-    node.addEventListener("canplay", onCanPlay);
-    node.play().catch(() => {});
-    return () => node.removeEventListener("canplay", onCanPlay);
   }, []);
 
   useEffect(() => {

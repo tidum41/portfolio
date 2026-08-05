@@ -620,8 +620,15 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 isPaused = false;
                 win.style.opacity = "0";
                 win.style.transform = "scale(0.96)";
-                player?.pause?.();
                 hopper?.stop();
+                // Tear down mux-player so HLS/MSE aren't retained on
+                // document.body for the rest of the session after one hover.
+                if (player) {
+                    try { player.pause?.(); } catch { /* ignore */ }
+                    player.remove();
+                    player = null;
+                    playerMounted = false;
+                }
             }
             function togglePause() {
                 if (!isOpen) return;
