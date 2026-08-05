@@ -71,7 +71,7 @@ export default function PS3Silk({
   const [mode, setMode] = useState(initialMode);
 
   const dk = useDialKit("PS3Silk", {
-    intensity:     [intensity,      0,    0.5],
+    intensity:     [intensity,      0,    1.0],
     mouseStrength: [mouseStrength,  0,    0.5],
     yOffset:       [yOffset,        -50,  100],
     halftoneSize:  [3.0,            1,    20],

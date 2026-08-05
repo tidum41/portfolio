@@ -919,7 +919,7 @@ export default function PS3ControlPanel() {
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
-          <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark} label="Intensity"
+          <Slider min={0} max={1.0} step={0.01} value={intensity} isDark={isDark} label="Intensity"
             onChange={v => {
               if (activePreset >= 1) {
                 setPresetIntensity(prev => ({ ...prev, [`${mode}:${activePreset}`]: v }));
