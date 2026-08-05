@@ -180,27 +180,26 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // iframe doesn't unmount until onExitComplete fires.
   const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  // CD keeps a static poster until first open (real webp art). Habit mounts
-  // with the work shell — its poster is an empty phone bezel without the live
-  // embed, so deferral there just looked blank.
-  const [cdMounted, setCdMounted] = useState(false);
+  // CD: live grid preview once "/" visited (perf-gated via active=false + Disc
+  // RAF idle-stop). Habit: high-quality poster in grid; live PhoneEmbed only
+  // while the popup is open (state persists in localStorage across remounts).
   const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
-  const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
-  // CD: opaque until first open+close reveals live. Habit: only covers while in popup.
-  const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
-  const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
+  // CD poster only covers while the modal is open. Habit poster is the grid.
+  const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
   const [cdPosterFade, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
-  // Lifted from PhoneEmbed's live HabitTrackerApp instance so PhonePoster (a
-  // sibling, not a descendant) can match its frame image to the widget's own
-  // theme toggle even while showing instead of the live embed.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>('light');
+  // Habit poster frame/theme: site theme until the live widget reports its own.
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === "undefined") return "light";
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  });
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -362,7 +361,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const openPopupHandler = (id: PopupId) => {
     if (id === "cd") {
-      setCdMounted(true);
       setCdPosterFade(false);
       setCdPosterOpacity(1);
     } else {
@@ -375,39 +373,48 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const closePopup = () => {
     setPopupVisible(false);
-    // Crossfade poster out as the embed portals back to the grid slot.
+    // CD: fade poster out so the live grid preview returns.
+    // Habit: poster stays the grid face (no live-under-card).
     if (openPopup === "cd") {
       setCdPosterFade(true);
       setCdPosterOpacity(0);
-    } else if (openPopup === "habit") {
-      setHabitPosterFade(true);
-      setHabitPosterOpacity(0);
     }
   };
 
-  const handlePopupExitComplete = (id: PopupId) => {
+  const handlePopupExitComplete = (_id: PopupId) => {
     setOpenPopup(null);
   };
 
-  // Portal to popup only while visibly open; return to grid immediately on
-  // close so the embed is back under the poster before the exit animation ends.
+  // Follow site theme for the habit poster until the live widget overrides it.
+  useEffect(() => {
+    if (openPopup === "habit") return;
+    const sync = () => {
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      setHabitWidgetTheme(dark ? "dark" : "light");
+    };
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, [openPopup]);
+
+  // CD portals between grid ↔ popup. Habit live instance only targets the popup.
   useLayoutEffect(() => {
-    if (!cdMounted) return;
+    if (!hasEverBeenActive) return;
     if (openPopup === "cd" && popupVisible && popupCdEl) {
       setCdPortalTarget(popupCdEl);
     } else if (gridCdEl) {
       setCdPortalTarget(gridCdEl);
     }
-  }, [cdMounted, openPopup, popupVisible, popupCdEl, gridCdEl]);
+  }, [hasEverBeenActive, openPopup, popupVisible, popupCdEl, gridCdEl]);
 
   useLayoutEffect(() => {
-    if (!hasEverBeenActive) return;
-    if (openPopup === "habit" && popupVisible && popupHabitEl) {
+    if (openPopup === "habit" && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
-    } else if (gridHabitEl) {
-      setHabitPortalTarget(gridHabitEl);
+    } else {
+      setHabitPortalTarget(null);
     }
-  }, [hasEverBeenActive, openPopup, popupVisible, popupHabitEl, gridHabitEl]);
+  }, [openPopup, popupHabitEl]);
 
   return (
     <div
@@ -642,19 +649,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                       opacity={habitPosterOpacity}
                       fade={habitPosterFade}
                       theme={habitWidgetTheme}
-                      showScreen={openPopup === "habit"}
-                    />
-                    <div
-                      ref={setGridHabitEl}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        pointerEvents: "none",
-                        visibility: (openPopup === "habit" && popupVisible) ? "hidden" : "visible",
-                      }}
+                      showScreen
                     />
                   </div>
                 </div>
@@ -697,21 +692,18 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </div>
 
       {/*
-        CD: mount on first open (static poster until then). Habit: mount once
-        "/" visited so the grid shows the live phone, not an empty bezel.
-        Both portal grid ↔ popup; no offscreen warm slots.
+        CD: live preview in the grid once "/" visited — audio/RAF idle when
+        the modal is closed (active=false). Habit: poster+screen in grid;
+        PhoneEmbed only while the popup is open.
       */}
-      {cdMounted && (
+      {hasEverBeenActive && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
-      {hasEverBeenActive && (
+      {openPopup === "habit" && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
-            // Boost only after the phone has moved into the popup slot —
-            // expanding while still in the grid makes the blurred card
-            // behind the modal look like it resized.
             expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
             onWidgetThemeChange={setHabitWidgetTheme}
           />
