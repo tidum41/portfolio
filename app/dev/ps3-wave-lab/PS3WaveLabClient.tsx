@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { DialRoot } from "dialkit";
@@ -7,56 +9,69 @@ import { DialRoot } from "dialkit";
 const PS3SilkLab = dynamic(() => import("@/components/PS3SilkLab"), { ssr: false });
 
 export default function PS3WaveLabClient() {
-  return (
-    <div
-      data-theme="dark"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 999997,
-        background: "#101214",
-        overflow: "hidden",
-        fontFamily: "var(--font-sans, system-ui, sans-serif)",
-        color: "rgba(255,255,255,0.72)",
-      }}
-    >
-      <PS3SilkLab />
+  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
 
-      {/* Hint card — DialKit mounts on top via DialRoot */}
+  useEffect(() => {
+    // DialKit's own z-index tops out ~10000; this page's canvas overlay sits
+    // far above PersistentWorkShell (~999997). Portal DialRoot above that
+    // or the panel is invisible behind the lab.
+    const el = document.createElement("div");
+    el.id = "ps3-wave-lab-dialkit";
+    el.style.cssText = "position:relative;z-index:1000001;";
+    document.body.appendChild(el);
+    setPortalEl(el);
+    return () => {
+      el.remove();
+    };
+  }, []);
+
+  return (
+    <>
       <div
+        data-theme="dark"
         style={{
-          position: "absolute",
-          left: 24,
-          bottom: 24,
-          maxWidth: 340,
-          padding: "14px 16px",
-          borderRadius: 8,
-          background: "rgba(16,18,20,0.72)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backdropFilter: "blur(10px)",
-          fontSize: 13,
-          lineHeight: 1.5,
-          pointerEvents: "auto",
-          zIndex: 2,
+          position: "fixed",
+          inset: 0,
+          zIndex: 999997,
+          background: "#101214",
+          overflow: "hidden",
+          fontFamily: "var(--font-sans, system-ui, sans-serif)",
+          color: "rgba(255,255,255,0.65)",
         }}
       >
-        <div style={{ fontSize: 12, letterSpacing: "0.04em", opacity: 0.55, marginBottom: 6 }}>
-          PS3 WAVE LAB · DEV ONLY
+        <PS3SilkLab />
+
+        <div
+          style={{
+            position: "absolute",
+            left: 20,
+            bottom: 20,
+            maxWidth: 280,
+            padding: "10px 12px",
+            borderRadius: 6,
+            background: "rgba(16,18,20,0.55)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            fontSize: 12,
+            lineHeight: 1.45,
+            pointerEvents: "auto",
+            zIndex: 2,
+          }}
+        >
+          <div style={{ opacity: 0.5, marginBottom: 4, letterSpacing: "0.04em", fontSize: 11 }}>
+            WAVE LAB
+          </div>
+          <p style={{ margin: "0 0 6px" }}>
+            DialKit → <strong style={{ fontWeight: 500 }}>variation</strong> for quiet presets.
+            Starts at classic (near production).
+          </p>
+          <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
+            ← work
+          </Link>
         </div>
-        <p style={{ margin: "0 0 8px" }}>
-          Open DialKit (<strong style={{ fontWeight: 500 }}>PS3 Wave Lab</strong>) and play.
-          Try style → <em>variable dots</em> or <em>gooey</em>, then nudge cursor / goo folders.
-        </p>
-        <p style={{ margin: "0 0 10px", opacity: 0.7, fontSize: 12 }}>
-          Click the canvas for a pulse ring. Save DialKit presets when you land on something good.
-          Production hero is untouched.
-        </p>
-        <Link href="/" style={{ color: "rgba(255,255,255,0.9)", fontSize: 12 }}>
-          ← back to work
-        </Link>
       </div>
 
-      <DialRoot defaultOpen />
-    </div>
+      {portalEl &&
+        createPortal(<DialRoot defaultOpen />, portalEl)}
+    </>
   );
 }
