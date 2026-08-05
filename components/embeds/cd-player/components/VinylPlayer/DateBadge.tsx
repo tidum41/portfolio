@@ -41,6 +41,8 @@ interface DateBadgeProps {
   volume?: number;
   /** Current audio playback rate: 1 = normal, >1 fast-forward, <0 rewind */
   scratchRate?: number;
+  /** Modal open — clock / song-date flip stay fully reactive. */
+  live?: boolean;
 }
 
 function formatDate(d: Date) {
@@ -59,7 +61,7 @@ function formatElapsed(secs: number) {
   return `${neg ? '-' : ''}${mins}:${rem}`;
 }
 
-export function DateBadge({ activeAlbum, isPlaying, isLoading, volume = 0.7, scratchRate = 1 }: DateBadgeProps) {
+export function DateBadge({ activeAlbum, isPlaying, isLoading, volume = 0.7, scratchRate = 1, live = true }: DateBadgeProps) {
   const [now, setNow] = useState<Date | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [showSong, setShowSong] = useState(false);
@@ -75,9 +77,10 @@ export function DateBadge({ activeAlbum, isPlaying, isLoading, volume = 0.7, scr
 
   useEffect(() => {
     setNow(new Date());
+    if (!live) return;
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [live]);
 
   // Reset elapsed when album changes
   useEffect(() => {
@@ -91,7 +94,7 @@ export function DateBadge({ activeAlbum, isPlaying, isLoading, volume = 0.7, scr
   // RAF-driven elapsed ticker — rate mirrors audio playback rate when scratching
   useEffect(() => {
     const isScratching = scratchRate !== 1;
-    const shouldTick = isPlaying || isScratching;
+    const shouldTick = live && (isPlaying || isScratching);
 
     if (!shouldTick) {
       if (rafIdRef.current !== null) {
@@ -117,16 +120,16 @@ export function DateBadge({ activeAlbum, isPlaying, isLoading, volume = 0.7, scr
       if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
       lastTickRef.current = null;
     };
-  }, [isPlaying, scratchRate]);
+  }, [isPlaying, scratchRate, live]);
 
   useEffect(() => {
-    if (!activeAlbum) {
+    if (!live || !activeAlbum) {
       setShowSong(false);
       return;
     }
     const id = setInterval(() => setShowSong(s => !s), 7000);
     return () => clearInterval(id);
-  }, [activeAlbum]);
+  }, [activeAlbum, live]);
 
   // Show volume % briefly when volume changes
   useEffect(() => {

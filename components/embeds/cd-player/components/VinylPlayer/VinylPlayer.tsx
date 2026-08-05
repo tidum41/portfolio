@@ -23,6 +23,8 @@ interface VinylPlayerProps {
   scratchRate?: number;
   onEjectDragMove?: (clientX: number, clientY: number) => void;
   onEjectDragCancel?: () => void;
+  /** When true (CD modal open), DateBadge stays fully reactive. */
+  live?: boolean;
 }
 
 export function VinylPlayer({
@@ -43,6 +45,7 @@ export function VinylPlayer({
   scratchRate = 1,
   onEjectDragMove,
   onEjectDragCancel,
+  live = true,
 }: VinylPlayerProps) {
   return (
     <div className={styles.playerCard}>
@@ -71,7 +74,7 @@ export function VinylPlayer({
         onEjectDragMove={onEjectDragMove}
         onEjectDragCancel={onEjectDragCancel}
       />
-      <DateBadge activeAlbum={activeAlbum} isPlaying={isPlaying} isLoading={isLoading} volume={volume} scratchRate={scratchRate} />
+      <DateBadge activeAlbum={activeAlbum} isPlaying={isPlaying} isLoading={isLoading} volume={volume} scratchRate={scratchRate} live={live} />
       <VolumeControl onVolumeUp={onVolumeUp} onVolumeDown={onVolumeDown} />
       <TransportBar
         isPlaying={isPlaying}
