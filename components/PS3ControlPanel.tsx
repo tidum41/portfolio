@@ -13,7 +13,6 @@ const PILL_W  = 70;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
-const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
 // Morph open/close — Emil ease-out (fast start → settles). Open stays prompt;
 // close runs a touch longer so collapse doesn't feel abrupt.
 const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
