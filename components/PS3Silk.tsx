@@ -518,7 +518,18 @@ void main() {
         }
         startLoop();
       };
-      lifecycleRef.current = { wake, pause: stopLoop };
+      // Stop RAF and collapse the drawing buffer so a full-hero GPU surface
+      // isn't retained while PersistentWorkShell is display:none on other
+      // routes. wake() remeasures and restores size on return.
+      const pause = () => {
+        stopLoop();
+        if (canvas.width > 1 || canvas.height > 1) {
+          canvas.width = 1;
+          canvas.height = 1;
+          if (!glCtx.isContextLost()) glCtx.viewport(0, 0, 1, 1);
+        }
+      };
+      lifecycleRef.current = { wake, pause };
 
       function frame(ms: number) {
         if (!running) return;

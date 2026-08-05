@@ -49,9 +49,13 @@ export function Disc({
   useEffect(() => { isSpinningRef.current = isSpinning; }, [isSpinning]);
   useEffect(() => { speedMultiplierRef.current = speedMultiplier; }, [speedMultiplier]);
 
-  // ── Persistent RAF physics loop ──────────────────────────────────────────
+  // RAF physics — runs while spinning, decelerating, or scratching; sleeps
+  // when fully idle so a paused grid preview doesn't burn a frame forever.
+  const wakeLoopRef = useRef<() => void>(() => {});
+
   useEffect(() => {
-    let frameId: number;
+    let frameId = 0;
+    let running = false;
 
     const animate = () => {
       if (!isScratchingRef.current) {
@@ -62,18 +66,47 @@ export function Disc({
         speedRef.current += (target - speedRef.current) * lerp;
         if (speedRef.current > 0.002) {
           angleRef.current = (angleRef.current + speedRef.current) % 360;
+        } else if (!isSpinningRef.current) {
+          speedRef.current = 0;
         }
       }
-      // Always write current angle to DOM (scratch updates angleRef directly)
       if (svgRef.current) {
         svgRef.current.style.transform = `rotate(${angleRef.current}deg)`;
       }
-      frameId = requestAnimationFrame(animate);
+
+      const needsFrame =
+        isScratchingRef.current ||
+        isSpinningRef.current ||
+        speedRef.current > 0.002;
+
+      if (needsFrame) {
+        frameId = requestAnimationFrame(animate);
+      } else {
+        running = false;
+        frameId = 0;
+      }
     };
 
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
+    const wake = () => {
+      if (running) return;
+      running = true;
+      frameId = requestAnimationFrame(animate);
+    };
+    wakeLoopRef.current = wake;
+
+    if (isSpinningRef.current) wake();
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      running = false;
+      wakeLoopRef.current = () => {};
+    };
   }, []);
+
+  // Resume the loop when play starts (idle → spinning).
+  useEffect(() => {
+    if (isSpinning) wakeLoopRef.current();
+  }, [isSpinning]);
 
   // ── Scratch helpers ──────────────────────────────────────────────────────
   const getAngleFromCenter = (clientX: number, clientY: number, rect: DOMRect) => {
@@ -98,6 +131,7 @@ export function Disc({
     lastScratchAngleRef.current = getAngleFromCenter(e.clientX, e.clientY, rect);
     lastScratchTimeRef.current = e.timeStamp;
     scratchVelRef.current = 0;
+    wakeLoopRef.current();
     try {
       // Throws for synthetic pointer IDs (e.g. Framer embed postMessage events).
       // Capture is simulated via capturedTarget tracking in the message handler instead.

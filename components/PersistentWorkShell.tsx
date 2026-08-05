@@ -20,6 +20,11 @@ import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
+/** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
+function isExternalHref(href: string) {
+  return /^(https?:|mailto:|tel:)/i.test(href);
+}
+
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
@@ -61,7 +66,7 @@ const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 // component state) whenever createPortal's target DOM node differs from the
 // previous render — see ReactChildFiber's updatePortal, which only reuses
 // the existing fiber when `containerInfo` is referentially the same. Moving
-// the live embed between grid/popup/warm slots by changing `container`
+// the live embed between grid/popup slots by changing `container`
 // directly would therefore reset it (WebAudio graph, calendar selection,
 // etc.) on every open/close — invisible for the old iframe embeds, where a
 // reload was cheap, but a real bug for native components.
@@ -69,7 +74,7 @@ const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 // Fix: portal into one permanent, off-tree div created once and never swapped
 // (so createPortal's container never changes, and React treats every
 // re-render as a plain update). Move that stable div between the logical
-// grid/popup/warm target elements with a plain DOM appendChild, which the
+// grid/popup target elements with a plain DOM appendChild, which the
 // browser treats as a reparent, not a destroy/recreate.
 function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
   const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
@@ -90,13 +95,25 @@ function EmbedPortal({ container, children }: { container: HTMLDivElement | null
   return createPortal(children, portalEl);
 }
 
-// Northeast arrow — shared with MuxAutoplayCard external-link titles.
+// Northeast arrow — shared glyph. Blue is reserved for external links only;
+// in-page popup tiles use currentColor so they match the title (not a hyperlink).
 function OpensInPopupIcon() {
-  return <NortheastArrow size={13} color="var(--color-link-blue)" />;
+  return <NortheastArrow size={13} />;
 }
 
 // ─── Card label ────────────────────────────────────────────────────────
-function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string; showPopupIcon?: boolean }) {
+function CardLabel({
+  title,
+  sub,
+  showPopupIcon,
+  external,
+}: {
+  title: string;
+  sub?: string;
+  showPopupIcon?: boolean;
+  /** External project link — blue northeast arrow. */
+  external?: boolean;
+}) {
   return (
     <div style={{ padding: 0 }}>
       <p style={{
@@ -111,6 +128,7 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
         gap: 6,
       }}>
         {title}
+        {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
         {showPopupIcon && <OpensInPopupIcon />}
       </p>
       {sub && (
@@ -128,9 +146,8 @@ function CardLabel({ title, sub, showPopupIcon }: { title: string; sub?: string;
   );
 }
 
-// Northeast arrows on external/popup tiles already signal affordance; the
-// custom-cursor label pills on project cards were retired — they competed
-// with the quieter press-in hover.
+// Northeast arrow blue = external only. Popup tiles keep a neutral arrow;
+// InteractiveBadge already marks the media as explorable.
 
 /** Mounted once, unconditionally, by the root layout — never unmounts across
  *  client-side navigation. Visibility is toggled purely with CSS based on the
@@ -163,24 +180,26 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // iframe doesn't unmount until onExitComplete fires.
   const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
+  // CD: live grid preview once "/" visited (perf-gated via active=false + Disc
+  // RAF idle-stop). Habit: high-quality poster in grid; live PhoneEmbed only
+  // while the popup is open (state persists in localStorage across remounts).
   const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
-  const [warmCdEl, setWarmCdEl] = useState<HTMLDivElement | null>(null);
-  const [gridHabitEl, setGridHabitEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
-  const [warmHabitEl, setWarmHabitEl] = useState<HTMLDivElement | null>(null);
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
+  // CD poster only covers while the modal is open. Habit poster is the grid.
   const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
-  const [habitPosterOpacity, setHabitPosterOpacity] = useState(0);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
   const [cdPosterFade, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
-  // Lifted from PhoneEmbed's live HabitTrackerApp instance so PhonePoster (a
-  // sibling, not a descendant) can match its frame image to the widget's own
-  // theme toggle even while showing instead of the live embed.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>('light');
+  // Habit poster frame/theme: site theme until the live widget reports its own.
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === "undefined") return "light";
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  });
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -354,41 +373,48 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const closePopup = () => {
     setPopupVisible(false);
-    // Crossfade poster out as the embed portals back to the grid slot.
+    // CD: fade poster out so the live grid preview returns.
+    // Habit: poster stays the grid face (no live-under-card).
     if (openPopup === "cd") {
       setCdPosterFade(true);
       setCdPosterOpacity(0);
-    } else if (openPopup === "habit") {
-      setHabitPosterFade(true);
-      setHabitPosterOpacity(0);
     }
   };
 
-  const handlePopupExitComplete = (id: PopupId) => {
+  const handlePopupExitComplete = (_id: PopupId) => {
     setOpenPopup(null);
   };
 
-  // Portal to popup only while visibly open; return to grid immediately on
-  // close so the embed is back under the poster before the exit animation ends.
+  // Follow site theme for the habit poster until the live widget overrides it.
+  useEffect(() => {
+    if (openPopup === "habit") return;
+    const sync = () => {
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      setHabitWidgetTheme(dark ? "dark" : "light");
+    };
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, [openPopup]);
+
+  // CD portals between grid ↔ popup. Habit live instance only targets the popup.
   useLayoutEffect(() => {
+    if (!hasEverBeenActive) return;
     if (openPopup === "cd" && popupVisible && popupCdEl) {
       setCdPortalTarget(popupCdEl);
     } else if (gridCdEl) {
       setCdPortalTarget(gridCdEl);
-    } else if (warmCdEl) {
-      setCdPortalTarget(warmCdEl);
     }
-  }, [openPopup, popupVisible, popupCdEl, gridCdEl, warmCdEl]);
+  }, [hasEverBeenActive, openPopup, popupVisible, popupCdEl, gridCdEl]);
 
   useLayoutEffect(() => {
-    if (openPopup === "habit" && popupVisible && popupHabitEl) {
+    if (openPopup === "habit" && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
-    } else if (gridHabitEl) {
-      setHabitPortalTarget(gridHabitEl);
-    } else if (warmHabitEl) {
-      setHabitPortalTarget(warmHabitEl);
+    } else {
+      setHabitPortalTarget(null);
     }
-  }, [openPopup, popupVisible, popupHabitEl, gridHabitEl, warmHabitEl]);
+  }, [openPopup, popupHabitEl]);
 
   return (
     <div
@@ -464,7 +490,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
-                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -485,7 +510,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           </div>
                         </Link>
                       </div>
-                      <CardLabel title={p.title} sub={p.subtitle} />
+                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -574,7 +599,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={isWorkRoute}
-                        showExternalArrow={p._id === "project-todolist"}
                       />
                     )}
                   </EntranceItem>
@@ -595,7 +619,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           </div>
                         </Link>
                       </div>
-                      <CardLabel title={p.title} sub={p.subtitle} />
+                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -625,19 +649,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                       opacity={habitPosterOpacity}
                       fade={habitPosterFade}
                       theme={habitWidgetTheme}
-                      showScreen={openPopup === "habit"}
-                    />
-                    <div
-                      ref={setGridHabitEl}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        pointerEvents: "none",
-                        visibility: (openPopup === "habit" && popupVisible) ? "hidden" : "visible",
-                      }}
+                      showScreen
                     />
                   </div>
                 </div>
@@ -679,50 +691,23 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
       </div>
 
+      {/*
+        CD: live preview in the grid once "/" visited — audio/RAF idle when
+        the modal is closed (active=false). Habit: poster+screen in grid;
+        PhoneEmbed only while the popup is open.
+      */}
       {hasEverBeenActive && (
-        <>
-          {/* Offscreen warm slots — popup-sized preload before grid refs exist. */}
-          <div
-            ref={setWarmCdEl}
-            aria-hidden
-            style={{
-              position: "fixed",
-              left: -10000,
-              top: 0,
-              width: POPUP_EMBED_MAX_W,
-              minHeight: CD_POPUP_EMBED_H,
-              height: CD_POPUP_EMBED_H,
-              visibility: "hidden",
-              pointerEvents: "none",
-            }}
+        <EmbedPortal container={cdPortalTarget}>
+          <CDPlayer active={openPopup === "cd" && popupVisible} />
+        </EmbedPortal>
+      )}
+      {openPopup === "habit" && (
+        <EmbedPortal container={habitPortalTarget}>
+          <PhoneEmbed
+            expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
+            onWidgetThemeChange={setHabitWidgetTheme}
           />
-          <div
-            ref={setWarmHabitEl}
-            aria-hidden
-            style={{
-              position: "fixed",
-              left: -10000,
-              top: 0,
-              width: HABIT_POPUP_MAX_W,
-              minHeight: HABIT_POPUP_EMBED_H,
-              height: HABIT_POPUP_EMBED_H,
-              visibility: "hidden",
-              pointerEvents: "none",
-            }}
-          />
-          <EmbedPortal container={cdPortalTarget}>
-            <CDPlayer active={openPopup === "cd" && popupVisible} />
-          </EmbedPortal>
-          <EmbedPortal container={habitPortalTarget}>
-            <PhoneEmbed
-              // Boost only after the phone has moved into the popup slot —
-              // expanding while still in the grid makes the blurred card
-              // behind the modal look like it resized.
-              expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
-              onWidgetThemeChange={setHabitWidgetTheme}
-            />
-          </EmbedPortal>
-        </>
+        </EmbedPortal>
       )}
     </div>
   );

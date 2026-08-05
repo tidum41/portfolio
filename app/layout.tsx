@@ -6,6 +6,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
+import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
@@ -118,15 +119,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://cdplayer-peach.vercel.app" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://sprightly-stroopwafel-8f1061.netlify.app" crossOrigin="anonymous" />
-        <link rel="prefetch" href="https://cdplayer-peach.vercel.app/" crossOrigin="anonymous" />
-        <link rel="prefetch" href="https://sprightly-stroopwafel-8f1061.netlify.app/" crossOrigin="anonymous" />
         <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
+        <UiSoundRoot />
         <Nav />
         <main id="main-content">
           {/* Mounted once, unconditionally, for the whole session — never
