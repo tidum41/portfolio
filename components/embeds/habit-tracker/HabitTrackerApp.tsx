@@ -96,11 +96,14 @@ function normalizeHabitTitle(value: string | null): string {
 export default function HabitTrackerApp({
   onThemeChange,
   forcedTheme,
+  initialTheme,
   inert = false,
 }: {
   onThemeChange?: (theme: 'light' | 'dark') => void;
   /** Lock theme to a parent-controlled value (used by the grid poster clone). */
   forcedTheme?: 'light' | 'dark';
+  /** Seed only — used by PhoneEmbed so frame + screen match on open. */
+  initialTheme?: 'light' | 'dark';
   /** Non-interactive stand-in — no pointer events, not focusable. */
   inert?: boolean;
 }) {
@@ -116,6 +119,7 @@ export default function HabitTrackerApp({
   const [direction, setDirection] = useState(1);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
     if (forcedTheme) return forcedTheme;
+    if (initialTheme) return initialTheme;
     if (typeof document === "undefined") return "light";
     const attr = document.documentElement.getAttribute("data-theme");
     return attr === "dark" || attr === "light" ? attr : "light";
