@@ -6,6 +6,9 @@ import { useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
+import { markSoftNav } from "@/lib/instantNav";
+
+const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
 // Shared between the base span's own inline style and the dot-field's mask
 // bake, so the two can't drift apart (see useHalftoneMorph.ts's comment on
@@ -95,6 +98,9 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       // failsafe in case navigation doesn't happen (e.g. a modifier-click
       // opening a new tab), so this can't get stuck active forever.
       onPointerDown={() => {
+        // Soft-skip the route opacity crossfade for primary chrome navigations
+        // (work / about / archive) — biggest remaining about→work lag source.
+        if (PRIMARY_NAV.has(href)) markSoftNav();
         setIsTapped(true);
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
         tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);

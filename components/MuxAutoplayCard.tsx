@@ -80,14 +80,11 @@ export default function MuxAutoplayCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
-  // Viewport-only mount while the work route is active. Leaving "/" clears
-  // the latch so HLS stacks are not remounted en masse on return — only
-  // cards that re-enter view spin up again.
+  // Latch once in view — keep the player mounted across "/" soft-returns so
+  // about→work doesn't rebuild every HLS stack. Pause when the work shell
+  // is hidden (active=false) instead of tearing down.
   useEffect(() => {
-    if (!active) {
-      setShouldLoad(false);
-      return;
-    }
+    if (shouldLoad) return;
     const container = containerRef.current;
     if (!container) return;
     const obs = new IntersectionObserver(
@@ -101,7 +98,7 @@ export default function MuxAutoplayCard({
     );
     obs.observe(container);
     return () => obs.disconnect();
-  }, [active]);
+  }, [shouldLoad]);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -110,11 +107,10 @@ export default function MuxAutoplayCard({
     else player.pause?.();
   }, [active, shouldLoad]);
 
-  // Poster while the live player isn't mounted — Mux thumbnail is a still,
-  // not a second decoder. Live player only mounts when this card has entered
-  // view AND the work route is active, so leaving "/" releases HLS memory.
+  // Poster while waiting for first viewport entry. After that the player
+  // stays mounted (paused off-route) for snappy returns.
   const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
-  const showPlayer = shouldLoad && active;
+  const showPlayer = shouldLoad;
 
   const video = (
     <div className="project-media">

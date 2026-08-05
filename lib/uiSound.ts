@@ -20,7 +20,7 @@ const SOURCES: Record<UiSoundId, string> = {
 };
 
 /** UI SFX sit above ambient music; kept under 1.0 at full master volume. */
-const UI_GAIN = 0.88;
+const UI_GAIN = 0.96;
 
 type Master = { muted: boolean; volume: number };
 
