@@ -15,7 +15,7 @@ export const SITE_DESCRIPTION =
   `${HERO_HEADLINE}. Currently @ JOOLA | cognitive science @ UCLA`;
 
 /** Default social / Open Graph image (1200×630). */
-export const OG_IMAGE_PATH = "/og-default.jpg";
+export const OG_IMAGE_PATH = "/og-default.png";
 export const OG_IMAGE_ALT =
   "mudit mahajan — product design, people, and rabbit holes";
 
