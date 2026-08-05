@@ -510,7 +510,7 @@ html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,
 html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
-export default function PS3ControlPanel() {
+export default function PS3ControlPanel({ visible = true }: { visible?: boolean }) {
   const dk = useDialKit("PS3 Pill", {
     chevronOffset:  [-1.5, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
@@ -561,7 +561,8 @@ export default function PS3ControlPanel() {
   );
   const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
 
-  // Portal setup
+  // Portal setup — UI is portaled to document.body, so parent display:none
+  // on PersistentWorkShell cannot hide it. `visible` gates that host node.
   useEffect(() => {
     const el = document.createElement("div");
     el.id = "ps3cp-portal";
@@ -570,6 +571,15 @@ export default function PS3ControlPanel() {
     setPortalEl(el);
     return () => { try { el.remove(); } catch {} };
   }, []);
+
+  useEffect(() => {
+    if (!portalEl) return;
+    portalEl.style.display = visible ? "" : "none";
+    portalEl.setAttribute("aria-hidden", visible ? "false" : "true");
+    if (!visible) {
+      startTransition(() => setIsOpen(false));
+    }
+  }, [portalEl, visible]);
 
   // Inject CSS once
   useEffect(() => {

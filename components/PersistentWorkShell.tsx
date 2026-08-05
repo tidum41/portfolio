@@ -731,9 +731,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         </section>
 
         {/* Keep mounted after first "/" visit — remounting the panel on every
-            return was a major source of nav lag. Shell is display:none/inert
-            off-route so it stays cheap while hidden. */}
-        {hasEverBeenActive && <PS3ControlPanel />}
+            return was a major source of nav lag. The menu portals to
+            document.body, so hide via visible={isWorkRoute} (parent
+            display:none cannot cover a body portal). */}
+        {hasEverBeenActive && <PS3ControlPanel visible={isWorkRoute} />}
       </div>
 
       {/*
