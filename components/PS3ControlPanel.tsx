@@ -35,7 +35,7 @@ const FADE_MS = 700;
 // opacity with zero transition while its neighbors visibly re-enter.
 const RETURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const RETURN_FADE_MS = 450;
-const PICKER_MAX_H = 180;
+const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
 const POS_KEY         = "ps3cp_pos";
@@ -318,16 +318,17 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
   );
 }
 
-// ── Color picker (Custom Shadcn Base - Hex Forced, Minimal) ────────────────
-const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange, isDark }: { value: string; onChange: (c: string) => void; isDark?: boolean }) {
-  const svRef      = useRef<HTMLDivElement>(null);
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const isDragging = useRef(false);
+// ── Color picker (Minimal, Pixel-Perfect Canvas + Hue Track) ────────────────
+const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  const svRef       = useRef<HTMLDivElement>(null);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const hueRef      = useRef<HTMLDivElement>(null);
+  const isSvDrag    = useRef(false);
+  const isHueDrag   = useRef(false);
 
-  const [hsl, setHsl]         = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
-  const [hexDraft, setHexDraft] = useState((value || "#999999").toUpperCase());
+  const [hsl, setHsl] = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
 
-  useEffect(() => { if (value) { setHsl(hexToHsl(value)); setHexDraft(value.toUpperCase()); } }, [value]);
+  useEffect(() => { if (value) { setHsl(hexToHsl(value)); } }, [value]);
 
   const drawCanvas = useCallback((hue: number) => {
     const canvas = canvasRef.current;
@@ -367,9 +368,20 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange, isDark }:
     const S = L === 0 || L === 1 ? 0 : (val - L) / Math.min(L, 1 - L);
     const newHsl: [number,number,number] = [hue, S * 100, L * 100];
     setHsl(newHsl);
-    const hex = hslToHex(newHsl[0], newHsl[1], newHsl[2]);
-    setHexDraft(hex.toUpperCase()); onChange(hex);
+    onChange(hslToHex(newHsl[0], newHsl[1], newHsl[2]));
   }, [onChange]);
+
+  const applyHueFromClientX = useCallback((clientX: number) => {
+    const el = hueRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const newHue = Math.round(pct * 360);
+    const newHsl: [number,number,number] = [newHue, hsl[1], hsl[2]];
+    setHsl(newHsl);
+    drawCanvas(newHue);
+    onChange(hslToHex(newHue, hsl[1], hsl[2]));
+  }, [hsl, drawCanvas, onChange]);
 
   const getSVFromCanvas = useCallback((e: React.PointerEvent) => {
     const rect = svRef.current!.getBoundingClientRect();
@@ -387,65 +399,66 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange, isDark }:
     return { svX: sv_s * 100, svY: (1 - v) * 100 };
   }, [hsl]);
 
+  const huePct = Math.max(0, Math.min(100, (hsl[0] / 360) * 100));
+
   return (
-    <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%" }}>
+    <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
       {/* SV Canvas */}
-      <div ref={svRef} style={{ position: "relative", width: "100%", height: 76, borderRadius: 4, overflow: "hidden", marginBottom: 8, touchAction: "none" }}
-        onPointerDown={e => { isDragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerMove={e => { if (!isDragging.current) return; applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerUp={() => { isDragging.current = false; }}
+      <div ref={svRef} style={{ position: "relative", width: "100%", height: 86, borderRadius: 5, overflow: "hidden", touchAction: "none", cursor: "crosshair" }}
+        onPointerDown={e => { isSvDrag.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerMove={e => { if (!isSvDrag.current) return; applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerUp={e => { isSvDrag.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
+        onPointerCancel={e => { isSvDrag.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
       >
         <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 0 0 1px rgba(0,0,0,0.4)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid #ffffff", boxShadow: "0 0 0 1px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
       </div>
 
-      {/* Hue Slider Rail */}
-      <div style={{ position: "relative", height: 28, display: "flex", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 5, transform: "translateY(-50%)", borderRadius: 3, pointerEvents: "none", background: "linear-gradient(to right,hsl(0,90%,52%),hsl(30,90%,52%),hsl(60,90%,52%),hsl(90,90%,52%),hsl(120,90%,52%),hsl(150,90%,52%),hsl(180,90%,52%),hsl(210,90%,52%),hsl(240,90%,52%),hsl(270,90%,52%),hsl(300,90%,52%),hsl(330,90%,52%),hsl(360,90%,52%))" }} />
-        <input type="range" min={0} max={360} step={1} value={Math.round(hsl[0])}
-          aria-label="Hue"
-          style={{ position: "relative", zIndex: 1, width: "100%", height: 28, background: "transparent", appearance: "none", WebkitAppearance: "none", margin: 0, padding: 0, touchAction: "none" }}
-          onPointerDown={e => e.stopPropagation()}
-          onChange={e => {
-            const h = parseFloat(e.target.value);
-            const newHsl: [number,number,number] = [h, hsl[1], hsl[2]];
-            setHsl(newHsl); drawCanvas(h);
-            const hex = hslToHex(h, hsl[1], hsl[2]);
-            setHexDraft(hex.toUpperCase()); onChange(hex);
-          }}
-        />
-      </div>
-
-      {/* Minimal Hex Input (Dark Mode Aware, Fully Padded, No Cutting Off) */}
-      <div style={{ width: "100%" }}>
-        <input
-          id="ps3cp-hex-input"
-          value={hexDraft}
-          onChange={e => {
-            const raw = e.target.value.replace(/[^0-9a-fA-F#]/g, "");
-            setHexDraft(raw.toUpperCase());
-            const hex = raw.startsWith("#") ? raw : "#" + raw;
-            if (/^#[0-9a-fA-F]{6}$/.test(hex)) { setHsl(hexToHsl(hex)); onChange(hex.toLowerCase()); }
-          }}
-          onPointerDown={e => e.stopPropagation()}
-          maxLength={7} spellCheck={false}
-          style={{
-            width: "100%", height: 26,
-            backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
-            border: isDark ? "1px solid rgba(255,255,255,0.16)" : "1px solid rgba(0,0,0,0.14)",
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 500,
-            letterSpacing: "0.08em",
-            color: isDark ? "rgba(255,255,255,0.90)" : "rgba(0,0,0,0.85)",
-            padding: "0 8px",
-            textAlign: "center",
-            textTransform: "uppercase",
-            boxSizing: "border-box",
-            fontFamily: "monospace",
-            outline: "none",
-          }}
-        />
+      {/* Custom Precision Hue Rail */}
+      <div
+        ref={hueRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: 12,
+          borderRadius: 6,
+          touchAction: "none",
+          cursor: "pointer",
+          background: "linear-gradient(to right, hsl(0,95%,52%), hsl(30,95%,52%), hsl(60,95%,52%), hsl(90,95%,52%), hsl(120,95%,52%), hsl(150,95%,52%), hsl(180,95%,52%), hsl(210,95%,52%), hsl(240,95%,52%), hsl(270,95%,52%), hsl(300,95%,52%), hsl(330,95%,52%), hsl(360,95%,52%))",
+          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+        }}
+        onPointerDown={e => {
+          isHueDrag.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          applyHueFromClientX(e.clientX);
+        }}
+        onPointerMove={e => {
+          if (!isHueDrag.current) return;
+          applyHueFromClientX(e.clientX);
+        }}
+        onPointerUp={e => {
+          isHueDrag.current = false;
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+        }}
+        onPointerCancel={e => {
+          isHueDrag.current = false;
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+        }}
+      >
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: `${huePct}%`,
+          width: 14,
+          height: 14,
+          borderRadius: "50%",
+          backgroundColor: "#ffffff",
+          border: "2px solid #ffffff",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.25)",
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
+          transition: "left 40ms linear",
+        }} />
       </div>
     </div>
   );
