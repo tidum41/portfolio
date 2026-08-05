@@ -176,7 +176,7 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Custom Slider (Design Engineer Craft & Pixel-Perfect Precision) ────────
+// ── Custom Slider (Vertical Slide Toggle & Pixel-Perfect Precision) ────────
 const Slider = memo(function Slider({
   min, max, step, value, onChange, isDark, label,
 }: {
@@ -254,32 +254,30 @@ const Slider = memo(function Slider({
         else if (e.key === "End") { e.preventDefault(); onChange(max); }
       }}
     >
-      {/* Background Rail */}
       <div style={{
         position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)",
         borderRadius: 1, pointerEvents: "none", background: trackBg,
       }} />
 
-      {/* Filled Rail */}
       <div style={{
         position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)",
         borderRadius: 1, pointerEvents: "none", background: filledBg,
         transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)",
       }} />
 
-      {/* Minimalist Thumb */}
+      {/* Sleek Vertical Slide Toggle Thumb */}
       <div style={{
         position: "absolute",
         top: "50%",
         left: `${pct}%`,
-        width: active ? 10 : 8,
-        height: active ? 10 : 8,
-        borderRadius: "50%",
+        width: active ? 6 : 5,
+        height: active ? 16 : 14,
+        borderRadius: 2,
         backgroundColor: thumbColor,
         boxShadow: isDark
-          ? "0 0 0 1px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)"
-          : "0 0 0 1px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.15)",
-        transform: `translate(-50%, -50%) scale(${isDragging ? 0.92 : 1})`,
+          ? "0 1px 3px rgba(0,0,0,0.5)"
+          : "0 1px 3px rgba(0,0,0,0.2)",
+        transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`,
         pointerEvents: "none",
         transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease",
       }} />
@@ -320,8 +318,8 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
   );
 }
 
-// ── Color picker ────────────────────────────────────────────────────────────
-const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+// ── Color picker (Custom Shadcn Base - Hex Forced, Minimal) ────────────────
+const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange, isDark }: { value: string; onChange: (c: string) => void; isDark?: boolean }) {
   const svRef      = useRef<HTMLDivElement>(null);
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const isDragging = useRef(false);
@@ -390,22 +388,23 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
   }, [hsl]);
 
   return (
-    <div onPointerDown={e => e.stopPropagation()}>
-      <div ref={svRef} style={{ position: "relative", width: "100%", height: 80, borderRadius: 2, overflow: "hidden", marginBottom: 6, touchAction: "none" }}
+    <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%" }}>
+      {/* SV Canvas */}
+      <div ref={svRef} style={{ position: "relative", width: "100%", height: 76, borderRadius: 4, overflow: "hidden", marginBottom: 8, touchAction: "none" }}
         onPointerDown={e => { isDragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
         onPointerMove={e => { if (!isDragging.current) return; applySV(...getSVFromCanvas(e), hsl[0]); }}
         onPointerUp={() => { isDragging.current = false; }}
       >
         <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "repeating-linear-gradient(to bottom,transparent 0px,transparent 2px,rgba(0,0,0,0.035) 2px,rgba(0,0,0,0.035) 3px)" }} />
-        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 0 0 1.5px rgba(0,0,0,0.35),0 1px 4px rgba(0,0,0,0.25)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 0 0 1px rgba(0,0,0,0.4)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
       </div>
 
-      <div style={{ position: "relative", height: 44, display: "flex", alignItems: "center", marginBottom: 6 }}>
-        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 5, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: "linear-gradient(to right,hsl(0,90%,52%),hsl(30,90%,52%),hsl(60,90%,52%),hsl(90,90%,52%),hsl(120,90%,52%),hsl(150,90%,52%),hsl(180,90%,52%),hsl(210,90%,52%),hsl(240,90%,52%),hsl(270,90%,52%),hsl(300,90%,52%),hsl(330,90%,52%),hsl(360,90%,52%))" }} />
+      {/* Hue Slider Rail */}
+      <div style={{ position: "relative", height: 28, display: "flex", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 5, transform: "translateY(-50%)", borderRadius: 3, pointerEvents: "none", background: "linear-gradient(to right,hsl(0,90%,52%),hsl(30,90%,52%),hsl(60,90%,52%),hsl(90,90%,52%),hsl(120,90%,52%),hsl(150,90%,52%),hsl(180,90%,52%),hsl(210,90%,52%),hsl(240,90%,52%),hsl(270,90%,52%),hsl(300,90%,52%),hsl(330,90%,52%),hsl(360,90%,52%))" }} />
         <input type="range" min={0} max={360} step={1} value={Math.round(hsl[0])}
           aria-label="Hue"
-          style={{ position: "relative", zIndex: 1, width: "100%", height: 44, background: "transparent", appearance: "none", WebkitAppearance: "none", margin: 0, padding: 0, touchAction: "none" }}
+          style={{ position: "relative", zIndex: 1, width: "100%", height: 28, background: "transparent", appearance: "none", WebkitAppearance: "none", margin: 0, padding: 0, touchAction: "none" }}
           onPointerDown={e => e.stopPropagation()}
           onChange={e => {
             const h = parseFloat(e.target.value);
@@ -417,8 +416,8 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
         />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <label htmlFor="ps3cp-hex-input" style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: "0.09em", color: "rgba(0,0,0,0.28)", flexShrink: 0 }}>HEX</label>
+      {/* Minimal Hex Input (Dark Mode Aware, Fully Padded, No Cutting Off) */}
+      <div style={{ width: "100%" }}>
         <input
           id="ps3cp-hex-input"
           value={hexDraft}
@@ -430,7 +429,22 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
           }}
           onPointerDown={e => e.stopPropagation()}
           maxLength={7} spellCheck={false}
-          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
+          style={{
+            width: "100%", height: 26,
+            backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+            border: isDark ? "1px solid rgba(255,255,255,0.16)" : "1px solid rgba(0,0,0,0.14)",
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.08em",
+            color: isDark ? "rgba(255,255,255,0.90)" : "rgba(0,0,0,0.85)",
+            padding: "0 8px",
+            textAlign: "center",
+            textTransform: "uppercase",
+            boxSizing: "border-box",
+            fontFamily: "monospace",
+            outline: "none",
+          }}
         />
       </div>
     </div>
@@ -440,7 +454,7 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
 .ps3cp,.ps3cp * { cursor: none !important; }
-.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
+.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
 .ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
 html[data-theme=dark] .ps3cp input[type=range]::-webkit-slider-thumb { background:rgba(255,255,255,0.72); }
@@ -457,9 +471,9 @@ html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
 .ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
 .ps3cp-ibtn:active { transform:scale(0.96); }
-.ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 150ms ease,border-color 150ms ease; }
-.ps3cp-swatch-btn::before { content:"";position:absolute;inset:-6px; }
-.ps3cp-swatch-btn:active { transform:scale(0.96)!important; }
+.ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
+.ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
+.ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
 .ps3cp-swatch-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
 html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; }
@@ -473,16 +487,9 @@ html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(25
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    // Both converge to 0 empirically — measured live via getBoundingClientRect
-    // at each step (0.75/1.75 → 0.37/0.87px real offset remaining, a
-    // consistent ~0.5 ratio from 2x DPR subpixel rounding) rather than eyeballed.
-    // Letting flex's own align-items: center do the work (no manual offset)
-    // is also the more foolproof choice long-term — a hand-tuned pixel hack
-    // can silently drift if the font or line-height ever changes; true
-    // centering can't.
-    chevronOffset:  [0, -4, 4, 0.25],
+    chevronOffset:  [-1.5, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [0, -4, 4, 0.25],
+    menuTextOffset: [-3.5, -4, 4, 0.5],
   });
 
   const panelRef       = useRef<HTMLDivElement>(null);
@@ -730,7 +737,7 @@ export default function PS3ControlPanel() {
   const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
     ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
-    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`, `transform ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
+    : (showTransition ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}`].join(", ") : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
 
@@ -742,17 +749,12 @@ export default function PS3ControlPanel() {
   const bgG = Math.round(baseBgG * (1 - tintAmt) + wg * tintAmt);
   const bgB = Math.round(baseBgB * (1 - tintAmt) + wb * tintAmt);
   const pillBg     = `rgba(${bgR},${bgG},${bgB},${isDark ? "0.93" : "0.82"})`;
-  // Edge definition rides entirely on box-shadow now — no `border` property —
-  // an inset 1px ring stands in for what used to be a literal border (same
-  // pixel result, but composes with the drop shadow below instead of
-  // fighting it as two separate box-model concepts), plus a soft outer drop
-  // shadow for real elevation off the page instead of a flat bordered line.
-  const pillRing = isDark
+  const pillBorder = isDark
     ? "rgba(255,255,255,0.14)"
     : (isDefaultWave ? "rgba(0,0,0,0.28)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
   const pillShadow = isDark
-    ? `inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px ${pillRing}, 0 8px 24px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.2)`
-    : `inset 0 1px 0 rgba(255,255,255,0.60), inset 0 0 0 1px ${pillRing}, 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)`;
+    ? "inset 0 1px 0 rgba(255,255,255,0.10)"
+    : "inset 0 1px 0 rgba(255,255,255,0.60)";
   const accentCol  = isDark ? "rgba(255,255,255,0.62)" : "rgba(0,0,0,0.62)";
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
@@ -769,22 +771,17 @@ export default function PS3ControlPanel() {
     setAndDispatch({ waveColor: preset.wave, intensity: nextIntensity });
   };
 
-  const labelSt: React.CSSProperties = { fontSize: 11, color: isDark ? "rgba(255,255,255,0.48)" : "rgba(0,0,0,0.48)", letterSpacing: "0.02em", display: "flex", alignItems: "center", gap: 4 };
+  const labelSt: React.CSSProperties = { fontSize: 11, fontWeight: 500, color: isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.50)", letterSpacing: "0.01em" };
   const valueSt: React.CSSProperties = { fontSize: 10.5, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)", fontFamily: "monospace" };
   const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 2 };
   const rowH: React.CSSProperties    = { display: "flex", alignItems: "center", justifyContent: "space-between" };
-  const secPad = "3px 16px 5px";
+  const secPad = "4px 16px 6px";
 
   const swatchSt = (active: boolean, bg: string): React.CSSProperties => ({
-    width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+    width: 17, height: 17, borderRadius: 4, flexShrink: 0,
+    border: active ? (isDark ? "1.5px solid rgba(255,255,255,0.85)" : "1.5px solid rgba(0,0,0,0.85)") : (isDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(0,0,0,0.18)"),
     backgroundColor: bg,
-    // Inset ring stands in for the old border; the outer ring layers on
-    // top of it when active — both shadow layers, nothing fighting the
-    // box model the way border-plus-boxShadow used to.
-    boxShadow: active
-      ? "inset 0 0 0 1.5px rgba(0,0,0,0.40), 0 0 0 2px rgba(0,0,0,0.10)"
-      : "inset 0 0 0 1px rgba(0,0,0,0.18)",
-    transition: "box-shadow 120ms ease, transform 120ms ease",
+    transition: "border-color 140ms ease, transform 140ms ease",
   });
 
   const panelMarkup = (
@@ -796,6 +793,7 @@ export default function PS3ControlPanel() {
       backgroundColor: pillBg,
       backdropFilter: "blur(28px) saturate(180%)",
       WebkitBackdropFilter: "blur(28px) saturate(180%)",
+      border: `1px solid ${pillBorder}`,
       boxShadow: pillShadow,
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
@@ -830,38 +828,39 @@ export default function PS3ControlPanel() {
       {/* Body */}
       <div style={{ pointerEvents: isOpen ? "auto" : "none", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "visible", maxHeight: geo.clampedBodyH, WebkitOverflowScrolling: "touch" }}>
 
-        {/* Pattern color */}
+        {/* Pattern color (Clean Text Label - Zero Icons) */}
         <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
-            <span style={labelSt}>
-              <PS3CircleGlyph size={8} color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"} />
-              pattern color
-            </span>
+            <span style={labelSt}>pattern color</span>
             <div className="ps3cp-color-swatch" role="button" tabIndex={0} aria-label="Pattern color" aria-expanded={openColorPicker === "pattern"}
               onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
               style={swatchSt(openColorPicker === "pattern", rgbToHex(waveColor))} />
           </div>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {PRESETS.map((p, i) => (
               <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
                 aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
-                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, boxShadow: activePreset === i ? "inset 0 0 0 2px rgba(0,0,0,0.55)" : "inset 0 0 0 1.5px rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
+                style={{
+                  width: 17, height: 17, borderRadius: 4, backgroundColor: p.swatch,
+                  boxShadow: activePreset === i
+                    ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
+                    : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.15)" : "inset 0 0 0 1px rgba(0,0,0,0.12)"),
+                  transform: activePreset === i ? "scale(1.08)" : "scale(1)",
+                  padding: 0, flexShrink: 0,
+                }} />
             ))}
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
             <div style={{ paddingTop: 10 }}>
-              <PS3ColorPicker value={rgbToHex(waveColor)} onChange={hex => setAndDispatch({ waveColor: hexToRgb01(hex) })} />
+              <PS3ColorPicker value={rgbToHex(waveColor)} isDark={isDark} onChange={hex => setAndDispatch({ waveColor: hexToRgb01(hex) })} />
             </div>
           </ExpandSection>
         </div>
 
-        {/* Pattern mode */}
+        {/* Pattern mode (Clean Text Label - Zero Icons) */}
         <div style={{ padding: "6px 16px 8px" }}>
-          <span style={{ ...labelSt, display: "flex", marginBottom: 6 }}>
-            <PS3TriangleGlyph size={8} color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"} />
-            pattern mode
-          </span>
+          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern mode</span>
           <div style={{ display: "flex", gap: 4 }}>
             {["wave", "halftone"].map((m, i) => (
               <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
