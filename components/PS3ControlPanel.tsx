@@ -176,47 +176,67 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Custom Slider (Vertical Slide Toggle & Pixel-Perfect Precision) ────────
+function preventTextSelect(e?: React.PointerEvent) {
+  if (e) { try { e.preventDefault(); } catch {} }
+  try { window.getSelection()?.removeAllRanges(); } catch {}
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "none";
+    (document.body.style as { webkitUserSelect?: string }).webkitUserSelect = "none";
+  }
+}
+
+function restoreTextSelect() {
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "";
+    (document.body.style as { webkitUserSelect?: string }).webkitUserSelect = "";
+  }
+}
+
+// ── Minimal Design-Engineer Custom Slider ────────────────────────────────────
 const Slider = memo(function Slider({
-  min, max, step, value, onChange, isDark, label,
+  min, max, step, value, onChange, label, isDark
 }: {
   min: number; max: number; step: number; value: number;
-  onChange: (v: number) => void; isDark: boolean; label: string;
+  onChange: (v: number) => void; label: string; isDark: boolean;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered]   = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const trackRef                    = useRef<HTMLDivElement>(null);
 
-  const clamp = useCallback((v: number) => parseFloat(Math.max(min, Math.min(max, v)).toFixed(10)), [min, max]);
+  const clamp = useCallback((v: number) => Math.max(min, Math.min(max, v)), [min, max]);
+
   const valueFromClientX = useCallback((clientX: number) => {
     const el = trackRef.current;
     if (!el) return value;
     const rect = el.getBoundingClientRect();
-    const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const raw  = min + pct * (max - min);
-    const snapped = min + Math.round((raw - min) / step) * step;
-    return clamp(snapped);
+    if (rect.width <= 0) return value;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const raw = min + pct * (max - min);
+    const stepped = Math.round(raw / step) * step;
+    return clamp(Number(stepped.toFixed(4)));
   }, [min, max, step, value, clamp]);
 
-  const pct    = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
-  const active = isDragging || isHovered;
+  const active = isHovered || isDragging;
+  const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 
-  const trackBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)";
-  const filledBg = active
-    ? (isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.85)")
-    : (isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.60)");
-  const thumbColor = isDark ? "rgba(255,255,255,0.95)" : "rgba(15,15,20,0.95)";
+  const trackBg   = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
+  const filledBg  = active
+    ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.78)")
+    : (isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.40)");
+  const thumbColor = active
+    ? (isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.90)")
+    : (isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)");
 
   return (
     <div
       ref={trackRef}
-      className="ps3cp-slider-track"
       role="slider"
-      tabIndex={0}
       aria-label={label}
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={value}
+      tabIndex={0}
+      className="ps3cp-slider-track"
       style={{
         position: "relative",
         height: 24,
@@ -231,20 +251,24 @@ const Slider = memo(function Slider({
       onPointerLeave={() => setIsHovered(false)}
       onPointerDown={e => {
         e.stopPropagation();
+        preventTextSelect(e);
         setIsDragging(true);
         e.currentTarget.setPointerCapture(e.pointerId);
         onChange(valueFromClientX(e.clientX));
       }}
       onPointerMove={e => {
         if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        preventTextSelect(e);
         onChange(valueFromClientX(e.clientX));
       }}
       onPointerUp={e => {
         setIsDragging(false);
+        restoreTextSelect();
         try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
       }}
       onPointerCancel={e => {
         setIsDragging(false);
+        restoreTextSelect();
         try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
       }}
       onKeyDown={e => {
@@ -254,33 +278,9 @@ const Slider = memo(function Slider({
         else if (e.key === "End") { e.preventDefault(); onChange(max); }
       }}
     >
-      <div style={{
-        position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)",
-        borderRadius: 1, pointerEvents: "none", background: trackBg,
-      }} />
-
-      <div style={{
-        position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)",
-        borderRadius: 1, pointerEvents: "none", background: filledBg,
-        transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)",
-      }} />
-
-      {/* Sleek Vertical Slide Toggle Thumb */}
-      <div style={{
-        position: "absolute",
-        top: "50%",
-        left: `${pct}%`,
-        width: active ? 6 : 5,
-        height: active ? 16 : 14,
-        borderRadius: 2,
-        backgroundColor: thumbColor,
-        boxShadow: isDark
-          ? "0 1px 3px rgba(0,0,0,0.5)"
-          : "0 1px 3px rgba(0,0,0,0.2)",
-        transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`,
-        pointerEvents: "none",
-        transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease",
-      }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: trackBg }} />
+      <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: filledBg, transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)" }} />
+      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbColor, boxShadow: isDark ? "0 1px 3px rgba(0,0,0,0.5)" : "0 1px 3px rgba(0,0,0,0.2)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
     </div>
   );
 });
@@ -409,11 +409,11 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
   return (
     <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
       {/* SV Canvas */}
-      <div ref={svRef} style={{ position: "relative", width: "100%", height: 86, borderRadius: 5, overflow: "hidden", touchAction: "none", cursor: "crosshair" }}
-        onPointerDown={e => { isSvDrag.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerMove={e => { if (!isSvDrag.current) return; applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerUp={e => { isSvDrag.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
-        onPointerCancel={e => { isSvDrag.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
+      <div ref={svRef} style={{ position: "relative", width: "100%", height: 86, borderRadius: 5, overflow: "hidden", touchAction: "none", cursor: "crosshair", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
+        onPointerDown={e => { preventTextSelect(e); isSvDrag.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerMove={e => { if (!isSvDrag.current) return; preventTextSelect(e); applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerUp={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
+        onPointerCancel={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
       >
         <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
         <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid #ffffff", boxShadow: "0 0 0 1px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
@@ -428,21 +428,26 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
           height: 12,
           borderRadius: 6,
           touchAction: "none",
+          userSelect: "none",
+          WebkitUserSelect: "none",
           cursor: "pointer",
           background: "linear-gradient(to right, hsl(0,95%,52%), hsl(30,95%,52%), hsl(60,95%,52%), hsl(90,95%,52%), hsl(120,95%,52%), hsl(150,95%,52%), hsl(180,95%,52%), hsl(210,95%,52%), hsl(240,95%,52%), hsl(270,95%,52%), hsl(300,95%,52%), hsl(330,95%,52%), hsl(360,95%,52%))",
           boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
-        }}
+        } as React.CSSProperties}
         onPointerDown={e => {
+          preventTextSelect(e);
           isHueDrag.current = true;
           e.currentTarget.setPointerCapture(e.pointerId);
           applyHueFromClientX(e.clientX);
         }}
         onPointerMove={e => {
           if (!isHueDrag.current) return;
+          preventTextSelect(e);
           applyHueFromClientX(e.clientX);
         }}
         onPointerUp={e => {
           isHueDrag.current = false;
+          restoreTextSelect();
           try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
         }}
         onPointerCancel={e => {

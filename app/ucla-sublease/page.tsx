@@ -546,13 +546,8 @@ export default async function BruinLeasePage() {
 
               {cs.figmaComparison
                 ? (
-                  // Matches the fallback's 16/9 below — the CMS field is a
-                  // plain URL string with no known intrinsic dimensions, so
-                  // fill+a fixed aspect-ratio wrapper is what actually
-                  // reserves layout space ahead of the real image loading
-                  // (a bare width:100% <img> has no height until it does).
-                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px" }}>
-                    <Image src={cs.figmaComparison} alt="Early layout exploration in Figma" fill sizes="(max-width: 768px) 100vw, 750px" style={{ objectFit: "cover" }} />
+                  <div style={{ position: "relative", width: "100%", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)" }}>
+                    <img src={cs.figmaComparison} alt="Early layout exploration in Figma" loading="lazy" decoding="async" style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius-card)" }} />
                   </div>
                 )
                 : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
