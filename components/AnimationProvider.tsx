@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { peekInstantBack } from "@/lib/instantNav";
+import { useEffect } from "react";
+import { peekSoftNav, peekSkipRouteFade, clearSoftNav } from "@/lib/instantNav";
 import { EASE_OPACITY, EASE_EXIT, DURATION } from "@/lib/motion";
 
 // Detaches whichever element is currently *exiting* from normal document
@@ -41,25 +42,27 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // dragged the sticky TOC along with it).
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Read synchronously at render time so this navigation's entry uses the
-  // right variant immediately — the flag is cleared later, on a passive
-  // effect in PersistentWorkShell, after every consumer has had a chance to
-  // read it during the same navigation's commit phase.
-  const instant = peekInstantBack();
-  // Reduced-motion: keep every target value identical, just arrive there
-  // without animating — content still lands in the same resting state.
+  // Instant-back (case-study) or soft primary nav (work/about/archive) —
+  // skip the opacity crossfade so keep-alive shells aren't fighting a fade.
+  const skipFade = peekSkipRouteFade();
   const reduced = useReducedMotion();
   const dur = (d: number) => (reduced ? 0 : d);
+
+  // Soft-nav is one-shot per navigation; clear after commit so it doesn't
+  // leak into the next unrelated transition.
+  useEffect(() => {
+    if (peekSoftNav()) clearSoftNav();
+  }, [pathname]);
 
   return (
     <div style={{ position: "relative" }}>
       <AnimatePresence mode="sync" initial={false}>
         <motion.div
           key={pathname}
-          initial={instant ? false : { opacity: 0 }}
+          initial={skipFade ? false : { opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
           exit={
-            instant
+            skipFade
               ? { opacity: 1, transition: { duration: 0 } }
               : { opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }
           }

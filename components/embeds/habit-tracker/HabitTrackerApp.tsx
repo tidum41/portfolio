@@ -114,7 +114,12 @@ export default function HabitTrackerApp({
   const [habitTitle, setHabitTitle] = useState('');
   const habitInputRef = useRef<HTMLInputElement>(null);
   const [direction, setDirection] = useState(1);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(forcedTheme ?? 'light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (forcedTheme) return forcedTheme;
+    if (typeof document === "undefined") return "light";
+    const attr = document.documentElement.getAttribute("data-theme");
+    return attr === "dark" || attr === "light" ? attr : "light";
+  });
 
   useEffect(() => {
     const refDate = new Date();
@@ -130,12 +135,7 @@ export default function HabitTrackerApp({
     } else {
       localStorage.removeItem('habit-title');
     }
-
-    if (!forcedTheme) {
-      const attr = document.documentElement.getAttribute('data-theme');
-      if (attr === 'dark' || attr === 'light') setResolvedTheme(attr);
-    }
-  }, [forcedTheme]);
+  }, []);
 
   useEffect(() => {
     if (forcedTheme) setResolvedTheme(forcedTheme);

@@ -77,14 +77,15 @@ const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
 // grid/popup target elements with a plain DOM appendChild, which the
 // browser treats as a reparent, not a destroy/recreate.
 function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
-  const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
-
-  useEffect(() => {
+  // Create the host node during the first client render so children can paint
+  // in the same frame as append (useEffect deferred one paint and flashed).
+  const [portalEl] = useState(() => {
+    if (typeof document === "undefined") return null;
     const el = document.createElement("div");
     el.style.width = "100%";
     el.style.height = "100%";
-    setPortalEl(el);
-  }, []);
+    return el;
+  });
 
   useLayoutEffect(() => {
     if (!container || !portalEl) return;
@@ -414,10 +415,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     setOpenPopup(null);
   };
 
-  // Follow site theme for the habit poster until the live widget overrides it.
+  // Seed habit poster theme from the site only until the live widget reports
+  // its own (don't overwrite session widget theme on every site toggle/close).
+  const habitThemeFromWidgetRef = useRef(false);
   useEffect(() => {
     if (openPopup === "habit") return;
+    if (habitThemeFromWidgetRef.current) return;
     const sync = () => {
+      if (habitThemeFromWidgetRef.current) return;
       const dark = document.documentElement.getAttribute("data-theme") === "dark";
       setHabitWidgetTheme(dark ? "dark" : "light");
     };
@@ -426,6 +431,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
   }, [openPopup]);
+
+  const onHabitWidgetThemeChange = (theme: "light" | "dark") => {
+    habitThemeFromWidgetRef.current = true;
+    setHabitWidgetTheme(theme);
+  };
 
   // CD portals between grid ↔ popup. Habit live instance only targets the popup.
   useLayoutEffect(() => {
@@ -737,11 +747,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
-      {openPopup === "habit" && isWorkRoute && (
+      {openPopup === "habit" && isWorkRoute && habitPortalTarget && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
-            expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
-            onWidgetThemeChange={setHabitWidgetTheme}
+            // Always expanded in the popup — toggling boost after portal
+            // settle was shifting the phone on open (worse in light mode).
+            expanded
+            initialTheme={habitWidgetTheme}
+            onWidgetThemeChange={onHabitWidgetThemeChange}
           />
         </EmbedPortal>
       )}

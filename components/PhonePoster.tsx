@@ -145,7 +145,7 @@ export default function PhonePoster({
             left: 0,
             width: "100%",
             height: "100%",
-            objectFit: "contain",
+            objectFit: "fill",
             zIndex: 2,
             pointerEvents: "none",
             userSelect: "none",

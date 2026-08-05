@@ -97,12 +97,23 @@ export default function PS3Silk({
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
-  // Wake (or pause) the WebGL loop when the work route's visibility flips —
-  // forces a real-sized resize + restores resting opacity on return; stops the
-  // RAF entirely while hidden so we aren't burning frames into a dead canvas.
+  // Wake after paint so about→work isn't competing with layout + Mux resume
+  // on the same frame. Pause immediately when leaving.
   useEffect(() => {
-    if (active) lifecycleRef.current?.wake();
-    else lifecycleRef.current?.pause();
+    if (!active) {
+      lifecycleRef.current?.pause();
+      return;
+    }
+    let cancelled = false;
+    const outer = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) lifecycleRef.current?.wake();
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(outer);
+    };
   }, [active]);
 
   // ps3-update event
