@@ -80,11 +80,14 @@ export default function MuxAutoplayCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
-  // Viewport-only mount — no timed force-load. The old 1500ms fallback
-  // spun up every Mux stack (HLS + media-chrome) even for below-fold cards
-  // a visitor never reached, and PersistentWorkShell keeps those players
-  // alive under display:none for the whole session.
+  // Viewport-only mount while the work route is active. Leaving "/" clears
+  // the latch so HLS stacks are not remounted en masse on return — only
+  // cards that re-enter view spin up again.
   useEffect(() => {
+    if (!active) {
+      setShouldLoad(false);
+      return;
+    }
     const container = containerRef.current;
     if (!container) return;
     const obs = new IntersectionObserver(
@@ -98,7 +101,7 @@ export default function MuxAutoplayCard({
     );
     obs.observe(container);
     return () => obs.disconnect();
-  }, []);
+  }, [active]);
 
   useEffect(() => {
     const player = playerRef.current;

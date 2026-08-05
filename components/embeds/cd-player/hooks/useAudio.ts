@@ -168,5 +168,25 @@ export function useAudio() {
     connectAudioGraph(audio);
   }, [getAudio, connectAudioGraph]);
 
+  // Release HTMLAudio + WebAudio when the player unmounts (e.g. leaving "/").
+  useEffect(() => {
+    return () => {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
+      audioRef.current = null;
+      const ctx = audioCtxRef.current;
+      audioCtxRef.current = null;
+      analyserRef.current = null;
+      sourceConnectedRef.current = false;
+      if (ctx && ctx.state !== "closed") {
+        void ctx.close().catch(() => {});
+      }
+    };
+  }, []);
+
   return { loadAndPlay, playAudio, pauseAudio, stopAudio, volumeUp, volumeDown, volume, analyserRef, scratchAudio, primeAudio, audioError, clearAudioError };
 }

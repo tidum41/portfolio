@@ -232,6 +232,25 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
+  // Leaving "/" — drop popup state so CD/habit aren't live under display:none,
+  // and snap the CD poster opaque so the card isn't empty while CD unmounts.
+  useEffect(() => {
+    if (isWorkRoute) return;
+    setPopupVisible(false);
+    setOpenPopup(null);
+    setHabitPortalTarget(null);
+    setCdPosterOpacity(1);
+    setCdPosterFade(false);
+  }, [isWorkRoute]);
+
+  // Once we're back on "/" with a live CD instance, reveal it under the poster.
+  useEffect(() => {
+    if (!isWorkRoute || !hasEverBeenActive) return;
+    if (openPopup === "cd") return;
+    setCdPosterFade(true);
+    setCdPosterOpacity(0);
+  }, [isWorkRoute, hasEverBeenActive, openPopup]);
+
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
   // globally (for anchor-link nav), which would otherwise make this snap-back
@@ -649,7 +668,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                       opacity={habitPosterOpacity}
                       fade={habitPosterFade}
                       theme={habitWidgetTheme}
-                      showScreen
+                      // Unmount the inert HabitTrackerApp while the shell is
+                      // hidden — phone chrome stays; screen remounts on return.
+                      showScreen={isWorkRoute}
                     />
                   </div>
                 </div>
@@ -692,16 +713,15 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </div>
 
       {/*
-        CD: live preview in the grid once "/" visited — audio/RAF idle when
-        the modal is closed (active=false). Habit: poster+screen in grid;
-        PhoneEmbed only while the popup is open.
+        CD: live only while "/" is active (poster covers the card off-route).
+        Habit: live PhoneEmbed only while the popup is open on "/".
       */}
-      {hasEverBeenActive && (
+      {hasEverBeenActive && isWorkRoute && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
-      {openPopup === "habit" && (
+      {openPopup === "habit" && isWorkRoute && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
             expanded={Boolean(popupHabitEl) && habitPortalTarget === popupHabitEl}
