@@ -22,6 +22,19 @@ const REF_H_BASE = 614;
 const CONTENT_W = 394;
 const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 
+const FRAME_IMG: React.CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  zIndex: 2,
+  pointerEvents: "none",
+  userSelect: "none",
+  transition: "none",
+};
+
 /**
  * Grid-tile stand-in while the live PhoneEmbed is portaled into the modal.
  * Matches PhoneEmbed's scale-to-fit math, and when `showScreen` is on, renders
@@ -84,8 +97,6 @@ export default function PhonePoster({
   const contentH = Math.ceil(CONTENT_W * (screenLocalH / screenLocalW));
   const contentScale = screenLocalW / CONTENT_W;
 
-  const frameSrc = theme === "dark" ? phoneFrameDark.src : phoneFrameLight.src;
-
   return (
     <div
       ref={containerRef}
@@ -113,7 +124,7 @@ export default function PhonePoster({
             right: `${dk.insetSide}%`,
             borderRadius: `${dk.screenRadius}%`,
             overflow: "hidden",
-            background: "#000",
+            background: theme === "dark" ? "#0a0a0a" : "#f5f5f0",
           }}
         >
           {showScreen && (
@@ -132,23 +143,24 @@ export default function PhonePoster({
             </div>
           )}
         </div>
+        {/* Both frames stay mounted — opacity toggle is instant, no src-swap flash. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={frameSrc}
+          src={phoneFrameLight.src}
           alt=""
           decoding="async"
           draggable={false}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            zIndex: 2,
-            pointerEvents: "none",
-            userSelect: "none",
-          }}
+          aria-hidden={theme !== "light"}
+          style={{ ...FRAME_IMG, opacity: theme === "light" ? 1 : 0 }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={phoneFrameDark.src}
+          alt=""
+          decoding="async"
+          draggable={false}
+          aria-hidden={theme !== "dark"}
+          style={{ ...FRAME_IMG, opacity: theme === "dark" ? 1 : 0 }}
         />
       </div>
     </div>
