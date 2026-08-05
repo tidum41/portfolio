@@ -21,6 +21,8 @@ const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
 // below), instead of an independently-tuned 2s ease-out that finished long
 // after everything else had already settled and read as a separate, slower
 // reveal bolted onto the page rather than part of it.
+const OPEN_EASE  = "cubic-bezier(0.16, 1, 0.3, 1)";
+const CLOSE_EASE = "cubic-bezier(0.25, 1, 0.4, 1)";
 const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const FADE_MS = 700;
 // This component unmounts whenever the user navigates off "/" (see the
@@ -312,8 +314,8 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
       maxHeight: open ? maxH : 0, overflow: "hidden",
       opacity: open ? 1 : 0,
       transition: open
-        ? `max-height 320ms ${EXPAND_EASE}, opacity 220ms ease`
-        : `max-height 240ms ${EXPAND_EASE}, opacity 160ms ease`,
+        ? `max-height 180ms ${OPEN_EASE}, opacity 140ms ease`
+        : `max-height 280ms ${CLOSE_EASE}, opacity 180ms ease`,
       pointerEvents: open ? "auto" : "none",
     }}>
       {children}
@@ -749,10 +751,9 @@ export default function PS3ControlPanel() {
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [isDragging, isOpen, pillPos.y]);
 
-  const dur = isOpen ? `320ms ${EXPAND_EASE}` : `200ms ${EXPAND_EASE}`;
+  const dur = isOpen ? `180ms ${OPEN_EASE}` : `300ms ${CLOSE_EASE}`;
   const baseMorphParts = [
-    `width ${dur}`, `height ${dur}`, `max-height ${dur}`,
-    `border-radius ${isOpen ? `300ms ${EXPAND_EASE}` : `180ms ${EXPAND_EASE}`}`,
+    `width ${dur}`, `height ${dur}`, `max-height ${dur}`, `border-radius ${dur}`,
     `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
   ];
   const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
@@ -831,7 +832,7 @@ export default function PS3ControlPanel() {
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
+            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform 180ms ${OPEN_EASE}` : `transform 300ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
               <ChevronDown color={accentCol} size={10} />
             </div>
             <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
