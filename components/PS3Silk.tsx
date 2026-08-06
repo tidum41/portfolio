@@ -53,26 +53,24 @@ export interface PS3SilkProps {
   active?: boolean;
 }
 
-/** Lab v9 wrap + finer classic-halftone print (pitch tuned for hero). */
+/** Wrap physics + distinct AM print; crest glow = finer dots. */
 const V9 = {
   intensity: 0.19,
-  // Phase bend under cursor — no ring halo (that path never shipped here)
   mouseStrength: 0.12,
   yOffset: 49,
   speed: 0.92,
   startOpacity: 0.33,
-  // Closer to old production ~3px halftone; 6.3 read as coarse stamps
-  printPitch: 3.2,
+  printPitch: 3.4,
   parallax: 0.065,
   crestBoost: 0.14,
   harmonic: 0.36,
   sheetSoft: 0.6,
-  silkMix: 0.46,
-  contrast: 1.2,
-  // Scale soft edge with finer pitch so dots stay round, not mushy
-  inkSoft: 0.45,
-  inkDensity: 0.43,
-  minDot: 0.04,
+  // Print-forward so dots read clearly; silk stays the coverage plate
+  silkMix: 0.78,
+  contrast: 1.35,
+  inkSoft: 0.32,
+  inkDensity: 0.58,
+  minDot: 0.028,
 };
 
 export default function PS3Silk({
@@ -479,6 +477,30 @@ float inkRadius(float coverage, float pitch) {
   return pitch * 0.5 * sqrt(pow(t, kContrast));
 }
 
+// AM dot layer at a given pitch — silk coverage is the wave plate
+float amDot(vec2 frag, float pitch, float covBoost) {
+  pitch = max(pitch, 1.35);
+  vec2 cell = floor(frag / pitch);
+  vec2 centerFrag = (cell + 0.5) * pitch;
+  vec2 centerUV = centerFrag / uResolution;
+  centerUV.y += uYOffsetPx / uResolution.y;
+  float cellSilk = sampleSilk(centerUV);
+  float cellLight = cellSilk * uIntensity * 4.5;
+  float cursorProx = smoothstep(0.38, 0.0, length(centerUV - uMouse));
+  float cellCov = clamp(
+    cellLight - 0.03 + cursorProx * uMouseStrength * 1.55 + covBoost,
+    0.0, 1.3
+  );
+  float soft = max(kInkSoft * (pitch / 3.4), 0.22);
+  float r = inkRadius(cellCov, pitch);
+  float d = length(frag - centerFrag);
+  float dot = smoothstep(r + soft, r - soft, d);
+  float vis = smoothstep(kMinDot, kMinDot + 0.045, cellCov);
+  // Keep dots on the ribbon — wave physics gates the screen
+  float plate = smoothstep(0.015, 0.14, cellSilk);
+  return dot * vis * plate;
+}
+
 void main() {
   vec2 frag = gl_FragCoord.xy;
   vec2 uv = frag / uResolution;
@@ -487,37 +509,28 @@ void main() {
   float silkLuma = sampleSilk(uv);
   float waveLight = silkLuma * uIntensity * 4.5;
   float crest = pow(clamp(silkLuma, 0.0, 1.0), 1.35);
-  float silkA = clamp(waveLight * (1.05 + kCrestBoost * crest * 0.85), 0.0, 1.0);
 
-  // mode 1 = wrap + print (default hero); mode 0 = pure continuous silk
+  // mode 1 = print (AM on wave plate); mode 0 = continuous wave sheets
   float mixAmt = (uMode == 1) ? kSilkMix : 0.0;
+  // In print mode, dial back continuous crest glow — glow becomes fine dots
+  float silkGlow = kCrestBoost * crest * 0.85 * (1.0 - mixAmt * 0.92);
+  float silkA = clamp(waveLight * (1.05 + silkGlow), 0.0, 1.0);
   float a = silkA;
 
   if (mixAmt > 0.001) {
-    float pitch = max(uHalftoneSize, 1.5);
-    vec2 cell = floor(frag / pitch);
-    vec2 centerFrag = (cell + 0.5) * pitch;
-    vec2 centerUV = centerFrag / uResolution;
-    centerUV.y += uYOffsetPx / uResolution.y;
+    float bodyPitch = max(uHalftoneSize, 1.5);
+    // Crest / glow layer: smaller halftone cells riding the bright ridges
+    float glowPitch = max(bodyPitch * 0.45, 1.4);
+    float bodyA = amDot(frag, bodyPitch, 0.0);
+    float glowA = amDot(frag, glowPitch, 0.06);
+    float crestW = smoothstep(0.18, 0.55, silkLuma);
+    // Distinct AM field shaped by wrap; fine dots build the luminous crests
+    float printA = max(bodyA, glowA * crestW * 1.25);
+    printA = max(printA, bodyA * 0.85);
 
-    float cellSilk = sampleSilk(centerUV);
-    float cellLight = cellSilk * uIntensity * 4.5;
-    // Soft local react under cursor (falloff blob, not a ring halo)
-    float cursorProx = smoothstep(0.38, 0.0, length(centerUV - uMouse));
-    float cellCov = clamp(
-      cellLight - 0.05 + cursorProx * uMouseStrength * 1.6,
-      0.0, 1.2
-    );
-
-    float rCrisp = inkRadius(cellCov, pitch);
-    float dCrisp = length(frag - centerFrag);
-    float crispDot = smoothstep(rCrisp + kInkSoft, rCrisp - kInkSoft, dCrisp);
-    float crispVis = smoothstep(kMinDot, kMinDot + 0.06, cellCov);
-    float crestMask = smoothstep(0.12, 0.55, cellSilk);
-    float printA = crispDot * crispVis * mix(0.35, 1.0, crestMask);
-
-    a = mix(silkA, printA, mixAmt);
-    a = max(a, silkA * (1.0 - mixAmt) * 0.40 + silkA * 0.14 * step(0.45, mixAmt));
+    a = mix(silkA * 0.18, printA, mixAmt);
+    // Thin continuous whisper so sheets still wrap under the screen
+    a = max(a, silkA * (1.0 - mixAmt) * 0.22);
   }
 
   vec3 col = uWaveColor * mix(0.82, kInkDensity, mixAmt);

@@ -54,7 +54,7 @@ const DEFAULT_MOUSE_STR    = 0.12; // phase bend + soft local print react
 const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
-const DEFAULT_HALFTONE_SIZE = 3.2; // finer classic-halftone pitch
+const DEFAULT_HALFTONE_SIZE = 3.4; // body dot size (crest uses finer layer)
 const DEFAULT_SPEED        = 0.92;
 // First-pick intensity for any colored preset (index >= 1 in PRESETS below —
 // index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
@@ -941,7 +941,7 @@ export default function PS3ControlPanel() {
         <div style={{ padding: "6px 16px 8px" }}>
           <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern mode</span>
           <div style={{ display: "flex", gap: 4 }}>
-            {["silk", "print"].map((m, i) => (
+            {["wave", "print"].map((m, i) => (
               <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
                 style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.02em" }}>
                 {m}
@@ -950,11 +950,11 @@ export default function PS3ControlPanel() {
           </div>
         </div>
 
-        {/* Print pitch (dot size) */}
+        {/* Dot size */}
         <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
-            <div style={rowH}><span style={labelSt}>print pitch</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
-            <Slider min={2.2} max={10} step={0.1} value={halftoneSize} isDark={isDark} label="Print pitch"
+            <div style={rowH}><span style={labelSt}>size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}</span></div>
+            <Slider min={2} max={8} step={0.1} value={halftoneSize} isDark={isDark} label="Size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
