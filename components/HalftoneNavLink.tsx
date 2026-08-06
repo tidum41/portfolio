@@ -15,6 +15,11 @@ const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 // "hover" morph stuck on.
 const TAP_MOVE_THRESHOLD_PX = 10;
 
+// After a nav commit, ignore hover for this long so a soft-nav layout shift
+// under the cursor (leave→enter) can't restart the morph and double-flicker
+// before the link settles into its solid active state.
+const POST_NAV_HOVER_IGNORE_MS = 450;
+
 // Shared between the base span's own inline style and the dot-field's mask
 // bake, so the two can't drift apart (see useHalftoneMorph.ts's comment on
 // how exactly this kind of duplication caused the old opacity bug).
@@ -37,6 +42,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pressRef = useRef<{
     pointerId: number;
     x: number;
@@ -46,14 +52,18 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   // Set when we already committed navigation on touch/pen pointerup, so the
   // synthetic click that follows doesn't double-push the same route.
   const touchNavRef = useRef(false);
+  // This press committed a route change to `href` — when isActive flips true,
+  // settle the morph once into solid active instead of leaving hover/tap on
+  // (which double-flickered as soft-nav shifted layout under the cursor).
+  const pendingNavSettleRef = useRef(false);
+  const ignoreHoverUntilRef = useRef(0);
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
 
-  // isHovered drives desktop; isTapped is touch press feedback. Morph must
-  // still run on the *current* page's own link (work on `/`, etc.) — gating
-  // on !isActive killed hover/tap on work after soft-nav made route commits
-  // instant. isActive only drives color / aria-current, not the morph.
+  // Hover works on the current page's own link (work on `/`). Tap always
+  // works. After a nav commit to this link we clear both and briefly ignore
+  // hover so the solid active state can land once — see settle effect below.
   // dk.keepEffectOn (DialKit) pins the effect while dragging dials.
   const active = dk.enabled ? (dk.keepEffectOn || isHovered || isTapped) : false;
 
@@ -84,17 +94,68 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     }
   };
 
+  const clearSettleTimer = () => {
+    if (settleTimeoutRef.current) {
+      clearTimeout(settleTimeoutRef.current);
+      settleTimeoutRef.current = null;
+    }
+  };
+
   const armTap = () => {
     setIsTapped(true);
     clearTapTimer();
     // Failsafe if navigation doesn't land (modifier-click, aborted gesture,
-    // same-route tap). Navigating away unmounts or mouseleave clears it.
+    // same-route tap). Nav settle / mouseleave also clears it.
     tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
   };
 
   const disarmTap = () => {
     clearTapTimer();
     setIsTapped(false);
+  };
+
+  const markNavCommit = () => {
+    pendingNavSettleRef.current = true;
+    // Ignore hover immediately — soft-nav can leave→enter under the cursor
+    // during the morph-in window, which restarted the effect (double flicker)
+    // before the settle timeout below could clear state.
+    const showMs = reduced ? 0 : (dk?.showHideSpeed?.showDurationMs ?? 220);
+    ignoreHoverUntilRef.current =
+      performance.now() + showMs + POST_NAV_HOVER_IGNORE_MS;
+  };
+
+  // One morph-in on press, then settle to solid active when this link becomes
+  // the current page — without this, isHovered stays true (cursor still on
+  // the link) and soft-nav's layout shift under the cursor leave→enter fires
+  // a second morph before the active solid state can stick.
+  useEffect(() => {
+    if (!isActive || !pendingNavSettleRef.current) return;
+    pendingNavSettleRef.current = false;
+
+    const showMs = reduced ? 0 : (dk?.showHideSpeed?.showDurationMs ?? 220);
+    clearTapTimer();
+    clearSettleTimer();
+    // Hold isTapped through the morph-in so a mouseleave mid-nav doesn't
+    // kill the press feedback early; then clear hover+tap together.
+    settleTimeoutRef.current = setTimeout(() => {
+      setIsTapped(false);
+      setIsHovered(false);
+      ignoreHoverUntilRef.current =
+        performance.now() + POST_NAV_HOVER_IGNORE_MS;
+    }, showMs);
+
+    return () => clearSettleTimer();
+  }, [isActive, reduced, dk?.showHideSpeed?.showDurationMs]);
+
+  // Don't let mouseleave clear the press morph while we're settling into the
+  // active solid state after a nav commit — that off/on pair was the flicker.
+  const onLinkMouseLeave = () => {
+    if (pendingNavSettleRef.current || settleTimeoutRef.current) {
+      setIsHovered(false);
+      return;
+    }
+    setIsHovered(false);
+    disarmTap();
   };
 
   // Global sticky-hover killer: any touch on the page clears isHovered.
@@ -106,7 +167,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     return () => window.removeEventListener("touchstart", onTouchStart);
   }, []);
 
-  useEffect(() => () => clearTapTimer(), []);
+  useEffect(() => () => {
+    clearTapTimer();
+    clearSettleTimer();
+  }, []);
 
   return (
     <Link
@@ -131,17 +195,16 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       // synthetic mouseenter with no matching mouseleave ever firing (no
       // cursor to leave), leaving isHovered stuck true forever.
       onMouseEnter={() => {
+        if (performance.now() < ignoreHoverUntilRef.current) return;
         if (canHover()) setIsHovered(true);
       }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        disarmTap();
-      }}
+      onMouseLeave={onLinkMouseLeave}
       // A real tap fires pointerup (often <150ms after pointerdown) and then
       // click/navigation almost immediately after that — well before the
       // ~200ms "in" spring has become visible. Resetting isTapped on
       // pointerup cut the effect off before it could ever be seen. Instead,
-      // leave it active through the tap; the timeout / mouseleave clears it.
+      // leave it active through the tap; the post-nav settle / mouseleave
+      // clears it after one morph-in.
       //
       // On touch, we also *commit navigation on pointerup*. Relying on the
       // later click is what made taps sometimes flash the morph (pointerdown)
@@ -187,6 +250,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           // only races the work shell wake and can kill the animation.
           if (pathMatchesHref(pathname, href)) return;
 
+          markNavCommit();
           if (PRIMARY_NAV.has(href)) markSoftNav();
           router.push(href);
           return;
@@ -210,6 +274,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           e.preventDefault();
           return;
         }
+        markNavCommit();
         if (PRIMARY_NAV.has(href)) markSoftNav();
       }}
     >
