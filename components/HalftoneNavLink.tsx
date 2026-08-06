@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
-import { useIsMobile } from "./useIsMobile";
 import { markSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
+
+// Finger jitter / scroll-intent threshold. Beyond this, treat the gesture as
+// a scroll (or aborted press), not a tap — don't navigate, don't leave the
+// "hover" morph stuck on.
+const TAP_MOVE_THRESHOLD_PX = 10;
 
 // Shared between the base span's own inline style and the dot-field's mask
 // bake, so the two can't drift apart (see useHalftoneMorph.ts's comment on
@@ -18,21 +23,32 @@ const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 // at, see halftoneMask.ts's buildTextMask.
 const TEXT_STYLE = { fontWeight: 400, fontSizePx: 16, lineHeightPx: 24 };
 
+function canHover() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    pointerType: string;
+  } | null>(null);
+  // Set when we already committed navigation on touch/pen pointerup, so the
+  // synthetic click that follows doesn't double-push the same route.
+  const touchNavRef = useRef(false);
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
-  const isMobile = useIsMobile();
-  
-  // isHovered drives desktop; isTapped (pointerdown → pointerup/cancel/leave)
-  // is the touch equivalent — there's no hover state on mobile to piggyback
-  // on, so activation needs its own explicit touch-and-hold trigger. If
-  // it's already the active page, don't show the effect either way.
-  // ON MOBILE: Invert the logic. Inactive = Halftone on, Active = Solid off.
-  // Tap triggers the solid state temporarily before navigation.
+
+  // isHovered drives desktop only. isTapped is the touch press feedback —
+  // mobile has no hover, so a tap must not piggyback on mouseenter (which
+  // can stick forever with no mouseleave). If it's already the active page,
+  // don't show the effect either way.
   // dk.keepEffectOn (DialKit dev panel) forces the effect active regardless
   // of real hover/tap — including overriding the !isActive gate, since
   // without that override the current page's own nav link would stay
@@ -62,6 +78,37 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
   const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
 
+  const clearTapTimer = () => {
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+    }
+  };
+
+  const armTap = () => {
+    setIsTapped(true);
+    clearTapTimer();
+    // Failsafe if navigation doesn't land (modifier-click, aborted gesture,
+    // same-route tap). Navigating flips isActive and clears via the gate.
+    tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
+  };
+
+  const disarmTap = () => {
+    clearTapTimer();
+    setIsTapped(false);
+  };
+
+  // Global sticky-hover killer: any touch on the page clears isHovered.
+  // Hybrid / "desktop site" mobile browsers can report hover:hover and leave
+  // mouseenter stuck with no mouseleave — mobile itself has no hover.
+  useEffect(() => {
+    const onTouchStart = () => setIsHovered(false);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    return () => window.removeEventListener("touchstart", onTouchStart);
+  }, []);
+
+  useEffect(() => () => clearTapTimer(), []);
+
   return (
     <Link
       href={href}
@@ -75,18 +122,20 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         fontWeight: 400,
         lineHeight: "24px",
         userSelect: "none",
-        WebkitTapHighlightColor: "transparent"
+        WebkitTapHighlightColor: "transparent",
+        // Drops the old 300ms double-tap-zoom delay and reduces gesture
+        // conflicts that can swallow the follow-up click on mobile.
+        touchAction: "manipulation",
       }}
-      // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
-      // touch devices can trigger a synthetic mouseenter with no matching
-      // mouseleave ever firing (no cursor to leave), leaving isHovered
-      // stuck true forever and the link permanently dimmed/halftoned.
+      // Guarded — without this, a tap on touch devices can trigger a
+      // synthetic mouseenter with no matching mouseleave ever firing (no
+      // cursor to leave), leaving isHovered stuck true forever.
       onMouseEnter={() => {
-        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
+        if (canHover()) setIsHovered(true);
       }}
       onMouseLeave={() => {
         setIsHovered(false);
-        setIsTapped(false);
+        disarmTap();
       }}
       // A real tap fires pointerup (often <150ms after pointerdown) and then
       // click/navigation almost immediately after that — well before the
@@ -94,20 +143,67 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       // pointerup cut the effect off before it could ever be seen. Instead,
       // leave it active through the tap: navigating flips `isActive` true
       // for this link, which naturally deactivates it via the `!isActive`
-      // gate above once the new page renders. The timeout is just a
-      // failsafe in case navigation doesn't happen (e.g. a modifier-click
-      // opening a new tab), so this can't get stuck active forever.
-      onPointerDown={() => {
-        // Soft-skip the route opacity crossfade for primary chrome navigations
-        // (work / about / archive) — biggest remaining about→work lag source.
-        if (PRIMARY_NAV.has(href)) markSoftNav();
-        setIsTapped(true);
-        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
-        tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
+      // gate above once the new page renders.
+      //
+      // On touch, we also *commit navigation on pointerup*. Relying on the
+      // later click is what made taps sometimes flash the morph (pointerdown)
+      // without ever changing route — slight finger movement cancels click
+      // while leaving isTapped on. Mouse keeps native Link click so
+      // cmd/middle-click still work.
+      onPointerDown={(e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+
+        if (e.pointerType === "touch" || e.pointerType === "pen") {
+          setIsHovered(false);
+        }
+
+        pressRef.current = {
+          pointerId: e.pointerId,
+          x: e.clientX,
+          y: e.clientY,
+          pointerType: e.pointerType,
+        };
+        armTap();
+      }}
+      onPointerUp={(e) => {
+        const press = pressRef.current;
+        if (!press || press.pointerId !== e.pointerId) return;
+        pressRef.current = null;
+
+        const dx = Math.abs(e.clientX - press.x);
+        const dy = Math.abs(e.clientY - press.y);
+        if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
+          disarmTap();
+          return;
+        }
+
+        if (press.pointerType === "touch" || press.pointerType === "pen") {
+          touchNavRef.current = true;
+          // If the ghost click never arrives, don't leave the flag stuck
+          // blocking the *next* real tap's click handler.
+          window.setTimeout(() => {
+            touchNavRef.current = false;
+          }, 500);
+          if (PRIMARY_NAV.has(href)) markSoftNav();
+          router.push(href);
+          // Keep isTapped through the route change (see armTap comments).
+          return;
+        }
+
+        // Mouse: soft-nav flag belongs with the actual click, not the press.
       }}
       onPointerCancel={() => {
-        if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
-        setIsTapped(false);
+        pressRef.current = null;
+        disarmTap();
+      }}
+      onClick={(e) => {
+        if (touchNavRef.current) {
+          // Already navigated on pointerup — block the ghost click.
+          e.preventDefault();
+          touchNavRef.current = false;
+          return;
+        }
+        if (PRIMARY_NAV.has(href)) markSoftNav();
       }}
     >
       {/* Base Text (Solid) */}
