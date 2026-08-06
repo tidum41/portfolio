@@ -46,9 +46,10 @@ Contact sheets: `contact-playback-6s.jpg`, `contact-playback-dense.jpg`, `contac
 
 Persist key: `ps3-wave-lab-v9`
 
-Ship path: bake these uniforms into production `PS3Silk` behind a mode flag.
+Ship path: **baked into production `PS3Silk`** (Aug 2026). Homepage default =
+mode 1 (wrap + print). Mode 0 = pure continuous silk. Morph never ships.
 Keep morph off. Print path runs (silkMix 0.46) but morph 3×3 is gated off.
-30fps + DPR cap already in lab/production.
+30fps + CSS-pixel canvas (no DPR upscale) on production hero.
 
 ```json
 {

@@ -53,10 +53,29 @@ export interface PS3SilkProps {
   active?: boolean;
 }
 
+/** Lab v9 visual reference — baked into production hero. */
+const V9 = {
+  intensity: 0.19,
+  mouseStrength: 0,
+  yOffset: 49,
+  speed: 0.92,
+  startOpacity: 0.33,
+  printPitch: 6.3,
+  parallax: 0.065,
+  crestBoost: 0.14,
+  harmonic: 0.36,
+  sheetSoft: 0.6,
+  silkMix: 0.46,
+  contrast: 1.25,
+  inkSoft: 0.85,
+  inkDensity: 0.43,
+  minDot: 0.05,
+};
+
 export default function PS3Silk({
-  intensity = 0.1,
-  mouseStrength = 0.11,
-  yOffset = 49,
+  intensity = V9.intensity,
+  mouseStrength = V9.mouseStrength,
+  yOffset = V9.yOffset,
   waveColor = "#ffffff",
   mode: initialMode = 1,
   style,
@@ -71,21 +90,22 @@ export default function PS3Silk({
   const [mode, setMode] = useState(initialMode);
 
   const dk = useDialKit("PS3Silk", {
-    intensity:     [intensity,      0,    1.0],
-    mouseStrength: [mouseStrength,  0,    0.5],
-    yOffset:       [yOffset,        -50,  100],
-    halftoneSize:  [3.0,            1,    20],
-    speed:         [1.0,            0,    4],
-    endOpacity:    [0.15,           0,    0.5,  0.01],
+    intensity:     [intensity,           0,    1.0],
+    mouseStrength: [mouseStrength,       0,    0.5],
+    yOffset:       [yOffset,             -50,  100],
+    // Maps to print pitch in wrap+print mode
+    halftoneSize:  [V9.printPitch,       2.2,  10,  0.1],
+    speed:         [V9.speed,            0,    4],
+    endOpacity:    [0.12,                0,    0.5, 0.01],
   });
 
   const intensityRef    = useRef(intensity);
   const mouseStrRef     = useRef(mouseStrength);
   const yOffsetRef      = useRef(yOffset);
   const waveColorRef    = useRef<[number, number, number]>(hexToRgb(waveColor));
-  const halftSizeRef    = useRef(3.0);
-  const speedRef        = useRef(1.0);
-  const endOpacityRef   = useRef(0.15);
+  const halftSizeRef    = useRef(V9.printPitch);
+  const speedRef        = useRef(V9.speed);
+  const endOpacityRef   = useRef(0.12);
 
   // Sync DialKit live values into refs each frame
   useEffect(() => { intensityRef.current = dk.intensity; }, [dk.intensity]);
@@ -174,7 +194,7 @@ export default function PS3Silk({
 
     const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
     let rafId = 0, lastT = 0;
-    const START_OPACITY = 0.5;
+    const START_OPACITY = V9.startOpacity;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
 
     // StrictMode-safety: in dev, React mounts this effect, tears it straight
@@ -379,6 +399,8 @@ export default function PS3Silk({
       };
 
       const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos,0.0,1.0); }`;
+      // Lab v9 wrap + crest print — morph never runs in production (perf).
+      // mode 0 = pure silk sheets; mode 1 = silk + print material (default).
       const FS = `
 precision highp float;
 uniform float uTime;
@@ -393,59 +415,94 @@ uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
 
-vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
+const float kParallax   = ${V9.parallax.toFixed(3)};
+const float kCrestBoost = ${V9.crestBoost.toFixed(3)};
+const float kHarmonic   = ${V9.harmonic.toFixed(3)};
+const float kSheetSoft  = ${V9.sheetSoft.toFixed(3)};
+const float kSilkMix    = ${V9.silkMix.toFixed(3)};
+const float kContrast   = ${V9.contrast.toFixed(3)};
+const float kInkSoft    = ${V9.inkSoft.toFixed(3)};
+const float kInkDensity = ${V9.inkDensity.toFixed(3)};
+const float kMinDot     = ${V9.minDot.toFixed(3)};
+
+float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
+  float phase, float cy, float width, float sharp, bool flip,
+  float paraSign, float harmPhase) {
   float md = length(uv - uMouse);
   float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
-  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
-  float wy = sin(angle) * amp + cy;
+  float px = uvx + paraSign * kParallax * (uv.x - 0.5) * 2.0;
+  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + px + mnudge) * 2.0;
+  float harm = sin(angle * 2.0 + harmPhase) * amp * kHarmonic * 0.35;
+  float wy = sin(angle) * amp + harm + cy;
   float dy = wy - uv.y;
   float dist = abs(dy);
   if (flip) { if (dy > 0.0) dist *= 4.0; }
   else       { if (dy < 0.0) dist *= 4.0; }
-  float s = smoothstep(width * 1.5, 0.0, dist);
-  return min(col * pow(s, sharp), col);
+  float softW = mix(width * 1.5, width * 1.9, kSheetSoft);
+  float softPow = mix(sharp, sharp * 0.68, kSheetSoft);
+  float s = smoothstep(softW, 0.0, dist);
+  return pow(s, softPow);
+}
+
+float sampleSilk(vec2 uv) {
+  float aspectScale = uAspect / 2.414;
+  float uvx = uv.x * aspectScale;
+  float c = 0.0;
+  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false, 1.00, 0.0) * 0.90;
+  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false, 0.55, 1.2) * 0.68;
+  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false, 0.25, 2.4) * 0.38;
+  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false, 0.80, 0.6) * 0.16;
+  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true, -0.90, 1.7) * 0.84;
+  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true, -0.50, 3.1) * 0.62;
+  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true, -0.30, 0.9) * 0.32;
+  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true, -1.10, 2.0) * 0.14;
+  return clamp(c, 0.0, 1.0);
+}
+
+float inkRadius(float coverage, float pitch) {
+  float t = clamp(coverage, 0.0, 1.0);
+  if (t < kMinDot) return 0.0;
+  return pitch * 0.5 * sqrt(pow(t, kContrast));
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec2 frag = gl_FragCoord.xy;
+  vec2 uv = frag / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
-  float aspectScale = uAspect / 2.414;
-  float uvx = uv.x * aspectScale;
 
-  vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
-  c = clamp(c,0.0,1.0);
+  float silkLuma = sampleSilk(uv);
+  float waveLight = silkLuma * uIntensity * 4.5;
+  float crest = pow(clamp(silkLuma, 0.0, 1.0), 1.35);
+  float silkA = clamp(waveLight * (1.05 + kCrestBoost * crest * 0.85), 0.0, 1.0);
 
-  float waveLuma  = max(max(c.r,c.g),c.b);
-  float waveLight = waveLuma * uIntensity * 4.5;
+  // mode 1 = wrap + print (default hero); mode 0 = pure continuous silk
+  float mixAmt = (uMode == 1) ? kSilkMix : 0.0;
+  float a = silkA;
 
-  if (uMode == 1) {
-    vec2 cell       = floor(gl_FragCoord.xy / uHalftoneSize);
-    vec2 cellCenter = (cell + 0.5) * uHalftoneSize;
-    vec2 cellUV     = cellCenter / uResolution;
-    float mouseDist = length(cellUV - uMouse);
-    float ripple    = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseStrength * 2.8;
-    float d         = length(gl_FragCoord.xy - cellCenter);
-    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
-    float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
-    vec3  dotColor  = uWaveColor * 0.55;
-    float vis       = smoothstep(0.02, 0.08, waveLight);
-    float a         = dotVal * vis;
-    gl_FragColor = vec4(dotColor * a, a);
-    return;
+  if (mixAmt > 0.001) {
+    float pitch = max(uHalftoneSize, 1.5);
+    vec2 cell = floor(frag / pitch);
+    vec2 centerFrag = (cell + 0.5) * pitch;
+    vec2 centerUV = centerFrag / uResolution;
+    centerUV.y += uYOffsetPx / uResolution.y;
+
+    float cellSilk = sampleSilk(centerUV);
+    float cellLight = cellSilk * uIntensity * 4.5;
+    float cellCov = clamp(cellLight - 0.05, 0.0, 1.2);
+
+    float rCrisp = inkRadius(cellCov, pitch);
+    float dCrisp = length(frag - centerFrag);
+    float crispDot = smoothstep(rCrisp + kInkSoft, rCrisp - kInkSoft, dCrisp);
+    float crispVis = smoothstep(kMinDot, kMinDot + 0.06, cellCov);
+    float crestMask = smoothstep(0.12, 0.55, cellSilk);
+    float printA = crispDot * crispVis * mix(0.35, 1.0, crestMask);
+
+    a = mix(silkA, printA, mixAmt);
+    a = max(a, silkA * (1.0 - mixAmt) * 0.40 + silkA * 0.14 * step(0.45, mixAmt));
   }
 
-  vec3  darkWave = uWaveColor * 0.78;
-  float alpha    = clamp(waveLight * 1.1, 0.0, 1.0);
-  gl_FragColor = vec4(darkWave * alpha, alpha);
+  vec3 col = uWaveColor * mix(0.82, kInkDensity, mixAmt);
+  gl_FragColor = vec4(col * a, a);
 }`;
 
       function compile(src: string, type: number) {
@@ -507,6 +564,8 @@ void main() {
       gl.enableVertexAttribArray(posLoc);
       gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
       gl.clearColor(0, 0, 0, 0);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
       // Called when the work route becomes visible again (and once at init if
       // already active). Re-measure against a real box and rebind GL state so
