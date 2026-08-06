@@ -225,13 +225,12 @@ const Slider = memo(function Slider({
   const active = isHovered || isDragging;
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 
-  const trackBg   = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
-  const filledBg  = active
-    ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.78)")
-    : (isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.40)");
-  const thumbColor = active
-    ? (isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.90)")
-    : (isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)");
+  // One ink family: track is a quieter cut of the same stroke as fill+thumb
+  // so the vertical button reads as part of the line, not a separate layer.
+  const ink       = isDark ? "255,255,255" : "0,0,0";
+  const trackBg   = `rgba(${ink},0.18)`;
+  const filledBg  = active ? `rgba(${ink},0.72)` : `rgba(${ink},0.55)`;
+  const thumbColor = filledBg;
 
   return (
     <div
@@ -299,7 +298,12 @@ function Minus({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 }
 function Reset({ size = 11 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+  // Single path so the arrow + arc share one stroke (no stacked translucent joins).
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5" />
+    </svg>
+  );
 }
 function Plus({ size = 9, color = "currentColor" }: { size?: number; color?: string }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
@@ -496,10 +500,13 @@ html[data-theme=dark] .ps3cp input[type=range]:focus-visible { outline-color: rg
 html[data-theme=dark] .ps3cp-slider-track:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-header:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: -3px; border-radius: 999px; }
 html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,255,0.72); }
-.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.28);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.72);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp-ibtn svg { display:block; opacity:1; }
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
-.ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
+.ps3cp-ibtn:hover { color:rgba(0,0,0,0.88); }
 .ps3cp-ibtn:active { transform:scale(0.96); }
+.ps3cp-ibtn:focus-visible { outline:2px solid rgba(0,0,0,0.65); outline-offset:2px; }
+html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255,0.72); }
 .ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
 .ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
@@ -723,45 +730,68 @@ export default function PS3ControlPanel() {
     setOpenColorPicker(null);
   }
 
-  // Drag logic
+  // Drag logic — only flip `isDragging` once past the click threshold.
+  // Setting it on pointerdown used to force `transition: none` for the
+  // subsequent open/close toggle, so the pill→panel morph snapped instead
+  // of animating (isOpen committed while isDragging was still true).
+  // Listeners are bound synchronously here (not via useEffect) so a quick
+  // click can't miss pointerup before React re-renders.
   const startDrag = useCallback((e: React.PointerEvent) => {
     if ((e.target as Element).closest("button, label, input")) return;
-    didDragRef.current = false; dragStartedRef.current = true;
+    if (dragStartedRef.current) return;
+    didDragRef.current = false;
+    dragStartedRef.current = true;
     dragInHeaderRef.current = headerRef.current?.contains(e.target as Node) ?? false;
-    dragRef.current = { startX: e.pageX, startY: e.pageY, origX: pillPos.x, origY: pillPos.y };
-    startTransition(() => setIsDragging(true));
-  }, [pillPos]);
+    const origX = pillPos.x;
+    const origY = pillPos.y;
+    const openAtStart = isOpen;
+    dragRef.current = { startX: e.pageX, startY: e.pageY, origX, origY };
 
-  useEffect(() => {
-    if (!isDragging && !dragStartedRef.current) return;
-    const onMove = (e: PointerEvent) => {
+    const onMove = (ev: PointerEvent) => {
       if (!dragRef.current) return;
-      const dx = e.pageX - dragRef.current.startX, dy = e.pageY - dragRef.current.startY;
-      if (Math.abs(dx) + Math.abs(dy) > 4) didDragRef.current = true;
+      const dx = ev.pageX - dragRef.current.startX;
+      const dy = ev.pageY - dragRef.current.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        if (!didDragRef.current) {
+          didDragRef.current = true;
+          setIsDragging(true);
+        }
+      }
       if (!didDragRef.current) return;
-      const docW = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
-      const cw = isOpen ? PANEL_W : PILL_W;
+      const docW = document.documentElement.scrollWidth;
+      const docH = document.documentElement.scrollHeight;
+      const cw = openAtStart ? PANEL_W : PILL_W;
       const dragged = {
         x: Math.max(EDGE_PAD, Math.min(dragRef.current.origX + dx, docW - cw - EDGE_PAD)),
         y: Math.max(EDGE_PAD, Math.min(dragRef.current.origY + dy, docH - PILL_H - EDGE_PAD)),
       };
-      savePos(dragged); hasDraggedRef.current = true;
-      startTransition(() => setPillPos(dragged));
+      savePos(dragged);
+      hasDraggedRef.current = true;
+      setPillPos(dragged);
     };
+
     const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
       if (!dragStartedRef.current) return;
-      dragStartedRef.current = false; startTransition(() => setIsDragging(false));
-      const wasDrag = didDragRef.current, wasHeader = dragInHeaderRef.current;
-      dragRef.current = null; didDragRef.current = false; dragInHeaderRef.current = false;
+      dragStartedRef.current = false;
+      // Clear drag flag synchronously *before* toggling open so morphT
+      // still includes width/height when isOpen flips in this same turn.
+      setIsDragging(false);
+      const wasDrag = didDragRef.current;
+      const wasHeader = dragInHeaderRef.current;
+      dragRef.current = null;
+      didDragRef.current = false;
+      dragInHeaderRef.current = false;
       if (wasDrag) return;
       if (!wasHeader) return;
-      if (isOpen) setIsOpen(false);
-      else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
+      if (openAtStart) setIsOpen(false);
+      else { setFlipped(shouldFlip(origY)); setIsOpen(true); }
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-  }, [isDragging, isOpen, pillPos.y]);
+  }, [pillPos, isOpen]);
 
   const dur = isOpen ? `${OPEN_MS}ms ${OPEN_EASE}` : `${CLOSE_MS}ms ${CLOSE_EASE}`;
   // Keep morph transitions on their own string — never share a node with
