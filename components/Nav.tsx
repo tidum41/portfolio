@@ -27,8 +27,8 @@ export default function Nav() {
     // visible while you move the mouse to this panel and drag a slider —
     // without it, leaving the target element to reach the panel fires
     // onMouseLeave and springs the effect back to rest before you can see
-    // what changed. Dev-only: this panel never mounts in production, so
-    // this always resolves to its false default for real visitors.
+    // what changed. Also useful for tuning the current page's own link
+    // (work on `/`, etc.). Dev-only: this panel never mounts in production.
     keepEffectOn: false,
 
     dotShape: {

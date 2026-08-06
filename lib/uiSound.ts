@@ -7,6 +7,9 @@
  *
  * Ambient bed (VolumeControl) is separate — UI ticks unlock on first gesture
  * and play even when background music is muted.
+ *
+ * Hot path: once buffers are decoded and AudioContext is running, play is
+ * fully synchronous (no await) so ticks land on the same frame as the press.
  */
 
 export type UiSoundId = "option" | "push";
@@ -61,7 +64,8 @@ async function loadBuffer(id: UiSoundId): Promise<AudioBuffer | null> {
   if (existing) return existing;
 
   const promise = (async () => {
-    const audioCtx = await resumeCtx();
+    // Decode works on a suspended context — don't wait for unlock/resume.
+    const audioCtx = getCtx();
     if (!audioCtx) return null;
     try {
       const res = await fetch(SOURCES[id], { cache: "force-cache" });
@@ -79,6 +83,20 @@ async function loadBuffer(id: UiSoundId): Promise<AudioBuffer | null> {
 
   inflight.set(id, promise);
   return promise;
+}
+
+function startBuffer(audioCtx: AudioContext, buf: AudioBuffer) {
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const gain = audioCtx.createGain();
+  gain.gain.value = Math.min(1, master.volume * UI_GAIN);
+  src.connect(gain);
+  gain.connect(audioCtx.destination);
+  try {
+    src.start(0);
+  } catch {
+    // Ignored — overlapping starts are fine; rare InvalidStateError if closed.
+  }
 }
 
 /** Master volume for UI ticks (slider in nav). Not tied to ambient mute. */
@@ -101,35 +119,44 @@ export function unlockUiSounds() {
   void resumeCtx();
 }
 
-/** Prefetch both clips after unlock or unmute. */
+/**
+ * Prefetch + decode both clips. Safe before unlock — decode works while the
+ * context is still suspended, so the first press only needs resume + start.
+ */
 export function warmUiSounds() {
-  void resumeCtx().then(() => {
-    void loadBuffer("option");
-    void loadBuffer("push");
-  });
+  void loadBuffer("option");
+  void loadBuffer("push");
+  void resumeCtx();
 }
 
-export async function playUiSound(id: UiSoundId): Promise<void> {
+/**
+ * Play a UI tick. Prefer the sync hot path (cached buffer + running context)
+ * so sound lands on the press frame. Cold path falls back to async load.
+ */
+export function playUiSound(id: UiSoundId): void {
   if (!master.enabled || master.volume <= 0) return;
 
-  const audioCtx = await resumeCtx();
-  if (!audioCtx || !unlocked) return;
+  const audioCtx = getCtx();
+  if (!audioCtx) return;
 
-  const buf = await loadBuffer(id);
-  if (!buf) return;
-  if (!master.enabled || master.volume <= 0) return;
-
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
-  const gain = audioCtx.createGain();
-  gain.gain.value = Math.min(1, master.volume * UI_GAIN);
-  src.connect(gain);
-  gain.connect(audioCtx.destination);
-  try {
-    src.start(0);
-  } catch {
-    // Ignored — overlapping starts are fine; rare InvalidStateError if closed.
+  if (audioCtx.state === "running") {
+    unlocked = true;
+    const buf = buffers.get(id);
+    if (buf) {
+      startBuffer(audioCtx, buf);
+      return;
+    }
   }
+
+  // Cold / suspended: resume + load, then start as soon as ready.
+  void (async () => {
+    const ready = await resumeCtx();
+    if (!ready || !unlocked) return;
+    if (!master.enabled || master.volume <= 0) return;
+    const buf = await loadBuffer(id);
+    if (!buf || !master.enabled || master.volume <= 0) return;
+    startBuffer(ready, buf);
+  })();
 }
 
 /** Resolve which sound a click target should play, if any. */
