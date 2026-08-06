@@ -1,22 +1,26 @@
 "use client";
 
 import { useEffect } from "react";
-import { playUiSound, resolveUiSoundFromEventTarget, warmUiSounds } from "@/lib/uiSound";
+import { playUiSound, resolveUiSoundFromEventTarget, unlockUiSounds, warmUiSounds } from "@/lib/uiSound";
 
 /**
  * Global click → PS3 UI sound bridge.
  * Capture-phase so we hear the intent even if a handler stops propagation
  * later. Kept out of embeds via data-ui-sound="off" when needed.
+ *
+ * UI ticks unlock on the first pointerdown (gesture) and play even when
+ * ambient music is muted. prefers-reduced-motion disables UI ticks.
  */
 export default function UiSoundRoot() {
   useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const onPointerDown = () => {
-      // Unlock AudioContext early on any gesture so the first nav click isn't silent.
+      if (!reducedMotion) unlockUiSounds();
       warmUiSounds();
     };
 
     const onClick = (e: MouseEvent) => {
-      // Ignore non-primary / modified clicks that open new tabs without navigating this page's chrome feel.
       if (e.button !== 0) return;
       const id = resolveUiSoundFromEventTarget(e.target);
       if (!id) return;

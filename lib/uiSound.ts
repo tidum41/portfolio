@@ -5,11 +5,8 @@
  * - `option` — selecting / navigating (nav, footer, external links, unmute)
  * - `push`   — entering / confirming (project cards, archive opens)
  *
- * Performance:
- * - Decode each clip once into an AudioBuffer; play via lightweight BufferSources
- * - Lazy-init AudioContext on first unmute or first play (browser gesture)
- * - Assets are tiny (~2–5KB); no streaming, no HTMLAudioElement pool churn
- * - Honors the site mute/volume master from VolumeControl
+ * Ambient bed (VolumeControl) is separate — UI ticks unlock on first gesture
+ * and play even when background music is muted.
  */
 
 export type UiSoundId = "option" | "push";
@@ -22,9 +19,13 @@ const SOURCES: Record<UiSoundId, string> = {
 /** UI SFX sit above ambient music; kept under 1.0 at full master volume. */
 const UI_GAIN = 0.96;
 
-type Master = { muted: boolean; volume: number };
+type Master = {
+  volume: number;
+  /** Unlocked on first pointerdown (gesture); off when prefers-reduced-motion. */
+  enabled: boolean;
+};
 
-let master: Master = { muted: true, volume: 0.4 };
+let master: Master = { volume: 0.4, enabled: false };
 let ctx: AudioContext | null = null;
 const buffers = new Map<UiSoundId, AudioBuffer>();
 const inflight = new Map<UiSoundId, Promise<AudioBuffer | null>>();
@@ -80,16 +81,27 @@ async function loadBuffer(id: UiSoundId): Promise<AudioBuffer | null> {
   return promise;
 }
 
-/** Keep mute/volume in sync with the nav VolumeControl. */
-export function setUiSoundMaster(next: Partial<Master>) {
-  master = { ...master, ...next };
+/** Master volume for UI ticks (slider in nav). Not tied to ambient mute. */
+export function setUiSoundVolume(volume: number) {
+  master = { ...master, volume };
+}
+
+export function setUiSoundEnabled(enabled: boolean) {
+  master = { ...master, enabled };
 }
 
 export function getUiSoundMaster(): Master {
   return master;
 }
 
-/** Prefetch both clips after a user gesture (e.g. first unmute). */
+/** First visitor gesture — unlock Web Audio + enable UI ticks. */
+export function unlockUiSounds() {
+  if (master.enabled) return;
+  master = { ...master, enabled: true };
+  void resumeCtx();
+}
+
+/** Prefetch both clips after unlock or unmute. */
 export function warmUiSounds() {
   void resumeCtx().then(() => {
     void loadBuffer("option");
@@ -97,20 +109,15 @@ export function warmUiSounds() {
   });
 }
 
-/**
- * Play a UI sound. Safe to call from click handlers; no-ops when muted,
- * reduced-audio preference isn't a thing we gate on (mute is the control).
- */
 export async function playUiSound(id: UiSoundId): Promise<void> {
-  if (master.muted || master.volume <= 0) return;
+  if (!master.enabled || master.volume <= 0) return;
 
   const audioCtx = await resumeCtx();
   if (!audioCtx || !unlocked) return;
 
   const buf = await loadBuffer(id);
   if (!buf) return;
-  // Re-check after await — user may have muted mid-load.
-  if (master.muted || master.volume <= 0) return;
+  if (!master.enabled || master.volume <= 0) return;
 
   const src = audioCtx.createBufferSource();
   src.buffer = buf;
@@ -129,7 +136,6 @@ export async function playUiSound(id: UiSoundId): Promise<void> {
 export function resolveUiSoundFromEventTarget(target: EventTarget | null): UiSoundId | null {
   if (!(target instanceof Element)) return null;
 
-  // Explicit opt-out wins (embeds, dials, etc.).
   if (target.closest("[data-ui-sound='off']")) return null;
 
   const explicit = target.closest<HTMLElement>("[data-ui-sound]");
@@ -137,12 +143,10 @@ export function resolveUiSoundFromEventTarget(target: EventTarget | null): UiSou
   if (value === "option" || value === "push") return value;
   if (value === "off") return null;
 
-  // Entering content — project tiles / interactive grid cards (wins over nested links).
   if (target.closest(".portfolio-grid-card, .project-card, [data-grid-card]")) {
     return "push";
   }
 
-  // Navigation / external / mail / social — lightweight option tick.
   const link = target.closest<HTMLAnchorElement>("a[href]");
   if (link) {
     const href = link.getAttribute("href") || "";
@@ -150,7 +154,6 @@ export function resolveUiSoundFromEventTarget(target: EventTarget | null): UiSou
     return "option";
   }
 
-  // Archive gallery chrome (zoom, open cell) — not plain links (those already returned).
   if (target.closest("[data-ui-sound-scope='archive']")) {
     return "push";
   }
