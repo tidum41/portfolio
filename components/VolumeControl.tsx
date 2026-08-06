@@ -6,11 +6,57 @@ import { VOLUME_MASK_SVG, MUTED_MASK_SVG, VOLUME_CLONE_INNER, MUTED_CLONE_INNER 
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion } from "framer-motion";
-import { playUiSound, setUiSoundMaster, warmUiSounds } from "@/lib/uiSound";
+import { playUiSound, setUiSoundVolume, warmUiSounds } from "@/lib/uiSound";
 
 const ICON_SIZE = 17;
 const SLIDER_WIDTH = 72;
 const GAP = 8;
+
+const STORAGE_VOLUME = "site-audio-volume";
+const STORAGE_AMBIENT_MUTED = "site-ambient-muted";
+
+const DEFAULT_AMBIENT_MUTED = true;
+const DEFAULT_VOLUME = 0.4;
+
+function readStoredVolume(): number {
+  try {
+    const raw = localStorage.getItem(STORAGE_VOLUME);
+    if (raw != null) {
+      const n = parseFloat(raw);
+      if (Number.isFinite(n) && n >= 0 && n <= 1) return n;
+    }
+  } catch {
+    // private mode / blocked storage
+  }
+  return DEFAULT_VOLUME;
+}
+
+function readStoredAmbientMuted(): boolean {
+  try {
+    const raw = localStorage.getItem(STORAGE_AMBIENT_MUTED);
+    if (raw === "false") return false;
+    if (raw === "true") return true;
+  } catch {
+    // private mode / blocked storage
+  }
+  return DEFAULT_AMBIENT_MUTED;
+}
+
+function persistVolume(volume: number) {
+  try {
+    localStorage.setItem(STORAGE_VOLUME, String(volume));
+  } catch {
+    // ignore
+  }
+}
+
+function persistAmbientMuted(muted: boolean) {
+  try {
+    localStorage.setItem(STORAGE_AMBIENT_MUTED, String(muted));
+  } catch {
+    // ignore
+  }
+}
 
 function VolumeIcon() {
   return (
@@ -32,21 +78,17 @@ function MutedIcon() {
   );
 }
 
-const DEFAULT_MUTED = true;
-const DEFAULT_VOLUME = 0.4;
-
 export default function VolumeControl({ dk }: { dk?: any }) {
-  const [muted, setMuted] = useState(DEFAULT_MUTED);
-  const [volume, setVolume] = useState(DEFAULT_VOLUME);
+  const [ambientMuted, setAmbientMuted] = useState(() =>
+    typeof window !== "undefined" ? readStoredAmbientMuted() : DEFAULT_AMBIENT_MUTED,
+  );
+  const [volume, setVolume] = useState(() =>
+    typeof window !== "undefined" ? readStoredVolume() : DEFAULT_VOLUME,
+  );
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMobile = useIsMobile();
-  // Compact (no hover-reveal slider) on touch devices OR a narrow viewport —
-  // `isMobile` alone only catches touch-capable devices; a plain desktop
-  // browser window resized narrow is mouse-capable (isMobile stays false)
-  // but still has no room for a hover-revealed slider and no hover gesture
-  // reliably available at that width either.
   const [isNarrow, setIsNarrow] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -57,111 +99,95 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   }, []);
   const isCompact = isMobile || isNarrow;
   const audioRef = useRef<HTMLAudioElement>(null);
-  // Remembers the last non-zero volume so unmuting restores it rather than
-  const preVolume = useRef(DEFAULT_VOLUME);
-  // Mirrors React state for the ref callback — deps must stay [] so Nav
-  // re-renders don't detach/reattach the node and reset playback.
-  const mutedRef = useRef(DEFAULT_MUTED);
-  const volumeRef = useRef(DEFAULT_VOLUME);
+  const preVolume = useRef(volume);
+  const ambientMutedRef = useRef(ambientMuted);
+  const volumeRef = useRef(volume);
   const reduced = useReducedMotion();
 
-  const applyAudioState = useCallback((nextMuted: boolean, nextVolume: number) => {
-    mutedRef.current = nextMuted;
+  const applyAmbientState = useCallback((nextMuted: boolean, nextVolume: number) => {
+    ambientMutedRef.current = nextMuted;
     volumeRef.current = nextVolume;
-    setUiSoundMaster({ muted: nextMuted, volume: nextVolume });
+    setUiSoundVolume(nextVolume);
+    persistVolume(nextVolume);
+    persistAmbientMuted(nextMuted);
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = nextMuted;
     audio.volume = nextVolume;
   }, []);
 
-  // Keep UI SFX master aligned even before the first toggle (defaults match).
   useEffect(() => {
-    setUiSoundMaster({ muted, volume });
-  }, [muted, volume]);
+    setUiSoundVolume(volume);
+  }, [volume]);
 
-  const tryPlay = useCallback((audible = false) => {
+  const tryPlayAmbient = useCallback((audible = false) => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audible) {
-      audio.muted = mutedRef.current;
+      audio.muted = ambientMutedRef.current;
       audio.volume = volumeRef.current;
     }
     audio.play().catch(() => {
-      // Blocked or not ready yet — canplay handler below retries muted start.
+      // Blocked or not ready yet.
     });
   }, []);
 
-  // Setting muted/volume on the real node sidesteps React re-asserting
-  // controlled media props. Do NOT call play() here — browsers allow muted
-  // autoplay, but that still downloads/decodes the full ~7.6MB ambient bed
-  // for the whole session. Start only on unmute (tryPlay in the gesture).
   const setAudioNode = useCallback((node: HTMLAudioElement | null) => {
     audioRef.current = node;
     if (!node) return;
-    node.muted = mutedRef.current;
+    node.muted = ambientMutedRef.current;
     node.volume = volumeRef.current;
   }, []);
 
   useEffect(() => {
-    mutedRef.current = muted;
+    ambientMutedRef.current = ambientMuted;
     if (!audioRef.current) return;
-    audioRef.current.muted = muted;
-  }, [muted]);
+    audioRef.current.muted = ambientMuted;
+  }, [ambientMuted]);
 
   useEffect(() => {
     volumeRef.current = volume;
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // Slider value: show 0 when muted, actual volume when unmuted.
-  const sliderValue = muted ? 0 : volume;
+  const sliderValue = ambientMuted ? 0 : volume;
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
-    const nextMuted = v === 0;
+    const nextAmbientMuted = v === 0;
     const nextVolume = v > 0 ? v : preVolume.current;
     if (v > 0) preVolume.current = v;
-    const wasMuted = mutedRef.current;
-    // Apply on the DOM synchronously inside this gesture — unmute before
-    // play() so audible start isn't deferred to a post-commit effect.
-    applyAudioState(nextMuted, nextVolume);
-    if (!nextMuted) {
-      tryPlay(true);
+    const wasAmbientMuted = ambientMutedRef.current;
+    applyAmbientState(nextAmbientMuted, nextVolume);
+    if (!nextAmbientMuted) {
+      tryPlayAmbient(true);
       warmUiSounds();
-      if (wasMuted) void playUiSound("option");
+      if (wasAmbientMuted) void playUiSound("option");
     }
     setVolume(nextVolume);
-    setMuted(nextMuted);
+    setAmbientMuted(nextAmbientMuted);
   };
 
   const handleMuteToggle = () => {
-    if (muted) {
+    if (ambientMuted) {
       const nextVolume = preVolume.current;
-      applyAudioState(false, nextVolume);
-      tryPlay(true);
+      applyAmbientState(false, nextVolume);
+      tryPlayAmbient(true);
       warmUiSounds();
       void playUiSound("option");
       setVolume(nextVolume);
-      setMuted(false);
+      setAmbientMuted(false);
     } else {
       if (volume > 0) preVolume.current = volume;
-      applyAudioState(true, volume);
-      setMuted(true);
+      applyAmbientState(true, volume);
+      setAmbientMuted(true);
     }
   };
 
-  // dk.keepEffectOn (DialKit dev panel) pins the effect active regardless
-  // of real hover/tap — see HalftoneNavLink.tsx's matching comment for why.
   const active = !!dk?.enabled && (!!dk?.keepEffectOn || isHovered || isTapped);
 
   const { filterId, t } = useHalftoneMorph(dk, active);
 
-  // Fixed-duration, active-driven crossfade — NOT derived from `t`. See
-  // useHalftoneMorph.ts's doc comment: base and overlay always share this
-  // exact duration and start together, a strict complementary pair, which
-  // is what guarantees the crisp icon and the halftone dots are never both
-  // substantially gone at once.
   const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
   const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
 
@@ -176,7 +202,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   const visibleAnim = { opacity: 1, scale: 1, filter: "blur(0px)" };
   const hiddenAnim = { opacity: 0, scale: reduced ? 1 : 0.25, filter: reduced ? "blur(0px)" : "blur(4px)" };
 
-  const baseColor = muted ? "var(--color-text-muted)" : "var(--color-text-primary)";
+  const baseColor = ambientMuted ? "var(--color-text-muted)" : "var(--color-text-primary)";
   const hoverColor = "var(--color-text-primary)";
 
   return (
@@ -188,14 +214,6 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         alignItems: "center",
         justifyContent: "flex-end",
         gap: GAP,
-        // Fixed at the fully-expanded width (icon + gap + slider) even while
-        // collapsed, so the hover hitbox already covers the space the slider
-        // reveals into — moving the mouse from the icon toward where the
-        // slider is about to appear stays inside this box the whole time,
-        // instead of exiting a hitbox that was only ever icon-sized and
-        // collapsing the slider before it can be reached. On touch (no
-        // hover), the slider never renders at all, so just the icon's width
-        // keeps the control compact instead of reserving dead space.
         width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
@@ -215,7 +233,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             value={sliderValue}
             onChange={handleSliderChange}
             className="volume-slider"
-            aria-label="Volume"
+            aria-label="Background music volume"
             style={{ width: 64 }}
           />
         </motion.div>
@@ -223,7 +241,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
       <button
         onClick={handleMuteToggle}
         className="nav-link theme-toggle-btn"
-        aria-label={muted ? "Unmute background audio" : "Mute background audio"}
+        aria-label={ambientMuted ? "Unmute background music" : "Mute background music"}
         style={{
           background: "none",
           border: "none",
@@ -239,7 +257,6 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           flexShrink: 0,
         }}
       >
-        {/* Base Icon */}
         <motion.div
           style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
           initial={false}
@@ -250,7 +267,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
-            animate={muted ? hiddenAnim : visibleAnim}
+            animate={ambientMuted ? hiddenAnim : visibleAnim}
             transition={spring}
           >
             <VolumeIcon />
@@ -259,19 +276,18 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
-            animate={muted ? visibleAnim : hiddenAnim}
+            animate={ambientMuted ? visibleAnim : hiddenAnim}
             transition={spring}
           >
             <MutedIcon />
           </motion.span>
         </motion.div>
 
-        {/* Halftone Overlay Icon (independently-animated dots, see HalftoneDotField) */}
         <motion.div
           style={{
             position: "absolute",
             inset: 0,
-            willChange: "opacity"
+            willChange: "opacity",
           }}
           initial={false}
           animate={{ opacity: active ? 1 : 0 }}
@@ -281,7 +297,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
-            animate={muted ? hiddenAnim : visibleAnim}
+            animate={ambientMuted ? hiddenAnim : visibleAnim}
             transition={spring}
           >
             <HalftoneDotField id={filterId + "-volume"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: VOLUME_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: VOLUME_CLONE_INNER }} />
@@ -290,7 +306,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
-            animate={muted ? visibleAnim : hiddenAnim}
+            animate={ambientMuted ? visibleAnim : hiddenAnim}
             transition={spring}
           >
             <HalftoneDotField id={filterId + "-muted"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: MUTED_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: MUTED_CLONE_INNER }} />
