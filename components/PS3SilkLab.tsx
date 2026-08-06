@@ -1,14 +1,11 @@
 "use client";
 
 /**
- * PS3SilkLab v5 — XMB ribbon physics first, vintage halftone as material.
+ * PS3SilkLab v9 — visual reference preset + gated print/morph for perf.
  *
- * Real XMB (spline.elf): subdivided mesh / continuous translucent ribbons with
- * fresnel-ish sheet lighting + a SEPARATE particles.elf sparkle pass.
- * Your site already approximates the ribbons as additive one-sided sine bands
- * (production PS3Silk). v4 flattened that into AM print coverage and lost the
- * wrapping sheets. v5 restores continuous silk, then textures it with print
- * dots (and optional cursor melt) — no floating sparkles.
+ * Defaults bake Mudit's DialKit look (soft wrap + print silkMix 0.46, morph off).
+ * Shader skips print when silkMix≈0 and skips the 3×9 morph sampleSilk loop
+ * unless morph is on — so this look stays shippable without the lab tax.
  */
 
 import { useEffect, useRef } from "react";
@@ -33,42 +30,47 @@ export default function PS3SilkLab() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const dk = useDialKit(
-    "Vintage Halftone",
+    "PS3 Wave Lab",
     {
-      print: {
-        // User-tuned defaults (Aug 2026)
-        pitch: [4.8, 2.2, 6.5, 0.1],
-        screenAngle: [0, 0, 45, 0.5],
-        contrast: [1.1, 0.45, 1.4, 0.05],
-        inkSoftness: [0.7, 0.35, 2.2, 0.05],
-        inkDensity: [0.44, 0.3, 0.9, 0.01],
-        minDot: [0.035, 0, 0.15, 0.005],
-        inkColor: { type: "color", default: "#ffffff" },
-        // 0 = pure continuous silk (production physics), 1 = dots only
-        silkMix: [0.42, 0, 1, 0.01],
+      // Visual reference preset (Aug 2026) — wrap + soft print; morph off for perf
+      silk: {
+        parallax: [0.065, 0, 0.22, 0.005],
+        crestBoost: [0.14, 0, 1.2, 0.01],
+        harmonic: [0.36, 0, 0.55, 0.01],
+        sheetSoft: [0.6, 0, 1, 0.01],
       },
-      morph: {
-        enabled: true,
-        strength: [0.7, 0, 1, 0.01],
-        radius: [0.26, 0.1, 0.5, 0.01],
-        fusion: [0.55, 0.2, 1.1, 0.01],
-        softness: [0.14, 0.04, 0.35, 0.01],
-        overlap: [1.2, 0.9, 1.7, 0.05],
-        lag: [0.055, 0.02, 0.14, 0.005],
+      print: {
+        pitch: [6.3, 2.2, 6.5, 0.1],
+        screenAngle: [0, 0, 45, 0.5],
+        contrast: [1.25, 0.45, 1.4, 0.05],
+        inkSoftness: [0.85, 0.35, 2.2, 0.05],
+        inkDensity: [0.43, 0.3, 0.9, 0.01],
+        minDot: [0.05, 0, 0.15, 0.005],
+        inkColor: { type: "color", default: "#ffffff" },
+        silkMix: [0.46, 0, 1, 0.01],
       },
       plate: {
-        _collapsed: true,
-        intensity: [0.18, 0.06, 0.4, 0.005],
-        mouseNudge: [0.11, 0, 0.28, 0.005],
-        speed: [1.0, 0.15, 2.0, 0.01],
+        intensity: [0.19, 0.06, 0.4, 0.005],
+        mouseNudge: [0, 0, 0.28, 0.005],
+        speed: [0.92, 0.15, 2.0, 0.01],
         yOffset: [49, -20, 100, 1],
-        opacity: [0.55, 0.25, 0.9, 0.01],
+        opacity: [0.33, 0.25, 0.9, 0.01],
+      },
+      morph: {
+        _collapsed: true,
+        enabled: false,
+        strength: [0.55, 0, 1, 0.01],
+        radius: [0.22, 0.1, 0.5, 0.01],
+        fusion: [0.55, 0.2, 1.1, 0.01],
+        softness: [0.14, 0.04, 0.35, 0.01],
+        overlap: [1.15, 0.9, 1.7, 0.05],
+        lag: [0.055, 0.02, 0.14, 0.005],
       },
     },
     {
-      id: "ps3-vintage-halftone-v5",
+      id: "ps3-wave-lab-v9",
       persist: {
-        key: "ps3-vintage-halftone-v5",
+        key: "ps3-wave-lab-v9",
         storage: "localStorage",
         presets: true,
       },
@@ -76,26 +78,30 @@ export default function PS3SilkLab() {
   );
 
   const refs = useRef({
-    pitch: 4.8,
+    pitch: 6.3,
     screenAngle: 0,
-    contrast: 1.1,
-    inkSoftness: 0.7,
-    inkDensity: 0.44,
-    minDot: 0.035,
+    contrast: 1.25,
+    inkSoftness: 0.85,
+    inkDensity: 0.43,
+    minDot: 0.05,
     inkColor: [1, 1, 1] as [number, number, number],
-    silkMix: 0.42,
-    morphOn: true,
-    morphStrength: 0.7,
-    morphRadius: 0.26,
+    silkMix: 0.46,
+    parallax: 0.065,
+    crestBoost: 0.14,
+    harmonic: 0.36,
+    sheetSoft: 0.6,
+    morphOn: false,
+    morphStrength: 0.55,
+    morphRadius: 0.22,
     morphFusion: 0.55,
     morphSoftness: 0.14,
-    morphOverlap: 1.2,
+    morphOverlap: 1.15,
     morphLag: 0.055,
-    intensity: 0.18,
-    mouseNudge: 0.11,
-    speed: 1,
+    intensity: 0.19,
+    mouseNudge: 0,
+    speed: 0.92,
     yOffset: 49,
-    opacity: 0.55,
+    opacity: 0.33,
   });
 
   useEffect(() => {
@@ -108,6 +114,10 @@ export default function PS3SilkLab() {
     r.minDot = dk.print.minDot;
     r.inkColor = hexToRgb(dk.print.inkColor);
     r.silkMix = dk.print.silkMix;
+    r.parallax = dk.silk.parallax;
+    r.crestBoost = dk.silk.crestBoost;
+    r.harmonic = dk.silk.harmonic;
+    r.sheetSoft = dk.silk.sheetSoft;
     r.morphOn = dk.morph.enabled;
     r.morphStrength = dk.morph.strength;
     r.morphRadius = dk.morph.radius;
@@ -159,6 +169,10 @@ uniform float uInkDensity;
 uniform float uMinDot;
 uniform vec3  uInkColor;
 uniform float uSilkMix;
+uniform float uParallax;
+uniform float uCrestBoost;
+uniform float uHarmonic;
+uniform float uSheetSoft;
 uniform float uMorphOn;
 uniform float uMorphStrength;
 uniform float uMorphRadius;
@@ -166,33 +180,43 @@ uniform float uMorphFusion;
 uniform float uMorphSoft;
 uniform float uMorphOverlap;
 
-// Exact production PS3Silk band — continuous ribbon with one-sided thickness
+// Production PS3Silk band DNA + wrap cues from frame analysis
 float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, float width, float sharp, bool flip) {
+  float phase, float cy, float width, float sharp, bool flip,
+  float paraSign, float harmPhase) {
   float md = length(uv - uMouse);
   float mnudge = smoothstep(0.45, 0.0, md) * uMouseNudge;
-  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
-  float wy = sin(angle) * amp + cy;
+  // Parallax: layer-scaled x phase → L/R crest y divergence (ps3silk lag)
+  float px = uvx + paraSign * uParallax * (uv.x - 0.5) * 2.0;
+  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + px + mnudge) * 2.0;
+  // Secondary harmonic — fine filaments inside broader sheets
+  float harm = sin(angle * 2.0 + harmPhase) * amp * uHarmonic * 0.35;
+  float wy = sin(angle) * amp + harm + cy;
   float dy = wy - uv.y;
   float dist = abs(dy);
   if (flip) { if (dy > 0.0) dist *= 4.0; }
   else       { if (dy < 0.0) dist *= 4.0; }
-  float s = smoothstep(width * 1.5, 0.0, dist);
-  return pow(s, sharp);
+  // Higher sheetSoft → wider, softer translucent edges (refs: bloom not hard lines)
+  float softW = mix(width * 1.5, width * 1.9, clamp(uSheetSoft, 0.0, 1.0));
+  float softPow = mix(sharp, sharp * 0.68, clamp(uSheetSoft, 0.0, 1.0));
+  float s = smoothstep(softW, 0.0, dist);
+  return pow(s, softPow);
 }
 
 float sampleSilk(vec2 uv) {
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
   float c = 0.0;
-  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false) * 0.90;
-  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false) * 0.68;
-  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false) * 0.38;
-  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false) * 0.16;
-  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true) * 0.84;
-  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true) * 0.62;
-  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true) * 0.32;
-  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true) * 0.14;
+  // Down-facing sheets (paraSign +) — production weights preserved
+  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false, 1.00, 0.0) * 0.90;
+  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false, 0.55, 1.2) * 0.68;
+  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false, 0.25, 2.4) * 0.38;
+  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false, 0.80, 0.6) * 0.16;
+  // Up-facing sheets (paraSign −) — opposing wrap / depth
+  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true, -0.90, 1.7) * 0.84;
+  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true, -0.50, 3.1) * 0.62;
+  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true, -0.30, 0.9) * 0.32;
+  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true, -1.10, 2.0) * 0.14;
   return clamp(c, 0.0, 1.0);
 }
 
@@ -212,63 +236,72 @@ void main() {
   vec2 uv = frag / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
 
-  // ── Continuous XMB ribbons (physics / wrapping sheets) ──
+  // ── Continuous XMB ribbons (one sampleSilk — the beauty / wrap path) ──
   float silkLuma = sampleSilk(uv);
   float waveLight = silkLuma * uIntensity * 4.5;
   float mouseDist = length(uv - uMouse);
-  float ripple = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
-  float silkA = clamp(waveLight * 1.1 + ripple * 0.12, 0.0, 1.0);
 
-  // ── Halftone material riding ON the silk (not replacing it) ──
-  vec2 screenPx = rotate2(frag, uAngleRad);
-  float pitch = max(uPitch, 1.5);
-  vec2 cell = floor(screenPx / pitch);
-  vec2 centerScreen = (cell + 0.5) * pitch;
-  vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
-  vec2 centerUV = centerFrag / uResolution;
-  centerUV.y += uYOffsetPx / uResolution.y;
+  float crest = pow(clamp(silkLuma, 0.0, 1.0), 1.35);
+  float silkA = clamp(
+    waveLight * (1.05 + uCrestBoost * crest * 0.85),
+    0.0, 1.0
+  );
 
-  float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
-  float cellRipple = exp(-pow((length(centerUV - uMouse) - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
-  float cellCov = clamp(cellSilk - 0.05 + cellRipple * 0.38, 0.0, 1.2);
+  float mixAmt = clamp(uSilkMix, 0.0, 1.0);
+  float a = silkA;
+  float printA = 0.0;
 
-  float melt = 0.0;
-  if (uMorphOn > 0.5) {
-    melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
-  }
+  // Print only when mixed in — skip second silk sample + grid when silkMix≈0
+  if (mixAmt > 0.001) {
+    vec2 screenPx = rotate2(frag, uAngleRad);
+    float pitch = max(uPitch, 1.5);
+    vec2 cell = floor(screenPx / pitch);
+    vec2 centerScreen = (cell + 0.5) * pitch;
+    vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
+    vec2 centerUV = centerFrag / uResolution;
+    centerUV.y += uYOffsetPx / uResolution.y;
 
-  float rCrisp = inkRadius(cellCov, pitch);
-  float dCrisp = length(frag - centerFrag);
-  float crispDot = smoothstep(rCrisp + uInkSoft, rCrisp - uInkSoft, dCrisp);
-  float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
-  float crispA = crispDot * crispVis;
+    float cellSilk = sampleSilk(centerUV);
+    float cellLight = cellSilk * uIntensity * 4.5;
+    float cellCov = clamp(cellLight - 0.05, 0.0, 1.2);
 
-  // Cursor melt — soft-merge dots while silk sheet still shows underneath
-  float field = 0.0;
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 nCell = cell + vec2(float(i), float(j));
-      vec2 nCenterS = (nCell + 0.5) * pitch;
-      vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
-      vec2 nUV = nCenterF / uResolution;
-      nUV.y += uYOffsetPx / uResolution.y;
-      float nCov = clamp(sampleSilk(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
-      float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
-      float nD = length(frag - nCenterF);
-      field += (nR * nR) / (nD * nD + 2.0);
+    float rCrisp = inkRadius(cellCov, pitch);
+    float dCrisp = length(frag - centerFrag);
+    float crispDot = smoothstep(rCrisp + uInkSoft, rCrisp - uInkSoft, dCrisp);
+    float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
+    float crestMask = smoothstep(0.12, 0.55, cellSilk);
+    float crispA = crispDot * crispVis * mix(0.35, 1.0, crestMask);
+
+    // Morph 3×3 is expensive (9× sampleSilk) — only when enabled + near cursor
+    float melt = 0.0;
+    float meltA = 0.0;
+    if (uMorphOn > 0.5) {
+      melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
+      if (melt > 0.01) {
+        float field = 0.0;
+        for (int j = -1; j <= 1; j++) {
+          for (int i = -1; i <= 1; i++) {
+            vec2 nCell = cell + vec2(float(i), float(j));
+            vec2 nCenterS = (nCell + 0.5) * pitch;
+            vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
+            vec2 nUV = nCenterF / uResolution;
+            nUV.y += uYOffsetPx / uResolution.y;
+            float nCov = clamp(sampleSilk(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
+            float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
+            float nD = length(frag - nCenterF);
+            field += (nR * nR) / (nD * nD + 2.0);
+          }
+        }
+        meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
+        meltA *= smoothstep(uMinDot, uMinDot + 0.05, waveLight) * mix(0.35, 1.0, crestMask);
+      }
     }
+    printA = mix(crispA, meltA, melt);
+    a = mix(silkA, printA, mixAmt);
+    a = max(a, silkA * (1.0 - mixAmt) * 0.40 + silkA * 0.14 * step(0.45, mixAmt));
   }
-  float meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
-  meltA *= smoothstep(uMinDot, uMinDot + 0.05, waveLight);
-  float printA = mix(crispA, meltA, melt);
 
-  // Composite: continuous silk sheet + print texture. silkMix=0 → pure XMB
-  // ribbons; 1 → dots only (old v4 look). Default keeps wrapping readable.
-  float a = mix(silkA, printA, clamp(uSilkMix, 0.0, 1.0));
-  // Keep a whisper of continuous silk even at high silkMix so crests still wrap
-  a = max(a, silkA * (1.0 - clamp(uSilkMix, 0.0, 1.0)) * 0.35 + silkA * 0.12 * step(0.55, uSilkMix));
-
-  vec3 col = uInkColor * mix(0.78, uInkDensity, clamp(uSilkMix, 0.0, 1.0));
+  vec3 col = uInkColor * mix(0.82, uInkDensity, mixAmt);
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -310,6 +343,10 @@ void main() {
       minDot: gl.getUniformLocation(prog, "uMinDot"),
       inkColor: gl.getUniformLocation(prog, "uInkColor"),
       silkMix: gl.getUniformLocation(prog, "uSilkMix"),
+      parallax: gl.getUniformLocation(prog, "uParallax"),
+      crestBoost: gl.getUniformLocation(prog, "uCrestBoost"),
+      harmonic: gl.getUniformLocation(prog, "uHarmonic"),
+      sheetSoft: gl.getUniformLocation(prog, "uSheetSoft"),
       morphOn: gl.getUniformLocation(prog, "uMorphOn"),
       morphStrength: gl.getUniformLocation(prog, "uMorphStrength"),
       morphRadius: gl.getUniformLocation(prog, "uMorphRadius"),
@@ -366,6 +403,10 @@ void main() {
       gl!.uniform1f(L.minDot, r.minDot);
       gl!.uniform3f(L.inkColor, ic[0], ic[1], ic[2]);
       gl!.uniform1f(L.silkMix, r.silkMix);
+      gl!.uniform1f(L.parallax, r.parallax);
+      gl!.uniform1f(L.crestBoost, r.crestBoost);
+      gl!.uniform1f(L.harmonic, r.harmonic);
+      gl!.uniform1f(L.sheetSoft, r.sheetSoft);
       gl!.uniform1f(L.morphOn, r.morphOn ? 1 : 0);
       gl!.uniform1f(L.morphStrength, r.morphStrength);
       gl!.uniform1f(L.morphRadius, r.morphRadius);
@@ -388,7 +429,7 @@ void main() {
     }
 
     resize();
-    wrapper.style.opacity = "0.55";
+    wrapper.style.opacity = "0.33";
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMouseMove);
     rafId = requestAnimationFrame(frame);
@@ -411,7 +452,7 @@ void main() {
         width: "100%",
         height: "100%",
         pointerEvents: "none",
-        opacity: 0.55,
+        opacity: 0.33,
       }}
     >
       <canvas

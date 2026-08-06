@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useDialKit } from "dialkit";
 
 // Pool size for the echo trail — always allocated in full so the Trail
@@ -922,6 +923,9 @@ export default function GlobalCustomCursor({
     Pill: dk.Pill,
   });
 
+  const pathname = usePathname();
+  const onWaveLab = pathname.startsWith("/dev/ps3-wave-lab");
+
   useEffect(() => {
     window.gc_morphConfig = {
       duration:         dk.Pill.morphDuration,
@@ -963,6 +967,29 @@ export default function GlobalCustomCursor({
       wrapFadeDuration: 180,
     };
 
+    // Wave lab: solid dot only — no XMB trail stamps (those read as glow/halo).
+    if (onWaveLab) {
+      window.gc_trailConfig = {
+        style:             "classic",
+        echoCount:         0,
+        lifetime:          0,
+        driftMs:           0,
+        spawnGap:          64,
+        opacity:           0,
+        scale:             1,
+        scatter:           0,
+        pop:               0,
+        variance:          0,
+        lag:               0.5,
+        stretch:           0.28,
+        velocityDecay:     0.78,
+        velocitySmoothing: 0.4,
+        lerpMin:           0.08,
+        speedDivisor:      4,
+      };
+      return;
+    }
+
     window.gc_trailConfig = {
       style:             dk.trailStyle === "classic" ? "classic" : "xmb",
       echoCount:         dk.Trail.echoCount,
@@ -981,7 +1008,7 @@ export default function GlobalCustomCursor({
       lerpMin:           0.08,
       speedDivisor:      4,
     };
-  }, [dialSnapshot]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dialSnapshot, onWaveLab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return bootCursor(color, darkColor, dk.size, zIndex);
