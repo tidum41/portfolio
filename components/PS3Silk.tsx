@@ -53,23 +53,26 @@ export interface PS3SilkProps {
   active?: boolean;
 }
 
-/** Lab v9 visual reference — baked into production hero. */
+/** Lab v9 wrap + finer classic-halftone print (pitch tuned for hero). */
 const V9 = {
   intensity: 0.19,
-  mouseStrength: 0,
+  // Phase bend under cursor — no ring halo (that path never shipped here)
+  mouseStrength: 0.12,
   yOffset: 49,
   speed: 0.92,
   startOpacity: 0.33,
-  printPitch: 6.3,
+  // Closer to old production ~3px halftone; 6.3 read as coarse stamps
+  printPitch: 3.2,
   parallax: 0.065,
   crestBoost: 0.14,
   harmonic: 0.36,
   sheetSoft: 0.6,
   silkMix: 0.46,
-  contrast: 1.25,
-  inkSoft: 0.85,
+  contrast: 1.2,
+  // Scale soft edge with finer pitch so dots stay round, not mushy
+  inkSoft: 0.45,
   inkDensity: 0.43,
-  minDot: 0.05,
+  minDot: 0.04,
 };
 
 export default function PS3Silk({
@@ -499,7 +502,12 @@ void main() {
 
     float cellSilk = sampleSilk(centerUV);
     float cellLight = cellSilk * uIntensity * 4.5;
-    float cellCov = clamp(cellLight - 0.05, 0.0, 1.2);
+    // Soft local react under cursor (falloff blob, not a ring halo)
+    float cursorProx = smoothstep(0.38, 0.0, length(centerUV - uMouse));
+    float cellCov = clamp(
+      cellLight - 0.05 + cursorProx * uMouseStrength * 1.6,
+      0.0, 1.2
+    );
 
     float rCrisp = inkRadius(cellCov, pitch);
     float dCrisp = length(frag - centerFrag);
@@ -635,8 +643,8 @@ void main() {
         if (ms - lastT < FRAME_MS) return;
         lastT = ms;
 
-        mouse.x += (mouse.tx - mouse.x) * 0.042;
-        mouse.y += (mouse.ty - mouse.y) * 0.042;
+        mouse.x += (mouse.tx - mouse.x) * 0.085;
+        mouse.y += (mouse.ty - mouse.y) * 0.085;
 
         updateTarget();
         const isIntro = ms < introPhaseEnd;

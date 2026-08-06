@@ -481,7 +481,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         <PS3Silk
           mode={1}
           intensity={0.19}
-          mouseStrength={0}
+          mouseStrength={0.12}
           active={isWorkRoute}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
         />
