@@ -50,11 +50,11 @@ const MODE_KEY        = "ps3cp_mode";
 
 const DEFAULT_INTENSITY_HT = 0.19; // wrap+print (mode 1) — lab v9
 const DEFAULT_INTENSITY_WV = 0.19; // pure silk wrap (mode 0)
-const DEFAULT_MOUSE_STR    = 0.12; // phase bend + soft local print react
+const DEFAULT_MOUSE_STR    = 0.14; // playful local intensity + dot variance
 const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
-const DEFAULT_HALFTONE_SIZE = 3.4; // body dot size (crest uses finer layer)
+const DEFAULT_HALFTONE_SIZE = 7.0; // print size default
 const DEFAULT_SPEED        = 0.92;
 // First-pick intensity for any colored preset (index >= 1 in PRESETS below —
 // index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
@@ -954,7 +954,7 @@ export default function PS3ControlPanel() {
         <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}</span></div>
-            <Slider min={2} max={8} step={0.1} value={halftoneSize} isDark={isDark} label="Size"
+            <Slider min={2} max={12} step={0.1} value={halftoneSize} isDark={isDark} label="Size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>

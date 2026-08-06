@@ -56,11 +56,11 @@ export interface PS3SilkProps {
 /** Wrap physics + distinct AM print; crest glow = finer dots. */
 const V9 = {
   intensity: 0.19,
-  mouseStrength: 0.12,
+  mouseStrength: 0.14,
   yOffset: 49,
   speed: 0.92,
   startOpacity: 0.33,
-  printPitch: 3.4,
+  printPitch: 7.0,
   parallax: 0.065,
   crestBoost: 0.14,
   harmonic: 0.36,
@@ -68,7 +68,7 @@ const V9 = {
   // Print-forward so dots read clearly; silk stays the coverage plate
   silkMix: 0.78,
   contrast: 1.35,
-  inkSoft: 0.32,
+  inkSoft: 0.38,
   inkDensity: 0.58,
   minDot: 0.028,
 };
@@ -94,8 +94,8 @@ export default function PS3Silk({
     intensity:     [intensity,           0,    1.0],
     mouseStrength: [mouseStrength,       0,    0.5],
     yOffset:       [yOffset,             -50,  100],
-    // Maps to print pitch in wrap+print mode
-    halftoneSize:  [V9.printPitch,       2.2,  10,  0.1],
+    // Maps to print size in print mode
+    halftoneSize:  [V9.printPitch,       2.0,  12,  0.1],
     speed:         [V9.speed,            0,    4],
     endOpacity:    [0.12,                0,    0.5, 0.01],
   });
@@ -477,28 +477,48 @@ float inkRadius(float coverage, float pitch) {
   return pitch * 0.5 * sqrt(pow(t, kContrast));
 }
 
-// AM dot layer at a given pitch — silk coverage is the wave plate
+// Tiny deterministic hash for playful per-cell variance
+float cellHash(vec2 cell) {
+  return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// AM dot layer — silk is the plate; cursor adds intensity + playful variance
 float amDot(vec2 frag, float pitch, float covBoost) {
   pitch = max(pitch, 1.35);
   vec2 cell = floor(frag / pitch);
-  vec2 centerFrag = (cell + 0.5) * pitch;
-  vec2 centerUV = centerFrag / uResolution;
+  float h = cellHash(cell);
+  float h2 = cellHash(cell + 19.0);
+
+  vec2 centerUV = ((cell + 0.5) * pitch) / uResolution;
   centerUV.y += uYOffsetPx / uResolution.y;
+  float cursorProx = smoothstep(0.42, 0.0, length(centerUV - uMouse));
+  float play = cursorProx * uMouseStrength;
+
+  // Near cursor: cells drift slightly + pitch jitters so the screen feels alive
+  vec2 jitter = (vec2(h, h2) - 0.5) * pitch * play * 0.55;
+  vec2 centerFrag = (cell + 0.5) * pitch + jitter;
+  float localPitch = pitch * mix(1.0, mix(0.72, 1.28, h), play * 1.35);
+
   float cellSilk = sampleSilk(centerUV);
   float cellLight = cellSilk * uIntensity * 4.5;
-  float cursorProx = smoothstep(0.38, 0.0, length(centerUV - uMouse));
+  // Intensity / highlight bloom under cursor (coverage, not a ring)
   float cellCov = clamp(
-    cellLight - 0.03 + cursorProx * uMouseStrength * 1.55 + covBoost,
-    0.0, 1.3
+    cellLight - 0.03
+      + covBoost
+      + play * 2.1
+      + (h - 0.5) * play * 0.9,
+    0.0, 1.45
   );
-  float soft = max(kInkSoft * (pitch / 3.4), 0.22);
-  float r = inkRadius(cellCov, pitch);
+
+  float soft = max(kInkSoft * (localPitch / 7.0), 0.24);
+  float r = inkRadius(cellCov, localPitch) * mix(1.0, mix(0.75, 1.35, h2), play);
   float d = length(frag - centerFrag);
   float dot = smoothstep(r + soft, r - soft, d);
   float vis = smoothstep(kMinDot, kMinDot + 0.045, cellCov);
-  // Keep dots on the ribbon — wave physics gates the screen
   float plate = smoothstep(0.015, 0.14, cellSilk);
-  return dot * vis * plate;
+  // Extra pop on hits near the cursor
+  float highlight = 1.0 + play * mix(0.35, 1.1, h);
+  return dot * vis * plate * highlight;
 }
 
 void main() {
@@ -507,14 +527,18 @@ void main() {
   uv.y += uYOffsetPx / uResolution.y;
 
   float silkLuma = sampleSilk(uv);
-  float waveLight = silkLuma * uIntensity * 4.5;
+  float cursorProx = smoothstep(0.42, 0.0, length(uv - uMouse));
+  float play = cursorProx * uMouseStrength;
+  // Local intensity lift around cursor (both modes)
+  float localInt = uIntensity * (1.0 + play * 1.8);
+  float waveLight = silkLuma * localInt * 4.5;
   float crest = pow(clamp(silkLuma, 0.0, 1.0), 1.35);
 
   // mode 1 = print (AM on wave plate); mode 0 = continuous wave sheets
   float mixAmt = (uMode == 1) ? kSilkMix : 0.0;
   // In print mode, dial back continuous crest glow — glow becomes fine dots
   float silkGlow = kCrestBoost * crest * 0.85 * (1.0 - mixAmt * 0.92);
-  float silkA = clamp(waveLight * (1.05 + silkGlow), 0.0, 1.0);
+  float silkA = clamp(waveLight * (1.05 + silkGlow + play * 0.55), 0.0, 1.0);
   float a = silkA;
 
   if (mixAmt > 0.001) {
@@ -534,6 +558,8 @@ void main() {
   }
 
   vec3 col = uWaveColor * mix(0.82, kInkDensity, mixAmt);
+  // Slight brightness lift in the cursor neighborhood
+  col *= 1.0 + play * 0.25;
   gl_FragColor = vec4(col * a, a);
 }`;
 

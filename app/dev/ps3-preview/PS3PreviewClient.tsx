@@ -23,7 +23,7 @@ export default function PS3PreviewClient() {
         active
         mode={1}
         intensity={0.19}
-        mouseStrength={0.12}
+        mouseStrength={0.14}
         waveColor="#ffffff"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       />
