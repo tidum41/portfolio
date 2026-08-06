@@ -197,10 +197,16 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const [cdPosterFade, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
   // Habit poster frame/theme: site theme until the live widget reports its own.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof document === "undefined") return "light";
-    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-  });
+  // Initialize to "light" unconditionally so SSR HTML matches the first client
+  // render — a `useState` initializer that reads `document.documentElement`
+  // resolves to the fallback "light" branch on the server (no `document`) and
+  // to the real theme on the client, which produces a hydration mismatch on
+  // every dark-mode visitor and forces React to repaint the entire habit
+  // subtree. The `useEffect` further down that reads the live theme + observes
+  // MutationObserver still runs immediately after mount and updates state to
+  // "dark" for dark-mode visitors — that's a normal state update, not an
+  // aborted hydration, so no warning and no subtree re-render on hydrate.
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("light");
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -283,51 +289,24 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     if (isWorkRoute) clearInstantBack();
   }, [isWorkRoute]);
 
-  // Replay intro when the user returns to this tab from outside the site.
-  // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
-  // (navigated away in same tab and pressed Back). Neither event fires during
-  // client-side navigation, so /about → / remains instant with no delay.
-  //
-  // Exception: a target="_blank" link click fires the exact same
-  // hidden→visible sequence on this tab as a genuine tab-switch-away-and-back
-  // (the new tab steals focus, then the user switches back). To tell those
-  // apart, track the last click time and, if this tab went hidden within 1s
-  // of a click, treat that as "a link on the page opened a new tab" and skip
-  // the next replay — a real away-and-back (another app, an already-open
-  // tab, idle-then-return) has no such recent click and still replays.
+  // Replay intro only on BFCache restore (browser back from another origin,
+  // pressing Back into a persisted page). Plain tab-switch used to also
+  // trigger a replay via `visibilitychange`, which made every alt-tab back
+  // into `/` re-hide Nav/Footer/grid and re-fade them in over ~2.6s — read
+  // as a jank spike on every return-to-tab. Removed. `pageshow(persisted)`
+  // fires only on genuine BFCache restore, so the "long-away and back"
+  // ceremony is preserved for actual page restores, not for casual focus
+  // changes. `pageshow` never fires during client-side navigation, so
+  // `/about → /` stays instant.
   useEffect(() => {
-    const lastClickAtRef = { current: 0 };
-    const hiddenByClickRef = { current: false };
-    const replay = () => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
       if (!isWorkRoute) return;
       document.documentElement.setAttribute("data-intro", "playing");
       window.dispatchEvent(new CustomEvent("intro-replay"));
     };
-    const onClick = () => {
-      lastClickAtRef.current = Date.now();
-    };
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        hiddenByClickRef.current = Date.now() - lastClickAtRef.current < 1000;
-        return;
-      }
-      if (document.visibilityState === "visible") {
-        if (hiddenByClickRef.current) {
-          hiddenByClickRef.current = false;
-          return;
-        }
-        replay();
-      }
-    };
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) replay();
-    };
-    document.addEventListener("click", onClick, true);
-    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pageshow", onPageShow);
     return () => {
-      document.removeEventListener("click", onClick, true);
-      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
   }, [isWorkRoute]);

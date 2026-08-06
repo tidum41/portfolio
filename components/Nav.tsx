@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
-import { useDialKit } from "dialkit";
+import { useDialKit, type DialConfig } from "dialkit";
 
 const links = [
   { href: "/",         label: "work" },
@@ -12,16 +12,19 @@ const links = [
   { href: "/about",    label: "about" },
 ];
 
-export default function Nav() {
-  const pathname = usePathname();
-
-  // DialKit auto-generates each slider's on-screen label from its key name
-  // (camelCase -> "Title Case") and has no separate description field, so
-  // the key names below ARE the UI copy — chosen to be readable with no
-  // prior vocabulary, grouped into folders by what part of the effect they
-  // touch. A parallel plain-English glossary (what each one does + which
-  // way to drag it) lives in docs/halftone-dial-guide.md.
-  const dk = useDialKit("Nav Links", {
+// Hoisted to module scope: `Nav` re-renders on every `usePathname` change
+// (i.e. every route change), and DialKit's `registerPanel` effect diffs its
+// config via `JSON.stringify(config)`. Rebuilding this ~130-line literal each
+// render costs a fresh allocation + a large serialization on the nav critical
+// path. Frozen at module load, referenced by identity below.
+//
+// DialKit auto-generates each slider's on-screen label from its key name
+// (camelCase -> "Title Case") and has no separate description field, so
+// the key names below ARE the UI copy — chosen to be readable with no
+// prior vocabulary, grouped into folders by what part of the effect they
+// touch. A parallel plain-English glossary (what each one does + which
+// way to drag it) lives in docs/halftone-dial-guide.md.
+const NAV_DIAL_CONFIG: DialConfig = {
     enabled: true,
     // Pins the effect active regardless of real hover/tap, so it stays
     // visible while you move the mouse to this panel and drag a slider —
@@ -150,7 +153,11 @@ export default function Nav() {
       textEndScale: [1, 0.5, 1.5, 0.01],
       dotsEndScale: [1, 0.5, 1.5, 0.01],
     },
-  });
+  };
+
+export default function Nav() {
+  const pathname = usePathname();
+  const dk = useDialKit("Nav Links", NAV_DIAL_CONFIG);
 
   return (
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>

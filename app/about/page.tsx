@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import CDPlayer from "@/components/CDPlayer";
+import dynamic from "next/dynamic";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import {
@@ -12,6 +12,16 @@ import {
   SOCIALS,
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
+
+// `/` keeps its own live CDPlayer mounted (portaled via PersistentWorkShell).
+// The one here is a *separate* instance that hydrates on every /about visit —
+// a 635-line component + dnd-kit + audio + album-color extraction — which
+// blocks first paint of the whole page. Defer to after hydration, with a
+// same-height placeholder so nothing shifts when it lands.
+const CDPlayer = dynamic(() => import("@/components/CDPlayer"), {
+  ssr: false,
+  loading: () => <div style={{ marginTop: 16, minHeight: 520 }} aria-hidden />,
+});
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
