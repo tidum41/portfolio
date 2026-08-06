@@ -291,8 +291,8 @@ const Slider = memo(function Slider({
 });
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-function ChevronDown({ size = 10, color = "currentColor" }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline points="6 9 12 15 18 9" /></svg>;
+function ChevronDown({ size = 10, color = "currentColor", polyRef }: { size?: number; color?: string; polyRef?: React.Ref<SVGPolylineElement> }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline ref={polyRef} points="6 9 12 15 18 9" /></svg>;
 }
 function Minus({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><line x1="5" y1="12" x2="19" y2="12" /></svg>;
@@ -313,6 +313,49 @@ function PS3TriangleGlyph({ size = 9, color = "currentColor" }) {
 }
 function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><circle cx="12" cy="12" r="9" /></svg>;
+}
+
+// ── Chevron/label optical alignment ─────────────────────────────────────────
+// "menu" renders in --font-sans, which is "HN" (a local() alias for the
+// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
+// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
+// (Android, Windows, Linux) the stack lands on a substitute with different
+// ascent/descent proportions, so a marginTop tuned by eye against one font's
+// glyph metrics reads as misaligned against another's. Rather than guess a
+// static px value that only holds for whichever font the tuner happened to
+// have installed, measure the *actual* rendered ink of both the chevron and
+// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
+// for the stroke — and compute the delta needed to center them on each
+// other, whatever font actually won the fallback chain on this device.
+function useLabelOpticalOffset(
+  chevronRef: React.RefObject<SVGPolylineElement | null>,
+  labelRef: React.RefObject<HTMLSpanElement | null>,
+) {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const chevron = chevronRef.current, label = labelRef.current;
+    if (!chevron || !label) return;
+    function measure() {
+      if (!chevron || !label) return;
+      const ctx = document.createElement("canvas").getContext("2d");
+      if (!ctx) return;
+      const cs = getComputedStyle(label);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = ctx.measureText(label.textContent || "");
+      if (m.fontBoundingBoxAscent === undefined || m.actualBoundingBoxAscent === undefined) return;
+      const labelRect = label.getBoundingClientRect();
+      const halfLeading = (labelRect.height - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2;
+      const baselineFromTop = halfLeading + m.fontBoundingBoxAscent;
+      const inkCenterFromTop = baselineFromTop + (m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) / 2;
+      const labelInkCenterY = labelRect.top + inkCenterFromTop;
+      const chevronRect = chevron.getBoundingClientRect();
+      const chevronInkCenterY = chevronRect.top + chevronRect.height / 2;
+      setOffset(chevronInkCenterY - labelInkCenterY);
+    }
+    measure();
+    document.fonts?.ready?.then(measure).catch(() => {});
+  }, [chevronRef, labelRef]);
+  return offset;
 }
 
 // ── Expand/collapse section ─────────────────────────────────────────────────
@@ -523,10 +566,18 @@ html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(25
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset:  [-1.5, -4, 4, 0.5],
+    // Manual fine-tune only — the bulk of the alignment is auto-computed by
+    // useLabelOpticalOffset from the resolved font's real metrics (see
+    // above), so these default to 0 and exist for deliberate optical-weight
+    // taste adjustments on top of that measured correction.
+    chevronOffset:  [0, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [-3.5, -4, 4, 0.5],
+    menuTextOffset: [0, -4, 4, 0.5],
   });
+
+  const chevronPolyRef  = useRef<SVGPolylineElement>(null);
+  const menuLabelRef    = useRef<HTMLSpanElement>(null);
+  const labelAutoOffset = useLabelOpticalOffset(chevronPolyRef, menuLabelRef);
 
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
@@ -880,9 +931,9 @@ export default function PS3ControlPanel() {
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
             <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
-              <ChevronDown color={accentCol} size={10} />
+              <ChevronDown color={accentCol} size={10} polyRef={chevronPolyRef} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 200ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
+            <span ref={menuLabelRef} style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 200ms ease", lineHeight: 1, marginTop: labelAutoOffset + dk.menuTextOffset }}>menu</span>
           </div>
         </div>
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 120ms ${OPEN_EASE} 40ms` : `opacity 90ms ${CLOSE_EASE}` }}>
