@@ -23,6 +23,7 @@ Two XMB-style clips, mapped by *intent* (not by component name):
 ## Performance
 
 - Web Audio: decode each file **once**, replay via `AudioBufferSourceNode`
-- Lazy unlock on first pointerdown / unmute
+- Prefetch/decode on idle (works while AudioContext is still suspended); unlock on first pointerdown
+- Play on **pointerdown** (sync hot path when buffer is warm) so ticks match the press — click is keyboard fallback only
 - Clips are ~50–70ms and a few KB — no streaming, no HTMLAudio pools
 - Override with `data-ui-sound="option|push|off"` when delegation isn’t enough

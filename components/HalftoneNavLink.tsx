@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
@@ -27,8 +27,13 @@ function canHover() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
+function pathMatchesHref(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,18 +50,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
 
-  // isHovered drives desktop only. isTapped is the touch press feedback —
-  // mobile has no hover, so a tap must not piggyback on mouseenter (which
-  // can stick forever with no mouseleave). If it's already the active page,
-  // don't show the effect either way.
-  // dk.keepEffectOn (DialKit dev panel) forces the effect active regardless
-  // of real hover/tap — including overriding the !isActive gate, since
-  // without that override the current page's own nav link would stay
-  // permanently untunable while standing on it. Lets the mouse move to the
-  // (separately positioned) DialKit panel and drag a slider while the
-  // effect stays pinned visible, instead of losing hover the moment the
-  // cursor leaves this link.
-  const active = dk.enabled ? (dk.keepEffectOn || (!isActive && (isHovered || isTapped))) : false;
+  // isHovered drives desktop; isTapped is touch press feedback. Morph must
+  // still run on the *current* page's own link (work on `/`, etc.) — gating
+  // on !isActive killed hover/tap on work after soft-nav made route commits
+  // instant. isActive only drives color / aria-current, not the morph.
+  // dk.keepEffectOn (DialKit) pins the effect while dragging dials.
+  const active = dk.enabled ? (dk.keepEffectOn || isHovered || isTapped) : false;
 
   const { filterId, t } = useHalftoneMorph(dk, active);
   const reduced = useReducedMotion();
@@ -89,7 +88,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     setIsTapped(true);
     clearTapTimer();
     // Failsafe if navigation doesn't land (modifier-click, aborted gesture,
-    // same-route tap). Navigating flips isActive and clears via the gate.
+    // same-route tap). Navigating away unmounts or mouseleave clears it.
     tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
   };
 
@@ -115,6 +114,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       prefetch
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
+      data-ui-sound="option"
       style={{
         position: "relative",
         textDecoration: "none",
@@ -141,9 +141,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       // click/navigation almost immediately after that — well before the
       // ~200ms "in" spring has become visible. Resetting isTapped on
       // pointerup cut the effect off before it could ever be seen. Instead,
-      // leave it active through the tap: navigating flips `isActive` true
-      // for this link, which naturally deactivates it via the `!isActive`
-      // gate above once the new page renders.
+      // leave it active through the tap; the timeout / mouseleave clears it.
       //
       // On touch, we also *commit navigation on pointerup*. Relying on the
       // later click is what made taps sometimes flash the morph (pointerdown)
@@ -184,9 +182,13 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           window.setTimeout(() => {
             touchNavRef.current = false;
           }, 500);
+
+          // Same-route tap: keep morph feedback, skip a useless push that
+          // only races the work shell wake and can kill the animation.
+          if (pathMatchesHref(pathname, href)) return;
+
           if (PRIMARY_NAV.has(href)) markSoftNav();
           router.push(href);
-          // Keep isTapped through the route change (see armTap comments).
           return;
         }
 
@@ -201,6 +203,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           // Already navigated on pointerup — block the ghost click.
           e.preventDefault();
           touchNavRef.current = false;
+          return;
+        }
+        if (pathMatchesHref(pathname, href)) {
+          // Already here — don't soft-nav / re-push.
+          e.preventDefault();
           return;
         }
         if (PRIMARY_NAV.has(href)) markSoftNav();
