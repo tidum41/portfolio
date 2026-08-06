@@ -259,7 +259,11 @@ export default function PS3Silk({
     // shader is already GPU/driver-cached from the earlier compile, so there's
     // no jank to protect against, and any delay would just read as a stutter.
     const initTimer = setTimeout(() => {
-      const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
+      const _glNullable = canvas.getContext("webgl", {
+        alpha: true,
+        antialias: false,
+        preserveDrawingBuffer: false,
+      });
       if (!_glNullable) return;
       const gl = _glNullable as WebGLRenderingContext;
       glRef = gl;
@@ -272,6 +276,12 @@ export default function PS3Silk({
       // with the hero.
       let wrapperRect: DOMRect | null = null;
 
+      // Match lab canvas sizing: device pixels (capped) so print pitch / soft
+      // edges / yOffset stay in the same fragment units DialKit was tuned in.
+      // Shipping CSS-pixel buffers made pitch 6.3 read ~2× chunkier on retina
+      // and doubled the UV y-nudge vs the lab look.
+      let bufferDpr = 1;
+
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
         wrapperRect = rect ?? null;
@@ -279,8 +289,9 @@ export default function PS3Silk({
         // Never write a 0×0 (or near-zero) drawing buffer. The persistent work
         // shell hides via display:none on non-/ routes, which reports 0×0 here;
         // assigning that size is what made the pattern go flat/empty on return.
-        const w = Math.max(0, Math.floor(rect.width));
-        const h = Math.max(0, Math.floor(rect.height));
+        bufferDpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(0, Math.floor(rect.width * bufferDpr));
+        const h = Math.max(0, Math.floor(rect.height * bufferDpr));
         if (w < 2 || h < 2) return;
         if (canvas.width === w && canvas.height === h) {
           glCtx.viewport(0, 0, w, h);
@@ -549,7 +560,11 @@ void main() {
         gl.uniform1f(uIntLoc, intensityRef.current);
         gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
-        gl.uniform1f(uYOfsLoc, yOffsetRef.current);
+        // Lab dial yOffset=49 was tuned fullscreen. Scale so UV nudge matches
+        // that fraction inside the shorter hero band (not 49/heroHeight).
+        const cssH = wrapperRect?.height || (bufferDpr > 0 ? canvas.height / bufferDpr : canvas.height);
+        const vh = typeof window !== "undefined" ? Math.max(window.innerHeight, 1) : cssH;
+        gl.uniform1f(uYOfsLoc, yOffsetRef.current * (cssH / vh));
         gl.uniform1i(uModeLoc, modeRef.current);
         gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
