@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import { useDialKit } from "dialkit";
-import { ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_EXPAND, type CubicBezier } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -13,34 +13,31 @@ const PILL_W  = 70;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
-// Morph open/close — Emil ease-out (fast start → settles). Open stays prompt;
-// close runs a touch longer so collapse doesn't feel abrupt.
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
-const OPEN_MS = 200;
+
+function cssCubic(c: CubicBezier) {
+  return `cubic-bezier(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})`;
+}
+
+// Morph open/close — same expand curve as site panels (`--expand-ease` /
+// EASE_EXPAND). Open stays prompt; close runs a touch longer so collapse
+// doesn't feel abrupt.
+const OPEN_MS = 220;
 const CLOSE_MS = 280;
-const OPEN_EASE = EASE_OUT;
-const CLOSE_EASE = EASE_OUT;
-// Matches lib/motion.ts's EASE_OPACITY / app/layout.tsx's intro-gate CSS
-// (`transition: opacity 0.7s cubic-bezier(.16,1,.3,1)`) — the pill's first-
-// load fade now rides the exact same curve/duration nav and footer use, and
-// is triggered by the same "intro-done" event (see the posReady effect
-// below), instead of an independently-tuned 2s ease-out that finished long
-// after everything else had already settled and read as a separate, slower
-// reveal bolted onto the page rather than part of it.
-const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const FADE_MS = 700;
+const OPEN_EASE = cssCubic(EASE_EXPAND);
+const CLOSE_EASE = cssCubic(EASE_EXPAND);
+// Reveal (first paint after intro-done, and every about/archive return):
+// same fade-up as EntranceItem / work grid — so the pill settles with the
+// content around it instead of a separate chrome-style opacity fade.
+// (lib/motion.ts ENTRANCE_DEFAULTS + EASE_Y.)
+const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+const REVEAL_EASE = cssCubic(EASE_Y);
+const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This component unmounts whenever the user navigates off "/" (see the
 // `isWorkRoute &&` gate in PersistentWorkShell.tsx) and remounts fresh on
 // return — unlike PS3Silk/hero/the grid, which stay mounted the whole
 // session and are only CSS-hidden. `_ps3cpHasLoaded` (module-level, so it
-// survives the unmount) means every return trip takes the "not very first
-// load" path below. Matches EntranceItem/hero's own re-entry animation
-// (lib/motion.ts's EASE_Y + ENTRANCE_DEFAULTS.duration=0.45s) — used so the
-// pill fades back in as part of the same "content sliding back into view"
-// moment as everything else on the route, instead of popping in at full
-// opacity with zero transition while its neighbors visibly re-enter.
-const RETURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const RETURN_FADE_MS = 450;
+// survives the unmount) means every return trip skips the intro-done wait
+// and reveals immediately with the same EntranceItem settle as first load.
 const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
@@ -350,7 +347,12 @@ function useLabelOpticalOffset(
       const labelInkCenterY = labelRect.top + inkCenterFromTop;
       const chevronRect = chevron.getBoundingClientRect();
       const chevronInkCenterY = chevronRect.top + chevronRect.height / 2;
-      setOffset(chevronInkCenterY - labelInkCenterY);
+      // Accumulate: if we already applied a marginTop from a prior measure
+      // (e.g. fonts.ready re-run), the live delta is the remaining error —
+      // adding it avoids double-correcting against the shifted label.
+      const delta = chevronInkCenterY - labelInkCenterY;
+      if (Math.abs(delta) < 0.25) return;
+      setOffset(prev => prev + delta);
     }
     measure();
     document.fonts?.ready?.then(measure).catch(() => {});
@@ -566,11 +568,11 @@ html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(25
 
 export default function PS3ControlPanel() {
   const dk = useDialKit("PS3 Pill", {
-    // Manual fine-tune only — the bulk of the alignment is auto-computed by
-    // useLabelOpticalOffset from the resolved font's real metrics (see
-    // above), so these default to 0 and exist for deliberate optical-weight
-    // taste adjustments on top of that measured correction.
-    chevronOffset:  [0, -4, 4, 0.5],
+    // Optical lift for the whole chevron+"menu" unit inside the pill.
+    // Lowercase text + downward chevron read heavy when geometrically
+    // centered — default −1px. Relative chevron↔label alignment is still
+    // handled by useLabelOpticalOffset; menuTextOffset is a fine-tune on top.
+    chevronOffset:  [-1, -4, 2, 0.5],
     pillGap:        [4,    2, 10, 0.5],
     menuTextOffset: [0, -4, 4, 0.5],
   });
@@ -690,7 +692,8 @@ export default function PS3ControlPanel() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // posReady: handle show timing
+  // posReady: handle show timing — same EntranceItem settle for first load
+  // (after intro-done) and about/archive return.
   useEffect(() => {
     if (!posReady) return;
     if (!isVeryFirstLoad.current) {
@@ -699,7 +702,7 @@ export default function PS3ControlPanel() {
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
       })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), RETURN_FADE_MS + 200);
+      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
       return;
     }
     revealKindRef.current = "first";
@@ -708,7 +711,7 @@ export default function PS3ControlPanel() {
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
       })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
+      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
       _ps3cpHasLoaded = true;
     }
     if (!document.documentElement.hasAttribute("data-intro")) {
@@ -841,7 +844,7 @@ export default function PS3ControlPanel() {
   const dur = isOpen ? `${OPEN_MS}ms ${OPEN_EASE}` : `${CLOSE_MS}ms ${CLOSE_EASE}`;
   // Keep morph transitions on their own string — never share a node with
   // `.intro-hide` (that class sets `transition: opacity … !important` and
-  // wipes width/height morph). First-load reveal uses `shown` / intro-done.
+  // wipes width/height morph). Reveal uses EntranceItem fade-up tokens.
   const baseMorphParts = [
     `width ${dur}`,
     `height ${dur}`,
@@ -852,13 +855,10 @@ export default function PS3ControlPanel() {
     "background-color 200ms ease",
     "border-color 200ms ease",
   ];
-  const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
-  const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
-  const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
+    ? (showTransition ? `opacity ${REVEAL_MS}ms ${REVEAL_EASE}, transform ${REVEAL_MS}ms ${REVEAL_EASE}` : "none")
     : (showTransition
-      ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`, `transform ${fadeMs}ms ${fadeEase}`].join(", ")
+      ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
       : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
@@ -915,7 +915,7 @@ export default function PS3ControlPanel() {
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
-      transform: shown ? "translateY(0px)" : `translateY(${slideY}px)`,
+      transform: shown ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
       WebkitTapHighlightColor: "transparent",
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
@@ -929,14 +929,41 @@ export default function PS3ControlPanel() {
         }}
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: dk.pillGap,
+            marginLeft: -1,
+            // Lift the whole unit — lowercase "menu" + downward chevron sit
+            // optically low when only flex-centered in the pill.
+            transform: `translateY(${dk.chevronOffset}px)`,
+          }}>
+            <div style={{
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`,
+              display: "flex",
+              alignItems: "center",
+            }}>
               <ChevronDown color={accentCol} size={10} polyRef={chevronPolyRef} />
             </div>
-            <span ref={menuLabelRef} style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 200ms ease", lineHeight: 1, marginTop: labelAutoOffset + dk.menuTextOffset }}>menu</span>
+            <span
+              ref={menuLabelRef}
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.03em",
+                color: accentCol,
+                transition: "color 200ms ease",
+                lineHeight: 1,
+                display: "block",
+                marginTop: labelAutoOffset + dk.menuTextOffset,
+              }}
+            >
+              menu
+            </span>
           </div>
         </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 120ms ${OPEN_EASE} 40ms` : `opacity 90ms ${CLOSE_EASE}` }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 140ms ${OPEN_EASE} 60ms` : `opacity 90ms ${CLOSE_EASE}` }}>
           <button className="ps3cp-ibtn" onClick={handleReset} title="Reset" aria-label="Reset to defaults"><Reset /></button>
           <button className="ps3cp-ibtn" onClick={() => setIsOpen(false)} title="Minimize" aria-label="Minimize"><Minus /></button>
         </div>
@@ -954,8 +981,8 @@ export default function PS3ControlPanel() {
         maxHeight: geo.clampedBodyH,
         opacity: isOpen ? 1 : 0,
         transition: isOpen
-          ? `opacity 140ms ${OPEN_EASE} 40ms`
-          : `opacity 90ms ${CLOSE_EASE}`,
+          ? `opacity 160ms ${OPEN_EASE} 50ms`
+          : `opacity 100ms ${CLOSE_EASE}`,
         WebkitOverflowScrolling: "touch",
       }}>
 
