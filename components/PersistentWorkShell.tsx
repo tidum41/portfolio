@@ -212,19 +212,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // wrong variant.
   const wasWorkRouteRef = useRef(isWorkRoute);
   const instantArrivalRef = useRef(false);
-  // Soft return: after the first "/" visit, coming back from about/archive/
-  // case studies skips entrance stagger (same feel as instant-back) so we
-  // don't restack grid animations on top of silk wake + media resume.
-  const softReturnRef = useRef(false);
   if (isWorkRoute && !wasWorkRouteRef.current) {
     instantArrivalRef.current = peekInstantBack();
-    softReturnRef.current = hasEverBeenActive && !instantArrivalRef.current;
-  }
-  if (!isWorkRoute) {
-    softReturnRef.current = false;
   }
   wasWorkRouteRef.current = isWorkRoute;
-  const instant = instantArrivalRef.current || softReturnRef.current;
+  // Only case-study Back is fully instant (avoids remounting silk/media).
+  // Nav "work" / browser back from about/archive keep the short EntranceItem
+  // fade-up — that is the non-intro return animation documented above.
+  const instant = instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
