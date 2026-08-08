@@ -91,8 +91,11 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   // the PS3-style entrance animation re-fires. About page is always active so
   // it fires once on mount (cards animate in on first scroll-reveal).
   const [entranceKey, setEntranceKey] = useState(0);
-  // Player fades in after the popup panel settles; about page starts visible.
-  const [playerVisible, setPlayerVisible] = useState(active);
+  // Opacity-only reveal after fit scale is known. Never animate scale/width —
+  // starting at design size (scale=1) and transitioning down was the weird
+  // "giant CD then shrink" on about + modal open.
+  const [playerVisible, setPlayerVisible] = useState(false);
+  const [layoutReady, setLayoutReady] = useState(false);
   const entranceActiveRef = useRef(active);
 
   useEffect(() => {
@@ -100,10 +103,13 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     entranceActiveRef.current = active;
     if (active && !wasActive) {
       setEntranceKey(k => k + 1);
-      const t = setTimeout(() => setPlayerVisible(true), 80);
-      return () => clearTimeout(t);
+      setLayoutReady(false);
+      setPlayerVisible(false);
     }
-    if (!active) setPlayerVisible(false);
+    if (!active) {
+      setPlayerVisible(false);
+      setLayoutReady(false);
+    }
   }, [active]);
 
   const [scratchRate, setScratchRate] = useState(1);
@@ -156,6 +162,8 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     const el = containerRef.current;
     const W = el?.clientWidth  ?? window.innerWidth;
     const H = el?.clientHeight || el?.offsetHeight || window.innerHeight;
+    // Wait for a real laid-out box — about/popup can mount at 0×0 for a frame.
+    if (!el || W < 2 || H < 2) return;
     setContainerW(W);
 
     if (isVertical) {
@@ -191,7 +199,9 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
       setScale(Math.max(0.14, s));
     }
     setContainerH(H);
-  }, [isVertical, dk.targetPlayerWidth, dk.carouselArtSize, dk.titleFontSize, dk.artistFontSize]);
+    setLayoutReady(true);
+    if (active) setPlayerVisible(true);
+  }, [isVertical, dk.targetPlayerWidth, dk.carouselArtSize, dk.titleFontSize, dk.artistFontSize, active]);
 
   useEffect(() => {
     updateScale();
@@ -504,7 +514,16 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
               </button>
             </div>
           )}
-          <div className={`${styles.contentBox} ${isVertical ? styles.contentBoxVertical : ''}`}>
+          <div
+            className={`${styles.contentBox} ${isVertical ? styles.contentBoxVertical : ''}`}
+            style={{
+              // Whole unit fades once fit scale is known — no scale tween.
+              opacity: layoutReady && playerVisible ? 1 : 0,
+              transition: layoutReady
+                ? `opacity ${PANEL_DURATION.embed.enter}s ${EASE_CSS}`
+                : 'none',
+            }}
+          >
 
             {/* CD Player */}
             <div className={`${styles.playerCol} ${isVertical ? styles.playerColVertical : ''}`}>
@@ -514,21 +533,6 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   width: playerWidth,
                   height: playerHeight,
                   flexShrink: 0,
-                  // Reparenting into the popup can't recompute `scale` from
-                  // this container's new size until a frame after the DOM
-                  // actually moves (ResizeObserver is async) — animating the
-                  // correction turns that one-frame snap into a deliberate
-                  // settle instead of a visible jitter. Uses the SAME
-                  // duration/easing as ProjectPopup's own panel fade-in
-                  // (lib/motion.ts) rather than an independent 0.18s ease —
-                  // an earlier version snapped this instantly instead to
-                  // avoid a "grow" animation on open, but that just traded
-                  // it for two motions (a smooth panel + content popping in
-                  // with zero motion) reading as disjointed. Sharing one
-                  // timing/easing across the panel and its content settles
-                  // them together as a single motion.
-                  opacity: (!active || playerVisible) ? 1 : 0,
-                  transition: `width ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, height ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1)`,
                 }}
               >
                 <div style={{
@@ -536,7 +540,6 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   height: PLAYER_H,
                   transform: `scale(${scale})`,
                   transformOrigin: 'top left',
-                  transition: `transform ${PANEL_DURATION.panel.enter}s ${EASE_CSS}`,
                 }}>
                   <VinylPlayer
                     activeAlbum={activeAlbum}
