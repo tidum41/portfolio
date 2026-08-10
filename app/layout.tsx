@@ -10,6 +10,7 @@ import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
+import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
@@ -168,9 +169,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <GlobalCustomCursor />
         <UiSoundRoot />
         <Nav />
-        <main id="main-content">
+        <main id="main-content" style={{ position: "relative" }}>
           {/* Mounted once, unconditionally, for the whole session — never
               unmounted by route changes. See PersistentWorkShell for why. */}
+          <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
           <AnimationProvider>
             {children}

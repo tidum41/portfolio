@@ -1,5 +1,5 @@
 import { preload } from "react-dom";
-import { markSoftNav } from "@/lib/instantNav";
+import { markPatternTransition, markSoftNav } from "@/lib/instantNav";
 
 /**
  * Known case-study LCP assets — warmed on work-grid hover / pointerdown so
@@ -34,8 +34,8 @@ export function caseStudyLcpUrl(href: string): string | undefined {
 type PrefetchableRouter = { prefetch: (href: string) => void };
 
 /**
- * Work → case study intent: soft-skip the route opacity crossfade, prefetch
- * the RSC payload, and preload the LCP poster. Safe to call repeatedly.
+ * Passive resource warmup only. Hover/focus must never decide the next route's
+ * visual policy: users routinely inspect several cards before committing.
  */
 export function warmCaseStudyNav(
   href: string,
@@ -43,11 +43,21 @@ export function warmCaseStudyNav(
 ) {
   if (!isCaseStudyHref(href)) return;
 
-  markSoftNav();
   router?.prefetch(href);
 
   const lcp = caseStudyLcpUrl(href);
   if (lcp) {
     preload(lcp, { as: "image" });
   }
+}
+
+/** Visual intent is set only for a committed Work → case-study navigation. */
+export function commitCaseStudyNav(
+  href: string,
+  router?: PrefetchableRouter | null,
+) {
+  if (!isCaseStudyHref(href)) return;
+  markSoftNav();
+  markPatternTransition(href);
+  warmCaseStudyNav(href, router);
 }

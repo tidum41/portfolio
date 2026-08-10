@@ -18,7 +18,7 @@ import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
-import { isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -43,7 +43,6 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
-const PS3Silk         = dynamic(() => import("@/components/PS3Silk"));
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
@@ -178,6 +177,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const isWorkRoute = pathname === "/";
   const warmProjectNav = (href: string) => {
     if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
+  const commitProjectNav = (href: string) => {
+    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
@@ -460,7 +462,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   return (
     <div
-      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)" }}
+      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
       aria-hidden={!isWorkRoute}
       inert={!isWorkRoute}
       // When this shell is hidden on other routes, its hero + grid still sit in
@@ -474,6 +476,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       <section
         aria-label="Introduction"
         className="work-hero"
+        data-work-hero
         style={{
           position: "relative",
           overflow: "hidden",
@@ -481,11 +484,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           paddingBottom: "var(--hero-pb)",
         }}
       >
-        <PS3Silk
-          mode={1}
-          active={isWorkRoute}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-        />
         <HeroLegibilityScrim />
         <EntranceItem active={isWorkRoute} instant={heroInstant} delay={0} style={{
           position: "relative",
@@ -545,7 +543,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           style={{ textDecoration: "none", display: "block" }}
                           onMouseEnter={() => warmProjectNav(p.href)}
                           onFocus={() => warmProjectNav(p.href)}
-                          onPointerDown={() => warmProjectNav(p.href)}
+                          onPointerDown={() => commitProjectNav(p.href)}
+                          onClick={() => commitProjectNav(p.href)}
                         >
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
@@ -661,7 +660,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                           style={{ textDecoration: "none", display: "block" }}
                           onMouseEnter={() => warmProjectNav(p.href)}
                           onFocus={() => warmProjectNav(p.href)}
-                          onPointerDown={() => warmProjectNav(p.href)}
+                          onPointerDown={() => commitProjectNav(p.href)}
+                          onClick={() => commitProjectNav(p.href)}
                         >
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image

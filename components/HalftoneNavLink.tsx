@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
-import { markSoftNav } from "@/lib/instantNav";
+import { markPatternTransition, markSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -100,10 +100,21 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       onPointerDown={() => {
         // Soft-skip the route opacity crossfade for primary chrome navigations
         // (work / about / archive) — biggest remaining about→work lag source.
-        if (PRIMARY_NAV.has(href)) markSoftNav();
+        if (PRIMARY_NAV.has(href)) {
+          markSoftNav();
+          markPatternTransition(href);
+        }
         setIsTapped(true);
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
         tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 1000);
+      }}
+      onClick={() => {
+        // Keyboard navigation has no pointerdown, so commit the same
+        // directional handoff at click time. Repeated calls are harmless.
+        if (PRIMARY_NAV.has(href)) {
+          markSoftNav();
+          markPatternTransition(href);
+        }
       }}
       onPointerCancel={() => {
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
