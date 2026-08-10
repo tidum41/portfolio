@@ -1,7 +1,33 @@
-// Flags for fast client navigations that should skip the route crossfade.
-// Case-study Back uses instant-back (also restores scroll). Primary chrome
-// (work / about / archive) uses soft-nav so about↔work / about↔archive feel
-// snappy without remounting PersistentWorkShell's keep-alive trees mid-fade.
+/**
+ * Motion contract — Instant vs Orchestrated
+ * ==========================================
+ * Layer A — route opacity (AnimationProvider):
+ *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
+ *   - Soft-nav does not imply that destination content is instant.
+ *
+ * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
+ *   - Instant only for CaseStudyTOC Back on this arrival (peekInstantBack()).
+ *   - Orchestrated for every other arrival at "/": cold work after the intro,
+ *     primary-nav returns (about/archive/nav work), and case-study → work via
+ *     primary chrome. These use ENTRANCE_DEFAULTS; do not fire intro-replay.
+ *
+ * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
+ * PS3Silk):
+ *   - Cold "/" and tab/BFCache intro-replay only. Never use it for an SPA
+ *     soft return.
+ *
+ * Layer D — route lifetime:
+ *   - Remounting chrome (about, archive, case studies, PS3ControlPanel) may
+ *     own an entrance. Keep-alive work media/grid/silk must not remount.
+ *
+ * Primary paths:
+ *   Cold "/"                  → intro, then orchestrated grid
+ *   "/" ↔ about/archive       → soft fade skip; destination orchestrated
+ *   "/" → case study          → soft fade skip; narrative entrance preserved
+ *   case-study Back → "/"     → instant fade/content return
+ *   case-study → "/" via nav  → soft fade skip; work orchestrated
+ *   tab/BFCache return on "/" → distinct intro-replay
+ */
 
 const INSTANT_KEY = "instant-back";
 const SOFT_KEY = "soft-nav";

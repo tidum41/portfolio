@@ -28,7 +28,11 @@ const nextConfig = {
   },
   serverExternalPackages: ["sanity", "next-sanity", "@sanity/client", "@sanity/ui"],
   experimental: {
-    optimizePackageImports: ["framer-motion", "@mux/mux-player-react"],
+    optimizePackageImports: [
+      "framer-motion",
+      "@mux/mux-player-react",
+      "@phosphor-icons/react",
+    ],
   },
   async redirects() {
     return [

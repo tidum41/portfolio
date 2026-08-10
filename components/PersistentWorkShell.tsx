@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
@@ -18,6 +18,7 @@ import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
+import { isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -173,7 +174,11 @@ function CardLabel({
  *     replaying on every such arrival since hero/grid re-hide when you leave. */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isWorkRoute = pathname === "/";
+  const warmProjectNav = (href: string) => {
+    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
   // Which embed's popup is active, and whether the modal is visibly open.
@@ -211,20 +216,18 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
   const wasWorkRouteRef = useRef(isWorkRoute);
+  // Layer B — see the contract in lib/instantNav.ts. Only case-study Back
+  // (markInstantBack / peekInstantBack) skips the work entrance. Soft returns
+  // from about/archive must replay EntranceItems; soft-nav only skips Layer A.
   const instantArrivalRef = useRef(false);
-  // Soft return: after the first "/" visit, coming back from about/archive/
-  // case studies skips entrance stagger (same feel as instant-back) so we
-  // don't restack grid animations on top of silk wake + media resume.
-  const softReturnRef = useRef(false);
   if (isWorkRoute && !wasWorkRouteRef.current) {
     instantArrivalRef.current = peekInstantBack();
-    softReturnRef.current = hasEverBeenActive && !instantArrivalRef.current;
-  }
-  if (!isWorkRoute) {
-    softReturnRef.current = false;
   }
   wasWorkRouteRef.current = isWorkRoute;
-  const instant = instantArrivalRef.current || softReturnRef.current;
+  // Off-route: snap to hidden (duration 0) so a later soft return can replay
+  // hidden→visible cleanly even while display:none. On-route: instant only
+  // for case-study Back.
+  const instant = !isWorkRoute || instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -536,7 +539,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <div className="project-media">
-                        <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
+                        <Link
+                          href={p.href}
+                          prefetch
+                          style={{ textDecoration: "none", display: "block" }}
+                          onMouseEnter={() => warmProjectNav(p.href)}
+                          onFocus={() => warmProjectNav(p.href)}
+                          onPointerDown={() => warmProjectNav(p.href)}
+                        >
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
@@ -645,7 +655,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                   <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <div className="project-media">
-                        <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
+                        <Link
+                          href={p.href}
+                          prefetch
+                          style={{ textDecoration: "none", display: "block" }}
+                          onMouseEnter={() => warmProjectNav(p.href)}
+                          onFocus={() => warmProjectNav(p.href)}
+                          onPointerDown={() => warmProjectNav(p.href)}
+                        >
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
@@ -734,7 +751,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             (parent display:none cannot hide it), and its default position is
             measured against the live hero. Keep-mounted + CSS hide left it
             visible off-route and could freeze a stale/zero position. */}
-        {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
+        {hasEverBeenActive && isWorkRoute && (
+          <PS3ControlPanel instantReturn={instantArrivalRef.current} />
+        )}
       </div>
 
       {/*

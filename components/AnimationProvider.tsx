@@ -42,8 +42,7 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // dragged the sticky TOC along with it).
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Instant-back (case-study) or soft primary nav (work/about/archive) —
-  // skip the opacity crossfade so keep-alive shells aren't fighting a fade.
+  // Layer A only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
   const skipFade = peekSkipRouteFade();
   const reduced = useReducedMotion();
   const dur = (d: number) => (reduced ? 0 : d);

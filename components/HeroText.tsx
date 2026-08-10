@@ -6,6 +6,10 @@ import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, EASE_Y } from "@/lib/motion";
 import { HERO_HEADLINE } from "@/lib/site";
 
+// Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
+// This guards the long cold-load/tab-replay timeline. On an SPA soft return,
+// PersistentWorkShell's Layer B EntranceItem moves this settled inner content;
+// never reset _animated for that path or the hero will double-motion/arrive late.
 // Module-level: false on fresh page load, true after first mount.
 // Persists across client-side navigation — same pattern as PS3Silk._hasMounted.
 let _animated = false;

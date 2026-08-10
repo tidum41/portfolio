@@ -1,12 +1,18 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { preload } from "react-dom";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import CaseStudyLoadingSilhouette from "@/components/CaseStudyLoadingSilhouette";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
+import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
+
+/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "sviz",
@@ -229,7 +235,43 @@ const LOCAL_SOLUTION_VIDEO = "/images/sviz/solution-video.webm";
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function SvizPage() {
+export default function SvizPage() {
+  const lcp = CASE_STUDY_LCP["/sviz"];
+  if (lcp) preload(lcp, { as: "image" });
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseStudyTOC
+            items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
+            backHref="/"
+          />
+        </aside>
+
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
+
+          <Suspense
+            fallback={
+              <CaseStudyLoadingSilhouette
+                contentOnly
+                heroBg="var(--color-placeholder)"
+                mediaAspect="1596 / 1388"
+              />
+            }
+          >
+            <SvizContent />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function SvizContent() {
   const raw = await getCaseStudy("sviz").catch(() => ({ slug: "sviz" }));
 
   const cs = {
@@ -250,22 +292,7 @@ export default async function SvizPage() {
   const solutionVideoSrc = cs.solutionVideo ?? LOCAL_SOLUTION_VIDEO;
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
-      <div className="cs-layout">
-
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={(cs.tocItems?.length ? cs.tocItems : TOC_ITEMS).map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
-
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
+    <>
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           {/* Staggers in top-to-bottom on route arrival, own "Case Study
               Entrance" DialKit panel — see app/ucla-sublease/page.tsx for the
@@ -391,8 +418,6 @@ export default async function SvizPage() {
             </Section>
 
           </article>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

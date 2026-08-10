@@ -19,8 +19,8 @@ interface Props {
 export function ScrollReveal({ children, delay = 0, style, className, y: yProp }: Props) {
   const dk = useDialKit("ScrollReveal", {
     y:              [16,   0,    80],
-    yDuration:      [0.95, 0.1,  2.5],
-    opacityDuration:[0.75, 0.1,  2.5],
+    yDuration:      [0.55, 0.1,  2.5],
+    opacityDuration:[0.45, 0.1,  2.5],
     viewportMargin: [-60, -300,  0],
   });
   const y = yProp ?? dk.y;
@@ -84,7 +84,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
     <motion.div
       variants={{
         hidden:  { opacity: 0, transform: "translateY(16px)" },
-        visible: { opacity: 1, transform: "translateY(0px)", transition: { duration: reduced ? 0 : 0.7, ease: PS3_EASE } },
+        visible: { opacity: 1, transform: "translateY(0px)", transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
       className={className}
@@ -98,10 +98,9 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
 // Same fade-up + slide-up shape as StaggerReveal/StaggerItem, but triggered
 // by an explicit `active` flag instead of `whileInView`. For above-the-fold
 // content that should animate the instant its page becomes current (work
-// grid, about page) rather than when scrolled to. Adds a brief mid-flight
-// blur on top of opacity/y — barely perceptible, gone by the time the item
-// is at rest. Shares the "Entrance" dialkit panel with BentoGallery's plain-
-// CSS implementation of the same vocabulary, so one panel tunes both.
+// grid, about page) rather than when scrolled to. Shares the "Entrance"
+// dialkit panel with BentoGallery's plain-CSS implementation of the same
+// opacity + translateY vocabulary, so one panel tunes both.
 interface EntranceStaggerProps {
   active: boolean;
   children: ReactNode;
