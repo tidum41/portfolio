@@ -5,7 +5,6 @@ import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
-import { useIsMobile } from "./useIsMobile";
 import { markPatternTransition, markSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
@@ -18,14 +17,27 @@ const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 // at, see halftoneMask.ts's buildTextMask.
 const TEXT_STYLE = { fontWeight: 400, fontSizePx: 16, lineHeightPx: 24 };
 
-export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
+type NavLinkDials = {
+  enabled: boolean;
+  keepEffectOn: boolean;
+  bouncePhysics?: { textEndScale?: number; dotsEndScale?: number };
+  showHideSpeed?: { showDurationMs?: number; hideDurationMs?: number };
+};
+
+interface HalftoneNavLinkProps {
+  href: string;
+  label: string;
+  isActive: boolean;
+  dk: NavLinkDials;
+}
+
+export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneNavLinkProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
-  const isMobile = useIsMobile();
   
   // isHovered drives desktop; isTapped (pointerdown → pointerup/cancel/leave)
   // is the touch equivalent — there's no hover state on mobile to piggyback
