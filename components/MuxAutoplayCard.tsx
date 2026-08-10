@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
+import { isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 
 function CardLabel({
   title,
@@ -76,9 +78,13 @@ export default function MuxAutoplayCard({
     labelFontSize: [18, 10, 32],
   });
 
+  const router = useRouter();
   const playerRef    = useRef<MuxPlayerRefAttributes>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const warmCaseStudy = () => {
+    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
 
   // Latch once in view — keep the player mounted across "/" soft-returns so
   // about→work doesn't rebuild every HLS stack. Pause when the work shell
@@ -159,7 +165,6 @@ export default function MuxAutoplayCard({
               height: "100%",
               objectFit: "cover",
               display: "block",
-              // @ts-ignore CSS custom properties
               "--controls": "none",
               "--media-background-color": "transparent",
             }}
@@ -180,7 +185,16 @@ export default function MuxAutoplayCard({
         {external ? (
           <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
         ) : (
-          <Link href={href} prefetch style={linkStyle}>{video}</Link>
+          <Link
+            href={href}
+            prefetch
+            style={linkStyle}
+            onMouseEnter={warmCaseStudy}
+            onFocus={warmCaseStudy}
+            onPointerDown={warmCaseStudy}
+          >
+            {video}
+          </Link>
         )}
         <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
       </ProjectCardLift>

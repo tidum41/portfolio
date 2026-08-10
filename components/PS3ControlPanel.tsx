@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
+import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { EASE_Y, ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
+const useSafeLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const PANEL_W = 240;
 const PILL_W  = 70;
@@ -29,18 +31,12 @@ const CLOSE_EASE = EASE_OUT;
 // reveal bolted onto the page rather than part of it.
 const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const FADE_MS = 700;
-// This component unmounts whenever the user navigates off "/" (see the
-// `isWorkRoute &&` gate in PersistentWorkShell.tsx) and remounts fresh on
-// return — unlike PS3Silk/hero/the grid, which stay mounted the whole
-// session and are only CSS-hidden. `_ps3cpHasLoaded` (module-level, so it
-// survives the unmount) means every return trip takes the "not very first
-// load" path below. Matches EntranceItem/hero's own re-entry animation
-// (lib/motion.ts's EASE_Y + ENTRANCE_DEFAULTS.duration=0.45s) — used so the
-// pill fades back in as part of the same "content sliding back into view"
-// moment as everything else on the route, instead of popping in at full
-// opacity with zero transition while its neighbors visibly re-enter.
-const RETURN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const RETURN_FADE_MS = 450;
+// This portal intentionally remounts off-route. On an orchestrated work
+// return it shares the work entrance's opacity + settle language, so the
+// pill joins the hero/grid chorus rather than entering as an isolated layer.
+// Case-study Back passes instantReturn and deliberately snaps instead.
+const RETURN_EASE = `cubic-bezier(${EASE_Y.join(", ")})`;
+const RETURN_FADE_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
@@ -514,7 +510,7 @@ html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,
 html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
-export default function PS3ControlPanel() {
+export default function PS3ControlPanel({ instantReturn = false }: { instantReturn?: boolean }) {
   const dk = useDialKit("PS3 Pill", {
     chevronOffset:  [-1.5, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
@@ -531,7 +527,7 @@ export default function PS3ControlPanel() {
   const isVeryFirstLoad = useRef(!_ps3cpHasLoaded);
   const savedPos        = useRef<{x:number;y:number} | null>(typeof window !== "undefined" ? readSavedPos() : null);
   const hasDraggedRef   = useRef(savedPos.current !== null);
-  const revealKindRef   = useRef<"first" | "return">("first");
+  const revealKindRef   = useRef<"first" | "return" | "instant">("first");
 
   const [portalEl, setPortalEl]         = useState<HTMLElement | null>(null);
   const [pillPos, setPillPos]           = useState(savedPos.current ?? { x: 0, y: 0 });
@@ -564,6 +560,7 @@ export default function PS3ControlPanel() {
     typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") === "dark" : true
   );
   const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
+  const reduced = useReducedMotion();
 
   // Portal setup
   useEffect(() => {
@@ -604,20 +601,26 @@ export default function PS3ControlPanel() {
     return () => window.removeEventListener("ps3-mode-sync", h);
   }, []);
 
-  // Find nav-aligned position
-  useEffect(() => {
+  // Find the live hero alignment before paint. A normal effect plus the old
+  // 200ms retry left every remounted pill behind the work entrance, even when
+  // the anchor was already in the DOM.
+  useSafeLayoutEffect(() => {
     if (savedPos.current) return;
     const findAndPlace = (attempt: number) => {
       const pos = computeNavAlignedPos();
       if (pos) {
-        startTransition(() => { setPillPos(pos); setFlipped(shouldFlip(pos.y)); setPosReady(true); });
+        setPillPos(pos);
+        setFlipped(shouldFlip(pos.y));
+        setPosReady(true);
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
       const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
-      startTransition(() => { setPillPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
+      setPillPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY });
+      setFlipped(false);
+      setPosReady(true);
     };
-    setTimeout(() => findAndPlace(0), 200);
+    findAndPlace(0);
   }, []);
 
   // Reposition on resize (unless user has dragged)
@@ -632,11 +635,28 @@ export default function PS3ControlPanel() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // posReady: handle show timing
-  useEffect(() => {
+  // `instantReturn` is Layer B's Case-study Back contract. The panel remounts
+  // because it portals to document.body, but must not become the only thing
+  // still moving after the kept-alive work content has restored instantly.
+  useSafeLayoutEffect(() => {
     if (!posReady) return;
+    const revealImmediately = () => {
+      setShowTransition(false);
+      setShown(true);
+      setPositionSettled(true);
+    };
+    if (instantReturn) {
+      revealKindRef.current = "instant";
+      revealImmediately();
+      _ps3cpHasLoaded = true;
+      return;
+    }
     if (!isVeryFirstLoad.current) {
       revealKindRef.current = "return";
+      if (reduced) {
+        revealImmediately();
+        return;
+      }
       startTransition(() => setShowTransition(true));
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
@@ -646,11 +666,15 @@ export default function PS3ControlPanel() {
     }
     revealKindRef.current = "first";
     function reveal() {
-      startTransition(() => setShowTransition(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-        setShown(true); setPositionSettled(true);
-      })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
+      if (reduced) {
+        revealImmediately();
+      } else {
+        startTransition(() => setShowTransition(true));
+        requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
+          setShown(true); setPositionSettled(true);
+        })));
+        setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
+      }
       _ps3cpHasLoaded = true;
     }
     if (!document.documentElement.hasAttribute("data-intro")) {
@@ -659,7 +683,7 @@ export default function PS3ControlPanel() {
     }
     window.addEventListener("intro-done", reveal, { once: true });
     return () => window.removeEventListener("intro-done", reveal);
-  }, [posReady]);
+  }, [instantReturn, posReady, reduced]);
 
   // Sync dark mode from html[data-theme]
   useEffect(() => {
@@ -769,9 +793,10 @@ export default function PS3ControlPanel() {
     "background-color 200ms ease",
     "border-color 200ms ease",
   ];
-  const fadeMs   = revealKindRef.current === "return" ? RETURN_FADE_MS : FADE_MS;
-  const fadeEase = revealKindRef.current === "return" ? RETURN_EASE   : FADE_EASE;
-  const slideY = revealKindRef.current === "return" ? ENTRANCE_DEFAULTS.y : 0;
+  const isReturnReveal = revealKindRef.current === "return";
+  const fadeMs   = isReturnReveal ? RETURN_FADE_MS : FADE_MS;
+  const fadeEase = isReturnReveal ? RETURN_EASE   : FADE_EASE;
+  const slideY = isReturnReveal ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
     ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
     : (showTransition

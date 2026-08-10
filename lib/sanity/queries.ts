@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { sanityClient } from "./client";
 import {
   sanityImageUrl,
@@ -297,11 +298,12 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 type RawImg  = { asset: { url: string } } | null;
 type RawFile = { asset: { url: string } } | null;
 
-export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
+/** Per-request dedupe when Suspense splits shell + body both need the doc. */
+export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
   const raw = await sanityClient.fetch<Record<string, unknown> | null>(
     CASE_STUDY_QUERY,
     { slug },
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 300 } }
   );
   if (!raw) return { slug };
 
@@ -324,7 +326,7 @@ export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
     decision1Video:        file("decision1Video"),
     solutionVideo:         file("solutionVideo"),
   } as CaseStudyData;
-}
+});
 
 // Legacy shim — keeps old imports working
 export async function getCaseStudyAssets(slug: string) {

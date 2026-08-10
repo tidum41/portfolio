@@ -1,3 +1,10 @@
+import CaseStudyLoadingSilhouette from "@/components/CaseStudyLoadingSilhouette";
+
 export default function Loading() {
-  return null;
+  return (
+    <CaseStudyLoadingSilhouette
+      heroBg="#C6DDF2"
+      mediaAspect="16 / 9"
+    />
+  );
 }

@@ -1,13 +1,20 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { preload } from "react-dom";
 import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
 import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import CaseStudyLoadingSilhouette from "@/components/CaseStudyLoadingSilhouette";
+import MuxHero from "@/components/MuxHero";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
+import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
+
+/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "BruinLease",
@@ -41,7 +48,6 @@ const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
-const MuxHero             = dynamic(() => import("@/components/MuxHero"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
 const COLOR_NEUTRAL = "#757575";
@@ -379,7 +385,49 @@ const FB = {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function BruinLeasePage() {
+export default function BruinLeasePage() {
+  const lcp = CASE_STUDY_LCP["/ucla-sublease"];
+  if (lcp) preload(lcp, { as: "image" });
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      {process.env.NODE_ENV === "development" && (
+        <>
+          <DevNavigator />
+          <PhoneMockupDevPanel />
+        </>
+      )}
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseStudyTOC
+            items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
+            backHref="/"
+          />
+        </aside>
+
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
+
+          <Suspense
+            fallback={
+              <CaseStudyLoadingSilhouette
+                contentOnly
+                heroBg="#C6DDF2"
+                mediaAspect="16 / 9"
+              />
+            }
+          >
+            <BruinLeaseContent />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function BruinLeaseContent() {
   const raw = await getCaseStudy("ucla-sublease").catch(() => ({ slug: "ucla-sublease" }));
 
   const cs = {
@@ -401,7 +449,6 @@ export default async function BruinLeasePage() {
     ...Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null && (Array.isArray(v) ? v.length > 0 : v !== ""))),
   };
 
-  const tocItems        = (cs.tocItems      ?? FB.tocItems)      as TocItem[];
   const metadata        = (cs.metadata      ?? FB.metadata);
   const stats           = (cs.stats         ?? FB.stats);
   const processTools    = (cs.processTools  ?? FB.processTools);
@@ -414,27 +461,7 @@ export default async function BruinLeasePage() {
   const reflectionItems = (cs.reflectionItems ?? FB.reflectionItems);
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
-      {process.env.NODE_ENV === "development" && (
-        <>
-          <DevNavigator />
-          <PhoneMockupDevPanel />
-        </>
-      )}
-      <div className="cs-layout">
-
-        <aside className="cs-aside">
-          <CaseStudyTOC items={tocItems.map(t => ({ id: t.id, label: t.label }))} backHref="/" />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
-
-          {/* Mobile back lives in the content lane (aside is hidden ≤767px) so
-              the chevron, tagline, title, and hero media share one left edge. */}
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
+    <>
           {/* ── Hero ───────────────────────────────────────────────────── */}
           {/* Staggers in top-to-bottom on route arrival (tagline, title, video,
               metadata) on its own "Case Study Entrance" DialKit panel — subtler
@@ -711,8 +738,6 @@ export default async function BruinLeasePage() {
             </Section>
 
           </article>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
