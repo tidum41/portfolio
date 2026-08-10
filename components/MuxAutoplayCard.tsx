@@ -8,7 +8,7 @@ import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
-import { isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 
 function CardLabel({
   title,
@@ -84,6 +84,9 @@ export default function MuxAutoplayCard({
   const [shouldLoad, setShouldLoad] = useState(false);
   const warmCaseStudy = () => {
     if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
+  const commitCaseStudy = () => {
+    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   // Latch once in view — keep the player mounted across "/" soft-returns so
@@ -191,7 +194,8 @@ export default function MuxAutoplayCard({
             style={linkStyle}
             onMouseEnter={warmCaseStudy}
             onFocus={warmCaseStudy}
-            onPointerDown={warmCaseStudy}
+            onPointerDown={commitCaseStudy}
+            onClick={commitCaseStudy}
           >
             {video}
           </Link>

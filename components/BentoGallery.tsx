@@ -632,6 +632,37 @@ export default function BentoGallery({
         [vw, vh, trackW, trackPadH]
     );
 
+    // A focus/flow transition can still be mid-flight when the user grabs the
+    // canvas. Read the composited matrix before disabling CSS transition so the
+    // gesture starts exactly where the eye sees it, not from the stored target.
+    const takeOverFromRenderedTransform = useCallback(() => {
+        const el = canvasRef.current;
+        if (!el) return;
+        const transform = getComputedStyle(el).transform;
+        if (!transform || transform === "none") {
+            el.style.transition = "none";
+            return;
+        }
+
+        try {
+            const matrix = new DOMMatrixReadOnly(transform);
+            const scale = matrix.a || tx.current.s;
+            const next = { x: matrix.m41, y: matrix.m42, s: scale };
+            tx.current = next;
+            const focused = focusedRef.current;
+            if (focused !== null) syncSelectorBox(focused);
+            el.style.transition = "none";
+            const thumb = thumbRef.current;
+            if (thumb) {
+                const thumbX = scaleToThumbX(scale, zMinRef.current, zMaxRef.current, trackW);
+                thumb.style.left = trackPadH + thumbX + "px";
+                thumb.style.transform = "translate(-50%, -50%)";
+            }
+        } catch {
+            el.style.transition = "none";
+        }
+    }, [trackW, trackPadH]);
+
     const snapToBounds = useCallback(
         (easing: "none" | "spring" | "flow" = "spring") => {
             const { x, y, s } = tx.current;
@@ -743,10 +774,10 @@ export default function BentoGallery({
             syncSelectorBox(idx);
             sel.style.transition = "none";
             if (animate) {
-                sel.style.transform = "scale(0, 0)";
+                sel.style.transform = "scale(0.96, 0.96)";
                 sel.style.opacity = "0";
                 requestAnimationFrame(() => {
-                    sel.style.transition = `transform 1.5s ${FOCUS_E}, opacity 0.4s ease`;
+                    sel.style.transition = `transform 0.45s ${FOCUS_E}, opacity 0.22s ${FOCUS_E}`;
                     sel.style.transform = "scale(1, 1)";
                     sel.style.opacity = "1";
                 });
@@ -1160,6 +1191,7 @@ export default function BentoGallery({
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
+            takeOverFromRenderedTransform();
             if (canvasRef.current) canvasRef.current.style.willChange = "transform";
             cancelZoomAnim();
             ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1189,7 +1221,7 @@ export default function BentoGallery({
                 g.p2py = tx.current.y;
             }
         },
-        [cancelZoomAnim, clientToLocal]
+        [cancelZoomAnim, clientToLocal, takeOverFromRenderedTransform]
     );
 
     const onPointerMove = useCallback(
@@ -1661,7 +1693,7 @@ export default function BentoGallery({
                     left: 0,
                     top: 0,
                     transformOrigin: "center center",
-                    transform: "scale(0, 0)",
+                    transform: "scale(0.96, 0.96)",
                     width: 0,
                     height: 0,
                     border: `1px solid ${selectorBorderColor}`,

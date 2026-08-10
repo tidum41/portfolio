@@ -54,7 +54,7 @@ export default function AnimationProvider({ children }: { children: React.ReactN
   }, [pathname]);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", zIndex: 1 }}>
       <AnimatePresence mode="sync" initial={false}>
         <motion.div
           key={pathname}
