@@ -78,22 +78,24 @@ export default function PersistentSilkLayer() {
     const transition = intent ?? inferred;
 
     if (pathname === "/") {
-      setHasVisitedWork(true);
+      queue(() => setHasVisitedWork(true), 0);
       if (peekInstantBack() || reduced) {
-        setPhase("work");
+        queue(() => setPhase("work"), 0);
         return;
       }
-      setPhase("returning");
-      requestAnimationFrame(() => requestAnimationFrame(() => setPhase("work")));
+      queue(() => {
+        setPhase("returning");
+        requestAnimationFrame(() => requestAnimationFrame(() => setPhase("work")));
+      }, 0);
       return;
     }
 
     if (reduced || (transition !== "work-to-about" && transition !== "work-to-case-study")) {
-      setPhase("hidden");
+      queue(() => setPhase("hidden"), 0);
       return;
     }
 
-    setPhase("imprint-hold");
+    queue(() => setPhase("imprint-hold"), 0);
     const [hold, yieldDuration] = transition === "work-to-about"
       ? [ABOUT_HOLD_MS, ABOUT_YIELD_MS]
       : [CASE_HOLD_MS, CASE_YIELD_MS];
