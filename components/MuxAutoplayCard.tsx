@@ -11,6 +11,10 @@ import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/cas
 
 /** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
 const MOUNT_STAGGER_MS = 140;
+/** Spread Mux teardown when leaving "/" so About/Archive paint + cursor
+ *  aren't blocked by N× MediaSource destroys on one commit. */
+const UNMOUNT_STAGGER_MS = 45;
+const UNMOUNT_BASE_MS = 48;
 
 function CardLabel({
   title,
@@ -113,27 +117,35 @@ export default function MuxAutoplayCard({
     return () => obs.disconnect();
   }, [shouldLoad, active]);
 
-  // Stagger player attach on return so N× HLS doesn't hitch one frame.
-  // Reset happens in cleanup (when leaving "/" or rescheduling), not sync
-  // at effect start — keeps the set-state-in-effect lint happy.
+  // Attach/detach are both staggered. Leave yields a paint first so soft-nav
+  // to About/Archive isn't one long Mux-destroy frame (cursor tip freezes).
+  // mountReady alone gates the player — `active` only schedules the timers.
   useEffect(() => {
-    if (!active || !shouldLoad) return;
     let cancelled = false;
-    const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+    if (active && shouldLoad) {
+      const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+      const id = window.setTimeout(() => {
+        if (!cancelled) setMountReady(true);
+      }, delay);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(id);
+      };
+    }
+    const delay = UNMOUNT_BASE_MS + Math.max(0, mountOrder) * UNMOUNT_STAGGER_MS;
     const id = window.setTimeout(() => {
-      if (!cancelled) setMountReady(true);
+      if (!cancelled) setMountReady(false);
     }, delay);
     return () => {
       cancelled = true;
       window.clearTimeout(id);
-      setMountReady(false);
     };
   }, [active, shouldLoad, mountOrder]);
 
   // Poster stays painted under the player so tear-down/remount never blanks
-  // the card. Player only exists while the work route is active + scheduled.
+  // the card. Player only exists while scheduled (see mountReady).
   const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
-  const showPlayer = active && shouldLoad && mountReady;
+  const showPlayer = shouldLoad && mountReady;
 
   const video = (
     <div className="project-media">

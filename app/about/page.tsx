@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import CDPlayer from "@/components/CDPlayer";
+import dynamic from "next/dynamic";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import {
@@ -12,6 +13,10 @@ import {
   SOCIALS,
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
+
+// Defer CD mount so soft-nav from Work can paint bio/bento + keep the
+// custom cursor smooth before Disc/audio graph init hits the main thread.
+const CDPlayer = dynamic(() => import("@/components/CDPlayer"), { ssr: false });
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -24,6 +29,50 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       color: "var(--color-text-primary)",
       margin: "0 0 12px",
     }}>{children}</h2>
+  );
+}
+
+function DeferredAboutCD() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    let idleId = 0;
+    let timeoutId = 0;
+    const enable = () => {
+      if (!cancelled) setReady(true);
+    };
+    // Prefer idle; fall back so CD still appears if the tab stays busy.
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(enable, { timeout: 500 });
+    } else {
+      timeoutId = window.setTimeout(enable, 120);
+    }
+    return () => {
+      cancelled = true;
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return (
+    <section style={{ marginBottom: "var(--space-7)", minHeight: 520 }}>
+      <SectionLabel>drag my favorite CDs!</SectionLabel>
+      {ready ? (
+        <CDPlayer style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+      ) : (
+        <div
+          aria-hidden
+          style={{
+            marginTop: 16,
+            minHeight: 520,
+            borderRadius: "var(--radius-card)",
+            background: "var(--color-placeholder)",
+          }}
+        />
+      )}
+    </section>
   );
 }
 
@@ -155,14 +204,9 @@ export default function AboutPage() {
       </EntranceStagger>
       </div>
 
-      {/* ── CD Player ── */}
+      {/* ── CD Player (deferred — see DeferredAboutCD) ── */}
       <ScrollReveal>
-        <section style={{
-          marginBottom: "var(--space-7)",
-        }}>
-          <SectionLabel>drag my favorite CDs!</SectionLabel>
-          <CDPlayer style={{ marginTop: 16, minHeight: 520 }} variant="about" />
-        </section>
+        <DeferredAboutCD />
       </ScrollReveal>
 
       {/* ── Experience ── */}

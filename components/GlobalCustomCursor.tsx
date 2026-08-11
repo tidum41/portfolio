@@ -753,6 +753,17 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
   }
 
+  // Tip follows the pointer on the event itself. Trail stays RAF-driven —
+  // during soft-nav to About/Archive the main thread can miss several frames
+  // (Mux/CD teardown + destination mount), which used to freeze the tip when
+  // its transform only updated inside tick.
+  const syncTip = (x: number, y: number) => {
+    const rx = Math.round(x * 2) / 2;
+    const ry = Math.round(y * 2) / 2;
+    wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
+    wrap.style.opacity = "1";
+  };
+
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -761,6 +772,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
+    syncTip(e.clientX, e.clientY);
     checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
@@ -780,6 +792,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
+    syncTip(e.clientX, e.clientY);
     wakeUp();
   }, { signal: sig });
   window.addEventListener("pointerdown", () => {
