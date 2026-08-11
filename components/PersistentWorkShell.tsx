@@ -152,13 +152,15 @@ function CardLabel({
 
 /** Mounted once, unconditionally, by the root layout — never unmounts across
  *  client-side navigation. Visibility is toggled purely with CSS based on the
- *  current route, so returning to "/" (via the case-study Back control, the
- *  Nav "work" link, or browser back/forward) never remounts, refetches, or
- *  reloads video/iframes — the DOM was simply never destroyed.
+ *  current route, so returning to "/" restores scroll and shell chrome without
+ *  remounting the page tree.
  *
- *  `hasEverBeenActive` lazily gates the heavy embeds (autoplay videos, the
- *  two live iframes) so sessions that never visit "/" don't pay for them.
- *  Once true it never resets, so the grid never has to "reload" again.
+ *  Heavy media (Mux grid players, live CD) unmount while off "/" and remount
+ *  on return — posters keep cards feeling instant without holding paused HLS /
+ *  audio graphs in memory. Habit live embed remains popup-only.
+ *
+ *  `hasEverBeenActive` lazily gates the heavy embeds so sessions that never
+ *  visit "/" don't pay for them. Once true it never resets.
  *
  *  Entrance animation has three distinct cases:
  *   - True first load at "/" (data-intro gate active): hero + PS3Silk's own
@@ -246,9 +248,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Leaving "/" — force-close popups (no live audio under display:none) and
-  // cover the CD grid slot with its theme poster. CD / habit poster trees
-  // stay mounted so session state survives without a cold remount on return.
+  // Leaving "/" — force-close popups and cover the CD grid slot with its
+  // theme poster. Live CD/Mux unmount off-route (memory); posters stay so
+  // return still feels instant.
   useEffect(() => {
     if (isWorkRoute) return;
     setPopupVisible(false);
@@ -258,8 +260,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     setCdPosterFade(false);
   }, [isWorkRoute]);
 
-  // Back on "/": reveal the kept-alive live CD under the poster (unless the
-  // modal is open — poster stays opaque behind the blur).
+  // Back on "/": once the remounted live CD is in place, fade the poster out
+  // (unless the modal is open — poster stays opaque behind the blur).
   useEffect(() => {
     if (!isWorkRoute || !hasEverBeenActive) return;
     if (openPopup === "cd") return;
@@ -757,14 +759,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </div>
 
       {/*
-        CD stays mounted after first "/" visit (session state + no remount lag).
-        active=true only in the open modal → DateBadge / Disc / transport fully
-        live; active=false in the grid pauses audio and sleeps Disc RAF.
-        Off-route the theme poster covers the card. Habit live embed is popup-only.
+        CD mounts only on the work route. Off-route the theme poster covers
+        the card (no live audio graph / Disc RAF). Habit live embed stays
+        popup-only.
       */}
-      {hasEverBeenActive && (
+      {hasEverBeenActive && isWorkRoute && (
         <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
+          <CDPlayer active={openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
       {openPopup === "habit" && isWorkRoute && habitPortalTarget && (

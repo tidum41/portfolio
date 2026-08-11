@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
-import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useDialKit } from "dialkit";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
@@ -58,9 +57,9 @@ interface Props {
   title: string;
   sub?: string;
   aspectRatio: string;
-  /** Whether this card is on the currently-visible route. Defaults to true
-   *  for standalone use; the persistent work shell passes this so background
-   *  cards pause (rather than reload) while a case study is open. */
+  /** When false (work shell off-route), tear down Mux/HLS entirely and show
+   *  the poster. Remount on return — posters keep cards feeling instant
+   *  without holding paused MediaSource buffers in memory. */
   active?: boolean;
 }
 
@@ -79,8 +78,9 @@ export default function MuxAutoplayCard({
   });
 
   const router = useRouter();
-  const playerRef    = useRef<MuxPlayerRefAttributes>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Latches after first in-view hit so returning to "/" remounts Mux
+  // immediately instead of waiting for IntersectionObserver again.
   const [shouldLoad, setShouldLoad] = useState(false);
   const warmCaseStudy = () => {
     if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
@@ -89,11 +89,8 @@ export default function MuxAutoplayCard({
     if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
-  // Latch once in view — keep the player mounted across "/" soft-returns so
-  // about→work doesn't rebuild every HLS stack. Pause when the work shell
-  // is hidden (active=false) instead of tearing down.
   useEffect(() => {
-    if (shouldLoad) return;
+    if (shouldLoad || !active) return;
     const container = containerRef.current;
     if (!container) return;
     const obs = new IntersectionObserver(
@@ -107,19 +104,12 @@ export default function MuxAutoplayCard({
     );
     obs.observe(container);
     return () => obs.disconnect();
-  }, [shouldLoad]);
+  }, [shouldLoad, active]);
 
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (active) player.play?.().catch(() => {});
-    else player.pause?.();
-  }, [active, shouldLoad]);
-
-  // Poster while waiting for first viewport entry. After that the player
-  // stays mounted (paused off-route) for snappy returns.
+  // Poster stays painted under the player so tear-down/remount never blanks
+  // the card. Player only exists while the work route is active.
   const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
-  const showPlayer = shouldLoad;
+  const showPlayer = active && shouldLoad;
 
   const video = (
     <div className="project-media">
@@ -146,20 +136,18 @@ export default function MuxAutoplayCard({
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: showPlayer ? 0 : 1,
-            transition: "opacity 180ms var(--spring-panel)",
             pointerEvents: "none",
           }}
         />
         {showPlayer && (
           <MuxPlayer
-            ref={playerRef}
             playbackId={playbackId}
             autoPlay="muted"
             loop
             muted
             playsInline
             nohotkeys
+            preload="none"
             poster={posterUrl}
             style={{
               position: "absolute",
