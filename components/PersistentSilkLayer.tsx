@@ -1,77 +1,41 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
-import {
-  peekInstantBack,
-  takePatternTransition,
-  type PatternTransitionKind,
-} from "@/lib/instantNav";
+import { peekInstantBack } from "@/lib/instantNav";
 import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 
-type Phase = "hidden" | "work" | "returning" | "imprint-hold" | "imprint-yield";
-
 const EASE = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
 const RETURN_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
-// Work → About: keep the live pattern as an afterimage long enough to read,
-// then yield. Sub-200ms holds were effectively invisible in testing.
-const ABOUT_HOLD_MS = 1000;
-const ABOUT_YIELD_MS = 800;
-const CASE_HOLD_MS = 220;
-const CASE_YIELD_MS = 420;
 const DEFAULT_HERO_H = 420;
 
-// Module session state survives hydration-recovery remounts. useState alone
-// re-initialized on /about after a remount, which unmounted the silk host and
-// skipped the afterimage because previousPathRef also reset to /about.
 let sessionVisitedWork = false;
-let sessionPathname: string | null = null;
 
 /**
- * A single session-long host for the PS3 silk. Its live WebGL scene can leave
- * a brief material afterimage during committed navigation without duplicating
- * a canvas or making route content wait for animation.
+ * Session-long host for the PS3 silk on the work hero. Visible only on "/";
+ * hides immediately when leaving work — no route afterimage / linger.
  */
 export default function PersistentSilkLayer() {
   const pathname = usePathname();
   const reduced = useReducedMotion();
-  const previousPathRef = useRef(sessionPathname ?? pathname);
-  const timersRef = useRef<number[]>([]);
-  const lastHeroHeightRef = useRef(DEFAULT_HERO_H);
+  const previousPathRef = useRef(pathname);
   const [hasVisitedWork, setHasVisitedWork] = useState(
     () => sessionVisitedWork || pathname === "/"
   );
-  const [phase, setPhase] = useState<Phase>(() =>
-    pathname === "/" ? "work" : "hidden"
-  );
+  const [visible, setVisible] = useState(pathname === "/");
+  const [fadingIn, setFadingIn] = useState(false);
   const [height, setHeight] = useState(DEFAULT_HERO_H);
 
-  const clearTimers = () => {
-    for (const timer of timersRef.current) window.clearTimeout(timer);
-    timersRef.current = [];
-  };
-
-  const queue = (callback: () => void, delay: number) => {
-    timersRef.current.push(window.setTimeout(callback, delay));
-  };
-
-  // Mirror the live work hero box so the persistent layer preserves the same
-  // crop before, during, and after the route handoff. Ignore 0-height reads
-  // while PersistentWorkShell is display:none.
   useLayoutEffect(() => {
     const hero = document.querySelector<HTMLElement>("[data-work-hero]");
     if (!hero) return;
     const sync = () => {
       const next = hero.getBoundingClientRect().height;
-      if (next >= 2) {
-        const rounded = Math.round(next);
-        lastHeroHeightRef.current = rounded;
-        setHeight(rounded);
-      }
+      if (next >= 2) setHeight(Math.round(next));
     };
     sync();
     const observer = new ResizeObserver(sync);
@@ -79,142 +43,65 @@ export default function PersistentSilkLayer() {
     return () => observer.disconnect();
   }, [pathname]);
 
-  // Phase changes must land before paint. Sync setState in useLayoutEffect is
-  // intentional here: setTimeout(0)/useEffect left the silk under About for a
-  // frame, and the old ~180ms hold ended before the afterimage could be seen.
   useLayoutEffect(() => {
     const previousPath = previousPathRef.current;
     if (previousPath === pathname) {
-      sessionPathname = pathname;
-      if (pathname === "/") {
-        sessionVisitedWork = true;
-      }
+      if (pathname === "/") sessionVisitedWork = true;
       return;
     }
     previousPathRef.current = pathname;
-    sessionPathname = pathname;
-    clearTimers();
 
-    const intent = takePatternTransition(previousPath, pathname);
-    const inferred: PatternTransitionKind | null =
-      previousPath === "/" && pathname === "/about"
-        ? "work-to-about"
-        : previousPath === "/about" && pathname === "/"
-          ? "about-to-work"
-          : previousPath === "/" && pathname !== "/" && pathname !== "/archive"
-            ? "work-to-case-study"
-            : null;
-    const transition = intent ?? inferred;
-
-    /* eslint-disable react-hooks/set-state-in-effect -- silk handoff must commit before paint */
+    /* eslint-disable react-hooks/set-state-in-effect -- route visibility before paint */
     if (pathname === "/") {
       sessionVisitedWork = true;
       setHasVisitedWork(true);
       if (peekInstantBack() || reduced) {
-        setPhase("work");
+        setFadingIn(false);
+        setVisible(true);
       } else {
-        // Fade the same live pattern back in with the work return chorus.
-        setPhase("returning");
+        // Soft fade-in with work return only — never linger on other routes.
+        setFadingIn(true);
+        setVisible(false);
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => setPhase("work"));
+          requestAnimationFrame(() => {
+            setVisible(true);
+            setFadingIn(false);
+          });
         });
       }
-    } else if (reduced || (transition !== "work-to-about" && transition !== "work-to-case-study")) {
-      setPhase("hidden");
     } else {
-      // Preserve last known hero height for the imprint crop.
-      setHeight(lastHeroHeightRef.current);
-      setPhase("imprint-hold");
-      const [hold, yieldDuration] = transition === "work-to-about"
-        ? [ABOUT_HOLD_MS, ABOUT_YIELD_MS]
-        : [CASE_HOLD_MS, CASE_YIELD_MS];
-      queue(() => setPhase("imprint-yield"), hold);
-      queue(() => setPhase("hidden"), hold + yieldDuration);
+      setFadingIn(false);
+      setVisible(false);
     }
     /* eslint-enable react-hooks/set-state-in-effect */
-
-    return clearTimers;
   }, [pathname, reduced]);
-
-  useEffect(() => clearTimers, []);
 
   if (!hasVisitedWork && !sessionVisitedWork) return null;
 
-  // Until the layout effect commits imprint-hold, the first About paint can
-  // still have phase==="work" at z-index 0 — under AnimationProvider — so the
-  // afterimage is invisible for a beat. Treat a pending work→imprint handoff as
-  // already imprinting for stacking/opacity on this render.
-  const pendingImprint =
-    !reduced &&
-    sessionPathname === "/" &&
-    pathname !== "/" &&
-    pathname !== "/archive" &&
-    (phase === "work" || phase === "returning");
-
-  const imprinting =
-    phase === "imprint-hold" || phase === "imprint-yield" || pendingImprint;
-  const visible = phase !== "hidden" || pendingImprint;
-  // Keep the WebGL loop alive through the whole fade-out so the afterimage
-  // doesn't collapse to a blank 1×1 canvas mid-transition.
-  const canvasActive = visible;
-  const opacity =
-    pendingImprint
-      ? 1
-      : phase === "hidden" || phase === "returning" || phase === "imprint-yield"
-        ? 0
-        : 1;
-  const duration =
-    pendingImprint
-      ? 0
-      : phase === "returning" || phase === "work"
-        ? RETURN_MS
-        : phase === "imprint-yield"
-          ? pathname === "/about"
-            ? ABOUT_YIELD_MS
-            : CASE_YIELD_MS
-          : 0;
+  const onWork = pathname === "/";
+  const show = onWork && visible;
+  const duration = fadingIn || (onWork && visible) ? RETURN_MS : 0;
 
   return (
     <div
       aria-hidden
-      data-silk-phase={pendingImprint ? "imprint-hold" : phase}
+      data-silk-phase={show ? "work" : "hidden"}
       style={{
-        // Fixed during imprint so the afterimage stays in the viewport even if
-        // About mounts scrolled or reflows; absolute on Work so it tracks the
-        // hero band inside <main>.
-        position: imprinting ? "fixed" : "absolute",
+        position: "absolute",
         top: 0,
         left: 0,
         width: "100%",
         height,
-        // During imprint, sit above route content (below nav z=40) so the
-        // afterimage is actually visible over About. On Work, stay behind the
-        // hero text/scrim shell (z=1).
-        zIndex: imprinting ? 5 : 0,
-        opacity,
+        zIndex: 0,
+        opacity: show ? 1 : 0,
         pointerEvents: "none",
         overflow: "hidden",
         transition: reduced ? "none" : `opacity ${duration}ms ${EASE}`,
       }}
     >
-      {/* Dark plate behind the dots during imprint so the white wave reads on
-          About the same way it does in the work hero (otherwise dots sit on
-          the page bg and look like they “vanished”). */}
-      {imprinting && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 92%, transparent), color-mix(in srgb, var(--color-bg) 55%, transparent) 70%, transparent)",
-            pointerEvents: "none",
-          }}
-        />
-      )}
       <PS3Silk
         mode={1}
-        active={canvasActive}
-        imprint={imprinting}
+        active={show}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       />
     </div>

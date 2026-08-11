@@ -18,14 +18,13 @@
  *
  * Layer D — route lifetime:
  *   - Remounting chrome (about, archive, case studies, PS3ControlPanel) may
- *     own an entrance. Keep-alive work media/grid/silk must not remount.
+ *     own an entrance. Keep-alive work shell chrome must not remount; heavy
+ *     media (Mux/CD) may unload off "/" and remount on return.
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
  *   "/" ↔ about/archive       → soft fade skip; destination orchestrated
- *                                (Work ↔ About also owns a persistent silk handoff)
- *   "/" → case study          → soft fade skip; brief silk departure, then
- *                                narrative entrance
+ *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
  *   case-study → "/" via nav  → soft fade skip; work orchestrated
  *   tab/BFCache return on "/" → distinct intro-replay
@@ -33,22 +32,6 @@
 
 const INSTANT_KEY = "instant-back";
 const SOFT_KEY = "soft-nav";
-const PATTERN_KEY = "pattern-transition";
-
-export type PatternTransitionKind =
-  | "work-to-about"
-  | "about-to-work"
-  | "work-to-case-study";
-
-type PatternTransitionIntent = {
-  from: string;
-  to: string;
-  kind: PatternTransitionKind;
-};
-
-function pathOf(href: string) {
-  return href.split("?")[0]?.split("#")[0] ?? href;
-}
 
 export function markInstantBack() {
   if (typeof window === "undefined") return;
@@ -84,42 +67,4 @@ export function clearSoftNav() {
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
 export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
-}
-
-/**
- * Records a visual handoff only when navigation has actually been committed
- * (pointer/click), never during route or poster prefetch. The persistent silk
- * host consumes this once the pathname changes and can safely retarget it if
- * the user immediately chooses another destination.
- */
-export function markPatternTransition(href: string) {
-  if (typeof window === "undefined") return;
-
-  const from = window.location.pathname;
-  const to = pathOf(href);
-  let kind: PatternTransitionKind | null = null;
-
-  if (from === "/" && to === "/about") kind = "work-to-about";
-  else if (from === "/about" && to === "/") kind = "about-to-work";
-  else if (from === "/" && to !== "/" && to !== "/about" && to !== "/archive") {
-    kind = "work-to-case-study";
-  }
-
-  if (!kind) return;
-  sessionStorage.setItem(PATTERN_KEY, JSON.stringify({ from, to, kind } satisfies PatternTransitionIntent));
-}
-
-/** Returns and clears the committed intent for this exact route change. */
-export function takePatternTransition(from: string, to: string): PatternTransitionKind | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(PATTERN_KEY);
-    sessionStorage.removeItem(PATTERN_KEY);
-    if (!raw) return null;
-    const intent = JSON.parse(raw) as PatternTransitionIntent;
-    return intent.from === from && intent.to === to ? intent.kind : null;
-  } catch {
-    sessionStorage.removeItem(PATTERN_KEY);
-    return null;
-  }
 }
