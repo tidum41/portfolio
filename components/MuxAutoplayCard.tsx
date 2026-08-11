@@ -9,6 +9,9 @@ import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 
+/** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
+const MOUNT_STAGGER_MS = 140;
+
 function CardLabel({
   title,
   sub,
@@ -61,6 +64,8 @@ interface Props {
    *  the poster. Remount on return — posters keep cards feeling instant
    *  without holding paused MediaSource buffers in memory. */
   active?: boolean;
+  /** Grid order for staggered remount (0 first). */
+  mountOrder?: number;
 }
 
 export default function MuxAutoplayCard({
@@ -70,6 +75,7 @@ export default function MuxAutoplayCard({
   sub,
   aspectRatio,
   active = true,
+  mountOrder = 0,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -79,9 +85,10 @@ export default function MuxAutoplayCard({
 
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Latches after first in-view hit so returning to "/" remounts Mux
-  // immediately instead of waiting for IntersectionObserver again.
+  // Latches after first in-view hit so returning to "/" can remount without
+  // waiting on IntersectionObserver again.
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [mountReady, setMountReady] = useState(false);
   const warmCaseStudy = () => {
     if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
@@ -106,10 +113,27 @@ export default function MuxAutoplayCard({
     return () => obs.disconnect();
   }, [shouldLoad, active]);
 
+  // Stagger player attach on return so N× HLS doesn't hitch one frame.
+  // Reset happens in cleanup (when leaving "/" or rescheduling), not sync
+  // at effect start — keeps the set-state-in-effect lint happy.
+  useEffect(() => {
+    if (!active || !shouldLoad) return;
+    let cancelled = false;
+    const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+    const id = window.setTimeout(() => {
+      if (!cancelled) setMountReady(true);
+    }, delay);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+      setMountReady(false);
+    };
+  }, [active, shouldLoad, mountOrder]);
+
   // Poster stays painted under the player so tear-down/remount never blanks
-  // the card. Player only exists while the work route is active.
+  // the card. Player only exists while the work route is active + scheduled.
   const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
-  const showPlayer = active && shouldLoad;
+  const showPlayer = active && shouldLoad && mountReady;
 
   const video = (
     <div className="project-media">

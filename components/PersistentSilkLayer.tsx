@@ -3,14 +3,9 @@
 import dynamic from "next/dynamic";
 import { useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useReducedMotion } from "framer-motion";
-import { peekInstantBack } from "@/lib/instantNav";
-import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 
-const EASE = `cubic-bezier(${EASE_OPACITY.join(", ")})`;
-const RETURN_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const DEFAULT_HERO_H = 420;
 
 let sessionVisitedWork = false;
@@ -21,13 +16,11 @@ let sessionVisitedWork = false;
  */
 export default function PersistentSilkLayer() {
   const pathname = usePathname();
-  const reduced = useReducedMotion();
   const previousPathRef = useRef(pathname);
   const [hasVisitedWork, setHasVisitedWork] = useState(
     () => sessionVisitedWork || pathname === "/"
   );
   const [visible, setVisible] = useState(pathname === "/");
-  const [fadingIn, setFadingIn] = useState(false);
   const [height, setHeight] = useState(DEFAULT_HERO_H);
 
   useLayoutEffect(() => {
@@ -55,32 +48,16 @@ export default function PersistentSilkLayer() {
     if (pathname === "/") {
       sessionVisitedWork = true;
       setHasVisitedWork(true);
-      if (peekInstantBack() || reduced) {
-        setFadingIn(false);
-        setVisible(true);
-      } else {
-        // Soft fade-in with work return only — never linger on other routes.
-        setFadingIn(true);
-        setVisible(false);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setVisible(true);
-            setFadingIn(false);
-          });
-        });
-      }
+      setVisible(true);
     } else {
-      setFadingIn(false);
       setVisible(false);
     }
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [pathname, reduced]);
+  }, [pathname]);
 
   if (!hasVisitedWork && !sessionVisitedWork) return null;
 
-  const onWork = pathname === "/";
-  const show = onWork && visible;
-  const duration = fadingIn || (onWork && visible) ? RETURN_MS : 0;
+  const show = pathname === "/" && visible;
 
   return (
     <div
@@ -96,7 +73,6 @@ export default function PersistentSilkLayer() {
         opacity: show ? 1 : 0,
         pointerEvents: "none",
         overflow: "hidden",
-        transition: reduced ? "none" : `opacity ${duration}ms ${EASE}`,
       }}
     >
       <PS3Silk

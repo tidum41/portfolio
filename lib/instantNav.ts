@@ -3,13 +3,12 @@
  * ==========================================
  * Layer A — route opacity (AnimationProvider):
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
- *   - Soft-nav does not imply that destination content is instant.
  *
  * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
- *   - Instant only for CaseStudyTOC Back on this arrival (peekInstantBack()).
- *   - Orchestrated for every other arrival at "/": cold work after the intro,
- *     primary-nav returns (about/archive/nav work), and case-study → work via
- *     primary chrome. These use ENTRANCE_DEFAULTS; do not fire intro-replay.
+ *   - Instant for CaseStudyTOC Back (peekInstantBack()) AND soft primary-nav
+ *     returns to "/" (peekSoftNav()) — posters already painted; replaying the
+ *     entrance chorus on every About/Archive return felt like lag.
+ *   - Orchestrated only for cold "/" after the intro gate (no soft/instant flag).
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -19,14 +18,15 @@
  * Layer D — route lifetime:
  *   - Remounting chrome (about, archive, case studies, PS3ControlPanel) may
  *     own an entrance. Keep-alive work shell chrome must not remount; heavy
- *     media (Mux/CD) may unload off "/" and remount on return.
+ *     media (Mux/CD) may unload off "/" and remount on return (Mux remounts
+ *     are staggered so return doesn't hitch).
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; destination orchestrated
+ *   "/" ↔ about/archive       → soft fade skip; work content instant
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work orchestrated
+ *   case-study → "/" via nav  → soft fade skip; work content instant
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
@@ -66,5 +66,10 @@ export function clearSoftNav() {
 
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
 export function peekSkipRouteFade(): boolean {
+  return peekInstantBack() || peekSoftNav();
+}
+
+/** Work shell / silk: treat soft return like Back for content snap. */
+export function peekInstantWorkContent(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
