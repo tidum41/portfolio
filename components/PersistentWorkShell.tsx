@@ -246,6 +246,32 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
+  // Heavy media (live CD) stays up for a beat after leaving "/" so About /
+  // Archive can paint and the custom cursor tip can track before CD teardown
+  // hits the main thread. Shell is already display:none — user never sees it.
+  const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
+  useEffect(() => {
+    if (isWorkRoute) {
+      setHeavyMediaLive(true);
+      return;
+    }
+    let cancelled = false;
+    const tearDown = () => {
+      if (!cancelled) setHeavyMediaLive(false);
+    };
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(tearDown);
+    });
+    const fallback = window.setTimeout(tearDown, 100);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      window.clearTimeout(fallback);
+    };
+  }, [isWorkRoute]);
+
   // Leaving "/" — force-close popups and cover the CD grid slot with its
   // theme poster. Live CD/Mux unmount off-route (memory); posters stay so
   // return still feels instant.
@@ -529,7 +555,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         title={p.title}
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
-                        active={isWorkRoute}
+                        active={heavyMediaLive}
                         mountOrder={rank}
                       />
                     )}
@@ -647,7 +673,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         title={p.title}
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
-                        active={isWorkRoute}
+                        active={heavyMediaLive}
                         mountOrder={rank}
                       />
                     )}
@@ -759,11 +785,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       </div>
 
       {/*
-        CD mounts only on the work route. Off-route the theme poster covers
-        the card (no live audio graph / Disc RAF). Habit live embed stays
-        popup-only.
+        CD mounts while heavy media is live (work route, or briefly after
+        leave so teardown doesn't contend with About/Archive paint). Off-route
+        the theme poster covers the card. Habit live embed stays popup-only.
       */}
-      {hasEverBeenActive && isWorkRoute && (
+      {hasEverBeenActive && heavyMediaLive && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={openPopup === "cd" && popupVisible} />
         </EmbedPortal>

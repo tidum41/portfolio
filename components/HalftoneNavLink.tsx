@@ -114,6 +114,13 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         // (work / about / archive) — biggest remaining about→work lag source.
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
+          // Snap-kill the morph before route work. Leaving the spring/crossfade
+          // running races Mux teardown + destination mount and starves the
+          // custom cursor's RAF tip (felt as lag to About/Archive).
+          setIsHovered(false);
+          setIsTapped(false);
+          if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+          return;
         }
         setIsTapped(true);
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
@@ -124,6 +131,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         // soft-nav skip at click time. Repeated calls are harmless.
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
+          setIsHovered(false);
+          setIsTapped(false);
         }
       }}
       onPointerCancel={() => {
