@@ -146,7 +146,7 @@ export default function PersistentSilkLayer() {
   // already imprinting for stacking/opacity on this render.
   const pendingImprint =
     !reduced &&
-    previousPathRef.current === "/" &&
+    sessionPathname === "/" &&
     pathname !== "/" &&
     pathname !== "/archive" &&
     (phase === "work" || phase === "returning");
@@ -186,7 +186,7 @@ export default function PersistentSilkLayer() {
         top: 0,
         left: 0,
         width: "100%",
-        height: pendingImprint ? lastHeroHeightRef.current : height,
+        height,
         // During imprint, sit above route content (below nav z=40) so the
         // afterimage is actually visible over About. On Work, stay behind the
         // hero text/scrim shell (z=1).
