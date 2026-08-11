@@ -197,9 +197,24 @@ export default function PersistentSilkLayer() {
         transition: reduced ? "none" : `opacity ${duration}ms ${EASE}`,
       }}
     >
+      {/* Dark plate behind the dots during imprint so the white wave reads on
+          About the same way it does in the work hero (otherwise dots sit on
+          the page bg and look like they “vanished”). */}
+      {imprinting && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 92%, transparent), color-mix(in srgb, var(--color-bg) 55%, transparent) 70%, transparent)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
       <PS3Silk
         mode={1}
         active={canvasActive}
+        imprint={imprinting}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       />
     </div>

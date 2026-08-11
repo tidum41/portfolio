@@ -51,6 +51,9 @@ export interface PS3SilkProps {
    *  never write a 0×0 drawing buffer — that path is what flattened the
    *  pattern after navigating away from "/" and coming back. */
   active?: boolean;
+  /** Route imprint: lock resting opacity (ignore scroll fade) so the afterimage
+   *  stays readable over About / case-study instead of dimming to endOpacity. */
+  imprint?: boolean;
 }
 
 export default function PS3Silk({
@@ -61,12 +64,15 @@ export default function PS3Silk({
   mode: initialMode = 1,
   style,
   active = true,
+  imprint = false,
 }: PS3SilkProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const modeRef = useRef(initialMode);
   const activeRef = useRef(active);
   activeRef.current = active;
+  const imprintRef = useRef(imprint);
+  imprintRef.current = imprint;
   const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
   const [mode, setMode] = useState(initialMode);
 
@@ -302,6 +308,14 @@ export default function PS3Silk({
         // keeps onMouseMove's cached rect correct without reintroducing a
         // per-mousemove layout read.
         wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
+        if (imprintRef.current) {
+          // Route afterimage: keep the wave at resting strength so scroll-fade
+          // from the previous work page (or About's own scroll) doesn't erase it.
+          targetOpacity = START_OPACITY;
+          currentOpacity = START_OPACITY;
+          if (wrapper) wrapper.style.opacity = String(START_OPACITY);
+          return;
+        }
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
