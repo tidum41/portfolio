@@ -5,7 +5,7 @@ import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
-import { markPatternTransition, markSoftNav } from "@/lib/instantNav";
+import { markSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -114,7 +114,6 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         // (work / about / archive) — biggest remaining about→work lag source.
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
-          markPatternTransition(href);
         }
         setIsTapped(true);
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
@@ -122,10 +121,9 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       }}
       onClick={() => {
         // Keyboard navigation has no pointerdown, so commit the same
-        // directional handoff at click time. Repeated calls are harmless.
+        // soft-nav skip at click time. Repeated calls are harmless.
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
-          markPatternTransition(href);
         }
       }}
       onPointerCancel={() => {

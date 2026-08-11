@@ -1,5 +1,5 @@
 import { preload } from "react-dom";
-import { markPatternTransition, markSoftNav } from "@/lib/instantNav";
+import { markSoftNav } from "@/lib/instantNav";
 
 /**
  * Known case-study LCP assets — warmed on work-grid hover / pointerdown so
@@ -51,13 +51,12 @@ export function warmCaseStudyNav(
   }
 }
 
-/** Visual intent is set only for a committed Work → case-study navigation. */
+/** Soft-nav + prefetch for a committed Work → case-study click. */
 export function commitCaseStudyNav(
   href: string,
   router?: PrefetchableRouter | null,
 ) {
   if (!isCaseStudyHref(href)) return;
   markSoftNav();
-  markPatternTransition(href);
   warmCaseStudyNav(href, router);
 }
