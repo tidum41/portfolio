@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { introTimings } from "@/lib/introTimings";
 
 /** Drop this anywhere on the home page. Manages the first-load intro sequence:
- *  - The inline <script> in layout.tsx sets data-intro="playing" before first paint
+ *  - BootScripts injects the theme/intro gate script before first paint
+ *    (via useServerInsertedHTML) so data-intro="playing" is cleared off-home
  *  - This component starts the timer (duration from introTimings.gateDuration),
  *    then fires "intro-done" and swaps to "done"
  *  - Also listens for "intro-replay" to restart the sequence in-place
