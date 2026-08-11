@@ -1,4 +1,3 @@
-import Script from "next/script";
 import {
   OG_IMAGE_PATH,
   SAME_AS,
@@ -7,11 +6,12 @@ import {
   SITE_URL,
 } from "@/lib/site";
 
-export default function JsonLd() {
+/** Serializes site JSON-LD for BootScripts (injected outside the React tree). */
+export function getSiteJsonLd(): string {
   const logoUrl = `${SITE_URL}/icon-512.png`;
   const imageUrl = `${SITE_URL}${OG_IMAGE_PATH}`;
 
-  const data = {
+  return JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
       {
@@ -44,18 +44,5 @@ export default function JsonLd() {
         sameAs: SAME_AS,
       },
     ],
-  };
-
-  // next/script avoids React 19's raw-<script>-in-component console error
-  // while keeping JSON-LD in the document for crawlers. beforeInteractive is
-  // valid in the App Router root layout (JsonLd is only mounted there).
-  return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- root layout via JsonLd
-    <Script
-      id="site-jsonld"
-      type="application/ld+json"
-      strategy="beforeInteractive"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  );
+  });
 }

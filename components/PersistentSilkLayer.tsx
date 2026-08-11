@@ -25,6 +25,12 @@ const CASE_HOLD_MS = 220;
 const CASE_YIELD_MS = 420;
 const DEFAULT_HERO_H = 420;
 
+// Module session state survives hydration-recovery remounts. useState alone
+// re-initialized on /about after a remount, which unmounted the silk host and
+// skipped the afterimage because previousPathRef also reset to /about.
+let sessionVisitedWork = false;
+let sessionPathname: string | null = null;
+
 /**
  * A single session-long host for the PS3 silk. Its live WebGL scene can leave
  * a brief material afterimage during committed navigation without duplicating
@@ -33,11 +39,15 @@ const DEFAULT_HERO_H = 420;
 export default function PersistentSilkLayer() {
   const pathname = usePathname();
   const reduced = useReducedMotion();
-  const previousPathRef = useRef(pathname);
+  const previousPathRef = useRef(sessionPathname ?? pathname);
   const timersRef = useRef<number[]>([]);
   const lastHeroHeightRef = useRef(DEFAULT_HERO_H);
-  const [hasVisitedWork, setHasVisitedWork] = useState(pathname === "/");
-  const [phase, setPhase] = useState<Phase>(pathname === "/" ? "work" : "hidden");
+  const [hasVisitedWork, setHasVisitedWork] = useState(
+    () => sessionVisitedWork || pathname === "/"
+  );
+  const [phase, setPhase] = useState<Phase>(() =>
+    pathname === "/" ? "work" : "hidden"
+  );
   const [height, setHeight] = useState(DEFAULT_HERO_H);
 
   const clearTimers = () => {
@@ -74,8 +84,15 @@ export default function PersistentSilkLayer() {
   // frame, and the old ~180ms hold ended before the afterimage could be seen.
   useLayoutEffect(() => {
     const previousPath = previousPathRef.current;
-    if (previousPath === pathname) return;
+    if (previousPath === pathname) {
+      sessionPathname = pathname;
+      if (pathname === "/") {
+        sessionVisitedWork = true;
+      }
+      return;
+    }
     previousPathRef.current = pathname;
+    sessionPathname = pathname;
     clearTimers();
 
     const intent = takePatternTransition(previousPath, pathname);
@@ -91,6 +108,7 @@ export default function PersistentSilkLayer() {
 
     /* eslint-disable react-hooks/set-state-in-effect -- silk handoff must commit before paint */
     if (pathname === "/") {
+      sessionVisitedWork = true;
       setHasVisitedWork(true);
       if (peekInstantBack() || reduced) {
         setPhase("work");
@@ -120,7 +138,7 @@ export default function PersistentSilkLayer() {
 
   useEffect(() => clearTimers, []);
 
-  if (!hasVisitedWork) return null;
+  if (!hasVisitedWork && !sessionVisitedWork) return null;
 
   const imprinting = phase === "imprint-hold" || phase === "imprint-yield";
   const visible = phase !== "hidden";

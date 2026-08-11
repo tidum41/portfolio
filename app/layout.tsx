@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import JsonLd from "@/components/JsonLd";
+import BootScripts from "@/components/BootScripts";
+import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
@@ -157,19 +157,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
-        <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
-        {/* beforeInteractive avoids React 19's "script tag while rendering"
-            console error from raw <script> JSX, while still running before
-            hydration: theme, session reset, and off-home intro ungating. */}
-        <Script
-          id="theme-intro-boot"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()`,
-          }}
-        />
+        {/* Injected via useServerInsertedHTML so React 19 never sees a
+            <script> in the component tree (raw script / next/script both warn). */}
+        <BootScripts jsonLd={getSiteJsonLd()} />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
         <UiSoundRoot />
