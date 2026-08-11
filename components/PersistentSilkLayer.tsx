@@ -140,28 +140,44 @@ export default function PersistentSilkLayer() {
 
   if (!hasVisitedWork && !sessionVisitedWork) return null;
 
-  const imprinting = phase === "imprint-hold" || phase === "imprint-yield";
-  const visible = phase !== "hidden";
+  // Until the layout effect commits imprint-hold, the first About paint can
+  // still have phase==="work" at z-index 0 — under AnimationProvider — so the
+  // afterimage is invisible for a beat. Treat a pending work→imprint handoff as
+  // already imprinting for stacking/opacity on this render.
+  const pendingImprint =
+    !reduced &&
+    previousPathRef.current === "/" &&
+    pathname !== "/" &&
+    pathname !== "/archive" &&
+    (phase === "work" || phase === "returning");
+
+  const imprinting =
+    phase === "imprint-hold" || phase === "imprint-yield" || pendingImprint;
+  const visible = phase !== "hidden" || pendingImprint;
   // Keep the WebGL loop alive through the whole fade-out so the afterimage
   // doesn't collapse to a blank 1×1 canvas mid-transition.
   const canvasActive = visible;
   const opacity =
-    phase === "hidden" || phase === "returning" || phase === "imprint-yield"
-      ? 0
-      : 1;
+    pendingImprint
+      ? 1
+      : phase === "hidden" || phase === "returning" || phase === "imprint-yield"
+        ? 0
+        : 1;
   const duration =
-    phase === "returning" || phase === "work"
-      ? RETURN_MS
-      : phase === "imprint-yield"
-        ? pathname === "/about"
-          ? ABOUT_YIELD_MS
-          : CASE_YIELD_MS
-        : 0;
+    pendingImprint
+      ? 0
+      : phase === "returning" || phase === "work"
+        ? RETURN_MS
+        : phase === "imprint-yield"
+          ? pathname === "/about"
+            ? ABOUT_YIELD_MS
+            : CASE_YIELD_MS
+          : 0;
 
   return (
     <div
       aria-hidden
-      data-silk-phase={phase}
+      data-silk-phase={pendingImprint ? "imprint-hold" : phase}
       style={{
         // Fixed during imprint so the afterimage stays in the viewport even if
         // About mounts scrolled or reflows; absolute on Work so it tracks the
@@ -170,7 +186,7 @@ export default function PersistentSilkLayer() {
         top: 0,
         left: 0,
         width: "100%",
-        height,
+        height: pendingImprint ? lastHeroHeightRef.current : height,
         // During imprint, sit above route content (below nav z=40) so the
         // afterimage is actually visible over About. On Work, stay behind the
         // hero text/scrim shell (z=1).
