@@ -98,23 +98,15 @@ export default function PS3Silk({
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
-  // Wake after paint so about→work isn't competing with layout + Mux resume
-  // on the same frame. Pause immediately when leaving.
+  // Wake immediately on return so soft-nav back to work doesn't blank the
+  // pattern for a couple of frames. Mux remount is staggered separately;
+  // silk is one canvas and should snap with the route. Pause stops RAF only.
   useEffect(() => {
     if (!active) {
       lifecycleRef.current?.pause();
       return;
     }
-    let cancelled = false;
-    const outer = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) lifecycleRef.current?.wake();
-      });
-    });
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(outer);
-    };
+    lifecycleRef.current?.wake();
   }, [active]);
 
   // ps3-update event
@@ -530,16 +522,11 @@ void main() {
         }
         startLoop();
       };
-      // Stop RAF and collapse the drawing buffer so a full-hero GPU surface
-      // isn't retained while PersistentWorkShell is display:none on other
-      // routes. wake() remeasures and restores size on return.
+      // Stop RAF while off-route, but keep the last framebuffer. Shrinking to
+      // 1×1 blanked the pattern until wake()+draw, which read as a split-
+      // second pop-in on About/Archive → Work. One silk canvas is cheap vs Mux.
       const pause = () => {
         stopLoop();
-        if (canvas.width > 1 || canvas.height > 1) {
-          canvas.width = 1;
-          canvas.height = 1;
-          if (!glCtx.isContextLost()) glCtx.viewport(0, 0, 1, 1);
-        }
       };
       lifecycleRef.current = { wake, pause };
 
