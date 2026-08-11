@@ -12,6 +12,7 @@ import {
   ORGS,
   SOCIALS,
 } from "@/lib/about";
+import { peekSoftNavArrival } from "@/lib/instantNav";
 import { useDialKit } from "dialkit";
 
 // Defer CD mount so soft-nav from Work can paint bio/bento + keep the
@@ -41,11 +42,12 @@ function DeferredAboutCD() {
     const enable = () => {
       if (!cancelled) setReady(true);
     };
-    // Prefer idle; fall back so CD still appears if the tab stays busy.
+    // Prefer idle well after soft-nav paint — Work→About measured hitch was
+    // CD/Mux teardown racing About entrance; don't add About CD into that window.
     if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(enable, { timeout: 500 });
+      idleId = window.requestIdleCallback(enable, { timeout: 2200 });
     } else {
-      timeoutId = window.setTimeout(enable, 120);
+      timeoutId = window.setTimeout(enable, 900);
     }
     return () => {
       cancelled = true;
@@ -77,6 +79,10 @@ function DeferredAboutCD() {
 }
 
 export default function AboutPage() {
+  // Soft-nav from Work: snap hero in (no Framer entrance chorus). Measured
+  // Work→About hitch overlapped entrance animations with CD/Mux teardown.
+  const [softArrival] = useState(() => peekSoftNavArrival());
+
   // Per-logo scale + crop (pan) controls. Each logo sits in a circular,
   // overflow:hidden frame — offsetX/offsetY shift the image within that
   // frame via transform, and anything pushed past the circle's edge is
@@ -106,7 +112,7 @@ export default function AboutPage() {
           links sit un-animated, nested inside the bento column so they
           stack directly beneath it at every breakpoint. ── */}
       <div style={{ marginBottom: "var(--space-7)" }}>
-      <EntranceStagger active className="about-hero">
+      <EntranceStagger active instant={softArrival} className="about-hero">
 
         <div className="about-hero-bio">
           <EntranceItem>
@@ -174,6 +180,7 @@ export default function AboutPage() {
               featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
               top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
               bottom={{ src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" }}
+              priority={!softArrival}
             />
           </EntranceItem>
 

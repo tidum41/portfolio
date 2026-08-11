@@ -52,6 +52,8 @@ export function clearInstantBack() {
 export function markSoftNav() {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(SOFT_KEY, "1");
+  // Notify chrome (custom cursor) to mute trail/hit-tests during the hitch window.
+  window.dispatchEvent(new CustomEvent("soft-nav-start"));
 }
 
 export function peekSoftNav(): boolean {
@@ -72,4 +74,13 @@ export function peekSkipRouteFade(): boolean {
 /** Work shell / silk: treat soft return like Back for content snap. */
 export function peekInstantWorkContent(): boolean {
   return peekInstantBack() || peekSoftNav();
+}
+
+/**
+ * Latch soft-nav at destination first paint. AnimationProvider clears the
+ * session flag in an effect; pages that should snap (About) must read this
+ * during render before that clear — useState(initializer) is the latch.
+ */
+export function peekSoftNavArrival(): boolean {
+  return peekSoftNav();
 }

@@ -246,9 +246,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Heavy media (live CD) stays up for a beat after leaving "/" so About /
-  // Archive can paint and the custom cursor tip can track before CD teardown
-  // hits the main thread. Shell is already display:none — user never sees it.
+  // Heavy media (live CD + Mux gate) stays mounted under display:none until
+  // the destination route has settled. Playwright measured CD teardown at
+  // About-arrival +0ms and Mux unmounts +100–200ms with 62–110ms pointer gaps —
+  // double-rAF was still inside the soft-nav hitch window.
+  const HEAVY_TEARDOWN_MS = 1800;
   const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
   useEffect(() => {
     if (isWorkRoute) {
@@ -256,19 +258,25 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       return;
     }
     let cancelled = false;
+    let idleId = 0;
     const tearDown = () => {
-      if (!cancelled) setHeavyMediaLive(false);
+      if (cancelled) return;
+      setHeavyMediaLive(false);
     };
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(tearDown);
-    });
-    const fallback = window.setTimeout(tearDown, 100);
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return;
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(tearDown, { timeout: 600 });
+      } else {
+        tearDown();
+      }
+    }, HEAVY_TEARDOWN_MS);
     return () => {
       cancelled = true;
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      window.clearTimeout(fallback);
+      window.clearTimeout(timeoutId);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
     };
   }, [isWorkRoute]);
 
@@ -556,6 +564,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
+                        playing={isWorkRoute}
                         mountOrder={rank}
                       />
                     )}
@@ -674,6 +683,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
+                        playing={isWorkRoute}
                         mountOrder={rank}
                       />
                     )}
@@ -791,7 +801,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       */}
       {hasEverBeenActive && heavyMediaLive && (
         <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={openPopup === "cd" && popupVisible} />
+          <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
       {openPopup === "habit" && isWorkRoute && habitPortalTarget && (

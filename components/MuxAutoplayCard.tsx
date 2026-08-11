@@ -64,10 +64,10 @@ interface Props {
   title: string;
   sub?: string;
   aspectRatio: string;
-  /** When false (work shell off-route), tear down Mux/HLS entirely and show
-   *  the poster. Remount on return — posters keep cards feeling instant
-   *  without holding paused MediaSource buffers in memory. */
+  /** When false, tear down Mux/HLS after a deferred window (memory). */
   active?: boolean;
+  /** When false, pause playback immediately without unmounting (soft-nav). */
+  playing?: boolean;
   /** Grid order for staggered remount (0 first). */
   mountOrder?: number;
 }
@@ -79,6 +79,7 @@ export default function MuxAutoplayCard({
   sub,
   aspectRatio,
   active = true,
+  playing = true,
   mountOrder = 0,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
@@ -141,6 +142,28 @@ export default function MuxAutoplayCard({
       window.clearTimeout(id);
     };
   }, [active, shouldLoad, mountOrder]);
+
+  // Soft-nav leave: pause immediately so decode doesn't fight About paint,
+  // but keep the element mounted until `active` deferred-teardown fires.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    const el = root.querySelector("mux-player") as HTMLElement & {
+      pause?: () => void;
+      play?: () => Promise<void> | void;
+    } | null;
+    if (!el) return;
+    if (!playing) {
+      try { el.pause?.(); } catch { /* ignore */ }
+      return;
+    }
+    try {
+      const p = el.play?.();
+      if (p && typeof (p as Promise<void>).catch === "function") {
+        (p as Promise<void>).catch(() => {});
+      }
+    } catch { /* ignore */ }
+  }, [playing, mountReady]);
 
   // Poster stays painted under the player so tear-down/remount never blanks
   // the card. Player only exists while scheduled (see mountReady).
