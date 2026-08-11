@@ -1,3 +1,4 @@
+import Script from "next/script";
 import {
   OG_IMAGE_PATH,
   SAME_AS,
@@ -45,9 +46,15 @@ export default function JsonLd() {
     ],
   };
 
+  // next/script avoids React 19's raw-<script>-in-component console error
+  // while keeping JSON-LD in the document for crawlers. beforeInteractive is
+  // valid in the App Router root layout (JsonLd is only mounted there).
   return (
-    <script
+    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- root layout via JsonLd
+    <Script
+      id="site-jsonld"
       type="application/ld+json"
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );
