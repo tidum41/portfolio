@@ -70,11 +70,12 @@ export default function PS3Silk({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const modeRef = useRef(initialMode);
   const activeRef = useRef(active);
-  activeRef.current = active;
   const imprintRef = useRef(imprint);
-  imprintRef.current = imprint;
   const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
   const [mode, setMode] = useState(initialMode);
+
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { imprintRef.current = imprint; }, [imprint]);
 
   const dk = useDialKit("PS3Silk", {
     intensity:     [intensity,      0,    1.0],
