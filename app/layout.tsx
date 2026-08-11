@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
@@ -131,20 +132,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
     >
       <head>
-        {/* Runs synchronously before first paint:
-            1. Applies saved light/dark theme from localStorage.
-            2. Clears sessionStorage so cursor-color, wave-color, PS3 mode, etc.
-               reset on every hard load (they persist only across client-side navigations).
-            3. Off the homepage, removes data-intro="playing" (see the comment on <html>
-               above for why it starts present on every route instead of being added here). */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()` }} />
-        {/* Intro gate CSS — must be inline, not in globals.css. The blocking script
-            above sets data-intro="playing" synchronously, but globals.css is an
-            external stylesheet that loads separately over the network. On production
-            there is a gap between when the script runs and when the external CSS
-            arrives, during which .intro-hide elements are briefly visible (the flash).
-            Inlining these rules here guarantees they apply in the same paint as the
-            script. globals.css keeps a copy as a fallback. */}
+        {/* Intro gate CSS — must be inline, not in globals.css. The blocking
+            beforeInteractive script below sets data-intro="playing"
+            synchronously, but globals.css is an external stylesheet that loads
+            separately over the network. On production there is a gap between
+            when the script runs and when the external CSS arrives, during which
+            .intro-hide elements are briefly visible (the flash). Inlining these
+            rules here guarantees they apply in the same paint as the script.
+            globals.css keeps a copy as a fallback. */}
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         {/* Hide system cursor immediately on pointer:fine devices — before JS
@@ -165,6 +160,16 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
+        {/* beforeInteractive avoids React 19's "script tag while rendering"
+            console error from raw <script> JSX, while still running before
+            hydration: theme, session reset, and off-home intro ungating. */}
+        <Script
+          id="theme-intro-boot"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()`,
+          }}
+        />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
         <UiSoundRoot />
