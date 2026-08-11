@@ -21,7 +21,7 @@ interface BentoHeroProps {
 // the left cell's height always equals the right stack's combined height —
 // no fixed pixel heights anywhere. Crop/layout knobs are tunable live via
 // the "BentoHero" DialKit panel instead of Framer's property controls.
-export default function BentoHero({ featured, top, bottom, style }: BentoHeroProps) {
+export default function BentoHero({ featured, top, bottom, style, priority = true }: BentoHeroProps & { priority?: boolean }) {
   const dk = useDialKit("BentoHero", {
     leftRatio:     [50,   20,  80],
     aspectRatio:   [1.25, 0.6, 3],
@@ -70,7 +70,7 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
           src={featured.src}
           alt={featured.alt}
           fill
-          priority
+          priority={priority}
           quality={92}
           sizes={featuredSizes}
           style={{ objectFit: "cover", objectPosition: `${dk.featuredCropX}% ${dk.featuredCropY}%`, transform: `scale(${dk.featuredZoom})` }}

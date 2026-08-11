@@ -580,8 +580,26 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 5 : 6))));
     const opacityBase = tc.opacity ?? (style === "xmb" ? 0.18 : 0.55);
     const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.5  : 0.78);
+    const trailMuted = now < trailMutedUntil;
 
     let allSettled = true;
+
+    if (trailMuted) {
+      // Soft-nav window: tip already tracks on pointermove; blank echoes so
+      // trail DOM writes don't compete with About mount / deferred teardown.
+      for (let i = 0; i < MAX_ECHO; i++) {
+        const el = echoEls[i];
+        if (!el) continue;
+        if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
+        stamps[i].active = false;
+      }
+      const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
+      if (pressSettled && !mouse.inside && idleFade <= 0) {
+        isIdle = true; setWillChange("auto"); return;
+      }
+      raf = requestAnimationFrame(tick);
+      return;
+    }
 
     if (style === "xmb") {
       // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
@@ -764,6 +782,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     wrap.style.opacity = "1";
   };
 
+  let trailMutedUntil = 0;
+  window.addEventListener("soft-nav-start", () => {
+    trailMutedUntil = performance.now() + 500;
+  }, { signal: sig });
+
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -773,7 +796,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
     syncTip(e.clientX, e.clientY);
-    checkPillHover(e.clientX, e.clientY);
+    if (performance.now() >= trailMutedUntil) {
+      checkPillHover(e.clientX, e.clientY);
+    }
     const now = performance.now();
     if (now - lastPosWrite > 500) {
       try { sessionStorage.setItem(CURSOR_POS_KEY, JSON.stringify({ x: e.clientX, y: e.clientY })); } catch {}

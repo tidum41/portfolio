@@ -1,12 +1,15 @@
 "use client";
 
-import { Children } from "react";
+import { Children, createContext, useContext } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
 import type { ReactNode, CSSProperties } from "react";
+
+/** When true, nested EntranceItems snap (soft-nav About arrival). */
+const InstantEntranceCtx = createContext(false);
 
 interface Props {
   children: ReactNode;
@@ -150,23 +153,25 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
     : rawStagger;
 
   return (
-    <motion.div
-      initial="hidden"
-      animate={active ? "visible" : "hidden"}
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: reduced ? 0 : effectiveStagger,
-            delayChildren:   reduced ? 0 : delay,
+    <InstantEntranceCtx.Provider value={reduced}>
+      <motion.div
+        initial="hidden"
+        animate={active ? "visible" : "hidden"}
+        variants={{
+          hidden: {},
+          visible: {
+            transition: {
+              staggerChildren: reduced ? 0 : effectiveStagger,
+              delayChildren:   reduced ? 0 : delay,
+            },
           },
-        },
-      }}
-      style={style}
-      className={className}
-    >
-      {children}
-    </motion.div>
+        }}
+        style={style}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </InstantEntranceCtx.Provider>
   );
 }
 
@@ -199,7 +204,8 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   [key: `data-${string}`]: unknown;
 }) {
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));
-  const reduced = useReducedMotion() || instant;
+  const fromParent = useContext(InstantEntranceCtx);
+  const reduced = useReducedMotion() || instant || fromParent;
   const y = yProp ?? dk.y;
   const selfDriven = active !== undefined;
 
