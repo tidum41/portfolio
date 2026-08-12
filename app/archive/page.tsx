@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { getPlaygroundGallery } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
-import ArchivePageClient from "./ArchivePageClient";
 
+// Content lives in root layout PersistentArchiveShell — same pattern as Work.
 export const metadata: Metadata = {
   title: "archive",
   description:
@@ -16,7 +15,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ArchivePage() {
-  const items = await getPlaygroundGallery();
-  return <ArchivePageClient items={items} />;
+export default function ArchivePage() {
+  return null;
 }

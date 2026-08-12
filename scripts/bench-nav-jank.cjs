@@ -181,6 +181,69 @@ async function runWarmLeg(page, from, to) {
   };
 }
 
+/** First soft-nav from a fresh Work session with no hover-prefetch (true first visit). */
+async function runColdSoftNav(context, to) {
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    window.__benchArmed = false;
+  });
+  await page.goto(BASE + "/", { waitUntil: "domcontentloaded", timeout: 60000 });
+  await page.waitForTimeout(3500);
+  await armObservers(page);
+  await clearBenchWindow(page);
+  // Explicitly do NOT hover-prefetch — measure first-click cost.
+  const mover = moveMouse(page, 1400);
+  await page.waitForTimeout(50);
+  await softNav(page, to);
+  await mover;
+  await page.waitForTimeout(400);
+  const marks = await page.evaluate(() => window.__bench.marks);
+  const arrived = marks.find((m) => m.phase === "arrived");
+  const pre = marks.find((m) => m.phase === "pre-nav");
+  const windowed = await sliceAroundArrival(page, arrived.t, 80, 1000);
+  const summary = summarize(windowed.gaps, windowed.longTasks, 1080);
+  await page.close();
+  return {
+    kind: "cold-soft",
+    from: "/",
+    to,
+    clickToArriveMs: arrived.t - pre.t,
+    ...summary,
+    sampleGaps: windowed.gaps.filter((g) => g.gap >= 50).slice(0, 12),
+    sampleLongTasks: windowed.longTasks.slice(0, 12),
+  };
+}
+
+/** Second soft-nav to same destination after shell should be keep-alive. */
+async function runSecondVisit(page, to) {
+  // Ensure we're on work first
+  if (!/localhost:3000\/?$/.test(page.url()) && !page.url().endsWith("/")) {
+    await softNav(page, "/");
+    await page.waitForTimeout(400);
+  }
+  await armObservers(page);
+  await clearBenchWindow(page);
+  const mover = moveMouse(page, 1200);
+  await page.waitForTimeout(50);
+  await softNav(page, to);
+  await mover;
+  await page.waitForTimeout(300);
+  const marks = await page.evaluate(() => window.__bench.marks);
+  const arrived = marks.find((m) => m.phase === "arrived");
+  const pre = marks.find((m) => m.phase === "pre-nav");
+  const windowed = await sliceAroundArrival(page, arrived.t, 80, 800);
+  const summary = summarize(windowed.gaps, windowed.longTasks, 880);
+  return {
+    kind: "second-visit",
+    from: "/",
+    to,
+    clickToArriveMs: arrived.t - pre.t,
+    ...summary,
+    sampleGaps: windowed.gaps.filter((g) => g.gap >= 50).slice(0, 12),
+    sampleLongTasks: windowed.longTasks.slice(0, 12),
+  };
+}
+
 async function runCold(page, route) {
   const context = page.context();
   const cold = await context.newPage();
@@ -250,6 +313,19 @@ function score(result) {
     s += leg.longTaskTotalMs * 0.25;
     s += Math.max(0, leg.clickToArriveMs - 100) * 0.2;
   }
+  for (const leg of result.coldSoft || []) {
+    // First soft-nav from Work — what users report as "first visit lag".
+    s += leg.maxPointerGapMs * 2.5;
+    s += leg.pointerGapsGe80 * 50;
+    s += leg.pointerGapsGe50 * 12;
+    s += Math.max(0, leg.clickToArriveMs - 100) * 0.25;
+  }
+  for (const leg of result.secondVisit || []) {
+    // Keep-alive should make these near-instant; weight heavily if not.
+    s += leg.maxPointerGapMs * 3;
+    s += leg.pointerGapsGe80 * 60;
+    s += Math.max(0, leg.clickToArriveMs - 80) * 0.4;
+  }
   for (const leg of result.cold || []) {
     s += leg.maxPointerGapMs;
     s += leg.pointerGapsGe80 * 25;
@@ -310,9 +386,22 @@ async function main() {
   warm.push(await runWarmLeg(page, "/archive", "/about"));
   warm.push(await runWarmLeg(page, "/about", "/archive"));
 
+  // Second visits — shells should already be keep-alive from warm legs.
+  const secondVisit = [];
+  await softNav(page, "/");
+  await page.waitForTimeout(500);
+  secondVisit.push(await runSecondVisit(page, "/about"));
+  await softNav(page, "/");
+  await page.waitForTimeout(300);
+  secondVisit.push(await runSecondVisit(page, "/archive"));
+
+  // Cold soft-nav — fresh context, no hover prefetch (true first-visit feel).
+  const coldSoft = [];
+  coldSoft.push(await runColdSoftNav(context, "/about"));
+  coldSoft.push(await runColdSoftNav(context, "/archive"));
+
   const cold = [];
-  cold.push(await runCold(context.pages()[0] ? page : page, "/about"));
-  // runCold opens its own page via page.context()
+  cold.push(await runCold(page, "/about"));
   cold.push(await runCold(page, "/archive"));
   cold.push(await runCold(page, "/"));
 
@@ -321,6 +410,8 @@ async function main() {
     base: BASE,
     muxPlayersOnWork: muxBefore,
     warm,
+    secondVisit,
+    coldSoft,
     cold,
     score: 0,
   };

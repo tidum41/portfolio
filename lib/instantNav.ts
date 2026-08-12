@@ -16,14 +16,16 @@
  *     soft return.
  *
  * Layer D — route lifetime:
- *   - Remounting chrome (about, archive, case studies, PS3ControlPanel) may
- *     own an entrance. Keep-alive work shell chrome must not remount; heavy
- *     media (Mux/CD) may unload off "/" and remount on return (Mux remounts
- *     are staggered so return doesn't hitch).
+ *   - Work / About / Archive use persistent shells in the root layout (display
+ *     toggle, no remount on soft-nav). Case studies still remount via
+ *     AnimationProvider children. Mux/CD may pause off "/" and reclaim after
+ *     idle; About CD is viewport-gated; About below-fold mounts on idle.
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; work content instant
+ *   "/" ↔ about/archive       → soft fade skip; persistent shells show/hide
+ *   First about/archive visit → mount shell (budget-split) + idle warmup helps
+ *   Later about/archive visit → display toggle only (no remount)
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
  *   case-study → "/" via nav  → soft fade skip; work content instant
