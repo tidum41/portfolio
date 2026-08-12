@@ -246,12 +246,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Heavy media: pause immediately on leave, then tear down onto posters so
-  // About/Archive aren't sharing Mux/CD with a hidden Work shell. Mux cards
-  // keep their thumbnail poster; CD keeps CdPlayerPoster. Remount on return is
-  // staggered (MuxAutoplayCard mountOrder) so Work arrival stays smooth.
-  // ~700ms lets About's first paint + cursor settle before MediaSource destroy.
-  const HEAVY_TEARDOWN_MS = 700;
+  // Pause immediately on leave (posters already sit under Mux/CD). Destroying
+  // MediaSource ~700ms into About was the remaining first-About cursor hitch.
+  // Reclaim after a long idle off-route so return-to-Work remount isn't racing
+  // the About open.
+  const HEAVY_TEARDOWN_MS = 15000;
   const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
   useEffect(() => {
     if (isWorkRoute) {

@@ -14,7 +14,6 @@ import {
   ORGS,
   SOCIALS,
 } from "@/lib/about";
-import { peekSoftNavArrival } from "@/lib/instantNav";
 import { useDialKit } from "dialkit";
 
 const CDPlayer = dynamic(() => import("@/components/CDPlayer"), { ssr: false });
@@ -40,44 +39,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * About CD is visible under the hero on desktop — scroll-gating can't hide it.
- * Show the real product poster immediately, warm the chunk, then mount the live
- * player after the soft-nav hitch window (idle). Audio/dnd stay gated inside the
- * app until the user interacts.
+ * About CD is visible under the hero on desktop. Keep the product poster as
+ * the first-open face — auto-mounting the live player (~0.5s) was competing
+ * with the cursor. Live player starts on explicit click.
  */
 function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
   const [live, setLive] = useState(false);
 
   useEffect(() => {
     if (!routeActive || live) return;
-    let cancelled = false;
-    let idleId = 0;
-    let delayId = 0;
-
-    const arm = () => {
-      if (cancelled) return;
-      void import("@/components/CDPlayer").then(() => {
-        if (!cancelled) setLive(true);
-      });
-    };
-
-    // Hero + cursor get the first beat; then idle-mount the live player.
-    delayId = window.setTimeout(() => {
-      if (cancelled) return;
-      if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(arm, { timeout: 1400 });
-      } else {
-        arm();
-      }
-    }, 480);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(delayId);
-      if (idleId && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-    };
+    // Warm the chunk only — do not construct the tree until click.
+    void import("@/components/CDPlayer");
   }, [routeActive, live]);
 
   return (
@@ -87,29 +59,33 @@ function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
         style={{
           position: "relative",
           marginTop: 16,
+          height: live ? "auto" : 520,
           minHeight: 520,
           borderRadius: "var(--radius-card)",
           overflow: "hidden",
           background: "var(--color-placeholder)",
         }}
       >
-        {/* Product poster — same assets as Work grid tile. */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: live ? 0 : 1,
-            transition: "opacity 0.35s ease",
-            pointerEvents: "none",
-          }}
-        >
-          <CdPlayerPoster opacity={1} fade={false} />
-        </div>
-        {live ? (
-          <CDPlayer style={{ marginTop: 0, minHeight: 520 }} variant="about" />
-        ) : (
-          <div aria-hidden style={{ minHeight: 520 }} />
+        {!live && (
+          <button
+            type="button"
+            onClick={() => setLive(true)}
+            aria-label="Load CD player"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 3,
+              padding: 0,
+              border: 0,
+              cursor: "pointer",
+              background: "transparent",
+            }}
+          >
+            <CdPlayerPoster opacity={1} fade={false} />
+          </button>
+        )}
+        {live && (
+          <CDPlayer style={{ marginTop: 0, height: "100%", minHeight: 0 }} variant="about" />
         )}
       </div>
     </section>
@@ -289,12 +265,11 @@ function AboutSocials() {
  */
 export default function AboutPageContent({
   active,
-  softArrival: softArrivalProp,
+  softArrival = false,
 }: {
   active: boolean;
   softArrival?: boolean;
 }) {
-  const [softArrival] = useState(() => softArrivalProp ?? peekSoftNavArrival());
   const [belowFold, setBelowFold] = useState(false);
 
   useEffect(() => {
@@ -339,8 +314,8 @@ export default function AboutPageContent({
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
         <div style={{ marginBottom: "var(--space-7)" }}>
           <CssEntranceStagger
-            active
-            instant={softArrival}
+            active={active}
+            instant={softArrival || !active}
             className="about-hero"
             data-soft-hero={softArrival ? "1" : "0"}
           >
@@ -353,7 +328,7 @@ export default function AboutPageContent({
                   featured={BENTO.featured}
                   top={BENTO.top}
                   bottom={BENTO.bottom}
-                  priority={!softArrival}
+                  priority={false}
                 />
               </CssEntranceItem>
               <AboutSocials />

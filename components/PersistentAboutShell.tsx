@@ -6,50 +6,40 @@ import AboutPageContent from "@/components/AboutPageContent";
 import { peekSoftNav } from "@/lib/instantNav";
 
 /**
- * Session keep-alive for /about — same contract as PersistentWorkShell.
- * First soft visit: latch soft intent in layout, then mount body after two
- * frames so leave-Work (Mux pause / shell hide) gets the click frame first.
- * Later soft-navs only toggle display.
+ * Session keep-alive for /about.
+ * Idle-premount while still on Work so the first About click is a display
+ * toggle (not a first React commit). Soft-nav latches instant arrival.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
   const [hasVisited, setHasVisited] = useState(onAbout);
-  const [softFirst, setSoftFirst] = useState(false);
-  const [bodyReady, setBodyReady] = useState(() => {
-    // Hard land on /about (refresh): mount immediately.
-    if (typeof window === "undefined") return onAbout;
-    return onAbout && !peekSoftNav();
-  });
   const softLatched = useRef(false);
+  if (onAbout && peekSoftNav()) softLatched.current = true;
 
   useLayoutEffect(() => {
-    if (!onAbout) return;
-    if (peekSoftNav()) {
-      softLatched.current = true;
-      setSoftFirst(true);
-    }
-    setHasVisited(true);
+    if (onAbout) setHasVisited(true);
   }, [onAbout]);
 
   useEffect(() => {
-    if (!hasVisited || bodyReady) return;
-    if (!softLatched.current && !softFirst) {
-      setBodyReady(true);
-      return;
+    if (hasVisited) return;
+    let idleId = 0;
+    let timeoutId = 0;
+    const warm = () => setHasVisited(true);
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(warm, { timeout: 2800 });
+    } else {
+      timeoutId = window.setTimeout(warm, 1200);
     }
-    // Yield two frames so soft-nav leave-Work paints before About commit.
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setBodyReady(true));
-    });
     return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [hasVisited, bodyReady, softFirst]);
+  }, [hasVisited]);
 
-  if (!hasVisited || !bodyReady) return null;
+  if (!hasVisited) return null;
 
   return (
     <div
@@ -58,7 +48,7 @@ export default function PersistentAboutShell() {
       inert={!onAbout}
       {...(!onAbout ? { "data-nosnippet": true } : {})}
     >
-      <AboutPageContent active={onAbout} softArrival={softFirst} />
+      <AboutPageContent active={onAbout} softArrival={softLatched.current} />
     </div>
   );
 }
