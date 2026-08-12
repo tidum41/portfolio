@@ -18,7 +18,6 @@ import { DragDisc } from './components/Disc/DragDisc';
 import { AudioConsent } from './components/AudioConsent/AudioConsent';
 import { usePlayerState } from './hooks/usePlayerState';
 import { useAudio } from './hooks/useAudio';
-import { EASE_OPACITY, PANEL_DURATION } from '@/lib/motion';
 import { useAlbumColors } from './hooks/useAlbumColors';
 import { albums } from './data/albums';
 import type { Album } from './data/albums';
@@ -35,7 +34,6 @@ import styles from './CdPlayerApp.module.css';
 const PLAYER_W = 893;
 const PLAYER_H = 1321;
 const PLATTER_SIZE = 835;
-const EASE_CSS = `cubic-bezier(${EASE_OPACITY.join(', ')})`;
 
 /** Compact carousel covers on narrow/short stacks so the vinyl stays fully visible. */
 function carouselArtForWidth(width: number, dialSize: number, height = Infinity): number {
@@ -87,11 +85,11 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const { loadAndPlay, playAudio, pauseAudio, stopAudio, volumeUp, volumeDown, volume, analyserRef, scratchAudio, primeAudio, audioError, clearAudioError } = useAudio();
   const colorMap = useAlbumColors(albums);
 
-  // Increments each time the popup opens — forces album cards to remount so
-  // the PS3-style entrance animation re-fires. About page is always active so
-  // it fires once on mount (cards animate in on first scroll-reveal).
+  // Increments each time the work popup opens — remounts album cards for a
+  // fresh opacity entrance. About never remounts / never scale-enters.
   const [entranceKey, setEntranceKey] = useState(0);
-  // Player fades in after the popup panel settles; about page starts visible.
+  // Player fades in after the popup panel settles; about page starts visible
+  // once scale is measured (scaleReady).
   const [playerVisible, setPlayerVisible] = useState(active);
   const entranceActiveRef = useRef(active);
 
@@ -99,12 +97,12 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     const wasActive = entranceActiveRef.current;
     entranceActiveRef.current = active;
     if (active && !wasActive) {
-      setEntranceKey(k => k + 1);
-      const t = setTimeout(() => setPlayerVisible(true), 80);
+      if (variant !== "about") setEntranceKey((k) => k + 1);
+      const t = setTimeout(() => setPlayerVisible(true), variant === "about" ? 0 : 80);
       return () => clearTimeout(t);
     }
     if (!active) setPlayerVisible(false);
-  }, [active]);
+  }, [active, variant]);
 
   const [scratchRate, setScratchRate] = useState(1);
   const [dragAlbum, setDragAlbum] = useState<Album | null>(null);
@@ -113,6 +111,9 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const [ejectAnim, setEjectAnim] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scale, setScale] = useState(1);
+  // Hide until the first fit-to-slot measure so we never flash at scale(1)
+  // then snap smaller (the motion users read as scale-out→scale-in).
+  const [scaleReady, setScaleReady] = useState(false);
   // Seeded to match the server's fallback (no DOM to measure) so the grid's
   // artSize/gridWidth agree on the very first client render; corrected
   // post-mount by updateScale, same pattern as `scale`/`isVertical` above.
@@ -191,6 +192,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
       setScale(Math.max(0.14, s));
     }
     setContainerH(H);
+    setScaleReady(true);
   }, [isVertical, dk.targetPlayerWidth, dk.carouselArtSize, dk.titleFontSize, dk.artistFontSize]);
 
   useEffect(() => {
@@ -514,29 +516,19 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   width: playerWidth,
                   height: playerHeight,
                   flexShrink: 0,
-                  // Reparenting into the popup can't recompute `scale` from
-                  // this container's new size until a frame after the DOM
-                  // actually moves (ResizeObserver is async) — animating the
-                  // correction turns that one-frame snap into a deliberate
-                  // settle instead of a visible jitter. Uses the SAME
-                  // duration/easing as ProjectPopup's own panel fade-in
-                  // (lib/motion.ts) rather than an independent 0.18s ease —
-                  // an earlier version snapped this instantly instead to
-                  // avoid a "grow" animation on open, but that just traded
-                  // it for two motions (a smooth panel + content popping in
-                  // with zero motion) reading as disjointed. Sharing one
-                  // timing/easing across the panel and its content settles
-                  // them together as a single motion.
-                  opacity: (!active || playerVisible) ? 1 : 0,
-                  transition: `width ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, height ${PANEL_DURATION.panel.enter}s ${EASE_CSS}, opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1)`,
+                  // Snap fit-to-slot size — never animate scale/width/height.
+                  // A CSS transition here read as a big scale-out→scale-in when
+                  // the player mounts (About) or opens in the popup; that motion
+                  // was rejected repeatedly. Opacity-only is fine for popup fade.
+                  opacity: (scaleReady && (!active || playerVisible)) ? 1 : 0,
+                  transition: "opacity 0.15s ease-out",
                 }}
               >
                 <div style={{
                   width: PLAYER_W,
                   height: PLAYER_H,
                   transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
-                  transition: `transform ${PANEL_DURATION.panel.enter}s ${EASE_CSS}`,
+                  transformOrigin: "top left",
                 }}>
                   <VinylPlayer
                     activeAlbum={activeAlbum}
@@ -586,7 +578,8 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   onAlbumTap={handleAlbumTap}
                   dragDirection={dragDirection}
                   showHint={!activeAlbum}
-                  entranceKey={entranceKey}
+                  entranceKey={variant === "about" ? 0 : entranceKey}
+                  skipEntrance={variant === "about"}
                 />
               </div>
             </div>

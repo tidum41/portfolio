@@ -1,11 +1,9 @@
 @keyframes cdCardEntrance {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(4px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0px);
   }
 }
 
@@ -18,8 +16,13 @@
   min-height: 0;
   -webkit-tap-highlight-color: transparent;
   touch-action: none; /* let dnd-kit own all touch events */
-  animation: cdCardEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Opacity-only — no scale. Scale entrance read as a grow on About/popup. */
+  animation: cdCardEntrance 0.25s ease-out both;
   animation-delay: var(--entrance-delay, 0ms);
+}
+
+.cardStatic {
+  animation: none;
 }
 
 .card:active { cursor: grabbing; }

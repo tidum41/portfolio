@@ -16,11 +16,12 @@ interface AlbumGridProps {
   dragDirection?: DragDir;
   showHint?: boolean;
   entranceKey?: number;
+  skipEntrance?: boolean;
 }
 
 const GRID_GAP = 14;
 
-export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarousel, onAlbumTap, dragDirection, showHint, entranceKey }: AlbumGridProps) {
+export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarousel, onAlbumTap, dragDirection, showHint, entranceKey, skipEntrance = false }: AlbumGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
@@ -59,6 +60,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
                   onTap={onAlbumTap}
                   dragDirection={dragDirection}
                   entranceIdx={i}
+                  skipEntrance={skipEntrance}
                 />
               </div>
             ))}
@@ -92,6 +94,7 @@ export function AlbumGrid({ activeAlbumId, gridWidth, artSize, colorMap, isCarou
           onTap={onAlbumTap}
           dragDirection={dragDirection}
           entranceIdx={i}
+          skipEntrance={skipEntrance}
         />
       ))}
     </div>

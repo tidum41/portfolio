@@ -98,10 +98,6 @@ function AboutBelowFold() {
 
   return (
     <>
-      <ScrollReveal>
-        <DeferredAboutCD />
-      </ScrollReveal>
-
       <section style={{ marginBottom: "var(--space-7)" }}>
         <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
         <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
@@ -297,11 +293,15 @@ export default function AboutPageContent({ active }: { active: boolean }) {
           </EntranceStagger>
         </div>
 
+        {/* CD slot stays in the tree (lightweight placeholder) so IO can arm
+            without waiting on DialKit below-fold. Live CD only mounts when
+            scrolled near — keeps first About paint + cursor free of CD init. */}
+        <DeferredAboutCD />
+
         {belowFold ? (
           <AboutBelowFold />
         ) : (
-          // Reserve space so scroll position doesn't jump when below-fold mounts.
-          <div aria-hidden style={{ minHeight: 720 }} />
+          <div aria-hidden style={{ minHeight: 320 }} />
         )}
       </div>
     </div>
