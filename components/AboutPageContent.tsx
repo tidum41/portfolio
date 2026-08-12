@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import BentoHero from "@/components/BentoHero";
+import BentoHeroStatic from "@/components/BentoHeroStatic";
 import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,
@@ -16,6 +17,12 @@ import { peekSoftNavArrival } from "@/lib/instantNav";
 import { useDialKit } from "dialkit";
 
 const CDPlayer = dynamic(() => import("@/components/CDPlayer"), { ssr: false });
+
+const BENTO = {
+  featured: { src: "/images/about/bento-large.jpg", alt: "Mudit in London" },
+  top: { src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" },
+  bottom: { src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" },
+} as const;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -31,39 +38,56 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DeferredAboutCD() {
+/**
+ * CD stays a placeholder until the user actually scrolls it into view.
+ * Previous rootMargin:160px + immediate observe meant the slot was "near"
+ * on first About open and armed CdPlayer (~DialKit + audio + dnd) ~400ms
+ * into the soft-nav hitch window.
+ */
+function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (ready) return;
+    if (!routeActive || ready) return;
     const target = document.getElementById("about-cd-slot");
     if (!target) return;
     let cancelled = false;
     let idleId = 0;
+    let armTimer = 0;
+    let obs: IntersectionObserver | null = null;
+
     const enable = () => {
       if (!cancelled) setReady(true);
     };
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        obs.disconnect();
-        if (typeof window.requestIdleCallback === "function") {
-          idleId = window.requestIdleCallback(enable, { timeout: 1200 });
-        } else {
-          enable();
-        }
-      },
-      { rootMargin: "160px 0px" },
-    );
-    obs.observe(target);
+
+    // Don't even watch until soft-nav + first paint have room to breathe.
+    armTimer = window.setTimeout(() => {
+      if (cancelled) return;
+      obs = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry?.isIntersecting) return;
+          obs?.disconnect();
+          if (typeof window.requestIdleCallback === "function") {
+            idleId = window.requestIdleCallback(enable, { timeout: 2200 });
+          } else {
+            window.setTimeout(enable, 320);
+          }
+        },
+        // No positive rootMargin — must be meaningfully in view.
+        { rootMargin: "0px", threshold: 0.12 },
+      );
+      obs.observe(target);
+    }, 1600);
+
     return () => {
       cancelled = true;
-      obs.disconnect();
+      window.clearTimeout(armTimer);
+      obs?.disconnect();
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
     };
-  }, [ready]);
+  }, [routeActive, ready]);
 
   return (
     <section id="about-cd-slot" style={{ marginBottom: "var(--space-7)", minHeight: 520 }}>
@@ -161,27 +185,156 @@ function AboutBelowFold() {
   );
 }
 
+function SoftHeroItem({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
+  return <div style={style}>{children}</div>;
+}
+
+function AboutHeroCopy() {
+  return (
+    <>
+      <h1 style={{
+        fontFamily: "var(--font-page-title)",
+        fontSize: 32,
+        fontWeight: 400,
+        lineHeight: 1.2,
+        letterSpacing: "-0.8px",
+        color: "var(--color-text-primary)",
+        margin: "0 0 4px",
+      }}>hello hello, i&apos;m mudit</h1>
+
+      <p style={{
+        fontSize: 14,
+        lineHeight: 1.5,
+        color: "var(--color-text-muted)",
+        margin: "0 0 24px",
+      }}>B.S. Cognitive Science | UCLA &apos;27</p>
+
+      <p style={{
+        fontSize: 15,
+        lineHeight: 1.6,
+        letterSpacing: "0.1px",
+        color: "var(--color-text-secondary)",
+        margin: "0 0 32px",
+        textWrap: "pretty",
+      }}>
+        {ABOUT_BIO}
+      </p>
+
+      <p style={{
+        fontSize: 15,
+        lineHeight: 1.6,
+        color: "var(--color-text-secondary)",
+        margin: "0 0 4px",
+      }}>You can find me</p>
+
+      <ul style={{
+        fontSize: 15,
+        lineHeight: 1.87,
+        color: "var(--color-text-secondary)",
+        margin: 0,
+        paddingLeft: 20,
+        listStyleType: "disc",
+      }}>
+        {ABOUT_INTERESTS.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function AboutSocials() {
+  return (
+    <nav aria-label="Social links" style={{
+      display: "flex",
+      justifyContent: "center",
+      gap: 24,
+    }}>
+      {SOCIALS.map(({ label, href }) => (
+        <a
+          key={label}
+          href={href}
+          target={href.startsWith("mailto") ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          className="nav-link"
+          style={{
+            fontSize: 14,
+            color: "var(--color-text-secondary)",
+            textDecoration: "underline",
+            textUnderlineOffset: "3px",
+            textDecorationThickness: "1px",
+          }}
+        >{label}</a>
+      ))}
+    </nav>
+  );
+}
+
 /**
- * About body used by PersistentAboutShell. First paint is hero-only; below-fold
- * (CD / experience DialKit / orgs) mounts on idle after the route is active so
- * Work→About soft-nav isn't competing with that tree on the click frame.
+ * About body used by PersistentAboutShell.
+ *
+ * First soft-nav paint budget (what was burning the cursor):
+ *  - no Framer EntranceStagger/EntranceItem (7× DialKit + motion.divs)
+ *  - static bento (no BentoHero DialKit) until idle upgrade
+ *  - CD not observed for ~1.6s, then only when actually in view
+ *  - experience DialKit deferred until scroll / long idle
  */
 export default function AboutPageContent({ active }: { active: boolean }) {
   const [softArrival] = useState(() => peekSoftNavArrival());
   const [belowFold, setBelowFold] = useState(false);
+  // Soft first open: static bento. Hard nav / later upgrade: live DialKit.
+  const [bentoLive, setBentoLive] = useState(!softArrival);
 
   useEffect(() => {
     if (!active || belowFold) return;
     let cancelled = false;
     let idleId = 0;
     let timeoutId = 0;
+
     const enable = () => {
       if (!cancelled) setBelowFold(true);
     };
+
+    const onScroll = () => {
+      if (window.scrollY < 100) return;
+      window.removeEventListener("scroll", onScroll);
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(enable, { timeout: 900 });
+      } else {
+        enable();
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // Fallback only — was 700ms and raced the soft-nav hitch.
     if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(enable, { timeout: 700 });
+      idleId = window.requestIdleCallback(enable, { timeout: 4500 });
     } else {
-      timeoutId = window.setTimeout(enable, 120);
+      timeoutId = window.setTimeout(enable, 2500);
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("scroll", onScroll);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [active, belowFold]);
+
+  useEffect(() => {
+    if (!active || bentoLive) return;
+    let cancelled = false;
+    let idleId = 0;
+    let timeoutId = 0;
+    const upgrade = () => {
+      if (!cancelled) setBentoLive(true);
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(upgrade, { timeout: 2800 });
+    } else {
+      timeoutId = window.setTimeout(upgrade, 1200);
     }
     return () => {
       cancelled = true;
@@ -190,113 +343,109 @@ export default function AboutPageContent({ active }: { active: boolean }) {
       }
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [active, belowFold]);
+  }, [active, bentoLive]);
+
+  const bento = bentoLive ? (
+    <BentoHero
+      featured={BENTO.featured}
+      top={BENTO.top}
+      bottom={BENTO.bottom}
+      priority={!softArrival}
+    />
+  ) : (
+    <BentoHeroStatic
+      featured={BENTO.featured}
+      top={BENTO.top}
+      bottom={BENTO.bottom}
+      priority={false}
+    />
+  );
 
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
         <div style={{ marginBottom: "var(--space-7)" }}>
-          <EntranceStagger active instant={softArrival} className="about-hero">
-            <div className="about-hero-bio">
-              <EntranceItem>
-                <h1 style={{
-                  fontFamily: "var(--font-page-title)",
-                  fontSize: 32,
-                  fontWeight: 400,
-                  lineHeight: 1.2,
-                  letterSpacing: "-0.8px",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 4px",
-                }}>hello hello, i&apos;m mudit</h1>
-              </EntranceItem>
-
-              <EntranceItem>
-                <p style={{
-                  fontSize: 14,
-                  lineHeight: 1.5,
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 24px",
-                }}>B.S. Cognitive Science | UCLA &apos;27</p>
-              </EntranceItem>
-
-              <EntranceItem>
-                <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  letterSpacing: "0.1px",
-                  color: "var(--color-text-secondary)",
-                  margin: "0 0 32px",
-                  textWrap: "pretty",
-                }}>
-                  {ABOUT_BIO}
-                </p>
-              </EntranceItem>
-
-              <EntranceItem>
-                <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  color: "var(--color-text-secondary)",
-                  margin: "0 0 4px",
-                }}>You can find me</p>
-              </EntranceItem>
-
-              <EntranceItem>
-                <ul style={{
-                  fontSize: 15,
-                  lineHeight: 1.87,
-                  color: "var(--color-text-secondary)",
-                  margin: 0,
-                  paddingLeft: 20,
-                  listStyleType: "disc",
-                }}>
-                  {ABOUT_INTERESTS.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </EntranceItem>
+          {softArrival ? (
+            <div className="about-hero">
+              <div className="about-hero-bio">
+                <AboutHeroCopy />
+              </div>
+              <div className="about-hero-bento-col">
+                <SoftHeroItem style={{ marginBottom: 5 }}>{bento}</SoftHeroItem>
+                <AboutSocials />
+              </div>
             </div>
+          ) : (
+            <EntranceStagger active instant={false} className="about-hero">
+              <div className="about-hero-bio">
+                <EntranceItem>
+                  <h1 style={{
+                    fontFamily: "var(--font-page-title)",
+                    fontSize: 32,
+                    fontWeight: 400,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.8px",
+                    color: "var(--color-text-primary)",
+                    margin: "0 0 4px",
+                  }}>hello hello, i&apos;m mudit</h1>
+                </EntranceItem>
 
-            <div className="about-hero-bento-col">
-              <EntranceItem style={{ marginBottom: 5 }}>
-                <BentoHero
-                  featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
-                  top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
-                  bottom={{ src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" }}
-                  priority={!softArrival}
-                />
-              </EntranceItem>
+                <EntranceItem>
+                  <p style={{
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                    color: "var(--color-text-muted)",
+                    margin: "0 0 24px",
+                  }}>B.S. Cognitive Science | UCLA &apos;27</p>
+                </EntranceItem>
 
-              <nav aria-label="Social links" style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 24,
-              }}>
-                {SOCIALS.map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target={href.startsWith("mailto") ? undefined : "_blank"}
-                    rel="noopener noreferrer"
-                    className="nav-link"
-                    style={{
-                      fontSize: 14,
-                      color: "var(--color-text-secondary)",
-                      textDecoration: "underline",
-                      textUnderlineOffset: "3px",
-                      textDecorationThickness: "1px",
-                    }}
-                  >{label}</a>
-                ))}
-              </nav>
-            </div>
-          </EntranceStagger>
+                <EntranceItem>
+                  <p style={{
+                    fontSize: 15,
+                    lineHeight: 1.6,
+                    letterSpacing: "0.1px",
+                    color: "var(--color-text-secondary)",
+                    margin: "0 0 32px",
+                    textWrap: "pretty",
+                  }}>
+                    {ABOUT_BIO}
+                  </p>
+                </EntranceItem>
+
+                <EntranceItem>
+                  <p style={{
+                    fontSize: 15,
+                    lineHeight: 1.6,
+                    color: "var(--color-text-secondary)",
+                    margin: "0 0 4px",
+                  }}>You can find me</p>
+                </EntranceItem>
+
+                <EntranceItem>
+                  <ul style={{
+                    fontSize: 15,
+                    lineHeight: 1.87,
+                    color: "var(--color-text-secondary)",
+                    margin: 0,
+                    paddingLeft: 20,
+                    listStyleType: "disc",
+                  }}>
+                    {ABOUT_INTERESTS.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </EntranceItem>
+              </div>
+
+              <div className="about-hero-bento-col">
+                <EntranceItem style={{ marginBottom: 5 }}>{bento}</EntranceItem>
+                <AboutSocials />
+              </div>
+            </EntranceStagger>
+          )}
         </div>
 
-        {/* CD slot stays in the tree (lightweight placeholder) so IO can arm
-            without waiting on DialKit below-fold. Live CD only mounts when
-            scrolled near — keeps first About paint + cursor free of CD init. */}
-        <DeferredAboutCD />
+        <DeferredAboutCD routeActive={active} />
 
         {belowFold ? (
           <AboutBelowFold />
