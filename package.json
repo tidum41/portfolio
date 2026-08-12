@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "studio": "sanity dev",
-    "seed:sviz": "node scripts/seed-sviz.mjs"
+    "seed:sviz": "node scripts/seed-sviz.mjs",
+    "bench:nav": "node scripts/bench-nav-jank.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -39,6 +40,7 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.10",
+    "playwright": "^1.52.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0"
   }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import { peekSoftNavArrival } from "@/lib/instantNav";
 
 // Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
@@ -70,6 +71,8 @@ const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, m
 
 export default function PlaygroundPageClient({ items }: { items: PlaygroundGalleryItem[] }) {
     const instanceKey = useRef<symbol | null>(null);
+    // Soft-nav from Work/About: snap gallery in (no entrance chorus).
+    const [softArrival] = useState(() => peekSoftNavArrival());
 
     const dk = useDialKit("Archive Edge Fade", {
         topHeight:      [160,  40, 320, 1],
@@ -131,6 +134,7 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
                 overviewMode="width"
                 maxZoom={1.5}
                 minZoomFactor={0.667}
+                instant={softArrival}
             />
 
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}

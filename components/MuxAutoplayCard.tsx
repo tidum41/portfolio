@@ -10,11 +10,11 @@ import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 
 /** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
-const MOUNT_STAGGER_MS = 140;
+const MOUNT_STAGGER_MS = 200;
 /** Spread Mux teardown when leaving "/" so About/Archive paint + cursor
  *  aren't blocked by N× MediaSource destroys on one commit. */
-const UNMOUNT_STAGGER_MS = 45;
-const UNMOUNT_BASE_MS = 48;
+const UNMOUNT_STAGGER_MS = 90;
+const UNMOUNT_BASE_MS = 120;
 
 function CardLabel({
   title,
@@ -147,22 +147,29 @@ export default function MuxAutoplayCard({
   // but keep the element mounted until `active` deferred-teardown fires.
   useEffect(() => {
     const root = containerRef.current;
-    if (!root) return;
-    const el = root.querySelector("mux-player") as HTMLElement & {
-      pause?: () => void;
-      play?: () => Promise<void> | void;
-    } | null;
-    if (!el) return;
-    if (!playing) {
-      try { el.pause?.(); } catch { /* ignore */ }
-      return;
-    }
-    try {
-      const p = el.play?.();
-      if (p && typeof (p as Promise<void>).catch === "function") {
-        (p as Promise<void>).catch(() => {});
-      }
-    } catch { /* ignore */ }
+    const pauseEl = () => {
+      const el = root?.querySelector("mux-player") as HTMLElement & {
+        pause?: () => void;
+      } | null;
+      try { el?.pause?.(); } catch { /* ignore */ }
+    };
+    const playEl = () => {
+      const el = root?.querySelector("mux-player") as HTMLElement & {
+        play?: () => Promise<void> | void;
+      } | null;
+      try {
+        const p = el?.play?.();
+        if (p && typeof (p as Promise<void>).catch === "function") {
+          (p as Promise<void>).catch(() => {});
+        }
+      } catch { /* ignore */ }
+    };
+
+    // Sync with soft-nav click — don't wait for React playing=false effect.
+    window.addEventListener("soft-nav-start", pauseEl);
+    if (!playing) pauseEl();
+    else playEl();
+    return () => window.removeEventListener("soft-nav-start", pauseEl);
   }, [playing, mountReady]);
 
   // Poster stays painted under the player so tear-down/remount never blanks

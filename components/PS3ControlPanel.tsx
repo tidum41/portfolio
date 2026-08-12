@@ -510,7 +510,14 @@ html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,
 html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
-export default function PS3ControlPanel({ instantReturn = false }: { instantReturn?: boolean }) {
+export default function PS3ControlPanel({
+  instantReturn = false,
+  visible = true,
+}: {
+  instantReturn?: boolean;
+  /** When false (off work route), hide the body portal without unmounting. */
+  visible?: boolean;
+}) {
   const dk = useDialKit("PS3 Pill", {
     chevronOffset:  [-1.5, -4, 4, 0.5],
     pillGap:        [4,    2, 10, 0.5],
@@ -571,6 +578,15 @@ export default function PS3ControlPanel({ instantReturn = false }: { instantRetu
     setPortalEl(el);
     return () => { try { el.remove(); } catch {} };
   }, []);
+
+  // Soft-nav leave/return: hide body portal without remounting (remount was a
+  // measured hitch on Work↔About). Parent display:none cannot hide this portal.
+  useEffect(() => {
+    if (!portalEl) return;
+    portalEl.style.display = visible ? "" : "none";
+    portalEl.style.pointerEvents = visible ? "auto" : "none";
+    portalEl.setAttribute("aria-hidden", visible ? "false" : "true");
+  }, [portalEl, visible]);
 
   // Inject CSS once
   useEffect(() => {

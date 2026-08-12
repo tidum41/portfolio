@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
@@ -14,6 +15,29 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Warm primary routes on idle so first soft-nav pays less RSC/JS cost.
+  useEffect(() => {
+    let idleId = 0;
+    let timeoutId = 0;
+    const warm = () => {
+      for (const { href } of links) {
+        if (href !== pathname) router.prefetch(href);
+      }
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(warm, { timeout: 2500 });
+    } else {
+      timeoutId = window.setTimeout(warm, 900);
+    }
+    return () => {
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [pathname, router]);
 
   // DialKit auto-generates each slider's on-screen label from its key name
   // (camelCase -> "Title Case") and has no separate description field, so

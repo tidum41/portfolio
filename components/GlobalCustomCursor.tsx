@@ -784,7 +784,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   let trailMutedUntil = 0;
   window.addEventListener("soft-nav-start", () => {
-    trailMutedUntil = performance.now() + 500;
+    // Cover About/Archive first-paint + deferred media pause (benchmarked
+    // hitch windows often exceed 500ms).
+    trailMutedUntil = performance.now() + 1600;
+  }, { signal: sig });
+  window.addEventListener("soft-nav-settled", () => {
+    trailMutedUntil = Math.max(trailMutedUntil, performance.now() + 180);
   }, { signal: sig });
 
   window.addEventListener("pointermove", (e: PointerEvent) => {

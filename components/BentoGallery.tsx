@@ -119,6 +119,8 @@ interface Props {
     maxZoom?: number;
     minZoomFactor?: number;
     style?: CSSProperties;
+    /** Soft-nav arrival: snap tiles in (no entrance stagger). */
+    instant?: boolean;
 }
 
 // ── Pure utilities ─────────────────────────────────────────────────────────────
@@ -364,6 +366,7 @@ export default function BentoGallery({
     maxZoom = 4,
     minZoomFactor = 0,
     style,
+    instant = false,
 }: Props) {
     const isStatic = false;
     const isDark = useIsDark();
@@ -398,11 +401,16 @@ export default function BentoGallery({
 
     // Reveal as soon as layout is ready — LQIP posters already paint the
     // tiles, so waiting on full-res downloads just left empty holes.
-    const [ready, setReady] = useState(false);
+    // Soft-nav snaps ready immediately (no one-frame blank).
+    const [ready, setReady] = useState(instant);
     useEffect(() => {
+        if (instant) {
+            setReady(true);
+            return;
+        }
         const id = requestAnimationFrame(() => setReady(true));
         return () => cancelAnimationFrame(id);
-    }, []);
+    }, [instant]);
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
@@ -1434,7 +1442,7 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const entranceInstant = reducedMotionRef.current;
+                    const entranceInstant = reducedMotionRef.current || instant;
 
                     return (
                         <div
