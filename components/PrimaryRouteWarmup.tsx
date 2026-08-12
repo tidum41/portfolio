@@ -22,20 +22,27 @@ export default function PrimaryRouteWarmup() {
     let timeoutId = 0;
     const warm = () => {
       void import("@/components/AboutPageContent");
+      void import("@/components/BentoHeroStatic");
       void import("@/app/archive/ArchivePageClient");
       void import("@/components/BentoGallery");
-      void import("@/components/BentoHero");
-      void import("@/components/CDPlayer");
+      // BentoHero / CDPlayer are scroll-or-idle upgrades on About — warm later
+      // so they don't compete with the first soft-nav hitch window.
       for (const src of ABOUT_IMAGES) {
         const img = new window.Image();
         img.decoding = "async";
         img.src = src;
       }
     };
+    const warmHeavy = () => {
+      void import("@/components/BentoHero");
+      void import("@/components/CDPlayer");
+    };
     if (typeof window.requestIdleCallback === "function") {
       idleId = window.requestIdleCallback(warm, { timeout: pathname === "/" ? 2200 : 4000 });
+      window.requestIdleCallback(warmHeavy, { timeout: pathname === "/" ? 8000 : 10000 });
     } else {
       timeoutId = window.setTimeout(warm, pathname === "/" ? 900 : 1500);
+      window.setTimeout(warmHeavy, pathname === "/" ? 5000 : 7000);
     }
     return () => {
       if (idleId && typeof window.cancelIdleCallback === "function") {
