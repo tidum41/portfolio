@@ -246,11 +246,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Heavy media (live CD + Mux gate) stays mounted under display:none until
-  // the destination route has settled. Playwright measured CD teardown at
-  // About-arrival +0ms and Mux unmounts +100–200ms with 62–110ms pointer gaps —
-  // double-rAF was still inside the soft-nav hitch window.
-  const HEAVY_TEARDOWN_MS = 1800;
+  // Heavy media stays mounted under display:none while browsing About/Archive
+  // so soft return to Work is pause→play (not N× Mux remount). Reclaim memory
+  // after a long idle off-route — short windows caused About→Work regressions
+  // in the Playwright bench (maxGap 84→139 when remount raced the return).
+  const HEAVY_TEARDOWN_MS = 30000;
   const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
   useEffect(() => {
     if (isWorkRoute) {
@@ -266,7 +266,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     const timeoutId = window.setTimeout(() => {
       if (cancelled) return;
       if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(tearDown, { timeout: 600 });
+        idleId = window.requestIdleCallback(tearDown, { timeout: 1500 });
       } else {
         tearDown();
       }
@@ -277,6 +277,30 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
+    };
+  }, [isWorkRoute]);
+
+  // Resume Mux after Work paints — double-rAF + short delay so silk/shell
+  // show first without decode competing on the arrival frame.
+  const [mediaPlaying, setMediaPlaying] = useState(isWorkRoute);
+  useEffect(() => {
+    if (!isWorkRoute) {
+      setMediaPlaying(false);
+      return;
+    }
+    let cancelled = false;
+    let timeoutId = 0;
+    const raf1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        timeoutId = window.setTimeout(() => {
+          if (!cancelled) setMediaPlaying(true);
+        }, 80);
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [isWorkRoute]);
 
@@ -564,7 +588,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
-                        playing={isWorkRoute}
+                        playing={mediaPlaying}
                         mountOrder={rank}
                       />
                     )}
@@ -683,7 +707,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
-                        playing={isWorkRoute}
+                        playing={mediaPlaying}
                         mountOrder={rank}
                       />
                     )}
@@ -785,12 +809,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           )}
         </section>
 
-        {/* Remount on each "/" visit — this panel portals to document.body
-            (parent display:none cannot hide it), and its default position is
-            measured against the live hero. Keep-mounted + CSS hide left it
-            visible off-route and could freeze a stale/zero position. */}
-        {hasEverBeenActive && isWorkRoute && (
-          <PS3ControlPanel instantReturn={instantArrivalRef.current} />
+        {/* Keep the panel mounted across soft-nav — it portals to document.body
+            so parent display:none cannot hide it; `visible` toggles the portal. */}
+        {hasEverBeenActive && (
+          <PS3ControlPanel
+            instantReturn={instantArrivalRef.current}
+            visible={isWorkRoute}
+          />
         )}
       </div>
 

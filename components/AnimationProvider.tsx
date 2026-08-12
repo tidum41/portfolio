@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { peekSoftNav, peekSkipRouteFade, clearSoftNav } from "@/lib/instantNav";
 import { EASE_OPACITY, EASE_EXIT, DURATION } from "@/lib/motion";
 
@@ -33,42 +33,64 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // Provides page enter/exit animations keyed by route.
 // Lives in layout.tsx (persistent) so AnimatePresence survives navigations.
 // template.tsx is kept as a passthrough for Next.js scroll-reset behaviour.
-// Every route's above-the-fold content now owns a richer entrance of its own
-// (EntranceStagger/EntranceItem — see about page, PersistentWorkShell,
-// BentoGallery, case study pages), so this crossfade is deliberately just a
-// fast, opacity-only swap — a fuller fade+slide+scale here would compete
-// with each page's own entrance and read as double motion (the case-study
-// page's whole-page slide read as "buggy" for exactly this reason: it also
-// dragged the sticky TOC along with it).
+// Soft primary-nav (work/about/archive) bypasses AnimatePresence entirely —
+// the exit layer + opacity bookkeeping was competing with destination mount
+// (cursor gaps). Case studies and hard loads keep the crossfade.
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Layer A only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
   const skipFade = peekSkipRouteFade();
   const reduced = useReducedMotion();
   const dur = (d: number) => (reduced ? 0 : d);
 
-  // Soft-nav is one-shot per navigation; clear after commit so it doesn't
-  // leak into the next unrelated transition.
+  // Latch soft-swap for this pathname commit (session flag clears in effect).
+  const pathRef = useRef(pathname);
+  const softSwapRef = useRef(skipFade);
+  if (pathRef.current !== pathname) {
+    softSwapRef.current = peekSkipRouteFade();
+    pathRef.current = pathname;
+  }
+  const softSwap = softSwapRef.current;
+
   useEffect(() => {
     if (peekSoftNav()) clearSoftNav();
+    // Tell the custom cursor the route has committed; trail can unmute soon.
+    let idleId = 0;
+    const settle = () => {
+      window.dispatchEvent(new CustomEvent("soft-nav-settled", { detail: { pathname } }));
+    };
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (typeof window.requestIdleCallback === "function") {
+          idleId = window.requestIdleCallback(settle, { timeout: 400 });
+        } else {
+          settle();
+        }
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+    };
   }, [pathname]);
 
   return (
     <div style={{ position: "relative", zIndex: 1 }}>
-      <AnimatePresence mode="sync" initial={false}>
-        <motion.div
-          key={pathname}
-          initial={skipFade ? false : { opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
-          exit={
-            skipFade
-              ? { opacity: 1, transition: { duration: 0 } }
-              : { opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }
-          }
-        >
-          <TransitionLayer>{children}</TransitionLayer>
-        </motion.div>
-      </AnimatePresence>
+      {softSwap ? (
+        <div key={pathname}>{children}</div>
+      ) : (
+        <AnimatePresence mode="sync" initial={false}>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
+            exit={{ opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }}
+          >
+            <TransitionLayer>{children}</TransitionLayer>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

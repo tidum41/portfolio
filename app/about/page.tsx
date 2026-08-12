@@ -35,31 +35,43 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function DeferredAboutCD() {
   const [ready, setReady] = useState(false);
+
+  // Mount only when the section is near the viewport. Soft About visits that
+  // never scroll past the bio skip CD init — and About→Work then doesn't pay
+  // CD unmount on the return (Playwright bench regression).
   useEffect(() => {
+    if (ready) return;
+    const target = document.getElementById("about-cd-slot");
+    if (!target) return;
     let cancelled = false;
     let idleId = 0;
-    let timeoutId = 0;
     const enable = () => {
       if (!cancelled) setReady(true);
     };
-    // Prefer idle well after soft-nav paint — Work→About measured hitch was
-    // CD/Mux teardown racing About entrance; don't add About CD into that window.
-    if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(enable, { timeout: 2200 });
-    } else {
-      timeoutId = window.setTimeout(enable, 900);
-    }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        obs.disconnect();
+        if (typeof window.requestIdleCallback === "function") {
+          idleId = window.requestIdleCallback(enable, { timeout: 1200 });
+        } else {
+          enable();
+        }
+      },
+      { rootMargin: "160px 0px" },
+    );
+    obs.observe(target);
     return () => {
       cancelled = true;
+      obs.disconnect();
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
-      if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [ready]);
 
   return (
-    <section style={{ marginBottom: "var(--space-7)", minHeight: 520 }}>
+    <section id="about-cd-slot" style={{ marginBottom: "var(--space-7)", minHeight: 520 }}>
       <SectionLabel>drag my favorite CDs!</SectionLabel>
       {ready ? (
         <CDPlayer style={{ marginTop: 16, minHeight: 520 }} variant="about" />
