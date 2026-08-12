@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
@@ -69,10 +69,20 @@ const solidEdgeGradient = (dir: "bottom" | "top", solidPct: number, falloff: num
 const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, midPct: number, midAlpha: number) =>
     `linear-gradient(to ${dir}, rgba(0,0,0,${startAlpha}) 0%, rgba(0,0,0,${startAlpha}) ${solidPct}%, rgba(0,0,0,${midAlpha}) ${midPct}%, transparent 100%)`;
 
-export default function PlaygroundPageClient({ items }: { items: PlaygroundGalleryItem[] }) {
+export default function PlaygroundPageClient({
+  items,
+  active = true,
+}: {
+  items: PlaygroundGalleryItem[];
+  /** When false (persistent shell hidden), release archive footer overrides. */
+  active?: boolean;
+}) {
     const instanceKey = useRef<symbol | null>(null);
     // Soft-nav from Work/About: snap gallery in (no entrance chorus).
     const [softArrival] = useState(() => peekSoftNavArrival());
+    // First mount of gallery body — defer one idle tick on soft arrival so
+    // Work→Archive paint isn't one long BentoGallery+DialKit frame.
+    const [galleryReady, setGalleryReady] = useState(!softArrival);
 
     const dk = useDialKit("Archive Edge Fade", {
         topHeight:      [160,  40, 320, 1],
@@ -92,9 +102,41 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
         bottomMaskMidAlpha:[0.42, 0,  1,   0.01],
     });
 
+    useEffect(() => {
+      if (galleryReady || !active) return;
+      let cancelled = false;
+      let idleId = 0;
+      let timeoutId = 0;
+      const enable = () => {
+        if (!cancelled) setGalleryReady(true);
+      };
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(enable, { timeout: 400 });
+      } else {
+        timeoutId = window.setTimeout(enable, 48);
+      }
+      return () => {
+        cancelled = true;
+        if (idleId && typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(idleId);
+        }
+        if (timeoutId) window.clearTimeout(timeoutId);
+      };
+    }, [galleryReady, active]);
+
     useLayoutEffect(() => {
         const footer = document.querySelector("footer") as HTMLElement | null;
         if (!footer) return;
+
+        if (!active) {
+            // Shell still mounted but off-route — don't leave footer pinned.
+            if (instanceKey.current) {
+                _pg.delete(instanceKey.current);
+                instanceKey.current = null;
+                if (_pg.size === 0) _footerReset(footer);
+            }
+            return;
+        }
 
         const key = Symbol();
         instanceKey.current = key;
@@ -103,9 +145,10 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
 
         return () => {
             _pg.delete(key);
+            if (instanceKey.current === key) instanceKey.current = null;
             if (_pg.size === 0) _footerReset(footer);
         };
-    }, []);
+    }, [active]);
 
     const fadeBase: CSSProperties = {
         position: "absolute",
@@ -123,19 +166,33 @@ export default function PlaygroundPageClient({ items }: { items: PlaygroundGalle
             left: 0,
             right: 0,
             bottom: FOOTER_H,
+            visibility: active ? "visible" : "hidden",
+            pointerEvents: active ? "auto" : "none",
         } as CSSProperties}
             data-ui-sound-scope="archive"
+            aria-hidden={!active}
         >
-            <BentoGallery
-                items={items}
-                columns={4}
-                gap={12}
-                cellAspect={1.25}
-                overviewMode="width"
-                maxZoom={1.5}
-                minZoomFactor={0.667}
-                instant={softArrival}
-            />
+            {galleryReady ? (
+              <BentoGallery
+                  items={items}
+                  columns={4}
+                  gap={12}
+                  cellAspect={1.25}
+                  overviewMode="width"
+                  maxZoom={1.5}
+                  minZoomFactor={0.667}
+                  instant={softArrival}
+              />
+            ) : (
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "var(--color-bg)",
+                }}
+              />
+            )}
 
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}
             <div style={{ ...fadeBase, top: 0, height: dk.topHeight }}>
