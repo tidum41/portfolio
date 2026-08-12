@@ -82,12 +82,14 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       className="nav-link"
       style={{
         position: "relative",
+        display: "inline-block",
+        flexShrink: 0,
         textDecoration: "none",
         fontSize: 16,
         fontWeight: 400,
         lineHeight: "24px",
         userSelect: "none",
-        WebkitTapHighlightColor: "transparent"
+        WebkitTapHighlightColor: "transparent",
       }}
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
@@ -151,7 +153,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
           zIndex: 1,
           display: "inline-flex",
           alignItems: "center",
-          willChange: "transform, opacity",
+          transformOrigin: "center",
         }}
         initial={false}
         animate={{ opacity: active ? 0 : 1 }}
@@ -169,7 +171,6 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
           inset: 0,
           zIndex: 2,
           pointerEvents: "none",
-          willChange: "transform, opacity",
         }}
         initial={false}
         animate={{ opacity: active ? 1 : 0 }}
