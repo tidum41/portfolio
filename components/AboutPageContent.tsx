@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import BentoHero from "@/components/BentoHero";
 import BentoHeroStatic from "@/components/BentoHeroStatic";
-import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import CdPlayerPoster from "@/components/CdPlayerPoster";
+import { CssEntranceStagger, CssEntranceItem } from "@/components/CssEntrance";
+import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,
   ABOUT_INTERESTS,
@@ -39,86 +40,82 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * CD stays a placeholder until the user scrolls. The slot often peeks into
- * an 800px viewport (~top 676) so IntersectionObserver alone still armed
- * CdPlayer on first About open without any scroll.
+ * About CD is visible under the hero on desktop — scroll-gating can't hide it.
+ * Show the real product poster immediately, warm the chunk, then mount the live
+ * player after the soft-nav hitch window (idle). Audio/dnd stay gated inside the
+ * app until the user interacts.
  */
 function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
-  const [ready, setReady] = useState(false);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
-    if (!routeActive || ready) return;
-    const target = document.getElementById("about-cd-slot");
-    if (!target) return;
+    if (!routeActive || live) return;
     let cancelled = false;
     let idleId = 0;
-    let userScrolled = window.scrollY > 48;
-    let obs: IntersectionObserver | null = null;
+    let delayId = 0;
 
-    const enable = () => {
-      if (!cancelled) setReady(true);
+    const arm = () => {
+      if (cancelled) return;
+      void import("@/components/CDPlayer").then(() => {
+        if (!cancelled) setLive(true);
+      });
     };
 
-    const maybeArm = () => {
-      if (cancelled || !userScrolled) return;
-      const rect = target.getBoundingClientRect();
-      const vh = window.innerHeight || 0;
-      // Require a real chunk of the slot in view after scroll — not the
-      // ~100px peek that shows under the hero on desktop.
-      const visible = rect.top < vh - 80 && rect.bottom > 120;
-      if (!visible) return;
-      obs?.disconnect();
-      window.removeEventListener("scroll", onScroll);
+    // Hero + cursor get the first beat; then idle-mount the live player.
+    delayId = window.setTimeout(() => {
+      if (cancelled) return;
       if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(enable, { timeout: 1800 });
+        idleId = window.requestIdleCallback(arm, { timeout: 1400 });
       } else {
-        window.setTimeout(enable, 280);
+        arm();
       }
-    };
-
-    const onScroll = () => {
-      if (window.scrollY > 48) userScrolled = true;
-      maybeArm();
-    };
-
-    obs = new IntersectionObserver(() => maybeArm(), {
-      rootMargin: "0px",
-      threshold: [0, 0.15, 0.35],
-    });
-    obs.observe(target);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    }, 480);
 
     return () => {
       cancelled = true;
-      obs?.disconnect();
-      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(delayId);
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
     };
-  }, [routeActive, ready]);
+  }, [routeActive, live]);
 
   return (
-    <section id="about-cd-slot" style={{ marginBottom: "var(--space-7)", minHeight: 520 }}>
+    <section id="about-cd-slot" style={{ marginBottom: "var(--space-7)" }}>
       <SectionLabel>drag my favorite CDs!</SectionLabel>
-      {ready ? (
-        <CDPlayer style={{ marginTop: 16, minHeight: 520 }} variant="about" />
-      ) : (
+      <div
+        style={{
+          position: "relative",
+          marginTop: 16,
+          minHeight: 520,
+          borderRadius: "var(--radius-card)",
+          overflow: "hidden",
+          background: "var(--color-placeholder)",
+        }}
+      >
+        {/* Product poster — same assets as Work grid tile. */}
         <div
           aria-hidden
           style={{
-            marginTop: 16,
-            minHeight: 520,
-            borderRadius: "var(--radius-card)",
-            background: "var(--color-placeholder)",
+            position: "absolute",
+            inset: 0,
+            opacity: live ? 0 : 1,
+            transition: "opacity 0.35s ease",
+            pointerEvents: "none",
           }}
-        />
-      )}
+        >
+          <CdPlayerPoster opacity={1} fade={false} />
+        </div>
+        {live ? (
+          <CDPlayer style={{ marginTop: 0, minHeight: 520 }} variant="about" />
+        ) : (
+          <div aria-hidden style={{ minHeight: 520 }} />
+        )}
+      </div>
     </section>
   );
 }
 
-/** Experience + orgs — DialKit logos live here so first About paint skips them. */
 function AboutBelowFold() {
   const logoDk = useDialKit("About Logos", {
     cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
@@ -194,60 +191,66 @@ function AboutBelowFold() {
   );
 }
 
-function SoftHeroItem({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
-  return <div style={style}>{children}</div>;
-}
-
 function AboutHeroCopy() {
   return (
     <>
-      <h1 style={{
-        fontFamily: "var(--font-page-title)",
-        fontSize: 32,
-        fontWeight: 400,
-        lineHeight: 1.2,
-        letterSpacing: "-0.8px",
-        color: "var(--color-text-primary)",
-        margin: "0 0 4px",
-      }}>hello hello, i&apos;m mudit</h1>
+      <CssEntranceItem>
+        <h1 style={{
+          fontFamily: "var(--font-page-title)",
+          fontSize: 32,
+          fontWeight: 400,
+          lineHeight: 1.2,
+          letterSpacing: "-0.8px",
+          color: "var(--color-text-primary)",
+          margin: "0 0 4px",
+        }}>hello hello, i&apos;m mudit</h1>
+      </CssEntranceItem>
 
-      <p style={{
-        fontSize: 14,
-        lineHeight: 1.5,
-        color: "var(--color-text-muted)",
-        margin: "0 0 24px",
-      }}>B.S. Cognitive Science | UCLA &apos;27</p>
+      <CssEntranceItem>
+        <p style={{
+          fontSize: 14,
+          lineHeight: 1.5,
+          color: "var(--color-text-muted)",
+          margin: "0 0 24px",
+        }}>B.S. Cognitive Science | UCLA &apos;27</p>
+      </CssEntranceItem>
 
-      <p style={{
-        fontSize: 15,
-        lineHeight: 1.6,
-        letterSpacing: "0.1px",
-        color: "var(--color-text-secondary)",
-        margin: "0 0 32px",
-        textWrap: "pretty",
-      }}>
-        {ABOUT_BIO}
-      </p>
+      <CssEntranceItem>
+        <p style={{
+          fontSize: 15,
+          lineHeight: 1.6,
+          letterSpacing: "0.1px",
+          color: "var(--color-text-secondary)",
+          margin: "0 0 32px",
+          textWrap: "pretty",
+        }}>
+          {ABOUT_BIO}
+        </p>
+      </CssEntranceItem>
 
-      <p style={{
-        fontSize: 15,
-        lineHeight: 1.6,
-        color: "var(--color-text-secondary)",
-        margin: "0 0 4px",
-      }}>You can find me</p>
+      <CssEntranceItem>
+        <p style={{
+          fontSize: 15,
+          lineHeight: 1.6,
+          color: "var(--color-text-secondary)",
+          margin: "0 0 4px",
+        }}>You can find me</p>
+      </CssEntranceItem>
 
-      <ul style={{
-        fontSize: 15,
-        lineHeight: 1.87,
-        color: "var(--color-text-secondary)",
-        margin: 0,
-        paddingLeft: 20,
-        listStyleType: "disc",
-      }}>
-        {ABOUT_INTERESTS.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+      <CssEntranceItem>
+        <ul style={{
+          fontSize: 15,
+          lineHeight: 1.87,
+          color: "var(--color-text-secondary)",
+          margin: 0,
+          paddingLeft: 20,
+          listStyleType: "disc",
+        }}>
+          {ABOUT_INTERESTS.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </CssEntranceItem>
     </>
   );
 }
@@ -281,25 +284,18 @@ function AboutSocials() {
 
 /**
  * About body used by PersistentAboutShell.
- *
- * First soft-nav paint budget (what was burning the cursor):
- *  - no Framer EntranceStagger/EntranceItem (7× DialKit + motion.divs)
- *  - static bento (no BentoHero DialKit) until idle upgrade
- *  - CD not observed for ~1.6s, then only when actually in view
- *  - experience DialKit deferred until scroll / long idle
+ * Soft + hard: CSS entrance (Archive/BentoGallery vocabulary). Soft snaps.
+ * Bento stays static (production); CD poster→live after settle.
  */
 export default function AboutPageContent({
   active,
   softArrival: softArrivalProp,
 }: {
   active: boolean;
-  /** Latched by PersistentAboutShell before soft-nav session flag clears. */
   softArrival?: boolean;
 }) {
   const [softArrival] = useState(() => softArrivalProp ?? peekSoftNavArrival());
   const [belowFold, setBelowFold] = useState(false);
-  // Soft first open: static bento. Hard nav / later upgrade: live DialKit.
-  const [bentoLive, setBentoLive] = useState(!softArrival);
 
   useEffect(() => {
     if (!active || belowFold) return;
@@ -322,7 +318,6 @@ export default function AboutPageContent({
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Fallback only — was 700ms and raced the soft-nav hitch.
     if (typeof window.requestIdleCallback === "function") {
       idleId = window.requestIdleCallback(enable, { timeout: 4500 });
     } else {
@@ -339,126 +334,31 @@ export default function AboutPageContent({
     };
   }, [active, belowFold]);
 
-  useEffect(() => {
-    if (!active || bentoLive) return;
-    let cancelled = false;
-    let idleId = 0;
-    let timeoutId = 0;
-    const upgrade = () => {
-      if (!cancelled) setBentoLive(true);
-    };
-    if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(upgrade, { timeout: 2800 });
-    } else {
-      timeoutId = window.setTimeout(upgrade, 1200);
-    }
-    return () => {
-      cancelled = true;
-      if (idleId && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [active, bentoLive]);
-
-  const bento = bentoLive ? (
-    <BentoHero
-      featured={BENTO.featured}
-      top={BENTO.top}
-      bottom={BENTO.bottom}
-      priority={!softArrival}
-    />
-  ) : (
-    <BentoHeroStatic
-      featured={BENTO.featured}
-      top={BENTO.top}
-      bottom={BENTO.bottom}
-      priority={false}
-    />
-  );
-
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
         <div style={{ marginBottom: "var(--space-7)" }}>
-          {softArrival ? (
-            <div className="about-hero" data-soft-hero="1">
-              <div className="about-hero-bio">
-                <AboutHeroCopy />
-              </div>
-              <div className="about-hero-bento-col">
-                <SoftHeroItem style={{ marginBottom: 5 }}>{bento}</SoftHeroItem>
-                <AboutSocials />
-              </div>
+          <CssEntranceStagger
+            active
+            instant={softArrival}
+            className="about-hero"
+            data-soft-hero={softArrival ? "1" : "0"}
+          >
+            <div className="about-hero-bio">
+              <AboutHeroCopy />
             </div>
-          ) : (
-            <EntranceStagger active instant={false} className="about-hero">
-              <div className="about-hero-bio">
-                <EntranceItem>
-                  <h1 style={{
-                    fontFamily: "var(--font-page-title)",
-                    fontSize: 32,
-                    fontWeight: 400,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.8px",
-                    color: "var(--color-text-primary)",
-                    margin: "0 0 4px",
-                  }}>hello hello, i&apos;m mudit</h1>
-                </EntranceItem>
-
-                <EntranceItem>
-                  <p style={{
-                    fontSize: 14,
-                    lineHeight: 1.5,
-                    color: "var(--color-text-muted)",
-                    margin: "0 0 24px",
-                  }}>B.S. Cognitive Science | UCLA &apos;27</p>
-                </EntranceItem>
-
-                <EntranceItem>
-                  <p style={{
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                    letterSpacing: "0.1px",
-                    color: "var(--color-text-secondary)",
-                    margin: "0 0 32px",
-                    textWrap: "pretty",
-                  }}>
-                    {ABOUT_BIO}
-                  </p>
-                </EntranceItem>
-
-                <EntranceItem>
-                  <p style={{
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                    color: "var(--color-text-secondary)",
-                    margin: "0 0 4px",
-                  }}>You can find me</p>
-                </EntranceItem>
-
-                <EntranceItem>
-                  <ul style={{
-                    fontSize: 15,
-                    lineHeight: 1.87,
-                    color: "var(--color-text-secondary)",
-                    margin: 0,
-                    paddingLeft: 20,
-                    listStyleType: "disc",
-                  }}>
-                    {ABOUT_INTERESTS.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </EntranceItem>
-              </div>
-
-              <div className="about-hero-bento-col">
-                <EntranceItem style={{ marginBottom: 5 }}>{bento}</EntranceItem>
-                <AboutSocials />
-              </div>
-            </EntranceStagger>
-          )}
+            <div className="about-hero-bento-col">
+              <CssEntranceItem style={{ marginBottom: 5 }}>
+                <BentoHeroStatic
+                  featured={BENTO.featured}
+                  top={BENTO.top}
+                  bottom={BENTO.bottom}
+                  priority={!softArrival}
+                />
+              </CssEntranceItem>
+              <AboutSocials />
+            </div>
+          </CssEntranceStagger>
         </div>
 
         <DeferredAboutCD routeActive={active} />

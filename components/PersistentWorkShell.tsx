@@ -246,11 +246,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Heavy media stays mounted under display:none while browsing About/Archive
-  // so soft return to Work is pause→play (not N× Mux remount). Reclaim memory
-  // after a long idle off-route — short windows caused About→Work regressions
-  // in the Playwright bench (maxGap 84→139 when remount raced the return).
-  const HEAVY_TEARDOWN_MS = 30000;
+  // Heavy media: pause immediately on leave, then tear down onto posters so
+  // About/Archive aren't sharing Mux/CD with a hidden Work shell. Mux cards
+  // keep their thumbnail poster; CD keeps CdPlayerPoster. Remount on return is
+  // staggered (MuxAutoplayCard mountOrder) so Work arrival stays smooth.
+  // ~700ms lets About's first paint + cursor settle before MediaSource destroy.
+  const HEAVY_TEARDOWN_MS = 700;
   const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
   useEffect(() => {
     if (isWorkRoute) {

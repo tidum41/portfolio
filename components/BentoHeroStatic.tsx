@@ -51,8 +51,10 @@ export default function BentoHeroStatic({
     background: "var(--color-placeholder)",
     borderRadius,
   });
-  const sideSizes = "(max-width: 767px) 50vw, 480px";
-  const featuredSizes = "(max-width: 767px) 100vw, 900px";
+  // Soft/About first paint: request less decode work than the DialKit live
+  // hero (900/480). Column is ~320px; 640/320 @2x is enough for sharpness.
+  const sideSizes = "(max-width: 767px) 50vw, 320px";
+  const featuredSizes = "(max-width: 767px) 100vw, 640px";
 
   return (
     <div
@@ -74,7 +76,7 @@ export default function BentoHeroStatic({
           alt={featured.alt}
           fill
           priority={priority}
-          quality={92}
+          quality={82}
           sizes={featuredSizes}
           style={{
             objectFit: "cover",
@@ -89,7 +91,7 @@ export default function BentoHeroStatic({
             src={top.src}
             alt={top.alt}
             fill
-            quality={90}
+            quality={78}
             sizes={sideSizes}
             style={{
               objectFit: "cover",
@@ -103,7 +105,7 @@ export default function BentoHeroStatic({
             src={bottom.src}
             alt={bottom.alt}
             fill
-            quality={90}
+            quality={78}
             sizes={sideSizes}
             style={{
               objectFit: "cover",

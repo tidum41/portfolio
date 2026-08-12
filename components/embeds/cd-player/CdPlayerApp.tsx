@@ -124,6 +124,9 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const [containerW, setContainerW] = useState(800);
   const [audioEnabled, setAudioEnabled] = useState<boolean | null>(null);
   const [showConsent, setShowConsent] = useState(false);
+  // About: paint the player chrome first; arm dnd/audio only after a gesture
+  // so soft-nav mount cost stays layout/measure, not sensors + AudioContext.
+  const [interactionReady, setInteractionReady] = useState(variant !== "about");
   const [ejectDragPos, setEjectDragPos] = useState<{ x: number; y: number } | null>(null);
   const pendingAlbumRef = useRef<Album | null>(null);
   const [liveMessage, setLiveMessage] = useState('');
@@ -247,9 +250,19 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   }, [scale]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 12 } })
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: interactionReady ? 8 : Number.MAX_SAFE_INTEGER },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: interactionReady
+        ? { delay: 120, tolerance: 12 }
+        : { delay: 60_000, tolerance: 0 },
+    }),
   );
+
+  const enableInteraction = useCallback(() => {
+    if (!interactionReady) setInteractionReady(true);
+  }, [interactionReady]);
 
   function handleDragStart(event: DragStartEvent) {
     setDragAlbum(event.active.data.current?.album ?? null);
@@ -477,7 +490,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
       <div className={styles.srOnly} aria-live="polite" aria-atomic="true">
         {liveMessage}
       </div>
-      {showConsent && (
+      {showConsent && interactionReady && (
         <AudioConsent onAccept={handleConsentAccept} onDecline={handleConsentDecline} />
       )}
       <DndContext
@@ -490,6 +503,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
         <div
           className={`${styles.layout} ${isVertical ? styles.layoutVertical : ''}`}
           ref={containerRef}
+          onPointerDownCapture={variant === "about" ? enableInteraction : undefined}
           style={{
             '--cd-transport-bar-height': `${dk.transportBarHeight}px`,
             '--cd-title-font-size': `${dk.titleFontSize}px`,
@@ -548,9 +562,9 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                     scratchRate={scratchRate}
                     onEjectDragMove={handleEjectDragMove}
                     onEjectDragCancel={handleEjectDragCancel}
-                    // Modal open → full live UI (date flip, elapsed, etc.).
-                    // Grid / off-route → pause reactive chrome; Disc RAF already idle-stops.
-                    live={active}
+                    // Modal open → full live UI. About waits for a gesture so
+                    // first mount doesn't spin disc RAF / audio wiring.
+                    live={active && interactionReady}
                   />
                 </div>
               </div>
