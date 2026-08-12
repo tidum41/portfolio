@@ -39,10 +39,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * CD stays a placeholder until the user actually scrolls it into view.
- * Previous rootMargin:160px + immediate observe meant the slot was "near"
- * on first About open and armed CdPlayer (~DialKit + audio + dnd) ~400ms
- * into the soft-nav hitch window.
+ * CD stays a placeholder until the user scrolls. The slot often peeks into
+ * an 800px viewport (~top 676) so IntersectionObserver alone still armed
+ * CdPlayer on first About open without any scroll.
  */
 function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
   const [ready, setReady] = useState(false);
@@ -53,36 +52,46 @@ function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
     if (!target) return;
     let cancelled = false;
     let idleId = 0;
-    let armTimer = 0;
+    let userScrolled = window.scrollY > 48;
     let obs: IntersectionObserver | null = null;
 
     const enable = () => {
       if (!cancelled) setReady(true);
     };
 
-    // Don't even watch until soft-nav + first paint have room to breathe.
-    armTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      obs = new IntersectionObserver(
-        ([entry]) => {
-          if (!entry?.isIntersecting) return;
-          obs?.disconnect();
-          if (typeof window.requestIdleCallback === "function") {
-            idleId = window.requestIdleCallback(enable, { timeout: 2200 });
-          } else {
-            window.setTimeout(enable, 320);
-          }
-        },
-        // No positive rootMargin — must be meaningfully in view.
-        { rootMargin: "0px", threshold: 0.12 },
-      );
-      obs.observe(target);
-    }, 1600);
+    const maybeArm = () => {
+      if (cancelled || !userScrolled) return;
+      const rect = target.getBoundingClientRect();
+      const vh = window.innerHeight || 0;
+      // Require a real chunk of the slot in view after scroll — not the
+      // ~100px peek that shows under the hero on desktop.
+      const visible = rect.top < vh - 80 && rect.bottom > 120;
+      if (!visible) return;
+      obs?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(enable, { timeout: 1800 });
+      } else {
+        window.setTimeout(enable, 280);
+      }
+    };
+
+    const onScroll = () => {
+      if (window.scrollY > 48) userScrolled = true;
+      maybeArm();
+    };
+
+    obs = new IntersectionObserver(() => maybeArm(), {
+      rootMargin: "0px",
+      threshold: [0, 0.15, 0.35],
+    });
+    obs.observe(target);
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       cancelled = true;
-      window.clearTimeout(armTimer);
       obs?.disconnect();
+      window.removeEventListener("scroll", onScroll);
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
@@ -279,8 +288,15 @@ function AboutSocials() {
  *  - CD not observed for ~1.6s, then only when actually in view
  *  - experience DialKit deferred until scroll / long idle
  */
-export default function AboutPageContent({ active }: { active: boolean }) {
-  const [softArrival] = useState(() => peekSoftNavArrival());
+export default function AboutPageContent({
+  active,
+  softArrival: softArrivalProp,
+}: {
+  active: boolean;
+  /** Latched by PersistentAboutShell before soft-nav session flag clears. */
+  softArrival?: boolean;
+}) {
+  const [softArrival] = useState(() => softArrivalProp ?? peekSoftNavArrival());
   const [belowFold, setBelowFold] = useState(false);
   // Soft first open: static bento. Hard nav / later upgrade: live DialKit.
   const [bentoLive, setBentoLive] = useState(!softArrival);
@@ -366,7 +382,7 @@ export default function AboutPageContent({ active }: { active: boolean }) {
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
         <div style={{ marginBottom: "var(--space-7)" }}>
           {softArrival ? (
-            <div className="about-hero">
+            <div className="about-hero" data-soft-hero="1">
               <div className="about-hero-bio">
                 <AboutHeroCopy />
               </div>
