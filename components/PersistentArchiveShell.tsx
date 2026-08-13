@@ -4,7 +4,6 @@ import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
-import { parkShellStyle } from "@/lib/shellPark";
 
 /**
  * Session keep-alive for /archive. First visit mounts the gallery; later
@@ -27,7 +26,7 @@ export default function PersistentArchiveShell({
 
   return (
     <div
-      style={{ ...parkShellStyle(onArchive) }}
+      style={{ display: onArchive ? "block" : "none", position: "relative", zIndex: 1 }}
       aria-hidden={!onArchive}
       inert={!onArchive}
       {...(!onArchive ? { "data-nosnippet": true } : {})}

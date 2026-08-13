@@ -61,11 +61,8 @@ declare global {
 function bootCursor(lightColor: string, darkColor: string, size: number, zIndex: number): (() => void) | undefined {
   if (typeof window === "undefined") return;
   if (window.matchMedia("(pointer: coarse)").matches) return;
-  // Reduced-motion: never mount the replacement cursor at all — this whole
-  // system is a continuous rAF trail/echo/spring-morph animation with no
-  // way to render a single static frame. Bailing out here (rather than the
-  // native-cursor-hiding rule in layout.tsx, which is scoped out of
-  // reduced-motion to match) leaves these visitors with the real OS cursor.
+  // Reduced-motion: skip trail/pill JS. Layout CSS cursor still applies
+  // unless prefers-reduced-motion (that media query leaves the OS cursor).
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const getThemeColor = () =>
@@ -113,8 +110,40 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   } catch {}
 
   const styleEl = document.createElement("style");
-  styleEl.textContent = "* { cursor: none !important; }";
   document.head.appendChild(styleEl);
+
+  const hotspot = Math.round(size / 2);
+
+  const cssCursorRule = (color: string, hide = false) => {
+    if (hide) {
+      return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:none!important}}`;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:url("/cursors/dot-light.svg") 10 10,auto!important}}`;
+    }
+    ctx.clearRect(0, 0, size, size);
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    const rgb = hexToRgb(color);
+    const a = window.gc_dotConfig?.restOpacity ?? 0.88;
+    ctx.fillStyle = rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${a})` : color;
+    ctx.fill();
+    const url = canvas.toDataURL("image/png");
+    return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:url("${url}") ${hotspot} ${hotspot}, auto !important}}`;
+  };
+
+  const showCssTip = () => {
+    styleEl.textContent = cssCursorRule(currentColor, false);
+  };
+  const hideCssTipForPill = () => {
+    styleEl.textContent = cssCursorRule(currentColor, true);
+  };
+
+  styleEl.textContent = cssCursorRule(currentColor, false);
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
@@ -178,11 +207,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // "none" so it still interpolates cleanly from the ringFlash pulse.
   const noStroke = (px: number) => `inset 0 0 0 ${px}px rgba(255,255,255,0)`;
 
-  // Single persistent cursor shape. `wrap` tracks the raw mouse position every
-  // frame; `cursorEl` is center-anchored inside it via translate(-50%,-50%),
-  // so growing/shrinking is always symmetric around the cursor regardless of
-  // current size — no top-left corner math, and nothing to hand off between
-  // a separate "dot" and "pill" element.
+  // JS wrap is the hover pill only. Resting tip is the CSS cursor (compositor).
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
     position: "fixed", top: "0", left: "0",
@@ -304,6 +329,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   const morphToPill = (label: string) => {
+    hideCssTipForPill();
+    wrap.style.opacity = "1";
+    wrap.style.transform = `translate3d(${Math.round(mouse.x * 2) / 2}px,${Math.round(mouse.y * 2) / 2}px,0)`;
     clearTimeout(showPillTimer);
     pillGen++;
     const genAtStart = pillGen;
@@ -505,6 +533,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // pop the arrow back into the flex layout mid-collapse and visibly
     // shift the label text — this is what renderedHideIcon guards against.
     if (!renderedHideIcon) arrowEl.style.display = "";
+    wrap.style.opacity = "0";
+    showCssTip();
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a
@@ -532,14 +562,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.display = "";
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
+    wrap.style.opacity = "0";
+    showCssTip();
   };
 
   const tick = () => {
     if (!wrap.isConnected) return; // cursor was cleaned up — stop RAF chain
-    if (nativeCursor) {
-      raf = requestAnimationFrame(tick);
-      return;
-    }
     const dc = window.gc_dotConfig   ?? {} as NonNullable<typeof window.gc_dotConfig>;
     const tc = window.gc_trailConfig ?? {} as NonNullable<typeof window.gc_trailConfig>;
 
@@ -560,12 +588,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
 
     if (mouse.inside) {
-      const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
-      wrap.style.transform     = `translate3d(${rx}px,${ry}px,0)`;
-      wrap.style.opacity       = "1";
-      // No click-press squash while the "View Case Study" pill is showing —
-      // that scale cue is for the plain dot only.
-      cursorEl.style.transform = `translate(-50%,-50%) scale(${pillVisible ? 1 : pressScale})`;
+      if (pillVisible) {
+        const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
+        wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
+        wrap.style.opacity = "1";
+        cursorEl.style.transform = "translate(-50%,-50%)";
+      }
       if (isPill) {
         if (!pillVisible || pillLabel !== renderedLabel) {
           pillVisible = true; renderedLabel = pillLabel; morphToPill(pillLabel);
@@ -589,8 +617,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     let allSettled = true;
 
     if (trailMuted) {
-      // Soft-nav window: tip already tracks on pointermove; blank echoes so
-      // trail DOM writes don't compete with About mount / deferred teardown.
+      // Soft-nav: CSS tip still tracks; blank trail so rAF writes don't compete.
       for (let i = 0; i < MAX_ECHO; i++) {
         const el = echoEls[i];
         if (!el) continue;
@@ -779,7 +806,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // during soft-nav to About/Archive the main thread can miss several frames
   // (Mux/CD teardown + destination mount), which used to freeze the tip when
   // its transform only updated inside tick.
-  const syncTip = (x: number, y: number) => {
+  const syncPill = (x: number, y: number) => {
+    if (!pillVisible) return;
     const rx = Math.round(x * 2) / 2;
     const ry = Math.round(y * 2) / 2;
     wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
@@ -787,38 +815,14 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   let trailMutedUntil = 0;
-  let nativeCursor = false;
-  const setNativeCursor = (on: boolean) => {
-    nativeCursor = on;
-    styleEl.textContent = on ? "" : "* { cursor: none !important; }";
-    wrap.style.visibility = on ? "hidden" : "visible";
-    for (let i = 0; i < echoEls.length; i++) {
-      const el = echoEls[i];
-      if (!el) continue;
-      el.style.opacity = "0";
-      lastOpacity[i] = 0;
-    }
-    if (!on && mouse.inside) syncTip(mouse.x, mouse.y);
-  };
-
   window.addEventListener("soft-nav-start", () => {
-    // Custom cursor is a DOM node on the main thread — it freezes during
-    // route commit. Hand the pointer back to the OS for the hitch window.
-    setNativeCursor(true);
     trailMutedUntil = performance.now() + 1600;
   }, { signal: sig });
   window.addEventListener("soft-nav-settled", () => {
-    setNativeCursor(false);
     trailMutedUntil = Math.max(trailMutedUntil, performance.now() + 180);
   }, { signal: sig });
 
   window.addEventListener("pointermove", (e: PointerEvent) => {
-    if (nativeCursor) {
-      lastX = e.clientX; lastY = e.clientY;
-      mouse.x = e.clientX; mouse.y = e.clientY;
-      mouse.inside = true; lastMove = performance.now();
-      return;
-    }
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     const smoothing = window.gc_trailConfig?.velocitySmoothing ?? 0.4;
@@ -826,7 +830,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
-    syncTip(e.clientX, e.clientY);
+    syncPill(e.clientX, e.clientY);
     if (performance.now() >= trailMutedUntil) {
       checkPillHover(e.clientX, e.clientY);
     }
@@ -848,7 +852,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
-    syncTip(e.clientX, e.clientY);
+    syncPill(e.clientX, e.clientY);
     wakeUp();
   }, { signal: sig });
   window.addEventListener("pointerdown", () => {
@@ -894,6 +898,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.color  = tc;
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
+    if (pillVisible) hideCssTipForPill();
+    else showCssTip();
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
