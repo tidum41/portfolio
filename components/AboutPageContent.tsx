@@ -239,8 +239,10 @@ function AboutSocials() {
  */
 export default function AboutPageContent({
   active,
+  instant = false,
 }: {
   active: boolean;
+  instant?: boolean;
 }) {
   const [belowFold, setBelowFold] = useState(false);
 
@@ -287,7 +289,7 @@ export default function AboutPageContent({
         <div style={{ marginBottom: "var(--space-7)" }}>
           <CssEntranceStagger
             active={active}
-            instant={false}
+            instant={instant}
             className="about-hero"
           >
             <div className="about-hero-bio">

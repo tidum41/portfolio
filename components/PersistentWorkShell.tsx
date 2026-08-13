@@ -17,7 +17,8 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
+import { clearInstantBack } from "@/lib/instantNav";
+import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -170,11 +171,11 @@ function CardLabel({
  *     instant so it doesn't double-animate on top of that. The grid waits
  *     for "intro-done" (via useGridFirstLoadActive), then plays the same
  *     entrance stagger as every other case, giving the hero its moment.
- *   - Case-study "Back" (peekInstantBack()): stays fully instant, exactly as
- *     before — this is the fix that avoids remounting PS3Silk's WebGL canvas.
- *   - Everything else (Nav "work" link, browser back from about/archive,
- *     etc.): hero settles in first, then the grid cascades in shortly after,
- *     replaying on every such arrival since hero/grid re-hide when you leave. */
+ *   - Case-study "Back" and primary-nav Work/About/Archive: content snaps.
+ *     Replaying a spawn chorus on every section click felt like a glitch.
+ *   - Cold load at "/": intro, then the quiet grid fade (same as case-study
+ *     open). Hero wrapper stays instant so it doesn't double the intro.
+ */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -221,17 +222,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // chance to run. Using a ref comparison here (not a state update inside an
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
-  const wasWorkRouteRef = useRef(isWorkRoute);
-  // Layer B — case-study Back snaps work content. About/Archive → Work
-  // replays the hero + grid entrance (soft-nav only skips the route fade).
-  const instantArrivalRef = useRef(false);
-  if (isWorkRoute && !wasWorkRouteRef.current) {
-    instantArrivalRef.current = peekInstantBack();
-  }
-  wasWorkRouteRef.current = isWorkRoute;
-  // Off-route: snap to hidden so a later return has a from-state under
-  // display:none. On-route: instant only for case-study Back.
-  const instant = !isWorkRoute || instantArrivalRef.current;
+  const snapArrival = useKeepAliveInstant(isWorkRoute);
+  // Off-route: snap to hidden so display:none isn't mid-tween. On-route:
+  // snap for primary-nav / Back; cold load may still play the quiet fade.
+  const instant = !isWorkRoute || snapArrival;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -761,7 +755,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             so parent display:none cannot hide it; `visible` toggles the portal. */}
         {hasEverBeenActive && (
           <PS3ControlPanel
-            instantReturn={instantArrivalRef.current}
+            instantReturn={snapArrival}
             visible={isWorkRoute}
           />
         )}
