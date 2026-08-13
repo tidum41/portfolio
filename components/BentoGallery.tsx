@@ -638,7 +638,7 @@ export default function BentoGallery({
 
             const DUR: Record<string, string> = {
                 none: "none",
-                focus: "transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)",
+                focus: "transform 1.5s cubic-bezier(0.16, 1, 0.3, 1)",
                 snap: "transform .45s cubic-bezier(.22,1,.36,1)",
                 spring: "transform .5s cubic-bezier(.34,1.4,.64,1)",
                 flow: "transform .6s cubic-bezier(.4,0,.2,1)",
@@ -804,14 +804,15 @@ export default function BentoGallery({
             syncSelectorBox(idx);
             sel.style.transition = "none";
             if (animate) {
-                sel.style.transform = "none";
+                sel.style.transform = "scale(0, 0)";
                 sel.style.opacity = "0";
                 requestAnimationFrame(() => {
-                    sel.style.transition = `opacity 0.22s ${FOCUS_E}`;
+                    sel.style.transition = `transform 1.5s ${FOCUS_E}, opacity 0.4s ease`;
+                    sel.style.transform = "scale(1, 1)";
                     sel.style.opacity = "1";
                 });
             } else {
-                sel.style.transform = "none";
+                sel.style.transform = "scale(1, 1)";
                 sel.style.opacity = "1";
             }
         },
@@ -897,7 +898,7 @@ export default function BentoGallery({
             // so +/- and track clicks still feel animated — without the top-left drift
             // that CSS translate+scale interpolation causes.
             const DUR_MS =
-                easing === "focus" ? 550 : easing === "flow" ? 600 : easing === "spring" ? 500 : 450;
+                easing === "focus" ? 1500 : easing === "flow" ? 600 : easing === "spring" ? 500 : 450;
             const ease =
                 easing === "spring"
                     ? (t: number) => {
@@ -1383,7 +1384,7 @@ export default function BentoGallery({
     const zpBtnHoverColor = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)";
     const trackLineColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
     const outlineNormal = isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)";
-    const outlineHover = isDark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.3)";
+    const outlineHover = isDark ? "1.5px solid rgba(255,255,255,0.35)" : "1.5px solid rgba(0,0,0,0.3)";
     const selectorBorderColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.42)";
     const captionActive = isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)";
     const captionHovered = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
@@ -1500,7 +1501,7 @@ export default function BentoGallery({
                             style={{
                                 cursor: dimmed ? "default" : "crosshair",
                                 opacity: dimmed ? 0.42 : 1,
-                                transition: "opacity .28s cubic-bezier(0.16,1,0.3,1)",
+                                transition: "opacity .65s cubic-bezier(.4,0,.2,1)",
                                 position: "relative",
                             }}
                         >
@@ -1722,7 +1723,7 @@ export default function BentoGallery({
                     left: 0,
                     top: 0,
                     transformOrigin: "center center",
-                    transform: "scale(0.96, 0.96)",
+                    transform: "scale(0, 0)",
                     width: 0,
                     height: 0,
                     border: `1px solid ${selectorBorderColor}`,
