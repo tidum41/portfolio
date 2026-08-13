@@ -218,15 +218,21 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const transformMv = useTransform(yMv, (v) => `translateY(${v}px)`);
   const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced });
   motionParamsRef.current = { duration: dk.duration, delay, y, reduced };
+  const motionGenRef = useRef(0);
+  const tweensRef = useRef<{ stop: () => void }[]>([]);
 
   useLayoutEffect(() => {
     if (!selfDriven) return;
     const { duration, delay: itemDelay, y: yPx, reduced: rm } = motionParamsRef.current;
     if (!active) {
+      motionGenRef.current += 1;
+      for (const tween of tweensRef.current) tween.stop();
+      tweensRef.current = [];
       opacityMv.set(0);
       yMv.set(rm ? 0 : yPx);
       return;
     }
+    const gen = motionGenRef.current;
     if (rm) {
       opacityMv.set(1);
       yMv.set(0);
@@ -236,10 +242,14 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     yMv.set(yPx);
     const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
     const slide = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
-    return () => {
-      fade.stop();
-      slide.stop();
-    };
+    tweensRef.current = [fade, slide];
+    // Fire-and-forget fallback. Clearing it on cleanup is what left grid
+    // cards at opacity 0 after a keep-alive return.
+    window.setTimeout(() => {
+      if (motionGenRef.current !== gen) return;
+      opacityMv.set(1);
+      yMv.set(0);
+    }, Math.ceil((itemDelay + duration) * 1000) + 64);
   }, [selfDriven, active, opacityMv, yMv]);
 
   return (

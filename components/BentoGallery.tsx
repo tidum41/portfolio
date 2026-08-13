@@ -407,22 +407,21 @@ export default function BentoGallery({
     // tiles, so waiting on full-res downloads just left empty holes.
     // Soft-nav snaps ready immediately (no one-frame blank).
     const [ready, setReady] = useState(instant);
-    const readyRef = useRef(ready);
-    readyRef.current = ready;
+    const genRef = useRef(0);
     useLayoutEffect(() => {
+        if (!active) {
+            genRef.current += 1;
+            setReady(false);
+            return;
+        }
         if (instant) {
             setReady(true);
             return;
         }
-        if (!active) {
-            setReady(false);
-            return;
-        }
-        // Don't blank tiles that are already in — fast back-and-forth used to
-        // setReady(false) on every active=true, then cancel the rAF that was
-        // supposed to restore them.
-        if (readyRef.current) return;
-        return afterPaint(() => setReady(true));
+        const gen = genRef.current;
+        afterPaint(() => {
+            if (genRef.current === gen) setReady(true);
+        });
     }, [instant, active]);
 
     const focusedRef = useRef<number | null>(null);
