@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import "@mux/mux-player";
 import { useDialKit } from "dialkit";
 
 const REF_W = 344;
@@ -228,7 +229,6 @@ export default function PhoneMockup({
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    // @ts-expect-error Mux player CSS custom properties
                     "--controls": "none",
                     "--media-background-color": "transparent",
                   }}

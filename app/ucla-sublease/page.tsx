@@ -6,7 +6,6 @@ import { preload } from "react-dom";
 import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
-import MuxHero from "@/components/MuxHero";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
@@ -413,11 +412,8 @@ export default function BruinLeasePage() {
             tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={FB.metadata}
-            media={
-              <div style={{ background: FB.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
-                <MuxHero playbackId={FB.heroMuxId} />
-              </div>
-            }
+            muxPlaybackId={FB.heroMuxId}
+            heroBg={FB.heroBg}
           />
           <Suspense fallback={null}>
             <BruinLeaseContent />

@@ -257,20 +257,19 @@ export default function SvizPage() {
             tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={METADATA}
-            media={
-              <MediaCard>
-                <Image
-                  src={LOCAL_HERO_IMAGE}
-                  alt="sviz YouTube channel"
-                  width={1596}
-                  height={1388}
-                  sizes="(max-width: 750px) 100vw, 750px"
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                  priority
-                />
-              </MediaCard>
-            }
-          />
+          >
+            <MediaCard>
+              <Image
+                src={LOCAL_HERO_IMAGE}
+                alt="sviz YouTube channel"
+                width={1596}
+                height={1388}
+                sizes="(max-width: 750px) 100vw, 750px"
+                style={{ width: "100%", height: "auto", display: "block" }}
+                priority
+              />
+            </MediaCard>
+          </CaseStudyOpen>
           <Suspense fallback={null}>
             <SvizContent />
           </Suspense>

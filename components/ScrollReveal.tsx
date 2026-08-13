@@ -136,7 +136,6 @@ const ENTRANCE_RANGES = (defaults?: Partial<EntranceDefaults>) => {
     duration:  [d.duration,  0.1, 2]  as [number, number, number],
     stagger:   [d.stagger,   0,   0.4] as [number, number, number],
     maxSpread: [d.maxSpread, 0,   2]  as [number, number, number],
-    scale:     [d.scale,     0.8, 1]  as [number, number, number],
   };
 };
 
@@ -219,7 +218,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const fromParent = useContext(InstantEntranceCtx);
   const reduced = useReducedMotion() || instant || fromParent;
   const y = yProp ?? dk.y;
-  const scaleFrom = dk.scale ?? XMB_ENTRANCE_SCALE;
+  const scaleFrom = defaults?.scale ?? XMB_ENTRANCE_SCALE;
   const selfDriven = active !== undefined;
 
   // Keep-alive shells hide with display:none. Framer often skips applying
@@ -235,12 +234,12 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     return `translateY(${yVal}px) scale(${sVal})`;
   });
   const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced, scaleFrom });
+  // Keep the latest dials on the ref during render so the hide/show layout
+  // effect in the same commit reads current values (keep-alive shells).
+  // eslint-disable-next-line react-hooks/refs -- intentional render-time ref sync
+  motionParamsRef.current = { duration: dk.duration, delay, y, reduced, scaleFrom };
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
-
-  useLayoutEffect(() => {
-    motionParamsRef.current = { duration: dk.duration, delay, y, reduced, scaleFrom };
-  });
 
   useLayoutEffect(() => {
     if (!selfDriven) return;
