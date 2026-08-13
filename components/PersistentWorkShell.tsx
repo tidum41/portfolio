@@ -13,12 +13,14 @@ import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
+import XmbColumn from "@/components/XmbColumn";
 import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack } from "@/lib/instantNav";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
+import { useColumnFocus } from "@/lib/useColumnFocus";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -169,10 +171,10 @@ function CardLabel({
  *   - True first load at "/" (data-intro gate active): hero + PS3Silk's own
  *     slow first-load animation is the whole show — this wrapper stays
  *     instant so it doesn't double-animate on top of that. The grid waits
- *     for "intro-done" (via useGridFirstLoadActive), then plays column-focus.
+ *     for "intro-done" (via useGridFirstLoadActive), then plays its stagger.
  *   - Case-study "Back": content snaps (silk/scroll contract).
- *   - Primary-nav Work/About/Archive: hero + grid replay column-focus enter.
- *     Hero wrapper stays instant during intro.
+ *   - Primary-nav Work/About/Archive: the shell plays XMB column focus (one
+ *     CSS fade). Inner cards stay at rest so they don't spawn every click.
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
@@ -221,9 +223,16 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
   const snapArrival = useKeepAliveInstant(isWorkRoute);
-  // Off-route: snap hidden under display:none. On-route: snap only for
-  // case-study Back; primary nav plays the column-focus fade.
-  const instant = !isWorkRoute || snapArrival;
+  const phase = useColumnFocus(isWorkRoute, {
+    snap: snapArrival,
+    playMountEnter: false,
+  });
+  // Inner cards spawn once (cold load after intro). Nav returns are the
+  // shell's column-focus fade — replaying per-card Framer every click is
+  // what made primary nav feel like a template, not XMB.
+  const hasLeftWorkRef = useRef(false);
+  if (!isWorkRoute) hasLeftWorkRef.current = true;
+  const instant = !isWorkRoute || snapArrival || hasLeftWorkRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -517,14 +526,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   return (
     <>
-    <div
-      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
-      aria-hidden={!isWorkRoute}
-      inert={!isWorkRoute}
-      // When this shell is hidden on other routes, its hero + grid still sit in
-      // the DOM — exclude all of it from Google snippets so project titles like
-      // "Simplifying UCLA subleasing" don't get stitched onto the homepage blurb.
-      {...(!isWorkRoute ? { "data-nosnippet": true } : {})}
+    <XmbColumn
+      phase={phase}
+      style={{ fontFamily: "var(--font-sans)" }}
     >
       <IntroOrchestrator />
 
@@ -758,7 +762,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           />
         )}
       </div>
-    </div>
+    </XmbColumn>
 
       {isWorkRoute && openPopup === "cd" && (
         <ProjectPopup

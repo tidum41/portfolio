@@ -250,7 +250,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
-      opacityMv.set(SPAWN_FROM_OPACITY);
+      opacityMv.set(rm ? 1 : SPAWN_FROM_OPACITY);
       xMv.set(rm ? 0 : xPx);
       yMv.set(rm ? 0 : yPx);
       return;

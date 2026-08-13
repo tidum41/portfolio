@@ -2,30 +2,28 @@
 
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
+import XmbColumn from "@/components/XmbColumn";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
+import { useColumnFocus } from "@/lib/useColumnFocus";
 import { onWarmAbout, wasAboutWarmed } from "@/lib/keepAliveWarm";
 
 /**
- * Session keep-alive for /about. First visit (or idle/hover warm) mounts;
- * later visits toggle display.
+ * Session keep-alive for /about. The shell plays XMB column focus;
+ * inner copy stays at rest so it doesn't double-spawn.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
   const hasVisited = useKeepAliveVisit(onAbout, wasAboutWarmed(), onWarmAbout);
-  const instant = useKeepAliveInstant(onAbout);
+  const snap = useKeepAliveInstant(onAbout);
+  const phase = useColumnFocus(onAbout, { snap, playMountEnter: true });
 
   if (!hasVisited) return null;
 
   return (
-    <div
-      style={{ display: onAbout ? "block" : "none", position: "relative", zIndex: 1 }}
-      aria-hidden={!onAbout}
-      inert={!onAbout}
-      {...(!onAbout ? { "data-nosnippet": true } : {})}
-    >
-      <AboutPageContent active={onAbout} instant={instant} />
-    </div>
+    <XmbColumn phase={phase}>
+      <AboutPageContent active={phase !== "hidden"} instant />
+    </XmbColumn>
   );
 }

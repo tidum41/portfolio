@@ -4,10 +4,11 @@
  * Layer A — route opacity (AnimationProvider):
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
- * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
+ * Layer B — keep-alive columns (Work / About / Archive):
+ *   - Primary nav: one CSS column-focus fade on the shell (see PAGE_FOCUS /
+ *     .xmb-column). Inner cards stay at rest.
  *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
- *   - Primary-nav Work/About/Archive skips the route fade (Layer A) and
- *     plays the keep-alive column-focus fade (see ENTRANCE_DEFAULTS).
+ *   - Cold "/" grid still staggers after intro (EntranceItem).
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -22,12 +23,12 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; destination column-focus enter
- *   First about/archive visit → mount shell + column-focus enter
- *   Later about/archive visit → display toggle + column-focus enter
+ *   "/" ↔ about/archive       → soft fade skip; XMB column crossfade
+ *   First about/archive visit → mount shell + column focus
+ *   Later about/archive visit → column focus (children at rest)
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work column-focus enter
+ *   case-study → "/" via nav  → soft fade skip; work column focus
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
