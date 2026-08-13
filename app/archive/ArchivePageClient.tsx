@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
-import { peekSoftNavArrival } from "@/lib/instantNav";
 
 // Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
@@ -78,11 +77,6 @@ export default function PlaygroundPageClient({
   active?: boolean;
 }) {
     const instanceKey = useRef<symbol | null>(null);
-    // Soft-nav from Work/About: snap gallery in (no entrance chorus).
-    const [softArrival] = useState(() => peekSoftNavArrival());
-    // First mount of gallery body — defer one idle tick on soft arrival so
-    // Work→Archive paint isn't one long BentoGallery+DialKit frame.
-    const [galleryReady, setGalleryReady] = useState(!softArrival);
 
     const dk = useDialKit("Archive Edge Fade", {
         topHeight:      [160,  40, 320, 1],
@@ -101,28 +95,6 @@ export default function PlaygroundPageClient({
         bottomMaskMidPct:  [70,   0,  100, 1],
         bottomMaskMidAlpha:[0.42, 0,  1,   0.01],
     });
-
-    useEffect(() => {
-      if (galleryReady || !active) return;
-      let cancelled = false;
-      let idleId = 0;
-      let timeoutId = 0;
-      const enable = () => {
-        if (!cancelled) setGalleryReady(true);
-      };
-      if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(enable, { timeout: 400 });
-      } else {
-        timeoutId = window.setTimeout(enable, 48);
-      }
-      return () => {
-        cancelled = true;
-        if (idleId && typeof window.cancelIdleCallback === "function") {
-          window.cancelIdleCallback(idleId);
-        }
-        if (timeoutId) window.clearTimeout(timeoutId);
-      };
-    }, [galleryReady, active]);
 
     useLayoutEffect(() => {
         const footer = document.querySelector("footer") as HTMLElement | null;
@@ -172,8 +144,7 @@ export default function PlaygroundPageClient({
             data-ui-sound-scope="archive"
             aria-hidden={!active}
         >
-            {galleryReady ? (
-              <BentoGallery
+            <BentoGallery
                   items={items}
                   columns={4}
                   gap={12}
@@ -181,18 +152,8 @@ export default function PlaygroundPageClient({
                   overviewMode="width"
                   maxZoom={1.5}
                   minZoomFactor={0.667}
-                  instant={softArrival}
+                  instant={false}
               />
-            ) : (
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "var(--color-bg)",
-                }}
-              />
-            )}
 
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}
             <div style={{ ...fadeBase, top: 0, height: dk.topHeight }}>
