@@ -940,33 +940,36 @@ html[data-theme="dark"] .ps-polaroid-cap {
 
 /* ─── Mux player — fill the poster-sized slot, hide chrome ───────── */
 .mux-media-slot {
+  position: relative;
   display: block;
   width: 100%;
+  overflow: hidden;
+  background: var(--color-modal-bg);
+}
+.mux-media-sizer {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
 }
 .mux-media-slot mux-player,
-.mux-cover {
+.mux-media-slot .mux-cover {
   display: block;
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   --controls: none;
-  --media-object-fit: cover;
+  --media-object-fit: contain;
   --media-object-position: center;
   --media-background-color: transparent;
 }
-
-/* XMB brightness breathes slowly — placeholder while Mux HLS is still
-   arriving, same box as the video so the page doesn't reflow. */
-@keyframes xmb-breathe {
-  0%, 100% { opacity: 0.72; }
-  50% { opacity: 1; }
-}
-.mux-media-slot__breathe {
-  animation: xmb-breathe 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .mux-media-slot__breathe { animation: none; }
+.mux-cover {
+  --controls: none;
+  --media-object-fit: cover;
+  --media-object-position: center;
+  --media-background-color: transparent;
 }
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */

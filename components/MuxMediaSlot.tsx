@@ -1,103 +1,107 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import type MuxPlayerElement from "@mux/mux-player";
-import { cssEase, EASE_OPACITY, MUX_POSTER_FADE_MS } from "@/lib/motion";
-
-const FADE = `opacity ${MUX_POSTER_FADE_MS}ms ${cssEase(EASE_OPACITY)}`;
-const FALLBACK_AR = "16 / 9";
 
 export function muxPosterUrl(playbackId: string, width: number, time = 1) {
   return `https://image.mux.com/${playbackId}/thumbnail.webp?time=${time}&width=${width}`;
 }
 
-export function muxBlurUrl(playbackId: string, time = 1) {
-  return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=${time}&width=32`;
-}
+type Playable = { play?: () => Promise<void> | void; muted?: boolean };
 
-function ratioFromImg(img: HTMLImageElement): string | null {
-  const w = img.naturalWidth;
-  const h = img.naturalHeight;
-  if (!w || !h) return null;
-  return `${w} / ${h}`;
+function playMux(el: MuxPlayerElement | null) {
+  if (!el) return;
+  try {
+    el.muted = true;
+  } catch {
+    /* custom element may not expose muted yet */
+  }
+  const media = (el as MuxPlayerElement & { media?: HTMLMediaElement }).media;
+  for (const node of [el, media] as Playable[]) {
+    try {
+      const p = node?.play?.();
+      if (p && typeof (p as Promise<void>).catch === "function") {
+        (p as Promise<void>).catch(() => {});
+      }
+    } catch {
+      /* autoplay can reject until the slot has a real box and is on-screen */
+    }
+  }
 }
 
 /**
- * One layout box for Mux: the slot's width/height is the poster's intrinsic
- * ratio (same as the rendered video). Blur + poster sit on top of the player
- * and both fade out on canplay — the player stays opacity 1 so muted autoplay
- * is allowed, and it never paints a black hole over the still.
+ * Case-study Mux: the poster <img> is in normal flow so the slot is the
+ * video's real aspect ratio (not a guessed 16:9). The player sits on top
+ * at full opacity from the first paint — no skeleton, no overlay fade —
+ * so muted autoplay is allowed. The still is just the first frame until
+ * HLS catches up.
  */
 export default function MuxMediaSlot({
   playbackId,
   thumbnailTime = 1,
-  aspectRatio,
   className,
   style,
 }: {
   playbackId: string;
   thumbnailTime?: number;
-  /** Fallback until the poster reports native dimensions. */
-  aspectRatio?: string;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) {
   const poster = muxPosterUrl(playbackId, 1280, thumbnailTime);
-  const blur = muxBlurUrl(playbackId, thumbnailTime);
   const playerRef = useRef<MuxPlayerElement>(null);
-  const [ready, setReady] = useState(false);
-  const [ratio, setRatio] = useState(aspectRatio ?? FALLBACK_AR);
-
-  const applyPosterSize = useCallback((img: HTMLImageElement | null) => {
-    const next = img ? ratioFromImg(img) : null;
-    if (next) setRatio(next);
-  }, []);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const kickPlay = useCallback(() => {
-    const el = playerRef.current;
-    if (!el) return;
-    try {
-      const p = el.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    } catch { /* autoplay may reject until the slot is on-screen */ }
+    const root = rootRef.current;
+    if (root && root.getBoundingClientRect().height < 8) return;
+    playMux(playerRef.current);
   }, []);
-
-  useEffect(() => {
-    setReady(false);
-    setRatio(aspectRatio ?? FALLBACK_AR);
-  }, [playbackId, aspectRatio]);
 
   useEffect(() => {
     kickPlay();
-    const t1 = window.setTimeout(kickPlay, 120);
-    const t2 = window.setTimeout(kickPlay, 700);
+    const t1 = window.setTimeout(kickPlay, 60);
+    const t2 = window.setTimeout(kickPlay, 240);
+    const t3 = window.setTimeout(kickPlay, 800);
+    const onVis = () => {
+      if (document.visibilityState === "visible") kickPlay();
+    };
     window.addEventListener("soft-nav-settled", kickPlay);
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.clearTimeout(t3);
       window.removeEventListener("soft-nav-settled", kickPlay);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, [playbackId, kickPlay]);
 
-  const onReady = () => {
-    setReady(true);
-    kickPlay();
-  };
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => kickPlay());
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [kickPlay]);
 
   return (
     <div
+      ref={rootRef}
       className={["mux-media-slot", className].filter(Boolean).join(" ")}
-      style={{
-        position: "relative",
-        width: "100%",
-        aspectRatio: ratio,
-        overflow: "hidden",
-        background: "var(--color-placeholder)",
-        isolation: "isolate",
-        ...style,
-      }}
+      style={style}
     >
+      {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="mux-media-sizer"
+        src={poster}
+        alt=""
+        aria-hidden
+        decoding="async"
+        fetchPriority="high"
+        onLoad={kickPlay}
+      />
       <MuxPlayer
         ref={playerRef}
         key={playbackId}
@@ -108,51 +112,14 @@ export default function MuxMediaSlot({
         muted
         playsInline
         nohotkeys
+        defaultHiddenCaptions
         preload="auto"
         thumbnailTime={thumbnailTime}
         poster={poster}
-        onCanPlay={onReady}
-        onPlaying={onReady}
-        onLoadedData={onReady}
+        onCanPlay={kickPlay}
+        onPlaying={kickPlay}
+        onLoadedData={kickPlay}
         className="mux-cover"
-      />
-      <img
-        src={blur}
-        alt=""
-        aria-hidden
-        className={ready ? undefined : "mux-media-slot__breathe"}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: "scale(1.08)",
-          filter: "blur(16px)",
-          pointerEvents: "none",
-          zIndex: 2,
-          opacity: ready ? 0 : 1,
-          transition: FADE,
-        }}
-      />
-      <img
-        src={poster}
-        alt=""
-        aria-hidden
-        decoding="async"
-        fetchPriority="high"
-        onLoad={(e) => applyPosterSize(e.currentTarget)}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          pointerEvents: "none",
-          zIndex: 3,
-          opacity: ready ? 0 : 1,
-          transition: FADE,
-        }}
       />
     </div>
   );

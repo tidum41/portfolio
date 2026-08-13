@@ -18,8 +18,6 @@ export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 // "settle into focus" scale — not a bounce, not a pop.
 export const XMB_ENTRANCE_SCALE = 0.97;
 
-export const MUX_POSTER_FADE_MS = 480;
-
 export const PANEL_DURATION = {
   backdrop: { enter: 0.22, exit: 0.16 },
   panel:    { enter: 0.26, exit: 0.16 },
@@ -40,6 +38,8 @@ export interface EntranceDefaults {
   duration: number;   // s, per-item
   stagger: number;    // s, delay increment between items
   maxSpread: number;  // s, cap on total stagger spread regardless of item count
+  /** 1 = no scale (body type). Icon-like tiles use XMB_ENTRANCE_SCALE. */
+  scale: number;
 }
 
 // Content entrance: fade-up + slide-up, staggered.
@@ -52,16 +52,15 @@ export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   duration: 0.45,
   stagger: 0.05,
   maxSpread: 0.4,
+  scale: XMB_ENTRANCE_SCALE,
 };
 
-// Case-study hero entrance — same fade-up vocabulary as ENTRANCE_DEFAULTS,
-// tuned differently: the slide is much more subtle (a whole-page y-slide
-// read as "buggy" against the TOC's sticky position, which never participates
-// in this entrance at all). Lives on its own DialKit panel ("Case Study
-// Entrance") so tuning it doesn't retune the work grid / about / BentoGallery.
+// Case-study open — type only. Media is instant (autoplay + readability).
+// Under 300ms, ease-out, no scale on titles (XMB scale is for icons).
 export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
-  y: 8,
-  duration: 0.55,
-  stagger: 0.08,
-  maxSpread: 0.4,
+  y: 6,
+  duration: 0.22,
+  stagger: 0.045,
+  maxSpread: 0.14,
+  scale: 1,
 };

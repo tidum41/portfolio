@@ -11,6 +11,12 @@ import type { ReactNode, CSSProperties } from "react";
 /** When true, nested EntranceItems snap (soft-nav About arrival). */
 const InstantEntranceCtx = createContext(false);
 
+/** Nested EntranceItems inherit the parent's DialKit panel + defaults. */
+const EntranceTuneCtx = createContext<{
+  dialKitName: string;
+  defaults?: Partial<EntranceDefaults>;
+}>({ dialKitName: "Entrance" });
+
 interface Props {
   children: ReactNode;
   delay?: number;
@@ -130,6 +136,7 @@ const ENTRANCE_RANGES = (defaults?: Partial<EntranceDefaults>) => {
     duration:  [d.duration,  0.1, 2]  as [number, number, number],
     stagger:   [d.stagger,   0,   0.4] as [number, number, number],
     maxSpread: [d.maxSpread, 0,   2]  as [number, number, number],
+    scale:     [d.scale,     0.8, 1]  as [number, number, number],
   };
 };
 
@@ -153,25 +160,27 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
     : rawStagger;
 
   return (
-    <InstantEntranceCtx.Provider value={reduced}>
-      <motion.div
-        initial="hidden"
-        animate={active ? "visible" : "hidden"}
-        variants={{
-          hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: reduced ? 0 : effectiveStagger,
-              delayChildren:   reduced ? 0 : delay,
+    <EntranceTuneCtx.Provider value={{ dialKitName, defaults }}>
+      <InstantEntranceCtx.Provider value={reduced}>
+        <motion.div
+          initial="hidden"
+          animate={active ? "visible" : "hidden"}
+          variants={{
+            hidden: {},
+            visible: {
+              transition: {
+                staggerChildren: reduced ? 0 : effectiveStagger,
+                delayChildren:   reduced ? 0 : delay,
+              },
             },
-          },
-        }}
-        style={style}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    </InstantEntranceCtx.Provider>
+          }}
+          style={style}
+          className={className}
+        >
+          {children}
+        </motion.div>
+      </InstantEntranceCtx.Provider>
+    </EntranceTuneCtx.Provider>
   );
 }
 
@@ -184,7 +193,7 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
 //    Needed where items span more than one physical container that still
 //    need to read as a single interleaved sequence — e.g. the work grid's
 //    two DOM columns, where "visual reading order" crosses both columns.
-export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, dialKitName = "Entrance", defaults, ...rest }: {
+export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, ...rest }: {
   children: ReactNode; style?: CSSProperties; className?: string; y?: number; instant?: boolean;
   active?: boolean; delay?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
   // Passed straight through to the underlying motion.div via ...rest below —
@@ -203,10 +212,14 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   onKeyDown?: (e: React.KeyboardEvent) => void;
   [key: `data-${string}`]: unknown;
 }) {
+  const tune = useContext(EntranceTuneCtx);
+  const dialKitName = dialKitNameProp ?? tune.dialKitName;
+  const defaults = defaultsProp ?? tune.defaults;
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));
   const fromParent = useContext(InstantEntranceCtx);
   const reduced = useReducedMotion() || instant || fromParent;
   const y = yProp ?? dk.y;
+  const scaleFrom = dk.scale ?? XMB_ENTRANCE_SCALE;
   const selfDriven = active !== undefined;
 
   // Keep-alive shells hide with display:none. Framer often skips applying
@@ -221,21 +234,24 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     const sVal = latest[1] as number;
     return `translateY(${yVal}px) scale(${sVal})`;
   });
-  const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced });
-  motionParamsRef.current = { duration: dk.duration, delay, y, reduced };
+  const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced, scaleFrom });
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
 
   useLayoutEffect(() => {
+    motionParamsRef.current = { duration: dk.duration, delay, y, reduced, scaleFrom };
+  });
+
+  useLayoutEffect(() => {
     if (!selfDriven) return;
-    const { duration, delay: itemDelay, y: yPx, reduced: rm } = motionParamsRef.current;
+    const { duration, delay: itemDelay, y: yPx, reduced: rm, scaleFrom: sFrom } = motionParamsRef.current;
     if (!active) {
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
       opacityMv.set(0);
       yMv.set(rm ? 0 : yPx);
-      scaleMv.set(rm ? 1 : XMB_ENTRANCE_SCALE);
+      scaleMv.set(rm ? 1 : sFrom);
       return;
     }
     const gen = motionGenRef.current;
@@ -247,7 +263,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     }
     opacityMv.set(0);
     yMv.set(yPx);
-    scaleMv.set(XMB_ENTRANCE_SCALE);
+    scaleMv.set(sFrom);
     const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
     const slide = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
     const zoom = animate(scaleMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
@@ -274,7 +290,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
                 opacity: 0,
                 transform: reduced
                   ? "translateY(0px) scale(1)"
-                  : `translateY(${y}px) scale(${XMB_ENTRANCE_SCALE})`,
+                  : `translateY(${y}px) scale(${scaleFrom})`,
               },
               visible: {
                 opacity: 1,

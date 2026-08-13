@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { preload } from "react-dom";
-import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
-import CaseStudyLoadingSilhouette from "@/components/CaseStudyLoadingSilhouette";
-import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
@@ -254,15 +253,25 @@ export default function SvizPage() {
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
 
-          <Suspense
-            fallback={
-              <CaseStudyLoadingSilhouette
-                contentOnly
-                heroBg="var(--color-placeholder)"
-                mediaAspect="1596 / 1388"
-              />
+          <CaseStudyOpen
+            tagline={FB.heroTagline}
+            title={FB.heroTitle}
+            metadata={METADATA}
+            media={
+              <MediaCard>
+                <Image
+                  src={LOCAL_HERO_IMAGE}
+                  alt="sviz YouTube channel"
+                  width={1596}
+                  height={1388}
+                  sizes="(max-width: 750px) 100vw, 750px"
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                  priority
+                />
+              </MediaCard>
             }
-          >
+          />
+          <Suspense fallback={null}>
             <SvizContent />
           </Suspense>
         </div>
@@ -287,79 +296,11 @@ async function SvizContent() {
     { _key: "views",  value: "1M+",   label: "total views across the channel" },
     { _key: "first",  value: "500K+", label: "views on the first upload, organic" },
   ];
-  const heroImageSrc     = cs.heroImage     ?? LOCAL_HERO_IMAGE;
   const processImageSrc  = cs.processImage  ?? LOCAL_PROCESS_IMAGE;
   const solutionVideoSrc = cs.solutionVideo ?? LOCAL_SOLUTION_VIDEO;
 
   return (
     <>
-          {/* ── Hero ─────────────────────────────────────────────────────── */}
-          {/* Staggers in top-to-bottom on route arrival, own "Case Study
-              Entrance" DialKit panel — see app/ucla-sublease/page.tsx for the
-              full rationale. TOC (aside, above) never participates. */}
-          <header className="cs-hero-header">
-            <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem className="cs-hero-tagline-wrap">
-                <p className="cs-hero-tagline" style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  letterSpacing: "0.01em",
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 var(--space-2)",
-                }}>
-                  {cs.heroTagline}
-                </p>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-title-wrap">
-                <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-doc-title)",
-                  fontSize: "var(--fs-hero)",
-                  fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
-                  lineHeight: 1.1,
-                  letterSpacing: "var(--ls-hero)",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 var(--space-3)",
-                }}>
-                  {cs.heroTitle}
-                </h1>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-media-wrap">
-                <MediaCard>
-                  <Image
-                    src={heroImageSrc}
-                    alt="sviz YouTube channel"
-                    width={1596}
-                    height={1388}
-                    sizes="(max-width: 750px) 100vw, 750px"
-                    style={{ width: "100%", height: "auto", display: "block" }}
-                    priority
-                  />
-                </MediaCard>
-              </EntranceItem>
-
-              {/* Metadata — 4-column */}
-              <EntranceItem>
-                <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${METADATA.length}, 1fr)`, marginTop: "var(--space-4)" }}>
-                  {METADATA.map(({ label, values }) => (
-                    <div key={label} style={{ padding: "0 24px 0 0" }}>
-                      <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-                        {label}
-                      </p>
-                      {values.map((v) => (
-                        <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>
-                          {v}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </EntranceItem>
-            </EntranceStagger>
-          </header>
-
           <article style={{ minWidth: 0 }}>
 
             {/* ── Problem ──────────────────────────────────────────────────── */}

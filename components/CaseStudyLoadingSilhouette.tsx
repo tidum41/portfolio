@@ -1,18 +1,10 @@
 /**
- * Same-layout ATF placeholder for case-study navigations.
- * Matches .cs-layout / hero structure so a brief flash reads as continuous
- * chrome rather than a spinner or gray shimmer. Prefer prefetch so this
- * rarely paints at all.
+ * Route-level chrome while the case-study page chunk arrives.
+ * No media box — hero aspect ratio is the video/image itself, not a guess.
  */
 export default function CaseStudyLoadingSilhouette({
-  heroBg = "var(--color-placeholder)",
-  /** Media box aspect — UCLA Mux hero ~16/9; sviz screenshot 1596/1388. */
-  mediaAspect = "16 / 9",
-  /** When true, only the hero ATF block (for Suspense inside page chrome). */
   contentOnly = false,
 }: {
-  heroBg?: string;
-  mediaAspect?: string;
   contentOnly?: boolean;
 }) {
   const hero = (
@@ -40,17 +32,6 @@ export default function CaseStudyLoadingSilhouette({
             background: "var(--color-border-subtle)",
             margin: "0 0 var(--space-4)",
             opacity: 0.45,
-          }}
-        />
-      </div>
-      <div className="cs-hero-media-wrap">
-        <div
-          style={{
-            background: heroBg,
-            borderRadius: "var(--radius-card)",
-            overflow: "hidden",
-            aspectRatio: mediaAspect,
-            width: "100%",
           }}
         />
       </div>
