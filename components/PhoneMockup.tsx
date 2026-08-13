@@ -216,6 +216,8 @@ export default function PhoneMockup({
                     position: "absolute", inset: 0, width: "100%", height: "100%",
                     objectFit: "cover", transform: "scale(1.08)", filter: "blur(12px)",
                     pointerEvents: "none",
+                    opacity: videoReady ? 0 : 1,
+                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 />
               )}
