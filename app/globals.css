@@ -172,6 +172,10 @@ html {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   scroll-behavior: smooth;
+  overflow-y: scroll;
+  /* Archive is a fixed plane (no document scrollbar). Without a stable
+     gutter, Work/About/CS scrollbars shove the centered nav ~15px. */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -268,6 +272,12 @@ html.theme-switching *::after {
   outline-offset: 3px;
   border-radius: var(--radius-card);
 }
+/* Archive tiles use the selector frame as focus chrome. A second
+   :focus-visible ring on the huge hit target fights the camera move. */
+.bento-cell:focus,
+.bento-cell:focus-visible {
+  outline: none;
+}
 
 /* ─── Nav tap-target expansion ────────────────────────────────────── */
 nav a {
@@ -286,9 +296,9 @@ nav a {
    media’s circular --radius-card. Uniform pad keeps a circular outer
    radius that is truly concentric: r_outer = r_media + pad.
 
-   8px sits between the earlier “too tight” 5px and “too wide” 10px sides.
-   Scale is a very slight press (0.99) with a heavier settle so it feels
-   weighted without looking dramatic. */
+   No hover scale — video cards cannot scale a transformed ancestor
+   (Mux letterboxes), so none of the cards do. Hover chrome is the
+   underlay plate (+ a light wash on video). */
 .project-card {
   --project-hover-pad: 8px;
   --project-hover-ease: var(--expand-ease); /* PS3 panel curve */
@@ -316,18 +326,9 @@ html[data-theme="dark"] .project-card::before {
   display: flex;
   flex-direction: column;
   gap: inherit;
-  transform: scale(1);
-  transform-origin: center center;
-  transition: transform var(--project-hover-out) var(--project-hover-ease);
 }
 .project-card .project-media .project-img-wrap {
   border-radius: var(--radius-card);
-}
-/* Mux-player sizes its video from getBoundingClientRect of transformed
-   ancestors and letterboxes (dark bars, accent hairline). Never scale a
-   video card’s lift — hover chrome is the underlay + wash only. */
-.project-card.project-card--video .project-card-lift {
-  transform: none;
 }
 .project-card--video mux-player {
   --controls: none;
@@ -342,13 +343,6 @@ html[data-theme="dark"] .project-card::before {
   .project-card:hover::before {
     opacity: 1;
     transition: opacity var(--project-hover-in) var(--project-hover-ease);
-  }
-  .project-card:hover .project-card-lift {
-    transform: scale(0.99);
-    transition: transform var(--project-hover-in) var(--project-hover-ease);
-  }
-  .project-card.project-card--video:hover .project-card-lift {
-    transform: none;
   }
 }
 
@@ -372,12 +366,8 @@ html[data-theme="dark"] .project-card::before {
 
 @media (prefers-reduced-motion: reduce) {
   .project-card::before,
-  .project-card-lift,
   .project-card--video .project-img-wrap::after {
     transition: none !important;
-  }
-  .project-card:hover .project-card-lift {
-    transform: none;
   }
 }
 

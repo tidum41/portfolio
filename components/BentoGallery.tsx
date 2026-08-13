@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, XMB_ENTRANCE_SCALE, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, spawnHidden, cssEase } from "@/lib/motion";
 
 const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
@@ -223,14 +223,28 @@ const ZOOM_MIN = 0.06;
 const ZOOM_ABS = 8;
 /** Matches `app/globals.css` `--page-px` — overview must respect this gutter. */
 const PAGE_PX_FALLBACK = 24;
+const GRID_MAX_W_FALLBACK = 1440;
 
-function readPagePx(): number {
-    if (typeof window === "undefined") return PAGE_PX_FALLBACK;
+function readCssPx(name: string, fallback: number): number {
+    if (typeof window === "undefined") return fallback;
     const raw = getComputedStyle(document.documentElement)
-        .getPropertyValue("--page-px")
+        .getPropertyValue(name)
         .trim();
     const n = parseFloat(raw);
-    return Number.isFinite(n) ? n : PAGE_PX_FALLBACK;
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function readPagePx(): number {
+    return readCssPx("--page-px", PAGE_PX_FALLBACK);
+}
+
+/** Work/nav band — archive overview used to ignore this and go full-bleed. */
+function readGridMaxW(): number {
+    return readCssPx("--grid-max-w", GRID_MAX_W_FALLBACK);
+}
+
+function contentBandW(vw: number): number {
+    return Math.max(1, Math.min(vw - 2 * readPagePx(), readGridMaxW()));
 }
 
 // ── Dark mode hook ─────────────────────────────────────────────────────────────
@@ -454,10 +468,9 @@ export default function BentoGallery({
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Grid geometry ─────────────────────────────────────────────────────────
-    // Lay out for the site's horizontal content band (`--page-px` gutters), not
-    // the raw viewport — overview then sits at scale ≈ 1 with real page padding.
-    const pagePx = readPagePx();
-    const layoutW = Math.max(1, vw - 2 * pagePx);
+    // Lay out for the same horizontal band as Work/Nav (`--grid-max-w` +
+    // `--page-px` gutters). Overview then sits at scale ≈ 1, centered.
+    const layoutW = contentBandW(vw);
     const colUnit = Math.max(80, (layoutW - (columns - 1) * gap) / columns);
     const imgUnitH = colUnit * cellAspect;
     const hasCaps = items.some((it) => it.caption);
@@ -504,6 +517,7 @@ export default function BentoGallery({
     // Rank is by visual position (top, then left) rather than array index,
     // since packMasonry's layout doesn't preserve item order.
     const dk = useDialKit("Entrance", {
+        x:         [ENTRANCE_DEFAULTS.x,         0,   80],
         y:         [ENTRANCE_DEFAULTS.y,         0,   80],
         duration:  [ENTRANCE_DEFAULTS.duration,  0.1, 2],
         stagger:   [ENTRANCE_DEFAULTS.stagger,   0,   0.4],
@@ -627,7 +641,7 @@ export default function BentoGallery({
 
             const DUR: Record<string, string> = {
                 none: "none",
-                focus: "transform 1.5s cubic-bezier(0.16, 1, 0.3, 1)",
+                focus: "transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)",
                 snap: "transform .45s cubic-bezier(.22,1,.36,1)",
                 spring: "transform .5s cubic-bezier(.34,1.4,.64,1)",
                 flow: "transform .6s cubic-bezier(.4,0,.2,1)",
@@ -705,20 +719,18 @@ export default function BentoGallery({
 
     // ── Overview + Focus ──────────────────────────────────────────────────────
     const getOverviewT = useCallback((): Tx => {
-        const pad = readPagePx();
+        const band = contentBandW(vw);
         if (overviewMode === "fit") {
-            const contentW = Math.max(1, vw - 2 * pad);
             const s =
                 Math.min(
-                    contentW / Math.max(1, canvasW),
+                    band / Math.max(1, canvasW),
                     vh / Math.max(1, canvasH)
                 ) * 0.88;
             return { x: (vw - canvasW * s) / 2, y: (vh - canvasH * s) / 2, s };
         }
-        // Canvas is already laid out for `--page-px` content width — fill that
-        // band (scale 1 when layoutW matches), keep L/R gutters, pin to top.
-        const contentW = Math.max(1, vw - 2 * pad);
-        const s = contentW / Math.max(1, canvasW);
+        // Canvas is laid out for the Work/Nav 1440 band — fill that band
+        // (scale 1 when layoutW matches), keep L/R gutters, pin to top.
+        const s = band / Math.max(1, canvasW);
         const scaledH = canvasH * s;
         const x = (vw - canvasW * s) / 2;
         const y = scaledH <= vh ? (vh - scaledH) / 2 : 0;
@@ -795,15 +807,14 @@ export default function BentoGallery({
             syncSelectorBox(idx);
             sel.style.transition = "none";
             if (animate) {
-                sel.style.transform = "scale(0.96, 0.96)";
+                sel.style.transform = "none";
                 sel.style.opacity = "0";
                 requestAnimationFrame(() => {
-                    sel.style.transition = `transform 0.45s ${FOCUS_E}, opacity 0.22s ${FOCUS_E}`;
-                    sel.style.transform = "scale(1, 1)";
+                    sel.style.transition = `opacity 0.22s ${FOCUS_E}`;
                     sel.style.opacity = "1";
                 });
             } else {
-                sel.style.transform = "scale(1, 1)";
+                sel.style.transform = "none";
                 sel.style.opacity = "1";
             }
         },
@@ -889,7 +900,7 @@ export default function BentoGallery({
             // so +/- and track clicks still feel animated — without the top-left drift
             // that CSS translate+scale interpolation causes.
             const DUR_MS =
-                easing === "focus" ? 1500 : easing === "flow" ? 600 : easing === "spring" ? 500 : 450;
+                easing === "focus" ? 550 : easing === "flow" ? 600 : easing === "spring" ? 500 : 450;
             const ease =
                 easing === "spring"
                     ? (t: number) => {
@@ -1375,7 +1386,7 @@ export default function BentoGallery({
     const zpBtnHoverColor = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)";
     const trackLineColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
     const outlineNormal = isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)";
-    const outlineHover = isDark ? "1.5px solid rgba(255,255,255,0.35)" : "1.5px solid rgba(0,0,0,0.3)";
+    const outlineHover = isDark ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(0,0,0,0.3)";
     const selectorBorderColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.42)";
     const captionActive = isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)";
     const captionHovered = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
@@ -1467,8 +1478,8 @@ export default function BentoGallery({
                                 width: iw,
                                 opacity: ready ? 1 : 0,
                                 transform: ready
-                                    ? "translateY(0px) scale(1)"
-                                    : `translateY(${dk.y}px) scale(${XMB_ENTRANCE_SCALE})`,
+                                    ? SPAWN_REST
+                                    : spawnHidden(dk.x ?? ENTRANCE_DEFAULTS.x, dk.y),
                                 pointerEvents: ready ? undefined : "none",
                                 // Delay folded into the shorthand itself (not a separate
                                 // transitionDelay longhand) — mixing the two in one style
@@ -1479,6 +1490,7 @@ export default function BentoGallery({
                             }}
                         >
                         <div
+                            className="bento-cell"
                             onClick={(e) => onCellClick(e, i)}
                             onMouseEnter={() => {
                                 if (!gst.current.moved && window.matchMedia("(hover: hover)").matches) setHoveredIdx(i);
@@ -1494,7 +1506,7 @@ export default function BentoGallery({
                             style={{
                                 cursor: dimmed ? "default" : "crosshair",
                                 opacity: dimmed ? 0.42 : 1,
-                                transition: "opacity .65s cubic-bezier(.4,0,.2,1)",
+                                transition: "opacity .28s cubic-bezier(0.16,1,0.3,1)",
                                 position: "relative",
                             }}
                         >
