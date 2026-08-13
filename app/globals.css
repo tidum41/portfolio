@@ -812,7 +812,8 @@ html[data-theme="dark"] .project-image {
   display: flex;
   align-items: flex-start;
   gap: var(--space-5);
-  overflow: hidden;
+  /* Visible so the fade-up translateY isn't clipped mid-entrance. */
+  overflow: visible;
 }
 .about-hero-bio { flex: 1 1 0; min-width: 0; order: 1; }
 .about-hero-bento-col { flex: 1 1 0; max-width: 320px; order: 2; }

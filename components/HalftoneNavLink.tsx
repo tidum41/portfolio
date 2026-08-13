@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { markSoftNav } from "@/lib/instantNav";
@@ -35,6 +36,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const pathname = usePathname();
 
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
@@ -55,18 +58,32 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
   const baseScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.textEndScale ?? 1]);
   const overlayScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.dotsEndScale ?? 1]);
 
-  // Fixed-duration, active-driven crossfade — NOT derived from `t`. See
-  // useHalftoneMorph.ts's doc comment: base and overlay always share this
-  // exact duration and start together, a strict complementary pair
-  // (opacity: active?0:1 vs active?1:0), which is what guarantees the crisp
-  // text and the halftone dots are never both substantially gone at once.
-  // Reduced-motion collapses it to a near-instant swap (kept nonzero, not
-  // 0, so it still reads as a crossfade rather than a hard cut).
-  const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
-  const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
+  // Overlay uses the long hide tween; base type restores faster. The settle
+  // spring collapses `t` (empty dots) well before hideDurationMs, so a 550ms
+  // complementary fade left both layers empty — the label vanished.
+  const showMs = dk?.showHideSpeed?.showDurationMs ?? 220;
+  const hideMs = dk?.showHideSpeed?.hideDurationMs ?? 550;
+  const overlayMs = reduced ? 1 : active ? showMs : hideMs;
+  const baseMs = reduced ? 1 : active ? showMs : Math.min(hideMs, 120);
+  const overlayTransition = { duration: overlayMs / 1000, ease: "easeInOut" as const };
+  const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
+
+  // Clicking a nav item does not fire mouseleave (pointer never left). After
+  // the route commits, restore hover if the cursor is still on this link.
+  useLayoutEffect(() => {
+    const el = linkRef.current;
+    if (!el) return;
+    if (
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+      el.matches(":hover")
+    ) {
+      setIsHovered(true);
+    }
+  }, [pathname]);
 
   return (
     <Link
+      ref={linkRef}
       href={href}
       prefetch
       aria-current={isActive ? "page" : undefined}
@@ -101,15 +118,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       // navigation doesn't happen (e.g. a modifier-click opening a new tab).
       onPointerDown={() => {
         // Soft-skip the route opacity crossfade for primary chrome navigations
-        // (work / about / archive) — biggest remaining about→work lag source.
+        // (work / about / archive). Do not snap-kill hover: the pointer is
+        // still on the link, and killing it raced the settle spring against
+        // the 550ms hide tween so the label went fully transparent.
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
-          // Snap-kill the morph before route work. Leaving the spring/crossfade
-          // running races Mux teardown + destination mount and starves the
-          // custom cursor's RAF tip (felt as lag to About/Archive).
-          setIsHovered(false);
-          setIsTapped(false);
-          if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
           return;
         }
         setIsTapped(true);
@@ -119,11 +132,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       onClick={() => {
         // Keyboard navigation has no pointerdown, so commit the same
         // soft-nav skip at click time. Repeated calls are harmless.
-        if (PRIMARY_NAV.has(href)) {
-          markSoftNav();
-          setIsHovered(false);
-          setIsTapped(false);
-        }
+        if (PRIMARY_NAV.has(href)) markSoftNav();
       }}
       onPointerCancel={() => {
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
@@ -145,7 +154,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         }}
         initial={false}
         animate={{ opacity: active ? 0 : 1 }}
-        transition={crossfadeTransition}
+        transition={baseTransition}
       >
         {label}
       </motion.span>
@@ -163,7 +172,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         }}
         initial={false}
         animate={{ opacity: active ? 1 : 0 }}
-        transition={crossfadeTransition}
+        transition={overlayTransition}
       >
         <HalftoneDotField
           id={filterId}

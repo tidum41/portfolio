@@ -11,6 +11,7 @@ import {
     type CSSProperties,
 } from "react";
 import { useDialKit } from "dialkit";
+import { afterPaint } from "@/lib/afterPaint";
 import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
 
 const ENTRANCE_EASE_CSS = `cubic-bezier(${EASE_Y.join(",")})`;
@@ -406,7 +407,9 @@ export default function BentoGallery({
     // tiles, so waiting on full-res downloads just left empty holes.
     // Soft-nav snaps ready immediately (no one-frame blank).
     const [ready, setReady] = useState(instant);
-    useEffect(() => {
+    const readyRef = useRef(ready);
+    readyRef.current = ready;
+    useLayoutEffect(() => {
         if (instant) {
             setReady(true);
             return;
@@ -415,15 +418,11 @@ export default function BentoGallery({
             setReady(false);
             return;
         }
-        setReady(false);
-        let id2 = 0;
-        const id1 = requestAnimationFrame(() => {
-            id2 = requestAnimationFrame(() => setReady(true));
-        });
-        return () => {
-            cancelAnimationFrame(id1);
-            cancelAnimationFrame(id2);
-        };
+        // Don't blank tiles that are already in — fast back-and-forth used to
+        // setReady(false) on every active=true, then cancel the rAF that was
+        // supposed to restore them.
+        if (readyRef.current) return;
+        return afterPaint(() => setReady(true));
     }, [instant, active]);
 
     const focusedRef = useRef<number | null>(null);
