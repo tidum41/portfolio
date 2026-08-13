@@ -39,20 +39,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
   const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
   const hoverColor = "var(--color-text-primary)"; // Or read from dk
   
-  // isHovered drives desktop; isTapped (pointerdown → pointerup/cancel/leave)
-  // is the touch equivalent — there's no hover state on mobile to piggyback
-  // on, so activation needs its own explicit touch-and-hold trigger. If
-  // it's already the active page, don't show the effect either way.
-  // ON MOBILE: Invert the logic. Inactive = Halftone on, Active = Solid off.
-  // Tap triggers the solid state temporarily before navigation.
-  // dk.keepEffectOn (DialKit dev panel) forces the effect active regardless
-  // of real hover/tap — including overriding the !isActive gate, since
-  // without that override the current page's own nav link would stay
-  // permanently untunable while standing on it. Lets the mouse move to the
-  // (separately positioned) DialKit panel and drag a slider while the
-  // effect stays pinned visible, instead of losing hover the moment the
-  // cursor leaves this link.
-  const active = dk.enabled ? (dk.keepEffectOn || (!isActive && (isHovered || isTapped))) : false;
+  // isHovered drives desktop; isTapped is the touch equivalent. Hover also
+  // works on the current page's own link (work on `/`) so the morph doesn't
+  // look like it "skipped" that item. dk.keepEffectOn pins the effect while
+  // dragging DialKit sliders.
+  const active = dk.enabled ? (dk.keepEffectOn || isHovered || isTapped) : false;
 
   const { filterId, t } = useHalftoneMorph(dk, active);
   const reduced = useReducedMotion();
@@ -80,16 +71,16 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       prefetch
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
+      data-ui-sound="option"
       style={{
         position: "relative",
-        display: "inline-block",
-        flexShrink: 0,
         textDecoration: "none",
         fontSize: 16,
         fontWeight: 400,
         lineHeight: "24px",
         userSelect: "none",
         WebkitTapHighlightColor: "transparent",
+        touchAction: "manipulation",
       }}
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
@@ -106,11 +97,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       // click/navigation almost immediately after that — well before the
       // ~200ms "in" spring has become visible. Resetting isTapped on
       // pointerup cut the effect off before it could ever be seen. Instead,
-      // leave it active through the tap: navigating flips `isActive` true
-      // for this link, which naturally deactivates it via the `!isActive`
-      // gate above once the new page renders. The timeout is just a
-      // failsafe in case navigation doesn't happen (e.g. a modifier-click
-      // opening a new tab), so this can't get stuck active forever.
+      // leave it active through the tap. The timeout is a failsafe if
+      // navigation doesn't happen (e.g. a modifier-click opening a new tab).
       onPointerDown={() => {
         // Soft-skip the route opacity crossfade for primary chrome navigations
         // (work / about / archive) — biggest remaining about→work lag source.
@@ -153,7 +141,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
           zIndex: 1,
           display: "inline-flex",
           alignItems: "center",
-          transformOrigin: "center",
+          willChange: "transform, opacity",
         }}
         initial={false}
         animate={{ opacity: active ? 0 : 1 }}
@@ -171,6 +159,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
           inset: 0,
           zIndex: 2,
           pointerEvents: "none",
+          willChange: "transform, opacity",
         }}
         initial={false}
         animate={{ opacity: active ? 1 : 0 }}

@@ -113,37 +113,42 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   document.head.appendChild(styleEl);
 
   const hotspot = Math.round(size / 2);
+  const CSS_TIP_MQ = `@media (pointer:fine) and (prefers-reduced-motion: no-preference)`;
+  const hideCssRule = `${CSS_TIP_MQ}{html,html *{cursor:none!important}}`;
 
-  const cssCursorRule = (color: string, hide = false) => {
-    if (hide) {
-      return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:none!important}}`;
-    }
+  const makeDotDataUrl = (color: string, scale: number) => {
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:url("/cursors/dot-light.svg") 10 10,auto!important}}`;
-    }
+    if (!ctx) return "";
     ctx.clearRect(0, 0, size, size);
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.arc(size / 2, size / 2, Math.max(0.5, (size / 2) * scale), 0, Math.PI * 2);
     const rgb = hexToRgb(color);
     const a = window.gc_dotConfig?.restOpacity ?? 0.88;
     ctx.fillStyle = rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${a})` : color;
     ctx.fill();
-    const url = canvas.toDataURL("image/png");
-    return `@media (pointer:fine) and (prefers-reduced-motion: no-preference){html,html *{cursor:url("${url}") ${hotspot} ${hotspot}, auto !important}}`;
+    return canvas.toDataURL("image/png");
   };
 
-  const showCssTip = () => {
-    styleEl.textContent = cssCursorRule(currentColor, false);
-  };
-  const hideCssTipForPill = () => {
-    styleEl.textContent = cssCursorRule(currentColor, true);
+  let restCursorUrl = "";
+  let pressCursorUrl = "";
+  let cssTipMode: "rest" | "press" | "hide" | "" = "";
+
+  const rebuildCursorUrls = () => {
+    restCursorUrl = makeDotDataUrl(currentColor, 1) || "/cursors/dot-light.svg";
+    const ps = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
+    pressCursorUrl = makeDotDataUrl(currentColor, ps) || restCursorUrl;
+    cssTipMode = "";
   };
 
-  styleEl.textContent = cssCursorRule(currentColor, false);
+  const cursorRuleForUrl = (url: string) =>
+    `${CSS_TIP_MQ}{html,html *{cursor:url("${url}") ${hotspot} ${hotspot}, auto !important}}`;
+
+  rebuildCursorUrls();
+  styleEl.textContent = cursorRuleForUrl(restCursorUrl);
+  cssTipMode = "rest";
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
@@ -318,6 +323,23 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let lastWrapFadeMs = 180;
   const lastOpacity    = new Array(MAX_ECHO).fill(-1);
   const lastTransform  = new Array(MAX_ECHO).fill("");
+
+  const paintCssTip = () => {
+    const mode = pillVisible ? "hide" : (pressTarget < 0.95 ? "press" : "rest");
+    if (mode === cssTipMode) return;
+    cssTipMode = mode;
+    if (mode === "hide") {
+      styleEl.textContent = hideCssRule;
+      return;
+    }
+    styleEl.textContent = cursorRuleForUrl(mode === "press" ? pressCursorUrl : restCursorUrl);
+  };
+  const showCssTip = () => { paintCssTip(); };
+  const hideCssTipForPill = () => {
+    cssTipMode = "";
+    styleEl.textContent = hideCssRule;
+    cssTipMode = "hide";
+  };
 
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
@@ -612,25 +634,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 5 : 6))));
     const opacityBase = tc.opacity ?? (style === "xmb" ? 0.18 : 0.55);
     const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.5  : 0.78);
-    const trailMuted = now < trailMutedUntil;
 
     let allSettled = true;
-
-    if (trailMuted) {
-      // Soft-nav: CSS tip still tracks; blank trail so rAF writes don't compete.
-      for (let i = 0; i < MAX_ECHO; i++) {
-        const el = echoEls[i];
-        if (!el) continue;
-        if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
-        stamps[i].active = false;
-      }
-      const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
-      if (pressSettled && !mouse.inside && idleFade <= 0) {
-        isIdle = true; setWillChange("auto"); return;
-      }
-      raf = requestAnimationFrame(tick);
-      return;
-    }
 
     if (style === "xmb") {
       // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
@@ -814,14 +819,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     wrap.style.opacity = "1";
   };
 
-  let trailMutedUntil = 0;
-  window.addEventListener("soft-nav-start", () => {
-    trailMutedUntil = performance.now() + 1600;
-  }, { signal: sig });
-  window.addEventListener("soft-nav-settled", () => {
-    trailMutedUntil = Math.max(trailMutedUntil, performance.now() + 180);
-  }, { signal: sig });
-
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -831,9 +828,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
     syncPill(e.clientX, e.clientY);
-    if (performance.now() >= trailMutedUntil) {
-      checkPillHover(e.clientX, e.clientY);
-    }
+    checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
       try { sessionStorage.setItem(CURSOR_POS_KEY, JSON.stringify({ x: e.clientX, y: e.clientY })); } catch {}
@@ -844,7 +839,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   window.addEventListener("pointerleave", () => {
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
+    pressTarget = 1;
     if (pillVisible) { pillVisible = false; morphToRest(); }
+    else paintCssTip();
     isPill = false; pillLabel = ""; renderedLabel = "";
   }, { signal: sig });
   window.addEventListener("pointerenter", (e: PointerEvent) => {
@@ -857,9 +854,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   }, { signal: sig });
   window.addEventListener("pointerdown", () => {
     pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
+    if (!pillVisible) paintCssTip();
     wakeUp();
   }, { signal: sig });
-  window.addEventListener("pointerup",   () => { pressTarget = 1;   wakeUp(); }, { signal: sig });
+  window.addEventListener("pointerup", () => {
+    pressTarget = 1;
+    if (!pillVisible) paintCssTip();
+    wakeUp();
+  }, { signal: sig });
+  window.addEventListener("pointercancel", () => {
+    pressTarget = 1;
+    if (!pillVisible) paintCssTip();
+    wakeUp();
+  }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
   document.addEventListener("click", (e) => {
@@ -898,8 +905,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.color  = tc;
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
+    rebuildCursorUrls();
     if (pillVisible) hideCssTipForPill();
-    else showCssTip();
+    else paintCssTip();
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
