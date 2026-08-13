@@ -12,21 +12,27 @@ function muxHlsUrl(playbackId: string) {
 }
 
 /**
- * Case-study Mux hero: native <video> + HLS so muted autoplay is a real
- * media element. The poster <img> is in-flow so the slot is the video's
- * real aspect ratio — not a guessed 16:9. HLS is imported inside the
- * effect so a bundling failure can't block this component from hydrating.
+ * Native <video> + HLS so muted autoplay is a real media element.
+ * Default: poster <img> is in-flow so the slot is the video's real ratio.
+ * `fill`: cover a parent aspect box (work-grid cards) — no mux-player chrome.
+ * HLS is imported inside the effect so a bundling failure can't block hydrate.
  */
 export default function MuxMediaSlot({
   playbackId,
   thumbnailTime = 1,
   className,
   style,
+  fill = false,
+  playing = true,
 }: {
   playbackId: string;
   thumbnailTime?: number;
   className?: string;
   style?: CSSProperties;
+  /** Fill a parent box (work-grid cards) with object-fit: cover. */
+  fill?: boolean;
+  /** Pause without tearing down HLS (soft-nav). */
+  playing?: boolean;
 }) {
   const poster = muxPosterUrl(playbackId, 1280, thumbnailTime);
   const src = muxHlsUrl(playbackId);
@@ -104,12 +110,17 @@ export default function MuxMediaSlot({
     const onVis = () => {
       if (document.visibilityState === "visible") kickPlay();
     };
+    const onSoftStart = () => {
+      try { videoRef.current?.pause(); } catch { /* ignore */ }
+    };
+    window.addEventListener("soft-nav-start", onSoftStart);
     window.addEventListener("soft-nav-settled", kickPlay);
     document.addEventListener("visibilitychange", onVis);
     return () => {
       stop?.();
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.removeEventListener("soft-nav-start", onSoftStart);
       window.removeEventListener("soft-nav-settled", kickPlay);
       document.removeEventListener("visibilitychange", onVis);
       hlsRef.current?.destroy();
@@ -117,10 +128,17 @@ export default function MuxMediaSlot({
     };
   }, [attachVideo, kickPlay]);
 
+  useEffect(() => {
+    if (playing) kickPlay();
+    else {
+      try { videoRef.current?.pause(); } catch { /* ignore */ }
+    }
+  }, [playing, kickPlay]);
+
   return (
     <div
       ref={rootRef}
-      className={["mux-media-slot", className].filter(Boolean).join(" ")}
+      className={["mux-media-slot", fill ? "mux-media-slot--fill" : "", className].filter(Boolean).join(" ")}
       style={style}
       data-hls="pending"
     >
