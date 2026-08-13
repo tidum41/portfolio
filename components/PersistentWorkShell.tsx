@@ -18,7 +18,6 @@ import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
-import { parkShellStyle } from "@/lib/shellPark";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -247,10 +246,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const dk = useEntranceDials();
 
-  // Pause immediately on leave (posters already sit under Mux/CD). Destroying
-  // MediaSource ~700ms into About was the remaining first-About cursor hitch.
-  // Reclaim after a long idle off-route so return-to-Work remount isn't racing
-  // the About open.
+  // Pause Mux/CD on leave. Reclaim after a long idle off-route — never on
+  // the About click frame. Grid CD poster only covers once live media unmounts.
   const HEAVY_TEARDOWN_MS = 15000;
   const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
   useEffect(() => {
@@ -305,10 +302,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     };
   }, [isWorkRoute]);
 
-  // Leaving "/" — close popups. Do not snap the grid CD poster to opaque:
-  // the live player is still mounted (parked, not display:none). Covering it
-  // with the Work-tile poster made modal/grid state look out of sync. Poster
-  // only covers once heavy media actually tears down.
+  // Leaving "/" — close popups. Live CD stays in the hidden work shell until
+  // idle teardown; the grid poster covers the slot only when that happens.
   useEffect(() => {
     if (isWorkRoute) return;
     setPopupVisible(false);
@@ -526,7 +521,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   return (
     <div
-      style={{ ...parkShellStyle(isWorkRoute), fontFamily: "var(--font-sans)" }}
+      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
       aria-hidden={!isWorkRoute}
       inert={!isWorkRoute}
       // When this shell is hidden on other routes, its hero + grid still sit in

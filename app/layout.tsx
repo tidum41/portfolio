@@ -149,12 +149,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             globals.css keeps a copy as a fallback. */}
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
-        {/* Hide system cursor immediately on pointer:fine devices — before JS
-            hydration — so there's no flash of the default arrow on load.
-            Scoped out of prefers-reduced-motion: bootCursor() (GlobalCustomCursor.tsx)
-            never mounts its replacement animation for those visitors, so hiding
-            the native cursor here would otherwise leave them with no cursor at all. */}
-        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){*{cursor:none!important}}` }} />
+        {/* CSS cursor tip — compositor-drawn so it still tracks during JS
+            hitches. JS only draws the trail + hover pills. */}
+        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){html,html *{cursor:url("/cursors/dot-light.svg") 10 10,auto!important}html[data-theme="dark"],html[data-theme="dark"] *{cursor:url("/cursors/dot-dark.svg") 10 10,auto!important}}` }} />
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here
             for crawlers that only read the first non-media icon link. */}
         <link rel="icon" href="/favicon.ico" sizes="any" />

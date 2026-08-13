@@ -172,8 +172,6 @@ html {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   scroll-behavior: smooth;
-  /* Keep nav/page from shifting when About's scrollbar appears. */
-  scrollbar-gutter: stable;
 }
 
 body {
