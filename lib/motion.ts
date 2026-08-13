@@ -14,9 +14,16 @@ export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-eas
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// XMB icons shrink slightly when unselected. Page entrances use the same
-// "settle into focus" scale — not a bounce, not a pop.
-export const XMB_ENTRANCE_SCALE = 0.97;
+// Kept for DialKit / older callers. Spawn motion no longer scales content —
+// XMB “focus” is a side-cascade (translateX) + fade, not shrinking cards.
+export const XMB_ENTRANCE_SCALE = 1;
+
+/** Resting / reduced-motion transform for spawn items. */
+export const SPAWN_REST = "translate(0px, 0px)";
+
+export function spawnHidden(x: number, y: number): string {
+  return `translate(${x}px, ${y}px)`;
+}
 
 export const PANEL_DURATION = {
   backdrop: { enter: 0.22, exit: 0.16 },
@@ -34,30 +41,31 @@ export const DURATION = {
 } as const;
 
 export interface EntranceDefaults {
-  y: number;          // px, slide-up distance
+  x: number;          // px, XMB-style arrive-from-the-side
+  y: number;          // px, slight settle-up
   duration: number;   // s, per-item
   stagger: number;    // s, delay increment between items
   maxSpread: number;  // s, cap on total stagger spread regardless of item count
-  /** 1 = no scale (body type). Icon-like tiles use XMB_ENTRANCE_SCALE. */
+  /** Always 1 for page content — scale on cards/type reads as a glitch. */
   scale: number;
 }
 
-// Content entrance: fade-up + slide-up, staggered.
-// Shared by the work-page grid, about page, and BentoGallery — BentoGallery
-// reads the matching dialkit key ("Entrance") directly rather than importing
-// this object, since it stays framer-motion-free, but the numbers here are
-// the single source of truth for what those live-tunable defaults should be.
+// Content spawn: Cross Media Bar cascade — items arrive from the left
+// and settle, staggered. No scale (that was a 3% shrink nobody felt, and
+// it letterboxed Mux). Case-study open is a separate CSS path; leave it.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
-  y: 20,
-  duration: 0.45,
-  stagger: 0.05,
-  maxSpread: 0.4,
-  scale: XMB_ENTRANCE_SCALE,
+  x: 18,
+  y: 10,
+  duration: 0.32,
+  stagger: 0.07,
+  maxSpread: 0.38,
+  scale: 1,
 };
 
 // Case-study open — type only. Media is instant (autoplay + readability).
 // Under 300ms, ease-out, no scale on titles (XMB scale is for icons).
 export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
+  x: 0,
   y: 6,
   duration: 0.22,
   stagger: 0.045,

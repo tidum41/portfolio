@@ -10,16 +10,16 @@ import {
   type ReactNode,
 } from "react";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, XMB_ENTRANCE_SCALE, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, spawnHidden, cssEase } from "@/lib/motion";
 
 const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /**
- * Same fade-up + slide-up vocabulary as Framer EntranceStagger/EntranceItem
+ * Same fade + XMB side-cascade as Framer EntranceStagger/EntranceItem
  * and BentoGallery — CSS transitions only (no Framer, no DialKit on the
  * hot path). Use for route-arrival reveals where the motion is simple.
- * Scale is the XMB unselected→focus settle (icons shrink slightly at rest).
+ * Scale is not used — XMB focus is translate from the left, not shrink.
  */
 
 type CssEntranceCtx = {
@@ -27,6 +27,7 @@ type CssEntranceCtx = {
   instant: boolean;
   duration: number;
   stagger: number;
+  x: number;
   y: number;
   takeIndex: () => number;
 };
@@ -40,6 +41,7 @@ export function CssEntranceStagger({
   style,
   children,
   y = ENTRANCE_DEFAULTS.y,
+  x = ENTRANCE_DEFAULTS.x,
   duration = ENTRANCE_DEFAULTS.duration,
   stagger = ENTRANCE_DEFAULTS.stagger,
   maxSpread = ENTRANCE_DEFAULTS.maxSpread,
@@ -51,6 +53,7 @@ export function CssEntranceStagger({
   style?: CSSProperties;
   children: ReactNode;
   y?: number;
+  x?: number;
   duration?: number;
   stagger?: number;
   maxSpread?: number;
@@ -102,6 +105,7 @@ export function CssEntranceStagger({
         instant: snap,
         duration,
         stagger: effectiveStagger,
+        x,
         y,
         takeIndex,
       }}
@@ -153,9 +157,7 @@ export function CssEntranceItem({
       className={className}
       style={{
         opacity: show ? 1 : 0,
-        transform: show
-          ? "translateY(0px) scale(1)"
-          : `translateY(${ctx.y}px) scale(${XMB_ENTRANCE_SCALE})`,
+        transform: show ? SPAWN_REST : spawnHidden(ctx.x, ctx.y),
         transition: ctx.instant
           ? "none"
           : `opacity ${ctx.duration}s ${ENTRANCE_EASE_OP} ${delay}s, transform ${ctx.duration}s ${ENTRANCE_EASE_Y} ${delay}s`,

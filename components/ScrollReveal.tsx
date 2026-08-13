@@ -4,7 +4,7 @@ import { Children, createContext, useContext, useLayoutEffect, useRef } from "re
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, XMB_ENTRANCE_SCALE } from "@/lib/motion";
+import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, spawnHidden } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
 import type { ReactNode, CSSProperties } from "react";
 
@@ -92,8 +92,8 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
   return (
     <motion.div
       variants={{
-        hidden:  { opacity: 0, transform: reduced ? "translateY(0px) scale(1)" : `translateY(16px) scale(${XMB_ENTRANCE_SCALE})` },
-        visible: { opacity: 1, transform: "translateY(0px) scale(1)", transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
+        hidden:  { opacity: 0, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, 16) },
+        visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
       className={className}
@@ -132,6 +132,7 @@ interface EntranceStaggerProps {
 const ENTRANCE_RANGES = (defaults?: Partial<EntranceDefaults>) => {
   const d = { ...ENTRANCE_DEFAULTS, ...defaults };
   return {
+    x:         [d.x,         0,   80] as [number, number, number],
     y:         [d.y,         0,   80] as [number, number, number],
     duration:  [d.duration,  0.1, 2]  as [number, number, number],
     stagger:   [d.stagger,   0,   0.4] as [number, number, number],
@@ -218,64 +219,64 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const fromParent = useContext(InstantEntranceCtx);
   const reduced = useReducedMotion() || instant || fromParent;
   const y = yProp ?? dk.y;
-  const scaleFrom = defaults?.scale ?? XMB_ENTRANCE_SCALE;
+  const x = dk.x ?? ENTRANCE_DEFAULTS.x;
   const selfDriven = active !== undefined;
 
   // Keep-alive shells hide with display:none. Framer often skips applying
   // `hidden` under that, then on return thinks the node is already `visible`
-  // while the DOM is still opacity:0 — content stays gone. Drive opacity/y
+  // while the DOM is still opacity:0 — content stays gone. Drive opacity/x/y
   // ourselves so hide always lands, and every active false→true starts from 0.
   const opacityMv = useMotionValue(0);
+  const xMv = useMotionValue(0);
   const yMv = useMotionValue(0);
-  const scaleMv = useMotionValue(1);
-  const transformMv = useTransform([yMv, scaleMv], (latest) => {
-    const yVal = latest[0] as number;
-    const sVal = latest[1] as number;
-    return `translateY(${yVal}px) scale(${sVal})`;
+  const transformMv = useTransform([xMv, yMv], (latest) => {
+    const xVal = latest[0] as number;
+    const yVal = latest[1] as number;
+    return spawnHidden(xVal, yVal);
   });
-  const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced, scaleFrom });
+  const motionParamsRef = useRef({ duration: dk.duration, delay, x, y, reduced });
   // Keep the latest dials on the ref during render so the hide/show layout
   // effect in the same commit reads current values (keep-alive shells).
   // eslint-disable-next-line react-hooks/refs -- intentional render-time ref sync
-  motionParamsRef.current = { duration: dk.duration, delay, y, reduced, scaleFrom };
+  motionParamsRef.current = { duration: dk.duration, delay, x, y, reduced };
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
 
   useLayoutEffect(() => {
     if (!selfDriven) return;
-    const { duration, delay: itemDelay, y: yPx, reduced: rm, scaleFrom: sFrom } = motionParamsRef.current;
+    const { duration, delay: itemDelay, x: xPx, y: yPx, reduced: rm } = motionParamsRef.current;
     if (!active) {
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
       opacityMv.set(0);
+      xMv.set(rm ? 0 : xPx);
       yMv.set(rm ? 0 : yPx);
-      scaleMv.set(rm ? 1 : sFrom);
       return;
     }
     const gen = motionGenRef.current;
     if (rm) {
       opacityMv.set(1);
+      xMv.set(0);
       yMv.set(0);
-      scaleMv.set(1);
       return;
     }
     opacityMv.set(0);
+    xMv.set(xPx);
     yMv.set(yPx);
-    scaleMv.set(sFrom);
     const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
-    const slide = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
-    const zoom = animate(scaleMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
-    tweensRef.current = [fade, slide, zoom];
+    const slideX = animate(xMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
+    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
+    tweensRef.current = [fade, slideX, slideY];
     // Fire-and-forget fallback. Clearing it on cleanup is what left grid
     // cards at opacity 0 after a keep-alive return.
     window.setTimeout(() => {
       if (motionGenRef.current !== gen) return;
       opacityMv.set(1);
+      xMv.set(0);
       yMv.set(0);
-      scaleMv.set(1);
     }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, opacityMv, yMv, scaleMv]);
+  }, [selfDriven, active, opacityMv, xMv, yMv]);
 
   return (
     <motion.div
@@ -287,13 +288,11 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
           : {
               hidden: {
                 opacity: 0,
-                transform: reduced
-                  ? "translateY(0px) scale(1)"
-                  : `translateY(${y}px) scale(${scaleFrom})`,
+                transform: reduced ? SPAWN_REST : spawnHidden(x, y),
               },
               visible: {
                 opacity: 1,
-                transform: "translateY(0px) scale(1)",
+                transform: SPAWN_REST,
                 transition: {
                   duration: reduced ? 0 : dk.duration,
                   ease: PS3_EASE,
