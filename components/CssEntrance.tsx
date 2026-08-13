@@ -68,11 +68,10 @@ export function CssEntranceStagger({
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const noMotion = instant || prefersReduced;
     if (!active) {
-      // Invalidate in-flight show timers so a stale afterPaint cannot
-      // un-hide this page while it's off-route.
       genRef.current += 1;
       setSnap(true);
-      setReady(false);
+      // Instant keep-alive: stay at rest. The shell's column fade hides us.
+      setReady(noMotion);
       return;
     }
     if (noMotion) {

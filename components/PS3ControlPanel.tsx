@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallb
 import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_ENTRANCE, ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { EASE_ENTRANCE, PAGE_FOCUS } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -36,7 +36,7 @@ const FADE_MS = 700;
 // pill joins the hero/grid chorus rather than entering as an isolated layer.
 // Case-study Back passes instantReturn and deliberately snaps instead.
 const RETURN_EASE = `cubic-bezier(${EASE_ENTRANCE.join(", ")})`;
-const RETURN_FADE_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+const RETURN_FADE_MS = PAGE_FOCUS.inMs;
 const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
@@ -846,7 +846,7 @@ export default function PS3ControlPanel({
   const isReturnReveal = revealKindRef.current === "return";
   const fadeMs   = isReturnReveal ? RETURN_FADE_MS : FADE_MS;
   const fadeEase = isReturnReveal ? RETURN_EASE   : FADE_EASE;
-  const slideY = isReturnReveal ? ENTRANCE_DEFAULTS.y : 0;
+  const slideY = isReturnReveal ? PAGE_FOCUS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
     ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
     : (showTransition

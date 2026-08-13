@@ -417,15 +417,13 @@ export default function BentoGallery({
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
     const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
 
-    // Reveal as soon as layout is ready — LQIP posters already paint the
-    // tiles, so waiting on full-res downloads just left empty holes.
-    // Primary-nav show plays the 220ms fade from 0.4; instant is Back-only.
+    // Tiles stay painted; the archive shell plays XMB column focus.
     const [ready, setReady] = useState(instant);
     const genRef = useRef(0);
     useLayoutEffect(() => {
         if (!active) {
             genRef.current += 1;
-            setReady(false);
+            setReady(instant);
             return;
         }
         if (instant) {

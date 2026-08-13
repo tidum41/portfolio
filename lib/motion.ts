@@ -45,6 +45,17 @@ export const DURATION = {
   routeEnterFast:    0.18,
 } as const;
 
+/** XMB column focus — the whole keep-alive page as one object, CSS only.
+ *  Incoming fades up as a unit; outgoing dims in place. No per-item Framer. */
+export const PAGE_FOCUS = {
+  inMs: 480,
+  outMs: 280,
+  y: 10,
+  fromOpacity: 0.2,
+  ease: [0.23, 1, 0.32, 1] as CubicBezier,
+  exitEase: EASE_EXIT,
+} as const;
+
 export interface EntranceDefaults {
   x: number;          // px, unused for column-focus (always 0)
   y: number;          // px, slight settle-up
