@@ -4,10 +4,9 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { preload } from "react-dom";
 import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
-import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
-import CaseStudyLoadingSilhouette from "@/components/CaseStudyLoadingSilhouette";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
 import MuxHero from "@/components/MuxHero";
-import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
@@ -410,15 +409,17 @@ export default function BruinLeasePage() {
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
 
-          <Suspense
-            fallback={
-              <CaseStudyLoadingSilhouette
-                contentOnly
-                heroBg="#C6DDF2"
-                mediaAspect="16 / 9"
-              />
+          <CaseStudyOpen
+            tagline={FB.heroTagline}
+            title={FB.heroTitle}
+            metadata={FB.metadata}
+            media={
+              <div style={{ background: FB.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+                <MuxHero playbackId={FB.heroMuxId} />
+              </div>
             }
-          >
+          />
+          <Suspense fallback={null}>
             <BruinLeaseContent />
           </Suspense>
         </div>
@@ -449,7 +450,6 @@ async function BruinLeaseContent() {
     ...Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null && (Array.isArray(v) ? v.length > 0 : v !== ""))),
   };
 
-  const metadata        = (cs.metadata      ?? FB.metadata);
   const stats           = (cs.stats         ?? FB.stats);
   const processTools    = (cs.processTools  ?? FB.processTools);
   const d1CompCol1      = (cs.d1CompCol1    ?? FB.d1CompCol1)    as CompRowData[];
@@ -462,63 +462,6 @@ async function BruinLeaseContent() {
 
   return (
     <>
-          {/* ── Hero ───────────────────────────────────────────────────── */}
-          {/* Staggers in top-to-bottom on route arrival (tagline, title, video,
-              metadata) on its own "Case Study Entrance" DialKit panel — subtler
-              slide + barely-there blur than the shared work-grid/about-page
-              "Entrance" panel. The TOC (aside, above) deliberately never
-              participates: it's position:sticky, and animating it alongside
-              the rest previously read as buggy/jittery rather than elegant. */}
-          <header className="cs-hero-header">
-            <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem className="cs-hero-tagline-wrap">
-                <p className="cs-hero-tagline" style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  letterSpacing: "0.01em",
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 var(--space-2)",
-                }}>
-                  {cs.heroTagline}
-                </p>
-              </EntranceItem>
-              <EntranceItem className="cs-hero-title-wrap">
-                <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-doc-title)",
-                  fontSize: "var(--fs-hero)",
-                  fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
-                  lineHeight: 1.1,
-                  letterSpacing: "var(--ls-hero)",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 var(--space-4)",
-                }}>
-                  {cs.heroTitle}
-                </h1>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-media-wrap">
-                <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
-                  <MuxHero playbackId={cs.heroMuxId} />
-                </div>
-              </EntranceItem>
-
-              {/* Metadata — 4-column, no border */}
-              {metadata.length > 0 && (
-                <EntranceItem>
-                  <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: "var(--space-4)" }}>
-                    {metadata.map(({ _key, label, values }) => (
-                      <div key={_key} style={{ padding: "0 24px 0 0" }}>
-                        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
-                        {values.map((v) => <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>{v}</p>)}
-                      </div>
-                    ))}
-                  </div>
-                </EntranceItem>
-              )}
-            </EntranceStagger>
-          </header>
-
           <article style={{ minWidth: 0 }}>
 
             {/* ── Problem ──────────────────────────────────────────────── */}

@@ -64,7 +64,6 @@ export default function PhoneMockup({
   const [containerWidth, setContainerWidth] = useState(REF_W);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   // Per-instance dialkit key so each phone can be tuned independently
@@ -116,9 +115,6 @@ export default function PhoneMockup({
   const muxPoster = muxPlaybackId
     ? `https://image.mux.com/${muxPlaybackId}/thumbnail.webp?time=1&width=640`
     : poster;
-  const muxBlur = muxPlaybackId
-    ? `https://image.mux.com/${muxPlaybackId}/thumbnail.jpg?time=1&width=32`
-    : undefined;
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -206,21 +202,6 @@ export default function PhoneMockup({
                 transformOrigin: "center center",
               }}
             >
-              {muxBlur && (
-                <img
-                  src={muxBlur}
-                  alt=""
-                  aria-hidden
-                  className={videoReady ? undefined : "mux-media-slot__breathe"}
-                  style={{
-                    position: "absolute", inset: 0, width: "100%", height: "100%",
-                    objectFit: "cover", transform: "scale(1.08)", filter: "blur(12px)",
-                    pointerEvents: "none",
-                    opacity: videoReady ? 0 : 1,
-                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                />
-              )}
               {muxPoster && (
                 <img
                   src={muxPoster}
@@ -229,30 +210,9 @@ export default function PhoneMockup({
                   style={{
                     position: "absolute", inset: 0, width: "100%", height: "100%",
                     objectFit: "cover", pointerEvents: "none",
-                    opacity: videoReady ? 0 : 1,
-                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 />
               )}
-              {!muxPoster && !muxBlur && (
-                <div
-                  className={videoReady ? undefined : "mux-media-slot__breathe"}
-                  aria-hidden
-                  style={{
-                    position: "absolute", inset: 0,
-                    background: "var(--color-placeholder)",
-                    opacity: videoReady ? 0 : 1,
-                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                />
-              )}
-              <div
-                style={{
-                  position: "absolute", inset: 0,
-                  opacity: videoReady ? 1 : 0,
-                  transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-              >
               {shouldLoad && muxPlaybackId && (
                 <MuxPlayer
                   playbackId={muxPlaybackId}
@@ -261,11 +221,14 @@ export default function PhoneMockup({
                   loop muted playsInline nohotkeys
                   preload="auto"
                   poster={muxPoster}
-                  onCanPlay={() => setVideoReady(true)}
-                  onPlaying={() => setVideoReady(true)}
                   style={{
-                    display: "block", width: "100%", height: "100%", objectFit: "cover",
-                    // @ts-ignore CSS custom property
+                    display: "block",
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    // @ts-expect-error Mux player CSS custom properties
                     "--controls": "none",
                     "--media-background-color": "transparent",
                   }}
@@ -280,14 +243,11 @@ export default function PhoneMockup({
                   loop={loop}
                   muted playsInline
                   preload="metadata"
-                  onCanPlay={() => setVideoReady(true)}
-                  onPlaying={() => setVideoReady(true)}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
                 />
               )}
-              </div>
             </div>
           ) : (
             <div style={{
