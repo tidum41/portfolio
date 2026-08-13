@@ -1,7 +1,7 @@
 "use client";
 
-import { Children, createContext, useContext } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { Children, createContext, useContext, useLayoutEffect, useRef } from "react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
@@ -209,30 +209,66 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const y = yProp ?? dk.y;
   const selfDriven = active !== undefined;
 
+  // Keep-alive shells hide with display:none. Framer often skips applying
+  // `hidden` under that, then on return thinks the node is already `visible`
+  // while the DOM is still opacity:0 — content stays gone. Drive opacity/y
+  // ourselves so hide always lands, and every active false→true starts from 0.
+  const opacityMv = useMotionValue(0);
+  const yMv = useMotionValue(0);
+  const transformMv = useTransform(yMv, (v) => `translateY(${v}px)`);
+  const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced });
+  motionParamsRef.current = { duration: dk.duration, delay, y, reduced };
+
+  useLayoutEffect(() => {
+    if (!selfDriven) return;
+    const { duration, delay: itemDelay, y: yPx, reduced: rm } = motionParamsRef.current;
+    if (!active) {
+      opacityMv.set(0);
+      yMv.set(rm ? 0 : yPx);
+      return;
+    }
+    if (rm) {
+      opacityMv.set(1);
+      yMv.set(0);
+      return;
+    }
+    opacityMv.set(0);
+    yMv.set(yPx);
+    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
+    const slide = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
+    return () => {
+      fade.stop();
+      slide.stop();
+    };
+  }, [selfDriven, active, opacityMv, yMv]);
+
   return (
     <motion.div
       {...rest}
-      {...(selfDriven ? { initial: "hidden", animate: active ? "visible" : "hidden" } : {})}
-      variants={{
-        hidden: {
-          opacity: 0,
-          transform: reduced ? "translateY(0px)" : `translateY(${y}px)`,
-        },
-        visible: {
-          opacity: 1,
-          transform: "translateY(0px)",
-          // `delay` only set in self-driven mode, where there's no parent
-          // EntranceStagger to inject it via staggerChildren/delayChildren.
-          // In nested mode, an explicit delay here (even 0) would override
-          // that parent-orchestrated stagger instead of composing with it.
-          transition: {
-            duration: reduced ? 0 : dk.duration,
-            ease: PS3_EASE,
-            ...(selfDriven ? { delay: reduced ? 0 : delay } : {}),
-          },
-        },
-      }}
-      style={style}
+      {...(selfDriven ? { initial: false } : { initial: "hidden" })}
+      variants={
+        selfDriven
+          ? undefined
+          : {
+              hidden: {
+                opacity: 0,
+                transform: reduced ? "translateY(0px)" : `translateY(${y}px)`,
+              },
+              visible: {
+                opacity: 1,
+                transform: "translateY(0px)",
+                transition: {
+                  duration: reduced ? 0 : dk.duration,
+                  ease: PS3_EASE,
+                },
+              },
+            }
+      }
+      style={
+        selfDriven
+          ? { ...style, opacity: opacityMv, transform: transformMv }
+          : style
+      }
       className={className}
     >
       {children}

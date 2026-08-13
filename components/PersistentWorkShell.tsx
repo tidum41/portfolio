@@ -543,7 +543,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         data-work-hero
         style={{
           position: "relative",
-          overflow: "hidden",
+          overflow: "visible",
           paddingTop: "var(--hero-pt)",
           paddingBottom: "var(--hero-pb)",
         }}

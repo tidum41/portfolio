@@ -55,13 +55,14 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const active = !!dk?.enabled && (!!dk?.keepEffectOn || isHovered || isTapped);
   const { filterId, t } = useHalftoneMorph(dk, active);
 
-  // Fixed-duration, active-driven crossfade — NOT derived from `t`. See
-  // useHalftoneMorph.ts's doc comment: base and overlay always share this
-  // exact duration and start together, a strict complementary pair, which
-  // is what guarantees the crisp icon and the halftone dots are never both
-  // substantially gone at once.
-  const crossfadeMs = reduced ? 1 : active ? (dk?.showHideSpeed?.showDurationMs ?? 220) : (dk?.showHideSpeed?.hideDurationMs ?? 550);
-  const crossfadeTransition = { duration: crossfadeMs / 1000, ease: "easeInOut" as const };
+  // Overlay can take the long hide tween; restore the solid icon faster so
+  // the settle spring emptying the dots can't leave the control blank.
+  const showMs = dk?.showHideSpeed?.showDurationMs ?? 220;
+  const hideMs = dk?.showHideSpeed?.hideDurationMs ?? 550;
+  const overlayMs = reduced ? 1 : active ? showMs : hideMs;
+  const baseMs = reduced ? 1 : active ? showMs : Math.min(hideMs, 120);
+  const overlayTransition = { duration: overlayMs / 1000, ease: "easeInOut" as const };
+  const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -135,7 +136,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
         initial={false}
         animate={{ opacity: active ? 0 : 1 }}
-        transition={crossfadeTransition}
+        transition={baseTransition}
       >
         <motion.span
           aria-hidden
@@ -166,7 +167,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         }}
         initial={false}
         animate={{ opacity: active ? 1 : 0 }}
-        transition={crossfadeTransition}
+        transition={overlayTransition}
       >
         <motion.span
           aria-hidden

@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { afterPaint } from "@/lib/afterPaint";
 import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
 
 /**
@@ -55,6 +56,8 @@ export function CssEntranceStagger({
 }) {
   const [ready, setReady] = useState(instant);
   const [snap, setSnap] = useState(instant);
+  const readyRef = useRef(ready);
+  readyRef.current = ready;
   const counterRef = useRef(0);
   counterRef.current = 0;
 
@@ -75,17 +78,14 @@ export function CssEntranceStagger({
       return;
     }
     setSnap(false);
-    setReady(false);
+    // Already visible (effect re-ran while on-route) — don't blank mid-flight.
+    // Hide is the only path that sets ready false; cancelled rAFs must not
+    // leave a visible page stuck at opacity 0.
+    if (readyRef.current) return;
     // Two frames after becoming visible: browsers skip transitions on
     // elements that were display:none unless opacity:0 paints first.
-    let id2 = 0;
-    const id1 = requestAnimationFrame(() => {
-      id2 = requestAnimationFrame(() => setReady(true));
-    });
-    return () => {
-      cancelAnimationFrame(id1);
-      cancelAnimationFrame(id2);
-    };
+    // Timeout fallback: Strict Mode / fast back-and-forth can cancel both rAFs.
+    return afterPaint(() => setReady(true));
   }, [active, instant]);
 
   // About nests ~6 items under 2 layout columns — don't derive stagger from
