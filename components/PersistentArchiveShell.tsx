@@ -1,14 +1,15 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
+import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
+import { onWarmArchive, wasArchiveWarmed } from "@/lib/keepAliveWarm";
 
 /**
- * Session keep-alive for /archive. First visit mounts the gallery; later
- * visits are display toggles (footer fix is gated on `active`).
+ * Session keep-alive for /archive. First visit (or idle/hover warm) mounts
+ * the gallery; later visits are display toggles.
  */
 export default function PersistentArchiveShell({
   items,
@@ -17,12 +18,8 @@ export default function PersistentArchiveShell({
 }) {
   const pathname = usePathname();
   const onArchive = pathname === "/archive";
-  const [hasVisited, setHasVisited] = useState(onArchive);
+  const hasVisited = useKeepAliveVisit(onArchive, wasArchiveWarmed(), onWarmArchive);
   const instant = useKeepAliveInstant(onArchive);
-
-  useLayoutEffect(() => {
-    if (onArchive) setHasVisited(true);
-  }, [onArchive]);
 
   if (!hasVisited) return null;
 

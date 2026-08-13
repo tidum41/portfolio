@@ -144,7 +144,7 @@ function AboutBelowFold() {
 function AboutHeroCopy() {
   return (
     <>
-      <CssEntranceItem>
+      <CssEntranceItem index={0}>
         <h1 style={{
           fontFamily: "var(--font-page-title)",
           fontSize: 32,
@@ -296,15 +296,17 @@ export default function AboutPageContent({
               <AboutHeroCopy />
             </div>
             <div className="about-hero-bento-col">
-              <CssEntranceItem style={{ marginBottom: 5 }}>
+              <CssEntranceItem index={0} style={{ marginBottom: 5 }}>
                 <BentoHeroStatic
                   featured={BENTO.featured}
                   top={BENTO.top}
                   bottom={BENTO.bottom}
-                  priority={false}
+                  priority
                 />
               </CssEntranceItem>
-              <AboutSocials />
+              <CssEntranceItem index={0}>
+                <AboutSocials />
+              </CssEntranceItem>
             </div>
           </CssEntranceStagger>
         </div>

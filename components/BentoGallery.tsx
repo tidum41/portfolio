@@ -1432,10 +1432,8 @@ export default function BentoGallery({
                 cursor: "crosshair",
                 touchAction: "none",
                 userSelect: "none",
-                // Hold interaction off for one frame so layout settles, then
-                // each tile entrance-staggers over already-visible LQIP posters.
-                // Full-res images blur-up independently inside each cell.
-                pointerEvents: ready ? "auto" : "none",
+                // Stagger is decorative — never eat the first click while tiles enter.
+                pointerEvents: "auto",
                 transform: "none",
             }}
         >
@@ -1480,7 +1478,6 @@ export default function BentoGallery({
                                 transform: ready
                                     ? SPAWN_REST
                                     : spawnHidden(dk.x ?? ENTRANCE_DEFAULTS.x, dk.y),
-                                pointerEvents: ready ? undefined : "none",
                                 // Delay folded into the shorthand itself (not a separate
                                 // transitionDelay longhand) — mixing the two in one style
                                 // object is ambiguous across re-renders and React warns on it.

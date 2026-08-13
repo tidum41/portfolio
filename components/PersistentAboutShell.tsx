@@ -1,22 +1,20 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
+import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
+import { onWarmAbout, wasAboutWarmed } from "@/lib/keepAliveWarm";
 
 /**
- * Session keep-alive for /about. First visit mounts; later visits toggle display.
+ * Session keep-alive for /about. First visit (or idle/hover warm) mounts;
+ * later visits toggle display.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
-  const [hasVisited, setHasVisited] = useState(onAbout);
+  const hasVisited = useKeepAliveVisit(onAbout, wasAboutWarmed(), onWarmAbout);
   const instant = useKeepAliveInstant(onAbout);
-
-  useLayoutEffect(() => {
-    if (onAbout) setHasVisited(true);
-  }, [onAbout]);
 
   if (!hasVisited) return null;
 

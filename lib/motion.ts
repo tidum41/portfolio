@@ -14,14 +14,15 @@ export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-eas
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// Page spawn does not scale. Column-focus enter is fade + 6px settle.
+// Page spawn does not scale. Column-focus enter is fade + 12px settle.
 export const XMB_ENTRANCE_SCALE = 1;
 
 /** Resting / reduced-motion transform for spawn items. */
 export const SPAWN_REST = "translate(0px, 0px)";
 
-/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content. */
-export const SPAWN_FROM_OPACITY = 0.4;
+/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content.
+ *  0.22 reads on photos and type; 0.4 was too close to rest to notice. */
+export const SPAWN_FROM_OPACITY = 0.22;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;
@@ -52,14 +53,14 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Column-focus enter — same quiet fade-up as case-study open. Played on
-// keep-alive Work/About/Archive show (primary nav) and on cold load.
+// Column-focus enter — same recipe as case-study open, slightly more travel
+// so keep-alive Work/About/Archive actually read as a focus change.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
-  y: 6,
-  duration: 0.22,
-  stagger: 0.045,
-  maxSpread: 0.14,
+  y: 12,
+  duration: 0.28,
+  stagger: 0.05,
+  maxSpread: 0.12,
   scale: 1,
 };
 

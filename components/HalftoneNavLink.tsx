@@ -7,6 +7,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { markSoftNav } from "@/lib/instantNav";
+import { warmAboutShell, warmArchiveShell } from "@/lib/keepAliveWarm";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -104,6 +105,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       // mouseleave ever firing (no cursor to leave), leaving isHovered
       // stuck true forever and the link permanently dimmed/halftoned.
       onMouseEnter={() => {
+        if (href === "/about") warmAboutShell();
+        if (href === "/archive") warmArchiveShell();
         if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
       }}
       onMouseLeave={() => {
@@ -121,6 +124,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
         // (work / about / archive). Do not snap-kill hover: the pointer is
         // still on the link, and killing it raced the settle spring against
         // the 550ms hide tween so the label went fully transparent.
+        if (href === "/about") warmAboutShell();
+        if (href === "/archive") warmArchiveShell();
         if (PRIMARY_NAV.has(href)) {
           markSoftNav();
           return;
