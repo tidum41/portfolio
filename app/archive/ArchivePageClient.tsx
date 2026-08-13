@@ -71,10 +71,13 @@ const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, m
 export default function PlaygroundPageClient({
   items,
   active = true,
+  instant = false,
 }: {
   items: PlaygroundGalleryItem[];
   /** When false (persistent shell hidden), release archive footer overrides. */
   active?: boolean;
+  /** Primary-nav return — tiles snap, no spawn replay. */
+  instant?: boolean;
 }) {
     const instanceKey = useRef<symbol | null>(null);
 
@@ -152,7 +155,7 @@ export default function PlaygroundPageClient({
                   overviewMode="width"
                   maxZoom={1.5}
                   minZoomFactor={0.667}
-                  instant={false}
+                  instant={instant}
                   active={active}
               />
 

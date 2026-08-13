@@ -16,10 +16,8 @@ const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /**
- * Same fade + XMB side-cascade as Framer EntranceStagger/EntranceItem
- * and BentoGallery — CSS transitions only (no Framer, no DialKit on the
- * hot path). Use for route-arrival reveals where the motion is simple.
- * Scale is not used — XMB focus is translate from the left, not shrink.
+ * Same quiet fade-up as Framer EntranceItem and BentoGallery.
+ * CSS transitions only. Primary-nav keep-alive returns pass instant.
  */
 
 type CssEntranceCtx = {

@@ -3,6 +3,7 @@
 import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
+import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 
 /**
  * Session keep-alive for /about. First visit mounts; later visits toggle display.
@@ -11,6 +12,7 @@ export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
   const [hasVisited, setHasVisited] = useState(onAbout);
+  const instant = useKeepAliveInstant(onAbout);
 
   useLayoutEffect(() => {
     if (onAbout) setHasVisited(true);
@@ -25,7 +27,7 @@ export default function PersistentAboutShell() {
       inert={!onAbout}
       {...(!onAbout ? { "data-nosnippet": true } : {})}
     >
-      <AboutPageContent active={onAbout} />
+      <AboutPageContent active={onAbout} instant={instant} />
     </div>
   );
 }

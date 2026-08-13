@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
+import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 
 /**
  * Session keep-alive for /archive. First visit mounts the gallery; later
@@ -17,6 +18,7 @@ export default function PersistentArchiveShell({
   const pathname = usePathname();
   const onArchive = pathname === "/archive";
   const [hasVisited, setHasVisited] = useState(onArchive);
+  const instant = useKeepAliveInstant(onArchive);
 
   useLayoutEffect(() => {
     if (onArchive) setHasVisited(true);
@@ -31,7 +33,7 @@ export default function PersistentArchiveShell({
       inert={!onArchive}
       {...(!onArchive ? { "data-nosnippet": true } : {})}
     >
-      <ArchivePageClient items={items} active={onArchive} />
+      <ArchivePageClient items={items} active={onArchive} instant={instant} />
     </div>
   );
 }

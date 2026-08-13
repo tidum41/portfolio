@@ -14,8 +14,8 @@ export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-eas
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// Kept for DialKit / older callers. Spawn motion no longer scales content —
-// XMB “focus” is a side-cascade (translateX) + fade, not shrinking cards.
+// Kept for DialKit / older callers. Page spawn does not scale, and
+// primary-nav keep-alive pages snap rather than sliding in from the side.
 export const XMB_ENTRANCE_SCALE = 1;
 
 /** Resting / reduced-motion transform for spawn items. */
@@ -50,15 +50,14 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Content spawn: Cross Media Bar cascade — items arrive from the left
-// and settle, staggered. No scale (that was a 3% shrink nobody felt, and
-// it letterboxed Mux). Case-study open is a separate CSS path; leave it.
+// Content spawn — same quiet fade-up as case-study open. Primary-nav
+// keep-alive returns snap (see peekKeepAliveSnap); this is for cold load.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
-  x: 18,
-  y: 10,
-  duration: 0.32,
-  stagger: 0.07,
-  maxSpread: 0.38,
+  x: 0,
+  y: 6,
+  duration: 0.22,
+  stagger: 0.045,
+  maxSpread: 0.14,
   scale: 1,
 };
 
