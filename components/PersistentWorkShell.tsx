@@ -18,6 +18,7 @@ import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
+import { parkShellStyle } from "@/lib/shellPark";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -304,17 +305,22 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     };
   }, [isWorkRoute]);
 
-  // Leaving "/" — force-close popups and cover the CD grid slot with its
-  // theme poster. Live CD/Mux unmount off-route (memory); posters stay so
-  // return still feels instant.
+  // Leaving "/" — close popups. Do not snap the grid CD poster to opaque:
+  // the live player is still mounted (parked, not display:none). Covering it
+  // with the Work-tile poster made modal/grid state look out of sync. Poster
+  // only covers once heavy media actually tears down.
   useEffect(() => {
     if (isWorkRoute) return;
     setPopupVisible(false);
     setOpenPopup(null);
     setHabitPortalTarget(null);
+  }, [isWorkRoute]);
+
+  useEffect(() => {
+    if (heavyMediaLive) return;
     setCdPosterOpacity(1);
     setCdPosterFade(false);
-  }, [isWorkRoute]);
+  }, [heavyMediaLive]);
 
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).
@@ -520,7 +526,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   return (
     <div
-      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
+      style={{ ...parkShellStyle(isWorkRoute), fontFamily: "var(--font-sans)" }}
       aria-hidden={!isWorkRoute}
       inert={!isWorkRoute}
       // When this shell is hidden on other routes, its hero + grid still sit in

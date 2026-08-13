@@ -536,6 +536,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   const tick = () => {
     if (!wrap.isConnected) return; // cursor was cleaned up — stop RAF chain
+    if (nativeCursor) {
+      raf = requestAnimationFrame(tick);
+      return;
+    }
     const dc = window.gc_dotConfig   ?? {} as NonNullable<typeof window.gc_dotConfig>;
     const tc = window.gc_trailConfig ?? {} as NonNullable<typeof window.gc_trailConfig>;
 
@@ -783,16 +787,38 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   let trailMutedUntil = 0;
+  let nativeCursor = false;
+  const setNativeCursor = (on: boolean) => {
+    nativeCursor = on;
+    styleEl.textContent = on ? "" : "* { cursor: none !important; }";
+    wrap.style.visibility = on ? "hidden" : "visible";
+    for (let i = 0; i < echoEls.length; i++) {
+      const el = echoEls[i];
+      if (!el) continue;
+      el.style.opacity = "0";
+      lastOpacity[i] = 0;
+    }
+    if (!on && mouse.inside) syncTip(mouse.x, mouse.y);
+  };
+
   window.addEventListener("soft-nav-start", () => {
-    // Cover About/Archive first-paint + deferred media pause (benchmarked
-    // hitch windows often exceed 500ms).
+    // Custom cursor is a DOM node on the main thread — it freezes during
+    // route commit. Hand the pointer back to the OS for the hitch window.
+    setNativeCursor(true);
     trailMutedUntil = performance.now() + 1600;
   }, { signal: sig });
   window.addEventListener("soft-nav-settled", () => {
+    setNativeCursor(false);
     trailMutedUntil = Math.max(trailMutedUntil, performance.now() + 180);
   }, { signal: sig });
 
   window.addEventListener("pointermove", (e: PointerEvent) => {
+    if (nativeCursor) {
+      lastX = e.clientX; lastY = e.clientY;
+      mouse.x = e.clientX; mouse.y = e.clientY;
+      mouse.inside = true; lastMove = performance.now();
+      return;
+    }
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     const smoothing = window.gc_trailConfig?.velocitySmoothing ?? 0.4;
