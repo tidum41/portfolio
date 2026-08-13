@@ -95,7 +95,7 @@ export default function MuxVideoEmbed({
           objectFit: "cover", objectPosition: "center",
           transform: `scale(${dk.blurScale})`, filter: `blur(${dk.blurAmount}px)`,
           opacity: playerReady ? 0 : 1,
-          transition: `opacity ${dk.fadeDuration}ms ease`,
+          transition: `opacity ${dk.fadeDuration}ms cubic-bezier(0.16, 1, 0.3, 1)`,
           pointerEvents: "none", zIndex: 1,
         }}
       />
@@ -104,7 +104,7 @@ export default function MuxVideoEmbed({
         <div style={{
           position: "absolute", inset: 0, zIndex: 0,
           opacity: playerReady ? 1 : 0,
-          transition: "opacity 500ms ease",
+          transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
           <MuxPlayer
             playbackId={playbackId}

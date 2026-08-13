@@ -4,7 +4,7 @@ import { Children, createContext, useContext, useLayoutEffect, useRef } from "re
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, XMB_ENTRANCE_SCALE } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
 import type { ReactNode, CSSProperties } from "react";
 
@@ -86,8 +86,8 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
   return (
     <motion.div
       variants={{
-        hidden:  { opacity: 0, transform: "translateY(16px)" },
-        visible: { opacity: 1, transform: "translateY(0px)", transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
+        hidden:  { opacity: 0, transform: reduced ? "translateY(0px) scale(1)" : `translateY(16px) scale(${XMB_ENTRANCE_SCALE})` },
+        visible: { opacity: 1, transform: "translateY(0px) scale(1)", transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
       className={className}
@@ -215,7 +215,12 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   // ourselves so hide always lands, and every active false→true starts from 0.
   const opacityMv = useMotionValue(0);
   const yMv = useMotionValue(0);
-  const transformMv = useTransform(yMv, (v) => `translateY(${v}px)`);
+  const scaleMv = useMotionValue(1);
+  const transformMv = useTransform([yMv, scaleMv], (latest) => {
+    const yVal = latest[0] as number;
+    const sVal = latest[1] as number;
+    return `translateY(${yVal}px) scale(${sVal})`;
+  });
   const motionParamsRef = useRef({ duration: dk.duration, delay, y, reduced });
   motionParamsRef.current = { duration: dk.duration, delay, y, reduced };
   const motionGenRef = useRef(0);
@@ -230,27 +235,32 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       tweensRef.current = [];
       opacityMv.set(0);
       yMv.set(rm ? 0 : yPx);
+      scaleMv.set(rm ? 1 : XMB_ENTRANCE_SCALE);
       return;
     }
     const gen = motionGenRef.current;
     if (rm) {
       opacityMv.set(1);
       yMv.set(0);
+      scaleMv.set(1);
       return;
     }
     opacityMv.set(0);
     yMv.set(yPx);
-    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
+    scaleMv.set(XMB_ENTRANCE_SCALE);
+    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
     const slide = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
-    tweensRef.current = [fade, slide];
+    const zoom = animate(scaleMv, 1, { duration, delay: itemDelay, ease: PS3_EASE });
+    tweensRef.current = [fade, slide, zoom];
     // Fire-and-forget fallback. Clearing it on cleanup is what left grid
     // cards at opacity 0 after a keep-alive return.
     window.setTimeout(() => {
       if (motionGenRef.current !== gen) return;
       opacityMv.set(1);
       yMv.set(0);
+      scaleMv.set(1);
     }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, opacityMv, yMv]);
+  }, [selfDriven, active, opacityMv, yMv, scaleMv]);
 
   return (
     <motion.div
@@ -262,11 +272,13 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
           : {
               hidden: {
                 opacity: 0,
-                transform: reduced ? "translateY(0px)" : `translateY(${y}px)`,
+                transform: reduced
+                  ? "translateY(0px) scale(1)"
+                  : `translateY(${y}px) scale(${XMB_ENTRANCE_SCALE})`,
               },
               visible: {
                 opacity: 1,
-                transform: "translateY(0px)",
+                transform: "translateY(0px) scale(1)",
                 transition: {
                   duration: reduced ? 0 : dk.duration,
                   ease: PS3_EASE,

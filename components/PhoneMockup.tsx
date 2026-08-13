@@ -61,11 +61,9 @@ export default function PhoneMockup({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
   const [containerWidth, setContainerWidth] = useState(REF_W);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
-  const [frameLoaded, setFrameLoaded] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
@@ -112,32 +110,15 @@ export default function PhoneMockup({
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    setFrameLoaded(false);
-    setVideoReady(false);
-    if (!frameSrc) return;
-    const img = imgRef.current;
-    if (img?.complete && img?.naturalWidth > 0) setFrameLoaded(true);
-  }, [frameSrc]);
-
-  // Fallback: show after 1.2s if frame or video stalls
-  useEffect(() => {
-    if (!shouldLoad) return;
-    const t = setTimeout(() => {
-      setFrameLoaded(true);
-      setVideoReady(true);
-    }, 1200);
-    return () => clearTimeout(t);
-  }, [shouldLoad]);
-
   const scale = containerWidth / REF_W;
   const intrinsicHeight = containerWidth * (REF_H / REF_W);
   const hasVideo = !!(muxPlaybackId || videoSrc);
-
-  // Both frame and video (if any) must be loaded before revealing
-  const frameOk = !frameSrc || frameLoaded;
-  const videoOk = !hasVideo || videoReady;
-  const isVisible = frameOk && videoOk;
+  const muxPoster = muxPlaybackId
+    ? `https://image.mux.com/${muxPlaybackId}/thumbnail.webp?time=1&width=640`
+    : poster;
+  const muxBlur = muxPlaybackId
+    ? `https://image.mux.com/${muxPlaybackId}/thumbnail.jpg?time=1&width=32`
+    : undefined;
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -188,8 +169,7 @@ export default function PhoneMockup({
         ...(showFrame ? {} : style),
         maxWidth: REF_W,
         height: intrinsicHeight,
-        opacity: isVisible ? 1 : 0,
-        transition: isVisible ? "opacity 200ms ease" : "none",
+        opacity: 1,
       }}
     >
       <div
@@ -226,16 +206,66 @@ export default function PhoneMockup({
                 transformOrigin: "center center",
               }}
             >
+              {muxBlur && (
+                <img
+                  src={muxBlur}
+                  alt=""
+                  aria-hidden
+                  className={videoReady ? undefined : "mux-media-slot__breathe"}
+                  style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", transform: "scale(1.08)", filter: "blur(12px)",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+              {muxPoster && (
+                <img
+                  src={muxPoster}
+                  alt=""
+                  aria-hidden
+                  style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", pointerEvents: "none",
+                    opacity: videoReady ? 0 : 1,
+                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                />
+              )}
+              {!muxPoster && !muxBlur && (
+                <div
+                  className={videoReady ? undefined : "mux-media-slot__breathe"}
+                  aria-hidden
+                  style={{
+                    position: "absolute", inset: 0,
+                    background: "var(--color-placeholder)",
+                    opacity: videoReady ? 0 : 1,
+                    transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  position: "absolute", inset: 0,
+                  opacity: videoReady ? 1 : 0,
+                  transition: "opacity 480ms cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
               {shouldLoad && muxPlaybackId && (
                 <MuxPlayer
                   playbackId={muxPlaybackId}
+                  streamType="on-demand"
                   autoPlay="muted"
                   loop muted playsInline nohotkeys
+                  preload="auto"
+                  poster={muxPoster}
                   onCanPlay={() => setVideoReady(true)}
+                  onPlaying={() => setVideoReady(true)}
                   style={{
                     display: "block", width: "100%", height: "100%", objectFit: "cover",
                     // @ts-ignore CSS custom property
                     "--controls": "none",
+                    "--media-background-color": "transparent",
                   }}
                 />
               )}
@@ -247,13 +277,15 @@ export default function PhoneMockup({
                   autoPlay={autoPlay}
                   loop={loop}
                   muted playsInline
-                  preload="none"
+                  preload="metadata"
                   onCanPlay={() => setVideoReady(true)}
+                  onPlaying={() => setVideoReady(true)}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
                 />
               )}
+              </div>
             </div>
           ) : (
             <div style={{
@@ -269,10 +301,8 @@ export default function PhoneMockup({
         {/* Phone frame PNG — overlaid at z-index 2 */}
         {frameSrc && (
           <img
-            ref={imgRef}
             src={frameSrc}
             alt=""
-            onLoad={() => setFrameLoaded(true)}
             style={{
               position: "absolute", top: 0, left: 0,
               width: "100%", height: "100%",

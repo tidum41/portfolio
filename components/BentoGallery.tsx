@@ -12,9 +12,10 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, XMB_ENTRANCE_SCALE, cssEase } from "@/lib/motion";
 
-const ENTRANCE_EASE_CSS = `cubic-bezier(${EASE_Y.join(",")})`;
+const ENTRANCE_EASE_Y = cssEase(EASE_Y);
+const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /** Full image crossfades over an instant LQIP/blur poster (archive tiles). */
 function BlurUpImage({
@@ -1465,14 +1466,16 @@ export default function BentoGallery({
                                 top: pos.top,
                                 width: iw,
                                 opacity: ready ? 1 : 0,
-                                transform: ready ? "translateY(0px)" : `translateY(${dk.y}px)`,
+                                transform: ready
+                                    ? "translateY(0px) scale(1)"
+                                    : `translateY(${dk.y}px) scale(${XMB_ENTRANCE_SCALE})`,
                                 pointerEvents: ready ? undefined : "none",
                                 // Delay folded into the shorthand itself (not a separate
                                 // transitionDelay longhand) — mixing the two in one style
                                 // object is ambiguous across re-renders and React warns on it.
                                 transition: entranceInstant
                                     ? "none"
-                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_CSS} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_CSS} ${entranceDelay}s`,
+                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_OP} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_Y} ${entranceDelay}s`,
                             }}
                         >
                         <div
