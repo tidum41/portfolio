@@ -5,10 +5,9 @@
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
  * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
- *   - Instant for CaseStudyTOC Back (peekInstantBack()) AND soft primary-nav
- *     returns to "/" (peekSoftNav()) — posters already painted; replaying the
- *     entrance chorus on every About/Archive return felt like lag.
- *   - Orchestrated only for cold "/" after the intro gate (no soft/instant flag).
+ *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
+ *   - About/Archive → Work replays the hero + grid entrance chorus.
+ *   - Soft-nav skips the route fade only — it does not snap content.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -28,7 +27,7 @@
  *   Later about/archive visit → display toggle only (no remount)
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work content instant
+ *   case-study → "/" via nav  → soft fade skip; work content orchestrated
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
@@ -73,9 +72,9 @@ export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
 
-/** Work shell / silk: treat soft return like Back for content snap. */
+/** Case-study Back only — work content snaps. Soft-nav does not use this. */
 export function peekInstantWorkContent(): boolean {
-  return peekInstantBack() || peekSoftNav();
+  return peekInstantBack();
 }
 
 /**

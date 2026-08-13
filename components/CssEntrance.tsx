@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -58,22 +58,34 @@ export function CssEntranceStagger({
   const counterRef = useRef(0);
   counterRef.current = 0;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const noMotion = instant || prefersReduced;
-    setSnap(noMotion);
     if (noMotion) {
+      setSnap(true);
       setReady(true);
       return;
     }
     if (!active) {
+      // Snap hidden so display:none doesn't eat the next show transition.
+      setSnap(true);
       setReady(false);
       return;
     }
-    const id = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(id);
+    setSnap(false);
+    setReady(false);
+    // Two frames after becoming visible: browsers skip transitions on
+    // elements that were display:none unless opacity:0 paints first.
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => setReady(true));
+    });
+    return () => {
+      cancelAnimationFrame(id1);
+      cancelAnimationFrame(id2);
+    };
   }, [active, instant]);
 
   // About nests ~6 items under 2 layout columns — don't derive stagger from

@@ -153,6 +153,7 @@ export default function PlaygroundPageClient({
                   maxZoom={1.5}
                   minZoomFactor={0.667}
                   instant={false}
+                  active={active}
               />
 
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}

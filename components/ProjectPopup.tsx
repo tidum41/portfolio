@@ -85,6 +85,7 @@ export default function ProjectPopup({
     };
 
     const body = document.body;
+    const html = document.documentElement;
     const prev = {
       position: body.style.position,
       top: body.style.top,
@@ -92,16 +93,22 @@ export default function ProjectPopup({
       right: body.style.right,
       width: body.style.width,
       paddingRight: body.style.paddingRight,
+      bodyBg: body.style.backgroundColor,
+      htmlBg: html.style.backgroundColor,
     };
 
     // Pin left/right (not only width:100%) so the fixed flex body can't pick
     // a stale static position and shift the grid under the backdrop blur.
     // paddingRight replaces the disappearing scrollbar so column widths stay put.
+    // Keep html/body fills on the site token so color-scheme canvas can't
+    // flash the opposite theme behind the overlay.
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
     body.style.left = "0";
     body.style.right = "0";
     body.style.width = "auto";
+    body.style.backgroundColor = "var(--color-bg)";
+    html.style.backgroundColor = "var(--color-bg)";
     if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
 
     document.addEventListener("keydown", onKeyDown);
@@ -112,6 +119,8 @@ export default function ProjectPopup({
       body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.paddingRight = prev.paddingRight;
+      body.style.backgroundColor = prev.bodyBg;
+      html.style.backgroundColor = prev.htmlBg;
       window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
       document.removeEventListener("keydown", onKeyDown);
       (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
