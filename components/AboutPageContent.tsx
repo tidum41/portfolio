@@ -38,18 +38,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * About CD is visible under the hero on desktop. First open keeps a sized
- * placeholder (not the Work grid/modal poster — that asset is the wrong
- * crop and modal state). Live player starts on click.
+ * About CD sits under the hero. Keep a definite height so the player's
+ * absolute layout can measure; live instance mounts with the About shell.
  */
-function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
-  const [live, setLive] = useState(false);
-
-  useEffect(() => {
-    if (!routeActive || live) return;
-    void import("@/components/CDPlayer");
-  }, [routeActive, live]);
-
+function AboutCD({ routeActive }: { routeActive: boolean }) {
   return (
     <section id="about-cd-slot" style={{ marginBottom: "var(--space-7)" }}>
       <SectionLabel>drag my favorite CDs!</SectionLabel>
@@ -57,32 +49,18 @@ function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
         style={{
           position: "relative",
           marginTop: 16,
-          height: live ? "auto" : 520,
+          height: 520,
           minHeight: 520,
           borderRadius: "var(--radius-card)",
           overflow: "hidden",
           background: "var(--color-placeholder)",
         }}
       >
-        {!live && (
-          <button
-            type="button"
-            onClick={() => setLive(true)}
-            aria-label="Load CD player"
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 3,
-              padding: 0,
-              border: 0,
-              cursor: "pointer",
-              background: "transparent",
-            }}
-          />
-        )}
-        {live && (
-          <CDPlayer style={{ marginTop: 0, height: "100%", minHeight: 0 }} variant="about" />
-        )}
+        <CDPlayer
+          style={{ marginTop: 0, height: "100%", minHeight: 520 }}
+          variant="about"
+          active={routeActive}
+        />
       </div>
     </section>
   );
@@ -256,15 +234,13 @@ function AboutSocials() {
 
 /**
  * About body used by PersistentAboutShell.
- * Soft + hard: CSS entrance (Archive/BentoGallery vocabulary). Soft snaps.
- * Bento stays static (production); CD poster→live after settle.
+ * CSS entrance plays each time the route becomes current (soft-nav still
+ * skips the outer route fade, not this chorus).
  */
 export default function AboutPageContent({
   active,
-  softArrival = false,
 }: {
   active: boolean;
-  softArrival?: boolean;
 }) {
   const [belowFold, setBelowFold] = useState(false);
 
@@ -311,9 +287,8 @@ export default function AboutPageContent({
         <div style={{ marginBottom: "var(--space-7)" }}>
           <CssEntranceStagger
             active={active}
-            instant={softArrival || !active}
+            instant={false}
             className="about-hero"
-            data-soft-hero={softArrival ? "1" : "0"}
           >
             <div className="about-hero-bio">
               <AboutHeroCopy />
@@ -332,7 +307,7 @@ export default function AboutPageContent({
           </CssEntranceStagger>
         </div>
 
-        <DeferredAboutCD routeActive={active} />
+        <AboutCD routeActive={active} />
 
         {belowFold ? (
           <AboutBelowFold />

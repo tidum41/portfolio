@@ -82,6 +82,8 @@ function EmbedPortal({ container, children }: { container: HTMLDivElement | null
   const [portalEl] = useState(() => {
     if (typeof document === "undefined") return null;
     const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.inset = "0";
     el.style.width = "100%";
     el.style.height = "100%";
     return el;
@@ -784,11 +786,18 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               position: "relative",
               height: CD_POPUP_EMBED_H,
               flex: "1 1 auto",
-              minHeight: 0,
+              minHeight: 280,
               background: "var(--color-modal-bg)",
             }}
           >
-            <div ref={setPopupCdEl} style={{ position: "absolute", inset: 0 }} />
+            <div
+              ref={(el) => {
+                setPopupCdEl(el);
+                if (el) setCdPortalTarget(el);
+                else if (gridCdEl) setCdPortalTarget(gridCdEl);
+              }}
+              style={{ position: "absolute", inset: 0 }}
+            />
           </div>
         </ProjectPopup>
       )}

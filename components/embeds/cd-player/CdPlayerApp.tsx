@@ -98,8 +98,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
     entranceActiveRef.current = active;
     if (active && !wasActive) {
       if (variant !== "about") setEntranceKey((k) => k + 1);
-      const t = setTimeout(() => setPlayerVisible(true), variant === "about" ? 0 : 80);
-      return () => clearTimeout(t);
+      setPlayerVisible(true);
     }
     if (!active) setPlayerVisible(false);
   }, [active, variant]);
@@ -158,7 +157,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
 
   const updateScale = useCallback(() => {
     const el = containerRef.current;
-    const W = el?.clientWidth  ?? window.innerWidth;
+    const W = el?.clientWidth || window.innerWidth;
     const H = el?.clientHeight || el?.offsetHeight || window.innerHeight;
     setContainerW(W);
 
@@ -494,7 +493,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
         <AudioConsent onAccept={handleConsentAccept} onDecline={handleConsentDecline} />
       )}
       <DndContext
-        id="cd-player-dnd"
+        id={variant === "about" ? "cd-player-dnd-about" : "cd-player-dnd-work"}
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
