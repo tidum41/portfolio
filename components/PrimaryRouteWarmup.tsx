@@ -6,6 +6,7 @@
  */
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { warmAboutShell, warmArchiveShell } from "@/lib/keepAliveWarm";
 
 const ABOUT_IMAGES = [
   "/images/about/bento-large.jpg",
@@ -33,6 +34,8 @@ export default function PrimaryRouteWarmup() {
       void import("@/components/CssEntrance");
       void import("@/app/archive/ArchivePageClient");
       void import("@/components/BentoGallery");
+      warmAboutShell();
+      warmArchiveShell();
       for (const src of [...ABOUT_IMAGES, ...CD_POSTERS]) {
         const img = new window.Image();
         img.decoding = "async";

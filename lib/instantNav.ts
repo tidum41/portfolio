@@ -7,7 +7,7 @@
  * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
  *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
  *   - Primary-nav Work/About/Archive skips the route fade (Layer A) and
- *     plays the same 220ms / 6px column-focus fade as case-study open.
+ *     plays the keep-alive column-focus fade (see ENTRANCE_DEFAULTS).
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):

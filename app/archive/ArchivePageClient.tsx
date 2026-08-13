@@ -1,10 +1,10 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import BentoGallery from "@/components/BentoGallery";
 
 // Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
@@ -35,10 +35,6 @@ function _footerReset(el: HTMLElement) {
     const inner = el.querySelector(".footer-inner") as HTMLElement | null;
     inner?.style.removeProperty("padding");
 }
-
-const BentoGallery = dynamic(() => import("@/components/BentoGallery"), {
-    ssr: false,
-});
 
 // Footer (shrunk for this page only, see _footerFix): paddingTop(12) + lineHeight(21) + paddingBottom(12) = 45px
 const FOOTER_H = 45;
@@ -76,7 +72,7 @@ export default function PlaygroundPageClient({
   items: PlaygroundGalleryItem[];
   /** When false (persistent shell hidden), release archive footer overrides. */
   active?: boolean;
-  /** Primary-nav return — tiles snap, no spawn replay. */
+  /** Case-study Back snaps; primary-nav show plays column-focus enter. */
   instant?: boolean;
 }) {
     const instanceKey = useRef<symbol | null>(null);
