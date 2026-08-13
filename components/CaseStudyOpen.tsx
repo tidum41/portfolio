@@ -2,25 +2,30 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import MuxHero from "@/components/MuxHero";
 import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 type Meta = { _key?: string; label: string; values: string[] };
 
 /**
  * Case-study above-the-fold open: type fades in (short XMB settle), media
- * does not. Animating the hero video hides it from autoplay and reads as a
- * loading skeleton — the opposite of a fast, readable open.
+ * does not. Mux is imported here so the player hydrates with this client
+ * island instead of as a server-passed slot.
  */
 export default function CaseStudyOpen({
   tagline,
   title,
   metadata,
-  media,
+  muxPlaybackId,
+  heroBg,
+  children,
 }: {
   tagline: string;
   title: string;
   metadata: Meta[];
-  media: ReactNode;
+  muxPlaybackId?: string;
+  heroBg?: string;
+  children?: ReactNode;
 }) {
   return (
     <header className="cs-hero-header">
@@ -61,7 +66,15 @@ export default function CaseStudyOpen({
           </h1>
         </EntranceItem>
       </EntranceStagger>
-      <div className="cs-hero-media-wrap">{media}</div>
+      <div className="cs-hero-media-wrap">
+        {muxPlaybackId ? (
+          <div style={{ background: heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+            <MuxHero playbackId={muxPlaybackId} />
+          </div>
+        ) : (
+          children
+        )}
+      </div>
       {metadata.length > 0 && (
         <EntranceStagger
           active

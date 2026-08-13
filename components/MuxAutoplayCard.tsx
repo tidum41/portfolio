@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
+import "@mux/mux-player";
 import { useDialKit } from "dialkit";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";

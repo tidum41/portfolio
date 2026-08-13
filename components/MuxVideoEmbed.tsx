@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import "@mux/mux-player";
 import { useDialKit } from "dialkit";
 
 // Source: MuxVideoEmbed.tsx (Framer).

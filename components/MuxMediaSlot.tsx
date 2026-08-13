@@ -1,41 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
-import MuxPlayer from "@mux/mux-player-react";
-import type MuxPlayerElement from "@mux/mux-player";
+import type Hls from "hls.js";
 
 export function muxPosterUrl(playbackId: string, width: number, time = 1) {
   return `https://image.mux.com/${playbackId}/thumbnail.webp?time=${time}&width=${width}`;
 }
 
-type Playable = { play?: () => Promise<void> | void; muted?: boolean };
-
-function playMux(el: MuxPlayerElement | null) {
-  if (!el) return;
-  try {
-    el.muted = true;
-  } catch {
-    /* custom element may not expose muted yet */
-  }
-  const media = (el as MuxPlayerElement & { media?: HTMLMediaElement }).media;
-  for (const node of [el, media] as Playable[]) {
-    try {
-      const p = node?.play?.();
-      if (p && typeof (p as Promise<void>).catch === "function") {
-        (p as Promise<void>).catch(() => {});
-      }
-    } catch {
-      /* autoplay can reject until the slot has a real box and is on-screen */
-    }
-  }
+function muxHlsUrl(playbackId: string) {
+  return `https://stream.mux.com/${playbackId}.m3u8`;
 }
 
 /**
- * Case-study Mux: the poster <img> is in normal flow so the slot is the
- * video's real aspect ratio (not a guessed 16:9). The player sits on top
- * at full opacity from the first paint — no skeleton, no overlay fade —
- * so muted autoplay is allowed. The still is just the first frame until
- * HLS catches up.
+ * Case-study Mux hero: native <video> + HLS so muted autoplay is a real
+ * media element. The poster <img> is in-flow so the slot is the video's
+ * real aspect ratio — not a guessed 16:9. HLS is imported inside the
+ * effect so a bundling failure can't block this component from hydrating.
  */
 export default function MuxMediaSlot({
   playbackId,
@@ -49,47 +29,100 @@ export default function MuxMediaSlot({
   style?: CSSProperties;
 }) {
   const poster = muxPosterUrl(playbackId, 1280, thumbnailTime);
-  const playerRef = useRef<MuxPlayerElement>(null);
+  const src = muxHlsUrl(playbackId);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   const kickPlay = useCallback(() => {
-    const root = rootRef.current;
-    if (root && root.getBoundingClientRect().height < 8) return;
-    playMux(playerRef.current);
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
   }, []);
 
+  const attachVideo = useCallback(
+    (video: HTMLVideoElement | null) => {
+      videoRef.current = video;
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
+      if (!video) return;
+
+      let cancelled = false;
+      video.muted = true;
+
+      const start = async () => {
+        const { default: Hls } = await import("hls.js");
+        if (cancelled) return;
+
+        // Prefer hls.js in Chrome; native HLS is Safari. canPlayType("maybe")
+        // on Chromium is not enough to skip MSE.
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            startLevel: -1,
+            maxBufferLength: 8,
+            enableWorker: false,
+          });
+          hlsRef.current = hls;
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, kickPlay);
+          hls.on(Hls.Events.ERROR, (_evt, data) => {
+            if (data?.fatal) {
+              rootRef.current?.setAttribute("data-hls", `error:${data.type}:${data.details}`);
+            }
+          });
+          rootRef.current?.setAttribute("data-hls", "hls.js");
+          kickPlay();
+          return;
+        }
+
+        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = src;
+          rootRef.current?.setAttribute("data-hls", "native");
+          kickPlay();
+          return;
+        }
+
+        rootRef.current?.setAttribute("data-hls", "unsupported");
+      };
+
+      void start();
+      return () => {
+        cancelled = true;
+      };
+    },
+    [src, kickPlay],
+  );
+
   useEffect(() => {
-    kickPlay();
+    const video = videoRef.current;
+    const stop = attachVideo(video);
     const t1 = window.setTimeout(kickPlay, 60);
-    const t2 = window.setTimeout(kickPlay, 240);
-    const t3 = window.setTimeout(kickPlay, 800);
+    const t2 = window.setTimeout(kickPlay, 400);
     const onVis = () => {
       if (document.visibilityState === "visible") kickPlay();
     };
     window.addEventListener("soft-nav-settled", kickPlay);
     document.addEventListener("visibilitychange", onVis);
     return () => {
+      stop?.();
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.clearTimeout(t3);
       window.removeEventListener("soft-nav-settled", kickPlay);
       document.removeEventListener("visibilitychange", onVis);
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
     };
-  }, [playbackId, kickPlay]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => kickPlay());
-    ro.observe(root);
-    return () => ro.disconnect();
-  }, [kickPlay]);
+  }, [attachVideo, kickPlay]);
 
   return (
     <div
       ref={rootRef}
       className={["mux-media-slot", className].filter(Boolean).join(" ")}
       style={style}
+      data-hls="pending"
     >
       {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -102,24 +135,19 @@ export default function MuxMediaSlot({
         fetchPriority="high"
         onLoad={kickPlay}
       />
-      <MuxPlayer
-        ref={playerRef}
-        key={playbackId}
-        playbackId={playbackId}
-        streamType="on-demand"
-        autoPlay="muted"
-        loop
-        muted
-        playsInline
-        nohotkeys
-        defaultHiddenCaptions
-        preload="auto"
-        thumbnailTime={thumbnailTime}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <video
+        ref={videoRef}
+        className="mux-cover"
         poster={poster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
         onCanPlay={kickPlay}
         onPlaying={kickPlay}
         onLoadedData={kickPlay}
-        className="mux-cover"
       />
     </div>
   );
