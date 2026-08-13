@@ -222,32 +222,16 @@ html[data-intro="done"] .intro-hide {
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* ─── Theme transition — smooth color shift on mode toggle only ───── */
-/* Scoped to html.theme-switching so transitions only fire during an
-   actual theme toggle, not on every hover/animation/style change.
-   ThemeToggle adds the class, removes it after 300ms (> 200ms duration). */
+/* ─── Theme toggle — snap tokens, don't interpolate the tree ──────── */
+/* Links, nav, cards, and embeds already have standing color/background
+   transitions for hover. When data-theme flips, those would tween every
+   token independently for 200ms–1s while canvases, images, and Mux snap
+   — that mismatch is the laggy/jittery theme change. Lock transitions
+   off for the swap paint; ThemeToggle restores them on the next frame. */
+html.theme-switching,
 html.theme-switching *,
 html.theme-switching *::before,
 html.theme-switching *::after {
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease,
-    fill 0.2s ease,
-    stroke 0.2s ease !important;
-}
-
-/* Hero heading + injected rabbit icon are excluded from the transition above
-   (higher specificity wins). At this size/prominence, a 200ms color morph
-   across a whole serif headline (plus the rabbit's fill trailing it on a
-   separate timer) reads as a flicker rather than a smooth shift — instant is
-   cleaner here, matching the instant CSS-variable flip everything else in
-   the tree is already doing under the hood. */
-html.theme-switching .hero-heading,
-html.theme-switching .hero-heading *,
-html.theme-switching #rh-trigger,
-html.theme-switching #rh-rabbit,
-html.theme-switching #rh-rabbit * {
   transition: none !important;
 }
 

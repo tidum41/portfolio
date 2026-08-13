@@ -63,6 +63,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const baseMs = reduced ? 1 : active ? showMs : Math.min(hideMs, 120);
   const overlayTransition = { duration: overlayMs / 1000, ease: "easeInOut" as const };
   const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
+  const unlockThemeRaf1 = useRef(0);
+  const unlockThemeRaf2 = useRef(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -70,15 +72,31 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
     setIsDark(dark);
   }, []);
 
+  useEffect(() => () => {
+    if (unlockThemeRaf1.current) cancelAnimationFrame(unlockThemeRaf1.current);
+    if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
+  }, []);
+
   const toggle = () => {
     const newDark = !isDark;
     setIsDark(newDark);
     const theme = newDark ? "dark" : "light";
     const html = document.documentElement;
+    // Suppress standing hover color-tweens for one paint so the token
+    // swap is a single frame, not a 200ms–1s chase across the tree.
     html.classList.add("theme-switching");
+    void html.offsetWidth;
     html.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
-    setTimeout(() => html.classList.remove("theme-switching"), 300);
+    if (unlockThemeRaf1.current) cancelAnimationFrame(unlockThemeRaf1.current);
+    if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
+    unlockThemeRaf1.current = requestAnimationFrame(() => {
+      unlockThemeRaf2.current = requestAnimationFrame(() => {
+        html.classList.remove("theme-switching");
+        unlockThemeRaf1.current = 0;
+        unlockThemeRaf2.current = 0;
+      });
+    });
   };
 
   // Reduced-motion: keep the opacity crossfade (aids comprehension), drop
