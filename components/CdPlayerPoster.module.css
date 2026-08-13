@@ -3,13 +3,12 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background-color: #E0E0E0;
+  background-color: var(--color-modal-bg);
   background-image: url("/images/cd-player-poster-light.webp");
   background-size: cover;
   background-position: center;
 }
 
 :global(html[data-theme="dark"]) .poster {
-  background-color: #191b1e;
   background-image: url("/images/cd-player-poster-dark.webp");
 }

@@ -39,18 +39,18 @@
   /* Site-theme card backdrop + text — driven by html[data-theme], not React
      state, so SSR/hydration and the grid poster always agree with the live
      embed without a post-mount theme observer. */
-  --cd-bg-color: #E0E0E0;
-  --cd-title-color: #1a1a1a;
-  --cd-artist-color: #888888;
+  /* Inherit the site modal token so the card can't flash the opposite
+     theme: these vars live on html (always loaded) instead of waiting on
+     a :global(html[data-theme]) descendant rule after a dynamic import. */
+  --cd-bg-color: var(--color-modal-bg);
+  --cd-title-color: var(--color-text-primary);
+  --cd-artist-color: var(--color-text-muted);
   --cd-hint-accent: #c01010;
   --cd-focus-color: #007aff;
   background-color: var(--cd-bg-color);
 }
 
 :global(html[data-theme="dark"]) .layout {
-  --cd-bg-color: #191b1e;
-  --cd-title-color: #f2f2f7;
-  --cd-artist-color: #aeaeb2;
   --cd-hint-accent: #ff4d4d;
   --cd-focus-color: #64b5ff;
 }

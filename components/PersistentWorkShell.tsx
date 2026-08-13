@@ -17,7 +17,7 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
+import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -222,15 +222,15 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
   const wasWorkRouteRef = useRef(isWorkRoute);
-  // Layer B — soft-nav returns and case-study Back both snap work content
-  // (see peekInstantWorkContent). Cold "/" after intro stays orchestrated.
+  // Layer B — case-study Back snaps work content. About/Archive → Work
+  // replays the hero + grid entrance (soft-nav only skips the route fade).
   const instantArrivalRef = useRef(false);
   if (isWorkRoute && !wasWorkRouteRef.current) {
-    instantArrivalRef.current = peekInstantWorkContent();
+    instantArrivalRef.current = peekInstantBack();
   }
   wasWorkRouteRef.current = isWorkRoute;
-  // Off-route: snap to hidden (duration 0) so a later return can show cleanly
-  // under display:none. On-route: instant for soft-nav / Back arrivals.
+  // Off-route: snap to hidden so a later return has a from-state under
+  // display:none. On-route: instant only for case-study Back.
   const instant = !isWorkRoute || instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate

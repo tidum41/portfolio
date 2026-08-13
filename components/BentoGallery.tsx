@@ -121,6 +121,8 @@ interface Props {
     style?: CSSProperties;
     /** Soft-nav arrival: snap tiles in (no entrance stagger). */
     instant?: boolean;
+    /** When the persistent archive shell is shown, replay the entrance. */
+    active?: boolean;
 }
 
 // ── Pure utilities ─────────────────────────────────────────────────────────────
@@ -367,6 +369,7 @@ export default function BentoGallery({
     minZoomFactor = 0,
     style,
     instant = false,
+    active = true,
 }: Props) {
     const isStatic = false;
     const isDark = useIsDark();
@@ -408,9 +411,20 @@ export default function BentoGallery({
             setReady(true);
             return;
         }
-        const id = requestAnimationFrame(() => setReady(true));
-        return () => cancelAnimationFrame(id);
-    }, [instant]);
+        if (!active) {
+            setReady(false);
+            return;
+        }
+        setReady(false);
+        let id2 = 0;
+        const id1 = requestAnimationFrame(() => {
+            id2 = requestAnimationFrame(() => setReady(true));
+        });
+        return () => {
+            cancelAnimationFrame(id1);
+            cancelAnimationFrame(id2);
+        };
+    }, [instant, active]);
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
