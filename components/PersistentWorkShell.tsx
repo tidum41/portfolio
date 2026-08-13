@@ -171,8 +171,8 @@ function CardLabel({
  *     instant so it doesn't double-animate on top of that. The grid waits
  *     for "intro-done" (via useGridFirstLoadActive), then plays column-focus.
  *   - Case-study "Back": content snaps (silk/scroll contract).
- *   - Primary-nav Work/About/Archive: hero + grid replay the same 220ms /
- *     6px fade-up as case-study open. Hero wrapper stays instant during intro.
+ *   - Primary-nav Work/About/Archive: hero + grid replay column-focus enter.
+ *     Hero wrapper stays instant during intro.
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
