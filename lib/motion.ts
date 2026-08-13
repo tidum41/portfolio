@@ -14,12 +14,14 @@ export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-eas
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// Kept for DialKit / older callers. Page spawn does not scale, and
-// primary-nav keep-alive pages snap rather than sliding in from the side.
+// Page spawn does not scale. Column-focus enter is fade + 6px settle.
 export const XMB_ENTRANCE_SCALE = 1;
 
 /** Resting / reduced-motion transform for spawn items. */
 export const SPAWN_REST = "translate(0px, 0px)";
+
+/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content. */
+export const SPAWN_FROM_OPACITY = 0.4;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;
@@ -41,7 +43,7 @@ export const DURATION = {
 } as const;
 
 export interface EntranceDefaults {
-  x: number;          // px, XMB-style arrive-from-the-side
+  x: number;          // px, unused for column-focus (always 0)
   y: number;          // px, slight settle-up
   duration: number;   // s, per-item
   stagger: number;    // s, delay increment between items
@@ -50,8 +52,8 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Content spawn — same quiet fade-up as case-study open. Primary-nav
-// keep-alive returns snap (see peekKeepAliveSnap); this is for cold load.
+// Column-focus enter — same quiet fade-up as case-study open. Played on
+// keep-alive Work/About/Archive show (primary nav) and on cold load.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
   y: 6,

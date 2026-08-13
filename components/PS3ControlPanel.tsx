@@ -681,11 +681,15 @@ export default function PS3ControlPanel({
     };
   }, [visible]);
 
-  // `instantReturn` is Layer B's Case-study Back contract. The panel remounts
-  // because it portals to document.body, but must not become the only thing
-  // still moving after the kept-alive work content has restored instantly.
+  // Case-study Back snaps. Primary-nav return replays the 220ms fade so the
+  // pill joins the work grid chorus instead of sitting still or moving alone.
   useSafeLayoutEffect(() => {
     if (!posReady) return;
+    if (!visible) {
+      setShown(false);
+      setShowTransition(false);
+      return;
+    }
     const revealImmediately = () => {
       setShowTransition(false);
       setShown(true);
@@ -729,7 +733,7 @@ export default function PS3ControlPanel({
     }
     window.addEventListener("intro-done", reveal, { once: true });
     return () => window.removeEventListener("intro-done", reveal);
-  }, [instantReturn, posReady, reduced]);
+  }, [instantReturn, posReady, reduced, visible]);
 
   // Sync dark mode from html[data-theme]
   useEffect(() => {

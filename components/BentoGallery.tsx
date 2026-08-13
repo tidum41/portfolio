@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
 
 const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
@@ -420,7 +420,7 @@ export default function BentoGallery({
 
     // Reveal as soon as layout is ready — LQIP posters already paint the
     // tiles, so waiting on full-res downloads just left empty holes.
-    // Soft-nav snaps ready immediately (no one-frame blank).
+    // Primary-nav show plays the 220ms fade from 0.4; instant is Back-only.
     const [ready, setReady] = useState(instant);
     const genRef = useRef(0);
     useLayoutEffect(() => {
@@ -1476,7 +1476,7 @@ export default function BentoGallery({
                                 left: pos.left,
                                 top: pos.top,
                                 width: iw,
-                                opacity: ready ? 1 : 0,
+                                opacity: ready ? 1 : SPAWN_FROM_OPACITY,
                                 transform: ready
                                     ? SPAWN_REST
                                     : spawnHidden(dk.x ?? ENTRANCE_DEFAULTS.x, dk.y),
