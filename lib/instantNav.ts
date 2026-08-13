@@ -54,7 +54,7 @@ export function clearInstantBack() {
 export function markSoftNav() {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(SOFT_KEY, "1");
-  // Notify chrome (custom cursor) to mute trail/hit-tests during the hitch window.
+  // Notify chrome that a primary-route transition started.
   window.dispatchEvent(new CustomEvent("soft-nav-start"));
 }
 

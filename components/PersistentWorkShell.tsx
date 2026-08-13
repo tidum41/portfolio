@@ -455,6 +455,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const openPopupHandler = (id: PopupId) => {
     if (id === "cd") {
+      setHasEverBeenActive(true);
+      setHeavyMediaLive(true);
       setCdPosterFade(false);
       setCdPosterOpacity(1);
     } else {
@@ -520,6 +522,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   }, [openPopup, popupHabitEl]);
 
   return (
+    <>
     <div
       style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
       aria-hidden={!isWorkRoute}
@@ -663,35 +666,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             </EntranceItem>
           </div>
 
-          {openPopup === "cd" && (
-            <ProjectPopup
-              open={popupVisible}
-              onClose={closePopup}
-              onExitComplete={() => handlePopupExitComplete("cd")}
-              title="Drag a CD"
-              sub="exploration"
-              maxWidth={POPUP_EMBED_MAX_W}
-              panelBg="var(--color-modal-bg)"
-            >
-              <div
-                className="project-image"
-                style={{
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  position: "relative",
-                  // Preferred height drives the panel; flex-shrink + minHeight 0
-                  // let it compress when ProjectPopup hits maxHeight.
-                  height: CD_POPUP_EMBED_H,
-                  flex: "1 1 auto",
-                  minHeight: 0,
-                  background: "var(--color-modal-bg)",
-                }}
-              >
-                <div ref={setPopupCdEl} style={{ position: "absolute", inset: 0 }} />
-              </div>
-            </ProjectPopup>
-          )}
-
           {/* ── Right column ── */}
           <div className="portfolio-grid-col">
             {projects
@@ -779,35 +753,6 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               </ProjectCardLift>
             </EntranceItem>
           </div>
-
-          {openPopup === "habit" && (
-            <ProjectPopup
-              open={popupVisible}
-              onClose={closePopup}
-              onExitComplete={() => handlePopupExitComplete("habit")}
-              title="Dumb Habit Tracker"
-              sub="product design + frontend"
-              maxWidth={HABIT_POPUP_MAX_W}
-              panelBg="var(--color-phone-bg)"
-            >
-              <div
-                style={{
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  position: "relative",
-                  height: HABIT_POPUP_EMBED_H,
-                  flex: "1 1 auto",
-                  minHeight: 0,
-                  background: "var(--color-phone-bg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
-              </div>
-            </ProjectPopup>
-          )}
         </section>
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
@@ -819,13 +764,69 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           />
         )}
       </div>
+    </div>
+
+      {isWorkRoute && openPopup === "cd" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("cd")}
+          title="Drag a CD"
+          sub="exploration"
+          maxWidth={POPUP_EMBED_MAX_W}
+          panelBg="var(--color-modal-bg)"
+        >
+          <div
+            className="project-image"
+            style={{
+              borderRadius: 4,
+              overflow: "hidden",
+              position: "relative",
+              height: CD_POPUP_EMBED_H,
+              flex: "1 1 auto",
+              minHeight: 0,
+              background: "var(--color-modal-bg)",
+            }}
+          >
+            <div ref={setPopupCdEl} style={{ position: "absolute", inset: 0 }} />
+          </div>
+        </ProjectPopup>
+      )}
+
+      {isWorkRoute && openPopup === "habit" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("habit")}
+          title="Dumb Habit Tracker"
+          sub="product design + frontend"
+          maxWidth={HABIT_POPUP_MAX_W}
+          panelBg="var(--color-phone-bg)"
+        >
+          <div
+            style={{
+              borderRadius: 4,
+              overflow: "hidden",
+              position: "relative",
+              height: HABIT_POPUP_EMBED_H,
+              flex: "1 1 auto",
+              minHeight: 0,
+              background: "var(--color-phone-bg)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+          </div>
+        </ProjectPopup>
+      )}
 
       {/*
-        CD mounts while heavy media is live (work route, or briefly after
-        leave so teardown doesn't contend with About/Archive paint). Off-route
-        the theme poster covers the card. Habit live embed stays popup-only.
+        CD mounts while heavy media is live, or immediately when the modal
+        opens (idle teardown may have unmounted it). Habit stays popup-only.
       */}
-      {hasEverBeenActive && heavyMediaLive && (
+      {hasEverBeenActive && (heavyMediaLive || openPopup === "cd") && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
@@ -833,14 +834,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       {openPopup === "habit" && isWorkRoute && habitPortalTarget && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
-            // Always expanded in the popup — toggling boost after portal
-            // settle was shifting the phone on open (worse in light mode).
             expanded
             initialTheme={habitWidgetTheme}
             onWidgetThemeChange={onHabitWidgetThemeChange}
           />
         </EmbedPortal>
       )}
-    </div>
+    </>
   );
 }

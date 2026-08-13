@@ -99,6 +99,9 @@ function computeHeroAlignedPos(): {x:number;y:number} | null {
   const heroP = joolaLink?.closest("p");
   if (!heroP) return null;
   const r = heroP.getBoundingClientRect();
+  // display:none shells report a 0×0 rect — treating that as a real anchor
+  // parks the pill at the viewport origin.
+  if (r.width < 8 || r.height < 8) return null;
   return {
     x: Math.round(r.left + window.scrollX),
     y: Math.round(r.bottom + 16 + window.scrollY),
@@ -650,6 +653,33 @@ export default function PS3ControlPanel({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Work was display:none on About/Archive, so the hero rect was 0. Re-read
+  // alignment whenever the pill becomes visible again (and after soft-nav
+  // layout has flushed). Skip if the user dragged it.
+  useSafeLayoutEffect(() => {
+    if (!visible) return;
+    if (hasDraggedRef.current) return;
+    let cancelled = false;
+    const place = () => {
+      if (cancelled || hasDraggedRef.current) return;
+      const pos = computeNavAlignedPos();
+      if (!pos) return;
+      startTransition(() => {
+        setPillPos(pos);
+        setFlipped(shouldFlip(pos.y));
+        setPosReady(true);
+      });
+    };
+    place();
+    const raf = requestAnimationFrame(() => requestAnimationFrame(place));
+    window.addEventListener("soft-nav-settled", place);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("soft-nav-settled", place);
+    };
+  }, [visible]);
 
   // `instantReturn` is Layer B's Case-study Back contract. The panel remounts
   // because it portals to document.body, but must not become the only thing
