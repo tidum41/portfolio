@@ -56,8 +56,7 @@ export function CssEntranceStagger({
 }) {
   const [ready, setReady] = useState(instant);
   const [snap, setSnap] = useState(instant);
-  const readyRef = useRef(ready);
-  readyRef.current = ready;
+  const genRef = useRef(0);
   const counterRef = useRef(0);
   counterRef.current = 0;
 
@@ -66,26 +65,26 @@ export function CssEntranceStagger({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const noMotion = instant || prefersReduced;
+    if (!active) {
+      // Invalidate in-flight show timers so a stale afterPaint cannot
+      // un-hide this page while it's off-route.
+      genRef.current += 1;
+      setSnap(true);
+      setReady(false);
+      return;
+    }
     if (noMotion) {
       setSnap(true);
       setReady(true);
       return;
     }
-    if (!active) {
-      // Snap hidden so display:none doesn't eat the next show transition.
-      setSnap(true);
-      setReady(false);
-      return;
-    }
     setSnap(false);
-    // Already visible (effect re-ran while on-route) — don't blank mid-flight.
-    // Hide is the only path that sets ready false; cancelled rAFs must not
-    // leave a visible page stuck at opacity 0.
-    if (readyRef.current) return;
-    // Two frames after becoming visible: browsers skip transitions on
-    // elements that were display:none unless opacity:0 paints first.
-    // Timeout fallback: Strict Mode / fast back-and-forth can cancel both rAFs.
-    return afterPaint(() => setReady(true));
+    const gen = genRef.current;
+    // Fire-and-forget — do not return afterPaint's cancel. Cleanup was
+    // aborting the reveal and leaving keep-alive About copy at opacity 0.
+    afterPaint(() => {
+      if (genRef.current === gen) setReady(true);
+    });
   }, [active, instant]);
 
   // About nests ~6 items under 2 layout columns — don't derive stagger from
@@ -105,7 +104,12 @@ export function CssEntranceStagger({
         takeIndex,
       }}
     >
-      <div className={className} style={style} {...rest}>
+      <div
+        className={className}
+        style={style}
+        {...rest}
+        data-entrance={ready ? "in" : "out"}
+      >
         {children}
       </div>
     </Ctx.Provider>
