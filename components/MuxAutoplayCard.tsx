@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import MuxPlayer from "@mux/mux-player-react";
-import "@mux/mux-player";
 import { useDialKit } from "dialkit";
+import MuxMediaSlot, { muxPosterUrl } from "@/components/MuxMediaSlot";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
@@ -149,20 +148,14 @@ export default function MuxAutoplayCard({
   useEffect(() => {
     const root = containerRef.current;
     const pauseEl = () => {
-      const el = root?.querySelector("mux-player") as HTMLElement & {
-        pause?: () => void;
-      } | null;
-      try { el?.pause?.(); } catch { /* ignore */ }
+      const el = root?.querySelector("video");
+      try { el?.pause(); } catch { /* ignore */ }
     };
     const playEl = () => {
-      const el = root?.querySelector("mux-player") as HTMLElement & {
-        play?: () => Promise<void> | void;
-      } | null;
+      const el = root?.querySelector("video");
       try {
-        const p = el?.play?.();
-        if (p && typeof (p as Promise<void>).catch === "function") {
-          (p as Promise<void>).catch(() => {});
-        }
+        const p = el?.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
       } catch { /* ignore */ }
     };
 
@@ -175,7 +168,7 @@ export default function MuxAutoplayCard({
 
   // Poster stays painted under the player so tear-down/remount never blanks
   // the card. Player only exists while scheduled (see mountReady).
-  const posterUrl = `https://image.mux.com/${playbackId}/thumbnail.webp?time=1&width=640`;
+  const posterUrl = muxPosterUrl(playbackId, 640);
   const showPlayer = shouldLoad && mountReady;
 
   const video = (
@@ -207,26 +200,10 @@ export default function MuxAutoplayCard({
           }}
         />
         {showPlayer && (
-          <MuxPlayer
+          <MuxMediaSlot
             playbackId={playbackId}
-            autoPlay="muted"
-            loop
-            muted
-            playsInline
-            nohotkeys
-            preload="none"
-            poster={posterUrl}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              "--controls": "none",
-              "--media-background-color": "transparent",
-              "--media-object-fit": "cover",
-            }}
+            fill
+            playing={playing}
           />
         )}
       </div>

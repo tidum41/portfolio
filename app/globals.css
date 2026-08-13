@@ -1015,6 +1015,28 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-position: center;
   --media-background-color: transparent;
 }
+/* Work-grid cards: cover a fixed aspect box. mux-player used contain + hover
+   chrome, which letterboxed the video (dark bars, accent hairline). */
+.mux-media-slot--fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+.mux-media-slot--fill .mux-media-sizer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mux-media-slot.mux-media-slot--fill .mux-cover,
+.mux-media-slot.mux-media-slot--fill video.mux-cover {
+  object-fit: cover;
+  --media-object-fit: cover;
+  pointer-events: none;
+}
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
 html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.28) !important; }
