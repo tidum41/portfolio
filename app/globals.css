@@ -964,6 +964,19 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-position: center;
 }
 
+/* XMB brightness breathes slowly — placeholder while Mux HLS is still
+   arriving, same box as the video so the page doesn't reflow. */
+@keyframes xmb-breathe {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+.mux-media-slot__breathe {
+  animation: xmb-breathe 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mux-media-slot__breathe { animation: none; }
+}
+
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
 html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.28) !important; }
 @media (hover: hover) and (pointer: fine) {

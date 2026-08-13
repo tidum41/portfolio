@@ -224,6 +224,7 @@ export default function MuxAutoplayCard({
               display: "block",
               "--controls": "none",
               "--media-background-color": "transparent",
+              "--media-object-fit": "cover",
             }}
           />
         )}

@@ -8,7 +8,7 @@ import { markSoftNav } from "@/lib/instantNav";
  */
 export const CASE_STUDY_LCP: Record<string, string> = {
   "/ucla-sublease":
-    "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp",
+    "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=1&width=1280",
   "/sviz": "/images/sviz/hero-channel-screenshot.png",
 };
 

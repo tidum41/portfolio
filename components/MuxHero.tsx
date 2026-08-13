@@ -1,102 +1,114 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import MuxPlayer from "@mux/mux-player-react";
+import { cssEase, EASE_OPACITY, MUX_POSTER_FADE_MS } from "@/lib/motion";
 
-const MuxPlayer = dynamic(() => import("@mux/mux-player-react"), { ssr: false });
+const FADE = `opacity ${MUX_POSTER_FADE_MS}ms ${cssEase(EASE_OPACITY)}`;
+
+function muxPoster(playbackId: string, width: number, time = 1) {
+  return `https://image.mux.com/${playbackId}/thumbnail.webp?time=${time}&width=${width}`;
+}
+
+function muxBlur(playbackId: string, time = 1) {
+  return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=${time}&width=32`;
+}
 
 /**
- * Poster-first LCP: paint the Mux thumbnail immediately via next/image
- * (priority), then mount MuxPlayer on idle / in-view / first interaction.
- * Invisible sizing img preserves the exact aspect ratio (CLS) before and
- * after the player mounts — same end visual as always-on MuxPlayer.
+ * Case-study hero Mux. The slot is sized up front (aspect-ratio) so the
+ * layout never jumps. A blurred LQIP + sharp poster paint immediately; the
+ * player sits underneath and only crossfades in on canplay — a black
+ * mux-player chrome used to cover the poster before HLS was ready, which
+ * read as "the video didn't load."
  */
-export default function MuxHero({ playbackId }: { playbackId: string }) {
-  const thumbnail = `https://image.mux.com/${playbackId}/thumbnail.webp`;
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [mountPlayer, setMountPlayer] = useState(false);
+export default function MuxHero({
+  playbackId,
+  aspectRatio = "16 / 9",
+}: {
+  playbackId: string;
+  aspectRatio?: string;
+}) {
+  const poster = muxPoster(playbackId, 1280);
+  const blur = muxBlur(playbackId);
+  const [ready, setReady] = useState(false);
+  const [mount, setMount] = useState(false);
 
   useEffect(() => {
-    if (mountPlayer) return;
-    const root = rootRef.current;
-    if (!root) return;
-
-    let cancelled = false;
-    const mount = () => {
-      if (!cancelled) setMountPlayer(true);
-    };
-
-    const onInteract = () => mount();
-    root.addEventListener("pointerdown", onInteract, { once: true });
-    root.addEventListener("focusin", onInteract, { once: true });
-
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) mount();
-      },
-      { rootMargin: "200px 0px" },
-    );
-    obs.observe(root);
-
-    let idleId: number | undefined;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(() => mount(), { timeout: 1500 });
-    } else {
-      timeoutId = setTimeout(mount, 600);
-    }
-
-    return () => {
-      cancelled = true;
-      root.removeEventListener("pointerdown", onInteract);
-      root.removeEventListener("focusin", onInteract);
-      obs.disconnect();
-      if (idleId != null && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId != null) clearTimeout(timeoutId);
-    };
-  }, [mountPlayer]);
+    setMount(true);
+  }, []);
 
   return (
-    <div ref={rootRef} style={{ position: "relative", width: "100%" }}>
-      {/* Invisible thumbnail sets the exact aspect ratio before/while the
-          poster + player paint — Mux serves this from CDN near-instantly. */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic AR probe; visible LCP is next/image below */}
+    <div
+      className="mux-media-slot"
+      style={{
+        position: "relative",
+        width: "100%",
+        aspectRatio,
+        overflow: "hidden",
+        background: "var(--color-placeholder)",
+        isolation: "isolate",
+      }}
+    >
       <img
-        src={thumbnail}
+        src={blur}
         alt=""
         aria-hidden
-        fetchPriority="high"
-        style={{ display: "block", width: "100%", height: "auto", visibility: "hidden" }}
+        className={ready ? undefined : "mux-media-slot__breathe"}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          transform: "scale(1.08)",
+          filter: "blur(16px)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
       />
-      <Image
-        src={thumbnail}
+      <img
+        src={poster}
         alt=""
-        fill
-        priority
-        sizes="(max-width: 767px) 100vw, 750px"
-        unoptimized
-        style={{ objectFit: "cover" }}
+        aria-hidden
+        decoding="async"
+        fetchPriority="high"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          pointerEvents: "none",
+          zIndex: 2,
+          opacity: ready ? 0 : 1,
+          transition: FADE,
+        }}
       />
-      {mountPlayer && (
+      {mount && (
         <MuxPlayer
+          key={playbackId}
           playbackId={playbackId}
+          streamType="on-demand"
           autoPlay="muted"
           loop
           muted
           playsInline
           nohotkeys
-          poster={thumbnail}
+          preload="auto"
+          poster={poster}
+          onCanPlay={() => setReady(true)}
+          onPlaying={() => setReady(true)}
+          className="mux-cover"
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
+            zIndex: 0,
             display: "block",
             "--controls": "none",
             "--media-background-color": "transparent",
+            "--media-object-fit": "cover",
           }}
         />
       )}

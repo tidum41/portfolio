@@ -10,15 +10,17 @@ import {
   type ReactNode,
 } from "react";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, XMB_ENTRANCE_SCALE, cssEase } from "@/lib/motion";
+
+const ENTRANCE_EASE_Y = cssEase(EASE_Y);
+const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /**
  * Same fade-up + slide-up vocabulary as Framer EntranceStagger/EntranceItem
  * and BentoGallery — CSS transitions only (no Framer, no DialKit on the
  * hot path). Use for route-arrival reveals where the motion is simple.
+ * Scale is the XMB unselected→focus settle (icons shrink slightly at rest).
  */
-
-const ENTRANCE_EASE_CSS = `cubic-bezier(${EASE_Y.join(",")})`;
 
 type CssEntranceCtx = {
   ready: boolean;
@@ -151,10 +153,12 @@ export function CssEntranceItem({
       className={className}
       style={{
         opacity: show ? 1 : 0,
-        transform: show ? "translateY(0px)" : `translateY(${ctx.y}px)`,
+        transform: show
+          ? "translateY(0px) scale(1)"
+          : `translateY(${ctx.y}px) scale(${XMB_ENTRANCE_SCALE})`,
         transition: ctx.instant
           ? "none"
-          : `opacity ${ctx.duration}s ${ENTRANCE_EASE_CSS} ${delay}s, transform ${ctx.duration}s ${ENTRANCE_EASE_CSS} ${delay}s`,
+          : `opacity ${ctx.duration}s ${ENTRANCE_EASE_OP} ${delay}s, transform ${ctx.duration}s ${ENTRANCE_EASE_Y} ${delay}s`,
         ...style,
       }}
     >

@@ -12,6 +12,14 @@ export const EASE_Y:       CubicBezier = [0.22, 1, 0.36, 1];  // "settle" curve
 export const EASE_EXIT:    CubicBezier = [0.4, 0, 1, 1];      // fast, simple dismissal
 export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease / PS3ControlPanel
 
+export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
+
+// XMB icons shrink slightly when unselected. Page entrances use the same
+// "settle into focus" scale — not a bounce, not a pop.
+export const XMB_ENTRANCE_SCALE = 0.97;
+
+export const MUX_POSTER_FADE_MS = 480;
+
 export const PANEL_DURATION = {
   backdrop: { enter: 0.22, exit: 0.16 },
   panel:    { enter: 0.26, exit: 0.16 },
