@@ -12,10 +12,9 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_ENTRANCE, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
 
-const ENTRANCE_EASE_Y = cssEase(EASE_Y);
-const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
+const ENTRANCE_EASE = cssEase(EASE_ENTRANCE);
 
 /** Full image crossfades over an instant LQIP/blur poster (archive tiles). */
 function BlurUpImage({
@@ -1483,7 +1482,7 @@ export default function BentoGallery({
                                 // object is ambiguous across re-renders and React warns on it.
                                 transition: entranceInstant
                                     ? "none"
-                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_OP} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_Y} ${entranceDelay}s`,
+                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE} ${entranceDelay}s`,
                             }}
                         >
                         <div

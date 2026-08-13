@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallb
 import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y, ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { EASE_ENTRANCE, ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -35,7 +35,7 @@ const FADE_MS = 700;
 // return it shares the work entrance's opacity + settle language, so the
 // pill joins the hero/grid chorus rather than entering as an isolated layer.
 // Case-study Back passes instantReturn and deliberately snaps instead.
-const RETURN_EASE = `cubic-bezier(${EASE_Y.join(", ")})`;
+const RETURN_EASE = `cubic-bezier(${EASE_ENTRANCE.join(", ")})`;
 const RETURN_FADE_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const PICKER_MAX_H = 125;
 const BODY_H = 620;

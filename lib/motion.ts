@@ -11,18 +11,20 @@ export const EASE_OPACITY: CubicBezier = [0.16, 1, 0.3, 1];   // == --spring-pan
 export const EASE_Y:       CubicBezier = [0.22, 1, 0.36, 1];  // "settle" curve
 export const EASE_EXIT:    CubicBezier = [0.4, 0, 1, 1];      // fast, simple dismissal
 export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease / PS3ControlPanel
+// XMB column-focus: same ease on fade + settle so they read as one glide.
+export const EASE_ENTRANCE: CubicBezier = [0.23, 1, 0.32, 1];
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// Page spawn does not scale. Column-focus enter is fade + 12px settle.
+// Page spawn does not scale. Column-focus enter is fade + settle-up.
 export const XMB_ENTRANCE_SCALE = 1;
 
 /** Resting / reduced-motion transform for spawn items. */
 export const SPAWN_REST = "translate(0px, 0px)";
 
 /** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content.
- *  0.22 reads on photos and type; 0.4 was too close to rest to notice. */
-export const SPAWN_FROM_OPACITY = 0.22;
+ *  Dim enough to read as XMB unfocused → focused, still visible if a tween skips. */
+export const SPAWN_FROM_OPACITY = 0.12;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;
@@ -53,14 +55,14 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Column-focus enter — same recipe as case-study open, slightly more travel
-// so keep-alive Work/About/Archive actually read as a focus change.
+// Column-focus enter — XMB unfocused → focused. Fade does the character;
+// a little extra travel + a longer ease-out tail keeps it graceful.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
-  y: 12,
-  duration: 0.28,
-  stagger: 0.05,
-  maxSpread: 0.12,
+  y: 16,
+  duration: 0.36,
+  stagger: 0.06,
+  maxSpread: 0.18,
   scale: 1,
 };
 
