@@ -4,8 +4,8 @@ import { useRef } from "react";
 import { peekKeepAliveSnap } from "@/lib/instantNav";
 
 /**
- * Rising-edge latch: first time this keep-alive route is current, snap only
- * if we arrived via primary nav / case-study Back. Later returns always snap.
+ * Rising-edge latch: snap keep-alive content only for case-study Back.
+ * Primary-nav arrivals stay `false` so the column-focus fade can play.
  * Staying on the route does not flip instant mid-stagger.
  */
 export function useKeepAliveInstant(onRoute: boolean): boolean {

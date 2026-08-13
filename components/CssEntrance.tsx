@@ -10,14 +10,14 @@ import {
   type ReactNode,
 } from "react";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
 
 const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /**
  * Same quiet fade-up as Framer EntranceItem and BentoGallery.
- * CSS transitions only. Primary-nav keep-alive returns pass instant.
+ * CSS transitions only. Primary-nav keep-alive returns play this enter.
  */
 
 type CssEntranceCtx = {
@@ -154,7 +154,7 @@ export function CssEntranceItem({
     <div
       className={className}
       style={{
-        opacity: show ? 1 : 0,
+        opacity: show ? 1 : SPAWN_FROM_OPACITY,
         transform: show ? SPAWN_REST : spawnHidden(ctx.x, ctx.y),
         transition: ctx.instant
           ? "none"

@@ -5,11 +5,9 @@
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
  * Layer B — work-shell content (PersistentWorkShell / EntranceItem):
- *   - Instant for CaseStudyTOC Back (peekInstantBack()) AND primary-nav
- *     Work/About/Archive (peekSoftNav()). Keep-alive pages do not replay
- *     a spawn chorus on every click — that read as “weird” page motion.
- *   - Cold load of a keep-alive route may play the quiet case-study fade
- *     once. Later visits snap.
+ *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
+ *   - Primary-nav Work/About/Archive skips the route fade (Layer A) and
+ *     plays the same 220ms / 6px column-focus fade as case-study open.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -24,12 +22,12 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; keep-alive shells snap
- *   First about/archive visit → mount shell; snap if arrived via primary nav
- *   Later about/archive visit → display toggle, content already at rest
+ *   "/" ↔ about/archive       → soft fade skip; destination column-focus enter
+ *   First about/archive visit → mount shell + column-focus enter
+ *   Later about/archive visit → display toggle + column-focus enter
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work content snaps
+ *   case-study → "/" via nav  → soft fade skip; work column-focus enter
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
@@ -69,9 +67,9 @@ export function clearSoftNav() {
   sessionStorage.removeItem(SOFT_KEY);
 }
 
-/** Instant-back OR soft primary-nav — keep-alive content snaps, no spawn. */
+/** Case-study Back only — keep-alive content snaps. Primary nav plays enter. */
 export function peekKeepAliveSnap(): boolean {
-  return peekInstantBack() || peekSoftNav();
+  return peekInstantBack();
 }
 
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
@@ -79,14 +77,14 @@ export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
 
-/** Case-study Back only — not used for primary-nav (that is peekKeepAliveSnap). */
+/** Case-study Back only — work content snaps. Primary nav plays enter. */
 export function peekInstantWorkContent(): boolean {
   return peekInstantBack();
 }
 
 /**
  * Latch soft-nav at destination first paint. AnimationProvider clears the
- * session flag in an effect; pages that should snap (About) must read this
+ * session flag in an effect; Layer A (route fade skip) must read this
  * during render before that clear — useState(initializer) is the latch.
  */
 export function peekSoftNavArrival(): boolean {

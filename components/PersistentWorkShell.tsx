@@ -169,12 +169,10 @@ function CardLabel({
  *   - True first load at "/" (data-intro gate active): hero + PS3Silk's own
  *     slow first-load animation is the whole show — this wrapper stays
  *     instant so it doesn't double-animate on top of that. The grid waits
- *     for "intro-done" (via useGridFirstLoadActive), then plays the same
- *     entrance stagger as every other case, giving the hero its moment.
- *   - Case-study "Back" and primary-nav Work/About/Archive: content snaps.
- *     Replaying a spawn chorus on every section click felt like a glitch.
- *   - Cold load at "/": intro, then the quiet grid fade (same as case-study
- *     open). Hero wrapper stays instant so it doesn't double the intro.
+ *     for "intro-done" (via useGridFirstLoadActive), then plays column-focus.
+ *   - Case-study "Back": content snaps (silk/scroll contract).
+ *   - Primary-nav Work/About/Archive: hero + grid replay the same 220ms /
+ *     6px fade-up as case-study open. Hero wrapper stays instant during intro.
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
@@ -223,8 +221,8 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
   const snapArrival = useKeepAliveInstant(isWorkRoute);
-  // Off-route: snap to hidden so display:none isn't mid-tween. On-route:
-  // snap for primary-nav / Back; cold load may still play the quiet fade.
+  // Off-route: snap hidden under display:none. On-route: snap only for
+  // case-study Back; primary nav plays the column-focus fade.
   const instant = !isWorkRoute || snapArrival;
 
   // Whether this session's very first paint had the first-load intro gate

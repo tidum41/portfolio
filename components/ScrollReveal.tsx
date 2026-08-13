@@ -4,11 +4,11 @@ import { Children, createContext, useContext, useLayoutEffect, useRef } from "re
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, spawnHidden } from "@/lib/motion";
+import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
 import type { ReactNode, CSSProperties } from "react";
 
-/** When true, nested EntranceItems snap (soft-nav About arrival). */
+/** When true, nested EntranceItems snap (case-study Back). */
 const InstantEntranceCtx = createContext(false);
 
 /** Nested EntranceItems inherit the parent's DialKit panel + defaults. */
@@ -92,7 +92,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
   return (
     <motion.div
       variants={{
-        hidden:  { opacity: 0, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, 16) },
+        hidden:  { opacity: SPAWN_FROM_OPACITY, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
         visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
@@ -224,9 +224,10 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
 
   // Keep-alive shells hide with display:none. Framer often skips applying
   // `hidden` under that, then on return thinks the node is already `visible`
-  // while the DOM is still opacity:0 — content stays gone. Drive opacity/x/y
-  // ourselves so hide always lands, and every active false→true starts from 0.
-  const opacityMv = useMotionValue(0);
+  // while the DOM is still at spawn opacity — content stays gone. Drive
+  // opacity/x/y ourselves so hide always lands, and every active false→true
+  // starts from SPAWN_FROM_OPACITY (never 0).
+  const opacityMv = useMotionValue(SPAWN_FROM_OPACITY);
   const xMv = useMotionValue(0);
   const yMv = useMotionValue(0);
   const transformMv = useTransform([xMv, yMv], (latest) => {
@@ -249,7 +250,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
-      opacityMv.set(0);
+      opacityMv.set(SPAWN_FROM_OPACITY);
       xMv.set(rm ? 0 : xPx);
       yMv.set(rm ? 0 : yPx);
       return;
@@ -261,7 +262,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       yMv.set(0);
       return;
     }
-    opacityMv.set(0);
+    opacityMv.set(SPAWN_FROM_OPACITY);
     xMv.set(xPx);
     yMv.set(yPx);
     const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
@@ -287,7 +288,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
           ? undefined
           : {
               hidden: {
-                opacity: 0,
+                opacity: SPAWN_FROM_OPACITY,
                 transform: reduced ? SPAWN_REST : spawnHidden(x, y),
               },
               visible: {
