@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import BentoHeroStatic from "@/components/BentoHeroStatic";
-import CdPlayerPoster from "@/components/CdPlayerPoster";
 import { CssEntranceStagger, CssEntranceItem } from "@/components/CssEntrance";
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
@@ -39,16 +38,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * About CD is visible under the hero on desktop. Keep the product poster as
- * the first-open face — auto-mounting the live player (~0.5s) was competing
- * with the cursor. Live player starts on explicit click.
+ * About CD is visible under the hero on desktop. First open keeps a sized
+ * placeholder (not the Work grid/modal poster — that asset is the wrong
+ * crop and modal state). Live player starts on click.
  */
 function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
   const [live, setLive] = useState(false);
 
   useEffect(() => {
     if (!routeActive || live) return;
-    // Warm the chunk only — do not construct the tree until click.
     void import("@/components/CDPlayer");
   }, [routeActive, live]);
 
@@ -80,9 +78,7 @@ function DeferredAboutCD({ routeActive }: { routeActive: boolean }) {
               cursor: "pointer",
               background: "transparent",
             }}
-          >
-            <CdPlayerPoster opacity={1} fade={false} />
-          </button>
+          />
         )}
         {live && (
           <CDPlayer style={{ marginTop: 0, height: "100%", minHeight: 0 }} variant="about" />

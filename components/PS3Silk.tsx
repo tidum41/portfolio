@@ -109,6 +109,12 @@ export default function PS3Silk({
     lifecycleRef.current?.wake();
   }, [active]);
 
+  useEffect(() => {
+    const pause = () => lifecycleRef.current?.pause();
+    window.addEventListener("soft-nav-start", pause);
+    return () => window.removeEventListener("soft-nav-start", pause);
+  }, []);
+
   // ps3-update event
   useEffect(() => {
     const handler = (e: Event) => {

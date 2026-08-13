@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
 import { peekSoftNav } from "@/lib/instantNav";
+import { parkShellStyle } from "@/lib/shellPark";
 
 /**
  * Session keep-alive for /about.
@@ -43,7 +44,7 @@ export default function PersistentAboutShell() {
 
   return (
     <div
-      style={{ display: onAbout ? "block" : "none", position: "relative", zIndex: 1 }}
+      style={{ ...parkShellStyle(onAbout) }}
       aria-hidden={!onAbout}
       inert={!onAbout}
       {...(!onAbout ? { "data-nosnippet": true } : {})}
