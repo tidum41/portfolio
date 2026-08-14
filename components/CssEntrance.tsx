@@ -10,9 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_ENTRANCE, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
 
-const ENTRANCE_EASE = cssEase(EASE_ENTRANCE);
+const ENTRANCE_EASE_Y = cssEase(EASE_Y);
+const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
 /**
  * Same quiet fade-up as Framer EntranceItem and BentoGallery.
@@ -70,8 +71,7 @@ export function CssEntranceStagger({
     if (!active) {
       genRef.current += 1;
       setSnap(true);
-      // Instant keep-alive: stay at rest. The shell's column fade hides us.
-      setReady(noMotion);
+      setReady(false);
       return;
     }
     if (noMotion) {
@@ -156,7 +156,7 @@ export function CssEntranceItem({
         transform: show ? SPAWN_REST : spawnHidden(ctx.x, ctx.y),
         transition: ctx.instant
           ? "none"
-          : `opacity ${ctx.duration}s ${ENTRANCE_EASE} ${delay}s, transform ${ctx.duration}s ${ENTRANCE_EASE} ${delay}s`,
+          : `opacity ${ctx.duration}s ${ENTRANCE_EASE_OP} ${delay}s, transform ${ctx.duration}s ${ENTRANCE_EASE_Y} ${delay}s`,
         ...style,
       }}
     >

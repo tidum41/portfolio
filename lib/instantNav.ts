@@ -4,11 +4,9 @@
  * Layer A — route opacity (AnimationProvider):
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
- * Layer B — keep-alive columns (Work / About / Archive):
- *   - Primary nav: previous shell hides; destination fades in (PAGE_FOCUS /
- *     .xmb-column). Never stack two pages. Inner cards stay at rest.
+ * Layer B — keep-alive content (Framer EntranceItem / CssEntrance / bento):
  *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
- *   - Cold "/" grid still staggers after intro (EntranceItem).
+ *   - Primary nav skips the route fade (Layer A) and replays the fade-up stagger.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -23,12 +21,12 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → old shell hides; destination fades over silk
- *   First about/archive visit → mount shell + column focus
- *   Later about/archive visit → column focus (children at rest)
+ *   "/" ↔ about/archive       → soft fade skip; destination Framer/CSS enter
+ *   First about/archive visit → mount shell + fade-up
+ *   Later about/archive visit → display toggle + fade-up
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work column focus
+ *   case-study → "/" via nav  → soft fade skip; work fade-up
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 

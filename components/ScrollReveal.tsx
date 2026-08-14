@@ -4,7 +4,7 @@ import { Children, createContext, useContext, useLayoutEffect, useRef } from "re
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, EASE_ENTRANCE, ENTRANCE_DEFAULTS, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden } from "@/lib/motion";
+import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
 import type { ReactNode, CSSProperties } from "react";
 
@@ -93,7 +93,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
     <motion.div
       variants={{
         hidden:  { opacity: SPAWN_FROM_OPACITY, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
-        visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: EASE_ENTRANCE } },
+        visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
       className={className}
@@ -263,12 +263,12 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       return;
     }
     opacityMv.set(SPAWN_FROM_OPACITY);
-    xMv.set(xPx);
+    xMv.set(0);
     yMv.set(yPx);
-    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: EASE_ENTRANCE });
-    const slideX = animate(xMv, 0, { duration, delay: itemDelay, ease: EASE_ENTRANCE });
-    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: EASE_ENTRANCE });
-    tweensRef.current = [fade, slideX, slideY];
+    // Opacity + Y only. Skip a third tween when x is always 0 (cheaper on nav).
+    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
+    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
+    tweensRef.current = [fade, slideY];
     // Fire-and-forget fallback. Clearing it on cleanup is what left grid
     // cards at opacity 0 after a keep-alive return.
     window.setTimeout(() => {
@@ -296,7 +296,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
                 transform: SPAWN_REST,
                 transition: {
                   duration: reduced ? 0 : dk.duration,
-                  ease: EASE_ENTRANCE,
+                  ease: PS3_EASE,
                 },
               },
             }
