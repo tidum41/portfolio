@@ -1,15 +1,15 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { PAGE_FOCUS } from "@/lib/motion";
+import { afterPaint } from "@/lib/afterPaint";
 
-export type ColumnPhase = "hidden" | "entering" | "in" | "leaving";
+export type ColumnPhase = "hidden" | "entering" | "in";
 
 /**
- * PS3 column focus for keep-alive shells.
- * Incoming: one CSS fade-up on the wrapper. Outgoing: dim in place, then hide.
- * `snap` (case-study Back) skips both. `playMountEnter` false keeps cold Work
- * at rest so the intro can own first paint.
+ * Keep-alive page show/hide. Outgoing hides immediately (never stacked with
+ * the destination — that painted two documents and read as overlap). Incoming
+ * plays one CSS fade after paint. `snap` skips the fade (case-study Back).
+ * `playMountEnter` false keeps cold Work at rest for the intro.
  */
 export function useColumnFocus(
   onRoute: boolean,
@@ -38,26 +38,13 @@ export function useColumnFocus(
       setPhase(onRoute ? "in" : "hidden");
       return;
     }
-    if (onRoute) {
-      if (phaseRef.current === "in" || phaseRef.current === "entering") {
-        if (phaseRef.current === "entering") {
-          const raf = requestAnimationFrame(() => {
-            requestAnimationFrame(() => setPhase("in"));
-          });
-          return () => cancelAnimationFrame(raf);
-        }
-        return;
-      }
-      setPhase("entering");
-      const raf = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setPhase("in"));
-      });
-      return () => cancelAnimationFrame(raf);
+    if (!onRoute) {
+      setPhase("hidden");
+      return;
     }
-    if (phaseRef.current === "hidden") return;
-    setPhase("leaving");
-    const t = window.setTimeout(() => setPhase("hidden"), PAGE_FOCUS.outMs);
-    return () => window.clearTimeout(t);
+    if (phaseRef.current === "in") return;
+    setPhase("entering");
+    return afterPaint(() => setPhase("in"));
   }, [onRoute, snap, reduced]);
 
   return phase;

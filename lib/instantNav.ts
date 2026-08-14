@@ -5,8 +5,8 @@
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
  * Layer B — keep-alive columns (Work / About / Archive):
- *   - Primary nav: one CSS column-focus fade on the shell (see PAGE_FOCUS /
- *     .xmb-column). Inner cards stay at rest.
+ *   - Primary nav: previous shell hides; destination fades in (PAGE_FOCUS /
+ *     .xmb-column). Never stack two pages. Inner cards stay at rest.
  *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
  *   - Cold "/" grid still staggers after intro (EntranceItem).
  *
@@ -23,7 +23,7 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; XMB column crossfade
+ *   "/" ↔ about/archive       → old shell hides; destination fades over silk
  *   First about/archive visit → mount shell + column focus
  *   Later about/archive visit → column focus (children at rest)
  *   "/" → case study          → soft fade skip; narrative entrance

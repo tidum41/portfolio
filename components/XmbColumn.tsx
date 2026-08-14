@@ -15,7 +15,7 @@ export default function XmbColumn({
   children,
 }: {
   phase: ColumnPhase;
-  /** Archive is already out of flow — don't absolute-position on leave. */
+  /** Archive: opacity-only. Transform on this wrapper traps position:fixed. */
   pin?: boolean;
   className?: string;
   style?: CSSProperties;

@@ -6,16 +6,15 @@ import XmbColumn from "@/components/XmbColumn";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
 import { useColumnFocus } from "@/lib/useColumnFocus";
-import { onWarmAbout, wasAboutWarmed } from "@/lib/keepAliveWarm";
 
 /**
- * Session keep-alive for /about. The shell plays XMB column focus;
- * inner copy stays at rest so it doesn't double-spawn.
+ * Session keep-alive for /about. Mounts on first visit; later visits are
+ * display toggles. The shell fades in; inner copy stays at rest.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
-  const hasVisited = useKeepAliveVisit(onAbout, wasAboutWarmed(), onWarmAbout);
+  const hasVisited = useKeepAliveVisit(onAbout);
   const snap = useKeepAliveInstant(onAbout);
   const phase = useColumnFocus(onAbout, { snap, playMountEnter: true });
 
@@ -23,7 +22,7 @@ export default function PersistentAboutShell() {
 
   return (
     <XmbColumn phase={phase}>
-      <AboutPageContent active={phase !== "hidden"} instant />
+      <AboutPageContent active={onAbout} instant />
     </XmbColumn>
   );
 }
