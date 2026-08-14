@@ -92,7 +92,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
   return (
     <motion.div
       variants={{
-        hidden:  { opacity: 0, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
+        hidden:  { opacity: SPAWN_FROM_OPACITY, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
         visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
       }}
       style={style}
@@ -288,7 +288,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
           ? undefined
           : {
               hidden: {
-                opacity: 0,
+                opacity: SPAWN_FROM_OPACITY,
                 transform: reduced ? SPAWN_REST : spawnHidden(x, y),
               },
               visible: {

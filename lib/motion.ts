@@ -52,13 +52,14 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Original portfolio Framer fade-up. Shared by work grid, about, archive.
+// XMB-like column focus: fade + short settle, no scale. Snappier than the
+// original 450ms Framer page spawn so Work↔About↔Archive doesn't feel late.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
-  y: 20,
-  duration: 0.45,
-  stagger: 0.05,
-  maxSpread: 0.4,
+  y: 12,
+  duration: 0.28,
+  stagger: 0.04,
+  maxSpread: 0.24,
   scale: 1,
 };
 

@@ -82,6 +82,7 @@ export default function BentoHero({ featured, top, bottom, style, priority = tru
             src={top.src}
             alt={top.alt}
             fill
+            priority={priority}
             quality={90}
             sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.topCropX}% ${dk.topCropY}%`, transform: `scale(${dk.topZoom})` }}
@@ -92,6 +93,7 @@ export default function BentoHero({ featured, top, bottom, style, priority = tru
             src={bottom.src}
             alt={bottom.alt}
             fill
+            priority={priority}
             quality={90}
             sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.bottomCropX}% ${dk.bottomCropY}%`, transform: `scale(${dk.bottomZoom})` }}

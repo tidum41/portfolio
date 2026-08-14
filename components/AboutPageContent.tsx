@@ -1,9 +1,10 @@
 "use client";
 
+import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
-import { ScrollReveal, StaggerReveal, StaggerItem, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
+import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,
   ABOUT_INTERESTS,
@@ -27,10 +28,26 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * About body — remounts with the /about route so Framer EntranceStagger
- * plays from initial="hidden" on first paint (the production page enter).
- */
+/** Compositor fade-up. Resting opacity is 1 — Framer hidden:0 was eating copy. */
+function Enter({
+  delay = 0,
+  children,
+  style,
+}: {
+  delay?: number;
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      className="ps3-enter"
+      style={{ ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function AboutPageContent() {
   const logoDk = useDialKit("About Logos", {
     cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
@@ -45,9 +62,9 @@ export default function AboutPageContent() {
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
         <div style={{ marginBottom: "var(--space-7)" }}>
-          <EntranceStagger active className="about-hero">
+          <div className="about-hero">
             <div className="about-hero-bio">
-              <EntranceItem>
+              <Enter delay={0}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
                   fontSize: 32,
@@ -57,18 +74,18 @@ export default function AboutPageContent() {
                   color: "var(--color-text-primary)",
                   margin: "0 0 4px",
                 }}>hello hello, i&apos;m mudit</h1>
-              </EntranceItem>
+              </Enter>
 
-              <EntranceItem>
+              <Enter delay={40}>
                 <p style={{
                   fontSize: 14,
                   lineHeight: 1.5,
                   color: "var(--color-text-muted)",
                   margin: "0 0 24px",
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
-              </EntranceItem>
+              </Enter>
 
-              <EntranceItem>
+              <Enter delay={80}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -79,18 +96,18 @@ export default function AboutPageContent() {
                 }}>
                   {ABOUT_BIO}
                 </p>
-              </EntranceItem>
+              </Enter>
 
-              <EntranceItem>
+              <Enter delay={120}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
                   color: "var(--color-text-secondary)",
                   margin: "0 0 4px",
                 }}>You can find me</p>
-              </EntranceItem>
+              </Enter>
 
-              <EntranceItem>
+              <Enter delay={160}>
                 <ul style={{
                   fontSize: 15,
                   lineHeight: 1.87,
@@ -103,17 +120,18 @@ export default function AboutPageContent() {
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </EntranceItem>
+              </Enter>
             </div>
 
             <div className="about-hero-bento-col">
-              <EntranceItem style={{ marginBottom: 5 }}>
+              <Enter delay={40} style={{ marginBottom: 5 }}>
                 <BentoHero
                   featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
                   top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
                   bottom={{ src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" }}
+                  priority
                 />
-              </EntranceItem>
+              </Enter>
 
               <nav aria-label="Social links" style={{
                 display: "flex",
@@ -138,7 +156,7 @@ export default function AboutPageContent() {
                 ))}
               </nav>
             </div>
-          </EntranceStagger>
+          </div>
         </div>
 
         <ScrollReveal>

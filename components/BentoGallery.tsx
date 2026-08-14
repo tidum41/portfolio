@@ -11,10 +11,7 @@ import {
     type CSSProperties,
 } from "react";
 import { useDialKit } from "dialkit";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, cssEase } from "@/lib/motion";
-
-const ENTRANCE_EASE_Y = cssEase(EASE_Y);
-const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
+import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
@@ -423,14 +420,6 @@ export default function BentoGallery({
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
     const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
 
-    // Reveal as soon as layout is ready — LQIP posters already paint the
-    // tiles, so waiting on full-res downloads just left empty holes.
-    const [ready, setReady] = useState(false);
-    useEffect(() => {
-        const id = requestAnimationFrame(() => setReady(true));
-        return () => cancelAnimationFrame(id);
-    }, []);
-
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
 
@@ -518,11 +507,6 @@ export default function BentoGallery({
         stagger:   [ENTRANCE_DEFAULTS.stagger,   0,   0.4],
         maxSpread: [ENTRANCE_DEFAULTS.maxSpread, 0,   2],
     });
-    const reducedMotionRef = useRef(false);
-    useEffect(() => {
-        reducedMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }, []);
-
     const staggerRank = useMemo(() => {
         const order = positions
             .map((pos, i) => (pos ? { i, pos } : null))
@@ -1460,26 +1444,17 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const entranceInstant = reducedMotionRef.current;
 
                     return (
                         <div
                             key={i}
+                            className="ps3-enter"
                             style={{
                                 position: "absolute",
                                 left: pos.left,
                                 top: pos.top,
                                 width: iw,
-                                opacity: ready ? 1 : 0,
-                                transform: ready
-                                    ? "translateY(0px)"
-                                    : `translateY(${dk.y}px)`,
-                                // Delay folded into the shorthand itself (not a separate
-                                // transitionDelay longhand) — mixing the two in one style
-                                // object is ambiguous across re-renders and React warns on it.
-                                transition: entranceInstant
-                                    ? "none"
-                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_OP} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_Y} ${entranceDelay}s`,
+                                ["--ps3-enter-delay" as string]: `${Math.round(entranceDelay * 1000)}ms`,
                             }}
                         >
                         <div

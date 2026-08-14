@@ -504,11 +504,13 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
           ref={containerRef}
           onPointerDownCapture={variant === "about" ? enableInteraction : undefined}
           style={{
-            '--cd-transport-bar-height': `${dk.transportBarHeight}px`,
-            '--cd-title-font-size': `${dk.titleFontSize}px`,
-            '--cd-artist-font-size': `${dk.artistFontSize}px`,
-            '--cd-date-line1-font-size': `${dk.dateLine1FontSize}px`,
-            '--cd-date-line2-font-size': `${dk.dateLine2FontSize}px`,
+            backgroundColor: "var(--color-modal-bg)",
+            colorScheme: "inherit",
+            "--cd-transport-bar-height": `${dk.transportBarHeight}px`,
+            "--cd-title-font-size": `${dk.titleFontSize}px`,
+            "--cd-artist-font-size": `${dk.artistFontSize}px`,
+            "--cd-date-line1-font-size": `${dk.dateLine1FontSize}px`,
+            "--cd-date-line2-font-size": `${dk.dateLine2FontSize}px`,
           } as React.CSSProperties}
         >
           {audioError && (

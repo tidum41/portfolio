@@ -667,6 +667,26 @@ html[data-theme="dark"] .project-image {
   .cs-open-type-meta { animation-delay: 80ms; }
 }
 
+/* Primary-nav page enter (About copy, archive tiles). Opacity + translate
+   only — compositor, no scale (Mux/type glitch). Resting styles stay fully
+   visible so a skipped animation cannot hide content. */
+.ps3-enter {
+  opacity: 1;
+  translate: 0 0;
+}
+@keyframes ps3-enter {
+  from {
+    opacity: 0.4;
+    translate: 0 12px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ps3-enter {
+    animation: ps3-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--ps3-enter-delay, 0ms);
+  }
+}
+
 /* Desktop nudges (≥768) — CaseStudyAlignDials injects live !important
    overrides on top of these var-based fallbacks. */
 .cs-back-desktop {
