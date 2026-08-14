@@ -7,11 +7,10 @@ import XmbColumn from "@/components/XmbColumn";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
 import { useColumnFocus } from "@/lib/useColumnFocus";
-import { onWarmArchive, wasArchiveWarmed } from "@/lib/keepAliveWarm";
 
 /**
- * Session keep-alive for /archive. Column focus is the shell fade;
- * bento tiles stay at rest.
+ * Session keep-alive for /archive. Mounts on first visit (not idle-premount,
+ * which laid the gallery out at 0×0). Shell fades; tiles stay at rest.
  */
 export default function PersistentArchiveShell({
   items,
@@ -20,7 +19,7 @@ export default function PersistentArchiveShell({
 }) {
   const pathname = usePathname();
   const onArchive = pathname === "/archive";
-  const hasVisited = useKeepAliveVisit(onArchive, wasArchiveWarmed(), onWarmArchive);
+  const hasVisited = useKeepAliveVisit(onArchive);
   const snap = useKeepAliveInstant(onArchive);
   const phase = useColumnFocus(onArchive, { snap, playMountEnter: true });
 

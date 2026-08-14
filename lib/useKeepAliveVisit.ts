@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 /**
- * Keep-alive shells stay unmounted until first visit (or a warm hint).
- * Adjust state during render when the route is already current so React
- * retries before paint — a useLayoutEffect latch still returns null for
- * one render, which reads as a dead click.
+ * Mount a keep-alive shell on first visit. setState during render so React
+ * retries before paint — a useEffect latch returns null for one frame.
  */
-export function useKeepAliveVisit(
-  onRoute: boolean,
-  alreadyWarmed: boolean,
-  subscribeWarm: (cb: () => void) => () => void,
-): boolean {
-  const [hasVisited, setHasVisited] = useState(onRoute || alreadyWarmed);
+export function useKeepAliveVisit(onRoute: boolean): boolean {
+  const [hasVisited, setHasVisited] = useState(onRoute);
   if (onRoute && !hasVisited) {
     setHasVisited(true);
   }
-  useEffect(() => subscribeWarm(() => setHasVisited(true)), [subscribeWarm]);
   return hasVisited;
 }

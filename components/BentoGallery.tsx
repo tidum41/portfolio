@@ -443,18 +443,23 @@ export default function BentoGallery({
     useLayoutEffect(() => {
         if (typeof window === "undefined") return;
         const root = rootRef.current;
-        if (!root) return;
-        const ro = new ResizeObserver(() =>
+        if (!root || !active) return;
+        const applySize = () => {
+            const w = root.offsetWidth;
+            const h = root.offsetHeight;
+            // display:none / first paint can report 0 — keep the last real size
+            // so overview math doesn't collapse the canvas.
+            if (w < 8 || h < 8) return;
             startTransition(() => {
-                setVw(root.offsetWidth);
-                setVh(root.offsetHeight);
-            })
-        );
+                setVw(w);
+                setVh(h);
+            });
+        };
+        applySize();
+        const ro = new ResizeObserver(applySize);
         ro.observe(root);
-        setVw(root.offsetWidth);
-        setVh(root.offsetHeight);
         return () => ro.disconnect();
-    }, []);
+    }, [active]);
 
     useLayoutEffect(() => {
         const th = thumbRef.current;

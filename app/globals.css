@@ -667,9 +667,10 @@ html[data-theme="dark"] .project-image {
   .cs-open-type-meta { animation-delay: 80ms; }
 }
 
-/* XMB column focus — one wrapper, CSS only. Incoming fades up as a unit;
-   outgoing dims in place (unfocused icon), then display:none. No scale
-   (Mux), no translateX (layout slide). */
+/* XMB column focus — destination fades in over silk. The previous page is
+   display:none immediately so two documents never composite together.
+   Archive is position:fixed inside this wrapper: any `transform` (even
+   translateY(0)) makes a 0-height containing block and the gallery vanishes. */
 .xmb-column {
   position: relative;
   z-index: 1;
@@ -679,32 +680,26 @@ html[data-theme="dark"] .project-image {
 }
 .xmb-column[data-xmb="entering"] {
   opacity: 0.2;
-  transform: translateY(10px);
+  transform: translateY(8px);
   transition: none;
 }
 .xmb-column[data-xmb="in"] {
   opacity: 1;
   transform: translateY(0);
   transition:
-    opacity 480ms cubic-bezier(0.23, 1, 0.32, 1),
-    transform 480ms cubic-bezier(0.23, 1, 0.32, 1);
+    opacity 400ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.xmb-column[data-xmb="leaving"] {
-  opacity: 0;
-  transform: translateY(0);
-  pointer-events: none;
-  transition: opacity 280ms cubic-bezier(0.4, 0, 1, 1);
+.xmb-column[data-xmb-pin][data-xmb="entering"],
+.xmb-column[data-xmb-pin][data-xmb="in"] {
+  transform: none;
 }
-.xmb-column[data-xmb="leaving"]:not([data-xmb-pin]) {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
+.xmb-column[data-xmb-pin][data-xmb="in"] {
+  transition: opacity 400ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   .xmb-column[data-xmb="entering"],
-  .xmb-column[data-xmb="in"],
-  .xmb-column[data-xmb="leaving"] {
+  .xmb-column[data-xmb="in"] {
     opacity: 1;
     transform: none;
     transition: none;
