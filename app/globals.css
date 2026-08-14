@@ -725,19 +725,6 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* Archive keep-alive: stay in the DOM so LQIP posters decode off-route.
-   visibility/opacity — not display:none — so the fixed gallery still has
-   a box to measure and images still decode. */
-.archive-keep-alive {
-  position: relative;
-  z-index: 1;
-}
-.archive-keep-alive--hidden {
-  visibility: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* Shown only if Archive is opened before gallery items have arrived. */
 .archive-skeleton {
   display: grid;

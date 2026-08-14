@@ -9,9 +9,9 @@
  *   - Work stays keep-alive (silk / Mux / CD). Instant only for
  *     CaseStudyTOC Back (peekInstantBack()). Primary nav skips the route
  *     fade (Layer A) and can replay Work's fade-up.
- *   - Archive stays keep-alive with LQIP posters decoding off-route
- *     (visibility hidden, not display:none). Show replays `.ps3-enter`.
- *     Full images attach only while `/archive` is visible.
+ *   - Archive stays keep-alive like Work (`display: none` off-route).
+ *     Data is seeded from the layout; LQIP posters warm via Image().
+ *     Show replays `.ps3-enter`. Full images attach only on `/archive`.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
