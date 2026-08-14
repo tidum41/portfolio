@@ -407,6 +407,9 @@ export default function BentoGallery({
 
     const [vw, setVw] = useState(1280);
     const [vh, setVh] = useState(720);
+    // First paint used to pack at 1280×720, then startTransition + a
+    // post-paint overview transform snapped the grid — the Archive flash.
+    const [layoutReady, setLayoutReady] = useState(false);
     const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
@@ -428,14 +431,24 @@ export default function BentoGallery({
         if (typeof window === "undefined") return;
         const root = rootRef.current;
         if (!root) return;
+        let first = true;
         const applySize = () => {
             const w = root.offsetWidth;
             const h = root.offsetHeight;
             if (w < 8 || h < 8) return;
-            startTransition(() => {
-                setVw(w);
-                setVh(h);
-            });
+            const commit = () => {
+                setVw((prev) => (prev === w ? prev : w));
+                setVh((prev) => (prev === h ? prev : h));
+                setLayoutReady(true);
+            };
+            // First measure must commit before paint. startTransition here
+            // let the browser paint the 1280×720 fallback pack for a frame.
+            if (first) {
+                first = false;
+                commit();
+                return;
+            }
+            startTransition(commit);
         };
         applySize();
         const ro = new ResizeObserver(applySize);
@@ -1071,15 +1084,12 @@ export default function BentoGallery({
     );
 
     // ── Init / resize — always "none" to avoid jarring scale-in ──────────────
-    // canvasH/getFocusT also change on every focus/defocus click now (the
-    // caption-push reflow keys packMasonry off focusedIdx/expandedExtraH),
-    // but that transition is already handled by focusCell/goOverview's own
-    // animated applyTransform call — this effect firing too, with "none"
-    // easing, was clobbering it moments later. Gate the actual resnap on
-    // vw/vh/canvasW (genuine viewport/layout changes) instead of letting
-    // focus-driven churn trigger it.
+    // Must be useLayoutEffect: useEffect applied the overview camera *after*
+    // paint, so Archive flashed the identity transform (top-left, scale 1)
+    // for a frame. Still gated on vw/vh/canvasW so focus/defocus animations
+    // are not clobbered by a "none" resnap.
     const prevResizeSigRef = useRef<{ vw: number; vh: number; canvasW: number } | null>(null);
-    useEffect(() => {
+    useLayoutEffect(() => {
         // Recompute dynamic min zoom whenever layout changes
         cancelZoomAnim();
         if (minZoomFactor > 0) {
@@ -1423,6 +1433,9 @@ export default function BentoGallery({
                 // Stagger is decorative — never eat the first click while tiles enter.
                 pointerEvents: "auto",
                 transform: "none",
+                // Hold the canvas until the first real measure + overview
+                // camera land. Avoids one frame of the 1280×720 fallback pack.
+                visibility: layoutReady ? "visible" : "hidden",
             }}
         >
             {/* ── Canvas ── */}
@@ -1452,11 +1465,12 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
+                    const tileEnterClass = layoutReady ? "ps3-enter" : "";
 
                     return (
                         <div
                             key={i}
-                            className="ps3-enter"
+                            className={tileEnterClass}
                             style={{
                                 position: "absolute",
                                 left: pos.left,

@@ -70,9 +70,14 @@ export default function PS3WaveLabClient() {
             Your print/morph numbers are the new defaults. Hard-refresh once (persist{" "}
             <strong style={{ fontWeight: 500 }}>v5</strong>).
           </p>
-          <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
-            ← work
-          </Link>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
+              ← work
+            </Link>
+            <Link href="/dev/motion-lab" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
+              motion lab
+            </Link>
+          </div>
         </div>
       </div>
 
