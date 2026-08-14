@@ -440,13 +440,12 @@ export default function BentoGallery({
     const attachFullSrcRef = useRef(visible);
     if (visible) attachFullSrcRef.current = true;
     const deferFullSrc = !attachFullSrcRef.current;
-    // First Archive visit in the session may enter; keep-alive returns snap.
-    const didEnterRef = useRef(false);
+    // Replay tile enter on every Archive show. display:none → block restarts
+    // `.ps3-enter`; clear the class while hidden so the next show can play.
     const enteringRef = useRef(false);
     if (layoutReady && visible) {
-        if (!didEnterRef.current) enteringRef.current = true;
-    } else if (!visible && enteringRef.current) {
-        didEnterRef.current = true;
+        enteringRef.current = true;
+    } else if (!visible) {
         enteringRef.current = false;
     }
     const playEnter = enteringRef.current;

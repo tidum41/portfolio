@@ -1,9 +1,8 @@
 "use client";
 
-import { memo, useLayoutEffect, useState } from "react";
+import { memo } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
-import { peekSoftNav } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 /**
@@ -11,21 +10,13 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
  * inert). Mounted once from the root layout so Work → About is a display
  * flip, not a remount of CDPlayer + BentoHero.
  *
- * Enter plays only on a hard load of `/about`. Soft-nav first show and
- * every later tab return snap at rest — `.ps3-enter` restarts when
- * `display` goes none → block, which reads as a load delay.
+ * `.ps3-enter` is on while visible so display:none → block retriggers the
+ * content enter on every About arrival. The shell itself is instant.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "about";
-  const [playEnter, setPlayEnter] = useState(
-    () => pathname === "/about" && !peekSoftNav(),
-  );
-
-  useLayoutEffect(() => {
-    if (!visible && playEnter) setPlayEnter(false);
-  }, [visible, playEnter]);
 
   return (
     <div
@@ -35,7 +26,7 @@ export default function PersistentAboutShell() {
       inert={!visible}
       {...(!visible ? { "data-nosnippet": true } : {})}
     >
-      <AboutKeepAlive visible={visible} playEnter={playEnter} />
+      <AboutKeepAlive visible={visible} playEnter={visible} />
     </div>
   );
 }

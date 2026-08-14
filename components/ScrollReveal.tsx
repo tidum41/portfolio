@@ -217,7 +217,8 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const defaults = defaultsProp ?? tune.defaults;
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));
   const fromParent = useContext(InstantEntranceCtx);
-  const reduced = useReducedMotion() || instant || fromParent;
+  const prefersReduced = useReducedMotion();
+  const reduced = prefersReduced || instant || fromParent;
   const y = yProp ?? dk.y;
   const x = dk.x ?? ENTRANCE_DEFAULTS.x;
   const selfDriven = active !== undefined;
@@ -244,11 +245,10 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
 
-  // Keep-alive shells hide with display:none. Zeroing opacity on leave
-  // (to "arm" a replay) is what made About → Work feel delayed: the grid
-  // sat at spawn 0, then tweened 1.14s. If we've already reached rest,
-  // stay there — display:none is the hide. First load still starts at
-  // SPAWN_FROM_OPACITY and plays enter when the intro gate opens.
+  // Keep-alive shells hide with display:none. Arm spawn on leave so the next
+  // primary-tab show can play the 8px / 1140ms enter (shell is already
+  // visible — this is the transition, not a load wait). Case-study Back
+  // passes `instant` and snaps to rest on show, before paint.
   useLayoutEffect(() => {
     if (!selfDriven) return;
     const { duration, delay: itemDelay, x: xPx, y: yPx, reduced: rm } = motionParamsRef.current;
@@ -256,10 +256,15 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
-      const stayRest = rm || opacityMv.get() > 0.01;
-      opacityMv.set(stayRest ? 1 : SPAWN_FROM_OPACITY);
-      xMv.set(stayRest ? 0 : xPx);
-      yMv.set(stayRest ? 0 : yPx);
+      if (prefersReduced) {
+        opacityMv.set(1);
+        xMv.set(0);
+        yMv.set(0);
+      } else {
+        opacityMv.set(SPAWN_FROM_OPACITY);
+        xMv.set(0);
+        yMv.set(yPx);
+      }
       return;
     }
     if (rm) {
@@ -300,7 +305,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       xMv.set(0);
       yMv.set(0);
     }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, reduced, opacityMv, xMv, yMv]);
+  }, [selfDriven, active, reduced, prefersReduced, opacityMv, xMv, yMv]);
 
   return (
     <motion.div
