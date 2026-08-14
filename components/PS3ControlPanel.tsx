@@ -1068,7 +1068,10 @@ export default function PS3ControlPanel({
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
-      transform: shown ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
+      // First load: the JOOLA / UCLA line owns the Y settle. Sliding the pill
+      // too made the pair look like a position jump. Soft-nav return still
+      // uses the shared 8px fade-up.
+      transform: shown || revealKindRef.current === "first" ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
       WebkitTapHighlightColor: "transparent",
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
