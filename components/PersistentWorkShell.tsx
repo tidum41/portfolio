@@ -249,7 +249,17 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
   const gridGateOpen = useGridFirstLoadActive();
   const gridActive = gridGateOpen && isWorkRoute;
-  const heroInstant = instant || (Boolean(isFirstLoadIntroRef.current) && !gridGateOpen);
+  // Read the live intro attribute during render (not only the layout-effect
+  // grid gate). Hydration reuses useState(true) for the gate, so the first
+  // client frame used to start the hero EntranceItem tween before the gate
+  // closed — nested 8px + HeroText's own slide, which is the first-load jitter.
+  const introPlaying =
+    typeof document !== "undefined" &&
+    document.documentElement.getAttribute("data-intro") === "playing";
+  const heroInstant =
+    instant ||
+    introPlaying ||
+    (Boolean(isFirstLoadIntroRef.current) && !gridGateOpen);
 
   const dk = useEntranceDials();
 
@@ -567,7 +577,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
-      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
+      <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"

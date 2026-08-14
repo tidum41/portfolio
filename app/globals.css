@@ -201,6 +201,14 @@ main#main-content {
 
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
+/* Hero type must not re-wrap after first layout — `balance` / `pretty`
+   reflow the JOOLA · UCLA line (and the pill that docks to it) on load. */
+.hero-heading,
+.hero-sub {
+  text-wrap: wrap;
+  text-wrap: stable;
+  max-width: 100%;
+}
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
 ::selection {
@@ -224,6 +232,12 @@ html[data-intro="done"] .intro-hide {
   opacity: 1 !important;
   pointer-events: auto !important;
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+/* Work grid owns its enter via EntranceItem. A second 0.7s CSS fade on
+   the same wrapper stacked with the 1.14s card tween and read as a pop. */
+html[data-intro="playing"] .intro-hide--snap,
+html[data-intro="done"] .intro-hide--snap {
+  transition: none !important;
 }
 
 /* ─── Theme toggle — snap tokens, don't interpolate the tree ──────── */

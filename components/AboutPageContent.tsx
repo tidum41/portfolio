@@ -188,7 +188,7 @@ export default function AboutPageContent() {
                   justifyContent: "space-between",
                   padding: "20px 0",
                 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16, minWidth: 0, flex: 1 }}>
                     <div style={{
                       position: "relative",
                       width: 40,
@@ -206,7 +206,7 @@ export default function AboutPageContent() {
                         style={{ objectFit: "contain", padding: 5, transform: `scale(${crop.scale}) translate(${crop.offsetX}px, ${crop.offsetY}px)` }}
                       />
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
                       <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
                       <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
@@ -229,7 +229,7 @@ export default function AboutPageContent() {
                 justifyContent: "space-between",
                 padding: "16px 0",
               }}>
-                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0 }}>{name}</p>
+                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
                 <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
               </StaggerItem>
             ))}

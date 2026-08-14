@@ -255,13 +255,29 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       yMv.set(rm ? 0 : yPx);
       return;
     }
-    const gen = motionGenRef.current;
     if (rm) {
+      // `instant` can flip true after the first commit (intro gate closes
+      // the grid in a layout effect; heroInstant follows). Stop any tween
+      // that already started so it never paints as a second Layer B slide.
+      motionGenRef.current += 1;
+      for (const tween of tweensRef.current) tween.stop();
+      tweensRef.current = [];
       opacityMv.set(1);
       xMv.set(0);
       yMv.set(0);
       return;
     }
+    // Intro releases heroInstant (reduced false) while this wrapper is
+    // already at rest — do not restart Layer B on top of HeroText.
+    if (
+      tweensRef.current.length === 0 &&
+      opacityMv.get() === 1 &&
+      xMv.get() === 0 &&
+      yMv.get() === 0
+    ) {
+      return;
+    }
+    const gen = motionGenRef.current;
     opacityMv.set(SPAWN_FROM_OPACITY);
     xMv.set(0);
     yMv.set(yPx);
@@ -277,7 +293,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       xMv.set(0);
       yMv.set(0);
     }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, opacityMv, xMv, yMv]);
+  }, [selfDriven, active, reduced, opacityMv, xMv, yMv]);
 
   return (
     <motion.div
