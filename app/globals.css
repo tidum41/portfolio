@@ -209,6 +209,11 @@ p, li       { text-wrap: pretty; }
   text-wrap: stable;
   max-width: 100%;
 }
+/* Keep "at ucla" together so the line doesn't orphan "ucla" on a third
+   row when the 390px wrap boundary sits between the words. */
+.hero-sub-end {
+  white-space: nowrap;
+}
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
 ::selection {

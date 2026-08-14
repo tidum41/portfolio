@@ -139,15 +139,18 @@ export default function HeroText() {
         </a>
         {" "}
         <span className="hero-dot">·</span>
-        {" cognitive science at "}
-        <a
-          href="https://www.ucla.edu/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hero-ucla"
-        >
-          ucla
-        </a>
+        {" cognitive science "}
+        <span className="hero-sub-end">
+          {"at "}
+          <a
+            href="https://www.ucla.edu/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hero-ucla"
+          >
+            ucla
+          </a>
+        </span>
       </motion.p>
     </>
   );
