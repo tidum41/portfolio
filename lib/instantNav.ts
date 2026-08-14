@@ -9,8 +9,9 @@
  *   - Work / About / Archive are keep-alive shells in the root layout.
  *     Hide with `display: none` + inert (never `visibility: hidden`).
  *     Visible tab is decided on the nav press (`markPrimaryShow`), then
- *     `router.push` syncs the URL. First About/Archive show may enter;
- *     every later tab return snaps at rest.
+ *     `router.push` syncs the URL. The shell is instant; content still
+ *     plays its 8px / 1140ms enter on each primary-tab arrival.
+ *   - Case-study Back snaps Work at rest (`markInstantBack`).
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -19,10 +20,10 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   work ↔ about ↔ archive    → tab switch this frame; URL catches up
+ *   work ↔ about ↔ archive    → tab switch this frame; content enters
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → tab show this frame; work snaps
+ *   case-study → "/" via nav  → tab show this frame; work content enters
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
@@ -128,9 +129,9 @@ export function clearSoftNav() {
   sessionStorage.removeItem(SOFT_KEY);
 }
 
-/** Keep-alive Work snaps: case-study Back OR primary-nav tab return. */
+/** Keep-alive snap: case-study Back only. Primary-nav plays content enter. */
 export function peekKeepAliveSnap(): boolean {
-  return peekInstantBack() || peekSoftNav();
+  return peekInstantBack();
 }
 
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
@@ -138,9 +139,9 @@ export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
 
-/** Keep-alive Work snaps on Back and on Work/About/Archive tab returns. */
+/** Work content snaps only on Case-study Back — not on Work/About/Archive tabs. */
 export function peekInstantWorkContent(): boolean {
-  return peekInstantBack() || peekSoftNav();
+  return peekInstantBack();
 }
 
 /**

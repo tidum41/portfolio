@@ -179,9 +179,9 @@ function CardLabel({
  *     slow first-load animation is the whole show — this wrapper stays
  *     instant so it doesn't double-animate on top of that. The grid waits
  *     for "intro-done" (via useGridFirstLoadActive), then plays its stagger.
- *   - Case-study "Back" and primary-nav returns: content stays at rest while
- *     `display: none`, then snaps. Tab switches must not replay the 1.14s fade.
- *   - Hero wrapper stays instant during intro.
+ *   - Case-study "Back": content stays at rest while hidden, then snaps.
+ *   - Primary-nav returns: shell is instant; hero + grid play the enter.
+ *   - Hero wrapper stays instant during intro so it doesn't stack on HeroText.
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
@@ -245,9 +245,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     instantArrivalRef.current = peekInstantWorkContent();
   }
   wasWorkRouteRef.current = visible;
-  // Case-study Back AND primary-nav returns snap. Replaying the 1.14s
-  // fade-up on Work/About/Archive tab switches felt like a load delay.
-  // First load still uses intro + grid enter (`instant` stays false).
+  // Case-study Back snaps. Primary-nav returns play the grid/hero enter
+  // (shell is already on screen — this is the page transition).
   const instant = instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate

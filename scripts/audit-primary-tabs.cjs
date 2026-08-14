@@ -2,7 +2,7 @@
  * Click-path audit for keep-alive primary tabs.
  *
  * Pass: destination shell `display` is not `none` inside the click handler;
- * hero/copy opacity 1; no `.ps3-enter` on return visits; Archive does not
+ * About/Archive replay `.ps3-enter` on primary-tab arrival; Archive does not
  * paint on Work/About; intro plays on cold `/` then clears.
  *
  * Usage: BENCH_BASE=http://localhost:3030 node scripts/audit-primary-tabs.cjs
@@ -179,33 +179,27 @@ async function main() {
   if (m.leak.archiveDisplay !== "none") {
     ok = fail("Work→About: archive leaked", m) && ok;
   }
+  if (m.enterCount === 0) {
+    ok = fail("Work→About first: expected .ps3-enter on about content", m) && ok;
+  }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
 
-  // About → Work (first return — must snap, no enter)
+  // About → Work (first return — shell instant, content may be entering)
   m = await clickNavMeasure(page, "/", "work");
   results.push({ step: "about-to-work-1", ...m });
   if (m.displayInHandler !== "block") {
     ok = fail("About→Work first: work not display:block in click handler", m) && ok;
   }
-  if (Number(m.heroOpacity) < 0.99) {
-    ok = fail("About→Work first: work hero opacity not 1", m) && ok;
-  }
-  if (m.enterCount > 0) {
-    ok = fail("About→Work first: .ps3-enter on work return", m) && ok;
-  }
   await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
 
-  // Work → About (second — no enter)
+  // Work → About (second — content enter should replay)
   m = await clickNavMeasure(page, "/about", "about");
   results.push({ step: "work-to-about-2", ...m });
   if (m.displayInHandler !== "block") {
     ok = fail("Work→About second: about not display:block in click handler", m) && ok;
   }
-  if (m.enterCount > 0) {
-    ok = fail("Work→About second: .ps3-enter on about return", m) && ok;
-  }
-  if (Number(m.heroOpacity) < 0.99) {
-    ok = fail("Work→About second: about h1 opacity not 1", m) && ok;
+  if (m.enterCount === 0) {
+    ok = fail("Work→About second: expected .ps3-enter on about content", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
 
@@ -256,8 +250,8 @@ async function main() {
   if (m.displayInHandler !== "block") {
     ok = fail("Archive→About: about not display:block in click handler", m) && ok;
   }
-  if (m.enterCount > 0) {
-    ok = fail("Archive→About: .ps3-enter on about return", m) && ok;
+  if (m.enterCount === 0) {
+    ok = fail("Archive→About: expected .ps3-enter on about content", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
 
