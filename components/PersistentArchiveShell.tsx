@@ -9,6 +9,7 @@ import {
   warmArchiveGallery,
 } from "@/lib/archiveGalleryCache";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { useTabArrival } from "@/lib/useTabArrival";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**
@@ -66,7 +67,15 @@ const ArchiveKeepAlive = memo(function ArchiveKeepAlive({
   items: PlaygroundGalleryItem[];
   visible: boolean;
 }) {
-  return <ArchivePageClient items={items} visible={visible} />;
+  const { snap, epoch } = useTabArrival(visible);
+  return (
+    <ArchivePageClient
+      items={items}
+      visible={visible}
+      snap={snap}
+      enterEpoch={epoch}
+    />
+  );
 }, (prev, next) => {
   if (!prev.visible && !next.visible) return true;
   return prev.visible === next.visible && prev.items === next.items;

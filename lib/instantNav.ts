@@ -11,7 +11,10 @@
  *     Visible tab is decided on the nav press (`markPrimaryShow`), then
  *     `router.push` syncs the URL. The shell is instant; content still
  *     plays its 8px / 1140ms enter on each primary-tab arrival.
- *   - Case-study Back snaps Work at rest (`markInstantBack`).
+ *   - Case-study Back and browser Back/Forward snap at rest.
+ *     Every other primary-tab arrival replays content enter (keep-alive
+ *     nodes must bump an enter epoch — CSS animations do not restart on
+ *     the same element after they finish).
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -23,6 +26,7 @@
  *   work ↔ about ↔ archive    → tab switch this frame; content enters
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
+ *   browser Back/Forward      → snap the destination tab at rest
  *   case-study → "/" via nav  → tab show this frame; work content enters
  *   tab/BFCache return on "/" → distinct intro-replay
  */
@@ -54,6 +58,18 @@ export function isPrimaryHref(href: string): boolean {
 
 /** Clicked a primary tab before Next.js flipped the pathname — paint now. */
 let pendingTab: PrimaryTab | null = null;
+/** Browser Back/Forward — not a primary-nav click. */
+let popPending = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "popstate",
+    () => {
+      popPending = true;
+    },
+    true,
+  );
+}
 
 function emitPrimaryTab() {
   if (typeof window === "undefined") return;
@@ -61,7 +77,11 @@ function emitPrimaryTab() {
 }
 
 export function markPrimaryShow(tab: PrimaryTab) {
+  popPending = false;
   pendingTab = tab;
+  // A click is not Back. Drop a leftover case-study flag so the next
+  // keep-alive show cannot inherit snap after Work's clear effect is skipped.
+  clearInstantBack();
   emitPrimaryTab();
 }
 
@@ -129,9 +149,19 @@ export function clearSoftNav() {
   sessionStorage.removeItem(SOFT_KEY);
 }
 
-/** Keep-alive snap: case-study Back only. Primary-nav plays content enter. */
+export function peekSnapArrival(): boolean {
+  // Primary-tab click already claimed this frame — never snap content.
+  if (pendingTab != null) return false;
+  return peekInstantBack() || popPending;
+}
+
+export function clearPopPending() {
+  popPending = false;
+}
+
+/** Keep-alive snap: case-study Back or browser Back/Forward only. */
 export function peekKeepAliveSnap(): boolean {
-  return peekInstantBack();
+  return peekSnapArrival();
 }
 
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
@@ -139,9 +169,9 @@ export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
 
-/** Work content snaps only on Case-study Back — not on Work/About/Archive tabs. */
+/** Work content snaps on Back — not on Work/About/Archive tab clicks. */
 export function peekInstantWorkContent(): boolean {
-  return peekInstantBack();
+  return peekSnapArrival();
 }
 
 /**

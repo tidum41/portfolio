@@ -101,9 +101,13 @@ function ArchivePosterGrid({ items }: { items: PlaygroundGalleryItem[] }) {
 export default function PlaygroundPageClient({
   items,
   visible = true,
+  snap = false,
+  enterEpoch = 0,
 }: {
   items: PlaygroundGalleryItem[];
   visible?: boolean;
+  snap?: boolean;
+  enterEpoch?: number;
 }) {
     const instanceKey = useRef<symbol | null>(null);
     if (items.length) rememberArchiveGallery(items);
@@ -175,6 +179,8 @@ export default function PlaygroundPageClient({
                   maxZoom={1.5}
                   minZoomFactor={0.667}
                   visible={visible}
+                  snap={snap}
+                  enterEpoch={enterEpoch}
               />
             )}
 

@@ -4,19 +4,23 @@ import { memo } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { useTabArrival } from "@/lib/useTabArrival";
 
 /**
  * About keep-alive — same hide contract as Work/Archive (`display: none` +
  * inert). Mounted once from the root layout so Work → About is a display
  * flip, not a remount of CDPlayer + BentoHero.
  *
- * `.ps3-enter` is on while visible so display:none → block retriggers the
- * content enter on every About arrival. The shell itself is instant.
+ * Content enter replays on every About click via `enterEpoch` (finished
+ * `.ps3-enter` will not restart on the same node). Back snaps at rest.
+ * The shell itself is instant.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "about";
+  const { snap, epoch } = useTabArrival(visible);
+  const playEnter = visible && !snap;
 
   return (
     <div
@@ -26,7 +30,7 @@ export default function PersistentAboutShell() {
       inert={!visible}
       {...(!visible ? { "data-nosnippet": true } : {})}
     >
-      <AboutKeepAlive visible={visible} playEnter={visible} />
+      <AboutKeepAlive visible={visible} playEnter={playEnter} enterEpoch={epoch} />
     </div>
   );
 }
@@ -34,12 +38,25 @@ export default function PersistentAboutShell() {
 const AboutKeepAlive = memo(function AboutKeepAlive({
   visible,
   playEnter,
+  enterEpoch,
 }: {
   visible: boolean;
   playEnter: boolean;
+  enterEpoch: number;
 }) {
-  return <AboutPageContent visible={visible} playEnter={playEnter} />;
+  return <AboutPageContent visible={visible} playEnter={playEnter} enterEpoch={enterEpoch} />;
 }, (prev, next) => {
-  if (!prev.visible && !next.visible && prev.playEnter === next.playEnter) return true;
-  return prev.visible === next.visible && prev.playEnter === next.playEnter;
+  if (
+    !prev.visible &&
+    !next.visible &&
+    prev.playEnter === next.playEnter &&
+    prev.enterEpoch === next.enterEpoch
+  ) {
+    return true;
+  }
+  return (
+    prev.visible === next.visible &&
+    prev.playEnter === next.playEnter &&
+    prev.enterEpoch === next.enterEpoch
+  );
 });

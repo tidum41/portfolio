@@ -193,9 +193,9 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
 //    Needed where items span more than one physical container that still
 //    need to read as a single interleaved sequence — e.g. the work grid's
 //    two DOM columns, where "visual reading order" crosses both columns.
-export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, ...rest }: {
+export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, replayToken = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, ...rest }: {
   children: ReactNode; style?: CSSProperties; className?: string; y?: number; instant?: boolean;
-  active?: boolean; delay?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
+  active?: boolean; delay?: number; replayToken?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
   // Passed straight through to the underlying motion.div via ...rest below —
   // framer-motion merges whileHover with the entrance animate/variants state
   // fine on its own, this just widens the prop type so callers (e.g. the
@@ -244,14 +244,24 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   motionParamsRef.current = { duration: dk.duration, delay, x, y, reduced };
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
+  const wasActiveRef = useRef(!!active);
+  const wasTokenRef = useRef(replayToken);
 
   // Keep-alive shells hide with display:none. Arm spawn on leave so the next
-  // primary-tab show can play the 8px / 1140ms enter (shell is already
-  // visible — this is the transition, not a load wait). Case-study Back
-  // passes `instant` and snaps to rest on show, before paint.
+  // primary-tab show can play the 8px / 1140ms enter. Back passes `instant`
+  // and snaps to rest on show, before paint.
+  //
+  // Skip "already at rest" ONLY when `active` stayed true and replayToken
+  // did not bump (intro releasing heroInstant). A false→true rising edge,
+  // or a new replayToken, must always replay — finished motion values on
+  // keep-alive nodes would otherwise snap after the first couple of visits.
   useLayoutEffect(() => {
     if (!selfDriven) return;
     const { duration, delay: itemDelay, x: xPx, y: yPx, reduced: rm } = motionParamsRef.current;
+    const rose = !!active && !wasActiveRef.current;
+    const tokenBumped = replayToken !== wasTokenRef.current;
+    wasActiveRef.current = !!active;
+    wasTokenRef.current = replayToken;
     if (!active) {
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
@@ -280,8 +290,10 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       return;
     }
     // Intro releases heroInstant (reduced false) while this wrapper is
-    // already at rest — do not restart Layer B on top of HeroText.
+    // already at rest and still active — do not restart Layer B on HeroText.
     if (
+      !rose &&
+      !tokenBumped &&
       tweensRef.current.length === 0 &&
       opacityMv.get() === 1 &&
       xMv.get() === 0 &&
@@ -289,6 +301,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     ) {
       return;
     }
+    motionGenRef.current += 1;
     const gen = motionGenRef.current;
     opacityMv.set(SPAWN_FROM_OPACITY);
     xMv.set(0);
@@ -305,7 +318,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       xMv.set(0);
       yMv.set(0);
     }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, reduced, prefersReduced, opacityMv, xMv, yMv]);
+  }, [selfDriven, active, reduced, prefersReduced, replayToken, opacityMv, xMv, yMv]);
 
   return (
     <motion.div

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -44,14 +44,29 @@ function Enter({
   children,
   style,
   playEnter,
+  enterEpoch,
 }: {
   delay?: number;
   children: ReactNode;
   style?: CSSProperties;
   playEnter: boolean;
+  enterEpoch: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Finished CSS animations do not restart on the same node. Remove → reflow
+  // → add on each non-Back About arrival so keep-alive visits still enter.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.remove("ps3-enter");
+    if (!playEnter) return;
+    void el.offsetWidth;
+    el.classList.add("ps3-enter");
+  }, [playEnter, enterEpoch]);
+
   return (
     <div
+      ref={ref}
       className={playEnter ? "ps3-enter" : undefined}
       style={
         playEnter
@@ -67,9 +82,11 @@ function Enter({
 export default function AboutPageContent({
   visible = true,
   playEnter = false,
+  enterEpoch = 0,
 }: {
   visible?: boolean;
   playEnter?: boolean;
+  enterEpoch?: number;
 }) {
   const logoDk = useDialKit("About Logos", {
     cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
@@ -86,7 +103,7 @@ export default function AboutPageContent({
         <div style={{ marginBottom: "var(--space-7)" }}>
           <div className="about-hero">
             <div className="about-hero-bio">
-              <Enter playEnter={playEnter} delay={enterMs(0)}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(0)}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
                   fontSize: 32,
@@ -98,7 +115,7 @@ export default function AboutPageContent({
                 }}>hello hello, i&apos;m mudit</h1>
               </Enter>
 
-              <Enter playEnter={playEnter} delay={enterMs(1)}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
                 <p style={{
                   fontSize: 14,
                   lineHeight: 1.5,
@@ -107,7 +124,7 @@ export default function AboutPageContent({
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
               </Enter>
 
-              <Enter playEnter={playEnter} delay={enterMs(2)}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(2)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -120,7 +137,7 @@ export default function AboutPageContent({
                 </p>
               </Enter>
 
-              <Enter playEnter={playEnter} delay={enterMs(3)}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(3)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -129,7 +146,7 @@ export default function AboutPageContent({
                 }}>You can find me</p>
               </Enter>
 
-              <Enter playEnter={playEnter} delay={enterMs(4)}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(4)}>
                 <ul style={{
                   fontSize: 15,
                   lineHeight: 1.87,
@@ -146,7 +163,7 @@ export default function AboutPageContent({
             </div>
 
             <div className="about-hero-bento-col">
-              <Enter playEnter={playEnter} delay={enterMs(1)} style={{ marginBottom: 5 }}>
+              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)} style={{ marginBottom: 5 }}>
                 <BentoHero
                   featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
                   top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
