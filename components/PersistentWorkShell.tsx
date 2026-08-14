@@ -636,7 +636,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">
-                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)" }}>
+                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
                     <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
                     <div
                       ref={setGridCdEl}
@@ -777,6 +777,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               flex: "1 1 auto",
               minHeight: 280,
               background: "var(--color-modal-bg)",
+              colorScheme: "inherit",
             }}
           >
             <div

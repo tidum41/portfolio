@@ -3,12 +3,16 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  /* Plate always follows the site token so a late/wrong poster image
+     cannot flip the card to the opposite theme. */
   background-color: var(--color-modal-bg);
-  background-image: url("/images/cd-player-poster-light.webp");
+  /* Site default is dark (layout data-theme="dark"). Default the dark
+     still so the grid card cannot flash the light plate on open. */
+  background-image: url("/images/cd-player-poster-dark.webp");
   background-size: cover;
   background-position: center;
 }
 
-:global(html[data-theme="dark"]) .poster {
-  background-image: url("/images/cd-player-poster-dark.webp");
+:global(html[data-theme="light"]) .poster {
+  background-image: url("/images/cd-player-poster-light.webp");
 }

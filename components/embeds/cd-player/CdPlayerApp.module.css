@@ -47,7 +47,8 @@
   --cd-artist-color: var(--color-text-muted);
   --cd-hint-accent: #c01010;
   --cd-focus-color: #007aff;
-  background-color: var(--cd-bg-color);
+  background-color: var(--color-modal-bg);
+  color-scheme: inherit;
 }
 
 :global(html[data-theme="dark"]) .layout {

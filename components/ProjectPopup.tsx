@@ -95,13 +95,16 @@ export default function ProjectPopup({
       paddingRight: body.style.paddingRight,
       bodyBg: body.style.backgroundColor,
       htmlBg: html.style.backgroundColor,
+      htmlScheme: html.style.colorScheme,
+      bodyScheme: body.style.colorScheme,
     };
 
     // Pin left/right (not only width:100%) so the fixed flex body can't pick
     // a stale static position and shift the grid under the backdrop blur.
     // paddingRight replaces the disappearing scrollbar so column widths stay put.
-    // Keep html/body fills on the site token so color-scheme canvas can't
-    // flash the opposite theme behind the overlay.
+    // Lock color-scheme to the live data-theme so the browser canvas cannot
+    // paint the opposite theme behind project cards / the CD plate.
+    const scheme = html.getAttribute("data-theme") === "light" ? "light" : "dark";
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
     body.style.left = "0";
@@ -109,6 +112,8 @@ export default function ProjectPopup({
     body.style.width = "auto";
     body.style.backgroundColor = "var(--color-bg)";
     html.style.backgroundColor = "var(--color-bg)";
+    html.style.colorScheme = scheme;
+    body.style.colorScheme = scheme;
     if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
 
     document.addEventListener("keydown", onKeyDown);
@@ -121,6 +126,8 @@ export default function ProjectPopup({
       body.style.paddingRight = prev.paddingRight;
       body.style.backgroundColor = prev.bodyBg;
       html.style.backgroundColor = prev.htmlBg;
+      html.style.colorScheme = prev.htmlScheme;
+      body.style.colorScheme = prev.bodyScheme;
       window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
       document.removeEventListener("keydown", onKeyDown);
       (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
@@ -170,9 +177,9 @@ export default function ProjectPopup({
             // never see a spurious resize mid-animation. Asymmetric timing —
             // slower open, snappier close — mirrors that same precedent
             // (320ms/220ms open vs 240ms/160ms close there).
-            initial={{ opacity: 0, y: panelY }}
-            animate={{ opacity: 1, y: 0, transition: { duration: panelEnter, ease: EASE_OPACITY } }}
-            exit={{ opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }}
+            initial={{ opacity: 0, transform: `translateY(${panelY}px)` }}
+            animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: panelEnter, ease: EASE_OPACITY } }}
+            exit={{ opacity: 0, transform: `translateY(${panelY}px)`, transition: { duration: panelExit, ease: EASE_EXIT } }}
             style={{
               width: `min(${maxWidth}px, 100%)`,
               // Leave a slim margin so the panel fills more of the viewport
@@ -182,6 +189,7 @@ export default function ProjectPopup({
               flexDirection: "column",
               overflow: "hidden",
               background: panelBg,
+              colorScheme: "inherit",
               borderRadius: "var(--radius-panel)",
               border: "1px solid var(--color-border-subtle)",
               boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
