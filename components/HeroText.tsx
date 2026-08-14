@@ -114,6 +114,7 @@ export default function HeroText() {
 
       <motion.p
         className="hero-sub"
+        data-hero-sub
         initial={{ opacity: SPAWN_FROM_OPACITY, transform: fromY }}
         animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: SPAWN_FROM_OPACITY, transform: fromY }}
         transition={subTx}
