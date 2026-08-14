@@ -207,6 +207,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         if (performance.now() < ignoreHoverUntilRef.current) return;
         if (canHover()) setIsHovered(true);
         warmPrimary(href);
+        if (PRIMARY_NAV.has(href)) router.prefetch(href);
       }}
       onMouseLeave={onLinkMouseLeave}
       // A real tap fires pointerup (often <150ms after pointerdown) and then
@@ -219,11 +220,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       // On touch, we also *commit navigation on pointerup*. Relying on the
       // later click is what made taps sometimes flash the morph (pointerdown)
       // without ever changing route — slight finger movement cancels click
-      // while leaving isTapped on. Mouse keeps native Link click so
-      // cmd/middle-click still work.
+      // while leaving isTapped on. Unmodified left-clicks use router.push so
+      // archive isn't stuck waiting on Sanity; cmd/middle-click stay native.
       onPointerDown={(e) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
         warmPrimary(href);
+        if (PRIMARY_NAV.has(href)) router.prefetch(href);
 
         if (e.pointerType === "touch" || e.pointerType === "pen") {
           setIsHovered(false);
@@ -285,8 +287,18 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           e.preventDefault();
           return;
         }
+        // cmd/ctrl/shift/middle-click: keep native Link (new tab).
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+          if (PRIMARY_NAV.has(href)) markSoftNav();
+          return;
+        }
         markNavCommit();
         if (PRIMARY_NAV.has(href)) markSoftNav();
+        // Don't wait on Link's default — archive's RSC fetch used to leave
+        // this click looking dead until Sanity returned. push() commits the
+        // URL immediately; app/archive/loading.tsx covers the data wait.
+        e.preventDefault();
+        router.push(href);
       }}
     >
       {/* Base Text (Solid) */}

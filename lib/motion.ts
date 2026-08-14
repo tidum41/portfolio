@@ -20,8 +20,10 @@ export const XMB_ENTRANCE_SCALE = 1;
 /** Resting / reduced-motion transform for spawn items. */
 export const SPAWN_REST = "translate(0px, 0px)";
 
-/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content. */
-export const SPAWN_FROM_OPACITY = 0.29;
+/** Ghost opacity for spawn — low enough to read as an appear (PS3 fade),
+ *  high enough that a skipped tween is not a blank hole. 0.29 sat on the
+ *  page as already-there type that then slid, which is the opposite. */
+export const SPAWN_FROM_OPACITY = 0.08;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;

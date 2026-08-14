@@ -692,7 +692,7 @@ html[data-theme="dark"] .project-image {
 }
 @keyframes cs-open-in {
   from {
-    opacity: 0.29;
+    opacity: 0.08;
     translate: 0 8px;
   }
 }
@@ -714,7 +714,7 @@ html[data-theme="dark"] .project-image {
 }
 @keyframes ps3-enter {
   from {
-    opacity: var(--ps3-enter-from-opacity, 0.29);
+    opacity: var(--ps3-enter-from-opacity, 0.08);
     translate: 0 var(--ps3-enter-y, 8px);
   }
 }
