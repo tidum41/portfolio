@@ -17,8 +17,9 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
+import { clearInstantBack } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -234,20 +235,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
 
-  // Captured synchronously during render, the moment visible flips to
-  // true — before any effect (including clearInstantBack, below) has a
-  // chance to run. Using a ref comparison here (not a state update inside an
-  // effect) avoids an extra render pass that could show one frame of the
-  // wrong variant.
-  const wasWorkRouteRef = useRef(visible);
-  const instantArrivalRef = useRef(false);
-  if (visible && !wasWorkRouteRef.current) {
-    instantArrivalRef.current = peekInstantWorkContent();
-  }
-  wasWorkRouteRef.current = visible;
-  // Case-study Back snaps. Primary-nav returns play the grid/hero enter
-  // (shell is already on screen — this is the page transition).
-  const instant = instantArrivalRef.current;
+  // Rising-edge latch: Back snaps; every other Work show bumps `epoch` so
+  // keep-alive EntranceItems replay instead of sitting at rest.
+  const { snap, epoch } = useTabArrival(visible);
+  const instant = snap;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -573,7 +564,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         }}
       >
         <HeroLegibilityScrim />
-        <EntranceItem active={visible} instant={heroInstant} delay={0} style={{
+        <EntranceItem active={visible} instant={heroInstant} replayToken={epoch} delay={0} style={{
           position: "relative",
           maxWidth: "var(--grid-max-w)",
           marginInline: "auto",
@@ -609,7 +600,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -624,7 +615,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -659,6 +650,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
             <EntranceItem
               active={gridActive}
               instant={instant}
+              replayToken={epoch}
               delay={rankDelay(projects.length)}
               className="project-card portfolio-grid-card"
               data-grid-card="cd"
@@ -699,7 +691,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -714,7 +706,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -748,6 +740,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
             <EntranceItem
               active={gridActive}
               instant={instant}
+              replayToken={epoch}
               delay={rankDelay(projects.length + 1)}
               className="project-card portfolio-grid-card"
               data-grid-card="habit"

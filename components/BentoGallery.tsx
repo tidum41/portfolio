@@ -138,6 +138,10 @@ interface Props {
     style?: CSSProperties;
     /** False while keep-alive is off-route: skip enter, posters only. */
     visible?: boolean;
+    /** Case-study / browser Back — tiles stay at rest. */
+    snap?: boolean;
+    /** Bumps on each non-Back Archive arrival so `.ps3-enter` can replay. */
+    enterEpoch?: number;
 }
 
 // ── Pure utilities ─────────────────────────────────────────────────────────────
@@ -398,6 +402,8 @@ export default function BentoGallery({
     minZoomFactor = 0,
     style,
     visible = true,
+    snap = false,
+    enterEpoch = 0,
 }: Props) {
     const isStatic = false;
     const isDark = useIsDark();
@@ -440,15 +446,23 @@ export default function BentoGallery({
     const attachFullSrcRef = useRef(visible);
     if (visible) attachFullSrcRef.current = true;
     const deferFullSrc = !attachFullSrcRef.current;
-    // Replay tile enter on every Archive show. display:none → block restarts
-    // `.ps3-enter`; clear the class while hidden so the next show can play.
-    const enteringRef = useRef(false);
-    if (layoutReady && visible) {
-        enteringRef.current = true;
-    } else if (!visible) {
-        enteringRef.current = false;
-    }
-    const playEnter = enteringRef.current;
+    // Finished `.ps3-enter` will not restart on the same tile. Restart the
+    // class in a layout effect on each non-Back show; Back leaves tiles at rest.
+    const playEnter = Boolean(layoutReady && visible && !snap);
+
+    useLayoutEffect(() => {
+        if (!layoutReady) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const tiles = canvas.querySelectorAll<HTMLElement>("[data-ps3-enter]");
+        for (const el of tiles) {
+            el.classList.remove("ps3-enter");
+            if (visible && !snap) {
+                void el.offsetWidth;
+                el.classList.add("ps3-enter");
+            }
+        }
+    }, [visible, snap, enterEpoch, layoutReady]);
 
 
     useLayoutEffect(() => {
@@ -1505,6 +1519,7 @@ export default function BentoGallery({
                     return (
                         <div
                             key={i}
+                            data-ps3-enter=""
                             className={tileEnterClass}
                             style={{
                                 position: "absolute",

@@ -124,6 +124,7 @@ async function snapshot(page) {
       return { display: getComputedStyle(el).display };
     };
     const aboutH1 = document.querySelector("[data-primary-shell='about'] h1");
+    const workCard = document.querySelector("[data-grid-card]");
     return {
       pathname: location.pathname,
       intro: document.documentElement.getAttribute("data-intro"),
@@ -132,11 +133,33 @@ async function snapshot(page) {
       archive: read("archive"),
       aboutH1Opacity: aboutH1 ? getComputedStyle(aboutH1).opacity : null,
       aboutEnter: document.querySelectorAll("[data-primary-shell='about'] .ps3-enter").length,
+      archiveEnter: document.querySelectorAll("[data-primary-shell='archive'] .ps3-enter").length,
+      workCardOpacity: workCard ? getComputedStyle(workCard).opacity : null,
       archiveVisibleTiles: document.querySelectorAll(
         "[data-primary-shell='archive'] .bento-cell, [data-primary-shell='archive'] canvas",
       ).length,
     };
   });
+}
+
+async function waitEnterMs(page, ms = 1250) {
+  await page.waitForTimeout(ms);
+}
+
+async function expectArchiveEnter(page, step, results) {
+  await page.waitForFunction(
+    () => document.querySelectorAll("[data-primary-shell='archive'] .ps3-enter").length > 0,
+    null,
+    { timeout: 8000 },
+  );
+  const count = await page.evaluate(
+    () => document.querySelectorAll("[data-primary-shell='archive'] .ps3-enter").length,
+  );
+  results.push({ step, archiveEnter: count });
+  if (count === 0) {
+    return fail(`${step}: expected .ps3-enter on archive tiles`);
+  }
+  return true;
 }
 
 function fail(msg, extra) {
@@ -183,6 +206,8 @@ async function main() {
     ok = fail("Work→About first: expected .ps3-enter on about content", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
+  // Let the first About enter finish — the bug is finished CSS not restarting.
+  await waitEnterMs(page);
 
   // About → Work (first return — shell instant, content may be entering)
   m = await clickNavMeasure(page, "/", "work");
@@ -191,8 +216,9 @@ async function main() {
     ok = fail("About→Work first: work not display:block in click handler", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
+  await waitEnterMs(page);
 
-  // Work → About (second — content enter should replay)
+  // Work → About (second — content enter should replay after the first finished)
   m = await clickNavMeasure(page, "/about", "about");
   results.push({ step: "work-to-about-2", ...m });
   if (m.displayInHandler !== "block") {
@@ -202,12 +228,33 @@ async function main() {
     ok = fail("Work→About second: expected .ps3-enter on about content", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
+  await waitEnterMs(page);
 
-  // About → Work (second)
+  // Repeat About a few more times — enter must not die after the first couple.
+  for (let i = 3; i <= 5; i++) {
+    m = await clickNavMeasure(page, "/", "work");
+    if (m.displayInHandler !== "block") {
+      ok = fail(`About→Work ${i}: work not display:block in click handler`, m) && ok;
+    }
+    await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
+    await waitEnterMs(page);
+    m = await clickNavMeasure(page, "/about", "about");
+    results.push({ step: `work-to-about-${i}`, ...m });
+    if (m.displayInHandler !== "block") {
+      ok = fail(`Work→About ${i}: about not display:block in click handler`, m) && ok;
+    }
+    if (m.enterCount === 0) {
+      ok = fail(`Work→About ${i}: expected .ps3-enter on about content`, m) && ok;
+    }
+    await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
+    await waitEnterMs(page);
+  }
+
+  // About → Work
   m = await clickNavMeasure(page, "/", "work");
-  results.push({ step: "about-to-work-2", ...m });
+  results.push({ step: "about-to-work-after-repeats", ...m });
   if (m.displayInHandler !== "block") {
-    ok = fail("About→Work second: work not display:block in click handler", m) && ok;
+    ok = fail("About→Work after repeats: work not display:block in click handler", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
 
@@ -218,11 +265,13 @@ async function main() {
     ok = fail("Work→Archive: archive not display:block in click handler", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/archive", null, { timeout: 10000 });
+  if (!(await expectArchiveEnter(page, "work-to-archive-enter", results))) ok = false;
   const onArchive = await snapshot(page);
   results.push({ step: "on-archive", ...onArchive });
   if (onArchive.work.display !== "none" || onArchive.about.display !== "none") {
     ok = fail("On archive: other shells not none", onArchive) && ok;
   }
+  await waitEnterMs(page);
 
   // Archive → Work
   m = await clickNavMeasure(page, "/", "work");
@@ -234,17 +283,24 @@ async function main() {
     ok = fail("Archive→Work: archive still visible in handler", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
+  await waitEnterMs(page);
 
   // About → Archive → About
   m = await clickNavMeasure(page, "/about", "about");
   results.push({ step: "work-to-about-for-archive", ...m });
+  if (m.enterCount === 0) {
+    ok = fail("Work→About before archive: expected .ps3-enter", m) && ok;
+  }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
+  await waitEnterMs(page);
   m = await clickNavMeasure(page, "/archive", "archive");
   results.push({ step: "about-to-archive", ...m });
   if (m.displayInHandler !== "block") {
     ok = fail("About→Archive: archive not display:block in click handler", m) && ok;
   }
   await page.waitForFunction(() => location.pathname === "/archive", null, { timeout: 10000 });
+  if (!(await expectArchiveEnter(page, "about-to-archive-enter", results))) ok = false;
+  await waitEnterMs(page);
   m = await clickNavMeasure(page, "/about", "about");
   results.push({ step: "archive-to-about", ...m });
   if (m.displayInHandler !== "block") {
@@ -255,13 +311,16 @@ async function main() {
   }
   await page.waitForFunction(() => location.pathname === "/about", null, { timeout: 10000 });
 
-  // Browser back / forward
+  // Browser back / forward — destination snaps (no .ps3-enter replay)
   await page.goBack();
   await page.waitForTimeout(200);
   const back1 = await snapshot(page);
   results.push({ step: "back-to-archive", ...back1 });
   if (back1.archive.display !== "block") {
     ok = fail("Back: expected archive visible", back1) && ok;
+  }
+  if (back1.archiveEnter !== 0) {
+    ok = fail("Back to archive: expected snap (no .ps3-enter)", back1) && ok;
   }
   await page.goForward();
   await page.waitForTimeout(200);
@@ -270,8 +329,11 @@ async function main() {
   if (fwd1.about.display !== "block") {
     ok = fail("Forward: expected about visible", fwd1) && ok;
   }
+  if (fwd1.aboutEnter !== 0) {
+    ok = fail("Forward to about: expected snap (no .ps3-enter)", fwd1) && ok;
+  }
 
-  // Case-study Back → Work, then About
+  // Case-study Back button snaps Work; primary About after that still enters.
   await clickNavMeasure(page, "/", "work");
   await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
   const caseHref = await page.evaluate(() => {
@@ -286,16 +348,33 @@ async function main() {
     if (onCase.work.display !== "none") {
       ok = fail("Case study: work shell should be hidden", onCase) && ok;
     }
-    m = await clickNavMeasure(page, "/", "work");
-    results.push({ step: "case-to-work-nav", ...m });
-    if (m.displayInHandler !== "block") {
-      ok = fail("Case→Work nav: work not display:block in click handler", m) && ok;
+    const backBtn = await page.$(".cs-back-desktop, .cs-back-mobile");
+    if (backBtn) {
+      await backBtn.click();
+      await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
+      const afterCsBack = await snapshot(page);
+      results.push({ step: "case-study-back-button", ...afterCsBack });
+      if (afterCsBack.work.display !== "block") {
+        ok = fail("Case-study Back: work should be visible", afterCsBack) && ok;
+      }
+      if (afterCsBack.workCardOpacity != null && Number(afterCsBack.workCardOpacity) < 0.99) {
+        ok = fail("Case-study Back: work content should snap at rest", afterCsBack) && ok;
+      }
+    } else {
+      m = await clickNavMeasure(page, "/", "work");
+      results.push({ step: "case-to-work-nav", ...m });
+      if (m.displayInHandler !== "block") {
+        ok = fail("Case→Work nav: work not display:block in click handler", m) && ok;
+      }
+      await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
     }
-    await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });
     m = await clickNavMeasure(page, "/about", "about");
     results.push({ step: "work-to-about-after-case", ...m });
     if (m.displayInHandler !== "block") {
       ok = fail("After case, Work→About: about not display:block", m) && ok;
+    }
+    if (m.enterCount === 0) {
+      ok = fail("After case, Work→About: expected .ps3-enter", m) && ok;
     }
   } else {
     results.push({ step: "case-study", skipped: true, caseHref });
@@ -338,6 +417,9 @@ async function main() {
   results.push({ step: "touch-pointerup-about", ...touch });
   if (touch.display !== "block") {
     ok = fail("Touch pointerup About: not display:block", touch) && ok;
+  }
+  if (touch.enterCount === 0) {
+    ok = fail("Touch pointerup About: expected .ps3-enter", touch) && ok;
   }
 
   console.log(JSON.stringify({ ok, results }, null, 2));
