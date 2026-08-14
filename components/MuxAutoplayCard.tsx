@@ -210,31 +210,37 @@ export default function MuxAutoplayCard({
     </div>
   );
 
-  const linkStyle = { textDecoration: "none", display: "block" } as const;
+  const linkStyle = { textDecoration: "none", display: "block", color: "inherit", cursor: "pointer" } as const;
   // Blue northeast arrow only when the card leaves the site — derived from
   // href, not a hard-coded project id.
   const external = /^(https?:|mailto:|tel:)/i.test(href);
 
+  const body = (
+    <ProjectCardLift style={{ gap: dk.cardGap }}>
+      {video}
+      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
+    </ProjectCardLift>
+  );
+
   return (
     <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
-      <ProjectCardLift style={{ gap: dk.cardGap }}>
-        {external ? (
-          <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
-        ) : (
-          <Link
-            href={href}
-            prefetch
-            style={linkStyle}
-            onMouseEnter={warmCaseStudy}
-            onFocus={warmCaseStudy}
-            onPointerDown={commitCaseStudy}
-            onClick={commitCaseStudy}
-          >
-            {video}
-          </Link>
-        )}
-        <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
-      </ProjectCardLift>
+      {external ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+          {body}
+        </a>
+      ) : (
+        <Link
+          href={href}
+          prefetch
+          style={linkStyle}
+          onMouseEnter={warmCaseStudy}
+          onFocus={warmCaseStudy}
+          onPointerDown={commitCaseStudy}
+          onClick={commitCaseStudy}
+        >
+          {body}
+        </Link>
+      )}
     </div>
   );
 }

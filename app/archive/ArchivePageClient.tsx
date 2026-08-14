@@ -124,6 +124,7 @@ export default function PlaygroundPageClient({
         } as CSSProperties}
             data-ui-sound-scope="archive"
         >
+            <h1 className="sr-only">archive</h1>
             <BentoGallery
                   items={items}
                   columns={4}

@@ -235,8 +235,10 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           lineHeight: 0,
           WebkitTapHighlightColor: "transparent",
           position: "relative",
-          width: ICON_SIZE,
-          height: ICON_SIZE,
+          width: 44,
+          height: 44,
+          boxSizing: "border-box",
+          justifyContent: "center",
           flexShrink: 0,
         }}
       >

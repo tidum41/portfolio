@@ -266,6 +266,18 @@ html.theme-switching *::after {
 }
 .skip-link:focus { top: 0; }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ─── Focus ring ──────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--color-text-primary);
@@ -306,6 +318,7 @@ nav a {
   --project-hover-out: 360ms;
   position: relative;
   isolation: isolate;
+  cursor: pointer;
 }
 .project-card::before {
   content: "";
@@ -830,13 +843,9 @@ html[data-theme="dark"] .project-image {
 @media (max-width: 767px) {
   .portfolio-grid { grid-template-columns: 1fr !important; }
   /* Flatten the two DOM columns so cards can be reordered as one stack
-     without changing the desktop 2-column structure. */
+     without changing the desktop 2-column structure. `order` is set in
+     JSX from Sanity index (plus CD/habit trailing slots). */
   .portfolio-grid-col { display: contents; }
-  .portfolio-grid-card[data-grid-card="project-bruinlease"] { order: 1; }
-  .portfolio-grid-card[data-grid-card="project-todolist"] { order: 2; }
-  .portfolio-grid-card[data-grid-card="project-sviz"] { order: 3; }
-  .portfolio-grid-card[data-grid-card="habit"] { order: 4; }
-  .portfolio-grid-card[data-grid-card="cd"] { order: 5; }
 }
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────

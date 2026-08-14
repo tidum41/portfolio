@@ -876,6 +876,14 @@ export default function BentoGallery({
 
             if (Math.abs(ns - s0) < 1e-6) return;
 
+            const reducedMotion =
+                typeof window !== "undefined" &&
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (reducedMotion) {
+                applyAtScale(ns);
+                return;
+            }
+
             // Approximate the former CSS snap/spring curves with a smooth ease-out
             // so +/- and track clicks still feel animated — without the top-left drift
             // that CSS translate+scale interpolation causes.
@@ -1768,7 +1776,9 @@ export default function BentoGallery({
                 }}
             >
                 <button
+                    type="button"
                     title="Zoom out"
+                    aria-label="Zoom out"
                     onClick={() => zoomBy(1 / 1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {
@@ -1786,6 +1796,8 @@ export default function BentoGallery({
 
                 <div
                     className="bento-zoom-track"
+                    role="group"
+                    aria-label="Zoom"
                     onClick={onTrackClick}
                     onPointerDown={onTrackPointerDown}
                     style={{
@@ -1841,7 +1853,9 @@ export default function BentoGallery({
                 <div style={{ width: 1, background: dividerColor, flexShrink: 0 }} />
 
                 <button
+                    type="button"
                     title="Zoom in"
+                    aria-label="Zoom in"
                     onClick={() => zoomBy(1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {

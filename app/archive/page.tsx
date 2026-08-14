@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPlaygroundGallery } from "@/lib/sanity/queries";
+import { getPlaygroundGallery, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
 import ArchivePageClient from "./ArchivePageClient";
 
@@ -17,6 +17,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchivePage() {
-  const items = await getPlaygroundGallery();
+  const items = await getPlaygroundGallery().catch(
+    () => [] as PlaygroundGalleryItem[],
+  );
   return <ArchivePageClient items={items} />;
 }
