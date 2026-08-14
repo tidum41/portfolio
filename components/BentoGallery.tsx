@@ -445,6 +445,7 @@ export default function BentoGallery({
         const applySize = () => {
             const w = root.offsetWidth;
             const h = root.offsetHeight;
+            // display:none reports 0. Wait until this shell is actually shown.
             if (w < 8 || h < 8) return;
             const commit = () => {
                 setVw((prev) => (prev === w ? prev : w));
@@ -464,7 +465,7 @@ export default function BentoGallery({
         const ro = new ResizeObserver(applySize);
         ro.observe(root);
         return () => ro.disconnect();
-    }, []);
+    }, [visible]);
 
     useLayoutEffect(() => {
         const th = thumbRef.current;
@@ -1130,7 +1131,7 @@ export default function BentoGallery({
 
     // ── Keyboard ──────────────────────────────────────────────────────────────
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !visible) return;
         const onKey = (e: KeyboardEvent) => {
             const fi = focusedRef.current;
             if (e.key === "Escape") {
@@ -1174,7 +1175,7 @@ export default function BentoGallery({
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [positions, items, goOverview, focusCell]);
+    }, [visible, positions, items, goOverview, focusCell]);
 
     // ── Wheel ─────────────────────────────────────────────────────────────────
     const wheelTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -1441,11 +1442,13 @@ export default function BentoGallery({
                 touchAction: "none",
                 userSelect: "none",
                 // Stagger is decorative — never eat the first click while tiles enter.
-                pointerEvents: "auto",
+                pointerEvents: visible ? "auto" : "none",
                 transform: "none",
                 // Hold the canvas until the first real measure + overview
-                // camera land. Avoids one frame of the 1280×720 fallback pack.
-                visibility: layoutReady ? "visible" : "hidden",
+                // camera land. Never set visible while the keep-alive shell
+                // is off-route — visibility:visible descendants paint through
+                // a visibility:hidden ancestor (the About bento leak).
+                visibility: layoutReady && visible ? "visible" : "hidden",
             }}
         >
             {/* ── Canvas ── */}

@@ -11,16 +11,19 @@ import {
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**
- * Archive keep-alive — same idea as PersistentWorkShell, Archive only.
+ * Archive keep-alive — same hide contract as PersistentWorkShell.
  *
- * Remounting `/archive` waited on RSC + BentoGallery + full-image decode,
- * which is why the click felt dead even after the Sanity cache. This shell:
- *   - Mounts once from the root layout (never unmounts on nav).
- *   - Stays in the DOM with visibility/opacity, not display:none, so LQIP
- *     posters can decode while the user is still on Work (nav is intro-hidden
- *     for ~2s — enough time).
- *   - Attaches full image `src` only while `/archive` is showing.
- *   - Replays `.ps3-enter` on each show by toggling the class with `visible`.
+ * Work uses `display: none` off-route. Archive must too. `visibility: hidden`
+ * on this wrapper cannot hide BentoGallery: the canvas (and captions) set
+ * `visibility: visible`, and a visible descendant paints through a hidden
+ * ancestor. That is the About/Work bento leak.
+ *
+ * Speed without painting off-route:
+ *   - Gallery JSON is seeded from the root layout (no Sanity wait).
+ *   - The client tree stays mounted so a return visit does not remount.
+ *   - PrimaryRouteWarmup decodes LQIP posters via Image(), not a second grid.
+ *   - Full images attach only while `/archive` is showing.
+ *   - `.ps3-enter` is added only while visible, so leave/return replays.
  */
 export default function PersistentArchiveShell({
   items: serverItems,
@@ -49,7 +52,7 @@ export default function PersistentArchiveShell({
 
   return (
     <div
-      className={visible ? "archive-keep-alive" : "archive-keep-alive archive-keep-alive--hidden"}
+      style={{ display: visible ? "block" : "none" }}
       aria-hidden={!visible}
       inert={!visible}
       {...(!visible ? { "data-nosnippet": true } : {})}

@@ -28,11 +28,11 @@ export default function PrimaryRouteWarmup() {
     void import("@/components/BentoGallery");
     void import("@/lib/archiveGalleryCache").then((m) => {
       void m.warmArchiveGallery().then((items) => {
-        // Posters only — full archive images attach when the keep-alive
-        // shell becomes visible. Preloading full srcs here competed with Work.
+        // Decode LQIP posters into the image cache without mounting a second
+        // visible grid. Data URIs included — display:none will not have painted them.
         for (const it of items.slice(0, 12)) {
           const poster = it.blurDataURL;
-          if (!poster || poster.startsWith("data:")) continue;
+          if (!poster) continue;
           const img = new window.Image();
           img.decoding = "async";
           img.src = poster;
