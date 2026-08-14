@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallb
 import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
-import { EASE_Y, ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_OPACITY, EASE_EXPAND, type CubicBezier } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -15,28 +15,24 @@ const PILL_W  = 70;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
-// Morph open/close — Emil ease-out (fast start → settles). Open stays prompt;
-// close runs a touch longer so collapse doesn't feel abrupt.
-const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
-const OPEN_MS = 200;
+
+function cssCubic(c: CubicBezier) {
+  return `cubic-bezier(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})`;
+}
+
+// Morph open/close — same expand curve as site panels (`--expand-ease` /
+// EASE_EXPAND). Open stays prompt; close runs a touch longer so collapse
+// doesn't feel abrupt.
+const OPEN_MS = 220;
 const CLOSE_MS = 280;
-const OPEN_EASE = EASE_OUT;
-const CLOSE_EASE = EASE_OUT;
-// Matches lib/motion.ts's EASE_OPACITY / app/layout.tsx's intro-gate CSS
-// (`transition: opacity 0.7s cubic-bezier(.16,1,.3,1)`) — the pill's first-
-// load fade now rides the exact same curve/duration nav and footer use, and
-// is triggered by the same "intro-done" event (see the posReady effect
-// below), instead of an independently-tuned 2s ease-out that finished long
-// after everything else had already settled and read as a separate, slower
-// reveal bolted onto the page rather than part of it.
-const FADE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const FADE_MS = 700;
-// This portal intentionally remounts off-route. On an orchestrated work
-// return it shares the work entrance's opacity + settle language, so the
-// pill joins the hero/grid chorus rather than entering as an isolated layer.
-// Case-study Back passes instantReturn and deliberately snaps instead.
-const RETURN_EASE = `cubic-bezier(${EASE_Y.join(", ")})`;
-const RETURN_FADE_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+const OPEN_EASE = cssCubic(EASE_EXPAND);
+const CLOSE_EASE = cssCubic(EASE_EXPAND);
+// Same fade-up as EntranceItem / work grid (ENTRANCE_DEFAULTS + EASE_OPACITY).
+const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+const REVEAL_EASE = cssCubic(EASE_OPACITY);
+const REVEAL_Y = ENTRANCE_DEFAULTS.y;
+// This portal stays mounted across soft-nav (`visible` toggles it). First
+// load waits for intro-done; about/archive return replays the same settle.
 const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
@@ -224,13 +220,12 @@ const Slider = memo(function Slider({
   const active = isHovered || isDragging;
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 
-  const trackBg   = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
-  const filledBg  = active
-    ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.78)")
-    : (isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.40)");
-  const thumbColor = active
-    ? (isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.90)")
-    : (isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)");
+  // One ink family: track is a quieter cut of the same stroke as fill+thumb
+  // so the vertical button reads as part of the line, not a separate layer.
+  const ink       = isDark ? "255,255,255" : "0,0,0";
+  const trackBg   = `rgba(${ink},0.18)`;
+  const filledBg  = active ? `rgba(${ink},0.72)` : `rgba(${ink},0.55)`;
+  const thumbColor = filledBg;
 
   return (
     <div
@@ -285,20 +280,25 @@ const Slider = memo(function Slider({
     >
       <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: trackBg }} />
       <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: filledBg, transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)" }} />
-      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbColor, boxShadow: isDark ? "0 1px 3px rgba(0,0,0,0.5)" : "0 1px 3px rgba(0,0,0,0.2)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
+      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbColor, boxShadow: isDark ? "0 1px 2px rgba(0,0,0,0.35)" : "0 1px 2px rgba(0,0,0,0.12)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
     </div>
   );
 });
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-function ChevronDown({ size = 10, color = "currentColor" }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline points="6 9 12 15 18 9" /></svg>;
+function ChevronDown({ size = 10, color = "currentColor", polyRef }: { size?: number; color?: string; polyRef?: React.Ref<SVGPolylineElement> }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline ref={polyRef} points="6 9 12 15 18 9" /></svg>;
 }
 function Minus({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 }
 function Reset({ size = 11 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+  // Single path so the arrow + arc share one stroke (no stacked translucent joins).
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5" />
+    </svg>
+  );
 }
 function Plus({ size = 9, color = "currentColor" }: { size?: number; color?: string }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
@@ -308,6 +308,54 @@ function PS3TriangleGlyph({ size = 9, color = "currentColor" }) {
 }
 function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><circle cx="12" cy="12" r="9" /></svg>;
+}
+
+// ── Chevron/label optical alignment ─────────────────────────────────────────
+// "menu" renders in --font-sans, which is "HN" (a local() alias for the
+// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
+// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
+// (Android, Windows, Linux) the stack lands on a substitute with different
+// ascent/descent proportions, so a marginTop tuned by eye against one font's
+// glyph metrics reads as misaligned against another's. Rather than guess a
+// static px value that only holds for whichever font the tuner happened to
+// have installed, measure the *actual* rendered ink of both the chevron and
+// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
+// for the stroke — and compute the delta needed to center them on each
+// other, whatever font actually won the fallback chain on this device.
+function useLabelOpticalOffset(
+  chevronRef: React.RefObject<SVGPolylineElement | null>,
+  labelRef: React.RefObject<HTMLSpanElement | null>,
+) {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const chevron = chevronRef.current, label = labelRef.current;
+    if (!chevron || !label) return;
+    function measure() {
+      if (!chevron || !label) return;
+      const ctx = document.createElement("canvas").getContext("2d");
+      if (!ctx) return;
+      const cs = getComputedStyle(label);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = ctx.measureText(label.textContent || "");
+      if (m.fontBoundingBoxAscent === undefined || m.actualBoundingBoxAscent === undefined) return;
+      const labelRect = label.getBoundingClientRect();
+      const halfLeading = (labelRect.height - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2;
+      const baselineFromTop = halfLeading + m.fontBoundingBoxAscent;
+      const inkCenterFromTop = baselineFromTop + (m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) / 2;
+      const labelInkCenterY = labelRect.top + inkCenterFromTop;
+      const chevronRect = chevron.getBoundingClientRect();
+      const chevronInkCenterY = chevronRect.top + chevronRect.height / 2;
+      // Accumulate: if we already applied a marginTop from a prior measure
+      // (e.g. fonts.ready re-run), the live delta is the remaining error —
+      // adding it avoids double-correcting against the shifted label.
+      const delta = chevronInkCenterY - labelInkCenterY;
+      if (Math.abs(delta) < 0.25) return;
+      setOffset(prev => prev + delta);
+    }
+    measure();
+    document.fonts?.ready?.then(measure).catch(() => {});
+  }, [chevronRef, labelRef]);
+  return offset;
 }
 
 // ── Expand/collapse section ─────────────────────────────────────────────────
@@ -495,10 +543,13 @@ html[data-theme=dark] .ps3cp input[type=range]:focus-visible { outline-color: rg
 html[data-theme=dark] .ps3cp-slider-track:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-header:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: -3px; border-radius: 999px; }
 html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,255,0.72); }
-.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.28);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.72);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp-ibtn svg { display:block; opacity:1; }
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
-.ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
+.ps3cp-ibtn:hover { color:rgba(0,0,0,0.88); }
 .ps3cp-ibtn:active { transform:scale(0.96); }
+.ps3cp-ibtn:focus-visible { outline:2px solid rgba(0,0,0,0.65); outline-offset:2px; }
+html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255,0.72); }
 .ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
 .ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
@@ -522,10 +573,18 @@ export default function PS3ControlPanel({
   visible?: boolean;
 }) {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset:  [-1.5, -4, 4, 0.5],
+    // Optical lift for the whole chevron+"menu" unit inside the pill.
+    // Lowercase text + downward chevron read heavy when geometrically
+    // centered — default −1px. Relative chevron↔label alignment is still
+    // handled by useLabelOpticalOffset; menuTextOffset is a fine-tune on top.
+    chevronOffset:  [-1, -4, 2, 0.5],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [-3.5, -4, 4, 0.5],
+    menuTextOffset: [0, -4, 4, 0.5],
   });
+
+  const chevronPolyRef  = useRef<SVGPolylineElement>(null);
+  const menuLabelRef    = useRef<HTMLSpanElement>(null);
+  const labelAutoOffset = useLabelOpticalOffset(chevronPolyRef, menuLabelRef);
 
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
@@ -681,8 +740,8 @@ export default function PS3ControlPanel({
     };
   }, [visible]);
 
-  // Case-study Back snaps. Primary-nav return replays the 220ms fade so the
-  // pill joins the work grid chorus instead of sitting still or moving alone.
+  // posReady: same EntranceItem settle for first load (after intro-done)
+  // and about/archive return. Case-study Back snaps.
   useSafeLayoutEffect(() => {
     if (!posReady) return;
     if (!visible) {
@@ -711,7 +770,7 @@ export default function PS3ControlPanel({
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
       })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), RETURN_FADE_MS + 200);
+      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
       return;
     }
     revealKindRef.current = "first";
@@ -723,7 +782,7 @@ export default function PS3ControlPanel({
         requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
           setShown(true); setPositionSettled(true);
         })));
-        setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
+        setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
       }
       _ps3cpHasLoaded = true;
     }
@@ -789,50 +848,75 @@ export default function PS3ControlPanel({
     setOpenColorPicker(null);
   }
 
-  // Drag logic
+  // Drag logic — only flip `isDragging` once past the click threshold.
+  // Setting it on pointerdown used to force `transition: none` for the
+  // subsequent open/close toggle, so the pill→panel morph snapped instead
+  // of animating (isOpen committed while isDragging was still true).
+  // Listeners are bound synchronously here (not via useEffect) so a quick
+  // click can't miss pointerup before React re-renders.
   const startDrag = useCallback((e: React.PointerEvent) => {
     if ((e.target as Element).closest("button, label, input")) return;
-    didDragRef.current = false; dragStartedRef.current = true;
+    if (dragStartedRef.current) return;
+    didDragRef.current = false;
+    dragStartedRef.current = true;
     dragInHeaderRef.current = headerRef.current?.contains(e.target as Node) ?? false;
-    dragRef.current = { startX: e.pageX, startY: e.pageY, origX: pillPos.x, origY: pillPos.y };
-    startTransition(() => setIsDragging(true));
-  }, [pillPos]);
+    const origX = pillPos.x;
+    const origY = pillPos.y;
+    const openAtStart = isOpen;
+    dragRef.current = { startX: e.pageX, startY: e.pageY, origX, origY };
 
-  useEffect(() => {
-    if (!isDragging && !dragStartedRef.current) return;
-    const onMove = (e: PointerEvent) => {
+    const onMove = (ev: PointerEvent) => {
       if (!dragRef.current) return;
-      const dx = e.pageX - dragRef.current.startX, dy = e.pageY - dragRef.current.startY;
-      if (Math.abs(dx) + Math.abs(dy) > 4) didDragRef.current = true;
+      const dx = ev.pageX - dragRef.current.startX;
+      const dy = ev.pageY - dragRef.current.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        if (!didDragRef.current) {
+          didDragRef.current = true;
+          setIsDragging(true);
+        }
+      }
       if (!didDragRef.current) return;
-      const docW = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
-      const cw = isOpen ? PANEL_W : PILL_W;
+      const docW = document.documentElement.scrollWidth;
+      const docH = document.documentElement.scrollHeight;
+      const cw = openAtStart ? PANEL_W : PILL_W;
       const dragged = {
         x: Math.max(EDGE_PAD, Math.min(dragRef.current.origX + dx, docW - cw - EDGE_PAD)),
         y: Math.max(EDGE_PAD, Math.min(dragRef.current.origY + dy, docH - PILL_H - EDGE_PAD)),
       };
-      savePos(dragged); hasDraggedRef.current = true;
-      startTransition(() => setPillPos(dragged));
+      savePos(dragged);
+      hasDraggedRef.current = true;
+      setPillPos(dragged);
     };
+
     const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       if (!dragStartedRef.current) return;
-      dragStartedRef.current = false; startTransition(() => setIsDragging(false));
-      const wasDrag = didDragRef.current, wasHeader = dragInHeaderRef.current;
-      dragRef.current = null; didDragRef.current = false; dragInHeaderRef.current = false;
+      dragStartedRef.current = false;
+      // Clear drag flag synchronously *before* toggling open so morphT
+      // still includes width/height when isOpen flips in this same turn.
+      setIsDragging(false);
+      const wasDrag = didDragRef.current;
+      const wasHeader = dragInHeaderRef.current;
+      dragRef.current = null;
+      didDragRef.current = false;
+      dragInHeaderRef.current = false;
       if (wasDrag) return;
       if (!wasHeader) return;
-      if (isOpen) setIsOpen(false);
-      else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
+      if (openAtStart) setIsOpen(false);
+      else { setFlipped(shouldFlip(origY)); setIsOpen(true); }
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-  }, [isDragging, isOpen, pillPos.y]);
+    window.addEventListener("pointercancel", onUp);
+  }, [pillPos, isOpen]);
 
   const dur = isOpen ? `${OPEN_MS}ms ${OPEN_EASE}` : `${CLOSE_MS}ms ${CLOSE_EASE}`;
   // Keep morph transitions on their own string — never share a node with
   // `.intro-hide` (that class sets `transition: opacity … !important` and
-  // wipes width/height morph). First-load reveal uses `shown` / intro-done.
+  // wipes width/height morph). Reveal uses EntranceItem fade-up tokens.
   const baseMorphParts = [
     `width ${dur}`,
     `height ${dur}`,
@@ -843,14 +927,10 @@ export default function PS3ControlPanel({
     "background-color 200ms ease",
     "border-color 200ms ease",
   ];
-  const isReturnReveal = revealKindRef.current === "return";
-  const fadeMs   = isReturnReveal ? RETURN_FADE_MS : FADE_MS;
-  const fadeEase = isReturnReveal ? RETURN_EASE   : FADE_EASE;
-  const slideY = isReturnReveal ? ENTRANCE_DEFAULTS.y : 0;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${fadeMs}ms ${fadeEase}, transform ${fadeMs}ms ${fadeEase}` : "none")
+    ? (showTransition ? `opacity ${REVEAL_MS}ms ${REVEAL_EASE}, transform ${REVEAL_MS}ms ${REVEAL_EASE}` : "none")
     : (showTransition
-      ? [...baseMorphParts, `opacity ${fadeMs}ms ${fadeEase}`, `transform ${fadeMs}ms ${fadeEase}`].join(", ")
+      ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
       : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
@@ -907,7 +987,7 @@ export default function PS3ControlPanel({
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
-      transform: shown ? "translateY(0px)" : `translateY(${slideY}px)`,
+      transform: shown ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
       WebkitTapHighlightColor: "transparent",
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
@@ -921,14 +1001,41 @@ export default function PS3ControlPanel({
         }}
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`, display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
-              <ChevronDown color={accentCol} size={10} />
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: dk.pillGap,
+            marginLeft: -1,
+            // Lift the whole unit — lowercase "menu" + downward chevron sit
+            // optically low when only flex-centered in the pill.
+            transform: `translateY(${dk.chevronOffset}px)`,
+          }}>
+            <div style={{
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`,
+              display: "flex",
+              alignItems: "center",
+            }}>
+              <ChevronDown color={accentCol} size={10} polyRef={chevronPolyRef} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 200ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
+            <span
+              ref={menuLabelRef}
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.03em",
+                color: accentCol,
+                transition: "color 200ms ease",
+                lineHeight: 1,
+                display: "block",
+                marginTop: labelAutoOffset + dk.menuTextOffset,
+              }}
+            >
+              menu
+            </span>
           </div>
         </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 120ms ${OPEN_EASE} 40ms` : `opacity 90ms ${CLOSE_EASE}` }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 140ms ${OPEN_EASE} 60ms` : `opacity 90ms ${CLOSE_EASE}` }}>
           <button className="ps3cp-ibtn" onClick={handleReset} title="Reset" aria-label="Reset to defaults"><Reset /></button>
           <button className="ps3cp-ibtn" onClick={() => setIsOpen(false)} title="Minimize" aria-label="Minimize"><Minus /></button>
         </div>
@@ -946,8 +1053,8 @@ export default function PS3ControlPanel({
         maxHeight: geo.clampedBodyH,
         opacity: isOpen ? 1 : 0,
         transition: isOpen
-          ? `opacity 140ms ${OPEN_EASE} 40ms`
-          : `opacity 90ms ${CLOSE_EASE}`,
+          ? `opacity 160ms ${OPEN_EASE} 50ms`
+          : `opacity 100ms ${CLOSE_EASE}`,
         WebkitOverflowScrolling: "touch",
       }}>
 

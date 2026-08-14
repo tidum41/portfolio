@@ -17,8 +17,7 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack } from "@/lib/instantNav";
-import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
+import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -229,10 +228,15 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // chance to run. Using a ref comparison here (not a state update inside an
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
-  const snapArrival = useKeepAliveInstant(isWorkRoute);
-  // Off-route: snap hidden under display:none. On-route: snap only for
-  // case-study Back; primary nav replays the Framer fade-up.
-  const instant = !isWorkRoute || snapArrival;
+  const wasWorkRouteRef = useRef(isWorkRoute);
+  const instantArrivalRef = useRef(false);
+  if (isWorkRoute && !wasWorkRouteRef.current) {
+    instantArrivalRef.current = peekInstantBack();
+  }
+  wasWorkRouteRef.current = isWorkRoute;
+  // Only case-study Back is fully instant (avoids remounting silk/media).
+  // Nav "work" replays EntranceItem with ENTRANCE_DEFAULTS.
+  const instant = instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -759,7 +763,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
             so parent display:none cannot hide it; `visible` toggles the portal. */}
         {hasEverBeenActive && (
           <PS3ControlPanel
-            instantReturn={snapArrival}
+            instantReturn={instant}
             visible={isWorkRoute}
           />
         )}

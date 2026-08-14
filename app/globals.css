@@ -297,6 +297,8 @@ nav a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  /* Avoid 300ms double-tap delay / gesture conflicts that can flash
+     press feedback without firing the follow-up click on mobile. */
   touch-action: manipulation;
 }
 
@@ -384,7 +386,9 @@ html[data-theme="dark"] .project-card::before {
   }
 }
 
-/* ─── Nav link hover — smooth color fade, no underline ──────────── */
+/* ─── Nav link hover — smooth color fade, no underline ────────────
+   Hover is desktop-only. Mobile has no hover; sticky :hover from a tap
+   must never restyle these links. */
 .nav-link { transition: color 0.25s ease, background-color 1s ease, border-color 1s ease; }
 @media (hover: hover) and (pointer: fine) {
   .nav-link:hover { color: var(--color-text-muted) !important; }
@@ -1060,9 +1064,9 @@ html[data-theme="dark"] .ps-polaroid-cap {
 }
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
-html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.28) !important; }
+html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.78) !important; }
 @media (hover: hover) and (pointer: fine) {
-  html[data-theme="dark"] .ps3cp-ibtn:hover { color: rgba(255,255,255,0.65) !important; }
+  html[data-theme="dark"] .ps3cp-ibtn:hover { color: rgba(255,255,255,0.92) !important; }
   html[data-theme="dark"] .ps3cp-mode-btn:hover { background: rgba(255,255,255,0.07) !important; }
 }
 html[data-theme="dark"] .ps3cp input[type=range]::-webkit-slider-thumb { background: rgba(255,255,255,0.88) !important; }
