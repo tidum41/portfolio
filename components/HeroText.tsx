@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
-import { EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
+import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { HERO_HEADLINE } from "@/lib/site";
 
 // Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
@@ -29,7 +29,7 @@ export default function HeroText() {
     // (the JOOLA / UCLA line "never arriving", then popping).
     if (instant) return;
 
-    function animateH1(delay = introTimings.heroDelay, dur = introTimings.heroDuration) {
+    function animateH1(delay = introTimings.heroDelay) {
       // Full `transform` string rather than the `y` shorthand — the shorthand
       // runs on the main thread via rAF, while `transform` stays on the
       // compositor. This entrance fires at the busiest possible moment
@@ -38,13 +38,18 @@ export default function HeroText() {
       // sliding after the fade (and after intro-done), which read as a jump
       // on the JOOLA / UCLA line and made the menu pill chase the box.
       const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-      h1Controls.set({ opacity: reduced ? 1 : SPAWN_FROM_OPACITY, transform: reduced ? "translateY(0px)" : fromY });
+      // Hold at 0 through the delay so the H1 is not a visible ghost that
+      // then slides — it materializes with the fade, same language as the
+      // subtitle and grid. Duration matches ENTRANCE_DEFAULTS so H1 settle
+      // and subtitle appear share one clock.
+      const fadeDur = reduced ? 0 : ENTRANCE_DEFAULTS.duration;
+      h1Controls.set({ opacity: reduced ? 1 : 0, transform: reduced ? "translateY(0px)" : fromY });
       h1Controls.start({
         opacity: 1,
         transform: "translateY(0px)",
         transition: {
-          opacity:   { duration: reduced ? 0 : dur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
-          transform: { duration: reduced ? 0 : dur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
+          opacity:   { duration: fadeDur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
+          transform: { duration: fadeDur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
         },
       });
     }
@@ -66,7 +71,7 @@ export default function HeroText() {
     function onReplay() {
       _animated = false;
       setSubReady(false);
-      animateH1(introTimings.heroDelay, introTimings.heroDuration);
+      animateH1();
       window.addEventListener("intro-done", onDone, { once: true });
     }
     window.addEventListener("intro-replay", onReplay);
@@ -79,7 +84,7 @@ export default function HeroText() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: SPAWN_FROM_OPACITY, transform: fromY };
+  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY };
   const subTx = instant || reduced
     ? { duration: 0 }
     : {
@@ -115,8 +120,8 @@ export default function HeroText() {
       <motion.p
         className="hero-sub"
         data-hero-sub
-        initial={{ opacity: SPAWN_FROM_OPACITY, transform: fromY }}
-        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: SPAWN_FROM_OPACITY, transform: fromY }}
+        initial={{ opacity: 0, transform: fromY }}
+        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY }}
         transition={subTx}
         style={{
           position: "relative",
