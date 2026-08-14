@@ -46,6 +46,32 @@ const nextConfig = {
         destination: "/archive/:path*",
         permanent: true,
       },
+      {
+        source: "/resume",
+        destination: "/resume.pdf",
+        permanent: false,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/resume.pdf",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/pdf",
+          },
+          {
+            key: "Content-Disposition",
+            value: 'inline; filename="Mudit-Mahajan-Resume.pdf"',
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
