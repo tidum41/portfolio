@@ -244,6 +244,11 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const motionGenRef = useRef(0);
   const tweensRef = useRef<{ stop: () => void }[]>([]);
 
+  // Keep-alive shells hide with display:none. Zeroing opacity on leave
+  // (to "arm" a replay) is what made About → Work feel delayed: the grid
+  // sat at spawn 0, then tweened 1.14s. If we've already reached rest,
+  // stay there — display:none is the hide. First load still starts at
+  // SPAWN_FROM_OPACITY and plays enter when the intro gate opens.
   useLayoutEffect(() => {
     if (!selfDriven) return;
     const { duration, delay: itemDelay, x: xPx, y: yPx, reduced: rm } = motionParamsRef.current;
@@ -251,9 +256,10 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       motionGenRef.current += 1;
       for (const tween of tweensRef.current) tween.stop();
       tweensRef.current = [];
-      opacityMv.set(rm ? 1 : SPAWN_FROM_OPACITY);
-      xMv.set(rm ? 0 : xPx);
-      yMv.set(rm ? 0 : yPx);
+      const stayRest = rm || opacityMv.get() > 0.01;
+      opacityMv.set(stayRest ? 1 : SPAWN_FROM_OPACITY);
+      xMv.set(stayRest ? 0 : xPx);
+      yMv.set(stayRest ? 0 : yPx);
       return;
     }
     if (rm) {

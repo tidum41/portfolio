@@ -34,9 +34,8 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // Lives in layout.tsx (persistent) so AnimatePresence survives navigations.
 // template.tsx is kept as a passthrough for Next.js scroll-reset behaviour.
 // Soft primary-nav (work/about/archive) bypasses AnimatePresence entirely —
-// About remounts as the route child and plays its own Framer/CSS entrance.
-// Archive is keep-alive, hidden with display:none like Work. Case studies
-// and hard loads keep the crossfade.
+// keep-alive Work/Archive snap; About remounts at rest (no 1.14s enter).
+// Case studies and hard loads keep the crossfade.
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const skipFade = peekSkipRouteFade();

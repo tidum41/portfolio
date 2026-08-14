@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -14,6 +15,7 @@ import {
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { peekSoftNav } from "@/lib/instantNav";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -48,10 +50,17 @@ function Enter({
   children: ReactNode;
   style?: CSSProperties;
 }) {
+  // Latch on this mount: AnimationProvider clears the session flag in an
+  // effect. Soft-nav About must paint at rest — a 1.14s fade reads as delay.
+  const skipEnter = useRef(peekSoftNav()).current;
   return (
     <div
-      className="ps3-enter"
-      style={{ ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }}
+      className={skipEnter ? undefined : "ps3-enter"}
+      style={
+        skipEnter
+          ? style
+          : { ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }
+      }
     >
       {children}
     </div>
