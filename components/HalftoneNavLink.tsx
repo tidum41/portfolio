@@ -6,7 +6,7 @@ import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
-import { markSoftNav, markArchiveShow } from "@/lib/instantNav";
+import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -32,8 +32,12 @@ function canHover() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-function pathMatchesHref(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+function commitPrimary(href: string) {
+  const tab = hrefToPrimaryTab(href);
+  if (tab) {
+    markSoftNav();
+    markPrimaryShow(tab);
+  }
 }
 
 function warmPrimary(href: string) {
@@ -262,11 +266,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
           // Same-route tap: keep morph feedback, skip a useless push that
           // only races the work shell wake and can kill the animation.
-          if (pathMatchesHref(pathname, href)) return;
+          if (isAlreadyShowingPrimary(href, pathname)) return;
 
           markNavCommit();
-          if (PRIMARY_NAV.has(href)) markSoftNav();
-          if (href === "/archive") markArchiveShow();
+          commitPrimary(href);
           router.push(href);
           return;
         }
@@ -284,7 +287,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           touchNavRef.current = false;
           return;
         }
-        if (pathMatchesHref(pathname, href)) {
+        if (isAlreadyShowingPrimary(href, pathname)) {
           // Already here — don't soft-nav / re-push.
           e.preventDefault();
           return;
@@ -295,10 +298,9 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
           return;
         }
         markNavCommit();
-        if (PRIMARY_NAV.has(href)) markSoftNav();
-        if (href === "/archive") markArchiveShow();
-        // Keep-alive Archive is already in the tree; push() just flips
-        // visibility. cmd/middle-click stay native above.
+        commitPrimary(href);
+        // Keep-alive shells are already in the tree; push() syncs the URL.
+        // cmd/middle-click stay native above.
         e.preventDefault();
         router.push(href);
       }}

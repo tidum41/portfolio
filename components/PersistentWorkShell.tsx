@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
@@ -17,7 +17,7 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
+import { clearInstantBack, peekInstantWorkContent, useResolvedPrimaryTab } from "@/lib/instantNav";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -184,8 +184,18 @@ function CardLabel({
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
+  const visible = useResolvedPrimaryTab(pathname) === "work";
+  return <WorkKeepAlive visible={visible} projects={projects} />;
+}
+
+const WorkKeepAlive = memo(function WorkKeepAlive({
+  visible,
+  projects,
+}: {
+  visible: boolean;
+  projects: SanityProject[];
+}) {
   const router = useRouter();
-  const isWorkRoute = pathname === "/";
   const warmProjectNav = (href: string) => {
     if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
@@ -193,7 +203,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
-  const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
+  const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
   // Which embed's popup is active, and whether the modal is visibly open.
   // openPopup stays set through the exit animation so the single portaled
   // iframe doesn't unmount until onExitComplete fires.
@@ -223,17 +233,17 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
 
-  // Captured synchronously during render, the moment isWorkRoute flips to
+  // Captured synchronously during render, the moment visible flips to
   // true — before any effect (including clearInstantBack, below) has a
   // chance to run. Using a ref comparison here (not a state update inside an
   // effect) avoids an extra render pass that could show one frame of the
   // wrong variant.
-  const wasWorkRouteRef = useRef(isWorkRoute);
+  const wasWorkRouteRef = useRef(visible);
   const instantArrivalRef = useRef(false);
-  if (isWorkRoute && !wasWorkRouteRef.current) {
+  if (visible && !wasWorkRouteRef.current) {
     instantArrivalRef.current = peekInstantWorkContent();
   }
-  wasWorkRouteRef.current = isWorkRoute;
+  wasWorkRouteRef.current = visible;
   // Case-study Back AND primary-nav returns snap. Replaying the 1.14s
   // fade-up on Work/About/Archive tab switches felt like a load delay.
   // First load still uses intro + grid enter (`instant` stays false).
@@ -249,7 +259,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   }
 
   const gridGateOpen = useGridFirstLoadActive();
-  const gridActive = gridGateOpen && isWorkRoute;
+  const gridActive = gridGateOpen && visible;
   // Read the live intro attribute during render (not only the layout-effect
   // grid gate). Hydration reuses useState(true) for the gate, so the first
   // client frame used to start the hero EntranceItem tween before the gate
@@ -267,9 +277,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // Pause Mux/CD on leave. Reclaim after a long idle off-route — never on
   // the About click frame. Grid CD poster only covers once live media unmounts.
   const HEAVY_TEARDOWN_MS = 15000;
-  const [heavyMediaLive, setHeavyMediaLive] = useState(isWorkRoute);
+  const [heavyMediaLive, setHeavyMediaLive] = useState(visible);
   useEffect(() => {
-    if (isWorkRoute) {
+    if (visible) {
       setHeavyMediaLive(true);
       return;
     }
@@ -294,13 +304,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         window.cancelIdleCallback(idleId);
       }
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Resume Mux after Work paints — double-rAF + short delay so silk/shell
   // show first without decode competing on the arrival frame.
-  const [mediaPlaying, setMediaPlaying] = useState(isWorkRoute);
+  const [mediaPlaying, setMediaPlaying] = useState(visible);
   useEffect(() => {
-    if (!isWorkRoute) {
+    if (!visible) {
       setMediaPlaying(false);
       return;
     }
@@ -318,16 +328,16 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       cancelAnimationFrame(raf1);
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Leaving "/" — close popups. Live CD stays in the hidden work shell until
   // idle teardown; the grid poster covers the slot only when that happens.
   useEffect(() => {
-    if (isWorkRoute) return;
+    if (visible) return;
     setPopupVisible(false);
     setOpenPopup(null);
     setHabitPortalTarget(null);
-  }, [isWorkRoute]);
+  }, [visible]);
 
   useEffect(() => {
     if (heavyMediaLive) return;
@@ -338,32 +348,32 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).
   useEffect(() => {
-    if (!isWorkRoute || !hasEverBeenActive) return;
+    if (!visible || !hasEverBeenActive) return;
     if (openPopup === "cd") return;
     setCdPosterFade(true);
     setCdPosterOpacity(0);
-  }, [isWorkRoute, hasEverBeenActive, openPopup]);
+  }, [visible, hasEverBeenActive, openPopup]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
   // globally (for anchor-link nav), which would otherwise make this snap-back
   // visibly animate instead of landing exactly where it was immediately.
   useLayoutEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     if (!hasEverBeenActive) setHasEverBeenActive(true);
     window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
     // Resume normal tracking now that we're confirmed back — the suppression
     // was only ever meant to survive the single departing transition.
     suppressTrackingRef.current = false;
-  }, [isWorkRoute]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // AnimationProvider reads the instant-back flag once, synchronously, to
   // decide whether the outgoing case study's exit should skip its fade. Clear
   // it shortly after landing back here so it doesn't leak into unrelated,
   // later transitions (e.g. about -> archive).
   useEffect(() => {
-    if (isWorkRoute) clearInstantBack();
-  }, [isWorkRoute]);
+    if (visible) clearInstantBack();
+  }, [visible]);
 
   // Replay intro when the user returns to this tab from outside the site.
   // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
@@ -381,7 +391,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     const lastClickAtRef = { current: 0 };
     const hiddenByClickRef = { current: false };
     const replay = () => {
-      if (!isWorkRoute) return;
+      if (!visible) return;
       document.documentElement.setAttribute("data-intro", "playing");
       window.dispatchEvent(new CustomEvent("intro-replay"));
     };
@@ -412,7 +422,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Continuously track scroll position while visible, so it's always current
   // by the moment we're hidden. Suppressed after a navigating click (see
@@ -425,7 +435,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // too slow to beat this) would otherwise capture those and silently
   // overwrite the real position with a collapsed one.
   useEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     let rafId: number | null = null;
     const onScroll = () => {
       if (rafId != null) return;
@@ -440,7 +450,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       window.removeEventListener("scroll", onScroll);
       if (rafId != null) cancelAnimationFrame(rafId);
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Freeze the scroll position synchronously the instant a project card is
   // clicked — a *capturing*-phase listener runs before the Link's own click
@@ -450,14 +460,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // component is hidden. Un-suppressed by the restore effect once we're
   // confirmed back on "/", so normal tracking resumes for next time.
   useEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     const onClickCapture = () => {
       scrollYRef.current = window.scrollY;
       suppressTrackingRef.current = true;
     };
     window.addEventListener("click", onClickCapture, { capture: true });
     return () => window.removeEventListener("click", onClickCapture, { capture: true });
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Manual cross-column stagger rank: the two DOM columns (even/odd project
   // index) need to read as one interleaved sequence — project[0] (left),
@@ -542,10 +552,11 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   return (
     <>
     <div
-      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
-      aria-hidden={!isWorkRoute}
-      inert={!isWorkRoute}
-      {...(!isWorkRoute ? { "data-nosnippet": true } : {})}
+      data-primary-shell="work"
+      style={{ display: visible ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
+      aria-hidden={!visible}
+      inert={!visible}
+      {...(!visible ? { "data-nosnippet": true } : {})}
     >
       <IntroOrchestrator />
 
@@ -562,7 +573,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         }}
       >
         <HeroLegibilityScrim />
-        <EntranceItem active={isWorkRoute} instant={heroInstant} delay={0} style={{
+        <EntranceItem active={visible} instant={heroInstant} delay={0} style={{
           position: "relative",
           maxWidth: "var(--grid-max-w)",
           marginInline: "auto",
@@ -775,13 +786,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         {hasEverBeenActive && (
           <PS3ControlPanel
             instantReturn={instant}
-            visible={isWorkRoute}
+            visible={visible}
           />
         )}
       </div>
     </div>
 
-      {isWorkRoute && openPopup === "cd" && (
+      {visible && openPopup === "cd" && (
         <ProjectPopup
           open={popupVisible}
           onClose={closePopup}
@@ -816,7 +827,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
         </ProjectPopup>
       )}
 
-      {isWorkRoute && openPopup === "habit" && (
+      {visible && openPopup === "habit" && (
         <ProjectPopup
           open={popupVisible}
           onClose={closePopup}
@@ -851,10 +862,10 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       */}
       {hasEverBeenActive && (heavyMediaLive || openPopup === "cd") && (
         <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={isWorkRoute && openPopup === "cd" && popupVisible} />
+          <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
       )}
-      {openPopup === "habit" && isWorkRoute && habitPortalTarget && (
+      {openPopup === "habit" && visible && habitPortalTarget && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
             expanded
@@ -865,4 +876,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       )}
     </>
   );
-}
+}, (prev, next) => {
+  // Hidden work must not reconcile on About ↔ Archive. Leave/enter still
+  // re-renders so Mux can pause without destroying HLS on the click frame.
+  if (!prev.visible && !next.visible) return true;
+  return prev.visible === next.visible && prev.projects === next.projects;
+});

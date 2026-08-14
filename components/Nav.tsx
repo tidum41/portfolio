@@ -6,6 +6,7 @@ import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
 import { useDialKit } from "dialkit";
+import { hrefToPrimaryTab, useResolvedPrimaryTab } from "@/lib/instantNav";
 
 const links = [
   { href: "/",         label: "work" },
@@ -16,6 +17,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
+  const currentTab = useResolvedPrimaryTab(pathname);
 
   // Warm primary routes immediately so first archive/about click isn't waiting
   // on idle. Cheap if the destination is already cached.
@@ -173,8 +175,7 @@ export default function Nav() {
           <VolumeControl dk={dk} />
           <ThemeToggle dk={dk} />
           {links.map(({ href, label }) => {
-            const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const isActive = hrefToPrimaryTab(href) === currentTab;
             return (
               <HalftoneNavLink
                 key={href}

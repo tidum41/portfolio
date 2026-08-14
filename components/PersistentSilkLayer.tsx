@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useResolvedPrimaryTab } from "@/lib/instantNav";
 
 const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 
@@ -12,14 +13,14 @@ const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 let sessionVisitedWork = false;
 
 /**
- * Session-long host for the PS3 silk on the work hero. Visible only on "/";
- * hides immediately when leaving work — no route afterimage / linger.
- * Show is derived from pathname (no deferred visible state) so soft-nav
- * returns don't blank the pattern for an extra frame before paint.
+ * Session-long host for the PS3 silk on the work hero. Visible only on the
+ * Work tab; hides immediately when leaving work — no route afterimage.
+ * Show is derived from the primary-tab store so a Work click paints silk
+ * this frame, not after `usePathname` catches up.
  */
 export default function PersistentSilkLayer() {
   const pathname = usePathname();
-  const onWork = pathname === "/";
+  const onWork = useResolvedPrimaryTab(pathname) === "work";
   const [hasVisitedWork, setHasVisitedWork] = useState(
     () => sessionVisitedWork || onWork
   );
@@ -54,7 +55,7 @@ export default function PersistentSilkLayer() {
       cancelled = true;
       observer?.disconnect();
     };
-  }, [pathname]);
+  }, [onWork]);
 
   if (!hasVisitedWork && !sessionVisitedWork) return null;
 

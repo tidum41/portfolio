@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { useRef } from "react";
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -15,7 +14,6 @@ import {
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS } from "@/lib/motion";
-import { peekSoftNav } from "@/lib/instantNav";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -45,21 +43,20 @@ function Enter({
   delay = 0,
   children,
   style,
+  playEnter,
 }: {
   delay?: number;
   children: ReactNode;
   style?: CSSProperties;
+  playEnter: boolean;
 }) {
-  // Latch on this mount: AnimationProvider clears the session flag in an
-  // effect. Soft-nav About must paint at rest — a 1.14s fade reads as delay.
-  const skipEnter = useRef(peekSoftNav()).current;
   return (
     <div
-      className={skipEnter ? undefined : "ps3-enter"}
+      className={playEnter ? "ps3-enter" : undefined}
       style={
-        skipEnter
-          ? style
-          : { ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }
+        playEnter
+          ? { ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }
+          : style
       }
     >
       {children}
@@ -67,7 +64,13 @@ function Enter({
   );
 }
 
-export default function AboutPageContent() {
+export default function AboutPageContent({
+  visible = true,
+  playEnter = false,
+}: {
+  visible?: boolean;
+  playEnter?: boolean;
+}) {
   const logoDk = useDialKit("About Logos", {
     cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
     joola:       { scale: [1.34, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
@@ -83,7 +86,7 @@ export default function AboutPageContent() {
         <div style={{ marginBottom: "var(--space-7)" }}>
           <div className="about-hero">
             <div className="about-hero-bio">
-              <Enter delay={enterMs(0)}>
+              <Enter playEnter={playEnter} delay={enterMs(0)}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
                   fontSize: 32,
@@ -95,7 +98,7 @@ export default function AboutPageContent() {
                 }}>hello hello, i&apos;m mudit</h1>
               </Enter>
 
-              <Enter delay={enterMs(1)}>
+              <Enter playEnter={playEnter} delay={enterMs(1)}>
                 <p style={{
                   fontSize: 14,
                   lineHeight: 1.5,
@@ -104,7 +107,7 @@ export default function AboutPageContent() {
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
               </Enter>
 
-              <Enter delay={enterMs(2)}>
+              <Enter playEnter={playEnter} delay={enterMs(2)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -117,7 +120,7 @@ export default function AboutPageContent() {
                 </p>
               </Enter>
 
-              <Enter delay={enterMs(3)}>
+              <Enter playEnter={playEnter} delay={enterMs(3)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -126,7 +129,7 @@ export default function AboutPageContent() {
                 }}>You can find me</p>
               </Enter>
 
-              <Enter delay={enterMs(4)}>
+              <Enter playEnter={playEnter} delay={enterMs(4)}>
                 <ul style={{
                   fontSize: 15,
                   lineHeight: 1.87,
@@ -143,7 +146,7 @@ export default function AboutPageContent() {
             </div>
 
             <div className="about-hero-bento-col">
-              <Enter delay={enterMs(1)} style={{ marginBottom: 5 }}>
+              <Enter playEnter={playEnter} delay={enterMs(1)} style={{ marginBottom: 5 }}>
                 <BentoHero
                   featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
                   top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
@@ -181,7 +184,7 @@ export default function AboutPageContent() {
         <ScrollReveal>
           <section style={{ marginBottom: "var(--space-7)" }}>
             <SectionLabel>drag my favorite CDs!</SectionLabel>
-            <CDPlayer style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+            <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
           </section>
         </ScrollReveal>
 

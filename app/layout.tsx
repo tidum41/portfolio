@@ -13,8 +13,10 @@ import DevToolbar from "@/components/DevToolbar";
 import DevDialRoot from "@/components/DevDialRoot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
+import PersistentAboutShell from "@/components/PersistentAboutShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
+import PrimaryTabSync from "@/components/PrimaryTabSync";
 import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
@@ -179,16 +181,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <UiSoundRoot />
         <Nav />
         <PrimaryRouteWarmup />
+        <PrimaryTabSync />
         <main id="main-content" style={{ position: "relative" }}>
           {/* Mounted once, unconditionally, for the whole session — never
               unmounted by route changes. See PersistentWorkShell for why. */}
           <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
+          <PersistentAboutShell />
           <PersistentArchiveShell items={archiveItems} />
           <AnimationProvider>
             {children}
-            {process.env.NODE_ENV === "development" && <DevDialRoot />}
           </AnimationProvider>
+          {process.env.NODE_ENV === "development" && <DevDialRoot />}
         </main>
         <Footer />
         {process.env.NODE_ENV === "development" && <DevToolbar />}
