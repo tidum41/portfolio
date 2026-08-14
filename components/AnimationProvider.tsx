@@ -7,8 +7,8 @@ import {
   peekSoftNav,
   peekSkipRouteFade,
   clearSoftNav,
-  useResolvedPrimaryTab,
 } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { EASE_OPACITY, EASE_EXIT, DURATION } from "@/lib/motion";
 
 // Detaches whichever element is currently *exiting* from normal document

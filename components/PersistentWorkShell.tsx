@@ -17,7 +17,8 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantWorkContent, useResolvedPrimaryTab } from "@/lib/instantNav";
+import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 

@@ -3,7 +3,8 @@
 import { memo, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
-import { peekSoftNav, useResolvedPrimaryTab } from "@/lib/instantNav";
+import { peekSoftNav } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 /**
  * About keep-alive — same hide contract as Work/Archive (`display: none` +
