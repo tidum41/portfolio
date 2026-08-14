@@ -5,13 +5,11 @@
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
  * Layer B — page content:
- *   - About remounts inside AnimationProvider. Framer / CSS enter from first paint.
- *   - Work stays keep-alive (silk / Mux / CD). Instant only for
- *     CaseStudyTOC Back (peekInstantBack()). Primary nav skips the route
- *     fade (Layer A) and can replay Work's fade-up.
- *   - Archive stays keep-alive like Work (`display: none` off-route).
- *     Nav click calls markArchiveShow() so LQIP posters paint before the
- *     pathname commits; the bento takes over after measure.
+ *   - About remounts inside AnimationProvider. Soft-nav skips the CSS enter
+ *     so Work ↔ About is a tab switch, not a 1.14s fade from 0.
+ *   - Work stays keep-alive (silk / Mux / CD). Content stays at rest while
+ *     hidden (`display: none`). Instant on CaseStudyTOC Back AND primary nav.
+ *   - Archive stays keep-alive like Work. First show may enter; returns snap.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -20,12 +18,12 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about               → soft fade skip; About remounts and enters
- *   "/" ↔ archive             → soft fade skip; keep-alive posters + CSS enter
- *   about ↔ archive           → soft fade skip; Archive keep-alive / About remount
+ *   "/" ↔ about               → soft fade skip; keep-alive Work snaps; About skips enter
+ *   "/" ↔ archive             → soft fade skip; both keep-alive shells snap
+ *   about ↔ archive           → soft fade skip; Archive keep-alive / About skip enter
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
- *   case-study → "/" via nav  → soft fade skip; work fade-up
+ *   case-study → "/" via nav  → soft fade skip; work snaps (tab, not replay)
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
@@ -91,9 +89,9 @@ export function clearSoftNav() {
   sessionStorage.removeItem(SOFT_KEY);
 }
 
-/** Case-study Back only — keep-alive content snaps. Primary nav plays enter. */
+/** Keep-alive Work snaps: case-study Back OR primary-nav tab return. */
 export function peekKeepAliveSnap(): boolean {
-  return peekInstantBack();
+  return peekInstantBack() || peekSoftNav();
 }
 
 /** Instant-back OR soft primary-nav — AnimationProvider skips the fade. */
@@ -101,9 +99,9 @@ export function peekSkipRouteFade(): boolean {
   return peekInstantBack() || peekSoftNav();
 }
 
-/** Case-study Back only — work content snaps. Primary nav plays enter. */
+/** Keep-alive Work snaps on Back and on Work/About/Archive tab returns. */
 export function peekInstantWorkContent(): boolean {
-  return peekInstantBack();
+  return peekInstantBack() || peekSoftNav();
 }
 
 /**

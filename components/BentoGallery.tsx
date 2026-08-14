@@ -440,6 +440,16 @@ export default function BentoGallery({
     const attachFullSrcRef = useRef(visible);
     if (visible) attachFullSrcRef.current = true;
     const deferFullSrc = !attachFullSrcRef.current;
+    // First Archive visit in the session may enter; keep-alive returns snap.
+    const didEnterRef = useRef(false);
+    const enteringRef = useRef(false);
+    if (layoutReady && visible) {
+        if (!didEnterRef.current) enteringRef.current = true;
+    } else if (!visible && enteringRef.current) {
+        didEnterRef.current = true;
+        enteringRef.current = false;
+    }
+    const playEnter = enteringRef.current;
 
 
     useLayoutEffect(() => {
@@ -1489,7 +1499,7 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const tileEnterClass = layoutReady && visible ? "ps3-enter" : "";
+                    const tileEnterClass = playEnter ? "ps3-enter" : "";
                     const fromOpacity =
                         ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY;
 

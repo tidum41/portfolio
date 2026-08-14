@@ -17,7 +17,7 @@ import ProjectPopup from "@/components/ProjectPopup";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
-import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
+import { clearInstantBack, peekInstantWorkContent } from "@/lib/instantNav";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
 
@@ -178,9 +178,9 @@ function CardLabel({
  *     slow first-load animation is the whole show — this wrapper stays
  *     instant so it doesn't double-animate on top of that. The grid waits
  *     for "intro-done" (via useGridFirstLoadActive), then plays its stagger.
- *   - Case-study "Back": content snaps (silk/scroll contract).
- *   - Primary-nav Work/About/Archive: Framer/CSS fade-up stagger replays.
- *     Hero wrapper stays instant during intro.
+ *   - Case-study "Back" and primary-nav returns: content stays at rest while
+ *     `display: none`, then snaps. Tab switches must not replay the 1.14s fade.
+ *   - Hero wrapper stays instant during intro.
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
@@ -231,11 +231,12 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const wasWorkRouteRef = useRef(isWorkRoute);
   const instantArrivalRef = useRef(false);
   if (isWorkRoute && !wasWorkRouteRef.current) {
-    instantArrivalRef.current = peekInstantBack();
+    instantArrivalRef.current = peekInstantWorkContent();
   }
   wasWorkRouteRef.current = isWorkRoute;
-  // Only case-study Back is fully instant (avoids remounting silk/media).
-  // Nav "work" replays EntranceItem with ENTRANCE_DEFAULTS.
+  // Case-study Back AND primary-nav returns snap. Replaying the 1.14s
+  // fade-up on Work/About/Archive tab switches felt like a load delay.
+  // First load still uses intro + grid enter (`instant` stays false).
   const instant = instantArrivalRef.current;
 
   // Whether this session's very first paint had the first-load intro gate
