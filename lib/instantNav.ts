@@ -10,8 +10,8 @@
  *     CaseStudyTOC Back (peekInstantBack()). Primary nav skips the route
  *     fade (Layer A) and can replay Work's fade-up.
  *   - Archive stays keep-alive like Work (`display: none` off-route).
- *     Data is seeded from the layout; LQIP posters warm via Image().
- *     Show replays `.ps3-enter`. Full images attach only on `/archive`.
+ *     Nav click calls markArchiveShow() so LQIP posters paint before the
+ *     pathname commits; the bento takes over after measure.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -31,6 +31,32 @@
 
 const INSTANT_KEY = "instant-back";
 const SOFT_KEY = "soft-nav";
+
+/** Clicked Archive before Next.js flipped the pathname — paint posters now. */
+let archiveShow = false;
+
+export function markArchiveShow() {
+  archiveShow = true;
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("archive-show"));
+}
+
+export function peekArchiveShow(): boolean {
+  return archiveShow;
+}
+
+export function clearArchiveShow() {
+  if (!archiveShow) return;
+  archiveShow = false;
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("archive-show"));
+}
+
+export function subscribeArchiveShow(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("archive-show", onStoreChange);
+  return () => window.removeEventListener("archive-show", onStoreChange);
+}
 
 export function markInstantBack() {
   if (typeof window === "undefined") return;

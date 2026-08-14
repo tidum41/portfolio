@@ -79,6 +79,25 @@ function ArchivePosterSkeleton() {
     );
 }
 
+function ArchivePosterGrid({ items }: { items: PlaygroundGalleryItem[] }) {
+    if (!items.length) return <ArchivePosterSkeleton />;
+    return (
+        <div className="archive-poster-grid" aria-hidden>
+            {items.slice(0, 12).map((item) => (
+                <div key={item.key} className="archive-poster-tile">
+                    {item.blurDataURL || item.src ? (
+                        <img
+                            src={item.blurDataURL || item.src}
+                            alt=""
+                            draggable={false}
+                        />
+                    ) : null}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function PlaygroundPageClient({
   items,
   visible = true,
@@ -145,9 +164,8 @@ export default function PlaygroundPageClient({
             data-ui-sound-scope="archive"
         >
             <h1 className="sr-only">archive</h1>
-            {resolved.length === 0 ? (
-              visible ? <ArchivePosterSkeleton /> : null
-            ) : (
+            {visible && <ArchivePosterGrid items={resolved} />}
+            {resolved.length > 0 && (
               <BentoGallery
                   items={resolved}
                   columns={4}

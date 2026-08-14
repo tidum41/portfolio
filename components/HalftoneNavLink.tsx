@@ -6,7 +6,7 @@ import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
-import { markSoftNav } from "@/lib/instantNav";
+import { markSoftNav, markArchiveShow, clearArchiveShow } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -266,6 +266,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
 
           markNavCommit();
           if (PRIMARY_NAV.has(href)) markSoftNav();
+          if (href === "/archive") markArchiveShow();
+          else clearArchiveShow();
           router.push(href);
           return;
         }
@@ -295,6 +297,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         }
         markNavCommit();
         if (PRIMARY_NAV.has(href)) markSoftNav();
+        if (href === "/archive") markArchiveShow();
+        else clearArchiveShow();
         // Keep-alive Archive is already in the tree; push() just flips
         // visibility. cmd/middle-click stay native above.
         e.preventDefault();

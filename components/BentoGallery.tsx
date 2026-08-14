@@ -443,10 +443,15 @@ export default function BentoGallery({
         if (!root) return;
         let first = true;
         const applySize = () => {
-            const w = root.offsetWidth;
-            const h = root.offsetHeight;
-            // display:none reports 0. Wait until this shell is actually shown.
-            if (w < 8 || h < 8) return;
+            let w = root.offsetWidth;
+            let h = root.offsetHeight;
+            // display:none reports 0. Once Archive is showing, pack from the
+            // viewport so the canvas is not stuck visibility:hidden.
+            if (w < 8 || h < 8) {
+                if (!visible) return;
+                w = window.innerWidth;
+                h = Math.max(1, window.innerHeight - 45);
+            }
             const commit = () => {
                 setVw((prev) => (prev === w ? prev : w));
                 setVh((prev) => (prev === h ? prev : h));
@@ -1444,6 +1449,7 @@ export default function BentoGallery({
                 // Stagger is decorative — never eat the first click while tiles enter.
                 pointerEvents: visible ? "auto" : "none",
                 transform: "none",
+                zIndex: 1,
                 // Hold the canvas until the first real measure + overview
                 // camera land. Never set visible while the keep-alive shell
                 // is off-route — visibility:visible descendants paint through
