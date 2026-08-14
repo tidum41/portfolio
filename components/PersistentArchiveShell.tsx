@@ -3,14 +3,12 @@
 import { usePathname } from "next/navigation";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
-import XmbColumn from "@/components/XmbColumn";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
-import { useColumnFocus } from "@/lib/useColumnFocus";
 
 /**
- * Session keep-alive for /archive. Mounts on first visit (not idle-premount,
- * which laid the gallery out at 0×0). Shell fades; tiles stay at rest.
+ * Session keep-alive for /archive. Mounts on first visit; later visits
+ * toggle display. No transform wrapper — the gallery is position:fixed.
  */
 export default function PersistentArchiveShell({
   items,
@@ -20,14 +18,18 @@ export default function PersistentArchiveShell({
   const pathname = usePathname();
   const onArchive = pathname === "/archive";
   const hasVisited = useKeepAliveVisit(onArchive);
-  const snap = useKeepAliveInstant(onArchive);
-  const phase = useColumnFocus(onArchive, { snap, playMountEnter: true });
+  const instant = useKeepAliveInstant(onArchive);
 
   if (!hasVisited) return null;
 
   return (
-    <XmbColumn phase={phase} pin>
-      <ArchivePageClient items={items} active={phase !== "hidden"} instant />
-    </XmbColumn>
+    <div
+      style={{ display: onArchive ? "block" : "none", position: "relative", zIndex: 1 }}
+      aria-hidden={!onArchive}
+      inert={!onArchive}
+      {...(!onArchive ? { "data-nosnippet": true } : {})}
+    >
+      <ArchivePageClient items={items} active={onArchive} instant={instant} />
+    </div>
   );
 }

@@ -12,11 +12,13 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_ENTRANCE, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
 
-const ENTRANCE_EASE = cssEase(EASE_ENTRANCE);
+const ENTRANCE_EASE_Y = cssEase(EASE_Y);
+const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
 
-/** Full image crossfades over an instant LQIP/blur poster (archive tiles). */
+/** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
+ *  intersection never fires and tiles stay empty. */
 function BlurUpImage({
     src,
     blurDataURL,
@@ -30,7 +32,20 @@ function BlurUpImage({
     priority?: boolean;
     onLoad?: () => void;
 }) {
+    const imgRef = useRef<HTMLImageElement>(null);
     const [loaded, setLoaded] = useState(false);
+
+    useLayoutEffect(() => {
+        const el = imgRef.current;
+        if (el && el.complete && el.naturalWidth > 0) {
+            setLoaded(true);
+        }
+    }, [src]);
+
+    const markLoaded = () => {
+        setLoaded(true);
+        onLoad?.();
+    };
 
     return (
         <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -46,7 +61,6 @@ function BlurUpImage({
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
-                        // LQIP is tiny — scale + blur hides pixelation and soft edge.
                         transform: "scale(1.1)",
                         filter: blurDataURL.startsWith("data:") ? "blur(16px)" : "blur(8px)",
                         opacity: loaded ? 0 : 1,
@@ -56,16 +70,15 @@ function BlurUpImage({
                 />
             )}
             <img
-                loading={priority ? "eager" : "lazy"}
+                ref={imgRef}
+                loading="eager"
                 decoding="async"
                 {...(priority ? { fetchPriority: "high" as const } : {})}
                 src={src}
                 alt={alt}
                 draggable={false}
-                onLoad={() => {
-                    setLoaded(true);
-                    onLoad?.();
-                }}
+                onLoad={markLoaded}
+                onError={markLoaded}
                 style={{
                     position: "relative",
                     width: "100%",
@@ -73,7 +86,7 @@ function BlurUpImage({
                     objectFit: "cover",
                     display: "block",
                     pointerEvents: "none",
-                    opacity: loaded ? 1 : 0,
+                    opacity: loaded || !blurDataURL ? 1 : 0,
                     transition: "opacity 420ms ease",
                 }}
             />
@@ -417,13 +430,13 @@ export default function BentoGallery({
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
     const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
 
-    // Tiles stay painted; the archive shell plays XMB column focus.
+    // Reveal tiles with the shared fade-up once this shell is shown.
     const [ready, setReady] = useState(instant);
     const genRef = useRef(0);
     useLayoutEffect(() => {
         if (!active) {
             genRef.current += 1;
-            setReady(instant);
+            setReady(false);
             return;
         }
         if (instant) {
@@ -1486,7 +1499,7 @@ export default function BentoGallery({
                                 // object is ambiguous across re-renders and React warns on it.
                                 transition: entranceInstant
                                     ? "none"
-                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE} ${entranceDelay}s`,
+                                    : `opacity ${dk.duration}s ${ENTRANCE_EASE_OP} ${entranceDelay}s, transform ${dk.duration}s ${ENTRANCE_EASE_Y} ${entranceDelay}s`,
                             }}
                         >
                         <div

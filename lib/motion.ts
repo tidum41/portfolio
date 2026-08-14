@@ -11,20 +11,17 @@ export const EASE_OPACITY: CubicBezier = [0.16, 1, 0.3, 1];   // == --spring-pan
 export const EASE_Y:       CubicBezier = [0.22, 1, 0.36, 1];  // "settle" curve
 export const EASE_EXIT:    CubicBezier = [0.4, 0, 1, 1];      // fast, simple dismissal
 export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease / PS3ControlPanel
-// XMB column-focus: same ease on fade + settle so they read as one glide.
-export const EASE_ENTRANCE: CubicBezier = [0.23, 1, 0.32, 1];
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 
-// Page spawn does not scale. Column-focus enter is fade + settle-up.
+// Page spawn does not scale (Mux letterboxes; type reads as a glitch).
 export const XMB_ENTRANCE_SCALE = 1;
 
 /** Resting / reduced-motion transform for spawn items. */
 export const SPAWN_REST = "translate(0px, 0px)";
 
-/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content.
- *  Dim enough to read as XMB unfocused → focused, still visible if a tween skips. */
-export const SPAWN_FROM_OPACITY = 0.12;
+/** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content. */
+export const SPAWN_FROM_OPACITY = 0.4;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;
@@ -45,18 +42,9 @@ export const DURATION = {
   routeEnterFast:    0.18,
 } as const;
 
-/** XMB column focus — destination fades in as one CSS layer. Previous
- *  page is display:none immediately so two documents never composite. */
-export const PAGE_FOCUS = {
-  inMs: 400,
-  y: 8,
-  fromOpacity: 0.2,
-  ease: [0.23, 1, 0.32, 1] as CubicBezier,
-} as const;
-
 export interface EntranceDefaults {
-  x: number;          // px, unused for column-focus (always 0)
-  y: number;          // px, slight settle-up
+  x: number;          // px, unused (always 0) — kept so DialKit can still expose it
+  y: number;          // px, slide-up distance
   duration: number;   // s, per-item
   stagger: number;    // s, delay increment between items
   maxSpread: number;  // s, cap on total stagger spread regardless of item count
@@ -64,19 +52,17 @@ export interface EntranceDefaults {
   scale: number;
 }
 
-// Column-focus enter — XMB unfocused → focused. Fade does the character;
-// a little extra travel + a longer ease-out tail keeps it graceful.
+// Original portfolio Framer fade-up. Shared by work grid, about, archive.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
-  y: 16,
-  duration: 0.36,
-  stagger: 0.06,
-  maxSpread: 0.18,
+  y: 20,
+  duration: 0.45,
+  stagger: 0.05,
+  maxSpread: 0.4,
   scale: 1,
 };
 
-// Case-study open — type only. Media is instant (autoplay + readability).
-// Under 300ms, ease-out, no scale on titles (XMB scale is for icons).
+// Case-study open — type only. Media is instant. CSS in globals, not Framer.
 export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
   y: 6,

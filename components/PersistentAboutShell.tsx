@@ -2,27 +2,29 @@
 
 import { usePathname } from "next/navigation";
 import AboutPageContent from "@/components/AboutPageContent";
-import XmbColumn from "@/components/XmbColumn";
 import { useKeepAliveInstant } from "@/lib/useKeepAliveInstant";
 import { useKeepAliveVisit } from "@/lib/useKeepAliveVisit";
-import { useColumnFocus } from "@/lib/useColumnFocus";
 
 /**
- * Session keep-alive for /about. Mounts on first visit; later visits are
- * display toggles. The shell fades in; inner copy stays at rest.
+ * Session keep-alive for /about. First visit mounts; later visits toggle display.
+ * Framer-matched CSS entrance plays whenever the route becomes current.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const onAbout = pathname === "/about";
   const hasVisited = useKeepAliveVisit(onAbout);
-  const snap = useKeepAliveInstant(onAbout);
-  const phase = useColumnFocus(onAbout, { snap, playMountEnter: true });
+  const instant = useKeepAliveInstant(onAbout);
 
   if (!hasVisited) return null;
 
   return (
-    <XmbColumn phase={phase}>
-      <AboutPageContent active={onAbout} instant />
-    </XmbColumn>
+    <div
+      style={{ display: onAbout ? "block" : "none", position: "relative", zIndex: 1 }}
+      aria-hidden={!onAbout}
+      inert={!onAbout}
+      {...(!onAbout ? { "data-nosnippet": true } : {})}
+    >
+      <AboutPageContent active={onAbout} instant={instant} />
+    </div>
   );
 }
