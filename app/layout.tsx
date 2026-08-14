@@ -10,6 +10,7 @@ import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
+import DevDialRoot from "@/components/DevDialRoot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
@@ -176,6 +177,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <PersistentWorkShell projects={projects} />
           <AnimationProvider>
             {children}
+            {process.env.NODE_ENV === "development" && <DevDialRoot />}
           </AnimationProvider>
         </main>
         <Footer />
