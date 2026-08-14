@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+import AboutPageContent from "@/components/AboutPageContent";
 
-// Content lives in root layout PersistentAboutShell — same pattern as Work.
 export const metadata: Metadata = {
   title: "about",
   description:
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return null;
+  return <AboutPageContent />;
 }

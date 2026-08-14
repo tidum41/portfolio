@@ -105,6 +105,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       // stuck true forever and the link permanently dimmed/halftoned.
       onMouseEnter={() => {
         if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
+        if (href === "/archive") {
+          void import("@/app/archive/ArchivePageClient");
+          void import("@/components/BentoGallery");
+        } else if (href === "/about") {
+          void import("@/components/AboutPageContent");
+        }
       }}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -117,6 +123,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: HalftoneN
       // leave it active through the tap. The timeout is a failsafe if
       // navigation doesn't happen (e.g. a modifier-click opening a new tab).
       onPointerDown={() => {
+        if (href === "/archive") {
+          void import("@/app/archive/ArchivePageClient");
+          void import("@/components/BentoGallery");
+        } else if (href === "/about") {
+          void import("@/components/AboutPageContent");
+        }
         // Soft-skip the route opacity crossfade for primary chrome navigations
         // (work / about / archive). Do not snap-kill hover: the pointer is
         // still on the link, and killing it raced the settle spring against

@@ -12,10 +12,8 @@ import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
-import PersistentAboutShell from "@/components/PersistentAboutShell";
-import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
-import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -105,12 +103,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // failure. Fall back to the shipped defaults and an empty project list,
   // matching the .catch() pattern already used for case-study fetches
   // (app/sviz/page.tsx).
-  const [ds, projects, gallery] = await Promise.all([
+  const [ds, projects] = await Promise.all([
     getDesignSystem(),
     getProjects(),
-    getPlaygroundGallery(),
   ]).catch(
-    () => [DS_DEFAULTS, [], []] as [Required<DesignSystemData>, SanityProject[], PlaygroundGalleryItem[]]
+    () => [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
   const dsStyle = designSystemToCss(ds);
 
@@ -177,8 +174,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               unmounted by route changes. See PersistentWorkShell for why. */}
           <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
-          <PersistentAboutShell />
-          <PersistentArchiveShell items={gallery} />
           <AnimationProvider>
             {children}
           </AnimationProvider>

@@ -4,26 +4,21 @@
  * Layer A — route opacity (AnimationProvider):
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
- * Layer B — keep-alive content (Framer EntranceItem / CssEntrance / bento):
- *   - Instant only for CaseStudyTOC Back (peekInstantBack()).
- *   - Primary nav skips the route fade (Layer A) and replays the fade-up stagger.
+ * Layer B — page content:
+ *   - About and Archive remount inside AnimationProvider. Framer
+ *     EntranceStagger / archive tile CSS play from first paint.
+ *   - Work stays keep-alive (silk / Mux / CD). Instant only for
+ *     CaseStudyTOC Back (peekInstantBack()). Primary nav skips the route
+ *     fade (Layer A) and can replay Work's fade-up.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
  *   - Cold "/" and tab/BFCache intro-replay only. Never use it for an SPA
  *     soft return.
  *
- * Layer D — route lifetime:
- *   - Work / About / Archive use persistent shells in the root layout (display
- *     toggle, no remount on soft-nav). Case studies still remount via
- *     AnimationProvider children. Mux/CD may pause off "/" and reclaim after
- *     idle; About CD is viewport-gated; About below-fold mounts on idle.
- *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; destination Framer/CSS enter
- *   First about/archive visit → mount shell + fade-up
- *   Later about/archive visit → display toggle + fade-up
+ *   "/" ↔ about/archive       → soft fade skip; destination remounts and enters
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
  *   case-study → "/" via nav  → soft fade skip; work fade-up
