@@ -5,11 +5,13 @@
  *   - Soft-nav or instant-back skips the route fade via peekSkipRouteFade().
  *
  * Layer B — page content:
- *   - About and Archive remount inside AnimationProvider. Framer
- *     EntranceStagger / archive tile CSS play from first paint.
+ *   - About remounts inside AnimationProvider. Framer / CSS enter from first paint.
  *   - Work stays keep-alive (silk / Mux / CD). Instant only for
  *     CaseStudyTOC Back (peekInstantBack()). Primary nav skips the route
  *     fade (Layer A) and can replay Work's fade-up.
+ *   - Archive stays keep-alive with LQIP posters decoding off-route
+ *     (visibility hidden, not display:none). Show replays `.ps3-enter`.
+ *     Full images attach only while `/archive` is visible.
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
@@ -18,7 +20,9 @@
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
- *   "/" ↔ about/archive       → soft fade skip; destination remounts and enters
+ *   "/" ↔ about               → soft fade skip; About remounts and enters
+ *   "/" ↔ archive             → soft fade skip; keep-alive posters + CSS enter
+ *   about ↔ archive           → soft fade skip; Archive keep-alive / About remount
  *   "/" → case study          → soft fade skip; narrative entrance
  *   case-study Back → "/"     → instant fade/content return
  *   case-study → "/" via nav  → soft fade skip; work fade-up

@@ -65,10 +65,26 @@ const solidEdgeGradient = (dir: "bottom" | "top", solidPct: number, falloff: num
 const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, midPct: number, midAlpha: number) =>
     `linear-gradient(to ${dir}, rgba(0,0,0,${startAlpha}) 0%, rgba(0,0,0,${startAlpha}) ${solidPct}%, rgba(0,0,0,${midAlpha}) ${midPct}%, transparent 100%)`;
 
+function ArchivePosterSkeleton() {
+    return (
+        <div className="archive-skeleton" aria-busy="true" aria-label="Loading archive">
+            {Array.from({ length: 8 }, (_, i) => (
+                <div
+                    key={i}
+                    className="archive-skeleton-tile"
+                    style={{ animationDelay: `${i * 70}ms` }}
+                />
+            ))}
+        </div>
+    );
+}
+
 export default function PlaygroundPageClient({
   items,
+  visible = true,
 }: {
   items: PlaygroundGalleryItem[];
+  visible?: boolean;
 }) {
     const instanceKey = useRef<symbol | null>(null);
     if (items.length) rememberArchiveGallery(items);
@@ -93,6 +109,7 @@ export default function PlaygroundPageClient({
     });
 
     useLayoutEffect(() => {
+        if (!visible) return;
         const footer = document.querySelector("footer") as HTMLElement | null;
         if (!footer) return;
 
@@ -106,7 +123,7 @@ export default function PlaygroundPageClient({
             if (instanceKey.current === key) instanceKey.current = null;
             if (_pg.size === 0) _footerReset(footer);
         };
-    }, []);
+    }, [visible]);
 
     const fadeBase: CSSProperties = {
         position: "absolute",
@@ -128,7 +145,10 @@ export default function PlaygroundPageClient({
             data-ui-sound-scope="archive"
         >
             <h1 className="sr-only">archive</h1>
-            <BentoGallery
+            {resolved.length === 0 ? (
+              visible ? <ArchivePosterSkeleton /> : null
+            ) : (
+              <BentoGallery
                   items={resolved}
                   columns={4}
                   gap={12}
@@ -136,8 +156,12 @@ export default function PlaygroundPageClient({
                   overviewMode="width"
                   maxZoom={1.5}
                   minZoomFactor={0.667}
+                  visible={visible}
               />
+            )}
 
+            {visible && (
+              <>
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}
             <div style={{ ...fadeBase, top: 0, height: dk.topHeight }}>
                 <div style={{
@@ -161,6 +185,8 @@ export default function PlaygroundPageClient({
                 }} />
                 <div style={{ position: "absolute", inset: 0, background: solidEdgeGradient("top", dk.bottomStartPct, dk.bottomFalloff) }} />
             </div>
+              </>
+            )}
         </div>
     );
 }

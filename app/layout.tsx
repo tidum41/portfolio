@@ -12,9 +12,10 @@ import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
 import DevDialRoot from "@/components/DevDialRoot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
+import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
-import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
+import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -104,14 +105,19 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // failure. Fall back to the shipped defaults and an empty project list,
   // matching the .catch() pattern already used for case-study fetches
   // (app/sviz/page.tsx).
-  const [ds, projects] = await Promise.all([
+  const [ds, projects, archiveItems] = await Promise.all([
     getDesignSystem(),
     getProjects(),
-    // Warm the archive gallery cache on every layout render (including `/`)
-    // so the first archive click is a cache hit, not a live Sanity round-trip.
-    getPlaygroundGallery().catch(() => []),
+    // Seed the keep-alive archive shell on every layout render (including `/`)
+    // so Work → Archive is posters already in the DOM, not a live Sanity wait.
+    getPlaygroundGallery().catch(() => [] as PlaygroundGalleryItem[]),
   ]).catch(
-    () => [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
+    () =>
+      [DS_DEFAULTS, [], []] as [
+        Required<DesignSystemData>,
+        SanityProject[],
+        PlaygroundGalleryItem[],
+      ]
   );
   const dsStyle = designSystemToCss(ds);
 
@@ -178,6 +184,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               unmounted by route changes. See PersistentWorkShell for why. */}
           <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
+          <PersistentArchiveShell items={archiveItems} />
           <AnimationProvider>
             {children}
             {process.env.NODE_ENV === "development" && <DevDialRoot />}
