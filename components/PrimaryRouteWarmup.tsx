@@ -28,11 +28,14 @@ export default function PrimaryRouteWarmup() {
     void import("@/components/BentoGallery");
     void import("@/lib/archiveGalleryCache").then((m) => {
       void m.warmArchiveGallery().then((items) => {
-        for (const it of items.slice(0, 8)) {
-          if (!it.src) continue;
+        // Posters only — full archive images attach when the keep-alive
+        // shell becomes visible. Preloading full srcs here competed with Work.
+        for (const it of items.slice(0, 12)) {
+          const poster = it.blurDataURL;
+          if (!poster || poster.startsWith("data:")) continue;
           const img = new window.Image();
           img.decoding = "async";
-          img.src = it.src;
+          img.src = poster;
         }
       });
     });

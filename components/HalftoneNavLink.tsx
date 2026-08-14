@@ -38,6 +38,7 @@ function pathMatchesHref(pathname: string, href: string) {
 
 function warmPrimary(href: string) {
   if (href === "/archive") {
+    void import("@/lib/archiveGalleryCache").then((m) => m.warmArchiveGallery());
     void import("@/app/archive/ArchivePageClient");
     void import("@/components/BentoGallery");
   } else if (href === "/about") {
@@ -294,10 +295,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         }
         markNavCommit();
         if (PRIMARY_NAV.has(href)) markSoftNav();
-        // Don't wait on Link's default — archive's RSC fetch used to leave
-        // this click looking dead until Sanity returned. push() commits the
-        // URL immediately; the archive Suspense shell + warmed gallery cache
-        // cover the data wait so this is not a blank pause.
+        // Keep-alive Archive is already in the tree; push() just flips
+        // visibility. cmd/middle-click stay native above.
         e.preventDefault();
         router.push(href);
       }}

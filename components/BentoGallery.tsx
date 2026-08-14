@@ -21,22 +21,27 @@ function BlurUpImage({
     alt,
     priority,
     onLoad,
+    deferFullSrc,
 }: {
     src: string;
     blurDataURL?: string;
     alt: string;
     priority?: boolean;
     onLoad?: () => void;
+    /** Keep-alive: decode LQIP posters off-route; attach the full image on show. */
+    deferFullSrc?: boolean;
 }) {
     const imgRef = useRef<HTMLImageElement>(null);
     const [loaded, setLoaded] = useState(false);
+    const liveSrc = deferFullSrc ? "" : src;
 
     useLayoutEffect(() => {
+        setLoaded(false);
         const el = imgRef.current;
         if (el && el.complete && el.naturalWidth > 0) {
             setLoaded(true);
         }
-    }, [src]);
+    }, [liveSrc]);
 
     const markLoaded = () => {
         setLoaded(true);
@@ -65,27 +70,29 @@ function BlurUpImage({
                     }}
                 />
             )}
-            <img
-                ref={imgRef}
-                loading="eager"
-                decoding="async"
-                {...(priority ? { fetchPriority: "high" as const } : {})}
-                src={src}
-                alt={alt}
-                draggable={false}
-                onLoad={markLoaded}
-                onError={markLoaded}
-                style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                    pointerEvents: "none",
-                    opacity: loaded || !blurDataURL ? 1 : 0,
-                    transition: "opacity 420ms ease",
-                }}
-            />
+            {liveSrc ? (
+                <img
+                    ref={imgRef}
+                    loading="eager"
+                    decoding="async"
+                    {...(priority ? { fetchPriority: "high" as const } : {})}
+                    src={liveSrc}
+                    alt={alt}
+                    draggable={false}
+                    onLoad={markLoaded}
+                    onError={markLoaded}
+                    style={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                        pointerEvents: "none",
+                        opacity: loaded || !blurDataURL ? 1 : 0,
+                        transition: "opacity 420ms ease",
+                    }}
+                />
+            ) : null}
         </div>
     );
 }
@@ -129,6 +136,8 @@ interface Props {
     maxZoom?: number;
     minZoomFactor?: number;
     style?: CSSProperties;
+    /** False while keep-alive is off-route: skip enter, posters only. */
+    visible?: boolean;
 }
 
 // ── Pure utilities ─────────────────────────────────────────────────────────────
@@ -388,6 +397,7 @@ export default function BentoGallery({
     maxZoom = 4,
     minZoomFactor = 0,
     style,
+    visible = true,
 }: Props) {
     const isStatic = false;
     const isDark = useIsDark();
@@ -1465,7 +1475,7 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const tileEnterClass = layoutReady ? "ps3-enter" : "";
+                    const tileEnterClass = layoutReady && visible ? "ps3-enter" : "";
                     const fromOpacity =
                         ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY;
 
@@ -1524,6 +1534,7 @@ export default function BentoGallery({
                                         blurDataURL={item.blurDataURL}
                                         alt={item.alt ?? ""}
                                         priority={item.priority}
+                                        deferFullSrc={!visible}
                                     />
                                 ) : (
                                     <div
