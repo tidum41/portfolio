@@ -51,7 +51,7 @@ export default function MotionLabClient() {
       variant: {
         type: "select",
         options: VARIANTS.map((v) => ({ value: v.id, label: v.label })),
-        default: "current-site",
+        default: "opacity-only",
       },
       autoReplay: true,
       twoColumn: false,
@@ -87,7 +87,7 @@ export default function MotionLabClient() {
 
   const variantId: VariantId = isVariantId(lab.values.variant)
     ? lab.values.variant
-    : "current-site";
+    : "opacity-only";
   const variantMeta = VARIANTS.find((v) => v.id === variantId) ?? VARIANTS[0];
   const variantIndex = VARIANTS.findIndex((v) => v.id === variantId);
 
