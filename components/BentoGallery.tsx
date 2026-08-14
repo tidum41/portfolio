@@ -435,6 +435,11 @@ export default function BentoGallery({
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
+    // Keep full images attached after the first show — tearing them down on
+    // Work/About clicks is what made those navs hitch.
+    const attachFullSrcRef = useRef(visible);
+    if (visible) attachFullSrcRef.current = true;
+    const deferFullSrc = !attachFullSrcRef.current;
 
 
     useLayoutEffect(() => {
@@ -1543,7 +1548,7 @@ export default function BentoGallery({
                                         blurDataURL={item.blurDataURL}
                                         alt={item.alt ?? ""}
                                         priority={item.priority}
-                                        deferFullSrc={!visible}
+                                        deferFullSrc={deferFullSrc}
                                     />
                                 ) : (
                                     <div
