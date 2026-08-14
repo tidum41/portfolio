@@ -1,10 +1,10 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import BentoGallery from "@/components/BentoGallery";
 
 // Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
@@ -36,10 +36,6 @@ function _footerReset(el: HTMLElement) {
     inner?.style.removeProperty("padding");
 }
 
-const BentoGallery = dynamic(() => import("@/components/BentoGallery"), {
-    ssr: false,
-});
-
 // Footer (shrunk for this page only, see _footerFix): paddingTop(12) + lineHeight(21) + paddingBottom(12) = 45px
 const FOOTER_H = 45;
 
@@ -70,14 +66,8 @@ const edgeMask = (dir: "bottom" | "top", startAlpha: number, solidPct: number, m
 
 export default function PlaygroundPageClient({
   items,
-  active = true,
-  instant = false,
 }: {
   items: PlaygroundGalleryItem[];
-  /** When false (persistent shell hidden), release archive footer overrides. */
-  active?: boolean;
-  /** Case-study Back snaps; primary-nav show plays column-focus enter. */
-  instant?: boolean;
 }) {
     const instanceKey = useRef<symbol | null>(null);
 
@@ -103,16 +93,6 @@ export default function PlaygroundPageClient({
         const footer = document.querySelector("footer") as HTMLElement | null;
         if (!footer) return;
 
-        if (!active) {
-            // Shell still mounted but off-route — don't leave footer pinned.
-            if (instanceKey.current) {
-                _pg.delete(instanceKey.current);
-                instanceKey.current = null;
-                if (_pg.size === 0) _footerReset(footer);
-            }
-            return;
-        }
-
         const key = Symbol();
         instanceKey.current = key;
         _pg.add(key);
@@ -123,7 +103,7 @@ export default function PlaygroundPageClient({
             if (instanceKey.current === key) instanceKey.current = null;
             if (_pg.size === 0) _footerReset(footer);
         };
-    }, [active]);
+    }, []);
 
     const fadeBase: CSSProperties = {
         position: "absolute",
@@ -141,11 +121,8 @@ export default function PlaygroundPageClient({
             left: 0,
             right: 0,
             bottom: FOOTER_H,
-            visibility: active ? "visible" : "hidden",
-            pointerEvents: active ? "auto" : "none",
         } as CSSProperties}
             data-ui-sound-scope="archive"
-            aria-hidden={!active}
         >
             <BentoGallery
                   items={items}
@@ -155,8 +132,6 @@ export default function PlaygroundPageClient({
                   overviewMode="width"
                   maxZoom={1.5}
                   minZoomFactor={0.667}
-                  instant={instant}
-                  active={active}
               />
 
             {/* Top: solid for nav height, then long soft dissolve — fully dialkit-tunable */}

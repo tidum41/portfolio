@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Prefetch About/Archive JS + About images while still on Work.
- * Do not mount those shells here — that laid Archive out at 0×0.
+ * Prefetch About/Archive JS + About images while still on Work so the first
+ * nav click does not wait on a late chunk.
  */
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -22,34 +22,31 @@ export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Warm from Work (and keep warm elsewhere — cheap if already cached).
+    void import("@/components/AboutPageContent");
+    void import("@/components/BentoHero");
+    void import("@/app/archive/ArchivePageClient");
+    void import("@/components/BentoGallery");
+
     let idleId = 0;
     let timeoutId = 0;
     let heavyIdleId = 0;
     let heavyTimeoutId = 0;
-    const warm = () => {
-      void import("@/components/AboutPageContent");
-      void import("@/components/BentoHeroStatic");
-      void import("@/components/CssEntrance");
-      void import("@/app/archive/ArchivePageClient");
-      void import("@/components/BentoGallery");
+    const warmAssets = () => {
       for (const src of [...ABOUT_IMAGES, ...CD_POSTERS]) {
         const img = new window.Image();
         img.decoding = "async";
         img.src = src;
       }
     };
-    // CD chunk warms sooner than before — About shows a poster first, then
-    // mounts live ~0.5s after settle. Still after About JS/images.
     const warmHeavy = () => {
       void import("@/components/CDPlayer");
     };
     if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(warm, { timeout: pathname === "/" ? 2200 : 4000 });
-      heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: pathname === "/" ? 4500 : 7000 });
+      idleId = window.requestIdleCallback(warmAssets, { timeout: pathname === "/" ? 1200 : 3000 });
+      heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: pathname === "/" ? 2800 : 5000 });
     } else {
-      timeoutId = window.setTimeout(warm, pathname === "/" ? 900 : 1500);
-      heavyTimeoutId = window.setTimeout(warmHeavy, pathname === "/" ? 2800 : 5000);
+      timeoutId = window.setTimeout(warmAssets, pathname === "/" ? 400 : 900);
+      heavyTimeoutId = window.setTimeout(warmHeavy, pathname === "/" ? 1600 : 3200);
     }
     return () => {
       if (idleId && typeof window.cancelIdleCallback === "function") {

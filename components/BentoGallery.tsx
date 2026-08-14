@@ -11,8 +11,7 @@ import {
     type CSSProperties,
 } from "react";
 import { useDialKit } from "dialkit";
-import { afterPaint } from "@/lib/afterPaint";
-import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden, cssEase } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, EASE_Y, EASE_OPACITY, cssEase } from "@/lib/motion";
 
 const ENTRANCE_EASE_Y = cssEase(EASE_Y);
 const ENTRANCE_EASE_OP = cssEase(EASE_OPACITY);
@@ -133,10 +132,6 @@ interface Props {
     maxZoom?: number;
     minZoomFactor?: number;
     style?: CSSProperties;
-    /** Soft-nav arrival: snap tiles in (no entrance stagger). */
-    instant?: boolean;
-    /** When the persistent archive shell is shown, replay the entrance. */
-    active?: boolean;
 }
 
 // ── Pure utilities ─────────────────────────────────────────────────────────────
@@ -396,8 +391,6 @@ export default function BentoGallery({
     maxZoom = 4,
     minZoomFactor = 0,
     style,
-    instant = false,
-    active = true,
 }: Props) {
     const isStatic = false;
     const isDark = useIsDark();
@@ -430,24 +423,13 @@ export default function BentoGallery({
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
     const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
 
-    // Reveal tiles with the shared fade-up once this shell is shown.
-    const [ready, setReady] = useState(instant);
-    const genRef = useRef(0);
-    useLayoutEffect(() => {
-        if (!active) {
-            genRef.current += 1;
-            setReady(false);
-            return;
-        }
-        if (instant) {
-            setReady(true);
-            return;
-        }
-        const gen = genRef.current;
-        afterPaint(() => {
-            if (genRef.current === gen) setReady(true);
-        });
-    }, [instant, active]);
+    // Reveal as soon as layout is ready — LQIP posters already paint the
+    // tiles, so waiting on full-res downloads just left empty holes.
+    const [ready, setReady] = useState(false);
+    useEffect(() => {
+        const id = requestAnimationFrame(() => setReady(true));
+        return () => cancelAnimationFrame(id);
+    }, []);
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
@@ -456,12 +438,10 @@ export default function BentoGallery({
     useLayoutEffect(() => {
         if (typeof window === "undefined") return;
         const root = rootRef.current;
-        if (!root || !active) return;
+        if (!root) return;
         const applySize = () => {
             const w = root.offsetWidth;
             const h = root.offsetHeight;
-            // display:none / first paint can report 0 — keep the last real size
-            // so overview math doesn't collapse the canvas.
             if (w < 8 || h < 8) return;
             startTransition(() => {
                 setVw(w);
@@ -472,7 +452,7 @@ export default function BentoGallery({
         const ro = new ResizeObserver(applySize);
         ro.observe(root);
         return () => ro.disconnect();
-    }, [active]);
+    }, []);
 
     useLayoutEffect(() => {
         const th = thumbRef.current;
@@ -1480,7 +1460,7 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const entranceInstant = reducedMotionRef.current || instant;
+                    const entranceInstant = reducedMotionRef.current;
 
                     return (
                         <div
@@ -1490,10 +1470,10 @@ export default function BentoGallery({
                                 left: pos.left,
                                 top: pos.top,
                                 width: iw,
-                                opacity: ready ? 1 : SPAWN_FROM_OPACITY,
+                                opacity: ready ? 1 : 0,
                                 transform: ready
-                                    ? SPAWN_REST
-                                    : spawnHidden(dk.x ?? ENTRANCE_DEFAULTS.x, dk.y),
+                                    ? "translateY(0px)"
+                                    : `translateY(${dk.y}px)`,
                                 // Delay folded into the shorthand itself (not a separate
                                 // transitionDelay longhand) — mixing the two in one style
                                 // object is ambiguous across re-renders and React warns on it.
