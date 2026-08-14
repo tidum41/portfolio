@@ -89,15 +89,40 @@ function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KE
 // "about", or falling back to raw viewport math, or an even earlier version
 // that mirrored to the *right* edge above the mobile breakpoint), which
 // routinely lost that margin or put the pill on the wrong side entirely.
+/** Layout box of `el`, with ancestor translates undone.
+ *  getBoundingClientRect includes the hero subtitle's entrance translateY,
+ *  so docking to it made the menu pill chase the JOOLA / UCLA line. */
+function untransformedViewportRect(el: HTMLElement): DOMRect | null {
+  const r = el.getBoundingClientRect();
+  if (r.width < 8 || r.height < 8) return null;
+  let dx = 0;
+  let dy = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== document.documentElement) {
+    const t = getComputedStyle(node).transform;
+    if (t && t !== "none") {
+      try {
+        const m = new DOMMatrix(t);
+        dx += m.e;
+        dy += m.f;
+      } catch {
+        /* ignore unparsable transform lists */
+      }
+    }
+    node = node.parentElement;
+  }
+  return new DOMRect(r.left - dx, r.top - dy, r.width, r.height);
+}
+
 function computeHeroAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
   const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
   const heroP = joolaLink?.closest("p");
   if (!heroP) return null;
-  const r = heroP.getBoundingClientRect();
+  const r = untransformedViewportRect(heroP);
   // display:none shells report a 0×0 rect — treating that as a real anchor
   // parks the pill at the viewport origin.
-  if (r.width < 8 || r.height < 8) return null;
+  if (!r) return null;
   return {
     x: Math.round(r.left + window.scrollX),
     y: Math.round(r.bottom + 16 + window.scrollY),
@@ -684,21 +709,39 @@ export default function PS3ControlPanel({
   // the anchor was already in the DOM.
   useSafeLayoutEffect(() => {
     if (savedPos.current) return;
+    const applyPos = (pos: {x:number;y:number}) => {
+      if (hasDraggedRef.current) return;
+      setPillPos(pos);
+      setFlipped(shouldFlip(pos.y));
+      setPosReady(true);
+    };
     const findAndPlace = (attempt: number) => {
+      if (hasDraggedRef.current) return;
       const pos = computeNavAlignedPos();
       if (pos) {
-        setPillPos(pos);
-        setFlipped(shouldFlip(pos.y));
-        setPosReady(true);
+        applyPos(pos);
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
       const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
-      setPillPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY });
-      setFlipped(false);
-      setPosReady(true);
+      applyPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY });
     };
     findAndPlace(0);
+    // Re-read the untransformed rest box when the subtitle starts and when
+    // webfonts settle — both used to shift the JOOLA / UCLA line (and wrap
+    // it on mobile) after the first measure.
+    let cancelled = false;
+    const reanchor = () => {
+      if (cancelled) return;
+      const pos = computeNavAlignedPos();
+      if (pos) applyPos(pos);
+    };
+    window.addEventListener("intro-done", reanchor);
+    document.fonts?.ready.then(reanchor);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("intro-done", reanchor);
+    };
   }, []);
 
   // Reposition on resize (unless user has dragged)

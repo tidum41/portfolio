@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 
 const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 
-const DEFAULT_HERO_H = 420;
+// 0 until the hero is measured — a 420px guess then ResizeObserver shrink
+// was a visible silk-height jump on first load (hero is ~230–320px).
 
 let sessionVisitedWork = false;
 
@@ -22,7 +23,7 @@ export default function PersistentSilkLayer() {
   const [hasVisitedWork, setHasVisitedWork] = useState(
     () => sessionVisitedWork || onWork
   );
-  const [height, setHeight] = useState(DEFAULT_HERO_H);
+  const [height, setHeight] = useState(0);
 
   useLayoutEffect(() => {
     if (!onWork) return;
