@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { useDialKit } from "dialkit";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 import BentoGallery from "@/components/BentoGallery";
+import { peekArchiveGallery, rememberArchiveGallery } from "@/lib/archiveGalleryCache";
 
 // Module-level set of active archive mounts (unique symbol per instance).
 // The footer is only restored once ALL instances have unmounted — this handles
@@ -70,6 +71,8 @@ export default function PlaygroundPageClient({
   items: PlaygroundGalleryItem[];
 }) {
     const instanceKey = useRef<symbol | null>(null);
+    if (items.length) rememberArchiveGallery(items);
+    const resolved = items.length ? items : (peekArchiveGallery() ?? []);
 
     const dk = useDialKit("Archive Edge Fade", {
         topHeight:      [160,  40, 320, 1],
@@ -126,7 +129,7 @@ export default function PlaygroundPageClient({
         >
             <h1 className="sr-only">archive</h1>
             <BentoGallery
-                  items={items}
+                  items={resolved}
                   columns={4}
                   gap={12}
                   cellAspect={1.25}

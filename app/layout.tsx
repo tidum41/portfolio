@@ -14,7 +14,7 @@ import DevDialRoot from "@/components/DevDialRoot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
-import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
+import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -107,6 +107,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const [ds, projects] = await Promise.all([
     getDesignSystem(),
     getProjects(),
+    // Warm the archive gallery cache on every layout render (including `/`)
+    // so the first archive click is a cache hit, not a live Sanity round-trip.
+    getPlaygroundGallery().catch(() => []),
   ]).catch(
     () => [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
