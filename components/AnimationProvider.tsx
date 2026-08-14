@@ -3,7 +3,12 @@
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { peekSoftNav, peekSkipRouteFade, clearSoftNav } from "@/lib/instantNav";
+import {
+  peekSoftNav,
+  peekSkipRouteFade,
+  clearSoftNav,
+  useResolvedPrimaryTab,
+} from "@/lib/instantNav";
 import { EASE_OPACITY, EASE_EXIT, DURATION } from "@/lib/motion";
 
 // Detaches whichever element is currently *exiting* from normal document
@@ -33,11 +38,13 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // Provides page enter/exit animations keyed by route.
 // Lives in layout.tsx (persistent) so AnimatePresence survives navigations.
 // template.tsx is kept as a passthrough for Next.js scroll-reset behaviour.
-// Soft primary-nav (work/about/archive) bypasses AnimatePresence entirely —
-// keep-alive Work/Archive snap; About remounts at rest (no 1.14s enter).
-// Case studies and hard loads keep the crossfade.
+// Primary tabs (work/about/archive) are keep-alive siblings — this wrapper
+// only remounts case studies and other real routes. When a primary tab is
+// showing (including an optimistic show from a case-study nav click),
+// children are not painted so the case study cannot stack on the shell.
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const primaryTab = useResolvedPrimaryTab(pathname);
   const skipFade = peekSkipRouteFade();
   const reduced = useReducedMotion();
   const dur = (d: number) => (reduced ? 0 : d);
@@ -77,7 +84,7 @@ export default function AnimationProvider({ children }: { children: React.ReactN
 
   return (
     <div style={{ position: "relative", zIndex: 1 }}>
-      {softSwap ? (
+      {primaryTab ? null : softSwap ? (
         <div key={pathname}>{children}</div>
       ) : (
         <AnimatePresence mode="sync" initial={false}>

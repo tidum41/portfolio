@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
+import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
 import {
@@ -8,11 +8,7 @@ import {
   rememberArchiveGallery,
   warmArchiveGallery,
 } from "@/lib/archiveGalleryCache";
-import {
-  clearArchiveShow,
-  peekArchiveShow,
-  subscribeArchiveShow,
-} from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/instantNav";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**
@@ -28,12 +24,8 @@ export default function PersistentArchiveShell({
   items: PlaygroundGalleryItem[];
 }) {
   const pathname = usePathname();
-  const pending = useSyncExternalStore(
-    subscribeArchiveShow,
-    peekArchiveShow,
-    () => false,
-  );
-  const visible = pathname === "/archive" || pending;
+  const tab = useResolvedPrimaryTab(pathname);
+  const visible = tab === "archive";
 
   if (serverItems.length) rememberArchiveGallery(serverItems);
 
@@ -42,18 +34,6 @@ export default function PersistentArchiveShell({
   );
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);
-
-  useLayoutEffect(() => {
-    if (pathname === "/archive") clearArchiveShow();
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!pending || pathname === "/archive") return;
-    const t = window.setTimeout(() => {
-      if (window.location.pathname !== "/archive") clearArchiveShow();
-    }, 1500);
-    return () => window.clearTimeout(t);
-  }, [pending, pathname]);
 
   useEffect(() => {
     if (items.length) return;
@@ -68,6 +48,7 @@ export default function PersistentArchiveShell({
 
   return (
     <div
+      data-primary-shell="archive"
       style={{ display: visible ? "block" : "none" }}
       aria-hidden={!visible}
       inert={!visible}
@@ -86,4 +67,7 @@ const ArchiveKeepAlive = memo(function ArchiveKeepAlive({
   visible: boolean;
 }) {
   return <ArchivePageClient items={items} visible={visible} />;
+}, (prev, next) => {
+  if (!prev.visible && !next.visible) return true;
+  return prev.visible === next.visible && prev.items === next.items;
 });
