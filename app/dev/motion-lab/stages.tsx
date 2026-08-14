@@ -30,7 +30,7 @@ export type StageProps = {
 };
 
 export const VARIANTS = [
-  { id: "current-site", label: "Current site", hint: "CSS · 12px / 280ms · production .ps3-enter" },
+  { id: "current-site", label: "Current site", hint: "CSS · 8px / 1140ms · production .ps3-enter" },
   { id: "case-study", label: "Case study", hint: "CSS · 8px / 1140ms · live .cs-open-type" },
   { id: "xmb-long", label: "XMB 450", hint: "CSS · 20px / 450ms · original Framer settle" },
   { id: "opacity-only", label: "Opacity only", hint: "PS3 fade + 8px settle · opacity and Y split" },
@@ -339,13 +339,14 @@ export function CurrentSiteStage(props: StageProps) {
   return (
     <CssStage
       panel="Current site"
+      persistKey="current-site-v2"
       defaults={{
         y: ENTRANCE_DEFAULTS.y,
         duration: ENTRANCE_DEFAULTS.duration,
         stagger: ENTRANCE_DEFAULTS.stagger,
         maxSpread: ENTRANCE_DEFAULTS.maxSpread,
         fromOpacity: SPAWN_FROM_OPACITY,
-        ease: EASE_Y,
+        ease: EASE_OPACITY,
       }}
       {...props}
     />

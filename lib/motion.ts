@@ -21,7 +21,7 @@ export const XMB_ENTRANCE_SCALE = 1;
 export const SPAWN_REST = "translate(0px, 0px)";
 
 /** Hidden opacity for spawn — never 0, so a skipped tween cannot hide content. */
-export const SPAWN_FROM_OPACITY = 0.4;
+export const SPAWN_FROM_OPACITY = 0.29;
 
 export function spawnHidden(x: number, y: number): string {
   return `translate(${x}px, ${y}px)`;
@@ -54,25 +54,16 @@ export interface EntranceDefaults {
   fromOpacity?: number;
 }
 
-// XMB-like column focus: fade + short settle, no scale. Snappier than the
-// original 450ms Framer page spawn so Work↔About↔Archive doesn't feel late.
+// Page enter (Work grid, About copy, archive tiles) and case-study type.
+// Tuned in /dev/motion-lab (Case study). CSS: `.ps3-enter` / `.cs-open-type`.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
-  x: 0,
-  y: 12,
-  duration: 0.28,
-  stagger: 0.04,
-  maxSpread: 0.24,
-  scale: 1,
-};
-
-// Case-study open — type only. Media is instant. CSS in globals.css
-// `.cs-open-type` (keep those numbers in sync). Tuned in /dev/motion-lab.
-export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
   y: 8,
   duration: 1.14,
   stagger: 0.15,
   maxSpread: 0.28,
   scale: 1,
-  fromOpacity: 0.29,
+  fromOpacity: SPAWN_FROM_OPACITY,
 };
+
+export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = ENTRANCE_DEFAULTS;

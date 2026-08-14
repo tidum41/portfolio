@@ -13,6 +13,7 @@ import {
   SOCIALS,
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
+import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +30,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 /** Compositor fade-up. Resting opacity is 1 — Framer hidden:0 was eating copy. */
+const ABOUT_HERO_STEPS = 5;
+const ABOUT_ENTER_MS = Math.round(
+  Math.min(
+    ENTRANCE_DEFAULTS.stagger,
+    ENTRANCE_DEFAULTS.maxSpread / (ABOUT_HERO_STEPS - 1),
+  ) * 1000,
+);
+const enterMs = (step: number) => ABOUT_ENTER_MS * step;
+
 function Enter({
   delay = 0,
   children,
@@ -64,7 +74,7 @@ export default function AboutPageContent() {
         <div style={{ marginBottom: "var(--space-7)" }}>
           <div className="about-hero">
             <div className="about-hero-bio">
-              <Enter delay={0}>
+              <Enter delay={enterMs(0)}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
                   fontSize: 32,
@@ -76,7 +86,7 @@ export default function AboutPageContent() {
                 }}>hello hello, i&apos;m mudit</h1>
               </Enter>
 
-              <Enter delay={40}>
+              <Enter delay={enterMs(1)}>
                 <p style={{
                   fontSize: 14,
                   lineHeight: 1.5,
@@ -85,7 +95,7 @@ export default function AboutPageContent() {
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
               </Enter>
 
-              <Enter delay={80}>
+              <Enter delay={enterMs(2)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -98,7 +108,7 @@ export default function AboutPageContent() {
                 </p>
               </Enter>
 
-              <Enter delay={120}>
+              <Enter delay={enterMs(3)}>
                 <p style={{
                   fontSize: 15,
                   lineHeight: 1.6,
@@ -107,7 +117,7 @@ export default function AboutPageContent() {
                 }}>You can find me</p>
               </Enter>
 
-              <Enter delay={160}>
+              <Enter delay={enterMs(4)}>
                 <ul style={{
                   fontSize: 15,
                   lineHeight: 1.87,
@@ -124,7 +134,7 @@ export default function AboutPageContent() {
             </div>
 
             <div className="about-hero-bento-col">
-              <Enter delay={40} style={{ marginBottom: 5 }}>
+              <Enter delay={enterMs(1)} style={{ marginBottom: 5 }}>
                 <BentoHero
                   featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
                   top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
