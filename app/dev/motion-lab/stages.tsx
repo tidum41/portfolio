@@ -33,7 +33,7 @@ export const VARIANTS = [
   { id: "current-site", label: "Current site", hint: "CSS · 12px / 280ms · production .ps3-enter" },
   { id: "case-study", label: "Case study", hint: "CSS · 6px / 220ms · .cs-open-type" },
   { id: "xmb-long", label: "XMB 450", hint: "CSS · 20px / 450ms · original Framer settle" },
-  { id: "opacity-only", label: "Opacity only", hint: "CSS · no translate · fade in place" },
+  { id: "opacity-only", label: "Opacity only", hint: "PS3 fade + 8px settle · opacity and Y split" },
   { id: "split-channels", label: "Split channels", hint: "Framer · opacity + Y timed separately" },
   { id: "chorus", label: "Chorus", hint: "Two clocks · left / right stagger combo" },
   { id: "spring-settle", label: "Spring settle", hint: "DialKit spring · no scale" },
@@ -384,20 +384,47 @@ export function XmbLongStage(props: StageProps) {
   );
 }
 
-export function OpacityOnlyStage(props: StageProps) {
+export function OpacityOnlyStage({ copy, replayKey, autoReplay, twoColumn }: StageProps) {
+  const dk = useDialKit(
+    "Opacity only",
+    {
+      y: [8, 0, 80, 1],
+      fromOpacity: [SPAWN_FROM_OPACITY, 0.05, 1, 0.01],
+      stagger: [0.035, 0, 0.4, 0.005],
+      maxSpread: [0.2, 0, 2, 0.01],
+      opacity: {
+        duration: [0.38, 0.08, 1.6, 0.01],
+        ease: easeFolder(EASE_OPACITY),
+      },
+      translate: {
+        duration: [0.55, 0.08, 1.6, 0.01],
+        ease: easeFolder(EASE_Y),
+      },
+    },
+    persist("opacity-only-v2"),
+  );
+  const slots = nodes(copy);
+  const playKey = usePlayKey(JSON.stringify(dk), autoReplay, replayKey);
+  const per = slots.length > 1 ? Math.min(dk.stagger, dk.maxSpread / (slots.length - 1)) : dk.stagger;
+  const opacityEase = readEase(dk.opacity.ease);
+  const yEase = readEase(dk.translate.ease);
+
   return (
-    <CssStage
-      panel="Opacity only"
-      defaults={{
-        y: 0,
-        duration: 0.32,
-        stagger: 0.04,
-        maxSpread: 0.24,
-        fromOpacity: SPAWN_FROM_OPACITY,
-        ease: EASE_OPACITY,
-      }}
-      {...props}
-    />
+    <Layout twoColumn={twoColumn} key={playKey}>
+      {slots.map((node, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: dk.fromOpacity, transform: spawnHidden(0, dk.y) }}
+          animate={{ opacity: 1, transform: SPAWN_REST }}
+          transition={{
+            opacity: { duration: dk.opacity.duration, ease: opacityEase, delay: per * i },
+            transform: { duration: dk.translate.duration, ease: yEase, delay: per * i },
+          }}
+        >
+          {node}
+        </motion.div>
+      ))}
+    </Layout>
   );
 }
 
