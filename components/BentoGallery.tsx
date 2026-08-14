@@ -32,19 +32,19 @@ function BlurUpImage({
     deferFullSrc?: boolean;
 }) {
     const imgRef = useRef<HTMLImageElement>(null);
-    const [loaded, setLoaded] = useState(false);
+    const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
     const liveSrc = deferFullSrc ? "" : src;
+    const loaded = Boolean(liveSrc) && loadedSrc === liveSrc;
 
     useLayoutEffect(() => {
-        setLoaded(false);
         const el = imgRef.current;
         if (el && el.complete && el.naturalWidth > 0) {
-            setLoaded(true);
+            setLoadedSrc(liveSrc);
         }
     }, [liveSrc]);
 
     const markLoaded = () => {
-        setLoaded(true);
+        setLoadedSrc(liveSrc);
         onLoad?.();
     };
 
