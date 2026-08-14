@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { sanityClient } from "./client";
 import {
   sanityImageUrl,
@@ -458,11 +459,10 @@ function playgroundPriorityRank(caption?: string): number {
   return idx === -1 ? PLAYGROUND_PRIORITY.length : idx;
 }
 
-export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
+async function loadPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
   const raw = await sanityClient.fetch<{ items?: RawPlaygroundItem[] } | null>(
     PLAYGROUND_GALLERY_QUERY,
     {},
-    { next: { revalidate: 60 } }
   );
   const items = raw?.items ?? [];
   const result: PlaygroundGalleryItem[] = [];
@@ -491,3 +491,9 @@ export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
   );
   return result;
 }
+
+/** Cross-request cache. `@sanity/client` does not honor `{ next: { revalidate } }`,
+ *  so every archive nav used to hit Sanity live (~1s). Home layout warms this. */
+export const getPlaygroundGallery = cache(
+  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 60 }),
+);

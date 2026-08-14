@@ -26,6 +26,16 @@ export default function PrimaryRouteWarmup() {
     void import("@/components/BentoHero");
     void import("@/app/archive/ArchivePageClient");
     void import("@/components/BentoGallery");
+    void import("@/lib/archiveGalleryCache").then((m) => {
+      void m.warmArchiveGallery().then((items) => {
+        for (const it of items.slice(0, 8)) {
+          if (!it.src) continue;
+          const img = new window.Image();
+          img.decoding = "async";
+          img.src = it.src;
+        }
+      });
+    });
 
     let idleId = 0;
     let timeoutId = 0;

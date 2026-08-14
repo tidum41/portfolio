@@ -18,7 +18,7 @@ let _animated = false;
 
 export default function HeroText() {
   const instant = typeof window !== "undefined" && _animated;
-  const [subReady, setSubReady] = useState(instant);
+  const [playId, setPlayId] = useState(0);
   const h1Controls = useAnimation();
   const reduced = useReducedMotion();
 
@@ -34,16 +34,11 @@ export default function HeroText() {
       // runs on the main thread via rAF, while `transform` stays on the
       // compositor. This entrance fires at the busiest possible moment
       // (page load/hydration), so it's the one place that matters most.
-      // Opacity + Y share one duration — a longer transform used to keep
-      // sliding after the fade (and after intro-done), which read as a jump
-      // on the JOOLA / UCLA line and made the menu pill chase the box.
       const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-      // Hold at 0 through the delay so the H1 is not a visible ghost that
-      // then slides — it materializes with the fade, same language as the
-      // subtitle and grid. Duration matches ENTRANCE_DEFAULTS so H1 settle
-      // and subtitle appear share one clock.
       const fadeDur = reduced ? 0 : ENTRANCE_DEFAULTS.duration;
       h1Controls.set({ opacity: reduced ? 1 : 0, transform: reduced ? "translateY(0px)" : fromY });
+      // Tween is armed immediately at opacity 0 — the delay is part of the
+      // playing animation, not a hold then a separate slide.
       h1Controls.start({
         opacity: 1,
         transform: "translateY(0px)",
@@ -58,19 +53,17 @@ export default function HeroText() {
 
     function onDone() {
       _animated = true;
-      setSubReady(true);
     }
     if (document.documentElement.getAttribute("data-intro") !== "playing") {
       onDone();
     } else {
       window.addEventListener("intro-done", onDone, { once: true });
     }
-    // Intro gate is 1.9s; if intro-done never fires, still show the subtitle.
     const subFallback = window.setTimeout(onDone, Math.ceil((introTimings.gateDuration + 0.6) * 1000));
 
     function onReplay() {
       _animated = false;
-      setSubReady(false);
+      setPlayId((n) => n + 1);
       animateH1();
       window.addEventListener("intro-done", onDone, { once: true });
     }
@@ -85,11 +78,12 @@ export default function HeroText() {
 
   const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
   const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY };
+  const subDelay = instant || reduced ? 0 : introTimings.gateDuration;
   const subTx = instant || reduced
     ? { duration: 0 }
     : {
-        opacity:   { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY },
-        transform: { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY },
+        opacity:   { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
+        transform: { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
       };
 
   return (
@@ -120,8 +114,9 @@ export default function HeroText() {
       <motion.p
         className="hero-sub"
         data-hero-sub
-        initial={{ opacity: 0, transform: fromY }}
-        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY }}
+        key={instant ? "rest" : playId}
+        initial={instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY }}
+        animate={{ opacity: 1, transform: "translateY(0px)" }}
         transition={subTx}
         style={{
           position: "relative",

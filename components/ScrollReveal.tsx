@@ -226,7 +226,8 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   // `hidden` under that, then on return thinks the node is already `visible`
   // while the DOM is still at spawn opacity — content stays gone. Drive
   // opacity/x/y ourselves so hide always lands, and every active false→true
-  // starts from SPAWN_FROM_OPACITY (never 0).
+  // starts from SPAWN_FROM_OPACITY. Fallbacks snap to 1 so a skipped tween
+  // cannot rest hidden.
   const opacityMv = useMotionValue(SPAWN_FROM_OPACITY);
   const xMv = useMotionValue(0);
   const yMv = useMotionValue(0);

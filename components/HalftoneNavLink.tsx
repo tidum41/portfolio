@@ -296,7 +296,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         if (PRIMARY_NAV.has(href)) markSoftNav();
         // Don't wait on Link's default — archive's RSC fetch used to leave
         // this click looking dead until Sanity returned. push() commits the
-        // URL immediately; app/archive/loading.tsx covers the data wait.
+        // URL immediately; the archive Suspense shell + warmed gallery cache
+        // cover the data wait so this is not a blank pause.
         e.preventDefault();
         router.push(href);
       }}
