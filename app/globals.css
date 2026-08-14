@@ -725,20 +725,40 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-/* Shown only if Archive is opened before gallery items have arrived. */
+/* Instant Archive paint: LQIP posters sit under BentoGallery so a click
+   always has something on screen while the canvas measures. */
+.archive-poster-grid,
 .archive-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   padding: 88px var(--page-px) 24px;
-  height: 100%;
   box-sizing: border-box;
   align-content: start;
+  pointer-events: none;
 }
-.archive-skeleton-tile {
+.archive-skeleton-tile,
+.archive-poster-tile {
   background: var(--color-placeholder);
   aspect-ratio: 1.1;
+  overflow: hidden;
+  position: relative;
+}
+.archive-skeleton-tile {
   opacity: 0.4;
+}
+.archive-poster-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08);
+  filter: blur(12px);
+  pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
   .archive-skeleton-tile {
@@ -750,6 +770,7 @@ html[data-theme="dark"] .project-image {
   to { opacity: 0.55; }
 }
 @media (max-width: 767px) {
+  .archive-poster-grid,
   .archive-skeleton {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-top: 72px;
