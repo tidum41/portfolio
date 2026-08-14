@@ -12,6 +12,8 @@ import { HERO_HEADLINE } from "@/lib/site";
 // never reset _animated for that path or the hero will double-motion/arrive late.
 // Module-level: false on fresh page load, true after first mount.
 // Persists across client-side navigation — same pattern as PS3Silk._hasMounted.
+// Set true only after the first-load intro finishes (not at effect start) so
+// React StrictMode remount can still hear `intro-done`.
 let _animated = false;
 
 export default function HeroText() {
@@ -21,8 +23,10 @@ export default function HeroText() {
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    _animated = true;
-
+    // Do not set `_animated` until this intro actually finishes. Setting it
+    // at effect start made StrictMode's remount see `instant` and return
+    // before re-registering `intro-done` — the subtitle stayed at spawn
+    // (the JOOLA / UCLA line "never arriving", then popping).
     if (instant) return;
 
     function animateH1(delay = introTimings.heroDelay, dur = introTimings.heroDuration) {
@@ -47,8 +51,15 @@ export default function HeroText() {
 
     animateH1();
 
-    function onDone() { setSubReady(true); }
-    window.addEventListener("intro-done", onDone, { once: true });
+    function onDone() {
+      _animated = true;
+      setSubReady(true);
+    }
+    if (document.documentElement.getAttribute("data-intro") !== "playing") {
+      onDone();
+    } else {
+      window.addEventListener("intro-done", onDone, { once: true });
+    }
     // Intro gate is 1.9s; if intro-done never fires, still show the subtitle.
     const subFallback = window.setTimeout(onDone, Math.ceil((introTimings.gateDuration + 0.6) * 1000));
 

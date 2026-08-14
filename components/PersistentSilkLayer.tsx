@@ -32,16 +32,28 @@ export default function PersistentSilkLayer() {
   }, [onWork]);
 
   useLayoutEffect(() => {
-    const hero = document.querySelector<HTMLElement>("[data-work-hero]");
-    if (!hero) return;
-    const sync = () => {
-      const next = hero.getBoundingClientRect().height;
-      if (next >= 2) setHeight(Math.round(next));
+    let cancelled = false;
+    let observer: ResizeObserver | null = null;
+    const attach = () => {
+      if (cancelled) return;
+      const hero = document.querySelector<HTMLElement>("[data-work-hero]");
+      if (!hero) {
+        requestAnimationFrame(attach);
+        return;
+      }
+      const sync = () => {
+        const next = hero.getBoundingClientRect().height;
+        if (next >= 2) setHeight(Math.round(next));
+      };
+      sync();
+      observer = new ResizeObserver(sync);
+      observer.observe(hero);
     };
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(hero);
-    return () => observer.disconnect();
+    attach();
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
   }, [pathname]);
 
   if (!hasVisitedWork && !sessionVisitedWork) return null;
@@ -58,6 +70,7 @@ export default function PersistentSilkLayer() {
         height,
         zIndex: 0,
         opacity: onWork ? 1 : 0,
+        visibility: height >= 2 ? "visible" : "hidden",
         pointerEvents: "none",
         overflow: "hidden",
       }}

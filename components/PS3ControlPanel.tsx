@@ -89,9 +89,47 @@ function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KE
 // "about", or falling back to raw viewport math, or an even earlier version
 // that mirrored to the *right* edge above the mobile breakpoint), which
 // routinely lost that margin or put the pill on the wrong side entirely.
-/** Layout box of `el`, with ancestor translates undone.
+/** Layout box of `el`, ignoring CSS translates (offset* is transform-agnostic).
  *  getBoundingClientRect includes the hero subtitle's entrance translateY,
  *  so docking to it made the menu pill chase the JOOLA / UCLA line. */
+function layoutDocumentRect(el: HTMLElement): { left: number; top: number; width: number; height: number } | null {
+  const width = el.offsetWidth;
+  const height = el.offsetHeight;
+  if (width < 8 || height < 8) return null;
+  let left = 0;
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node) {
+    left += node.offsetLeft;
+    top += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return { left, top, width, height };
+}
+
+function elementTranslation(el: HTMLElement): { x: number; y: number } {
+  const cs = getComputedStyle(el);
+  const t = cs.transform;
+  if (t && t !== "none") {
+    try {
+      const m = new DOMMatrix(t);
+      return { x: m.e, y: m.f };
+    } catch {
+      /* fall through to `translate` */
+    }
+  }
+  const raw = cs.translate;
+  if (raw && raw !== "none") {
+    const parts = raw.trim().split(/\s+/);
+    const n = (v?: string) => {
+      const x = parseFloat(v ?? "0");
+      return Number.isFinite(x) ? x : 0;
+    };
+    return { x: n(parts[0]), y: n(parts[1]) };
+  }
+  return { x: 0, y: 0 };
+}
+
 function untransformedViewportRect(el: HTMLElement): DOMRect | null {
   const r = el.getBoundingClientRect();
   if (r.width < 8 || r.height < 8) return null;
@@ -99,16 +137,9 @@ function untransformedViewportRect(el: HTMLElement): DOMRect | null {
   let dy = 0;
   let node: HTMLElement | null = el;
   while (node && node !== document.documentElement) {
-    const t = getComputedStyle(node).transform;
-    if (t && t !== "none") {
-      try {
-        const m = new DOMMatrix(t);
-        dx += m.e;
-        dy += m.f;
-      } catch {
-        /* ignore unparsable transform lists */
-      }
-    }
+    const { x, y } = elementTranslation(node);
+    dx += x;
+    dy += y;
     node = node.parentElement;
   }
   return new DOMRect(r.left - dx, r.top - dy, r.width, r.height);
@@ -119,9 +150,16 @@ function computeHeroAlignedPos(): {x:number;y:number} | null {
   const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
   const heroP = joolaLink?.closest("p");
   if (!heroP) return null;
+  // Prefer offset chain (ignores transforms). Fall back to undoing matrices
+  // if an offsetParent is missing (transformed containing blocks).
+  const layout = layoutDocumentRect(heroP);
+  if (layout) {
+    return {
+      x: Math.round(layout.left),
+      y: Math.round(layout.top + layout.height + 16),
+    };
+  }
   const r = untransformedViewportRect(heroP);
-  // display:none shells report a 0×0 rect — treating that as a real anchor
-  // parks the pill at the viewport origin.
   if (!r) return null;
   return {
     x: Math.round(r.left + window.scrollX),
