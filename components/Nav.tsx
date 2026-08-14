@@ -6,7 +6,8 @@ import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
 import { useDialKit } from "dialkit";
-import { hrefToPrimaryTab, useResolvedPrimaryTab } from "@/lib/instantNav";
+import { hrefToPrimaryTab } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 const links = [
   { href: "/",         label: "work" },

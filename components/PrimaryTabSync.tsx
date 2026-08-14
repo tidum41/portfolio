@@ -6,8 +6,8 @@ import {
   clearPendingPrimaryTab,
   pathnameToPrimaryTab,
   peekPendingPrimaryTab,
-  usePendingPrimaryTab,
 } from "@/lib/instantNav";
+import { usePendingPrimaryTab } from "@/lib/usePrimaryTab";
 
 /**
  * URL is the sync target, not the paint trigger. Clear the optimistic tab

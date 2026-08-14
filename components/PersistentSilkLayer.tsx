@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useResolvedPrimaryTab } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 

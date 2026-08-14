@@ -26,8 +26,6 @@
  *   tab/BFCache return on "/" → distinct intro-replay
  */
 
-import { useSyncExternalStore } from "react";
-
 const INSTANT_KEY = "instant-back";
 const SOFT_KEY = "soft-nav";
 const PRIMARY_TAB_EVENT = "primary-tab-show";
@@ -95,19 +93,6 @@ export function isAlreadyShowingPrimary(href: string, pathname: string): boolean
   const tab = hrefToPrimaryTab(href);
   if (!tab) return false;
   return resolvePrimaryTab(pathname) === tab;
-}
-
-export function usePendingPrimaryTab(): PrimaryTab | null {
-  return useSyncExternalStore(
-    subscribePrimaryTab,
-    peekPendingPrimaryTab,
-    () => null,
-  );
-}
-
-export function useResolvedPrimaryTab(pathname: string): PrimaryTab | null {
-  const pending = usePendingPrimaryTab();
-  return pending ?? pathnameToPrimaryTab(pathname);
 }
 
 export function markInstantBack() {

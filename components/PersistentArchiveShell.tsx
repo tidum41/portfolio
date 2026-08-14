@@ -8,7 +8,7 @@ import {
   rememberArchiveGallery,
   warmArchiveGallery,
 } from "@/lib/archiveGalleryCache";
-import { useResolvedPrimaryTab } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**

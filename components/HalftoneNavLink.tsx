@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { HalftoneDotField } from "./HalftoneDotField";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
@@ -34,10 +35,13 @@ function canHover() {
 
 function commitPrimary(href: string) {
   const tab = hrefToPrimaryTab(href);
-  if (tab) {
-    markSoftNav();
+  if (!tab) return;
+  markSoftNav();
+  // router.push is a transition. Without flushSync the tab store update is
+  // deferred with the RSC payload — the whole point of markPrimaryShow.
+  flushSync(() => {
     markPrimaryShow(tab);
-  }
+  });
 }
 
 function warmPrimary(href: string) {
