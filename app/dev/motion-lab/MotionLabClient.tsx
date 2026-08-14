@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { DialRoot, useDialKit, useDialKitController } from "dialkit";
+import { useDialKit, useDialKitController } from "dialkit";
 import { isVariantId, VARIANTS, VariantStage, type Copy, type VariantId } from "./stages";
 
 const LAB_Z = 50;
@@ -274,9 +274,6 @@ export default function MotionLabClient() {
           </div>
         </div>
       </div>
-
-      {/* Preview is NODE_ENV=production — without this DialKit never mounts. */}
-      <DialRoot defaultOpen productionEnabled />
     </>
   );
 }

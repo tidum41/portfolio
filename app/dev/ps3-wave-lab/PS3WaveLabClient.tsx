@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { DialRoot } from "dialkit";
 import PS3SilkLab from "@/components/PS3SilkLab";
 
 /**
@@ -80,8 +79,6 @@ export default function PS3WaveLabClient() {
           </div>
         </div>
       </div>
-
-      <DialRoot defaultOpen />
     </>
   );
 }
