@@ -31,7 +31,7 @@ export type StageProps = {
 
 export const VARIANTS = [
   { id: "current-site", label: "Current site", hint: "CSS · 12px / 280ms · production .ps3-enter" },
-  { id: "case-study", label: "Case study", hint: "CSS · 6px / 220ms · .cs-open-type" },
+  { id: "case-study", label: "Case study", hint: "CSS · 8px / 1140ms · live .cs-open-type" },
   { id: "xmb-long", label: "XMB 450", hint: "CSS · 20px / 450ms · original Framer settle" },
   { id: "opacity-only", label: "Opacity only", hint: "PS3 fade + 8px settle · opacity and Y split" },
   { id: "split-channels", label: "Split channels", hint: "Framer · opacity + Y timed separately" },
@@ -280,6 +280,7 @@ function readEase(folder: { x1: number; y1: number; x2: number; y2: number }): C
 
 function CssStage({
   panel,
+  persistKey,
   defaults,
   copy,
   replayKey,
@@ -287,6 +288,7 @@ function CssStage({
   twoColumn,
 }: StageProps & {
   panel: string;
+  persistKey?: string;
   defaults: {
     x?: number;
     y: number;
@@ -308,7 +310,7 @@ function CssStage({
       fromOpacity: [defaults.fromOpacity, 0.05, 1, 0.01],
       ease: easeFolder(defaults.ease),
     },
-    persist(panel),
+    persist(persistKey ?? panel),
   );
   const slots = nodes(copy);
   const playKey = usePlayKey(JSON.stringify(dk), autoReplay, replayKey);
@@ -354,12 +356,14 @@ export function CaseStudyStage(props: StageProps) {
   return (
     <CssStage
       panel="Case study"
+      persistKey="case-study-v2"
       defaults={{
         y: CASE_STUDY_ENTRANCE_DEFAULTS.y,
+        x: CASE_STUDY_ENTRANCE_DEFAULTS.x,
         duration: CASE_STUDY_ENTRANCE_DEFAULTS.duration,
         stagger: CASE_STUDY_ENTRANCE_DEFAULTS.stagger,
         maxSpread: CASE_STUDY_ENTRANCE_DEFAULTS.maxSpread,
-        fromOpacity: SPAWN_FROM_OPACITY,
+        fromOpacity: CASE_STUDY_ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY,
         ease: EASE_OPACITY,
       }}
       {...props}

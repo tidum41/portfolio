@@ -7,8 +7,8 @@ type Meta = { _key?: string; label: string; values: string[] };
 
 /**
  * Case-study above-the-fold: media is instant (autoplay). Type is visible
- * by default; CSS animates a fade-up from 0.4 opacity so a skipped tween
- * cannot leave the title gone.
+ * by default; CSS animates a fade-up (CASE_STUDY_ENTRANCE_DEFAULTS) so a
+ * skipped tween cannot leave the title gone.
  */
 export default function CaseStudyOpen({
   tagline,

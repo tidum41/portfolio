@@ -50,6 +50,8 @@ export interface EntranceDefaults {
   maxSpread: number;  // s, cap on total stagger spread regardless of item count
   /** Always 1 for page content — scale on cards/type reads as a glitch. */
   scale: number;
+  /** Animation `from` opacity. Resting state stays 1. */
+  fromOpacity?: number;
 }
 
 // XMB-like column focus: fade + short settle, no scale. Snappier than the
@@ -63,12 +65,14 @@ export const ENTRANCE_DEFAULTS: EntranceDefaults = {
   scale: 1,
 };
 
-// Case-study open — type only. Media is instant. CSS in globals, not Framer.
+// Case-study open — type only. Media is instant. CSS in globals.css
+// `.cs-open-type` (keep those numbers in sync). Tuned in /dev/motion-lab.
 export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
   x: 0,
-  y: 6,
-  duration: 0.22,
-  stagger: 0.045,
-  maxSpread: 0.14,
+  y: 8,
+  duration: 1.14,
+  stagger: 0.15,
+  maxSpread: 0.28,
   scale: 1,
+  fromOpacity: 0.29,
 };
