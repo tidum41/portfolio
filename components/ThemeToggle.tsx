@@ -143,10 +143,12 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         alignItems: "center",
         lineHeight: 0,
         WebkitTapHighlightColor: "transparent",
-        // Fixed size so stacked absolute icons don't shift layout
+        // 44px tap target; 15px icon stays visually the same, centered.
         position: "relative",
-        width: ICON_SIZE,
-        height: ICON_SIZE,
+        width: 44,
+        height: 44,
+        boxSizing: "border-box",
+        justifyContent: "center",
       }}
     >
       {/* Base Icon */}

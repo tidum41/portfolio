@@ -27,6 +27,15 @@ function isExternalHref(href: string) {
   return /^(https?:|mailto:|tel:)/i.test(href);
 }
 
+const CARD_LINK_STYLE = {
+  textDecoration: "none",
+  color: "inherit",
+  display: "flex",
+  flexDirection: "column",
+  gap: "inherit",
+  cursor: "pointer",
+} as const;
+
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
@@ -574,7 +583,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -589,18 +598,18 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
-                      <div className="project-media">
-                        <Link
-                          href={p.href}
-                          prefetch
-                          style={{ textDecoration: "none", display: "block" }}
-                          onMouseEnter={() => warmProjectNav(p.href)}
-                          onFocus={() => warmProjectNav(p.href)}
-                          onPointerDown={() => commitProjectNav(p.href)}
-                          onClick={() => commitProjectNav(p.href)}
-                        >
+                      <Link
+                        href={p.href}
+                        prefetch
+                        style={CARD_LINK_STYLE}
+                        onMouseEnter={() => warmProjectNav(p.href)}
+                        onFocus={() => warmProjectNav(p.href)}
+                        onPointerDown={() => commitProjectNav(p.href)}
+                        onClick={() => commitProjectNav(p.href)}
+                      >
+                        <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
@@ -611,9 +620,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                               sizes="(max-width: 768px) 100vw, 50vw"
                             />
                           </div>
-                        </Link>
-                      </div>
-                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        </div>
+                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                      </Link>
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -632,7 +641,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               aria-label="Open Drag a CD in a larger view"
               onClick={() => openPopupHandler("cd")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
-              style={{ gap: 6, cursor: "pointer" }}
+              style={{ gap: 6, cursor: "pointer", order: projects.length }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">
@@ -664,7 +673,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -679,18 +688,18 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8 }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
-                      <div className="project-media">
-                        <Link
-                          href={p.href}
-                          prefetch
-                          style={{ textDecoration: "none", display: "block" }}
-                          onMouseEnter={() => warmProjectNav(p.href)}
-                          onFocus={() => warmProjectNav(p.href)}
-                          onPointerDown={() => commitProjectNav(p.href)}
-                          onClick={() => commitProjectNav(p.href)}
-                        >
+                      <Link
+                        href={p.href}
+                        prefetch
+                        style={CARD_LINK_STYLE}
+                        onMouseEnter={() => warmProjectNav(p.href)}
+                        onFocus={() => warmProjectNav(p.href)}
+                        onPointerDown={() => commitProjectNav(p.href)}
+                        onClick={() => commitProjectNav(p.href)}
+                      >
+                        <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
@@ -701,9 +710,9 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                               sizes="(max-width: 768px) 100vw, 50vw"
                             />
                           </div>
-                        </Link>
-                      </div>
-                      <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        </div>
+                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                      </Link>
                     </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
@@ -721,7 +730,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
               aria-label="Open Dumb Habit Tracker in a larger view"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={{ gap: 6, cursor: "pointer" }}
+              style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
-import { EASE_OPACITY, EASE_Y } from "@/lib/motion";
+import { EASE_OPACITY, EASE_Y, SPAWN_FROM_OPACITY } from "@/lib/motion";
 import { HERO_HEADLINE } from "@/lib/site";
 
 // Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
@@ -30,7 +30,8 @@ export default function HeroText() {
       // runs on the main thread via rAF, while `transform` stays on the
       // compositor. This entrance fires at the busiest possible moment
       // (page load/hydration), so it's the one place that matters most.
-      h1Controls.set({ opacity: 0, transform: "translateY(22px)" });
+      // Opacity floor 0.4 — never 0 — so a skipped tween cannot hide the H1.
+      h1Controls.set({ opacity: reduced ? 1 : SPAWN_FROM_OPACITY, transform: reduced ? "translateY(0px)" : "translateY(22px)" });
       h1Controls.start({
         opacity: 1,
         transform: "translateY(0px)",
@@ -45,23 +46,25 @@ export default function HeroText() {
 
     function onDone() { setSubReady(true); }
     window.addEventListener("intro-done", onDone, { once: true });
+    // Intro gate is 1.9s; if intro-done never fires, still show the subtitle.
+    const subFallback = window.setTimeout(onDone, Math.ceil((introTimings.gateDuration + 0.6) * 1000));
 
     function onReplay() {
       _animated = false;
       setSubReady(false);
       animateH1(introTimings.heroDelay, introTimings.heroDuration);
-      // Re-register so subtitle animates in after the replayed intro-done
       window.addEventListener("intro-done", onDone, { once: true });
     }
     window.addEventListener("intro-replay", onReplay);
 
     return () => {
+      window.clearTimeout(subFallback);
       window.removeEventListener("intro-done", onDone);
       window.removeEventListener("intro-replay", onReplay);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: "translateY(22px)" };
+  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: SPAWN_FROM_OPACITY, transform: "translateY(22px)" };
   const subTx = instant || reduced
     ? { duration: 0 }
     : { opacity: { duration: 1.5, ease: EASE_OPACITY }, transform: { duration: 1.9, ease: EASE_Y } };
@@ -92,8 +95,8 @@ export default function HeroText() {
       </div>
 
       <motion.p
-        initial={{ opacity: 0, transform: "translateY(22px)" }}
-        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: "translateY(22px)" }}
+        initial={{ opacity: SPAWN_FROM_OPACITY, transform: "translateY(22px)" }}
+        animate={subReady ? { opacity: 1, transform: "translateY(0px)" } : { opacity: SPAWN_FROM_OPACITY, transform: "translateY(22px)" }}
         transition={subTx}
         style={{
           position: "relative",

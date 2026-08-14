@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { SPAWN_FROM_OPACITY } from "@/lib/motion";
 
 export default function InteractiveBadge() {
   const reduced = useReducedMotion();
@@ -8,10 +9,10 @@ export default function InteractiveBadge() {
   return (
     <motion.div
       className="interactive-badge"
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: SPAWN_FROM_OPACITY }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-20px" }}
-      transition={{ type: "spring", duration: reduced ? 0 : 0.35, bounce: 0 }}
+      transition={{ duration: reduced ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
       style={{
         display: "inline-flex",
         alignItems: "center",

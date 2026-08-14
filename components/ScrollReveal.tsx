@@ -40,7 +40,7 @@ export function ScrollReveal({ children, delay = 0, style, className, y: yProp }
       // Full `transform` string rather than the `y` shorthand, so this stays
       // on the compositor instead of running via rAF on the main thread —
       // this primitive backs nearly every scroll reveal on the site.
-      initial={{ opacity: 0, transform: `translateY(${y}px)` }}
+      initial={{ opacity: SPAWN_FROM_OPACITY, transform: `translateY(${y}px)` }}
       whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: `${dk.viewportMargin}px` }}
       transition={{
