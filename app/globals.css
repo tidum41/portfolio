@@ -683,20 +683,21 @@ html[data-theme="dark"] .project-image {
 
 /* Primary-nav page enter (About copy, archive tiles). Opacity + translate
    only — compositor, no scale (Mux/type glitch). Resting styles stay fully
-   visible so a skipped animation cannot hide content. */
+   visible so a skipped animation cannot hide content. Numbers match
+   ENTRANCE_DEFAULTS in lib/motion.ts. */
 .ps3-enter {
   opacity: 1;
   translate: 0 0;
 }
 @keyframes ps3-enter {
   from {
-    opacity: 0.4;
-    translate: 0 12px;
+    opacity: var(--ps3-enter-from-opacity, 0.29);
+    translate: 0 var(--ps3-enter-y, 8px);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .ps3-enter {
-    animation: ps3-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation: ps3-enter 1140ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
     animation-delay: var(--ps3-enter-delay, 0ms);
   }
 }

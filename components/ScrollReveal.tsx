@@ -93,7 +93,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
     <motion.div
       variants={{
         hidden:  { opacity: SPAWN_FROM_OPACITY, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
-        visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_EASE } },
+        visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_OPACITY } },
       }}
       style={style}
       className={className}
@@ -267,7 +267,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
     yMv.set(yPx);
     // Opacity + Y only. Skip a third tween when x is always 0 (cheaper on nav).
     const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
-    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_EASE });
+    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_OPACITY });
     tweensRef.current = [fade, slideY];
     // Fire-and-forget fallback. Clearing it on cleanup is what left grid
     // cards at opacity 0 after a keep-alive return.
@@ -296,7 +296,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
                 transform: SPAWN_REST,
                 transition: {
                   duration: reduced ? 0 : dk.duration,
-                  ease: PS3_EASE,
+                  ease: PS3_OPACITY,
                 },
               },
             }

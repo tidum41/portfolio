@@ -11,7 +11,7 @@ import {
     type CSSProperties,
 } from "react";
 import { useDialKit } from "dialkit";
-import { ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { cssEase, EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
 
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
@@ -1466,6 +1466,8 @@ export default function BentoGallery({
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
                     const tileEnterClass = layoutReady ? "ps3-enter" : "";
+                    const fromOpacity =
+                        ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY;
 
                     return (
                         <div
@@ -1477,6 +1479,10 @@ export default function BentoGallery({
                                 top: pos.top,
                                 width: iw,
                                 ["--ps3-enter-delay" as string]: `${Math.round(entranceDelay * 1000)}ms`,
+                                ["--ps3-enter-y" as string]: `${dk.y}px`,
+                                ["--ps3-enter-from-opacity" as string]: String(fromOpacity),
+                                animationDuration: `${dk.duration * 1000}ms`,
+                                animationTimingFunction: cssEase(EASE_OPACITY),
                             }}
                         >
                         <div
