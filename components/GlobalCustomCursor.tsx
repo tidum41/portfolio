@@ -2,6 +2,13 @@
 
 import { useEffect } from "react";
 import { useDialKit } from "dialkit";
+import { cssEase, EASE_OPACITY } from "@/lib/motion";
+
+// Press squash: CSS transform only, so the GPU owns it. Asymmetric — down
+// is snappier than release. Site ease-out so it matches page enter.
+const PRESS_EASE = cssEase(EASE_OPACITY);
+const PRESS_IN_MS = 110;
+const PRESS_OUT_MS = 140;
 
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
@@ -30,7 +37,6 @@ declare global {
     gc_dotConfig?: {
       restOpacity: number;
       pressScaleAmount: number;
-      pressLerp: number;
       idleFadeDelay: number;
       idleFadeDuration: number;
       wrapFadeDuration: number;
@@ -133,13 +139,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   let restCursorUrl = "";
-  let pressCursorUrl = "";
-  let cssTipMode: "rest" | "press" | "hide" | "" = "";
+  let cssTipMode: "rest" | "hide" | "" = "";
 
   const rebuildCursorUrls = () => {
     restCursorUrl = makeDotDataUrl(currentColor, 1) || "/cursors/dot-light.svg";
-    const ps = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    pressCursorUrl = makeDotDataUrl(currentColor, ps) || restCursorUrl;
     cssTipMode = "";
   };
 
@@ -212,7 +215,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // "none" so it still interpolates cleanly from the ringFlash pulse.
   const noStroke = (px: number) => `inset 0 0 0 ${px}px rgba(255,255,255,0)`;
 
-  // JS wrap is the hover pill only. Resting tip is the CSS cursor (compositor).
+  // JS wrap is the hover pill + press squash. Resting tip stays the CSS
+  // cursor (compositor). Press briefly hands off to this wrap so we can
+  // animate scale — CSS `cursor:` cannot.
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
     position: "fixed", top: "0", left: "0",
@@ -223,6 +228,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     transform: "translate3d(-9999px,-9999px,0)",
   });
   document.body.appendChild(wrap);
+
+  // Isolated scale node: wrap's transform is the mouse follow (must stay
+  // transition-less). Press squash lives here so it can CSS-transition
+  // without lagging the tip.
+  const pressEl = document.createElement("div");
+  Object.assign(pressEl.style, {
+    transformOrigin: "0 0",
+    transform: "scale(1)",
+    transition: "none",
+    willChange: "auto",
+    pointerEvents: "none",
+  });
+  wrap.appendChild(pressEl);
 
   const cursorEl = document.createElement("div");
   Object.assign(cursorEl.style, {
@@ -239,7 +257,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     transform: "translate(-50%,-50%)",
     opacity: String(window.gc_dotConfig?.restOpacity ?? 0.88),
   });
-  wrap.appendChild(cursorEl);
+  pressEl.appendChild(cursorEl);
 
   // Sheen overlay for the "gradient" fill effect — a fixed diagonal highlight
   // whose OPACITY fades in/out (fully animatable), instead of trying to
@@ -307,7 +325,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   let lastX = mouse.x, lastY = mouse.y, vel = 0;
   let lastMove = seededPos != null ? performance.now() : 0;
-  let raf = 0, isIdle = false, pressScale = 1, pressTarget = 1;
+  let raf = 0, isIdle = false;
+  let pressHeld = false;
+  let pressVisual = false;
+  let pressHideTimer = 0;
   let gpuPromoted = false, lastPosWrite = 0;
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
@@ -325,20 +346,72 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   const lastTransform  = new Array(MAX_ECHO).fill("");
 
   const paintCssTip = () => {
-    const mode = pillVisible ? "hide" : (pressTarget < 0.95 ? "press" : "rest");
+    const mode = pillVisible || pressHeld || pressVisual ? "hide" : "rest";
     if (mode === cssTipMode) return;
     cssTipMode = mode;
     if (mode === "hide") {
       styleEl.textContent = hideCssRule;
       return;
     }
-    styleEl.textContent = cursorRuleForUrl(mode === "press" ? pressCursorUrl : restCursorUrl);
+    styleEl.textContent = cursorRuleForUrl(restCursorUrl);
   };
   const showCssTip = () => { paintCssTip(); };
   const hideCssTipForPill = () => {
     cssTipMode = "";
     styleEl.textContent = hideCssRule;
     cssTipMode = "hide";
+  };
+
+  const wrapPos = () => {
+    const rx = Math.round(mouse.x * 2) / 2;
+    const ry = Math.round(mouse.y * 2) / 2;
+    return `translate3d(${rx}px,${ry}px,0)`;
+  };
+
+  const setPressScale = (down: boolean, instant = false) => {
+    const amount = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
+    const ms = down ? PRESS_IN_MS : PRESS_OUT_MS;
+    pressEl.style.transition = instant ? "none" : `transform ${ms}ms ${PRESS_EASE}`;
+    pressEl.style.transform = down ? `scale(${amount})` : "scale(1)";
+    pressEl.style.willChange = down || !instant ? "transform" : "auto";
+  };
+
+  const showWrapForPress = () => {
+    pressVisual = true;
+    hideCssTipForPill();
+    wrap.style.transition = "none";
+    wrap.style.transform = wrapPos();
+    wrap.style.opacity = "1";
+  };
+
+  const hideWrapAfterPress = () => {
+    pressHideTimer = 0;
+    pressVisual = false;
+    pressEl.style.willChange = "auto";
+    pressEl.style.transition = "none";
+    if (pillVisible || pressHeld) return;
+    wrap.style.transition = "none";
+    wrap.style.opacity = "0";
+    wrap.style.transition = `opacity ${lastWrapFadeMs}ms ease`;
+    paintCssTip();
+  };
+
+  const endPress = (instant = false) => {
+    clearTimeout(pressHideTimer);
+    pressHideTimer = 0;
+    const wasHeld = pressHeld;
+    pressHeld = false;
+    setPressScale(false, instant);
+    if (instant) {
+      hideWrapAfterPress();
+      return;
+    }
+    if (!wasHeld) return;
+    if (!pillVisible) {
+      pressHideTimer = window.setTimeout(hideWrapAfterPress, PRESS_OUT_MS) as unknown as number;
+    } else {
+      pressVisual = false;
+    }
   };
 
   const setWillChange = (v: string) => {
@@ -556,6 +629,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // shift the label text — this is what renderedHideIcon guards against.
     if (!renderedHideIcon) arrowEl.style.display = "";
     wrap.style.opacity = "0";
+    endPress(true);
     showCssTip();
   };
 
@@ -585,6 +659,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
     wrap.style.opacity = "0";
+    endPress(true);
     showCssTip();
   };
 
@@ -601,7 +676,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
     const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
     const lerpMin     = tc.lerpMin ?? 0.08;
-    pressScale += (pressTarget - pressScale) * (dc.pressLerp ?? 0.28);
 
     const wrapFadeMs = dc.wrapFadeDuration ?? 180;
     if (wrapFadeMs !== lastWrapFadeMs) {
@@ -610,9 +684,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
 
     if (mouse.inside) {
-      if (pillVisible) {
-        const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
-        wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
+      if (pillVisible || pressHeld || pressVisual) {
+        wrap.style.transform = wrapPos();
         wrap.style.opacity = "1";
         cursorEl.style.transform = "translate(-50%,-50%)";
       }
@@ -775,8 +848,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       }
     }
 
-    const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
-    if (allSettled && pressSettled && !mouse.inside && idleFade <= 0) {
+    if (allSettled && !pressHeld && !mouse.inside && idleFade <= 0) {
       isIdle = true; setWillChange("auto"); return;
     }
     raf = requestAnimationFrame(tick);
@@ -811,8 +883,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // during soft-nav to About/Archive the main thread can miss several frames
   // (Mux/CD teardown + destination mount), which used to freeze the tip when
   // its transform only updated inside tick.
-  const syncPill = (x: number, y: number) => {
-    if (!pillVisible) return;
+  const syncWrap = (x: number, y: number) => {
+    if (!pillVisible && !pressHeld && !pressVisual) return;
     const rx = Math.round(x * 2) / 2;
     const ry = Math.round(y * 2) / 2;
     wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
@@ -827,7 +899,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
-    syncPill(e.clientX, e.clientY);
+    syncWrap(e.clientX, e.clientY);
     checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
@@ -839,7 +911,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   window.addEventListener("pointerleave", () => {
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
-    pressTarget = 1;
+    endPress(true);
     if (pillVisible) { pillVisible = false; morphToRest(); }
     else paintCssTip();
     isPill = false; pillLabel = ""; renderedLabel = "";
@@ -849,23 +921,21 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
-    syncPill(e.clientX, e.clientY);
+    syncWrap(e.clientX, e.clientY);
     wakeUp();
   }, { signal: sig });
-  window.addEventListener("pointerdown", () => {
-    pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    if (!pillVisible) paintCssTip();
-    wakeUp();
+  window.addEventListener("pointerdown", (e: PointerEvent) => {
+    if (e.button !== 0) return;
+    clearTimeout(pressHideTimer);
+    pressHeld = true;
+    if (!pillVisible) showWrapForPress();
+    setPressScale(true);
   }, { signal: sig });
   window.addEventListener("pointerup", () => {
-    pressTarget = 1;
-    if (!pillVisible) paintCssTip();
-    wakeUp();
+    endPress();
   }, { signal: sig });
   window.addEventListener("pointercancel", () => {
-    pressTarget = 1;
-    if (!pillVisible) paintCssTip();
-    wakeUp();
+    endPress(true);
   }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
@@ -950,6 +1020,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     wrap.remove();
     echoEls.forEach(el => el.remove());
     styleEl.remove();
+    clearTimeout(pressHideTimer);
   };
 }
 
@@ -1040,7 +1111,6 @@ export default function GlobalCustomCursor({
     window.gc_dotConfig = {
       restOpacity:      dk.Dot.restOpacity,
       pressScaleAmount: dk.Dot.pressScale,
-      pressLerp:        0.28,
       idleFadeDelay:    150,
       idleFadeDuration: 220,
       wrapFadeDuration: 180,
