@@ -2,11 +2,6 @@
 
 import { useEffect } from "react";
 import { useDialKit } from "dialkit";
-import { cssEase, EASE_OPACITY } from "@/lib/motion";
-
-const PRESS_EASE = cssEase(EASE_OPACITY);
-const PRESS_IN_MS = 90;
-const PRESS_OUT_MS = 140;
 
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
@@ -116,13 +111,42 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   const styleEl = document.createElement("style");
   document.head.appendChild(styleEl);
 
+  const hotspot = Math.round(size / 2);
   const CSS_TIP_MQ = `@media (pointer:fine) and (prefers-reduced-motion: no-preference)`;
-  // Beat layout's `html * { cursor:url(dot.svg) !important }` (and the dark
-  // variant). The JS wrap is the only tip while this cursor is booted —
-  // swapping CSS cursor ↔ wrap on click is what made press jitter.
-  const JS_TIP_HIDE = `${CSS_TIP_MQ}{html[data-cursor-js],html[data-cursor-js] *,html[data-cursor-js][data-theme="dark"],html[data-cursor-js][data-theme="dark"] *{cursor:none!important}}`;
-  styleEl.textContent = JS_TIP_HIDE;
-  document.documentElement.setAttribute("data-cursor-js", "");
+
+  // Resting tip + press are CSS cursors (compositor — they keep moving if JS
+  // hitches). Same 20×20 hotspot for rest and press so the point doesn't jump;
+  // press just draws a smaller circle. Pill still hides the CSS cursor.
+  const cursorUrl = (color: string, scale: number) => {
+    const a = window.gc_dotConfig?.restOpacity ?? 0.88;
+    const rgb = hexToRgb(color);
+    const fill = rgb ? `rgb(${rgb.r},${rgb.g},${rgb.b})` : color;
+    const r = Math.max(0.5, (size / 2) * scale);
+    const c = size / 2;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${c}" cy="${c}" r="${r}" fill="${fill}" fill-opacity="${a}"/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  };
+
+  let lastSheetKey = "";
+  const writeCursorSheet = () => {
+    const pressAmt = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
+    const restOp = window.gc_dotConfig?.restOpacity ?? 0.88;
+    const key = `${currentColor}|${pressAmt}|${restOp}`;
+    if (key === lastSheetKey) return;
+    lastSheetKey = key;
+    const rest = cursorUrl(currentColor, 1);
+    const press = cursorUrl(currentColor, pressAmt);
+    const hs = hotspot;
+    styleEl.textContent =
+      `${CSS_TIP_MQ}{` +
+      `html[data-cursor-custom],html[data-cursor-custom] *,html[data-cursor-custom][data-theme="dark"],html[data-cursor-custom][data-theme="dark"] *{cursor:${rest} ${hs} ${hs},auto!important}` +
+      `html[data-cursor-custom]:active,html[data-cursor-custom] *:active,html[data-cursor-custom][data-theme="dark"]:active,html[data-cursor-custom][data-theme="dark"] *:active{cursor:${press} ${hs} ${hs},auto!important}` +
+      `html[data-cursor-custom][data-cursor-js],html[data-cursor-custom][data-cursor-js] *,html[data-cursor-custom][data-cursor-js]:active,html[data-cursor-custom][data-cursor-js] *:active,html[data-cursor-custom][data-cursor-js][data-theme="dark"],html[data-cursor-custom][data-cursor-js][data-theme="dark"] *,html[data-cursor-custom][data-cursor-js][data-theme="dark"]:active,html[data-cursor-custom][data-cursor-js][data-theme="dark"] *:active{cursor:none!important}` +
+      `}`;
+  };
+
+  writeCursorSheet();
+  document.documentElement.setAttribute("data-cursor-custom", "");
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
@@ -186,30 +210,17 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // "none" so it still interpolates cleanly from the ringFlash pulse.
   const noStroke = (px: number) => `inset 0 0 0 ${px}px rgba(255,255,255,0)`;
 
-  // JS wrap is the only tip while booted (layout CSS cursor is `none`).
-  // Position follows pointermove; press squash is a compositor scale on
-  // pressEl so it never fights the pill's width/height transition.
+  // JS wrap is the hover pill only. Resting tip is the CSS cursor (compositor).
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
     position: "fixed", top: "0", left: "0",
     pointerEvents: "none", zIndex: `${zIndex}`,
-    opacity: seededPos ? "1" : "0",
-    transition: "none",
-    willChange: "transform",
-    transform: seededPos
-      ? `translate3d(${Math.round(seededPos.x * 2) / 2}px,${Math.round(seededPos.y * 2) / 2}px,0)`
-      : "translate3d(-9999px,-9999px,0)",
+    opacity: "0",
+    transition: "opacity 180ms ease",
+    willChange: "auto",
+    transform: "translate3d(-9999px,-9999px,0)",
   });
   document.body.appendChild(wrap);
-
-  const pressEl = document.createElement("div");
-  Object.assign(pressEl.style, {
-    transform: "scale(1)",
-    transformOrigin: "0 0",
-    willChange: "transform",
-    transition: "none",
-  });
-  wrap.appendChild(pressEl);
 
   const cursorEl = document.createElement("div");
   Object.assign(cursorEl.style, {
@@ -224,10 +235,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     overflow: "hidden",
     willChange: "auto",
     transform: "translate(-50%,-50%)",
-    transformOrigin: "center center",
     opacity: String(window.gc_dotConfig?.restOpacity ?? 0.88),
   });
-  pressEl.appendChild(cursorEl);
+  wrap.appendChild(cursorEl);
 
   // Sheen overlay for the "gradient" fill effect — a fixed diagonal highlight
   // whose OPACITY fades in/out (fully animatable), instead of trying to
@@ -296,7 +306,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let lastX = mouse.x, lastY = mouse.y, vel = 0;
   let lastMove = seededPos != null ? performance.now() : 0;
   let raf = 0, isIdle = false;
-  let pressHeld = false;
   let gpuPromoted = false, lastPosWrite = 0;
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
@@ -309,6 +318,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
+  let lastWrapFadeMs = 180;
   const lastOpacity    = new Array(MAX_ECHO).fill(-1);
   const lastTransform  = new Array(MAX_ECHO).fill("");
 
@@ -318,24 +328,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     return `translate3d(${rx}px,${ry}px,0)`;
   };
 
-  const syncWrap = () => {
-    wrap.style.transform = wrapPos();
+  const setJsTip = (on: boolean) => {
+    document.documentElement.toggleAttribute("data-cursor-js", on);
   };
-
-  const applyPressScale = (amount: number, durationMs: number) => {
-    pressEl.style.transition = `transform ${durationMs}ms ${PRESS_EASE}`;
-    pressEl.style.transform = `scale(${amount})`;
-  };
-
-  const endPress = (instant = false) => {
-    pressHeld = false;
-    if (instant) {
-      pressEl.style.transition = "none";
-      pressEl.style.transform = "scale(1)";
-      return;
-    }
-    applyPressScale(1, PRESS_OUT_MS);
-  };
+  const showCssTip = () => { setJsTip(false); };
+  const hideCssTipForPill = () => { setJsTip(true); };
 
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
@@ -347,7 +344,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   const morphToPill = (label: string) => {
-    endPress(true);
+    hideCssTipForPill();
     wrap.style.opacity = "1";
     wrap.style.transform = wrapPos();
     clearTimeout(showPillTimer);
@@ -551,9 +548,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // pop the arrow back into the flex layout mid-collapse and visibly
     // shift the label text — this is what renderedHideIcon guards against.
     if (!renderedHideIcon) arrowEl.style.display = "";
-    if (mouse.inside) wrap.style.opacity = "1";
-    else wrap.style.opacity = "0";
-    endPress(true);
+    wrap.style.opacity = "0";
+    showCssTip();
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a
@@ -581,8 +577,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.display = "";
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
-    wrap.style.opacity = mouse.inside ? "1" : "0";
-    endPress(true);
+    wrap.style.opacity = "0";
+    showCssTip();
   };
 
   const tick = () => {
@@ -598,6 +594,13 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
     const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
     const lerpMin     = tc.lerpMin ?? 0.08;
+    writeCursorSheet();
+
+    const wrapFadeMs = dc.wrapFadeDuration ?? 180;
+    if (wrapFadeMs !== lastWrapFadeMs) {
+      lastWrapFadeMs = wrapFadeMs;
+      wrap.style.transition = `opacity ${wrapFadeMs}ms ease`;
+    }
 
     if (mouse.inside) {
       if (isPill) {
@@ -759,7 +762,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       }
     }
 
-    if (allSettled && !pressHeld && !mouse.inside && idleFade <= 0) {
+    if (allSettled && !mouse.inside && idleFade <= 0) {
       isIdle = true; setWillChange("auto"); return;
     }
     raf = requestAnimationFrame(tick);
@@ -790,10 +793,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
   }
 
-  // Tip follows the pointer on the event itself. Trail stays RAF-driven —
-  // during soft-nav to About/Archive the main thread can miss several frames
-  // (Mux/CD teardown + destination mount), which used to freeze the tip when
-  // its transform only updated inside tick.
+  // Pill follows the pointer on the event itself. The resting tip is a CSS
+  // cursor, so it still tracks if the main thread hitches (trail stays RAF).
 
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
@@ -803,8 +804,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
-    wrap.style.opacity = "1";
-    syncWrap();
+    if (pillVisible) {
+      wrap.style.transform = wrapPos();
+      wrap.style.opacity = "1";
+    }
     checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
@@ -816,8 +819,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   window.addEventListener("pointerleave", () => {
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
-    endPress(true);
     if (pillVisible) { pillVisible = false; morphToRest(); }
+    else showCssTip();
     isPill = false; pillLabel = ""; renderedLabel = "";
   }, { signal: sig });
   window.addEventListener("pointerenter", (e: PointerEvent) => {
@@ -825,22 +828,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
-    wrap.style.opacity = "1";
-    syncWrap();
-    wakeUp();
-  }, { signal: sig });
-  window.addEventListener("pointerdown", (e: PointerEvent) => {
-    if (e.button !== 0) return;
-    pressHeld = true;
-    if (!pillVisible) {
-      applyPressScale(window.gc_dotConfig?.pressScaleAmount ?? 0.6, PRESS_IN_MS);
+    if (pillVisible) {
+      wrap.style.transform = wrapPos();
+      wrap.style.opacity = "1";
     }
-  }, { signal: sig });
-  window.addEventListener("pointerup", () => {
-    endPress();
-  }, { signal: sig });
-  window.addEventListener("pointercancel", () => {
-    endPress(true);
+    wakeUp();
   }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
@@ -880,6 +872,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.color  = tc;
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
+    writeCursorSheet();
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
@@ -923,6 +916,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     echoEls.forEach(el => el.remove());
     styleEl.remove();
     document.documentElement.removeAttribute("data-cursor-js");
+    document.documentElement.removeAttribute("data-cursor-custom");
   };
 }
 
