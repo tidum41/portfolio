@@ -114,7 +114,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   const hotspot = Math.round(size / 2);
   const CSS_TIP_MQ = `@media (pointer:fine) and (prefers-reduced-motion: no-preference)`;
-  const hideCssRule = `${CSS_TIP_MQ}{html,html *{cursor:none!important}}`;
+  // Layout ships `html, html * { cursor:url(dot.svg) !important }` and a
+  // more-specific dark rule. A same-specificity `cursor:none` never wins, so
+  // the SVG tip stays on top of the JS wrap and press scale is invisible.
+  const JS_TIP_HIDE = `${CSS_TIP_MQ}{html[data-cursor-js],html[data-cursor-js] *,html[data-cursor-js][data-theme="dark"],html[data-cursor-js][data-theme="dark"] *,html:active,html:active *,html:active[data-theme="dark"],html:active[data-theme="dark"] *{cursor:none!important}}`;
 
   const makeDotDataUrl = (color: string, scale: number) => {
     const canvas = document.createElement("canvas");
@@ -133,19 +136,24 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   let restCursorUrl = "";
-  let cssTipMode: "rest" | "hide" | "" = "";
-
-  const rebuildCursorUrls = () => {
-    restCursorUrl = makeDotDataUrl(currentColor, 1) || "/cursors/dot-light.svg";
-    cssTipMode = "";
-  };
 
   const cursorRuleForUrl = (url: string) =>
     `${CSS_TIP_MQ}{html,html *{cursor:url("${url}") ${hotspot} ${hotspot}, auto !important}}`;
 
+  const writeCursorSheet = () => {
+    styleEl.textContent = cursorRuleForUrl(restCursorUrl) + JS_TIP_HIDE;
+  };
+
+  const setJsTip = (on: boolean) => {
+    document.documentElement.toggleAttribute("data-cursor-js", on);
+  };
+
+  const rebuildCursorUrls = () => {
+    restCursorUrl = makeDotDataUrl(currentColor, 1) || "/cursors/dot-light.svg";
+    writeCursorSheet();
+  };
+
   rebuildCursorUrls();
-  styleEl.textContent = cursorRuleForUrl(restCursorUrl);
-  cssTipMode = "rest";
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
@@ -326,21 +334,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   const lastTransform  = new Array(MAX_ECHO).fill("");
 
   const paintCssTip = () => {
-    const mode = pillVisible || pressHeld || pressVisual ? "hide" : "rest";
-    if (mode === cssTipMode) return;
-    cssTipMode = mode;
-    if (mode === "hide") {
-      styleEl.textContent = hideCssRule;
-      return;
-    }
-    styleEl.textContent = cursorRuleForUrl(restCursorUrl);
+    setJsTip(pillVisible || pressHeld || pressVisual);
   };
   const showCssTip = () => { paintCssTip(); };
-  const hideCssTipForPill = () => {
-    cssTipMode = "";
-    styleEl.textContent = hideCssRule;
-    cssTipMode = "hide";
-  };
+  const hideCssTipForPill = () => { setJsTip(true); };
 
   const wrapPos = () => {
     const rx = Math.round(mouse.x * 2) / 2;
@@ -350,13 +347,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   const showWrapForPress = () => {
     pressVisual = true;
-    hideCssTipForPill();
+    setJsTip(true);
     wrap.style.transition = "none";
     wrap.style.transform = wrapPos();
     wrap.style.opacity = "1";
-    // Same transform the old JS tip used — scale around the dot's center,
-    // not a parent origin. Start at 1 so the first lerp frame is a shrink
-    // of the cursor you were already looking at, not a pop to small.
     cursorEl.style.transform = "translate(-50%,-50%) scale(1)";
   };
 
@@ -902,7 +896,13 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     if (e.button !== 0) return;
     pressHeld = true;
     pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    if (!pillVisible) showWrapForPress();
+    if (!pillVisible) {
+      showWrapForPress();
+      // Land at the pressed size this frame. Lerp-in was invisible on a
+      // click; the old JS tip was the same node you were already watching.
+      pressScale = pressTarget;
+      cursorEl.style.transform = `translate(-50%,-50%) scale(${pressScale})`;
+    }
     wakeUp();
   }, { signal: sig });
   window.addEventListener("pointerup", () => {
@@ -950,8 +950,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
     rebuildCursorUrls();
-    if (pillVisible) hideCssTipForPill();
-    else paintCssTip();
+    paintCssTip();
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
@@ -994,6 +993,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     wrap.remove();
     echoEls.forEach(el => el.remove());
     styleEl.remove();
+    document.documentElement.removeAttribute("data-cursor-js");
   };
 }
 
