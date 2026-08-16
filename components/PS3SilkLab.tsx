@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PS3SilkLab v5 — XMB ribbon physics first, vintage halftone as material.
+ * PS3SilkLab v6 — XMB ribbon physics first, print + Bayer dither as materials.
  *
  * Real XMB (spline.elf): subdivided mesh / continuous translucent ribbons with
  * fresnel-ish sheet lighting + a SEPARATE particles.elf sparkle pass.
@@ -9,6 +9,12 @@
  * (production PS3Silk). v4 flattened that into AM print coverage and lost the
  * wrapping sheets. v5 restores continuous silk, then textures it with print
  * dots (and optional cursor melt) — no floating sparkles.
+ *
+ * v6 adds Maxime Heckel's ordered-dither / quantization / pixelize post
+ * (https://blog.maximeheckel.com/posts/the-art-of-dithering-and-retro-shading-web/)
+ * as a mixable material on the same silk, not a replacement for wrap physics.
+ * CRT curvature/scanlines from that article are omitted — PS3 XMB is HD silk,
+ * not a shadow-mask monitor.
  */
 
 import { useEffect, useRef } from "react";
@@ -27,6 +33,46 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 const FRAME_MS = 1000 / 30;
+
+/** Bayer 2^n via the 2×2 recurrence. Values 0..n²-1, then scaled to 0–255. */
+function bayerRgba(n: 4 | 8): Uint8Array {
+  const idx = new Uint8Array(n * n);
+  const fill = (size: number, x: number, y: number, value: number, step: number) => {
+    if (size === 1) {
+      idx[y * n + x] = value;
+      return;
+    }
+    const h = size / 2;
+    fill(h, x, y, value, step * 4);
+    fill(h, x + h, y, value + step * 2, step * 4);
+    fill(h, x, y + h, value + step * 3, step * 4);
+    fill(h, x + h, y + h, value + step, step * 4);
+  };
+  fill(n, 0, 0, 0, 1);
+  const out = new Uint8Array(n * n * 4);
+  const denom = n * n;
+  for (let i = 0; i < n * n; i++) {
+    const v = Math.round((idx[i] / denom) * 255);
+    out[i * 4] = v;
+    out[i * 4 + 1] = v;
+    out[i * 4 + 2] = v;
+    out[i * 4 + 3] = 255;
+  }
+  return out;
+}
+
+function uploadBayer(gl: WebGLRenderingContext, n: 4 | 8): WebGLTexture {
+  const tex = gl.createTexture()!;
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA, n, n, 0, gl.RGBA, gl.UNSIGNED_BYTE, bayerRgba(n),
+  );
+  return tex;
+}
 
 export default function PS3SilkLab() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,6 +93,13 @@ export default function PS3SilkLab() {
         // 0 = pure continuous silk (production physics), 1 = dots only
         silkMix: [0.42, 0, 1, 0.01],
       },
+      retro: {
+        // Heckel ordered dither as a material on the silk (0 = off)
+        mix: [0.35, 0, 1, 0.01],
+        matrix: { type: "select", options: ["4x4", "8x8"], default: "8x8" },
+        colors: [4, 2, 8, 1],
+        pixelSize: [1, 1, 12, 1],
+      },
       morph: {
         enabled: true,
         strength: [0.7, 0, 1, 0.01],
@@ -66,9 +119,9 @@ export default function PS3SilkLab() {
       },
     },
     {
-      id: "ps3-vintage-halftone-v5",
+      id: "ps3-vintage-halftone-v6",
       persist: {
-        key: "ps3-vintage-halftone-v5",
+        key: "ps3-vintage-halftone-v6",
         storage: "localStorage",
         presets: true,
       },
@@ -84,6 +137,10 @@ export default function PS3SilkLab() {
     minDot: 0.035,
     inkColor: [1, 1, 1] as [number, number, number],
     silkMix: 0.42,
+    ditherMix: 0.35,
+    bayerSize: 8,
+    colorNum: 4,
+    pixelSize: 1,
     morphOn: true,
     morphStrength: 0.7,
     morphRadius: 0.26,
@@ -108,6 +165,10 @@ export default function PS3SilkLab() {
     r.minDot = dk.print.minDot;
     r.inkColor = hexToRgb(dk.print.inkColor);
     r.silkMix = dk.print.silkMix;
+    r.ditherMix = dk.retro.mix;
+    r.bayerSize = dk.retro.matrix === "4x4" ? 4 : 8;
+    r.colorNum = dk.retro.colors;
+    r.pixelSize = dk.retro.pixelSize;
     r.morphOn = dk.morph.enabled;
     r.morphStrength = dk.morph.strength;
     r.morphRadius = dk.morph.radius;
@@ -165,6 +226,11 @@ uniform float uMorphRadius;
 uniform float uMorphFusion;
 uniform float uMorphSoft;
 uniform float uMorphOverlap;
+uniform sampler2D uBayer;
+uniform float uBayerSize;
+uniform float uDitherMix;
+uniform float uColorNum;
+uniform float uPixelSize;
 
 // Exact production PS3Silk band — continuous ribbon with one-sided thickness
 float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
@@ -209,6 +275,10 @@ vec2 rotate2(vec2 p, float a) {
 
 void main() {
   vec2 frag = gl_FragCoord.xy;
+  float px = max(uPixelSize, 1.0);
+  if (px > 1.01) {
+    frag = px * floor(frag / px) + px * 0.5;
+  }
   vec2 uv = frag / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
 
@@ -269,7 +339,21 @@ void main() {
   a = max(a, silkA * (1.0 - clamp(uSilkMix, 0.0, 1.0)) * 0.35 + silkA * 0.12 * step(0.55, uSilkMix));
 
   vec3 col = uInkColor * mix(0.78, uInkDensity, clamp(uSilkMix, 0.0, 1.0));
-  gl_FragColor = vec4(col * a, a);
+  vec3 rgb = col * a;
+
+  // Ordered dither + quantization (Heckel) — post on the silk, not a new wave.
+  if (uDitherMix > 0.001) {
+    vec2 bUv = (mod(frag, uBayerSize) + 0.5) / uBayerSize;
+    float th = texture2D(uBayer, bUv).r;
+    float lum = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+    float n = max(uColorNum - 1.0, 1.0);
+    float q = clamp(lum + (th - 0.5) / max(uColorNum, 2.0), 0.0, 1.0);
+    q = floor(q * n + 0.5) / n;
+    rgb = mix(rgb, uInkColor * q, clamp(uDitherMix, 0.0, 1.0));
+    a = mix(a, q, clamp(uDitherMix, 0.0, 1.0));
+  }
+
+  gl_FragColor = vec4(rgb, a);
 }`;
 
     function compile(src: string, type: number) {
@@ -316,7 +400,16 @@ void main() {
       morphFusion: gl.getUniformLocation(prog, "uMorphFusion"),
       morphSoft: gl.getUniformLocation(prog, "uMorphSoft"),
       morphOverlap: gl.getUniformLocation(prog, "uMorphOverlap"),
+      bayer: gl.getUniformLocation(prog, "uBayer"),
+      bayerSize: gl.getUniformLocation(prog, "uBayerSize"),
+      ditherMix: gl.getUniformLocation(prog, "uDitherMix"),
+      colorNum: gl.getUniformLocation(prog, "uColorNum"),
+      pixelSize: gl.getUniformLocation(prog, "uPixelSize"),
     };
+
+    const bayer4 = uploadBayer(gl, 4);
+    const bayer8 = uploadBayer(gl, 8);
+    gl.uniform1i(L.bayer, 0);
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -366,6 +459,12 @@ void main() {
       gl!.uniform1f(L.minDot, r.minDot);
       gl!.uniform3f(L.inkColor, ic[0], ic[1], ic[2]);
       gl!.uniform1f(L.silkMix, r.silkMix);
+      gl!.uniform1f(L.ditherMix, r.ditherMix);
+      gl!.uniform1f(L.bayerSize, r.bayerSize);
+      gl!.uniform1f(L.colorNum, r.colorNum);
+      gl!.uniform1f(L.pixelSize, r.pixelSize);
+      gl!.activeTexture(gl!.TEXTURE0);
+      gl!.bindTexture(gl!.TEXTURE_2D, r.bayerSize < 6 ? bayer4 : bayer8);
       gl!.uniform1f(L.morphOn, r.morphOn ? 1 : 0);
       gl!.uniform1f(L.morphStrength, r.morphStrength);
       gl!.uniform1f(L.morphRadius, r.morphRadius);
@@ -398,7 +497,11 @@ void main() {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouseMove);
-      if (!gl.isContextLost()) gl.deleteProgram(prog);
+      if (!gl.isContextLost()) {
+        gl.deleteProgram(prog);
+        gl.deleteTexture(bayer4);
+        gl.deleteTexture(bayer8);
+      }
     };
   }, []);
 
