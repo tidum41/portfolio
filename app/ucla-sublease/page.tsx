@@ -46,7 +46,6 @@ const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
 const BruinLeaseIAMap     = dynamic(() => import("@/components/BruinLeaseIAMap"));
-const InteractiveBadge    = dynamic(() => import("@/components/InteractiveBadge"));
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
@@ -283,16 +282,16 @@ function ToolCard({ tool, desc }: { tool: string; desc: string }) {
 
 const FB = {
   tocItems: [
-    { _key: "t1", id: "problem",                   label: "Problem"                  },
-    { _key: "t2", id: "research",                  label: "Research"                 },
-    { _key: "t3", id: "process",                   label: "Process"                  },
-    { _key: "t3b", id: "information-architecture", label: "Information Architecture" },
-    { _key: "t4", id: "decision-1",                label: "Design Decision 1"        },
-    { _key: "t5", id: "decision-2",                label: "Design Decision 2"        },
-    { _key: "t6", id: "decision-3",                label: "Design Decision 3"        },
-    { _key: "t7", id: "decision-4",                label: "Design Decision 4"        },
-    { _key: "t8", id: "solution",                  label: "Solution"                 },
-    { _key: "t9", id: "reflection",                label: "Reflection"               },
+    { _key: "t1", id: "problem",    label: "Problem"           },
+    { _key: "t2", id: "research",   label: "Research"          },
+    { _key: "t3", id: "structure",  label: "The Structure"     },
+    { _key: "t4", id: "process",    label: "Process"           },
+    { _key: "t5", id: "decision-1", label: "Design Decision 1" },
+    { _key: "t6", id: "decision-2", label: "Design Decision 2" },
+    { _key: "t7", id: "decision-3", label: "Design Decision 3" },
+    { _key: "t8", id: "decision-4", label: "Design Decision 4" },
+    { _key: "t9", id: "solution",   label: "Solution"          },
+    { _key: "t10", id: "reflection", label: "Reflection"       },
   ] as TocItem[],
   heroTagline:   "Product Design  ·  Case Study  ·  2026",
   heroTitle:     "Simplifying UCLA subleasing",
@@ -332,9 +331,9 @@ const FB = {
     { _key: "p3", tool: "Claude Code",   desc: "Built interactions and prototyped in real time, allowing for iteration. I was able to focus on creating a feeling." },
     { _key: "p4", tool: "Vercel",        desc: "Deployment and testing on a more native iOS view." },
   ],
-  iaLabel: "Information Architecture",
-  iaHeading: "Structure the app around how students already hunt for housing—not around a generic marketplace.",
-  iaBody: "I organized BruinLease around the jobs students already do—browse, shortlist, message, manage—so one app replaces hopping Facebook, Reddit, and texts.",
+  iaLabel: "The Structure",
+  iaHeading: "The hop across Facebook, Reddit, and texts had to become one place.",
+  iaBody: "70% reached out on at least three platforms before finding a place. I mapped BruinLease around what they were already doing. Browse, save, and message in one app.",
   d1Label: "Design Decision",
   d1Heading: "Condensing apartment info into a standardized format.",
   d1Body: "Based on research insights, I explored card layouts to communicate apartment details without being overwhelming. This is the first interaction with hundreds of listings, so conveying essential info without additional fluff is important.",
@@ -510,6 +509,14 @@ async function BruinLeaseContent() {
               <Body style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>{cs.researchCallout}</Body>
             </Section>
 
+            {/* ── Structure ────────────────────────────────────────────── */}
+            <Section id="structure">
+              <SectionLabel>{cs.iaLabel}</SectionLabel>
+              <H2>{cs.iaHeading}</H2>
+              <Body>{cs.iaBody}</Body>
+              <BruinLeaseIAMap />
+            </Section>
+
             {/* ── Process ──────────────────────────────────────────────── */}
             <Section id="process">
               <SectionLabel>{cs.processLabel}</SectionLabel>
@@ -531,17 +538,6 @@ async function BruinLeaseContent() {
                   <ToolCard key={_key} tool={tool} desc={desc} />
                 ))}
               </div>
-            </Section>
-
-            {/* ── Information Architecture ─────────────────────────────── */}
-            <Section id="information-architecture">
-              <SectionLabel>{cs.iaLabel}</SectionLabel>
-              <H2>{cs.iaHeading}</H2>
-              <Body>{cs.iaBody}</Body>
-              <div style={{ display: "flex", justifyContent: "flex-start", margin: "8px 0 12px" }}>
-                <InteractiveBadge />
-              </div>
-              <BruinLeaseIAMap />
             </Section>
 
             {/* ── Decision 1 ───────────────────────────────────────────── */}

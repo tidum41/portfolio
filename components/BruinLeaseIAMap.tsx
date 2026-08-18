@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 /**
- * BruinLease IA as a flow map — outlined nodes, thin connectors, one caption.
- * Click a destination to see where that job leads.
+ * BruinLease structure as a flow map.
+ * Pain-point channels fold into one app with four destinations.
  */
 
 const NODES = [
@@ -12,7 +12,6 @@ const NODES = [
     id: "home",
     label: "Home",
     job: "Browse",
-    why: "One feed of standardized listings instead of hopping groups and threads.",
     next: [
       { label: "Search + filters" },
       { label: "Listing detail" },
@@ -23,7 +22,6 @@ const NODES = [
     id: "saved",
     label: "Saved",
     job: "Shortlist",
-    why: "Housing search spans days. Students compare, then come back.",
     next: [
       { label: "Bookmarks" },
       { label: "Listing detail" },
@@ -32,8 +30,7 @@ const NODES = [
   {
     id: "chat",
     label: "Chat",
-    job: "Coordinate",
-    why: "Outreach stays in-app, so basics aren’t asked over DMs.",
+    job: "Message",
     next: [
       { label: "Inbox" },
       { label: "Thread" },
@@ -42,8 +39,7 @@ const NODES = [
   {
     id: "profile",
     label: "Profile",
-    job: "Account",
-    why: "Lister tools live here — without crowding seeker jobs.",
+    job: "List",
     next: [
       { label: "+ List", note: "header, not a tab" },
       { label: "My listings" },
@@ -54,26 +50,31 @@ const NODES = [
 
 type NodeId = (typeof NODES)[number]["id"];
 
-const SOURCES = ["Facebook", "Reddit", "Instagram", "Texts"];
+const PAIN_CHANNELS = ["Facebook", "Reddit", "Instagram", "Texts"] as const;
+
+const COLOR_WRONG = "#C62828";
 
 export default function BruinLeaseIAMap() {
   const [active, setActive] = useState<NodeId>("home");
-  const node = NODES.find((n) => n.id === active) ?? NODES[0];
 
   return (
     <div className="bl-ia">
       <style>{CSS}</style>
 
       <div className="bl-ia-plate">
-        <div className="bl-ia-tree" aria-label="BruinLease information architecture">
+        <div className="bl-ia-tree" aria-label="How BruinLease is structured">
+          <p className="bl-ia-group-label">what students use now</p>
           <div className="bl-ia-sources">
-            {SOURCES.map((name) => (
+            {PAIN_CHANNELS.map((name) => (
               <span key={name} className="bl-ia-source">
+                <PainX />
                 {name}
               </span>
             ))}
           </div>
 
+          <div className="bl-ia-line bl-ia-line-v" />
+          <p className="bl-ia-fold">one place</p>
           <div className="bl-ia-line bl-ia-line-v" />
 
           <div className="bl-ia-root">BruinLease</div>
@@ -84,7 +85,7 @@ export default function BruinLeaseIAMap() {
             {NODES.map((n) => {
               const isActive = n.id === active;
               return (
-                <div key={n.id} className="bl-ia-col">
+                <div key={n.id} className={`bl-ia-col${isActive ? " is-active" : ""}`}>
                   <button
                     type="button"
                     className={`bl-ia-node${isActive ? " is-active" : ""}`}
@@ -95,7 +96,7 @@ export default function BruinLeaseIAMap() {
                     <span className="bl-ia-node-job">{n.job}</span>
                   </button>
 
-                  <ul className={`bl-ia-next${isActive ? " is-active" : ""}`}>
+                  <ul className="bl-ia-next">
                     {n.next.map((step) => (
                       <li key={step.label} className="bl-ia-next-item">
                         <span className="bl-ia-line bl-ia-line-v bl-ia-line-short" />
@@ -115,11 +116,18 @@ export default function BruinLeaseIAMap() {
         </div>
       </div>
 
-      <div key={node.id} className="bl-ia-callout" aria-live="polite">
-        <p className="bl-ia-callout-job">{node.job}</p>
-        <p className="bl-ia-callout-why">{node.why}</p>
-      </div>
+      <p className="bl-ia-caption">
+        Facebook groups, Reddit threads, Instagram, and texts. What students juggle now, folded into four destinations. Listing stays in the header so it doesn&apos;t compete with seeking.
+      </p>
     </div>
+  );
+}
+
+function PainX() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M2.5 2.5L11.5 11.5M11.5 2.5L2.5 11.5" stroke={COLOR_WRONG} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -129,21 +137,25 @@ const CSS = `
   --bl-ia-sec: var(--color-text-secondary);
   --bl-ia-ter: var(--color-text-tertiary);
   --bl-ia-muted: var(--color-text-muted);
-  --bl-ia-line: color-mix(in srgb, var(--color-text-muted) 55%, transparent);
-  --bl-ia-plate: var(--color-accent-subtle);
+  --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 22%, transparent);
   --bl-ia-surface: var(--color-badge-bg);
   --bl-ia-border: var(--color-border-subtle);
   --bl-ia-blue: var(--color-ucla-blue);
   --bl-ia-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --bl-ia-wrong: ${COLOR_WRONG};
   font-family: var(--font-sans);
   color: var(--bl-ia-ink);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .bl-ia-plate {
-  background: var(--bl-ia-plate);
+  background: #C6DDF2;
   border-radius: 8px;
-  padding: 36px 24px 28px;
+  padding: 28px 20px 24px;
+}
+
+html[data-theme="dark"] .bl-ia-plate {
+  background: var(--color-hero-tint);
 }
 
 .bl-ia-tree {
@@ -152,18 +164,44 @@ const CSS = `
   align-items: center;
 }
 
+.bl-ia-group-label,
+.bl-ia-fold {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--bl-ia-ter);
+  text-align: center;
+}
+
+.bl-ia-fold {
+  padding: 3px 8px;
+  background: var(--bl-ia-surface);
+  border-radius: 4px;
+  color: var(--bl-ia-sec);
+}
+
 .bl-ia-sources {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px 20px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .bl-ia-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  border-radius: 8px;
+  background: var(--bl-ia-surface);
+  border: 1px solid color-mix(in srgb, var(--bl-ia-wrong) 22%, var(--bl-ia-border));
   font-size: 12px;
   font-weight: 500;
-  color: var(--bl-ia-muted);
   letter-spacing: -0.1px;
+  color: var(--bl-ia-sec);
 }
 
 .bl-ia-line {
@@ -173,11 +211,11 @@ const CSS = `
 
 .bl-ia-line-v {
   width: 1px;
-  height: 22px;
+  height: 16px;
 }
 
 .bl-ia-line-short {
-  height: 14px;
+  height: 12px;
   margin: 0 auto;
   display: block;
 }
@@ -188,7 +226,7 @@ const CSS = `
   justify-content: center;
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid var(--bl-ia-border);
+  border: 1px solid color-mix(in srgb, var(--bl-ia-blue) 40%, var(--bl-ia-border));
   border-radius: 8px;
   background: var(--bl-ia-surface);
   font-size: 13px;
@@ -221,7 +259,7 @@ const CSS = `
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 22px;
+  padding-top: 20px;
   position: relative;
   min-width: 0;
 }
@@ -232,7 +270,7 @@ const CSS = `
   top: 0;
   left: 50%;
   width: 1px;
-  height: 22px;
+  height: 20px;
   background: var(--bl-ia-line);
 }
 
@@ -261,7 +299,7 @@ const CSS = `
   outline-offset: 2px;
 }
 .bl-ia-node.is-active {
-  border-color: color-mix(in srgb, var(--bl-ia-blue) 45%, var(--bl-ia-border));
+  border-color: color-mix(in srgb, var(--bl-ia-blue) 50%, var(--bl-ia-border));
 }
 .bl-ia-node.is-active .bl-ia-node-job {
   color: var(--bl-ia-blue);
@@ -286,6 +324,14 @@ const CSS = `
   color: var(--bl-ia-muted);
 }
 
+.bl-ia-col .bl-ia-next {
+  opacity: 0.55;
+  transition: opacity 180ms var(--bl-ia-ease);
+}
+.bl-ia-col.is-active .bl-ia-next {
+  opacity: 1;
+}
+
 .bl-ia-next {
   list-style: none;
   margin: 0;
@@ -294,12 +340,6 @@ const CSS = `
   flex-direction: column;
   align-items: center;
   width: 100%;
-  opacity: 0.42;
-  transition: opacity 180ms var(--bl-ia-ease);
-}
-
-.bl-ia-next.is-active {
-  opacity: 1;
 }
 
 .bl-ia-next-item {
@@ -317,9 +357,9 @@ const CSS = `
   width: 100%;
   max-width: 128px;
   padding: 7px 8px;
-  border: 1px dashed var(--bl-ia-border);
+  border: 1px solid var(--bl-ia-border);
   border-radius: 8px;
-  background: transparent;
+  background: var(--bl-ia-surface);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: -0.1px;
@@ -335,56 +375,22 @@ const CSS = `
   color: var(--bl-ia-muted);
 }
 
-.bl-ia-callout {
-  margin: 16px 0 0;
-  text-align: center;
-  animation: bl-ia-in 180ms var(--bl-ia-ease) both;
-}
-
-.bl-ia-callout-job {
-  margin: 0 0 6px;
+.bl-ia-caption {
+  margin: 8px 0 0;
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--bl-ia-ter);
-}
-
-.bl-ia-callout-why {
-  margin: 0 auto;
-  max-width: 42em;
-  font-size: 15px;
-  line-height: var(--lh-body, 1.72);
-  color: var(--bl-ia-sec);
-}
-
-@keyframes bl-ia-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  line-height: 1.5;
+  color: var(--bl-ia-muted);
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bl-ia-callout {
-    animation: bl-ia-fade 180ms ease both;
-  }
-  .bl-ia-next { transition: none; }
+  .bl-ia-col .bl-ia-next { transition: none; }
   .bl-ia-node { transition: border-color 160ms ease; }
   .bl-ia-node:active { transform: none; }
 }
 
-@keyframes bl-ia-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 @media (max-width: 640px) {
-  .bl-ia-plate { padding: 28px 16px 22px; }
+  .bl-ia-plate { padding: 24px 14px 20px; }
   .bl-ia-fork {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 300px;
