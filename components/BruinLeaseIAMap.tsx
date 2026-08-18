@@ -149,13 +149,9 @@ const CSS = `
 }
 
 .bl-ia-plate {
-  background: #C6DDF2;
+  background: var(--color-placeholder);
   border-radius: 8px;
   padding: 28px 20px 24px;
-}
-
-html[data-theme="dark"] .bl-ia-plate {
-  background: var(--color-hero-tint);
 }
 
 .bl-ia-tree {
