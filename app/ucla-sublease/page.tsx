@@ -45,7 +45,7 @@ const CaseStudyTOC        = dynamic(() => import("@/components/CaseStudyTOC"));
 const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
-const BruinLeaseIAMap     = dynamic(() => import("@/components/BruinLeaseIAMap"));
+import BruinLeaseIAMap from "@/components/BruinLeaseIAMap";
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
