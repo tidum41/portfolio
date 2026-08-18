@@ -74,6 +74,14 @@ export default function CDPlayer({
     );
   };
 
+  // The embedded app may not have attached its `message` listener the instant
+  // the iframe fires `load`, so a single post can be dropped — leaving the
+  // widget in its default light theme even though the site is in dark mode.
+  // Re-post a few times to win that race. Also reused after interactions,
+  // since opening the widget's own expanded view resets it to the default
+  // theme; re-syncing keeps the card matching the current site theme.
+  const syncTheme = () => { [0, 150, 400, 900].forEach((d) => setTimeout(sendTheme, d)); };
+
   useEffect(() => {
     if (!ready) return;
     const mo = new MutationObserver(sendTheme);
@@ -135,17 +143,19 @@ export default function CDPlayer({
           style={{ border: "none", display: "block", pointerEvents: isTouch ? "auto" : "none" }}
           allow="autoplay"
           title="CD Player"
-          onLoad={sendTheme}
+          onLoad={syncTheme}
         />
       </div>
 
       {/* Overlay captures all pointer events and forwards them with corrected coordinates */}
       {!isTouch && (
         <div
-          onPointerDown={(e) => forwardEvent(e.clientX, e.clientY, "framer-pointerdown")}
+          onPointerDown={(e) => { sendTheme(); forwardEvent(e.clientX, e.clientY, "framer-pointerdown"); }}
           onPointerMove={(e) => forwardEvent(e.clientX, e.clientY, "framer-pointermove")}
           onPointerUp={(e)   => forwardEvent(e.clientX, e.clientY, "framer-pointerup")}
-          onClick={(e)       => forwardEvent(e.clientX, e.clientY, "framer-click")}
+          // A click can open the widget's expanded view, which resets it to the
+          // default theme — re-sync (with retries) so it matches the site.
+          onClick={(e)       => { forwardEvent(e.clientX, e.clientY, "framer-click"); syncTheme(); }}
           style={{ position: "absolute", inset: 0 }}
         />
       )}
