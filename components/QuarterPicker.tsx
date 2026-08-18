@@ -24,6 +24,8 @@ const C = {
     font: "Helvetica Neue, Arial, sans-serif",
 }
 
+const DESIGN_W = 560
+
 const QUARTERS = [
     { value: "spring", label: "Spring 2026", moveIn: "2026-03-25", moveOut: "2026-06-12" },
     { value: "summer", label: "Summer 2026", moveIn: "2026-06-22", moveOut: "2026-09-11" },
@@ -425,7 +427,6 @@ function DateCalendar({
 function DateCard({
     date,
     label,
-    scale,
     open,
     onToggle,
     triggerRef,
@@ -433,14 +434,11 @@ function DateCard({
 }: {
     date: string | null
     label: string
-    scale: number
     open: boolean
     onToggle: () => void
     triggerRef: (el: HTMLButtonElement | null) => void
     controlsId: string
 }) {
-    const hitSize = scale > 0 ? 44 / scale : 44
-
     const card: CSSProperties = {
         background: C.white,
         borderRadius: 8,
@@ -451,7 +449,6 @@ function DateCard({
         boxShadow: open
             ? `0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05)`
             : "0 1px 2px rgba(0,0,0,0.05)",
-        minHeight: hitSize,
         width: "100%",
         boxSizing: "border-box",
         position: "relative",
@@ -520,19 +517,18 @@ export default function QuarterPicker({
             const w = entry.contentRect.width
             // Desktop keeps the compact ~0.46 width; mobile matches the phone
             // mockup frame width used elsewhere on the case study (~77%).
+            // Inner layout is a fixed design canvas — only the outer scale
+            // changes, so mobile is the desktop composition, just smaller.
             const factor = w <= 520 ? 0.77 : 0.46
-            const s = (w / 393) * factor
+            const s = (w / DESIGN_W) * factor
             setScale(s)
-            setOffsetX((w - 393 * s) / 2)
+            setOffsetX((w - DESIGN_W * s) / 2)
         })
         ro.observe(el)
         return () => ro.disconnect()
     }, [])
 
-    // Outer clip height = unscaled inner height × scale. Chip hit-targets use
-    // minHeight: 44/scale, so when scale settles the inner layout grows —
-    // remeasure after every scale change or the overflow shell clips
-    // the bottom corners (missing border-radius).
+    // Outer clip height = unscaled inner height × scale.
     // Calendar is position:absolute, so open/close must not change height.
     useLayoutEffect(() => {
         const el = innerRef.current
@@ -686,7 +682,7 @@ export default function QuarterPicker({
                 <div
                     ref={innerRef}
                     style={{
-                        width: 393,
+                        width: DESIGN_W,
                         transformOrigin: "top left",
                         transform: `translateX(${offsetX}px) scale(${scale})`,
                         background: C.background,
@@ -710,7 +706,6 @@ export default function QuarterPicker({
                         <DateCard
                             date={moveIn}
                             label="Move In date"
-                            scale={scale}
                             open={openField === "in"}
                             onToggle={() => setOpenField((f) => (f === "in" ? null : "in"))}
                             triggerRef={(el) => { moveInBtnRef.current = el }}
@@ -719,7 +714,6 @@ export default function QuarterPicker({
                         <DateCard
                             date={moveOut}
                             label="Move Out date"
-                            scale={scale}
                             open={openField === "out"}
                             onToggle={() => setOpenField((f) => (f === "out" ? null : "out"))}
                             triggerRef={(el) => { moveOutBtnRef.current = el }}
@@ -752,11 +746,11 @@ export default function QuarterPicker({
                         </div>
                     )}
 
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "nowrap", gap: 8 }}>
                         {QUARTERS.map((q) => {
                             const isSelected = selected.includes(q.value)
                             const chip: CSSProperties = {
-                                padding: "8px 16px",
+                                padding: "8px 12px",
                                 borderRadius: 9999,
                                 border: isSelected ? `1px solid ${C.uclaBlue}` : `1px solid ${C.border}`,
                                 background: isSelected ? C.blueBg : C.white,
@@ -767,16 +761,10 @@ export default function QuarterPicker({
                                 lineHeight: "20px",
                                 whiteSpace: "nowrap",
                                 userSelect: "none",
+                                width: "100%",
+                                boxSizing: "border-box",
+                                textAlign: "center",
                             }
-                            // The visible pill above stays exactly the size it's always
-                            // been — this outer button carries the real click/focus
-                            // target, inflated by 1/scale so its on-screen size clears
-                            // the 44px minimum regardless of how compressed the whole
-                            // widget currently is (see the ancestor transform:scale()
-                            // in QuarterPicker below). Since the ambient scale applies
-                            // to this whole subtree uniformly, the inner pill still
-                            // renders at its original, unchanged on-screen size.
-                            const hitSize = scale > 0 ? 44 / scale : 44
                             return (
                                 <button
                                     key={q.value}
@@ -789,8 +777,8 @@ export default function QuarterPicker({
                                         border: "none",
                                         padding: 0,
                                         cursor: "pointer",
-                                        minWidth: hitSize,
-                                        minHeight: hitSize,
+                                        flex: "1 1 0",
+                                        minWidth: 0,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         justifyContent: "center",
