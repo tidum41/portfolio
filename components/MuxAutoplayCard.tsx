@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import MuxPlayer from "@mux/mux-player-react";
 import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
@@ -57,19 +57,70 @@ export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRa
   });
 
   const playerRef = useRef<MuxPlayerRefAttributes>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  // A CDN thumbnail so the card always shows a frame — even if playback is
+  // blocked (e.g. iOS Low Power Mode) or hasn't started yet — instead of a
+  // flat placeholder rectangle. Matches MuxHero's approach.
+  const poster = `https://image.mux.com/${playbackId}/thumbnail.webp`;
+
+  // Only drive playback while the card is on/near screen. Browsers cap how many
+  // videos can decode simultaneously; gating on visibility keeps a grid full of
+  // autoplaying videos from starving each other so some never "render in".
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: "200px 0px 200px 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const shouldPlay = active && inView;
 
   useEffect(() => {
     const player = playerRef.current;
     if (!player) return;
-    if (active) player.play?.().catch(() => {});
-    else player.pause?.();
-  }, [active]);
+
+    if (!shouldPlay) {
+      player.pause?.();
+      return;
+    }
+
+    let cancelled = false;
+    const attempt = () => {
+      const p = playerRef.current?.play?.();
+      // Swallow the rejection here — autoplay may be blocked (iOS Low Power
+      // Mode / strict autoplay). Recovery is handled by the gesture listeners.
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+    attempt();
+
+    // If autoplay was blocked, resume on the first real user interaction
+    // anywhere on the page — muted playback is always permitted post-gesture.
+    const onGesture = () => {
+      if (cancelled) return;
+      if (shouldPlay && playerRef.current?.paused) attempt();
+    };
+    const opts: AddEventListenerOptions = { passive: true, capture: true };
+    const events = ["pointerdown", "touchstart", "keydown", "click"] as const;
+    events.forEach((e) => window.addEventListener(e, onGesture, opts));
+
+    return () => {
+      cancelled = true;
+      events.forEach((e) => window.removeEventListener(e, onGesture, opts));
+    };
+  }, [shouldPlay]);
 
   const video = (
-    <div className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
+    <div ref={cardRef} className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
       <MuxPlayer
         ref={playerRef}
         playbackId={playbackId}
+        poster={poster}
         autoPlay="muted"
         loop
         muted
