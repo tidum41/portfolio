@@ -216,6 +216,33 @@ p, li       { text-wrap: pretty; }
 }
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
+/* Native OS cursor (arrow / I-beam / resize). The custom dot tip is off;
+   JS only draws the XMB trail. Clickable targets get the pointing hand so
+   they read as interactive instead of staying the default arrow. */
+@media (pointer: fine) {
+  a[href],
+  button:not(:disabled),
+  summary,
+  select,
+  label[for],
+  [role="button"],
+  [role="link"],
+  [role="menuitem"],
+  [role="tab"],
+  [role="option"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="image"],
+  input[type="color"],
+  input[type="range"] {
+    cursor: pointer;
+  }
+}
+
 ::selection {
   background-color: var(--color-text-primary);
   color: var(--color-bg);

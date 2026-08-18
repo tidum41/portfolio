@@ -61,8 +61,7 @@ declare global {
 function bootCursor(lightColor: string, darkColor: string, size: number, zIndex: number): (() => void) | undefined {
   if (typeof window === "undefined") return;
   if (window.matchMedia("(pointer: coarse)").matches) return;
-  // Reduced-motion: skip trail/pill JS. Layout CSS cursor still applies
-  // unless prefers-reduced-motion (that media query leaves the OS cursor).
+  // Reduced-motion: skip trail/pill JS. Native OS cursor still applies.
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const getThemeColor = () =>
@@ -109,47 +108,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
   } catch {}
 
-  const styleEl = document.createElement("style");
-  document.head.appendChild(styleEl);
-
-  const hotspot = Math.round(size / 2);
-  const CSS_TIP_MQ = `@media (pointer:fine) and (prefers-reduced-motion: no-preference)`;
-  const hideCssRule = `${CSS_TIP_MQ}{html,html *{cursor:none!important}}`;
-
-  const makeDotDataUrl = (color: string, scale: number) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return "";
-    ctx.clearRect(0, 0, size, size);
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, Math.max(0.5, (size / 2) * scale), 0, Math.PI * 2);
-    const rgb = hexToRgb(color);
-    const a = window.gc_dotConfig?.restOpacity ?? 0.88;
-    ctx.fillStyle = rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${a})` : color;
-    ctx.fill();
-    return canvas.toDataURL("image/png");
-  };
-
-  let restCursorUrl = "";
-  let pressCursorUrl = "";
-  let cssTipMode: "rest" | "press" | "hide" | "" = "";
-
-  const rebuildCursorUrls = () => {
-    restCursorUrl = makeDotDataUrl(currentColor, 1) || "/cursors/dot-light.svg";
-    const ps = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    pressCursorUrl = makeDotDataUrl(currentColor, ps) || restCursorUrl;
-    cssTipMode = "";
-  };
-
-  const cursorRuleForUrl = (url: string) =>
-    `${CSS_TIP_MQ}{html,html *{cursor:url("${url}") ${hotspot} ${hotspot}, auto !important}}`;
-
-  rebuildCursorUrls();
-  styleEl.textContent = cursorRuleForUrl(restCursorUrl);
-  cssTipMode = "rest";
-
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
   const echoEls: HTMLDivElement[] = [];
@@ -177,15 +135,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     frozen: boolean;
     /** Spawn scale pop — settles to 1 over the drift window. */
     pop: number;
-    /** Per-stamp size/opacity rhythm (deterministic). */
+    /** Per-stamp size rhythm (deterministic). */
     variance: number;
+    /** Independent opacity rhythm so size and dimness don't lock in step. */
+    opVariance: number;
+    /** Per-stamp lifetime multiplier. */
+    lifeMul: number;
     /** Path direction at spawn — used for perpendicular scatter on freeze. */
     dirX: number;
     dirY: number;
   };
   const stamps: Stamp[] = Array.from({ length: MAX_ECHO }, () => ({
     active: false, x: 0, y: 0, vx: 0, vy: 0, born: 0, frozen: false,
-    pop: 1, variance: 1, dirX: 1, dirY: 0,
+    pop: 1, variance: 1, opVariance: 1, lifeMul: 1, dirX: 1, dirY: 0,
   }));
   let stampCursor = 0;
   let lastStampX = 0;
@@ -212,7 +174,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // "none" so it still interpolates cleanly from the ringFlash pulse.
   const noStroke = (px: number) => `inset 0 0 0 ${px}px rgba(255,255,255,0)`;
 
-  // JS wrap is the hover pill only. Resting tip is the CSS cursor (compositor).
+  // JS wrap is the hover pill only. Resting tip is the native OS cursor.
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
     position: "fixed", top: "0", left: "0",
@@ -324,23 +286,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   const lastOpacity    = new Array(MAX_ECHO).fill(-1);
   const lastTransform  = new Array(MAX_ECHO).fill("");
 
-  const paintCssTip = () => {
-    const mode = pillVisible ? "hide" : (pressTarget < 0.95 ? "press" : "rest");
-    if (mode === cssTipMode) return;
-    cssTipMode = mode;
-    if (mode === "hide") {
-      styleEl.textContent = hideCssRule;
-      return;
-    }
-    styleEl.textContent = cursorRuleForUrl(mode === "press" ? pressCursorUrl : restCursorUrl);
-  };
-  const showCssTip = () => { paintCssTip(); };
-  const hideCssTipForPill = () => {
-    cssTipMode = "";
-    styleEl.textContent = hideCssRule;
-    cssTipMode = "hide";
-  };
-
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
     echoEls.forEach(el => { el.style.willChange = v; });
@@ -351,7 +296,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   const morphToPill = (label: string) => {
-    hideCssTipForPill();
     wrap.style.opacity = "1";
     wrap.style.transform = `translate3d(${Math.round(mouse.x * 2) / 2}px,${Math.round(mouse.y * 2) / 2}px,0)`;
     clearTimeout(showPillTimer);
@@ -556,7 +500,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // shift the label text — this is what renderedHideIcon guards against.
     if (!renderedHideIcon) arrowEl.style.display = "";
     wrap.style.opacity = "0";
-    showCssTip();
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a
@@ -585,7 +528,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
     wrap.style.opacity = "0";
-    showCssTip();
   };
 
   const tick = () => {
@@ -631,7 +573,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const style = tc.style === "classic" ? "classic" : "xmb";
     if (style !== lastTrailStyle) paintEchoAppearance(style);
 
-    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? (style === "xmb" ? 5 : 6))));
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? 6)));
     const opacityBase = tc.opacity ?? (style === "xmb" ? 0.18 : 0.55);
     const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.5  : 0.78);
 
@@ -641,10 +583,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
       const lifetime = tc.lifetime ?? 360;
       const driftMs  = Math.max(1, tc.driftMs ?? 40);
-      const spawnGap = tc.spawnGap ?? 48;
-      const scatter  = tc.scatter  ?? 0.95;
-      const popAmt   = tc.pop      ?? 0.5;
-      const varAmt   = tc.variance ?? 0.9;
+      const spawnGap = tc.spawnGap ?? 42;
+      const scatter  = tc.scatter  ?? 1.15;
+      const popAmt   = tc.pop      ?? 0.65;
+      const varAmt   = tc.variance ?? 1;
 
       // Spawn stamps along travel — left behind at gaps, never chasing the tip.
       if (mouse.inside && count > 0 && vel > 0.4) {
@@ -654,7 +596,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         stampTravel += step;
         lastStampX = mouse.x;
         lastStampY = mouse.y;
-        if (stampTravel >= spawnGap && step > 0.01) {
+        // Spacing jitters per stamp so the chain isn't a metronome.
+        const gapMul = 0.68 + 0.64 * (((stampCursor * 53) % 11) / 10);
+        if (stampTravel >= spawnGap * gapMul && step > 0.01) {
           stampTravel = 0;
           const slot = stampCursor % count;
           const gen = stampCursor++;
@@ -662,9 +606,13 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
           const inv = 1 / step;
           const dirX = dx * inv;
           const dirY = dy * inv;
-          // Variance dial: 0 = uniform; 1 = up to ~18% size/opacity rhythm.
+          // Variance dial: 0 = uniform; 1 = up to ~32% size / ~38% opacity.
+          const unit = (n: number, mod: number) => ((n % mod) / (mod - 1));
           const rhythm = varAmt > 0.01
-            ? 1 - varAmt * (0.18 * (((gen * 37) % 10) / 10))
+            ? 1 - varAmt * (0.32 * unit(gen * 37, 10))
+            : 1;
+          const opRhythm = varAmt > 0.01
+            ? 1 - varAmt * (0.38 * unit(gen * 41, 11))
             : 1;
           s.active = true;
           s.frozen = false;
@@ -676,8 +624,13 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
           s.dirX = dirX;
           s.dirY = dirY;
           s.variance = rhythm;
-          // Pop dial: 0 = no overshoot; 1 ≈ 18% spawn scale pop.
-          s.pop = 1 + 0.18 * popAmt;
+          s.opVariance = opRhythm;
+          s.lifeMul = varAmt > 0.01
+            ? 0.82 + 0.36 * unit(gen * 29, 10)
+            : 1;
+          // Pop dial: 0 = no overshoot; 1 ≈ 22% spawn scale pop, hashed per stamp.
+          const popJitter = 0.7 + 0.6 * unit(gen * 19, 8);
+          s.pop = 1 + 0.22 * popAmt * popJitter;
         }
       } else {
         lastStampX = mouse.x;
@@ -696,7 +649,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         }
 
         const age = now - s.born;
-        if (age >= lifetime) {
+        const life = lifetime * s.lifeMul;
+        if (age >= life) {
           s.active = false;
           if (lastOpacity[i] !== 0) { el.style.opacity = "0"; lastOpacity[i] = 0; }
           continue;
@@ -718,20 +672,21 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
             // Perpendicular scatter on freeze — off when scatter dial is 0.
             if (scatter > 0.01) {
               const sign = ((i * 13 + stampCursor) % 2) === 0 ? 1 : -1;
-              const amt = scatter * (1.2 + s.variance) * sign;
+              const scatterMul = 0.35 + 1.45 * (((i * 17 + stampCursor) % 10) / 9);
+              const amt = scatter * scatterMul * (0.8 + 0.5 * s.variance) * sign;
               s.x += -s.dirY * amt;
               s.y +=  s.dirX * amt;
             }
           }
         }
 
-        const age01 = age / lifetime;
+        const age01 = age / life;
         // Soft dissolve: hold presence, then ease off (PS3-ish, not linear).
         const hold = 0.32;
         const dissolve = age01 <= hold
           ? 1
           : 1 - Math.pow((age01 - hold) / (1 - hold), 1.55);
-        const op = opacityBase * dissolve * idleFade * s.variance;
+        const op = opacityBase * dissolve * idleFade * s.opVariance;
         const sc = scaleBase * s.pop * s.variance * (1 - 0.28 * age01);
 
         const rx = Math.round(s.x * 2) / 2;
@@ -841,7 +796,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
     pressTarget = 1;
     if (pillVisible) { pillVisible = false; morphToRest(); }
-    else paintCssTip();
     isPill = false; pillLabel = ""; renderedLabel = "";
   }, { signal: sig });
   window.addEventListener("pointerenter", (e: PointerEvent) => {
@@ -854,17 +808,14 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   }, { signal: sig });
   window.addEventListener("pointerdown", () => {
     pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    if (!pillVisible) paintCssTip();
     wakeUp();
   }, { signal: sig });
   window.addEventListener("pointerup", () => {
     pressTarget = 1;
-    if (!pillVisible) paintCssTip();
     wakeUp();
   }, { signal: sig });
   window.addEventListener("pointercancel", () => {
     pressTarget = 1;
-    if (!pillVisible) paintCssTip();
     wakeUp();
   }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
@@ -905,9 +856,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.color  = tc;
     lastTrailStyle = "";
     paintEchoAppearance((window.gc_trailConfig?.style === "classic" ? "classic" : "xmb"));
-    rebuildCursorUrls();
-    if (pillVisible) hideCssTipForPill();
-    else paintCssTip();
     try { sessionStorage.setItem(CURSOR_COLOR_KEY, color); } catch {}
   };
 
@@ -949,7 +897,6 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     themeObserver.disconnect();
     wrap.remove();
     echoEls.forEach(el => el.remove());
-    styleEl.remove();
   };
 }
 
@@ -973,15 +920,15 @@ export default function GlobalCustomCursor({
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
     Trail: {
-      echoCount: [5,    1,   8,   1],
+      echoCount: [6,    1,   8,   1],
       lifetime:  [360,  80,  500, 10],
       driftMs:   [40,   0,   160, 5],
-      spawnGap:  [48,   6,   64,  1],
+      spawnGap:  [42,   6,   64,  1],
       opacity:   [0.18, 0.05, 1,  0.01],
       scale:     [0.5,  0.2, 1.1, 0.01],
-      scatter:   [0.95, 0,   1.5, 0.05],
-      pop:       [0.5,  0,   1,   0.05],
-      variance:  [0.9,  0,   1,   0.05],
+      scatter:   [1.15, 0,   1.8, 0.05],
+      pop:       [0.65, 0,   1,   0.05],
+      variance:  [1,    0,   1,   0.05],
     },
 
     Dot: {
