@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import type { Album } from '../../data/albums';
 import styles from './AlbumCard.module.css';
@@ -21,6 +22,16 @@ export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, drag
     data: { album },
   });
 
+  // Play the opacity entrance once, then latch the card static. The work-grid
+  // CD player is a single live instance that gets re-parented (a DOM move,
+  // which restarts CSS animations) from the modal back into the grid tile on
+  // close — without this latch, that reparent replays the entrance every time
+  // the modal closes. A genuine fresh entrance (the entranceKey bump on modal
+  // open, or the first scroll-into-view mount) remounts the card and resets
+  // this, so those still animate.
+  const [entranceDone, setEntranceDone] = useState(false);
+  const isStatic = skipEntrance || entranceDone;
+
   const handleActivate = () => {
     onTap?.(album);
   };
@@ -35,8 +46,9 @@ export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, drag
   return (
     <div
       ref={setNodeRef}
-      className={`${styles.card} ${skipEntrance ? styles.cardStatic : ''} ${isDragging ? styles.dragging : ''} ${isActive ? styles.active : ''}`}
+      className={`${styles.card} ${isStatic ? styles.cardStatic : ''} ${isDragging ? styles.dragging : ''} ${isActive ? styles.active : ''}`}
       style={{ '--entrance-delay': `${entranceIdx * 45}ms` } as React.CSSProperties}
+      onAnimationEnd={() => setEntranceDone(true)}
       {...attributes}
       {...listeners}
       role="button"
