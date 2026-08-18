@@ -3,10 +3,10 @@
 import { useState } from "react";
 
 /**
- * BruinLease structure as a flow map.
- * Pain-point channels fold into one app with four destinations.
- * Mobile (767px, same as the rest of the case study): even 2×2 of
- * destinations; the selected job's next screens sit under the grid.
+ * BruinLease structure as a markdown-graph artifact.
+ * Channels fold into one place, then the four jobs.
+ * Connectors are CSS (so they survive SSR and reflow). A short
+ * linear pulse rides the spine — same motion as Emil’s flow demo.
  */
 
 const NODES = [
@@ -63,10 +63,17 @@ export default function BruinLeaseIAMap() {
   return (
     <div className="bl-ia">
       <style>{CSS}</style>
+      <figure className="bl-ia-frame" aria-label="How BruinLease is structured">
+        <span className="bl-ia-plus bl-ia-plus-tl" aria-hidden>+</span>
+        <span className="bl-ia-plus bl-ia-plus-tr" aria-hidden>+</span>
+        <span className="bl-ia-plus bl-ia-plus-bl" aria-hidden>+</span>
+        <span className="bl-ia-plus bl-ia-plus-br" aria-hidden>+</span>
+        <span className="bl-ia-kicker">[ one place ]</span>
 
-      <div className="bl-ia-plate">
-        <div className="bl-ia-tree" aria-label="How BruinLease is structured">
-          <p className="bl-ia-group-label">what students use now</p>
+        <div className="bl-ia-board">
+          <span className="bl-ia-pulse" aria-hidden />
+
+          <p className="bl-ia-caption">what students use now</p>
           <div className="bl-ia-sources">
             {PAIN_CHANNELS.map((name) => (
               <span key={name} className="bl-ia-source">
@@ -76,72 +83,66 @@ export default function BruinLeaseIAMap() {
             ))}
           </div>
 
-          <div className="bl-ia-line bl-ia-line-v" />
-          <p className="bl-ia-fold">one place</p>
-          <div className="bl-ia-line bl-ia-line-v" />
+          <span className="bl-ia-join" aria-hidden>
+            <span className="bl-ia-join-rail" />
+            <span className="bl-ia-join-plus">+</span>
+            <span className="bl-ia-arrow">v</span>
+          </span>
 
           <div className="bl-ia-root">BruinLease</div>
 
-          <div className="bl-ia-line bl-ia-line-v" />
+          <span className="bl-ia-join" aria-hidden>
+            <span className="bl-ia-arrow">v</span>
+          </span>
 
-          <div className="bl-ia-fork">
+          <div className="bl-ia-dests" role="group" aria-label="Tabs">
             {NODES.map((n) => {
               const isActive = n.id === active;
               return (
-                <div key={n.id} className={`bl-ia-col${isActive ? " is-active" : ""}`}>
-                  <button
-                    type="button"
-                    className={`bl-ia-node${isActive ? " is-active" : ""}`}
-                    aria-pressed={isActive}
-                    onClick={() => setActive(n.id)}
-                  >
-                    <span className="bl-ia-node-label">{n.label}</span>
-                    <span className="bl-ia-node-job">{n.job}</span>
-                  </button>
-
-                  <ul className="bl-ia-next">
-                    {n.next.map((step) => (
-                      <li key={step.label} className="bl-ia-next-item">
-                        <span className="bl-ia-line bl-ia-line-v bl-ia-line-short" />
-                        <Leaf step={step} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <button
+                  key={n.id}
+                  type="button"
+                  className={`bl-ia-dest${isActive ? " is-active" : ""}`}
+                  aria-pressed={isActive}
+                  onClick={() => setActive(n.id)}
+                >
+                  <span className="bl-ia-dest-label">{n.label}</span>
+                  <span className="bl-ia-dest-job">{n.job}</span>
+                </button>
               );
             })}
           </div>
 
-          <ul className="bl-ia-mobile-flow" aria-label={`${node.label} leads to`}>
-            {node.next.map((step) => (
-              <li key={step.label}>
-                <Leaf step={step} />
+          <span className="bl-ia-join" aria-hidden>
+            <span className="bl-ia-arrow">v</span>
+          </span>
+
+          <ol className="bl-ia-leaves" aria-label={`${node.label} leads to`}>
+            {node.next.map((step, i) => (
+              <li key={step.label} className="bl-ia-leaf">
+                {i > 0 ? <span className="bl-ia-arrow">v</span> : null}
+                <span className="bl-ia-leaf-label">{step.label}</span>
+                {step.note ? (
+                  <em className="bl-ia-leaf-note">{step.note}</em>
+                ) : null}
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
-      </div>
+      </figure>
     </div>
-  );
-}
-
-function Leaf({
-  step,
-}: {
-  step: { label: string; note?: string };
-}) {
-  return (
-    <span className="bl-ia-leaf">
-      {step.label}
-      {step.note ? <em className="bl-ia-leaf-note">{step.note}</em> : null}
-    </span>
   );
 }
 
 function PainX() {
   return (
-    <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M2.5 2.5L11.5 11.5M11.5 2.5L2.5 11.5" stroke={COLOR_WRONG} strokeWidth="1.6" strokeLinecap="round" />
+    <svg width="9" height="9" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path
+        d="M2.5 2.5L11.5 11.5M11.5 2.5L2.5 11.5"
+        stroke={COLOR_WRONG}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -152,296 +153,302 @@ const CSS = `
   --bl-ia-sec: var(--color-text-secondary);
   --bl-ia-ter: var(--color-text-tertiary);
   --bl-ia-muted: var(--color-text-muted);
-  --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 22%, transparent);
-  --bl-ia-surface: var(--color-badge-bg);
-  --bl-ia-border: var(--color-border-subtle);
+  --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 42%, transparent);
   --bl-ia-blue: var(--color-ucla-blue);
   --bl-ia-ease: cubic-bezier(0.23, 1, 0.32, 1);
-  font-family: var(--font-sans);
+  --bl-ia-mono: var(--font-mono);
+  --bl-ia-sans: var(--font-sans);
   color: var(--bl-ia-ink);
   margin-top: 8px;
 }
 
-.bl-ia-plate {
+.bl-ia-frame {
+  position: relative;
   background: var(--color-placeholder);
-  border-radius: 8px;
-  padding: 28px 20px 24px;
+  border: 1px dashed var(--bl-ia-line);
+  border-radius: 0;
+  padding: 36px 28px 32px;
 }
 
-.bl-ia-tree {
+.bl-ia-plus {
+  position: absolute;
+  z-index: 2;
+  font-family: var(--bl-ia-mono);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--bl-ia-muted);
+  pointer-events: none;
+  user-select: none;
+}
+.bl-ia-plus-tl { top: -7px; left: -5px; }
+.bl-ia-plus-tr { top: -7px; right: -5px; }
+.bl-ia-plus-bl { bottom: -8px; left: -5px; }
+.bl-ia-plus-br { bottom: -8px; right: -5px; }
+
+.bl-ia-kicker {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 10px;
+  background: var(--color-placeholder);
+  color: var(--bl-ia-blue);
+  font-family: var(--bl-ia-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.bl-ia-board {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.bl-ia-group-label,
-.bl-ia-fold {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--bl-ia-ter);
-  text-align: center;
+.bl-ia-board::before {
+  content: "";
+  position: absolute;
+  top: 42px;
+  bottom: 8px;
+  left: 50%;
+  width: 0;
+  border-left: 1px dashed var(--bl-ia-line);
+  pointer-events: none;
 }
 
-.bl-ia-fold {
-  padding: 3px 8px;
-  background: var(--bl-ia-surface);
-  border-radius: 4px;
-  color: var(--bl-ia-sec);
+.bl-ia-pulse {
+  position: absolute;
+  top: 42px;
+  bottom: 8px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bl-ia-pulse::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 22px;
+  background: var(--bl-ia-blue);
+  animation: bl-ia-flow 3.4s linear infinite;
+}
+
+@keyframes bl-ia-flow {
+  from { top: 0; transform: translateY(-100%); }
+  to { top: 100%; transform: translateY(0); }
+}
+
+.bl-ia-caption {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 12px;
+  font-family: var(--bl-ia-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--bl-ia-ter);
+  text-align: center;
+  background: var(--color-placeholder);
+  padding: 0 8px;
 }
 
 .bl-ia-sources {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 8px 28px;
+  width: 100%;
 }
 
 .bl-ia-source {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px 0 8px;
-  border-radius: 8px;
-  background: var(--bl-ia-surface);
-  border: 1px solid color-mix(in srgb, ${COLOR_WRONG} 22%, var(--bl-ia-border));
-  font-size: 12px;
-  font-weight: 500;
+  gap: 6px;
+  font-family: var(--bl-ia-sans);
+  font-size: 13px;
+  font-weight: 400;
   letter-spacing: -0.1px;
   color: var(--bl-ia-sec);
+  background: var(--color-placeholder);
+  padding: 0 4px;
 }
 
-.bl-ia-line {
-  background: var(--bl-ia-line);
-  flex-shrink: 0;
-}
-
-.bl-ia-line-v {
-  width: 1px;
-  height: 16px;
-}
-
-.bl-ia-line-short {
-  height: 12px;
-  margin: 0 auto;
-  display: block;
-}
-
-.bl-ia-root {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 18px;
-  border: 1px solid color-mix(in srgb, var(--bl-ia-blue) 40%, var(--bl-ia-border));
-  border-radius: 8px;
-  background: var(--bl-ia-surface);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.15px;
-  color: var(--bl-ia-blue);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-
-.bl-ia-fork {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  width: 100%;
-  max-width: 640px;
+.bl-ia-join {
   position: relative;
-  align-items: start;
-}
-
-.bl-ia-fork::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 12.5%;
-  width: 75%;
-  height: 1px;
-  background: var(--bl-ia-line);
-}
-
-.bl-ia-col {
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 20px;
-  position: relative;
-  min-width: 0;
-}
-
-.bl-ia-col::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: 20px;
-  background: var(--bl-ia-line);
-}
-
-.bl-ia-node {
-  appearance: none;
   width: 100%;
-  max-width: 128px;
+  max-width: 520px;
+  padding: 14px 0 10px;
+}
+
+.bl-ia-join-rail {
+  display: block;
+  width: 78%;
+  height: 0;
+  border-top: 1px dashed var(--bl-ia-line);
+}
+
+.bl-ia-join-plus {
+  font-family: var(--bl-ia-mono);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--bl-ia-muted);
+  background: var(--color-placeholder);
+  margin-top: -6px;
+  padding: 0 4px;
+}
+
+.bl-ia-arrow {
+  display: block;
+  font-family: var(--bl-ia-mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--bl-ia-muted);
+  background: var(--color-placeholder);
+  padding: 6px;
+  user-select: none;
+}
+
+.bl-ia-root {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-sans-medium, var(--bl-ia-sans));
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--bl-ia-blue);
+  background: var(--color-placeholder);
+  padding: 4px 10px;
+}
+
+.bl-ia-dests {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 4px;
+  width: 100%;
+}
+
+.bl-ia-dest {
+  appearance: none;
   margin: 0;
-  padding: 10px 8px 9px;
-  border: 1px solid var(--bl-ia-border);
-  border-radius: 8px;
-  background: var(--bl-ia-surface);
+  padding: 8px 16px;
+  border: none;
+  background: var(--color-placeholder);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
+  min-width: 92px;
+  color: var(--bl-ia-ink);
   transform: scale(1);
-  transition: transform 160ms var(--bl-ia-ease), border-color 160ms var(--bl-ia-ease);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: transform 160ms var(--bl-ia-ease), color 160ms var(--bl-ia-ease);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.bl-ia-node:active { transform: scale(0.97); }
-.bl-ia-node:focus-visible {
+.bl-ia-dest:active { transform: scale(0.97); }
+.bl-ia-dest:focus-visible {
   outline: 2px solid var(--bl-ia-blue);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
-.bl-ia-node.is-active {
-  border-color: color-mix(in srgb, var(--bl-ia-blue) 50%, var(--bl-ia-border));
+
+.bl-ia-dest-label {
+  font-family: var(--font-sans-medium, var(--bl-ia-sans));
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
 }
-.bl-ia-node.is-active .bl-ia-node-job {
+
+.bl-ia-dest-job {
+  font-family: var(--bl-ia-sans);
+  font-size: 11px;
+  color: var(--bl-ia-muted);
+  letter-spacing: 0;
+}
+
+.bl-ia-dest.is-active .bl-ia-dest-label,
+.bl-ia-dest.is-active .bl-ia-dest-job {
   color: var(--bl-ia-blue);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .bl-ia-node:hover {
-    border-color: color-mix(in srgb, var(--bl-ia-ink) 18%, var(--bl-ia-border));
+  .bl-ia-dest:hover .bl-ia-dest-label {
+    color: var(--bl-ia-blue);
   }
 }
 
-.bl-ia-node-label {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.15px;
-  color: var(--bl-ia-ink);
-  font-family: var(--font-sans-medium, var(--font-sans));
-}
-
-.bl-ia-node-job {
-  font-size: 11px;
-  color: var(--bl-ia-muted);
-}
-
-.bl-ia-col .bl-ia-next {
-  opacity: 0.55;
-  transition: opacity 180ms var(--bl-ia-ease);
-}
-.bl-ia-col.is-active .bl-ia-next {
-  opacity: 1;
-}
-
-.bl-ia-next {
+.bl-ia-leaves {
+  position: relative;
+  z-index: 1;
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-}
-
-.bl-ia-next-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
 }
 
 .bl-ia-leaf {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 100%;
-  max-width: 128px;
-  padding: 7px 8px;
-  border: 1px solid var(--bl-ia-border);
-  border-radius: 8px;
-  background: var(--bl-ia-surface);
-  font-size: 11px;
-  font-weight: 500;
+  background: var(--color-placeholder);
+  padding: 0 8px;
+  text-align: center;
+}
+
+.bl-ia-leaf-label {
+  font-family: var(--bl-ia-sans);
+  font-size: 13px;
+  font-weight: 400;
   letter-spacing: -0.1px;
   color: var(--bl-ia-sec);
-  text-align: center;
-  font-style: normal;
-  box-sizing: border-box;
 }
 
 .bl-ia-leaf-note {
+  font-family: var(--bl-ia-mono);
   font-style: normal;
-  font-weight: 400;
   font-size: 10px;
+  letter-spacing: 0.04em;
   color: var(--bl-ia-muted);
-}
-
-.bl-ia-mobile-flow {
-  display: none;
+  margin-top: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bl-ia-col .bl-ia-next { transition: none; }
-  .bl-ia-node { transition: border-color 160ms ease; }
-  .bl-ia-node:active { transform: none; }
+  .bl-ia-pulse::after { animation: none; opacity: 0; }
+  .bl-ia-dest { transition: color 160ms ease; }
+  .bl-ia-dest:active { transform: none; }
 }
 
-/* Same cutoff as .cs-stats-row / .cs-process-tools / .cs-d1-columns */
 @media (max-width: 767px) {
-  .bl-ia-plate { padding: 20px 16px; }
-
+  .bl-ia-frame { padding: 28px 16px 24px; }
   .bl-ia-sources {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    width: 100%;
-    gap: 8px;
+    gap: 10px 12px;
   }
-  .bl-ia-source {
-    width: 100%;
-    justify-content: center;
-    box-sizing: border-box;
-  }
-
-  .bl-ia-fork {
+  .bl-ia-source { justify-content: center; }
+  .bl-ia-join { max-width: none; }
+  .bl-ia-join-rail { width: 70%; }
+  .bl-ia-dests {
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    width: 100%;
-    max-width: none;
-    gap: 8px;
+    gap: 4px;
   }
-  .bl-ia-fork::before,
-  .bl-ia-col::before { display: none; }
-  .bl-ia-col { padding-top: 0; width: 100%; }
-  .bl-ia-node { max-width: none; }
-
-  .bl-ia-fork .bl-ia-next { display: none; }
-  .bl-ia-col .bl-ia-next { opacity: 1; }
-
-  .bl-ia-mobile-flow {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .bl-ia-mobile-flow li {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 0;
-  }
-  .bl-ia-mobile-flow .bl-ia-leaf {
-    max-width: none;
-  }
+  .bl-ia-dest { min-width: 0; width: 100%; padding: 8px 6px; }
 }
 `;
