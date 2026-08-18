@@ -286,8 +286,9 @@ void main() {
   float silkLuma = sampleSilk(uv);
   float waveLight = silkLuma * uIntensity * 4.5;
   float mouseDist = length(uv - uMouse);
-  float ripple = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
-  float silkA = clamp(waveLight * 1.1 + ripple * 0.12, 0.0, 1.0);
+  // Production wave has no brightness halo — mouse only warps band phase
+  // (mnudge in waveBand). Keep that interactivity; drop the Gaussian ring.
+  float silkA = clamp(waveLight * 1.1, 0.0, 1.0);
 
   // ── Halftone material riding ON the silk (not replacing it) ──
   vec2 screenPx = rotate2(frag, uAngleRad);
@@ -299,8 +300,7 @@ void main() {
   centerUV.y += uYOffsetPx / uResolution.y;
 
   float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
-  float cellRipple = exp(-pow((length(centerUV - uMouse) - 0.10) / 0.055, 2.0)) * uMouseNudge * 2.8;
-  float cellCov = clamp(cellSilk - 0.05 + cellRipple * 0.38, 0.0, 1.2);
+  float cellCov = clamp(cellSilk - 0.05, 0.0, 1.2);
 
   float melt = 0.0;
   if (uMorphOn > 0.5) {
