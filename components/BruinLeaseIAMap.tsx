@@ -92,7 +92,7 @@ export default function BruinLeaseIAMap() {
                   <span key={step}>
                     {i > 0 ? (
                       <span className="bl-ia-sep" aria-hidden>
-                        {"join" in j && j.join === "dot" ? "·" : "→"}
+                        {"join" in j && j.join === "dot" ? " · " : " → "}
                       </span>
                     ) : null}
                     {step}
@@ -194,10 +194,13 @@ const CSS = `
   padding: 0;
 }
 .bl-ia-from{
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: start;
+  gap: 4px 12px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
 }
 .bl-ia-from li{
   display: inline-flex;
@@ -256,14 +259,35 @@ const CSS = `
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 2px;
+  margin: 2px auto 0;
+  width: max-content;
+  max-width: 100%;
+  padding-left: 14px;
+  position: relative;
+}
+.bl-ia-jobs::before{
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0.55em;
+  bottom: 0.7em;
+  border-left: 1px solid var(--bl-ia-blue);
 }
 .bl-ia-jobs > li{
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
   gap: 1px;
+  position: relative;
+}
+.bl-ia-jobs > li::after{
+  content: "";
+  position: absolute;
+  left: -11px;
+  top: 0.55em;
+  width: 9px;
+  border-top: 1px solid var(--bl-ia-blue);
 }
 .bl-ia-job{
   font-weight: 600;
@@ -280,8 +304,6 @@ const CSS = `
 }
 .bl-ia-flow > span{ white-space: nowrap; }
 .bl-ia-sep{
-  display: inline-block;
-  margin: 0 6px;
   color: var(--bl-ia-blue);
   font-weight: 400;
 }
@@ -291,7 +313,13 @@ const CSS = `
     padding: 32px 24px 28px;
     font-size: 13px;
   }
-  .bl-ia-from{ gap: 8px 28px; }
+  .bl-ia-from{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    width: auto;
+  }
   .bl-ia-app-name{ font-size: 15px; }
   .bl-ia-arrow{ margin: 10px 0; }
   .bl-ia-into{ margin-bottom: 0; }
@@ -317,12 +345,18 @@ const CSS = `
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px 12px;
     text-align: center;
+    width: auto;
+    margin: 0;
+    padding: 0;
   }
+  .bl-ia-jobs::before{ content: none; }
   .bl-ia-jobs > li{
     align-items: center;
+    text-align: center;
     position: relative;
     padding: 12px 0 0;
   }
+  .bl-ia-jobs > li::after{ content: none; }
   .bl-ia-jobs > li::before{
     content: "";
     position: absolute;
