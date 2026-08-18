@@ -592,7 +592,6 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
-.ps3cp,.ps3cp * { cursor: none !important; }
 .ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
 .ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
