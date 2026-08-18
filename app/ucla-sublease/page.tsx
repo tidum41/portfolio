@@ -334,7 +334,7 @@ const FB = {
   ],
   iaLabel: "Information Architecture",
   iaHeading: "Structure the app around how students already hunt for housing—not around a generic marketplace.",
-  iaBody: "Research made the problem clear: seekers jumped across at least three platforms, posts rarely shared the same basics, and trust was always in question. I organized BruinLease around a small set of jobs students already do—browse, shortlist, message, manage—so the product replaces fragmented channels instead of adding another one.",
+  iaBody: "I organized BruinLease around the jobs students already do—browse, shortlist, message, manage—so one app replaces hopping Facebook, Reddit, and texts.",
   d1Label: "Design Decision",
   d1Heading: "Condensing apartment info into a standardized format.",
   d1Body: "Based on research insights, I explored card layouts to communicate apartment details without being overwhelming. This is the first interaction with hundreds of listings, so conveying essential info without additional fluff is important.",
