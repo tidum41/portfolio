@@ -93,15 +93,45 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
   const [playerVisible, setPlayerVisible] = useState(active);
   const entranceActiveRef = useRef(active);
 
+  // Album covers play their opacity entrance ONLY during a deliberate window:
+  // the first mount (scroll-into-view) and each modal open. It's opt-in (covers
+  // are static by default) and disarmed on close, so the layout switch
+  // (grid⇄carousel) and the single live instance being re-parented back into
+  // the grid tile on close — both of which remount/reconnect the cards — can't
+  // replay the fade. About never animates.
+  const [albumEntranceOn, setAlbumEntranceOn] = useState(variant !== "about");
+  const entranceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armAlbumEntrance = useCallback(() => {
+    if (variant === "about") return;
+    setAlbumEntranceOn(true);
+    if (entranceTimerRef.current) clearTimeout(entranceTimerRef.current);
+    // A bit longer than the last card's (stagger + duration) so all covers finish.
+    entranceTimerRef.current = setTimeout(() => setAlbumEntranceOn(false), 900);
+  }, [variant]);
+
+  // First appearance (mount / scroll-into-view) gets one entrance.
+  useEffect(() => {
+    armAlbumEntrance();
+    return () => { if (entranceTimerRef.current) clearTimeout(entranceTimerRef.current); };
+  }, [armAlbumEntrance]);
+
   useEffect(() => {
     const wasActive = entranceActiveRef.current;
     entranceActiveRef.current = active;
     if (active && !wasActive) {
-      if (variant !== "about") setEntranceKey((k) => k + 1);
+      if (variant !== "about") { setEntranceKey((k) => k + 1); armAlbumEntrance(); }
       setPlayerVisible(true);
     }
-    if (!active) setPlayerVisible(false);
-  }, [active, variant]);
+    if (!active) {
+      setPlayerVisible(false);
+      // Closing (true -> false only): keep covers static as the player relayouts
+      // / re-parents back into the grid tile.
+      if (wasActive) {
+        setAlbumEntranceOn(false);
+        if (entranceTimerRef.current) clearTimeout(entranceTimerRef.current);
+      }
+    }
+  }, [active, variant, armAlbumEntrance]);
 
   const [scratchRate, setScratchRate] = useState(1);
   const [dragAlbum, setDragAlbum] = useState<Album | null>(null);
@@ -594,7 +624,7 @@ export default function CdPlayerApp({ active = true, variant = 'work' }: { activ
                   dragDirection={dragDirection}
                   showHint={!activeAlbum}
                   entranceKey={variant === "about" ? 0 : entranceKey}
-                  skipEntrance={variant === "about"}
+                  skipEntrance={variant === "about" || !albumEntranceOn}
                 />
               </div>
             </div>

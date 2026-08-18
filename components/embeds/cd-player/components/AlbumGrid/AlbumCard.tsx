@@ -35,7 +35,7 @@ export function AlbumCard({ album, isActive, artSize, resolvedColor, onTap, drag
   return (
     <div
       ref={setNodeRef}
-      className={`${styles.card} ${skipEntrance ? styles.cardStatic : ''} ${isDragging ? styles.dragging : ''} ${isActive ? styles.active : ''}`}
+      className={`${styles.card} ${skipEntrance ? '' : styles.cardEntering} ${isDragging ? styles.dragging : ''} ${isActive ? styles.active : ''}`}
       style={{ '--entrance-delay': `${entranceIdx * 45}ms` } as React.CSSProperties}
       {...attributes}
       {...listeners}

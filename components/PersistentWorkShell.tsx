@@ -226,6 +226,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
   const [cdPosterFade, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
+  // Frozen still of the live CD tile, captured (as static HTML) the instant the
+  // modal opens — so the grid slot keeps showing the exact on-screen state
+  // (site theme, loaded album, date) while the one live instance is portaled
+  // into the modal. Beats the generic light-mode poster image, which flipped
+  // the tile's theme and dropped the live album state. Cleared on close.
+  const [cdFrozen, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
   const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
     if (typeof document === "undefined") return "light";
@@ -474,10 +480,18 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   const openPopupHandler = (id: PopupId) => {
     if (id === "cd") {
+      // Snapshot the live tile's current DOM synchronously, BEFORE the state
+      // update below reparents the single live instance into the modal (so the
+      // grid node is still populated). The frozen copy is inert HTML with all
+      // animations disabled (see [data-cd-frozen] in globals.css), so it neither
+      // re-runs the album entrance nor drifts from what was on screen. Falls
+      // back to the poster only if the live tile isn't mounted yet.
+      const frozen = gridCdEl?.innerHTML || null;
+      setCdFrozen(frozen);
       setHasEverBeenActive(true);
       setHeavyMediaLive(true);
       setCdPosterFade(false);
-      setCdPosterOpacity(1);
+      setCdPosterOpacity(frozen ? 0 : 1);
     } else {
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
@@ -496,8 +510,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
   };
 
-  const handlePopupExitComplete = (_id: PopupId) => {
+  const handlePopupExitComplete = (id: PopupId) => {
     setOpenPopup(null);
+    // Drop the frozen still once the modal is fully closed and the live CD has
+    // reparented back into the grid slot, so it goes live again next open.
+    if (id === "cd") setCdFrozen(null);
   };
 
   // Seed habit poster theme from the site only until the live widget reports
@@ -665,6 +682,14 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 <div className="project-media">
                   <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
                     <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
+                    {cdFrozen && openPopup === "cd" && (
+                      <div
+                        data-cd-frozen
+                        aria-hidden
+                        style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
+                        dangerouslySetInnerHTML={{ __html: cdFrozen }}
+                      />
+                    )}
                     <div
                       ref={setGridCdEl}
                       style={{
