@@ -77,7 +77,6 @@ export default function PersistentSilkLayer() {
       }}
     >
       <PS3Silk
-        mode={1}
         active={onWork}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       />

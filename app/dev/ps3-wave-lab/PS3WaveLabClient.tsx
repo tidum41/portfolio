@@ -58,16 +58,17 @@ export default function PS3WaveLabClient() {
           }}
         >
           <div style={{ opacity: 0.5, marginBottom: 4, letterSpacing: "0.04em", fontSize: 11 }}>
-            XMB RIBBONS + PRINT · v5
+            XMB RIBBONS + PRINT + DITHER · v7
           </div>
           <p style={{ margin: "0 0 6px" }}>
-            Continuous wrapping silk first (real XMB physics). Halftone is a material on top —
-            dial <strong style={{ fontWeight: 500 }}>print.silkMix</strong> (0 = pure ribbons,
-            1 = dots only).
+            Continuous wrapping silk first. Print is AM dots;{" "}
+            <strong style={{ fontWeight: 500 }}>retro.mix</strong> is ordered Bayer
+            dither + color quantization on that silk (Heckel). 0 = pure ribbons.
           </p>
           <p style={{ margin: "0 0 8px", opacity: 0.65, fontSize: 11 }}>
-            Your print/morph numbers are the new defaults. Hard-refresh once (persist{" "}
-            <strong style={{ fontWeight: 500 }}>v5</strong>).
+            Hard-refresh once (persist <strong style={{ fontWeight: 500 }}>v7</strong>).
+            Morph melt is off by default (turn it on if you want goo). Production
+            hero is unchanged.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>
