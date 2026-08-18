@@ -58,7 +58,7 @@ export default function PS3WaveLabClient() {
           }}
         >
           <div style={{ opacity: 0.5, marginBottom: 4, letterSpacing: "0.04em", fontSize: 11 }}>
-            XMB RIBBONS + PRINT + DITHER · v6
+            XMB RIBBONS + PRINT + DITHER · v7
           </div>
           <p style={{ margin: "0 0 6px" }}>
             Continuous wrapping silk first. Print is AM dots;{" "}
@@ -66,8 +66,9 @@ export default function PS3WaveLabClient() {
             dither + color quantization on that silk (Heckel). 0 = pure ribbons.
           </p>
           <p style={{ margin: "0 0 8px", opacity: 0.65, fontSize: 11 }}>
-            Hard-refresh once (persist <strong style={{ fontWeight: 500 }}>v6</strong>).
-            Production hero is unchanged.
+            Hard-refresh once (persist <strong style={{ fontWeight: 500 }}>v7</strong>).
+            Morph melt is off by default (turn it on if you want goo). Production
+            hero is unchanged.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/" style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>

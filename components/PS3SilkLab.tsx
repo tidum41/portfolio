@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PS3SilkLab v6 — XMB ribbon physics first, print + Bayer dither as materials.
+ * PS3SilkLab v7 — XMB ribbon physics first, print + Bayer dither as materials.
  *
  * Real XMB (spline.elf): subdivided mesh / continuous translucent ribbons with
  * fresnel-ish sheet lighting + a SEPARATE particles.elf sparkle pass.
@@ -15,6 +15,10 @@
  * as a mixable material on the same silk, not a replacement for wrap physics.
  * CRT curvature/scanlines from that article are omitted — PS3 XMB is HD silk,
  * not a shadow-mask monitor.
+ *
+ * v7 is a perf pass: dither itself is one texture lookup. The real cost was
+ * sampleSilk (8 sines) running ~11×/pixel because the print 3×3 morph loop
+ * always ran, plus a 2× DPR fullscreen buffer vs production's 1× CSS pixels.
  */
 
 import { useEffect, useRef } from "react";
@@ -33,6 +37,8 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 const FRAME_MS = 1000 / 30;
+/** Match production silk: CSS pixels, not device pixels. Cap so 4K isn't 8M fragments. */
+const MAX_BUFFER_W = 1440;
 
 /** Bayer 2^n via the 2×2 recurrence. Values 0..n²-1, then scaled to 0–255. */
 function bayerRgba(n: 4 | 8): Uint8Array {
@@ -101,7 +107,7 @@ export default function PS3SilkLab() {
         pixelSize: [1, 1, 12, 1],
       },
       morph: {
-        enabled: true,
+        enabled: false,
         strength: [0.7, 0, 1, 0.01],
         radius: [0.26, 0.1, 0.5, 0.01],
         fusion: [0.55, 0.2, 1.1, 0.01],
@@ -119,9 +125,9 @@ export default function PS3SilkLab() {
       },
     },
     {
-      id: "ps3-vintage-halftone-v6",
+      id: "ps3-vintage-halftone-v7",
       persist: {
-        key: "ps3-vintage-halftone-v6",
+        key: "ps3-vintage-halftone-v7",
         storage: "localStorage",
         presets: true,
       },
@@ -141,7 +147,7 @@ export default function PS3SilkLab() {
     bayerSize: 8,
     colorNum: 4,
     pixelSize: 1,
-    morphOn: true,
+    morphOn: false,
     morphStrength: 0.7,
     morphRadius: 0.26,
     morphFusion: 0.55,
@@ -197,7 +203,11 @@ export default function PS3SilkLab() {
     const gl = canvas.getContext("webgl", {
       alpha: true,
       antialias: false,
+      depth: false,
+      stencil: false,
       preserveDrawingBuffer: false,
+      powerPreference: "high-performance",
+      desynchronized: true,
     });
     if (!gl) return;
 
@@ -232,11 +242,10 @@ uniform float uDitherMix;
 uniform float uColorNum;
 uniform float uPixelSize;
 
-// Exact production PS3Silk band — continuous ribbon with one-sided thickness
+// Exact production PS3Silk band — continuous ribbon with one-sided thickness.
+// mnudge is hoisted in sampleSilk (same uv → same mouse dist for all 8 bands).
 float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, float width, float sharp, bool flip) {
-  float md = length(uv - uMouse);
-  float mnudge = smoothstep(0.45, 0.0, md) * uMouseNudge;
+  float phase, float cy, float width, float sharp, bool flip, float mnudge) {
   float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
   float wy = sin(angle) * amp + cy;
   float dy = wy - uv.y;
@@ -250,15 +259,17 @@ float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
 float sampleSilk(vec2 uv) {
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
+  float md = length(uv - uMouse);
+  float mnudge = smoothstep(0.45, 0.0, md) * uMouseNudge;
   float c = 0.0;
-  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false) * 0.90;
-  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false) * 0.68;
-  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false) * 0.38;
-  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false) * 0.16;
-  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true) * 0.84;
-  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true) * 0.62;
-  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true) * 0.32;
-  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true) * 0.14;
+  c += waveBand(uv,uvx,0.18,0.22,0.32,0.00,0.62,0.090,18.0,false,mnudge) * 0.90;
+  c += waveBand(uv,uvx,0.38,0.42,0.24,0.00,0.62,0.085,20.0,false,mnudge) * 0.68;
+  c += waveBand(uv,uvx,0.28,0.62,0.20,0.00,0.62,0.042,28.0,false,mnudge) * 0.38;
+  c += waveBand(uv,uvx,0.12,0.18,0.14,0.00,0.62,0.065,22.0,false,mnudge) * 0.16;
+  c += waveBand(uv,uvx,0.14,0.28,0.14,0.00,0.58,0.095,20.0,true,mnudge) * 0.84;
+  c += waveBand(uv,uvx,0.33,0.39,0.11,0.00,0.58,0.088,22.0,true,mnudge) * 0.62;
+  c += waveBand(uv,uvx,0.48,0.50,0.09,0.00,0.56,0.040,30.0,true,mnudge) * 0.32;
+  c += waveBand(uv,uvx,0.22,0.57,0.08,0.00,0.52,0.160,18.0,true,mnudge) * 0.14;
   return clamp(c, 0.0, 1.0);
 }
 
@@ -285,52 +296,55 @@ void main() {
   // ── Continuous XMB ribbons (physics / wrapping sheets) ──
   float silkLuma = sampleSilk(uv);
   float waveLight = silkLuma * uIntensity * 4.5;
-  float mouseDist = length(uv - uMouse);
   // Production wave has no brightness halo — mouse only warps band phase
   // (mnudge in waveBand). Keep that interactivity; drop the Gaussian ring.
   float silkA = clamp(waveLight * 1.1, 0.0, 1.0);
 
   // ── Halftone material riding ON the silk (not replacing it) ──
-  vec2 screenPx = rotate2(frag, uAngleRad);
-  float pitch = max(uPitch, 1.5);
-  vec2 cell = floor(screenPx / pitch);
-  vec2 centerScreen = (cell + 0.5) * pitch;
-  vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
-  vec2 centerUV = centerFrag / uResolution;
-  centerUV.y += uYOffsetPx / uResolution.y;
+  // Uniform branches: whole draw takes one path. Morph 3×3 is ~9 extra
+  // sampleSilk calls — skip unless melt is actually on.
+  float printA = 0.0;
+  if (uSilkMix > 0.008) {
+    vec2 screenPx = rotate2(frag, uAngleRad);
+    float pitch = max(uPitch, 1.5);
+    vec2 cell = floor(screenPx / pitch);
+    vec2 centerScreen = (cell + 0.5) * pitch;
+    vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
+    vec2 centerUV = centerFrag / uResolution;
+    centerUV.y += uYOffsetPx / uResolution.y;
 
-  float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
-  float cellCov = clamp(cellSilk - 0.05, 0.0, 1.2);
+    float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
+    float cellCov = clamp(cellSilk - 0.05, 0.0, 1.2);
 
-  float melt = 0.0;
-  if (uMorphOn > 0.5) {
-    melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
-  }
+    float rCrisp = inkRadius(cellCov, pitch);
+    float dCrisp = length(frag - centerFrag);
+    float crispDot = smoothstep(rCrisp + uInkSoft, rCrisp - uInkSoft, dCrisp);
+    float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
+    float crispA = crispDot * crispVis;
+    printA = crispA;
 
-  float rCrisp = inkRadius(cellCov, pitch);
-  float dCrisp = length(frag - centerFrag);
-  float crispDot = smoothstep(rCrisp + uInkSoft, rCrisp - uInkSoft, dCrisp);
-  float crispVis = smoothstep(uMinDot, uMinDot + 0.06, cellCov);
-  float crispA = crispDot * crispVis;
-
-  // Cursor melt — soft-merge dots while silk sheet still shows underneath
-  float field = 0.0;
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 nCell = cell + vec2(float(i), float(j));
-      vec2 nCenterS = (nCell + 0.5) * pitch;
-      vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
-      vec2 nUV = nCenterF / uResolution;
-      nUV.y += uYOffsetPx / uResolution.y;
-      float nCov = clamp(sampleSilk(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
-      float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
-      float nD = length(frag - nCenterF);
-      field += (nR * nR) / (nD * nD + 2.0);
+    if (uMorphOn > 0.5) {
+      float mouseDist = length(uv - uMouse);
+      float melt = (1.0 - smoothstep(0.0, uMorphRadius, mouseDist)) * uMorphStrength;
+      float field = 0.0;
+      for (int j = -1; j <= 1; j++) {
+        for (int i = -1; i <= 1; i++) {
+          vec2 nCell = cell + vec2(float(i), float(j));
+          vec2 nCenterS = (nCell + 0.5) * pitch;
+          vec2 nCenterF = rotate2(nCenterS, -uAngleRad);
+          vec2 nUV = nCenterF / uResolution;
+          nUV.y += uYOffsetPx / uResolution.y;
+          float nCov = clamp(sampleSilk(nUV) * uIntensity * 4.5 - 0.05, 0.0, 1.2);
+          float nR = inkRadius(nCov, pitch) * mix(1.0, uMorphOverlap, melt);
+          float nD = length(frag - nCenterF);
+          field += (nR * nR) / (nD * nD + 2.0);
+        }
+      }
+      float meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
+      meltA *= smoothstep(uMinDot, uMinDot + 0.05, waveLight);
+      printA = mix(crispA, meltA, melt);
     }
   }
-  float meltA = smoothstep(uMorphFusion - uMorphSoft, uMorphFusion + uMorphSoft, field);
-  meltA *= smoothstep(uMinDot, uMinDot + 0.05, waveLight);
-  float printA = mix(crispA, meltA, melt);
 
   // Composite: continuous silk sheet + print texture. silkMix=0 → pure XMB
   // ribbons; 1 → dots only (old v4 look). Default keeps wrapping readable.
@@ -416,16 +430,17 @@ void main() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    // Fullscreen quad overwrites every pixel with premultiplied rgba — skip
+    // clear+blend (equivalent to ONE, ONE_MINUS_SRC_ALPHA onto a cleared buffer).
+    gl.disable(gl.BLEND);
+    gl.disable(gl.DEPTH_TEST);
 
     function resize() {
       const rect = wrapper!.getBoundingClientRect();
       wrapperRect = rect;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.max(2, Math.floor(rect.width * dpr));
-      const h = Math.max(2, Math.floor(rect.height * dpr));
+      const scale = Math.min(1, MAX_BUFFER_W / Math.max(rect.width, 1));
+      const w = Math.max(2, Math.floor(rect.width * scale));
+      const h = Math.max(2, Math.floor(rect.height * scale));
       if (canvas!.width !== w || canvas!.height !== h) {
         canvas!.width = w;
         canvas!.height = h;
@@ -471,12 +486,15 @@ void main() {
       gl!.uniform1f(L.morphFusion, r.morphFusion);
       gl!.uniform1f(L.morphSoft, r.morphSoftness);
       gl!.uniform1f(L.morphOverlap, r.morphOverlap);
-      gl!.clear(gl!.COLOR_BUFFER_BIT);
       gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
     }
 
     function frame(ms: number) {
       if (!running) return;
+      if (document.hidden) {
+        rafId = 0;
+        return;
+      }
       rafId = requestAnimationFrame(frame);
       if (ms - lastT < FRAME_MS) return;
       lastT = ms;
@@ -486,10 +504,23 @@ void main() {
       draw(ms);
     }
 
+    function onVisibility() {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+        return;
+      }
+      if (running && rafId === 0) {
+        lastT = 0;
+        rafId = requestAnimationFrame(frame);
+      }
+    }
+
     resize();
     wrapper.style.opacity = "0.55";
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("visibilitychange", onVisibility);
     rafId = requestAnimationFrame(frame);
 
     return () => {
@@ -497,6 +528,7 @@ void main() {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("visibilitychange", onVisibility);
       if (!gl.isContextLost()) {
         gl.deleteProgram(prog);
         gl.deleteTexture(bayer4);
@@ -519,7 +551,13 @@ void main() {
     >
       <canvas
         ref={canvasRef}
-        style={{ display: "block", width: "100%", height: "100%", background: "transparent" }}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "100%",
+          background: "transparent",
+          imageRendering: "pixelated",
+        }}
       />
     </div>
   );
