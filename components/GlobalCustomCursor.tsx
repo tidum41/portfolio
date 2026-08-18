@@ -2,6 +2,11 @@
 
 import { useEffect } from "react";
 import { useDialKit } from "dialkit";
+import { cssEase, EASE_OPACITY } from "@/lib/motion";
+
+const PRESS_EASE = cssEase(EASE_OPACITY);
+const PRESS_IN_MS = 90;
+const PRESS_OUT_MS = 140;
 
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
@@ -30,7 +35,6 @@ declare global {
     gc_dotConfig?: {
       restOpacity: number;
       pressScaleAmount: number;
-      pressLerp: number;
       idleFadeDelay: number;
       idleFadeDuration: number;
       wrapFadeDuration: number;
@@ -180,11 +184,22 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     position: "fixed", top: "0", left: "0",
     pointerEvents: "none", zIndex: `${zIndex}`,
     opacity: "0",
-    transition: "opacity 180ms ease",
-    willChange: "auto",
-    transform: "translate3d(-9999px,-9999px,0)",
+    transition: "none",
+    willChange: "transform",
+    transform: seededPos
+      ? `translate3d(${Math.round(seededPos.x * 2) / 2}px,${Math.round(seededPos.y * 2) / 2}px,0)`
+      : "translate3d(-9999px,-9999px,0)",
   });
   document.body.appendChild(wrap);
+
+  const pressEl = document.createElement("div");
+  Object.assign(pressEl.style, {
+    transform: "scale(1)",
+    transformOrigin: "0 0",
+    willChange: "transform",
+    transition: "none",
+  });
+  wrap.appendChild(pressEl);
 
   const cursorEl = document.createElement("div");
   Object.assign(cursorEl.style, {
@@ -201,7 +216,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     transform: "translate(-50%,-50%)",
     opacity: String(window.gc_dotConfig?.restOpacity ?? 0.88),
   });
-  wrap.appendChild(cursorEl);
+  pressEl.appendChild(cursorEl);
 
   // Sheen overlay for the "gradient" fill effect — a fixed diagonal highlight
   // whose OPACITY fades in/out (fully animatable), instead of trying to
@@ -269,7 +284,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   let lastX = mouse.x, lastY = mouse.y, vel = 0;
   let lastMove = seededPos != null ? performance.now() : 0;
-  let raf = 0, isIdle = false, pressScale = 1, pressTarget = 1;
+  let raf = 0, isIdle = false;
   let gpuPromoted = false, lastPosWrite = 0;
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
@@ -282,9 +297,41 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
-  let lastWrapFadeMs = 180;
   const lastOpacity    = new Array(MAX_ECHO).fill(-1);
   const lastTransform  = new Array(MAX_ECHO).fill("");
+
+  const wrapPos = () => {
+    const rx = Math.round(mouse.x * 2) / 2;
+    const ry = Math.round(mouse.y * 2) / 2;
+    return `translate3d(${rx}px,${ry}px,0)`;
+  };
+
+  const syncWrap = () => {
+    wrap.style.transform = wrapPos();
+    if (pillVisible && mouse.inside) wrap.style.opacity = "1";
+  };
+
+  const applyPressScale = (amount: number, durationMs: number) => {
+    pressEl.style.transition = `transform ${durationMs}ms ${PRESS_EASE}`;
+    pressEl.style.transform = `scale(${amount})`;
+  };
+
+  const resetPressEl = () => {
+    pressEl.style.transition = "none";
+    pressEl.style.transform = "scale(1)";
+  };
+
+  const beginPress = () => {
+    // Native OS cursor is the tip; don't squash a hidden JS rest-dot on click.
+  };
+
+  const endPress = (instant = false) => {
+    if (instant) {
+      resetPressEl();
+      return;
+    }
+    applyPressScale(1, PRESS_OUT_MS);
+  };
 
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
@@ -296,8 +343,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   const morphToPill = (label: string) => {
+    endPress(true);
     wrap.style.opacity = "1";
-    wrap.style.transform = `translate3d(${Math.round(mouse.x * 2) / 2}px,${Math.round(mouse.y * 2) / 2}px,0)`;
+    wrap.style.transform = wrapPos();
     clearTimeout(showPillTimer);
     pillGen++;
     const genAtStart = pillGen;
@@ -500,6 +548,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // shift the label text — this is what renderedHideIcon guards against.
     if (!renderedHideIcon) arrowEl.style.display = "";
     wrap.style.opacity = "0";
+    endPress(true);
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a
@@ -528,6 +577,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
     wrap.style.opacity = "0";
+    endPress(true);
   };
 
   const tick = () => {
@@ -543,27 +593,16 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
     const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
     const lerpMin     = tc.lerpMin ?? 0.08;
-    pressScale += (pressTarget - pressScale) * (dc.pressLerp ?? 0.28);
-
-    const wrapFadeMs = dc.wrapFadeDuration ?? 180;
-    if (wrapFadeMs !== lastWrapFadeMs) {
-      lastWrapFadeMs = wrapFadeMs;
-      wrap.style.transition = `opacity ${wrapFadeMs}ms ease`;
-    }
 
     if (mouse.inside) {
-      if (pillVisible) {
-        const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
-        wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
-        wrap.style.opacity = "1";
-        cursorEl.style.transform = "translate(-50%,-50%)";
-      }
       if (isPill) {
         if (!pillVisible || pillLabel !== renderedLabel) {
           pillVisible = true; renderedLabel = pillLabel; morphToPill(pillLabel);
         }
       } else if (pillVisible) {
         pillVisible = false; renderedLabel = ""; morphToRest();
+      } else {
+        wrap.style.opacity = "0";
       }
     } else {
       wrap.style.opacity = "0";
@@ -730,8 +769,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       }
     }
 
-    const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
-    if (allSettled && pressSettled && !mouse.inside && idleFade <= 0) {
+    if (allSettled && !mouse.inside && idleFade <= 0) {
       isIdle = true; setWillChange("auto"); return;
     }
     raf = requestAnimationFrame(tick);
@@ -763,16 +801,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   }
 
   // Tip follows the pointer on the event itself. Trail stays RAF-driven —
-  // during soft-nav to About/Archive the main thread can miss several frames
-  // (Mux/CD teardown + destination mount), which used to freeze the tip when
-  // its transform only updated inside tick.
-  const syncPill = (x: number, y: number) => {
-    if (!pillVisible) return;
-    const rx = Math.round(x * 2) / 2;
-    const ry = Math.round(y * 2) / 2;
-    wrap.style.transform = `translate3d(${rx}px,${ry}px,0)`;
-    wrap.style.opacity = "1";
-  };
+  // during soft-nav the main thread can miss frames; the tip still updates here.
 
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
@@ -782,7 +811,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
-    syncPill(e.clientX, e.clientY);
+    syncWrap();
     checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
@@ -794,7 +823,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   window.addEventListener("pointerleave", () => {
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
-    pressTarget = 1;
+    endPress(true);
     if (pillVisible) { pillVisible = false; morphToRest(); }
     isPill = false; pillLabel = ""; renderedLabel = "";
   }, { signal: sig });
@@ -803,20 +832,20 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
-    syncPill(e.clientX, e.clientY);
+    syncWrap();
     wakeUp();
   }, { signal: sig });
-  window.addEventListener("pointerdown", () => {
-    pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    wakeUp();
-  }, { signal: sig });
+  window.addEventListener("pointerdown", (e: PointerEvent) => {
+    if (e.button !== 0) return;
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    syncWrap();
+    beginPress();
+  }, { capture: true, signal: sig });
   window.addEventListener("pointerup", () => {
-    pressTarget = 1;
-    wakeUp();
+    endPress();
   }, { signal: sig });
   window.addEventListener("pointercancel", () => {
-    pressTarget = 1;
-    wakeUp();
+    endPress(true);
   }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
@@ -829,6 +858,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     // instead of animating, so the collapse doesn't compete with the new
     // page's own mount work (see snapToRest above).
     const willNavigate = !!(e.target as Element)?.closest?.("a[href]");
+    if (willNavigate) endPress(true);
     // Project cards ("View Case Study") should always play the normal
     // hover-off morph on click, even though navigation is imminent — the pill
     // collapsing back to a dot is part of the interaction feedback there.
@@ -987,7 +1017,6 @@ export default function GlobalCustomCursor({
     window.gc_dotConfig = {
       restOpacity:      dk.Dot.restOpacity,
       pressScaleAmount: dk.Dot.pressScale,
-      pressLerp:        0.28,
       idleFadeDelay:    150,
       idleFadeDuration: 220,
       wrapFadeDuration: 180,
