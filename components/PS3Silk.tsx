@@ -78,6 +78,8 @@ export default function PS3Silk({
     halftoneSize:  [3.0,            1,    20],
     speed:         [1.0,            0,    4],
     endOpacity:    [0.15,           0,    0.5,  0.01],
+    // Quiet directional stretch along pointer travel. 0 = position nudge only.
+    wake:          [0.7,            0,    1.6,  0.01],
   });
 
   const intensityRef    = useRef(intensity);
@@ -87,6 +89,7 @@ export default function PS3Silk({
   const halftSizeRef    = useRef(3.0);
   const speedRef        = useRef(1.0);
   const endOpacityRef   = useRef(0.15);
+  const wakeGainRef     = useRef(0.7);
 
   // Sync DialKit live values into refs each frame
   useEffect(() => { intensityRef.current = dk.intensity; }, [dk.intensity]);
@@ -95,6 +98,7 @@ export default function PS3Silk({
   useEffect(() => { halftSizeRef.current = dk.halftoneSize; }, [dk.halftoneSize]);
   useEffect(() => { speedRef.current = dk.speed; }, [dk.speed]);
   useEffect(() => { endOpacityRef.current = dk.endOpacity; }, [dk.endOpacity]);
+  useEffect(() => { wakeGainRef.current = dk.wake; }, [dk.wake]);
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
@@ -171,7 +175,7 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, vx: 0, vy: 0 };
     let rafId = 0, lastT = 0;
     const START_OPACITY = 0.5;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
@@ -383,6 +387,8 @@ precision highp float;
 uniform float uTime;
 uniform vec2  uResolution;
 uniform vec2  uMouse;
+uniform vec2  uMouseVel;
+uniform float uWakeGain;
 uniform float uIntensity;
 uniform float uMouseStrength;
 uniform float uAspect;
@@ -393,10 +399,10 @@ uniform vec3  uWaveColor;
 uniform float uSpeed;
 
 vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
-  float md = length(uv - uMouse);
-  float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
-  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
+  float phase, float cy, vec3 col, float width, float sharp, bool flip,
+  float mnudge, float wakeAlong) {
+  float angle = uTime * uSpeed * spd * freq * -1.0
+    + (phase + uvx + mnudge + wakeAlong) * 2.0;
   float wy = sin(angle) * amp + cy;
   float dy = wy - uv.y;
   float dist = abs(dy);
@@ -412,15 +418,24 @@ void main() {
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
 
+  float md = length(uv - uMouse);
+  float falloff = smoothstep(0.45, 0.0, md);
+  float mnudge = falloff * uMouseStrength;
+  float vlen = length(uMouseVel);
+  float wakeAmt = uWakeGain * vlen / (1.0 + vlen);
+  vec2 vDir = vlen > 0.001 ? uMouseVel / vlen : vec2(0.0);
+  float along = dot(uv - uMouse, vDir);
+  float wakeAlong = falloff * wakeAmt * along;
+
   vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
+  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false,mnudge,wakeAlong*1.00);
+  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false,mnudge,wakeAlong*0.82);
+  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false,mnudge,wakeAlong*0.55);
+  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false,mnudge,wakeAlong*0.28);
+  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true,mnudge,wakeAlong*0.92);
+  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true,mnudge,wakeAlong*0.70);
+  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true,mnudge,wakeAlong*0.42);
+  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true,mnudge,wakeAlong*0.22);
   c = clamp(c,0.0,1.0);
 
   float waveLuma  = max(max(c.r,c.g),c.b);
@@ -465,6 +480,8 @@ void main() {
       const uTimeLoc          = gl.getUniformLocation(prog, "uTime");
       const uResLoc           = gl.getUniformLocation(prog, "uResolution");
       const uMouseLoc         = gl.getUniformLocation(prog, "uMouse");
+      const uMouseVelLoc      = gl.getUniformLocation(prog, "uMouseVel");
+      const uWakeGainLoc      = gl.getUniformLocation(prog, "uWakeGain");
       const uIntLoc           = gl.getUniformLocation(prog, "uIntensity");
       const uMStrLoc          = gl.getUniformLocation(prog, "uMouseStrength");
       const uAspLoc           = gl.getUniformLocation(prog, "uAspect");
@@ -488,6 +505,8 @@ void main() {
         gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
         gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
+        gl.uniform2f(uMouseVelLoc, reducedMotion ? 0 : mouse.vx, reducedMotion ? 0 : mouse.vy);
+        gl.uniform1f(uWakeGainLoc, reducedMotion ? 0 : wakeGainRef.current);
         gl.uniform1f(uIntLoc, intensityRef.current);
         gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
@@ -553,10 +572,23 @@ void main() {
         }
 
         if (ms - lastT < FRAME_MS) return;
+        const dt = lastT > 0 ? (ms - lastT) / 1000 : 0;
         lastT = ms;
 
+        const prevX = mouse.x;
+        const prevY = mouse.y;
         mouse.x += (mouse.tx - mouse.x) * 0.042;
         mouse.y += (mouse.ty - mouse.y) * 0.042;
+        if (!reducedMotion && dt > 0.001 && dt < 0.1) {
+          const maxV = 3.5;
+          const ivx = Math.max(-maxV, Math.min(maxV, (mouse.x - prevX) / dt));
+          const ivy = Math.max(-maxV, Math.min(maxV, (mouse.y - prevY) / dt));
+          mouse.vx = mouse.vx * 0.86 + ivx * 0.14;
+          mouse.vy = mouse.vy * 0.86 + ivy * 0.14;
+        } else {
+          mouse.vx *= 0.82;
+          mouse.vy *= 0.82;
+        }
 
         updateTarget();
         const isIntro = ms < introPhaseEnd;
