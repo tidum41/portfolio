@@ -158,9 +158,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             globals.css keeps a copy as a fallback. */}
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
-        {/* CSS cursor fallback before JS boots, and for reduced-motion / coarse
-            pointers. While the custom cursor is running, JS sets cursor:none. */}
-        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){html,html *{cursor:url("/cursors/dot-light.svg") 10 10,auto!important}html[data-theme="dark"],html[data-theme="dark"] *{cursor:url("/cursors/dot-dark.svg") 10 10,auto!important}}` }} />
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here
             for crawlers that only read the first non-media icon link. */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
