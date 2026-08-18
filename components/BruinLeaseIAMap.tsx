@@ -1,94 +1,150 @@
 /**
  * The Structure — static sitemap.
  *
- * Desktop: 4-column funnel (channels collapse into BruinLease, then
- * fan into tabs). Sources and tabs share one grid so the rails actually
- * line up — the usual failure in org-chart sitemaps.
+ * Story, from the case-study copy: the hop across Facebook / Reddit /
+ * Instagram / texts becomes one place. Browse, save, and message are
+ * the jobs, so those became the tabs. List stays in the header.
  *
- * Mobile: file-tree outline. Case-study sitemaps (NN/g, Linear/Stripe
- * docs) switch to an indented tree on a phone instead of squashing the
- * org chart into a 2×2.
+ * Desktop used to put 4 channels over 4 tabs, which read as
+ * Facebook → Home. Channels are now a cluster that collapse into
+ * BruinLease; only then does the app fan into jobs.
  *
- * Craft: dashed plate, + corners, [ STRUCTURE ] in the rule, type nodes
- * (no pills, no rounding). Mono inside the artifact.
+ * Mobile stacks the same beats with arrows. Square dashed plate,
+ * type nodes, a little UCLA blue on the flow.
  */
 
 const SOURCES = ["Facebook", "Reddit", "Instagram", "Texts"] as const;
 
-const BRANCHES = [
-  { tab: "Home", screens: ["Search", "Listing", "Save"] },
-  { tab: "Saved", screens: ["Bookmarks", "Listing"] },
-  { tab: "Chat", screens: ["Inbox", "Thread"] },
-  { tab: "Profile", screens: ["Listings", "Settings"] },
+const JOBS = [
+  {
+    job: "Browse",
+    tab: "Home",
+    flow: ["Search", "Listing", "Save"],
+  },
+  {
+    job: "Save",
+    tab: "Saved",
+    flow: ["Bookmarks", "Listing"],
+  },
+  {
+    job: "Message",
+    tab: "Chat",
+    flow: ["Inbox", "Thread"],
+  },
+  {
+    job: "Profile",
+    tab: "Profile",
+    flow: ["Listings", "Settings"],
+    join: "dot" as const,
+  },
 ] as const;
 
 export default function BruinLeaseIAMap() {
   return (
-    <figure className="bl-ia" aria-label="How BruinLease is structured">
+    <figure className="bl-ia" aria-label="How the hop across platforms became BruinLease">
       <style>{CSS}</style>
       <div className="bl-ia-plate">
         <span className="bl-ia-plus bl-ia-plus-tl" aria-hidden>+</span>
         <span className="bl-ia-plus bl-ia-plus-tr" aria-hidden>+</span>
         <span className="bl-ia-plus bl-ia-plus-bl" aria-hidden>+</span>
         <span className="bl-ia-plus bl-ia-plus-br" aria-hidden>+</span>
-        <span className="bl-ia-kicker">[ STRUCTURE ]</span>
 
-        <div className="bl-ia-board">
-          <ul className="bl-ia-from">
-            {SOURCES.map((name) => (
-              <li key={name}>
-                <s>{name}</s>
-              </li>
-            ))}
-          </ul>
+        <ul className="bl-ia-from">
+          {SOURCES.map((name) => (
+            <li key={name}>
+              <Cross />
+              <s>{name}</s>
+            </li>
+          ))}
+        </ul>
 
-          <div className="bl-ia-rails bl-ia-converge" aria-hidden>
-            <span className="bl-ia-h" />
-            <span className="bl-ia-mid" />
-            <div className="bl-ia-vs">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
+        <p className="bl-ia-arrow" aria-hidden>
+          <ArrowDown />
+        </p>
 
-          <p className="bl-ia-join" aria-hidden>
-            +
-          </p>
-
-          <p className="bl-ia-app">
-            <span className="bl-ia-app-name">BruinLease</span>
-            <span className="bl-ia-app-rail" aria-hidden />
-            <span className="bl-ia-list">List</span>
-          </p>
-
-          <div className="bl-ia-rails bl-ia-diverge" aria-hidden>
-            <span className="bl-ia-h" />
-            <span className="bl-ia-mid" />
-            <div className="bl-ia-vs">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-
-          <ul className="bl-ia-tree">
-            {BRANCHES.map((b) => (
-              <li key={b.tab}>
-                <span className="bl-ia-tab">{b.tab}</span>
-                <ul>
-                  {b.screens.map((s) => (
-                    <li key={s}>{s}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
+        <div className="bl-ia-app">
+          <span className="bl-ia-app-name">BruinLease</span>
+          <span className="bl-ia-arrow bl-ia-arrow-h" aria-hidden>
+            <ArrowRight />
+          </span>
+          <span className="bl-ia-list">
+            <span>List</span>
+            <em>header</em>
+          </span>
         </div>
+
+        <p className="bl-ia-arrow bl-ia-into" aria-hidden>
+          <ArrowDown />
+        </p>
+
+        <div className="bl-ia-fan" aria-hidden>
+          <span className="bl-ia-fan-stem" />
+          <span className="bl-ia-fan-rail" />
+        </div>
+
+        <ul className="bl-ia-jobs">
+          {JOBS.map((j) => (
+            <li key={j.tab}>
+              <span className="bl-ia-job">{j.job}</span>
+              {j.job !== j.tab ? <span className="bl-ia-tab">{j.tab}</span> : null}
+              <p className="bl-ia-flow">
+                {j.flow.map((step, i) => (
+                  <span key={step}>
+                    {i > 0 ? (
+                      <span className="bl-ia-sep" aria-hidden>
+                        {"join" in j && j.join === "dot" ? "·" : "→"}
+                      </span>
+                    ) : null}
+                    {step}
+                  </span>
+                ))}
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
     </figure>
+  );
+}
+
+function Cross() {
+  return (
+    <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden>
+      <path
+        d="M1.5 1.5l5 5M6.5 1.5l-5 5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function ArrowDown() {
+  return (
+    <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden>
+      <path
+        d="M5 1v8M2.2 6.8L5 11l2.8-4.2"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
+      />
+    </svg>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg width="12" height="10" viewBox="0 0 12 10" aria-hidden>
+      <path
+        d="M1 5h8M6.8 2.2L11 5 6.8 7.8"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
+      />
+    </svg>
   );
 }
 
@@ -98,6 +154,8 @@ const CSS = `
   --bl-ia-mute: var(--color-text-tertiary);
   --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
   --bl-ia-rule: color-mix(in srgb, var(--color-text-primary) 22%, transparent);
+  --bl-ia-blue: var(--color-ucla-blue);
+  --bl-ia-wrong: #C62828;
   margin: 8px 0 0;
   color: var(--bl-ia-ink);
   -webkit-font-smoothing: antialiased;
@@ -105,7 +163,7 @@ const CSS = `
 .bl-ia-plate{
   position: relative;
   margin: 0;
-  padding: 28px 18px 22px;
+  padding: 24px 18px 20px;
   background: var(--color-placeholder);
   border: 1px dashed var(--bl-ia-rule);
   border-radius: 0;
@@ -128,33 +186,24 @@ const CSS = `
 .bl-ia-plus-tr{ top: -7px; right: -5px; }
 .bl-ia-plus-bl{ bottom: -8px; left: -5px; }
 .bl-ia-plus-br{ bottom: -8px; right: -5px; }
-.bl-ia-kicker{
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0 8px;
-  background: var(--color-placeholder);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  color: var(--bl-ia-mute);
-  white-space: nowrap;
-}
 
-/* ── mobile: left-aligned file tree ── */
-.bl-ia-board{ display: block; }
 .bl-ia-from,
-.bl-ia-tree,
-.bl-ia-tree ul{
+.bl-ia-jobs{
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .bl-ia-from{
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+}
+.bl-ia-from li{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--bl-ia-wrong);
 }
 .bl-ia-from s{
   text-decoration: line-through;
@@ -162,157 +211,129 @@ const CSS = `
   text-underline-offset: 3px;
   color: var(--bl-ia-mute);
 }
-.bl-ia-rails{ display: none; }
-.bl-ia-join{
-  width: 1px;
-  height: 14px;
-  margin: 6px 0 6px 3px;
-  padding: 0;
-  overflow: hidden;
-  color: transparent;
-  background: var(--bl-ia-line);
+
+.bl-ia-arrow{
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  color: var(--bl-ia-blue);
+  line-height: 0;
 }
+.bl-ia-arrow-h{
+  margin: 0;
+  flex-shrink: 0;
+}
+
 .bl-ia-app{
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin: 0;
-  font-size: 13px;
-  position: relative;
 }
-.bl-ia-app::after{
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: calc(100% + 2px);
-  height: 6px;
-  border-left: 1px solid var(--bl-ia-line);
-}
-.bl-ia-app-name{ font-weight: 600; letter-spacing: 0.04em; }
-.bl-ia-app-rail{
-  width: 18px;
-  height: 0;
-  border-top: 1px solid var(--bl-ia-line);
-}
-.bl-ia-list{
-  font-weight: 500;
-  color: color-mix(in srgb, var(--bl-ia-ink) 62%, transparent);
-}
-.bl-ia-tree{
-  margin: 8px 0 0;
-  padding: 0;
-}
-.bl-ia-tree > li{
-  position: relative;
-  padding: 0 0 8px 16px;
-}
-.bl-ia-tree > li:last-child{ padding-bottom: 0; }
-.bl-ia-tree > li::before{
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid var(--bl-ia-line);
-}
-.bl-ia-tree > li:last-child::before{
-  bottom: auto;
-  height: 0.72em;
-}
-.bl-ia-tree > li::after{
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0.72em;
-  width: 11px;
-  border-top: 1px solid var(--bl-ia-line);
-}
-.bl-ia-tab{
+.bl-ia-app-name{
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  color: var(--bl-ia-blue);
 }
-.bl-ia-tree ul{
-  margin: 1px 0 0;
-  color: color-mix(in srgb, var(--bl-ia-ink) 58%, transparent);
+.bl-ia-list{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+  font-weight: 500;
 }
-.bl-ia-tree ul li{ padding: 1px 0; }
+.bl-ia-list em{
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--bl-ia-mute);
+}
 
-/* ── desktop: 4-column funnel, sources and tabs share columns ── */
+.bl-ia-fan{ display: none; }
+
+.bl-ia-jobs{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 2px;
+}
+.bl-ia-jobs > li{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1px;
+}
+.bl-ia-job{
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--bl-ia-blue);
+}
+.bl-ia-tab{
+  font-size: 11px;
+  color: var(--bl-ia-mute);
+}
+.bl-ia-flow{
+  margin: 2px 0 0;
+  color: color-mix(in srgb, var(--bl-ia-ink) 62%, transparent);
+}
+.bl-ia-flow > span{ white-space: nowrap; }
+.bl-ia-sep{
+  display: inline-block;
+  margin: 0 6px;
+  color: var(--bl-ia-blue);
+  font-weight: 400;
+}
+
 @media (min-width: 768px){
   .bl-ia-plate{
-    padding: 36px 24px 28px;
+    padding: 32px 24px 28px;
     font-size: 13px;
   }
-  .bl-ia-board{
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    justify-items: center;
-    text-align: center;
-  }
-  .bl-ia-from{ display: contents; }
-  .bl-ia-from li{ min-width: 0; }
-  .bl-ia-join{ display: none; }
+  .bl-ia-from{ gap: 8px 28px; }
+  .bl-ia-app-name{ font-size: 15px; }
+  .bl-ia-arrow{ margin: 10px 0; }
+  .bl-ia-into{ margin-bottom: 0; }
 
-  .bl-ia-rails{
+  .bl-ia-fan{
     display: block;
-    grid-column: 1 / -1;
     position: relative;
+    height: 12px;
+    margin: 0 auto;
     width: 100%;
-    height: 28px;
   }
-  .bl-ia-vs{
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    height: 100%;
-    justify-items: center;
-  }
-  .bl-ia-vs span{
-    width: 1px;
-    background: var(--bl-ia-line);
-  }
-  .bl-ia-h,
-  .bl-ia-mid{
+  .bl-ia-fan-stem{ display: none; }
+  .bl-ia-fan-rail{
     position: absolute;
-    pointer-events: none;
-  }
-  .bl-ia-h{
     left: 12.5%;
     right: 12.5%;
-    height: 0;
-    border-top: 1px solid var(--bl-ia-line);
+    top: 0;
+    border-top: 1px solid var(--bl-ia-blue);
   }
-  .bl-ia-mid{
+
+  .bl-ia-jobs{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 12px;
+    text-align: center;
+  }
+  .bl-ia-jobs > li{
+    align-items: center;
+    position: relative;
+    padding: 12px 0 0;
+  }
+  .bl-ia-jobs > li::before{
+    content: "";
+    position: absolute;
+    top: 0;
     left: 50%;
     width: 1px;
-    background: var(--bl-ia-line);
+    height: 12px;
+    background: var(--bl-ia-blue);
     transform: translateX(-0.5px);
   }
-
-  .bl-ia-converge .bl-ia-vs span{ height: 12px; }
-  .bl-ia-converge .bl-ia-h{ top: 12px; }
-  .bl-ia-converge .bl-ia-mid{ top: 12px; height: 16px; }
-
-  .bl-ia-diverge .bl-ia-mid{ top: 0; height: 12px; }
-  .bl-ia-diverge .bl-ia-h{ top: 12px; }
-  .bl-ia-diverge .bl-ia-vs span{
-    height: 16px;
-    margin-top: 12px;
-  }
-
-  .bl-ia-app{
-    grid-column: 1 / -1;
-    justify-content: center;
-    margin: 2px 0;
-    font-size: 14px;
-  }
-  .bl-ia-app::after{ content: none; }
-  .bl-ia-tree{ display: contents; }
-  .bl-ia-tree > li{
-    padding: 0;
-    width: 100%;
-  }
-  .bl-ia-tree > li::before,
-  .bl-ia-tree > li::after{ content: none; }
-  .bl-ia-tree ul{ margin: 6px 0 0; }
+  .bl-ia-tab{ font-size: 12px; }
+  .bl-ia-flow{ margin-top: 4px; }
 }
 `;
