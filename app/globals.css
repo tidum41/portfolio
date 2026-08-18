@@ -619,6 +619,17 @@ html[data-theme="dark"] .project-image {
   outline-color: rgba(255, 255, 255, 0.06);
 }
 
+/* ─── Frozen CD tile stand-in (PersistentWorkShell) ───────────────────
+   A static HTML copy of the live CD player, shown in the grid slot while the
+   modal is open so the tile keeps its exact on-screen state (theme, album,
+   date). Kill all motion so the copy never re-runs the album-card entrance or
+   otherwise drifts from the moment it was captured. */
+[data-cd-frozen],
+[data-cd-frozen] * {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* ─── Back button — scale on press + adequate hit area ───────────── */
 .back-btn { transition: color 0.2s ease, transform 80ms ease, background-color 1s ease, border-color 1s ease; }
 .back-btn:active { transform: scale(0.96); }
