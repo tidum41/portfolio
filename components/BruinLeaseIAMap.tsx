@@ -1,16 +1,13 @@
 /**
- * The Structure — static sitemap.
+ * The Structure — static sitemap in the case-study type.
  *
- * Story, from the case-study copy: the hop across Facebook / Reddit /
- * Instagram / texts becomes one place. Browse, save, and message are
- * the jobs, so those became the tabs. List stays in the header.
+ * Same beats as the copy: four channels fold into BruinLease, List
+ * stays in the header, browse / save / message became the tabs.
+ * Screens stack under each job so the flow fits at every width —
+ * a horizontal “Search → Listing → Save” overflowed the column.
  *
- * Desktop used to put 4 channels over 4 tabs, which read as
- * Facebook → Home. Channels are now a cluster that collapse into
- * BruinLease; only then does the app fan into jobs.
- *
- * Mobile stacks the same beats with arrows. Square dashed plate,
- * type nodes, a little UCLA blue on the flow.
+ * Helvetica Neue, solid plate, hairlines. ASCII-table structure
+ * (aligned columns, type, arrows) without the mono / dashed chrome.
  */
 
 const SOURCES = ["Facebook", "Reddit", "Instagram", "Texts"] as const;
@@ -35,7 +32,7 @@ const JOBS = [
     job: "Profile",
     tab: "Profile",
     flow: ["Listings", "Settings"],
-    join: "dot" as const,
+    sequential: false,
   },
 ] as const;
 
@@ -44,11 +41,6 @@ export default function BruinLeaseIAMap() {
     <figure className="bl-ia" aria-label="How the hop across platforms became BruinLease">
       <style>{CSS}</style>
       <div className="bl-ia-plate">
-        <span className="bl-ia-plus bl-ia-plus-tl" aria-hidden>+</span>
-        <span className="bl-ia-plus bl-ia-plus-tr" aria-hidden>+</span>
-        <span className="bl-ia-plus bl-ia-plus-bl" aria-hidden>+</span>
-        <span className="bl-ia-plus bl-ia-plus-br" aria-hidden>+</span>
-
         <ul className="bl-ia-from">
           {SOURCES.map((name) => (
             <li key={name}>
@@ -78,29 +70,33 @@ export default function BruinLeaseIAMap() {
         </p>
 
         <div className="bl-ia-fan" aria-hidden>
-          <span className="bl-ia-fan-stem" />
           <span className="bl-ia-fan-rail" />
         </div>
 
         <ul className="bl-ia-jobs">
-          {JOBS.map((j) => (
-            <li key={j.tab}>
-              <span className="bl-ia-job">{j.job}</span>
-              {j.job !== j.tab ? <span className="bl-ia-tab">{j.tab}</span> : null}
-              <p className="bl-ia-flow">
-                {j.flow.map((step, i) => (
-                  <span key={step}>
-                    {i > 0 ? (
-                      <span className="bl-ia-sep" aria-hidden>
-                        {"join" in j && j.join === "dot" ? " · " : " → "}
-                      </span>
-                    ) : null}
-                    {step}
-                  </span>
-                ))}
-              </p>
-            </li>
-          ))}
+          {JOBS.map((j) => {
+            const sequential = !("sequential" in j && j.sequential === false);
+            return (
+              <li key={j.tab}>
+                <div className="bl-ia-head">
+                  <span className="bl-ia-job">{j.job}</span>
+                  {j.job !== j.tab ? <span className="bl-ia-tab">{j.tab}</span> : null}
+                </div>
+                <ol className="bl-ia-flow">
+                  {j.flow.map((step, i) => (
+                    <li key={step}>
+                      {i > 0 && sequential ? (
+                        <span className="bl-ia-sep" aria-hidden>
+                          <ArrowDown />
+                        </span>
+                      ) : null}
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </figure>
@@ -122,11 +118,11 @@ function Cross() {
 
 function ArrowDown() {
   return (
-    <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden>
+    <svg width="9" height="11" viewBox="0 0 9 11" aria-hidden>
       <path
-        d="M5 1v8M2.2 6.8L5 11l2.8-4.2"
+        d="M4.5 1v7.2M2.1 6.4L4.5 10l2.4-3.6"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.15"
         strokeLinecap="square"
         strokeLinejoin="miter"
       />
@@ -136,11 +132,11 @@ function ArrowDown() {
 
 function ArrowRight() {
   return (
-    <svg width="12" height="10" viewBox="0 0 12 10" aria-hidden>
+    <svg width="11" height="9" viewBox="0 0 11 9" aria-hidden>
       <path
-        d="M1 5h8M6.8 2.2L11 5 6.8 7.8"
+        d="M1 4.5h7.2M6.4 2.1L10 4.5 6.4 6.9"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.15"
         strokeLinecap="square"
         strokeLinejoin="miter"
       />
@@ -152,8 +148,7 @@ const CSS = `
 .bl-ia{
   --bl-ia-ink: var(--color-text-primary);
   --bl-ia-mute: var(--color-text-tertiary);
-  --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
-  --bl-ia-rule: color-mix(in srgb, var(--color-text-primary) 22%, transparent);
+  --bl-ia-line: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
   --bl-ia-blue: var(--color-ucla-blue);
   --bl-ia-wrong: #C62828;
   margin: 8px 0 0;
@@ -161,46 +156,33 @@ const CSS = `
   -webkit-font-smoothing: antialiased;
 }
 .bl-ia-plate{
-  position: relative;
   margin: 0;
-  padding: 24px 18px 20px;
+  padding: 24px 16px 22px;
   background: var(--color-placeholder);
-  border: 1px dashed var(--bl-ia-rule);
+  border: 1px solid var(--bl-ia-line);
   border-radius: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.45;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  line-height: 1.35;
+  overflow: hidden;
+  container-type: inline-size;
 }
-.bl-ia-plus{
-  position: absolute;
-  z-index: 2;
-  font-size: 12px;
-  line-height: 1;
-  color: var(--bl-ia-mute);
-  pointer-events: none;
-  user-select: none;
-}
-.bl-ia-plus-tl{ top: -7px; left: -5px; }
-.bl-ia-plus-tr{ top: -7px; right: -5px; }
-.bl-ia-plus-bl{ bottom: -8px; left: -5px; }
-.bl-ia-plus-br{ bottom: -8px; right: -5px; }
 
 .bl-ia-from,
-.bl-ia-jobs{
+.bl-ia-jobs,
+.bl-ia-flow{
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .bl-ia-from{
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto auto;
+  justify-content: center;
   justify-items: start;
-  gap: 4px 12px;
-  width: max-content;
-  max-width: 100%;
-  margin: 0 auto;
+  gap: 4px 18px;
 }
 .bl-ia-from li{
   display: inline-flex;
@@ -218,7 +200,7 @@ const CSS = `
 .bl-ia-arrow{
   display: flex;
   justify-content: center;
-  margin: 8px 0;
+  margin: 10px 0;
   color: var(--bl-ia-blue);
   line-height: 0;
 }
@@ -234,104 +216,95 @@ const CSS = `
   gap: 10px;
 }
 .bl-ia-app-name{
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-family: var(--font-sans-medium);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
   color: var(--bl-ia-blue);
 }
 .bl-ia-list{
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1.2;
-  font-weight: 500;
+  line-height: 1.15;
 }
 .bl-ia-list em{
   font-style: normal;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
   color: var(--bl-ia-mute);
 }
 
 .bl-ia-fan{ display: none; }
 
 .bl-ia-jobs{
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 2px auto 0;
-  width: max-content;
-  max-width: 100%;
-  padding-left: 14px;
-  position: relative;
-}
-.bl-ia-jobs::before{
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0.55em;
-  bottom: 0.7em;
-  border-left: 1px solid var(--bl-ia-blue);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 12px;
+  margin-top: 2px;
 }
 .bl-ia-jobs > li{
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 1px;
-  position: relative;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
 }
-.bl-ia-jobs > li::after{
-  content: "";
-  position: absolute;
-  left: -11px;
-  top: 0.55em;
-  width: 9px;
-  border-top: 1px solid var(--bl-ia-blue);
+.bl-ia-head{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  min-width: 72px;
+  border-bottom: 1px solid var(--bl-ia-line);
 }
 .bl-ia-job{
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: var(--font-sans-medium);
+  font-weight: 500;
   color: var(--bl-ia-blue);
 }
 .bl-ia-tab{
-  font-size: 11px;
+  font-size: 12px;
   color: var(--bl-ia-mute);
 }
 .bl-ia-flow{
-  margin: 2px 0 0;
-  color: color-mix(in srgb, var(--bl-ia-ink) 62%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-secondary);
 }
-.bl-ia-flow > span{ white-space: nowrap; }
+.bl-ia-flow li{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .bl-ia-sep{
+  display: flex;
+  justify-content: center;
+  margin: 3px 0;
   color: var(--bl-ia-blue);
-  font-weight: 400;
+  line-height: 0;
 }
 
-@media (min-width: 768px){
-  .bl-ia-plate{
-    padding: 32px 24px 28px;
-    font-size: 13px;
-  }
+@container (min-width: 400px){
   .bl-ia-from{
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px 28px;
-    width: auto;
+    gap: 8px 20px;
   }
-  .bl-ia-app-name{ font-size: 15px; }
-  .bl-ia-arrow{ margin: 10px 0; }
+}
+
+@container (min-width: 460px){
+  .bl-ia-arrow{ margin: 12px 0; }
   .bl-ia-into{ margin-bottom: 0; }
 
   .bl-ia-fan{
     display: block;
     position: relative;
     height: 12px;
-    margin: 0 auto;
     width: 100%;
   }
-  .bl-ia-fan-stem{ display: none; }
   .bl-ia-fan-rail{
     position: absolute;
     left: 12.5%;
@@ -341,22 +314,13 @@ const CSS = `
   }
 
   .bl-ia-jobs{
-    display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px 12px;
-    text-align: center;
-    width: auto;
-    margin: 0;
-    padding: 0;
   }
-  .bl-ia-jobs::before{ content: none; }
   .bl-ia-jobs > li{
-    align-items: center;
-    text-align: center;
+    padding-top: 12px;
     position: relative;
-    padding: 12px 0 0;
   }
-  .bl-ia-jobs > li::after{ content: none; }
   .bl-ia-jobs > li::before{
     content: "";
     position: absolute;
@@ -367,7 +331,9 @@ const CSS = `
     background: var(--bl-ia-blue);
     transform: translateX(-0.5px);
   }
-  .bl-ia-tab{ font-size: 12px; }
-  .bl-ia-flow{ margin-top: 4px; }
+}
+
+@media (min-width: 768px){
+  .bl-ia-plate{ padding: 32px 24px 28px; }
 }
 `;
