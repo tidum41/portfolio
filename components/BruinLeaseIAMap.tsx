@@ -164,10 +164,13 @@ const CSS = `
 }
 .bl-ia-rails{ display: none; }
 .bl-ia-join{
-  margin: 6px 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--bl-ia-line);
+  width: 1px;
+  height: 14px;
+  margin: 6px 0 6px 3px;
+  padding: 0;
+  overflow: hidden;
+  color: transparent;
+  background: var(--bl-ia-line);
 }
 .bl-ia-app{
   display: flex;
