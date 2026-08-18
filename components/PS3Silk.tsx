@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * Work-hero silk. Shader + material defaults match PS3SilkLab (print + Bayer
- * dither, morph off). The canvas is viewport-sized and clipped to the hero so
- * ribbon scale matches the lab, not a vertically stretched crop.
+ * Work-hero silk. Same print + Bayer material as PS3SilkLab, sampled in
+ * lab-scale world UV so the hero is a window into that field — without
+ * drawing a viewport-tall buffer and clipping it (that cut the ribbons
+ * off and cost ~3× fill).
  */
 
 import { useEffect, useRef, useState, startTransition } from "react";
@@ -136,6 +137,11 @@ export default function PS3Silk({
     endOpacity: [0.15, 0, 0.5, 0.01],
   });
 
+  const intensityRef = useRef(LAB.intensity);
+  const mouseStrRef = useRef(LAB.mouseNudge);
+  const yOffsetRef = useRef(LAB.yOffset);
+  const speedRef = useRef(LAB.speed);
+  const halftSizeRef = useRef(3.0);
   const waveColorRef = useRef<[number, number, number]>(hexToRgb(waveColor));
   const endOpacityRef = useRef(0.15);
 
@@ -161,6 +167,11 @@ export default function PS3Silk({
     const handler = (e: Event) => {
       const d = (e as CustomEvent).detail;
       if (!d) return;
+      if (d.intensity !== undefined) intensityRef.current = d.intensity;
+      if (d.mouseStrength !== undefined) mouseStrRef.current = d.mouseStrength;
+      if (d.yOffset !== undefined) yOffsetRef.current = d.yOffset;
+      if (d.halftoneSize !== undefined) halftSizeRef.current = d.halftoneSize;
+      if (d.speed !== undefined) speedRef.current = d.speed;
       if (d.waveColor !== undefined) {
         waveColorRef.current = Array.isArray(d.waveColor)
           ? (d.waveColor as [number, number, number])
@@ -175,15 +186,14 @@ export default function PS3Silk({
     return () => window.removeEventListener("ps3-update", handler);
   }, []);
 
-  // Hit-test the hero clip (parent), not the viewport-tall canvas, so grid
-  // clicks don't cycle mode.
+  // Click-to-cycle mode — ignore rabbit-holes / buttons so opening a video
+  // never flips the wave. Hero-sized canvas, so hit-test this wrapper.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (!wrapperRef.current) return;
       const el = e.target as Element | null;
       if (el?.closest?.("a, button, [role='button'], #rh-trigger, #rh-hover-zone, #rh-rabbit-wrapper")) return;
-      const hit = wrapperRef.current.parentElement ?? wrapperRef.current;
-      const rect = hit.getBoundingClientRect();
+      const rect = wrapperRef.current.getBoundingClientRect();
       if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
         startTransition(() => {
           setMode((m) => {
@@ -267,23 +277,25 @@ export default function PS3Silk({
       let wrapperRect: DOMRect | null = null;
       let posLoc = -1;
       let buf: WebGLBuffer | null = null;
+      let worldSpan = 1;
+      let worldAspect = 2.414;
+      let viewResY = 1;
 
       function resize() {
-        const clip = wrapper.parentElement;
-        const clipRect = clip?.getBoundingClientRect();
-        const heroW = clipRect?.width ?? 0;
-        const heroH = clipRect?.height ?? 0;
-        if (heroW < 2 || heroH < 2) return;
-        const viewH = window.innerHeight;
-        const top = heroH / 2 - LAB.bandCy * viewH;
-        wrapper.style.top = `${top}px`;
+        wrapper.style.top = "0px";
         wrapper.style.left = "0px";
-        wrapper.style.width = `${heroW}px`;
-        wrapper.style.height = `${viewH}px`;
-        wrapperRect = wrapper.getBoundingClientRect();
+        wrapper.style.width = "100%";
+        wrapper.style.height = "100%";
+        const rect = wrapper.getBoundingClientRect();
+        wrapperRect = rect;
+        if (rect.width < 2 || rect.height < 2) return;
+        const viewH = Math.max(window.innerHeight, 1);
+        worldSpan = rect.height / viewH;
+        worldAspect = rect.width / viewH;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = Math.max(2, Math.floor(heroW * dpr));
-        const h = Math.max(2, Math.floor(viewH * dpr));
+        viewResY = viewH * dpr;
+        const w = Math.max(2, Math.floor(rect.width * dpr));
+        const h = Math.max(2, Math.floor(rect.height * dpr));
         if (canvas.width === w && canvas.height === h) {
           glCtx.viewport(0, 0, w, h);
           return;
@@ -319,7 +331,8 @@ export default function PS3Silk({
         const rect = wrapperRect;
         if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
-        mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
+        const ny = (e.clientY - rect.top) / rect.height;
+        mouse.ty = LAB.bandCy + (0.5 - ny) * worldSpan;
       }
 
       function onPopState() {
@@ -345,7 +358,7 @@ export default function PS3Silk({
         resize();
         if (canvas.width >= 2 && canvas.height >= 2) startLoop();
       });
-      ro.observe(wrapper.parentElement ?? wrapper);
+      ro.observe(wrapper);
 
       const onContextLost = (e: Event) => {
         e.preventDefault();
@@ -361,6 +374,14 @@ export default function PS3Silk({
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", updateTarget, { passive: true });
       window.addEventListener("popstate", onPopState);
+      function onVisibility() {
+        if (document.hidden) {
+          stopLoop();
+          return;
+        }
+        if (activeRef.current) startLoop();
+      }
+      document.addEventListener("visibilitychange", onVisibility);
       removeListeners = () => {
         ro.disconnect();
         lifecycleRef.current = null;
@@ -371,6 +392,7 @@ export default function PS3Silk({
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("scroll", updateTarget);
         window.removeEventListener("popstate", onPopState);
+        document.removeEventListener("visibilitychange", onVisibility);
       };
 
       const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos,0.0,1.0); }`;
@@ -397,6 +419,18 @@ uniform float uBayerSize;
 uniform float uDitherMix;
 uniform float uColorNum;
 uniform float uPixelSize;
+uniform float uWorldSpan;
+uniform float uBandCy;
+uniform float uViewResY;
+
+vec2 worldUV(vec2 f) {
+  vec2 uv;
+  uv.x = f.x / uResolution.x;
+  float ny = uResolution.y > 0.0 ? f.y / uResolution.y : 0.5;
+  uv.y = uBandCy + (ny - 0.5) * uWorldSpan;
+  uv.y += uYOffsetPx / max(uViewResY, 1.0);
+  return uv;
+}
 
 float waveBand(vec2 uv, float uvx, float spd, float freq, float amp,
   float phase, float cy, float width, float sharp, bool flip, float mnudge) {
@@ -444,8 +478,7 @@ void main() {
   if (px > 1.01) {
     frag = px * floor(frag / px) + px * 0.5;
   }
-  vec2 uv = frag / uResolution;
-  uv.y += uYOffsetPx / uResolution.y;
+  vec2 uv = worldUV(frag);
 
   float silkLuma = sampleSilk(uv);
   float waveLight = silkLuma * uIntensity * 4.5;
@@ -458,8 +491,7 @@ void main() {
     vec2 cell = floor(screenPx / pitch);
     vec2 centerScreen = (cell + 0.5) * pitch;
     vec2 centerFrag = rotate2(centerScreen, -uAngleRad);
-    vec2 centerUV = centerFrag / uResolution;
-    centerUV.y += uYOffsetPx / uResolution.y;
+    vec2 centerUV = worldUV(centerFrag);
 
     float cellSilk = sampleSilk(centerUV) * uIntensity * 4.5;
     float cellCov = clamp(cellSilk - 0.05, 0.0, 1.2);
@@ -533,6 +565,9 @@ void main() {
         ditherMix: gl.getUniformLocation(prog, "uDitherMix"),
         colorNum: gl.getUniformLocation(prog, "uColorNum"),
         pixelSize: gl.getUniformLocation(prog, "uPixelSize"),
+        worldSpan: gl.getUniformLocation(prog, "uWorldSpan"),
+        bandCy: gl.getUniformLocation(prog, "uBandCy"),
+        viewResY: gl.getUniformLocation(prog, "uViewResY"),
       };
 
       bayer4 = uploadBayer(gl, 4);
@@ -541,26 +576,30 @@ void main() {
 
       function draw(ms: number) {
         const ic = waveColorRef.current;
+        const waveMode = modeRef.current === 0;
         gl.uniform1f(L.time, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(L.res, canvas.width, canvas.height);
         gl.uniform2f(L.mouse, mouse.x, mouse.y);
-        gl.uniform1f(L.intensity, LAB.intensity);
-        gl.uniform1f(L.mouseNudge, reducedMotion ? 0 : LAB.mouseNudge);
-        gl.uniform1f(L.aspect, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
-        gl.uniform1f(L.yOffset, LAB.yOffset);
-        gl.uniform1f(L.speed, LAB.speed);
-        gl.uniform1f(L.pitch, LAB.pitch);
+        gl.uniform1f(L.intensity, intensityRef.current);
+        gl.uniform1f(L.mouseNudge, reducedMotion ? 0 : mouseStrRef.current);
+        gl.uniform1f(L.aspect, worldAspect);
+        gl.uniform1f(L.yOffset, yOffsetRef.current);
+        gl.uniform1f(L.speed, speedRef.current);
+        gl.uniform1f(L.pitch, Math.max(1.5, halftSizeRef.current * (LAB.pitch / 3)));
         gl.uniform1f(L.angle, (LAB.screenAngle * Math.PI) / 180);
         gl.uniform1f(L.contrast, LAB.contrast);
         gl.uniform1f(L.inkSoft, LAB.inkSoft);
         gl.uniform1f(L.inkDensity, LAB.inkDensity);
         gl.uniform1f(L.minDot, LAB.minDot);
         gl.uniform3f(L.inkColor, ic[0], ic[1], ic[2]);
-        gl.uniform1f(L.silkMix, LAB.silkMix);
-        gl.uniform1f(L.ditherMix, LAB.ditherMix);
+        gl.uniform1f(L.silkMix, waveMode ? 0 : LAB.silkMix);
+        gl.uniform1f(L.ditherMix, waveMode ? 0 : LAB.ditherMix);
         gl.uniform1f(L.bayerSize, LAB.bayerSize);
         gl.uniform1f(L.colorNum, LAB.colorNum);
         gl.uniform1f(L.pixelSize, LAB.pixelSize);
+        gl.uniform1f(L.worldSpan, worldSpan);
+        gl.uniform1f(L.bandCy, LAB.bandCy);
+        gl.uniform1f(L.viewResY, viewResY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, LAB.bayerSize < 6 ? bayer4 : bayer8);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -598,6 +637,10 @@ void main() {
 
       function frame(ms: number) {
         if (!running) return;
+        if (document.hidden) {
+          rafId = 0;
+          return;
+        }
         rafId = requestAnimationFrame(frame);
 
         if (!activeRef.current) {
