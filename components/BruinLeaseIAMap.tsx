@@ -251,7 +251,7 @@ const CSS = `
   align-items: center;
   gap: 2px;
   transform: scale(1);
-  transition: transform 160ms var(--bl-ia-ease), border-color 160ms var(--bl-ia-ease), background 160ms var(--bl-ia-ease);
+  transition: transform 160ms var(--bl-ia-ease), border-color 160ms var(--bl-ia-ease);
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
