@@ -5,6 +5,8 @@ import { useState } from "react";
 /**
  * BruinLease structure as a flow map.
  * Pain-point channels fold into one app with four destinations.
+ * Mobile (767px, same as the rest of the case study): even 2×2 of
+ * destinations; the selected job's next screens sit under the grid.
  */
 
 const NODES = [
@@ -56,6 +58,7 @@ const COLOR_WRONG = "#C62828";
 
 export default function BruinLeaseIAMap() {
   const [active, setActive] = useState<NodeId>("home");
+  const node = NODES.find((n) => n.id === active) ?? NODES[0];
 
   return (
     <div className="bl-ia">
@@ -100,12 +103,7 @@ export default function BruinLeaseIAMap() {
                     {n.next.map((step) => (
                       <li key={step.label} className="bl-ia-next-item">
                         <span className="bl-ia-line bl-ia-line-v bl-ia-line-short" />
-                        <span className="bl-ia-leaf">
-                          {step.label}
-                          {"note" in step && step.note ? (
-                            <em className="bl-ia-leaf-note">{step.note}</em>
-                          ) : null}
-                        </span>
+                        <Leaf step={step} />
                       </li>
                     ))}
                   </ul>
@@ -113,13 +111,30 @@ export default function BruinLeaseIAMap() {
               );
             })}
           </div>
+
+          <ul className="bl-ia-mobile-flow" aria-label={`${node.label} leads to`}>
+            {node.next.map((step) => (
+              <li key={step.label}>
+                <Leaf step={step} />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
-      <p className="bl-ia-caption">
-        Facebook groups, Reddit threads, Instagram, and texts. What students juggle now, folded into four destinations. Listing stays in the header so it doesn&apos;t compete with seeking.
-      </p>
     </div>
+  );
+}
+
+function Leaf({
+  step,
+}: {
+  step: { label: string; note?: string };
+}) {
+  return (
+    <span className="bl-ia-leaf">
+      {step.label}
+      {step.note ? <em className="bl-ia-leaf-note">{step.note}</em> : null}
+    </span>
   );
 }
 
@@ -142,7 +157,6 @@ const CSS = `
   --bl-ia-border: var(--color-border-subtle);
   --bl-ia-blue: var(--color-ucla-blue);
   --bl-ia-ease: cubic-bezier(0.23, 1, 0.32, 1);
-  --bl-ia-wrong: ${COLOR_WRONG};
   font-family: var(--font-sans);
   color: var(--bl-ia-ink);
   margin-top: 8px;
@@ -193,7 +207,7 @@ const CSS = `
   padding: 0 10px 0 8px;
   border-radius: 8px;
   background: var(--bl-ia-surface);
-  border: 1px solid color-mix(in srgb, var(--bl-ia-wrong) 22%, var(--bl-ia-border));
+  border: 1px solid color-mix(in srgb, ${COLOR_WRONG} 22%, var(--bl-ia-border));
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.1px;
@@ -362,6 +376,7 @@ const CSS = `
   color: var(--bl-ia-sec);
   text-align: center;
   font-style: normal;
+  box-sizing: border-box;
 }
 
 .bl-ia-leaf-note {
@@ -371,12 +386,8 @@ const CSS = `
   color: var(--bl-ia-muted);
 }
 
-.bl-ia-caption {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--bl-ia-muted);
-  text-align: center;
+.bl-ia-mobile-flow {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -385,14 +396,52 @@ const CSS = `
   .bl-ia-node:active { transform: none; }
 }
 
-@media (max-width: 640px) {
-  .bl-ia-plate { padding: 24px 14px 20px; }
-  .bl-ia-fork {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: 300px;
+/* Same cutoff as .cs-stats-row / .cs-process-tools / .cs-d1-columns */
+@media (max-width: 767px) {
+  .bl-ia-plate { padding: 20px 16px; }
+
+  .bl-ia-sources {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 8px;
   }
-  .bl-ia-fork::before { display: none; }
-  .bl-ia-col { padding-top: 12px; }
+  .bl-ia-source {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .bl-ia-fork {
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: none;
+    gap: 8px;
+  }
+  .bl-ia-fork::before,
   .bl-ia-col::before { display: none; }
+  .bl-ia-col { padding-top: 0; width: 100%; }
+  .bl-ia-node { max-width: none; }
+
+  .bl-ia-fork .bl-ia-next { display: none; }
+  .bl-ia-col .bl-ia-next { opacity: 1; }
+
+  .bl-ia-mobile-flow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bl-ia-mobile-flow li {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+  .bl-ia-mobile-flow .bl-ia-leaf {
+    max-width: none;
+  }
 }
 `;

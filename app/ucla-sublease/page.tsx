@@ -333,7 +333,7 @@ const FB = {
   ],
   iaLabel: "The Structure",
   iaHeading: "The hop across Facebook, Reddit, and texts had to become one place.",
-  iaBody: "70% reached out on at least three platforms before finding a place. I mapped BruinLease around what they were already doing. Browse, save, and message in one app.",
+  iaBody: "70% were already reaching out on at least three platforms, which is why I didn't add another feed to check. Browse, save, and message are the jobs they were hopping between, so those became the tabs. Listing stays in the header so seeking still comes first.",
   d1Label: "Design Decision",
   d1Heading: "Condensing apartment info into a standardized format.",
   d1Body: "Based on research insights, I explored card layouts to communicate apartment details without being overwhelming. This is the first interaction with hundreds of listings, so conveying essential info without additional fluff is important.",
