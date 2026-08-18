@@ -16,13 +16,16 @@
   min-height: 0;
   -webkit-tap-highlight-color: transparent;
   touch-action: none; /* let dnd-kit own all touch events */
-  /* Opacity-only — no scale. Scale entrance read as a grow on About/popup. */
-  animation: cdCardEntrance 0.25s ease-out both;
-  animation-delay: var(--entrance-delay, 0ms);
 }
 
-.cardStatic {
-  animation: none;
+/* Opacity-only entrance — no scale (scale read as a grow on About/popup).
+   Opt-in: the class is applied ONLY during a deliberate entrance window (first
+   scroll-into-view mount, and each modal open). Left off by default so that a
+   layout switch (grid⇄carousel) or the live player being re-parented back into
+   the grid tile on close cannot restart the animation. */
+.cardEntering {
+  animation: cdCardEntrance 0.25s ease-out both;
+  animation-delay: var(--entrance-delay, 0ms);
 }
 
 .card:active { cursor: grabbing; }
