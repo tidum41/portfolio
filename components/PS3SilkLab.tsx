@@ -18,7 +18,9 @@
  *
  * v7 is a perf pass: dither itself is one texture lookup. The real cost was
  * sampleSilk (8 sines) running ~11×/pixel because the print 3×3 morph loop
- * always ran, plus a 2× DPR fullscreen buffer vs production's 1× CSS pixels.
+ * always ran, plus the root layout hydrating keep-alives under the lab.
+ * Drawing buffer stays 2× device pixels — dropping that made the ribbons
+ * look slightly crunchier than the v6 lab.
  */
 
 import { useEffect, useRef } from "react";
@@ -37,8 +39,6 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 const FRAME_MS = 1000 / 30;
-/** Match production silk: CSS pixels, not device pixels. Cap so 4K isn't 8M fragments. */
-const MAX_BUFFER_W = 1440;
 
 /** Bayer 2^n via the 2×2 recurrence. Values 0..n²-1, then scaled to 0–255. */
 function bayerRgba(n: 4 | 8): Uint8Array {
@@ -438,9 +438,9 @@ void main() {
     function resize() {
       const rect = wrapper!.getBoundingClientRect();
       wrapperRect = rect;
-      const scale = Math.min(1, MAX_BUFFER_W / Math.max(rect.width, 1));
-      const w = Math.max(2, Math.floor(rect.width * scale));
-      const h = Math.max(2, Math.floor(rect.height * scale));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(2, Math.floor(rect.width * dpr));
+      const h = Math.max(2, Math.floor(rect.height * dpr));
       if (canvas!.width !== w || canvas!.height !== h) {
         canvas!.width = w;
         canvas!.height = h;
@@ -551,13 +551,7 @@ void main() {
     >
       <canvas
         ref={canvasRef}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          background: "transparent",
-          imageRendering: "pixelated",
-        }}
+        style={{ display: "block", width: "100%", height: "100%", background: "transparent" }}
       />
     </div>
   );
