@@ -24,7 +24,9 @@ const C = {
     font: "Helvetica Neue, Arial, sans-serif",
 }
 
-const DESIGN_W = 560
+// iPhone-width design canvas. Every breakpoint renders this same layout
+// and only changes `transform: scale` — never min-size, wrap, or padding.
+const DESIGN_W = 393
 
 const QUARTERS = [
     { value: "spring", label: "Spring 2026", moveIn: "2026-03-25", moveOut: "2026-06-12" },
@@ -48,6 +50,11 @@ function injectPickerStyles() {
     const el = document.createElement("style")
     el.id = "qfm-date-styles"
     el.textContent = `
+        .qfm-date-card,
+        .qfm-quarter-chip {
+            min-height: 0;
+            min-width: 0;
+        }
         .qfm-date-card:focus-visible {
             outline: none;
             box-shadow: 0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05);
@@ -515,10 +522,9 @@ export default function QuarterPicker({
         if (!el) return
         const ro = new ResizeObserver(([entry]) => {
             const w = entry.contentRect.width
-            // Desktop keeps the compact ~0.46 width; mobile matches the phone
-            // mockup frame width used elsewhere on the case study (~77%).
-            // Inner layout is a fixed design canvas — only the outer scale
-            // changes, so mobile is the desktop composition, just smaller.
+            // Same composition at every width. Only the uniform scale changes:
+            // desktop sits at ~46% of the column; mobile matches the phone
+            // mockup frame (~77%) so the artifact reads at a similar size.
             const factor = w <= 520 ? 0.77 : 0.46
             const s = (w / DESIGN_W) * factor
             setScale(s)
@@ -683,6 +689,8 @@ export default function QuarterPicker({
                     ref={innerRef}
                     style={{
                         width: DESIGN_W,
+                        minWidth: DESIGN_W,
+                        maxWidth: DESIGN_W,
                         transformOrigin: "top left",
                         transform: `translateX(${offsetX}px) scale(${scale})`,
                         background: C.background,
@@ -746,11 +754,11 @@ export default function QuarterPicker({
                         </div>
                     )}
 
-                    <div style={{ display: "flex", flexWrap: "nowrap", gap: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {QUARTERS.map((q) => {
                             const isSelected = selected.includes(q.value)
                             const chip: CSSProperties = {
-                                padding: "8px 12px",
+                                padding: "8px 16px",
                                 borderRadius: 9999,
                                 border: isSelected ? `1px solid ${C.uclaBlue}` : `1px solid ${C.border}`,
                                 background: isSelected ? C.blueBg : C.white,
@@ -761,9 +769,7 @@ export default function QuarterPicker({
                                 lineHeight: "20px",
                                 whiteSpace: "nowrap",
                                 userSelect: "none",
-                                width: "100%",
                                 boxSizing: "border-box",
-                                textAlign: "center",
                             }
                             return (
                                 <button
@@ -776,12 +782,12 @@ export default function QuarterPicker({
                                         background: "transparent",
                                         border: "none",
                                         padding: 0,
+                                        margin: 0,
                                         cursor: "pointer",
-                                        flex: "1 1 0",
-                                        minWidth: 0,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        flex: "0 0 auto",
                                         WebkitTapHighlightColor: "transparent",
                                     }}
                                 >
