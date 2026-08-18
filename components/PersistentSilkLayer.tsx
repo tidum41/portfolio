@@ -17,6 +17,9 @@ let sessionVisitedWork = false;
  * Work tab; hides immediately when leaving work — no route afterimage.
  * Show is derived from the primary-tab store so a Work click paints silk
  * this frame, not after `usePathname` catches up.
+ *
+ * Overflow clips a viewport-tall canvas so lab-scale ribbons sit in the
+ * hero band instead of stretching to fill ~280px.
  */
 export default function PersistentSilkLayer() {
   const pathname = usePathname();
