@@ -1,27 +1,46 @@
 "use client";
 
-import { useEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
+import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
+import { ENTRANCE_DEFAULTS, EASE_OPACITY, EASE_EXPAND, type CubicBezier } from "@/lib/motion";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
+const useSafeLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const PANEL_W = 240;
 const PILL_W  = 70;
 const PILL_H  = 28;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
-const EXPAND_EASE = "cubic-bezier(0.25, 0, 0, 1)";
-const FADE_MS = 2000;
-const PICKER_MAX_H = 180;
+
+function cssCubic(c: CubicBezier) {
+  return `cubic-bezier(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})`;
+}
+
+// Morph open/close — same expand curve as site panels (`--expand-ease` /
+// EASE_EXPAND). Open stays prompt; close runs a touch longer so collapse
+// doesn't feel abrupt.
+const OPEN_MS = 220;
+const CLOSE_MS = 280;
+const OPEN_EASE = cssCubic(EASE_EXPAND);
+const CLOSE_EASE = cssCubic(EASE_EXPAND);
+// Same fade-up as EntranceItem / work grid (ENTRANCE_DEFAULTS + EASE_OPACITY).
+const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+const REVEAL_EASE = cssCubic(EASE_OPACITY);
+const REVEAL_Y = ENTRANCE_DEFAULTS.y;
+// This portal stays mounted across soft-nav (`visible` toggles it). First
+// load waits for intro-done; about/archive return replays the same settle.
+const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
 const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
-const DEFAULT_INTENSITY_HT = 0.14; // halftone mode default
+const DEFAULT_INTENSITY_HT = 0.18; // halftone mode default
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
 const DEFAULT_YOFFSET      = 49;
@@ -29,6 +48,13 @@ const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
 const DEFAULT_SPEED        = 1.0;
+// First-pick intensity for any colored preset (index >= 1 in PRESETS below —
+// index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
+// above). Only applied the first time a given preset is picked in a given
+// mode; after that, whatever intensity was last active for that preset+mode
+// (default or user-adjusted) is what's remembered — see presetIntensity state.
+const PRESET_INTENSITY_HT = 0.33;
+const PRESET_INTENSITY_WV = 0.16;
 
 const PRESETS = [
   { swatch: "#CBCBCB", wave: [1.0, 1.0, 1.0] as [number,number,number] },
@@ -53,40 +79,127 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
 function readSavedPos() { try { const r = sessionStorage.getItem(POS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch {} }
 
-function computeNavAlignedPos(): {x:number;y:number} | null {
+// Anchors the pill under the "currently @ JOOLA..." hero line, left-aligned
+// to it at every breakpoint (found via its JOOLA link, since the <p> itself
+// has no stable selector) — that line is an unconstrained-width flex sibling
+// of the heading, so its own left edge already equals the page's real left
+// content edge (page-px in from the true left, whatever --grid-max-w's
+// centering margin is at the current width). Same rule from mobile straight
+// through desktop — instead of the old nav-row-relative logic (docking after
+// "about", or falling back to raw viewport math, or an even earlier version
+// that mirrored to the *right* edge above the mobile breakpoint), which
+// routinely lost that margin or put the pill on the wrong side entirely.
+/** Layout box of `el`, ignoring CSS translates (offset* is transform-agnostic).
+ *  getBoundingClientRect includes the hero subtitle's entrance translateY,
+ *  so docking to it made the menu pill chase the JOOLA / UCLA line. */
+function layoutDocumentRect(el: HTMLElement): { left: number; top: number; width: number; height: number } | null {
+  const width = el.offsetWidth;
+  const height = el.offsetHeight;
+  if (width < 8 || height < 8) return null;
+  let left = 0;
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node) {
+    left += node.offsetLeft;
+    top += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return { left, top, width, height };
+}
+
+function elementTranslation(el: HTMLElement): { x: number; y: number } {
+  const cs = getComputedStyle(el);
+  const t = cs.transform;
+  if (t && t !== "none") {
+    try {
+      const m = new DOMMatrix(t);
+      return { x: m.e, y: m.f };
+    } catch {
+      /* fall through to `translate` */
+    }
+  }
+  const raw = cs.translate;
+  if (raw && raw !== "none") {
+    const parts = raw.trim().split(/\s+/);
+    const n = (v?: string) => {
+      const x = parseFloat(v ?? "0");
+      return Number.isFinite(x) ? x : 0;
+    };
+    return { x: n(parts[0]), y: n(parts[1]) };
+  }
+  return { x: 0, y: 0 };
+}
+
+function untransformedViewportRect(el: HTMLElement): DOMRect | null {
+  const r = el.getBoundingClientRect();
+  if (r.width < 8 || r.height < 8) return null;
+  let dx = 0;
+  let dy = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== document.documentElement) {
+    const { x, y } = elementTranslation(node);
+    dx += x;
+    dy += y;
+    node = node.parentElement;
+  }
+  return new DOMRect(r.left - dx, r.top - dy, r.width, r.height);
+}
+
+function computeHeroAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
-  const navLink = document.querySelector<HTMLElement>('a[href="/about"]') ?? document.querySelector<HTMLElement>('a[href="./about"]');
-  if (!navLink) return null;
-  const navRect = navLink.getBoundingClientRect();
-  const w = window.innerWidth;
-  const containerLeft = w > 1440 ? (w - 1440) / 2 : 0;
+  const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
+  const heroP = joolaLink?.closest("p");
+  if (!heroP) return null;
+  // Prefer offset chain (ignores transforms). Fall back to undoing matrices
+  // if an offsetParent is missing (transformed containing blocks).
+  const layout = layoutDocumentRect(heroP);
+  if (layout) {
+    return {
+      x: Math.round(layout.left),
+      y: Math.round(layout.top + layout.height + 16),
+    };
+  }
+  const r = untransformedViewportRect(heroP);
+  if (!r) return null;
   return {
-    x: Math.round(containerLeft + 24 + window.scrollX),
-    y: Math.round(navRect.top + navRect.height / 2 - PILL_H / 2 + window.scrollY),
+    x: Math.round(r.left + window.scrollX),
+    y: Math.round(r.bottom + 16 + window.scrollY),
   };
+}
+
+function computeNavAlignedPos(): {x:number;y:number} | null {
+  return computeHeroAlignedPos();
 }
 
 function shouldFlip(pillY: number) {
   if (typeof window === "undefined") return false;
   const vy = pillY - window.scrollY;
-  return window.innerHeight - vy - PILL_H - EDGE_PAD < BODY_H && vy - EDGE_PAD >= BODY_H;
+  const spaceBelow = window.innerHeight - (vy + PILL_H) - EDGE_PAD * 2;
+  const spaceAbove = vy - EDGE_PAD * 2;
+  return spaceBelow < 420 && spaceAbove > spaceBelow;
 }
 
 function getGeometry(pillPos: {x:number;y:number}, isOpen: boolean, flipped: boolean) {
   if (typeof window === "undefined") return { w: PILL_W, maxH: PILL_H, r: PILL_H / 2, left: 0, top: 0, clampedBodyH: BODY_H };
   const docW = document.documentElement.scrollWidth;
   const viewportH = window.innerHeight;
-  const maxBodyH = Math.max(120, viewportH - PILL_H - EDGE_PAD * 3);
-  const clampedBodyH = Math.min(BODY_H, maxBodyH);
+  const vy = pillPos.y - window.scrollY;
+
+  const spaceBelow = Math.max(100, viewportH - (vy + PILL_H) - EDGE_PAD * 2);
+  const spaceAbove = Math.max(100, vy - EDGE_PAD * 2);
+  const availH = flipped ? spaceAbove : spaceBelow;
+  const clampedBodyH = Math.max(140, Math.min(BODY_H, Math.floor(availH)));
+
   const w = isOpen ? PANEL_W : PILL_W;
   const maxH = isOpen ? PILL_H + clampedBodyH : PILL_H;
-  // PS3 XMB feel: rectangular button (not pill) when closed, gently rounded panel when open.
   const r = isOpen ? 14 : 8;
-  const rightEdge = pillPos.x + PILL_W;
-  const left = Math.max(EDGE_PAD, Math.min(rightEdge - w, docW - w - EDGE_PAD));
+
+  const targetLeft = pillPos.x;
+  const left = Math.max(EDGE_PAD, Math.min(targetLeft, docW - w - (isOpen ? EDGE_PAD : 0)));
   const top = flipped && isOpen
     ? Math.max(EDGE_PAD, pillPos.y + PILL_H - maxH)
     : Math.max(EDGE_PAD, pillPos.y);
+
   return { w, maxH, r, left, top, clampedBodyH };
 }
 
@@ -127,56 +240,185 @@ function hslToHex(h: number, s: number, l: number) {
   return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
 }
 
-// ── Custom Slider ──────────────────────────────────────────────────────────
-// Visually identical to the old input[type=range] style (2px track,
-// 5px×14px thumb) but built on pointer events + setPointerCapture so the
-// thumb reliably follows the finger on mobile — native range inputs lose the
-// drag if touch briefly leaves the element or the parent steals the event.
+function preventTextSelect(e?: React.PointerEvent) {
+  if (e) { try { e.preventDefault(); } catch {} }
+  try { window.getSelection()?.removeAllRanges(); } catch {}
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "none";
+    (document.body.style as { webkitUserSelect?: string }).webkitUserSelect = "none";
+  }
+}
+
+function restoreTextSelect() {
+  if (typeof document !== "undefined") {
+    document.body.style.userSelect = "";
+    (document.body.style as { webkitUserSelect?: string }).webkitUserSelect = "";
+  }
+}
+
+// ── Minimal Design-Engineer Custom Slider ────────────────────────────────────
 const Slider = memo(function Slider({
-  min, max, step, value, onChange, isDark,
+  min, max, step, value, onChange, label, isDark
 }: {
   min: number; max: number; step: number; value: number;
-  onChange: (v: number) => void; isDark: boolean;
+  onChange: (v: number) => void; label: string; isDark: boolean;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered]   = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const trackRef                    = useRef<HTMLDivElement>(null);
+
+  const clamp = useCallback((v: number) => Math.max(min, Math.min(max, v)), [min, max]);
+
   const valueFromClientX = useCallback((clientX: number) => {
     const el = trackRef.current;
     if (!el) return value;
     const rect = el.getBoundingClientRect();
-    const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const raw  = min + pct * (max - min);
-    const snapped = min + Math.round((raw - min) / step) * step;
-    return parseFloat(Math.max(min, Math.min(max, snapped)).toFixed(10));
-  }, [min, max, step, value]);
-  const pct    = ((value - min) / (max - min)) * 100;
-  const filled = isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)";
-  const empty  = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-  const thumb  = isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.65)";
+    if (rect.width <= 0) return value;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const raw = min + pct * (max - min);
+    const stepped = Math.round(raw / step) * step;
+    return clamp(Number(stepped.toFixed(4)));
+  }, [min, max, step, value, clamp]);
+
+  const active = isHovered || isDragging;
+  const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+
+  // One ink family: track is a quieter cut of the same stroke as fill+thumb
+  // so the vertical button reads as part of the line, not a separate layer.
+  const ink       = isDark ? "255,255,255" : "0,0,0";
+  const trackBg   = `rgba(${ink},0.18)`;
+  const filledBg  = active ? `rgba(${ink},0.72)` : `rgba(${ink},0.55)`;
+  const thumbColor = filledBg;
+
   return (
-    <div ref={trackRef}
-      style={{ position: "relative", height: 44, display: "flex", alignItems: "center", touchAction: "none", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-      onPointerDown={e => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); onChange(valueFromClientX(e.clientX)); }}
-      onPointerMove={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) return; onChange(valueFromClientX(e.clientX)); }}
-      onPointerUp={e => e.currentTarget.releasePointerCapture(e.pointerId)}
-      onPointerCancel={e => e.currentTarget.releasePointerCapture(e.pointerId)}
+    <div
+      ref={trackRef}
+      role="slider"
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      tabIndex={0}
+      className="ps3cp-slider-track"
+      style={{
+        position: "relative",
+        height: 24,
+        display: "flex",
+        alignItems: "center",
+        touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        cursor: "pointer",
+      } as React.CSSProperties}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
+      onPointerDown={e => {
+        e.stopPropagation();
+        preventTextSelect(e);
+        setIsDragging(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        onChange(valueFromClientX(e.clientX));
+      }}
+      onPointerMove={e => {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        preventTextSelect(e);
+        onChange(valueFromClientX(e.clientX));
+      }}
+      onPointerUp={e => {
+        setIsDragging(false);
+        restoreTextSelect();
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+      }}
+      onPointerCancel={e => {
+        setIsDragging(false);
+        restoreTextSelect();
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+      }}
+      onKeyDown={e => {
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(clamp(value + step)); }
+        else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(clamp(value - step)); }
+        else if (e.key === "Home") { e.preventDefault(); onChange(min); }
+        else if (e.key === "End") { e.preventDefault(); onChange(max); }
+      }}
     >
-      {/* Track */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: `linear-gradient(to right,${filled} 0%,${filled} ${pct}%,${empty} ${pct}%,${empty} 100%)` }} />
-      {/* Thumb */}
-      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: 5, height: 14, borderRadius: 2, backgroundColor: thumb, transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: trackBg }} />
+      <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: filledBg, transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)" }} />
+      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbColor, boxShadow: isDark ? "0 1px 2px rgba(0,0,0,0.35)" : "0 1px 2px rgba(0,0,0,0.12)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
     </div>
   );
 });
 
 // ── Icons ──────────────────────────────────────────────────────────────────
-function ChevronDown({ size = 10, color = "currentColor" }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline points="6 9 12 15 18 9" /></svg>;
+function ChevronDown({ size = 10, color = "currentColor", polyRef }: { size?: number; color?: string; polyRef?: React.Ref<SVGPolylineElement> }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polyline ref={polyRef} points="6 9 12 15 18 9" /></svg>;
 }
 function Minus({ size = 11 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 }
 function Reset({ size = 11 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+  // Single path so the arrow + arc share one stroke (no stacked translucent joins).
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5" />
+    </svg>
+  );
+}
+function Plus({ size = 9, color = "currentColor" }: { size?: number; color?: string }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
+}
+function PS3TriangleGlyph({ size = 9, color = "currentColor" }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><polygon points="12 3 22 21 2 21" /></svg>;
+}
+function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0 }} aria-hidden><circle cx="12" cy="12" r="9" /></svg>;
+}
+
+// ── Chevron/label optical alignment ─────────────────────────────────────────
+// "menu" renders in --font-sans, which is "HN" (a local() alias for the
+// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
+// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
+// (Android, Windows, Linux) the stack lands on a substitute with different
+// ascent/descent proportions, so a marginTop tuned by eye against one font's
+// glyph metrics reads as misaligned against another's. Rather than guess a
+// static px value that only holds for whichever font the tuner happened to
+// have installed, measure the *actual* rendered ink of both the chevron and
+// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
+// for the stroke — and compute the delta needed to center them on each
+// other, whatever font actually won the fallback chain on this device.
+function useLabelOpticalOffset(
+  chevronRef: React.RefObject<SVGPolylineElement | null>,
+  labelRef: React.RefObject<HTMLSpanElement | null>,
+) {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const chevron = chevronRef.current, label = labelRef.current;
+    if (!chevron || !label) return;
+    function measure() {
+      if (!chevron || !label) return;
+      const ctx = document.createElement("canvas").getContext("2d");
+      if (!ctx) return;
+      const cs = getComputedStyle(label);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = ctx.measureText(label.textContent || "");
+      if (m.fontBoundingBoxAscent === undefined || m.actualBoundingBoxAscent === undefined) return;
+      const labelRect = label.getBoundingClientRect();
+      const halfLeading = (labelRect.height - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2;
+      const baselineFromTop = halfLeading + m.fontBoundingBoxAscent;
+      const inkCenterFromTop = baselineFromTop + (m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) / 2;
+      const labelInkCenterY = labelRect.top + inkCenterFromTop;
+      const chevronRect = chevron.getBoundingClientRect();
+      const chevronInkCenterY = chevronRect.top + chevronRect.height / 2;
+      // Accumulate: if we already applied a marginTop from a prior measure
+      // (e.g. fonts.ready re-run), the live delta is the remaining error —
+      // adding it avoids double-correcting against the shifted label.
+      const delta = chevronInkCenterY - labelInkCenterY;
+      if (Math.abs(delta) < 0.25) return;
+      setOffset(prev => prev + delta);
+    }
+    measure();
+    document.fonts?.ready?.then(measure).catch(() => {});
+  }, [chevronRef, labelRef]);
+  return offset;
 }
 
 // ── Expand/collapse section ─────────────────────────────────────────────────
@@ -186,8 +428,8 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
       maxHeight: open ? maxH : 0, overflow: "hidden",
       opacity: open ? 1 : 0,
       transition: open
-        ? `max-height 320ms ${EXPAND_EASE}, opacity 220ms ease`
-        : `max-height 240ms ${EXPAND_EASE}, opacity 160ms ease`,
+        ? `max-height ${OPEN_MS}ms ${OPEN_EASE}, opacity 120ms ${OPEN_EASE}`
+        : `max-height ${CLOSE_MS}ms ${CLOSE_EASE}, opacity 140ms ${CLOSE_EASE}`,
       pointerEvents: open ? "auto" : "none",
     }}>
       {children}
@@ -195,16 +437,17 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
   );
 }
 
-// ── Color picker ────────────────────────────────────────────────────────────
+// ── Color picker (Minimal, Pixel-Perfect Canvas + Hue Track) ────────────────
 const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
-  const svRef      = useRef<HTMLDivElement>(null);
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const isDragging = useRef(false);
+  const svRef       = useRef<HTMLDivElement>(null);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const hueRef      = useRef<HTMLDivElement>(null);
+  const isSvDrag    = useRef(false);
+  const isHueDrag   = useRef(false);
 
-  const [hsl, setHsl]         = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
-  const [hexDraft, setHexDraft] = useState((value || "#999999").toUpperCase());
+  const [hsl, setHsl] = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
 
-  useEffect(() => { if (value) { setHsl(hexToHsl(value)); setHexDraft(value.toUpperCase()); } }, [value]);
+  useEffect(() => { if (value) { setHsl(hexToHsl(value)); } }, [value]);
 
   const drawCanvas = useCallback((hue: number) => {
     const canvas = canvasRef.current;
@@ -244,9 +487,22 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
     const S = L === 0 || L === 1 ? 0 : (val - L) / Math.min(L, 1 - L);
     const newHsl: [number,number,number] = [hue, S * 100, L * 100];
     setHsl(newHsl);
-    const hex = hslToHex(newHsl[0], newHsl[1], newHsl[2]);
-    setHexDraft(hex.toUpperCase()); onChange(hex);
+    onChange(hslToHex(newHsl[0], newHsl[1], newHsl[2]));
   }, [onChange]);
+
+  const applyHueFromClientX = useCallback((clientX: number) => {
+    const el = hueRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pad = 7;
+    const availW = Math.max(1, rect.width - pad * 2);
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left - pad) / availW));
+    const newHue = Math.round(pct * 360);
+    const newHsl: [number,number,number] = [newHue, hsl[1], hsl[2]];
+    setHsl(newHsl);
+    drawCanvas(newHue);
+    onChange(hslToHex(newHue, hsl[1], hsl[2]));
+  }, [hsl, drawCanvas, onChange]);
 
   const getSVFromCanvas = useCallback((e: React.PointerEvent) => {
     const rect = svRef.current!.getBoundingClientRect();
@@ -264,47 +520,71 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
     return { svX: sv_s * 100, svY: (1 - v) * 100 };
   }, [hsl]);
 
+  const huePct = Math.max(0, Math.min(100, (hsl[0] / 360) * 100));
+
   return (
-    <div onPointerDown={e => e.stopPropagation()}>
-      <div ref={svRef} style={{ position: "relative", width: "100%", height: 80, borderRadius: 2, overflow: "hidden", marginBottom: 6, touchAction: "none" }}
-        onPointerDown={e => { isDragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerMove={e => { if (!isDragging.current) return; applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerUp={() => { isDragging.current = false; }}
+    <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* SV Canvas */}
+      <div ref={svRef} style={{ position: "relative", width: "100%", height: 86, borderRadius: 5, overflow: "hidden", touchAction: "none", cursor: "crosshair", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
+        onPointerDown={e => { preventTextSelect(e); isSvDrag.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerMove={e => { if (!isSvDrag.current) return; preventTextSelect(e); applySV(...getSVFromCanvas(e), hsl[0]); }}
+        onPointerUp={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
+        onPointerCancel={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
       >
         <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "repeating-linear-gradient(to bottom,transparent 0px,transparent 2px,rgba(0,0,0,0.035) 2px,rgba(0,0,0,0.035) 3px)" }} />
-        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 0 0 1.5px rgba(0,0,0,0.35),0 1px 4px rgba(0,0,0,0.25)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid #ffffff", boxShadow: "0 0 0 1px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
       </div>
 
-      <div style={{ position: "relative", height: 44, display: "flex", alignItems: "center", marginBottom: 6 }}>
-        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 5, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: "linear-gradient(to right,hsl(0,90%,52%),hsl(30,90%,52%),hsl(60,90%,52%),hsl(90,90%,52%),hsl(120,90%,52%),hsl(150,90%,52%),hsl(180,90%,52%),hsl(210,90%,52%),hsl(240,90%,52%),hsl(270,90%,52%),hsl(300,90%,52%),hsl(330,90%,52%),hsl(360,90%,52%))" }} />
-        <input type="range" min={0} max={360} step={1} value={Math.round(hsl[0])}
-          style={{ position: "relative", zIndex: 1, width: "100%", height: 44, background: "transparent", appearance: "none", WebkitAppearance: "none", outline: "none", margin: 0, padding: 0, touchAction: "none" }}
-          onPointerDown={e => e.stopPropagation()}
-          onChange={e => {
-            const h = parseFloat(e.target.value);
-            const newHsl: [number,number,number] = [h, hsl[1], hsl[2]];
-            setHsl(newHsl); drawCanvas(h);
-            const hex = hslToHex(h, hsl[1], hsl[2]);
-            setHexDraft(hex.toUpperCase()); onChange(hex);
-          }}
-        />
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 8.5, fontWeight: 600, letterSpacing: "0.09em", color: "rgba(0,0,0,0.28)", flexShrink: 0 }}>HEX</span>
-        <input
-          value={hexDraft}
-          onChange={e => {
-            const raw = e.target.value.replace(/[^0-9a-fA-F#]/g, "");
-            setHexDraft(raw.toUpperCase());
-            const hex = raw.startsWith("#") ? raw : "#" + raw;
-            if (/^#[0-9a-fA-F]{6}$/.test(hex)) { setHsl(hexToHsl(hex)); onChange(hex.toLowerCase()); }
-          }}
-          onPointerDown={e => e.stopPropagation()}
-          maxLength={7} spellCheck={false}
-          style={{ flex: 1, height: 20, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 2, fontSize: 10, letterSpacing: "0.07em", color: "rgba(0,0,0,0.58)", padding: "0 5px", outline: "none", textTransform: "uppercase", boxSizing: "border-box", fontFamily: "monospace", minWidth: 0 }}
-        />
+      {/* Custom Precision Hue Rail (Zero Clipping) */}
+      <div
+        ref={hueRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: 12,
+          borderRadius: 6,
+          touchAction: "none",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          cursor: "pointer",
+          background: "linear-gradient(to right, hsl(0,95%,52%), hsl(30,95%,52%), hsl(60,95%,52%), hsl(90,95%,52%), hsl(120,95%,52%), hsl(150,95%,52%), hsl(180,95%,52%), hsl(210,95%,52%), hsl(240,95%,52%), hsl(270,95%,52%), hsl(300,95%,52%), hsl(330,95%,52%), hsl(360,95%,52%))",
+          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+        } as React.CSSProperties}
+        onPointerDown={e => {
+          preventTextSelect(e);
+          isHueDrag.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          applyHueFromClientX(e.clientX);
+        }}
+        onPointerMove={e => {
+          if (!isHueDrag.current) return;
+          preventTextSelect(e);
+          applyHueFromClientX(e.clientX);
+        }}
+        onPointerUp={e => {
+          isHueDrag.current = false;
+          restoreTextSelect();
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+        }}
+        onPointerCancel={e => {
+          isHueDrag.current = false;
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+        }}
+      >
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: `calc(7px + (${huePct} / 100) * (100% - 14px))`,
+          width: 14,
+          height: 14,
+          borderRadius: "50%",
+          backgroundColor: "#ffffff",
+          border: "2px solid #ffffff",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.25)",
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
+          transition: "left 40ms linear",
+        }} />
       </div>
     </div>
   );
@@ -313,33 +593,61 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
 .ps3cp,.ps3cp * { cursor: none !important; }
-.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent!important;outline:none;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
+.ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
 .ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
 html[data-theme=dark] .ps3cp input[type=range]::-webkit-slider-thumb { background:rgba(255,255,255,0.72); }
 .ps3cp input[type=range]::-moz-range-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-moz-range-thumb { width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);border:none;margin-top:-4px; }
 html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rgba(255,255,255,0.72); }
-.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.28);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp input[type=range]:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp input[type=range]:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-slider-track:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 4px; border-radius: 2px; }
+html[data-theme=dark] .ps3cp-slider-track:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-header:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: -3px; border-radius: 999px; }
+html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.72);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
+.ps3cp-ibtn svg { display:block; opacity:1; }
 .ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
-.ps3cp-ibtn:hover { color:rgba(0,0,0,0.55); }
+.ps3cp-ibtn:hover { color:rgba(0,0,0,0.88); }
 .ps3cp-ibtn:active { transform:scale(0.96); }
-.ps3cp-swatch-btn { position:relative;border:none;padding:0;outline:none;transition:transform 150ms ease,border-color 150ms ease; }
-.ps3cp-swatch-btn::before { content:"";position:absolute;inset:-6px; }
-.ps3cp-swatch-btn:active { transform:scale(0.96)!important; }
+.ps3cp-ibtn:focus-visible { outline:2px solid rgba(0,0,0,0.65); outline-offset:2px; }
+html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255,0.72); }
+.ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
+.ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
+.ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
+.ps3cp-swatch-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; }
 .ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
 .ps3cp-mode-btn:active { transform:scale(0.96); }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
 .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
+.ps3cp-color-swatch:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
+html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
-export default function PS3ControlPanel() {
+export default function PS3ControlPanel({
+  instantReturn = false,
+  visible = true,
+}: {
+  instantReturn?: boolean;
+  /** When false (off work route), hide the body portal without unmounting. */
+  visible?: boolean;
+}) {
   const dk = useDialKit("PS3 Pill", {
-    chevronOffset:  [-1.5, -4, 4, 0.5],
+    // Optical lift for the whole chevron+"menu" unit inside the pill.
+    // Lowercase text + downward chevron read heavy when geometrically
+    // centered — default −1px. Relative chevron↔label alignment is still
+    // handled by useLabelOpticalOffset; menuTextOffset is a fine-tune on top.
+    chevronOffset:  [-1, -4, 2, 0.5],
     pillGap:        [4,    2, 10, 0.5],
-    menuTextOffset: [-3.5, -4, 4, 0.5],
+    menuTextOffset: [0, -4, 4, 0.5],
   });
+
+  const chevronPolyRef  = useRef<SVGPolylineElement>(null);
+  const menuLabelRef    = useRef<HTMLSpanElement>(null);
+  const labelAutoOffset = useLabelOpticalOffset(chevronPolyRef, menuLabelRef);
 
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
@@ -351,6 +659,7 @@ export default function PS3ControlPanel() {
   const isVeryFirstLoad = useRef(!_ps3cpHasLoaded);
   const savedPos        = useRef<{x:number;y:number} | null>(typeof window !== "undefined" ? readSavedPos() : null);
   const hasDraggedRef   = useRef(savedPos.current !== null);
+  const revealKindRef   = useRef<"first" | "return" | "instant">("first");
 
   const [portalEl, setPortalEl]         = useState<HTMLElement | null>(null);
   const [pillPos, setPillPos]           = useState(savedPos.current ?? { x: 0, y: 0 });
@@ -358,14 +667,15 @@ export default function PS3ControlPanel() {
   const [isOpen, setIsOpen]             = useState(false);
   const [flipped, setFlipped]           = useState(false);
   const [isDragging, setIsDragging]     = useState(false);
-  const [shown, setShown]               = useState(!isVeryFirstLoad.current);
+  const [shown, setShown]               = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [positionSettled, setPositionSettled] = useState(
     savedPos.current !== null && !isVeryFirstLoad.current
   );
 
-  const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT); // halftone
-  const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV); // wave
+  const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT);
+  const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV);
+  const [presetIntensity, setPresetIntensity] = useState<Record<string, number>>({});
   const [mouseStr,     setMouseStr]     = useState(DEFAULT_MOUSE_STR);
   const [yOffset,      setYOffset]      = useState(DEFAULT_YOFFSET);
   const [waveColor,    setWaveColor]    = useState<[number,number,number]>(() =>
@@ -382,6 +692,7 @@ export default function PS3ControlPanel() {
     typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") === "dark" : true
   );
   const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
+  const reduced = useReducedMotion();
 
   // Portal setup
   useEffect(() => {
@@ -392,6 +703,15 @@ export default function PS3ControlPanel() {
     setPortalEl(el);
     return () => { try { el.remove(); } catch {} };
   }, []);
+
+  // Soft-nav leave/return: hide body portal without remounting (remount was a
+  // measured hitch on Work↔About). Parent display:none cannot hide this portal.
+  useEffect(() => {
+    if (!portalEl) return;
+    portalEl.style.display = visible ? "" : "none";
+    portalEl.style.pointerEvents = visible ? "auto" : "none";
+    portalEl.setAttribute("aria-hidden", visible ? "false" : "true");
+  }, [portalEl, visible]);
 
   // Inject CSS once
   useEffect(() => {
@@ -422,20 +742,44 @@ export default function PS3ControlPanel() {
     return () => window.removeEventListener("ps3-mode-sync", h);
   }, []);
 
-  // Find nav-aligned position
-  useEffect(() => {
+  // Find the live hero alignment before paint. A normal effect plus the old
+  // 200ms retry left every remounted pill behind the work entrance, even when
+  // the anchor was already in the DOM.
+  useSafeLayoutEffect(() => {
     if (savedPos.current) return;
+    const applyPos = (pos: {x:number;y:number}) => {
+      if (hasDraggedRef.current) return;
+      setPillPos(pos);
+      setFlipped(shouldFlip(pos.y));
+      setPosReady(true);
+    };
     const findAndPlace = (attempt: number) => {
+      if (hasDraggedRef.current) return;
       const pos = computeNavAlignedPos();
       if (pos) {
-        startTransition(() => { setPillPos(pos); setFlipped(shouldFlip(pos.y)); setPosReady(true); });
+        applyPos(pos);
         return;
       }
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
-      const w = window.innerWidth, lp = w > 768 ? 40 : w > 360 ? 32 : 24, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
-      startTransition(() => { setPillPos({ x: cl + lp + window.scrollX, y: EDGE_PAD + window.scrollY }); setFlipped(false); setPosReady(true); });
+      const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
+      applyPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY });
     };
-    setTimeout(() => findAndPlace(0), 200);
+    findAndPlace(0);
+    // Re-read the untransformed rest box when the subtitle starts and when
+    // webfonts settle — both used to shift the JOOLA / UCLA line (and wrap
+    // it on mobile) after the first measure.
+    let cancelled = false;
+    const reanchor = () => {
+      if (cancelled) return;
+      const pos = computeNavAlignedPos();
+      if (pos) applyPos(pos);
+    };
+    window.addEventListener("intro-done", reanchor);
+    document.fonts?.ready.then(reanchor);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("intro-done", reanchor);
+    };
   }, []);
 
   // Reposition on resize (unless user has dragged)
@@ -450,24 +794,86 @@ export default function PS3ControlPanel() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // posReady: handle show timing
-  useEffect(() => {
+  // Work was display:none on About/Archive, so the hero rect was 0. Re-read
+  // alignment whenever the pill becomes visible again (and after soft-nav
+  // layout has flushed). Skip if the user dragged it.
+  useSafeLayoutEffect(() => {
+    if (!visible) return;
+    if (hasDraggedRef.current) return;
+    let cancelled = false;
+    const place = () => {
+      if (cancelled || hasDraggedRef.current) return;
+      const pos = computeNavAlignedPos();
+      if (!pos) return;
+      startTransition(() => {
+        setPillPos(pos);
+        setFlipped(shouldFlip(pos.y));
+        setPosReady(true);
+      });
+    };
+    place();
+    const raf = requestAnimationFrame(() => requestAnimationFrame(place));
+    window.addEventListener("soft-nav-settled", place);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("soft-nav-settled", place);
+    };
+  }, [visible]);
+
+  // posReady: same EntranceItem settle for first load (after intro-done)
+  // and about/archive return. Case-study Back snaps.
+  useSafeLayoutEffect(() => {
     if (!posReady) return;
-    if (!isVeryFirstLoad.current) {
-      startTransition(() => setShown(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => setPositionSettled(true)));
+    if (!visible) {
+      setShown(false);
+      setShowTransition(false);
       return;
     }
-    const t = setTimeout(() => {
+    const revealImmediately = () => {
+      setShowTransition(false);
+      setShown(true);
+      setPositionSettled(true);
+    };
+    if (instantReturn) {
+      revealKindRef.current = "instant";
+      revealImmediately();
+      _ps3cpHasLoaded = true;
+      return;
+    }
+    if (!isVeryFirstLoad.current) {
+      revealKindRef.current = "return";
+      if (reduced) {
+        revealImmediately();
+        return;
+      }
       startTransition(() => setShowTransition(true));
       requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
         setShown(true); setPositionSettled(true);
       })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), FADE_MS + 200);
+      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+      return;
+    }
+    revealKindRef.current = "first";
+    function reveal() {
+      if (reduced) {
+        revealImmediately();
+      } else {
+        startTransition(() => setShowTransition(true));
+        requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
+          setShown(true); setPositionSettled(true);
+        })));
+        setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+      }
       _ps3cpHasLoaded = true;
-    }, 400);
-    return () => clearTimeout(t);
-  }, [posReady]);
+    }
+    if (!document.documentElement.hasAttribute("data-intro")) {
+      reveal();
+      return;
+    }
+    window.addEventListener("intro-done", reveal, { once: true });
+    return () => window.removeEventListener("intro-done", reveal);
+  }, [instantReturn, posReady, reduced, visible]);
 
   // Sync dark mode from html[data-theme]
   useEffect(() => {
@@ -509,7 +915,6 @@ export default function PS3ControlPanel() {
     if (patch.speed         !== undefined) startTransition(() => setSpeed(patch.speed!));
     if (patch.waveColor     !== undefined) { startTransition(() => setWaveColor(patch.waveColor!)); saveWaveColor(patch.waveColor!); }
     if (patch.mode          !== undefined) { startTransition(() => setMode(patch.mode!)); saveMode(patch.mode!); }
-    // When switching mode without an explicit intensity, dispatch the stored intensity for the new mode
     const payload: Record<string, unknown> = { ...patch as Record<string, unknown> };
     if (patch.mode !== undefined && patch.intensity === undefined) {
       payload.intensity = patch.mode === 1 ? intensityHt : intensityWv;
@@ -524,66 +929,96 @@ export default function PS3ControlPanel() {
     setOpenColorPicker(null);
   }
 
-  // Drag logic
+  // Drag logic — only flip `isDragging` once past the click threshold.
+  // Setting it on pointerdown used to force `transition: none` for the
+  // subsequent open/close toggle, so the pill→panel morph snapped instead
+  // of animating (isOpen committed while isDragging was still true).
+  // Listeners are bound synchronously here (not via useEffect) so a quick
+  // click can't miss pointerup before React re-renders.
   const startDrag = useCallback((e: React.PointerEvent) => {
     if ((e.target as Element).closest("button, label, input")) return;
-    didDragRef.current = false; dragStartedRef.current = true;
+    if (dragStartedRef.current) return;
+    didDragRef.current = false;
+    dragStartedRef.current = true;
     dragInHeaderRef.current = headerRef.current?.contains(e.target as Node) ?? false;
-    dragRef.current = { startX: e.pageX, startY: e.pageY, origX: pillPos.x, origY: pillPos.y };
-    startTransition(() => setIsDragging(true));
-  }, [pillPos]);
+    const origX = pillPos.x;
+    const origY = pillPos.y;
+    const openAtStart = isOpen;
+    dragRef.current = { startX: e.pageX, startY: e.pageY, origX, origY };
 
-  useEffect(() => {
-    if (!isDragging && !dragStartedRef.current) return;
-    const onMove = (e: PointerEvent) => {
+    const onMove = (ev: PointerEvent) => {
       if (!dragRef.current) return;
-      const dx = e.pageX - dragRef.current.startX, dy = e.pageY - dragRef.current.startY;
-      if (Math.abs(dx) + Math.abs(dy) > 4) didDragRef.current = true;
+      const dx = ev.pageX - dragRef.current.startX;
+      const dy = ev.pageY - dragRef.current.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) {
+        if (!didDragRef.current) {
+          didDragRef.current = true;
+          setIsDragging(true);
+        }
+      }
       if (!didDragRef.current) return;
-      const docW = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
-      const cw = isOpen ? PANEL_W : PILL_W;
+      const docW = document.documentElement.scrollWidth;
+      const docH = document.documentElement.scrollHeight;
+      const cw = openAtStart ? PANEL_W : PILL_W;
       const dragged = {
-        x: Math.max(EDGE_PAD + cw - PILL_W, Math.min(dragRef.current.origX + dx, docW - PILL_W - EDGE_PAD)),
+        x: Math.max(EDGE_PAD, Math.min(dragRef.current.origX + dx, docW - cw - EDGE_PAD)),
         y: Math.max(EDGE_PAD, Math.min(dragRef.current.origY + dy, docH - PILL_H - EDGE_PAD)),
       };
-      savePos(dragged); hasDraggedRef.current = true;
-      startTransition(() => setPillPos(dragged));
+      savePos(dragged);
+      hasDraggedRef.current = true;
+      setPillPos(dragged);
     };
+
     const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       if (!dragStartedRef.current) return;
-      dragStartedRef.current = false; startTransition(() => setIsDragging(false));
-      const wasDrag = didDragRef.current, wasHeader = dragInHeaderRef.current;
-      dragRef.current = null; didDragRef.current = false; dragInHeaderRef.current = false;
+      dragStartedRef.current = false;
+      // Clear drag flag synchronously *before* toggling open so morphT
+      // still includes width/height when isOpen flips in this same turn.
+      setIsDragging(false);
+      const wasDrag = didDragRef.current;
+      const wasHeader = dragInHeaderRef.current;
+      dragRef.current = null;
+      didDragRef.current = false;
+      dragInHeaderRef.current = false;
       if (wasDrag) return;
       if (!wasHeader) return;
-      if (isOpen) startTransition(() => setIsOpen(false));
-      else startTransition(() => { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); });
+      if (openAtStart) setIsOpen(false);
+      else { setFlipped(shouldFlip(origY)); setIsOpen(true); }
     };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-  }, [isDragging, isOpen, pillPos.y]);
+    window.addEventListener("pointercancel", onUp);
+  }, [pillPos, isOpen]);
 
-  // Derived styling — close is faster than open (snappy dismissal) but keeps
-  // the same ease-out family; ease-in would delay the start of the collapse,
-  // the exact moment the user's eye is on it.
-  const dur = isOpen ? `320ms ${EXPAND_EASE}` : `200ms ${EXPAND_EASE}`;
+  const dur = isOpen ? `${OPEN_MS}ms ${OPEN_EASE}` : `${CLOSE_MS}ms ${CLOSE_EASE}`;
+  // Keep morph transitions on their own string — never share a node with
+  // `.intro-hide` (that class sets `transition: opacity … !important` and
+  // wipes width/height morph). Reveal uses EntranceItem fade-up tokens.
   const baseMorphParts = [
-    `width ${dur}`, `height ${dur}`, `max-height ${dur}`,
-    `border-radius ${isOpen ? `300ms ${EXPAND_EASE}` : `180ms ${EXPAND_EASE}`}`,
-    `left ${dur}`, `top ${dur}`, "background-color 300ms ease", "border-color 300ms ease",
+    `width ${dur}`,
+    `height ${dur}`,
+    `max-height ${dur}`,
+    `border-radius ${dur}`,
+    `left ${dur}`,
+    `top ${dur}`,
+    "background-color 200ms ease",
+    "border-color 200ms ease",
   ];
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${FADE_MS}ms ease-out` : "none")
-    : (showTransition ? [...baseMorphParts, `opacity ${FADE_MS}ms ease-out`].join(", ") : baseMorphParts.join(", "));
+    ? (showTransition ? `opacity ${REVEAL_MS}ms ${REVEAL_EASE}, transform ${REVEAL_MS}ms ${REVEAL_EASE}` : "none")
+    : (showTransition
+      ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
+      : baseMorphParts.join(", "));
 
   const geo = getGeometry(pillPos, isOpen, flipped);
 
   const isDefaultWave = waveColor[0] > 0.9 && waveColor[1] > 0.9 && waveColor[2] > 0.9;
   const wr = Math.round(waveColor[0] * 255), wg = Math.round(waveColor[1] * 255), wb = Math.round(waveColor[2] * 255);
   const tintAmt = isDefaultWave ? 0 : 0.06;
-  // PS3 base: deep midnight blue-black (6,8,18) vs flat near-black (16,16,16).
-  // The subtle blue undertone is characteristic of PS3 XMB's dark void aesthetic.
   const [baseBgR, baseBgG, baseBgB] = isDark ? [20, 20, 20] : [252, 252, 252];
   const bgR = Math.round(baseBgR * (1 - tintAmt) + wr * tintAmt);
   const bgG = Math.round(baseBgG * (1 - tintAmt) + wg * tintAmt);
@@ -592,7 +1027,6 @@ export default function PS3ControlPanel() {
   const pillBorder = isDark
     ? "rgba(255,255,255,0.14)"
     : (isDefaultWave ? "rgba(0,0,0,0.28)" : `rgba(${Math.round(wr*0.3)},${Math.round(wg*0.3)},${Math.round(wb*0.3)},0.32)`);
-  // PS3 glass sheen: thin inset highlight on the top edge only — flat, no drop shadow.
   const pillShadow = isDark
     ? "inset 0 1px 0 rgba(255,255,255,0.10)"
     : "inset 0 1px 0 rgba(255,255,255,0.60)";
@@ -600,24 +1034,30 @@ export default function PS3ControlPanel() {
 
   const activePreset = PRESETS.findIndex(p => p.wave.every((v, i) => Math.abs(v - waveColor[i]) < 0.015));
 
-  const labelSt: React.CSSProperties = { fontSize: 11, color: isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.42)", letterSpacing: "0.01em" };
-  const valueSt: React.CSSProperties = { fontSize: 11, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.28)", fontFamily: "monospace" };
-  const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 4 };
+  const pickPreset = (i: number) => {
+    const preset = PRESETS[i];
+    if (i === 0) { setAndDispatch({ waveColor: preset.wave }); return; }
+    const key = `${mode}:${i}`;
+    const remembered = presetIntensity[key];
+    const nextIntensity = remembered ?? (mode === 1 ? PRESET_INTENSITY_HT : PRESET_INTENSITY_WV);
+    if (remembered === undefined) {
+      setPresetIntensity(prev => ({ ...prev, [key]: nextIntensity }));
+    }
+    setAndDispatch({ waveColor: preset.wave, intensity: nextIntensity });
+  };
+
+  const labelSt: React.CSSProperties = { fontSize: 11, fontWeight: 500, color: isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.50)", letterSpacing: "0.01em" };
+  const valueSt: React.CSSProperties = { fontSize: 10.5, fontVariantNumeric: "tabular-nums", color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)", fontFamily: "monospace" };
+  const rowSt: React.CSSProperties   = { display: "flex", flexDirection: "column", gap: 2 };
   const rowH: React.CSSProperties    = { display: "flex", alignItems: "center", justifyContent: "space-between" };
-  const secPad = "4px 16px 8px";
+  const secPad = "4px 16px 6px";
 
-  const swatchSt = (active: boolean, bg: string): React.CSSProperties => ({
-    width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-    border: active ? "1.5px solid rgba(0,0,0,0.40)" : "1px solid rgba(0,0,0,0.18)",
-    backgroundColor: bg, boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.10)" : "none",
-    transition: "border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
-  });
-
+  const isColorLight = (waveColor[0]*0.299 + waveColor[1]*0.587 + waveColor[2]*0.114) > 0.5;
 
   const panelMarkup = (
-    <div ref={panelRef} className="ps3cp intro-hide" style={{
+    <div ref={panelRef} className="ps3cp" style={{
       position: "absolute", left: geo.left, top: geo.top,
-      width: geo.w, height: "auto", maxHeight: geo.maxH, borderRadius: geo.r,
+      width: geo.w, height: geo.maxH, maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
       transition: morphT,
       backgroundColor: pillBg,
@@ -628,38 +1068,124 @@ export default function PS3ControlPanel() {
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
+      // First load: the JOOLA / UCLA line owns the Y settle. Sliding the pill
+      // too made the pair look like a position jump. Soft-nav return still
+      // uses the shared 8px fade-up.
+      transform: shown || revealKindRef.current === "first" ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
       WebkitTapHighlightColor: "transparent",
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
       {/* Header / pill */}
-      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" aria-label="Drag or click to toggle panel">
+      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" tabIndex={0} aria-label="Drag or click to toggle panel" aria-expanded={isOpen}
+        onKeyDown={e => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          if (isOpen) setIsOpen(false);
+          else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
+        }}
+      >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: dk.pillGap, marginLeft: -1 }}>
-            <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: isDragging ? "none" : "transform 260ms ease", display: "flex", alignItems: "center", marginTop: dk.chevronOffset }}>
-              <ChevronDown color={accentCol} size={10} />
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: dk.pillGap,
+            marginLeft: -1,
+            // Lift the whole unit — lowercase "menu" + downward chevron sit
+            // optically low when only flex-centered in the pill.
+            transform: `translateY(${dk.chevronOffset}px)`,
+          }}>
+            <div style={{
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: isDragging ? "none" : isOpen ? `transform ${OPEN_MS}ms ${OPEN_EASE}` : `transform ${CLOSE_MS}ms ${CLOSE_EASE}`,
+              display: "flex",
+              alignItems: "center",
+            }}>
+              <ChevronDown color={accentCol} size={10} polyRef={chevronPolyRef} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.03em", color: accentCol, transition: "color 300ms ease", lineHeight: 1, marginTop: dk.menuTextOffset }}>menu</span>
+            <span
+              ref={menuLabelRef}
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.03em",
+                color: accentCol,
+                transition: "color 200ms ease",
+                lineHeight: 1,
+                display: "block",
+                marginTop: labelAutoOffset + dk.menuTextOffset,
+              }}
+            >
+              menu
+            </span>
           </div>
         </div>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: "opacity 150ms" }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 2, opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? "auto" : "none", transition: isOpen ? `opacity 140ms ${OPEN_EASE} 60ms` : `opacity 90ms ${CLOSE_EASE}` }}>
           <button className="ps3cp-ibtn" onClick={handleReset} title="Reset" aria-label="Reset to defaults"><Reset /></button>
-          <button className="ps3cp-ibtn" onClick={() => startTransition(() => setIsOpen(false))} title="Minimize" aria-label="Minimize"><Minus /></button>
+          <button className="ps3cp-ibtn" onClick={() => setIsOpen(false)} title="Minimize" aria-label="Minimize"><Minus /></button>
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ pointerEvents: isOpen ? "auto" : "none", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "visible", maxHeight: geo.clampedBodyH, WebkitOverflowScrolling: "touch" }}>
+      {/* Body — fades just behind the shell morph so content doesn't pop */}
+      <div style={{
+        pointerEvents: isOpen ? "auto" : "none",
+        display: "flex",
+        flexDirection: "column",
+        flex: "1 1 auto",
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        maxHeight: geo.clampedBodyH,
+        opacity: isOpen ? 1 : 0,
+        transition: isOpen
+          ? `opacity 160ms ${OPEN_EASE} 50ms`
+          : `opacity 100ms ${CLOSE_EASE}`,
+        WebkitOverflowScrolling: "touch",
+      }}>
 
         {/* Pattern color */}
-        <div style={{ padding: "6px 16px 10px" }}>
+        <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
             <span style={labelSt}>pattern color</span>
-            <div className="ps3cp-color-swatch" onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }} style={swatchSt(openColorPicker === "pattern", rgbToHex(waveColor))} />
+            <button
+              className="ps3cp-custom-color-btn"
+              onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
+              aria-label="Custom color picker"
+              aria-expanded={openColorPicker === "pattern"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 18,
+                height: 18,
+                borderRadius: 4,
+                border: "none",
+                backgroundColor: rgbToHex(waveColor),
+                boxShadow: openColorPicker === "pattern"
+                  ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
+                  : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.25)" : "inset 0 0 0 1px rgba(0,0,0,0.20)"),
+                transform: openColorPicker === "pattern" ? "scale(1.08)" : "scale(1)",
+                cursor: "pointer",
+                padding: 0,
+                flexShrink: 0,
+                transition: "transform 140ms cubic-bezier(0.23, 1, 0.32, 1), boxShadow 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+              }}
+            >
+              <Plus size={8} color={isColorLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.90)"} />
+            </button>
           </div>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, width: "100%" }}>
             {PRESETS.map((p, i) => (
-              <button key={i} className="ps3cp-swatch-btn" onClick={() => setAndDispatch({ waveColor: p.wave })}
-                style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: p.swatch, border: activePreset === i ? "2px solid rgba(0,0,0,0.55)" : "1.5px solid rgba(0,0,0,0.10)", padding: 0, flexShrink: 0, outline: "none", transform: activePreset === i ? "scale(1.18)" : "scale(1)" }} />
+              <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
+                aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
+                style={{
+                  width: "100%", height: 18, borderRadius: 4, backgroundColor: p.swatch,
+                  boxShadow: activePreset === i
+                    ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
+                    : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.15)" : "inset 0 0 0 1px rgba(0,0,0,0.12)"),
+                  transform: activePreset === i ? "scale(1.04)" : "scale(1)",
+                  padding: 0, flexShrink: 0,
+                }} />
             ))}
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
@@ -669,13 +1195,13 @@ export default function PS3ControlPanel() {
           </ExpandSection>
         </div>
 
-        {/* Pattern mode */}
-        <div style={{ padding: "8px 16px" }}>
-          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern</span>
+        {/* Pattern mode (Clean Text Label - Zero Icons) */}
+        <div style={{ padding: "6px 16px 8px" }}>
+          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern mode</span>
           <div style={{ display: "flex", gap: 4 }}>
             {["wave", "halftone"].map((m, i) => (
               <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
-                style={{ flex: 1, height: 28, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.72)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 11, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.01em" }}>
+                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.02em" }}>
                 {m}
               </button>
             ))}
@@ -683,10 +1209,10 @@ export default function PS3ControlPanel() {
         </div>
 
         {/* Dot size */}
-        <ExpandSection open={mode === 1} maxH={72}>
+        <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
             <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
-            <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark}
+            <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
         </ExpandSection>
@@ -694,28 +1220,33 @@ export default function PS3ControlPanel() {
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
-          <Slider min={0} max={0.4} step={0.01} value={intensity} isDark={isDark}
-            onChange={v => setAndDispatch({ intensity: v })} />
+          <Slider min={0} max={1.0} step={0.01} value={intensity} isDark={isDark} label="Intensity"
+            onChange={v => {
+              if (activePreset >= 1) {
+                setPresetIntensity(prev => ({ ...prev, [`${mode}:${activePreset}`]: v }));
+              }
+              setAndDispatch({ intensity: v });
+            }} />
         </div>
 
         {/* Speed */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
-          <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark}
+          <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
         {/* Y offset */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
-          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark}
+          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
         {/* Cursor reactivity */}
         <div style={{ padding: secPad, ...rowSt }}>
           <div style={rowH}><span style={labelSt}>cursor reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
-          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark}
+          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark} label="Cursor reactivity"
             onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>
 

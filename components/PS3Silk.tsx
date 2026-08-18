@@ -66,12 +66,13 @@ export default function PS3Silk({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const modeRef = useRef(initialMode);
   const activeRef = useRef(active);
-  activeRef.current = active;
   const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
   const [mode, setMode] = useState(initialMode);
 
+  useEffect(() => { activeRef.current = active; }, [active]);
+
   const dk = useDialKit("PS3Silk", {
-    intensity:     [intensity,      0,    0.5],
+    intensity:     [intensity,      0,    1.0],
     mouseStrength: [mouseStrength,  0,    0.5],
     yOffset:       [yOffset,        -50,  100],
     halftoneSize:  [3.0,            1,    20],
@@ -97,13 +98,22 @@ export default function PS3Silk({
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
-  // Wake (or pause) the WebGL loop when the work route's visibility flips —
-  // forces a real-sized resize + restores resting opacity on return; stops the
-  // RAF entirely while hidden so we aren't burning frames into a dead canvas.
+  // Wake immediately on return so soft-nav back to work doesn't blank the
+  // pattern for a couple of frames. Mux remount is staggered separately;
+  // silk is one canvas and should snap with the route. Pause stops RAF only.
   useEffect(() => {
-    if (active) lifecycleRef.current?.wake();
-    else lifecycleRef.current?.pause();
+    if (!active) {
+      lifecycleRef.current?.pause();
+      return;
+    }
+    lifecycleRef.current?.wake();
   }, [active]);
+
+  useEffect(() => {
+    const pause = () => lifecycleRef.current?.pause();
+    window.addEventListener("soft-nav-start", pause);
+    return () => window.removeEventListener("soft-nav-start", pause);
+  }, []);
 
   // ps3-update event
   useEffect(() => {
@@ -234,8 +244,16 @@ export default function PS3Silk({
       glRef = gl;
       const glCtx = gl;
 
+      // Cached on resize/scroll and reused by onMouseMove below, instead of
+      // calling getBoundingClientRect() on every raw mousemove event — that
+      // forces a synchronous layout read well over 60x/second on a modern
+      // trackpad/high-poll mouse, exactly while a visitor is interacting
+      // with the hero.
+      let wrapperRect: DOMRect | null = null;
+
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
+        wrapperRect = rect ?? null;
         if (!rect || !canvas) return;
         // Never write a 0×0 (or near-zero) drawing buffer. The persistent work
         // shell hides via display:none on non-/ routes, which reports 0×0 here;
@@ -276,6 +294,13 @@ export default function PS3Silk({
       }
 
       function updateTarget() {
+        // getBoundingClientRect() is viewport-relative, so the resize-only
+        // cache above would go stale as soon as the page scrolls without the
+        // wrapper's own size changing. This already runs once per scroll
+        // event (far less often than raw mousemove), so refreshing it here
+        // keeps onMouseMove's cached rect correct without reintroducing a
+        // per-mousemove layout read.
+        wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
@@ -286,7 +311,7 @@ export default function PS3Silk({
 
       function onMouseMove(e: MouseEvent) {
         if (!activeRef.current) return;
-        const rect = wrapperRef.current?.getBoundingClientRect();
+        const rect = wrapperRect;
         if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
         mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
@@ -456,7 +481,11 @@ void main() {
       // means instead of two copies drifting apart.
       function draw(ms: number) {
         const wc = waveColorRef.current;
-        gl.uniform1f(uTimeLoc, ms * 0.001);
+        // Reduced-motion: freeze the shader's time input instead of feeding
+        // it the running clock, so the wave pattern still renders (just as a
+        // static frame) rather than keeping the animation loop's only
+        // visible effect running at full speed regardless of the preference.
+        gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
         gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
         gl.uniform1f(uIntLoc, intensityRef.current);
@@ -499,7 +528,13 @@ void main() {
         }
         startLoop();
       };
-      lifecycleRef.current = { wake, pause: stopLoop };
+      // Stop RAF while off-route, but keep the last framebuffer. Shrinking to
+      // 1×1 blanked the pattern until wake()+draw, which read as a split-
+      // second pop-in on About/Archive → Work. One silk canvas is cheap vs Mux.
+      const pause = () => {
+        stopLoop();
+      };
+      lifecycleRef.current = { wake, pause };
 
       function frame(ms: number) {
         if (!running) return;
@@ -542,7 +577,7 @@ void main() {
 
       // Start only if we're currently the visible work route; otherwise wait
       // for the active→true wake. Avoids the old path of sizing to 0×0 on
-      // about/play first-paint and then permanently flattening the pattern.
+      // about/archive first-paint and then permanently flattening the pattern.
       if (activeRef.current) {
         requestAnimationFrame(() => lifecycleRef.current?.wake());
       }

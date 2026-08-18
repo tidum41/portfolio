@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { HalftoneFilterDef } from "./HalftoneFilterDef";
+import { HalftoneDotField } from "./HalftoneDotField";
+import { SUN_MASK_SVG, MOON_MASK_SVG, SUN_CLONE_INNER, MOON_CLONE_INNER } from "./halftoneIconMasks";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
-import { motion, useReducedMotion, useTransform } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+
+const ICON_SIZE = 15;
 
 function SunIcon() {
   return (
@@ -47,14 +50,21 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   // cut the effect off before it's ever seen. Instead this plays as a
   // fixed-duration one-shot flash, timed in the pointerdown handler below.
   // Active is when hovered/tapped on desktop. On mobile, inactive (untapped) is halftoned.
-  const active = (isHovered || isTapped) && !!dk?.enabled;
+  // dk.keepEffectOn (DialKit dev panel) pins the effect active regardless
+  // of real hover/tap — see HalftoneNavLink.tsx's matching comment for why.
+  const active = !!dk?.enabled && (!!dk?.keepEffectOn || isHovered || isTapped);
   const { filterId, t } = useHalftoneMorph(dk, active);
 
-  const baseOpacity = useTransform(t, [0, 1], [1, 0]);
-  // |t|, not t — the underdamped "out" spring sends t slightly negative as
-  // it settles, and without abs() this layer clamps near-invisible for
-  // exactly that window, hiding the bubble the undershoot exists to produce.
-  const overlayOpacity = useTransform(t, (v) => Math.max(Math.abs(v) * 1.5, 0.0001));
+  // Overlay can take the long hide tween; restore the solid icon faster so
+  // the settle spring emptying the dots can't leave the control blank.
+  const showMs = dk?.showHideSpeed?.showDurationMs ?? 220;
+  const hideMs = dk?.showHideSpeed?.hideDurationMs ?? 550;
+  const overlayMs = reduced ? 1 : active ? showMs : hideMs;
+  const baseMs = reduced ? 1 : active ? showMs : Math.min(hideMs, 120);
+  const overlayTransition = { duration: overlayMs / 1000, ease: "easeInOut" as const };
+  const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
+  const unlockThemeRaf1 = useRef(0);
+  const unlockThemeRaf2 = useRef(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -62,15 +72,31 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
     setIsDark(dark);
   }, []);
 
+  useEffect(() => () => {
+    if (unlockThemeRaf1.current) cancelAnimationFrame(unlockThemeRaf1.current);
+    if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
+  }, []);
+
   const toggle = () => {
     const newDark = !isDark;
     setIsDark(newDark);
     const theme = newDark ? "dark" : "light";
     const html = document.documentElement;
+    // Suppress standing hover color-tweens for one paint so the token
+    // swap is a single frame, not a 200ms–1s chase across the tree.
     html.classList.add("theme-switching");
+    void html.offsetWidth;
     html.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
-    setTimeout(() => html.classList.remove("theme-switching"), 300);
+    if (unlockThemeRaf1.current) cancelAnimationFrame(unlockThemeRaf1.current);
+    if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
+    unlockThemeRaf1.current = requestAnimationFrame(() => {
+      unlockThemeRaf2.current = requestAnimationFrame(() => {
+        html.classList.remove("theme-switching");
+        unlockThemeRaf1.current = 0;
+        unlockThemeRaf2.current = 0;
+      });
+    });
   };
 
   // Reduced-motion: keep the opacity crossfade (aids comprehension), drop
@@ -85,6 +111,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   return (
     <button
       onClick={toggle}
+      data-ui-sound="option"
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
       // mouseleave ever firing (no cursor to leave), leaving isHovered
@@ -116,17 +143,20 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         alignItems: "center",
         lineHeight: 0,
         WebkitTapHighlightColor: "transparent",
-        // Fixed size so stacked absolute icons don't shift layout
+        // 44px tap target; 15px icon stays visually the same, centered.
         position: "relative",
-        width: 15,
-        height: 15,
+        width: 44,
+        height: 44,
+        boxSizing: "border-box",
+        justifyContent: "center",
       }}
     >
-      {dk && <HalftoneFilterDef id={filterId} dk={dk} hoverColor={hoverColor} t={t} />}
-
       {/* Base Icon */}
       <motion.div
-        style={{ position: "absolute", inset: 0, color: baseColor, opacity: baseOpacity, willChange: "opacity" }}
+        style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
+        initial={false}
+        animate={{ opacity: active ? 0 : 1 }}
+        transition={baseTransition}
       >
         <motion.span
           aria-hidden
@@ -148,16 +178,16 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         </motion.span>
       </motion.div>
 
-      {/* Halftone Overlay Icon */}
+      {/* Halftone Overlay Icon (independently-animated dots, see HalftoneDotField) */}
       <motion.div
         style={{
           position: "absolute",
           inset: 0,
-          color: hoverColor,
-          filter: `url(#${filterId})`,
-          opacity: overlayOpacity,
-          willChange: "opacity, filter"
+          willChange: "opacity"
         }}
+        initial={false}
+        animate={{ opacity: active ? 1 : 0 }}
+        transition={overlayTransition}
       >
         <motion.span
           aria-hidden
@@ -166,7 +196,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           animate={isDark ? visibleAnim : hiddenAnim}
           transition={spring}
         >
-          <SunIcon />
+          <HalftoneDotField id={filterId + "-sun"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: SUN_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: SUN_CLONE_INNER }} />
         </motion.span>
         <motion.span
           aria-hidden
@@ -175,7 +205,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           animate={isDark ? hiddenAnim : visibleAnim}
           transition={spring}
         >
-          <MoonIcon />
+          <HalftoneDotField id={filterId + "-moon"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: MOON_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: MOON_CLONE_INNER }} />
         </motion.span>
       </motion.div>
     </button>

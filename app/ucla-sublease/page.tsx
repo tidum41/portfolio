@@ -1,12 +1,18 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import dynamic from "next/dynamic";
-import { Frown, BadgeCheck, MessagesSquare } from "lucide-react";
-import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
-import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { preload } from "react-dom";
+import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
+import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
+
+/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "BruinLease",
@@ -40,7 +46,6 @@ const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
-const MuxHero             = dynamic(() => import("@/components/MuxHero"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
 const COLOR_NEUTRAL = "#757575";
@@ -59,9 +64,9 @@ function Section({ id, children, noReveal = false }: { id: string; children: Rea
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, as: Tag = "p" }: { children: React.ReactNode; as?: "p" | "h2" }) {
   return (
-    <p style={{
+    <Tag style={{
       fontFamily: "var(--font-sans)",
       fontSize: "var(--fs-section-label)",
       fontWeight: 400,
@@ -70,7 +75,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       margin: "0 0 16px",
     }}>
       {children}
-    </p>
+    </Tag>
   );
 }
 
@@ -107,10 +112,10 @@ function Body({ children, style }: { children: React.ReactNode; style?: React.CS
 
 // Colors that sit next to the lilac accent (#9590C2) without competing with it —
 // rose for stress, teal for trust, soft amber for outreach across platforms.
-const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>; color: string }> = {
-  "75%": { Icon: Frown,          color: "#C4899A" }, // dusty rose — stress / frustration
-  "83%": { Icon: BadgeCheck,     color: "#6FA8A0" }, // soft teal  — trust / safety
-  "70%": { Icon: MessagesSquare, color: "#C4A878" }, // soft amber — multi-platform outreach
+const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; weight?: "thin" | "light" | "regular" | "bold" | "fill" | "duotone"; "aria-hidden"?: boolean }>; color: string }> = {
+  "75%": { Icon: SmileySad, color: "#C4899A" }, // dusty rose — stress / frustration
+  "83%": { Icon: SealCheck, color: "#6FA8A0" }, // soft teal  — trust / safety
+  "70%": { Icon: Chats,     color: "#C4A878" }, // soft amber — multi-platform outreach
 };
 
 function Stat({ value, label }: { value: string; label: string }) {
@@ -121,7 +126,7 @@ function Stat({ value, label }: { value: string; label: string }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Icon && (
           <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
-            <Icon size={28} strokeWidth={1.5} aria-hidden={true} />
+            <Icon size={28} weight="light" aria-hidden={true} />
           </span>
         )}
         <p style={{
@@ -192,7 +197,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
-          ? <img src={src} alt={alt} style={{ width: "100%", display: "block", objectFit: "cover" }} />
+          ? <img src={src} alt={alt} loading="lazy" decoding="async" style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
         }
       </div>
@@ -378,8 +383,49 @@ const FB = {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function BruinLeasePage() {
-  const raw = await getCaseStudy("ucla-sublease");
+export default function BruinLeasePage() {
+  const lcp = CASE_STUDY_LCP["/ucla-sublease"];
+  if (lcp) preload(lcp, { as: "image" });
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      {process.env.NODE_ENV === "development" && (
+        <>
+          <DevNavigator />
+          <PhoneMockupDevPanel />
+        </>
+      )}
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseStudyTOC
+            items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
+            backHref="/"
+          />
+        </aside>
+
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
+
+          <CaseStudyOpen
+            tagline={FB.heroTagline}
+            title={FB.heroTitle}
+            metadata={FB.metadata}
+            muxPlaybackId={FB.heroMuxId}
+            heroBg={FB.heroBg}
+          />
+          <Suspense fallback={null}>
+            <BruinLeaseContent />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function BruinLeaseContent() {
+  const raw = await getCaseStudy("ucla-sublease").catch(() => ({ slug: "ucla-sublease" }));
 
   const cs = {
     ...FB,
@@ -400,8 +446,6 @@ export default async function BruinLeasePage() {
     ...Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null && (Array.isArray(v) ? v.length > 0 : v !== ""))),
   };
 
-  const tocItems        = (cs.tocItems      ?? FB.tocItems)      as TocItem[];
-  const metadata        = (cs.metadata      ?? FB.metadata);
   const stats           = (cs.stats         ?? FB.stats);
   const processTools    = (cs.processTools  ?? FB.processTools);
   const d1CompCol1      = (cs.d1CompCol1    ?? FB.d1CompCol1)    as CompRowData[];
@@ -413,84 +457,7 @@ export default async function BruinLeasePage() {
   const reflectionItems = (cs.reflectionItems ?? FB.reflectionItems);
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
-      {process.env.NODE_ENV === "development" && (
-        <>
-          <DevNavigator />
-          <PhoneMockupDevPanel />
-        </>
-      )}
-      <div className="cs-layout">
-
-        <aside className="cs-aside">
-          <CaseStudyTOC items={tocItems.map(t => ({ id: t.id, label: t.label }))} backHref="/" />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
-
-          {/* Mobile back lives in the content lane (aside is hidden ≤767px) so
-              the chevron, tagline, title, and hero media share one left edge. */}
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
-          {/* ── Hero ───────────────────────────────────────────────────── */}
-          {/* Staggers in top-to-bottom on route arrival (tagline, title, video,
-              metadata) on its own "Case Study Entrance" DialKit panel — subtler
-              slide + barely-there blur than the shared work-grid/about-page
-              "Entrance" panel. The TOC (aside, above) deliberately never
-              participates: it's position:sticky, and animating it alongside
-              the rest previously read as buggy/jittery rather than elegant. */}
-          <header className="cs-hero-header" style={{ marginBottom: 64 }}>
-            <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem className="cs-hero-tagline-wrap">
-                <p className="cs-hero-tagline" style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  letterSpacing: "0.01em",
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 16px",
-                }}>
-                  {cs.heroTagline}
-                </p>
-              </EntranceItem>
-              <EntranceItem className="cs-hero-title-wrap">
-                <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-sans-medium)",
-                  fontSize: "var(--fs-hero)",
-                  fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
-                  lineHeight: 1.1,
-                  letterSpacing: "var(--ls-hero)",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 36px",
-                }}>
-                  {cs.heroTitle}
-                </h1>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-media-wrap">
-                <div style={{ background: cs.heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
-                  <MuxHero playbackId={cs.heroMuxId} />
-                </div>
-              </EntranceItem>
-
-              {/* Metadata — 4-column, no border */}
-              {metadata.length > 0 && (
-                <EntranceItem>
-                  <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${metadata.length}, 1fr)`, marginTop: 32 }}>
-                    {metadata.map(({ _key, label, values }) => (
-                      <div key={_key} style={{ padding: "0 24px 0 0" }}>
-                        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>{label}</p>
-                        {values.map((v) => <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>{v}</p>)}
-                      </div>
-                    ))}
-                  </div>
-                </EntranceItem>
-              )}
-            </EntranceStagger>
-          </header>
-
+    <>
           <article style={{ minWidth: 0 }}>
 
             {/* ── Problem ──────────────────────────────────────────────── */}
@@ -500,7 +467,17 @@ export default async function BruinLeasePage() {
               <Body>{cs.problemBody}</Body>
 
               {cs.problemImage
-                ? <img src={cs.problemImage} alt="Fragmented subleasing platforms" style={{ width: "100%", aspectRatio: "16/7", objectFit: "cover", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
+                ? (
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }}>
+                    <Image
+                      src={cs.problemImage}
+                      alt="Fragmented subleasing platforms"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 750px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                )
                 : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 28 }}>{cs.problemImageCaption}</p>
@@ -534,7 +511,11 @@ export default async function BruinLeasePage() {
               <Body>{cs.processBody}</Body>
 
               {cs.figmaComparison
-                ? <img src={cs.figmaComparison} alt="Early layout exploration in Figma" style={{ width: "100%", borderRadius: "var(--radius-card)", display: "block", margin: "24px 0 8px" }} />
+                ? (
+                  <div style={{ position: "relative", width: "100%", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)" }}>
+                    <img src={cs.figmaComparison} alt="Early layout exploration in Figma" loading="lazy" decoding="async" style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius-card)" }} />
+                  </div>
+                )
                 : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
               }
               <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
@@ -590,7 +571,7 @@ export default async function BruinLeasePage() {
               <Body>{cs.d2Body}</Body>
               {cs.ueTestingVideo && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                  <div className="pm-d2-wrap" style={{ width: "72%", maxWidth: 364 }}>
+                  <div className="pm-d2-wrap">
                     <PhoneMockup
                       videoSrc={cs.ueTestingVideo}
                       showFrame
@@ -620,9 +601,9 @@ export default async function BruinLeasePage() {
               <H2>{cs.d4Heading}</H2>
               <Body>{cs.d4Body}</Body>
               {(cs.oldFlowVideo || cs.decision1Video) && (
-                <div className="pm-d4-row" style={{ display: "flex", gap: 24, justifyContent: "center", margin: "32px 0", alignItems: "flex-start" }}>
+                <div className="pm-d4-row" style={{ display: "flex", gap: "var(--space-3)", justifyContent: "center", margin: "var(--space-4) 0", alignItems: "flex-start" }}>
                   {cs.oldFlowVideo && (
-                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.oldFlowVideo}
                         showFrame
@@ -634,7 +615,7 @@ export default async function BruinLeasePage() {
                     </div>
                   )}
                   {cs.decision1Video && (
-                    <div className="pm-d4-wrap" style={{ flex: 1, maxWidth: 338, display: "flex", flexDirection: "column", gap: 5 }}>
+                    <div className="pm-d4-wrap" style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                       <PhoneMockup
                         videoSrc={cs.decision1Video}
                         showFrame
@@ -655,7 +636,7 @@ export default async function BruinLeasePage() {
               <H2>{cs.solutionHeading}</H2>
               {cs.solutionBody && <Body>{cs.solutionBody}</Body>}
               <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                <div className="pm-solution-wrap" style={{ width: "72%", maxWidth: 364 }}>
+                <div className="pm-solution-wrap">
                   <PhoneMockup
                     videoSrc="/solution.mp4"
                     showFrame
@@ -668,7 +649,11 @@ export default async function BruinLeasePage() {
 
             {/* ── Reflection ───────────────────────────────────────────── */}
             <Section id="reflection">
-              <SectionLabel>{cs.reflectionLabel}</SectionLabel>
+              {/* Unlike every other section, Reflection has no separate long-form
+                  H2 heading — this label is the section's only heading-level
+                  text, so it renders as a real <h2> to own the <h3>s below
+                  (they'd otherwise read as children of the prior section's H2). */}
+              <SectionLabel as="h2">{cs.reflectionLabel}</SectionLabel>
               <div className="reflection-grid" style={{ marginTop: 8 }}>
                 {reflectionItems.map(({ _key, heading, body }) => (
                   <div key={_key}>
@@ -692,8 +677,6 @@ export default async function BruinLeasePage() {
             </Section>
 
           </article>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

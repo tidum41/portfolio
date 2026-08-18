@@ -1,223 +1,212 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
+import HabitTrackerApp from "@/components/embeds/habit-tracker/HabitTrackerApp";
+// Static imports (not plain "/phonemockup-*.webp" string paths) so Next.js
+// content-hashes the served filename — a plain public/ path never changes
+// URL even if the file's bytes are replaced, so a browser that ever cached
+// the old version keeps serving it forever. Hashed imports make any future
+// asset swap automatically bust every client's cache.
+import phoneFrameLight from "@/public/phonemockup-light.webp";
+import phoneFrameDark from "@/public/phonemockup-dark.webp";
 
-const REF_W  = 344;
-const REF_H  = 614;
-const PHONE_W  = 280;
-const PHONE_H  = 580;
-const IFRAME_W = 394;
-const IFRAME_H = 844;
+// Phone-frame chrome + screen-cutout math from Jul 29 (2c55487 / 477ee8d):
+// DialKit REF 344×614 vs phone 280×580, object-fit contain, % screen radius.
+// Frame art follows the *widget* theme (sun/moon), not the site theme.
+// Assets: public/phonemockup-{light,dark}.webp (864×1762) — do not regenerate.
+const REF_W_BASE = 344;
+const REF_H_BASE = 614;
+const PHONE_W_BASE = 280;
+const PHONE_H_BASE = 580;
+// Design box HabitTrackerApp renders at before being scaled into the screen
+// cutout — matches the old iframe's own viewport size (394×844), which is
+// also a near-perfect fit for the widget's own max-w-[393px] content.
+const CONTENT_W = 394;
 
-interface Props {
-  url?:            string;
-  frameSrcLight?:  string;
-  frameSrcDark?:   string;
-  postMessageKey?: string;
-  scale?:          number;
-  style?:          React.CSSProperties;
+const FRAME_IMG: React.CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  zIndex: 2,
+  pointerEvents: "none",
+  userSelect: "none",
+  // Instant swap — never fade between frames (avoids empty-src flash).
+  transition: "none",
+};
+
+// Warm both bezels so the first toggle never waits on decode.
+if (typeof window !== "undefined") {
+  const warm = (src: string) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  };
+  warm(phoneFrameLight.src);
+  warm(phoneFrameDark.src);
+}
+
+function readSiteTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function PhoneBezel({ theme }: { theme: "light" | "dark" }) {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={phoneFrameLight.src}
+        alt=""
+        decoding="async"
+        draggable={false}
+        aria-hidden={theme !== "light"}
+        style={{ ...FRAME_IMG, opacity: theme === "light" ? 1 : 0 }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={phoneFrameDark.src}
+        alt=""
+        decoding="async"
+        draggable={false}
+        aria-hidden={theme !== "dark"}
+        style={{ ...FRAME_IMG, opacity: theme === "dark" ? 1 : 0 }}
+      />
+    </>
+  );
 }
 
 export default function PhoneEmbed({
-  url            = "",
-  frameSrcLight,
-  frameSrcDark,
-  postMessageKey = "theme",
-  scale          = 1,
   style,
-}: Props) {
+  expanded = false,
+  initialTheme,
+  onWidgetThemeChange,
+}: {
+  style?: React.CSSProperties;
+  expanded?: boolean;
+  /** Seed frame + widget theme before first paint (avoids light→dark jump). */
+  initialTheme?: "light" | "dark";
+  onWidgetThemeChange?: (theme: "light" | "dark") => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const iframeRef    = useRef<HTMLIFrameElement>(null);
-  const [containerWidth, setContainerWidth] = useState(REF_W * scale);
-  const [isSrcReady, setIsSrcReady] = useState(false);
-  const [pageIsDark, setPageIsDark] = useState(false);
-  // Theme reported by the embedded site itself (via postMessage), once it's told us.
-  // Falls back to the outer page's theme until then.
-  const [embedIsDark, setEmbedIsDark] = useState<boolean | null>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
+  // Frame follows the HABIT TRACKER WIDGET theme (not site theme after seed).
+  const [widgetTheme, setWidgetTheme] = useState<"light" | "dark">(
+    () => initialTheme ?? readSiteTheme(),
+  );
+  const onWidgetThemeChangeRef = useRef(onWidgetThemeChange);
+  onWidgetThemeChangeRef.current = onWidgetThemeChange;
+  const handleWidgetThemeChange = useCallback((theme: "light" | "dark") => {
+    setWidgetTheme(theme);
+    onWidgetThemeChangeRef.current?.(theme);
+  }, []);
 
   const dk = useDialKit("PhoneEmbed", {
-    insetTop:      [3.07, 0, 15,  0.01],
-    insetBottom:   [3.64, 0, 15,  0.01],
-    insetSide:     [3.3,  0, 15,  0.01],
-    screenRadius:  [12.86, 0, 25, 0.01],
-    iframeOffsetX: [0,   -10, 10, 0.01],
+    sizeScale: [1.4, 0.5, 2.5, 0.05],
+    insetTop: [3.07, 0, 15, 0.01],
+    insetBottom: [3.64, 0, 15, 0.01],
+    insetSide: [3.3, 0, 15, 0.01],
+    screenRadius: [12.86, 0, 25, 0.01],
+    iframeOffsetX: [0, -10, 10, 0.01],
     iframeOffsetY: [-0.41, -10, 10, 0.01],
   });
 
-  // Watch page dark/light theme for frame image switching
-  useEffect(() => {
-    const read = () => setPageIsDark(document.documentElement.getAttribute("data-theme") === "dark");
-    read();
-    const mo = new MutationObserver(read);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => mo.disconnect();
-  }, []);
+  const popupBoost = expanded ? 1.28 : 1;
+  const PHONE_W = PHONE_W_BASE * dk.sizeScale * popupBoost;
+  const PHONE_H = PHONE_H_BASE * dk.sizeScale * popupBoost;
+  // Tight reference box in popup so scale-to-fit uses the full slot.
+  const REF_W = expanded ? PHONE_W : REF_W_BASE * dk.sizeScale;
+  const REF_H = expanded ? PHONE_H : REF_H_BASE * dk.sizeScale;
 
-  const isTouchDevice = useMemo(
-    () => typeof navigator !== "undefined" && navigator.maxTouchPoints > 0,
-    []
-  );
-
-  const scaledRefW = REF_W * scale;
-
-  // Scroll-bridge postMessage
-  useEffect(() => {
-    let sbPending = 0, sbConfirmed = false;
-    let sbTimer: ReturnType<typeof setTimeout> | null = null;
-    const reset = () => { sbPending = 0; sbConfirmed = false; };
-
-    function onMessage(e: MessageEvent) {
-      const d = e.data;
-      if (!d || typeof d !== "object") return;
-
-      // Embedded site reporting its own dark/light toggle, e.g. { theme: "dark" }
-      const themeVal = d[postMessageKey];
-      if (themeVal === "dark" || themeVal === "light") {
-        setEmbedIsDark(themeVal === "dark");
-        return;
-      }
-
-      if (d.type === "scroll-bridge") {
-        const phase = d.phase as string | undefined;
-        if (phase === "start" || phase === "end") {
-          reset();
-          if (sbTimer) { clearTimeout(sbTimer); sbTimer = null; }
-          return;
-        }
-        const dy = d.dy;
-        if (typeof dy !== "number" || dy === 0) return;
-        if (sbTimer) clearTimeout(sbTimer);
-        sbTimer = setTimeout(() => { reset(); sbTimer = null; }, 250);
-        if (!sbConfirmed) {
-          sbPending += dy;
-          if (Math.abs(sbPending) >= 10) {
-            window.scrollBy({ top: sbPending, behavior: "instant" as ScrollBehavior });
-            sbPending = 0; sbConfirmed = true;
-          }
-        } else {
-          window.scrollBy({ top: dy, behavior: "instant" as ScrollBehavior });
-        }
-      }
-    }
-
-    window.addEventListener("message", onMessage);
-    return () => { window.removeEventListener("message", onMessage); if (sbTimer) clearTimeout(sbTimer); };
-  }, [postMessageKey]);
-
-  // Track container width
-  useEffect(() => {
+  // Measure synchronously before paint so the first visible frame already
+  // uses the real popup slot size (avoids REF→slot scale jump on open).
+  useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    const apply = () => {
+      const r = el.getBoundingClientRect();
+      setContainerSize({ width: r.width, height: r.height });
+    };
+    apply();
     const ro = new ResizeObserver(([e]) =>
-      setContainerWidth(Math.min(e.contentRect.width, scaledRefW))
+      setContainerSize({ width: e.contentRect.width, height: e.contentRect.height }),
     );
     ro.observe(el);
     return () => ro.disconnect();
-  }, [scaledRefW]);
+  }, []);
 
-  // Lazy-load iframe on intersection
-  useEffect(() => {
-    if (!url) return;
-    const ready = () => setIsSrcReady(true);
-    const t = setTimeout(ready, 300);
-    const el = containerRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { ready(); clearTimeout(t); obs.disconnect(); } },
-      { rootMargin: "0px 0px 600px 0px" }
-    );
-    obs.observe(el);
-    return () => { clearTimeout(t); obs.disconnect(); };
-  }, [url]);
+  const measured = containerSize !== null;
+  const cw = containerSize?.width ?? REF_W;
+  const ch = containerSize?.height ?? REF_H;
+  const scaleByW = Math.min(cw, REF_W) / REF_W;
+  const scaleByH = ch / REF_H;
+  const phoneScale = Math.min(scaleByW, scaleByH);
 
-  const phoneScale   = containerWidth / REF_W;
-  const intrinsicH   = containerWidth * (REF_H / REF_W);
   const screenLocalW = PHONE_W * (1 - (dk.insetSide * 2) / 100);
-  const iframeScale  = screenLocalW / IFRAME_W;
-
-  const isDark = embedIsDark ?? pageIsDark;
-  const frameSrc = isDark ? (frameSrcDark || frameSrcLight) : (frameSrcLight || frameSrcDark);
-
-  function forwardPointer(e: React.MouseEvent<HTMLDivElement>, type: "click" | "pointerdown") {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const vs = iframeScale * phoneScale;
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: "framer-pointer", eventType: type, x: (e.clientX - rect.left) / vs, y: (e.clientY - rect.top) / vs },
-      "*"
-    );
-  }
+  const screenLocalH = PHONE_H * (1 - dk.insetTop / 100 - dk.insetBottom / 100);
+  const contentH = Math.ceil(CONTENT_W * (screenLocalH / screenLocalW));
+  const contentScale = screenLocalW / CONTENT_W;
 
   return (
     <div
       ref={containerRef}
-      style={{ position: "relative", width: "100%", maxWidth: scaledRefW, height: intrinsicH, margin: "0 auto", ...style }}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        maxWidth: REF_W,
+        margin: "0 auto",
+        ...style,
+        // Invisible until measured — prevents one-frame wrong-scale flash.
+        opacity: measured ? 1 : 0,
+      }}
     >
-      {/* Phone body */}
-      <div style={{
-        position: "absolute", top: "50%", left: "50%",
-        width: PHONE_W, height: PHONE_H,
-        transform: `translate(-50%, -50%) scale(${phoneScale})`,
-        transformOrigin: "center center",
-      }}>
-        {/* Screen cutout */}
-        <div style={{
-          position: "absolute", zIndex: 1,
-          top: `${dk.insetTop}%`, bottom: `${dk.insetBottom}%`,
-          left: `${dk.insetSide}%`, right: `${dk.insetSide}%`,
-          borderRadius: `${dk.screenRadius}%`,
-          overflow: "hidden", background: "#000",
-        }}>
-          {url ? (
-            <>
-              <iframe
-                ref={iframeRef}
-                src={isSrcReady ? url : undefined}
-                style={{
-                  position: "absolute",
-                  top: `${dk.iframeOffsetY}%`,
-                  left: `${dk.iframeOffsetX}%`,
-                  width: IFRAME_W, height: IFRAME_H,
-                  border: "none",
-                  transform: `scale(${iframeScale})`,
-                  transformOrigin: "top left",
-                  pointerEvents: isTouchDevice ? "auto" : "none",
-                }}
-              />
-              <div
-                onPointerDown={e => forwardPointer(e, "pointerdown")}
-                onClick={e => forwardPointer(e, "click")}
-                style={{
-                  position: "absolute", inset: 0, zIndex: 10,
-                  cursor: "none", backgroundColor: "transparent",
-                  pointerEvents: isTouchDevice ? "none" : "all",
-                }}
-              />
-            </>
-          ) : (
-            <div style={{
-              width: "100%", height: "100%", background: "#111",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.15)", fontSize: 11,
-              fontFamily: "var(--font-sans)",
-            }}>
-              coming soon
-            </div>
-          )}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: PHONE_W,
+          height: PHONE_H,
+          transform: `translate(-50%, -50%) scale(${phoneScale})`,
+          transformOrigin: "center center",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 1,
+            top: `${dk.insetTop}%`,
+            bottom: `${dk.insetBottom}%`,
+            left: `${dk.insetSide}%`,
+            right: `${dk.insetSide}%`,
+            borderRadius: `${dk.screenRadius}%`,
+            overflow: "hidden",
+            background: widgetTheme === "dark" ? "#0a0a0a" : "#f5f5f0",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: `${dk.iframeOffsetY}%`,
+              left: `${dk.iframeOffsetX}%`,
+              width: CONTENT_W,
+              height: contentH,
+              transform: `scale(${contentScale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            <HabitTrackerApp
+              initialTheme={initialTheme}
+              onThemeChange={handleWidgetThemeChange}
+            />
+          </div>
         </div>
 
-        {/* Phone frame PNG */}
-        {frameSrc && (
-          <img
-            src={frameSrc} alt=""
-            style={{
-              position: "absolute", top: 0, left: 0,
-              width: "100%", height: "100%",
-              objectFit: "contain", zIndex: 2,
-              pointerEvents: "none", userSelect: "none",
-            }}
-          />
-        )}
+        <PhoneBezel theme={widgetTheme} />
       </div>
     </div>
   );

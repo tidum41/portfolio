@@ -2,13 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import MuxPlayer from "@mux/mux-player-react";
-import type { MuxPlayerRefAttributes } from "@mux/mux-player-react";
+import { useRouter } from "next/navigation";
 import { useDialKit } from "dialkit";
-import { motion } from "framer-motion";
-import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "./cardHover";
+import MuxMediaSlot, { muxPosterUrl } from "@/components/MuxMediaSlot";
+import NortheastArrow from "@/components/icons/NortheastArrow";
+import ProjectCardLift from "@/components/ProjectCardLift";
+import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 
-function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string; labelFontSize: number }) {
+/** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
+const MOUNT_STAGGER_MS = 200;
+/** Spread Mux teardown when leaving "/" so About/Archive paint + cursor
+ *  aren't blocked by N× MediaSource destroys on one commit. */
+const UNMOUNT_STAGGER_MS = 90;
+const UNMOUNT_BASE_MS = 120;
+
+function CardLabel({
+  title,
+  sub,
+  labelFontSize,
+  external,
+}: {
+  title: string;
+  sub?: string;
+  labelFontSize: number;
+  external?: boolean;
+}) {
   return (
     <div style={{ padding: "3px 2px" }}>
       <p style={{
@@ -18,7 +36,13 @@ function CardLabel({ title, sub, labelFontSize }: { title: string; sub?: string;
         lineHeight: 1.4,
         color: "var(--color-text-primary)",
         margin: 0,
-      }}>{title}</p>
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}>
+        {title}
+        {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
+      </p>
       {sub && (
         <p style={{
           fontFamily: "var(--font-sans)",
@@ -40,122 +64,183 @@ interface Props {
   title: string;
   sub?: string;
   aspectRatio: string;
-  /** Whether this card is on the currently-visible route. Defaults to true
-   *  for standalone use; the persistent work shell passes this so background
-   *  cards pause (rather than reload) while a case study is open. */
+  /** When false, tear down Mux/HLS after a deferred window (memory). */
   active?: boolean;
-  /** Opt out of the hover press-in scale — e.g. an external-link card that
-   *  redirects immediately doesn't benefit from the "press and settle" feel. */
-  hoverScale?: boolean;
+  /** When false, pause playback immediately without unmounting (soft-nav). */
+  playing?: boolean;
+  /** Grid order for staggered remount (0 first). */
+  mountOrder?: number;
 }
 
-export default function MuxAutoplayCard({ playbackId, href, title, sub, aspectRatio, active = true, hoverScale = true }: Props) {
+export default function MuxAutoplayCard({
+  playbackId,
+  href,
+  title,
+  sub,
+  aspectRatio,
+  active = true,
+  playing = true,
+  mountOrder = 0,
+}: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
     cardGap:       [6,  0, 24],
     labelFontSize: [18, 10, 32],
   });
 
-  const playerRef = useRef<MuxPlayerRefAttributes>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Latches after first in-view hit so returning to "/" can remount without
+  // waiting on IntersectionObserver again.
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [mountReady, setMountReady] = useState(false);
+  const warmCaseStudy = () => {
+    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
+  const commitCaseStudy = () => {
+    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  };
 
-  // A CDN thumbnail so the card always shows a frame — even if playback is
-  // blocked (e.g. iOS Low Power Mode) or hasn't started yet — instead of a
-  // flat placeholder rectangle. Matches MuxHero's approach.
-  const poster = `https://image.mux.com/${playbackId}/thumbnail.webp`;
-
-  // Only drive playback while the card is on/near screen. Browsers cap how many
-  // videos can decode simultaneously; gating on visibility keeps a grid full of
-  // autoplaying videos from starving each other so some never "render in".
   useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
+    if (shouldLoad || !active) return;
+    const container = containerRef.current;
+    if (!container) return;
     const obs = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { rootMargin: "200px 0px 200px 0px" },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px 200px 0px" },
     );
-    obs.observe(el);
+    obs.observe(container);
     return () => obs.disconnect();
-  }, []);
+  }, [shouldLoad, active]);
 
-  const shouldPlay = active && inView;
-
+  // Attach/detach are both staggered. Leave yields a paint first so soft-nav
+  // to About/Archive isn't one long Mux-destroy frame (cursor tip freezes).
+  // mountReady alone gates the player — `active` only schedules the timers.
   useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
-
-    if (!shouldPlay) {
-      player.pause?.();
-      return;
-    }
-
     let cancelled = false;
-    const attempt = () => {
-      const p = playerRef.current?.play?.();
-      // Swallow the rejection here — autoplay may be blocked (iOS Low Power
-      // Mode / strict autoplay). Recovery is handled by the gesture listeners.
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    };
-    attempt();
-
-    // If autoplay was blocked, resume on the first real user interaction
-    // anywhere on the page — muted playback is always permitted post-gesture.
-    const onGesture = () => {
-      if (cancelled) return;
-      if (shouldPlay && playerRef.current?.paused) attempt();
-    };
-    const opts: AddEventListenerOptions = { passive: true, capture: true };
-    const events = ["pointerdown", "touchstart", "keydown", "click"] as const;
-    events.forEach((e) => window.addEventListener(e, onGesture, opts));
-
+    if (active && shouldLoad) {
+      const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+      const id = window.setTimeout(() => {
+        if (!cancelled) setMountReady(true);
+      }, delay);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(id);
+      };
+    }
+    const delay = UNMOUNT_BASE_MS + Math.max(0, mountOrder) * UNMOUNT_STAGGER_MS;
+    const id = window.setTimeout(() => {
+      if (!cancelled) setMountReady(false);
+    }, delay);
     return () => {
       cancelled = true;
-      events.forEach((e) => window.removeEventListener(e, onGesture, opts));
+      window.clearTimeout(id);
     };
-  }, [shouldPlay]);
+  }, [active, shouldLoad, mountOrder]);
+
+  // Soft-nav leave: pause immediately so decode doesn't fight About paint,
+  // but keep the element mounted until `active` deferred-teardown fires.
+  useEffect(() => {
+    const root = containerRef.current;
+    const pauseEl = () => {
+      const el = root?.querySelector("video");
+      try { el?.pause(); } catch { /* ignore */ }
+    };
+    const playEl = () => {
+      const el = root?.querySelector("video");
+      try {
+        const p = el?.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      } catch { /* ignore */ }
+    };
+
+    // Sync with soft-nav click — don't wait for React playing=false effect.
+    window.addEventListener("soft-nav-start", pauseEl);
+    if (!playing) pauseEl();
+    else playEl();
+    return () => window.removeEventListener("soft-nav-start", pauseEl);
+  }, [playing, mountReady]);
+
+  // Poster stays painted under the player so tear-down/remount never blanks
+  // the card. Player only exists while scheduled (see mountReady).
+  const posterUrl = muxPosterUrl(playbackId, 640);
+  const showPlayer = shouldLoad && mountReady;
 
   const video = (
-    <div ref={cardRef} className="project-image project-img-wrap" style={{ borderRadius: dk.cardRadius, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio, position: "relative", width: "100%" }}>
-      <MuxPlayer
-        ref={playerRef}
-        playbackId={playbackId}
-        poster={poster}
-        autoPlay="muted"
-        loop
-        muted
-        playsInline
-        nohotkeys
+    <div className="project-media">
+      <div
+        ref={containerRef}
+        className="project-image project-img-wrap"
         style={{
-          position: "absolute",
-          inset: 0,
+          borderRadius: "var(--radius-card)",
+          overflow: "hidden",
+          background: "var(--color-placeholder)",
+          aspectRatio,
+          position: "relative",
           width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-          // @ts-ignore CSS custom properties
-          "--controls": "none",
-          "--media-background-color": "transparent",
         }}
-      />
+      >
+        <img
+          src={posterUrl}
+          alt=""
+          aria-hidden
+          decoding="async"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        />
+        {showPlayer && (
+          <MuxMediaSlot
+            playbackId={playbackId}
+            fill
+            playing={playing}
+          />
+        )}
+      </div>
     </div>
   );
 
-  const linkStyle = { textDecoration: "none", display: "block" } as const;
-  const external = href.startsWith("http");
+  const linkStyle = { textDecoration: "none", display: "block", color: "inherit", cursor: "pointer" } as const;
+  // Blue northeast arrow only when the card leaves the site — derived from
+  // href, not a hard-coded project id.
+  const external = /^(https?:|mailto:|tel:)/i.test(href);
+
+  const body = (
+    <ProjectCardLift style={{ gap: dk.cardGap }}>
+      {video}
+      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
+    </ProjectCardLift>
+  );
 
   return (
-    <motion.div
-      className="project-card"
-      {...(hoverScale ? { whileHover: { scale: CARD_HOVER_SCALE }, transition: CARD_HOVER_SPRING } : {})}
-      style={{ display: "flex", flexDirection: "column", gap: dk.cardGap }}
-    >
+    <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
       {external ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>{video}</a>
+        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+          {body}
+        </a>
       ) : (
-        <Link href={href} prefetch style={linkStyle}>{video}</Link>
+        <Link
+          href={href}
+          prefetch
+          style={linkStyle}
+          onMouseEnter={warmCaseStudy}
+          onFocus={warmCaseStudy}
+          onPointerDown={commitCaseStudy}
+          onClick={commitCaseStudy}
+        >
+          {body}
+        </Link>
       )}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} />
-    </motion.div>
+    </div>
   );
 }

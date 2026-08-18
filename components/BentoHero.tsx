@@ -21,7 +21,7 @@ interface BentoHeroProps {
 // the left cell's height always equals the right stack's combined height —
 // no fixed pixel heights anywhere. Crop/layout knobs are tunable live via
 // the "BentoHero" DialKit panel instead of Framer's property controls.
-export default function BentoHero({ featured, top, bottom, style }: BentoHeroProps) {
+export default function BentoHero({ featured, top, bottom, style, priority = true }: BentoHeroProps & { priority?: boolean }) {
   const dk = useDialKit("BentoHero", {
     leftRatio:     [50,   20,  80],
     aspectRatio:   [1.25, 0.6, 3],
@@ -45,6 +45,12 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
     borderRadius,
   });
 
+  // Side cells: enough for ~320px column @2x.
+  const sideSizes = "(max-width: 767px) 50vw, 480px";
+  // Featured cell is CSS-scaled (~1.3× by default) — request extra pixels so
+  // the magnified crop stays sharp on retina (display × dpr × zoom ≈ 800–900).
+  const featuredSizes = "(max-width: 767px) 100vw, 900px";
+
   return (
     <div
       style={{
@@ -64,8 +70,9 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
           src={featured.src}
           alt={featured.alt}
           fill
-          priority
-          sizes="(max-width: 767px) 50vw, 220px"
+          priority={priority}
+          quality={92}
+          sizes={featuredSizes}
           style={{ objectFit: "cover", objectPosition: `${dk.featuredCropX}% ${dk.featuredCropY}%`, transform: `scale(${dk.featuredZoom})` }}
         />
       </div>
@@ -75,7 +82,9 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             src={top.src}
             alt={top.alt}
             fill
-            sizes="(max-width: 767px) 50vw, 220px"
+            priority={priority}
+            quality={90}
+            sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.topCropX}% ${dk.topCropY}%`, transform: `scale(${dk.topZoom})` }}
           />
         </div>
@@ -84,7 +93,9 @@ export default function BentoHero({ featured, top, bottom, style }: BentoHeroPro
             src={bottom.src}
             alt={bottom.alt}
             fill
-            sizes="(max-width: 767px) 50vw, 220px"
+            priority={priority}
+            quality={90}
+            sizes={sideSizes}
             style={{ objectFit: "cover", objectPosition: `${dk.bottomCropX}% ${dk.bottomCropY}%`, transform: `scale(${dk.bottomZoom})` }}
           />
         </div>

@@ -12,6 +12,10 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Required for Sanity Studio (mounted at /studio, a real production route)
+  // — @sanity/ui and the sanity package both use styled-components
+  // internally at runtime, this isn't for our own app code. This transform
+  // also fixes styled-components class-name hydration mismatches under SSR.
   compiler: {
     styledComponents: true,
   },
@@ -24,7 +28,51 @@ const nextConfig = {
   },
   serverExternalPackages: ["sanity", "next-sanity", "@sanity/client", "@sanity/ui"],
   experimental: {
-    optimizePackageImports: ["framer-motion", "@mux/mux-player-react"],
+    optimizePackageImports: [
+      "framer-motion",
+      "@mux/mux-player-react",
+      "@phosphor-icons/react",
+    ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/playground",
+        destination: "/archive",
+        permanent: true,
+      },
+      {
+        source: "/playground/:path*",
+        destination: "/archive/:path*",
+        permanent: true,
+      },
+      {
+        source: "/resume",
+        destination: "/resume.pdf",
+        permanent: false,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/resume.pdf",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/pdf",
+          },
+          {
+            key: "Content-Disposition",
+            value: 'inline; filename="Mudit-Mahajan-Resume.pdf"',
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, must-revalidate",
+          },
+        ],
+      },
+    ];
   },
 };
 

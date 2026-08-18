@@ -1,0 +1,417 @@
+/* Habit tracker embed — scoped tokens. Contrast targets WCAG AA:
+   4.5:1 normal text, 3:1 large text / UI components. */
+
+.root {
+  --ht-space-1: 4px;
+  --ht-space-2: 8px;
+  --ht-space-3: 12px;
+  --ht-space-4: 16px;
+  --ht-space-5: 24px;
+  --ht-space-6: 32px;
+
+  --ht-cell-size: 44px;
+  --ht-calendar-gap: 4px;
+  --ht-stats-offset: 28px;
+  --ht-nav-hit: 44px;
+  --ht-safe-top: 64px;
+  --ht-radius-sm: 6px;
+  --ht-radius-md: 8px;
+
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  container-type: size;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ht-bg);
+  color: var(--ht-text);
+}
+
+/* PhoneEmbed renders this at 394×844 — proportional type bump + looser calendar. */
+@container (max-height: 860px) {
+  .root {
+    --ht-space-4: 14px;
+    --ht-space-5: 20px;
+    --ht-nav-hit: 40px;
+    --ht-cell-size: 46px;
+    --ht-calendar-gap: 6px;
+    --ht-stats-offset: 44px;
+  }
+
+  .content {
+    gap: 18px;
+  }
+
+  .titleBlock {
+    gap: 10px;
+  }
+
+  .habitTitle {
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+
+  .dateLabel {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .monthLabel {
+    font-size: 14px;
+  }
+
+  .dayHeader {
+    height: 28px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .dayCell {
+    font-size: 15px;
+  }
+
+  .streakLabel {
+    font-size: 19px;
+    font-weight: 400;
+  }
+
+  .progressLabel {
+    font-size: 14px;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+}
+
+.root[data-theme='light'] {
+  /* #2e2e2e on #e8e8e8 ≈ 9.7:1 */
+  --ht-bg: #e8e8e8;
+  --ht-text: #2e2e2e;
+  /* #5c5c5c on #e8e8e8 ≈ 4.6:1 */
+  --ht-text-muted: #5c5c5c;
+  /* #6a6a6a on #f3f3f3 ≈ 4.5:1 (day numerals) */
+  --ht-text-subtle: #6a6a6a;
+  --ht-cell-bg: #f3f3f3;
+  --ht-cell-future: #ececec;
+  --ht-cell-selected-bg: #454545;
+  --ht-cell-selected-text: #f3f3f3;
+  --ht-cell-selected-border: #2e2e2e;
+  /* Slightly darker than #f3f3f3 neighbors — quiet today cue */
+  --ht-cell-today-bg: #e0e0e0;
+  /* #5c5c5c on #e0e0e0 ≈ 4.6:1 (today ring + dot) */
+  --ht-cell-today-border: #5c5c5c;
+  --ht-cell-today-dot: #5c5c5c;
+  --ht-cell-today-border-selected: #c7c7cc;
+  --ht-cell-today-dot-selected: #c7c7cc;
+  --ht-progress-track: #c4c4c4;
+  --ht-progress-fill: #454545;
+  --ht-nav-press: rgba(0, 0, 0, 0.08);
+  --ht-cell-press: rgba(0, 0, 0, 0.06);
+}
+
+.root[data-theme='dark'] {
+  /* #f2f2f7 on #1c1c1e ≈ 14.8:1 */
+  --ht-bg: #1c1c1e;
+  --ht-text: #f2f2f7;
+  /* #aeaeb2 on #1c1c1e ≈ 6.5:1 */
+  --ht-text-muted: #aeaeb2;
+  /* #98989d on #2c2c2e ≈ 4.6:1 */
+  --ht-text-subtle: #98989d;
+  --ht-cell-bg: #2c2c2e;
+  --ht-cell-future: #252527;
+  --ht-cell-selected-bg: #48484a;
+  --ht-cell-selected-text: #f2f2f7;
+  --ht-cell-selected-border: #8e8e93;
+  /* Slightly lifted gray vs #2c2c2e neighbors */
+  --ht-cell-today-bg: #363638;
+  /* #aeaeb2 on #363638 ≈ 4.5:1 */
+  --ht-cell-today-border: #aeaeb2;
+  --ht-cell-today-dot: #aeaeb2;
+  --ht-cell-today-border-selected: #d1d1d6;
+  --ht-cell-today-dot-selected: #d1d1d6;
+  --ht-progress-track: #3a3a3c;
+  --ht-progress-fill: #e0e0e0;
+  --ht-nav-press: rgba(255, 255, 255, 0.1);
+  --ht-cell-press: rgba(255, 255, 255, 0.08);
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--ht-safe-top) var(--ht-space-5) 0;
+  flex-shrink: 0;
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ht-nav-hit);
+  height: var(--ht-nav-hit);
+  border: none;
+  background: transparent;
+  color: var(--ht-text);
+  border-radius: var(--ht-radius-md);
+  transition: transform 120ms ease, background-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.themeToggle:active {
+  transform: scale(0.96);
+  background: var(--ht-nav-press);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: var(--ht-space-4) var(--ht-space-5) var(--ht-space-5);
+  gap: var(--ht-space-4);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ht-space-2);
+  flex-shrink: 0;
+}
+
+.habitTitle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ht-text);
+  text-align: center;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  outline: none;
+  padding: 0;
+  caret-color: var(--ht-text);
+}
+
+.habitTitle::placeholder {
+  color: var(--ht-text-muted);
+  opacity: 1;
+  font-weight: 500;
+}
+
+.dateLabel {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ht-text-muted);
+  text-align: center;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ht-space-2);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.monthLabel {
+  margin: 0;
+  min-width: 9rem;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ht-text-muted);
+  text-transform: lowercase;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ht-nav-hit);
+  height: var(--ht-nav-hit);
+  border: none;
+  background: transparent;
+  color: var(--ht-text);
+  border-radius: var(--ht-radius-md);
+  flex-shrink: 0;
+  transition: transform 120ms ease, background-color 120ms ease, opacity 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.navButton:active:not(:disabled) {
+  transform: scale(0.96);
+  background: var(--ht-nav-press);
+}
+
+.navButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.calendarSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ht-space-3);
+  flex-shrink: 0;
+}
+
+.dayHeaders {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--ht-calendar-gap);
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ht-text-muted);
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--ht-calendar-gap);
+  justify-items: center;
+}
+
+.calendarSpacer {
+  width: var(--ht-cell-size);
+  height: var(--ht-cell-size);
+  justify-self: center;
+}
+
+.dayCell {
+  position: relative;
+  width: var(--ht-cell-size);
+  height: var(--ht-cell-size);
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--ht-radius-sm);
+  background: var(--ht-cell-bg);
+  color: var(--ht-text-subtle);
+  font-size: 14px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dayCell:active:not(:disabled) {
+  transform: scale(0.96);
+  background-color: color-mix(in srgb, var(--ht-cell-bg) 88%, var(--ht-text) 12%);
+}
+
+.dayCellFuture {
+  background: var(--ht-cell-future);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dayCellToday {
+  background: var(--ht-cell-today-bg);
+  box-shadow: inset 0 0 0 1.5px var(--ht-cell-today-border);
+}
+
+.dayCellToday::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ht-cell-today-dot);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.dayCellSelected {
+  background: var(--ht-cell-selected-bg);
+  color: var(--ht-cell-selected-text);
+  box-shadow: inset 0 0 0 1px var(--ht-cell-selected-border);
+}
+
+.dayCellSelected.dayCellToday {
+  box-shadow: inset 0 0 0 1.5px var(--ht-cell-today-border-selected);
+}
+
+.dayCellSelected.dayCellToday::after {
+  background: var(--ht-cell-today-dot-selected);
+}
+
+.dayNumber {
+  font-variant-numeric: tabular-nums;
+}
+
+.checkIcon {
+  color: var(--ht-cell-selected-text);
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ht-space-2);
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: var(--ht-stats-offset);
+}
+
+.streakLabel,
+.progressLabel {
+  text-align: center;
+}
+
+.streakLabel {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--ht-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ht-progress-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--ht-progress-fill);
+  transition: width 300ms ease;
+}
+
+.progressLabel {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--ht-text-muted);
+  font-variant-numeric: tabular-nums;
+}

@@ -10,6 +10,29 @@ export type CubicBezier = [number, number, number, number];
 export const EASE_OPACITY: CubicBezier = [0.16, 1, 0.3, 1];   // == --spring-panel
 export const EASE_Y:       CubicBezier = [0.22, 1, 0.36, 1];  // "settle" curve
 export const EASE_EXIT:    CubicBezier = [0.4, 0, 1, 1];      // fast, simple dismissal
+export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease / PS3ControlPanel
+
+export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
+
+// Page spawn does not scale (Mux letterboxes; type reads as a glitch).
+export const XMB_ENTRANCE_SCALE = 1;
+
+/** Resting / reduced-motion transform for spawn items. */
+export const SPAWN_REST = "translate(0px, 0px)";
+
+/** Appear-from opacity. 0 so the enter is a fade, not already-there type
+ *  that then moves. Resting state stays 1; skipped tweens snap to 1. */
+export const SPAWN_FROM_OPACITY = 0;
+
+export function spawnHidden(x: number, y: number): string {
+  return `translate(${x}px, ${y}px)`;
+}
+
+export const PANEL_DURATION = {
+  backdrop: { enter: 0.22, exit: 0.16 },
+  panel:    { enter: 0.26, exit: 0.16 },
+  embed:    { enter: 0.22, exit: 0.16 },
+} as const;
 
 export const DURATION = {
   routeExit:         0.16,
@@ -21,32 +44,27 @@ export const DURATION = {
 } as const;
 
 export interface EntranceDefaults {
+  x: number;          // px, unused (always 0) — kept so DialKit can still expose it
   y: number;          // px, slide-up distance
   duration: number;   // s, per-item
   stagger: number;    // s, delay increment between items
   maxSpread: number;  // s, cap on total stagger spread regardless of item count
+  /** Always 1 for page content — scale on cards/type reads as a glitch. */
+  scale: number;
+  /** Animation `from` opacity. Resting state stays 1. */
+  fromOpacity?: number;
 }
 
-// Content entrance: fade-up + slide-up, staggered.
-// Shared by the work-page grid, about page, and BentoGallery — BentoGallery
-// reads the matching dialkit key ("Entrance") directly rather than importing
-// this object, since it stays framer-motion-free, but the numbers here are
-// the single source of truth for what those live-tunable defaults should be.
+// Page enter (Work grid, About copy, archive tiles) and case-study type.
+// Tuned in /dev/motion-lab (Case study). CSS: `.ps3-enter` / `.cs-open-type`.
 export const ENTRANCE_DEFAULTS: EntranceDefaults = {
-  y: 20,
-  duration: 0.45,
-  stagger: 0.05,
-  maxSpread: 0.4,
+  x: 0,
+  y: 8,
+  duration: 1.14,
+  stagger: 0.15,
+  maxSpread: 0.28,
+  scale: 1,
+  fromOpacity: SPAWN_FROM_OPACITY,
 };
 
-// Case-study hero entrance — same fade-up vocabulary as ENTRANCE_DEFAULTS,
-// tuned differently: the slide is much more subtle (a whole-page y-slide
-// read as "buggy" against the TOC's sticky position, which never participates
-// in this entrance at all). Lives on its own DialKit panel ("Case Study
-// Entrance") so tuning it doesn't retune the work grid / about / BentoGallery.
-export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = {
-  y: 8,
-  duration: 0.55,
-  stagger: 0.08,
-  maxSpread: 0.4,
-};
+export const CASE_STUDY_ENTRANCE_DEFAULTS: EntranceDefaults = ENTRANCE_DEFAULTS;

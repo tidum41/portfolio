@@ -3,17 +3,39 @@
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { usePathname, useRouter } from "next/navigation";
+import { memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
 import HeroLegibilityScrim from "@/components/HeroLegibilityScrim";
 import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
-import { CARD_HOVER_SPRING, CARD_HOVER_SCALE } from "@/components/cardHover";
-import { clearInstantBack, peekInstantBack } from "@/lib/instantNav";
+import ProjectCardLift from "@/components/ProjectCardLift";
+import ProjectPopup from "@/components/ProjectPopup";
+import CdPlayerPoster from "@/components/CdPlayerPoster";
+import PhonePoster from "@/components/PhonePoster";
+import NortheastArrow from "@/components/icons/NortheastArrow";
+import { clearInstantBack } from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { useTabArrival } from "@/lib/useTabArrival";
+import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import type { SanityProject } from "@/lib/sanity/queries";
+
+/** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
+function isExternalHref(href: string) {
+  return /^(https?:|mailto:|tel:)/i.test(href);
+}
+
+const CARD_LINK_STYLE = {
+  textDecoration: "none",
+  color: "inherit",
+  display: "flex",
+  flexDirection: "column",
+  gap: "inherit",
+  cursor: "pointer",
+} as const;
 
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
@@ -32,14 +54,80 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
-const PS3Silk         = dynamic(() => import("@/components/PS3Silk"));
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
+type PopupId = "cd" | "habit";
+
+const POPUP_EMBED_MAX_W = 1100;
+const HABIT_POPUP_MAX_W = 560;
+// Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
+// carousel + drag hint aren't clipped at narrow modal widths. Sized to
+// fill more of the viewport while leaving room for panel chrome.
+// Width stays ≥ CDPlayerWork's mobileBreakpoint (1000) so desktop modals
+// keep the horizontal player + grid layout instead of the carousel.
+const CD_POPUP_EMBED_H = "min(76dvh, 880px)";
+// Phone mockup is ~9:19 — a 4:3 popup slot caps height and shrinks the
+// embed; give the habit popup a portrait slot so the phone can scale up.
+const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
+
+// React's reconciler recreates a Portal's entire subtree (destroying its
+// component state) whenever createPortal's target DOM node differs from the
+// previous render — see ReactChildFiber's updatePortal, which only reuses
+// the existing fiber when `containerInfo` is referentially the same. Moving
+// the live embed between grid/popup slots by changing `container`
+// directly would therefore reset it (WebAudio graph, calendar selection,
+// etc.) on every open/close — invisible for the old iframe embeds, where a
+// reload was cheap, but a real bug for native components.
+//
+// Fix: portal into one permanent, off-tree div created once and never swapped
+// (so createPortal's container never changes, and React treats every
+// re-render as a plain update). Move that stable div between the logical
+// grid/popup target elements with a plain DOM appendChild, which the
+// browser treats as a reparent, not a destroy/recreate.
+function EmbedPortal({ container, children }: { container: HTMLDivElement | null; children: ReactNode }) {
+  // Create the host node during the first client render so children can paint
+  // in the same frame as append (useEffect deferred one paint and flashed).
+  const [portalEl] = useState(() => {
+    if (typeof document === "undefined") return null;
+    const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.inset = "0";
+    el.style.width = "100%";
+    el.style.height = "100%";
+    return el;
+  });
+
+  useLayoutEffect(() => {
+    if (!container || !portalEl) return;
+    container.appendChild(portalEl);
+  }, [container, portalEl]);
+
+  if (!portalEl) return null;
+  return createPortal(children, portalEl);
+}
+
+// Northeast arrow — shared glyph. Blue is reserved for external links only;
+// in-page popup tiles use currentColor so they match the title (not a hyperlink).
+function OpensInPopupIcon() {
+  return <NortheastArrow size={13} />;
+}
+
 // ─── Card label ────────────────────────────────────────────────────────
-function CardLabel({ title, sub }: { title: string; sub?: string }) {
+function CardLabel({
+  title,
+  sub,
+  showPopupIcon,
+  external,
+}: {
+  title: string;
+  sub?: string;
+  showPopupIcon?: boolean;
+  /** External project link — blue northeast arrow. */
+  external?: boolean;
+}) {
   return (
     <div style={{ padding: 0 }}>
       <p style={{
@@ -49,7 +137,14 @@ function CardLabel({ title, sub }: { title: string; sub?: string }) {
         lineHeight: 1.4,
         color: "var(--color-text-primary)",
         margin: 0,
-      }}>{title}</p>
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}>
+        {title}
+        {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
+        {showPopupIcon && <OpensInPopupIcon />}
+      </p>
       {sub && (
         <p style={{
           fontFamily: "var(--font-sans)",
@@ -65,48 +160,85 @@ function CardLabel({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
+// Northeast arrow blue = external only. Popup tiles keep a neutral arrow;
+// InteractiveBadge already marks the media as explorable.
+
 /** Mounted once, unconditionally, by the root layout — never unmounts across
  *  client-side navigation. Visibility is toggled purely with CSS based on the
- *  current route, so returning to "/" (via the case-study Back control, the
- *  Nav "work" link, or browser back/forward) never remounts, refetches, or
- *  reloads video/iframes — the DOM was simply never destroyed.
+ *  current route, so returning to "/" restores scroll and shell chrome without
+ *  remounting the page tree.
  *
- *  `hasEverBeenActive` lazily gates the heavy embeds (autoplay videos, the
- *  two live iframes) so sessions that never visit "/" don't pay for them.
- *  Once true it never resets, so the grid never has to "reload" again.
+ *  Heavy media (Mux grid players, live CD) unmount while off "/" and remount
+ *  on return — posters keep cards feeling instant without holding paused HLS /
+ *  audio graphs in memory. Habit live embed remains popup-only.
+ *
+ *  `hasEverBeenActive` lazily gates the heavy embeds so sessions that never
+ *  visit "/" don't pay for them. Once true it never resets.
  *
  *  Entrance animation has three distinct cases:
  *   - True first load at "/" (data-intro gate active): hero + PS3Silk's own
  *     slow first-load animation is the whole show — this wrapper stays
  *     instant so it doesn't double-animate on top of that. The grid waits
- *     for "intro-done" (via useGridFirstLoadActive), then plays the same
- *     entrance stagger as every other case, giving the hero its moment.
- *   - Case-study "Back" (peekInstantBack()): stays fully instant, exactly as
- *     before — this is the fix that avoids remounting PS3Silk's WebGL canvas.
- *   - Everything else (Nav "work" link, browser back from about/playground,
- *     etc.): hero settles in first, then the grid cascades in shortly after,
- *     replaying on every such arrival since hero/grid re-hide when you leave. */
+ *     for "intro-done" (via useGridFirstLoadActive), then plays its stagger.
+ *   - Case-study "Back": content stays at rest while hidden, then snaps.
+ *   - Primary-nav returns: shell is instant; hero + grid play the enter.
+ *   - Hero wrapper stays instant during intro so it doesn't stack on HeroText.
+ */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
-  const isWorkRoute = pathname === "/";
+  const visible = useResolvedPrimaryTab(pathname) === "work";
+  return <WorkKeepAlive visible={visible} projects={projects} />;
+}
 
-  const [hasEverBeenActive, setHasEverBeenActive] = useState(isWorkRoute);
+const WorkKeepAlive = memo(function WorkKeepAlive({
+  visible,
+  projects,
+}: {
+  visible: boolean;
+  projects: SanityProject[];
+}) {
+  const router = useRouter();
+  const warmProjectNav = (href: string) => {
+    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  };
+  const commitProjectNav = (href: string) => {
+    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  };
+
+  const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
+  // Which embed's popup is active, and whether the modal is visibly open.
+  // openPopup stays set through the exit animation so the single portaled
+  // iframe doesn't unmount until onExitComplete fires.
+  const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+  // CD: live grid preview once "/" visited (perf-gated via active=false + Disc
+  // RAF idle-stop). Habit: high-quality poster in grid; live PhoneEmbed only
+  // while the popup is open (state persists in localStorage across remounts).
+  const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
+  const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
+  const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
+  const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
+  const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
+  // CD poster only covers while the modal is open. Habit poster is the grid.
+  const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
+  const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
+  // Poster opacity transitions only on close (reveal live embed). Open snaps
+  // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
+  const [cdPosterFade, setCdPosterFade] = useState(false);
+  const [habitPosterFade, setHabitPosterFade] = useState(false);
+  // Habit poster frame/theme: site theme until the live widget reports its own.
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === "undefined") return "light";
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  });
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
 
-  // Captured synchronously during render, the moment isWorkRoute flips to
-  // true — before any effect (including clearInstantBack, below) has a
-  // chance to run. Using a ref comparison here (not a state update inside an
-  // effect) avoids an extra render pass that could show one frame of the
-  // wrong variant.
-  const wasWorkRouteRef = useRef(isWorkRoute);
-  const instantArrivalRef = useRef(false);
-  if (isWorkRoute && !wasWorkRouteRef.current) {
-    instantArrivalRef.current = peekInstantBack();
-  }
-  wasWorkRouteRef.current = isWorkRoute;
-  const instant = instantArrivalRef.current;
+  // Rising-edge latch: Back snaps; every other Work show bumps `epoch` so
+  // keep-alive EntranceItems replay instead of sitting at rest.
+  const { snap, epoch } = useTabArrival(visible);
+  const instant = snap;
 
   // Whether this session's very first paint had the first-load intro gate
   // active at all (i.e. the literal first page load was "/"). Captured once,
@@ -118,31 +250,121 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   }
 
   const gridGateOpen = useGridFirstLoadActive();
-  const gridActive = gridGateOpen && isWorkRoute;
-  const heroInstant = instant || (Boolean(isFirstLoadIntroRef.current) && !gridGateOpen);
+  const gridActive = gridGateOpen && visible;
+  // Read the live intro attribute during render (not only the layout-effect
+  // grid gate). Hydration reuses useState(true) for the gate, so the first
+  // client frame used to start the hero EntranceItem tween before the gate
+  // closed — nested 8px + HeroText's own slide, which is the first-load jitter.
+  const introPlaying =
+    typeof document !== "undefined" &&
+    document.documentElement.getAttribute("data-intro") === "playing";
+  const heroInstant =
+    instant ||
+    introPlaying ||
+    (Boolean(isFirstLoadIntroRef.current) && !gridGateOpen);
 
   const dk = useEntranceDials();
+
+  // Pause Mux/CD on leave. Reclaim after a long idle off-route — never on
+  // the About click frame. Grid CD poster only covers once live media unmounts.
+  const HEAVY_TEARDOWN_MS = 15000;
+  const [heavyMediaLive, setHeavyMediaLive] = useState(visible);
+  useEffect(() => {
+    if (visible) {
+      setHeavyMediaLive(true);
+      return;
+    }
+    let cancelled = false;
+    let idleId = 0;
+    const tearDown = () => {
+      if (cancelled) return;
+      setHeavyMediaLive(false);
+    };
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return;
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(tearDown, { timeout: 1500 });
+      } else {
+        tearDown();
+      }
+    }, HEAVY_TEARDOWN_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+    };
+  }, [visible]);
+
+  // Resume Mux after Work paints — double-rAF + short delay so silk/shell
+  // show first without decode competing on the arrival frame.
+  const [mediaPlaying, setMediaPlaying] = useState(visible);
+  useEffect(() => {
+    if (!visible) {
+      setMediaPlaying(false);
+      return;
+    }
+    let cancelled = false;
+    let timeoutId = 0;
+    const raf1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        timeoutId = window.setTimeout(() => {
+          if (!cancelled) setMediaPlaying(true);
+        }, 80);
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [visible]);
+
+  // Leaving "/" — close popups. Live CD stays in the hidden work shell until
+  // idle teardown; the grid poster covers the slot only when that happens.
+  useEffect(() => {
+    if (visible) return;
+    setPopupVisible(false);
+    setOpenPopup(null);
+    setHabitPortalTarget(null);
+  }, [visible]);
+
+  useEffect(() => {
+    if (heavyMediaLive) return;
+    setCdPosterOpacity(1);
+    setCdPosterFade(false);
+  }, [heavyMediaLive]);
+
+  // Back on "/": once the remounted live CD is in place, fade the poster out
+  // (unless the modal is open — poster stays opaque behind the blur).
+  useEffect(() => {
+    if (!visible || !hasEverBeenActive) return;
+    if (openPopup === "cd") return;
+    setCdPosterFade(true);
+    setCdPosterOpacity(0);
+  }, [visible, hasEverBeenActive, openPopup]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
   // globally (for anchor-link nav), which would otherwise make this snap-back
   // visibly animate instead of landing exactly where it was immediately.
   useLayoutEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     if (!hasEverBeenActive) setHasEverBeenActive(true);
     window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
     // Resume normal tracking now that we're confirmed back — the suppression
     // was only ever meant to survive the single departing transition.
     suppressTrackingRef.current = false;
-  }, [isWorkRoute]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // AnimationProvider reads the instant-back flag once, synchronously, to
   // decide whether the outgoing case study's exit should skip its fade. Clear
   // it shortly after landing back here so it doesn't leak into unrelated,
-  // later transitions (e.g. about -> playground).
+  // later transitions (e.g. about -> archive).
   useEffect(() => {
-    if (isWorkRoute) clearInstantBack();
-  }, [isWorkRoute]);
+    if (visible) clearInstantBack();
+  }, [visible]);
 
   // Replay intro when the user returns to this tab from outside the site.
   // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
@@ -160,7 +382,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     const lastClickAtRef = { current: 0 };
     const hiddenByClickRef = { current: false };
     const replay = () => {
-      if (!isWorkRoute) return;
+      if (!visible) return;
       document.documentElement.setAttribute("data-intro", "playing");
       window.dispatchEvent(new CustomEvent("intro-replay"));
     };
@@ -191,7 +413,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Continuously track scroll position while visible, so it's always current
   // by the moment we're hidden. Suppressed after a navigating click (see
@@ -204,7 +426,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // too slow to beat this) would otherwise capture those and silently
   // overwrite the real position with a collapsed one.
   useEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     let rafId: number | null = null;
     const onScroll = () => {
       if (rafId != null) return;
@@ -219,7 +441,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
       window.removeEventListener("scroll", onScroll);
       if (rafId != null) cancelAnimationFrame(rafId);
     };
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Freeze the scroll position synchronously the instant a project card is
   // clicked — a *capturing*-phase listener runs before the Link's own click
@@ -229,14 +451,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   // component is hidden. Un-suppressed by the restore effect once we're
   // confirmed back on "/", so normal tracking resumes for next time.
   useEffect(() => {
-    if (!isWorkRoute) return;
+    if (!visible) return;
     const onClickCapture = () => {
       scrollYRef.current = window.scrollY;
       suppressTrackingRef.current = true;
     };
     window.addEventListener("click", onClickCapture, { capture: true });
     return () => window.removeEventListener("click", onClickCapture, { capture: true });
-  }, [isWorkRoute]);
+  }, [visible]);
 
   // Manual cross-column stagger rank: the two DOM columns (even/odd project
   // index) need to read as one interleaved sequence — project[0] (left),
@@ -250,35 +472,99 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
     : dk.stagger;
   const rankDelay = (rank: number) => rank * perItemStagger;
 
+  const openPopupHandler = (id: PopupId) => {
+    if (id === "cd") {
+      setHasEverBeenActive(true);
+      setHeavyMediaLive(true);
+      setCdPosterFade(false);
+      setCdPosterOpacity(1);
+    } else {
+      setHabitPosterFade(false);
+      setHabitPosterOpacity(1);
+    }
+    setOpenPopup(id);
+    setPopupVisible(true);
+  };
+
+  const closePopup = () => {
+    setPopupVisible(false);
+    // CD: fade poster out so the live grid preview returns.
+    // Habit: poster stays the grid face (no live-under-card).
+    if (openPopup === "cd") {
+      setCdPosterFade(true);
+      setCdPosterOpacity(0);
+    }
+  };
+
+  const handlePopupExitComplete = (_id: PopupId) => {
+    setOpenPopup(null);
+  };
+
+  // Seed habit poster theme from the site only until the live widget reports
+  // its own (don't overwrite session widget theme on every site toggle/close).
+  const habitThemeFromWidgetRef = useRef(false);
+  useEffect(() => {
+    if (openPopup === "habit") return;
+    if (habitThemeFromWidgetRef.current) return;
+    const sync = () => {
+      if (habitThemeFromWidgetRef.current) return;
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      setHabitWidgetTheme(dark ? "dark" : "light");
+    };
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, [openPopup]);
+
+  const onHabitWidgetThemeChange = (theme: "light" | "dark") => {
+    habitThemeFromWidgetRef.current = true;
+    setHabitWidgetTheme(theme);
+  };
+
+  // CD portals between grid ↔ popup. Habit live instance only targets the popup.
+  useLayoutEffect(() => {
+    if (!hasEverBeenActive) return;
+    if (openPopup === "cd" && popupVisible && popupCdEl) {
+      setCdPortalTarget(popupCdEl);
+    } else if (gridCdEl) {
+      setCdPortalTarget(gridCdEl);
+    }
+  }, [hasEverBeenActive, openPopup, popupVisible, popupCdEl, gridCdEl]);
+
+  useLayoutEffect(() => {
+    if (openPopup === "habit" && popupHabitEl) {
+      setHabitPortalTarget(popupHabitEl);
+    } else {
+      setHabitPortalTarget(null);
+    }
+  }, [openPopup, popupHabitEl]);
+
   return (
+    <>
     <div
-      style={{ display: isWorkRoute ? "block" : "none", fontFamily: "var(--font-sans)" }}
-      aria-hidden={!isWorkRoute}
-      inert={!isWorkRoute}
-      // When this shell is hidden on other routes, its hero + grid still sit in
-      // the DOM — exclude all of it from Google snippets so project titles like
-      // "Simplifying UCLA subleasing" don't get stitched onto the homepage blurb.
-      {...(!isWorkRoute ? { "data-nosnippet": true } : {})}
+      data-primary-shell="work"
+      style={{ display: visible ? "block" : "none", fontFamily: "var(--font-sans)", position: "relative", zIndex: 1 }}
+      aria-hidden={!visible}
+      inert={!visible}
+      {...(!visible ? { "data-nosnippet": true } : {})}
     >
       <IntroOrchestrator />
 
-      {/* ── Hero — full-viewport width, no max-width constraint ── */}
+      {/* ── Hero — more top/bottom breathing room; cards still peek ── */}
       <section
         aria-label="Introduction"
+        className="work-hero"
+        data-work-hero
         style={{
           position: "relative",
-          overflow: "hidden",
-          paddingTop: 80,
-          paddingBottom: 64,
+          overflow: "visible",
+          paddingTop: "var(--hero-pt)",
+          paddingBottom: "var(--hero-pb)",
         }}
       >
-        <PS3Silk
-          mode={1}
-          active={isWorkRoute}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-        />
         <HeroLegibilityScrim />
-        <EntranceItem active={isWorkRoute} instant={heroInstant} delay={0} style={{
+        <EntranceItem active={visible} instant={heroInstant} replayToken={epoch} delay={0} style={{
           position: "relative",
           maxWidth: "var(--grid-max-w)",
           marginInline: "auto",
@@ -286,7 +572,7 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           paddingRight: "var(--page-px)",
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: "var(--space-3)",
         }}>
           <HeroTextWithRabbit />
         </EntranceItem>
@@ -294,13 +580,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
 
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
-      <div className="intro-hide" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <section
           aria-label="Portfolio"
           className="project-grid portfolio-grid"
           style={{
-            paddingTop: 48,
-            paddingBottom: 48,
+            paddingTop: "var(--space-5)",
+            paddingBottom: "var(--space-8)",
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
             gap: "var(--grid-gutter)",
@@ -308,13 +594,13 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
           }}
         >
           {/* ── Left column ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 48, minWidth: 0 }}>
+          <div className="portfolio-grid-col">
             {projects
               .filter((_, i) => i % 2 === 0)
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -322,50 +608,90 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         title={p.title}
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
-                        active={isWorkRoute}
-                        hoverScale={p._id !== "project-todolist"}
+                        active={heavyMediaLive}
+                        playing={mediaPlaying}
+                        mountOrder={rank}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
-                    <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                      <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                        <Image
-                          src={p.image.asset.url}
-                          alt={p.title}
-                          fill
-                          className="project-image"
-                          style={{ objectFit: "cover" }}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    </Link>
-                    <CardLabel title={p.title} sub={p.subtitle} />
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
+                      <Link
+                        href={p.href}
+                        prefetch
+                        style={CARD_LINK_STYLE}
+                        onMouseEnter={() => warmProjectNav(p.href)}
+                        onFocus={() => warmProjectNav(p.href)}
+                        onPointerDown={() => commitProjectNav(p.href)}
+                        onClick={() => commitProjectNav(p.href)}
+                      >
+                        <div className="project-media">
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                            <Image
+                              src={p.image.asset.url}
+                              alt={p.title}
+                              fill
+                              className="project-image"
+                              style={{ objectFit: "cover" }}
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          </div>
+                        </div>
+                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                      </Link>
+                    </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
               })}
 
-            {/* CDPlayer — always in left column after Sanity projects */}
-            <EntranceItem active={gridActive} instant={instant} delay={rankDelay(projects.length)} data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div className="project-image" style={{ borderRadius: 4, overflow: "hidden", position: "relative", aspectRatio: "4 / 3" }}>
-                {hasEverBeenActive && <CDPlayer dialKitKey="CDPlayerWork" defaults={{ zoom: 1.28, offsetX: 0, offsetY: -40, cardW: 1296, cardH: 1080, canvasW: 1296, canvasH: 1080, iframeW: 1296, iframeH: 1080 }} />}
-                <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                  <InteractiveBadge />
+            {/* CDPlayer — whole card opens the popup; one live instance is
+                portaled between this grid slot and the modal (see below). */}
+            <EntranceItem
+              active={gridActive}
+              instant={instant}
+              replayToken={epoch}
+              delay={rankDelay(projects.length)}
+              className="project-card portfolio-grid-card"
+              data-grid-card="cd"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Drag a CD in a larger view"
+              onClick={() => openPopupHandler("cd")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
+              style={{ gap: 6, cursor: "pointer", order: projects.length }}
+            >
+              <ProjectCardLift style={{ gap: 6 }}>
+                <div className="project-media">
+                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
+                    <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
+                    <div
+                      ref={setGridCdEl}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
+                      }}
+                    />
+                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                      <InteractiveBadge />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <CardLabel title="Drag a CD" sub="exploration" />
+                <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
+              </ProjectCardLift>
             </EntranceItem>
           </div>
 
           {/* ── Right column ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 48, minWidth: 0 }}>
+          <div className="portfolio-grid-col">
             {projects
               .filter((_, i) => i % 2 === 1)
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -373,51 +699,179 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
                         title={p.title}
                         sub={p.subtitle}
                         aspectRatio={p.aspectRatio}
-                        active={isWorkRoute}
-                        hoverScale={p._id !== "project-todolist"}
+                        active={heavyMediaLive}
+                        playing={mediaPlaying}
+                        mountOrder={rank}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} delay={rankDelay(rank)} className="project-card" whileHover={{ scale: CARD_HOVER_SCALE }} transition={CARD_HOVER_SPRING} style={{ display: "flex", flexDirection: "column", gap: 8 }} {...(p.caseStudy ? { "data-cursor-label": "View Case Study" } : {})}>
-                    <Link href={p.href} prefetch style={{ textDecoration: "none", display: "block" }}>
-                      <div className="project-img-wrap" style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
-                        <Image
-                          src={p.image.asset.url}
-                          alt={p.title}
-                          fill
-                          className="project-image"
-                          style={{ objectFit: "cover" }}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    </Link>
-                    <CardLabel title={p.title} sub={p.subtitle} />
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
+                      <Link
+                        href={p.href}
+                        prefetch
+                        style={CARD_LINK_STYLE}
+                        onMouseEnter={() => warmProjectNav(p.href)}
+                        onFocus={() => warmProjectNav(p.href)}
+                        onPointerDown={() => commitProjectNav(p.href)}
+                        onClick={() => commitProjectNav(p.href)}
+                      >
+                        <div className="project-media">
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                            <Image
+                              src={p.image.asset.url}
+                              alt={p.title}
+                              fill
+                              className="project-image"
+                              style={{ objectFit: "cover" }}
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                          </div>
+                        </div>
+                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                      </Link>
+                    </ProjectCardLift>
                   </EntranceItem>
                 ) : null;
               })}
 
-            {/* Habit tracker — phone embed */}
-            <EntranceItem active={gridActive} instant={instant} delay={rankDelay(projects.length + 1)} data-cursor-label="click around!" data-cursor-timed style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ borderRadius: 4, overflow: "hidden", background: "var(--color-phone-bg)", position: "relative" }}>
-                <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                  <InteractiveBadge />
+            {/* Habit tracker — same single-instance portal treatment as CD. */}
+            <EntranceItem
+              active={gridActive}
+              instant={instant}
+              replayToken={epoch}
+              delay={rankDelay(projects.length + 1)}
+              className="project-card portfolio-grid-card"
+              data-grid-card="habit"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Dumb Habit Tracker in a larger view"
+              onClick={() => openPopupHandler("habit")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
+              style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
+            >
+              <ProjectCardLift style={{ gap: 6 }}>
+                <div className="project-media">
+                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                      <InteractiveBadge />
+                    </div>
+                    <PhonePoster
+                      opacity={habitPosterOpacity}
+                      fade={habitPosterFade}
+                      theme={habitWidgetTheme}
+                      // Keep the inert screen mounted after the first "/" visit
+                      // so the poster reflects this session's habit state across
+                      // navigations (no cold remount flash on return).
+                      showScreen={hasEverBeenActive}
+                    />
+                  </div>
                 </div>
-                {hasEverBeenActive && (
-                  <PhoneEmbed
-                    url="https://sprightly-stroopwafel-8f1061.netlify.app/"
-                    frameSrcLight="/phonemockup-light.webp"
-                    frameSrcDark="/phonemockup-dark.webp"
-                  />
-                )}
-              </div>
-              <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" />
+                <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
+              </ProjectCardLift>
             </EntranceItem>
           </div>
         </section>
 
-        {hasEverBeenActive && isWorkRoute && <PS3ControlPanel />}
+        {/* Keep the panel mounted across soft-nav — it portals to document.body
+            so parent display:none cannot hide it; `visible` toggles the portal. */}
+        {hasEverBeenActive && (
+          <PS3ControlPanel
+            instantReturn={instant}
+            visible={visible}
+          />
+        )}
       </div>
     </div>
+
+      {visible && openPopup === "cd" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("cd")}
+          title="Drag a CD"
+          sub="exploration"
+          maxWidth={POPUP_EMBED_MAX_W}
+          panelBg="var(--color-modal-bg)"
+        >
+          <div
+            className="project-image"
+            style={{
+              borderRadius: 4,
+              overflow: "hidden",
+              position: "relative",
+              height: CD_POPUP_EMBED_H,
+              flex: "1 1 auto",
+              minHeight: 280,
+              background: "var(--color-modal-bg)",
+              colorScheme: "inherit",
+            }}
+          >
+            <div
+              ref={(el) => {
+                setPopupCdEl(el);
+                if (el) setCdPortalTarget(el);
+                else if (gridCdEl) setCdPortalTarget(gridCdEl);
+              }}
+              style={{ position: "absolute", inset: 0 }}
+            />
+          </div>
+        </ProjectPopup>
+      )}
+
+      {visible && openPopup === "habit" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("habit")}
+          title="Dumb Habit Tracker"
+          sub="product design + frontend"
+          maxWidth={HABIT_POPUP_MAX_W}
+          panelBg="var(--color-phone-bg)"
+        >
+          <div
+            style={{
+              borderRadius: 4,
+              overflow: "hidden",
+              position: "relative",
+              height: HABIT_POPUP_EMBED_H,
+              flex: "1 1 auto",
+              minHeight: 0,
+              background: "var(--color-phone-bg)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+          </div>
+        </ProjectPopup>
+      )}
+
+      {/*
+        CD mounts while heavy media is live, or immediately when the modal
+        opens (idle teardown may have unmounted it). Habit stays popup-only.
+      */}
+      {hasEverBeenActive && (heavyMediaLive || openPopup === "cd") && (
+        <EmbedPortal container={cdPortalTarget}>
+          <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
+        </EmbedPortal>
+      )}
+      {openPopup === "habit" && visible && habitPortalTarget && (
+        <EmbedPortal container={habitPortalTarget}>
+          <PhoneEmbed
+            expanded
+            initialTheme={habitWidgetTheme}
+            onWidgetThemeChange={onHabitWidgetThemeChange}
+          />
+        </EmbedPortal>
+      )}
+    </>
   );
-}
+}, (prev, next) => {
+  // Hidden work must not reconcile on About ↔ Archive. Leave/enter still
+  // re-renders so Mux can pause without destroying HLS on the click frame.
+  if (!prev.visible && !next.visible) return true;
+  return prev.visible === next.visible && prev.projects === next.projects;
+});

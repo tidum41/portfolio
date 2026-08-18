@@ -1,0 +1,243 @@
+/* Scoped to .layout (not a bare `*`/`body` reset) — this used to be a
+   top-level Vite app with the whole document to itself; ported into the
+   portfolio it only owns this subtree, so the reset/font/background rules
+   that used to target html/body/#root are rewritten to target .layout and
+   its descendants instead. Same pattern as the existing `.ps3cp *` scoped
+   reset in app/globals.css — the portfolio has no global border-box reset,
+   and this app's absolute-positioning math depends on one. */
+.layout,
+.layout *,
+.layout *::before,
+.layout *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.layout {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Desktop / Horizontal layout ─────────────────────────────────────── */
+
+.layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* This device's own text (album titles, "drag to play" hint, etc.) had no
+     backing of its own — it inherited the popup's var(--color-modal-bg),
+     which goes dark in the site's dark theme and made dark-on-nothing text
+     vanish. Give the card its own backdrop that follows the site's theme,
+     with matching light/dark text colors (set via --cd-* custom properties
+     on this element, computed in CdPlayerApp.tsx) — the player device itself
+     (its plastic shell, buttons) stays the same silver/gray in both themes,
+     only the card's own background is what actually flips. */
+  /* Site-theme card backdrop + text — driven by html[data-theme], not React
+     state, so SSR/hydration and the grid poster always agree with the live
+     embed without a post-mount theme observer. */
+  /* Inherit the site modal token so the card can't flash the opposite
+     theme: these vars live on html (always loaded) instead of waiting on
+     a :global(html[data-theme]) descendant rule after a dynamic import. */
+  --cd-bg-color: var(--color-modal-bg);
+  --cd-title-color: var(--color-text-primary);
+  --cd-artist-color: var(--color-text-muted);
+  --cd-hint-accent: #c01010;
+  --cd-focus-color: #007aff;
+  background-color: var(--color-modal-bg);
+  color-scheme: inherit;
+}
+
+:global(html[data-theme="dark"]) .layout {
+  --cd-hint-accent: #ff4d4d;
+  --cd-focus-color: #64b5ff;
+}
+
+.contentBox {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 24px;
+}
+
+.playerCol {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Outer wrapper: positions the floating hint above gridCol without overflow clipping */
+.gridColWrapper {
+  flex: 0 0 auto;
+  position: relative; /* hint anchors here */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gridCol {
+  min-width: 0;
+  overflow: hidden;   /* no scroll in any direction — grid is always exactly sized to fit */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layoutVertical .gridCol {
+  /* Carousel + titles need room; clipping was cutting covers and meta. */
+  overflow: visible;
+}
+
+/* ── Mobile / Vertical layout (<500px width) ──────────────────────────── */
+
+.layoutVertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* center children horizontally */
+  justify-content: flex-start;
+  width: 100%;
+  min-height: unset;
+  /* Fit-to-slot scale keeps the stack inside the popup — avoid scroll clip. */
+  overflow: hidden;
+}
+
+.contentBoxVertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  /* Extra bottom pad so album titles/artists aren't clipped under the row. */
+  padding: 8px 0 12px;
+}
+
+.playerColVertical {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Scrollable grid area — full width, scroll vertically, fade bottom */
+.gridColVertical {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* horizontally centers the inner AlbumGrid */
+  padding: 4px 12px 0;
+}
+
+/* Carousel container that wraps AlbumGrid in vertical mode */
+.carouselWrap {
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.carouselContainer {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  width: 100%;
+  /* Tighter pad on the vertical stack so covers + titles stay unclipped. */
+  padding: 8px 12px 10px;
+  gap: 10px;
+  scrollbar-width: none;
+}
+.carouselContainer::-webkit-scrollbar { display: none; }
+
+.layoutVertical .gridColVertical {
+  /* Don't clip album covers or title lines under the carousel row. */
+  overflow: visible;
+}
+
+.carouselNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  z-index: 10;
+  color: #1a1a1a;
+  outline: none;
+}
+.carouselNav:active {
+  background: #eee;
+}
+.carouselNavLeft { left: 8px; }
+.carouselNavRight { right: 8px; }
+
+.carouselNav svg {
+  width: 16px; height: 16px; fill: currentColor;
+}
+
+/* ── Accessibility ────────────────────────────────────────────────────── */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.audioError {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: rgba(196, 18, 18, 0.92);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.audioErrorDismiss {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.85;
+}
+
+.audioErrorDismiss:hover {
+  opacity: 1;
+}

@@ -1,23 +1,29 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { SPAWN_FROM_OPACITY } from "@/lib/motion";
 
 export default function InteractiveBadge() {
   const reduced = useReducedMotion();
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
+      className="interactive-badge"
+      initial={{ opacity: SPAWN_FROM_OPACITY }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-20px" }}
-      transition={{ type: "spring", duration: reduced ? 0 : 0.35, bounce: 0 }}
+      transition={{ duration: reduced ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: 4,
         padding: "8px 12px",
         background: "var(--color-badge-bg)",
-        border: "1px solid var(--color-border-subtle)",
+        // Neutral grey border (see .interactive-badge in globals.css for the
+        // light/dark values) — lighter than --color-border-subtle so it
+        // still reads as "interactive," without leaning on an accent color.
+        borderWidth: 1,
+        borderStyle: "solid",
         borderRadius: 12,
         boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
         color: "var(--color-text-card-sub)",

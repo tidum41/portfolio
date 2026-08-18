@@ -2,7 +2,13 @@
 
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { peekInstantBack } from "@/lib/instantNav";
+import { useEffect, useRef } from "react";
+import {
+  peekSoftNav,
+  peekSkipRouteFade,
+  clearSoftNav,
+} from "@/lib/instantNav";
+import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { EASE_OPACITY, EASE_EXIT, DURATION } from "@/lib/motion";
 
 // Detaches whichever element is currently *exiting* from normal document
@@ -32,41 +38,66 @@ function TransitionLayer({ children }: { children: React.ReactNode }) {
 // Provides page enter/exit animations keyed by route.
 // Lives in layout.tsx (persistent) so AnimatePresence survives navigations.
 // template.tsx is kept as a passthrough for Next.js scroll-reset behaviour.
-// Every route's above-the-fold content now owns a richer entrance of its own
-// (EntranceStagger/EntranceItem — see about page, PersistentWorkShell,
-// BentoGallery, case study pages), so this crossfade is deliberately just a
-// fast, opacity-only swap — a fuller fade+slide+scale here would compete
-// with each page's own entrance and read as double motion (the case-study
-// page's whole-page slide read as "buggy" for exactly this reason: it also
-// dragged the sticky TOC along with it).
+// Primary tabs (work/about/archive) are keep-alive siblings — this wrapper
+// only remounts case studies and other real routes. When a primary tab is
+// showing (including an optimistic show from a case-study nav click),
+// children are not painted so the case study cannot stack on the shell.
 export default function AnimationProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Read synchronously at render time so this navigation's entry uses the
-  // right variant immediately — the flag is cleared later, on a passive
-  // effect in PersistentWorkShell, after every consumer has had a chance to
-  // read it during the same navigation's commit phase.
-  const instant = peekInstantBack();
-  // Reduced-motion: keep every target value identical, just arrive there
-  // without animating — content still lands in the same resting state.
+  const primaryTab = useResolvedPrimaryTab(pathname);
+  const skipFade = peekSkipRouteFade();
   const reduced = useReducedMotion();
   const dur = (d: number) => (reduced ? 0 : d);
 
+  // Latch soft-swap for this pathname commit (session flag clears in effect).
+  const pathRef = useRef(pathname);
+  const softSwapRef = useRef(skipFade);
+  if (pathRef.current !== pathname) {
+    softSwapRef.current = peekSkipRouteFade();
+    pathRef.current = pathname;
+  }
+  const softSwap = softSwapRef.current;
+
+  useEffect(() => {
+    if (peekSoftNav()) clearSoftNav();
+    // Tell the custom cursor the route has committed; trail can unmute soon.
+    let idleId = 0;
+    const settle = () => {
+      window.dispatchEvent(new CustomEvent("soft-nav-settled", { detail: { pathname } }));
+    };
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (typeof window.requestIdleCallback === "function") {
+          idleId = window.requestIdleCallback(settle, { timeout: 400 });
+        } else {
+          settle();
+        }
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+    };
+  }, [pathname]);
+
   return (
-    <div style={{ position: "relative" }}>
-      <AnimatePresence mode="sync" initial={false}>
-        <motion.div
-          key={pathname}
-          initial={instant ? false : { opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
-          exit={
-            instant
-              ? { opacity: 1, transition: { duration: 0 } }
-              : { opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }
-          }
-        >
-          <TransitionLayer>{children}</TransitionLayer>
-        </motion.div>
-      </AnimatePresence>
+    <div style={{ position: "relative", zIndex: 1 }}>
+      {primaryTab ? null : softSwap ? (
+        <div key={pathname}>{children}</div>
+      ) : (
+        <AnimatePresence mode="sync" initial={false}>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
+            exit={{ opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }}
+          >
+            <TransitionLayer>{children}</TransitionLayer>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

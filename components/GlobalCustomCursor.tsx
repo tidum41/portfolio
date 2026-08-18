@@ -2,6 +2,11 @@
 
 import { useEffect } from "react";
 import { useDialKit } from "dialkit";
+import { cssEase, EASE_OPACITY } from "@/lib/motion";
+
+const PRESS_EASE = cssEase(EASE_OPACITY);
+const PRESS_IN_MS = 90;
+const PRESS_OUT_MS = 140;
 
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
@@ -30,7 +35,6 @@ declare global {
     gc_dotConfig?: {
       restOpacity: number;
       pressScaleAmount: number;
-      pressLerp: number;
       idleFadeDelay: number;
       idleFadeDuration: number;
       wrapFadeDuration: number;
@@ -61,6 +65,9 @@ declare global {
 function bootCursor(lightColor: string, darkColor: string, size: number, zIndex: number): (() => void) | undefined {
   if (typeof window === "undefined") return;
   if (window.matchMedia("(pointer: coarse)").matches) return;
+  // Reduced-motion: skip trail/pill JS. Layout CSS cursor still applies
+  // unless prefers-reduced-motion (that media query leaves the OS cursor).
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const getThemeColor = () =>
     document.documentElement.getAttribute("data-theme") === "dark" ? darkColor : lightColor;
@@ -107,8 +114,14 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   } catch {}
 
   const styleEl = document.createElement("style");
-  styleEl.textContent = "* { cursor: none !important; }";
   document.head.appendChild(styleEl);
+
+  const CSS_TIP_MQ = `@media (pointer:fine) and (prefers-reduced-motion: no-preference)`;
+  // Beat layout's `html * { cursor:url(dot.svg) !important }` (and the dark
+  // variant). The JS wrap is the only tip while this cursor is booted.
+  styleEl.textContent =
+    `${CSS_TIP_MQ}{html[data-cursor-js],html[data-cursor-js] *,html[data-cursor-js][data-theme="dark"],html[data-cursor-js][data-theme="dark"] *{cursor:none!important}}`;
+  document.documentElement.setAttribute("data-cursor-js", "");
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
   // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
@@ -172,21 +185,30 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   // "none" so it still interpolates cleanly from the ringFlash pulse.
   const noStroke = (px: number) => `inset 0 0 0 ${px}px rgba(255,255,255,0)`;
 
-  // Single persistent cursor shape. `wrap` tracks the raw mouse position every
-  // frame; `cursorEl` is center-anchored inside it via translate(-50%,-50%),
-  // so growing/shrinking is always symmetric around the cursor regardless of
-  // current size — no top-left corner math, and nothing to hand off between
-  // a separate "dot" and "pill" element.
+  // JS wrap is the only tip while booted. Position follows pointermove;
+  // press squash is a compositor scale on pressEl so it never fights the
+  // pill's width/height transition.
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
     position: "fixed", top: "0", left: "0",
     pointerEvents: "none", zIndex: `${zIndex}`,
-    opacity: "0",
-    transition: "opacity 180ms ease",
-    willChange: "auto",
-    transform: "translate3d(-9999px,-9999px,0)",
+    opacity: seededPos ? "1" : "0",
+    transition: "none",
+    willChange: "transform",
+    transform: seededPos
+      ? `translate3d(${Math.round(seededPos.x * 2) / 2}px,${Math.round(seededPos.y * 2) / 2}px,0)`
+      : "translate3d(-9999px,-9999px,0)",
   });
   document.body.appendChild(wrap);
+
+  const pressEl = document.createElement("div");
+  Object.assign(pressEl.style, {
+    transform: "scale(1)",
+    transformOrigin: "0 0",
+    willChange: "transform",
+    transition: "none",
+  });
+  wrap.appendChild(pressEl);
 
   const cursorEl = document.createElement("div");
   Object.assign(cursorEl.style, {
@@ -203,7 +225,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     transform: "translate(-50%,-50%)",
     opacity: String(window.gc_dotConfig?.restOpacity ?? 0.88),
   });
-  wrap.appendChild(cursorEl);
+  pressEl.appendChild(cursorEl);
 
   // Sheen overlay for the "gradient" fill effect — a fixed diagonal highlight
   // whose OPACITY fades in/out (fully animatable), instead of trying to
@@ -225,6 +247,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     fontSize: "13.5px",
     fontWeight: "500",
     letterSpacing: "0.01em",
+    lineHeight: "1",
     marginRight: "-0.01em",
     textAlign: "center",
     whiteSpace: "nowrap",
@@ -235,9 +258,15 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   });
   cursorEl.appendChild(textSpan);
 
-  // Arrow icon — SVG northeast arrow, fades in with text.
-  // Explicit width/height + translateZ(0) pins it to its own compositor layer
-  // so opacity transitions never cause a sub-pixel position jitter.
+  // Arrow icon — SVG northeast arrow, fades in with text. Swapped for a
+  // Phosphor "MagnifyingGlass" glyph specifically for the "View Case Study"
+  // pill — see morphToPill below — since that pill means "look closer," not
+  // "leave the page," which the arrow implies for every other label.
+  const ARROW_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
+  // Magnifier for the "View Case Study" pill. Tuned at 11px so the lens stays
+  // open (old 1.9 stroke at 10px sealed the hole), the handle clears the ring
+  // instead of blobbing into it, and the glyph sits on the text midline.
+  const CASE_STUDY_ICON_SVG = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="4.75" cy="4.75" r="3.25"/><line x1="7.7" y1="7.7" x2="10.9" y2="10.9"/></svg>`;
   const arrowEl = document.createElement("span");
   Object.assign(arrowEl.style, {
     position: "relative", zIndex: "1",
@@ -252,7 +281,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lineHeight: "1",
     transform: "translateZ(0)",
   });
-  arrowEl.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="10" y2="2"/><polyline points="4,2 10,2 10,8"/></svg>`;
+  arrowEl.innerHTML = ARROW_ICON_SVG;
   cursorEl.appendChild(arrowEl);
 
   const mouse = {
@@ -264,16 +293,63 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   let lastX = mouse.x, lastY = mouse.y, vel = 0;
   let lastMove = seededPos != null ? performance.now() : 0;
-  let raf = 0, isIdle = false, pressScale = 1, pressTarget = 1;
+  let raf = 0, isIdle = false;
+  let pressHeld = false;
   let gpuPromoted = false, lastPosWrite = 0;
   let isPill = false, pillLabel = "", pillVisible = false, renderedLabel = "";
   let pillIsTimed = false;
+  let pillNoIcon = false;
+  // Captured at morph-in time — checkPillHover can reset the live pillNoIcon
+  // flag (mouse already moved to a new target) before morphToRest actually
+  // runs for the PREVIOUS pill, so morphToRest must consult this snapshot
+  // rather than the live flag to know whether to keep the arrow out of flow.
+  let renderedHideIcon = false;
   let lastHoverCheck = 0;
   let showPillTimer = 0, timedPillTimeout = 0;
   let pillGen = 0;
-  let lastWrapFadeMs = 180;
   const lastOpacity    = new Array(MAX_ECHO).fill(-1);
   const lastTransform  = new Array(MAX_ECHO).fill("");
+
+  const wrapPos = () => {
+    const rx = Math.round(mouse.x * 2) / 2;
+    const ry = Math.round(mouse.y * 2) / 2;
+    return `translate3d(${rx}px,${ry}px,0)`;
+  };
+
+  const syncWrap = () => {
+    wrap.style.transform = wrapPos();
+    if (mouse.inside) wrap.style.opacity = "1";
+  };
+
+  const applyPressScale = (amount: number, durationMs: number) => {
+    pressEl.style.transition = `transform ${durationMs}ms ${PRESS_EASE}`;
+    pressEl.style.transform = `scale(${amount})`;
+  };
+
+  const resetPressEl = () => {
+    pressEl.style.transition = "none";
+    pressEl.style.transform = "scale(1)";
+  };
+
+  const beginPress = () => {
+    if (pillVisible) return;
+    const reversing = pressEl.style.transition !== "none" && pressEl.style.transform !== "scale(1)";
+    pressHeld = true;
+    if (!reversing) {
+      resetPressEl();
+      void pressEl.offsetWidth;
+    }
+    applyPressScale(window.gc_dotConfig?.pressScaleAmount ?? 0.6, PRESS_IN_MS);
+  };
+
+  const endPress = (instant = false) => {
+    pressHeld = false;
+    if (instant) {
+      resetPressEl();
+      return;
+    }
+    applyPressScale(1, PRESS_OUT_MS);
+  };
 
   const setWillChange = (v: string) => {
     wrap.style.willChange = v;
@@ -285,6 +361,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   };
 
   const morphToPill = (label: string) => {
+    endPress(true);
+    wrap.style.opacity = "1";
+    wrap.style.transform = wrapPos();
     clearTimeout(showPillTimer);
     pillGen++;
     const genAtStart = pillGen;
@@ -305,11 +384,29 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
     // Always restore arrow to flow first — handles switching from a timed pill
     // (where it was display:none) to a non-timed one without leaving it hidden.
-    arrowEl.style.display     = "";
+    const hideIcon = pillIsTimed || pillNoIcon;
+    // No-icon pills ("open", "try demo!") only have label text — a single line
+    // at flex center reads optically low vs icon+text pills like "View Case Study".
+    const opticalTextY = hideIcon ? -1 : 0;
+    renderedHideIcon = hideIcon;
+    arrowEl.style.display     = hideIcon ? "none" : "";
+    if (!hideIcon) {
+      const isCaseStudy = label === "View Case Study";
+      arrowEl.innerHTML       = isCaseStudy ? CASE_STUDY_ICON_SVG : ARROW_ICON_SVG;
+      // Mag is 11×11 with a SE handle — give it its own slot and a hair of lift
+      // so the lens (not the bbox) sits on the text midline. Slightly wider gap
+      // than the default 5px keeps "Study" from crowding the circle.
+      arrowEl.style.width     = isCaseStudy ? "11px" : "10px";
+      arrowEl.style.height    = isCaseStudy ? "11px" : "10px";
+      arrowEl.style.transform = isCaseStudy ? "translateY(-0.5px) translateZ(0)" : "translateZ(0)";
+      cursorEl.style.gap      = isCaseStudy ? "6px" : "5px";
+    } else {
+      cursorEl.style.gap = "5px";
+    }
     textSpan.textContent      = label;
     textSpan.style.transition = "none";
     textSpan.style.opacity    = "0";
-    textSpan.style.transform  = `translate(${textOffsetX}px,${textOffsetY}px)`;
+    textSpan.style.transform  = `translate(${textOffsetX}px,${textOffsetY + opticalTextY}px)`;
     arrowEl.style.transition  = "none";
     arrowEl.style.opacity     = "0";
 
@@ -322,13 +419,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
     const fillEffect = cfg.fillEffect ?? "solid";
 
-    const pillPad = pillIsTimed ? "0 12px" : "0 10px 0 12px";
-    // For timed pills (no arrow), remove the arrow from layout during
+    const pillPad = (pillIsTimed || pillNoIcon) ? "0 12px" : "0 10px 0 12px";
+    // For timed / no-icon pills, remove the arrow from layout during
     // measurement so max-content doesn't include its invisible width + gap.
-    // Hide arrow from layout for timed pills — keeps it out of max-content
-    // measurement AND out of the flex flow during the expanded state so the
-    // text stays optically centered. Restored in morphToRest.
-    if (pillIsTimed) arrowEl.style.display = "none";
+    if (pillIsTimed || pillNoIcon) arrowEl.style.display = "none";
     cursorEl.style.transition = "none";
     cursorEl.style.padding    = pillPad;
     cursorEl.style.height     = `${ph}px`;
@@ -400,10 +494,10 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       showPillTimer = window.setTimeout(() => {
         if (pillGen !== genAtStart) return;
         const c = window.gc_morphConfig ?? {} as NonNullable<typeof window.gc_morphConfig>;
-        textSpan.style.transform  = `translate(${c.textOffsetX ?? 0}px,${c.textOffsetY ?? 0}px)`;
+        textSpan.style.transform  = `translate(${c.textOffsetX ?? 0}px,${(c.textOffsetY ?? 0) + opticalTextY}px)`;
         textSpan.style.transition = `opacity ${scaledFade}ms ease`;
         textSpan.style.opacity    = "1";
-        if (!pillIsTimed) {
+        if (!pillIsTimed && !pillNoIcon) {
           arrowEl.style.transition  = `opacity ${scaledFade}ms ease`;
           arrowEl.style.opacity     = "1";
         }
@@ -430,6 +524,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     textSpan.style.opacity    = "0";
     arrowEl.style.transition  = `opacity ${scaledFade}ms ease`;
     arrowEl.style.opacity     = "0";
+    // Reset case-study mag slot extras so the next (possibly arrow) pill
+    // measures against the default gap / 10×10 icon box.
+    cursorEl.style.gap        = "5px";
+    arrowEl.style.width       = "10px";
+    arrowEl.style.height      = "10px";
+    arrowEl.style.transform   = "translateZ(0)";
 
     // Same element, same transition mechanism as the expand — just animating
     // back to the resting dot size. No swap, so nothing to hand off.
@@ -454,11 +554,19 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     cursorEl.style.backdropFilter  = "blur(0px) saturate(100%)";
     (cursorEl.style as unknown as { webkitBackdropFilter: string }).webkitBackdropFilter = "blur(0px) saturate(100%)";
     cursorEl.style.boxShadow = noStroke(1);
-    // Restore arrow visibility (was hidden for timed pills during expand)
-    arrowEl.style.display = "";
 
     sheenEl.style.transition = `opacity ${scaledCol}ms ${curve}`;
     sheenEl.style.opacity    = "0";
+    // Restore arrow visibility (was hidden for timed/no-icon pills during
+    // expand) — but only if the pill actually collapsing had an icon in the
+    // first place. For a no-icon pill (e.g. "try demo!"), pillNoIcon may
+    // already have been reset by checkPillHover by the time this runs (the
+    // mouse has moved on), so restoring display here unconditionally would
+    // pop the arrow back into the flex layout mid-collapse and visibly
+    // shift the label text — this is what renderedHideIcon guards against.
+    if (!renderedHideIcon) arrowEl.style.display = "";
+    wrap.style.opacity = mouse.inside ? "1" : "0";
+    endPress(true);
   };
 
   // Instant reset to the resting dot — no transition. Used specifically when a
@@ -486,6 +594,8 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     arrowEl.style.display = "";
     sheenEl.style.transition = "none";
     sheenEl.style.opacity    = "0";
+    wrap.style.opacity = mouse.inside ? "1" : "0";
+    endPress(true);
   };
 
   const tick = () => {
@@ -501,21 +611,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const idleFade    = msSinceMove < fadeDelay ? 1 : Math.max(0, 1 - (msSinceMove - fadeDelay) / fadeDur);
     const speedFactor = Math.min(1, vel / (tc.speedDivisor ?? 4));
     const lerpMin     = tc.lerpMin ?? 0.08;
-    pressScale += (pressTarget - pressScale) * (dc.pressLerp ?? 0.28);
-
-    const wrapFadeMs = dc.wrapFadeDuration ?? 180;
-    if (wrapFadeMs !== lastWrapFadeMs) {
-      lastWrapFadeMs = wrapFadeMs;
-      wrap.style.transition = `opacity ${wrapFadeMs}ms ease`;
-    }
 
     if (mouse.inside) {
-      const rx = Math.round(mouse.x * 2) / 2, ry = Math.round(mouse.y * 2) / 2;
-      wrap.style.transform     = `translate3d(${rx}px,${ry}px,0)`;
-      wrap.style.opacity       = "1";
-      // No click-press squash while the "View Case Study" pill is showing —
-      // that scale cue is for the plain dot only.
-      cursorEl.style.transform = `translate(-50%,-50%) scale(${pillVisible ? 1 : pressScale})`;
+      wrap.style.opacity = "1";
       if (isPill) {
         if (!pillVisible || pillLabel !== renderedLabel) {
           pillVisible = true; renderedLabel = pillLabel; morphToPill(pillLabel);
@@ -675,8 +773,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       }
     }
 
-    const pressSettled = Math.abs(pressScale - pressTarget) < 0.001;
-    if (allSettled && pressSettled && !mouse.inside && idleFade <= 0) {
+    if (allSettled && !mouse.inside && idleFade <= 0) {
       isIdle = true; setWillChange("auto"); return;
     }
     raf = requestAnimationFrame(tick);
@@ -697,6 +794,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       pillLabel    = newLabel;
       isPill       = !!newLabel;
       pillIsTimed  = newLabel ? (labelEl?.hasAttribute("data-cursor-timed") ?? false) : false;
+      pillNoIcon   = newLabel ? (labelEl?.hasAttribute("data-cursor-no-icon") ?? false) : false;
       clearTimeout(timedPillTimeout);
       if (newLabel && pillIsTimed) {
         timedPillTimeout = window.setTimeout(() => {
@@ -706,6 +804,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     }
   }
 
+  // Tip follows the pointer on the event itself. Trail stays RAF-driven —
+  // during soft-nav the main thread can miss frames; the tip still updates here.
+
   window.addEventListener("pointermove", (e: PointerEvent) => {
     promoteGPU();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -714,6 +815,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     lastX = e.clientX; lastY = e.clientY;
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
+    syncWrap();
     checkPillHover(e.clientX, e.clientY);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
@@ -725,6 +827,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   window.addEventListener("pointerleave", () => {
     mouse.inside = false; vel = 0; wrap.style.opacity = "0";
+    endPress(true);
     if (pillVisible) { pillVisible = false; morphToRest(); }
     isPill = false; pillLabel = ""; renderedLabel = "";
   }, { signal: sig });
@@ -733,24 +836,33 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
     lastX = e.clientX; lastY = e.clientY; lastMove = performance.now(); vel = 0;
     echoes.forEach(ec => { ec.x = e.clientX; ec.y = e.clientY; });
+    syncWrap();
     wakeUp();
   }, { signal: sig });
-  window.addEventListener("pointerdown", () => {
-    pressTarget = window.gc_dotConfig?.pressScaleAmount ?? 0.6;
-    wakeUp();
+  window.addEventListener("pointerdown", (e: PointerEvent) => {
+    if (e.button !== 0) return;
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    syncWrap();
+    beginPress();
+  }, { capture: true, signal: sig });
+  window.addEventListener("pointerup", () => {
+    endPress();
   }, { signal: sig });
-  window.addEventListener("pointerup",   () => { pressTarget = 1;   wakeUp(); }, { signal: sig });
+  window.addEventListener("pointercancel", () => {
+    endPress(true);
+  }, { signal: sig });
   // Collapse the pill on click — prevents it staying open if the user clicks
   // a case-study card and doesn't move the mouse after navigation.
   document.addEventListener("click", (e) => {
     clearTimeout(timedPillTimeout);
     // Collapse pill but keep pillLabel so a stationary mouse doesn't re-trigger
     // on the same element. It re-arms when the mouse leaves and re-enters.
-    isPill = false; pillIsTimed = false; renderedLabel = "";
+    isPill = false; pillIsTimed = false; pillNoIcon = false; renderedLabel = "";
     // A link click is about to trigger real navigation — snap instantly
     // instead of animating, so the collapse doesn't compete with the new
     // page's own mount work (see snapToRest above).
     const willNavigate = !!(e.target as Element)?.closest?.("a[href]");
+    if (willNavigate) endPress(true);
     // Project cards ("View Case Study") should always play the normal
     // hover-off morph on click, even though navigation is imminent — the pill
     // collapsing back to a dot is part of the interaction feedback there.
@@ -820,6 +932,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     wrap.remove();
     echoEls.forEach(el => el.remove());
     styleEl.remove();
+    document.documentElement.removeAttribute("data-cursor-js");
   };
 }
 
@@ -910,7 +1023,6 @@ export default function GlobalCustomCursor({
     window.gc_dotConfig = {
       restOpacity:      dk.Dot.restOpacity,
       pressScaleAmount: dk.Dot.pressScale,
-      pressLerp:        0.28,
       idleFadeDelay:    150,
       idleFadeDuration: 220,
       wrapFadeDuration: 180,

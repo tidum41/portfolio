@@ -18,10 +18,10 @@ let _shown = false;
  *  the deliberate hero+PS3Silk intro moment before it starts its own
  *  entrance stagger.
  *
- *  Everything else (nav-return from about/playground, case-study "Back",
+ *  Everything else (nav-return from about/archive, case-study "Back",
  *  or any first load that isn't "/") → active immediately. The caller
  *  (PersistentWorkShell) is responsible for choosing *how* that reveal
- *  looks — animated via EntranceStagger, or instant for the "Back" case.
+ *  looks — first-load stagger, or a snap for Back and primary-nav returns.
  *
  *  Hydration-safe: always starts true on server (matching server HTML — no
  *  flash of hidden content). useLayoutEffect fires before first paint and

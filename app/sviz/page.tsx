@@ -1,12 +1,17 @@
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ScrollReveal, EntranceStagger, EntranceItem } from "@/components/ScrollReveal";
-import { CASE_STUDY_ENTRANCE_DEFAULTS } from "@/lib/motion";
+import { preload } from "react-dom";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
+import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
+
+/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "sviz",
@@ -229,7 +234,52 @@ const LOCAL_SOLUTION_VIDEO = "/images/sviz/solution-video.webm";
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function SvizPage() {
+export default function SvizPage() {
+  const lcp = CASE_STUDY_LCP["/sviz"];
+  if (lcp) preload(lcp, { as: "image" });
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseStudyTOC
+            items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
+            backHref="/"
+          />
+        </aside>
+
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
+
+          <CaseStudyOpen
+            tagline={FB.heroTagline}
+            title={FB.heroTitle}
+            metadata={METADATA}
+          >
+            <MediaCard>
+              <Image
+                src={LOCAL_HERO_IMAGE}
+                alt="sviz YouTube channel"
+                width={1596}
+                height={1388}
+                sizes="(max-width: 750px) 100vw, 750px"
+                style={{ width: "100%", height: "auto", display: "block" }}
+                priority
+              />
+            </MediaCard>
+          </CaseStudyOpen>
+          <Suspense fallback={null}>
+            <SvizContent />
+          </Suspense>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function SvizContent() {
   const raw = await getCaseStudy("sviz").catch(() => ({ slug: "sviz" }));
 
   const cs = {
@@ -245,94 +295,11 @@ export default async function SvizPage() {
     { _key: "views",  value: "1M+",   label: "total views across the channel" },
     { _key: "first",  value: "500K+", label: "views on the first upload, organic" },
   ];
-  const heroImageSrc     = cs.heroImage     ?? LOCAL_HERO_IMAGE;
   const processImageSrc  = cs.processImage  ?? LOCAL_PROCESS_IMAGE;
   const solutionVideoSrc = cs.solutionVideo ?? LOCAL_SOLUTION_VIDEO;
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
-      <div className="cs-layout">
-
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={(cs.tocItems?.length ? cs.tocItems : TOC_ITEMS).map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
-
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
-          {/* ── Hero ─────────────────────────────────────────────────────── */}
-          {/* Staggers in top-to-bottom on route arrival, own "Case Study
-              Entrance" DialKit panel — see app/ucla-sublease/page.tsx for the
-              full rationale. TOC (aside, above) never participates. */}
-          <header className="cs-hero-header" style={{ marginBottom: 64 }}>
-            <EntranceStagger active dialKitName="Case Study Entrance" defaults={CASE_STUDY_ENTRANCE_DEFAULTS}>
-              <EntranceItem className="cs-hero-tagline-wrap">
-                <p className="cs-hero-tagline" style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  letterSpacing: "0.01em",
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 16px",
-                }}>
-                  {cs.heroTagline}
-                </p>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-title-wrap">
-                <h1 className="cs-hero-title" style={{
-                  fontFamily: "var(--font-sans-medium)",
-                  fontSize: "var(--fs-hero)",
-                  fontWeight: "var(--fw-hero)" as React.CSSProperties["fontWeight"],
-                  lineHeight: 1.1,
-                  letterSpacing: "var(--ls-hero)",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 20px",
-                }}>
-                  {cs.heroTitle}
-                </h1>
-              </EntranceItem>
-
-              <EntranceItem className="cs-hero-media-wrap">
-                <MediaCard>
-                  <Image
-                    src={heroImageSrc}
-                    alt="sviz YouTube channel"
-                    width={1596}
-                    height={1388}
-                    sizes="(max-width: 750px) 100vw, 750px"
-                    style={{ width: "100%", height: "auto", display: "block" }}
-                    priority
-                  />
-                </MediaCard>
-              </EntranceItem>
-
-              {/* Metadata — 4-column */}
-              <EntranceItem>
-                <div className="cs-meta-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${METADATA.length}, 1fr)`, marginTop: 32 }}>
-                  {METADATA.map(({ label, values }) => (
-                    <div key={label} style={{ padding: "0 24px 0 0" }}>
-                      <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 14, fontWeight: 500, letterSpacing: "normal", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-                        {label}
-                      </p>
-                      {values.map((v) => (
-                        <p key={v} style={{ fontSize: 14, fontWeight: 400, color: "var(--color-text-primary)", margin: 0, lineHeight: 1.45, letterSpacing: "-0.1px" }}>
-                          {v}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </EntranceItem>
-            </EntranceStagger>
-          </header>
-
+    <>
           <article style={{ minWidth: 0 }}>
 
             {/* ── Problem ──────────────────────────────────────────────────── */}
@@ -391,8 +358,6 @@ export default async function SvizPage() {
             </Section>
 
           </article>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

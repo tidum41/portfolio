@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect, CSSProperties } from "react";
+import {
+    useState,
+    useRef,
+    useEffect,
+    useLayoutEffect,
+    useId,
+    CSSProperties,
+    KeyboardEvent,
+} from "react";
 import InteractiveBadge from "@/components/InteractiveBadge";
 
 // ── Design tokens ─────────────────────────────────────────────────────────
@@ -30,47 +38,39 @@ const QUARTER_DATES: Record<string, { moveIn: string; moveOut: string }> = {
     winter: { moveIn: "2027-01-04", moveOut: "2027-03-19" },
 }
 
-function injectDateInputStyles() {
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+
+function injectPickerStyles() {
     if (typeof document === "undefined") return
     if (document.getElementById("qfm-date-styles")) return
     const el = document.createElement("style")
     el.id = "qfm-date-styles"
     el.textContent = `
-        .qfm-date-input {
-            -webkit-tap-highlight-color: transparent;
+        .qfm-date-card:focus-visible {
             outline: none;
-            border: none;
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            font-family: Helvetica Neue, Arial, sans-serif;
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 20px;
-            color: #0f172a;
-            width: 100%;
-            cursor: pointer;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        .qfm-date-input::-webkit-calendar-picker-indicator {
-            opacity: 0;
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-        .qfm-date-input::-webkit-inner-spin-button,
-        .qfm-date-input::-webkit-outer-spin-button {
-            display: none;
-        }
-        .qfm-date-input:empty::before {
-            content: attr(placeholder);
-            color: #94a3b8;
-        }
-        .qfm-date-card:focus-within {
             box-shadow: 0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .qfm-quarter-chip:focus-visible {
+            outline: 2px solid #2d68c4;
+            outline-offset: 2px;
+            border-radius: 9999px;
+        }
+        .qfm-cal-nav:focus-visible,
+        .qfm-cal-day:focus-visible {
+            outline: 2px solid #2d68c4;
+            outline-offset: 1px;
+        }
+        .qfm-cal-day:hover:not([aria-disabled="true"]):not([aria-selected="true"]) {
+            background: rgba(45,104,196,0.1);
+            color: #2d68c4;
+        }
+        .qfm-cal-nav:hover {
+            background: rgba(45,104,196,0.1);
+            color: #2d68c4;
+        }
+        .qfm-cal-nav:active,
+        .qfm-cal-day:active:not([aria-disabled="true"]) {
+            transform: scale(0.96);
         }
     `
     document.head.appendChild(el)
@@ -80,6 +80,24 @@ function formatDate(iso: string): string {
     return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
+        year: "numeric",
+    })
+}
+
+function toIso(year: number, month: number, day: number): string {
+    const m = String(month + 1).padStart(2, "0")
+    const d = String(day).padStart(2, "0")
+    return `${year}-${m}-${d}`
+}
+
+function parseIso(iso: string): { year: number; month: number; day: number } {
+    const [y, m, d] = iso.split("-").map(Number)
+    return { year: y, month: m - 1, day: d }
+}
+
+function monthLabel(year: number, month: number): string {
+    return new Date(year, month, 1).toLocaleDateString("en-US", {
+        month: "long",
         year: "numeric",
     })
 }
@@ -96,6 +114,7 @@ function CalendarIcon({ active = false }: { active?: boolean }) {
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{ flexShrink: 0, transition: "stroke 0.15s ease", pointerEvents: "none" }}
+            aria-hidden="true"
         >
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -105,8 +124,322 @@ function CalendarIcon({ active = false }: { active?: boolean }) {
     )
 }
 
-function DateCard({ date, onChange }: { date: string | null; onChange: (iso: string) => void }) {
-    const [focused, setFocused] = useState(false)
+function ChevronIcon({ dir }: { dir: "prev" | "next" }) {
+    return (
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            style={{ display: "block" }}
+        >
+            {dir === "prev" ? (
+                <polyline points="15 18 9 12 15 6" />
+            ) : (
+                <polyline points="9 18 15 12 9 6" />
+            )}
+        </svg>
+    )
+}
+
+function buildMonthGrid(year: number, month: number) {
+    const firstDow = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const cells: Array<{ day: number; iso: string } | null> = []
+    for (let i = 0; i < firstDow; i++) cells.push(null)
+    for (let day = 1; day <= daysInMonth; day++) {
+        cells.push({ day, iso: toIso(year, month, day) })
+    }
+    while (cells.length % 7 !== 0) cells.push(null)
+    return cells
+}
+
+function DateCalendar({
+    selected,
+    onSelect,
+    onClose,
+    labelledBy,
+}: {
+    selected: string | null
+    onSelect: (iso: string) => void
+    onClose: () => void
+    labelledBy: string
+}) {
+    const initial = selected ? parseIso(selected) : (() => {
+        const now = new Date()
+        return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() }
+    })()
+    const [viewYear, setViewYear] = useState(initial.year)
+    const [viewMonth, setViewMonth] = useState(initial.month)
+    const [focusIso, setFocusIso] = useState(
+        selected ?? toIso(initial.year, initial.month, initial.day)
+    )
+    const pendingFocusRef = useRef<string | null>(selected ?? toIso(initial.year, initial.month, initial.day))
+    const panelRef = useRef<HTMLDivElement>(null)
+    const gridId = useId()
+
+    useLayoutEffect(() => {
+        const iso = pendingFocusRef.current
+        if (!iso) return
+        const el = panelRef.current?.querySelector<HTMLElement>(`.qfm-cal-day[data-iso="${iso}"]`)
+        el?.focus({ preventScroll: true })
+        pendingFocusRef.current = null
+    }, [viewYear, viewMonth, focusIso])
+
+    function shiftMonth(delta: number) {
+        const d = new Date(viewYear, viewMonth + delta, 1)
+        setViewYear(d.getFullYear())
+        setViewMonth(d.getMonth())
+        // Keep focus on same day-of-month when possible
+        const day = Math.min(parseIso(focusIso).day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())
+        const nextIso = toIso(d.getFullYear(), d.getMonth(), day)
+        pendingFocusRef.current = nextIso
+        setFocusIso(nextIso)
+    }
+
+    function moveFocusTo(next: Date) {
+        const nYear = next.getFullYear()
+        const nMonth = next.getMonth()
+        const nextIso = toIso(nYear, nMonth, next.getDate())
+        pendingFocusRef.current = nextIso
+        if (nYear !== viewYear || nMonth !== viewMonth) {
+            setViewYear(nYear)
+            setViewMonth(nMonth)
+        }
+        setFocusIso(nextIso)
+    }
+
+    function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+        if (e.key === "Escape") {
+            e.preventDefault()
+            e.stopPropagation()
+            onClose()
+            return
+        }
+
+        const target = e.target as HTMLElement
+        if (!target.classList.contains("qfm-cal-day")) return
+
+        const iso = target.getAttribute("data-iso")
+        if (!iso) return
+        const { year, month, day } = parseIso(iso)
+
+        switch (e.key) {
+            case "ArrowLeft":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month, day - 1))
+                break
+            case "ArrowRight":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month, day + 1))
+                break
+            case "ArrowUp":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month, day - 7))
+                break
+            case "ArrowDown":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month, day + 7))
+                break
+            case "Home":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month, 1))
+                break
+            case "End":
+                e.preventDefault()
+                moveFocusTo(new Date(year, month + 1, 0))
+                break
+            case "PageUp":
+                e.preventDefault()
+                shiftMonth(e.shiftKey ? -12 : -1)
+                break
+            case "PageDown":
+                e.preventDefault()
+                shiftMonth(e.shiftKey ? 12 : 1)
+                break
+            case "Enter":
+            case " ":
+                e.preventDefault()
+                onSelect(iso)
+                break
+            default:
+                break
+        }
+    }
+
+    const cells = buildMonthGrid(viewYear, viewMonth)
+    const todayIso = (() => {
+        const n = new Date()
+        return toIso(n.getFullYear(), n.getMonth(), n.getDate())
+    })()
+
+    const navBtn: CSSProperties = {
+        width: 32,
+        height: 32,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "none",
+        background: "transparent",
+        borderRadius: 8,
+        color: C.slateGray,
+        cursor: "pointer",
+        padding: 0,
+        transition: "background 0.12s ease, color 0.12s ease, transform 0.1s ease",
+        WebkitTapHighlightColor: "transparent",
+    }
+
+    return (
+        <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={labelledBy}
+            onKeyDown={onKeyDown}
+            style={{
+                background: C.white,
+                borderRadius: 10,
+                border: `1px solid ${C.border}`,
+                boxShadow: "0 8px 28px rgba(15,23,42,0.14), 0 2px 6px rgba(0,0,0,0.06)",
+                padding: "14px 12px 12px",
+                fontFamily: C.font,
+                userSelect: "none",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
+                    padding: "0 2px",
+                }}
+            >
+                <button
+                    type="button"
+                    className="qfm-cal-nav"
+                    aria-label="Previous month"
+                    onClick={() => shiftMonth(-1)}
+                    style={navBtn}
+                >
+                    <ChevronIcon dir="prev" />
+                </button>
+                <span
+                    id={gridId}
+                    style={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: C.darkSlate,
+                        fontFamily: C.font,
+                        lineHeight: "20px",
+                    }}
+                >
+                    {monthLabel(viewYear, viewMonth)}
+                </span>
+                <button
+                    type="button"
+                    className="qfm-cal-nav"
+                    aria-label="Next month"
+                    onClick={() => shiftMonth(1)}
+                    style={navBtn}
+                >
+                    <ChevronIcon dir="next" />
+                </button>
+            </div>
+
+            <div
+                role="grid"
+                aria-labelledby={gridId}
+                style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}
+            >
+                {WEEKDAYS.map((d) => (
+                    <div
+                        key={d}
+                        role="columnheader"
+                        aria-label={d}
+                        style={{
+                            textAlign: "center",
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: C.lightSlate,
+                            fontFamily: C.font,
+                            lineHeight: "20px",
+                            paddingBottom: 4,
+                        }}
+                    >
+                        {d}
+                    </div>
+                ))}
+                {cells.map((cell, i) => {
+                    if (!cell) {
+                        return <div key={`e-${i}`} role="gridcell" aria-hidden="true" />
+                    }
+                    const isSelected = selected === cell.iso
+                    const isToday = todayIso === cell.iso
+                    const isFocused = focusIso === cell.iso
+                    return (
+                        <div key={cell.iso} role="gridcell" style={{ aspectRatio: "1" }}>
+                            <button
+                                type="button"
+                                className="qfm-cal-day"
+                                data-iso={cell.iso}
+                                aria-label={formatDate(cell.iso)}
+                                aria-selected={isSelected}
+                                tabIndex={isFocused ? 0 : -1}
+                                onClick={() => onSelect(cell.iso)}
+                                onFocus={() => setFocusIso(cell.iso)}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    border: isToday && !isSelected ? `1px solid ${C.uclaBlue}` : "1px solid transparent",
+                                    borderRadius: 8,
+                                    background: isSelected ? C.uclaBlue : "transparent",
+                                    color: isSelected ? C.white : C.darkSlate,
+                                    fontSize: 13,
+                                    fontWeight: isSelected || isToday ? 500 : 400,
+                                    fontFamily: C.font,
+                                    cursor: "pointer",
+                                    padding: 0,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "background 0.12s ease, color 0.12s ease, transform 0.1s ease",
+                                    WebkitTapHighlightColor: "transparent",
+                                }}
+                            >
+                                {cell.day}
+                            </button>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
+function DateCard({
+    date,
+    label,
+    scale,
+    open,
+    onToggle,
+    triggerRef,
+    controlsId,
+}: {
+    date: string | null
+    label: string
+    scale: number
+    open: boolean
+    onToggle: () => void
+    triggerRef: (el: HTMLButtonElement | null) => void
+    controlsId: string
+}) {
+    const hitSize = scale > 0 ? 44 / scale : 44
 
     const card: CSSProperties = {
         background: C.white,
@@ -115,19 +448,33 @@ function DateCard({ date, onChange }: { date: string | null; onChange: (iso: str
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        boxShadow: focused
+        boxShadow: open
             ? `0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05)`
             : "0 1px 2px rgba(0,0,0,0.05)",
-        minHeight: 44,
+        minHeight: hitSize,
+        width: "100%",
+        boxSizing: "border-box",
         position: "relative",
-        overflow: "hidden",
         transition: "box-shadow 0.15s ease",
         cursor: "pointer",
+        border: "none",
+        textAlign: "left",
+        fontFamily: C.font,
         WebkitTapHighlightColor: "transparent" as any,
     }
 
     return (
-        <div className="qfm-date-card" style={card}>
+        <button
+            ref={triggerRef}
+            type="button"
+            className="qfm-date-card"
+            aria-label={label}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={open ? controlsId : undefined}
+            onClick={onToggle}
+            style={card}
+        >
             <span
                 style={{
                     fontSize: 14,
@@ -135,38 +482,15 @@ function DateCard({ date, onChange }: { date: string | null; onChange: (iso: str
                     fontFamily: C.font,
                     fontWeight: 400,
                     lineHeight: "20px",
-                    pointerEvents: "none",
                     userSelect: "none",
-                    zIndex: 1,
-                    position: "relative",
                 }}
             >
                 {date ? formatDate(date) : "Select date"}
             </span>
-            <CalendarIcon active={focused} />
-            <input
-                type="date"
-                className="qfm-date-input"
-                value={date ?? ""}
-                onChange={(e) => { if (e.target.value) onChange(e.target.value) }}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: 0,
-                    width: "100%",
-                    height: "100%",
-                    cursor: "pointer",
-                    zIndex: 2,
-                    fontSize: 16,
-                    WebkitTapHighlightColor: "transparent",
-                } as CSSProperties}
-            />
-        </div>
+            <CalendarIcon active={open} />
+        </button>
     )
 }
-
 
 export default function QuarterPicker({
     defaultQuarter = "summer",
@@ -177,11 +501,17 @@ export default function QuarterPicker({
 }) {
     const containerRef = useRef<HTMLDivElement>(null)
     const innerRef = useRef<HTMLDivElement>(null)
+    const moveInBtnRef = useRef<HTMLButtonElement | null>(null)
+    const moveOutBtnRef = useRef<HTMLButtonElement | null>(null)
+    const calendarWrapRef = useRef<HTMLDivElement>(null)
     const [scale, setScale] = useState(1)
     const [offsetX, setOffsetX] = useState(0)
     const [naturalHeight, setNaturalHeight] = useState(0)
+    const [openField, setOpenField] = useState<"in" | "out" | null>(null)
+    // Floating popover geometry in unscaled inner coordinates
+    const [popover, setPopover] = useState<{ top: number; left: number; width: number } | null>(null)
 
-    useEffect(() => { injectDateInputStyles() }, [])
+    useEffect(() => { injectPickerStyles() }, [])
 
     useEffect(() => {
         const el = containerRef.current
@@ -199,9 +529,96 @@ export default function QuarterPicker({
         return () => ro.disconnect()
     }, [])
 
+    // Outer clip height = unscaled inner height × scale. Chip hit-targets use
+    // minHeight: 44/scale, so when scale settles the inner layout grows —
+    // remeasure after every scale change or the overflow shell clips
+    // the bottom corners (missing border-radius).
+    // Calendar is position:absolute, so open/close must not change height.
+    useLayoutEffect(() => {
+        const el = innerRef.current
+        if (!el) return
+        const measure = () => setNaturalHeight(el.offsetHeight)
+        measure()
+        const ro = new ResizeObserver(measure)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [scale])
+
+    // Anchor the floating calendar under the active field (iOS-style popover).
+    useLayoutEffect(() => {
+        if (!openField) {
+            setPopover(null)
+            return
+        }
+        const inner = innerRef.current
+        const trigger = (openField === "in" ? moveInBtnRef : moveOutBtnRef).current
+        if (!inner || !trigger) return
+
+        const place = () => {
+            const innerRect = inner.getBoundingClientRect()
+            const triggerRect = trigger.getBoundingClientRect()
+            // Convert screen coords → unscaled inner coords (parent is scaled).
+            const s = scale > 0 ? scale : 1
+            const gap = 8
+            const pad = 20
+            const maxWidth = inner.clientWidth - pad * 2
+            // Compact panel: at least the field width, up to content width.
+            const fieldWidth = triggerRect.width / s
+            const width = Math.min(maxWidth, Math.max(fieldWidth, Math.min(300, maxWidth)))
+            const triggerLeft = (triggerRect.left - innerRect.left) / s
+            const triggerRight = (triggerRect.right - innerRect.left) / s
+            // Prefer aligning to the active field; right-align for Move Out so
+            // the panel stays visually tethered when it would overflow the mock.
+            let left = openField === "out" ? triggerRight - width : triggerLeft
+            left = Math.max(pad, Math.min(left, inner.clientWidth - pad - width))
+            const top = (triggerRect.bottom - innerRect.top) / s + gap
+            setPopover({ top, left, width })
+        }
+
+        place()
+    }, [openField, scale])
+
+    // Focusing a day inside the scaled tree can scroll an overflow shell.
+    // Keep scroll locked at 0 when the shell is clipping (calendar closed).
+    useLayoutEffect(() => {
+        const el = containerRef.current
+        if (!el || openField) return
+        el.scrollTop = 0
+        const lock = () => { if (el.scrollTop) el.scrollTop = 0 }
+        el.addEventListener("scroll", lock, { passive: true })
+        return () => el.removeEventListener("scroll", lock)
+    }, [openField])
+
+    // Esc + click outside to close
     useEffect(() => {
-        if (innerRef.current) setNaturalHeight(innerRef.current.offsetHeight)
-    }, [])
+        if (!openField) return
+
+        function onKey(e: globalThis.KeyboardEvent) {
+            if (e.key === "Escape") {
+                e.preventDefault()
+                const field = openField
+                setOpenField(null)
+                requestAnimationFrame(() => {
+                    ;(field === "in" ? moveInBtnRef : moveOutBtnRef).current?.focus({ preventScroll: true })
+                })
+            }
+        }
+
+        function onPointerDown(e: PointerEvent) {
+            const target = e.target as Node
+            if (calendarWrapRef.current?.contains(target)) return
+            if (moveInBtnRef.current?.contains(target)) return
+            if (moveOutBtnRef.current?.contains(target)) return
+            setOpenField(null)
+        }
+
+        document.addEventListener("keydown", onKey)
+        document.addEventListener("pointerdown", onPointerDown)
+        return () => {
+            document.removeEventListener("keydown", onKey)
+            document.removeEventListener("pointerdown", onPointerDown)
+        }
+    }, [openField])
 
     const [selected, setSelected] = useState<string[]>([defaultQuarter])
     const [manualMoveIn, setManualMoveIn] = useState<string | null>(null)
@@ -213,6 +630,7 @@ export default function QuarterPicker({
         )
         setManualMoveIn(null)
         setManualMoveOut(null)
+        setOpenField(null)
     }
 
     const dates = selected.map((v) => QUARTER_DATES[v]).filter(Boolean)
@@ -226,6 +644,25 @@ export default function QuarterPicker({
     const moveIn = manualMoveIn ?? derivedMoveIn
     const moveOut = manualMoveOut ?? derivedMoveOut
 
+    function closeCalendar(returnFocus = true) {
+        const field = openField
+        setOpenField(null)
+        if (returnFocus && field) {
+            requestAnimationFrame(() => {
+                ;(field === "in" ? moveInBtnRef : moveOutBtnRef).current?.focus({ preventScroll: true })
+            })
+        }
+    }
+
+    function handleSelect(iso: string) {
+        if (openField === "in") setManualMoveIn(iso)
+        else if (openField === "out") setManualMoveOut(iso)
+        closeCalendar(true)
+    }
+
+    const calendarTitleId = useId()
+    const calendarPanelId = useId()
+
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
             {showBadge && <InteractiveBadge />}
@@ -234,11 +671,16 @@ export default function QuarterPicker({
                 style={{
                     width: "100%",
                     height: naturalHeight ? naturalHeight * scale : "auto",
-                    overflow: "hidden",
+                    // Visible while open so the floating calendar can hang over
+                    // the card edge; clipped when closed for scaled corner polish.
+                    overflow: openField ? "visible" : "clip",
                     borderRadius: 8,
-                    // translateZ forces a compositing layer so overflow:hidden
+                    // translateZ forces a compositing layer so overflow clipping
                     // correctly clips the transformed child's rounded corners.
                     transform: "translateZ(0)",
+                    // Let the popover paint above neighboring case-study content
+                    zIndex: openField ? 5 : 0,
+                    position: "relative",
                 }}
             >
                 <div
@@ -255,16 +697,61 @@ export default function QuarterPicker({
                         display: "flex",
                         flexDirection: "column",
                         fontFamily: C.font,
+                        position: "relative",
                     }}
                 >
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
                         <span style={{ fontSize: 12, color: C.slateGray, fontFamily: C.font }}>Move In</span>
                         <span style={{ fontSize: 12, color: C.slateGray, fontFamily: C.font }}>Move Out</span>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                        <DateCard date={moveIn} onChange={(iso) => setManualMoveIn(iso)} />
-                        <DateCard date={moveOut} onChange={(iso) => setManualMoveOut(iso)} />
+                    <div
+                        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}
+                    >
+                        <DateCard
+                            date={moveIn}
+                            label="Move In date"
+                            scale={scale}
+                            open={openField === "in"}
+                            onToggle={() => setOpenField((f) => (f === "in" ? null : "in"))}
+                            triggerRef={(el) => { moveInBtnRef.current = el }}
+                            controlsId={calendarPanelId}
+                        />
+                        <DateCard
+                            date={moveOut}
+                            label="Move Out date"
+                            scale={scale}
+                            open={openField === "out"}
+                            onToggle={() => setOpenField((f) => (f === "out" ? null : "out"))}
+                            triggerRef={(el) => { moveOutBtnRef.current = el }}
+                            controlsId={calendarPanelId}
+                        />
                     </div>
+
+                    {openField && popover && (
+                        <div
+                            ref={calendarWrapRef}
+                            id={calendarPanelId}
+                            style={{
+                                position: "absolute",
+                                top: popover.top,
+                                left: popover.left,
+                                width: popover.width,
+                                zIndex: 30,
+                            }}
+                        >
+                            <span id={calendarTitleId} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+                                {openField === "in" ? "Choose move-in date" : "Choose move-out date"}
+                            </span>
+                            <DateCalendar
+                                key={openField}
+                                selected={openField === "in" ? moveIn : moveOut}
+                                onSelect={handleSelect}
+                                onClose={() => closeCalendar(true)}
+                                labelledBy={calendarTitleId}
+                            />
+                        </div>
+                    )}
+
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {QUARTERS.map((q) => {
                             const isSelected = selected.includes(q.value)
@@ -278,16 +765,39 @@ export default function QuarterPicker({
                                 fontSize: 14,
                                 fontFamily: C.font,
                                 lineHeight: "20px",
-                                cursor: "pointer",
-                                transition: "background 0.08s ease, border-color 0.08s ease, color 0.08s ease",
-                                outline: "none",
                                 whiteSpace: "nowrap",
                                 userSelect: "none",
-                                WebkitTapHighlightColor: "transparent",
                             }
+                            // The visible pill above stays exactly the size it's always
+                            // been — this outer button carries the real click/focus
+                            // target, inflated by 1/scale so its on-screen size clears
+                            // the 44px minimum regardless of how compressed the whole
+                            // widget currently is (see the ancestor transform:scale()
+                            // in QuarterPicker below). Since the ambient scale applies
+                            // to this whole subtree uniformly, the inner pill still
+                            // renders at its original, unchanged on-screen size.
+                            const hitSize = scale > 0 ? 44 / scale : 44
                             return (
-                                <button key={q.value} style={chip} onClick={() => handleToggle(q.value)}>
-                                    {q.label}
+                                <button
+                                    key={q.value}
+                                    type="button"
+                                    className="qfm-quarter-chip"
+                                    aria-pressed={isSelected}
+                                    onClick={() => handleToggle(q.value)}
+                                    style={{
+                                        background: "transparent",
+                                        border: "none",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        minWidth: hitSize,
+                                        minHeight: hitSize,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        WebkitTapHighlightColor: "transparent",
+                                    }}
+                                >
+                                    <span style={chip}>{q.label}</span>
                                 </button>
                             )
                         })}

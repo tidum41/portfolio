@@ -1,4 +1,12 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { sanityClient } from "./client";
+import {
+  sanityImageUrl,
+  sanityCdnUrl,
+  SANITY_IMG_WIDTH,
+  SANITY_IMG_WIDTH_WIDE,
+} from "./imageUrl";
 
 // ── Design System (shared across all pages) ───────────────────────────────────
 
@@ -23,7 +31,12 @@ export const DS_DEFAULTS: Required<DesignSystemData> = {
   lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
   sectionGap: 80, sectionPb: 64, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
-  colorTextTertiary: "#767676", colorTextMuted: "#ADADAD", colorPlaceholder: "#EBEBEB",
+  // Kept in sync with app/globals.css's @theme block — these are a second,
+  // independent fallback used to inline-override the CSS when Sanity has no
+  // (or invalid) designSystem doc. Originally #767676/#ADADAD (2.17:1 /
+  // 4.39:1 against colorBg, both failing WCAG AA); this is what was actually
+  // winning the cascade over the globals.css fix until this was found.
+  colorTextTertiary: "#6C6C6C", colorTextMuted: "#727272", colorPlaceholder: "#EBEBEB",
   colorBorderSubtle: "#E8E4F0", colorAccent: "#9590C2",
 };
 
@@ -35,9 +48,31 @@ const DS_QUERY = `*[_type == "designSystem"][0]{
   colorTextMuted,colorPlaceholder,colorBorderSubtle,colorAccent
 }`;
 
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
+
+// designSystemToCss interpolates every field directly into an inline <style>
+// tag rendered on every route (app/layout.tsx). Sanity content is
+// user-editable, so each field must be constrained to the shape it's
+// interpolated as before it can reach that sink: colorFoo fields to a strict
+// hex color, everything else to a finite number. Anything malformed is
+// dropped in favor of DS_DEFAULTS rather than risk breaking out of the
+// <style> tag.
+function sanitizeDesignSystem(raw: DesignSystemData | null): DesignSystemData {
+  if (!raw) return {};
+  const clean: DesignSystemData = {};
+  for (const [key, value] of Object.entries(raw) as [keyof DesignSystemData, unknown][]) {
+    if (key.startsWith("color")) {
+      if (typeof value === "string" && HEX_COLOR_RE.test(value)) (clean[key] as string) = value;
+    } else if (typeof value === "number" && Number.isFinite(value)) {
+      (clean[key] as number) = value;
+    }
+  }
+  return clean;
+}
+
 export async function getDesignSystem(): Promise<Required<DesignSystemData>> {
   const raw = await sanityClient.fetch<DesignSystemData | null>(DS_QUERY, {}, { next: { revalidate: 60 } });
-  return { ...DS_DEFAULTS, ...(raw ?? {}) };
+  return { ...DS_DEFAULTS, ...sanitizeDesignSystem(raw) };
 }
 
 /** Convert a DesignSystemData to a CSS :root{} override block */
@@ -264,15 +299,17 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 type RawImg  = { asset: { url: string } } | null;
 type RawFile = { asset: { url: string } } | null;
 
-export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
+/** Per-request dedupe when Suspense splits shell + body both need the doc. */
+export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
   const raw = await sanityClient.fetch<Record<string, unknown> | null>(
     CASE_STUDY_QUERY,
     { slug },
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 300 } }
   );
   if (!raw) return { slug };
 
-  const img  = (f: string) => (raw[f] as RawImg)?.asset?.url;
+  const img  = (f: string, width = SANITY_IMG_WIDTH) =>
+    sanityCdnUrl((raw[f] as RawImg)?.asset?.url, { width, quality: 85 });
   const file = (f: string) => (raw[f] as RawFile)?.asset?.url;
 
   return {
@@ -282,34 +319,42 @@ export async function getCaseStudy(slug: string): Promise<CaseStudyData> {
     decision1CardCondensed:img("decision1CardCondensed"),
     decision1CardFinal:    img("decision1CardFinal"),
     homepageComparison:    img("homepageComparison"),
-    figmaComparison:       img("figmaComparison"),
-    heroImage:             img("heroImage"),
+    figmaComparison:       img("figmaComparison", SANITY_IMG_WIDTH_WIDE),
+    heroImage:             img("heroImage", SANITY_IMG_WIDTH_WIDE),
     processImage:          img("processImage"),
     ueTestingVideo:        file("ueTestingVideo"),
     oldFlowVideo:          file("oldFlowVideo"),
     decision1Video:        file("decision1Video"),
     solutionVideo:         file("solutionVideo"),
   } as CaseStudyData;
-}
+});
 
 // Legacy shim — keeps old imports working
 export async function getCaseStudyAssets(slug: string) {
   return getCaseStudy(slug);
 }
 
-// ── Playground Gallery (BentoGallery on /playground) ───────────────────────────
+// ── Archive Gallery (BentoGallery on /archive; Sanity type still playgroundGallery) ──
 
 export interface PlaygroundGalleryItem {
   key: string;
   src: string;
+  /** Tiny LQIP / blurred poster for instant paint + blur-up crossfade. */
+  blurDataURL?: string;
   alt?: string;
   caption?: string;
   link?: string;
   colSpan: 1 | 2;
   rowSpan: 1 | 2;
+  /** Natural width/height from Sanity image metadata — drives tile height. */
+  aspectRatio?: number;
+  /** First-viewport tiles — eager + high fetch priority in BentoGallery. */
+  priority?: boolean;
 }
 
 // Maps the Studio-friendly "shape" field to BentoGallery's grid units.
+// When aspectRatio is present, rowSpan is ignored for height — shape mainly
+// controls column span (wide/large → 2 cols; square/tall → 1 col).
 const SHAPE_TO_SPAN: Record<string, { colSpan: 1 | 2; rowSpan: 1 | 2 }> = {
   square: { colSpan: 1, rowSpan: 1 },
   tall:   { colSpan: 1, rowSpan: 2 },
@@ -318,7 +363,19 @@ const SHAPE_TO_SPAN: Record<string, { colSpan: 1 | 2; rowSpan: 1 | 2 }> = {
 };
 
 const PLAYGROUND_GALLERY_QUERY = `*[_type == "playgroundGallery"][0]{
-  items[]{ _key, caption, alt, link, shape, image{ asset->{ url } } }
+  items[]{
+    _key, caption, alt, link, shape,
+    image{
+      asset->{
+        _id,
+        url,
+        metadata {
+          lqip,
+          dimensions { width, height, aspectRatio }
+        }
+      }
+    }
+  }
 }`;
 
 interface RawPlaygroundItem {
@@ -327,24 +384,116 @@ interface RawPlaygroundItem {
   alt?: string;
   link?: string;
   shape?: string;
-  image?: { asset?: { url?: string } };
+  image?: {
+    asset?: {
+      _id?: string;
+      url?: string;
+      metadata?: {
+        lqip?: string;
+        dimensions?: {
+          width?: number;
+          height?: number;
+          aspectRatio?: number;
+        };
+      };
+    };
+  };
 }
 
-export async function getPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
+function playgroundImageSrc(it: RawPlaygroundItem): string | undefined {
+  const asset = it.image?.asset;
+  if (!asset?._id && !asset?.url) return undefined;
+  const shape = it.shape ?? "square";
+  const width =
+    shape === "wide" || shape === "large"
+      ? SANITY_IMG_WIDTH_WIDE
+      : SANITY_IMG_WIDTH;
+  if (asset._id) {
+    const url = sanityImageUrl(
+      { asset: { _ref: asset._id } },
+      { width, quality: 85 }
+    );
+    if (url) return url;
+  }
+  return sanityCdnUrl(asset.url, { width, quality: 85 }) ?? asset.url;
+}
+
+/** Instant paint: Sanity LQIP (base64) or a tiny blurred CDN derivative. */
+function playgroundBlurDataURL(it: RawPlaygroundItem): string | undefined {
+  const asset = it.image?.asset;
+  if (!asset) return undefined;
+  if (asset.metadata?.lqip) return asset.metadata.lqip;
+  if (asset._id) {
+    return sanityImageUrl(
+      { asset: { _ref: asset._id } },
+      { width: 24, quality: 20, blur: 50 }
+    );
+  }
+  return sanityCdnUrl(asset.url, { width: 24, quality: 20, blur: 50 });
+}
+
+function playgroundAspectRatio(it: RawPlaygroundItem): number | undefined {
+  const dims = it.image?.asset?.metadata?.dimensions;
+  if (!dims) return undefined;
+  if (dims.aspectRatio && dims.aspectRatio > 0) return dims.aspectRatio;
+  if (dims.width && dims.height && dims.height > 0) return dims.width / dims.height;
+  return undefined;
+}
+
+/** First in list → packed earliest → most visible in the default viewport. */
+const PLAYGROUND_PRIORITY = [
+  "asap rocky",
+  "j. cole",
+  "gunna",
+  "playboi carti",
+  "the marias",
+  "geonworks f1-8x",
+  "singa unikorn",
+];
+
+function playgroundPriorityRank(caption?: string): number {
+  const key = (caption ?? "").toLowerCase().trim();
+  const idx = PLAYGROUND_PRIORITY.findIndex(
+    (p) => key === p || key.includes(p) || p.includes(key)
+  );
+  return idx === -1 ? PLAYGROUND_PRIORITY.length : idx;
+}
+
+async function loadPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
   const raw = await sanityClient.fetch<{ items?: RawPlaygroundItem[] } | null>(
     PLAYGROUND_GALLERY_QUERY,
     {},
-    { next: { revalidate: 60 } }
   );
   const items = raw?.items ?? [];
-  return items
-    .filter((it) => it.image?.asset?.url)
-    .map((it) => ({
+  const result: PlaygroundGalleryItem[] = [];
+  for (const it of items) {
+    const src = playgroundImageSrc(it);
+    if (!src) continue;
+    const span = SHAPE_TO_SPAN[it.shape ?? "square"] ?? SHAPE_TO_SPAN.square;
+    const rank = playgroundPriorityRank(it.caption);
+    result.push({
       key: it._key,
-      src: it.image!.asset!.url!,
+      src,
+      blurDataURL: playgroundBlurDataURL(it),
       alt: it.alt || it.caption,
       caption: it.caption,
       link: it.link,
-      ...(SHAPE_TO_SPAN[it.shape ?? "square"] ?? SHAPE_TO_SPAN.square),
-    }));
+      aspectRatio: playgroundAspectRatio(it),
+      colSpan: span.colSpan,
+      rowSpan: span.rowSpan,
+      priority: rank < PLAYGROUND_PRIORITY.length,
+    });
+  }
+  result.sort(
+    (a, b) =>
+      playgroundPriorityRank(a.caption) - playgroundPriorityRank(b.caption) ||
+      (a.caption ?? "").localeCompare(b.caption ?? "")
+  );
+  return result;
 }
+
+/** Cross-request cache. `@sanity/client` does not honor `{ next: { revalidate } }`,
+ *  so every archive nav used to hit Sanity live (~1s). Home layout warms this. */
+export const getPlaygroundGallery = cache(
+  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 60 }),
+);

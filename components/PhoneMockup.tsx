@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import "@mux/mux-player";
 import { useDialKit } from "dialkit";
 
 const REF_W = 344;
@@ -41,7 +42,7 @@ interface Props {
 }
 
 export default function PhoneMockup({
-  frameSrc = "/images/phone-frame.png",
+  frameSrc = "/images/phone-frame.webp",
   videoSrc,
   muxPlaybackId,
   poster,
@@ -61,12 +62,9 @@ export default function PhoneMockup({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
   const [containerWidth, setContainerWidth] = useState(REF_W);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
-  const [frameLoaded, setFrameLoaded] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   // Per-instance dialkit key so each phone can be tuned independently
@@ -112,32 +110,12 @@ export default function PhoneMockup({
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    setFrameLoaded(false);
-    setVideoReady(false);
-    if (!frameSrc) return;
-    const img = imgRef.current;
-    if (img?.complete && img?.naturalWidth > 0) setFrameLoaded(true);
-  }, [frameSrc]);
-
-  // Fallback: show after 1.2s if frame or video stalls
-  useEffect(() => {
-    if (!shouldLoad) return;
-    const t = setTimeout(() => {
-      setFrameLoaded(true);
-      setVideoReady(true);
-    }, 1200);
-    return () => clearTimeout(t);
-  }, [shouldLoad]);
-
   const scale = containerWidth / REF_W;
   const intrinsicHeight = containerWidth * (REF_H / REF_W);
   const hasVideo = !!(muxPlaybackId || videoSrc);
-
-  // Both frame and video (if any) must be loaded before revealing
-  const frameOk = !frameSrc || frameLoaded;
-  const videoOk = !hasVideo || videoReady;
-  const isVisible = frameOk && videoOk;
+  const muxPoster = muxPlaybackId
+    ? `https://image.mux.com/${muxPlaybackId}/thumbnail.webp?time=1&width=640`
+    : poster;
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -152,6 +130,7 @@ export default function PhoneMockup({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       aria-label={isPlaying ? "Pause" : "Play"}
+      className="phone-mockup-play-btn"
       style={{
         position: "absolute", top: 8, right: 8, zIndex: 10,
         width: 32, height: 32, borderRadius: "50%",
@@ -159,7 +138,7 @@ export default function PhoneMockup({
         boxShadow: isHovered ? "inset 0 0 0 1.5px var(--color-text-muted)" : "none",
         border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
-        flexShrink: 0, outline: "none",
+        flexShrink: 0,
         transition: "box-shadow 150ms ease",
       }}
     >
@@ -187,8 +166,7 @@ export default function PhoneMockup({
         ...(showFrame ? {} : style),
         maxWidth: REF_W,
         height: intrinsicHeight,
-        opacity: isVisible ? 1 : 0,
-        transition: isVisible ? "opacity 200ms ease" : "none",
+        opacity: 1,
       }}
     >
       <div
@@ -225,16 +203,34 @@ export default function PhoneMockup({
                 transformOrigin: "center center",
               }}
             >
+              {muxPoster && (
+                <img
+                  src={muxPoster}
+                  alt=""
+                  aria-hidden
+                  style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", pointerEvents: "none",
+                  }}
+                />
+              )}
               {shouldLoad && muxPlaybackId && (
                 <MuxPlayer
                   playbackId={muxPlaybackId}
+                  streamType="on-demand"
                   autoPlay="muted"
                   loop muted playsInline nohotkeys
-                  onCanPlay={() => setVideoReady(true)}
+                  preload="auto"
+                  poster={muxPoster}
                   style={{
-                    display: "block", width: "100%", height: "100%", objectFit: "cover",
-                    // @ts-ignore CSS custom property
+                    display: "block",
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
                     "--controls": "none",
+                    "--media-background-color": "transparent",
                   }}
                 />
               )}
@@ -246,8 +242,7 @@ export default function PhoneMockup({
                   autoPlay={autoPlay}
                   loop={loop}
                   muted playsInline
-                  preload="none"
-                  onCanPlay={() => setVideoReady(true)}
+                  preload="metadata"
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
@@ -268,10 +263,8 @@ export default function PhoneMockup({
         {/* Phone frame PNG — overlaid at z-index 2 */}
         {frameSrc && (
           <img
-            ref={imgRef}
             src={frameSrc}
             alt=""
-            onLoad={() => setFrameLoaded(true)}
             style={{
               position: "absolute", top: 0, left: 0,
               width: "100%", height: "100%",

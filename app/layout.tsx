@@ -1,16 +1,45 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import JsonLd from "@/components/JsonLd";
+import BootScripts from "@/components/BootScripts";
+import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
+import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import DevToolbar from "@/components/DevToolbar";
+import DevDialRoot from "@/components/DevDialRoot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
-import { getDesignSystem, designSystemToCss, getProjects } from "@/lib/sanity/queries";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import PersistentArchiveShell from "@/components/PersistentArchiveShell";
+import PersistentAboutShell from "@/components/PersistentAboutShell";
+import PersistentSilkLayer from "@/components/PersistentSilkLayer";
+import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
+import PrimaryTabSync from "@/components/PrimaryTabSync";
+import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import {
+  OG_IMAGE_ALT,
+  OG_IMAGE_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+
+// Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
+// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+
+const OG_IMAGES = [
+  {
+    url: OG_IMAGE_PATH,
+    width: 1200,
+    height: 630,
+    alt: OG_IMAGE_ALT,
+  },
+];
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -30,6 +59,27 @@ export const metadata: Metadata = {
   authors: [{ name: "Mudit Mahajan", url: SITE_URL }],
   creator: "Mudit Mahajan",
   alternates: { canonical: "/" },
+  // Non-media defaults first so Google/Search can pick a stable icon.
+  // Theme-aware 32px variants remain for modern browser tabs.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
+      {
+        url: "/favicon-32-light.png",
+        type: "image/png",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/favicon-32-dark.png",
+        type: "image/png",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   openGraph: {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
@@ -37,11 +87,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
+    images: OG_IMAGES,
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
   },
   robots: {
     index: true,
@@ -50,12 +102,31 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [ds, projects] = await Promise.all([getDesignSystem(), getProjects()]);
+  // A Sanity outage/misconfig must not take the whole site down — every route
+  // renders through this layout, so a bare await here is a single point of
+  // failure. Fall back to the shipped defaults and an empty project list,
+  // matching the .catch() pattern already used for case-study fetches
+  // (app/sviz/page.tsx).
+  const [ds, projects, archiveItems] = await Promise.all([
+    getDesignSystem(),
+    getProjects(),
+    // Seed the keep-alive archive shell on every layout render (including `/`)
+    // so Work → Archive is posters already in the DOM, not a live Sanity wait.
+    getPlaygroundGallery().catch(() => [] as PlaygroundGalleryItem[]),
+  ]).catch(
+    () =>
+      [DS_DEFAULTS, [], []] as [
+        Required<DesignSystemData>,
+        SanityProject[],
+        PlaygroundGalleryItem[],
+      ]
+  );
   const dsStyle = designSystemToCss(ds);
 
   return (
     <html
       lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
       data-theme="dark"
       data-scroll-behavior="smooth"
       // Unconditionally "playing" in the static, server-rendered HTML — not
@@ -77,43 +148,51 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
     >
       <head>
-        {/* Runs synchronously before first paint:
-            1. Applies saved light/dark theme from localStorage.
-            2. Clears sessionStorage so cursor-color, wave-color, PS3 mode, etc.
-               reset on every hard load (they persist only across client-side navigations).
-            3. Off the homepage, removes data-intro="playing" (see the comment on <html>
-               above for why it starts present on every route instead of being added here). */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()` }} />
-        {/* Intro gate CSS — must be inline, not in globals.css. The blocking script
-            above sets data-intro="playing" synchronously, but globals.css is an
-            external stylesheet that loads separately over the network. On production
-            there is a gap between when the script runs and when the external CSS
-            arrives, during which .intro-hide elements are briefly visible (the flash).
-            Inlining these rules here guarantees they apply in the same paint as the
-            script. globals.css keeps a copy as a fallback. */}
-        <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}` }} />
+        {/* Intro gate CSS — must be inline, not in globals.css. The blocking
+            beforeInteractive script below sets data-intro="playing"
+            synchronously, but globals.css is an external stylesheet that loads
+            separately over the network. On production there is a gap between
+            when the script runs and when the external CSS arrives, during which
+            .intro-hide elements are briefly visible (the flash). Inlining these
+            rules here guarantees they apply in the same paint as the script.
+            globals.css keeps a copy as a fallback. */}
+        <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
-        {/* Hide system cursor immediately on pointer:fine devices — before JS
-            hydration — so there's no flash of the default arrow on load. */}
-        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine){*{cursor:none!important}}` }} />
-        {/* Theme-aware favicons: dark glyph on light chrome, light glyph on dark chrome */}
-        <link rel="icon" type="image/png" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
-        <link rel="icon" type="image/png" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
+        {/* CSS cursor fallback before JS boots, and for reduced-motion / coarse
+            pointers. While the custom cursor is running, JS sets cursor:none. */}
+        <style dangerouslySetInnerHTML={{ __html: `@media(pointer:fine) and (prefers-reduced-motion:no-preference){html,html *{cursor:url("/cursors/dot-light.svg") 10 10,auto!important}html[data-theme="dark"],html[data-theme="dark"] *{cursor:url("/cursors/dot-dark.svg") 10 10,auto!important}}` }} />
+        {/* Icons also declared in `metadata.icons` — keep a plain fallback here
+            for crawlers that only read the first non-media icon link. */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/favicon.png" sizes="48x48" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" type="image/png" href="/favicon-32-light.png" sizes="32x32" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://stream.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
-        <JsonLd />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
+        {/* Injected via useServerInsertedHTML so React 19 never sees a
+            <script> in the component tree (raw script / next/script both warn). */}
+        <BootScripts jsonLd={getSiteJsonLd()} />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
+        <UiSoundRoot />
         <Nav />
-        <main id="main-content">
+        <PrimaryRouteWarmup />
+        <PrimaryTabSync />
+        <main id="main-content" style={{ position: "relative" }}>
           {/* Mounted once, unconditionally, for the whole session — never
               unmounted by route changes. See PersistentWorkShell for why. */}
+          <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
+          <PersistentAboutShell />
+          <PersistentArchiveShell items={archiveItems} />
           <AnimationProvider>
             {children}
           </AnimationProvider>
+          {process.env.NODE_ENV === "development" && <DevDialRoot />}
         </main>
         <Footer />
         {process.env.NODE_ENV === "development" && <DevToolbar />}
