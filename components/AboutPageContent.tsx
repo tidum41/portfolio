@@ -168,7 +168,7 @@ export default function AboutPageContent({
                   featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
                   top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
                   bottom={{ src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" }}
-                  priority
+                  priority={visible}
                 />
               </Enter>
 

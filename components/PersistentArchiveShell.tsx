@@ -20,9 +20,9 @@ import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
  * gallery itself is not mounted until Archive is actually shown.
  */
 export default function PersistentArchiveShell({
-  items: serverItems,
+  items: serverItems = [],
 }: {
-  items: PlaygroundGalleryItem[];
+  items?: PlaygroundGalleryItem[];
 }) {
   const pathname = usePathname();
   const tab = useResolvedPrimaryTab(pathname);
@@ -37,6 +37,7 @@ export default function PersistentArchiveShell({
   if (visible && !hasShown) setHasShown(true);
 
   useEffect(() => {
+    if (!hasShown) return;
     if (items.length) return;
     let cancelled = false;
     void warmArchiveGallery().then((data) => {
@@ -45,7 +46,7 @@ export default function PersistentArchiveShell({
     return () => {
       cancelled = true;
     };
-  }, [items.length]);
+  }, [items.length, hasShown]);
 
   return (
     <div
