@@ -70,10 +70,16 @@ function sanitizeDesignSystem(raw: DesignSystemData | null): DesignSystemData {
   return clean;
 }
 
-export async function getDesignSystem(): Promise<Required<DesignSystemData>> {
-  const raw = await sanityClient.fetch<DesignSystemData | null>(DS_QUERY, {}, { next: { revalidate: 60 } });
+async function loadDesignSystem(): Promise<Required<DesignSystemData>> {
+  const raw = await sanityClient.fetch<DesignSystemData | null>(DS_QUERY);
   return { ...DS_DEFAULTS, ...sanitizeDesignSystem(raw) };
 }
+
+/** `@sanity/client` does not honor `{ next: { revalidate } }` — wrap like
+ *  the playground gallery so layout TTFB is not a live Sanity round-trip. */
+export const getDesignSystem = cache(
+  unstable_cache(loadDesignSystem, ["design-system"], { revalidate: 60 }),
+);
 
 /** Convert a DesignSystemData to a CSS :root{} override block */
 export function designSystemToCss(ds: Required<DesignSystemData>): string {
@@ -123,13 +129,17 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": "https://allinone-demo-amber.vercel.app/",
 };
 
-export async function getProjects(): Promise<SanityProject[]> {
-  const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY, {}, { next: { revalidate: 60 } });
+async function loadProjects(): Promise<SanityProject[]> {
+  const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY);
   return projects.map((p) => ({
     ...p,
     href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
   }));
 }
+
+export const getProjects = cache(
+  unstable_cache(loadProjects, ["projects"], { revalidate: 60 }),
+);
 
 // ── Case Study ────────────────────────────────────────────────────────────────
 

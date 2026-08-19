@@ -396,8 +396,6 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             const root = wrapRef.current;
             if (!root) return;
 
-            ensureMuxLoaded();
-
             // The whole feature is built by hand-mutating the DOM (splitting the
             // text node, injecting the SVG, wiring listeners) — none of it is
             // visible to React's virtual DOM. If anything causes this subtree to
@@ -566,7 +564,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 playerMounted = true;
                 player = document.createElement("mux-player");
                 player.setAttribute("playback-id", PLAYBACK_ID);
-                player.setAttribute("preload", "auto");
+                player.setAttribute("preload", "metadata");
                 player.setAttribute("autoplay", "muted");
                 player.setAttribute("loop", "");
                 player.setAttribute("muted", "");
@@ -605,6 +603,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
             }
 
             function open() {
+                ensureMuxLoaded();
                 mountPlayer();
                 position();
                 isOpen = true;

@@ -21,6 +21,7 @@ import { clearInstantBack } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
+import { useIntroReleased } from "@/lib/useIntroReleased";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -206,6 +207,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
+  const introReleased = useIntroReleased();
   // Which embed's popup is active, and whether the modal is visibly open.
   // openPopup stays set through the exit animation so the single portaled
   // iframe doesn't unmount until onExitComplete fires.
@@ -220,7 +222,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
   // CD poster only covers while the modal is open. Habit poster is the grid.
-  const [cdPosterOpacity, setCdPosterOpacity] = useState(0);
+  const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
   const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
@@ -344,12 +346,14 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).
+  // Also wait for intro-done so the first-load tile is a poster until silk
+  // has finished compiling — live CD mounts right after.
   useEffect(() => {
-    if (!visible || !hasEverBeenActive) return;
+    if (!visible || !hasEverBeenActive || !introReleased) return;
     if (openPopup === "cd") return;
     setCdPosterFade(true);
     setCdPosterOpacity(0);
-  }, [visible, hasEverBeenActive, openPopup]);
+  }, [visible, hasEverBeenActive, openPopup, introReleased]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
@@ -789,7 +793,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       // Keep the inert screen mounted after the first "/" visit
                       // so the poster reflects this session's habit state across
                       // navigations (no cold remount flash on return).
-                      showScreen={hasEverBeenActive}
+                      showScreen={hasEverBeenActive && introReleased}
                     />
                   </div>
                 </div>
@@ -801,7 +805,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
             so parent display:none cannot hide it; `visible` toggles the portal. */}
-        {hasEverBeenActive && (
+        {hasEverBeenActive && introReleased && (
           <PS3ControlPanel
             instantReturn={instant}
             visible={visible}
@@ -878,7 +882,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         CD mounts while heavy media is live, or immediately when the modal
         opens (idle teardown may have unmounted it). Habit stays popup-only.
       */}
-      {hasEverBeenActive && (heavyMediaLive || openPopup === "cd") && (
+      {hasEverBeenActive && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
         </EmbedPortal>
