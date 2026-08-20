@@ -11,7 +11,8 @@ import {
     type CSSProperties,
 } from "react";
 import { useDialKit } from "dialkit";
-import { cssEase, EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
+import { ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
+import { defaultPs3EnterVars, PS3_ENTER_CLASS, replayPs3Enter } from "@/components/Ps3Enter";
 
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
@@ -456,11 +457,7 @@ export default function BentoGallery({
         if (!canvas) return;
         const tiles = canvas.querySelectorAll<HTMLElement>("[data-ps3-enter]");
         for (const el of tiles) {
-            el.classList.remove("ps3-enter");
-            if (visible && !snap) {
-                void el.offsetWidth;
-                el.classList.add("ps3-enter");
-            }
+            replayPs3Enter(el, visible && !snap);
         }
     }, [visible, snap, enterEpoch, layoutReady]);
 
@@ -1512,9 +1509,9 @@ export default function BentoGallery({
                     // separate concern from the inner div's zoom-dim opacity,
                     // so replaying one never fights the other.
                     const entranceDelay = (staggerRank[i] ?? 0) * perItemStagger;
-                    const tileEnterClass = playEnter ? "ps3-enter" : "";
                     const fromOpacity =
                         ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY;
+                    const tileEnterClass = playEnter ? PS3_ENTER_CLASS : "";
 
                     return (
                         <div
@@ -1526,11 +1523,12 @@ export default function BentoGallery({
                                 left: pos.left,
                                 top: pos.top,
                                 width: iw,
-                                ["--ps3-enter-delay" as string]: `${Math.round(entranceDelay * 1000)}ms`,
-                                ["--ps3-enter-y" as string]: `${dk.y}px`,
-                                ["--ps3-enter-from-opacity" as string]: String(fromOpacity),
-                                animationDuration: `${dk.duration * 1000}ms`,
-                                animationTimingFunction: cssEase(EASE_OPACITY),
+                                ...defaultPs3EnterVars({
+                                    delayMs: Math.round(entranceDelay * 1000),
+                                    yPx: dk.y,
+                                    fromOpacity,
+                                    durationMs: Math.round(dk.duration * 1000),
+                                }),
                             }}
                         >
                         <div

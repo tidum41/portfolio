@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
-import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { HERO_HEADLINE } from "@/lib/site";
+import { Ps3Enter } from "@/components/Ps3Enter";
 
 // Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
 // This guards the long cold-load/tab-replay timeline. On an SPA soft return,
@@ -16,11 +15,29 @@ import { HERO_HEADLINE } from "@/lib/site";
 // React StrictMode remount can still hear `intro-done`.
 let _animated = false;
 
+const H1_STYLE = {
+  fontFamily: "var(--font-page-title)",
+  fontSize: "clamp(26px, 2.8vw, 36px)",
+  fontWeight: 400,
+  lineHeight: 1.2,
+  letterSpacing: "-0.5px",
+  color: "var(--color-text-primary)",
+  margin: 0,
+} as const;
+
+const SUB_STYLE = {
+  position: "relative",
+  zIndex: 1,
+  fontFamily: "var(--font-sans)",
+  fontSize: 17,
+  lineHeight: 1.5,
+  color: "var(--color-text-secondary)",
+  margin: 0,
+} as const;
+
 export default function HeroText() {
   const instant = typeof window !== "undefined" && _animated;
   const [playId, setPlayId] = useState(0);
-  const h1Controls = useAnimation();
-  const reduced = useReducedMotion();
 
   useEffect(() => {
     // Do not set `_animated` until this intro actually finishes. Setting it
@@ -28,28 +45,6 @@ export default function HeroText() {
     // before re-registering `intro-done` — the subtitle stayed at spawn
     // (the JOOLA / UCLA line "never arriving", then popping).
     if (instant) return;
-
-    function animateH1(delay = introTimings.heroDelay) {
-      // Full `transform` string rather than the `y` shorthand — the shorthand
-      // runs on the main thread via rAF, while `transform` stays on the
-      // compositor. This entrance fires at the busiest possible moment
-      // (page load/hydration), so it's the one place that matters most.
-      const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-      const fadeDur = reduced ? 0 : ENTRANCE_DEFAULTS.duration;
-      h1Controls.set({ opacity: reduced ? 1 : 0, transform: reduced ? "translateY(0px)" : fromY });
-      // Tween is armed immediately at opacity 0 — the delay is part of the
-      // playing animation, not a hold then a separate slide.
-      h1Controls.start({
-        opacity: 1,
-        transform: "translateY(0px)",
-        transition: {
-          opacity:   { duration: fadeDur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
-          transform: { duration: fadeDur, ease: EASE_OPACITY, delay: reduced ? 0 : delay },
-        },
-      });
-    }
-
-    animateH1();
 
     function onDone() {
       _animated = true;
@@ -59,12 +54,14 @@ export default function HeroText() {
     } else {
       window.addEventListener("intro-done", onDone, { once: true });
     }
-    const subFallback = window.setTimeout(onDone, Math.ceil((introTimings.gateDuration + 0.6) * 1000));
+    const subFallback = window.setTimeout(
+      onDone,
+      Math.ceil((introTimings.gateDuration + 0.6) * 1000),
+    );
 
     function onReplay() {
       _animated = false;
       setPlayId((n) => n + 1);
-      animateH1();
       window.addEventListener("intro-done", onDone, { once: true });
     }
     window.addEventListener("intro-replay", onReplay);
@@ -76,15 +73,7 @@ export default function HeroText() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-  const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY };
-  const subDelay = instant || reduced ? 0 : introTimings.gateDuration;
-  const subTx = instant || reduced
-    ? { duration: 0 }
-    : {
-        opacity:   { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
-        transform: { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
-      };
+  const play = !instant;
 
   return (
     <>
@@ -93,40 +82,26 @@ export default function HeroText() {
           viewports under ~388px (iPhone SE, common Android widths), clipping
           the headline instead of just letting it wrap a bit tighter. */}
       <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: "min(340px, 100%)" }}>
-        <motion.h1
-          initial={h1Initial}
-          animate={h1Controls}
+        <Ps3Enter
+          as="h1"
+          play={play}
+          replayToken={playId}
+          delayMs={play ? Math.round(introTimings.heroDelay * 1000) : 0}
           className="hero-heading"
-          style={{
-            fontFamily: "var(--font-page-title)",
-            fontSize: "clamp(26px, 2.8vw, 36px)",
-            fontWeight: 400,
-            lineHeight: 1.2,
-            letterSpacing: "-0.5px",
-            color: "var(--color-text-primary)",
-            margin: 0,
-          }}
+          style={H1_STYLE}
         >
           {HERO_HEADLINE}
-        </motion.h1>
+        </Ps3Enter>
       </div>
 
-      <motion.p
+      <Ps3Enter
+        as="p"
+        play={play}
+        replayToken={playId}
+        delayMs={play ? Math.round(introTimings.gateDuration * 1000) : 0}
         className="hero-sub"
-        data-hero-sub
-        key={instant ? "rest" : playId}
-        initial={instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY }}
-        animate={{ opacity: 1, transform: "translateY(0px)" }}
-        transition={subTx}
-        style={{
-          position: "relative",
-          zIndex: 1,
-          fontFamily: "var(--font-sans)",
-          fontSize: 17,
-          lineHeight: 1.5,
-          color: "var(--color-text-secondary)",
-          margin: 0,
-        }}
+        data-hero-sub=""
+        style={SUB_STYLE}
       >
         {"currently @ "}
         <a
@@ -151,7 +126,7 @@ export default function HeroText() {
             ucla
           </a>
         </span>
-      </motion.p>
+      </Ps3Enter>
     </>
   );
 }

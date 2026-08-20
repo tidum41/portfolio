@@ -1,8 +1,9 @@
 "use client";
 
-import { Children, createContext, useContext, useLayoutEffect, useRef } from "react";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
+import { Children, createContext, useContext } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
+import { Ps3Enter } from "@/components/Ps3Enter";
 import { useDialKit } from "dialkit";
 import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden } from "@/lib/motion";
 import type { EntranceDefaults } from "@/lib/motion";
@@ -193,18 +194,12 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
 //    Needed where items span more than one physical container that still
 //    need to read as a single interleaved sequence — e.g. the work grid's
 //    two DOM columns, where "visual reading order" crosses both columns.
-export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, replayToken = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, ...rest }: {
+export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, replayToken = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, whileHover: _whileHover, transition: _transition, ...rest }: {
   children: ReactNode; style?: CSSProperties; className?: string; y?: number; instant?: boolean;
   active?: boolean; delay?: number; replayToken?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
-  // Passed straight through to the underlying motion.div via ...rest below —
-  // framer-motion merges whileHover with the entrance animate/variants state
-  // fine on its own, this just widens the prop type so callers (e.g. the
-  // project-card hover) can pass them without a TS error.
+  // Accepted so existing callers type-check; hover is CSS on project cards.
   whileHover?: TargetAndTransition;
   transition?: Transition;
-  // Widened further for callers that make the whole item a click/keyboard
-  // target (e.g. the CD Player / Habit Tracker grid tiles opening a popup)
-  // rather than a plain link.
   role?: string;
   tabIndex?: number;
   "aria-label"?: string;
@@ -217,139 +212,32 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   const defaults = defaultsProp ?? tune.defaults;
   const dk = useDialKit(dialKitName, ENTRANCE_RANGES(defaults));
   const fromParent = useContext(InstantEntranceCtx);
-  const prefersReduced = useReducedMotion();
-  const reduced = prefersReduced || instant || fromParent;
   const y = yProp ?? dk.y;
-  const x = dk.x ?? ENTRANCE_DEFAULTS.x;
   const selfDriven = active !== undefined;
 
-  // Keep-alive shells hide with display:none. Framer often skips applying
-  // `hidden` under that, then on return thinks the node is already `visible`
-  // while the DOM is still at spawn opacity — content stays gone. Drive
-  // opacity/x/y ourselves so hide always lands, and every active false→true
-  // starts from SPAWN_FROM_OPACITY. Fallbacks snap to 1 so a skipped tween
-  // cannot rest hidden.
-  const opacityMv = useMotionValue(SPAWN_FROM_OPACITY);
-  const xMv = useMotionValue(0);
-  const yMv = useMotionValue(0);
-  const transformMv = useTransform([xMv, yMv], (latest) => {
-    const xVal = latest[0] as number;
-    const yVal = latest[1] as number;
-    return spawnHidden(xVal, yVal);
-  });
-  const motionParamsRef = useRef({ duration: dk.duration, delay, x, y, reduced });
-  // Keep the latest dials on the ref during render so the hide/show layout
-  // effect in the same commit reads current values (keep-alive shells).
-  // eslint-disable-next-line react-hooks/refs -- intentional render-time ref sync
-  motionParamsRef.current = { duration: dk.duration, delay, x, y, reduced };
-  const motionGenRef = useRef(0);
-  const tweensRef = useRef<{ stop: () => void }[]>([]);
-  const wasActiveRef = useRef(!!active);
-  const wasTokenRef = useRef(replayToken);
-
-  // Keep-alive shells hide with display:none. Arm spawn on leave so the next
-  // primary-tab show can play the 8px / 1140ms enter. Back passes `instant`
-  // and snaps to rest on show, before paint.
-  //
-  // Skip "already at rest" ONLY when `active` stayed true and replayToken
-  // did not bump (intro releasing heroInstant). A false→true rising edge,
-  // or a new replayToken, must always replay — finished motion values on
-  // keep-alive nodes would otherwise snap after the first couple of visits.
-  useLayoutEffect(() => {
-    if (!selfDriven) return;
-    const { duration, delay: itemDelay, x: xPx, y: yPx, reduced: rm } = motionParamsRef.current;
-    const rose = !!active && !wasActiveRef.current;
-    const tokenBumped = replayToken !== wasTokenRef.current;
-    wasActiveRef.current = !!active;
-    wasTokenRef.current = replayToken;
-    if (!active) {
-      motionGenRef.current += 1;
-      for (const tween of tweensRef.current) tween.stop();
-      tweensRef.current = [];
-      if (prefersReduced) {
-        opacityMv.set(1);
-        xMv.set(0);
-        yMv.set(0);
-      } else {
-        opacityMv.set(SPAWN_FROM_OPACITY);
-        xMv.set(0);
-        yMv.set(yPx);
-      }
-      return;
-    }
-    if (rm) {
-      // `instant` can flip true after the first commit (intro gate closes
-      // the grid in a layout effect; heroInstant follows). Stop any tween
-      // that already started so it never paints as a second Layer B slide.
-      motionGenRef.current += 1;
-      for (const tween of tweensRef.current) tween.stop();
-      tweensRef.current = [];
-      opacityMv.set(1);
-      xMv.set(0);
-      yMv.set(0);
-      return;
-    }
-    // Intro releases heroInstant (reduced false) while this wrapper is
-    // already at rest and still active — do not restart Layer B on HeroText.
-    if (
-      !rose &&
-      !tokenBumped &&
-      tweensRef.current.length === 0 &&
-      opacityMv.get() === 1 &&
-      xMv.get() === 0 &&
-      yMv.get() === 0
-    ) {
-      return;
-    }
-    motionGenRef.current += 1;
-    const gen = motionGenRef.current;
-    opacityMv.set(SPAWN_FROM_OPACITY);
-    xMv.set(0);
-    yMv.set(yPx);
-    // Opacity + Y only. Skip a third tween when x is always 0 (cheaper on nav).
-    const fade = animate(opacityMv, 1, { duration, delay: itemDelay, ease: PS3_OPACITY });
-    const slideY = animate(yMv, 0, { duration, delay: itemDelay, ease: PS3_OPACITY });
-    tweensRef.current = [fade, slideY];
-    // Fire-and-forget fallback. Clearing it on cleanup is what left grid
-    // cards at opacity 0 after a keep-alive return.
-    window.setTimeout(() => {
-      if (motionGenRef.current !== gen) return;
-      opacityMv.set(1);
-      xMv.set(0);
-      yMv.set(0);
-    }, Math.ceil((itemDelay + duration) * 1000) + 64);
-  }, [selfDriven, active, reduced, prefersReduced, replayToken, opacityMv, xMv, yMv]);
+  if (!selfDriven) {
+    return (
+      <div {...rest} style={style} className={className}>
+        {children}
+      </div>
+    );
+  }
 
   return (
-    <motion.div
+    <Ps3Enter
       {...rest}
-      {...(selfDriven ? { initial: false } : { initial: "hidden" })}
-      variants={
-        selfDriven
-          ? undefined
-          : {
-              hidden: {
-                opacity: SPAWN_FROM_OPACITY,
-                transform: reduced ? SPAWN_REST : spawnHidden(x, y),
-              },
-              visible: {
-                opacity: 1,
-                transform: SPAWN_REST,
-                transition: {
-                  duration: reduced ? 0 : dk.duration,
-                  ease: PS3_OPACITY,
-                },
-              },
-            }
-      }
-      style={
-        selfDriven
-          ? { ...style, opacity: opacityMv, transform: transformMv }
-          : style
-      }
+      play={!!active}
+      instant={instant || fromParent}
+      replayToken={replayToken}
+      delayMs={Math.round(delay * 1000)}
+      yPx={y}
+      fromOpacity={defaults?.fromOpacity ?? ENTRANCE_DEFAULTS.fromOpacity ?? SPAWN_FROM_OPACITY}
+      durationMs={Math.round(dk.duration * 1000)}
+      hideWhenInactive
       className={className}
+      style={style}
     >
       {children}
-    </motion.div>
+    </Ps3Enter>
   );
 }
