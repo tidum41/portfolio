@@ -17,7 +17,7 @@ import PersistentAboutShell from "@/components/PersistentAboutShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
 import PrimaryTabSync from "@/components/PrimaryTabSync";
-import { getDesignSystem, designSystemToCss, getProjects, getPlaygroundGallery, DS_DEFAULTS, type DesignSystemData, type SanityProject, type PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -29,8 +29,10 @@ import { Analytics } from '@vercel/analytics/next';
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
 // Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+// preload: false — body copy is local HN/Söhne. Geist is only used inside
+// the CD player + habit embed, which mount after first paint.
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
 
 const OG_IMAGES = [
   {
@@ -107,19 +109,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // failure. Fall back to the shipped defaults and an empty project list,
   // matching the .catch() pattern already used for case-study fetches
   // (app/sviz/page.tsx).
-  const [ds, projects, archiveItems] = await Promise.all([
+  // Archive gallery is NOT fetched here — serializing LQIP data-URIs +
+  // 2000px Sanity URLs into every `/` HTML payload was first-load bloat.
+  // PersistentArchiveShell + PrimaryRouteWarmup hydrate it after intro.
+  const [ds, projects] = await Promise.all([
     getDesignSystem(),
     getProjects(),
-    // Seed the keep-alive archive shell on every layout render (including `/`)
-    // so Work → Archive is posters already in the DOM, not a live Sanity wait.
-    getPlaygroundGallery().catch(() => [] as PlaygroundGalleryItem[]),
   ]).catch(
     () =>
-      [DS_DEFAULTS, [], []] as [
-        Required<DesignSystemData>,
-        SanityProject[],
-        PlaygroundGalleryItem[],
-      ]
+      [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
   const dsStyle = designSystemToCss(ds);
 
@@ -185,7 +183,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <PersistentSilkLayer />
           <PersistentWorkShell projects={projects} />
           <PersistentAboutShell />
-          <PersistentArchiveShell items={archiveItems} />
+          <PersistentArchiveShell />
           <AnimationProvider>
             {children}
           </AnimationProvider>

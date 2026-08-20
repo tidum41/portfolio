@@ -34,7 +34,7 @@ export default function MuxMediaSlot({
   /** Pause without tearing down HLS (soft-nav). */
   playing?: boolean;
 }) {
-  const poster = muxPosterUrl(playbackId, 1280, thumbnailTime);
+  const poster = muxPosterUrl(playbackId, fill ? 640 : 1280, thumbnailTime);
   const src = muxHlsUrl(playbackId);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -67,7 +67,9 @@ export default function MuxMediaSlot({
         if (Hls.isSupported()) {
           const hls = new Hls({
             startLevel: -1,
-            maxBufferLength: 8,
+            capLevelToPlayerSize: true,
+            maxBufferLength: fill ? 6 : 8,
+            maxMaxBufferLength: fill ? 12 : 24,
             enableWorker: false,
           });
           hlsRef.current = hls;
@@ -99,7 +101,7 @@ export default function MuxMediaSlot({
         cancelled = true;
       };
     },
-    [src, kickPlay],
+    [src, kickPlay, fill],
   );
 
   useEffect(() => {
@@ -142,17 +144,20 @@ export default function MuxMediaSlot({
       style={style}
       data-hls="pending"
     >
-      {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="mux-media-sizer"
-        src={poster}
-        alt=""
-        aria-hidden
-        decoding="async"
-        fetchPriority="high"
-        onLoad={kickPlay}
-      />
+      {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio.
+          Fill/grid cards already paint a poster underneath; skip a second 1280 fetch. */}
+      {!fill && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="mux-media-sizer"
+          src={poster}
+          alt=""
+          aria-hidden
+          decoding="async"
+          fetchPriority="high"
+          onLoad={kickPlay}
+        />
+      )}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video
         ref={videoRef}
@@ -162,7 +167,7 @@ export default function MuxMediaSlot({
         muted
         loop
         playsInline
-        preload="auto"
+        preload={fill ? "metadata" : "auto"}
         onCanPlay={kickPlay}
         onPlaying={kickPlay}
         onLoadedData={kickPlay}

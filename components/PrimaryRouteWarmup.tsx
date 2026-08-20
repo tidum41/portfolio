@@ -1,17 +1,13 @@
 "use client";
 
 /**
- * Prefetch About/Archive JS + About images while still on Work so the first
- * nav click does not wait on a late chunk.
+ * Prefetch About/Archive JS after the Work intro so first-load silk + Mux
+ * posters aren't competing with About images / CDPlayer / archive LQIPs.
+ * Work → About/Archive still hits a warm cache once idle completes.
  */
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-
-const ABOUT_IMAGES = [
-  "/images/about/bento-large.jpg",
-  "/images/about/bento-top-right.webp",
-  "/images/about/bento-bottom-right.avif",
-];
+import { afterIntroIdle } from "@/lib/introReady";
 
 const CD_POSTERS = [
   "/images/cd-player-poster-light.webp",
@@ -22,46 +18,48 @@ export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
 
   useEffect(() => {
-    void import("@/components/AboutPageContent");
-    void import("@/components/BentoHero");
-    void import("@/app/archive/ArchivePageClient");
-    void import("@/components/BentoGallery");
-    void import("@/lib/archiveGalleryCache").then((m) => {
-      void m.warmArchiveGallery().then((items) => {
-        // Decode LQIP posters into the image cache without mounting a second
-        // visible grid. Data URIs included — display:none will not have painted them.
-        for (const it of items.slice(0, 12)) {
-          const poster = it.blurDataURL;
-          if (!poster) continue;
-          const img = new window.Image();
-          img.decoding = "async";
-          img.src = poster;
-        }
-      });
-    });
-
     let idleId = 0;
     let timeoutId = 0;
     let heavyIdleId = 0;
     let heavyTimeoutId = 0;
+
+    const warmJs = () => {
+      void import("@/components/AboutPageContent");
+      void import("@/components/BentoHero");
+      void import("@/app/archive/ArchivePageClient");
+      void import("@/components/BentoGallery");
+      void import("@/lib/archiveGalleryCache").then((m) => {
+        void m.warmArchiveGallery();
+      });
+    };
+
     const warmAssets = () => {
-      for (const src of [...ABOUT_IMAGES, ...CD_POSTERS]) {
+      for (const src of CD_POSTERS) {
         const img = new window.Image();
         img.decoding = "async";
         img.src = src;
       }
     };
+
     const warmHeavy = () => {
       void import("@/components/CDPlayer");
     };
-    if (typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(warmAssets, { timeout: pathname === "/" ? 1200 : 3000 });
-      heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: pathname === "/" ? 2800 : 5000 });
-    } else {
-      timeoutId = window.setTimeout(warmAssets, pathname === "/" ? 400 : 900);
-      heavyTimeoutId = window.setTimeout(warmHeavy, pathname === "/" ? 1600 : 3200);
-    }
+
+    const schedule = () => {
+      warmJs();
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
+        heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
+      } else {
+        timeoutId = window.setTimeout(warmAssets, 400);
+        heavyTimeoutId = window.setTimeout(warmHeavy, 1200);
+      }
+    };
+
+    const cancelIntro = afterIntroIdle(schedule, pathname === "/" ? 2500 : 800);
+
     return () => {
+      cancelIntro();
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }

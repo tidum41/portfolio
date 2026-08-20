@@ -8,6 +8,7 @@ import MuxMediaSlot, { muxPosterUrl } from "@/components/MuxMediaSlot";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import { onIntroDone } from "@/lib/introReady";
 
 /** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
 const MOUNT_STAGGER_MS = 200;
@@ -121,25 +122,35 @@ export default function MuxAutoplayCard({
   // Attach/detach are both staggered. Leave yields a paint first so soft-nav
   // to About/Archive isn't one long Mux-destroy frame (cursor tip freezes).
   // mountReady alone gates the player — `active` only schedules the timers.
+  // Wait for intro-done so HLS/MSE don't fight PS3Silk shader compile.
   useEffect(() => {
     let cancelled = false;
+    let timeoutId = 0;
+    let cancelIntro = () => {};
+
     if (active && shouldLoad) {
-      const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
-      const id = window.setTimeout(() => {
-        if (!cancelled) setMountReady(true);
-      }, delay);
+      const start = () => {
+        if (cancelled) return;
+        const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+        timeoutId = window.setTimeout(() => {
+          if (!cancelled) setMountReady(true);
+        }, delay);
+      };
+      cancelIntro = onIntroDone(start);
       return () => {
         cancelled = true;
-        window.clearTimeout(id);
+        cancelIntro();
+        window.clearTimeout(timeoutId);
       };
     }
+
     const delay = UNMOUNT_BASE_MS + Math.max(0, mountOrder) * UNMOUNT_STAGGER_MS;
-    const id = window.setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       if (!cancelled) setMountReady(false);
     }, delay);
     return () => {
       cancelled = true;
-      window.clearTimeout(id);
+      window.clearTimeout(timeoutId);
     };
   }, [active, shouldLoad, mountOrder]);
 
