@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
+import { Ps3Enter } from "@/components/Ps3Enter";
 import Image from "next/image";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -52,30 +53,15 @@ function Enter({
   playEnter: boolean;
   enterEpoch: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  // Finished CSS animations do not restart on the same node. Remove → reflow
-  // → add on each non-Back About arrival so keep-alive visits still enter.
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.classList.remove("ps3-enter");
-    if (!playEnter) return;
-    void el.offsetWidth;
-    el.classList.add("ps3-enter");
-  }, [playEnter, enterEpoch]);
-
   return (
-    <div
-      ref={ref}
-      className={playEnter ? "ps3-enter" : undefined}
-      style={
-        playEnter
-          ? { ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }
-          : style
-      }
+    <Ps3Enter
+      play={playEnter}
+      replayToken={enterEpoch}
+      delayMs={delay}
+      style={style}
     >
       {children}
-    </div>
+    </Ps3Enter>
   );
 }
 
