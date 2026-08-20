@@ -1,19 +1,19 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import AboutPageContent from "@/components/AboutPageContent";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
+import { afterIntroIdle } from "@/lib/introReady";
+
+const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
 
 /**
  * About keep-alive — same hide contract as Work/Archive (`display: none` +
- * inert). Mounted once from the root layout so Work → About is a display
- * flip, not a remount of CDPlayer + BentoHero.
- *
- * Content enter replays on every About click via `enterEpoch` (finished
- * `.ps3-enter` will not restart on the same node). Back snaps at rest.
- * The shell itself is instant.
+ * inert). Not mounted on first Work paint (that pulled CDPlayer + BentoHero
+ * + priority About images into `/`). Idle-mounts after intro so Work → About
+ * is still a display flip once warmed.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
@@ -21,6 +21,14 @@ export default function PersistentAboutShell() {
   const visible = tab === "about";
   const { snap, epoch } = useTabArrival(visible);
   const playEnter = visible && !snap;
+
+  const [hasShown, setHasShown] = useState(visible);
+  if (visible && !hasShown) setHasShown(true);
+
+  useEffect(() => {
+    if (hasShown) return;
+    return afterIntroIdle(() => setHasShown(true), 4000);
+  }, [hasShown]);
 
   return (
     <div
@@ -30,7 +38,9 @@ export default function PersistentAboutShell() {
       inert={!visible}
       {...(!visible ? { "data-nosnippet": true } : {})}
     >
-      <AboutKeepAlive visible={visible} playEnter={playEnter} enterEpoch={epoch} />
+      {hasShown ? (
+        <AboutKeepAlive visible={visible} playEnter={playEnter} enterEpoch={epoch} />
+      ) : null}
     </div>
   );
 }

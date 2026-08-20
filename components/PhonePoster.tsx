@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useDialKit } from "dialkit";
 import { EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
-import HabitTrackerApp from "@/components/embeds/habit-tracker/HabitTrackerApp";
 // Static imports (see matching comment in PhoneEmbed.tsx) so Next.js
 // content-hashes the served filename instead of a plain public/ path that
 // never changes URL even when the file's bytes are swapped.
 import phoneFrameLight from "@/public/phonemockup-light.webp";
 import phoneFrameDark from "@/public/phonemockup-dark.webp";
+
+const HabitTrackerApp = dynamic(
+  () => import("@/components/embeds/habit-tracker/HabitTrackerApp"),
+  { ssr: false },
+);
 
 const PHONE_W_BASE = 280;
 const PHONE_H_BASE = 580;
