@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS, EASE_OPACITY, EASE_EXPAND, type CubicBezier } from "@/lib/motion";
+import { onIntroDone } from "@/lib/introReady";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -32,7 +33,7 @@ const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const REVEAL_EASE = cssCubic(EASE_OPACITY);
 const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
-// load waits for intro-done; about/archive return replays the same settle.
+// load is mounted only after introReleased; about/archive return replays settle.
 const PICKER_MAX_H = 125;
 const BODY_H = 620;
 
@@ -866,12 +867,11 @@ export default function PS3ControlPanel({
       }
       _ps3cpHasLoaded = true;
     }
-    if (!document.documentElement.hasAttribute("data-intro")) {
-      reveal();
-      return;
-    }
-    window.addEventListener("intro-done", reveal, { once: true });
-    return () => window.removeEventListener("intro-done", reveal);
+    // Parent already waits for introReleased before mounting this panel, so
+    // `data-intro` is often already "done" (attribute still present) when we
+    // run. Waiting for `intro-done` here misses the event and leaves the pill
+    // at opacity 0. onIntroDone treats anything but "playing" as released.
+    return onIntroDone(reveal);
   }, [instantReturn, posReady, reduced, visible]);
 
   // Sync dark mode from html[data-theme]
