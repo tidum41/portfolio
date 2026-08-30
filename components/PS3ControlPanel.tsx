@@ -35,7 +35,24 @@ const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
 // load is mounted only after introReleased; about/archive return replays settle.
 const PICKER_MAX_H = 125;
-const BODY_H = 620;
+// Content-tight body (not a fixed 620). First-frame estimate only —
+// ResizeObserver replaces it with the inner's visible offsetHeight.
+const BODY_COLOR_H = 107;
+const BODY_MODE_H = 65;
+const BODY_DOT_H = 49;
+const BODY_SLIDER_H = 55;
+const BODY_PAD_BOTTOM = 2;
+
+function estimateBodyH(mode: number, pickerOpen: boolean) {
+  return (
+    BODY_COLOR_H +
+    BODY_MODE_H +
+    BODY_SLIDER_H * 4 +
+    BODY_PAD_BOTTOM +
+    (mode === 1 ? BODY_DOT_H : 0) +
+    (pickerOpen ? PICKER_MAX_H : 0)
+  );
+}
 
 const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
@@ -172,24 +189,30 @@ function computeNavAlignedPos(): {x:number;y:number} | null {
   return computeHeroAlignedPos();
 }
 
-function shouldFlip(pillY: number) {
+function shouldFlip(pillY: number, openBodyH: number) {
   if (typeof window === "undefined") return false;
   const vy = pillY - window.scrollY;
+  const needed = PILL_H + openBodyH + EDGE_PAD * 2;
   const spaceBelow = window.innerHeight - (vy + PILL_H) - EDGE_PAD * 2;
   const spaceAbove = vy - EDGE_PAD * 2;
-  return spaceBelow < 420 && spaceAbove > spaceBelow;
+  return spaceBelow < needed && spaceAbove > spaceBelow;
 }
 
-function getGeometry(pillPos: {x:number;y:number}, isOpen: boolean, flipped: boolean) {
-  if (typeof window === "undefined") return { w: PILL_W, maxH: PILL_H, r: PILL_H / 2, left: 0, top: 0, clampedBodyH: BODY_H };
+function getGeometry(
+  pillPos: {x:number;y:number},
+  isOpen: boolean,
+  flipped: boolean,
+  bodyH: number,
+) {
+  if (typeof window === "undefined") return { w: PILL_W, maxH: PILL_H, r: PILL_H / 2, left: 0, top: 0, clampedBodyH: bodyH };
   const docW = document.documentElement.scrollWidth;
   const viewportH = window.innerHeight;
   const vy = pillPos.y - window.scrollY;
 
-  const spaceBelow = Math.max(100, viewportH - (vy + PILL_H) - EDGE_PAD * 2);
-  const spaceAbove = Math.max(100, vy - EDGE_PAD * 2);
+  const spaceBelow = Math.max(80, viewportH - (vy + PILL_H) - EDGE_PAD * 2);
+  const spaceAbove = Math.max(80, vy - EDGE_PAD * 2);
   const availH = flipped ? spaceAbove : spaceBelow;
-  const clampedBodyH = Math.max(140, Math.min(BODY_H, Math.floor(availH)));
+  const clampedBodyH = Math.max(0, Math.min(bodyH, Math.floor(availH)));
 
   const w = isOpen ? PANEL_W : PILL_W;
   const maxH = isOpen ? PILL_H + clampedBodyH : PILL_H;
@@ -426,14 +449,17 @@ function useLabelOpticalOffset(
 function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; children: React.ReactNode }) {
   return (
     <div style={{
-      maxHeight: open ? maxH : 0, overflow: "hidden",
+      display: "grid",
+      gridTemplateRows: open ? "1fr" : "0fr",
       opacity: open ? 1 : 0,
       transition: open
-        ? `max-height ${OPEN_MS}ms ${OPEN_EASE}, opacity 120ms ${OPEN_EASE}`
-        : `max-height ${CLOSE_MS}ms ${CLOSE_EASE}, opacity 140ms ${CLOSE_EASE}`,
+        ? `grid-template-rows ${OPEN_MS}ms ${OPEN_EASE}, opacity 120ms ${OPEN_EASE}`
+        : `grid-template-rows ${CLOSE_MS}ms ${CLOSE_EASE}, opacity 140ms ${CLOSE_EASE}`,
       pointerEvents: open ? "auto" : "none",
     }}>
-      {children}
+      <div style={{ overflow: "hidden", minHeight: 0, maxHeight: maxH }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -651,6 +677,9 @@ export default function PS3ControlPanel({
 
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
+  const bodyInnerRef   = useRef<HTMLDivElement>(null);
+  const contentBodyHRef = useRef(estimateBodyH(DEFAULT_MODE, false));
+  const [measuredBodyH, setMeasuredBodyH] = useState(0);
   const dragRef        = useRef<{startX:number;startY:number;origX:number;origY:number} | null>(null);
   const didDragRef     = useRef(false);
   const dragStartedRef = useRef(false);
@@ -693,6 +722,22 @@ export default function PS3ControlPanel({
   );
   const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
   const reduced = useReducedMotion();
+
+  useSafeLayoutEffect(() => {
+    const el = bodyInnerRef.current;
+    if (!el) return;
+    const sync = () => {
+      // offsetHeight only — scrollHeight includes max-height:0 / overflow
+      // hidden descendants (collapsed picker + wave's hidden dot-size),
+      // which left a tall empty well that did not shrink with mode.
+      const h = Math.ceil(el.offsetHeight);
+      if (h > 80) setMeasuredBodyH(h);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode, openColorPicker, portalEl]);
 
   // Portal setup
   useEffect(() => {
@@ -750,7 +795,7 @@ export default function PS3ControlPanel({
     const applyPos = (pos: {x:number;y:number}) => {
       if (hasDraggedRef.current) return;
       setPillPos(pos);
-      setFlipped(shouldFlip(pos.y));
+      setFlipped(shouldFlip(pos.y, contentBodyHRef.current));
       setPosReady(true);
     };
     const findAndPlace = (attempt: number) => {
@@ -788,7 +833,7 @@ export default function PS3ControlPanel({
       if (hasDraggedRef.current) return;
       const pos = computeNavAlignedPos();
       if (!pos) return;
-      startTransition(() => { setPillPos(pos); setFlipped(shouldFlip(pos.y)); });
+      startTransition(() => { setPillPos(pos); setFlipped(shouldFlip(pos.y, contentBodyHRef.current)); });
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -807,7 +852,7 @@ export default function PS3ControlPanel({
       if (!pos) return;
       startTransition(() => {
         setPillPos(pos);
-        setFlipped(shouldFlip(pos.y));
+        setFlipped(shouldFlip(pos.y, contentBodyHRef.current));
         setPosReady(true);
       });
     };
@@ -985,7 +1030,7 @@ export default function PS3ControlPanel({
       if (wasDrag) return;
       if (!wasHeader) return;
       if (openAtStart) setIsOpen(false);
-      else { setFlipped(shouldFlip(origY)); setIsOpen(true); }
+      else { setFlipped(shouldFlip(origY, contentBodyHRef.current)); setIsOpen(true); }
     };
 
     window.addEventListener("pointermove", onMove);
@@ -1013,7 +1058,10 @@ export default function PS3ControlPanel({
       ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
       : baseMorphParts.join(", "));
 
-  const geo = getGeometry(pillPos, isOpen, flipped);
+  const pickerOpen = openColorPicker === "pattern";
+  const contentBodyH = measuredBodyH > 80 ? measuredBodyH : estimateBodyH(mode, pickerOpen);
+  contentBodyHRef.current = contentBodyH;
+  const geo = getGeometry(pillPos, isOpen, flipped, contentBodyH);
 
   const isDefaultWave = waveColor[0] > 0.9 && waveColor[1] > 0.9 && waveColor[2] > 0.9;
   const wr = Math.round(waveColor[0] * 255), wg = Math.round(waveColor[1] * 255), wb = Math.round(waveColor[2] * 255);
@@ -1080,7 +1128,7 @@ export default function PS3ControlPanel({
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
           if (isOpen) setIsOpen(false);
-          else { setFlipped(shouldFlip(pillPos.y)); setIsOpen(true); }
+          else { setFlipped(shouldFlip(pillPos.y, contentBodyHRef.current)); setIsOpen(true); }
         }}
       >
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
@@ -1124,22 +1172,21 @@ export default function PS3ControlPanel({
         </div>
       </div>
 
-      {/* Body — fades just behind the shell morph so content doesn't pop */}
+      {/* Body — hugs visible controls (wave vs halftone, picker). Shell
+          height tracks this instead of a fixed 620px well. */}
       <div style={{
         pointerEvents: isOpen ? "auto" : "none",
-        display: "flex",
-        flexDirection: "column",
-        flex: "1 1 auto",
-        minHeight: 0,
-        overflowY: "auto",
+        flex: "0 0 auto",
+        height: isOpen ? geo.clampedBodyH : 0,
+        overflow: isOpen && geo.clampedBodyH < contentBodyH - 1 ? "auto" : "hidden",
         overflowX: "hidden",
-        maxHeight: geo.clampedBodyH,
         opacity: isOpen ? 1 : 0,
         transition: isOpen
-          ? `opacity 160ms ${OPEN_EASE} 50ms`
-          : `opacity 100ms ${CLOSE_EASE}`,
+          ? `height ${OPEN_MS}ms ${OPEN_EASE}, opacity 160ms ${OPEN_EASE} 50ms`
+          : `height ${CLOSE_MS}ms ${CLOSE_EASE}, opacity 100ms ${CLOSE_EASE}`,
         WebkitOverflowScrolling: "touch",
       }}>
+        <div ref={bodyInnerRef} style={{ paddingBottom: BODY_PAD_BOTTOM }}>
 
         {/* Pattern color */}
         <div style={{ padding: "6px 16px 8px" }}>
@@ -1249,6 +1296,7 @@ export default function PS3ControlPanel({
             onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>
 
+        </div>
       </div>
     </div>
   );
