@@ -155,10 +155,11 @@
   --radius-panel:   14px;
   --radius-logo:    24px;
 
-  /* Hero spacing — more breathing room than the old 56/48, but not
-     full-viewport (cards should still peek above the fold). */
-  --hero-pt:   var(--space-7); /* 80 */
-  --hero-pb:   var(--space-6); /* 64 */
+  /* Hero spacing — cards should peek above the fold. Desktop keeps
+     editorial air; mobile tightens so the first project is a real
+     first-viewport object, not a 50% sliver. */
+  --hero-pt:   var(--space-6); /* 64 */
+  --hero-pb:   var(--space-5); /* 48 */
   --card-gap:  var(--space-5);
 }
 
@@ -956,6 +957,10 @@ html[data-theme="dark"] .project-image {
        1-col at the mobile breakpoint (matches the .cs-layout mobile
        cutoff and CaseStudyTOC's isMobile check) ── */
 @media (max-width: 767px) {
+  :root {
+    --hero-pt: var(--space-4); /* 32 — first card is a first-viewport object */
+    --hero-pb: var(--space-3); /* 24 */
+  }
   .portfolio-grid { grid-template-columns: 1fr !important; }
   /* Flatten the two DOM columns so cards can be reordered as one stack
      without changing the desktop 2-column structure. `order` is set in
