@@ -24,6 +24,10 @@ const C = {
     font: "Helvetica Neue, Arial, sans-serif",
 }
 
+// Desktop composition: four quarter chips on one row. Every breakpoint
+// renders this canvas and only changes zoom — never wrap or padding.
+const DESIGN_W = 520
+
 const QUARTERS = [
     { value: "spring", label: "Spring 2026", moveIn: "2026-03-25", moveOut: "2026-06-12" },
     { value: "summer", label: "Summer 2026", moveIn: "2026-06-22", moveOut: "2026-09-11" },
@@ -46,6 +50,11 @@ function injectPickerStyles() {
     const el = document.createElement("style")
     el.id = "qfm-date-styles"
     el.textContent = `
+        .qfm-date-card,
+        .qfm-quarter-chip {
+            min-height: 0;
+            min-width: 0;
+        }
         .qfm-date-card:focus-visible {
             outline: none;
             box-shadow: 0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05);
@@ -425,7 +434,6 @@ function DateCalendar({
 function DateCard({
     date,
     label,
-    scale,
     open,
     onToggle,
     triggerRef,
@@ -433,14 +441,11 @@ function DateCard({
 }: {
     date: string | null
     label: string
-    scale: number
     open: boolean
     onToggle: () => void
     triggerRef: (el: HTMLButtonElement | null) => void
     controlsId: string
 }) {
-    const hitSize = scale > 0 ? 44 / scale : 44
-
     const card: CSSProperties = {
         background: C.white,
         borderRadius: 8,
@@ -451,7 +456,6 @@ function DateCard({
         boxShadow: open
             ? `0 0 0 2px rgba(45,104,196,0.25), 0 1px 2px rgba(0,0,0,0.05)`
             : "0 1px 2px rgba(0,0,0,0.05)",
-        minHeight: hitSize,
         width: "100%",
         boxSizing: "border-box",
         position: "relative",
@@ -504,45 +508,30 @@ export default function QuarterPicker({
     const moveInBtnRef = useRef<HTMLButtonElement | null>(null)
     const moveOutBtnRef = useRef<HTMLButtonElement | null>(null)
     const calendarWrapRef = useRef<HTMLDivElement>(null)
-    const [scale, setScale] = useState(1)
-    const [offsetX, setOffsetX] = useState(0)
-    const [naturalHeight, setNaturalHeight] = useState(0)
+    const [scale, setScale] = useState(0.46)
     const [openField, setOpenField] = useState<"in" | "out" | null>(null)
     // Floating popover geometry in unscaled inner coordinates
     const [popover, setPopover] = useState<{ top: number; left: number; width: number } | null>(null)
 
     useEffect(() => { injectPickerStyles() }, [])
 
-    useEffect(() => {
-        const el = containerRef.current
-        if (!el) return
-        const ro = new ResizeObserver(([entry]) => {
-            const w = entry.contentRect.width
-            // Desktop keeps the compact ~0.46 width; mobile matches the phone
-            // mockup frame width used elsewhere on the case study (~77%).
-            const factor = w <= 520 ? 0.77 : 0.46
-            const s = (w / 393) * factor
-            setScale(s)
-            setOffsetX((w - 393 * s) / 2)
-        })
-        ro.observe(el)
+    useLayoutEffect(() => {
+        const shell = containerRef.current
+        const canvas = innerRef.current
+        if (!shell || !canvas) return
+        const apply = () => {
+            const w = shell.getBoundingClientRect().width
+            if (w <= 0) return
+            const fill = w <= 520 ? 1 : 0.46
+            setScale((w / DESIGN_W) * fill)
+            shell.style.setProperty("--qp-h", String(canvas.offsetHeight))
+        }
+        apply()
+        const ro = new ResizeObserver(apply)
+        ro.observe(shell)
+        ro.observe(canvas)
         return () => ro.disconnect()
     }, [])
-
-    // Outer clip height = unscaled inner height × scale. Chip hit-targets use
-    // minHeight: 44/scale, so when scale settles the inner layout grows —
-    // remeasure after every scale change or the overflow shell clips
-    // the bottom corners (missing border-radius).
-    // Calendar is position:absolute, so open/close must not change height.
-    useLayoutEffect(() => {
-        const el = innerRef.current
-        if (!el) return
-        const measure = () => setNaturalHeight(el.offsetHeight)
-        measure()
-        const ro = new ResizeObserver(measure)
-        ro.observe(el)
-        return () => ro.disconnect()
-    }, [scale])
 
     // Anchor the floating calendar under the active field (iOS-style popover).
     useLayoutEffect(() => {
@@ -665,39 +654,58 @@ export default function QuarterPicker({
 
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
+            <style>{`
+                .qfm-shell {
+                    container-type: inline-size;
+                    width: 100%;
+                }
+                .qfm-sizer {
+                    width: calc(0.46 * 100cqw);
+                    height: calc(0.46 * 100cqw * var(--qp-h, 179) / ${DESIGN_W});
+                    margin-inline: auto;
+                    overflow: clip;
+                    border-radius: 8px;
+                    position: relative;
+                    transform: translateZ(0);
+                }
+                .qfm-canvas {
+                    width: ${DESIGN_W}px;
+                    transform-origin: top left;
+                    transform: scale(calc(0.46 * 100cqw / ${DESIGN_W}px));
+                }
+                @container (max-width: 520px) {
+                    .qfm-sizer {
+                        width: 100cqw;
+                        height: calc(100cqw * var(--qp-h, 179) / ${DESIGN_W});
+                    }
+                    .qfm-canvas {
+                        transform: scale(calc(100cqw / ${DESIGN_W}px));
+                    }
+                }
+            `}</style>
             {showBadge && <InteractiveBadge />}
-            <div
-                ref={containerRef}
-                style={{
-                    width: "100%",
-                    height: naturalHeight ? naturalHeight * scale : "auto",
-                    // Visible while open so the floating calendar can hang over
-                    // the card edge; clipped when closed for scaled corner polish.
-                    overflow: openField ? "visible" : "clip",
-                    borderRadius: 8,
-                    // translateZ forces a compositing layer so overflow clipping
-                    // correctly clips the transformed child's rounded corners.
-                    transform: "translateZ(0)",
-                    // Let the popover paint above neighboring case-study content
-                    zIndex: openField ? 5 : 0,
-                    position: "relative",
-                }}
-            >
+            <div ref={containerRef} className="qfm-shell">
+                <div
+                    className="qfm-sizer"
+                    style={{
+                        overflow: openField ? "visible" : undefined,
+                        zIndex: openField ? 5 : 0,
+                    }}
+                >
                 <div
                     ref={innerRef}
+                    className="qfm-canvas"
                     style={{
-                        width: 393,
-                        transformOrigin: "top left",
-                        transform: `translateX(${offsetX}px) scale(${scale})`,
+                        width: DESIGN_W,
                         background: C.background,
-                        // Scale-compensated radius so corners read as ~8px after scaling
-                        borderRadius: scale > 0 ? Math.round(8 / scale) : 8,
                         padding: "24px 20px",
                         boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "column",
                         fontFamily: C.font,
-                        position: "relative",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
                     }}
                 >
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
@@ -710,7 +718,6 @@ export default function QuarterPicker({
                         <DateCard
                             date={moveIn}
                             label="Move In date"
-                            scale={scale}
                             open={openField === "in"}
                             onToggle={() => setOpenField((f) => (f === "in" ? null : "in"))}
                             triggerRef={(el) => { moveInBtnRef.current = el }}
@@ -719,7 +726,6 @@ export default function QuarterPicker({
                         <DateCard
                             date={moveOut}
                             label="Move Out date"
-                            scale={scale}
                             open={openField === "out"}
                             onToggle={() => setOpenField((f) => (f === "out" ? null : "out"))}
                             triggerRef={(el) => { moveOutBtnRef.current = el }}
@@ -752,7 +758,7 @@ export default function QuarterPicker({
                         </div>
                     )}
 
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "nowrap", gap: 8 }}>
                         {QUARTERS.map((q) => {
                             const isSelected = selected.includes(q.value)
                             const chip: CSSProperties = {
@@ -767,16 +773,8 @@ export default function QuarterPicker({
                                 lineHeight: "20px",
                                 whiteSpace: "nowrap",
                                 userSelect: "none",
+                                boxSizing: "border-box",
                             }
-                            // The visible pill above stays exactly the size it's always
-                            // been — this outer button carries the real click/focus
-                            // target, inflated by 1/scale so its on-screen size clears
-                            // the 44px minimum regardless of how compressed the whole
-                            // widget currently is (see the ancestor transform:scale()
-                            // in QuarterPicker below). Since the ambient scale applies
-                            // to this whole subtree uniformly, the inner pill still
-                            // renders at its original, unchanged on-screen size.
-                            const hitSize = scale > 0 ? 44 / scale : 44
                             return (
                                 <button
                                     key={q.value}
@@ -788,12 +786,13 @@ export default function QuarterPicker({
                                         background: "transparent",
                                         border: "none",
                                         padding: 0,
+                                        margin: 0,
                                         cursor: "pointer",
-                                        minWidth: hitSize,
-                                        minHeight: hitSize,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        flex: "0 0 auto",
+                                        flexShrink: 0,
                                         WebkitTapHighlightColor: "transparent",
                                     }}
                                 >
@@ -802,6 +801,7 @@ export default function QuarterPicker({
                             )
                         })}
                     </div>
+                </div>
                 </div>
             </div>
         </div>

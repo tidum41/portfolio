@@ -45,6 +45,7 @@ const CaseStudyTOC        = dynamic(() => import("@/components/CaseStudyTOC"));
 const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
+import BruinLeaseIAMap from "@/components/BruinLeaseIAMap";
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
 const COLOR_WRONG   = "#C62828";
 const COLOR_RIGHT   = "#2E7D32";
@@ -283,13 +284,14 @@ const FB = {
   tocItems: [
     { _key: "t1", id: "problem",    label: "Problem"           },
     { _key: "t2", id: "research",   label: "Research"          },
-    { _key: "t3", id: "process",    label: "Process"           },
-    { _key: "t4", id: "decision-1", label: "Design Decision 1" },
-    { _key: "t5", id: "decision-2", label: "Design Decision 2" },
-    { _key: "t6", id: "decision-3", label: "Design Decision 3" },
-    { _key: "t7", id: "decision-4", label: "Design Decision 4" },
-    { _key: "t8", id: "solution",   label: "Solution"          },
-    { _key: "t9", id: "reflection", label: "Reflection"        },
+    { _key: "t3", id: "structure",  label: "The Structure"     },
+    { _key: "t4", id: "process",    label: "Process"           },
+    { _key: "t5", id: "decision-1", label: "Design Decision 1" },
+    { _key: "t6", id: "decision-2", label: "Design Decision 2" },
+    { _key: "t7", id: "decision-3", label: "Design Decision 3" },
+    { _key: "t8", id: "decision-4", label: "Design Decision 4" },
+    { _key: "t9", id: "solution",   label: "Solution"          },
+    { _key: "t10", id: "reflection", label: "Reflection"       },
   ] as TocItem[],
   heroTagline:   "Product Design  ·  Case Study  ·  2026",
   heroTitle:     "Simplifying UCLA subleasing",
@@ -329,6 +331,9 @@ const FB = {
     { _key: "p3", tool: "Claude Code",   desc: "Built interactions and prototyped in real time, allowing for iteration. I was able to focus on creating a feeling." },
     { _key: "p4", tool: "Vercel",        desc: "Deployment and testing on a more native iOS view." },
   ],
+  iaLabel: "The Structure",
+  iaHeading: "The hop across Facebook, Reddit, and texts had to become one place.",
+  iaBody: "70% were already reaching out on at least three platforms, which is why I didn't add another feed to check. Browse, save, and message are the jobs they were hopping between, so those became the tabs. Listing stays in the header so seeking still comes first.",
   d1Label: "Design Decision",
   d1Heading: "Condensing apartment info into a standardized format.",
   d1Body: "Based on research insights, I explored card layouts to communicate apartment details without being overwhelming. This is the first interaction with hundreds of listings, so conveying essential info without additional fluff is important.",
@@ -502,6 +507,14 @@ async function BruinLeaseContent() {
               </div>
 
               <Body style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>{cs.researchCallout}</Body>
+            </Section>
+
+            {/* ── Structure ────────────────────────────────────────────── */}
+            <Section id="structure">
+              <SectionLabel>{cs.iaLabel}</SectionLabel>
+              <H2>{cs.iaHeading}</H2>
+              <Body>{cs.iaBody}</Body>
+              <BruinLeaseIAMap />
             </Section>
 
             {/* ── Process ──────────────────────────────────────────────── */}
