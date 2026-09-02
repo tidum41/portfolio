@@ -11,9 +11,14 @@ export const SITE_NAME = "mudit mahajan";
  * School and job already live in the subtitle — don't repeat them here.
  * Keep the exact phrase "rabbit holes": RabbitHoleVideo wraps it as the
  * homepage easter egg.
+ *
+ * Lead + tell are split so the tell can nowrap as a unit. Joined, they are
+ * the H1 / meta description string.
  */
-export const HERO_HEADLINE =
-  "I'm Mudit, a product designer who engineers interactions and falls down rabbit holes";
+export const HERO_HEADLINE_LEAD =
+  "I'm Mudit, a product designer who engineers interactions";
+export const HERO_HEADLINE_TELL = "and falls down rabbit holes";
+export const HERO_HEADLINE = `${HERO_HEADLINE_LEAD} ${HERO_HEADLINE_TELL}`;
 
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
