@@ -109,22 +109,23 @@ export default function MuxAutoplayCard({
     if (shouldLoad || !active) return;
     const container = containerRef.current;
     if (!container) return;
-    // Tight margin on mobile — a 200px prefetch was pulling a second HLS
-    // stream into the first viewport and dominating mobile transfer (~4MiB).
+    // No bottom prefetch on mobile — a 200px margin was pulling a second HLS
+    // stream into the first viewport (~4MiB transfer).
     const mobile = window.matchMedia("(max-width: 767px)").matches;
-    const rootMargin = mobile ? "0px 0px 48px 0px" : "0px 0px 120px 0px";
+    const rootMargin = mobile ? "0px" : "0px 0px 120px 0px";
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          obs.disconnect();
-        }
+        if (!entry.isIntersecting) return;
+        // First card (mountOrder 0) may autoplay; later cards need real overlap.
+        if (mobile && mountOrder > 0 && entry.intersectionRatio < 0.35) return;
+        setShouldLoad(true);
+        obs.disconnect();
       },
-      { rootMargin },
+      { rootMargin, threshold: mobile && mountOrder > 0 ? [0, 0.35, 0.5] : [0] },
     );
     obs.observe(container);
     return () => obs.disconnect();
-  }, [shouldLoad, active]);
+  }, [shouldLoad, active, mountOrder]);
 
   // Attach/detach are both staggered. Leave yields a paint first so soft-nav
   // to About/Archive isn't one long Mux-destroy frame (cursor tip freezes).
@@ -138,7 +139,10 @@ export default function MuxAutoplayCard({
     if (active && shouldLoad) {
       const start = () => {
         if (cancelled) return;
-        const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
+        const mobile = window.matchMedia("(max-width: 767px)").matches;
+        // Let the poster paint as LCP before HLS/MSE work begins on mobile.
+        const delay =
+          Math.max(0, mountOrder) * MOUNT_STAGGER_MS + (mobile ? 1800 : 0);
         timeoutId = window.setTimeout(() => {
           if (!cancelled) setMountReady(true);
         }, delay);

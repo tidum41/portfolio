@@ -344,25 +344,29 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     setCdPosterFade(false);
   }, [heavyMediaLive]);
 
-  // Defer live CD / habit-screen JS until the tile nears the viewport so
-  // mobile first paint isn't paying for below-fold embeds (~unused JS).
-  const [cdNearView, setCdNearView] = useState(false);
+  // Defer habit-screen JS until the tile nears the viewport.
+  // Live CD mounts only after the modal is opened once (poster covers the
+  // grid until then) — mounting after intro pulled ~9 album images into the
+  // mobile first-load window even when the tile was "below the fold."
   const [habitNearView, setHabitNearView] = useState(false);
+  const [cdUnlocked, setCdUnlocked] = useState(false);
+  useEffect(() => {
+    if (openPopup === "cd") setCdUnlocked(true);
+  }, [openPopup]);
 
-  // Back on "/": once the remounted live CD is in place, fade the poster out
-  // (unless the modal is open — poster stays opaque behind the blur).
-  // Wait for near-view mount so a deferred CD doesn't leave an empty tile.
+  // Back on "/": fade the poster out only once the live CD has been unlocked
+  // (first modal open) and remounted into the grid.
   useEffect(() => {
     if (!visible || !hasEverBeenActive || !introReleased) return;
     if (openPopup === "cd") return;
-    if (!cdNearView) {
+    if (!cdUnlocked) {
       setCdPosterOpacity(1);
       setCdPosterFade(false);
       return;
     }
     setCdPosterFade(true);
     setCdPosterOpacity(0);
-  }, [visible, hasEverBeenActive, openPopup, introReleased, cdNearView]);
+  }, [visible, hasEverBeenActive, openPopup, introReleased, cdUnlocked]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
@@ -549,35 +553,23 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   }, [openPopup]);
 
   useEffect(() => {
-    if (!hasEverBeenActive || !introReleased) return;
-    const nodes: { el: Element | null; set: (v: boolean) => void; done: boolean }[] = [
-      { el: gridCdEl, set: setCdNearView, done: cdNearView },
-      {
-        el: document.querySelector('[data-grid-card="habit"]'),
-        set: setHabitNearView,
-        done: habitNearView,
-      },
-    ];
-    const pending = nodes.filter((n) => n.el && !n.done);
-    if (pending.length === 0) return;
+    if (!hasEverBeenActive || !introReleased || habitNearView) return;
+    const el = document.querySelector('[data-grid-card="habit"]');
+    if (!el) return;
     const mobile = window.matchMedia("(max-width: 767px)").matches;
-    const rootMargin = mobile ? "0px 0px 80px 0px" : "0px 0px 200px 0px";
+    const rootMargin = mobile ? "0px" : "0px 0px 120px 0px";
     const obs = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const hit = pending.find((n) => n.el === entry.target);
-          if (hit) {
-            hit.set(true);
-            obs.unobserve(entry.target);
-          }
-        }
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        if (mobile && entry.intersectionRatio < 0.15) return;
+        setHabitNearView(true);
+        obs.disconnect();
       },
-      { rootMargin },
+      { rootMargin, threshold: mobile ? [0, 0.15, 0.3] : [0] },
     );
-    for (const n of pending) if (n.el) obs.observe(n.el);
+    obs.observe(el);
     return () => obs.disconnect();
-  }, [hasEverBeenActive, introReleased, gridCdEl, cdNearView, habitNearView]);
+  }, [hasEverBeenActive, introReleased, habitNearView]);
 
   const onHabitWidgetThemeChange = (theme: "light" | "dark") => {
     habitThemeFromWidgetRef.current = true;
@@ -921,11 +913,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       )}
 
       {/*
-        CD mounts when the grid tile nears the viewport (or the modal opens).
-        Habit stays popup-only. Poster covers the slot until live media mounts.
+        CD mounts on first modal open (then stays for grid↔popup portaling).
+        Habit stays popup-only. Poster covers the grid slot until unlock.
       */}
-      {hasEverBeenActive &&
-        (openPopup === "cd" || (introReleased && cdNearView && heavyMediaLive)) && (
+      {hasEverBeenActive && (openPopup === "cd" || (cdUnlocked && heavyMediaLive)) && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
         </EmbedPortal>

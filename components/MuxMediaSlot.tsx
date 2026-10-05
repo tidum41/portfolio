@@ -66,10 +66,13 @@ export default function MuxMediaSlot({
         // on Chromium is not enough to skip MSE.
         if (Hls.isSupported()) {
           const hls = new Hls({
-            startLevel: -1,
+            // Prefer a small rung on grid cards — mobile was buffering multiple
+            // megabytes of 720p+ before LCP settled.
+            startLevel: fill ? 0 : -1,
             capLevelToPlayerSize: true,
-            maxBufferLength: fill ? 6 : 8,
-            maxMaxBufferLength: fill ? 12 : 24,
+            maxBufferLength: fill ? 2 : 8,
+            maxMaxBufferLength: fill ? 4 : 24,
+            maxBufferSize: fill ? 2 * 1000 * 1000 : 60 * 1000 * 1000,
             enableWorker: false,
           });
           hlsRef.current = hls;

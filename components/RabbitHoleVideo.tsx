@@ -478,7 +478,13 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                     if (!hoverZone) return;
                     const spriteHeight = svg.getBoundingClientRect().height || 18;
                     const spriteWidthPx = spriteHeight * FRAME_ASPECT;
-                    hoverZone.style.width = `${getMaxTravel() + spriteWidthPx + 24}px`;
+                    // Clamp to the viewport edge — the old `+ 24` pad pushed
+                    // past `edgeLimit` and expanded document scrollWidth by
+                    // ~8px at 375 (audit: 383 > 375).
+                    const staticLeft = wrapper.getBoundingClientRect().left;
+                    const maxW = Math.max(0, window.innerWidth - staticLeft);
+                    const desired = getMaxTravel() + spriteWidthPx + 24;
+                    hoverZone.style.width = `${Math.min(desired, maxW)}px`;
                 };
 
                 recomputeEdgeTravel();
