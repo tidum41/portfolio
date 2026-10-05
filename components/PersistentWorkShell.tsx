@@ -234,11 +234,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // into the modal. Beats the generic light-mode poster image, which flipped
   // the tile's theme and dropped the live album state. Cleared on close.
   const [cdFrozen, setCdFrozen] = useState<string | null>(null);
-  // Habit poster frame/theme: site theme until the live widget reports its own.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof document === "undefined") return "light";
-    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-  });
+  // Habit poster frame/theme: match layout SSR default (`data-theme="dark"`).
+  // Never read `document` in the initializer — that caused React #418 (SSR
+  // light vs client dark) on every home load. Sync from the live attribute
+  // after mount via the MutationObserver effect below.
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -344,16 +344,29 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     setCdPosterFade(false);
   }, [heavyMediaLive]);
 
-  // Back on "/": once the remounted live CD is in place, fade the poster out
-  // (unless the modal is open — poster stays opaque behind the blur).
-  // Also wait for intro-done so the first-load tile is a poster until silk
-  // has finished compiling — live CD mounts right after.
+  // Defer habit-screen JS until the tile nears the viewport.
+  // Live CD mounts only after the modal is opened once (poster covers the
+  // grid until then) — mounting after intro pulled ~9 album images into the
+  // mobile first-load window even when the tile was "below the fold."
+  const [habitNearView, setHabitNearView] = useState(false);
+  const [cdUnlocked, setCdUnlocked] = useState(false);
+  useEffect(() => {
+    if (openPopup === "cd") setCdUnlocked(true);
+  }, [openPopup]);
+
+  // Back on "/": fade the poster out only once the live CD has been unlocked
+  // (first modal open) and remounted into the grid.
   useEffect(() => {
     if (!visible || !hasEverBeenActive || !introReleased) return;
     if (openPopup === "cd") return;
+    if (!cdUnlocked) {
+      setCdPosterOpacity(1);
+      setCdPosterFade(false);
+      return;
+    }
     setCdPosterFade(true);
     setCdPosterOpacity(0);
-  }, [visible, hasEverBeenActive, openPopup, introReleased]);
+  }, [visible, hasEverBeenActive, openPopup, introReleased, cdUnlocked]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
@@ -523,8 +536,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   // Seed habit poster theme from the site only until the live widget reports
   // its own (don't overwrite session widget theme on every site toggle/close).
+  // useLayoutEffect so light-mode users don't paint one dark frame after mount.
   const habitThemeFromWidgetRef = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (openPopup === "habit") return;
     if (habitThemeFromWidgetRef.current) return;
     const sync = () => {
@@ -537,6 +551,25 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
   }, [openPopup]);
+
+  useEffect(() => {
+    if (!hasEverBeenActive || !introReleased || habitNearView) return;
+    const el = document.querySelector('[data-grid-card="habit"]');
+    if (!el) return;
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    const rootMargin = mobile ? "0px" : "0px 0px 120px 0px";
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        if (mobile && entry.intersectionRatio < 0.15) return;
+        setHabitNearView(true);
+        obs.disconnect();
+      },
+      { rootMargin, threshold: mobile ? [0, 0.15, 0.3] : [0] },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasEverBeenActive, introReleased, habitNearView]);
 
   const onHabitWidgetThemeChange = (theme: "light" | "dark") => {
     habitThemeFromWidgetRef.current = true;
@@ -632,6 +665,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
+                        priority={rank === 0}
                       />
                     )}
                   </EntranceItem>
@@ -793,7 +827,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       // Keep the inert screen mounted after the first "/" visit
                       // so the poster reflects this session's habit state across
                       // navigations (no cold remount flash on return).
-                      showScreen={hasEverBeenActive && introReleased}
+                      showScreen={hasEverBeenActive && introReleased && habitNearView}
                     />
                   </div>
                 </div>
@@ -879,10 +913,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       )}
 
       {/*
-        CD mounts while heavy media is live, or immediately when the modal
-        opens (idle teardown may have unmounted it). Habit stays popup-only.
+        CD mounts on first modal open (then stays for grid↔popup portaling).
+        Habit stays popup-only. Poster covers the grid slot until unlock.
       */}
-      {hasEverBeenActive && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
+      {hasEverBeenActive && (openPopup === "cd" || (cdUnlocked && heavyMediaLive)) && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
         </EmbedPortal>

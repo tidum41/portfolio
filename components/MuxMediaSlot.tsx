@@ -66,10 +66,13 @@ export default function MuxMediaSlot({
         // on Chromium is not enough to skip MSE.
         if (Hls.isSupported()) {
           const hls = new Hls({
-            startLevel: -1,
+            // Prefer a small rung on grid cards — mobile was buffering multiple
+            // megabytes of 720p+ before LCP settled.
+            startLevel: fill ? 0 : -1,
             capLevelToPlayerSize: true,
-            maxBufferLength: fill ? 6 : 8,
-            maxMaxBufferLength: fill ? 12 : 24,
+            maxBufferLength: fill ? 2 : 8,
+            maxMaxBufferLength: fill ? 4 : 24,
+            maxBufferSize: fill ? 2 * 1000 * 1000 : 60 * 1000 * 1000,
             enableWorker: false,
           });
           hlsRef.current = hls;
@@ -162,12 +165,15 @@ export default function MuxMediaSlot({
       <video
         ref={videoRef}
         className="mux-cover"
-        poster={poster}
+        // Fill/grid cards already paint a sibling poster <img>; setting
+        // poster= here double-fetches the Mux thumb and triggers unused-
+        // preload console noise. Non-fill keeps poster for intrinsic sizing.
+        poster={fill ? undefined : poster}
         autoPlay
         muted
         loop
         playsInline
-        preload={fill ? "metadata" : "auto"}
+        preload={fill ? "none" : "auto"}
         onCanPlay={kickPlay}
         onPlaying={kickPlay}
         onLoadedData={kickPlay}

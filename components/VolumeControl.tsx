@@ -79,12 +79,10 @@ function MutedIcon() {
 }
 
 export default function VolumeControl({ dk }: { dk?: any }) {
-  const [ambientMuted, setAmbientMuted] = useState(() =>
-    typeof window !== "undefined" ? readStoredAmbientMuted() : DEFAULT_AMBIENT_MUTED,
-  );
-  const [volume, setVolume] = useState(() =>
-    typeof window !== "undefined" ? readStoredVolume() : DEFAULT_VOLUME,
-  );
+  // SSR + first client paint must match (defaults). Reading localStorage in
+  // the initializer mismatched whenever a prior visit stored different values.
+  const [ambientMuted, setAmbientMuted] = useState(DEFAULT_AMBIENT_MUTED);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,6 +112,22 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     if (!audio) return;
     audio.muted = nextMuted;
     audio.volume = nextVolume;
+  }, []);
+
+  useEffect(() => {
+    const storedMuted = readStoredAmbientMuted();
+    const storedVolume = readStoredVolume();
+    setAmbientMuted(storedMuted);
+    setVolume(storedVolume);
+    ambientMutedRef.current = storedMuted;
+    volumeRef.current = storedVolume;
+    preVolume.current = storedVolume > 0 ? storedVolume : DEFAULT_VOLUME;
+    setUiSoundVolume(storedVolume);
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = storedMuted;
+      audio.volume = storedVolume;
+    }
   }, []);
 
   useEffect(() => {
@@ -220,7 +234,9 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         alignItems: "center",
         justifyContent: "flex-end",
         gap: GAP,
-        width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
+        flexShrink: 0,
+        // Match ThemeToggle's 44×44 tap target so flex layout reserves real space.
+        width: isCompact ? 44 : 44 + GAP + SLIDER_WIDTH,
       }}
     >
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="none" />
@@ -258,9 +274,13 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           lineHeight: 0,
           WebkitTapHighlightColor: "transparent",
           position: "relative",
-          width: ICON_SIZE,
-          height: ICON_SIZE,
+          width: 44,
+          height: 44,
+          minWidth: 44,
+          minHeight: 44,
           flexShrink: 0,
+          boxSizing: "border-box",
+          justifyContent: "center",
         }}
       >
         <motion.div

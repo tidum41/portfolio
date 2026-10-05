@@ -46,7 +46,10 @@ export function warmCaseStudyNav(
   router?.prefetch(href);
 
   const lcp = caseStudyLcpUrl(href);
-  if (lcp) {
+  // Only preload remote Mux thumbs — local /images paths go through
+  // next/image on the destination, so preloading the raw file here would
+  // create an unused-preload warning after navigation.
+  if (lcp && /^https?:\/\//i.test(lcp)) {
     preload(lcp, { as: "image" });
   }
 }
