@@ -14,6 +14,11 @@ const useSafeLayoutEffect = typeof window === "undefined" ? useEffect : useLayou
 const PANEL_W = 240;
 const PILL_W  = 70;
 const PILL_H  = 28;
+// Panel uses border-box with a 1px stroke, so the closed content box is
+// PILL_H − 2. The header must match that or it overflows and geometric
+// centering sits a pixel low (the old −1px translate was masking it).
+const PILL_BORDER = 1;
+const HEADER_H = PILL_H - PILL_BORDER * 2;
 const EDGE_PAD = 10;
 const MAX_W   = 1700;
 
@@ -389,26 +394,29 @@ function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
 }
 
 // ── Chevron/label optical alignment ─────────────────────────────────────────
-// "menu" renders in --font-sans, which is "HN" (a local() alias for the
-// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
-// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
-// (Android, Windows, Linux) the stack lands on a substitute with different
-// ascent/descent proportions, so a marginTop tuned by eye against one font's
-// glyph metrics reads as misaligned against another's. Rather than guess a
-// static px value that only holds for whichever font the tuner happened to
-// have installed, measure the *actual* rendered ink of both the chevron and
-// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
-// for the stroke — and compute the delta needed to center them on each
-// other, whatever font actually won the fallback chain on this device.
+// "menu" renders in --font-sans ("HN" → Helvetica Neue on Apple, a substitute
+// elsewhere). Ascent/descent differ across that stack, so a static marginTop
+// tuned on one machine misaligns on another. Measure live ink (canvas
+// TextMetrics + polyline bbox) and nudge the label until its ink center
+// matches the chevron stroke center.
+//
+// `ready` must flip true only after the body portal has mounted the header —
+// an effect that ran while refs were still null used to bail forever.
 function useLabelOpticalOffset(
   chevronRef: React.RefObject<SVGPolylineElement | null>,
   labelRef: React.RefObject<HTMLSpanElement | null>,
+  ready: boolean,
 ) {
   const [offset, setOffset] = useState(0);
-  useEffect(() => {
-    const chevron = chevronRef.current, label = labelRef.current;
-    if (!chevron || !label) return;
+  useSafeLayoutEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    let raf = 0;
+    setOffset(0);
     function measure() {
+      if (cancelled) return;
+      const chevron = chevronRef.current;
+      const label = labelRef.current;
       if (!chevron || !label) return;
       const ctx = document.createElement("canvas").getContext("2d");
       if (!ctx) return;
@@ -423,16 +431,26 @@ function useLabelOpticalOffset(
       const labelInkCenterY = labelRect.top + inkCenterFromTop;
       const chevronRect = chevron.getBoundingClientRect();
       const chevronInkCenterY = chevronRect.top + chevronRect.height / 2;
-      // Accumulate: if we already applied a marginTop from a prior measure
-      // (e.g. fonts.ready re-run), the live delta is the remaining error —
-      // adding it avoids double-correcting against the shifted label.
+      // Remaining error after the currently applied marginTop — accumulate so
+      // a fonts.ready re-measure corrects without double-counting.
       const delta = chevronInkCenterY - labelInkCenterY;
       if (Math.abs(delta) < 0.25) return;
-      setOffset(prev => prev + delta);
+      setOffset((prev) => prev + delta);
     }
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
     measure();
-    document.fonts?.ready?.then(measure).catch(() => {});
-  }, [chevronRef, labelRef]);
+    schedule();
+    document.fonts?.ready?.then(schedule).catch(() => {});
+    document.fonts?.addEventListener?.("loadingdone", schedule);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      document.fonts?.removeEventListener?.("loadingdone", schedule);
+    };
+  }, [ready, chevronRef, labelRef]);
   return offset;
 }
 
@@ -610,6 +628,8 @@ const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value
 
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
+.ps3cp { box-sizing: border-box; }
+.ps3cp * { box-sizing: border-box; }
 .ps3cp input[type=range] { -webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent!important;margin:0;padding:0;box-sizing:border-box;touch-action:none; }
 .ps3cp input[type=range]::-webkit-slider-runnable-track { height:2px;border-radius:1px;background:transparent; }
 .ps3cp input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:5px;height:14px;border-radius:2px;background:rgba(0,0,0,0.65);margin-top:-4px; }
@@ -653,18 +673,17 @@ export default function PS3ControlPanel({
   visible?: boolean;
 }) {
   const dk = useDialKit("PS3 Pill", {
-    // Optical lift for the whole chevron+"menu" unit inside the pill.
-    // Lowercase text + downward chevron read heavy when geometrically
-    // centered — default −1px. Relative chevron↔label alignment is still
-    // handled by useLabelOpticalOffset; menuTextOffset is a fine-tune on top.
-    chevronOffset:  [-1, -4, 2, 0.5],
+    // Small optical lift for the chevron+"menu" unit. Lowercase ink sits a
+    // hair low vs geometric center; −0.5px is enough once the header fills
+    // the closed pill's content box (it used to be 28px inside a 26px
+    // border-box, and a −1px nudge was papering over that).
+    chevronOffset:  [-0.5, -4, 2, 0.5],
     pillGap:        [4,    2, 10, 0.5],
     menuTextOffset: [0, -4, 4, 0.5],
   });
 
   const chevronPolyRef  = useRef<SVGPolylineElement>(null);
   const menuLabelRef    = useRef<HTMLSpanElement>(null);
-  const labelAutoOffset = useLabelOpticalOffset(chevronPolyRef, menuLabelRef);
 
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
@@ -691,6 +710,14 @@ export default function PS3ControlPanel({
   const [showTransition, setShowTransition] = useState(false);
   const [positionSettled, setPositionSettled] = useState(
     savedPos.current !== null && !isVeryFirstLoad.current
+  );
+
+  // Optical offset needs the portaled header in the DOM — refs are null
+  // until portalEl is set and the pill has been revealed.
+  const labelAutoOffset = useLabelOpticalOffset(
+    chevronPolyRef,
+    menuLabelRef,
+    !!portalEl && visible && shown,
   );
 
   const [intensityHt,  setIntensityHt]  = useState(DEFAULT_INTENSITY_HT);
@@ -1153,7 +1180,12 @@ export default function PS3ControlPanel({
     }} onClick={e => e.stopPropagation()} onPointerDown={startDrag}>
 
       {/* Header / pill */}
-      <div ref={headerRef} className="ps3cp-header" style={{ position: "relative", height: PILL_H, flexShrink: 0, WebkitTapHighlightColor: "transparent" }} role="button" tabIndex={0} aria-label="Drag or click to toggle panel" aria-expanded={isOpen}
+      <div ref={headerRef} className="ps3cp-header" style={{
+        position: "relative",
+        height: HEADER_H,
+        flexShrink: 0,
+        WebkitTapHighlightColor: "transparent",
+      }} role="button" tabIndex={0} aria-label="Drag or click to toggle panel" aria-expanded={isOpen}
         onKeyDown={e => {
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
@@ -1166,9 +1198,7 @@ export default function PS3ControlPanel({
             display: "flex",
             alignItems: "center",
             gap: dk.pillGap,
-            marginLeft: -1,
-            // Lift the whole unit — lowercase "menu" + downward chevron sit
-            // optically low when only flex-centered in the pill.
+            // No marginLeft shift — that made closed L/R padding differ by 1px.
             transform: `translateY(${dk.chevronOffset}px)`,
           }}>
             <div style={{
