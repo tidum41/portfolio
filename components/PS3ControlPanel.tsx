@@ -98,31 +98,26 @@ function readSavedPos() { try { const r = sessionStorage.getItem(POS_KEY); retur
 function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch {} }
 
 // Anchors the pill under the "currently @ JOOLA..." hero line, left-aligned
-// to it at every breakpoint (found via its JOOLA link, since the <p> itself
-// has no stable selector) — that line is an unconstrained-width flex sibling
-// of the heading, so its own left edge already equals the page's real left
-// content edge (page-px in from the true left, whatever --grid-max-w's
-// centering margin is at the current width). Same rule from mobile straight
-// through desktop — instead of the old nav-row-relative logic (docking after
-// "about", or falling back to raw viewport math, or an even earlier version
-// that mirrored to the *right* edge above the mobile breakpoint), which
-// routinely lost that margin or put the pill on the wrong side entirely.
-/** Layout box of `el`, ignoring CSS translates (offset* is transform-agnostic).
- *  getBoundingClientRect includes the hero subtitle's entrance translateY,
- *  so docking to it made the menu pill chase the JOOLA / UCLA line. */
-function layoutDocumentRect(el: HTMLElement): { left: number; top: number; width: number; height: number } | null {
-  const width = el.offsetWidth;
-  const height = el.offsetHeight;
-  if (width < 8 || height < 8) return null;
-  let left = 0;
-  let top = 0;
-  let node: HTMLElement | null = el;
-  while (node) {
-    left += node.offsetLeft;
-    top += node.offsetTop;
-    node = node.offsetParent as HTMLElement | null;
-  }
-  return { left, top, width, height };
+// to that line's content box at every breakpoint. The subtitle is an
+// unconstrained-width flex sibling of the heading, so its left edge is the
+// page's real left content edge (page-px in, plus --grid-max-w centering).
+//
+// Docking MUST use the untransformed visual box (getBoundingClientRect minus
+// ancestor translates) with subpixel precision:
+//   • Math.round shifted the pill 0.5px on centered layouts (margin 72.5 → 97)
+//   • offsetWidth/offsetHeight are integers, so offset*-chain Y drifted ~1px
+//     vs the real 25.5px line box across breakpoints
+// getBoundingClientRect alone still includes the subtitle's entrance
+// translateY, which made the pill chase the line — undo those matrices.
+const PILL_DOCK_GAP = 16;
+
+function findHeroSub(): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  return (
+    document.querySelector<HTMLElement>("[data-hero-sub]") ??
+    document.querySelector<HTMLElement>('a[href="https://joola.com"]')?.closest("p") ??
+    null
+  );
 }
 
 function elementTranslation(el: HTMLElement): { x: number; y: number } {
@@ -148,6 +143,7 @@ function elementTranslation(el: HTMLElement): { x: number; y: number } {
   return { x: 0, y: 0 };
 }
 
+/** Visual box of `el` with CSS translates undone (entrance motion, etc.). */
 function untransformedViewportRect(el: HTMLElement): DOMRect | null {
   const r = el.getBoundingClientRect();
   if (r.width < 8 || r.height < 8) return null;
@@ -165,28 +161,23 @@ function untransformedViewportRect(el: HTMLElement): DOMRect | null {
 
 function computeHeroAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
-  const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
-  const heroP = joolaLink?.closest("p");
+  const heroP = findHeroSub();
   if (!heroP) return null;
-  // Prefer offset chain (ignores transforms). Fall back to undoing matrices
-  // if an offsetParent is missing (transformed containing blocks).
-  const layout = layoutDocumentRect(heroP);
-  if (layout) {
-    return {
-      x: Math.round(layout.left),
-      y: Math.round(layout.top + layout.height + 16),
-    };
-  }
   const r = untransformedViewportRect(heroP);
   if (!r) return null;
+  // Keep subpixels — rounding was the desktop centering 0.5px miss.
   return {
-    x: Math.round(r.left + window.scrollX),
-    y: Math.round(r.bottom + 16 + window.scrollY),
+    x: r.left + window.scrollX,
+    y: r.bottom + PILL_DOCK_GAP + window.scrollY,
   };
 }
 
 function computeNavAlignedPos(): {x:number;y:number} | null {
   return computeHeroAlignedPos();
+}
+
+function samePos(a: {x:number;y:number}, b: {x:number;y:number}) {
+  return Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) < 0.01;
 }
 
 function shouldFlip(pillY: number, openBodyH: number) {
@@ -792,38 +783,70 @@ export default function PS3ControlPanel({
   // the anchor was already in the DOM.
   useSafeLayoutEffect(() => {
     if (savedPos.current) return;
+    let cancelled = false;
+    let raf = 0;
+    let observedHero: HTMLElement | null = null;
     const applyPos = (pos: {x:number;y:number}) => {
-      if (hasDraggedRef.current) return;
-      setPillPos(pos);
+      if (cancelled || hasDraggedRef.current) return;
+      setPillPos((prev) => (samePos(prev, pos) ? prev : pos));
       setFlipped(shouldFlip(pos.y, contentBodyHRef.current));
       setPosReady(true);
     };
-    const findAndPlace = (attempt: number) => {
-      if (hasDraggedRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (cancelled || hasDraggedRef.current) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (cancelled || hasDraggedRef.current) return;
+        const pos = computeNavAlignedPos();
+        if (pos) applyPos(pos);
+      });
+    });
+    ro.observe(document.documentElement);
+
+    const ensureHeroObserved = () => {
+      const heroP = findHeroSub();
+      if (!heroP || heroP === observedHero) return heroP;
+      if (observedHero) ro.unobserve(observedHero);
+      ro.observe(heroP);
+      observedHero = heroP;
+      return heroP;
+    };
+
+    const place = () => {
+      if (cancelled || hasDraggedRef.current) return false;
+      ensureHeroObserved();
       const pos = computeNavAlignedPos();
       if (pos) {
         applyPos(pos);
-        return;
+        return true;
       }
+      return false;
+    };
+    const findAndPlace = (attempt: number) => {
+      if (place()) return;
       if (attempt < 15) { setTimeout(() => findAndPlace(attempt + 1), 150); return; }
       const w = window.innerWidth, cl = w > MAX_W ? (w - MAX_W) / 2 : 0;
       applyPos({ x: cl + window.scrollX + EDGE_PAD, y: EDGE_PAD + window.scrollY });
     };
     findAndPlace(0);
-    // Re-read the untransformed rest box when the subtitle starts and when
-    // webfonts settle — both used to shift the JOOLA / UCLA line (and wrap
-    // it on mobile) after the first measure.
-    let cancelled = false;
+
+    // Re-dock when fonts settle or intro ends — ResizeObserver covers box
+    // changes (wrap, scrollbar gutter, centered max-width margin).
     const reanchor = () => {
-      if (cancelled) return;
-      const pos = computeNavAlignedPos();
-      if (pos) applyPos(pos);
+      if (cancelled || hasDraggedRef.current) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(place);
     };
     window.addEventListener("intro-done", reanchor);
-    document.fonts?.ready.then(reanchor);
+    document.fonts?.ready.then(reanchor).catch(() => {});
+    document.fonts?.addEventListener?.("loadingdone", reanchor);
+
     return () => {
       cancelled = true;
+      cancelAnimationFrame(raf);
       window.removeEventListener("intro-done", reanchor);
+      document.fonts?.removeEventListener?.("loadingdone", reanchor);
+      ro.disconnect();
     };
   }, []);
 
@@ -833,10 +856,17 @@ export default function PS3ControlPanel({
       if (hasDraggedRef.current) return;
       const pos = computeNavAlignedPos();
       if (!pos) return;
-      startTransition(() => { setPillPos(pos); setFlipped(shouldFlip(pos.y, contentBodyHRef.current)); });
+      startTransition(() => {
+        setPillPos((prev) => (samePos(prev, pos) ? prev : pos));
+        setFlipped(shouldFlip(pos.y, contentBodyHRef.current));
+      });
     };
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+    };
   }, []);
 
   // Work was display:none on About/Archive, so the hero rect was 0. Re-read
@@ -851,7 +881,7 @@ export default function PS3ControlPanel({
       const pos = computeNavAlignedPos();
       if (!pos) return;
       startTransition(() => {
-        setPillPos(pos);
+        setPillPos((prev) => (samePos(prev, pos) ? prev : pos));
         setFlipped(shouldFlip(pos.y, contentBodyHRef.current));
         setPosReady(true);
       });
