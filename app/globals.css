@@ -571,10 +571,12 @@ a.nav-link::before {
   inset: -20px;
 }
 
-/* Mobile nav: tighter gap so 44×44 theme/volume targets don't get flex-squashed. */
+/* Mobile nav: slightly tighter gap so 44×44 theme/volume targets fit without
+   flex-squashing (40px gaps + two 44px boxes overflow the 375 content width).
+   24px keeps icon↔link rhythm close to the old collapsed-box layout. */
 @media (max-width: 767px) {
   .site-nav {
-    gap: 16px !important;
+    gap: 24px !important;
   }
 }
 .phone-mockup-play-btn::before {
