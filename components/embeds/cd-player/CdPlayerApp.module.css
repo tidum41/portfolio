@@ -91,8 +91,11 @@
 }
 
 .layoutVertical .gridCol {
-  /* Carousel + titles need room; clipping was cutting covers and meta. */
-  overflow: visible;
+  /* Carousel scrolls inside; keep overflow contained so peek cards don't
+     expand the document width (375px home scrollWidth bug). */
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* ── Mobile / Vertical layout (<500px width) ──────────────────────────── */
@@ -140,19 +143,22 @@
 /* Carousel container that wraps AlbumGrid in vertical mode */
 .carouselWrap {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
+  min-width: 0;
   position: relative;
   display: flex;
   align-items: center;
+  overflow-x: hidden;
 }
 
 .carouselContainer {
   display: flex;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   width: 100%;
+  min-width: 0;
   /* Tighter pad on the vertical stack so covers + titles stay unclipped. */
   padding: 8px 12px 10px;
   gap: 10px;
@@ -161,8 +167,11 @@
 .carouselContainer::-webkit-scrollbar { display: none; }
 
 .layoutVertical .gridColVertical {
-  /* Don't clip album covers or title lines under the carousel row. */
-  overflow: visible;
+  /* Contain horizontal peek inside the tile; titles stay inside padding. */
+  overflow-x: hidden;
+  overflow-y: visible;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .carouselNav {

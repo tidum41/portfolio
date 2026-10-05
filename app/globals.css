@@ -560,10 +560,22 @@ a.nav-link::before {
   position: absolute;
   inset: -12px -8px;
 }
+.theme-toggle-btn {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+}
 .theme-toggle-btn::before {
   content: "";
   position: absolute;
   inset: -20px;
+}
+
+/* Mobile nav: tighter gap so 44×44 theme/volume targets don't get flex-squashed. */
+@media (max-width: 767px) {
+  .site-nav {
+    gap: 16px !important;
+  }
 }
 .phone-mockup-play-btn::before {
   content: "";

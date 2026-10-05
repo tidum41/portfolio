@@ -71,6 +71,8 @@ interface Props {
   playing?: boolean;
   /** Grid order for staggered remount (0 first). */
   mountOrder?: number;
+  /** First above-fold card — eager poster + high fetch priority for LCP. */
+  priority?: boolean;
 }
 
 export default function MuxAutoplayCard({
@@ -82,6 +84,7 @@ export default function MuxAutoplayCard({
   active = true,
   playing = true,
   mountOrder = 0,
+  priority = false,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -106,6 +109,10 @@ export default function MuxAutoplayCard({
     if (shouldLoad || !active) return;
     const container = containerRef.current;
     if (!container) return;
+    // Tight margin on mobile — a 200px prefetch was pulling a second HLS
+    // stream into the first viewport and dominating mobile transfer (~4MiB).
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    const rootMargin = mobile ? "0px 0px 48px 0px" : "0px 0px 120px 0px";
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -113,7 +120,7 @@ export default function MuxAutoplayCard({
           obs.disconnect();
         }
       },
-      { rootMargin: "0px 0px 200px 0px" },
+      { rootMargin },
     );
     obs.observe(container);
     return () => obs.disconnect();
@@ -196,11 +203,14 @@ export default function MuxAutoplayCard({
           width: "100%",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={posterUrl}
           alt=""
           aria-hidden
           decoding="async"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "low"}
           style={{
             position: "absolute",
             inset: 0,

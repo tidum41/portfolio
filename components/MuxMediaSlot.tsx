@@ -162,12 +162,15 @@ export default function MuxMediaSlot({
       <video
         ref={videoRef}
         className="mux-cover"
-        poster={poster}
+        // Fill/grid cards already paint a sibling poster <img>; setting
+        // poster= here double-fetches the Mux thumb and triggers unused-
+        // preload console noise. Non-fill keeps poster for intrinsic sizing.
+        poster={fill ? undefined : poster}
         autoPlay
         muted
         loop
         playsInline
-        preload={fill ? "metadata" : "auto"}
+        preload={fill ? "none" : "auto"}
         onCanPlay={kickPlay}
         onPlaying={kickPlay}
         onLoadedData={kickPlay}

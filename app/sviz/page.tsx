@@ -2,12 +2,10 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { preload } from "react-dom";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
-import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
 /** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
@@ -235,9 +233,6 @@ const LOCAL_SOLUTION_VIDEO = "/images/sviz/solution-video.webm";
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SvizPage() {
-  const lcp = CASE_STUDY_LCP["/sviz"];
-  if (lcp) preload(lcp, { as: "image" });
-
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
