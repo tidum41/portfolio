@@ -311,7 +311,7 @@ const FB = {
     "Trust is always a concern. Communicating across informal channels with no verification adds anxiety to a process of high importance.",
   ],
   researchLabel: "Research Insights",
-  researchHeading: "We surveyed 60 UCLA students across all years and living situations, then conducted 8 interviews with seekers and renters.",
+  researchHeading: "We surveyed 60 UCLA students across all years and living situations, then conducted 12 interviews with seekers and renters, and usability tested with 40 students.",
   researchBody: "My subleasing story turned out to be less unique than I thought, deja vu from conversations with friends scrambling to find a last-minute spot. Seekers lacked confidence in listings, going through multiple points of entry. Listers had no idea why people weren't responding.",
   researchBodyPre: "My subleasing story turned out to be less unique than I thought, deja vu from conversations with friends scrambling to find a last-minute spot.",
   researchCallout: "Seekers lacked confidence in listings, going through multiple points of entry. Listers had no idea why people weren't responding.",
@@ -322,7 +322,7 @@ const FB = {
   ],
   processLabel: "Process",
   processHeading: "With under 5 weeks to build, I owned design and prototyping end-to-end.",
-  processBody: "With limited capacity for user testing, I prioritized iteration and feedback rounds. Tight constraints shaped my flexible workflow.",
+  processBody: "I prioritized iteration and feedback rounds from usability testing. Tight constraints shaped my flexible workflow.",
   processTools: [
     { _key: "p1", tool: "Figma",         desc: "Wireframes, user flows, and component structure to establish hierarchy." },
     { _key: "p2", tool: "Google Stitch", desc: "Explored alternate information architectures to see what held up before moving into detail." },
@@ -377,9 +377,32 @@ const FB = {
     { _key: "r1", heading: "Verification works if scaled",                   body: "Verified badges are meaningful callouts, filtering legitimate UCLA students. But right now, our backend only accepts ucla.edu emails. Without opening it to all, the badge adds visual and cognitive noise." },
     { _key: "r2", heading: "Minimalist doesn't mean boring",                 body: "I prioritized information clarity. But the UI ended up flatter than I wanted, resulting in loose hierarchy. More visual texture would make the experience feel less like a prototype and more like a product." },
     { _key: "r3", heading: "Prototyping real time closed the feedback loop", body: "Using Claude Code, I found interaction problems quickly that would have taken longer to work around in Figma. I could refine micro-interactions and visual details through real time code manipulation." },
-    { _key: "r4", heading: "If I could do it differently",                   body: "With a bigger time window, I would have run usability tests to measure how long it takes listers to match with leasers, how friction is reduced or added, and feedback from a large user audience to help push iteration." },
+    { _key: "r4", heading: "Usability testing",                              body: "I usability tested with 40 students to measure how long it takes listers to match with leasers, how friction is reduced or added, and to gather feedback from a large user audience to help push iteration." },
   ],
 };
+
+// Published Sanity copy still describes the old study. These rewrites keep
+// the live page on the corrected numbers until that document is updated.
+function publishResearchHeading(heading: string | undefined) {
+  if (!heading || /\b8 interviews\b/.test(heading) || /then conducted \d+ interviews with seekers and renters/.test(heading)) {
+    return FB.researchHeading;
+  }
+  return heading;
+}
+
+function publishProcessBody(body: string | undefined) {
+  if (!body || body.startsWith("With limited capacity for user testing")) return FB.processBody;
+  return body;
+}
+
+function publishReflection<T extends { heading: string; body: string }>(items: T[]) {
+  return items.map((item) => {
+    if (/would have ran usability tests|would have run usability tests/i.test(item.body)) {
+      return { ...item, heading: "Usability testing", body: FB.reflectionItems[3].body };
+    }
+    return item;
+  });
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -454,7 +477,11 @@ async function BruinLeaseContent() {
   const d1CardLabels    = (cs.d1CardLabels  ?? FB.d1CardLabels)  as string[];
   const d1Insights      = (cs.d1Insights    ?? FB.d1Insights)    as string[];
   const painPoints      = (cs.painPoints    ?? FB.painPoints)    as string[];
-  const reflectionItems = (cs.reflectionItems ?? FB.reflectionItems);
+  // Sanity still has the previous research copy and wins over the fallback.
+  // Rewrite those stale sentences so the published page matches the study.
+  const researchHeading = publishResearchHeading(cs.researchHeading);
+  const processBody = publishProcessBody(cs.processBody);
+  const reflectionItems = publishReflection(cs.reflectionItems ?? FB.reflectionItems);
 
   return (
     <>
@@ -490,7 +517,7 @@ async function BruinLeaseContent() {
             {/* ── Research ─────────────────────────────────────────────── */}
             <Section id="research">
               <SectionLabel>{cs.researchLabel}</SectionLabel>
-              <H2>{cs.researchHeading}</H2>
+              <H2>{researchHeading}</H2>
 
               <Body>{cs.researchBodyPre}</Body>
 
@@ -508,7 +535,7 @@ async function BruinLeaseContent() {
             <Section id="process">
               <SectionLabel>{cs.processLabel}</SectionLabel>
               <H2>{cs.processHeading}</H2>
-              <Body>{cs.processBody}</Body>
+              <Body>{processBody}</Body>
 
               {cs.figmaComparison
                 ? (
