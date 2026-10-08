@@ -151,10 +151,9 @@ const elastic = (v: number, lo: number, hi: number, k = 0.22) =>
     v < lo ? lo + (v - lo) * k : v > hi ? hi + (v - hi) * k : v;
 
 // ── Slider geometry (horizontal) ──────────────────────────────────────────────
-// Desktop base geometry. Mobile scales every dimension by MOBILE_SCALE — the
-// same factor the thumb was already bumped by in globals.css (28px / 20px
-// height) — so the track and flanking buttons grow together with the thumb
-// instead of the thumb standing out against an unchanged-size track.
+// Desktop base geometry. Mobile scales the track by MOBILE_SCALE — the same
+// factor the thumb is bumped by in globals.css (28px / 20px height) — so the
+// grab target grows with the thumb. The − / + buttons stay at the desktop width.
 const TRACK_W = 110;
 const TRACK_PADH = 12;
 const ZOOM_BTN_W = 34;
@@ -420,6 +419,10 @@ export default function BentoGallery({
     const zMinRef = useRef(ZOOM_MIN);
     // Cancels in-flight focal zoom rAF when a new zoom gesture starts.
     const zoomAnimRef = useRef<number | null>(null);
+    // False while a focus/overview camera move is still running. A second
+    // tap in that window used to hit the growing tile and toggle it shut.
+    const focusSettledRef = useRef(true);
+    const camTokenRef = useRef(0);
 
     const [vw, setVw] = useState(1280);
     const [vh, setVh] = useState(720);
@@ -437,7 +440,7 @@ export default function BentoGallery({
     );
     const trackW = isMobile ? TRACK_W * MOBILE_SCALE : TRACK_W;
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
-    const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
+    const zoomBtnW = ZOOM_BTN_W;
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
@@ -801,28 +804,27 @@ export default function BentoGallery({
             const cs = item.colSpan ?? 1;
             const iw = cW(cs),
                 ih = cImgH(item);
-            const s_ov = getOverviewT().s;
-            // Respect whatever zoom the user already dialed in (via the
-            // slider or a pinch/scroll gesture) rather than always jumping
-            // to a fixed focus scale — clicking a tile while already zoomed
-            // in keeps that same scale, only clamped to stay within a
-            // sensible focus range and never made to overflow the tile's
-            // reserved on-screen area.
-            const fitCap = Math.min(
-                (vw * 0.38) / Math.max(1, iw),
-                (vh * 0.5) / Math.max(1, ih)
-            );
-            const s = clamp(tx.current.s, s_ov * 1.25, Math.min(s_ov * 3.5, fitCap));
-            // Clamp against the same bounds zoomToCenter/onThumbDown enforce —
-            // for tiles near the canvas edges, centering the tile alone can
-            // push x/y outside those bounds. Left unclamped, tx.current
-            // starts focus already out-of-bounds, and the first zoom-out step
-            // (which computes from tx.current, then clamps its result) snaps
-            // it back into bounds as a visible jump.
+            const sOv = getOverviewT().s;
+            // A click used to clamp the *current* scale into [overview×1.25,
+            // fit]. From the overview that always landed on the floor, so the
+            // photo barely grew. Aim at the size that fits under the nav and
+            // above the zoom bar, and never past the slider max — a bigger
+            // scale pegged the thumb and, on a phone, pushed every other
+            // photo off-screen so it could no longer be clicked.
+            const headerH =
+                typeof document !== "undefined"
+                    ? (document.querySelector("header")?.getBoundingClientRect().height ?? 92)
+                    : 92;
+            const bottomChrome = 78;
+            const availW = Math.max(120, vw - 48);
+            const availH = Math.max(140, vh - headerH - bottomChrome);
+            const fit = Math.min(availW / Math.max(1, iw), availH / Math.max(1, ih));
+            const zMax = zMaxRef.current;
+            const s = clamp(Math.min(fit, zMax), Math.min(sOv, zMax), zMax);
             const b = getBounds(s);
             return {
                 x: clamp((vw - iw * s) / 2 - pos.left * s, b.minX, b.maxX),
-                y: clamp((vh - ih * s) / 2 - pos.top * s, b.minY, b.maxY),
+                y: clamp(headerH + (availH - ih * s) / 2 - pos.top * s, b.minY, b.maxY),
                 s,
             };
         },
@@ -830,28 +832,24 @@ export default function BentoGallery({
     );
 
     // ── Selector border ───────────────────────────────────────────────────────
-    const FOCUS_E = "cubic-bezier(0.16,1,0.3,1)";
-
     const showSelector = useCallback(
         (idx: number, animate: boolean) => {
             const sel = selectorRef.current;
             if (!sel) return;
-            // Position/size come from syncSelectorBox, which reads tx.current —
-            // by the time showSelector is called (always right after
-            // applyTransform with the matching focus transform), that's
-            // already the correct just-applied transform.
+            // Keep the border glued to the photo. A scale(0→1) plus a CSS
+            // canvas transition left the outline at the final box while the
+            // image was still mid-flight (~15px off at 700ms).
             syncSelectorBox(idx);
-            sel.style.transition = "none";
+            sel.style.transform = "scale(1, 1)";
             if (animate) {
-                sel.style.transform = "scale(0, 0)";
+                sel.style.transition = "none";
                 sel.style.opacity = "0";
                 requestAnimationFrame(() => {
-                    sel.style.transition = `transform 1.5s ${FOCUS_E}, opacity 0.4s ease`;
-                    sel.style.transform = "scale(1, 1)";
+                    sel.style.transition = "opacity 0.22s ease";
                     sel.style.opacity = "1";
                 });
             } else {
-                sel.style.transform = "scale(1, 1)";
+                sel.style.transition = "none";
                 sel.style.opacity = "1";
             }
         },
@@ -865,29 +863,106 @@ export default function BentoGallery({
         sel.style.opacity = "0";
     }, []);
 
+    // Ease the camera in canvas space so a chosen point travels in a straight
+    // line. CSS `transition` on translate+scale eases each channel alone and
+    // the photo arcs toward the origin — the click zoom felt mushy and the
+    // focus outline (updated only at the end pose) didn't follow the image.
+    const tileFocal = useCallback((idx: number) => {
+        const pos = positionsRef.current[idx];
+        const item = itemsRef.current[idx];
+        if (!pos || !item) return null;
+        const cs = clamp(item.colSpan ?? 1, 1, columnsRef.current);
+        const iw = cs * colUnitRef.current + (cs - 1) * gapRef.current;
+        const ih = itemImageHeight(
+            item,
+            columnsRef.current,
+            colUnitRef.current,
+            imgUnitHRef.current,
+            gapRef.current
+        );
+        return { cx: pos.left + iw / 2, cy: pos.top + ih / 2 };
+    }, []);
+
+    const animateCamera = useCallback(
+        (target: Tx, durMs: number, focal: { cx: number; cy: number } | null) => {
+            cancelZoomAnim();
+            const gen = ++camTokenRef.current;
+            focusSettledRef.current = false;
+            const from = { ...tx.current };
+            const reduced =
+                typeof window !== "undefined" &&
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const tiny =
+                Math.hypot(target.x - from.x, target.y - from.y) < 0.4 &&
+                Math.abs(target.s - from.s) < 1e-4;
+            if (reduced || durMs < 16 || tiny) {
+                applyTransform(target.x, target.y, target.s, "none");
+                if (camTokenRef.current === gen) focusSettledRef.current = true;
+                return;
+            }
+            const useFocal = Boolean(focal) && from.s > 0;
+            const cx = focal?.cx ?? 0;
+            const cy = focal?.cy ?? 0;
+            const sx0 = from.x + cx * from.s;
+            const sy0 = from.y + cy * from.s;
+            const sx1 = target.x + cx * target.s;
+            const sy1 = target.y + cy * target.s;
+            const t0 = performance.now();
+            const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+            const step = (now: number) => {
+                if (camTokenRef.current !== gen) return;
+                const t = clamp((now - t0) / durMs, 0, 1);
+                const e = ease(t);
+                const s = from.s + (target.s - from.s) * e;
+                let x: number;
+                let y: number;
+                if (useFocal) {
+                    x = sx0 + (sx1 - sx0) * e - cx * s;
+                    y = sy0 + (sy1 - sy0) * e - cy * s;
+                } else {
+                    x = from.x + (target.x - from.x) * e;
+                    y = from.y + (target.y - from.y) * e;
+                }
+                applyTransform(x, y, s, "none");
+                if (t < 1) zoomAnimRef.current = requestAnimationFrame(step);
+                else {
+                    zoomAnimRef.current = null;
+                    applyTransform(target.x, target.y, target.s, "none");
+                    focusSettledRef.current = true;
+                }
+            };
+            zoomAnimRef.current = requestAnimationFrame(step);
+        },
+        [applyTransform, cancelZoomAnim]
+    );
+
     const goOverview = useCallback(() => {
         cancelZoomAnim();
         // Re-center overview on the tile we just left — not a jump back to
         // the initial top-left cover framing.
         const leaving = focusedRef.current;
-        startTransition(() => setFocusedIdx(null));
+        // Sync the ref now. setState is async, and a second click in the
+        // same beat was still seeing the old focus and toggling the wrong way.
+        focusedRef.current = null;
+        setFocusedIdx(null);
         const t =
             leaving !== null ? getOverviewAroundT(leaving) : getOverviewT();
-        applyTransform(t.x, t.y, t.s, "flow");
+        animateCamera(t, 520, leaving !== null ? tileFocal(leaving) : null);
         hideSelector();
         if (rootRef.current) rootRef.current.style.cursor = "crosshair";
-    }, [getOverviewT, getOverviewAroundT, applyTransform, hideSelector, cancelZoomAnim]);
+    }, [getOverviewT, getOverviewAroundT, animateCamera, tileFocal, hideSelector, cancelZoomAnim]);
 
     const focusCell = useCallback(
         (idx: number) => {
             cancelZoomAnim();
-            startTransition(() => setFocusedIdx(idx));
+            focusedRef.current = idx;
+            setFocusedIdx(idx);
             const t = getFocusT(idx);
-            applyTransform(t.x, t.y, t.s, "focus");
+            animateCamera(t, 680, tileFocal(idx));
             showSelector(idx, true);
             if (rootRef.current) rootRef.current.style.cursor = "crosshair";
         },
-        [getFocusT, applyTransform, showSelector, cancelZoomAnim]
+        [getFocusT, animateCamera, tileFocal, showSelector, cancelZoomAnim]
     );
 
     // ── Zoom helpers ──────────────────────────────────────────────────────────
@@ -1282,6 +1357,7 @@ export default function BentoGallery({
                 const g = gst.current;
                 g.p2 = true;
                 g.moved = true;
+                focusSettledRef.current = true;
                 g.p2dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
                 g.p2scale = tx.current.s;
                 // Store pinch midpoint in root-local space (same units as tx).
@@ -1337,6 +1413,8 @@ export default function BentoGallery({
                     dy = e.clientY - g.startY;
                 if (!g.moved && Math.hypot(dx, dy) > CLICK_PX) {
                     g.moved = true;
+                    // A drag takes the camera over. The next tap may dismiss.
+                    focusSettledRef.current = true;
                     try {
                         (e.currentTarget as HTMLElement).setPointerCapture(
                             e.pointerId
@@ -1364,16 +1442,13 @@ export default function BentoGallery({
             ptrs.current.delete(e.pointerId);
             if (ptrs.current.size < 2) gst.current.p2 = false;
             if (ptrs.current.size === 0) {
-                // The drag/pinch itself rests wherever it lands (no auto-focus,
-                // no re-centering) — but `elastic()` deliberately lets x/y/s
-                // overshoot past true bounds during the gesture for a rubber-
-                // band feel, and that overshoot was never corrected afterward.
-                // A subsequent zoom (which computes its new position from this
-                // already-out-of-bounds tx.current, then clamps the RESULT)
-                // would suddenly snap back into bounds — reading as a jump.
-                // Settling back within bounds now, right as the gesture ends,
-                // keeps that correction where the user expects it.
-                snapToBounds("spring");
+                // Only a drag/pinch may spring back into bounds. A stationary
+                // click used to start that spring before the click handler,
+                // and the camera fight ate the focus zoom.
+                // `elastic()` lets a drag overshoot for the rubber-band feel;
+                // settling here is what puts it back. A later zoom computes
+                // from tx.current and would otherwise jump.
+                if (gst.current.moved) snapToBounds("spring");
                 if (rootRef.current) rootRef.current.style.cursor = "crosshair";
                 setTimeout(() => { gst.current.moved = false; }, 0);
                 // Demote after snap/spring animations settle (~800ms)
@@ -1387,15 +1462,31 @@ export default function BentoGallery({
         (e: React.MouseEvent, idx: number) => {
             e.stopPropagation();
             if (gst.current.moved) return;
-            if (focusedRef.current === idx) goOverview();
-            else focusCell(idx);
+            if (focusedRef.current === idx) {
+                // The opening zoom is still running. pointerdown already
+                // froze it; dismissing here is what a fast second tap did
+                // when the growing photo slid under the cursor. Finish the
+                // open instead.
+                if (!focusSettledRef.current) {
+                    animateCamera(getFocusT(idx), 480, tileFocal(idx));
+                    return;
+                }
+                goOverview();
+                return;
+            }
+            focusCell(idx);
         },
-        [goOverview, focusCell]
+        [goOverview, focusCell, animateCamera, getFocusT, tileFocal]
     );
 
     const onBgClick = useCallback(() => {
-        if (!gst.current.moved && focusedRef.current !== null) goOverview();
-    }, [goOverview]);
+        if (gst.current.moved || focusedRef.current === null) return;
+        if (!focusSettledRef.current) {
+            animateCamera(getFocusT(focusedRef.current), 480, tileFocal(focusedRef.current));
+            return;
+        }
+        goOverview();
+    }, [goOverview, animateCamera, getFocusT, tileFocal]);
 
     const zoomed = focusedIdx !== null;
 
