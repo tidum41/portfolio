@@ -151,10 +151,9 @@ const elastic = (v: number, lo: number, hi: number, k = 0.22) =>
     v < lo ? lo + (v - lo) * k : v > hi ? hi + (v - hi) * k : v;
 
 // ── Slider geometry (horizontal) ──────────────────────────────────────────────
-// Desktop base geometry. Mobile scales every dimension by MOBILE_SCALE — the
-// same factor the thumb was already bumped by in globals.css (28px / 20px
-// height) — so the track and flanking buttons grow together with the thumb
-// instead of the thumb standing out against an unchanged-size track.
+// Desktop base geometry. Mobile scales the track by MOBILE_SCALE — the same
+// factor the thumb is bumped by in globals.css (28px / 20px height) — so the
+// grab target grows with the thumb. The − / + buttons stay at the desktop width.
 const TRACK_W = 110;
 const TRACK_PADH = 12;
 const ZOOM_BTN_W = 34;
@@ -441,7 +440,7 @@ export default function BentoGallery({
     );
     const trackW = isMobile ? TRACK_W * MOBILE_SCALE : TRACK_W;
     const trackPadH = isMobile ? TRACK_PADH * MOBILE_SCALE : TRACK_PADH;
-    const zoomBtnW = isMobile ? ZOOM_BTN_W * MOBILE_SCALE : ZOOM_BTN_W;
+    const zoomBtnW = ZOOM_BTN_W;
 
     const focusedRef = useRef<number | null>(null);
     focusedRef.current = focusedIdx;
