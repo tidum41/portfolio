@@ -169,3 +169,11 @@ Ported a design pass built in Paper (Quick Order, Catalog, Templates, PDP, Cart 
 - **Save as template and Add All To Cart are the same control.** Both are 46px, 6px radius, 14px bold. The black fill is what marks the primary. The 52px height and the 2px `#EAEAEA` border were not doing a job the fill wasn't already doing. Mobile Add All matches.
 - **The order count was a lie.** The footer already sums the rows (12 lines, $7,148.80). The expand control still said "Show 42 more lines (50 total)" and the toolbar said "50 lines." There are 13 rows, 5 of them collapsed, 12 with a quantity. The label is computed from those rows. "Pickleball Paddle" no longer breaks so the last word sits alone. Remove is a 16px stroke X.
 - **Message sales** uses the same wholesale bar as the other screens, cart included. Send is a 36px circle with a 16px arrow, 1.75px stroke, round caps. The thread is the two finished messages. No caption.
+
+## v20 — The footer counts the rows you can see
+
+- **Collapsed lines were still in the total.** `#moreRows` is `display: none`, but the footer summed every priced row anyway, so eight rows sat on screen and the footer said 12 lines / $7,148.80. It now skips rows inside a closed `#moreRows`. Collapsed: 8 lines, $6,227.62 (the eight line totals that are actually drawn). Opening the list runs the same sum, and the four hidden priced lines come back: 12 lines, $7,148.80. The out-of-stock net stays a dash and stays out of both numbers. The toolbar uses that same count.
+- **Mobile was a second, larger lie.** Three rows, a control that said "Show 47 more lines (50 total)", and a footer of 50 lines / $28,533.65. Those lines are not in the mobile list. The control is gone. The footer is 3 lines and $2,564.46, which is 6 × $164.97 + 12 × $114.98 + 12 × $16.24.
+- **The two mobile footer buttons are the same control.** Save template was 44px and Add All To Cart was 46px. Both are 46px, 6px radius, 14px bold, matching the desktop pair.
+- **Product names are flush left.** The name cell is `text-align: left`, so the name starts on the same edge as the Product header instead of sitting in the middle of a wide column.
+- **The mobile search placeholder uses the same gray as the desktop field** (`#808080`). The words were already `Search by name, category, or SKU`. The field stays a 44px mobile input, not a scaled-up desktop one.

@@ -1504,6 +1504,7 @@
   /* ---------- restrained depth: hover states that signal interactivity, not decoration ---------- */
   .row{ transition: background-color .1s ease; }
   .row:hover{ background-color: #FAFAF9; }
+  .row > .flex-1{ text-align: left; }
   .header-search-result{ transition: background-color .1s ease; }
   .header-search-result:hover{ background-color: #F6F6F6; }
 
@@ -1698,7 +1699,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15"><path d="M12 3v12m0 0 4-4m-4 4-4-4" fill="none" stroke="#1A1A1A" stroke-width="2"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="#1A1A1A" stroke-width="2"/></svg>
             <div class="font-bold text-[#1A1A1A] text-sm">Bulk upload</div>
           </div>
-          <div id="qoToolbarLineCount" class="text-[13px] text-[#808080] ml-auto">12 lines in this order</div>
+          <div id="qoToolbarLineCount" class="text-[13px] text-[#808080] ml-auto">8 lines in this order</div>
         </div>
       </div>
 
@@ -2053,8 +2054,8 @@
       <!-- sticky summary footer -->
       <div class="sticky bottom-0 w-full border-t-[1.5px] border-[#1A1A1A] bg-white flex items-center gap-4 px-4 py-4 shadow-[0_-8px_24px_rgba(20,20,18,0.08)]">
         <div class="flex flex-col gap-1">
-          <div id="qoFooterLineCount" class="text-[12.5px] text-[#595959]" style="line-height:1">50 lines</div>
-          <div id="qoFooterTotal" class="text-[38px] font-bold text-[#1A1A1A]" style="line-height:1">$28,533.65</div>
+          <div id="qoFooterLineCount" class="text-[12.5px] text-[#595959]" style="line-height:1">8 lines</div>
+          <div id="qoFooterTotal" class="text-[38px] font-bold text-[#1A1A1A]" style="line-height:1">$6,227.62</div>
         </div>
         <div class="flex items-center gap-2.5 ml-auto">
           <div class="btn-outline-hover h-11.5 flex items-center px-5 rounded-md border-[1.5px] border-[#1A1A1A] font-bold text-[#1A1A1A] text-sm cursor-pointer">Save as template</div>
@@ -3636,7 +3637,7 @@
       <div class="px-4 pt-4 flex flex-col gap-2.5">
         <div class="relative">
           <div class="w-full h-11 flex items-center pl-9 rounded-[10px] bg-[#F6F6F6]">
-            <div class="text-[#787878] text-[14px]">Search by name, category, or SKU</div>
+            <div class="text-[#808080] text-[14px]">Search by name, category, or SKU</div>
           </div>
           <svg class="absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" width="15" height="15"><circle cx="11" cy="11" r="7" fill="none" stroke="#808080" stroke-width="2"/><path d="m21 21-4.3-4.3" fill="none" stroke="#808080" stroke-width="2"/></svg>
         </div>
@@ -3708,19 +3709,15 @@
           </div>
         </div>
 
-        <button type="button" class="flex items-center justify-center gap-1.5 text-[#595959] text-[12px] font-semibold pt-1 w-full">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11"><path d="m6 9 6 6 6-6" fill="none" stroke="#595959" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Show 47 more lines (50 total)
-        </button>
       </div>
 
       <div class="sticky bottom-0 w-full border-t-[1.5px] border-[#1A1A1A] bg-white flex flex-col gap-2.5 px-4 py-3.5 shadow-[0_-8px_24px_rgba(20,20,18,0.08)]">
         <div class="flex items-center justify-between">
-          <div class="text-[12px] text-[#595959]">50 lines</div>
-          <div class="text-xl font-extrabold text-[#1A1A1A]">$28,533.65</div>
+          <div class="text-[12px] text-[#595959]">3 lines</div>
+          <div class="text-xl font-extrabold text-[#1A1A1A]">$2,564.46</div>
         </div>
         <div class="flex items-center gap-2">
-          <div class="btn-outline-hover flex-1 h-11 flex items-center justify-center rounded-md border-[1.5px] border-[#1A1A1A] font-bold text-[#1A1A1A] text-[13px]">Save template</div>
+          <div class="btn-outline-hover flex-1 h-11.5 flex items-center justify-center rounded-md border-[1.5px] border-[#1A1A1A] font-bold text-[#1A1A1A] text-sm">Save template</div>
           <div class="flex-1 h-11.5 flex items-center justify-center rounded-md bg-black font-bold text-[#EAEAEA] text-sm">Add All To Cart</div>
         </div>
       </div>
@@ -3875,6 +3872,7 @@
       moreRows.style.display = expanded ? 'none' : 'block';
       toggleLabel.textContent = moreLinesLabel(!expanded);
       toggleChevron.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+      updateQuickOrderTotals();
     });
   }
 
@@ -3925,6 +3923,8 @@
   function updateQuickOrderTotals(){
     var total = 0, lineCount = 0;
     document.querySelectorAll('.screen[data-screen="qo-desktop"] .row[data-tiers]').forEach(function(row){
+      var collapsed = row.closest('#moreRows');
+      if (collapsed && collapsed.style.display === 'none') return;
       var qty = parseInt(row.querySelector('.qty-input').value, 10) || 0;
       var totalText = row.querySelector('.line-total').textContent;
       var lineValue = parseFloat(totalText.replace(/[^0-9.]/g, ''));
