@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
-import { HERO_HEADLINE } from "@/lib/site";
+import { HERO_HEADLINE_LEAD, HERO_HEADLINE_TELL } from "@/lib/site";
 
 // Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
 // This guards the long cold-load/tab-replay timeline. On an SPA soft return,
@@ -107,7 +107,10 @@ export default function HeroText() {
             margin: 0,
           }}
         >
-          {HERO_HEADLINE}
+          {HERO_HEADLINE_LEAD}{" "}
+          <span className="hero-headline-tell" style={{ whiteSpace: "nowrap" }}>
+            {HERO_HEADLINE_TELL}
+          </span>
         </motion.h1>
       </div>
 

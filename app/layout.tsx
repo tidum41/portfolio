@@ -53,6 +53,8 @@ export const metadata: Metadata = {
   keywords: [
     "Mudit Mahajan",
     "product design",
+    "design engineering",
+    "interaction design",
     "UCLA",
     "portfolio",
     "UI UX",

@@ -214,6 +214,11 @@ p, li       { text-wrap: pretty; }
 .hero-sub-end {
   white-space: nowrap;
 }
+/* Keep the personality tell together so "falls down rabbit holes" never
+   splits across lines (and the rabbit-hole easter egg stays on one beat). */
+.hero-headline-tell {
+  white-space: nowrap;
+}
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
 /* Native OS cursor (arrow / I-beam / resize). The custom dot tip is off;
