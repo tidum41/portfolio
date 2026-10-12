@@ -80,6 +80,13 @@ export default function CardLabClient({ projects }: { projects: SanityProject[] 
         .card-lab-root {
           ${tokensToCssVars()}
         }
+        /* Cursor DialKit is noise on this page — hide while the lab is mounted. */
+        body:has(.card-lab-root) .dialkit-panel,
+        body:has(.card-lab-root) .dialkit-select-dropdown,
+        body:has(.card-lab-root) .dialkit-preset-dropdown,
+        body:has(.card-lab-root) .dialkit-shortcuts-dropdown {
+          display: none !important;
+        }
         .cl-btn {
           appearance: none;
           background: transparent;
@@ -88,10 +95,10 @@ export default function CardLabClient({ projects }: { projects: SanityProject[] 
           font: inherit;
           font-size: 12px;
           letter-spacing: 0.04em;
-          padding: 8px 12px;
+          padding: 7px 10px;
           border-radius: 4px;
           cursor: pointer;
-          min-height: 40px;
+          min-height: 36px;
         }
         .cl-btn:hover {
           background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);

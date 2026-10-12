@@ -262,13 +262,14 @@ function EdgeTileCard({ project }: { project: SanityProject }) {
 export function TextFirstList({ projects }: { projects: SanityProject[] }) {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
-  const [finePointer, setFinePointer] = useState(true);
+  /** True when the UA claims real hover; used only for the touch expand path. */
+  const [touchExpand, setTouchExpand] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const sync = () => setFinePointer(mq.matches);
+    const sync = () => setTouchExpand(!mq.matches);
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
@@ -290,27 +291,26 @@ export function TextFirstList({ projects }: { projects: SanityProject[] }) {
                   display: "block",
                   padding: "4px 0",
                   transition: `opacity var(--cl-tf-hover) ease, color var(--cl-tf-hover) ease`,
-                  opacity: finePointer && hoverId && hoverId !== p._id ? 0.35 : 1,
+                  opacity: hoverId && hoverId !== p._id ? 0.35 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!finePointer) return;
+                  // Event-driven: show floating preview whenever a mouse enters,
+                  // even if matchMedia lies (common in headless / some hybrid UAs).
                   setHoverId(p._id);
                   setPreviewPos({ x: e.clientX, y: e.clientY });
                 }}
                 onMouseMove={(e) => {
-                  if (!finePointer || hoverId !== p._id) return;
+                  if (hoverId !== p._id) return;
                   setPreviewPos({ x: e.clientX, y: e.clientY });
                 }}
-                onMouseLeave={() => {
-                  if (!finePointer) return;
-                  setHoverId(null);
-                }}
+                onMouseLeave={() => setHoverId(null)}
                 onClick={(e) => {
-                  if (finePointer) return;
-                  // Touch: first tap reveals preview; second follows link
+                  if (!touchExpand) return;
+                  // Touch: first tap reveals inline poster; second follows link
                   if (expandedId !== p._id) {
                     e.preventDefault();
                     setExpandedId(p._id);
+                    setHoverId(null);
                   }
                 }}
               >
@@ -343,7 +343,7 @@ export function TextFirstList({ projects }: { projects: SanityProject[] }) {
               </ProjectLink>
 
               {/* Touch / non-hover fallback: inline poster under the row */}
-              {!finePointer && open && (
+              {touchExpand && open && (
                 <div style={{ marginTop: 12, maxWidth: 280 }}>
                   <LabMedia
                     project={p}
@@ -357,18 +357,18 @@ export function TextFirstList({ projects }: { projects: SanityProject[] }) {
         })}
       </div>
 
-      {/* Desktop hover preview — opacity only, never scale the media ancestor */}
-      {finePointer && active && (
+      {/* Hover preview — opacity only, never scale the media ancestor */}
+      {active && (
         <div
           aria-hidden
           className="cl-tf-preview"
           style={{
             position: "fixed",
-            left: Math.min(previewPos.x + 24, window.innerWidth - TEXT_FIRST.previewWidth - 24),
-            top: Math.min(Math.max(24, previewPos.y - 90), window.innerHeight - 220),
+            left: Math.min(previewPos.x + 28, (typeof window !== "undefined" ? window.innerWidth : 1440) - TEXT_FIRST.previewWidth - 24),
+            top: Math.min(Math.max(88, previewPos.y - 80), (typeof window !== "undefined" ? window.innerHeight : 900) - 240),
             width: "var(--cl-tf-preview-w)",
             pointerEvents: "none",
-            zIndex: 40,
+            zIndex: 60,
             opacity: 1,
             transition: `opacity var(--cl-tf-hover) ease`,
           }}
@@ -385,10 +385,8 @@ export function TextFirstList({ projects }: { projects: SanityProject[] }) {
       )}
 
       <style>{`
-        @media (hover: hover) and (pointer: fine) {
-          .cl-tf-row:hover p:first-child {
-            color: var(--color-text-secondary);
-          }
+        .cl-tf-row:hover p:first-child {
+          color: var(--color-text-secondary);
         }
         @media (prefers-reduced-motion: reduce) {
           .cl-tf-row, .cl-tf-preview { transition: none !important; }
