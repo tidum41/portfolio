@@ -179,7 +179,7 @@ export default function CaseStudyTOC({
         }}
       >
         {backArrow}
-        <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 14, lineHeight: 1.5 }}>Back</span>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: 1.5 }}>Back</span>
       </a>
 
       {activeSections.length > 0 && (
@@ -198,7 +198,7 @@ export default function CaseStudyTOC({
                     ...NO_TAP_HIGHLIGHT,
                     background: "none", border: "none", padding: 0,
                     cursor: "pointer", textAlign: "left",
-                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    fontFamily: "var(--font-sans)",
                     fontSize: 14, letterSpacing: "0.1px", lineHeight: 1.5,
                     color: (isActive || isHovered) ? COLOR_ACTIVE : COLOR_INACTIVE,
                     fontWeight: isActive ? 500 : 400,

@@ -37,3 +37,8 @@ next-env.d.ts
 
 # local agent / playwright captures
 .playwright-screenshots/
+
+# ABC Areal variable woff2. Dinamo EULA §10 forbids putting the fonts in
+# public repositories. next/font/local still loads this path when the file
+# is present on disk (local dev / screenshots).
+/fonts/ABCArealVariable.woff2

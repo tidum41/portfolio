@@ -398,10 +398,8 @@ function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
 }
 
 // ── Chevron/label optical alignment ─────────────────────────────────────────
-// "menu" renders in --font-sans, which is "HN" (a local() alias for the
-// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
-// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
-// (Android, Windows, Linux) the stack lands on a substitute with different
+// "menu" renders in --font-sans (ABC Areal, falling through to Arial,
+// Helvetica, sans-serif). A missed load lands on a substitute with different
 // ascent/descent proportions, so a marginTop tuned by eye against one font's
 // glyph metrics reads as misaligned against another's. Rather than guess a
 // static px value that only holds for whichever font the tuner happened to
