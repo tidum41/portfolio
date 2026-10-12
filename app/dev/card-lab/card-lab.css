@@ -244,7 +244,6 @@
 }
 
 .card-lab__preview {
-  flex: 0 0 96px;
   width: 96px;
   border-radius: 4px;
   overflow: hidden;
@@ -255,29 +254,35 @@
   display: block;
 }
 
-/* Fine pointer: preview hidden until hover; opacity + 4px translate only */
-@media (hover: hover) and (pointer: fine) {
+/* Desktop + fine pointer: preview sits beside the row (absolute) so idle has
+   no empty slot. Opacity + ≤4px translate only — never scale.
+   Narrow viewports always show the preview inline (touch / no-hover parity),
+   so 390 screenshots don't depend on UA hover media features. */
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
   .card-lab__preview {
+    position: absolute;
+    right: 12px;
+    top: 50%;
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(calc(-50% + 4px));
     pointer-events: none;
   }
 
   .card-lab__text-row:hover .card-lab__preview,
   .card-lab__text-row:focus-within .card-lab__preview {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-50%);
   }
 }
 
-/* Touch / no-hover: preview always inline under text */
-@media (hover: none), (pointer: coarse) {
+@media (max-width: 900px), (hover: none), (pointer: coarse) {
   .card-lab__text-row {
     flex-direction: column;
     align-items: stretch;
   }
 
   .card-lab__preview {
+    position: static;
     flex: 0 0 auto;
     width: 100%;
     opacity: 1;
@@ -294,6 +299,9 @@
 /* Placeholder media block */
 .card-lab__media {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   background: var(--cl-media-0);
 }
@@ -307,12 +315,9 @@
 }
 
 .card-lab__media-mark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   width: 24px;
   height: 24px;
-  margin: -12px 0 0 -12px;
+  flex: 0 0 24px;
   background: color-mix(in srgb, var(--cl-primary) 12%, transparent);
 }
 

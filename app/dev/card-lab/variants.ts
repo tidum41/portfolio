@@ -57,10 +57,12 @@ export const direction1 = {
   intent: "Media inset in a surface frame; radius stays concentric with padding.",
   aspect: "4 / 3" as const,
   mediaIndex: 0,
+  // Padding/radius stay on the 4px spacing scale (rubric) while still
+  // showing concentric inset: outer = inner + padding.
   variants: [
     { id: "a", radius: 12, padding: 4, gap: 12, titleSize: 15, descSize: 13 },
-    { id: "b", radius: 12, padding: 6, gap: 12, titleSize: 15, descSize: 13 },
-    { id: "c", radius: 12, padding: 8, gap: 12, titleSize: 15, descSize: 13 },
+    { id: "b", radius: 12, padding: 8, gap: 12, titleSize: 15, descSize: 13 },
+    { id: "c", radius: 16, padding: 8, gap: 12, titleSize: 15, descSize: 13 },
   ] satisfies Direction1Variant[],
 };
 
@@ -153,7 +155,7 @@ export function applyOverrides<T extends object>(
   params: URLSearchParams
 ): T {
   const prefix = `${directionKey}${variantId}.`;
-  const next: Record<string, unknown> = { ...base };
+  const next = { ...(base as Record<string, unknown>) };
   const aliases: Record<string, string> = {
     p: "padding",
     r: "radius",

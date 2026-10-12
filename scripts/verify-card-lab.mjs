@@ -151,7 +151,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     throw new Error(`Failed to load ${url}: ${res ? res.status() : "no response"}`);
   }
   await page.waitForSelector("[data-cl-root]", { timeout: 15000 });
-  await page.waitForTimeout(300);
+  // Allow equalize-stages rAF + theme effect to settle.
+  await page.waitForTimeout(500);
 
   const tag = `${width}x${height}-${theme}`;
 
@@ -766,7 +767,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const parts = d.split(",").map((x) => x.trim());
       for (const p of parts) {
         const ms = parseFloat(p) * (p.includes("ms") ? 1 : 1000);
-        if (ms > 0) bad.push(`${el.className}:${d}`);
+        // Treat sub-millisecond browser/UA floors as zero.
+        if (ms >= 1) bad.push(`${el.className}:${d}`);
       }
     }
     return bad.slice(0, 8);

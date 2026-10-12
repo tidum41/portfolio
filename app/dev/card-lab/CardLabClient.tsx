@@ -256,6 +256,35 @@ export default function CardLabClient() {
     [searchParams]
   );
 
+  // Equal stage cells within each direction (desktop stretch + mobile stack).
+  useEffect(() => {
+    const equalize = () => {
+      document.querySelectorAll<HTMLElement>("[data-cl-row]").forEach((row) => {
+        const stages = [
+          ...row.querySelectorAll<HTMLElement>("[data-cl-stage]"),
+        ];
+        stages.forEach((s) => {
+          s.style.minHeight = "";
+        });
+        let max = 0;
+        for (const s of stages) {
+          max = Math.max(max, s.getBoundingClientRect().height);
+        }
+        const h = Math.ceil(max);
+        stages.forEach((s) => {
+          s.style.minHeight = `${h}px`;
+        });
+      });
+    };
+    equalize();
+    const id = requestAnimationFrame(equalize);
+    window.addEventListener("resize", equalize);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("resize", equalize);
+    };
+  }, [theme, d1, d2, d3]);
+
   return (
     <div
       className="card-lab"
@@ -292,7 +321,7 @@ export default function CardLabClient() {
                   <p
                     className="card-lab__spec"
                     data-cl-spec
-                    style={{ paddingLeft: `${v.padding}px` }}
+                    style={{ marginLeft: `${v.padding}px` }}
                   >
                     {labelD1(v)}
                   </p>
