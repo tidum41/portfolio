@@ -768,10 +768,37 @@ async function main() {
               if (/SKU\s*\d+/i.test(meta.textContent || "")) {
                 issues.pixelNits.push("rail meta still includes SKU");
               }
-              if (meta.scrollHeight > meta.clientHeight + 1 || meta.getBoundingClientRect().height > 20) {
-                issues.pixelNits.push("rail meta wraps to 2+ lines");
+            });
+            // No ellipsis / overflow on rail titles or meta — prices must be fully visible
+            rail.querySelectorAll(".rail-item .name, .rail-item .meta").forEach((el) => {
+              if (!visible(el)) return;
+              const cs = getComputedStyle(el);
+              if ((cs.textOverflow || "") === "ellipsis") {
+                issues.pixelNits.push(`rail ${el.className} uses ellipsis`);
+              }
+              // Single line
+              if (el.scrollHeight > el.clientHeight + 2 || el.getBoundingClientRect().height > 22) {
+                issues.pixelNits.push(`rail ${el.className} wraps: "${(el.textContent || "").trim().slice(0, 40)}"`);
+              }
+              // Horizontal clip / truncate
+              if (el.scrollWidth > el.clientWidth + 1) {
+                issues.pixelNits.push(
+                  `rail ${el.className} overflows: "${(el.textContent || "").trim().slice(0, 48)}"`
+                );
+              }
+              // Never truncate a price
+              if (/\$[\d,]+\.\d{2}\u2026|\$[\d,]+\u2026|\.\.\./.test(el.textContent || "")) {
+                issues.pixelNits.push(`rail price truncated: "${(el.textContent || "").trim()}"`);
               }
             });
+            // Add must be absolute overlay (no reserved flex column)
+            const action = rail.querySelector(".rail-action");
+            if (action) {
+              const pos = getComputedStyle(action).position;
+              if (pos !== "absolute" && pos !== "fixed") {
+                issues.pixelNits.push(`rail Add position=${pos} (want absolute overlay)`);
+              }
+            }
           }
           if (!root.querySelector("[data-qty-group]")) {
             issues.qoRail.push("qty-group microinteraction missing");
@@ -849,6 +876,10 @@ async function main() {
             if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
             if (!box.querySelector("[data-ship-address]")) {
               issues.cartCheckout.push("ship-to address line missing");
+            }
+            const shipSelect = box.querySelector('[data-field="ship-to"] select');
+            if (shipSelect && /Engage Pickleball\s*-\s/.test(shipSelect.textContent || "")) {
+              issues.cartCheckout.push("ship-to uses hyphen; want · or en dash");
             }
             if (box.querySelector("[data-warehouse-notes]") || /Notes for warehouse/i.test(box.textContent || "")) {
               issues.cartCheckout.push("warehouse notes must not appear for buyers");

@@ -167,12 +167,12 @@
   var shipTos = [
     {
       id: "engage-main",
-      label: "Engage Pickleball - Main",
+      label: "Engage Pickleball · Main",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
       id: "engage-north",
-      label: "Engage Pickleball - North",
+      label: "Engage Pickleball · North",
       detail: "2200 Research Park, Round Rock TX",
     },
   ];
