@@ -295,18 +295,21 @@
   }
 
   .card-lab__text-row:hover .card-lab__preview,
-  .card-lab__text-row:focus-within .card-lab__preview {
+  .card-lab__text-row:focus-within .card-lab__preview,
+  .card-lab__text-row[data-cl-force-hover="1"] .card-lab__preview {
     opacity: 1;
     visibility: visible;
   }
 
   .card-lab__text-row:hover .card-lab__preview[data-cl-placement="beside"],
-  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="beside"] {
+  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="beside"],
+  .card-lab__text-row[data-cl-force-hover="1"] .card-lab__preview[data-cl-placement="beside"] {
     transform: translateY(-50%);
   }
 
   .card-lab__text-row:hover .card-lab__preview[data-cl-placement="above"],
-  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="above"] {
+  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="above"],
+  .card-lab__text-row[data-cl-force-hover="1"] .card-lab__preview[data-cl-placement="above"] {
     transform: translateY(calc(-100% - 12px));
   }
 }

@@ -891,7 +891,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       hoverAll.mode === "1" &&
         hoverAll.restRows >= 10 &&
         hoverAll.hoverRows >= 10 &&
-        hoverAll.forced >= 20 &&
+        hoverAll.forced >= 30 &&
         hoverAllOverlaps.length === 0,
       `mode=${hoverAll.mode} rest=${hoverAll.restRows} hover=${hoverAll.hoverRows} forced=${hoverAll.forced} overlaps=${hoverAllOverlaps.slice(0, 4).join(",") || "0"} shot=${hoverAllShot}`
     );

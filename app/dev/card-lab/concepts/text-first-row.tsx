@@ -17,7 +17,13 @@ export type TextFirstRowVariant = ConceptVariant & {
   previewPlacement: PreviewPlacement;
 };
 
-function TextFirstRowCard({ v }: { v: TextFirstRowVariant }) {
+function TextFirstRowCard({
+  v,
+  forceHover = false,
+}: {
+  v: TextFirstRowVariant;
+  forceHover?: boolean;
+}) {
   return (
     <div
       className="card-lab__text-row"
@@ -30,6 +36,7 @@ function TextFirstRowCard({ v }: { v: TextFirstRowVariant }) {
       data-cl-preview-width={v.previewWidth}
       data-cl-preview-placement={v.previewPlacement}
       data-cl-row-pad-y={v.rowPadY}
+      data-cl-force-hover={forceHover ? "1" : "0"}
       style={{ padding: `${v.rowPadY}px 0` }}
     >
       <div className="card-lab__text-copy" data-cl-copy>
@@ -112,5 +119,7 @@ export const textFirstRow: ConceptDefinition<TextFirstRowVariant> = {
       ms: "hoverMs",
       preview: "previewWidth",
     }),
-  render: (v) => <TextFirstRowCard v={v} />,
+  render: (v, ctx) => (
+    <TextFirstRowCard v={v} forceHover={!!ctx?.forceHover} />
+  ),
 };
