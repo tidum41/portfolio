@@ -21,5 +21,11 @@ export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
-  return <DialRoot defaultOpen={pathname.startsWith("/dev")} />;
+  // Comparison labs have their own controls. An open DialKit panel
+  // would cover the thing being compared.
+  const openDials =
+    pathname.startsWith("/dev") &&
+    !pathname.startsWith("/dev/card-lab") &&
+    !pathname.startsWith("/dev/nav-morph");
+  return <DialRoot defaultOpen={openDials} />;
 }
