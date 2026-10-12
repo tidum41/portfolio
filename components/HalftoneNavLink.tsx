@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion, useTransform } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { HalftoneDotField } from "./HalftoneDotField";
-import { useHalftoneMorph } from "./useHalftoneMorph";
+import OutlineMorphWord, { OUTLINE_MORPH_S } from "./OutlineMorphWord";
 import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
@@ -20,14 +19,6 @@ const TAP_MOVE_THRESHOLD_PX = 10;
 // under the cursor (leave→enter) can't restart the morph and double-flicker
 // before the link settles into its solid active state.
 const POST_NAV_HOVER_IGNORE_MS = 450;
-
-// Shared between the base span's own inline style and the dot-field's mask
-// bake, so the two can't drift apart (see useHalftoneMorph.ts's comment on
-// how exactly this kind of duplication caused the old opacity bug).
-// lineHeightPx matters for alignment too — the bake uses it to reproduce
-// the exact baseline position CSS line-height centering puts the real text
-// at, see halftoneMask.ts's buildTextMask.
-const TEXT_STYLE = { fontWeight: 400, fontSizePx: 16, lineHeightPx: 24 };
 
 function canHover() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -76,34 +67,16 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
   const pendingNavSettleRef = useRef(false);
   const ignoreHoverUntilRef = useRef(0);
 
-  const baseColor = isActive ? "var(--color-text-primary)" : "var(--color-text-muted)";
-  const hoverColor = "var(--color-text-primary)"; // Or read from dk
-
   // Hover works on the current page's own link (work on `/`). Tap always
   // works. After a nav commit to this link we clear both and briefly ignore
   // hover so the solid active state can land once — see settle effect below.
   // dk.keepEffectOn (DialKit) pins the effect while dragging dials.
-  const active = dk.enabled ? (dk.keepEffectOn || isHovered || isTapped) : false;
-
-  const { filterId, t } = useHalftoneMorph(dk, active);
+  // enabled: false leaves the solid letter. The shape itself is baked, so
+  // the melt sliders no longer restyle these three words.
+  const morphOn =
+    dk?.enabled !== false && Boolean(dk?.keepEffectOn || isHovered || isTapped);
   const reduced = useReducedMotion();
-
-  // Scale is still a pure function of the same `t` that drives the dot
-  // field's own per-dot sweep (see HalftoneDotField) — the overlay is never a
-  // static end-state fading in, it's visibly changing shape as it becomes
-  // visible, which is what actually reads as a morph instead of a crossfade.
-  const baseScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.textEndScale ?? 1]);
-  const overlayScale = useTransform(t, [0, 1], [1, dk.bouncePhysics?.dotsEndScale ?? 1]);
-
-  // Overlay uses the long hide tween; base type restores faster. The settle
-  // spring collapses `t` (empty dots) well before hideDurationMs, so a 550ms
-  // complementary fade left both layers empty — the label vanished.
-  const showMs = dk?.showHideSpeed?.showDurationMs ?? 220;
-  const hideMs = dk?.showHideSpeed?.hideDurationMs ?? 550;
-  const overlayMs = reduced ? 1 : active ? showMs : hideMs;
-  const baseMs = reduced ? 1 : active ? showMs : Math.min(hideMs, 120);
-  const overlayTransition = { duration: overlayMs / 1000, ease: "easeInOut" as const };
-  const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
+  const morphMs = reduced ? 0 : OUTLINE_MORPH_S * 1000;
 
   const clearTapTimer = () => {
     if (tapTimeoutRef.current) {
@@ -137,9 +110,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     // Ignore hover immediately — soft-nav can leave→enter under the cursor
     // during the morph-in window, which restarted the effect (double flicker)
     // before the settle timeout below could clear state.
-    const showMs = reduced ? 0 : (dk?.showHideSpeed?.showDurationMs ?? 220);
     ignoreHoverUntilRef.current =
-      performance.now() + showMs + POST_NAV_HOVER_IGNORE_MS;
+      performance.now() + morphMs + POST_NAV_HOVER_IGNORE_MS;
   };
 
   // One morph-in on press, then settle to solid active when this link becomes
@@ -150,7 +122,6 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     if (!isActive || !pendingNavSettleRef.current) return;
     pendingNavSettleRef.current = false;
 
-    const showMs = reduced ? 0 : (dk?.showHideSpeed?.showDurationMs ?? 220);
     clearTapTimer();
     clearSettleTimer();
     // Hold isTapped through the morph-in so a mouseleave mid-nav doesn't
@@ -160,10 +131,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       setIsHovered(false);
       ignoreHoverUntilRef.current =
         performance.now() + POST_NAV_HOVER_IGNORE_MS;
-    }, showMs);
+    }, morphMs);
 
     return () => clearSettleTimer();
-  }, [isActive, reduced, dk?.showHideSpeed?.showDurationMs]);
+  }, [isActive, morphMs]);
 
   // Don't let mouseleave clear the press morph while we're settling into the
   // active solid state after a nav commit — that off/on pair was the flicker.
@@ -309,49 +280,19 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
         router.push(href);
       }}
     >
-      {/* Base Text (Solid) */}
-      <motion.span
+      <span
         style={{
-          scale: baseScale,
-          color: baseColor,
-          fontWeight: TEXT_STYLE.fontWeight,
-          fontSize: TEXT_STYLE.fontSizePx,
-          position: "relative",
-          zIndex: 1,
-          display: "inline-flex",
-          alignItems: "center",
-          willChange: "transform, opacity",
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
         }}
-        initial={false}
-        animate={{ opacity: active ? 0 : 1 }}
-        transition={baseTransition}
       >
         {label}
-      </motion.span>
-
-      {/* Halftone Overlay (independently-animated dots, see HalftoneDotField) */}
-      <motion.span
-        aria-hidden
-        style={{
-          scale: overlayScale,
-          position: "absolute",
-          inset: 0,
-          zIndex: 2,
-          pointerEvents: "none",
-          willChange: "transform, opacity",
-        }}
-        initial={false}
-        animate={{ opacity: active ? 1 : 0 }}
-        transition={overlayTransition}
-      >
-        <HalftoneDotField
-          id={filterId}
-          dk={dk}
-          hoverColor={hoverColor}
-          t={t}
-          content={{ type: "text", text: label, fontWeight: TEXT_STYLE.fontWeight, fontSizePx: TEXT_STYLE.fontSizePx, lineHeightPx: TEXT_STYLE.lineHeightPx }}
-        />
-      </motion.span>
+      </span>
+      <OutlineMorphWord label={label} active={morphOn} emphasized={!!isActive} />
     </Link>
   );
 }
