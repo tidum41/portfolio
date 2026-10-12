@@ -1,7 +1,7 @@
 /**
  * Single source of truth for the JOOLA B2B wholesale prototype.
  * Every screen reads this ledger. Story: Anna Bright at Engage Pickleball
- * orders SKU 600558 Perseus Pro V × 120 on Net 30 for $16,197.60.
+ * builds a multi-line restock on Net 30; hero line is Perseus Pro V × 120.
  */
 (function (root) {
   "use strict";
@@ -115,11 +115,15 @@
 
   /**
    * Story order on Quick Order / Cart / INV-1042 / Messages:
-   * Perseus Pro V × 120 at $134.98 (24+ tier) = $16,197.60.
-   * Catalog Recommended still shows three paddles; catalog grid shows balls + bag.
-   * No apparel rows (empty thumbs removed from the story).
+   * Multi-line restock led by Perseus Pro V × 120 at $134.98.
+   * Related SKUs from the same catalog keep the table full and realistic.
    */
-  var orderLines = [{ productId: "perseus", qty: 120 }];
+  var orderLines = [
+    { productId: "perseus", qty: 120 },
+    { productId: "hyperion", qty: 24 },
+    { productId: "hc40", qty: 48 },
+    { productId: "bag", qty: 6 },
+  ];
 
   function lineAmount(line) {
     var p = products[line.productId];
@@ -140,6 +144,9 @@
   var perseusOrderTotal =
     Math.round(perseusUnit * perseusLine.qty * 100) / 100;
 
+  var shipDate = "Fri, Oct 17";
+  var orderId = "PO-120";
+
   /**
    * INV-1042 is the open invoice for this Quick Order (full cart on Net 30).
    * Messages quote the same total. Supporting open invoices fill the credit bar.
@@ -147,7 +154,7 @@
   var invoices = [
     {
       id: "INV-1042",
-      order: "PO-120",
+      order: orderId,
       issued: "Oct 3, 2026",
       due: "Nov 2, 2026",
       amount: orderTotal,
@@ -199,28 +206,80 @@
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
     sam:
-      "120 units of Perseus Pro V ship Friday. Invoice INV-1042 for " +
+      "120 units of Perseus Pro V ship " +
+      shipDate +
+      ". Invoice INV-1042 for " +
       money(orderTotal) +
-      " is on Net 30.",
+      " covers the full restock on Net 30.",
   };
+
+  var recommendedMeta = {
+    perseus: {
+      reason: "Ordered most",
+      detail: "4 of your last 6 orders included this SKU",
+    },
+    hyperion: {
+      reason: "Your history",
+      detail: "Last bought Sep 12 · usually every 6 weeks",
+    },
+    scorpeus: {
+      reason: "Low stock at your store",
+      detail: "Engage on-hand estimate: 3 units",
+    },
+  };
+
+  var recentOrders = [
+    {
+      id: "PO-118",
+      label: "Match week restock",
+      when: "Sep 18",
+      total: 3802.4,
+      lines: 3,
+    },
+    {
+      id: "PO-110",
+      label: "Balls + bags",
+      when: "Aug 12",
+      total: 1200.0,
+      lines: 2,
+    },
+  ];
+
+  var templates = [
+    {
+      id: "tpl-perseus",
+      name: "Perseus restock",
+      detail: "SKU 600558 · " + perseusLine.qty + " units · " + money(perseusOrderTotal),
+    },
+    {
+      id: "tpl-match",
+      name: "Match kit",
+      detail: "Paddles + HC-40 + Tour Elite Bag",
+    },
+  ];
 
   var ledger = {
     retailer: {
       name: "Engage Pickleball",
       buyer: "Anna Bright",
       role: "Buyer",
-      // Cropped from engage-pickleball.png (engage-mark.png in the zip is fully transparent).
       avatar: "engage-avatar.png",
       avatarSize: 28,
     },
     terms: "Net 30",
     products: products,
     recommended: ["perseus", "hyperion", "scorpeus"],
+    recommendedMeta: recommendedMeta,
     catalogExtra: ["hc40", "bag"],
     orderLines: orderLines,
+    orderId: orderId,
+    shipDate: shipDate,
+    orderStatus: "Processing",
     orderTotal: orderTotal,
+    /** Pill amount mirrors the open order; badge starts at 0 until Add all. */
     cartTotal: orderTotal,
-    cartCount: orderLines.length,
+    cartCount: 0,
+    cartCountAfterAdd: orderLines.length,
     perseusUnit: perseusUnit,
     perseusQty: perseusLine.qty,
     perseusOrderTotal: perseusOrderTotal,
@@ -232,12 +291,15 @@
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
     },
     messages: messages,
+    recentOrders: recentOrders,
+    templates: templates,
     money: money,
     priceAt: priceAt,
     nextTier: nextTier,
     lineAmount: lineAmount,
     figures: (function () {
       var amounts = [
+        0,
         perseusUnit,
         perseusOrderTotal,
         orderTotal,
@@ -251,6 +313,9 @@
       });
       invoices.forEach(function (inv) {
         amounts.push(inv.amount);
+      });
+      recentOrders.forEach(function (o) {
+        amounts.push(o.total);
       });
       Object.keys(products).forEach(function (id) {
         var p = products[id];
@@ -280,13 +345,18 @@
         unitPrices: orderLines.map(function (line) {
           return priceAt(products[line.productId], line.qty);
         }),
+        lineCount: orderLines.length,
         allowedMoney: unique,
-        allowedQtys: [perseusLine.qty].concat(
-          orderLines.map(function (l) {
-            return l.qty;
+        allowedQtys: [perseusLine.qty]
+          .concat(
+            orderLines.map(function (l) {
+              return l.qty;
+            }),
+            [12, 24, 60, 120, 1, 3, 6, 48]
+          )
+          .filter(function (v, i, a) {
+            return a.indexOf(v) === i;
           }),
-          [12, 24, 60, 120, 1, 3, 6, 48]
-        ),
       };
     })(),
   };
