@@ -139,6 +139,12 @@ async function main() {
           joolaMark: [],
           numericAlign: [],
           mediaSurface: [],
+          tabularNums: [],
+          moneyAlign: [],
+          rowHeight: [],
+          singleAccent: [],
+          statusPill: [],
+          imageContain: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -204,14 +210,21 @@ async function main() {
           }
         });
 
-        // Header / chrome overlap with page title
-        const chrome = root.querySelector("[data-wholesale-chrome], .chrome-bar");
+        // Header / topbar overlap with page title (sidebar is expected left of content)
+        const topbar = root.querySelector("[data-topbar], .topbar, .chrome-bar");
         const h1 = root.querySelector("h1");
-        if (chrome && h1 && visible(chrome) && visible(h1)) {
-          const c = chrome.getBoundingClientRect();
+        if (topbar && h1 && visible(topbar) && visible(h1)) {
+          const c = topbar.getBoundingClientRect();
           const h = h1.getBoundingClientRect();
           const overlap = !(c.right <= h.left || c.left >= h.right || c.bottom <= h.top || c.top >= h.bottom);
-          if (overlap) issues.overlaps.push("chrome overlaps h1");
+          if (overlap) issues.overlaps.push("topbar overlaps h1");
+        }
+        const sidebar = root.querySelector("[data-sidebar], .sidebar");
+        if (sidebar && visible(sidebar)) {
+          const sw = sidebar.getBoundingClientRect().width;
+          if (sw < 200 || sw > 240) {
+            issues.overlaps.push(`sidebar width ${Math.round(sw)}px not ~220`);
+          }
         }
 
         // Clipped text: element content wider than client, or cut by switcher
@@ -473,8 +486,9 @@ async function main() {
                 );
               }
               const fit = getComputedStyle(img).objectFit;
-              if (fit !== "cover" && fit !== "fill") {
-                issues.mediaSurface.push(`img object-fit=${fit} (want cover/fill, not letterboxed contain)`);
+              if (fit !== "contain") {
+                issues.mediaSurface.push(`img object-fit=${fit} (want contain, never crop)`);
+                issues.imageContain.push(`catalog media object-fit=${fit}`);
               }
             }
             // media should be flush to card top (no outer grey frame above)
@@ -488,6 +502,165 @@ async function main() {
             }
           });
         }
+
+        // 7. Tabular nums on numeric cells
+        const numSelectors = [
+          "[data-display-price]",
+          "[data-unit-price]",
+          "[data-line-total]",
+          "[data-order-total]",
+          "[data-cart-total]",
+          "[data-invoice-amount]",
+          ".qty",
+          ".amt",
+          ".line-total",
+          ".total",
+          ".big",
+        ];
+        root.querySelectorAll(numSelectors.join(",")).forEach((el) => {
+          if (!visible(el)) return;
+          const cs = getComputedStyle(el);
+          const tnum =
+            cs.fontVariantNumeric.includes("tabular-nums") ||
+            (cs.fontFeatureSettings || "").includes("tnum");
+          if (!tnum) {
+            issues.tabularNums.push(
+              `${el.className || el.tagName} missing tabular-nums`
+            );
+          }
+        });
+
+        // 8. Right-aligned money columns
+        root.querySelectorAll("[data-line-total], .line-total, .amt, [data-invoice-amount]").forEach((el) => {
+          if (!visible(el)) return;
+          const align = getComputedStyle(el).textAlign;
+          if (align !== "right" && align !== "end") {
+            issues.moneyAlign.push(
+              `${el.className || el.getAttribute("data-col") || el.tagName} text-align=${align}`
+            );
+          }
+        });
+        if (orderHead) {
+          const priceH = [...orderHead.children].find((c) => /price/i.test(c.textContent));
+          const totalH = [...orderHead.children].find((c) => /line total/i.test(c.textContent));
+          [priceH, totalH].forEach((el) => {
+            if (!el) return;
+            const align = getComputedStyle(el).textAlign;
+            if (align !== "right" && align !== "end") {
+              issues.moneyAlign.push(`order head "${el.textContent.trim()}" align=${align}`);
+            }
+          });
+        }
+
+        // 9. Data row heights 48–52px (skip preset-expanded rows)
+        root.querySelectorAll("[data-order-row]:not(.has-presets), [data-invoice-row], [data-cart-line]").forEach((el) => {
+          if (!visible(el)) return;
+          const h = el.getBoundingClientRect().height;
+          if (h < 47.5 || h > 52.5) {
+            issues.rowHeight.push(
+              `${el.className || "row"} height ${Math.round(h)}px outside 48-52`
+            );
+          }
+        });
+        const stickyHeads = root.querySelectorAll("[data-order-head], [data-invoice-head]");
+        stickyHeads.forEach((el) => {
+          if (!visible(el)) return;
+          const h = el.getBoundingClientRect().height;
+          if (h < 36 || h > 44) {
+            issues.rowHeight.push(`sticky head height ${Math.round(h)}px (want ~40)`);
+          }
+        });
+
+        // 10. Single accent: JOOLA blue #2c3ee0 on primary actions / active nav only
+        const accent = { r: 44, g: 62, b: 224 }; // #2c3ee0
+        const parseRgba = (color) => {
+          const m = String(color || "").match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/i);
+          if (!m) return null;
+          return { r: +m[1], g: +m[2], b: +m[3], a: m[4] != null ? +m[4] : 1 };
+        };
+        const nearAccent = (color, { opaqueOnly = false } = {}) => {
+          const c = parseRgba(color);
+          if (!c) return false;
+          if (opaqueOnly && c.a < 0.5) return false; // soft tint fills are allowed (selected chips)
+          const dr = Math.abs(c.r - accent.r);
+          const dg = Math.abs(c.g - accent.g);
+          const db = Math.abs(c.b - accent.b);
+          return dr <= 8 && dg <= 8 && db <= 8 && c.r > 20;
+        };
+        const forbiddenAccentHosts = [];
+        root.querySelectorAll("button, a, .status, .nav-item, .btn-outline, .cart-pill").forEach((el) => {
+          if (!visible(el)) return;
+          if (el.classList.contains("btn-primary") || el.classList.contains("btn-black") || el.classList.contains("btn-send")) return;
+          if (el.classList.contains("nav-item") && el.classList.contains("active")) return;
+          if (el.classList.contains("status")) return; // status uses own palette
+          const cs = getComputedStyle(el);
+          // Only flag solid/opaque accent fills on non-primary controls
+          if (nearAccent(cs.backgroundColor, { opaqueOnly: true }) && !el.classList.contains("nav-item")) {
+            forbiddenAccentHosts.push(`${el.className || el.tagName} bg accent`);
+          }
+        });
+        // Active nav must use accent (fill or color)
+        const activeNav = root.querySelector(".nav-item.active");
+        if (activeNav && visible(activeNav)) {
+          const cs = getComputedStyle(activeNav);
+          const ok =
+            nearAccent(cs.color) ||
+            nearAccent(cs.backgroundColor) ||
+            (cs.backgroundColor.includes("44") && cs.backgroundColor.includes("62"));
+          // soft fill is rgba(44,62,224,0.08) — check color text is accent
+          if (!nearAccent(cs.color)) {
+            issues.singleAccent.push(`active nav color=${cs.color} not JOOLA blue`);
+          }
+        }
+        if (forbiddenAccentHosts.length) {
+          issues.singleAccent.push(...forbiddenAccentHosts.slice(0, 4));
+        }
+        // Primary CTA must be accent blue
+        const primary = root.querySelector(".btn-primary, .btn-black, .btn-send");
+        if (primary && visible(primary)) {
+          const bg = getComputedStyle(primary).backgroundColor;
+          if (!nearAccent(bg)) {
+            issues.singleAccent.push(`primary CTA bg=${bg} not #2c3ee0`);
+          }
+        }
+
+        // 11. Status pills: 20px tall, ~4px radius, 12px type
+        root.querySelectorAll(".status").forEach((el) => {
+          if (!visible(el)) return;
+          const r = el.getBoundingClientRect();
+          const cs = getComputedStyle(el);
+          const radius = parseFloat(cs.borderRadius) || 0;
+          const fs = parseFloat(cs.fontSize) || 0;
+          if (Math.abs(r.height - 20) > 2) {
+            issues.statusPill.push(`height ${Math.round(r.height)}px (want 20)`);
+          }
+          if (radius < 3 || radius > 6) {
+            issues.statusPill.push(`radius ${radius}px (want 4)`);
+          }
+          if (Math.abs(fs - 12) > 1) {
+            issues.statusPill.push(`font-size ${fs}px (want 12)`);
+          }
+          const label = (el.textContent || "").trim();
+          if (label && label !== label[0].toUpperCase() + label.slice(1).toLowerCase() && !/^[A-Z][a-z]+$/.test(label)) {
+            // sentence case: Paid, Pending, Failed
+            if (!/^(Paid|Pending|Failed|Due|Processing|Overdue)$/.test(label)) {
+              issues.statusPill.push(`label "${label}" not sentence case status`);
+            }
+          }
+        });
+
+        // 12. Product images must use contain (no crop) — all product thumbs/media
+        root.querySelectorAll(
+          "[data-product-media] img, .rec-card .media img, .cat-card .media img, img.thumb, .cart-line img, .search-result img"
+        ).forEach((img) => {
+          if (!visible(img)) return;
+          const fit = getComputedStyle(img).objectFit;
+          if (fit !== "contain") {
+            issues.imageContain.push(
+              `${img.getAttribute("src") || "img"} object-fit=${fit}`
+            );
+          }
+        });
 
         function parseMoneyLocal(text) {
           const out = [];
@@ -531,6 +704,12 @@ async function main() {
       ["joola-mark", result.joolaMark],
       ["numeric-align", result.numericAlign],
       ["media-surface", result.mediaSurface],
+      ["tabular-nums", result.tabularNums],
+      ["money-align", result.moneyAlign],
+      ["row-height", result.rowHeight],
+      ["single-accent", result.singleAccent],
+      ["status-pill", result.statusPill],
+      ["image-contain", result.imageContain],
     ];
     for (const [name, list] of checks) {
       // Screen-scoped checks: skip empty N/A as PASS only when relevant
@@ -541,6 +720,12 @@ async function main() {
         "numeric-align": ["invoices"],
         "media-surface": ["catalog"],
         "sku-price": ["qo-desktop", "catalog", "cart", "templates"],
+        "status-pill": ["invoices"],
+        "image-contain": ["qo-desktop", "catalog", "cart"],
+        "row-height": ["qo-desktop", "cart", "invoices"],
+        "money-align": ["qo-desktop", "cart", "invoices"],
+        "tabular-nums": ["qo-desktop", "catalog", "cart", "invoices", "messages", "qo-mobile"],
+        "single-accent": ["qo-desktop", "catalog", "cart", "invoices", "messages"],
       };
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));

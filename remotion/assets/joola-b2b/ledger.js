@@ -211,7 +211,7 @@
       role: "Buyer",
       // Cropped from engage-pickleball.png (engage-mark.png in the zip is fully transparent).
       avatar: "engage-avatar.png",
-      avatarSize: 36,
+      avatarSize: 28,
     },
     terms: "Net 30",
     products: products,

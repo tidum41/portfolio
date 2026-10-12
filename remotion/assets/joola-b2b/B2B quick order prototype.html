@@ -26,28 +26,41 @@
 
 :root {
   --ink: #1a1a1a;
-  --muted: #595959;
-  --faint: #808080;
-  --line: #dedede;
-  --band: #f6f6f6;
-  --wash: #ececea;
+  --muted: #5c5c66;
+  --faint: #8a8a96;
+  --line: #e6e8ef;
+  --line-soft: rgba(112, 115, 147, 0.12);
+  --band: #f4f5f7;
+  --sidebar-bg: #fbfcfd;
+  --wash: #eceef2;
   --blue: #2c3ee0;
+  --blue-soft: rgba(44, 62, 224, 0.08);
   --page: #ffffff;
   --canvas: #ededec;
   --switcher-h: 48px;
-  --col-thumb: 56px;
+  --sidebar-w: 220px;
+  --topbar-h: 48px;
+  --paid: #198754;
+  --paid-bg: rgba(25, 135, 84, 0.12);
+  --pending: #8a6100;
+  --pending-bg: rgba(238, 186, 54, 0.18);
+  --failed: #b0175f;
+  --failed-bg: rgba(176, 23, 95, 0.10);
+  --failed-border: rgba(208, 50, 117, 0.22);
+  --col-thumb: 48px;
   --col-product: 1fr;
-  --col-price: 150px;
-  --col-qty: 170px;
-  --col-total: 130px;
-  --col-x: 40px;
-  --inv-invoice: 140px;
-  --inv-order: 120px;
-  --inv-issued: 130px;
-  --inv-due: 130px;
+  --col-price: 140px;
+  --col-qty: 168px;
+  --col-total: 128px;
+  --col-x: 36px;
+  --inv-invoice: 132px;
+  --inv-order: 112px;
+  --inv-issued: 124px;
+  --inv-due: 124px;
   --inv-amount: 120px;
-  --inv-status: 120px;
-  --inv-action: 148px;
+  --inv-status: 108px;
+  --inv-action: 140px;
+  --tnum: tabular-nums;
 }
 
 * { box-sizing: border-box; }
@@ -55,13 +68,22 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: "FKGroteskNeue", -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--ink);
   background: var(--canvas);
   -webkit-font-smoothing: antialiased;
 }
 button, input { font: inherit; }
-button { cursor: pointer; border: 0; background: none; }
+button { cursor: pointer; border: 0; background: none; color: inherit; }
 img { display: block; max-width: 100%; }
+.tnum, [data-display-price], [data-unit-price], [data-line-total],
+[data-order-total], [data-cart-total], [data-invoice-amount],
+[data-credit-used], [data-credit-available], .qty, .amt, .price,
+.cart-amount-display, .unit, .big, .total {
+  font-variant-numeric: var(--tnum);
+  font-feature-settings: "tnum" 1;
+}
 
 #devSwitcher {
   position: fixed;
@@ -78,7 +100,7 @@ img { display: block; max-width: 100%; }
 }
 #devSwitcher .label {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.45);
@@ -88,7 +110,7 @@ img { display: block; max-width: 100%; }
 #devSwitcher .tab-btn {
   flex-shrink: 0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 6px 12px;
   border-radius: 6px;
   color: rgba(255,255,255,0.7);
@@ -105,7 +127,6 @@ img { display: block; max-width: 100%; }
 
 .screen { display: none; background: var(--page); min-height: calc(100vh - var(--switcher-h)); }
 .screen.active { display: flex; flex-direction: column; min-height: calc(100vh - var(--switcher-h)); }
-.screen .page { flex: 1 1 auto; }
 .screen.mobile-wrap {
   max-width: 390px;
   margin: 0 auto;
@@ -113,81 +134,168 @@ img { display: block; max-width: 100%; }
   border-right: 1px solid var(--line);
 }
 
-/* Shared wholesale chrome (no storefront promo / category nav) */
-.chrome-bar {
+/* —— App shell: sidebar + top bar —— */
+.app-shell {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--line);
-  background: #fff;
-  min-height: 72px;
+  flex: 1 1 auto;
+  min-height: calc(100vh - var(--switcher-h));
+  background: var(--page);
 }
-.chrome-brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.sidebar {
+  width: var(--sidebar-w);
   flex-shrink: 0;
-}
-.chrome-brand img { width: 100px; height: auto; }
-.wholesale-pill {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--line);
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--blue);
+  flex-direction: column;
+  padding: 16px 12px;
 }
-.wholesale-pill .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--blue);
-}
-.nav-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-.nav-pill {
-  padding: 10px 14px;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--muted);
-}
-.nav-pill.active {
-  color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--ink);
-  border-radius: 0;
-}
-.chrome-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.account-chip {
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 14px 6px 6px;
+  padding: 4px 8px 16px;
+}
+.sidebar-brand img { width: 84px; height: auto; }
+.wholesale-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+}
+.wholesale-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  text-align: left;
+  width: 100%;
+  transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+.nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+.nav-item:hover { background: rgba(112, 115, 147, 0.06); color: var(--ink); }
+.nav-item.active {
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 500;
+}
+.sidebar-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 12px 8px;
+}
+.sidebar-section {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px 8px;
+}
+.sidebar-meta {
+  margin-top: auto;
+  padding: 12px 10px 4px;
+  font-size: 12px;
+  color: var(--faint);
+  line-height: 1.4;
+}
+.sidebar-meta .bal {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.main-column {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+}
+.topbar {
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.top-search {
+  height: 32px;
+  width: min(420px, 46%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
   border-radius: 999px;
+  border: 1px solid var(--line);
   background: var(--band);
+  font-size: 13px;
+  color: var(--faint);
+}
+.top-search svg {
+  width: 14px; height: 14px;
+  stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0;
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  height: 36px;
 }
 .retailer-avatar {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  max-width: 36px;
-  max-height: 36px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  max-width: 28px;
+  max-height: 28px;
   border-radius: 50%;
   overflow: hidden;
-  /* Engage mark is black-on-transparent; light fill so the mark reads. */
   background: #fff;
   border: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 6px;
+  padding: 4px;
 }
 .retailer-avatar img {
   width: 100%;
@@ -195,17 +303,17 @@ img { display: block; max-width: 100%; }
   object-fit: contain;
 }
 .retailer-avatar.avatar-failed {
-  background: #c0392b !important;
+  background: var(--failed) !important;
   border-color: #8e2a20 !important;
 }
 .retailer-avatar.avatar-failed::after {
   content: "!";
   color: #fff;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 500;
+  font-size: 14px;
 }
-.account-meta { line-height: 1.25; text-align: left; }
-.account-meta .name { font-size: 13px; font-weight: 600; }
+.account-meta { line-height: 1.2; text-align: left; }
+.account-meta .name { font-size: 13px; font-weight: 500; }
 .account-meta .role { font-size: 11px; color: var(--faint); }
 
 .cart-pill {
@@ -213,75 +321,80 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  height: 32px;
+  padding: 0 12px;
   border-radius: 999px;
-  background: var(--ink);
-  color: #fff;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .cart-pill .badge {
   position: absolute;
-  top: -6px; right: -6px;
-  width: 18px; height: 18px;
+  top: -5px; right: -5px;
+  width: 16px; height: 16px;
   border-radius: 50%;
-  background: #c0392b;
+  background: var(--failed);
   border: 2px solid #fff;
   font-size: 10px;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .page {
-  padding: 32px 16px 120px;
+  padding: 28px 28px 100px;
   width: 100%;
+  flex: 1 1 auto;
 }
 .page h1 {
   margin: 0;
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 .page .lede {
   margin: 8px 0 0;
-  max-width: 640px;
-  font-size: 16px;
+  max-width: 560px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.5;
+  font-weight: 400;
 }
 
 .search-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 20px;
 }
-.search-wrap { position: relative; width: 420px; flex-shrink: 0; }
+.search-wrap { position: relative; width: 400px; flex-shrink: 0; }
 .search-field {
-  height: 52px;
+  height: 36px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  border-radius: 10px;
+  border-radius: 999px;
   background: var(--band);
-  border: 1px solid var(--band);
-  font-size: 16px;
+  border: 1px solid var(--line);
+  font-size: 14px;
   color: var(--faint);
 }
 .search-field .placeholder { color: var(--faint); }
-.search-field .value { color: var(--ink); font-weight: 600; }
+.search-field .value { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
 .search-field.has-value .placeholder { display: none; }
 .search-field:not(.has-value) .value { display: none; }
 .search-results {
   position: absolute;
-  top: 58px; left: 0; right: 0;
+  top: 42px; left: 0; right: 0;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 10px 28px rgba(20,20,18,0.14);
+  border-radius: 12px;
   padding: 6px;
   z-index: 20;
 }
@@ -289,120 +402,154 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px;
-  border-radius: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  height: 46px;
 }
+.search-result:hover { background: var(--blue-soft); }
 .search-result img {
-  width: 44px; height: 44px;
+  width: 28px; height: 28px;
   object-fit: contain;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--band);
-  padding: 4px;
+  padding: 2px;
 }
-.search-result .title { font-size: 14px; font-weight: 700; }
+.search-result .title { font-size: 13px; font-weight: 500; }
 .search-result .meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .section-title {
-  margin: 28px 0 12px;
-  font-size: 18px;
-  font-weight: 700;
+  margin: 24px 0 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
 }
-/* Keep the open SKU result card from covering PRODUCT / PRICE / QUANTITY / LINE TOTAL. */
 .search-row + .section-title {
-  margin-top: 120px;
+  margin-top: 108px;
 }
 
-/* Order table: CSS grid so headers and cells share tracks */
+/* Order table */
 .order-table {
   display: flex;
   flex-direction: column;
   width: 100%;
+  border-top: 1px solid var(--line);
 }
 .order-head, .order-row {
   display: grid;
   grid-template-columns: var(--col-thumb) var(--col-product) var(--col-price) var(--col-qty) var(--col-total) var(--col-x);
   column-gap: 16px;
   align-items: center;
-  padding: 14px 8px;
+  padding: 0 12px;
 }
 .order-head {
-  border-bottom: 1.5px solid var(--ink);
-  padding-bottom: 12px;
+  position: sticky;
+  top: var(--switcher-h);
+  z-index: 5;
+  height: 40px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
   padding-top: 0;
+  padding-bottom: 0;
 }
 .order-head > div {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.order-head .end, .order-row .end { text-align: right; }
-.cat-label {
-  padding: 20px 8px 6px;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--blue);
+  font-weight: 500;
+  color: var(--faint);
 }
-.order-row { border-bottom: 1px solid var(--wash); }
+.order-head .end,
+.order-row .end,
+.order-head .num,
+.price-block,
+.line-total {
+  text-align: right;
+}
+.order-head .qty-h,
+.order-row .qty-cell { text-align: right; }
+.cat-label {
+  padding: 14px 12px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.order-row {
+  min-height: 50px;
+  height: 50px;
+  border-bottom: 1px solid var(--line-soft);
+  transition: background-color 0.15s ease-out;
+}
+.order-row:hover { background: rgba(44, 62, 224, 0.03); }
+.order-row.has-presets {
+  height: auto;
+  min-height: 50px;
+  padding: 8px 12px;
+}
 .order-row img.thumb {
-  width: 56px; height: 56px;
+  width: 36px; height: 36px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--band);
-  padding: 4px;
+  padding: 3px;
 }
-.prod-name { font-size: 14px; font-weight: 700; }
-.prod-sku { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.price-block { display: flex; flex-direction: column; gap: 2px; }
+.prod-name { font-size: 14px; font-weight: 500; }
+.prod-sku { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.price-block { display: flex; flex-direction: column; gap: 1px; align-items: flex-end; }
 .price-block .strike { font-size: 12px; color: var(--faint); text-decoration: line-through; }
 .price-block .unit { font-size: 14px; font-variant-numeric: tabular-nums; }
 .price-block .hint { font-size: 11px; color: var(--muted); }
-.price-block .hint b { color: var(--ink); font-weight: 700; }
+.price-block .hint b { color: var(--ink); font-weight: 500; }
+.qty-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .qty-stepper {
   display: flex;
   align-items: center;
-  height: 40px;
-  width: 120px;
-  border-radius: 10px;
-  background: var(--band);
+  height: 32px;
+  width: 112px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
 }
 .qty-stepper button {
-  width: 36px; height: 100%;
+  width: 32px; height: 100%;
   font-size: 16px;
-  color: var(--ink);
+  color: var(--muted);
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+  border-radius: 7px;
 }
+.qty-stepper button:hover { color: var(--ink); background: var(--band); }
 .qty-stepper .qty {
   flex: 1;
   text-align: center;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 .qty-presets {
   display: flex;
   gap: 4px;
-  margin-top: 6px;
+  justify-content: flex-end;
 }
 .qty-presets button {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 999px;
   border: 1px solid var(--line);
+  height: 20px;
+  font-variant-numeric: tabular-nums;
 }
 .qty-presets button.on {
-  color: var(--ink);
-  border-color: var(--ink);
+  color: var(--blue);
+  border-color: transparent;
+  background: var(--blue-soft);
 }
 .line-total {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -415,134 +562,149 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px;
+  padding: 14px 28px;
   background: #fff;
   border-top: 1px solid var(--line);
-  box-shadow: 0 -8px 24px rgba(20,20,18,0.06);
   flex-shrink: 0;
 }
 .order-footer .total {
-  font-size: 38px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 .order-footer .meta { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-.btn-black {
-  height: 46px;
+.btn-primary {
+  height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 20px;
-  border-radius: 6px;
-  background: #000;
-  color: #eaeaea;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
+  transition: opacity 0.15s ease-out;
 }
+.btn-primary:hover { opacity: 0.92; }
 .btn-outline {
-  height: 46px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 20px;
-  border-radius: 6px;
-  border: 1px solid var(--ink);
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
+  color: var(--ink);
+  transition: background-color 0.15s ease-out;
+}
+.btn-outline:hover { background: var(--band); }
+.btn-black { /* legacy alias → primary accent */
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-/* Recommended / catalog cards */
+/* Recommended / catalog */
 .rec-rail {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 12px;
 }
 .rec-card {
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0 0 16px;
+  border-radius: 12px;
+  padding: 0 0 14px;
   background: #fff;
   overflow: hidden;
 }
-.rec-card .media {
-  height: 240px;
-  background: #eee;
+.rec-card .media,
+.cat-card .media {
+  height: 200px;
+  background: var(--band);
   overflow: hidden;
 }
-.rec-card .media img {
+.rec-card .media img,
+.cat-card .media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
 .rec-card .chip {
-  display: inline-block;
-  margin: 12px 16px 0;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin: 12px 14px 0;
+  padding: 0 8px;
   font-size: 12px;
-  font-weight: 700;
-  color: var(--blue);
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--band);
+  border-radius: 4px;
+  border: 1px solid var(--line);
 }
-.rec-card .title { margin: 6px 16px 0; font-size: 18px; font-weight: 700; }
+.rec-card .title { margin: 8px 14px 0; font-size: 16px; font-weight: 500; }
 .rec-card .price-row {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 6px 16px 0;
+  margin: 6px 14px 0;
   font-variant-numeric: tabular-nums;
 }
-.rec-card .price { font-size: 18px; font-weight: 700; }
-.rec-card .msrp { font-size: 14px; color: var(--faint); text-decoration: line-through; }
-.rec-card .moq { margin: 4px 16px 0; }
+.rec-card .price { font-size: 16px; font-weight: 500; }
+.rec-card .msrp { font-size: 13px; color: var(--faint); text-decoration: line-through; }
+.rec-card .moq { margin: 4px 14px 0; font-size: 12px; color: var(--muted); }
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 12px;
 }
 .cat-card {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 0 0 12px;
   background: #fff;
   overflow: hidden;
 }
-.cat-card .media {
-  height: 240px;
-  background: #eee;
-  overflow: hidden;
-}
-.cat-card .media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-.cat-card .title { margin: 10px 12px 0; font-size: 14px; font-weight: 600; }
-.cat-card .price { margin: 4px 12px 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cat-card .title { margin: 10px 12px 0; font-size: 13px; font-weight: 500; }
+.cat-card .price { margin: 4px 12px 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: left; }
 .cat-card .moq { margin: 2px 12px 0; font-size: 12px; color: var(--muted); }
 
 /* Invoices */
 .credit-card {
-  width: 400px;
+  width: 380px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 20px;
-  margin-top: 24px;
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 20px;
+  background: #fff;
 }
 .credit-card .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
 }
-.credit-card .row span:first-child { color: var(--muted); }
+.credit-card .row span:first-child { color: var(--muted); font-weight: 400; }
+.credit-card .row span:last-child { font-variant-numeric: tabular-nums; }
 .credit-bar {
   margin-top: 10px;
   width: 100%;
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: var(--wash);
   overflow: hidden;
@@ -554,99 +716,134 @@ img { display: block; max-width: 100%; }
   background: var(--blue);
 }
 .credit-card .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.credit-card .hero-total {
+  margin-top: 14px;
+  font-size: 30px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
 
 .invoice-table {
-  margin-top: 32px;
+  margin-top: 24px;
   width: max-content;
   max-width: 100%;
+  border-top: 1px solid var(--line);
 }
 .invoice-head, .invoice-row {
   display: grid;
   grid-template-columns: var(--inv-invoice) var(--inv-order) var(--inv-issued) var(--inv-due) var(--inv-amount) var(--inv-status) var(--inv-action);
   column-gap: 16px;
   align-items: center;
-  padding: 16px 8px;
+  padding: 0 8px;
   width: max-content;
 }
 .invoice-head {
-  border-bottom: 1.5px solid var(--ink);
-  padding-top: 0;
-  padding-bottom: 12px;
+  position: sticky;
+  top: var(--switcher-h);
+  z-index: 5;
+  height: 40px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
 }
 .invoice-head > div {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--faint);
 }
 .invoice-head > div.num,
 .invoice-row .amt {
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
-.invoice-row { border-bottom: 1px solid var(--wash); }
-.invoice-row .id { font-size: 14px; font-weight: 700; }
-.invoice-row .cell { font-size: 14px; color: var(--muted); }
+.invoice-row {
+  height: 50px;
+  min-height: 50px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.invoice-row .id { font-size: 14px; font-weight: 500; }
+.invoice-row .cell { font-size: 13px; color: var(--muted); }
 .invoice-row .amt {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
 .status {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
+  justify-content: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 4px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
+  line-height: 20px;
+  text-transform: none;
+  white-space: nowrap;
 }
-.status.Processing { background: #e8ecff; color: var(--blue); }
-.status.Due { background: #fff6da; color: #8a6100; }
-.status.Overdue { background: #fde8e6; color: #c0392b; }
-.status.Paid { background: #e7f4ee; color: #198754; }
+.status.Paid {
+  background: var(--paid-bg);
+  color: var(--paid);
+}
+.status.Processing,
+.status.Due,
+.status.Pending {
+  background: var(--pending-bg);
+  color: var(--pending);
+}
+.status.Overdue,
+.status.Failed {
+  background: var(--failed-bg);
+  color: var(--failed);
+  border: 1px solid var(--failed-border);
+}
 .invoice-row .action { justify-self: stretch; }
 .invoice-row .action button {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 6px;
-  border: 1px solid var(--ink);
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   width: 100%;
+  background: #fff;
 }
 
-/* Messages: full-bleed, same chrome */
+/* Messages */
 .messages-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  min-height: calc(100vh - var(--switcher-h) - 72px);
+  grid-template-columns: 240px 1fr;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .inbox {
   border-right: 1px solid var(--line);
-  padding: 16px;
-  background: #fafaf9;
+  padding: 16px 12px;
+  background: var(--sidebar-bg);
 }
-.inbox h2 { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
+.inbox h2 { margin: 0 0 10px; font-size: 13px; font-weight: 500; color: var(--faint); letter-spacing: 0.04em; text-transform: uppercase; }
 .inbox-item {
   display: flex;
   gap: 10px;
-  padding: 12px;
+  align-items: center;
+  padding: 0 10px;
+  height: 48px;
   border-radius: 8px;
-  background: #fff;
-  border: 1px solid var(--line);
+  background: var(--blue-soft);
+  border: 1px solid transparent;
 }
 .joola-mark {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 50%;
   overflow: hidden;
   background: #111;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px;
+  padding: 6px;
   flex-shrink: 0;
 }
 .joola-mark img {
@@ -674,107 +871,131 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  height: 48px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--line);
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
 }
 .thread-body {
   flex: 1;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background: #fafaf9;
+  gap: 12px;
+  background: #fff;
 }
 .bubble {
   max-width: 70%;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 16px;
   line-height: 1.45;
+  font-weight: 400;
 }
 .bubble .who { font-size: 12px; margin-bottom: 6px; }
-.bubble .who b { font-weight: 700; }
-.bubble .who span { color: var(--muted); font-weight: 500; }
+.bubble .who b { font-weight: 500; }
+.bubble .who span { color: var(--muted); font-weight: 400; }
 .bubble.anna {
   align-self: flex-end;
-  background: #111;
+  background: var(--ink);
   color: #fff;
 }
-.bubble.anna .who span { color: rgba(255,255,255,0.7); }
+.bubble.anna .who span { color: rgba(255,255,255,0.65); }
 .bubble.sam {
   align-self: flex-start;
-  background: #e8ecff;
-  border: 1px solid #d5dbff;
+  background: var(--band);
+  border: 1px solid var(--line);
 }
 .thread-compose {
   display: flex;
   gap: 10px;
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--line);
   background: #fff;
 }
 .thread-compose .field {
   flex: 1;
-  height: 46px;
+  height: 40px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  border-radius: 10px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
   background: var(--band);
   color: var(--faint);
-  font-size: 15px;
+  font-size: 14px;
+}
+.thread-compose .btn-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
 /* Cart */
-.cart-lines { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+.cart-lines { margin-top: 20px; display: flex; flex-direction: column; max-width: 720px; border-top: 1px solid var(--line); }
 .cart-line {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 40px 1fr auto;
   gap: 14px;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--wash);
+  height: 50px;
+  min-height: 50px;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--line-soft);
 }
 .cart-line img {
-  width: 56px; height: 56px;
+  width: 36px; height: 36px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--band);
-  padding: 4px;
+  padding: 3px;
 }
+.cart-line .line-total { text-align: right; }
 .cart-summary {
-  margin-top: 28px;
-  max-width: 400px;
+  margin-top: 24px;
+  max-width: 360px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 18px;
 }
 .cart-summary .big {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.templates-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.templates-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
 .template-card {
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.template-card h3 { margin: 0; font-size: 16px; font-weight: 700; }
-.template-card p { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+.template-card h3 { margin: 0; font-size: 14px; font-weight: 500; }
+.template-card p { margin: 4px 0 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 .mobile-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--line);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
+  height: 48px;
 }
 </style>
 </head>
@@ -800,15 +1021,26 @@ img { display: block; max-width: 100%; }
 
   var money = L.money;
   var NAV = [
-    { id: "qo-desktop", label: "Quick Order" },
-    { id: "catalog", label: "Catalog" },
-    { id: "templates", label: "Templates" },
-    { id: "invoices", label: "Invoices & Terms" },
-    { id: "messages", label: "Messages" },
+    { id: "qo-desktop", label: "Quick order", icon: "order" },
+    { id: "catalog", label: "Catalog", icon: "catalog" },
+    { id: "templates", label: "Templates", icon: "templates" },
+    { id: "invoices", label: "Invoices", icon: "invoices" },
+    { id: "messages", label: "Messages", icon: "messages" },
   ];
 
+  function icon(name) {
+    var paths = {
+      order: '<path d="M4 6h12M4 10h12M4 14h8"/>',
+      catalog: '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/>',
+      templates: '<path d="M5 3h8l2 2v12H5z"/><path d="M13 3v3h3"/>',
+      invoices: '<path d="M5 3h10v14H5z"/><path d="M8 7h4M8 10h4M8 13h2"/>',
+      messages: '<path d="M3 5h14v10H7l-4 3V5z"/>',
+    };
+    return '<svg viewBox="0 0 20 20" aria-hidden="true">' + (paths[name] || "") + "</svg>";
+  }
+
   function avatarHtml() {
-    var size = L.retailer.avatarSize;
+    var size = Math.min(L.retailer.avatarSize, 28);
     return (
       '<div class="retailer-avatar" data-retailer-avatar style="width:' + size + "px;height:" + size + "px;min-width:" + size + "px;min-height:" + size + "px;max-width:" + size + "px;max-height:" + size + 'px;">' +
       '<img src="' + L.retailer.avatar + '" alt="' + L.retailer.name + '" width="' + size + '" height="' + size + '" onerror="this.closest(\'[data-retailer-avatar]\').classList.add(\'avatar-failed\'); this.remove();">' +
@@ -824,22 +1056,33 @@ img { display: block; max-width: 100%; }
     );
   }
 
-  function chrome(activeTab) {
-    var pills = NAV.map(function (n) {
+  function shellOpen(activeTab) {
+    var items = NAV.map(function (n) {
       return (
-        '<button type="button" class="nav-pill' + (n.id === activeTab ? " active" : "") + '" data-tab="' + n.id + '">' +
-        n.label +
+        '<button type="button" class="nav-item' + (n.id === activeTab ? " active" : "") + '" data-tab="' + n.id + '">' +
+        icon(n.icon) +
+        "<span>" + n.label + "</span>" +
         "</button>"
       );
     }).join("");
     return (
-      '<div class="chrome-bar" data-wholesale-chrome>' +
-      '<div class="chrome-brand">' +
-      '<img src="joola-logo.png" alt="JOOLA" width="100" height="32">' +
-      '<div class="wholesale-pill"><span class="dot"></span>Wholesale</div>' +
+      '<div class="app-shell" data-wholesale-chrome>' +
+      '<aside class="sidebar" data-sidebar>' +
+      '<div class="sidebar-brand">' +
+      '<img src="joola-logo.png" alt="JOOLA" width="84" height="28">' +
       "</div>" +
-      '<div class="nav-pills">' + pills + "</div>" +
-      '<div class="chrome-right">' +
+      '<div class="wholesale-pill" style="padding:0 10px 12px;"><span class="dot"></span>Wholesale</div>' +
+      '<nav class="sidebar-nav">' + items + "</nav>" +
+      '<div class="sidebar-divider"></div>' +
+      '<div class="sidebar-section">Account</div>' +
+      '<div class="sidebar-meta">' + L.retailer.name +
+      '<div class="bal">' + L.terms + " · " + money(L.credit.available) + " avail.</div></div>" +
+      "</aside>" +
+      '<div class="main-column">' +
+      '<header class="topbar" data-topbar>' +
+      '<div class="top-search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>' +
+      "<span>Search SKUs, orders, invoices</span></div>" +
+      '<div class="topbar-right">' +
       '<button type="button" class="account-chip" data-account-chip>' +
       avatarHtml() +
       '<div class="account-meta"><div class="name">' + L.retailer.name + '</div><div class="role">' + L.retailer.buyer + " · " + L.retailer.role + "</div></div>" +
@@ -849,8 +1092,12 @@ img { display: block; max-width: 100%; }
       '<span class="cart-amount-display" data-cart-total>' + money(L.cartTotal) + "</span>" +
       '<span class="badge cart-badge-display" data-cart-count>' + L.cartCount + "</span>" +
       "</button>" +
-      "</div></div>"
+      "</div></header>"
     );
+  }
+
+  function shellClose() {
+    return "</div></div>";
   }
 
   function unitPriceHtml(product, qty) {
@@ -879,7 +1126,9 @@ img { display: block; max-width: 100%; }
       }
       var amount = L.lineAmount(line);
       var presets = "";
+      var rowClass = "order-row";
       if (line.productId === "perseus") {
+        rowClass += " has-presets";
         presets =
           '<div class="qty-presets">' +
           [12, 24, 60, 120]
@@ -892,11 +1141,11 @@ img { display: block; max-width: 100%; }
           "</div>";
       }
       rows +=
-        '<div class="order-row" data-order-row data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '" data-product="' + p.id + '">' +
-        '<img class="thumb" src="' + p.image + '" alt="' + p.name + '" width="56" height="56">' +
+        '<div class="' + rowClass + '" data-order-row data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '" data-product="' + p.id + '">' +
+        '<img class="thumb" src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
         '<div><div class="prod-name">' + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · MOQ " + p.moq + "</div></div>" +
         unitPriceHtml(p, line.qty) +
-        '<div><div class="qty-stepper"><button type="button" data-action="dec" aria-label="Decrease">-</button><div class="qty" data-qty="' + line.qty + '">' + line.qty + '</div><button type="button" data-action="inc" aria-label="Increase">+</button></div>' +
+        '<div class="qty-cell"><div class="qty-stepper"><button type="button" data-action="dec" aria-label="Decrease">-</button><div class="qty" data-qty="' + line.qty + '">' + line.qty + '</div><button type="button" data-action="inc" aria-label="Increase">+</button></div>' +
         presets +
         "</div>" +
         '<div class="line-total end" data-line-total="' + amount + '">' + money(amount) + "</div>" +
@@ -908,7 +1157,7 @@ img { display: block; max-width: 100%; }
       '<div class="section-title">This order</div>' +
       '<div class="order-table" data-order-table>' +
       '<div class="order-head" data-order-head>' +
-      "<div></div><div>Product</div><div>Price</div><div>Quantity</div><div class=\"end\">Line total</div><div></div>" +
+      "<div></div><div>Product</div><div class=\"end\">Price</div><div class=\"qty-h end\">Quantity</div><div class=\"end\">Line total</div><div></div>" +
       "</div>" +
       rows +
       "</div>"
@@ -922,7 +1171,7 @@ img { display: block; max-width: 100%; }
       '<div class="total" id="qoFooterTotal" data-order-total>' + money(L.orderTotal) + "</div></div>" +
       '<div style="display:flex;gap:10px;">' +
       '<button type="button" class="btn-outline">Save template</button>' +
-      '<button type="button" class="btn-black" id="qoAddAllBtn">Add All To Cart</button>' +
+      '<button type="button" class="btn-primary" id="qoAddAllBtn">Add all to cart</button>' +
       "</div></div>"
     );
   }
@@ -939,7 +1188,7 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<div class="search-results" data-search-results>' +
       '<div class="search-result" data-search-result data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
-      '<img src="' + p.image + '" alt="' + p.name + '" width="44" height="44">' +
+      '<img src="' + p.image + '" alt="' + p.name + '" width="28" height="28">' +
       "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(p.buyerPrice) + " · MOQ " + p.moq + "</div></div>" +
       "</div></div></div>" +
       '<button type="button" class="btn-outline">Bulk upload</button>' +
@@ -950,7 +1199,7 @@ img { display: block; max-width: 100%; }
   function screenQuickOrder() {
     return (
       '<section class="screen active" data-screen="qo-desktop">' +
-      chrome("qo-desktop") +
+      shellOpen("qo-desktop") +
       '<div class="page">' +
       "<h1>Build a bulk order</h1>" +
       '<p class="lede">Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects ' +
@@ -960,6 +1209,7 @@ img { display: block; max-width: 100%; }
       orderTableHtml() +
       "</div>" +
       footerHtml() +
+      shellClose() +
       "</section>"
     );
   }
@@ -975,7 +1225,7 @@ img { display: block; max-width: 100%; }
           '<div class="chip">' + chips[i] + "</div>" +
           '<div class="title">' + p.name + "</div>" +
           '<div class="price-row"><span class="price" data-display-price>' + money(p.buyerPrice) + '</span><span class="msrp">' + money(p.msrp) + "</span></div>" +
-          '<div class="moq" style="font-size:12px;color:var(--muted);">MOQ ' + p.moq + "</div>" +
+          '<div class="moq">MOQ ' + p.moq + "</div>" +
           "</div>"
         );
       })
@@ -998,29 +1248,33 @@ img { display: block; max-width: 100%; }
 
     return (
       '<section class="screen" data-screen="catalog">' +
-      chrome("catalog") +
+      shellOpen("catalog") +
       '<div class="page">' +
       "<h1>Catalog</h1>" +
-      '<p class="lede">Browse everything available to ' + L.retailer.name + ", or start from Recommended For You.</p>" +
-      '<div class="section-title">Recommended For You</div>' +
+      '<p class="lede">Browse everything available to ' + L.retailer.name + ", or start from Recommended for you.</p>" +
+      '<div class="section-title">Recommended for you</div>' +
       '<div class="rec-rail">' + rec + "</div>" +
       '<div class="section-title">Paddles &amp; pickleball goods</div>' +
       '<div class="catalog-grid">' + grid + "</div>" +
-      "</div></section>"
+      "</div>" +
+      shellClose() +
+      "</section>"
     );
   }
 
   function screenTemplates() {
     return (
       '<section class="screen" data-screen="templates">' +
-      chrome("templates") +
+      shellOpen("templates") +
       '<div class="page">' +
       "<h1>Templates</h1>" +
       '<p class="lede">Shared with everyone on <strong>' + L.retailer.name + "</strong>.</p>" +
       '<div class="templates-list">' +
       '<div class="template-card"><h3>Perseus restock</h3><p>SKU 600558 · ' + L.perseusQty + " units · " + money(L.perseusOrderTotal) + "</p></div>" +
       '<div class="template-card"><h3>Match kit</h3><p>Paddles + HC-40 + Tour Elite Bag</p></div>' +
-      "</div></div></section>"
+      "</div></div>" +
+      shellClose() +
+      "</section>"
     );
   }
 
@@ -1031,7 +1285,7 @@ img { display: block; max-width: 100%; }
         var amount = L.lineAmount(line);
         return (
           '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
-          '<img src="' + p.image + '" alt="' + p.name + '" width="56" height="56">' +
+          '<img src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
           "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">' + line.qty + " × " + money(L.priceAt(p, line.qty)) + "</div></div>" +
           '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
           "</div>"
@@ -1040,7 +1294,7 @@ img { display: block; max-width: 100%; }
       .join("");
     return (
       '<section class="screen" data-screen="cart">' +
-      chrome("cart") +
+      shellOpen("cart") +
       '<div class="page">' +
       "<h1>Cart</h1>" +
       '<p class="lede">Ready to place on ' + L.terms + " terms.</p>" +
@@ -1050,9 +1304,23 @@ img { display: block; max-width: 100%; }
       '<div class="big" data-order-total data-cart-total>' + money(L.cartTotal) + "</div>" +
       '<div class="note" style="margin-top:12px;font-size:12px;color:var(--muted);">' +
       L.terms + " credit: " + money(L.credit.used) + " of " + money(L.credit.limit) + " used · " + money(L.credit.available) + " available</div>" +
-      '<button type="button" class="btn-black" style="margin-top:16px;">Place order</button>' +
-      "</div></div></section>"
+      '<button type="button" class="btn-primary" style="margin-top:16px;">Place order</button>' +
+      "</div></div>" +
+      shellClose() +
+      "</section>"
     );
+  }
+
+  function statusLabel(status) {
+    if (status === "Processing" || status === "Due") return "Pending";
+    if (status === "Overdue") return "Failed";
+    return status;
+  }
+
+  function statusClass(status) {
+    if (status === "Processing" || status === "Due") return "Pending";
+    if (status === "Overdue") return "Failed";
+    return status;
   }
 
   function screenInvoices() {
@@ -1065,7 +1333,7 @@ img { display: block; max-width: 100%; }
           '<div class="cell" data-col="issued">' + inv.issued + "</div>" +
           '<div class="cell" data-col="due">' + inv.due + "</div>" +
           '<div class="amt" data-col="amount" data-invoice-amount="' + inv.amount + '">' + money(inv.amount) + "</div>" +
-          '<div data-col="status"><span class="status ' + inv.status + '">' + inv.status + "</span></div>" +
+          '<div data-col="status"><span class="status ' + statusClass(inv.status) + '">' + statusLabel(inv.status) + "</span></div>" +
           '<div class="action"><button type="button">Download PDF</button></div>' +
           "</div>"
         );
@@ -1074,32 +1342,35 @@ img { display: block; max-width: 100%; }
 
     return (
       '<section class="screen" data-screen="invoices">' +
-      chrome("invoices") +
+      shellOpen("invoices") +
       '<div class="page">' +
-      "<h1>Invoices &amp; Terms</h1>" +
-      '<p class="lede">Track what has been billed to your account, what is still open, and how much of your credit line is available for Quick Order.</p>' +
+      "<h1>Invoices &amp; terms</h1>" +
+      '<p class="lede">Track what has been billed to your account, what is still open, and how much of your credit line is available for Quick order.</p>' +
       '<div class="credit-card" data-credit-card>' +
       '<div class="row"><span>' + L.terms + ' credit line used</span><span data-credit-used>' + money(L.credit.used) + " of " + money(L.credit.limit) + "</span></div>" +
       '<div class="credit-bar" data-credit-bar><i style="width:' + L.credit.pct + '%" data-credit-fill></i></div>' +
-      '<div class="note" data-credit-available>' + money(L.credit.available) + " available for new Quick Order purchases on " + L.terms + " terms.</div>" +
+      '<div class="note" data-credit-available>' + money(L.credit.available) + " available for new Quick order purchases on " + L.terms + " terms.</div>" +
+      '<div class="hero-total" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
       '<div class="invoice-table" data-invoice-table>' +
       '<div class="invoice-head" data-invoice-head>' +
       '<div>Invoice</div><div>Order</div><div>Issued</div><div>Due</div><div class="num">Amount</div><div>Status</div><div></div>' +
       "</div>" +
       rows +
-      "</div></div></section>"
+      "</div></div>" +
+      shellClose() +
+      "</section>"
     );
   }
 
   function screenMessages() {
     return (
       '<section class="screen" data-screen="messages">' +
-      chrome("messages") +
+      shellOpen("messages") +
       '<div class="messages-layout">' +
       '<aside class="inbox"><h2>Inbox</h2>' +
       '<div class="inbox-item" data-inbox-joola>' + joolaMarkHtml() +
-      "<div><div style=\"font-size:13px;font-weight:700;\">JOOLA Sales</div><div style=\"font-size:12px;color:var(--muted);margin-top:2px;\">Perseus Pro V restock</div></div>" +
+      "<div><div style=\"font-size:13px;font-weight:500;\">JOOLA Sales</div><div style=\"font-size:12px;color:var(--muted);margin-top:2px;\">Perseus Pro V restock</div></div>" +
       "</div></aside>" +
       '<div class="thread">' +
       '<div class="thread-head">Sam Ortiz · JOOLA Sales</div>' +
@@ -1112,8 +1383,10 @@ img { display: block; max-width: 100%; }
       L.messages.sam +
       "</div>" +
       "</div>" +
-      '<div class="thread-compose"><div class="field">Message the sales team</div><button type="button" class="btn-black" style="border-radius:999px;width:46px;padding:0;justify-content:center;">↑</button></div>' +
-      "</div></div></section>"
+      '<div class="thread-compose"><div class="field">Message the sales team</div><button type="button" class="btn-send" aria-label="Send">↑</button></div>' +
+      "</div></div>" +
+      shellClose() +
+      "</section>"
     );
   }
 
@@ -1121,18 +1394,18 @@ img { display: block; max-width: 100%; }
     var p = L.products.perseus;
     return (
       '<section class="screen mobile-wrap" data-screen="qo-mobile">' +
-      '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="box-shadow:inset 0 -2px 0 #1a1a1a;padding-bottom:2px;">Quick Order</span>' +
+      '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
       '<span style="display:flex;align-items:center;gap:6px;">' + avatarHtml() + '<span style="font-size:11px;">' + L.retailer.name + "</span></span></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
       "<h1 style=\"font-size:28px;\">Build a bulk order</h1>" +
       '<p class="lede">Pricing for ' + L.retailer.name + ".</p>" +
-      '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--wash);padding-bottom:14px;">' +
-      '<img src="' + p.image + '" alt="" width="56" height="56" style="object-fit:contain;border:1px solid var(--line);border-radius:10px;background:var(--band);padding:4px;">' +
+      '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line-soft);height:50px;">' +
+      '<img src="' + p.image + '" alt="" width="36" height="36" style="object-fit:contain;border:1px solid var(--line);border-radius:6px;background:var(--band);padding:3px;">' +
       "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + "</div>" +
-      '<div style="margin-top:4px;font-weight:700;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea · qty " + L.perseusQty + "</div></div></div>" +
-      '<div style="margin-top:20px;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;" data-order-total>' + money(L.orderTotal) + "</div>" +
+      '<div style="margin-top:2px;font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea · qty " + L.perseusQty + "</div></div></div>" +
+      '<div style="margin-top:20px;font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
-      '<div class="order-footer"><button type="button" class="btn-outline" style="flex:1;justify-content:center;">Save</button><button type="button" class="btn-black" style="flex:1;justify-content:center;">Add All To Cart</button></div>' +
+      '<div class="order-footer" data-order-footer><button type="button" class="btn-outline" style="flex:1;justify-content:center;">Save</button><button type="button" class="btn-primary" style="flex:1;justify-content:center;">Add all to cart</button></div>' +
       "</section>"
     );
   }
