@@ -777,7 +777,7 @@ async function main() {
           }
         }
 
-        // 18. Cart checkout: PO, ship date, ship-to, collapsed warehouse notes, returns path
+        // 18. Cart checkout: PO, ship-to, need-by rush (no warehouse notes / ship schedule)
         if (screen === "cart") {
           const box = root.querySelector("[data-cart-checkout]");
           const layout = root.querySelector("[data-cart-layout]");
@@ -795,28 +795,26 @@ async function main() {
             if (!/Calculated at invoice/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("summary missing tax note");
             }
+            if (/Freight quoted/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("freight jargon still present");
+            }
           }
           if (!box || !visible(box)) {
             issues.cartCheckout.push("cart checkout block missing");
           } else {
             if (!box.querySelector('[data-field="po"]')) issues.cartCheckout.push("PO field missing");
-            if (!box.querySelector('[data-field="ship-date"]')) issues.cartCheckout.push("ship date missing");
+            if (box.querySelector('[data-field="ship-date"]') || /Requested ship date/i.test(box.textContent || "")) {
+              issues.cartCheckout.push("requested ship date must not appear (buyer cannot schedule)");
+            }
+            if (!box.querySelector("[data-need-by], [data-field='need-by']")) {
+              issues.cartCheckout.push("need-by rush request missing");
+            }
             if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
             if (!box.querySelector("[data-ship-address]")) {
               issues.cartCheckout.push("ship-to address line missing");
             }
-            const notes = box.querySelector("[data-warehouse-notes]");
-            if (!notes) issues.cartCheckout.push("warehouse notes missing");
-            else if (notes.open) issues.cartCheckout.push("warehouse notes should start collapsed");
-            else {
-              const sum = notes.querySelector("summary");
-              const t = (sum?.textContent || "").trim();
-              if (/^[-−–—+]/.test(t)) {
-                issues.cartCheckout.push(`warehouse summary has stray prefix: "${t.slice(0, 24)}"`);
-              }
-              if (!sum?.querySelector(".chev")) {
-                issues.cartCheckout.push("warehouse disclosure missing chevron");
-              }
+            if (box.querySelector("[data-warehouse-notes]") || /Notes for warehouse/i.test(box.textContent || "")) {
+              issues.cartCheckout.push("warehouse notes must not appear for buyers");
             }
             if (!box.querySelector("[data-returns-link]")) {
               issues.cartCheckout.push("returns / RMA link missing");
@@ -833,12 +831,16 @@ async function main() {
           }
         }
 
-        // Quiet warehouse / availability on Quick Order lines; no category grouping noise
+        // Buyer-facing QO lines: availability phrase, no warehouse codes / staged jargon
         if (screen === "qo-desktop") {
           const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
-          const withShip = rows.filter((el) => /\b(CA|TX)\b/.test(el.textContent || ""));
-          if (withShip.length < 2) {
-            issues.netsuiteLabels.push("order lines missing warehouse availability");
+          const withAvail = rows.filter((el) => /In stock|2-day ship|day ship|Backorder/i.test(el.textContent || ""));
+          if (withAvail.length < 2) {
+            issues.netsuiteLabels.push("order lines missing availability phrasing");
+          }
+          const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(el.querySelector(".prod-sku")?.textContent || ""));
+          if (withWh.length > 0) {
+            issues.netsuiteLabels.push("warehouse codes still shown to buyer");
           }
           if (root.querySelector(".cat-label")) {
             issues.netsuiteLabels.push("category grouping labels should be dropped (cognitive load)");
@@ -847,17 +849,73 @@ async function main() {
           if (bestSpam.length > 0) {
             issues.netsuiteLabels.push(`Best price unlocked spam ×${bestSpam.length}`);
           }
-          const staged = root.querySelector("[data-order-footer] [data-line-count]");
-          if (!staged || !/Staged|In cart/i.test(staged.textContent || "")) {
-            issues.netsuiteLabels.push("footer missing staged vs cart distinction");
+          const footerMeta = root.querySelector("[data-order-footer] [data-line-count]");
+          if (!footerMeta || !/Ready|In cart/i.test(footerMeta.textContent || "")) {
+            issues.netsuiteLabels.push("footer missing ready vs cart distinction");
+          }
+          if (/Staged/i.test(root.innerText || "")) {
+            issues.netsuiteLabels.push("staged jargon still present");
           }
           const results = root.querySelector("[data-search-results]");
           if (results && visible(results) && !results.classList.contains("is-closed") && !results.hasAttribute("hidden")) {
-            // Dropdown open while SKU already in table covers the header
             issues.netsuiteLabels.push("search dropdown still open over table (SKU already staged)");
           }
           if (root.querySelector(".sidebar-section")) {
             issues.netsuiteLabels.push("orphan ACCOUNT sidebar section heading");
+          }
+          // Product names must not ellipsis-truncate important titles
+          root.querySelectorAll(".prod-name").forEach((el) => {
+            if (!visible(el)) return;
+            if (el.scrollWidth > el.clientWidth + 1) {
+              issues.netsuiteLabels.push(`truncated product name: ${el.textContent.trim().slice(0, 40)}`);
+            }
+          });
+        }
+
+        // Pixel: matched pills + icon slots + FK Grotesk only
+        if (screen === "qo-desktop") {
+          const chip = root.querySelector("[data-account-chip]");
+          const cart = root.querySelector("[data-cart-pill]");
+          if (chip && cart && visible(chip) && visible(cart)) {
+            const ch = chip.getBoundingClientRect().height;
+            const kh = cart.getBoundingClientRect().height;
+            if (Math.abs(ch - kh) > 1 || Math.abs(ch - 32) > 1.5) {
+              issues.netsuiteLabels.push(`pill heights chip=${ch.toFixed(1)} cart=${kh.toFixed(1)} (want 32)`);
+            }
+            const cr = getComputedStyle(chip).borderRadius;
+            const kr = getComputedStyle(cart).borderRadius;
+            if (cr !== kr) issues.netsuiteLabels.push(`pill radius mismatch ${cr} vs ${kr}`);
+            const av = chip.querySelector("[data-retailer-avatar]");
+            if (av) {
+              const aw = av.getBoundingClientRect().width;
+              if (Math.abs(aw - 24) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 24)`);
+            }
+            const badge = cart.querySelector(".badge");
+            if (badge && visible(badge) && !badge.classList.contains("is-zero")) {
+              const br = badge.getBoundingClientRect();
+              const pr = cart.getBoundingClientRect();
+              // Badge should sit on the corner without sinking inside the pill body
+              if (br.top > pr.top + 2) issues.netsuiteLabels.push("cart badge too low (misplaced)");
+              if (br.right < pr.right - 2) issues.netsuiteLabels.push("cart badge inset too far");
+            }
+          }
+          root.querySelectorAll(".nav-item .icon-slot").forEach((slot) => {
+            if (!visible(slot)) return;
+            const r = slot.getBoundingClientRect();
+            if (Math.abs(r.width - 20) > 1.5 || Math.abs(r.height - 20) > 1.5) {
+              issues.netsuiteLabels.push(`icon-slot ${Math.round(r.width)}x${Math.round(r.height)} (want 20)`);
+            }
+            const svg = slot.querySelector("svg");
+            if (svg) {
+              const sr = svg.getBoundingClientRect();
+              if (Math.abs(sr.width - 16) > 2 || Math.abs(sr.height - 16) > 2) {
+                issues.netsuiteLabels.push(`nav icon ${Math.round(sr.width)}px (want 16)`);
+              }
+            }
+          });
+          const ff = getComputedStyle(root).fontFamily || "";
+          if (!/FKGroteskNeue/i.test(ff)) {
+            issues.netsuiteLabels.push(`UI font not FK Grotesk: ${ff.slice(0, 40)}`);
           }
         }
 

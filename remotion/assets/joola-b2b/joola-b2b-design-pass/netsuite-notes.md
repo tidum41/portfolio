@@ -78,16 +78,41 @@ Only fields that remove a phone call or a failed AP match without bloating the f
 | Duplicate long ledes explaining credit + terms on every page | Cut; credit panel + one cart note suffice. |
 | “Save template” as equal-weight primary next to Add all | Demoted to secondary text so each screen has one obvious primary. |
 
-## 5. Cognitive pass (non-NetSuite) applied alongside
+## 5. Buyer visibility audit (Mudit round-2 polish)
 
-- Plain titles: **Quick order**, **Cart**, **Catalog**, **Invoices**.
-- One primary CTA per screen (Add all / Place order).
-- Progressive disclosure for advanced cart fields and warehouse notes.
-- Catalog section **All products** (not a decorative category slogan).
-- Slimmer message chrome: order context keeps identity + amount; ship/status live in details (no triple repeat).
-- Rail labels shortened: **Templates**, **Recent**.
+What a public B2B **buyer** sees. Internal / sales-side fields stay out of the portal.
 
-## 6. Ledger invariants (unchanged)
+| Field / UI | Decision | Why |
+| --- | --- | --- |
+| Your PO # | **Keep** | Buyer AP match (`otherRefNum`) |
+| Ship to + address | **Keep** | Buyer chooses store location |
+| Notes for warehouse | **Remove** | Sales / warehouse writes memo — not a buyer task |
+| Requested ship date | **Remove** | Buyers cannot schedule fulfillment |
+| Need it by (checkbox + date) | **Add (optional)** | Rush *request* to the rep; copy states rep confirms, not a ship schedule |
+| Ships from CA / TX | **Remove** | Warehouse codes are internal |
+| Availability / ETA phrase | **Keep** (“In stock”, “2-day ship”) | Buyer needs readiness, not location IDs |
+| MSRP strikethrough on order lines | **Remove** | Noise on every line; wholesale unit price is enough |
+| Catalog MSRP (secondary) | **Keep** | Helps buyer judge margin when browsing |
+| “Staged” jargon | **Rephrase** → “Ready · Not in cart yet” | Plain language |
+| Freight quoted | **Rephrase** → “Confirmed on invoice” | No logistics jargon |
+| Net 30 + credit used / available | **Keep** | Buyer needs buy-power clarity |
+| Templates rail | **Keep** | Buyer reorder aid |
+| Recent → Reorder rail | **Rephrase** | Same data; clearer buyer verb |
+| Upload CSV in rail | **Remove** | Power-user / ops; not first-path |
+| Order type dropdown | **Remove** | Internal; returns/RMA instead |
+| Returns / warranty link | **Keep** | Buyer self-serve path |
+| Pending Fulfillment on order details | **Keep** | Matches NetSuite status the buyer tracks |
+| Invoice Paid / Pending / Overdue | **Keep** | AR language for billed docs |
+
+## 6. Cognitive / pixel pass (alongside)
+
+- Plain titles: **Quick order**, **Cart**, **Catalog**, **Invoices** (FK Grotesk 500 — brand mark is logo image only; see `design-spec.md`).
+- Matched top-bar pills (32px), 24px avatar, cart badge on the corner.
+- Nav icons in 20px slots / 16px glyphs, optically centred with labels.
+- Short product display names; wider product column — no ellipsis on titles.
+- One primary CTA per screen.
+
+## 7. Ledger invariants (unchanged)
 
 - Order total **$19,306.50** (Perseus 120 × $134.98 + Hyperion 24 + HC-40 48 + Bag 6)
 - Credit used **$24,308.90** / available **$25,691.10** / limit **$50,000**
