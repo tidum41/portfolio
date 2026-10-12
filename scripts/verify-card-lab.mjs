@@ -17,8 +17,8 @@ const OUT = process.env.CARD_LAB_SHOTS || "/opt/cursor/artifacts/card-lab";
 /** Optional Playwright storageState path (Vercel Deployment Protection cookie). */
 const STORAGE = process.env.CARD_LAB_STORAGE || "";
 const ALLOWED_SPACE = new Set([0, 1, 4, 8, 12, 16, 24, 32, 48, 96]);
-/** 24 = display metric (outcome-metric concept). */
-const ALLOWED_FS = new Set([11, 13, 15, 24]);
+/** 12–20 = refinement type steps; 24 = outcome-metric display. */
+const ALLOWED_FS = new Set([11, 12, 13, 14, 15, 16, 18, 20, 24]);
 /** Kinds allowed to change card box height on hover (expand/reveal). */
 const HEIGHT_CHANGE_KINDS = new Set(["numbered-index", "stagger-reveal", "text-row"]);
 /** Titles that must match Mudit's real work (homepage + case studies). */
@@ -597,19 +597,19 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
 
   let aspectOk = true;
   let aspectDetail = "";
-  // Square thumbs / portraits are intentional for list-row + grayscale concepts.
+  // Controlled media locks homepage ratio 1.2 / 1. List thumbs may clip smaller.
   const aspectSkip = new Set([
     "outcome-metric",
     "row-wash",
     "chevron-reveal",
-    "grayscale-color",
   ]);
   for (const [sec, arr] of Object.entries(values.aspects)) {
     if (aspectSkip.has(sec)) continue;
     // Ignore collapsed/hidden media (e.g. numbered-index preview at rest).
     const live = arr.filter((a) => Number.isFinite(a) && a > 0.2 && a < 8);
     for (const a of live) {
-      if (a < 4 / 3 - 0.02 || a > 1.9 + 0.02) {
+      // Homepage work-grid card is 1.2 / 1.
+      if (Math.abs(a - 1.2) > 0.04) {
         aspectOk = false;
         aspectDetail += `sec${sec} ${a}; `;
       }
@@ -1159,8 +1159,15 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     const errs = [];
     for (const section of document.querySelectorAll("section[data-cl-concept]")) {
       const sec = section.getAttribute("data-cl-concept");
-      // Index / wash lists intentionally vary structure across variants.
-      if (sec === "numbered-index" || sec === "row-wash" || sec === "chevron-reveal")
+      // Index / wash / chip axes intentionally vary structure across variants.
+      if (
+        sec === "numbered-index" ||
+        sec === "row-wash" ||
+        sec === "chevron-reveal" ||
+        sec === "ref-chips" ||
+        sec === "ref-spacing" ||
+        sec === "ref-colour"
+      )
         continue;
       const rows = [...section.querySelectorAll("[data-cl-row]")];
       const scopes = rows.length ? rows : [section];
@@ -1630,16 +1637,16 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         const m = c.querySelector(".cl-grey__media");
         return getComputedStyle(m).filter;
       });
-      const colored = cards.every((c) =>
-        c.querySelector('[data-cl-wire-colored="1"]')
+      const controlled = cards.every((c) =>
+        c.querySelector("[data-cl-controlled='1']")
       );
       const ok =
-        colored &&
+        controlled &&
         filters[0].includes("grayscale(1)") &&
         filters[1].includes("grayscale(0.5)") &&
         filters[2].includes("grayscale(1)") &&
         filters[2].includes("brightness");
-      return { ok, detail: `colored=${colored} filters=${filters.join(" | ")}` };
+      return { ok, detail: `controlled=${controlled} filters=${filters.join(" | ")}` };
     });
     record(58, `Grayscale rest filters (${tag})`, grey.ok, grey.detail);
 
@@ -1681,6 +1688,66 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       };
     });
     record(59, `Expand-caption no jump + approaches (${tag})`, xcap.ok, xcap.detail);
+
+    const controlled = await themePage.evaluate(() => {
+      const imgs = [...document.querySelectorAll("[data-cl-controlled-img]")];
+      const medias = [...document.querySelectorAll("[data-cl-media]")];
+      if (!imgs.length || imgs.length !== medias.length) {
+        return {
+          ok: false,
+          detail: `imgs=${imgs.length} medias=${medias.length}`,
+        };
+      }
+      const srcs = [...new Set(imgs.map((i) => i.getAttribute("src") || ""))];
+      const ok =
+        srcs.length === 1 &&
+        srcs[0] === "/dev/card-lab/placeholder.jpg" &&
+        medias.every((m) => m.getAttribute("data-cl-controlled") === "1");
+      return { ok, detail: `n=${imgs.length} srcs=${srcs.join("|")}` };
+    });
+    record(60, `Controlled media identical (${tag})`, controlled.ok, controlled.detail);
+
+    const refinements = await themePage.evaluate(() => {
+      const axes = ["ref-type", "ref-colour", "ref-chips", "ref-spacing", "ref-hover"];
+      const report = [];
+      for (const id of axes) {
+        const sec = document.querySelector(`section[data-cl-concept="${id}"]`);
+        if (!sec) {
+          report.push(`${id}:missing`);
+          continue;
+        }
+        const cards = [
+          ...sec.querySelectorAll(
+            '[data-cl-row-mode="rest"] [data-cl-kind="refinement"][data-cl-card]'
+          ),
+        ];
+        const specs = [
+          ...sec.querySelectorAll('[data-cl-row-mode="rest"] [data-cl-spec]'),
+        ].map((s) => s.textContent.trim());
+        const ids = cards.map((c) => c.getAttribute("data-cl-variant"));
+        const titles = new Set(
+          cards.map((c) => c.querySelector("[data-cl-card-title]")?.textContent)
+        );
+        const imgs = new Set(
+          cards.map(
+            (c) => c.querySelector("[data-cl-controlled-img]")?.getAttribute("src")
+          )
+        );
+        const labelsOk = specs.every((s, i) => s.startsWith(`${ids[i]} ·`));
+        if (
+          cards.length < 3 ||
+          titles.size !== 1 ||
+          imgs.size !== 1 ||
+          !labelsOk
+        ) {
+          report.push(
+            `${id}:cards=${cards.length} titles=${titles.size} imgs=${imgs.size} labels=${labelsOk}`
+          );
+        }
+      }
+      return { ok: report.length === 0, detail: report.join(" | ") || "5 axes ok" };
+    });
+    record(61, `Refinement axes labelled (${tag})`, refinements.ok, refinements.detail);
   } else {
     record(48, `Card titles match Mudit projects (${tag})`, true, "checked on 1440 light");
     record(49, `No text clipped by overflow:hidden (${tag})`, true, "checked on 1440 light");
@@ -1694,6 +1761,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     record(57, `Chevron trail reveal (${tag})`, true, "checked on 1440 light");
     record(58, `Grayscale rest filters (${tag})`, true, "checked on 1440 light");
     record(59, `Expand-caption no jump + approaches (${tag})`, true, "checked on 1440 light");
+    record(60, `Controlled media identical (${tag})`, true, "checked on 1440 light");
+    record(61, `Refinement axes labelled (${tag})`, true, "checked on 1440 light");
   }
 
   await themeCtx.close();

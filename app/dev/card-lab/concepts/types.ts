@@ -29,7 +29,8 @@ export type ConceptKind =
   | "attribution-fade"
   | "chevron-reveal"
   | "grayscale-color"
-  | "expand-caption";
+  | "expand-caption"
+  | "refinement";
 
 export type VariantId = "a" | "b" | "c" | string;
 

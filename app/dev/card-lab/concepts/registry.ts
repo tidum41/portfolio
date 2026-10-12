@@ -1,12 +1,5 @@
 /**
- * Concept registry — single source of which card ideas the lab shows.
- *
- * To add a concept later:
- *   1. Create concepts/<slug>.tsx exporting a ConceptDefinition
- *   2. Append it to CONCEPTS below
- *   3. Add kind-specific CSS if needed
- *   4. Extend verify only when the kind needs new rules
- *      (generic checks already cover every registered concept)
+ * Concept registry — refinements first (homepage-adjacent), then craft concepts.
  */
 
 import type { ConceptDefinition, ConceptVariant } from "./types";
@@ -28,9 +21,18 @@ import { attributionFade } from "./attribution-fade";
 import { chevronReveal } from "./chevron-reveal";
 import { grayscaleColor } from "./grayscale-color";
 import { expandCaption } from "./expand-caption";
+import { refinementType } from "../refinements/type";
+import { refinementColour } from "../refinements/colour";
+import { refinementChips } from "../refinements/chips";
+import { refinementSpacing } from "../refinements/spacing";
+import { refinementHover } from "../refinements/hover";
 
-// Heterogeneous variant shapes — registry erases V at the boundary.
 export const CONCEPTS = [
+  refinementType,
+  refinementColour,
+  refinementChips,
+  refinementSpacing,
+  refinementHover,
   framedInset,
   edgeTile,
   textFirstRow,

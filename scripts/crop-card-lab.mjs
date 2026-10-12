@@ -6,9 +6,26 @@ const OUT = "/opt/cursor/artifacts/card-lab-crops";
 await mkdir(OUT, { recursive: true });
 
 const concepts = [
-  "expanding-chip","pill-row","outcome-metric","status-line","brand-lockup",
-  "dual-cta","numbered-index","cursor-label","stagger-reveal","gated-nda",
-  "row-wash","attribution-fade","chevron-reveal","grayscale-color","expand-caption",
+  "ref-type",
+  "ref-colour",
+  "ref-chips",
+  "ref-spacing",
+  "ref-hover",
+  "expanding-chip",
+  "pill-row",
+  "outcome-metric",
+  "status-line",
+  "brand-lockup",
+  "dual-cta",
+  "numbered-index",
+  "cursor-label",
+  "stagger-reveal",
+  "gated-nda",
+  "row-wash",
+  "attribution-fade",
+  "chevron-reveal",
+  "grayscale-color",
+  "expand-caption",
 ];
 
 const browser = await chromium.launch({ headless: true });
@@ -16,9 +33,15 @@ for (const { width, height, tag } of [
   { width: 1440, height: 900, tag: "1440" },
   { width: 390, height: 844, tag: "390" },
 ]) {
-  const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({
+    viewport: { width, height },
+    deviceScaleFactor: 1,
+  });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/dev/card-lab?theme=light&hover=all`, { waitUntil: "networkidle", timeout: 60000 });
+  await page.goto(`${BASE}/dev/card-lab?theme=light&hover=all`, {
+    waitUntil: "networkidle",
+    timeout: 60000,
+  });
   await page.waitForTimeout(500);
   for (const id of concepts) {
     const section = page.locator(`section[data-cl-concept="${id}"]`);

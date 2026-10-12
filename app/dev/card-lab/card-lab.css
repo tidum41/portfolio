@@ -7,6 +7,7 @@
   --cl-secondary: #5c5c5c;
   --cl-tertiary: #6b6b6b;
   --cl-hairline: rgba(0, 0, 0, 0.08);
+  --cl-ref-border: rgba(0, 0, 0, 0.1);
   /* Single accent token for attribution / role reveals (ink-adjacent coral). */
   --cl-accent: #b84a2e;
   --cl-media-0: #e6e6e6;
@@ -41,6 +42,7 @@
   --cl-secondary: #a3a3a3;
   --cl-tertiary: #969696;
   --cl-hairline: rgba(255, 255, 255, 0.08);
+  --cl-ref-border: rgba(255, 255, 255, 0.12);
   --cl-accent: #e07a5f;
   --cl-media-0: #2a2a2a;
   --cl-media-1: #272b30;
@@ -2779,6 +2781,277 @@
   color: var(--cl-primary);
 }
 
+/* ——— Controlled media (Mux poster, all concepts) ——— */
+.cl-media {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--cl-media-0);
+  display: block;
+}
+
+.cl-media--fill {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  aspect-ratio: auto !important;
+}
+
+.cl-media--top-clear .cl-media__img {
+  /* clear band reserved above image content via padding clip */
+}
+
+.cl-media__clear {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--cl-media-top-clear, 0px);
+  z-index: 2;
+  background: #b8b8b8;
+  pointer-events: none;
+}
+
+.card-lab[data-theme="dark"] .cl-media__clear {
+  background: #0f0f0f;
+}
+
+.cl-media__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.cl-media--fill .cl-media__img {
+  position: absolute;
+  inset: 0;
+}
+
+.cl-media:not(.cl-media--fill) .cl-media__img {
+  position: absolute;
+  inset: 0;
+}
+
+.cl-media__veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cl-media__shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cl-media--play .cl-media__shimmer {
+  opacity: 1;
+  animation: cl-wire-shimmer 1.2s linear infinite;
+}
+
+/* Legacy class hooks still applied by concept CSS — keep img cover. */
+.cl-wire,
+.cl-wash__thumb-media,
+.cl-chev__tile-media,
+.cl-attr__media,
+.cl-grey__media,
+.cl-xcap__media,
+.card-lab__frame-media,
+.card-lab__tile-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--cl-media-0);
+}
+
+/* ——— Refinements (homepage-adjacent) ——— */
+.cl-ref {
+  --cl-ref-border: rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--cl-primary);
+}
+
+.cl-ref--dark {
+  color: #f2f2f2;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.cl-ref__media-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cl-ref__media {
+  width: 100%;
+  display: block;
+}
+
+.cl-ref__copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cl-ref__title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cl-ref__title-row--inline {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cl-ref__title {
+  margin: 0;
+  line-height: 1.4;
+  color: var(--cl-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cl-ref--dark .cl-ref__title {
+  color: inherit;
+}
+
+.cl-ref__meta {
+  margin: 4px 0 0;
+  line-height: 1.5;
+  color: var(--cl-tertiary);
+  letter-spacing: 0.01em;
+}
+
+.cl-ref__meta--mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0;
+}
+
+.cl-ref__meta--smallcaps {
+  font-variant: small-caps;
+  text-transform: lowercase;
+}
+
+.cl-ref__meta--assistive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cl-ref__year {
+  flex: 0 0 auto;
+  color: var(--cl-tertiary);
+  line-height: 1.4;
+}
+
+.cl-ref__chip-row {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cl-ref__chip {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  padding: 4px 8px;
+  font-weight: 400;
+  color: var(--cl-secondary);
+  border: 1px solid var(--cl-hairline);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.cl-ref__chip--tint {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--cl-primary) 6%, transparent);
+}
+
+.cl-ref__chip--mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+.cl-ref__chip--over {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.card-lab[data-theme="dark"] .cl-ref__chip--over,
+.cl-ref--dark .cl-ref__chip--over {
+  background: rgba(20, 20, 20, 0.88);
+  color: #f2f2f2;
+}
+
+.cl-ref__arrow {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.2s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cl-ref:hover .cl-ref__arrow,
+.cl-ref:focus-within .cl-ref__arrow,
+.cl-ref--force-hover .cl-ref__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cl-ref[data-cl-hover="scale"]:hover .cl-ref__media-wrap,
+.cl-ref[data-cl-hover="scale"]:focus-within .cl-ref__media-wrap,
+.cl-ref[data-cl-hover="scale"].cl-ref--force-hover .cl-ref__media-wrap {
+  transform: scale(1.02);
+}
+
+.cl-ref[data-cl-hover="underline"]:hover .cl-ref__title,
+.cl-ref[data-cl-hover="underline"]:focus-within .cl-ref__title,
+.cl-ref[data-cl-hover="underline"].cl-ref--force-hover .cl-ref__title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cl-ref[data-cl-hover="meta-shift"]:hover .cl-ref__meta,
+.cl-ref[data-cl-hover="meta-shift"]:focus-within .cl-ref__meta,
+.cl-ref[data-cl-hover="meta-shift"].cl-ref--force-hover .cl-ref__meta {
+  color: var(--cl-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cl-expand__chip,
   .cl-status__media,
@@ -2805,7 +3078,10 @@
   .cl-chev__row,
   .cl-chev__trail,
   .cl-grey__media,
-  .cl-xcap__captions {
+  .cl-xcap__captions,
+  .cl-ref__arrow,
+  .cl-ref__media-wrap,
+  .cl-media__shimmer {
     transition: none !important;
     animation: none !important;
   }
@@ -2816,9 +3092,15 @@
   }
 
   .cl-wire--play .cl-wire__shimmer,
+  .cl-media--play .cl-media__shimmer,
   .cl-status:hover .cl-wire__shimmer,
   .cl-status[data-cl-force-hover="1"] .cl-wire__shimmer {
     animation: none !important;
     opacity: 1;
+  }
+
+  .cl-ref[data-cl-hover="scale"]:hover .cl-ref__media-wrap,
+  .cl-ref[data-cl-hover="scale"].cl-ref--force-hover .cl-ref__media-wrap {
+    transform: none;
   }
 }
