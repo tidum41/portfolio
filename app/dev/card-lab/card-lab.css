@@ -698,7 +698,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1 1 auto;
   justify-content: space-evenly;
   min-height: 96px;
@@ -761,7 +761,7 @@
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
+  gap: 8px;
   padding: 0 8px 8px;
   margin-top: auto;
 }
@@ -871,13 +871,13 @@
 .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #111111;
   background: #ffffff;
-  box-shadow: inset 0 0 0 1.5px #111111;
+  box-shadow: inset 0 0 0 1px #111111;
 }
 
 .card-lab[data-theme="dark"] .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #f2f2f2;
   background: #1a1a1a;
-  box-shadow: inset 0 0 0 1.5px #f2f2f2;
+  box-shadow: inset 0 0 0 1px #f2f2f2;
 }
 
 .cl-expand__chip-hover {
@@ -1252,32 +1252,35 @@
   transform: translateY(-6px);
 }
 
+/* Stack both strings in one cell so display:none never false-trips clip checks. */
 .cl-status__line {
   margin: 0;
   font-size: 13px;
   line-height: 20px;
   color: var(--cl-secondary);
+  display: inline-grid;
+  justify-items: start;
 }
 
 .cl-status__line-rest,
 .cl-status__line-hover {
-  display: inline;
+  grid-area: 1 / 1;
 }
 
 .cl-status__line-hover {
-  display: none;
+  visibility: hidden;
 }
 
 .cl-status:hover .cl-status__line-rest,
 .cl-status:focus-within .cl-status__line-rest,
 .cl-status[data-cl-force-hover="1"] .cl-status__line-rest {
-  display: none;
+  visibility: hidden;
 }
 
 .cl-status:hover .cl-status__line-hover,
 .cl-status:focus-within .cl-status__line-hover,
 .cl-status[data-cl-force-hover="1"] .cl-status__line-hover {
-  display: inline;
+  visibility: visible;
 }
 
 .cl-status__line--on {
@@ -1919,8 +1922,6 @@
 
 .cl-stagger__copy--aside .cl-stagger__desc {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .cl-stagger__title {

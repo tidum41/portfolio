@@ -62,29 +62,44 @@ export default function CardLabClient() {
     [searchParams]
   );
 
-  // Equal card heights within each concept row (skip expand/list concepts).
+  // Equal card + stage heights within each concept row (skip expand/list).
   useEffect(() => {
     const equalize = () => {
       document.querySelectorAll<HTMLElement>("[data-cl-row]").forEach((row) => {
         const cards = [...row.querySelectorAll<HTMLElement>("[data-cl-card]")].filter(
           (c) => c.getAttribute("data-cl-skip-equalize") !== "1"
         );
+        const stages = [...row.querySelectorAll<HTMLElement>("[data-cl-stage]")];
         cards.forEach((c) => {
           c.style.minHeight = "";
         });
+        stages.forEach((s) => {
+          s.style.minHeight = "";
+        });
         if (!cards.length) return;
-        let max = 0;
+        let maxCard = 0;
         for (const c of cards) {
-          max = Math.max(max, c.getBoundingClientRect().height);
+          maxCard = Math.max(maxCard, c.getBoundingClientRect().height);
         }
-        const h = Math.ceil(max);
+        const cardH = Math.ceil(maxCard);
         cards.forEach((c) => {
-          c.style.minHeight = `${h}px`;
+          c.style.minHeight = `${cardH}px`;
+        });
+        let maxStage = 0;
+        for (const s of stages) {
+          maxStage = Math.max(maxStage, s.getBoundingClientRect().height);
+        }
+        const stageH = Math.ceil(maxStage);
+        stages.forEach((s) => {
+          s.style.minHeight = `${stageH}px`;
         });
       });
     };
     equalize();
-    const id = requestAnimationFrame(equalize);
+    const id = requestAnimationFrame(() => {
+      equalize();
+      requestAnimationFrame(equalize);
+    });
     window.addEventListener("resize", equalize);
     return () => {
       cancelAnimationFrame(id);
