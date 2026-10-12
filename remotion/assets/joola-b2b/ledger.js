@@ -208,7 +208,7 @@
       order: "PO-118",
       issued: "Sep 18, 2026",
       due: "Oct 18, 2026",
-      amount: 3802.4,
+      amount: 3800.0,
       status: "Due",
       open: true,
     },
@@ -232,6 +232,14 @@
     },
   ];
 
+  /**
+   * Round credit seed: limit $50,000 · open balance (ex-this-order) $5,000 ·
+   * available before place $45,000 · after this order $25,693.50.
+   * INV-1039 ($3,800) + INV-1021 ($1,200) = $5,000 prior used.
+   * INV-1042 books this restock, so available after place = limit − open.
+   */
+  var creditLimit = 50000;
+  var creditPriorUsed = 5000;
   var creditUsed =
     Math.round(
       invoices
@@ -242,15 +250,13 @@
           return s + inv.amount;
         }, 0) * 100
     ) / 100;
-  var creditLimit = 50000;
+  /** Sanity: open invoices must equal priorUsed + this order. */
+  if (Math.abs(creditUsed - (creditPriorUsed + orderTotal)) > 0.009) {
+    creditUsed = Math.round((creditPriorUsed + orderTotal) * 100) / 100;
+  }
   var creditAvailable = Math.round((creditLimit - creditUsed) * 100) / 100;
-  /**
-   * INV-1042 already books this restock on the credit line, so
-   * creditAvailable IS the balance after placing this order.
-   */
   var creditAfterOrder = creditAvailable;
-  /** Open balance excluding this restock (INV-1042), for segmented credit bar. */
-  var creditPriorUsed = Math.round((creditUsed - orderTotal) * 100) / 100;
+  var creditPriorAvailable = Math.round((creditLimit - creditPriorUsed) * 100) / 100;
 
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
@@ -287,7 +293,7 @@
       id: "PO-118",
       label: "Match week restock",
       when: "Sep 18",
-      total: 3802.4,
+      total: 3800.0,
       lines: 3,
     },
     {
@@ -365,8 +371,8 @@
       used: creditUsed,
       priorUsed: creditPriorUsed,
       thisOrder: orderTotal,
-      /** Available before placing this order (priorUsed already booked on INV). */
-      priorAvailable: Math.round((creditLimit - creditPriorUsed) * 100) / 100,
+      /** Available before placing this order. */
+      priorAvailable: creditPriorAvailable,
       available: creditAvailable,
       afterOrder: creditAfterOrder,
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
@@ -391,10 +397,8 @@
         creditLimit,
         creditAvailable,
         creditPriorUsed,
-        Math.round((creditLimit - creditPriorUsed) * 100) / 100,
+        creditPriorAvailable,
         creditAfterOrder,
-        Math.round(orderTotal),
-        Math.round(creditLimit - creditPriorUsed),
       ];
       orderLines.forEach(function (line) {
         amounts.push(lineAmount(line));

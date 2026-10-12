@@ -1254,33 +1254,53 @@ img { display: block; max-width: 100%; }
   display: none;
 }
 .cart-field .po-warn.show { display: block; }
-.page-confirm {
+/* Confirmation: page/card hug content — never stretch to viewport height */
+[data-screen="confirmation"] .page.page-confirm {
+  flex: 0 0 auto;
   display: flex;
   justify-content: center;
-  padding-top: 8px;
+  align-items: flex-start;
+  padding-top: 24px;
+  padding-bottom: 48px;
+  min-height: 0;
 }
 .confirm-panel {
-  margin-top: 20px;
+  margin-top: 0;
   width: 100%;
   max-width: 480px;
+  height: auto;
+  align-self: flex-start;
+  flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   padding: 24px;
   background: #fff;
 }
+.confirm-panel .confirm-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
 .confirm-panel h1 { margin: 0; }
+.confirm-panel .confirm-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
 .confirm-panel .confirm-lede {
   margin: 8px 0 0;
   font-size: var(--text-body);
+  font-weight: 400;
   color: var(--muted);
   line-height: 1.45;
-}
-.confirm-panel .confirm-status {
-  margin: 12px 0 0;
-  font-size: var(--text-meta);
-  font-weight: 500;
-  color: var(--ink);
-  line-height: 1.4;
 }
 .confirm-rows {
   margin-top: 20px;
@@ -1294,6 +1314,7 @@ img { display: block; max-width: 100%; }
   gap: 16px;
   font-size: var(--text-ui);
 }
+.confirm-rows .row[hidden] { display: none !important; }
 .confirm-rows .row .k { color: var(--faint); font-weight: 500; }
 .confirm-rows .row .v {
   color: var(--ink);
@@ -1306,6 +1327,7 @@ img { display: block; max-width: 100%; }
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .invoice-table {
   margin-top: 24px;
@@ -2401,17 +2423,8 @@ img { display: block; max-width: 100%; }
     var orderEnd = showOrder ? L.credit.priorPct + L.credit.orderPct : L.credit.pct;
     var leftLabel = L.terms + " credit";
     var priorAvail = L.credit.priorAvailable != null ? L.credit.priorAvailable : L.credit.available;
-    /** Whole dollars keep the Uses line on one row in the 320px summary. */
-    function moneyShort(n) {
-      return Math.round(n).toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      });
-    }
     var rightLabel = showOrder
-      ? "Uses " + moneyShort(L.credit.thisOrder) + " of " + moneyShort(priorAvail) + " available"
+      ? "Uses " + money(L.credit.thisOrder) + " of " + money(priorAvail) + " available"
       : money(L.credit.available) + " available";
     var tip =
       "<div class=\"credit-tip\" data-credit-tip role=\"tooltip\">" +
@@ -3062,24 +3075,23 @@ img { display: block; max-width: 100%; }
       L.shipTos.find(function (a) {
         return a.id === L.shipToId;
       }) || L.shipTos[0];
+    /** Only render optional rows when they have a value (never empty label/value). */
     var poRow = L.customerPo
       ? '<div class="row" data-confirm-po><span class="k">Your PO</span><span class="v" data-customer-po>' +
         L.customerPo +
         "</span></div>"
-      : '<div class="row" data-confirm-po hidden><span class="k">Your PO</span><span class="v" data-customer-po></span></div>';
-    var needByRow =
-      '<div class="row" data-confirm-needby hidden><span class="k">Need by</span><span class="v" data-needby-value>' +
-      L.shipDate +
-      "</span></div>";
+      : "";
     return (
       '<section class="screen" data-screen="confirmation">' +
       shellOpen("cart", emptyCart()) +
       '<div class="page page-confirm">' +
       '<div class="confirm-panel" data-confirm-panel>' +
+      '<div class="confirm-title-row">' +
       "<h1>Order placed</h1>" +
+      '<span class="confirm-tag" data-confirm-status>Awaiting rep confirmation</span>' +
+      "</div>" +
       '<p class="confirm-lede">You\'ll get the invoice by email when it ships.</p>' +
-      '<p class="confirm-status" data-confirm-status>Confirmed by your rep within 1 business day</p>' +
-      '<div class="confirm-rows">' +
+      '<div class="confirm-rows" data-confirm-rows>' +
       '<div class="row"><span class="k">Order</span><span class="v" data-order-id>' +
       L.orderId +
       "</span></div>" +
@@ -3092,7 +3104,6 @@ img { display: block; max-width: 100%; }
       ", " +
       ship.site +
       "</span></div>" +
-      needByRow +
       '<div class="row"><span class="k">Lines</span><span class="v">' +
       itemCountLabel(L.orderLines.length) +
       "</span></div>" +
@@ -3101,8 +3112,8 @@ img { display: block; max-width: 100%; }
       "</span></div>" +
       "</div>" +
       '<div class="confirm-actions">' +
-      '<button type="button" class="btn-primary" data-tab="invoices">View invoices</button>' +
-      '<button type="button" class="btn-text" data-tab="qo-desktop">Back to Quick order</button>' +
+      '<button type="button" class="btn-primary" data-tab="qo-desktop">Back to Quick order</button>' +
+      '<button type="button" class="btn-text" data-tab="messages">Message your rep</button>' +
       "</div></div></div>" +
       shellClose() +
       "</section>"
@@ -3325,24 +3336,51 @@ img { display: block; max-width: 100%; }
     var cartRoot = document.querySelector('[data-screen="cart"]');
     var conf = document.querySelector('[data-screen="confirmation"]');
     if (!cartRoot || !conf) return;
+    var rows = conf.querySelector("[data-confirm-rows]");
+    if (!rows) return;
     var poInput = cartRoot.querySelector("[data-po-input]");
     var needCheck = cartRoot.querySelector("[data-need-by-check]");
     var po = ((poInput && poInput.value) || "").trim();
     var poRow = conf.querySelector("[data-confirm-po]");
-    var poVal = conf.querySelector("[data-customer-po]");
-    if (poRow && poVal) {
-      if (po) {
-        poVal.textContent = po;
-        poRow.removeAttribute("hidden");
-      } else {
-        poVal.textContent = "";
-        poRow.setAttribute("hidden", "");
+    if (po) {
+      if (!poRow) {
+        poRow = document.createElement("div");
+        poRow.className = "row";
+        poRow.setAttribute("data-confirm-po", "");
+        poRow.innerHTML =
+          '<span class="k">Your PO</span><span class="v" data-customer-po></span>';
+        var orderRow = rows.querySelector("[data-order-id]");
+        var insertAfter = orderRow && orderRow.closest(".row");
+        if (insertAfter && insertAfter.nextSibling) {
+          rows.insertBefore(poRow, insertAfter.nextSibling);
+        } else {
+          rows.appendChild(poRow);
+        }
       }
+      var poVal = poRow.querySelector("[data-customer-po]");
+      if (poVal) poVal.textContent = po;
+    } else if (poRow) {
+      poRow.remove();
     }
     var needRow = conf.querySelector("[data-confirm-needby]");
-    if (needRow) {
-      if (needCheck && needCheck.checked) needRow.removeAttribute("hidden");
-      else needRow.setAttribute("hidden", "");
+    if (needCheck && needCheck.checked) {
+      if (!needRow) {
+        needRow = document.createElement("div");
+        needRow.className = "row";
+        needRow.setAttribute("data-confirm-needby", "");
+        needRow.innerHTML =
+          '<span class="k">Need by</span><span class="v" data-needby-value>' +
+          L.shipDate +
+          "</span>";
+        var shipRow = null;
+        rows.querySelectorAll(".row").forEach(function (r) {
+          if (/Ship to/i.test((r.querySelector(".k") || {}).textContent || "")) shipRow = r;
+        });
+        if (shipRow && shipRow.nextSibling) rows.insertBefore(needRow, shipRow.nextSibling);
+        else rows.appendChild(needRow);
+      }
+    } else if (needRow) {
+      needRow.remove();
     }
   }
 

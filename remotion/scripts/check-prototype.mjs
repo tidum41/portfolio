@@ -129,7 +129,7 @@ async function main() {
     await page.waitForTimeout(150);
 
     const result = await page.evaluate(
-      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, creditAvailable, perseusQty, perseusUnit, buyerBySku }) => {
+      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, creditAvailable, creditPriorUsed, creditPriorAvailable, creditAfterOrder, perseusQty, perseusUnit, buyerBySku }) => {
         const issues = {
           images: [],
           overlaps: [],
@@ -147,6 +147,7 @@ async function main() {
           tabularNums: [],
           moneyAlign: [],
           rowHeight: [],
+          creditReconcile: [],
           singleAccent: [],
           statusPill: [],
           imageContain: [],
@@ -371,8 +372,12 @@ async function main() {
             if (/INV-1042 will show/i.test(panel.textContent || "")) {
               issues.ia.push("confirmation must not promise invoice number before billing");
             }
-            if (!/Confirmed by your rep within 1 business day/i.test(panel.textContent || "")) {
-              issues.ia.push("confirmation missing rep status line");
+            const tag = panel.querySelector("[data-confirm-status], .confirm-tag");
+            if (!tag || !/Awaiting rep confirmation/i.test(tag.textContent || "")) {
+              issues.ia.push("confirmation missing 'Awaiting rep confirmation' status tag");
+            }
+            if (/Confirmed by your rep within 1 business day/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation still uses old bold status sentence");
             }
             const oid = panel.querySelector("[data-order-id]");
             if (!oid || !/^SO-\d+/i.test((oid.textContent || "").trim())) {
@@ -380,6 +385,27 @@ async function main() {
             }
             if (/PO-120/i.test(panel.textContent || "")) {
               issues.ia.push("confirmation still shows PO-120 as order id");
+            }
+            if (panel.querySelector("[data-confirm-po]") && visible(panel.querySelector("[data-confirm-po]"))) {
+              const pv = (panel.querySelector("[data-customer-po]")?.textContent || "").trim();
+              if (!pv) issues.ia.push("confirmation shows empty Your PO row");
+            }
+            const primary = panel.querySelector(".confirm-actions .btn-primary");
+            const secondary = panel.querySelector(".confirm-actions .btn-text");
+            if (!primary || !/Back to Quick order|Start a new order/i.test(primary.textContent || "")) {
+              issues.ia.push("confirmation primary must be Back to Quick order");
+            }
+            if (primary && /View invoices/i.test(primary.textContent || "")) {
+              issues.ia.push("confirmation primary must not be View invoices (none yet)");
+            }
+            if (!secondary || !/Message your rep|View order/i.test(secondary.textContent || "")) {
+              issues.ia.push("confirmation missing Message your rep / View order secondary");
+            }
+            // Card must hug content — not stretch toward viewport height
+            const pr = panel.getBoundingClientRect();
+            const vh = window.innerHeight || 1080;
+            if (pr.height > vh * 0.55) {
+              issues.ia.push(`confirmation card too tall (${Math.round(pr.height)}px) — should hug content`);
             }
           }
           // Cart chrome emptied after place
@@ -395,6 +421,23 @@ async function main() {
             issues.ia.push("confirmation cart badge still visible after place");
           }
         }
+
+        // No visible label/value row with an empty value (any screen)
+        root.querySelectorAll(".confirm-rows .row, .detail-row, .sum-row, .msg-details .detail-row").forEach((row) => {
+          if (!visible(row)) return;
+          const k = row.querySelector(".k, .sum-row > span:first-child, [class='k']");
+          const v = row.querySelector(".v, .sum-row > span:last-child, [data-customer-po], [data-needby-value]");
+          // confirm/detail rows
+          const label = row.querySelector(":scope > .k");
+          const value = row.querySelector(":scope > .v");
+          if (label && value) {
+            const lt = (label.textContent || "").trim();
+            const vt = (value.textContent || "").trim();
+            if (lt && !vt) {
+              issues.ia.push(`empty value for label "${lt}" on ${screen}`);
+            }
+          }
+        });
         must.forEach((n) => {
           if (!foundMoney.some((f) => Math.abs(f - n) <= 0.009)) {
             issues.ledger.push(`missing required $${n.toFixed(2)}`);
@@ -926,8 +969,13 @@ async function main() {
             if (!/Net 30 credit/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("credit meter missing 'Net 30 credit' label");
             }
-            if (!/Uses \$[\d,]+(?:\.\d{2})? of \$[\d,]+(?:\.\d{2})? available/i.test(summary.textContent || "")) {
-              issues.cartCheckout.push("credit meter missing 'Uses $X of $Y available' label");
+            const usesRe = new RegExp(
+              `Uses \\$${orderTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of \\$${creditPriorAvailable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available`
+            );
+            if (!usesRe.test(summary.textContent || "")) {
+              issues.cartCheckout.push(
+                `credit meter must say exact Uses $${orderTotal.toFixed(2)} of $${creditPriorAvailable.toFixed(2)} available`
+              );
             }
             if (/left after this order/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("legacy 'left after this order' credit copy still present");
@@ -1469,6 +1517,57 @@ async function main() {
           }
         }
 
+        // Credit figures must reconcile on cart + invoices (same ledger)
+        if (screen === "cart" || screen === "invoices") {
+          const t = root.innerText || "";
+          const need = [
+            ["thisOrder", orderTotal],
+            ["priorAvailable", creditPriorAvailable],
+            ["afterOrder", creditAfterOrder],
+            ["limit", creditLimit],
+          ];
+          // Cart Uses line must include thisOrder + priorAvailable
+          if (screen === "cart") {
+            need.forEach(([name, n]) => {
+              if (name === "limit") return; // limit may only appear in tip/invoices
+              if (!t.includes(n.toLocaleString("en-US", { style: "currency", currency: "USD" })) &&
+                  !t.includes("$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","))) {
+                // fallback parse
+                const monies = [];
+                const re = /\$[\d,]+(?:\.\d{2})?/g;
+                let m;
+                while ((m = re.exec(t))) monies.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+                if (!monies.some((x) => Math.abs(x - n) <= 0.009)) {
+                  issues.creditReconcile.push(`cart missing credit ${name}=$${n.toFixed(2)}`);
+                }
+              }
+            });
+            // Arithmetic: priorUsed + thisOrder + afterOrder === limit
+            if (Math.abs(creditPriorUsed + orderTotal + creditAfterOrder - creditLimit) > 0.009) {
+              issues.creditReconcile.push("ledger prior+order+left ≠ limit");
+            }
+            if (Math.abs(creditPriorAvailable - (creditLimit - creditPriorUsed)) > 0.009) {
+              issues.creditReconcile.push("priorAvailable ≠ limit − priorUsed");
+            }
+            if (Math.abs(creditPriorAvailable - orderTotal - creditAfterOrder) > 0.009) {
+              issues.creditReconcile.push("priorAvailable − thisOrder ≠ afterOrder");
+            }
+          }
+          if (screen === "invoices") {
+            const monies = [];
+            const re = /\$[\d,]+(?:\.\d{2})?/g;
+            let m;
+            while ((m = re.exec(t))) monies.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+            if (!monies.some((x) => Math.abs(x - creditAvailable) <= 0.009) &&
+                !monies.some((x) => Math.abs(x - creditAfterOrder) <= 0.009)) {
+              issues.creditReconcile.push(`invoices missing available/left $${creditAvailable.toFixed(2)}`);
+            }
+            if (!monies.some((x) => Math.abs(x - orderTotal) <= 0.009)) {
+              issues.creditReconcile.push(`invoices missing order total $${orderTotal.toFixed(2)}`);
+            }
+          }
+        }
+
         // Fonts loaded (document.fonts) — run once per evaluate on qo-desktop
         if (screen === "qo-desktop") {
           const ok400 = document.fonts.check('400 14px "FKGroteskNeue"');
@@ -1531,6 +1630,9 @@ async function main() {
         creditUsed: ledger.credit.used,
         creditLimit: ledger.credit.limit,
         creditAvailable: ledger.credit.available,
+        creditPriorUsed: ledger.credit.priorUsed,
+        creditPriorAvailable: ledger.credit.priorAvailable,
+        creditAfterOrder: ledger.credit.afterOrder,
         perseusQty: ledger.perseusQty,
         perseusUnit: ledger.perseusUnit,
         buyerBySku: Object.fromEntries(
@@ -1565,6 +1667,7 @@ async function main() {
       ["qo-rail", result.qoRail],
       ["msg-context", result.msgContext],
       ["cart-checkout", result.cartCheckout],
+      ["credit-reconcile", result.creditReconcile],
       ["netsuite-labels", result.netsuiteLabels],
       ["pixel-nits", result.pixelNits],
       ["fonts-loaded", result.fontsLoaded],
@@ -1587,11 +1690,12 @@ async function main() {
         "tabular-nums": ["qo-desktop", "catalog", "cart", "invoices", "messages", "qo-mobile"],
         "single-accent": ["qo-desktop", "catalog", "cart", "invoices", "messages"],
         "multi-line": ["qo-desktop", "cart", "invoices", "messages"],
-        "ia": ["qo-desktop", "catalog", "invoices", "messages"],
+        "ia": ["qo-desktop", "catalog", "cart", "confirmation", "invoices", "messages"],
         "interaction-css": ["qo-desktop"],
         "qo-rail": ["qo-desktop"],
         "msg-context": ["messages"],
         "cart-checkout": ["cart"],
+        "credit-reconcile": ["cart", "invoices"],
         "netsuite-labels": ["qo-desktop", "cart", "invoices", "messages"],
         "pixel-nits": ["qo-desktop", "cart"],
         "fonts-loaded": ["qo-desktop"],
