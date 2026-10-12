@@ -1787,6 +1787,68 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       return { ok: report.length === 0, detail: report.join(" | ") || "5 axes ok" };
     });
     record(61, `Refinement axes labelled (${tag})`, refinements.ok, refinements.detail);
+
+    const refGap = await themePage.evaluate(() => {
+      const bad = [];
+      const cards = [
+        ...document.querySelectorAll(
+          '[data-cl-row-mode="rest"] [data-cl-kind="refinement"][data-cl-card]'
+        ),
+      ];
+      for (const card of cards) {
+        const id = card.getAttribute("data-cl-variant") || "?";
+        const wrap = card.querySelector("[data-cl-media-wrap]");
+        const img = card.querySelector("[data-cl-controlled-img]");
+        const title = card.querySelector("[data-cl-card-title]");
+        if (!wrap || !img || !title) {
+          bad.push(`${id}:missing`);
+          continue;
+        }
+        const wr = wrap.getBoundingClientRect();
+        const ir = img.getBoundingClientRect();
+        const tr = title.getBoundingClientRect();
+        // Poster must fill the media slot (no letterbox band).
+        if (Math.abs(ir.bottom - wr.bottom) > 1.5 || Math.abs(ir.top - wr.top) > 1.5) {
+          bad.push(
+            `${id}:letterbox imgB=${ir.bottom.toFixed(1)} wrapB=${wr.bottom.toFixed(1)}`
+          );
+        }
+        const expected = Number(card.getAttribute("data-cl-gap"));
+        const gap = tr.top - wr.bottom;
+        if (!Number.isFinite(expected) || Math.abs(gap - expected) > 1.5) {
+          bad.push(`${id}:gap ${gap.toFixed(1)}≠${expected}`);
+        }
+        // Spec label must advertise the gap when the spacing axis names it.
+        const spec = card
+          .closest("[data-cl-variant-cell]")
+          ?.querySelector("[data-cl-spec]")
+          ?.textContent.trim();
+        if (spec && /gap\s+(\d+)/.test(spec)) {
+          const labeled = Number(spec.match(/gap\s+(\d+)/)?.[1]);
+          if (Math.abs(gap - labeled) > 1.5) {
+            bad.push(`${id}:labelGap ${gap.toFixed(1)}≠${labeled}`);
+          }
+        }
+      }
+      return { ok: bad.length === 0, detail: bad.slice(0, 10).join(" | ") || "ok" };
+    });
+    record(62, `Refinement media fill + image→title gap (${tag})`, refGap.ok, refGap.detail);
+
+    const chipFonts = await themePage.evaluate(() => {
+      const chips = [
+        ...document.querySelectorAll(
+          '[data-cl-row-mode="rest"] [data-cl-concept="ref-chips"] [data-cl-ref-chip]'
+        ),
+      ].filter((c) => c.getAttribute("data-cl-ref-chip") !== "none");
+      if (chips.length < 4) return { ok: false, detail: `chips=${chips.length}` };
+      const sizes = chips.map((c) => Math.round(parseFloat(getComputedStyle(c).fontSize)));
+      const unique = [...new Set(sizes)];
+      return {
+        ok: unique.length === 1 && unique[0] === 11,
+        detail: `sizes=${sizes.join(",")}`,
+      };
+    });
+    record(63, `Chip font 11px across K1–K8 (${tag})`, chipFonts.ok, chipFonts.detail);
   } else {
     record(48, `Card titles match Mudit projects (${tag})`, true, "checked on 1440 light");
     record(49, `No text clipped by overflow:hidden (${tag})`, true, "checked on 1440 light");
@@ -1802,6 +1864,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     record(59, `Expand-caption no jump + approaches (${tag})`, true, "checked on 1440 light");
     record(60, `Controlled media identical (${tag})`, true, "checked on 1440 light");
     record(61, `Refinement axes labelled (${tag})`, true, "checked on 1440 light");
+    record(62, `Refinement media fill + image→title gap (${tag})`, true, "checked on 1440 light");
+    record(63, `Chip font 11px across K1–K8 (${tag})`, true, "checked on 1440 light");
   }
 
   await themeCtx.close();

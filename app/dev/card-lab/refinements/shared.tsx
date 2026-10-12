@@ -41,7 +41,8 @@ export type RefCardProps = {
   chip?: ChipKind;
   chipPlace?: ChipPlace;
   chipRadius?: number;
-  chipSize?: number;
+  /** Chip box height in px. Font size stays 11 across K1–K8. */
+  chipHeight?: number;
   gap?: number;
   inlineMeta?: boolean;
   radius?: number;
@@ -52,17 +53,19 @@ export type RefCardProps = {
   style?: CSSProperties;
 };
 
+const CHIP_FONT_PX = 11;
+
 function Chip({
   kind,
   place,
   radius,
-  size,
+  height,
   accent,
 }: {
   kind: ChipKind;
   place: ChipPlace;
   radius: number;
-  size: number;
+  height?: number;
   accent?: boolean;
 }) {
   if (kind === "none") return null;
@@ -76,12 +79,17 @@ function Chip({
           : REF_PROJECT.role;
   return (
     <span
-      className={`cl-ref__chip cl-ref__chip--${kind}${place === "over" ? " cl-ref__chip--over" : ""}`}
+      className={`cl-ref__chip cl-ref__chip--${kind}${place === "over" ? " cl-ref__chip--over" : ""}${height ? " cl-ref__chip--tall" : ""}`}
       data-cl-ref-chip={kind}
       data-cl-ref-chip-place={place}
+      data-cl-ref-chip-font={CHIP_FONT_PX}
       style={{
-        fontSize: size,
+        fontSize: CHIP_FONT_PX,
+        lineHeight: "16px",
         borderRadius: radius >= 99 ? 999 : radius,
+        ...(height
+          ? { height, minHeight: height, boxSizing: "border-box" as const }
+          : null),
         ...(accent && kind === "tint"
           ? { background: "color-mix(in srgb, var(--cl-accent) 16%, transparent)", color: "var(--cl-accent)" }
           : null),
@@ -99,7 +107,7 @@ export function RefinementCard(p: RefCardProps) {
   const chip = p.chip ?? "none";
   const chipPlace = p.chipPlace ?? "below";
   const chipRadius = p.chipRadius ?? 4;
-  const chipSize = p.chipSize ?? 11;
+  const chipHeight = p.chipHeight;
   const hover = p.hover ?? "none";
   const metaFace = p.metaFace ?? "sans";
   const titleW = p.titleWeight ?? 500;
@@ -117,6 +125,7 @@ export function RefinementCard(p: RefCardProps) {
       data-cl-variant={p.id}
       data-cl-force-hover={force ? "1" : "0"}
       data-cl-hover={hover}
+      data-cl-gap={String(gap)}
       data-cl-ref-dark={p.dark ? "1" : "0"}
       style={{
         gap,
@@ -124,10 +133,11 @@ export function RefinementCard(p: RefCardProps) {
         ...p.style,
       }}
     >
+      {/* No data-cl-stage here — row equalize would stretch the wrap taller
+          than the 1.2/1 poster and leave a blank band above the title. */}
       <div
         className="cl-ref__media-wrap"
         data-cl-media-wrap
-        data-cl-stage
         style={{
           borderRadius: radius,
           border: p.border ? "1px solid var(--cl-ref-border)" : undefined,
@@ -146,7 +156,7 @@ export function RefinementCard(p: RefCardProps) {
             kind={chip}
             place="over"
             radius={chipRadius}
-            size={chipSize}
+            height={chipHeight}
             accent={p.accent}
           />
         ) : null}
@@ -217,7 +227,7 @@ export function RefinementCard(p: RefCardProps) {
               kind={chip}
               place="below"
               radius={chipRadius}
-              size={chipSize}
+              height={chipHeight}
               accent={p.accent}
             />
           </div>

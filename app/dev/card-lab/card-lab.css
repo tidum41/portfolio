@@ -2899,12 +2899,25 @@
   position: relative;
   width: 100%;
   overflow: hidden;
+  aspect-ratio: 1.2 / 1;
+  line-height: 0;
   transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
 
 .cl-ref__media {
   width: 100%;
+  height: 100%;
   display: block;
+  aspect-ratio: unset !important;
+}
+
+.cl-ref__media .cl-media__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .cl-ref__copy {
@@ -2978,13 +2991,20 @@
 .cl-ref__chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   line-height: 16px;
   padding: 4px 8px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--cl-secondary);
   border: 1px solid var(--cl-hairline);
   background: transparent;
   white-space: nowrap;
+}
+
+.cl-ref__chip--tall {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .cl-ref__chip--tint {

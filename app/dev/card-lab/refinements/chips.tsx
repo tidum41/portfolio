@@ -7,21 +7,22 @@ export type ChipsVariant = ConceptVariant & {
   chip: ChipKind;
   chipPlace: ChipPlace;
   chipRadius: number;
-  chipSize: number;
+  /** Box height only — font stays 11px across K1–K8. */
+  chipHeight?: number;
   accent?: boolean;
   note: string;
 };
 
 const VARIANTS: ChipsVariant[] = [
-  { id: "K0", chip: "none", chipPlace: "below", chipRadius: 4, chipSize: 11, note: "none" },
-  { id: "K1", chip: "outline", chipPlace: "below", chipRadius: 4, chipSize: 11, note: "outline · below" },
-  { id: "K2", chip: "tint", chipPlace: "below", chipRadius: 4, chipSize: 11, accent: true, note: "filled tint · below" },
-  { id: "K3", chip: "mono", chipPlace: "below", chipRadius: 4, chipSize: 11, note: "mono uppercase · below" },
-  { id: "K4", chip: "year", chipPlace: "below", chipRadius: 4, chipSize: 11, note: "year chip · below" },
-  { id: "K5", chip: "role", chipPlace: "below", chipRadius: 4, chipSize: 11, note: "role chip · below" },
-  { id: "K6", chip: "outline", chipPlace: "over", chipRadius: 4, chipSize: 11, note: "outline · over image" },
-  { id: "K7", chip: "outline", chipPlace: "below", chipRadius: 4, chipSize: 20, note: "20px · radius 4" },
-  { id: "K8", chip: "outline", chipPlace: "below", chipRadius: 99, chipSize: 11, note: "full pill radius" },
+  { id: "K0", chip: "none", chipPlace: "below", chipRadius: 4, note: "none" },
+  { id: "K1", chip: "outline", chipPlace: "below", chipRadius: 4, note: "outline · below" },
+  { id: "K2", chip: "tint", chipPlace: "below", chipRadius: 4, accent: true, note: "filled tint · below" },
+  { id: "K3", chip: "mono", chipPlace: "below", chipRadius: 4, note: "mono uppercase · below" },
+  { id: "K4", chip: "year", chipPlace: "below", chipRadius: 4, note: "year chip · below" },
+  { id: "K5", chip: "role", chipPlace: "below", chipRadius: 4, note: "role chip · below" },
+  { id: "K6", chip: "outline", chipPlace: "over", chipRadius: 4, note: "outline · over image" },
+  { id: "K7", chip: "outline", chipPlace: "below", chipRadius: 4, chipHeight: 20, note: "height 20 · radius 4" },
+  { id: "K8", chip: "outline", chipPlace: "below", chipRadius: 99, note: "full pill radius" },
 ];
 
 export const refinementChips: ConceptDefinition<ChipsVariant> = {
@@ -45,7 +46,7 @@ export const refinementChips: ConceptDefinition<ChipsVariant> = {
       chip={v.chip}
       chipPlace={v.chipPlace}
       chipRadius={v.chipRadius}
-      chipSize={v.chipSize}
+      chipHeight={v.chipHeight}
       accent={v.accent}
       titleWeight={500}
       metaWeight={400}
