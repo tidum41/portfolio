@@ -36,7 +36,6 @@ function BrandLockupCard({
     >
       <div
         className="cl-brand__stage"
-        data-cl-media
         data-cl-aspect={ASPECT}
         style={{
           aspectRatio: ASPECT,

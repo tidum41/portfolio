@@ -89,7 +89,7 @@ export const refinementType: ConceptDefinition<TypeVariant> = {
     <RefinementCard
       id={v.id}
       axis="type"
-      direction={ctx?.direction}
+      direction={101}
       forceHover={ctx?.forceHover}
       titleWeight={v.titleWeight}
       metaWeight={v.metaWeight}

@@ -156,32 +156,36 @@ export function RefinementCard(p: RefCardProps) {
         <div
           className={`cl-ref__title-row${p.inlineMeta ? " cl-ref__title-row--inline" : ""}`}
         >
-          <p
-            className="cl-ref__title"
-            data-cl-card-title
-            style={{
-              fontWeight: titleW,
-              fontSize: titlePx,
-              letterSpacing: p.letterSpacing,
-              color: p.titleColor,
-              textDecoration:
-                hover === "underline" && force ? "underline" : undefined,
-              textUnderlineOffset: 3,
-            }}
-          >
-            {REF_PROJECT.title}
+          <div className="cl-ref__title-wrap">
+            <p
+              className="cl-ref__title"
+              data-cl-card-title
+              style={{
+                fontWeight: titleW,
+                fontSize: titlePx,
+                lineHeight: `${titlePx >= 18 ? 24 : 20}px`,
+                letterSpacing: p.letterSpacing,
+                color: p.titleColor,
+                textDecoration:
+                  hover === "underline" && force ? "underline" : undefined,
+                textUnderlineOffset: 3,
+              }}
+            >
+              {REF_PROJECT.title}
+            </p>
             {hover === "arrow" ? (
               <span className="cl-ref__arrow" data-cl-ref-arrow aria-hidden>
                 →
               </span>
             ) : null}
-          </p>
+          </div>
           {p.inlineMeta ? (
             <span
               className="cl-ref__year"
               style={{
                 fontWeight: metaW,
                 fontSize: metaPx,
+                lineHeight: "20px",
                 color: p.metaColor,
               }}
             >
@@ -190,21 +194,28 @@ export function RefinementCard(p: RefCardProps) {
           ) : null}
         </div>
 
-        <p
-          className={`cl-ref__meta cl-ref__meta--${metaFace}${p.inlineMeta ? " cl-ref__meta--assistive" : ""}`}
-          data-cl-card-desc
-          style={{
-            fontWeight: metaW,
-            fontSize: metaPx,
-            color:
-              hover === "meta-shift" && force
-                ? "var(--cl-accent)"
-                : p.metaColor,
-            letterSpacing: metaFace === "smallcaps" ? "0.06em" : undefined,
-          }}
-        >
-          {REF_PROJECT.meta}
-        </p>
+        {!p.inlineMeta ? (
+          <p
+            className={`cl-ref__meta cl-ref__meta--${metaFace}`}
+            data-cl-card-desc
+            style={{
+              fontWeight: metaW,
+              fontSize: metaPx,
+              lineHeight: "20px",
+              color:
+                hover === "meta-shift" && force
+                  ? "var(--cl-accent)"
+                  : p.metaColor,
+              letterSpacing: metaFace === "smallcaps" ? "0.06em" : undefined,
+            }}
+          >
+            {REF_PROJECT.meta}
+          </p>
+        ) : (
+          <p className="cl-ref__meta" data-cl-card-desc hidden>
+            {REF_PROJECT.meta}
+          </p>
+        )}
 
         {chip !== "none" && chipPlace === "below" ? (
           <div className="cl-ref__chip-row">

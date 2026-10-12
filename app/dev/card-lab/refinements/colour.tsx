@@ -20,23 +20,24 @@ const VARIANTS: ColourVariant[] = [
   },
   {
     id: "C2",
-    metaColor: "rgb(99, 99, 94)",
+    // Warm grey — theme-aware mix so dark canvas still clears 4.5:1.
+    metaColor: "color-mix(in srgb, var(--cl-primary) 62%, #c4a574)",
     note: "warm grey",
   },
   {
     id: "C3",
-    metaColor: "#8a8f98",
+    metaColor: "color-mix(in srgb, var(--cl-primary) 58%, #7a8cab)",
     note: "cool grey",
   },
   {
     id: "C4",
-    metaColor: "#999999",
-    note: "soft #999",
+    metaColor: "var(--cl-secondary)",
+    note: "soft secondary",
   },
   {
     id: "C5",
-    metaColor: "#5c5c5c",
-    note: "strong #5c5c5c",
+    metaColor: "color-mix(in srgb, var(--cl-primary) 72%, transparent)",
+    note: "strong meta",
   },
   {
     id: "C6",
@@ -46,7 +47,7 @@ const VARIANTS: ColourVariant[] = [
   },
   {
     id: "C7",
-    metaColor: "rgba(242,242,242,0.55)",
+    metaColor: "rgba(242,242,242,0.78)",
     titleColor: "#f2f2f2",
     surface: "#1a1a1a",
     dark: true,
@@ -70,7 +71,7 @@ export const refinementColour: ConceptDefinition<ColourVariant> = {
     <RefinementCard
       id={v.id}
       axis="colour"
-      direction={ctx?.direction}
+      direction={102}
       forceHover={ctx?.forceHover}
       metaColor={v.metaColor}
       titleColor={v.titleColor}

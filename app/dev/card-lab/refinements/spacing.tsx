@@ -40,7 +40,7 @@ export const refinementSpacing: ConceptDefinition<SpacingVariant> = {
     <RefinementCard
       id={v.id}
       axis="spacing"
-      direction={ctx?.direction}
+      direction={104}
       forceHover={ctx?.forceHover}
       gap={v.gap}
       inlineMeta={v.inlineMeta}

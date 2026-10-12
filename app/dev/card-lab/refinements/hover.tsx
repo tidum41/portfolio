@@ -31,7 +31,7 @@ export const refinementHover: ConceptDefinition<HoverVariant> = {
     <RefinementCard
       id={v.id}
       axis="hover"
-      direction={ctx?.direction}
+      direction={105}
       forceHover={ctx?.forceHover}
       hover={v.hover}
       titleWeight={500}
