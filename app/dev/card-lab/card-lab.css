@@ -559,6 +559,15 @@
   align-items: center;
   justify-content: center;
   min-height: 64px;
+  position: relative;
+}
+
+.cl-wire__body--video .cl-wire__meta {
+  padding-top: 4px;
+}
+
+.cl-wire__body--video .cl-wire__line {
+  height: 10px;
 }
 
 .cl-wire__playbtn {
@@ -650,7 +659,7 @@
 .cl-wire__veil {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.28);
   opacity: 0;
   pointer-events: none;
   transition: opacity 300ms ease-out;
@@ -715,9 +724,13 @@
 
 .cl-expand__chip-rail {
   height: 32px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   display: flex;
   align-items: stretch;
+}
+
+.cl-expand[data-cl-chip-placement="above-media"] .cl-expand__chip-rail {
+  margin-bottom: 4px;
 }
 
 .cl-expand__chip {
@@ -919,14 +932,16 @@
 .cl-metric__metrics {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   margin: 8px 0 0;
 }
 
 .cl-metric__metric {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -972,8 +987,15 @@
 .cl-metric:hover .cl-metric__cta,
 .cl-metric:focus-within .cl-metric__cta,
 .cl-metric[data-cl-force-hover="1"] .cl-metric__cta {
-  background: #2a2a2a;
+  background: #0080a5;
   transform: translateY(-2px);
+}
+
+.cl-metric:hover .cl-metric__title,
+.cl-metric:focus-within .cl-metric__title,
+.cl-metric[data-cl-force-hover="1"] .cl-metric__title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .card-lab[data-theme="dark"] .cl-metric:hover .cl-metric__cta,
@@ -1040,15 +1062,21 @@
   align-items: flex-start;
   gap: 8px;
   padding: 16px;
-  /* Solid base so contrast checks resolve a dark plate under white type. */
-  background-color: rgb(16, 20, 24);
+  /* Dark plate only behind the type cluster; wireframe stays visible above. */
+  background-color: transparent;
   background-image: linear-gradient(
     to top,
-    rgba(8, 12, 16, 0.92) 0%,
-    rgba(8, 12, 16, 0.55) 45%,
-    rgba(8, 12, 16, 0.2) 100%
+    rgba(8, 12, 16, 0.88) 0%,
+    rgba(8, 12, 16, 0.45) 38%,
+    rgba(8, 12, 16, 0) 72%
   );
   border-radius: 16px;
+}
+
+.cl-metric__on-media .cl-metric__metrics {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: rgb(16, 20, 24);
 }
 
 .cl-metric__on-media .cl-metric__value {
@@ -1081,14 +1109,14 @@
 .cl-status__media {
   width: 100%;
   display: block;
-  filter: brightness(0.96);
+  filter: brightness(1);
   transition: filter 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cl-status:hover .cl-status__media,
 .cl-status:focus-within .cl-status__media,
 .cl-status[data-cl-force-hover="1"] .cl-status__media {
-  filter: brightness(1.04);
+  filter: brightness(1.02);
 }
 
 .cl-status__line {
@@ -1170,45 +1198,16 @@
   transition: opacity 300ms ease-out;
 }
 
-/* mark-word: horizontal lockup + side bands so rest ≠ plain */
+/* mark-word: horizontal lockup so rest ≠ plain stacked wordmark */
 .cl-brand__lockup--mark-word {
   flex-direction: row;
   gap: 12px;
 }
 
-.cl-brand__bands {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 300ms ease-out;
-}
-
-.cl-brand[data-cl-force-hover="1"] .cl-brand__bands {
-  transition: none;
-}
-
-.cl-brand__bands i {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.cl-brand__bands i:first-child {
-  left: 0;
-}
-
-.cl-brand__bands i:last-child {
-  right: 0;
-}
-
-.cl-brand:hover .cl-brand__bands,
-.cl-brand:focus-within .cl-brand__bands,
-.cl-brand[data-cl-force-hover="1"] .cl-brand__bands {
-  opacity: 0;
+.cl-brand__lockup--plain .cl-brand__wordmark {
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0.02em;
 }
 
 .cl-brand__wordmark {
@@ -1343,11 +1342,11 @@
 }
 
 .cl-dual__edge[data-cl-edge="hairline"] {
-  box-shadow: inset 0 0 0 1px #ffffff, inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 2px #ffffff;
 }
 
 .card-lab[data-theme="dark"] .cl-dual__edge[data-cl-edge="hairline"] {
-  box-shadow: inset 0 0 0 1px #f2f2f2, inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 0 2px #f2f2f2;
 }
 
 .cl-dual:hover .cl-dual__edge,

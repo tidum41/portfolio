@@ -70,7 +70,7 @@ function GatedNdaCard({
           </span>
         )}
         <span className="cl-gate__request" data-cl-gate-request>
-          Request access
+          {v.gateStyle === "blur-code" ? "Enter code" : "Request access"}
         </span>
       </div>
       <div className="cl-gate__copy" data-cl-copy>
