@@ -357,8 +357,42 @@ async function main() {
         if (screen === "confirmation") {
           const panel = root.querySelector("[data-confirm-panel]");
           if (!panel || !visible(panel)) issues.ia.push("confirmation panel missing");
-          else if (!/Order placed|Thanks/i.test(panel.textContent || "")) {
-            issues.ia.push("confirmation missing placed acknowledgement");
+          else {
+            const h1 = panel.querySelector("h1");
+            if (!h1 || !/^Order placed$/i.test((h1.textContent || "").trim())) {
+              issues.ia.push("confirmation H1 must be 'Order placed'");
+            }
+            if (panel.querySelector(".confirm-kicker")) {
+              issues.ia.push("confirmation eyebrow/kicker must be removed");
+            }
+            if (!/invoice by email when it ships/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation missing invoice-by-email copy");
+            }
+            if (/INV-1042 will show/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation must not promise invoice number before billing");
+            }
+            if (!/Confirmed by your rep within 1 business day/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation missing rep status line");
+            }
+            const oid = panel.querySelector("[data-order-id]");
+            if (!oid || !/^SO-\d+/i.test((oid.textContent || "").trim())) {
+              issues.ia.push("confirmation order id must be JOOLA SO-… number");
+            }
+            if (/PO-120/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation still shows PO-120 as order id");
+            }
+          }
+          // Cart chrome emptied after place
+          const pill = root.querySelector("[data-cart-pill]");
+          const badge = pill && pill.querySelector("[data-cart-count]");
+          const totalEl = pill && pill.querySelector("[data-cart-total]");
+          const totalTxt = (totalEl && totalEl.textContent) || "";
+          const totalN = parseFloat(totalTxt.replace(/[$,]/g, "")) || 0;
+          if (!pill || totalN > 0.009) {
+            issues.ia.push(`confirmation cart pill still shows ${totalTxt.trim() || "amount"} (want empty/$0)`);
+          }
+          if (badge && visible(badge) && (badge.textContent || "").trim()) {
+            issues.ia.push("confirmation cart badge still visible after place");
           }
         }
         must.forEach((n) => {
@@ -892,8 +926,17 @@ async function main() {
             if (!/Net 30 credit/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("credit meter missing 'Net 30 credit' label");
             }
-            if (!/left after this order/i.test(summary.textContent || "")) {
-              issues.cartCheckout.push("credit meter missing 'left after this order' label");
+            if (!/Uses \$[\d,]+(?:\.\d{2})? of \$[\d,]+(?:\.\d{2})? available/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("credit meter missing 'Uses $X of $Y available' label");
+            }
+            if (/left after this order/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("legacy 'left after this order' credit copy still present");
+            }
+            if (summary.querySelector("[data-size-note]")) {
+              issues.cartCheckout.push("size warning should not fire on hero demo cart");
+            }
+            if (!summary.querySelector("[data-credit-tip]")) {
+              issues.cartCheckout.push("credit meter missing used/this order/left tooltip");
             }
             const bar = summary.querySelector("[data-credit-bar]");
             if (bar) {

@@ -157,9 +157,9 @@
     Math.round(perseusUnit * perseusLine.qty * 100) / 100;
 
   var shipDate = "Fri, Oct 17";
-  /** Story order id (buyer-facing). NetSuite also has a separate SO tranid. */
-  var orderId = "PO-120";
-  /** Maps to NetSuite otherRefNum; optional at checkout (left blank until filled). */
+  /** JOOLA sales order number (NetSuite SO tranid). Buyer PO is separate. */
+  var orderId = "SO-48213";
+  /** Maps to NetSuite otherRefNum; optional at checkout (blank until entered). */
   var customerPo = "";
   /** Sales order status in NetSuite Advanced Shipping flow. */
   var orderStatus = "Pending Fulfillment";
@@ -277,6 +277,11 @@
     },
   };
 
+  /**
+   * Last 3 restocks for reorder rail + size warning.
+   * PO-118 total matches INV-1039. Average is high enough that the hero
+   * cart (~$19.3k) is under 3× and does not trip the anomalous-size notice.
+   */
   var recentOrders = [
     {
       id: "PO-118",
@@ -286,13 +291,28 @@
       lines: 3,
     },
     {
-      id: "PO-110",
-      label: "Balls + bags",
-      when: "Aug 12",
-      total: 1200.0,
-      lines: 2,
+      id: "PO-104",
+      label: "Back-to-school",
+      when: "Jul 28",
+      total: 8400.0,
+      lines: 4,
+    },
+    {
+      id: "PO-098",
+      label: "Club pack",
+      when: "Jun 20",
+      total: 9200.0,
+      lines: 5,
     },
   ];
+  var recentAvg =
+    Math.round(
+      (recentOrders.reduce(function (s, o) {
+        return s + o.total;
+      }, 0) /
+        recentOrders.length) *
+        100
+    ) / 100;
 
   var templates = [
     {
@@ -345,6 +365,8 @@
       used: creditUsed,
       priorUsed: creditPriorUsed,
       thisOrder: orderTotal,
+      /** Available before placing this order (priorUsed already booked on INV). */
+      priorAvailable: Math.round((creditLimit - creditPriorUsed) * 100) / 100,
       available: creditAvailable,
       afterOrder: creditAfterOrder,
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
@@ -353,6 +375,7 @@
     },
     messages: messages,
     recentOrders: recentOrders,
+    recentAvg: recentAvg,
     templates: templates,
     money: money,
     priceAt: priceAt,
@@ -367,6 +390,11 @@
         creditUsed,
         creditLimit,
         creditAvailable,
+        creditPriorUsed,
+        Math.round((creditLimit - creditPriorUsed) * 100) / 100,
+        creditAfterOrder,
+        Math.round(orderTotal),
+        Math.round(creditLimit - creditPriorUsed),
       ];
       orderLines.forEach(function (line) {
         amounts.push(lineAmount(line));
