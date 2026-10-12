@@ -1,22 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import "dialkit/styles.css";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
-import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
-import GlobalCustomCursor from "@/components/GlobalCustomCursor";
-import UiSoundRoot from "@/components/UiSoundRoot";
-import AnimationProvider from "@/components/AnimationProvider";
-import DevToolbar from "@/components/DevToolbar";
-import DevDialRoot from "@/components/DevDialRoot";
-import { PersistentWorkShell } from "@/components/PersistentWorkShell";
-import PersistentArchiveShell from "@/components/PersistentArchiveShell";
-import PersistentAboutShell from "@/components/PersistentAboutShell";
-import PersistentSilkLayer from "@/components/PersistentSilkLayer";
-import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
-import PrimaryTabSync from "@/components/PrimaryTabSync";
+import SiteChrome from "@/components/SiteChrome";
 import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
 import {
   OG_IMAGE_ALT,
@@ -25,7 +11,6 @@ import {
   SITE_NAME,
   SITE_URL,
 } from "@/lib/site";
-import { Analytics } from '@vercel/analytics/next';
 
 // ABC Areal is the only sans on the site. Georgia stays on page titles.
 // Variable file axes: wght 400–700 (default 400), slnt -12–0 (default 0),
@@ -173,30 +158,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
-        {/* Injected via useServerInsertedHTML so React 19 never sees a
-            <script> in the component tree (raw script / next/script both warn). */}
-        <BootScripts jsonLd={getSiteJsonLd()} />
-        <a href="#main-content" className="skip-link">Skip to content</a>
-        <GlobalCustomCursor />
-        <UiSoundRoot />
-        <Nav />
-        <PrimaryRouteWarmup />
-        <PrimaryTabSync />
-        <main id="main-content" style={{ position: "relative" }}>
-          {/* Mounted once, unconditionally, for the whole session — never
-              unmounted by route changes. See PersistentWorkShell for why. */}
-          <PersistentSilkLayer />
-          <PersistentWorkShell projects={projects} />
-          <PersistentAboutShell />
-          <PersistentArchiveShell />
-          <AnimationProvider>
-            {children}
-          </AnimationProvider>
-          {process.env.NODE_ENV === "development" && <DevDialRoot />}
-        </main>
-        <Footer />
-        {process.env.NODE_ENV === "development" && <DevToolbar />}
-        <Analytics />
+        {/* Chrome gated in SiteChrome so /dev/card-lab never mounts nav,
+            shells, DialKit, analytics, etc. Live routes unchanged. */}
+        <SiteChrome projects={projects} jsonLd={getSiteJsonLd()}>
+          {children}
+        </SiteChrome>
       </body>
     </html>
   );

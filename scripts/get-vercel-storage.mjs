@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+import { writeFileSync } from "fs";
+const url = process.argv[2];
+const out = process.argv[3] || "/tmp/vercel-auth/storage.json";
+const browser = await chromium.launch({ headless: true });
+const ctx = await browser.newContext();
+const page = await ctx.newPage();
+await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
+await page.waitForTimeout(1000);
+await ctx.storageState({ path: out });
+const ok = await page.evaluate(() => !!document.querySelector("[data-cl-root]"));
+console.log(JSON.stringify({ ok, title: await page.title(), out }));
+await browser.close();
