@@ -194,28 +194,22 @@ export function RefinementCard(p: RefCardProps) {
           ) : null}
         </div>
 
-        {!p.inlineMeta ? (
-          <p
-            className={`cl-ref__meta cl-ref__meta--${metaFace}`}
-            data-cl-card-desc
-            style={{
-              fontWeight: metaW,
-              fontSize: metaPx,
-              lineHeight: "20px",
-              color:
-                hover === "meta-shift" && force
-                  ? "var(--cl-accent)"
-                  : p.metaColor,
-              letterSpacing: metaFace === "smallcaps" ? "0.06em" : undefined,
-            }}
-          >
-            {REF_PROJECT.meta}
-          </p>
-        ) : (
-          <p className="cl-ref__meta" data-cl-card-desc hidden>
-            {REF_PROJECT.meta}
-          </p>
-        )}
+        <p
+          className={`cl-ref__meta cl-ref__meta--${metaFace}`}
+          data-cl-card-desc
+          style={{
+            fontWeight: metaW,
+            fontSize: metaPx,
+            lineHeight: "20px",
+            color:
+              hover === "meta-shift" && force
+                ? "var(--cl-accent)"
+                : p.metaColor,
+            letterSpacing: metaFace === "smallcaps" ? "0.06em" : undefined,
+          }}
+        >
+          {REF_PROJECT.meta}
+        </p>
 
         {chip !== "none" && chipPlace === "below" ? (
           <div className="cl-ref__chip-row">
