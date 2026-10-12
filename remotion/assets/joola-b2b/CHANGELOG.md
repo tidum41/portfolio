@@ -177,3 +177,18 @@ Ported a design pass built in Paper (Quick Order, Catalog, Templates, PDP, Cart 
 - **The two mobile footer buttons are the same control.** Save template was 44px and Add All To Cart was 46px. Both are 46px, 6px radius, 14px bold, matching the desktop pair.
 - **Product names are flush left.** The name cell is `text-align: left`, so the name starts on the same edge as the Product header instead of sitting in the middle of a wide column.
 - **The mobile search placeholder uses the same gray as the desktop field** (`#808080`). The words were already `Search by name, category, or SKU`. The field stays a 44px mobile input, not a scaled-up desktop one.
+
+## v22 — Film-readable wholesale UI, Engage identity, coherent invoices
+
+Art-direction and Mudit feedback pass on the HTML prototype before the next film run. Story lock: Anna Bright at Engage Pickleball, SKU 600558 Perseus Pro V, Recommended three paddles, qty 120 → $16,197.60 (120 × $134.98), totals agree on invoices and in messages.
+
+- **Engage Pickleball retailer avatar.** Replaced the "PC" initials chip with a real circle profile using `logos/engage-avatar.png` (Engage wordmark fitted on a square, clipped round). `onerror` paints a red failed state with "!" — a missing asset fails the check instead of rendering a blank grey circle.
+- **Invoices math fixed.** Credit bar was "Net 30 · $4,200 of $10,000" while a ~$90k invoice was Processing. Now: Net 30 / $50,000 line; open used = Processing INV-1042 **$16,197.60** (120 × Perseus) + Due $3,802.40 + Overdue $1,200.00 = **$21,200 of $50,000**; Paid $8,400 stays closed and out of the used sum. Status pills: Processing / Due / Overdue / Paid with distinct colour.
+- **Messages is full-bleed, not a floating card.** Inbox + thread grid fills the page like every other wholesale screen. Buyer bubble is black (right); sales bubble is blue-wash with JOOLA mark + "Sam Ortiz · JOOLA Sales" (left). Body type is 22px for portfolio-card readability.
+- **Order table has a local title.** "This order" sits above the column headers for film crops that miss the page H1. Category→first-row gap tightened. Sticky footer rule is a hairline `#DEDEDE` instead of a heavy black bar fighting the table.
+- **Quantity microinteraction.** Perseus row uses a 28px tabular stepper with bulk presets 12 / 24 / 60 / 120, +/- step of 12, count-up animation + scale bump on change. `window.__setPerseusQty(120)` is the film hook so quantity is set *before* Add All To Cart.
+- **Recommended thumbs use object-contain** with inset padding so paddle handles are not cropped; badges are 14px readable chips. Titles/prices at 22px.
+- **Film-readable type on key surfaces.** Search placeholder, product name, line totals, invoice amounts, and message copy land at ~22–28px in the 1920 frame so a ~650px portfolio crop still reads.
+- **Catalog listings** use real product photos with contain framing (joola.com-style: image, title, price, MOQ, CTA) instead of empty grey tiles for the lead cards.
+- **Film strings** in `JoolaB2B.tsx` renamed to Engage Pickleball so the Remotion composition still compiles against the same story; motion polish deferred.
+

@@ -344,10 +344,10 @@ function Chrome() {
               justifyContent: "center",
             }}
           >
-            PC
+            EP
           </div>
           <div style={{ lineHeight: 1.25 }}>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>Pickleball Central</div>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>Engage Pickleball</div>
             <div style={{ fontSize: 11, color: C.faint }}>Anna Bright · Buyer</div>
           </div>
         </div>
@@ -397,7 +397,7 @@ function SearchSection() {
       <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.2 }}>Build a bulk order</div>
       <div style={{ marginTop: 8, maxWidth: 640, fontSize: 16, color: C.muted, lineHeight: 1.5 }}>
         Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects
-        Pickleball Central's wholesale tier.
+        Engage Pickleball's wholesale tier.
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24 }}>
         <div style={{ position: "relative", width: 420, flexShrink: 0 }}>
@@ -856,7 +856,7 @@ function MessageSection() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, background: C.band }}>
           <Bubble
             align="end"
-            who="Anna Bright · Pickleball Central"
+            who="Anna Bright · Engage Pickleball"
             text="Perseus Pro V, SKU 600558. When can you restock 120 units?"
             fill={C.field}
           />

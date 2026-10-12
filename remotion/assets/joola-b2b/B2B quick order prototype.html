@@ -1491,6 +1491,188 @@
   }
 }
 
+
+  /* v22 — film-readable type, avatar fail, qty microinteraction, messages DM */
+  .retailer-avatar.avatar-failed{
+    background:#C0392B !important;
+    border-color:#8E2A20 !important;
+    outline:2px solid #C0392B;
+  }
+  .retailer-avatar.avatar-failed::after{
+    content:"!";
+    color:#fff;
+    font-weight:700;
+    font-size:16px;
+    line-height:1;
+  }
+  .qty-stepper{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .qty-stepper .qty-control{
+    display:flex;
+    align-items:center;
+    height:48px;
+    width:148px;
+    border-radius:10px;
+    background:#F6F6F6;
+  }
+  .qty-stepper .qty-control:focus-within{
+    box-shadow:0 0 0 2px #2C3EE0;
+  }
+  .qty-stepper .qty-btn{
+    width:40px;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    font-weight:600;
+    color:#1A1A1A;
+    cursor:pointer;
+    user-select:none;
+    transition:background-color .12s ease, transform .12s ease;
+  }
+  .qty-stepper .qty-btn:hover{ background:#ECECEA; }
+  .qty-stepper .qty-btn:active{ transform:scale(0.92); }
+  .qty-stepper .qty-input{
+    flex:1;
+    min-width:0;
+    text-align:center;
+    font-weight:700;
+    font-size:28px;
+    line-height:1;
+    color:#1A1A1A;
+    background:transparent;
+    border:none;
+    outline:none;
+    font-variant-numeric:tabular-nums;
+  }
+  .qty-stepper .qty-input.qty-bump{
+    animation:qtyBump .28s cubic-bezier(0.23,1,0.32,1);
+  }
+  @keyframes qtyBump{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(1.18); color:#2C3EE0; }
+    100%{ transform:scale(1); }
+  }
+  .qty-presets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+  }
+  .qty-presets button{
+    height:26px;
+    padding:0 8px;
+    border-radius:5px;
+    border:1px solid #DEDEDE;
+    background:#fff;
+    font-size:12px;
+    font-weight:700;
+    color:#595959;
+    cursor:pointer;
+    font-variant-numeric:tabular-nums;
+    transition:background-color .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .qty-presets button:hover{ border-color:#1A1A1A; color:#1A1A1A; }
+  .qty-presets button.is-active{
+    background:#1A1A1A;
+    border-color:#1A1A1A;
+    color:#fff;
+  }
+  .film-title{ font-size:40px !important; line-height:1.15 !important; font-weight:700; }
+  .film-body{ font-size:18px !important; line-height:1.35 !important; }
+  .film-product{ font-size:22px !important; line-height:1.25 !important; font-weight:700; }
+  .film-meta{ font-size:15px !important; }
+  .film-price{ font-size:20px !important; font-weight:700; font-variant-numeric:tabular-nums; }
+  .film-total{ font-size:28px !important; font-weight:700; font-variant-numeric:tabular-nums; }
+  .rec-badge{
+    position:absolute;
+    top:10px;
+    left:10px;
+    padding:6px 10px;
+    background:#1A1A1A;
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    border-radius:5px;
+    line-height:1.1;
+    letter-spacing:0.01em;
+  }
+  .rec-thumb{
+    position:relative;
+    width:100%;
+    aspect-ratio:1;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid #DEDEDE;
+    overflow:hidden;
+  }
+  .rec-thumb img{
+    position:absolute;
+    inset:8%;
+    width:84%;
+    height:84%;
+    object-fit:contain;
+    object-position:center;
+  }
+  .msg-layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    min-height:720px;
+    border-top:1px solid #DEDEDE;
+  }
+  .msg-sidebar{
+    border-right:1px solid #DEDEDE;
+    background:#FAFAF9;
+    display:flex;
+    flex-direction:column;
+  }
+  .msg-thread{
+    display:flex;
+    flex-direction:column;
+    min-height:720px;
+    background:#fff;
+  }
+  .msg-bubble-buyer{
+    align-self:flex-end;
+    max-width:72%;
+    padding:16px 18px;
+    border-radius:14px 14px 4px 14px;
+    background:#1A1A1A;
+    color:#F6F6F6;
+  }
+  .msg-bubble-sales{
+    align-self:flex-start;
+    max-width:72%;
+    padding:16px 18px;
+    border-radius:14px 14px 14px 4px;
+    background:#F0F2F8;
+    border:1px solid #D7DCF0;
+    color:#1A1A1A;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    height:28px;
+    padding:0 12px;
+    border-radius:5px;
+    font-size:14px;
+    font-weight:700;
+    line-height:1;
+  }
+  .status-paid{ background:#E7F4EE; color:#198754; }
+  .status-due{ background:#FFF6DA; color:#8A6100; }
+  .status-overdue{ background:#FCEBEA; color:#C0392B; }
+  .status-processing{ background:#E7E9FB; color:#2C3EE0; }
+  .order-section-title{
+    font-size:28px;
+    font-weight:700;
+    color:#1A1A1A;
+    line-height:1.2;
+  }
+
 </style>
 <style>
   html,body{ margin:0; padding:0; }
@@ -1575,7 +1757,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -1642,9 +1824,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1661,8 +1843,8 @@
       <!-- page heading -->
       <div class="w-full flex pt-8 px-4">
         <div class="w-full flex flex-col gap-2">
-          <div class="text-[34px] leading-[120%] font-bold text-[#1A1A1A]">Build a bulk order</div>
-          <div class="max-w-160 text-[#595959] text-base">Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects Pickleball Central's wholesale tier.</div>
+          <div class="film-title text-[#1A1A1A]">Build a bulk order</div>
+          <div class="film-body max-w-160 text-[#595959]">Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects Engage Pickleball's wholesale tier.</div>
         </div>
       </div>
 
@@ -1670,8 +1852,8 @@
       <div class="w-full flex pt-6 px-4">
         <div class="w-full flex items-center gap-3">
           <div class="w-105 relative shrink-0">
-            <div class="w-full h-11.5 flex items-center pl-10 rounded-[10px] bg-[#F6F6F6]">
-              <div class="text-[#808080] text-[15px]">Search by name, category, or SKU</div>
+            <div class="w-full h-14 flex items-center pl-12 rounded-[10px] bg-[#F6F6F6]">
+              <div class="text-[#808080] text-[28px] font-medium tracking-[-0.01em]">Search by name, category, or SKU</div>
             </div>
             <div class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="#808080" stroke-width="1.75"/><path d="m21 21-4.3-4.3" fill="none" stroke="#808080" stroke-width="1.75" stroke-linecap="round"/></svg>
@@ -1704,8 +1886,12 @@
       </div>
 
       <!-- order table -->
-      <div id="order-rows" class="w-full flex flex-col pt-7 px-4">
-        <div class="w-full flex items-center pb-3 gap-4 px-2 border-b-[1.5px] border-[#1A1A1A]">
+      <div id="order-rows" class="w-full flex flex-col pt-6 px-4">
+        <div class="flex items-end justify-between px-2 pb-3">
+          <div class="order-section-title">This order</div>
+          <div class="text-[15px] text-[#595959]">Engage Pickleball · Net 30</div>
+        </div>
+        <div class="w-full flex items-center pb-2.5 gap-4 px-2 border-b border-[#DEDEDE]">
           <div class="w-14 shrink-0"></div>
           <div class="flex-1 min-w-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Product</div>
           <div class="w-37.5 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Price</div>
@@ -1713,30 +1899,38 @@
           <div class="w-32.5 shrink-0 text-right tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Line total</div>
           <div class="w-10 shrink-0"></div>
         </div>
-        <div class="pt-5 pb-1.5 px-2 first:pt-0">
-          <div class="text-[11px] font-bold uppercase tracking-[0.05em] text-[#595959]">Paddles</div>
+        <div class="pt-2 pb-1 px-2">
+          <div class="text-[12px] font-bold uppercase tracking-[0.06em] text-[#2C3EE0]">Paddles</div>
         </div>
 
-        <div class="row flex items-center py-3.5 px-2 gap-4 border-b border-[#ECECEA]" data-moq="1" data-msrp="299.95" data-tiers="[{&quot;min&quot;: 1, &quot;price&quot;: 179.97}, {&quot;min&quot;: 6, &quot;price&quot;: 164.97}, {&quot;min&quot;: 12, &quot;price&quot;: 149.98}, {&quot;min&quot;: 24, &quot;price&quot;: 134.98}]">
-          <img src="products/perseus.jpg" alt="" class="size-14 shrink-0 rounded-[10px] border border-[#DEDEDE] object-cover">
-          <div class="flex-1 min-w-0 flex flex-col">
-            <div class="font-bold text-[#1A1A1A] text-sm">Perseus Pro V Pickleball Paddle</div>
-            <div class="text-[#595959] text-[11.5px]">SKU 600558 · MOQ 1</div>
+        <div class="row flex items-center py-4 px-2 gap-4 border-b border-[#ECECEA]" data-sku="600558" data-moq="1" data-msrp="299.95" data-tiers="[{&quot;min&quot;: 1, &quot;price&quot;: 179.97}, {&quot;min&quot;: 6, &quot;price&quot;: 164.97}, {&quot;min&quot;: 12, &quot;price&quot;: 149.98}, {&quot;min&quot;: 24, &quot;price&quot;: 134.98}]">
+          <img src="products/perseus.jpg" alt="" class="size-16 shrink-0 rounded-[10px] border border-[#DEDEDE] object-contain bg-white p-1">
+          <div class="flex-1 min-w-0 flex flex-col text-left">
+            <div class="film-product text-[#1A1A1A] text-left">Perseus Pro V Pickleball Paddle</div>
+            <div class="film-meta text-[#595959] text-left">SKU 600558 · MOQ 1</div>
           </div>
           <div class="w-37.5 shrink-0 flex flex-col gap-px">
-            <div class="line-through text-[#808080] text-xs">$299.95</div>
-            <div class="unit-price [font-variant-numeric:tabular-nums] text-[#1A1A1A] text-[13.5px]">$164.97 ea</div>
-            <div class="tier-hint text-[11px]"><span class="text-[#595959]">Buy 12+ for </span><span class="font-bold text-[#1A1A1A]">$149.98 ea</span></div>
+            <div class="line-through text-[#808080] text-[15px]">$299.95</div>
+            <div class="unit-price film-price text-[#1A1A1A]">$149.98 ea</div>
+            <div class="tier-hint text-[14px]"><span class="text-[#595959]">Buy 24+ for </span><span class="font-bold text-[#1A1A1A]">$134.98 ea</span></div>
           </div>
-          <div class="w-42.5 shrink-0">
-            <div class="flex items-center h-10 w-30 rounded-[10px] bg-[#F6F6F6] focus-within:ring-2 focus-within:ring-[#2C3EE0]">
-              <div data-action="dec" class="w-9 h-full flex items-center justify-center text-[#1A1A1A] text-base cursor-pointer select-none">–</div>
-              <input type="text" inputmode="numeric" class="qty-input flex-1 w-full min-w-0 text-center font-semibold text-[#1E1E1E] text-[15px] bg-transparent border-none outline-none" value="6">
-              <div data-action="inc" class="w-9 h-full flex items-center justify-center text-[#1A1A1A] text-base cursor-pointer select-none">+</div>
+          <div class="w-48 shrink-0">
+            <div class="qty-stepper" data-hero-qty>
+              <div class="qty-control">
+                <div data-action="dec" class="qty-btn" aria-label="Decrease quantity">–</div>
+                <input type="text" inputmode="numeric" class="qty-input" value="12" aria-label="Quantity">
+                <div data-action="inc" class="qty-btn" aria-label="Increase quantity">+</div>
+              </div>
+              <div class="qty-presets" aria-label="Bulk quantity presets">
+                <button type="button" data-preset="12" class="is-active">12</button>
+                <button type="button" data-preset="24">24</button>
+                <button type="button" data-preset="60">60</button>
+                <button type="button" data-preset="120">120</button>
+              </div>
+              <div class="qty-error text-[#C0392B] text-[12px] font-semibold" style="display:none;"></div>
             </div>
-            <div class="qty-error text-[#C0392B] text-[10.5px] font-semibold pt-1" style="display:none;"></div>
           </div>
-          <div class="line-total w-32.5 shrink-0 text-right [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-[17px]">$989.82</div>
+          <div class="line-total w-36 shrink-0 text-right film-total text-[#1A1A1A]">$1,799.76</div>
           <div class="w-10 shrink-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5" fill="none" stroke="#808080" stroke-width="1.75" stroke-linecap="round"/></svg></div>
         </div>
 
@@ -2052,7 +2246,7 @@
       </div>
 
       <!-- sticky summary footer -->
-      <div class="sticky bottom-0 w-full border-t-[1.5px] border-[#1A1A1A] bg-white flex items-center gap-4 px-4 py-4 shadow-[0_-8px_24px_rgba(20,20,18,0.08)]">
+      <div class="sticky bottom-0 w-full border-t border-[#DEDEDE] bg-white flex items-center gap-4 px-4 py-4 shadow-[0_-6px_20px_rgba(20,20,18,0.06)]">
         <div class="flex flex-col gap-1">
           <div id="qoFooterLineCount" class="text-[12.5px] text-[#595959]" style="line-height:1">8 lines</div>
           <div id="qoFooterTotal" class="text-[38px] font-bold text-[#1A1A1A]" style="line-height:1">$6,227.62</div>
@@ -2075,7 +2269,7 @@
               <div class="text-xs font-bold text-[#595959] mb-1.5">Template name</div>
               <div class="w-full h-11.5 rounded-[10px] bg-[#F6F6F6] flex items-center px-3.5 text-[15px] text-[#1A1A1A]">Monthly paddle restock</div>
             </div>
-            <div class="text-[12.5px] text-[#595959]">Visible to everyone on <span class="font-bold">Pickleball Central</span> the next time they open Templates.</div>
+            <div class="text-[12.5px] text-[#595959]">Visible to everyone on <span class="font-bold">Engage Pickleball</span> the next time they open Templates.</div>
           </div>
           <div class="flex justify-end gap-2.5 px-5 py-4 border-t border-[#DEDEDE]">
             <div class="h-11.5 flex items-center px-4 rounded-md text-[#595959] font-semibold text-sm">Cancel</div>
@@ -2122,7 +2316,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -2188,9 +2382,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2207,7 +2401,7 @@
       <div class="w-full flex pt-8 px-4">
         <div class="w-full flex flex-col gap-2">
           <div class="text-[34px] leading-[120%] font-bold text-[#1A1A1A]">Saved order templates</div>
-          <div class="max-w-160 text-[#595959] text-base">Shared with everyone on <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span>.</div>
+          <div class="max-w-160 text-[#595959] text-base">Shared with everyone on <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span>.</div>
         </div>
       </div>
 
@@ -2341,7 +2535,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -2407,9 +2601,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2425,8 +2619,8 @@
 
       <!-- page heading -->
       <div class="w-full flex flex-col gap-2 pt-8 px-4">
-        <div class="text-[34px] leading-[120%] font-bold text-[#1A1A1A]">Full catalog</div>
-        <div class="max-w-160 text-[#595959] text-base">Browse everything available to Pickleball Central, or filter by category below.</div>
+        <div class="film-title text-[#1A1A1A]">Full catalog</div>
+        <div class="max-w-160 text-[#595959] text-base">Browse everything available to Engage Pickleball, or filter by category below.</div>
       </div>
 
       <!-- category chips: primary browse control, right under the heading -->
@@ -2448,7 +2642,7 @@
 
       <!-- toolbar: retail/wholesale pricing-view toggle -->
       <div class="w-full flex items-center pt-4 px-4">
-        <div class="text-[13px] text-[#595959]">Showing wholesale pricing for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+        <div class="text-[13px] text-[#595959]">Showing wholesale pricing for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
         <div class="flex gap-1 ml-auto select-none">
           <div class="py-2 px-3.5 text-[13px] font-bold text-[#595959] cursor-pointer">Retail shopper</div>
           <div class="py-2 px-3.5 rounded-[5px] bg-[#1A1A1A] text-[13px] font-bold text-white cursor-pointer">Wholesale</div>
@@ -2459,7 +2653,7 @@
       <div class="w-full mt-7 bg-[#FAFAF9] border-y border-[#ECECEA] pb-6">
         <div class="w-full flex flex-col gap-1 pt-6 px-4">
           <div class="flex items-center gap-3">
-            <div class="recommended-heading text-xl font-bold text-[#1A1A1A]" style="transition: color .12s ease;">Recommended For You</div>
+            <div class="recommended-heading text-[28px] font-bold text-[#1A1A1A]" style="transition: color .12s ease;">Recommended For You</div>
             <label class="recommended-toggle flex items-center gap-2 cursor-pointer select-none">
               <span class="toggle-track relative inline-flex items-center w-8 h-4.5 rounded-full bg-[#1A1A1A] shrink-0" style="transition: background-color .12s ease;">
                 <span class="toggle-knob absolute left-0.5 top-0.5 size-3.5 rounded-full bg-white" style="transition: transform .12s ease; transform: translateX(14px);"></span>
@@ -2467,38 +2661,38 @@
               <span class="recommended-toggle-label text-[12px] font-semibold text-[#595959]">Showing</span>
             </label>
           </div>
-          <div class="recommended-description max-w-135 text-[#595959] text-[13px]">Based on your orders.</div>
+          <div class="recommended-description max-w-135 text-[#595959] text-[18px]">Based on your orders.</div>
         </div>
-        <div class="recommended-rail w-full flex gap-4 pt-4 px-4 overflow-x-auto">
+        <div class="recommended-rail w-full flex gap-5 pt-5 px-4 overflow-x-auto">
 
-          <div class="shrink-0 w-56 flex flex-col gap-1.5">
-            <div class="relative w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE]" style="overflow:hidden">
-              <img src="products/perseus.jpg" alt="" class="absolute inset-0 size-full object-cover">
-              <div class="absolute top-2 left-2 py-1 px-2 bg-[#1A1A1A] text-white text-[10px] font-bold" style="border-radius:2px;line-height:1">Ordered most</div>
+          <div class="shrink-0 w-64 flex flex-col gap-2">
+            <div class="rec-thumb">
+              <img src="products/perseus.jpg" alt="Perseus Pro V">
+              <div class="rec-badge">Ordered most</div>
             </div>
-            <div class="text-[13px] font-medium text-[#595959]">Pickleball paddle</div>
-            <div class="text-[14px] font-semibold text-[#1A1A1A]">Perseus Pro V</div>
-            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[15px] text-[#1A1A1A]">$299.95</span></div>
+            <div class="text-[15px] font-medium text-[#595959]">Pickleball paddle</div>
+            <div class="text-[22px] font-bold text-[#1A1A1A] leading-tight">Perseus Pro V</div>
+            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[22px] text-[#1A1A1A]">$299.95</span></div>
           </div>
 
-          <div class="shrink-0 w-56 flex flex-col gap-1.5">
-            <div class="relative w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE]" style="overflow:hidden">
-              <img src="products/hyperion.jpg" alt="" class="absolute inset-0 size-full object-cover">
-              <div class="absolute top-2 left-2 py-1 px-2 bg-[#1A1A1A] text-white text-[10px] font-bold" style="border-radius:2px;line-height:1">Your history</div>
+          <div class="shrink-0 w-64 flex flex-col gap-2">
+            <div class="rec-thumb">
+              <img src="products/hyperion.jpg" alt="Hyperion Pro IV">
+              <div class="rec-badge">Your history</div>
             </div>
-            <div class="text-[13px] font-medium text-[#595959]">Pickleball paddle</div>
-            <div class="text-[14px] font-semibold text-[#1A1A1A]">Hyperion Pro IV</div>
-            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[15px] text-[#1A1A1A]">$149.95</span><span class="line-through text-[#808080] text-[11px]">$229.95</span></div>
+            <div class="text-[15px] font-medium text-[#595959]">Pickleball paddle</div>
+            <div class="text-[22px] font-bold text-[#1A1A1A] leading-tight">Hyperion Pro IV</div>
+            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[22px] text-[#C0392B]">$149.95</span><span class="line-through text-[#808080] text-[16px]">$229.95</span></div>
           </div>
 
-          <div class="shrink-0 w-56 flex flex-col gap-1.5">
-            <div class="relative w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE]" style="overflow:hidden">
-              <img src="products/scorpeus.jpg" alt="" class="absolute inset-0 size-full object-cover">
-              <div class="absolute top-2 left-2 py-1 px-2 bg-[#1A1A1A] text-white text-[10px] font-bold" style="border-radius:2px;line-height:1">Also due</div>
+          <div class="shrink-0 w-64 flex flex-col gap-2">
+            <div class="rec-thumb">
+              <img src="products/scorpeus.jpg" alt="Scorpeus Pro V">
+              <div class="rec-badge">Also due</div>
             </div>
-            <div class="text-[13px] font-medium text-[#595959]">Pickleball paddle</div>
-            <div class="text-[14px] font-semibold text-[#1A1A1A]">Scorpeus Pro V</div>
-            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[15px] text-[#1A1A1A]">$299.95</span></div>
+            <div class="text-[15px] font-medium text-[#595959]">Pickleball paddle</div>
+            <div class="text-[22px] font-bold text-[#1A1A1A] leading-tight">Scorpeus Pro V</div>
+            <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-bold text-[22px] text-[#1A1A1A]">$299.95</span></div>
           </div>
 
         </div>
@@ -2508,7 +2702,7 @@
       <div class="w-full grid grid-cols-4 gap-6 pt-7 px-4 pb-16">
 
         <div class="catalog-card flex flex-col gap-2" data-price="179.97">
-          <div class="w-full aspect-square rounded-[10px] bg-[#F6F6F6] border border-[#DEDEDE]"></div>
+          <div class="w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE] overflow-hidden relative"><img src="products/perseus.jpg" alt="" class="absolute inset-[8%] w-[84%] h-[84%] object-contain"></div>
           <div class="text-[14.5px] font-semibold text-[#1A1A1A] pt-1">Perseus Pro V Pickleball Paddle</div>
           <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-extrabold text-[17px] text-[#1A1A1A]">$179.97</span><span class="line-through text-[#808080] text-xs">$299.95</span></div>
           <div class="text-xs text-[#595959]">MOQ 1</div>
@@ -2517,7 +2711,7 @@
         </div>
 
         <div class="catalog-card flex flex-col gap-2" data-price="179.97">
-          <div class="w-full aspect-square rounded-[10px] bg-[#F6F6F6] border border-[#DEDEDE]"></div>
+          <div class="w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE] overflow-hidden relative"><img src="products/scorpeus.jpg" alt="" class="absolute inset-[8%] w-[84%] h-[84%] object-contain"></div>
           <div class="text-[14.5px] font-semibold text-[#1A1A1A] pt-1">Kosmos Pro V Pickleball Paddle</div>
           <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-extrabold text-[17px] text-[#1A1A1A]">$179.97</span><span class="line-through text-[#808080] text-xs">$299.95</span></div>
           <div class="text-xs text-[#595959]">MOQ 1</div>
@@ -2526,7 +2720,7 @@
         </div>
 
         <div class="catalog-card flex flex-col gap-2" data-price="16.24">
-          <div class="w-full aspect-square rounded-[10px] bg-[#F6F6F6] border border-[#DEDEDE]"></div>
+          <div class="w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE] overflow-hidden relative"><img src="products/hc40.jpg" alt="" class="absolute inset-[8%] w-[84%] h-[84%] object-contain"></div>
           <div class="text-[14.5px] font-semibold text-[#1A1A1A] pt-1">Indoor 3-Star Balls (6-Pack)</div>
           <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-extrabold text-[17px] text-[#1A1A1A]">$16.24</span><span class="line-through text-[#808080] text-xs">$24.99</span></div>
           <div class="text-xs text-[#595959]">MOQ 12 (1 case)</div>
@@ -2552,7 +2746,7 @@
         </div>
 
         <div class="catalog-card flex flex-col gap-2" data-price="56.99">
-          <div class="w-full aspect-square rounded-[10px] bg-[#F6F6F6] border border-[#DEDEDE]"></div>
+          <div class="w-full aspect-square rounded-[10px] bg-white border border-[#DEDEDE] overflow-hidden relative"><img src="products/bag.jpg" alt="" class="absolute inset-[8%] w-[84%] h-[84%] object-contain"></div>
           <div class="text-[14.5px] font-semibold text-[#1A1A1A] pt-1">Tour Elite Backpack</div>
           <div class="flex items-baseline gap-2"><span class="[font-variant-numeric:tabular-nums] font-extrabold text-[17px] text-[#1A1A1A]">$56.99</span><span class="line-through text-[#808080] text-xs">$94.99</span></div>
           <div class="text-xs text-[#595959]">MOQ 1</div>
@@ -2657,7 +2851,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -2723,9 +2917,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2857,7 +3051,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -2923,9 +3117,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3101,7 +3295,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -3167,9 +3361,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3186,7 +3380,7 @@
       <!-- page heading -->
       <div class="w-full flex flex-col gap-2 pt-8 px-4">
         <div class="text-[34px] leading-[120%] font-bold text-[#1A1A1A]">Past orders</div>
-        <div class="max-w-160 text-[#595959] text-base">Every order placed on Pickleball Central's account, across everyone with login access.</div>
+        <div class="max-w-160 text-[#595959] text-base">Every order placed on Engage Pickleball's account, across everyone with login access.</div>
       </div>
 
       <div class="w-full flex flex-col px-4 pt-8 pb-16">
@@ -3375,9 +3569,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3390,26 +3584,74 @@
           </div>
         </div>
       </div>
-      <div class="w-full max-w-160 mx-auto pt-8 px-4 pb-16">
-        <div class="w-full flex flex-col rounded-[10px] border border-[#DEDEDE] bg-white overflow-hidden shadow-[0_10px_28px_rgba(20,20,18,0.14)]">
-          <div class="flex items-center gap-3 px-4 py-3 border-b border-[#DEDEDE]">
-            <div class="text-base font-bold text-[#1A1A1A]">Message sales</div>
-            <svg class="ml-auto" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4.5H4.5V8M12 4.5h3.5V8M8 15.5H4.5V12M12 15.5h3.5V12" fill="none" stroke="#595959" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+      <div class="w-full flex items-end justify-between px-4 pt-6 pb-4">
+        <div class="flex flex-col gap-1">
+          <div class="film-title text-[#1A1A1A]">Messages</div>
+          <div class="film-body text-[#595959]">Talk to JOOLA Sales about restocks, terms, and open orders.</div>
+        </div>
+      </div>
+
+      <div class="msg-layout w-full">
+        <aside class="msg-sidebar">
+          <div class="px-4 py-4 border-b border-[#DEDEDE]">
+            <div class="text-[12px] font-bold uppercase tracking-[0.06em] text-[#808080]">Inbox</div>
           </div>
-          <div class="flex flex-col gap-3 p-4 bg-[#FAFAF9]">
-            <div class="self-end max-w-[80%] px-3.5 py-2.5 rounded-[10px] bg-[#F6F6F6] border border-[#DEDEDE]">
-              <div class="text-[12px] font-medium text-[#595959]">Anna Bright · Pickleball Central</div>
-              <div class="text-[14px] text-[#1A1A1A] mt-1">Perseus Pro V, SKU 600558. When can you restock 120 units?</div>
+          <button type="button" class="flex items-start gap-3 px-4 py-4 bg-white border-b border-[#DEDEDE] text-left cursor-pointer">
+            <div class="size-11 shrink-0 rounded-full bg-[#1A1A1A] flex items-center justify-center overflow-hidden p-2">
+              <img src="joola-logo.png" alt="JOOLA" class="w-full h-auto brightness-0 invert" onerror="this.parentElement.classList.add('avatar-failed'); this.remove();">
             </div>
-            <div class="self-start max-w-[80%] px-3.5 py-2.5 rounded-[10px] bg-white border border-[#DEDEDE]">
-              <div class="text-[12px] font-medium text-[#595959]">Sam Ortiz · JOOLA Sales</div>
-              <div class="text-[14px] text-[#1A1A1A] mt-1">120 units of Perseus Pro V ship Friday.</div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-[16px] font-bold text-[#1A1A1A] truncate">JOOLA Sales</div>
+                <div class="text-[13px] text-[#808080] shrink-0">Fri</div>
+              </div>
+              <div class="text-[15px] text-[#595959] truncate mt-0.5">120 units of Perseus Pro V ship Friday.</div>
+            </div>
+          </button>
+          <div class="flex items-start gap-3 px-4 py-4 border-b border-[#DEDEDE] opacity-70">
+            <div class="size-11 shrink-0 rounded-full bg-[#ECECEA] flex items-center justify-center text-[13px] font-bold text-[#595959]">AR</div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-[16px] font-bold text-[#1A1A1A] truncate">Accounts receivable</div>
+                <div class="text-[13px] text-[#808080] shrink-0">Mon</div>
+              </div>
+              <div class="text-[15px] text-[#595959] truncate mt-0.5">INV-1042 is on Net 30 terms.</div>
             </div>
           </div>
-          <div class="flex items-center gap-2 px-4 py-3 border-t border-[#DEDEDE]">
-            <div class="grow h-11.5 flex items-center px-3 rounded-[10px] bg-[#F6F6F6] text-[15px] text-[#808080]">Message the sales team</div>
-            <div class="shrink-0 flex items-center justify-center rounded-full bg-[#1A1A1A]" style="width:36px;height:36px;" aria-label="Send">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12.5V3.5M8 3.5 4.75 6.75M8 3.5l3.25 3.25" fill="none" stroke="#EAEAEA" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </aside>
+
+        <div class="msg-thread">
+          <div class="flex items-center gap-3 px-5 py-4 border-b border-[#DEDEDE]">
+            <div class="size-12 shrink-0 rounded-full bg-[#1A1A1A] flex items-center justify-center overflow-hidden p-2.5">
+              <img src="joola-logo.png" alt="JOOLA" class="w-full h-auto brightness-0 invert" onerror="this.parentElement.classList.add('avatar-failed'); this.remove();">
+            </div>
+            <div class="min-w-0">
+              <div class="text-[22px] font-bold text-[#1A1A1A] leading-tight">JOOLA Sales</div>
+              <div class="text-[15px] text-[#595959]">Sam Ortiz · usually replies same day</div>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col gap-4 px-6 py-6 bg-[#FAFAF9]">
+            <div class="msg-bubble-buyer">
+              <div class="text-[14px] font-semibold text-white/70">Anna Bright · Engage Pickleball</div>
+              <div class="text-[22px] font-medium mt-1.5 leading-snug">Perseus Pro V, SKU 600558. When can you restock 120 units?</div>
+            </div>
+            <div class="msg-bubble-sales">
+              <div class="flex items-center gap-2">
+                <div class="size-6 rounded-full bg-[#1A1A1A] flex items-center justify-center overflow-hidden p-1">
+                  <img src="joola-logo.png" alt="" class="w-full h-auto brightness-0 invert">
+                </div>
+                <div class="text-[14px] font-semibold text-[#2C3EE0]">Sam Ortiz · JOOLA Sales</div>
+              </div>
+              <div class="text-[22px] font-medium mt-2 leading-snug">120 units of Perseus Pro V ship Friday — $16,197.60 on your Net 30 terms.</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 px-5 py-4 border-t border-[#DEDEDE] bg-white">
+            <div class="grow h-14 flex items-center px-4 rounded-[10px] bg-[#F6F6F6] text-[20px] text-[#808080]">Message the sales team</div>
+            <div class="shrink-0 flex items-center justify-center rounded-full bg-[#1A1A1A]" style="width:48px;height:48px;" aria-label="Send">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12.5V3.5M8 3.5 4.75 6.75M8 3.5l3.25 3.25" fill="none" stroke="#EAEAEA" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
           </div>
         </div>
@@ -3454,7 +3696,7 @@
                     <div class="header-search-results absolute top-13 right-0 w-100 flex flex-col rounded-[10px] shadow-[0_10px_28px_rgba(20,20,18,0.14)] bg-white border border-[#DEDEDE] z-30" style="display:none;">
                       <div class="flex items-center gap-1.5 px-4 py-3 border-b border-[#DEDEDE]">
                         <div class="rounded-full bg-[#2C3EE0] size-1.5 shrink-0"></div>
-                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Pickleball Central</span></div>
+                        <div class="text-[12px] text-[#595959]">Wholesale pricing applied for <span class="font-semibold text-[#1A1A1A]">Engage Pickleball</span></div>
                       </div>
                       <div class="flex flex-col p-1.5 gap-0.5">
                         <div class="header-search-result flex items-center p-2 rounded-[5px] gap-2.5 cursor-pointer">
@@ -3520,9 +3762,9 @@
           </div>
           <div class="flex items-center ml-auto gap-5">
             <button type="button" class="account-chip flex items-center gap-2.5 rounded-full bg-[#F6F6F6] pl-2 pr-3.5 py-2 cursor-pointer select-none">
-              <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-8 shrink-0"><div class="font-bold text-[#2C3EE0] text-[11px]">PC</div></div>
+              <div class="retailer-avatar size-9 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-[7px]" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" width="36" height="36" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
               <div class="flex flex-col leading-tight text-left">
-                <div class="font-semibold text-[#1A1A1A] text-[13px]">Pickleball Central</div>
+                <div class="font-semibold text-[#1A1A1A] text-[13px]">Engage Pickleball</div>
                 <div class="text-[#808080] text-[11px]">Anna Bright · Buyer</div>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="8" class="shrink-0"><path d="m2 5 6 6 6-6" fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3538,60 +3780,76 @@
 
       <!-- page heading -->
       <div class="w-full flex flex-col gap-2 pt-8 px-4">
-        <div class="text-[34px] leading-[120%] font-bold text-[#1A1A1A]">Invoices &amp; Terms</div>
-        <div class="max-w-160 text-[#595959] text-base">Track what's been billed to your account, what's still open, and how much of your credit line is available for Quick Order.</div>
+        <div class="film-title text-[#1A1A1A]">Invoices &amp; Terms</div>
+        <div class="film-body max-w-200 text-[#595959]">Track what's been billed to Engage Pickleball, what's still open, and how much of the Net 30 line is available.</div>
       </div>
 
-      <div class="w-full flex px-4 pt-6">
-        <div class="w-100 flex flex-col gap-2.5 rounded-[10px] border border-[#DEDEDE] p-5">
-          <div class="flex items-center justify-between">
-            <span class="text-[13px] font-bold text-[#595959]">Net 30 credit line used</span>
-            <span class="[font-variant-numeric:tabular-nums] text-[13px] font-bold text-[#1A1A1A]">$4,200 of $10,000</span>
+      <div class="w-full flex gap-4 px-4 pt-6">
+        <div class="flex-1 flex flex-col gap-3 rounded-[10px] border border-[#DEDEDE] p-6 bg-[#FAFAF9]">
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-[16px] font-bold text-[#595959]">Net 30 credit line</span>
+            <span class="[font-variant-numeric:tabular-nums] text-[22px] font-bold text-[#1A1A1A]">$21,200 of $50,000 used</span>
           </div>
-          <div class="w-full h-2 rounded-full bg-[#ECECEA]"><div class="h-full w-[42%] rounded-full bg-[#2C3EE0]"></div></div>
-          <div class="text-[12px] text-[#595959]">$5,800 available for new Quick Order purchases on Net 30 terms.</div>
+          <div class="w-full h-2.5 rounded-full bg-[#ECECEA]"><div class="h-full rounded-full bg-[#2C3EE0]" style="width:42.4%"></div></div>
+          <div class="text-[16px] text-[#595959]">$28,800 available. Open balance = Processing $16,197.60 + Due $3,802.40 + Overdue $1,200.00.</div>
+        </div>
+        <div class="w-80 flex flex-col gap-2 rounded-[10px] border border-[#DEDEDE] p-6">
+          <div class="text-[14px] font-bold uppercase tracking-[0.06em] text-[#808080]">Terms</div>
+          <div class="text-[28px] font-bold text-[#1A1A1A]">Net 30</div>
+          <div class="text-[16px] text-[#595959]">Engage Pickleball · Anna Bright</div>
+          <div class="text-[16px] text-[#595959]">120 × Perseus Pro V = <span class="font-bold text-[#1A1A1A]">$16,197.60</span></div>
         </div>
       </div>
 
       <div class="w-full flex flex-col px-4 pt-8 pb-16">
-        <div class="w-full flex items-center pb-3 gap-4 px-2 border-b-[1.5px] border-[#1A1A1A]">
-          <div class="w-32 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Invoice</div>
-          <div class="w-32 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Order</div>
-          <div class="w-30 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Issued</div>
-          <div class="w-30 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Due</div>
-          <div class="w-28 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Amount</div>
-          <div class="w-32 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">Status</div>
-          <div class="flex-1 min-w-0 text-right tracking-[0.05em] uppercase font-bold text-[#595959] text-[11px]">&nbsp;</div>
+        <div class="w-full flex items-center pb-3 gap-4 px-2 border-b border-[#DEDEDE]">
+          <div class="w-36 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Invoice</div>
+          <div class="w-40 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Order</div>
+          <div class="w-36 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Issued</div>
+          <div class="w-36 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Due</div>
+          <div class="w-36 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Amount</div>
+          <div class="w-40 shrink-0 tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">Status</div>
+          <div class="flex-1 min-w-0 text-right tracking-[0.05em] uppercase font-bold text-[#595959] text-[13px]">&nbsp;</div>
         </div>
 
-        <div class="flex items-center py-4 gap-4 px-2 border-b border-[#ECECEA]">
-          <div class="w-32 shrink-0 font-bold text-[#1A1A1A] text-sm">INV-10417</div>
-          <div class="w-32 shrink-0 text-[13.5px] text-[#595959]">CC-2026-0417</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Jul 28, 2026</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Aug 27, 2026</div>
-          <div class="w-28 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-sm">$2,026.92</div>
-          <div class="w-32 shrink-0"><span class="inline-flex items-center py-1 px-2.5 rounded-full bg-[#E7F4EE] text-[#198754] text-[11.5px] font-bold">Paid</span></div>
-          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-9 flex items-center px-3.5 rounded-md border border-[#1A1A1A] text-[12.5px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
+        <div class="flex items-center py-5 gap-4 px-2 border-b border-[#ECECEA] bg-[#F7F8FD]">
+          <div class="w-36 shrink-0 font-bold text-[#1A1A1A] text-[20px]">INV-1042</div>
+          <div class="w-40 shrink-0 text-[16px] text-[#595959]">WO-2026-1042<br><span class="text-[14px]">120 × Perseus Pro V</span></div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Oct 10, 2026</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Nov 9, 2026</div>
+          <div class="w-36 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-[22px]">$16,197.60</div>
+          <div class="w-40 shrink-0"><span class="status-pill status-processing">Processing</span></div>
+          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-11 flex items-center px-4 rounded-md border border-[#1A1A1A] text-[15px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
         </div>
 
-        <div class="flex items-center py-4 gap-4 px-2 border-b border-[#ECECEA]">
-          <div class="w-32 shrink-0 font-bold text-[#1A1A1A] text-sm">INV-10388</div>
-          <div class="w-32 shrink-0 text-[13.5px] text-[#595959]">CC-2026-0388</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Jul 09, 2026</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Aug 08, 2026</div>
-          <div class="w-28 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-sm">$1,268.70</div>
-          <div class="w-32 shrink-0"><span class="inline-flex items-center py-1 px-2.5 rounded-full bg-[#FFF6DA] text-[#8A6100] text-[11.5px] font-bold">Due in 6 days</span></div>
-          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-9 flex items-center px-3.5 rounded-md border border-[#1A1A1A] text-[12.5px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
+        <div class="flex items-center py-5 gap-4 px-2 border-b border-[#ECECEA]">
+          <div class="w-36 shrink-0 font-bold text-[#1A1A1A] text-[20px]">INV-10388</div>
+          <div class="w-40 shrink-0 text-[16px] text-[#595959]">WO-2026-0388</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Sep 12, 2026</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Oct 12, 2026</div>
+          <div class="w-36 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-[22px]">$3,802.40</div>
+          <div class="w-40 shrink-0"><span class="status-pill status-due">Due</span></div>
+          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-11 flex items-center px-4 rounded-md border border-[#1A1A1A] text-[15px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
         </div>
 
-        <div class="flex items-center py-4 gap-4 px-2 border-b border-[#ECECEA]">
-          <div class="w-32 shrink-0 font-bold text-[#1A1A1A] text-sm">INV-10351</div>
-          <div class="w-32 shrink-0 text-[13.5px] text-[#595959]">CC-2026-0351</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Jun 22, 2026</div>
-          <div class="w-30 shrink-0 text-[13.5px] text-[#595959]">Jul 22, 2026</div>
-          <div class="w-28 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-sm">$3,153.20</div>
-          <div class="w-32 shrink-0"><span class="inline-flex items-center py-1 px-2.5 rounded-full bg-[#E7F4EE] text-[#198754] text-[11.5px] font-bold">Paid</span></div>
-          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-9 flex items-center px-3.5 rounded-md border border-[#1A1A1A] text-[12.5px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
+        <div class="flex items-center py-5 gap-4 px-2 border-b border-[#ECECEA]">
+          <div class="w-36 shrink-0 font-bold text-[#1A1A1A] text-[20px]">INV-10320</div>
+          <div class="w-40 shrink-0 text-[16px] text-[#595959]">WO-2026-0320</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Aug 01, 2026</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Aug 31, 2026</div>
+          <div class="w-36 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-[22px]">$1,200.00</div>
+          <div class="w-40 shrink-0"><span class="status-pill status-overdue">Overdue</span></div>
+          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-11 flex items-center px-4 rounded-md border border-[#1A1A1A] text-[15px] font-semibold text-[#1A1A1A] cursor-pointer">Pay now</div></div>
+        </div>
+
+        <div class="flex items-center py-5 gap-4 px-2 border-b border-[#ECECEA]">
+          <div class="w-36 shrink-0 font-bold text-[#1A1A1A] text-[20px]">INV-10290</div>
+          <div class="w-40 shrink-0 text-[16px] text-[#595959]">WO-2026-0290</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Jul 15, 2026</div>
+          <div class="w-36 shrink-0 text-[16px] text-[#595959]">Aug 14, 2026</div>
+          <div class="w-36 shrink-0 [font-variant-numeric:tabular-nums] font-bold text-[#1A1A1A] text-[22px]">$8,400.00</div>
+          <div class="w-40 shrink-0"><span class="status-pill status-paid">Paid</span></div>
+          <div class="flex-1 min-w-0 flex justify-end"><div class="btn-outline-hover h-11 flex items-center px-4 rounded-md border border-[#1A1A1A] text-[15px] font-semibold text-[#1A1A1A] cursor-pointer">Download PDF</div></div>
         </div>
 
       </div>
@@ -3624,8 +3882,8 @@
         </div>
         <div class="py-1.5 px-3 rounded-[5px] bg-[#1A1A1A] text-white text-xs font-bold">Quick Order</div>
         <div class="flex items-center gap-1.5">
-          <div class="text-[11.5px] font-semibold text-[#1A1A1A]">Pickleball Central</div>
-          <div class="flex items-center justify-center rounded-full bg-[#E7E9FB] size-6"><div class="font-bold text-[#2C3EE0] text-[9px]">PC</div></div>
+          <div class="text-[11.5px] font-semibold text-[#1A1A1A]">Engage Pickleball</div>
+          <div class="retailer-avatar size-6 shrink-0 rounded-full bg-white border border-[#DEDEDE] overflow-hidden flex items-center justify-center p-0.5" data-retailer-avatar><img src="logos/engage-avatar.png" alt="Engage Pickleball" class="w-full h-full object-contain" onerror="this.closest('[data-retailer-avatar]').classList.add('avatar-failed'); this.remove();"></div>
         </div>
       </div>
 
@@ -3949,18 +4207,74 @@
     if (qty < moq) input.value = moq;
     updateRow(row);
   }
+  function bumpQty(input){
+    if (!input) return;
+    input.classList.remove('qty-bump');
+    void input.offsetWidth;
+    input.classList.add('qty-bump');
+  }
+  function setQtyAnimated(row, target){
+    var input = row.querySelector('.qty-input');
+    if (!input) return;
+    var from = parseInt(input.value, 10) || 0;
+    target = Math.max(0, target|0);
+    if (from === target){ updateRow(row); syncPresets(row); return; }
+    var steps = Math.min(18, Math.max(8, Math.abs(target - from)));
+    var i = 0;
+    if (row.__qtyAnim) cancelAnimationFrame(row.__qtyAnim);
+    function tick(){
+      i += 1;
+      var t = i / steps;
+      var eased = 1 - Math.pow(1 - t, 3);
+      var val = Math.round(from + (target - from) * eased);
+      input.value = val;
+      bumpQty(input);
+      updateRow(row);
+      syncPresets(row);
+      if (i < steps) row.__qtyAnim = requestAnimationFrame(tick);
+      else { input.value = target; updateRow(row); syncPresets(row); }
+    }
+    row.__qtyAnim = requestAnimationFrame(tick);
+  }
+  function syncPresets(row){
+    var input = row.querySelector('.qty-input');
+    var qty = parseInt(input && input.value, 10) || 0;
+    row.querySelectorAll('[data-preset]').forEach(function(btn){
+      btn.classList.toggle('is-active', parseInt(btn.getAttribute('data-preset'), 10) === qty);
+    });
+  }
   document.querySelectorAll('.row[data-tiers]').forEach(function(row){
     var input = row.querySelector('.qty-input');
     var dec = row.querySelector('[data-action="dec"]');
     var inc = row.querySelector('[data-action="inc"]');
-    if (dec) dec.addEventListener('click', function(){ input.value = Math.max(0, (parseInt(input.value,10)||0) - 1); updateRow(row); });
-    if (inc) inc.addEventListener('click', function(){ input.value = (parseInt(input.value,10)||0) + 1; updateRow(row); });
+    if (dec) dec.addEventListener('click', function(){
+      var next = Math.max(0, (parseInt(input.value,10)||0) - 1);
+      input.value = next; bumpQty(input); updateRow(row); syncPresets(row);
+    });
+    if (inc) inc.addEventListener('click', function(){
+      var step = row.dataset.sku === '600558' ? 12 : 1;
+      var next = (parseInt(input.value,10)||0) + step;
+      input.value = next; bumpQty(input); updateRow(row); syncPresets(row);
+    });
     if (input){
-      input.addEventListener('input', function(){ updateRow(row); });
-      input.addEventListener('blur', function(){ clampOnBlur(row); });
+      input.addEventListener('input', function(){ updateRow(row); syncPresets(row); });
+      input.addEventListener('blur', function(){ clampOnBlur(row); syncPresets(row); });
     }
+    row.querySelectorAll('[data-preset]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        setQtyAnimated(row, parseInt(btn.getAttribute('data-preset'), 10));
+      });
+    });
+    syncPresets(row);
   });
+  /* Demo hook for film: window.__setPerseusQty(120) animates the hero SKU */
+  window.__setPerseusQty = function(n){
+    var row = document.querySelector('.row[data-sku="600558"]');
+    if (row) setQtyAnimated(row, n);
+  };
   updateQuickOrderTotals();
+  var hero = document.querySelector('.row[data-sku="600558"]');
+  if (hero) updateRow(hero);
 
   /* ---------- PDP qty stepper: recompute price + highlight matching tier row ---------- */
   var pdpTiers = [{min:1,price:179.97},{min:6,price:164.97},{min:12,price:149.98},{min:24,price:134.98}];
