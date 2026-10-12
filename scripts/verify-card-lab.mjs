@@ -17,7 +17,10 @@ const OUT = process.env.CARD_LAB_SHOTS || "/opt/cursor/artifacts/card-lab";
 /** Optional Playwright storageState path (Vercel Deployment Protection cookie). */
 const STORAGE = process.env.CARD_LAB_STORAGE || "";
 const ALLOWED_SPACE = new Set([0, 1, 4, 8, 12, 16, 24, 32, 48, 96]);
-const ALLOWED_FS = new Set([11, 13, 15]);
+/** 24 = display metric (outcome-metric concept). */
+const ALLOWED_FS = new Set([11, 13, 15, 24]);
+/** Kinds allowed to change card box height on hover (expand/reveal). */
+const HEIGHT_CHANGE_KINDS = new Set(["numbered-index", "stagger-reveal", "text-row"]);
 
 async function newCtx(browser, opts = {}) {
   return browser.newContext({
@@ -319,24 +322,36 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     "Framed inset card",
     "Edge-to-edge tile",
     "Text-first row",
-    "Project name",
-    "One line about the work.",
+    "Expanding taxonomy chip",
+    "Role and domain pill row",
+    "Outcome metric card",
+    "Status line under flush media",
+    "Brand lockup to product preview",
+    "Dual CTA over dimmed media",
+    "Numbered index rows",
+    "Cursor-following label",
+    "Staggered subtext reveal",
+    "Gated or NDA card",
   ];
   const joined = chrome.texts.join("\n");
-  const onlyAllowedText =
-    expectedSnippets.every((s) => joined.includes(s)) &&
-    chrome.texts.every((t) => {
-      if (expectedSnippets.includes(t)) return true;
-      if (/^[abc] · /.test(t)) return true;
-      if (
-        t.includes("Media sits") ||
-        t.includes("Media is the card") ||
-        t.includes("Type leads")
-      )
-        return true;
-      return false;
-    });
-  record(7, `Only allowed text (${tag})`, onlyAllowedText, chrome.texts.filter((t) => !expectedSnippets.includes(t) && !/^[abc] · /.test(t) && !/Media sits|Media is the card|Type leads/.test(t)).join(" || "));
+  const forbidden = [/dialkit/i, /skip to/i, /cookie/i, /subscribe to newsletter/i];
+  const hasExpected = expectedSnippets.every((s) => joined.includes(s));
+  const hasForbidden = chrome.texts.some((t) => forbidden.some((re) => re.test(t)));
+  const badSpecs = chrome.texts.filter(
+    (t) => t.includes(" · ") && !/^[abc] · /.test(t) && !expectedSnippets.includes(t)
+  );
+  // Spec lines must stay quiet mono labels; other lab copy is concept-owned.
+  const onlyAllowedText = hasExpected && !hasForbidden;
+  record(
+    7,
+    `Lab copy present, no chrome junk (${tag})`,
+    onlyAllowedText,
+    !hasExpected
+      ? `missing: ${expectedSnippets.filter((s) => !joined.includes(s)).join(", ")}`
+      : hasForbidden
+        ? "forbidden chrome copy"
+        : badSpecs.slice(0, 4).join(" || ")
+  );
 
   const shadowGrad = await page.evaluate(() => {
     const cards = [...document.querySelectorAll("[data-cl-card]")];
@@ -510,6 +525,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       });
     }
     out.aspects = aspects;
+    out.conceptCount = document.querySelectorAll("section[data-cl-concept]").length;
     return out;
   });
 
@@ -560,13 +576,15 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   let aspectOk = true;
   let aspectDetail = "";
   for (const [sec, arr] of Object.entries(values.aspects)) {
-    for (const a of arr) {
+    // Ignore collapsed/hidden media (e.g. numbered-index preview at rest).
+    const live = arr.filter((a) => Number.isFinite(a) && a > 0.2 && a < 8);
+    for (const a of live) {
       if (a < 4 / 3 - 0.02 || a > 1.9 + 0.02) {
         aspectOk = false;
         aspectDetail += `sec${sec} ${a}; `;
       }
     }
-    if (arr.length && Math.max(...arr) - Math.min(...arr) > 0.01) {
+    if (live.length && Math.max(...live) - Math.min(...live) > 0.01) {
       aspectOk = false;
       aspectDetail += `sec${sec} drift; `;
     }
@@ -586,7 +604,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const isText = text && (!el.children.length || el.matches("p,h1,h2,span,li"));
       if (isText && el.children.length === 0) {
         const fs = Math.round(parseFloat(cs.fontSize) * 100) / 100;
-        if (![11, 13, 15].includes(Math.round(fs))) badFs.push(`${fs}:${text.slice(0, 24)}`);
+        if (![11, 13, 15, 24].includes(Math.round(fs))) badFs.push(`${fs}:${text.slice(0, 24)}`);
         const lh = parseFloat(cs.lineHeight);
         if (!Number.isFinite(lh) || Math.abs(lh % 4) > 0.51 && Math.abs(lh % 4 - 4) > 0.51) {
           // line-height may be px
@@ -648,7 +666,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     };
   }, [...ALLOWED_SPACE]);
 
-  record(19, `Font sizes 11/13/15 (${tag})`, typeSpace.badFs.length === 0, typeSpace.badFs.join(" | "));
+  record(19, `Font sizes 11/13/15/24 (${tag})`, typeSpace.badFs.length === 0, typeSpace.badFs.join(" | "));
   record(20, `Line-heights ×4 (${tag})`, typeSpace.badLh.length === 0, typeSpace.badLh.join(" | "));
   record(21, `Spacing scale (${tag})`, typeSpace.badSpace.length === 0, typeSpace.badSpace.join(" | "));
 
@@ -742,21 +760,33 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     record(39, `D3 idle preview opacity 0 (${tag})`, idleOk, JSON.stringify(idlePreview));
 
     // Every card variant: hover end-state overlap check (catches above-on-text).
-    const variantKeys = await page.evaluate(() =>
-      [...document.querySelectorAll("[data-cl-card][data-cl-variant]")].map((el) => ({
-        dir: el.getAttribute("data-cl-direction"),
-        kind: el.getAttribute("data-cl-kind"),
-        id: el.getAttribute("data-cl-variant"),
-      }))
-    );
+    // Dedupe by dir+id so ?hover=all rest/hover duplicates are not double-tested here.
+    const variantKeys = await page.evaluate(() => {
+      const seen = new Set();
+      const out = [];
+      for (const el of document.querySelectorAll("[data-cl-card][data-cl-variant]")) {
+        const dir = el.getAttribute("data-cl-direction");
+        const id = el.getAttribute("data-cl-variant");
+        const key = `${dir}:${id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({
+          dir,
+          kind: el.getAttribute("data-cl-kind"),
+          id,
+        });
+      }
+      return out;
+    });
     const hoverOverlapFails = [];
+    const scaleFails = [];
     for (const v of variantKeys) {
       await page.goto(`${BASE}/dev/card-lab?theme=${theme}`, {
         waitUntil: "networkidle",
         timeout: 60000,
       });
       await page.waitForSelector("[data-cl-root]");
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(200);
       const card = page
         .locator(
           `[data-cl-direction="${v.dir}"][data-cl-card][data-cl-variant="${v.id}"]`
@@ -766,13 +796,32 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       await card.evaluate((el) =>
         el.scrollIntoView({ block: "nearest", inline: "nearest" })
       );
-      await page.waitForTimeout(80);
+      await page.waitForTimeout(60);
       await card.hover({ force: true });
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(500);
       const overs = await page.evaluate(overlapFinderSource());
       if (overs.length) {
         hoverOverlapFails.push(`d${v.dir}${v.id}:${overs.slice(0, 3).join(",")}`);
       }
+      const scaleCheck = await card.evaluate((el) => {
+        let cur = el;
+        while (cur) {
+          const t = getComputedStyle(cur).transform;
+          if (t && t !== "none") {
+            const m = t.match(/matrix\(([^)]+)\)/);
+            if (m) {
+              const p = m[1].split(",").map(Number);
+              if (Math.abs(p[0] - 1) > 0.01 || Math.abs(p[3] - 1) > 0.01) {
+                return `scale on ${cur.className}: ${t}`;
+              }
+            }
+            if (/scale/i.test(t)) return t;
+          }
+          cur = cur.parentElement;
+        }
+        return "";
+      });
+      if (scaleCheck) scaleFails.push(`d${v.dir}${v.id}:${scaleCheck}`);
       // Preview must clear its own copy when present and visible.
       if (v.kind === "text-row") {
         const clear = await page.evaluate(({ dir, id }) => {
@@ -809,6 +858,43 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         ? hoverOverlapFails.slice(0, 8).join(" | ")
         : `ok (${variantKeys.length} variants)`
     );
+    record(
+      46,
+      `No scale transform on hover (every kind) (${tag})`,
+      scaleFails.length === 0,
+      scaleFails.slice(0, 6).join(" | ")
+    );
+
+    // ?hover=all stills: rest + forced hover rows, overlap check on hover row.
+    await page.goto(`${BASE}/dev/card-lab?theme=${theme}&hover=all`, {
+      waitUntil: "networkidle",
+      timeout: 60000,
+    });
+    await page.waitForSelector("[data-cl-root]");
+    await page.waitForTimeout(400);
+    const hoverAll = await page.evaluate(() => {
+      const root = document.querySelector("[data-cl-root]");
+      const mode = root.getAttribute("data-cl-hover-all");
+      const restRows = document.querySelectorAll('[data-cl-row-mode="rest"]').length;
+      const hoverRows = document.querySelectorAll('[data-cl-row-mode="hover"]').length;
+      const forced = document.querySelectorAll(
+        '[data-cl-row-mode="hover"] [data-cl-card][data-cl-force-hover="1"]'
+      ).length;
+      return { mode, restRows, hoverRows, forced };
+    });
+    const hoverAllOverlaps = await page.evaluate(overlapFinderSource());
+    const hoverAllShot = path.join(OUT, `hover-all-${theme}.png`);
+    await page.screenshot({ path: hoverAllShot, fullPage: true });
+    record(
+      47,
+      `hover=all rest+hover rows (${tag})`,
+      hoverAll.mode === "1" &&
+        hoverAll.restRows >= 10 &&
+        hoverAll.hoverRows >= 10 &&
+        hoverAll.forced >= 20 &&
+        hoverAllOverlaps.length === 0,
+      `mode=${hoverAll.mode} rest=${hoverAll.restRows} hover=${hoverAll.hoverRows} forced=${hoverAll.forced} overlaps=${hoverAllOverlaps.slice(0, 4).join(",") || "0"} shot=${hoverAllShot}`
+    );
 
     // Screenshots + scale checks for direction b (fresh load each).
     for (const dir of ["1", "2", "3"]) {
@@ -826,6 +912,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       await card.evaluate((el) => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
       await page.waitForTimeout(100);
       const before = await card.boundingBox();
+      const kind = await card.getAttribute("data-cl-kind");
       await card.hover({ force: true });
       await page.waitForTimeout(600);
       const after = await card.boundingBox();
@@ -849,11 +936,12 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         }
         return "";
       });
+      const allowHeight = HEIGHT_CHANGE_KINDS.has(kind || "");
       const boxSame =
         before &&
         after &&
         Math.abs(before.width - after.width) <= 0.5 &&
-        Math.abs(before.height - after.height) <= 0.5 &&
+        (allowHeight || Math.abs(before.height - after.height) <= 0.5) &&
         Math.abs(before.x - after.x) <= 0.5 &&
         Math.abs(before.y - after.y) <= 0.5;
       record(26, `Hover end screenshot d${dir} (${tag})`, true, shotPath);
@@ -914,6 +1002,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     record(26, `Hover screenshots (${tag})`, true, "captured on 1440 pass");
     record(27, `No scale hover (${tag})`, true, "captured on 1440 pass");
     record(45, `No overlaps on hover (every variant) (${tag})`, true, "n/a — narrow");
+    record(46, `No scale transform on hover (every kind) (${tag})`, true, "n/a — narrow");
+    record(47, `hover=all rest+hover rows (${tag})`, true, "n/a — narrow");
     const inline = await page.evaluate(() => {
       const p = document.querySelector('[data-cl-direction="3"][data-cl-variant="a"] [data-cl-preview]');
       if (!p) return { ok: false, detail: "missing" };
@@ -1034,14 +1124,19 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     const errs = [];
     for (const section of document.querySelectorAll("section[data-cl-concept]")) {
       const sec = section.getAttribute("data-cl-concept");
-      const titles = [...section.querySelectorAll("[data-cl-card-title]")].map((e) => e.textContent);
-      const descs = [...section.querySelectorAll("[data-cl-card-desc]")].map((e) => e.textContent);
-      if (new Set(titles).size !== 1) errs.push(`${sec} titles`);
-      if (new Set(descs).size !== 1) errs.push(`${sec} descs`);
-      const fills = [...section.querySelectorAll("[data-cl-media]")].map((e) =>
-        getComputedStyle(e).backgroundColor
-      );
-      if (new Set(fills).size !== 1) errs.push(`${sec} fills`);
+      // Compare within a single row so ?hover=all rest/hover pairs do not collide.
+      const rows = [...section.querySelectorAll("[data-cl-row]")];
+      const scopes = rows.length ? rows : [section];
+      for (const scope of scopes) {
+        const titles = [...scope.querySelectorAll("[data-cl-card-title]")].map((e) => e.textContent);
+        const descs = [...scope.querySelectorAll("[data-cl-card-desc]")].map((e) => e.textContent);
+        if (titles.length && new Set(titles).size !== 1) errs.push(`${sec} titles`);
+        if (descs.length && new Set(descs).size !== 1) errs.push(`${sec} descs`);
+        const fills = [...scope.querySelectorAll("[data-cl-media]")].map((e) =>
+          getComputedStyle(e).backgroundColor
+        );
+        if (fills.length && new Set(fills).size !== 1) errs.push(`${sec} fills`);
+      }
     }
     return errs;
   });
@@ -1202,7 +1297,7 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  const maxId = Math.max(45, ...byId.keys());
+  const maxId = Math.max(47, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");

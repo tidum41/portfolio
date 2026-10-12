@@ -19,6 +19,7 @@ export default function CardLabClient() {
   const searchParams = useSearchParams();
   const themeParam = searchParams.get("theme");
   const showGrid = searchParams.get("grid") === "1";
+  const hoverAll = searchParams.get("hover") === "all";
 
   const [theme, setTheme] = useState<ThemeName>(() =>
     themeParam === "light" || themeParam === "dark" ? themeParam : "light"
@@ -86,7 +87,7 @@ export default function CardLabClient() {
       cancelAnimationFrame(id);
       window.removeEventListener("resize", equalize);
     };
-  }, [theme, resolved]);
+  }, [theme, resolved, hoverAll]);
 
   return (
     <div
@@ -94,6 +95,7 @@ export default function CardLabClient() {
       data-theme={theme}
       data-cl-root
       data-cl-concept-count={CONCEPTS.length}
+      data-cl-hover-all={hoverAll ? "1" : "0"}
       style={{ position: "relative" }}
     >
       {showGrid ? (
@@ -111,6 +113,7 @@ export default function CardLabClient() {
               concept={concept}
               index={i + 1}
               variants={variants}
+              compareHover={hoverAll}
             />
           ))}
         </div>

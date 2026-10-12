@@ -11,13 +11,31 @@ import type { ReactNode } from "react";
 export type ThemeName = "light" | "dark";
 
 /** Routing key for kind-specific verify rules. Extend as concepts land. */
-export type ConceptKind = "framed-inset" | "edge-tile" | "text-row";
+export type ConceptKind =
+  | "framed-inset"
+  | "edge-tile"
+  | "text-row"
+  | "expanding-chip"
+  | "pill-row"
+  | "outcome-metric"
+  | "status-line"
+  | "brand-lockup"
+  | "dual-cta"
+  | "numbered-index"
+  | "cursor-label"
+  | "stagger-reveal"
+  | "gated-nda";
 
 export type VariantId = "a" | "b" | "c" | string;
 
 export type ConceptVariant = {
   id: VariantId;
   [key: string]: unknown;
+};
+
+export type RenderContext = {
+  /** When true, paint the hover end state without pointer hover (?hover=all). */
+  forceHover?: boolean;
 };
 
 export type ConceptDefinition<V extends ConceptVariant = ConceptVariant> = {
@@ -36,5 +54,5 @@ export type ConceptDefinition<V extends ConceptVariant = ConceptVariant> = {
   label: (variant: V) => string;
   applyOverrides: (variant: V, params: URLSearchParams) => V;
   /** One variant stage. Must set data-cl-card and data-cl-kind. */
-  render: (variant: V) => ReactNode;
+  render: (variant: V, ctx?: RenderContext) => ReactNode;
 };
