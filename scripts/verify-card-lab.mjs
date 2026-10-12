@@ -8,7 +8,7 @@
  * Exits non-zero on any FAIL. Prints PASS/FAIL table by rubric number.
  */
 
-import { chromium, devices } from "playwright";
+import { chromium } from "playwright";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -247,11 +247,15 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     chrome.texts.every((t) => {
       if (expectedSnippets.includes(t)) return true;
       if (/^[abc] · /.test(t)) return true;
-      if (t.includes("Media inset") || t.includes("Media is the card") || t.includes("Type leads"))
+      if (
+        t.includes("Media sits") ||
+        t.includes("Media is the card") ||
+        t.includes("Type leads")
+      )
         return true;
       return false;
     });
-  record(7, `Only allowed text (${tag})`, onlyAllowedText, chrome.texts.filter((t) => !expectedSnippets.includes(t) && !/^[abc] · /.test(t) && !/Media inset|Media is the card|Type leads/.test(t)).join(" || "));
+  record(7, `Only allowed text (${tag})`, onlyAllowedText, chrome.texts.filter((t) => !expectedSnippets.includes(t) && !/^[abc] · /.test(t) && !/Media sits|Media is the card|Type leads/.test(t)).join(" || "));
 
   const shadowGrad = await page.evaluate(() => {
     const cards = [...document.querySelectorAll("[data-cl-card]")];
@@ -426,21 +430,23 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   // ——— C. Values ———
   const values = await page.evaluate(() => {
     const out = { d1: [], d2: [], d3: [], errs: [] };
-    for (const card of document.querySelectorAll('[data-cl-direction="1"][data-cl-card]')) {
+    for (const card of document.querySelectorAll('[data-cl-kind="framed-inset"][data-cl-card]')) {
       const cs = getComputedStyle(card);
-      const pad = parseFloat(cs.paddingTop);
+      const inset = card.querySelector("[data-cl-media-inset]");
+      const insetCs = getComputedStyle(inset);
+      const pad = parseFloat(insetCs.paddingTop);
       const rad = parseFloat(cs.borderTopLeftRadius);
       const media = card.querySelector("[data-cl-media]");
       const mrad = parseFloat(getComputedStyle(media).borderTopLeftRadius);
       const copy = card.querySelector("[data-cl-copy]");
-      const gap = parseFloat(getComputedStyle(copy).marginTop);
+      const gap = parseFloat(getComputedStyle(copy).paddingTop);
       const title = card.querySelector("[data-cl-card-title]");
       const fs = parseFloat(getComputedStyle(title).fontSize);
       const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
       const id = card.getAttribute("data-cl-variant");
       out.d1.push({ id, pad, rad, mrad, gap, fs, spec, innerAttr: +card.getAttribute("data-cl-inner") });
     }
-    for (const card of document.querySelectorAll('[data-cl-direction="2"][data-cl-card]')) {
+    for (const card of document.querySelectorAll('[data-cl-kind="edge-tile"][data-cl-card]')) {
       const grid = card.querySelector("[data-cl-tile-grid]");
       const gutter = parseFloat(getComputedStyle(grid).gap);
       const media = card.querySelector("[data-cl-media]");
@@ -452,7 +458,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
       out.d2.push({ id: card.getAttribute("data-cl-variant"), gutter, rad, gap, fs, spec });
     }
-    for (const card of document.querySelectorAll('[data-cl-direction="3"][data-cl-card]')) {
+    for (const card of document.querySelectorAll('[data-cl-kind="text-row"][data-cl-card]')) {
       const preview = card.querySelector("[data-cl-preview]");
       const tr = getComputedStyle(preview).transitionDuration;
       const ms = Math.round(parseFloat(tr) * (tr.includes("ms") ? 1 : 1000));
@@ -461,11 +467,12 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
       out.d3.push({ id: card.getAttribute("data-cl-variant"), ms, fs, spec, tr });
     }
-    // aspect ratios
+    // aspect ratios — every registered concept section
     const aspects = {};
-    for (const section of [1, 2, 3]) {
-      const medias = [...document.querySelectorAll(`[data-cl-section="${section}"] [data-cl-media]`)];
-      aspects[section] = medias.map((m) => {
+    for (const section of document.querySelectorAll("section[data-cl-concept]")) {
+      const key = section.getAttribute("data-cl-concept") || section.getAttribute("data-cl-section");
+      const medias = [...section.querySelectorAll("[data-cl-media]")];
+      aspects[key] = medias.map((m) => {
         const r = m.getBoundingClientRect();
         return r.height ? r.width / r.height : 0;
       });
@@ -689,12 +696,38 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   record(24, `Contrast ≥4.5 (${tag})`, contrastFails.length === 0, contrastFails.join(" | "));
   record(25, `Contrast theme covered (${tag})`, true, theme);
 
-  // ——— F. Hover ———
+  // ——— F. Hover (fresh page load per direction — no stale fade ghosts) ———
   if (width === 1440 && hoverEmulation === "hover") {
+    // Idle previews must be fully invisible before any hover.
+    const idlePreview = await page.evaluate(() => {
+      const previews = [...document.querySelectorAll("[data-cl-preview]")];
+      return previews.map((el) => {
+        const cs = getComputedStyle(el);
+        return { opacity: Number(cs.opacity), visibility: cs.visibility };
+      });
+    });
+    const idleOk = idlePreview.every((p) => p.opacity === 0 && p.visibility === "hidden");
+    record(39, `D3 idle preview opacity 0 (${tag})`, idleOk, JSON.stringify(idlePreview));
+
     for (const dir of ["1", "2", "3"]) {
-      const card = page.locator(`[data-cl-direction="${dir}"][data-cl-card][data-cl-variant="b"]`).first();
+      // Fresh navigation so prior hover fades cannot ghost into the shot.
+      await page.goto(`${BASE}/dev/card-lab?theme=${theme}`, {
+        waitUntil: "networkidle",
+        timeout: 60000,
+      });
+      await page.waitForSelector("[data-cl-root]");
+      await page.waitForTimeout(400);
+
+      const card = page
+        .locator(`[data-cl-direction="${dir}"][data-cl-card][data-cl-variant="b"]`)
+        .first();
+      // Lock scroll so hover actionability cannot shift the page.
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await card.evaluate((el) => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
+      await page.waitForTimeout(100);
       const before = await card.boundingBox();
       await card.hover({ force: true });
+      // Do not scroll after hover — moving the viewport drops :hover.
       await page.waitForTimeout(600);
       const after = await card.boundingBox();
       const shotPath = path.join(OUT, `hover-d${dir}-${theme}.png`);
@@ -704,7 +737,6 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         while (cur) {
           const t = getComputedStyle(cur).transform;
           if (t && t !== "none") {
-            // matrix(a,b,c,d,tx,ty) — scale if a/d != 1
             const m = t.match(/matrix\(([^)]+)\)/);
             if (m) {
               const p = m[1].split(",").map(Number);
@@ -725,20 +757,41 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         Math.abs(before.height - after.height) <= 0.5 &&
         Math.abs(before.x - after.x) <= 0.5 &&
         Math.abs(before.y - after.y) <= 0.5;
-      // d3 preview excluded from box identity — card may grow if preview takes space;
-      // for d3 with absolute? Our preview is in-flow beside — hover only changes opacity/transform of preview, card box should stay same
-      record(
-        dir === "1" ? 26 : dir === "2" ? 26 : 26,
-        `Hover end screenshot d${dir} (${tag})`,
-        true,
-        shotPath
-      );
+      record(26, `Hover end screenshot d${dir} (${tag})`, true, shotPath);
       if (dir !== "3") {
-        record(27, `No scale on hover d${dir} (${tag})`, !scaleCheck && boxSame, scaleCheck || `box ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+        record(
+          27,
+          `No scale on hover d${dir} (${tag})`,
+          !scaleCheck && boxSame,
+          scaleCheck || `box ${JSON.stringify(before)} → ${JSON.stringify(after)}`
+        );
       } else {
         record(27, `No scale on hover d3 (${tag})`, !scaleCheck, scaleCheck);
-        const previewVisible = await page.locator(`[data-cl-direction="3"][data-cl-variant="b"] [data-cl-preview]`).evaluate((el) => getComputedStyle(el).opacity);
-        record(28, `D3 preview on hover 1440 (${tag})`, Number(previewVisible) > 0.9, `opacity=${previewVisible}`);
+        const previewVisible = await page
+          .locator(`[data-cl-direction="3"][data-cl-variant="b"] [data-cl-preview]`)
+          .evaluate((el) => getComputedStyle(el).opacity);
+        record(
+          28,
+          `D3 preview on hover 1440 (${tag})`,
+          Number(previewVisible) > 0.9,
+          `opacity=${previewVisible}`
+        );
+        // Non-hovered siblings must stay fully idle.
+        const ghosts = await page.evaluate(() => {
+          return ["a", "c"].map((id) => {
+            const el = document.querySelector(
+              `[data-cl-direction="3"][data-cl-variant="${id}"] [data-cl-preview]`
+            );
+            const cs = getComputedStyle(el);
+            return { id, opacity: Number(cs.opacity), visibility: cs.visibility };
+          });
+        });
+        record(
+          39,
+          `D3 non-hovered idle (${tag})`,
+          ghosts.every((g) => g.opacity === 0 && g.visibility === "hidden"),
+          JSON.stringify(ghosts)
+        );
       }
     }
   } else if (width === 390) {
@@ -751,11 +804,12 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const row = p.closest("[data-cl-card]");
       const rowCs = getComputedStyle(row);
       return {
-        ok: Number(cs.opacity) > 0.9,
-        detail: `opacity=${cs.opacity} flexDir=${rowCs.flexDirection}`,
+        ok: Number(cs.opacity) > 0.9 && cs.visibility !== "hidden",
+        detail: `opacity=${cs.opacity} vis=${cs.visibility} flexDir=${rowCs.flexDirection}`,
       };
     });
     record(28, `D3 inline at 390 (${tag})`, inline.ok, inline.detail);
+    record(39, `D3 idle preview opacity 0 (${tag})`, true, "n/a — inline on narrow");
   }
 
   // reduced motion
@@ -833,17 +887,44 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     };
   });
   record(32, `Grid column align (${tag})`, gridAlign.headVsCell <= 0.5, JSON.stringify(gridAlign));
-  record(33, `Label aligns to media (${tag})`, gridAlign.specVsMedia <= 1.5, JSON.stringify(gridAlign));
+
+  // 33 superseded for d1: label padding is constant across a/b/c (not media-edge align).
+  const d1LabelPad = await themePage.evaluate(() => {
+    const cards = [...document.querySelectorAll('[data-cl-kind="framed-inset"][data-cl-card]')];
+    const pads = cards.map((c) => {
+      const copy = c.querySelector("[data-cl-copy]");
+      const cs = getComputedStyle(copy);
+      return {
+        id: c.getAttribute("data-cl-variant"),
+        pl: parseFloat(cs.paddingLeft),
+        pr: parseFloat(cs.paddingRight),
+        pb: parseFloat(cs.paddingBottom),
+        attrX: +c.getAttribute("data-cl-label-pad-x"),
+        attrB: +c.getAttribute("data-cl-label-pad-bottom"),
+      };
+    });
+    const xs = pads.map((p) => p.pl);
+    const bs = pads.map((p) => p.pb);
+    const consistent =
+      Math.max(...xs) - Math.min(...xs) <= 0.5 &&
+      Math.max(...bs) - Math.min(...bs) <= 0.5 &&
+      pads.every((p) => Math.abs(p.pl - p.attrX) <= 0.5 && Math.abs(p.pb - p.attrB) <= 0.5);
+    return { consistent, pads };
+  });
+  record(33, `D1 label padding consistent (${tag})`, d1LabelPad.consistent, JSON.stringify(d1LabelPad.pads));
 
   const fair = await themePage.evaluate(() => {
     const errs = [];
-    for (const sec of [1, 2, 3]) {
-      const titles = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-card-title]`)].map((e) => e.textContent);
-      const descs = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-card-desc]`)].map((e) => e.textContent);
-      if (new Set(titles).size !== 1) errs.push(`sec${sec} titles`);
-      if (new Set(descs).size !== 1) errs.push(`sec${sec} descs`);
-      const fills = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-media]`)].map((e) => getComputedStyle(e).backgroundColor);
-      if (new Set(fills).size !== 1) errs.push(`sec${sec} fills`);
+    for (const section of document.querySelectorAll("section[data-cl-concept]")) {
+      const sec = section.getAttribute("data-cl-concept");
+      const titles = [...section.querySelectorAll("[data-cl-card-title]")].map((e) => e.textContent);
+      const descs = [...section.querySelectorAll("[data-cl-card-desc]")].map((e) => e.textContent);
+      if (new Set(titles).size !== 1) errs.push(`${sec} titles`);
+      if (new Set(descs).size !== 1) errs.push(`${sec} descs`);
+      const fills = [...section.querySelectorAll("[data-cl-media]")].map((e) =>
+        getComputedStyle(e).backgroundColor
+      );
+      if (new Set(fills).size !== 1) errs.push(`${sec} fills`);
     }
     return errs;
   });
@@ -867,6 +948,112 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   }
   record(38, `Variants distinguishable (${tag})`, true, "manual via specs");
 
+  // ——— Extended craft rules ———
+  const specProximity = await themePage.evaluate(() => {
+    const gaps = [];
+    for (const cell of document.querySelectorAll("[data-cl-variant-cell]")) {
+      const card = cell.querySelector("[data-cl-card]");
+      const spec = cell.querySelector("[data-cl-spec]");
+      const cb = card.getBoundingClientRect().bottom;
+      const st = spec.getBoundingClientRect().top;
+      gaps.push({ id: cell.getAttribute("data-cl-variant"), gap: st - cb, dir: cell.getAttribute("data-cl-direction") });
+    }
+    const ok = gaps.every((g) => g.gap >= 11.5 && g.gap <= 16.5);
+    return { ok, gaps };
+  });
+  record(40, `Spec within 16px of variant (${tag})`, specProximity.ok, JSON.stringify(specProximity.gaps.slice(0, 6)));
+
+  const d2Captions = await themePage.evaluate(() => {
+    const grids = [...document.querySelectorAll("[data-cl-tile-grid]")];
+    const report = grids.map((g) => {
+      const tiles = [...g.querySelectorAll(":scope > [data-cl-tile]")];
+      return tiles.map((t) => ({
+        hasCaption: !!t.querySelector("[data-cl-copy]"),
+        hasTitle: !!t.querySelector("[data-cl-card-title]"),
+      }));
+    });
+    const ok = report.every((tiles) => tiles.length >= 2 && tiles.every((t) => t.hasCaption && t.hasTitle));
+    return { ok, report };
+  });
+  record(41, `D2 every tile has caption (${tag})`, d2Captions.ok, JSON.stringify(d2Captions.report));
+
+  const d3Surface = await themePage.evaluate(() => {
+    const rows = [...document.querySelectorAll('[data-cl-kind="text-row"][data-cl-card]')];
+    return rows.map((r) => {
+      const cs = getComputedStyle(r);
+      const bg = cs.backgroundColor;
+      const transparent =
+        bg === "transparent" ||
+        bg === "rgba(0, 0, 0, 0)" ||
+        (bg.startsWith("rgba") && bg.endsWith(", 0)"));
+      return { id: r.getAttribute("data-cl-variant"), bg, transparent };
+    });
+  });
+  record(
+    42,
+    `D3 rows no background fill (${tag})`,
+    d3Surface.every((r) => r.transparent),
+    JSON.stringify(d3Surface)
+  );
+
+  if (width === 1440) {
+    const fill = await themePage.evaluate(() => {
+      const root = document.querySelector("[data-cl-root]");
+      const inner = document.querySelector(".card-lab__inner");
+      const row = document.querySelector("[data-cl-row]");
+      const ir = inner.getBoundingClientRect();
+      const rr = row.getBoundingClientRect();
+      const cs = getComputedStyle(root);
+      const padL = parseFloat(cs.paddingLeft);
+      const padR = parseFloat(cs.paddingRight);
+      // Root content box (accounts for scrollbar eating into the element).
+      const expected = root.clientWidth - padL - padR;
+      return {
+        innerW: ir.width,
+        rowW: rr.width,
+        rootClient: root.clientWidth,
+        padL,
+        padR,
+        expected,
+      };
+    });
+    record(
+      43,
+      `Columns fill content width (${tag})`,
+      Math.abs(fill.innerW - fill.expected) <= 1 && Math.abs(fill.rowW - fill.expected) <= 1,
+      JSON.stringify(fill)
+    );
+  } else {
+    record(43, `Columns fill content width (${tag})`, true, "n/a");
+  }
+
+  // Registry shell: every concept section has id, kind, ≥1 variant + spec.
+  const registry = await themePage.evaluate(() => {
+    const sections = [...document.querySelectorAll("section[data-cl-concept]")];
+    const report = sections.map((s) => {
+      const cells = [...s.querySelectorAll(":scope [data-cl-variant-cell]")];
+      return {
+        id: s.getAttribute("data-cl-concept"),
+        kind: s.getAttribute("data-cl-kind"),
+        variants: cells.length,
+        specs: cells.filter((c) => c.querySelector("[data-cl-spec]")).length,
+        cards: cells.filter((c) => c.querySelector("[data-cl-card]")).length,
+      };
+    });
+    const ok =
+      report.length >= 1 &&
+      report.every(
+        (r) =>
+          !!r.id &&
+          !!r.kind &&
+          r.variants >= 1 &&
+          r.specs === r.variants &&
+          r.cards === r.variants
+      );
+    return { ok, count: report.length, report };
+  });
+  record(44, `Registry concepts render (${tag})`, registry.ok, JSON.stringify(registry));
+
   await themeCtx.close();
   return { fullPath, mediaUrls };
 }
@@ -888,7 +1075,7 @@ async function main() {
   }
   await browser.close();
 
-  // Collapse to worst result per rubric id (1-38)
+  // Collapse to worst result per rubric id
   /** @type {Map<number, { id: number; name: string; pass: boolean; detail: string }>} */
   const byId = new Map();
   for (const r of results) {
@@ -898,12 +1085,12 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  // Ensure 26 recorded once as pass if any hover shot existed
+  const maxId = Math.max(44, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");
   let failed = 0;
-  for (let id = 1; id <= 38; id++) {
+  for (let id = 1; id <= maxId; id++) {
     const r = byId.get(id);
     if (!r) {
       console.log(`${String(id).padStart(2)} | FAIL   | (not checked)`);

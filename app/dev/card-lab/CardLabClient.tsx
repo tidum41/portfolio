@@ -3,22 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import "./card-lab.css";
-import {
-  DESCRIPTION,
-  TITLE,
-  applyOverrides,
-  direction1,
-  direction2,
-  direction3,
-  innerRadius,
-  labelD1,
-  labelD2,
-  labelD3,
-  type Direction1Variant,
-  type Direction2Variant,
-  type Direction3Variant,
-  type ThemeName,
-} from "./variants";
+import { CONCEPTS } from "./concepts/registry";
+import type { ThemeName } from "./concepts/types";
+import ConceptSection from "./shell/ConceptSection";
 
 function resolveTheme(param: string | null): ThemeName {
   if (param === "light" || param === "dark") return param;
@@ -26,177 +13,6 @@ function resolveTheme(param: string | null): ThemeName {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
-}
-
-function PlaceholderMedia({
-  aspect,
-  mediaIndex,
-  radius,
-  className,
-}: {
-  aspect: string;
-  mediaIndex: number;
-  radius?: number;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`card-lab__media card-lab__media--${mediaIndex}${className ? ` ${className}` : ""}`}
-      data-cl-media
-      data-cl-aspect={aspect}
-      style={{
-        aspectRatio: aspect,
-        borderRadius: radius !== undefined ? `${radius}px` : undefined,
-      }}
-    >
-      <span className="card-lab__media-mark" aria-hidden="true" />
-    </div>
-  );
-}
-
-function Direction1Card({ v }: { v: Direction1Variant }) {
-  const inner = innerRadius(v);
-  return (
-    <div
-      className="card-lab__frame"
-      data-cl-card
-      data-cl-direction="1"
-      data-cl-variant={v.id}
-      data-cl-radius={v.radius}
-      data-cl-padding={v.padding}
-      data-cl-inner={inner}
-      data-cl-gap={v.gap}
-      data-cl-title-size={v.titleSize}
-      style={{
-        borderRadius: `${v.radius}px`,
-        padding: `${v.padding}px`,
-      }}
-    >
-      <PlaceholderMedia
-        aspect={direction1.aspect}
-        mediaIndex={direction1.mediaIndex}
-        radius={inner}
-        className="card-lab__frame-media"
-      />
-      <div
-        className="card-lab__frame-copy"
-        data-cl-copy
-        style={{ marginTop: `${v.gap}px`, gap: "0px" }}
-      >
-        <p
-          className="card-lab__frame-title"
-          data-cl-card-title
-          style={{ fontSize: `${v.titleSize}px` }}
-        >
-          {TITLE}
-        </p>
-        <p
-          className="card-lab__frame-desc"
-          data-cl-card-desc
-          style={{ fontSize: `${v.descSize}px` }}
-        >
-          {DESCRIPTION}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function Direction2Card({ v }: { v: Direction2Variant }) {
-  return (
-    <div
-      data-cl-card
-      data-cl-direction="2"
-      data-cl-variant={v.id}
-      data-cl-radius={v.radius}
-      data-cl-gutter={v.gutter}
-      data-cl-gap={v.captionGap}
-      data-cl-title-size={v.titleSize}
-    >
-      <div
-        className="card-lab__tile-grid"
-        data-cl-tile-grid
-        style={{ gap: `${v.gutter}px` }}
-      >
-        <PlaceholderMedia
-          aspect={direction2.aspect}
-          mediaIndex={direction2.mediaIndex}
-          radius={v.radius}
-          className="card-lab__tile-media"
-        />
-        <PlaceholderMedia
-          aspect={direction2.aspect}
-          mediaIndex={direction2.mediaIndex}
-          radius={v.radius}
-          className="card-lab__tile-media"
-        />
-      </div>
-      <div
-        className="card-lab__tile-caption"
-        data-cl-copy
-        style={{ marginTop: `${v.captionGap}px` }}
-      >
-        <p
-          className="card-lab__tile-title"
-          data-cl-card-title
-          style={{ fontSize: `${v.titleSize}px` }}
-        >
-          {TITLE}
-        </p>
-        <p
-          className="card-lab__tile-desc"
-          data-cl-card-desc
-          style={{ fontSize: `${v.descSize}px` }}
-        >
-          {DESCRIPTION}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function Direction3Card({ v }: { v: Direction3Variant }) {
-  return (
-    <div
-      className="card-lab__text-row"
-      data-cl-card
-      data-cl-direction="3"
-      data-cl-variant={v.id}
-      data-cl-hover-ms={v.hoverMs}
-      data-cl-title-size={v.titleSize}
-      style={{ minHeight: `${v.rowMinHeight}px` }}
-    >
-      <div className="card-lab__text-copy" data-cl-copy>
-        <p
-          className="card-lab__text-title"
-          data-cl-card-title
-          style={{ fontSize: `${v.titleSize}px` }}
-        >
-          {TITLE}
-        </p>
-        <p
-          className="card-lab__text-desc"
-          data-cl-card-desc
-          style={{ fontSize: `${v.descSize}px` }}
-        >
-          {DESCRIPTION}
-        </p>
-      </div>
-      <div
-        className="card-lab__preview"
-        data-cl-preview
-        style={{
-          transition: `opacity ${v.hoverMs}ms ease-out, transform ${v.hoverMs}ms ease-out`,
-        }}
-      >
-        <PlaceholderMedia
-          aspect={direction3.aspect}
-          mediaIndex={direction3.mediaIndex}
-          className="card-lab__preview-media"
-        />
-      </div>
-    </div>
-  );
 }
 
 export default function CardLabClient() {
@@ -234,45 +50,32 @@ export default function CardLabClient() {
     };
   }, [theme]);
 
-  const d1 = useMemo(
+  const resolved = useMemo(
     () =>
-      direction1.variants.map((v) =>
-        applyOverrides("d1", v.id, v, searchParams)
-      ),
-    [searchParams]
-  );
-  const d2 = useMemo(
-    () =>
-      direction2.variants.map((v) =>
-        applyOverrides("d2", v.id, v, searchParams)
-      ),
-    [searchParams]
-  );
-  const d3 = useMemo(
-    () =>
-      direction3.variants.map((v) =>
-        applyOverrides("d3", v.id, v, searchParams)
-      ),
+      CONCEPTS.map((concept) => ({
+        concept,
+        variants: concept.variants.map((v) =>
+          concept.applyOverrides(v, searchParams)
+        ),
+      })),
     [searchParams]
   );
 
-  // Equal stage cells within each direction (desktop stretch + mobile stack).
+  // Equal card heights within each concept row.
   useEffect(() => {
     const equalize = () => {
       document.querySelectorAll<HTMLElement>("[data-cl-row]").forEach((row) => {
-        const stages = [
-          ...row.querySelectorAll<HTMLElement>("[data-cl-stage]"),
-        ];
-        stages.forEach((s) => {
-          s.style.minHeight = "";
+        const cards = [...row.querySelectorAll<HTMLElement>("[data-cl-card]")];
+        cards.forEach((c) => {
+          c.style.minHeight = "";
         });
         let max = 0;
-        for (const s of stages) {
-          max = Math.max(max, s.getBoundingClientRect().height);
+        for (const c of cards) {
+          max = Math.max(max, c.getBoundingClientRect().height);
         }
         const h = Math.ceil(max);
-        stages.forEach((s) => {
-          s.style.minHeight = `${h}px`;
+        cards.forEach((c) => {
+          c.style.minHeight = `${h}px`;
         });
       });
     };
@@ -283,106 +86,33 @@ export default function CardLabClient() {
       cancelAnimationFrame(id);
       window.removeEventListener("resize", equalize);
     };
-  }, [theme, d1, d2, d3]);
+  }, [theme, resolved]);
 
   return (
     <div
       className="card-lab"
       data-theme={theme}
       data-cl-root
+      data-cl-concept-count={CONCEPTS.length}
       style={{ position: "relative" }}
     >
-      {showGrid ? <div className="card-lab__grid" data-cl-grid aria-hidden="true" /> : null}
+      {showGrid ? (
+        <div className="card-lab__grid" data-cl-grid aria-hidden="true" />
+      ) : null}
       <div className="card-lab__inner">
         <h1 className="card-lab__title" data-cl-page-title>
           Card lab
         </h1>
 
         <div className="card-lab__sections">
-          <section data-cl-section="1" aria-labelledby="cl-d1-name">
-            <header className="card-lab__section-head" data-cl-section-head>
-              <h2 id="cl-d1-name" className="card-lab__section-name">
-                {direction1.name}
-              </h2>
-              <p className="card-lab__section-intent">{direction1.intent}</p>
-            </header>
-            <div className="card-lab__row" data-cl-row>
-              {d1.map((v) => (
-                <div
-                  key={v.id}
-                  className="card-lab__variant"
-                  data-cl-variant-cell
-                  data-cl-direction="1"
-                  data-cl-variant={v.id}
-                >
-                  <div className="card-lab__stage" data-cl-stage>
-                    <Direction1Card v={v} />
-                  </div>
-                  <p
-                    className="card-lab__spec"
-                    data-cl-spec
-                    style={{ marginLeft: `${v.padding}px` }}
-                  >
-                    {labelD1(v)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section data-cl-section="2" aria-labelledby="cl-d2-name">
-            <header className="card-lab__section-head" data-cl-section-head>
-              <h2 id="cl-d2-name" className="card-lab__section-name">
-                {direction2.name}
-              </h2>
-              <p className="card-lab__section-intent">{direction2.intent}</p>
-            </header>
-            <div className="card-lab__row" data-cl-row>
-              {d2.map((v) => (
-                <div
-                  key={v.id}
-                  className="card-lab__variant"
-                  data-cl-variant-cell
-                  data-cl-direction="2"
-                  data-cl-variant={v.id}
-                >
-                  <div className="card-lab__stage" data-cl-stage>
-                    <Direction2Card v={v} />
-                  </div>
-                  <p className="card-lab__spec" data-cl-spec>
-                    {labelD2(v)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section data-cl-section="3" aria-labelledby="cl-d3-name">
-            <header className="card-lab__section-head" data-cl-section-head>
-              <h2 id="cl-d3-name" className="card-lab__section-name">
-                {direction3.name}
-              </h2>
-              <p className="card-lab__section-intent">{direction3.intent}</p>
-            </header>
-            <div className="card-lab__row" data-cl-row>
-              {d3.map((v) => (
-                <div
-                  key={v.id}
-                  className="card-lab__variant"
-                  data-cl-variant-cell
-                  data-cl-direction="3"
-                  data-cl-variant={v.id}
-                >
-                  <div className="card-lab__stage" data-cl-stage>
-                    <Direction3Card v={v} />
-                  </div>
-                  <p className="card-lab__spec" data-cl-spec>
-                    {labelD3(v)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {resolved.map(({ concept, variants }, i) => (
+            <ConceptSection
+              key={concept.id}
+              concept={concept}
+              index={i + 1}
+              variants={variants}
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -13,8 +13,6 @@
   --cl-page-pad: 48px;
   --cl-section-gap: 96px;
   --cl-variant-gap: 48px;
-  --cl-col: 360px;
-  --cl-max: 1180px;
 
   box-sizing: border-box;
   min-height: 100vh;
@@ -71,10 +69,12 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
 }
 
+/* Fill the padded viewport — three equal columns + 48px gaps, one grid. */
 .card-lab__inner {
   position: relative;
   z-index: 1;
-  max-width: var(--cl-max);
+  width: 100%;
+  max-width: none;
 }
 
 .card-lab__title {
@@ -113,9 +113,9 @@
 
 .card-lab__row {
   display: grid;
-  grid-template-columns: repeat(3, var(--cl-col));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--cl-variant-gap);
-  align-items: stretch;
+  align-items: start;
   justify-content: start;
 }
 
@@ -124,14 +124,15 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .card-lab__stage {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
   width: 100%;
-  min-height: 100%;
+  overflow: visible;
+  /* Spec sits inside the stage, 12px under the card — not below an equalized void. */
 }
 
 .card-lab__spec {
@@ -148,8 +149,14 @@
 /* Direction 1 — framed inset */
 .card-lab__frame {
   background: var(--cl-surface);
-  /* hairline via inset box-shadow only */
   box-shadow: inset 0 0 0 1px var(--cl-hairline);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-lab__frame-media-inset {
+  /* Media inset only — label padding is separate and constant. */
   width: 100%;
 }
 
@@ -177,11 +184,19 @@
   line-height: 20px;
 }
 
-/* Direction 2 — edge tiles */
+/* Direction 2 — edge tiles: each tile owns its caption.
+   Two captioned tiles share the full column so radius/gutter read at real size. */
 .card-lab__tile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   width: 100%;
+  align-items: start;
+}
+
+.card-lab__tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .card-lab__tile-media {
@@ -208,17 +223,18 @@
   line-height: 20px;
 }
 
-/* Direction 3 — text-first row */
+/* Direction 3 — borderless text row on the canvas */
 .card-lab__text-row {
   position: relative;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
-  background: var(--cl-surface);
-  border-radius: 8px;
-  padding: 8px 12px;
-  gap: 16px;
+  background: transparent;
+  border-radius: 0;
+  /* hairline under the row — border, not box-shadow (rubric allows d1 inset only) */
+  border-bottom: 1px solid var(--cl-hairline);
+  overflow: visible;
 }
 
 .card-lab__text-copy {
@@ -244,9 +260,12 @@
 }
 
 .card-lab__preview {
-  width: 96px;
   border-radius: 4px;
   overflow: hidden;
+  /* Fully invisible when idle — visibility blocks paint ghosts. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .card-lab__preview-media {
@@ -254,28 +273,42 @@
   display: block;
 }
 
-/* Desktop + fine pointer: preview sits beside the row (absolute) so idle has
-   no empty slot. Opacity + ≤4px translate only — never scale.
-   Narrow viewports always show the preview inline (touch / no-hover parity),
-   so 390 screenshots don't depend on UA hover media features. */
-@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
-  .card-lab__preview {
+/* Desktop width: real-size preview outside the row with breathing room.
+   Width-based (not hover/pointer media) so headless Playwright can exercise :hover. */
+@media (min-width: 901px) {
+  .card-lab__preview[data-cl-placement="beside"] {
     position: absolute;
-    right: 12px;
+    left: calc(100% + 16px);
     top: 50%;
-    opacity: 0;
     transform: translateY(calc(-50% + 4px));
-    pointer-events: none;
+  }
+
+  .card-lab__preview[data-cl-placement="above"] {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 12px);
+    transform: translateY(4px);
   }
 
   .card-lab__text-row:hover .card-lab__preview,
   .card-lab__text-row:focus-within .card-lab__preview {
     opacity: 1;
+    visibility: visible;
+  }
+
+  .card-lab__text-row:hover .card-lab__preview[data-cl-placement="beside"],
+  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="beside"] {
     transform: translateY(-50%);
+  }
+
+  .card-lab__text-row:hover .card-lab__preview[data-cl-placement="above"],
+  .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="above"] {
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 900px), (hover: none), (pointer: coarse) {
+/* Narrow: preview always inline under text (touch parity). */
+@media (max-width: 900px) {
   .card-lab__text-row {
     flex-direction: column;
     align-items: stretch;
@@ -283,10 +316,11 @@
 
   .card-lab__preview {
     position: static;
-    flex: 0 0 auto;
-    width: 100%;
+    width: 100% !important;
     opacity: 1;
+    visibility: visible;
     transform: none;
+    margin-top: 12px;
   }
 }
 
