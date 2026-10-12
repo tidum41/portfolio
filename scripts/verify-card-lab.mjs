@@ -805,7 +805,9 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       45,
       `No overlaps on hover (every variant) (${tag})`,
       hoverOverlapFails.length === 0,
-      hoverOverlapFails.slice(0, 8).join(" | ")
+      hoverOverlapFails.length
+        ? hoverOverlapFails.slice(0, 8).join(" | ")
+        : `ok (${variantKeys.length} variants)`
     );
 
     // Screenshots + scale checks for direction b (fresh load each).
