@@ -283,11 +283,15 @@
     transform: translateY(calc(-50% + 4px));
   }
 
+  /* Above: anchor at the row top, then lift by full height + 12px gap so the
+     preview never covers the row's own title/description. Hover motion is
+     still only a 4px translate (idle sits 4px below the final seat). */
   .card-lab__preview[data-cl-placement="above"] {
     position: absolute;
     left: 0;
-    bottom: calc(100% + 12px);
-    transform: translateY(4px);
+    top: 0;
+    bottom: auto;
+    transform: translateY(calc(-100% - 8px));
   }
 
   .card-lab__text-row:hover .card-lab__preview,
@@ -303,7 +307,7 @@
 
   .card-lab__text-row:hover .card-lab__preview[data-cl-placement="above"],
   .card-lab__text-row:focus-within .card-lab__preview[data-cl-placement="above"] {
-    transform: translateY(0);
+    transform: translateY(calc(-100% - 12px));
   }
 }
 

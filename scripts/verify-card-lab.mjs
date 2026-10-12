@@ -26,6 +26,87 @@ async function newCtx(browser, opts = {}) {
   });
 }
 
+/**
+ * Overlap finder run inside the page. Preview may overlap the canvas outside
+ * its card, but must never cover its own title/description (or other copy).
+ */
+function overlapFinderSource() {
+  return () => {
+    const root = document.querySelector("[data-cl-root]");
+    const all = [...root.querySelectorAll("*")].filter((el) => {
+      const cs = getComputedStyle(el);
+      if (cs.visibility === "hidden" || cs.display === "none") return false;
+      if (Number(cs.opacity) < 0.05) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0.5 && r.height > 0.5;
+    });
+    const boxes = all.map((el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        el,
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+      };
+    });
+    const isPreview = (el) =>
+      el.hasAttribute("data-cl-preview") || !!el.closest("[data-cl-preview]");
+    const isRowCopy = (el) =>
+      el.hasAttribute("data-cl-copy") ||
+      el.hasAttribute("data-cl-card-title") ||
+      el.hasAttribute("data-cl-card-desc") ||
+      !!el.closest("[data-cl-copy]");
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i];
+        const b = boxes[j];
+        if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+        const hit = !(
+          a.right <= b.left + 0.5 ||
+          b.right <= a.left + 0.5 ||
+          a.bottom <= b.top + 0.5 ||
+          b.bottom <= a.top + 0.5
+        );
+        if (!hit) continue;
+
+        const aPrev = isPreview(a.el);
+        const bPrev = isPreview(b.el);
+        if (aPrev || bPrev) {
+          // Preview vs canvas (outside its card) is allowed. Preview vs its
+          // own row copy is a hard fail — that was the above-placement bug.
+          if (aPrev && bPrev) continue;
+          const previewEl = aPrev ? a.el : b.el;
+          const other = aPrev ? b.el : a.el;
+          const previewCard = previewEl.closest("[data-cl-card]");
+          if (
+            previewCard &&
+            previewCard.contains(other) &&
+            isRowCopy(other)
+          ) {
+            overlaps.push(
+              `preview>${other.className || other.tagName}[${previewCard.getAttribute("data-cl-variant")}]`
+            );
+          }
+          continue;
+        }
+
+        const aCard = a.el.closest("[data-cl-card]");
+        const bCard = b.el.closest("[data-cl-card]");
+        if (aCard && aCard === bCard) continue;
+        const aCell = a.el.closest("[data-cl-variant-cell]");
+        const bCell = b.el.closest("[data-cl-variant-cell]");
+        if (aCell && aCell === bCell) continue;
+        overlaps.push(`${a.el.className}|${b.el.className}`);
+        if (overlaps.length > 16) break;
+      }
+      if (overlaps.length > 16) break;
+    }
+    return overlaps;
+  };
+}
+
 /** @type {{ id: number; name: string; pass: boolean; detail: string }[]} */
 const results = [];
 
@@ -279,57 +360,11 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   record(8, `No card shadows/gradients except d1 hairline (${tag})`, shadowGrad.length === 0, shadowGrad.join("; "));
 
   // ——— B. Layout ———
+  const idleOverlaps = await page.evaluate(overlapFinderSource());
+  record(9, `No unintended overlaps idle (${tag})`, idleOverlaps.length === 0, idleOverlaps.slice(0, 6).join(" ; "));
+
   const layout = await page.evaluate(() => {
     const root = document.querySelector("[data-cl-root]");
-    const all = [...root.querySelectorAll("*")].filter((el) => {
-      const r = el.getBoundingClientRect();
-      return r.width > 0.5 && r.height > 0.5;
-    });
-    const boxes = all.map((el) => {
-      const r = el.getBoundingClientRect();
-      return {
-        el,
-        left: r.left,
-        top: r.top,
-        right: r.right,
-        bottom: r.bottom,
-        width: r.width,
-        height: r.height,
-      };
-    });
-    const overlaps = [];
-    for (let i = 0; i < boxes.length; i++) {
-      for (let j = i + 1; j < boxes.length; j++) {
-        const a = boxes[i];
-        const b = boxes[j];
-        if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
-        // allow d3 preview vs canvas siblings that don't contain each other
-        const aPrev = a.el.hasAttribute("data-cl-preview") || !!a.el.closest("[data-cl-preview]");
-        const bPrev = b.el.hasAttribute("data-cl-preview") || !!b.el.closest("[data-cl-preview]");
-        if (aPrev || bPrev) continue;
-        const overlap = !(
-          a.right <= b.left + 0.5 ||
-          b.right <= a.left + 0.5 ||
-          a.bottom <= b.top + 0.5 ||
-          b.bottom <= a.top + 0.5
-        );
-        if (overlap) {
-          // margin-collapse / adjacent text+desc inside copy is fine if nearly touching labels
-          const aCard = a.el.closest("[data-cl-card]");
-          const bCard = b.el.closest("[data-cl-card]");
-          if (aCard && aCard === bCard) continue;
-          const aCell = a.el.closest("[data-cl-variant-cell]");
-          const bCell = b.el.closest("[data-cl-variant-cell]");
-          if (aCell && aCell === bCell) continue;
-          overlaps.push(
-            `${a.el.className}|${b.el.className}`
-          );
-          if (overlaps.length > 12) break;
-        }
-      }
-      if (overlaps.length > 12) break;
-    }
-
     const textClip = [];
     for (const el of root.querySelectorAll("p, h1, h2, span, li")) {
       if (el.children.length) continue;
@@ -353,7 +388,6 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     });
 
     return {
-      overlaps,
       textClip,
       docScroll,
       clientWidth: document.documentElement.clientWidth,
@@ -362,8 +396,6 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       sectionGap: parseFloat(getComputedStyle(root.querySelector(".card-lab__sections")).gap),
     };
   });
-
-  record(9, `No unintended overlaps (${tag})`, layout.overlaps.length === 0, layout.overlaps.slice(0, 6).join(" ; "));
   record(10, `No clipped text (${tag})`, layout.textClip.length === 0, layout.textClip.slice(0, 4).join(" | "));
   if (width === 390) {
     record(11, `No horizontal scroll at 390 (${tag})`, layout.docScroll <= 390 + 0.5, `scrollWidth=${layout.docScroll}`);
@@ -696,7 +728,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   record(24, `Contrast ≥4.5 (${tag})`, contrastFails.length === 0, contrastFails.join(" | "));
   record(25, `Contrast theme covered (${tag})`, true, theme);
 
-  // ——— F. Hover (fresh page load per direction — no stale fade ghosts) ———
+  // ——— F. Hover (fresh page load per variant — no stale fade ghosts) ———
   if (width === 1440 && hoverEmulation === "hover") {
     // Idle previews must be fully invisible before any hover.
     const idlePreview = await page.evaluate(() => {
@@ -709,8 +741,75 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     const idleOk = idlePreview.every((p) => p.opacity === 0 && p.visibility === "hidden");
     record(39, `D3 idle preview opacity 0 (${tag})`, idleOk, JSON.stringify(idlePreview));
 
+    // Every card variant: hover end-state overlap check (catches above-on-text).
+    const variantKeys = await page.evaluate(() =>
+      [...document.querySelectorAll("[data-cl-card][data-cl-variant]")].map((el) => ({
+        dir: el.getAttribute("data-cl-direction"),
+        kind: el.getAttribute("data-cl-kind"),
+        id: el.getAttribute("data-cl-variant"),
+      }))
+    );
+    const hoverOverlapFails = [];
+    for (const v of variantKeys) {
+      await page.goto(`${BASE}/dev/card-lab?theme=${theme}`, {
+        waitUntil: "networkidle",
+        timeout: 60000,
+      });
+      await page.waitForSelector("[data-cl-root]");
+      await page.waitForTimeout(300);
+      const card = page
+        .locator(
+          `[data-cl-direction="${v.dir}"][data-cl-card][data-cl-variant="${v.id}"]`
+        )
+        .first();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await card.evaluate((el) =>
+        el.scrollIntoView({ block: "nearest", inline: "nearest" })
+      );
+      await page.waitForTimeout(80);
+      await card.hover({ force: true });
+      await page.waitForTimeout(600);
+      const overs = await page.evaluate(overlapFinderSource());
+      if (overs.length) {
+        hoverOverlapFails.push(`d${v.dir}${v.id}:${overs.slice(0, 3).join(",")}`);
+      }
+      // Preview must clear its own copy when present and visible.
+      if (v.kind === "text-row") {
+        const clear = await page.evaluate(({ dir, id }) => {
+          const card = document.querySelector(
+            `[data-cl-direction="${dir}"][data-cl-card][data-cl-variant="${id}"]`
+          );
+          const preview = card.querySelector("[data-cl-preview]");
+          const copy = card.querySelector("[data-cl-copy]");
+          const pcs = getComputedStyle(preview);
+          if (Number(pcs.opacity) < 0.9) return { ok: false, detail: "preview not visible" };
+          const pr = preview.getBoundingClientRect();
+          const cr = copy.getBoundingClientRect();
+          const overlap = !(
+            pr.right <= cr.left + 0.5 ||
+            cr.right <= pr.left + 0.5 ||
+            pr.bottom <= cr.top + 0.5 ||
+            cr.bottom <= pr.top + 0.5
+          );
+          return {
+            ok: !overlap,
+            detail: `preview(${pr.top.toFixed(1)}-${pr.bottom.toFixed(1)}) copy(${cr.top.toFixed(1)}-${cr.bottom.toFixed(1)})`,
+          };
+        }, v);
+        if (!clear.ok) {
+          hoverOverlapFails.push(`text-row ${v.id} preview/copy ${clear.detail}`);
+        }
+      }
+    }
+    record(
+      45,
+      `No overlaps on hover (every variant) (${tag})`,
+      hoverOverlapFails.length === 0,
+      hoverOverlapFails.slice(0, 8).join(" | ")
+    );
+
+    // Screenshots + scale checks for direction b (fresh load each).
     for (const dir of ["1", "2", "3"]) {
-      // Fresh navigation so prior hover fades cannot ghost into the shot.
       await page.goto(`${BASE}/dev/card-lab?theme=${theme}`, {
         waitUntil: "networkidle",
         timeout: 60000,
@@ -721,13 +820,11 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const card = page
         .locator(`[data-cl-direction="${dir}"][data-cl-card][data-cl-variant="b"]`)
         .first();
-      // Lock scroll so hover actionability cannot shift the page.
       await page.evaluate(() => window.scrollTo(0, 0));
       await card.evaluate((el) => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
       await page.waitForTimeout(100);
       const before = await card.boundingBox();
       await card.hover({ force: true });
-      // Do not scroll after hover — moving the viewport drops :hover.
       await page.waitForTimeout(600);
       const after = await card.boundingBox();
       const shotPath = path.join(OUT, `hover-d${dir}-${theme}.png`);
@@ -776,7 +873,6 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
           Number(previewVisible) > 0.9,
           `opacity=${previewVisible}`
         );
-        // Non-hovered siblings must stay fully idle.
         const ghosts = await page.evaluate(() => {
           return ["a", "c"].map((id) => {
             const el = document.querySelector(
@@ -792,11 +888,30 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
           ghosts.every((g) => g.opacity === 0 && g.visibility === "hidden"),
           JSON.stringify(ghosts)
         );
+        // Extra shot for text-row "above" (variant c) — the placement that regressed.
+        await page.goto(`${BASE}/dev/card-lab?theme=${theme}`, {
+          waitUntil: "networkidle",
+          timeout: 60000,
+        });
+        await page.waitForSelector("[data-cl-root]");
+        const cardC = page
+          .locator(`[data-cl-direction="3"][data-cl-card][data-cl-variant="c"]`)
+          .first();
+        await cardC.evaluate((el) =>
+          el.scrollIntoView({ block: "nearest", inline: "nearest" })
+        );
+        await cardC.hover({ force: true });
+        await page.waitForTimeout(600);
+        await page.screenshot({
+          path: path.join(OUT, `hover-d3c-above-${theme}.png`),
+          fullPage: true,
+        });
       }
     }
   } else if (width === 390) {
     record(26, `Hover screenshots (${tag})`, true, "captured on 1440 pass");
     record(27, `No scale hover (${tag})`, true, "captured on 1440 pass");
+    record(45, `No overlaps on hover (every variant) (${tag})`, true, "n/a — narrow");
     const inline = await page.evaluate(() => {
       const p = document.querySelector('[data-cl-direction="3"][data-cl-variant="a"] [data-cl-preview]');
       if (!p) return { ok: false, detail: "missing" };
@@ -1085,7 +1200,7 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  const maxId = Math.max(44, ...byId.keys());
+  const maxId = Math.max(45, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");
