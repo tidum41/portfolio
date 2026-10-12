@@ -484,7 +484,8 @@ img { display: block; max-width: 100%; }
 .order-row.has-presets {
   height: auto;
   min-height: 50px;
-  padding: 8px 12px;
+  padding: 6px 12px;
+  align-items: center;
 }
 .order-row img.thumb {
   width: 36px; height: 36px;
@@ -630,7 +631,7 @@ img { display: block; max-width: 100%; }
 }
 .rec-card .media,
 .cat-card .media {
-  height: 200px;
+  height: 220px;
   background: var(--band);
   overflow: hidden;
 }
@@ -716,14 +717,6 @@ img { display: block; max-width: 100%; }
   background: var(--blue);
 }
 .credit-card .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
-.credit-card .hero-total {
-  margin-top: 14px;
-  font-size: 30px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-
 .invoice-table {
   margin-top: 24px;
   width: max-content;
@@ -889,7 +882,7 @@ img { display: block; max-width: 100%; }
   max-width: 70%;
   padding: 12px 14px;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.45;
   font-weight: 400;
 }
@@ -993,10 +986,16 @@ img { display: block; max-width: 100%; }
   align-items: center;
   padding: 10px 16px;
   border-bottom: 1px solid var(--line);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   height: 48px;
 }
+.screen.mobile-wrap .page h1 { font-size: 28px; }
+.screen.mobile-wrap .lede { font-size: 15px; }
+.screen.mobile-wrap .prod-name { font-size: 15px; }
+.screen.mobile-wrap .prod-sku { font-size: 13px; }
+.screen.mobile-wrap .order-footer .btn-outline,
+.screen.mobile-wrap .order-footer .btn-primary { font-size: 15px; height: 44px; }
 </style>
 </head>
 <body>
@@ -1075,6 +1074,9 @@ img { display: block; max-width: 100%; }
       '<nav class="sidebar-nav">' + items + "</nav>" +
       '<div class="sidebar-divider"></div>' +
       '<div class="sidebar-section">Account</div>' +
+      '<button type="button" class="nav-item" data-tab="cart" style="height:30px;">' +
+      icon("order") +
+      "<span>Open cart</span></button>" +
       '<div class="sidebar-meta">' + L.retailer.name +
       '<div class="bal">' + L.terms + " · " + money(L.credit.available) + " avail.</div></div>" +
       "</aside>" +
@@ -1286,7 +1288,7 @@ img { display: block; max-width: 100%; }
         return (
           '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
           '<img src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
-          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">' + line.qty + " × " + money(L.priceAt(p, line.qty)) + "</div></div>" +
+          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · " + line.qty + " × " + money(L.priceAt(p, line.qty)) + "</div></div>" +
           '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
           "</div>"
         );
@@ -1350,7 +1352,6 @@ img { display: block; max-width: 100%; }
       '<div class="row"><span>' + L.terms + ' credit line used</span><span data-credit-used>' + money(L.credit.used) + " of " + money(L.credit.limit) + "</span></div>" +
       '<div class="credit-bar" data-credit-bar><i style="width:' + L.credit.pct + '%" data-credit-fill></i></div>' +
       '<div class="note" data-credit-available>' + money(L.credit.available) + " available for new Quick order purchases on " + L.terms + " terms.</div>" +
-      '<div class="hero-total" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
       '<div class="invoice-table" data-invoice-table>' +
       '<div class="invoice-head" data-invoice-head>' +
