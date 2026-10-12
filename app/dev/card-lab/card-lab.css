@@ -404,9 +404,17 @@
   color: rgba(242, 242, 242, 0.28);
 }
 
+.cl-wire__clear {
+  flex: 0 0 var(--cl-wire-top-clear, 0px);
+  height: var(--cl-wire-top-clear, 0px);
+  min-height: var(--cl-wire-top-clear, 0px);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
 .cl-wire__chrome {
   display: flex;
   gap: 4px;
+  align-items: center;
   padding: 8px;
   flex: 0 0 auto;
 }
@@ -414,6 +422,16 @@
 .cl-wire__chrome span {
   width: 8px;
   height: 8px;
+  border-radius: 4px;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.cl-wire__chrome-bar {
+  display: block;
+  flex: 1 1 auto;
+  height: 8px;
+  margin-left: 8px;
   border-radius: 4px;
   background: currentColor;
 }
@@ -429,6 +447,12 @@
 .cl-wire__body--listings {
   display: grid;
   grid-template-columns: 48px 1fr;
+  align-items: stretch;
+}
+
+.cl-wire__body--listings .cl-wire__main {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .cl-wire__side {
@@ -496,14 +520,17 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: stretch;
 }
 
 .cl-wire__cards i {
   display: block;
   border-radius: 4px;
   background: currentColor;
-  min-height: 32px;
+  min-height: 24px;
+  height: 100%;
 }
 
 .cl-wire__body--tasks {
@@ -517,6 +544,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
+  justify-content: space-evenly;
 }
 
 .cl-wire__list li {
@@ -552,22 +581,38 @@
 }
 
 .cl-wire__stage {
-  flex: 1;
+  flex: 1 1 auto;
   border-radius: 4px;
   background: color-mix(in srgb, currentColor 55%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 64px;
+  min-height: 48px;
   position: relative;
 }
 
 .cl-wire__body--video .cl-wire__meta {
   padding-top: 4px;
+  flex: 0 0 auto;
 }
 
 .cl-wire__body--video .cl-wire__line {
   height: 10px;
+}
+
+.cl-wire__related {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 40px;
+}
+
+.cl-wire__related i {
+  display: block;
+  border-radius: 4px;
+  background: currentColor;
+  min-height: 36px;
 }
 
 .cl-wire__playbtn {
@@ -584,8 +629,18 @@
 }
 
 .cl-wire__body--player {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.cl-wire__player-main {
+  display: flex;
+  gap: 8px;
   align-items: center;
-  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .cl-wire__disc {
@@ -620,9 +675,18 @@
   background: currentColor;
 }
 
-.cl-wire__body--habits {
-  justify-content: center;
-  align-items: center;
+.cl-wire__playlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.cl-wire__playlist li {
+  display: flex;
 }
 
 .cl-wire--fill {
@@ -633,8 +697,9 @@
 }
 
 .cl-wire__phone {
-  width: 48%;
+  width: 56%;
   min-width: 96px;
+  max-width: 160px;
   margin: 0;
   border-radius: 12px;
   background: color-mix(in srgb, currentColor 35%, transparent);
@@ -642,12 +707,24 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.cl-wire__body--habits {
+  justify-content: center;
+  align-items: center;
 }
 
 .cl-wire__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
+  flex: 1 1 auto;
+}
+
+.cl-wire__grid--dense {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .cl-wire__grid i {
@@ -722,19 +799,14 @@
   gap: 0;
 }
 
+/* Identical rail on a/b/c — media tops share one edge. */
 .cl-expand__chip-rail {
+  flex: 0 0 32px;
   height: 32px;
-  margin-bottom: 0;
+  min-height: 32px;
+  margin-bottom: 8px;
   display: flex;
   align-items: stretch;
-}
-
-.cl-expand[data-cl-chip-placement="above-media"] .cl-expand__chip-rail {
-  margin-bottom: 0;
-}
-
-.cl-expand[data-cl-chip-placement="above-media"] .cl-expand__media-wrap {
-  margin-top: 0;
 }
 
 .cl-expand__chip {
@@ -747,18 +819,21 @@
   line-height: 16px;
   font-weight: 400;
   color: #ffffff;
-  background: #0080a5;
+  background: #111111;
   white-space: nowrap;
 }
 
+/* Tinted: ink on light plate so contrast holds on grey wireframe. */
 .cl-expand__chip[data-cl-chip-fill="tinted"] {
-  color: #005f7a;
-  background: rgba(0, 128, 165, 0.18);
+  color: #111111;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.35);
 }
 
 .card-lab[data-theme="dark"] .cl-expand__chip[data-cl-chip-fill="tinted"] {
-  color: #b8e6f2;
-  background: rgba(0, 128, 165, 0.28);
+  color: #f2f2f2;
+  background: #2a2a2a;
+  box-shadow: inset 0 0 0 1px rgba(242, 242, 242, 0.4);
 }
 
 .cl-expand__chip-hover {
@@ -772,7 +847,7 @@
 
 .cl-expand__chip--overlay {
   position: absolute;
-  top: 8px;
+  top: 4px;
   left: 8px;
   z-index: 2;
 }
@@ -991,7 +1066,7 @@
 .cl-metric:hover .cl-metric__cta,
 .cl-metric:focus-within .cl-metric__cta,
 .cl-metric[data-cl-force-hover="1"] .cl-metric__cta {
-  background: #0080a5;
+  background: #2a2a2a;
   transform: translateY(-2px);
 }
 
@@ -1113,7 +1188,24 @@
 .cl-status__media {
   width: 100%;
   display: block;
-  filter: none;
+  filter: brightness(0.97);
+  transition: filter 160ms ease-out;
+}
+
+.cl-status:hover .cl-status__media,
+.cl-status:focus-within .cl-status__media,
+.cl-status[data-cl-force-hover="1"] .cl-status__media {
+  filter: brightness(1.04);
+}
+
+.cl-status .cl-wire__body {
+  transition: transform 160ms ease-out;
+}
+
+.cl-status:hover .cl-wire__body,
+.cl-status:focus-within .cl-wire__body,
+.cl-status[data-cl-force-hover="1"] .cl-wire__body {
+  transform: translateY(-4px);
 }
 
 .cl-status__line {
@@ -1271,15 +1363,44 @@
   clip-path: circle(120% at 50% 50%);
 }
 
-/* Force-hover skips mid-transition: jump to fully open end state. */
+/* Force-hover / mid stills: no animated transition — paint the keyframe. */
 .cl-brand[data-cl-force-hover="1"] .cl-brand__preview,
-.cl-brand[data-cl-force-hover="1"] .cl-brand__lockup {
+.cl-brand[data-cl-force-hover="1"] .cl-brand__lockup,
+.cl-brand[data-cl-hover-progress="0.5"] .cl-brand__preview,
+.cl-brand[data-cl-hover-progress="0.5"] .cl-brand__lockup {
   transition: none;
 }
 
 .cl-brand[data-cl-reveal="scale-center"][data-cl-force-hover="1"] .cl-brand__preview {
   clip-path: none;
   opacity: 1;
+}
+
+/* Mid (50%) stills — distinct reveal shapes for screenshot comparison */
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="crossfade"] .cl-brand__lockup {
+  opacity: 0.5;
+}
+
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="crossfade"] .cl-brand__preview {
+  opacity: 0.5;
+}
+
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="wipe"] .cl-brand__preview {
+  opacity: 1;
+  clip-path: inset(50% 0 0 0);
+}
+
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="wipe"] .cl-brand__lockup {
+  opacity: 1;
+}
+
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="scale-center"] .cl-brand__preview {
+  opacity: 1;
+  clip-path: circle(35% at 50% 50%);
+}
+
+.cl-brand[data-cl-hover-progress="0.5"][data-cl-reveal="scale-center"] .cl-brand__lockup {
+  opacity: 0.85;
 }
 
 .cl-brand[data-cl-reveal="scale-center"]:hover .cl-brand__lockup,
@@ -1343,13 +1464,13 @@
 }
 
 .cl-dual__edge[data-cl-edge="hairline"] {
-  box-shadow: inset 0 0 0 3px #ffffff;
-  background: rgba(0, 128, 165, 0.35);
+  box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 3px rgba(17, 17, 17, 0.55);
+  background: transparent;
 }
 
 .card-lab[data-theme="dark"] .cl-dual__edge[data-cl-edge="hairline"] {
-  box-shadow: inset 0 0 0 3px #f2f2f2;
-  background: rgba(0, 128, 165, 0.4);
+  box-shadow: inset 0 0 0 2px #f2f2f2, inset 0 0 0 3px rgba(0, 0, 0, 0.65);
+  background: transparent;
 }
 
 .cl-dual:hover .cl-dual__edge,
@@ -1683,9 +1804,19 @@
 
 .cl-stagger__copy--aside {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 16px;
   align-items: start;
+}
+
+.cl-stagger__copy--aside .cl-stagger__chips {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.cl-stagger__copy--aside .cl-stagger__chip {
+  flex: 0 0 auto;
+  max-width: 100%;
 }
 
 .cl-stagger__title {
@@ -1978,6 +2109,7 @@
 @media (prefers-reduced-motion: reduce) {
   .cl-expand__chip,
   .cl-status__media,
+  .cl-status .cl-wire__body,
   .cl-status__title,
   .cl-brand__lockup,
   .cl-brand__preview,
@@ -1997,6 +2129,11 @@
   .cl-wire__shimmer {
     transition: none !important;
     animation: none !important;
+  }
+
+  .cl-status:hover .cl-wire__body,
+  .cl-status[data-cl-force-hover="1"] .cl-wire__body {
+    transform: none;
   }
 
   .cl-wire--play .cl-wire__shimmer,

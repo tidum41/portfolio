@@ -19,7 +19,8 @@ function BrandLockupCard({
   v: BrandLockupVariant;
   ctx?: RenderContext;
 }) {
-  const force = !!ctx?.forceHover;
+  const progress = ctx?.hoverProgress ?? (ctx?.forceHover ? 1 : 0);
+  const forceEnd = progress >= 1;
   return (
     <div
       className="cl-brand"
@@ -29,7 +30,8 @@ function BrandLockupCard({
       data-cl-variant={v.id}
       data-cl-reveal={v.reveal}
       data-cl-lockup={v.lockup}
-      data-cl-force-hover={force ? "1" : "0"}
+      data-cl-force-hover={forceEnd ? "1" : "0"}
+      data-cl-hover-progress={String(progress)}
       data-cl-project={PROJECT.id}
     >
       <div

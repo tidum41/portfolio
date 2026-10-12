@@ -70,7 +70,10 @@ function StaggerRevealCard({
             </p>
           ) : (
             <ul className="cl-stagger__chips" data-cl-stagger-chips>
-              {PROJECT.pills.map((c, i) => (
+              {(v.reveal === "aside"
+                ? PROJECT.pills.slice(0, 2)
+                : PROJECT.pills
+              ).map((c, i) => (
                 <li
                   key={c}
                   className="cl-stagger__chip"

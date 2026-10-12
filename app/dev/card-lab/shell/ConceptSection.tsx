@@ -9,6 +9,7 @@ function VariantRow({
   index,
   variants,
   forceHover,
+  hoverProgress,
   rowMode,
   showModeLabel,
 }: {
@@ -16,16 +17,20 @@ function VariantRow({
   index: number;
   variants: ConceptVariant[];
   forceHover: boolean;
-  rowMode: "rest" | "hover";
+  hoverProgress?: number;
+  rowMode: "rest" | "mid" | "hover";
   showModeLabel: boolean;
 }) {
-  const ctx: RenderContext = { forceHover };
+  const ctx: RenderContext = {
+    forceHover,
+    hoverProgress: hoverProgress ?? (forceHover ? 1 : 0),
+  };
 
   return (
     <>
       {showModeLabel ? (
         <p className="card-lab__row-mode" data-cl-row-mode-label>
-          {rowMode}
+          {rowMode === "mid" ? "mid (50%)" : rowMode}
         </p>
       ) : null}
       <div
@@ -43,6 +48,7 @@ function VariantRow({
             data-cl-direction={String(index)}
             data-cl-variant={String(v.id)}
             data-cl-force-hover={forceHover ? "1" : "0"}
+            data-cl-hover-progress={String(ctx.hoverProgress ?? 0)}
           >
             <div className="card-lab__stage" data-cl-stage>
               {concept.render(v, ctx)}
@@ -62,7 +68,7 @@ function VariantRow({
  * columns, card stage, and generated spec line.
  *
  * When compareHover is set, renders rest then hover rows so stills can
- * compare end states (?hover=all).
+ * compare end states (?hover=all). Brand-lockup also gets a mid (50%) row.
  */
 export default function ConceptSection({
   concept,
@@ -77,6 +83,7 @@ export default function ConceptSection({
   compareHover?: boolean;
 }) {
   const headingId = `cl-${concept.id}-name`;
+  const showMid = compareHover && concept.id === "brand-lockup";
 
   return (
     <section
@@ -96,15 +103,28 @@ export default function ConceptSection({
         index={index}
         variants={variants}
         forceHover={false}
+        hoverProgress={0}
         rowMode="rest"
         showModeLabel={compareHover}
       />
+      {showMid ? (
+        <VariantRow
+          concept={concept}
+          index={index}
+          variants={variants}
+          forceHover={false}
+          hoverProgress={0.5}
+          rowMode="mid"
+          showModeLabel
+        />
+      ) : null}
       {compareHover ? (
         <VariantRow
           concept={concept}
           index={index}
           variants={variants}
           forceHover
+          hoverProgress={1}
           rowMode="hover"
           showModeLabel
         />

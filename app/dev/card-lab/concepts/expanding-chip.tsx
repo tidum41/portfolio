@@ -5,6 +5,8 @@ import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "4 / 3";
 const PROJECT = projectById("todolist");
+/** Clear band above wireframe chrome so on-media chips never cover dots/bar. */
+const CHIP_CLEAR = 40;
 
 export type ExpandingChipVariant = ConceptVariant & {
   id: "a" | "b" | "c";
@@ -32,11 +34,11 @@ function ExpandingChipCard({
       data-cl-force-hover={force ? "1" : "0"}
       data-cl-project={PROJECT.id}
     >
-      {/* Reserved chip rail so media tops align across on-media / above-media */}
+      {/* Same reserved rail on every variant so media top edges share one line. */}
       <div className="cl-expand__chip-rail" data-cl-chip-rail>
         <span
           className={`cl-expand__chip${v.placement === "above-media" ? " cl-expand__chip--in-rail" : " cl-expand__chip--ghost"}`}
-          data-cl-chip
+          data-cl-chip={v.placement === "above-media" ? "1" : undefined}
           data-cl-chip-fill={v.fill}
           aria-hidden={v.placement !== "above-media"}
         >
@@ -50,6 +52,7 @@ function ExpandingChipCard({
           aspect={ASPECT}
           radius={8}
           className="cl-expand__media"
+          topClear={v.placement === "on-media" ? CHIP_CLEAR : 0}
         />
         {v.placement === "on-media" ? (
           <span

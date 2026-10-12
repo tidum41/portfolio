@@ -901,10 +901,14 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       const mode = root.getAttribute("data-cl-hover-all");
       const restRows = document.querySelectorAll('[data-cl-row-mode="rest"]').length;
       const hoverRows = document.querySelectorAll('[data-cl-row-mode="hover"]').length;
+      const midRows = document.querySelectorAll('[data-cl-row-mode="mid"]').length;
+      const brandMid = document.querySelectorAll(
+        'section[data-cl-concept="brand-lockup"] [data-cl-row-mode="mid"] [data-cl-card][data-cl-hover-progress="0.5"]'
+      ).length;
       const forced = document.querySelectorAll(
         '[data-cl-row-mode="hover"] [data-cl-card][data-cl-force-hover="1"]'
       ).length;
-      return { mode, restRows, hoverRows, forced };
+      return { mode, restRows, hoverRows, midRows, brandMid, forced };
     });
     const hoverAllOverlaps = await page.evaluate(overlapFinderSource());
     const hoverAllShot = path.join(OUT, `hover-all-${theme}.png`);
@@ -916,8 +920,9 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         hoverAll.restRows >= 10 &&
         hoverAll.hoverRows >= 10 &&
         hoverAll.forced >= 30 &&
+        hoverAll.brandMid >= 3 &&
         hoverAllOverlaps.length === 0,
-      `mode=${hoverAll.mode} rest=${hoverAll.restRows} hover=${hoverAll.hoverRows} forced=${hoverAll.forced} overlaps=${hoverAllOverlaps.slice(0, 4).join(",") || "0"} shot=${hoverAllShot}`
+      `mode=${hoverAll.mode} rest=${hoverAll.restRows} mid=${hoverAll.midRows} brandMid=${hoverAll.brandMid} hover=${hoverAll.hoverRows} forced=${hoverAll.forced} overlaps=${hoverAllOverlaps.slice(0, 4).join(",") || "0"} shot=${hoverAllShot}`
     );
 
     // Screenshots + scale checks for direction b (fresh load each).
@@ -1477,12 +1482,78 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       variantDiffFails.length === 0,
       variantDiffFails.slice(0, 8).join(" | ")
     );
+
+    // Chip must not overlap wireframe chrome or body (expanding-chip clear zone).
+    await themePage.goto(`${BASE}/dev/card-lab?theme=light&hover=all`, {
+      waitUntil: "networkidle",
+      timeout: 60000,
+    });
+    await themePage.waitForSelector("[data-cl-root]");
+    await themePage.waitForTimeout(300);
+    const chipWire = await themePage.evaluate(() => {
+      const bad = [];
+      for (const chip of document.querySelectorAll("[data-cl-chip]")) {
+        if (chip.getAttribute("aria-hidden") === "true") continue;
+        const cs = getComputedStyle(chip);
+        if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) continue;
+        if (cs.display === "none") continue;
+        const cr = chip.getBoundingClientRect();
+        if (cr.width < 1 || cr.height < 1) continue;
+        const card = chip.closest("[data-cl-card]");
+        if (!card) continue;
+        for (const hit of card.querySelectorAll(
+          "[data-cl-wire-chrome], [data-cl-wire-body]"
+        )) {
+          const hr = hit.getBoundingClientRect();
+          const overlap = !(
+            cr.right <= hr.left + 0.5 ||
+            hr.right <= cr.left + 0.5 ||
+            cr.bottom <= hr.top + 0.5 ||
+            hr.bottom <= cr.top + 0.5
+          );
+          if (overlap) {
+            bad.push(
+              `${card.getAttribute("data-cl-kind")}/${card.getAttribute("data-cl-variant")}`
+            );
+            break;
+          }
+        }
+      }
+      return [...new Set(bad)].slice(0, 8);
+    });
+    record(
+      53,
+      `No chip overlapping wireframe chrome/body (${tag})`,
+      chipWire.length === 0,
+      chipWire.join(" | ")
+    );
+
+    // Expanding-chip media tops align across variants (shared chip rail).
+    const expandTops = await themePage.evaluate(() => {
+      const row = document.querySelector(
+        'section[data-cl-concept="expanding-chip"] [data-cl-row-mode="rest"]'
+      );
+      if (!row) return { ok: false, detail: "missing row" };
+      const medias = [...row.querySelectorAll("[data-cl-media]")];
+      if (medias.length < 3) return { ok: false, detail: `medias=${medias.length}` };
+      const tops = medias.map((m) => m.getBoundingClientRect().top);
+      const drift = Math.max(...tops) - Math.min(...tops);
+      return { ok: drift <= 1, detail: `tops=${tops.map((t) => t.toFixed(1)).join(",")} drift=${drift.toFixed(2)}` };
+    });
+    record(
+      54,
+      `Expanding-chip media tops aligned (${tag})`,
+      expandTops.ok,
+      expandTops.detail
+    );
   } else {
     record(48, `Card titles match Mudit projects (${tag})`, true, "checked on 1440 light");
     record(49, `No text clipped by overflow:hidden (${tag})`, true, "checked on 1440 light");
     record(50, `Rest rows no reserved void >16px (${tag})`, true, "checked on 1440 light");
     record(51, `Forced hover end states final (${tag})`, true, "checked on 1440 light");
     record(52, `Variants pixel-distinct (${tag})`, true, "checked on 1440 light");
+    record(53, `No chip overlapping wireframe chrome/body (${tag})`, true, "checked on 1440 light");
+    record(54, `Expanding-chip media tops aligned (${tag})`, true, "checked on 1440 light");
   }
 
   await themeCtx.close();
@@ -1516,7 +1587,7 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  const maxId = Math.max(52, ...byId.keys());
+  const maxId = Math.max(54, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");

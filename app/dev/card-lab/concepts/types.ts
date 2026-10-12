@@ -36,6 +36,11 @@ export type ConceptVariant = {
 export type RenderContext = {
   /** When true, paint the hover end state without pointer hover (?hover=all). */
   forceHover?: boolean;
+  /**
+   * Forced hover progress for still rows. 0 = rest, 0.5 = mid, 1 = end.
+   * Brand-lockup uses 0.5 to show reveal differences in screenshots.
+   */
+  hoverProgress?: number;
 };
 
 export type ConceptDefinition<V extends ConceptVariant = ConceptVariant> = {
