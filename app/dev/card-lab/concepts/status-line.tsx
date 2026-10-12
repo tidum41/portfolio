@@ -70,6 +70,9 @@ function StatusLineCard({
             {status}
           </p>
         ) : null}
+        {v.linePosition === "on-media" ? (
+          <div className="cl-status__line-spacer" aria-hidden="true" />
+        ) : null}
         <p className="cl-status__desc" data-cl-card-desc>
           {PROJECT.subtitle}
         </p>
