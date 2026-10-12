@@ -766,30 +766,36 @@ img { display: block; max-width: 100%; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   height: 20px;
+  min-height: 20px;
+  max-height: 20px;
   padding: 0 8px;
   border-radius: 4px;
+  border: 1px solid transparent;
   font-size: 12px;
   font-weight: 400;
-  line-height: 20px;
+  line-height: 1;
   text-transform: none;
   white-space: nowrap;
 }
 .status.Paid {
   background: var(--paid-bg);
   color: var(--paid);
+  border-color: rgba(25, 135, 84, 0.22);
 }
 .status.Processing,
 .status.Due,
 .status.Pending {
   background: var(--pending-bg);
   color: var(--pending);
+  border-color: rgba(138, 97, 0, 0.22);
 }
 .status.Overdue,
 .status.Failed {
   background: var(--failed-bg);
   color: var(--failed);
-  border: 1px solid var(--failed-border);
+  border-color: var(--failed-border);
 }
 .invoice-row .action { justify-self: stretch; }
 .invoice-row .action button {
