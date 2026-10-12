@@ -6,7 +6,7 @@ import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 const ASPECT = "4 / 3";
 const PROJECT = projectById("todolist");
 /** Clear band above wireframe chrome so on-media chips never cover dots/bar. */
-const CHIP_CLEAR = 40;
+const CHIP_CLEAR = 48;
 
 export type ExpandingChipVariant = ConceptVariant & {
   id: "a" | "b" | "c";

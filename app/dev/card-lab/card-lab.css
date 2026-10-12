@@ -408,7 +408,14 @@
   flex: 0 0 var(--cl-wire-top-clear, 0px);
   height: var(--cl-wire-top-clear, 0px);
   min-height: var(--cl-wire-top-clear, 0px);
-  background: color-mix(in srgb, currentColor 8%, transparent);
+  /* Distinct pad above chrome so overlay chips never read as covering dots. */
+  background: #d0d0d0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+}
+
+.card-lab[data-theme="dark"] .cl-wire__clear {
+  background: #1a1a1a;
+  border-bottom-color: rgba(242, 242, 242, 0.12);
 }
 
 .cl-wire__chrome {
@@ -854,17 +861,17 @@
   white-space: nowrap;
 }
 
-/* Tinted: ink on light plate so contrast holds on grey wireframe. */
+/* Tinted: ink on light plate with a firm border so it separates from grey media. */
 .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #111111;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.35);
+  background: #f4f4f4;
+  box-shadow: inset 0 0 0 1px #111111;
 }
 
 .card-lab[data-theme="dark"] .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #f2f2f2;
   background: #2a2a2a;
-  box-shadow: inset 0 0 0 1px rgba(242, 242, 242, 0.4);
+  box-shadow: inset 0 0 0 1px #f2f2f2;
 }
 
 .cl-expand__chip-hover {
