@@ -28,7 +28,7 @@ function AttributionFadeCard({
 
   const fade = (
     <p
-      className={`cl-attr__fade cl-attr__fade--${v.fadeColor}`}
+      className={`cl-attr__fade cl-attr__fade--${v.fadeColor} cl-attr__fade--${v.fadePlacement}`}
       data-cl-attr-fade
     >
       {roleLine}
@@ -56,11 +56,12 @@ function AttributionFadeCard({
         />
       </div>
       <div className="cl-attr__copy" data-cl-copy>
-        {v.fadePlacement === "above" ? fade : null}
-        <p className="cl-attr__title" data-cl-card-title>
-          {PROJECT.title}
-        </p>
-        {v.fadePlacement === "below" ? fade : null}
+        <div className="cl-attr__title-block">
+          {fade}
+          <p className="cl-attr__title" data-cl-card-title>
+            {PROJECT.title}
+          </p>
+        </div>
         <p className="cl-attr__desc" data-cl-card-desc>
           {PROJECT.subtitle}
         </p>

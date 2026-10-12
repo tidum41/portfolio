@@ -2429,13 +2429,18 @@
 
 .cl-attr__media {
   width: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .cl-attr__copy {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.cl-attr__title-block {
+  position: relative;
 }
 
 .cl-attr__title {
@@ -2454,6 +2459,8 @@
 }
 
 .cl-attr__fade {
+  position: absolute;
+  left: 0;
   margin: 0;
   font-size: 11px;
   line-height: 16px;
@@ -2461,7 +2468,20 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease-out;
+  white-space: nowrap;
+  z-index: 1;
+  background: var(--cl-bg, #f4f4f4);
+  padding-right: 8px;
+}
+
+.cl-attr__fade--above {
+  bottom: calc(100% + 2px);
+}
+
+.cl-attr__fade--below {
+  top: calc(100% + 2px);
 }
 
 .cl-attr__fade--accent {
@@ -2496,17 +2516,7 @@
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cl-chev__row:hover,
-.cl-chev__row:focus-within,
-.cl-chev__row--active {
-  background: rgb(245, 245, 245);
-}
-
-.card-lab[data-theme="dark"] .cl-chev__row:hover,
-.card-lab[data-theme="dark"] .cl-chev__row:focus-within,
-.card-lab[data-theme="dark"] .cl-chev__row--active {
-  background: rgb(36, 36, 36);
-}
+/* No row wash here — keep the hover delta on the trailing affordance only. */
 
 .cl-chev__tile {
   flex: 0 0 48px;
@@ -2593,7 +2603,8 @@
 
 .cl-grey__media {
   width: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
   transition: filter 0.4s;
 }
 
@@ -2606,7 +2617,7 @@
 }
 
 .cl-grey[data-cl-rest-filter="dim-grey"] .cl-grey__media {
-  filter: grayscale(1) brightness(0.85);
+  filter: grayscale(1) brightness(0.7);
 }
 
 .cl-grey:hover .cl-grey__media,
@@ -2657,7 +2668,8 @@
 
 .cl-xcap__media {
   width: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .cl-xcap__band {

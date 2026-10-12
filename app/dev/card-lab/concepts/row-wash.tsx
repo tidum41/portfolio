@@ -67,7 +67,7 @@ function RowWashCard({
               >
                 {v.descLines === 1
                   ? p.subtitle
-                  : `${p.subtitle}. ${p.role} · ${p.year}.`}
+                  : `${p.domain} · ${p.year}`}
               </p>
             </div>
           </div>
