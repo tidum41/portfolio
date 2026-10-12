@@ -37,10 +37,12 @@ function NumberedIndexCard({
           01
         </span>
         <div className="cl-index__main">
-          <p className="cl-index__title" data-cl-card-title>
-            {TITLE}
-          </p>
-          <span className="cl-index__year">{YEAR}</span>
+          <div className="cl-index__head">
+            <p className="cl-index__title" data-cl-card-title>
+              {TITLE}
+            </p>
+            <span className="cl-index__year">{YEAR}</span>
+          </div>
           <div className="cl-index__reveal" data-cl-index-reveal>
             <p className="cl-index__sub" data-cl-card-desc>
               {SUB}
@@ -52,9 +54,9 @@ function NumberedIndexCard({
                 </li>
               ))}
             </ul>
-            {v.expand === "inline" || v.expand === "below" ? (
+            {v.expand === "inline" ? (
               <div
-                className={`cl-index__preview cl-index__preview--${v.expand}`}
+                className="cl-index__preview cl-index__preview--inline"
                 data-cl-preview
               >
                 <PlaceholderMedia
@@ -78,6 +80,16 @@ function NumberedIndexCard({
           </div>
         ) : null}
       </div>
+      {v.expand === "below" ? (
+        <div className="cl-index__preview cl-index__preview--below" data-cl-preview>
+          <PlaceholderMedia
+            aspect={ASPECT}
+            mediaIndex={MEDIA_INDEX}
+            radius={4}
+            className="cl-index__preview-media"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

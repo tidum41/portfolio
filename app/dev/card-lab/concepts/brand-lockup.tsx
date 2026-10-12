@@ -10,6 +10,8 @@ const DESC = "UX/UI, product, design systems";
 export type BrandLockupVariant = ConceptVariant & {
   id: "a" | "b" | "c";
   reveal: "crossfade" | "wipe" | "scale-center";
+  /** Still-visible rest composition (bands / mark-only). */
+  lockup: "plain" | "bands" | "mark-only";
 };
 
 function BrandLockupCard({
@@ -28,6 +30,7 @@ function BrandLockupCard({
       data-cl-direction="8"
       data-cl-variant={v.id}
       data-cl-reveal={v.reveal}
+      data-cl-lockup={v.lockup}
       data-cl-force-hover={force ? "1" : "0"}
     >
       <div
@@ -36,12 +39,18 @@ function BrandLockupCard({
         data-cl-aspect={ASPECT}
         style={{ aspectRatio: ASPECT }}
       >
+        {v.lockup === "bands" ? (
+          <>
+            <span className="cl-brand__band cl-brand__band--left" aria-hidden="true" />
+            <span className="cl-brand__band cl-brand__band--right" aria-hidden="true" />
+          </>
+        ) : null}
         <div className="cl-brand__lockup" data-cl-lockup>
           <svg
             className="cl-brand__mark"
             viewBox="0 0 64 32"
-            width="48"
-            height="24"
+            width={v.lockup === "mark-only" ? 64 : 48}
+            height={v.lockup === "mark-only" ? 32 : 24}
             aria-hidden="true"
           >
             <path
@@ -67,7 +76,9 @@ function BrandLockupCard({
             />
             <circle cx="48" cy="16" r="2" fill="currentColor" />
           </svg>
-          <span className="cl-brand__wordmark">DailyOM</span>
+          {v.lockup !== "mark-only" ? (
+            <span className="cl-brand__wordmark">DailyOM</span>
+          ) : null}
         </div>
         <div className="cl-brand__preview" data-cl-preview-layer>
           <UiPreview tone="warm" />
@@ -95,11 +106,11 @@ export const brandLockup: ConceptDefinition<BrandLockupVariant> = {
   aspect: ASPECT,
   mediaIndex: MEDIA_INDEX,
   variants: [
-    { id: "a", reveal: "crossfade" },
-    { id: "b", reveal: "wipe" },
-    { id: "c", reveal: "scale-center" },
+    { id: "a", reveal: "crossfade", lockup: "plain" },
+    { id: "b", reveal: "wipe", lockup: "bands" },
+    { id: "c", reveal: "scale-center", lockup: "mark-only" },
   ],
-  label: (v) => `${v.id} · reveal ${v.reveal}`,
+  label: (v) => `${v.id} · ${v.lockup} · reveal ${v.reveal}`,
   applyOverrides: (v, params) => applyFieldOverrides("d8", v.id, v, params),
   render: (v, ctx) => <BrandLockupCard v={v} ctx={ctx} />,
 };
