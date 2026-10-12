@@ -2285,7 +2285,7 @@
 /* Compact thumbs: keep chrome + a single stage; drop dense chrome that overflows 48px. */
 .cl-wire--compact .cl-wire__chrome {
   padding: 4px;
-  gap: 2px;
+  gap: 4px;
 }
 
 .cl-wire--compact .cl-wire__chrome span {
