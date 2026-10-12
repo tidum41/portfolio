@@ -57,33 +57,63 @@ function StaggerRevealCard({
           {PROJECT.title}
         </p>
         <div className="cl-stagger__reveal" data-cl-stagger-reveal>
-          <p
-            className="cl-stagger__desc"
-            data-cl-card-desc
-            data-cl-stagger-item="0"
-          >
-            {PROJECT.subtitle}
-          </p>
-          {v.reveal === "replace-chips" ? (
-            <p className="cl-stagger__metric" data-cl-stagger-item="1">
-              {PROJECT.metrics[0]?.line}
-            </p>
+          {v.reveal === "aside" ? (
+            <>
+              <p
+                className="cl-stagger__desc"
+                data-cl-card-desc
+                data-cl-stagger-item="0"
+              >
+                {PROJECT.subtitle}
+              </p>
+              <ul className="cl-stagger__chips" data-cl-stagger-chips>
+                {PROJECT.pills.slice(0, 2).map((c, i) => (
+                  <li
+                    key={c}
+                    className="cl-stagger__chip"
+                    data-cl-chip
+                    data-cl-stagger-item={String(i + 1)}
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : v.reveal === "replace-chips" ? (
+            <>
+              <p
+                className="cl-stagger__desc"
+                data-cl-card-desc
+                data-cl-stagger-item="0"
+              >
+                {PROJECT.subtitle}
+              </p>
+              <p className="cl-stagger__metric" data-cl-stagger-item="1">
+                {PROJECT.metrics[0]?.line}
+              </p>
+            </>
           ) : (
-            <ul className="cl-stagger__chips" data-cl-stagger-chips>
-              {(v.reveal === "aside"
-                ? PROJECT.pills.slice(0, 2)
-                : PROJECT.pills
-              ).map((c, i) => (
-                <li
-                  key={c}
-                  className="cl-stagger__chip"
-                  data-cl-chip
-                  data-cl-stagger-item={String(i + 1)}
-                >
-                  {c}
-                </li>
-              ))}
-            </ul>
+            <>
+              <p
+                className="cl-stagger__desc"
+                data-cl-card-desc
+                data-cl-stagger-item="0"
+              >
+                {PROJECT.subtitle}
+              </p>
+              <ul className="cl-stagger__chips" data-cl-stagger-chips>
+                {PROJECT.pills.map((c, i) => (
+                  <li
+                    key={c}
+                    className="cl-stagger__chip"
+                    data-cl-chip
+                    data-cl-stagger-item={String(i + 1)}
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>

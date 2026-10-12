@@ -182,6 +182,11 @@ export default function WireframeMedia({
           </div>
         </div>
       ) : null}
+      <div className="cl-wire__dock" data-cl-wire-dock aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </div>
       {dimmed ? <span className="cl-wire__veil" aria-hidden="true" /> : null}
       {play ? <span className="cl-wire__shimmer" aria-hidden="true" /> : null}
     </div>

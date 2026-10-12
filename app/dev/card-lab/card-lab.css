@@ -439,6 +439,8 @@
 .cl-wire__body {
   flex: 1 1 auto;
   min-height: 0;
+  align-self: stretch;
+  width: 100%;
   padding: 0 8px 8px;
   display: flex;
   gap: 8px;
@@ -535,6 +537,7 @@
 
 .cl-wire__body--tasks {
   flex-direction: column;
+  min-height: 0;
 }
 
 .cl-wire__list {
@@ -546,6 +549,7 @@
   gap: 8px;
   flex: 1 1 auto;
   justify-content: space-evenly;
+  min-height: 0;
 }
 
 .cl-wire__list li {
@@ -578,16 +582,17 @@
 
 .cl-wire__body--video {
   flex-direction: column;
+  min-height: 0;
 }
 
 .cl-wire__stage {
-  flex: 1 1 auto;
+  flex: 1 1 55%;
   border-radius: 4px;
   background: color-mix(in srgb, currentColor 55%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: 72px;
   position: relative;
 }
 
@@ -604,15 +609,17 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  flex: 0 0 auto;
-  min-height: 40px;
+  flex: 1 1 30%;
+  min-height: 56px;
+  align-content: stretch;
 }
 
 .cl-wire__related i {
   display: block;
   border-radius: 4px;
   background: currentColor;
-  min-height: 36px;
+  min-height: 48px;
+  height: 100%;
 }
 
 .cl-wire__playbtn {
@@ -633,14 +640,15 @@
   align-items: stretch;
   justify-content: flex-start;
   gap: 8px;
+  min-height: 0;
 }
 
 .cl-wire__player-main {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1 1 60%;
+  min-height: 80px;
 }
 
 .cl-wire__disc {
@@ -682,11 +690,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 0 0 auto;
+  flex: 1 1 35%;
+  justify-content: space-evenly;
+  min-height: 64px;
 }
 
 .cl-wire__playlist li {
   display: flex;
+}
+
+.cl-wire__playlist .cl-wire__line {
+  height: 12px;
 }
 
 .cl-wire--fill {
@@ -729,6 +743,23 @@
 
 .cl-wire__grid i {
   aspect-ratio: 1;
+  border-radius: 4px;
+  background: currentColor;
+}
+
+/* Bottom dock so media frames never read as half-empty. */
+.cl-wire__dock {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 0 8px 8px;
+  margin-top: auto;
+}
+
+.cl-wire__dock i {
+  display: block;
+  flex: 1 1 0;
+  height: 20px;
   border-radius: 4px;
   background: currentColor;
 }
@@ -1802,21 +1833,41 @@
   gap: 0;
 }
 
+/* Aside: at rest single column (title only); hover becomes two columns */
 .cl-stagger__copy--aside {
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-stagger:hover .cl-stagger__copy--aside,
+.cl-stagger:focus-within .cl-stagger__copy--aside,
+.cl-stagger[data-cl-force-hover="1"] .cl-stagger__copy--aside {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   gap: 16px;
-  align-items: start;
+  align-items: center;
+}
+
+.cl-stagger__copy--aside .cl-stagger__reveal {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cl-stagger:hover .cl-stagger__copy--aside .cl-stagger__reveal,
+.cl-stagger:focus-within .cl-stagger__copy--aside .cl-stagger__reveal,
+.cl-stagger[data-cl-force-hover="1"] .cl-stagger__copy--aside .cl-stagger__reveal {
+  display: flex;
 }
 
 .cl-stagger__copy--aside .cl-stagger__chips {
   flex-wrap: nowrap;
-  overflow: hidden;
+  white-space: nowrap;
 }
 
 .cl-stagger__copy--aside .cl-stagger__chip {
   flex: 0 0 auto;
-  max-width: 100%;
 }
 
 .cl-stagger__title {
