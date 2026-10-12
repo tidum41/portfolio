@@ -183,8 +183,16 @@ Ported a design pass built in Paper (Quick Order, Catalog, Templates, PDP, Cart 
 - **The active nav item is an underline.** `goToScreen` no longer paints the pill black and the label white. `.nav-on` is ink type with a 2px inset line under the word. The mobile Quick Order chip matches.
 - **Message sales is the rep's side.** The header says JOOLA Sales. Anna Bright is Buyer, Sam Ortiz is JOOLA Sales, and her bubble carries a small Sent check. The ask and the reply are still 120 units of Perseus Pro V.
 
-## v22 — Engage Pickleball, and the account pill is the old one
+## v22 — One ledger, one shell, mechanical QA (on true local v21)
 
-- **The retailer is Engage Pickleball.** Holabird was a sporting-goods wordmark, and it did not read as pickleball. Selkirk's clean header file is the red S; their wordmark on the CDN is the all-white lockup. Paddletek's black file sits on a white plate. Engage's official file is a black wordmark that says PICKLEBALL, on transparency (`Large_Logo_Engage_P_P-Black.png` on their Shopify CDN), saved as `engage-pickleball.png`.
-- **The account chip is the earlier pill again.** Logo, then the name, then Anna Bright · Buyer, then the chevron, in the same rounded field row. It is not a logo-only chip.
-- **The pointer takes a short straight line.** Seven frames, ease-out, then a 3-frame 1px dip, then it is gone. It clicks the search field, the result, and Add All To Cart. It does not wander between them.
+Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), then re-applied the keep-worthy ideas from the mistaken v22 polish commits (`813d1d1`, `65e410a`) without their bugs. Film motion untouched this pass.
+
+- **Single ledger (`ledger.js`).** Products, tier prices, Perseus × 120 @ $134.98 = **$16,197.60**, cart, INV-1042, credit line ($21,200 of $50,000), and Messages all read the same object. Search shows $134.98, not MSRP-as-unit.
+- **36px Engage avatar.** `engage-mark.png` in the zip is fully transparent (blank circle). Cropped the three-bar mark from `engage-pickleball.png` into `engage-avatar.png`, fitted inside a 36px circle. No 190px overflow.
+- **One wholesale chrome.** Every desktop wholesale screen (Quick Order, Catalog, Templates, Cart, Invoices, Messages) shares the same bar: JOOLA mark, Wholesale pill, underline nav, account chip, cart. No storefront promo / Apparel–Outlet nav on Invoices.
+- **Order table clears the sticky switcher.** App content is offset by `--switcher-h`. Column headers and cells share one CSS grid so PRODUCT / PRICE / QUANTITY / LINE TOTAL line up.
+- **Invoices columns + credit bar.** ISSUED / DUE / AMOUNT / STATUS share grid tracks with values. Credit progress fill is visible. No empty card strip at the bottom.
+- **Messages is full-bleed** with the same chrome (not a floating card, not a different shell). Copy uses plain punctuation (no em dashes).
+- **Visible products have real photos.** Story order is Perseus only (paddles + pickleball goods in Catalog Recommended / grid). Empty apparel / cap / overgrip grey squares removed.
+- **Kept from the prior v22 attempt:** Net 30 story lock to $16,197.60, Recommended three paddles with contain thumbs + wholesale/MSRP, quantity presets + `window.__setPerseusQty`, "This order" title, status pills, Hyperion SKU 300829 / Scorpeus Pro V naming.
+- **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.

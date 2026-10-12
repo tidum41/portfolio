@@ -1,0 +1,391 @@
+/**
+ * Mechanical QA for the JOOLA B2B HTML prototype.
+ * Fails on empty images, overlaps, clipped text, misaligned table columns,
+ * oversized avatars, ledger figure mismatches, and em dashes.
+ *
+ * Usage: node remotion/scripts/check-prototype.mjs
+ */
+import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { join, extname, dirname } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { chromium } from "playwright-core";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, "../assets/joola-b2b");
+const HTML = join(ROOT, "B2B quick order prototype.html");
+const LEDGER = join(ROOT, "ledger.js");
+const VIEWPORT = { width: 1920, height: 1080 };
+const SCREENS = [
+  "qo-desktop",
+  "catalog",
+  "templates",
+  "cart",
+  "invoices",
+  "messages",
+  "qo-mobile",
+];
+
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".woff2": "font/woff2",
+  ".svg": "image/svg+xml",
+};
+
+function startServer() {
+  return new Promise((resolve) => {
+    const server = createServer((req, res) => {
+      const url = new URL(req.url || "/", "http://127.0.0.1");
+      let rel = decodeURIComponent(url.pathname);
+      if (rel === "/") rel = "/B2B%20quick%20order%20prototype.html";
+      rel = decodeURIComponent(rel).replace(/^\//, "");
+      const file = join(ROOT, rel);
+      if (!file.startsWith(ROOT) || !existsSync(file)) {
+        res.writeHead(404);
+        res.end("not found");
+        return;
+      }
+      const ext = extname(file).toLowerCase();
+      res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+      res.end(readFileSync(file));
+    });
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address();
+      resolve({ server, port });
+    });
+  });
+}
+
+function loadLedger() {
+  const src = readFileSync(LEDGER, "utf8");
+  const fn = new Function(`${src}; return globalThis.JOOLA_LEDGER;`);
+  return fn();
+}
+
+function parseMoney(text) {
+  const out = [];
+  const re = /\$[\d,]+(?:\.\d{2})?/g;
+  let m;
+  while ((m = re.exec(text))) {
+    out.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+  }
+  return out;
+}
+
+function nearly(a, b, eps = 0.009) {
+  return Math.abs(a - b) <= eps;
+}
+
+function inAllowed(n, allowed) {
+  return allowed.some((a) => nearly(a, n));
+}
+
+async function main() {
+  if (!existsSync(HTML) || !existsSync(LEDGER)) {
+    console.error("FAIL missing prototype or ledger");
+    process.exit(1);
+  }
+  const ledger = loadLedger();
+  const allowedMoney = ledger.figures.allowedMoney;
+  const { server, port } = await startServer();
+  const base = `http://127.0.0.1:${port}/B2B%20quick%20order%20prototype.html`;
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  });
+  const page = await browser.newPage({ viewport: VIEWPORT });
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.JOOLA_LEDGER && document.querySelector("[data-screen]"));
+
+  const rows = [];
+  let failed = false;
+
+  function record(screen, check, pass, detail = "") {
+    rows.push({ screen, check, pass, detail });
+    if (!pass) failed = true;
+  }
+
+  for (const screen of SCREENS) {
+    await page.evaluate((id) => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === id);
+      });
+      document.querySelectorAll("#devSwitcher .tab-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-tab") === id);
+      });
+      window.scrollTo(0, 0);
+    }, screen);
+    await page.waitForTimeout(150);
+
+    const result = await page.evaluate(
+      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, perseusQty, perseusUnit }) => {
+        const issues = {
+          images: [],
+          overlaps: [],
+          clipped: [],
+          tableAlign: [],
+          avatar: [],
+          ledger: [],
+          emdash: [],
+        };
+        const root = document.querySelector(`[data-screen="${screen}"]`);
+        if (!root || !root.classList.contains("active")) {
+          issues.images.push("screen not active");
+          return issues;
+        }
+
+        const visible = (el) => {
+          const r = el.getBoundingClientRect();
+          const st = getComputedStyle(el);
+          return (
+            r.width > 0 &&
+            r.height > 0 &&
+            st.visibility !== "hidden" &&
+            st.display !== "none" &&
+            st.opacity !== "0"
+          );
+        };
+
+        // Images
+        root.querySelectorAll("img").forEach((img) => {
+          if (!visible(img)) return;
+          const bad =
+            !img.complete ||
+            img.naturalWidth === 0 ||
+            img.naturalHeight === 0 ||
+            /placeholder|empty|blank/i.test(img.getAttribute("src") || "") ||
+            /placeholder|empty/i.test(img.className || "");
+          if (bad) {
+            issues.images.push(
+              `${img.getAttribute("src") || "(no src)"} natural=${img.naturalWidth}x${img.naturalHeight}`
+            );
+          }
+          // empty grey thumb placeholders (div.thumb without img already excluded)
+        });
+        root.querySelectorAll(".thumb, .media, [data-rec-card] .media, [data-catalog-card] .media").forEach((box) => {
+          if (!visible(box)) return;
+          const img = box.tagName === "IMG" ? box : box.querySelector("img");
+          if (!img) issues.images.push("thumbnail container without img");
+        });
+
+        // Avatar size
+        root.querySelectorAll("[data-retailer-avatar], .retailer-avatar").forEach((av) => {
+          if (!visible(av)) return;
+          const r = av.getBoundingClientRect();
+          if (r.width > 40.5 || r.height > 40.5) {
+            issues.avatar.push(`avatar ${Math.round(r.width)}x${Math.round(r.height)} > 40`);
+          }
+          // overlap with nav pills
+          const nav = root.querySelector(".nav-pills");
+          if (nav) {
+            const a = av.getBoundingClientRect();
+            const n = nav.getBoundingClientRect();
+            const overlap = !(a.right <= n.left || a.left >= n.right || a.bottom <= n.top || a.top >= n.bottom);
+            if (overlap) issues.overlaps.push("avatar overlaps nav");
+          }
+          const switcher = document.getElementById("devSwitcher");
+          if (switcher) {
+            const a = av.getBoundingClientRect();
+            const s = switcher.getBoundingClientRect();
+            const overlap = !(a.right <= s.left || a.left >= s.right || a.bottom <= s.top || a.top >= s.bottom);
+            if (overlap) issues.overlaps.push("avatar overlaps screen switcher");
+          }
+        });
+
+        // Header / chrome overlap with page title
+        const chrome = root.querySelector("[data-wholesale-chrome], .chrome-bar");
+        const h1 = root.querySelector("h1");
+        if (chrome && h1 && visible(chrome) && visible(h1)) {
+          const c = chrome.getBoundingClientRect();
+          const h = h1.getBoundingClientRect();
+          const overlap = !(c.right <= h.left || c.left >= h.right || c.bottom <= h.top || c.top >= h.bottom);
+          if (overlap) issues.overlaps.push("chrome overlaps h1");
+        }
+
+        // Clipped text: element content wider than client, or cut by switcher
+        const switcherBottom = document.getElementById("devSwitcher")?.getBoundingClientRect().bottom || 0;
+        root.querySelectorAll("h1, .prod-name, .order-head > div, .invoice-head > div, .bubble, .lede, [data-order-total], [data-cart-total]").forEach((el) => {
+          if (!visible(el)) return;
+          const r = el.getBoundingClientRect();
+          if (r.top < switcherBottom - 1) {
+            issues.clipped.push(`${el.className || el.tagName} under switcher`);
+          }
+          if (el.scrollWidth > el.clientWidth + 2 && getComputedStyle(el).overflow !== "visible") {
+            // only flag when overflow is hidden/clip
+            const ov = getComputedStyle(el).overflowX;
+            if (ov === "hidden" || ov === "clip") {
+              issues.clipped.push(`${el.className || el.tagName} text clipped`);
+            }
+          }
+        });
+
+        // Order table header alignment
+        const orderHead = root.querySelector("[data-order-head]");
+        const orderRows = [...root.querySelectorAll("[data-order-row]")];
+        if (orderHead && orderRows.length) {
+          const headCells = [...orderHead.children];
+          const sample = orderRows[0];
+          const rowCells = [...sample.children];
+          const n = Math.min(headCells.length, rowCells.length);
+          for (let i = 0; i < n; i++) {
+            const ht = headCells[i].textContent.trim();
+            if (!ht) continue;
+            const hr = headCells[i].getBoundingClientRect();
+            const rr = rowCells[i].getBoundingClientRect();
+            if (Math.abs(hr.left - rr.left) > 2 || Math.abs(hr.right - rr.right) > 2) {
+              issues.tableAlign.push(
+                `order col "${ht}" head[${Math.round(hr.left)}-${Math.round(hr.right)}] vs row[${Math.round(rr.left)}-${Math.round(rr.right)}]`
+              );
+            }
+          }
+          // header not under switcher
+          const hr = orderHead.getBoundingClientRect();
+          if (hr.top < switcherBottom - 1) {
+            issues.clipped.push("order table header under switcher");
+          }
+        }
+
+        // Invoice table alignment
+        const invHead = root.querySelector("[data-invoice-head]");
+        const invRows = [...root.querySelectorAll("[data-invoice-row]")];
+        if (invHead && invRows.length) {
+          const headCells = [...invHead.children];
+          const sample = invRows[0];
+          const rowCells = [...sample.children];
+          const labels = ["Invoice", "Order", "Issued", "Due", "Amount", "Status"];
+          for (let i = 0; i < labels.length; i++) {
+            const hr = headCells[i].getBoundingClientRect();
+            const rr = rowCells[i].getBoundingClientRect();
+            if (Math.abs(hr.left - rr.left) > 2 || Math.abs(hr.right - rr.right) > 2) {
+              issues.tableAlign.push(
+                `invoice col "${labels[i]}" head[${Math.round(hr.left)}-${Math.round(hr.right)}] vs row[${Math.round(rr.left)}-${Math.round(rr.right)}]`
+              );
+            }
+          }
+          // credit bar visible
+          const bar = root.querySelector("[data-credit-bar]");
+          const fill = root.querySelector("[data-credit-fill]");
+          if (!bar || !visible(bar)) issues.clipped.push("credit bar missing/invisible");
+          if (fill) {
+            const fr = fill.getBoundingClientRect();
+            if (fr.width < 2) issues.clipped.push("credit bar fill has no width");
+          }
+        }
+
+        // Em dashes in visible copy
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.nodeValue) continue;
+          if (!/[—–]/.test(node.nodeValue)) continue;
+          const parent = node.parentElement;
+          if (!parent || !visible(parent)) continue;
+          issues.emdash.push(JSON.stringify(node.nodeValue.trim().slice(0, 80)));
+        }
+
+        // Ledger figures from DOM money / qty
+        const text = root.innerText || "";
+        const moneyRe = /\$[\d,]+(?:\.\d{2})?/g;
+        let m;
+        const foundMoney = [];
+        while ((m = moneyRe.exec(text))) {
+          foundMoney.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+        }
+        const allowed = allowedMoney;
+        foundMoney.forEach((n) => {
+          if (!allowed.some((a) => Math.abs(a - n) <= 0.009)) {
+            issues.ledger.push(`unexpected money $${n.toFixed(2)}`);
+          }
+        });
+
+        // Key totals must appear on relevant screens
+        const must = [];
+        if (screen === "qo-desktop" || screen === "cart") must.push(orderTotal, cartTotal);
+        if (screen === "invoices") must.push(creditUsed, creditLimit, orderTotal);
+        if (screen === "messages") must.push(orderTotal);
+        if (screen === "qo-desktop") must.push(perseusUnit);
+        must.forEach((n) => {
+          if (!foundMoney.some((f) => Math.abs(f - n) <= 0.009)) {
+            issues.ledger.push(`missing required $${n.toFixed(2)}`);
+          }
+        });
+        if (screen === "qo-desktop" || screen === "messages") {
+          if (!new RegExp(`\\b${perseusQty}\\b`).test(text)) {
+            issues.ledger.push(`missing qty ${perseusQty}`);
+          }
+        }
+
+        // No storefront promo bar on wholesale screens
+        if (["qo-desktop", "catalog", "invoices", "messages", "cart", "templates"].includes(screen)) {
+          if (root.textContent.includes("Pickleball Paddles") && root.textContent.includes("Apparel") && root.textContent.includes("Footwear")) {
+            // category storefront nav
+            const storefront = [...root.querySelectorAll("div")].some((el) => {
+              const t = el.textContent || "";
+              return t.includes("Apparel") && t.includes("Footwear") && t.includes("Outlet") && el.children.length >= 5;
+            });
+            if (storefront) issues.overlaps.push("storefront category nav present (chrome inconsistent)");
+          }
+        }
+
+        return issues;
+      },
+      {
+        screen,
+        allowedMoney,
+        cartTotal: ledger.cartTotal,
+        orderTotal: ledger.orderTotal,
+        creditUsed: ledger.credit.used,
+        creditLimit: ledger.credit.limit,
+        perseusQty: ledger.perseusQty,
+        perseusUnit: ledger.perseusUnit,
+      }
+    );
+
+    const checks = [
+      ["images", result.images],
+      ["overlaps", result.overlaps],
+      ["clipped", result.clipped],
+      ["table-align", result.tableAlign],
+      ["avatar<=40", result.avatar],
+      ["ledger", result.ledger],
+      ["no-emdash", result.emdash],
+    ];
+    for (const [name, list] of checks) {
+      record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
+    }
+  }
+
+  // Print table
+  const pad = (s, n) => String(s).padEnd(n);
+  console.log("\nJOOLA B2B prototype check @ 1920×1080\n");
+  console.log(
+    `${pad("SCREEN", 14)} ${pad("CHECK", 14)} ${pad("RESULT", 6)} DETAIL`
+  );
+  console.log("-".repeat(100));
+  for (const r of rows) {
+    console.log(
+      `${pad(r.screen, 14)} ${pad(r.check, 14)} ${pad(r.pass ? "PASS" : "FAIL", 6)} ${r.detail}`
+    );
+  }
+  const passCount = rows.filter((r) => r.pass).length;
+  console.log("-".repeat(100));
+  console.log(
+    `${passCount}/${rows.length} checks passed · orderTotal=${ledger.money(ledger.orderTotal)} · perseus ${ledger.perseusQty}×${ledger.money(ledger.perseusUnit)}=${ledger.money(ledger.perseusOrderTotal)}`
+  );
+  console.log(failed ? "\nOVERALL: FAIL\n" : "\nOVERALL: PASS\n");
+
+  await browser.close();
+  server.close();
+  process.exit(failed ? 1 : 0);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
