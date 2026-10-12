@@ -167,12 +167,14 @@
   var shipTos = [
     {
       id: "engage-main",
-      label: "Engage Pickleball · Main",
+      name: "Engage Pickleball",
+      site: "Main",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
       id: "engage-north",
-      label: "Engage Pickleball · North",
+      name: "Engage Pickleball",
+      site: "North",
       detail: "2200 Research Park, Round Rock TX",
     },
   ];
@@ -247,6 +249,8 @@
    * creditAvailable IS the balance after placing this order.
    */
   var creditAfterOrder = creditAvailable;
+  /** Open balance excluding this restock (INV-1042), for segmented credit bar. */
+  var creditPriorUsed = Math.round((creditUsed - orderTotal) * 100) / 100;
 
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
@@ -265,7 +269,7 @@
     },
     hyperion: {
       reason: "Your history",
-      detail: "Last bought Sep 12 · usually every 6 weeks",
+      detail: "Last bought Sep 12, usually every 6 weeks",
     },
     scorpeus: {
       reason: "Low stock at your store",
@@ -294,7 +298,7 @@
     {
       id: "tpl-perseus",
       name: "Perseus restock",
-      detail: perseusLine.qty + " units · " + money(perseusOrderTotal),
+      detail: perseusLine.qty + " units, " + money(perseusOrderTotal),
     },
     {
       id: "tpl-match",
@@ -339,9 +343,13 @@
     credit: {
       limit: creditLimit,
       used: creditUsed,
+      priorUsed: creditPriorUsed,
+      thisOrder: orderTotal,
       available: creditAvailable,
       afterOrder: creditAfterOrder,
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
+      priorPct: Math.round((creditPriorUsed / creditLimit) * 1000) / 10,
+      orderPct: Math.round((orderTotal / creditLimit) * 1000) / 10,
     },
     messages: messages,
     recentOrders: recentOrders,

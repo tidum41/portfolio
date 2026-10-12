@@ -126,7 +126,7 @@ async function main() {
     await page.waitForTimeout(150);
 
     const result = await page.evaluate(
-      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, perseusQty, perseusUnit, buyerBySku }) => {
+      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, creditAvailable, perseusQty, perseusUnit, buyerBySku }) => {
         const issues = {
           images: [],
           overlaps: [],
@@ -339,7 +339,8 @@ async function main() {
         // Key totals must appear on relevant screens
         const must = [];
         if (screen === "qo-desktop" || screen === "cart") must.push(orderTotal, cartTotal);
-        if (screen === "invoices") must.push(creditUsed, creditLimit, orderTotal);
+        // Invoices credit meter shows available (not wordy used/limit sentence)
+        if (screen === "invoices") must.push(creditAvailable, orderTotal);
         if (screen === "messages") must.push(orderTotal);
         if (screen === "qo-desktop") must.push(perseusUnit);
         must.forEach((n) => {
@@ -713,8 +714,18 @@ async function main() {
           if (side && /\$[\d,]+\.\d{2}/.test(side.textContent || "") && /Net 30|Available|used/i.test(side.textContent || "")) {
             issues.ia.push("credit figures must not appear in sidebar (cart summary only)");
           }
-          if (!side || !side.querySelector("[data-store-link]")) {
-            issues.ia.push("sidebar missing Shop joola.com store link");
+          const storeLink = side && side.querySelector("[data-store-link]");
+          if (!storeLink) {
+            issues.ia.push("sidebar missing store link");
+          } else if (!/Back to joola\.com store|Shop retail store/i.test(storeLink.textContent || "")) {
+            issues.ia.push(`store link copy="${(storeLink.textContent || "").trim().slice(0, 40)}"`);
+          }
+          if (side && side.querySelector(".top-search, [data-top-search]")) {
+            issues.ia.push("global top-bar search must be removed (QO owns search)");
+          }
+          const topbar = root.querySelector("[data-topbar], .topbar");
+          if (topbar && topbar.querySelector(".top-search, [data-top-search]")) {
+            issues.ia.push("global top-bar search still present");
           }
           const cart = root.querySelector("[data-cart-pill], .cart-pill");
           if (!cart || !visible(cart)) issues.ia.push("cart pill missing from top bar");
@@ -834,8 +845,14 @@ async function main() {
             if (st.position !== "sticky" && st.position !== "fixed") {
               issues.cartCheckout.push(`summary position=${st.position} (want sticky)`);
             }
-            if (!/After placing|After this order/i.test(summary.textContent || "")) {
-              issues.cartCheckout.push("summary missing after-placing credit copy");
+            if (!summary.querySelector("[data-credit-meter], [data-credit-bar]")) {
+              issues.cartCheckout.push("summary missing Net 30 credit meter");
+            }
+            if (/After placing/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("wordy after-placing credit sentence still present");
+            }
+            if (!/Net 30/i.test(summary.textContent || "") || !/available/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("credit meter missing Net 30 + available label");
             }
             if (!/Calculated at invoice/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("summary missing tax note");
@@ -873,13 +890,20 @@ async function main() {
                 issues.pixelNits.push("need-by date missing calendar icon");
               }
             }
-            if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
+            if (box.querySelector('[data-field="ship-to"] select') || box.querySelector("select")) {
+              issues.cartCheckout.push("native select still visible (want address card)");
+            }
+            if (!box.querySelector("[data-ship-card], .ship-card")) {
+              issues.cartCheckout.push("ship-to address card missing");
+            }
             if (!box.querySelector("[data-ship-address]")) {
               issues.cartCheckout.push("ship-to address line missing");
             }
-            const shipSelect = box.querySelector('[data-field="ship-to"] select');
-            if (shipSelect && /Engage Pickleball\s*-\s/.test(shipSelect.textContent || "")) {
-              issues.cartCheckout.push("ship-to uses hyphen; want · or en dash");
+            if (!box.querySelector("[data-ship-change], .ship-change")) {
+              issues.cartCheckout.push("ship-to Change affordance missing");
+            }
+            if (/Engage Pickleball\s*[·\-]\s/.test(box.querySelector('[data-field="ship-to"]')?.textContent || "")) {
+              issues.cartCheckout.push("ship-to still uses punctuation belt in label");
             }
             if (box.querySelector("[data-warehouse-notes]") || /Notes for warehouse/i.test(box.textContent || "")) {
               issues.cartCheckout.push("warehouse notes must not appear for buyers");
@@ -922,8 +946,15 @@ async function main() {
             issues.netsuiteLabels.push(`Best price unlocked spam ×${bestSpam.length}`);
           }
           const footerMeta = root.querySelector("[data-order-footer] [data-line-count]");
-          if (!footerMeta || !/Ready|In cart/i.test(footerMeta.textContent || "")) {
-            issues.netsuiteLabels.push("footer missing ready vs cart distinction");
+          if (!footerMeta || !/\d+\s+items?/i.test(footerMeta.textContent || "")) {
+            issues.netsuiteLabels.push("footer missing quiet item count (e.g. 4 items)");
+          }
+          if (/Ready\s*·|In cart\s*·/i.test(footerMeta?.textContent || "")) {
+            issues.netsuiteLabels.push("footer still uses Ready/In cart · lines pattern");
+          }
+          const addBtn = root.querySelector("[data-add-all], #qoAddAllBtn");
+          if (addBtn && !/Add\s+\d+\s+to cart|Added/i.test(addBtn.textContent || "")) {
+            issues.netsuiteLabels.push(`footer CTA="${(addBtn.textContent || "").trim()}" (want Add N to cart)`);
           }
           if (/Staged/i.test(root.innerText || "")) {
             issues.netsuiteLabels.push("staged jargon still present");
@@ -991,6 +1022,29 @@ async function main() {
                 }
                 if (br.left < pr.left - 0.5 || br.right > pr.right + 0.5) {
                   issues.pixelNits.push("count-chip horizontally overflows cart pill");
+                }
+                const bg = getComputedStyle(countChip).backgroundColor || "";
+                if (bg !== "rgb(44, 62, 224)") {
+                  issues.pixelNits.push(`count-chip fill ${bg} (want JOOLA blue)`);
+                }
+                const range = document.createRange();
+                range.selectNodeContents(countChip);
+                const tr = range.getBoundingClientRect();
+                if (tr.width > 0 && tr.height > 0) {
+                  const dx = Math.abs((tr.left + tr.right) / 2 - (br.left + br.right) / 2);
+                  const dy = Math.abs((tr.top + tr.bottom) / 2 - (br.top + br.bottom) / 2);
+                  if (dx > 0.5 || dy > 0.5) {
+                    issues.pixelNits.push(
+                      `count-chip optical centre Δx=${dx.toFixed(2)} Δy=${dy.toFixed(2)} (max 0.5)`
+                    );
+                  }
+                }
+                const pillCy = (pr.top + pr.bottom) / 2;
+                const chipCy = (br.top + br.bottom) / 2;
+                if (Math.abs(pillCy - chipCy) > 1) {
+                  issues.pixelNits.push(
+                    `count-chip not vertically centred on pill (Δ=${Math.abs(pillCy - chipCy).toFixed(2)})`
+                  );
                 }
                 if (cart.querySelector(".badge:not(.count-chip)")) {
                   issues.pixelNits.push("legacy corner .badge still present");
@@ -1102,17 +1156,51 @@ async function main() {
             }
           }
 
-          // Shop joola.com text x = nav icon x
+          // Store link icon x = nav icon x (same pad/gap/slot)
           const store = root.querySelector("[data-store-link]");
           const navIcon = root.querySelector(".nav-item .icon-slot");
-          if (store && navIcon && visible(store) && visible(navIcon)) {
-            const padL = parseFloat(getComputedStyle(store).paddingLeft) || 0;
-            const sx = store.getBoundingClientRect().left + padL;
+          const storeIcon = store && store.querySelector(".icon-slot");
+          if (store && navIcon && storeIcon && visible(store) && visible(navIcon)) {
+            const sx = storeIcon.getBoundingClientRect().left;
             const ix = navIcon.getBoundingClientRect().left;
             if (Math.abs(sx - ix) > 1.5) {
-              issues.pixelNits.push(`store text x=${Math.round(sx)} vs nav icon x=${Math.round(ix)}`);
+              issues.pixelNits.push(`store icon x=${sx.toFixed(1)} vs nav icon x=${ix.toFixed(1)}`);
+            }
+            const storeSvg = storeIcon.querySelector("svg");
+            const navSvg = navIcon.querySelector("svg");
+            if (storeSvg && navSvg) {
+              const sw = storeSvg.getBoundingClientRect().width;
+              const nw = navSvg.getBoundingClientRect().width;
+              if (Math.abs(sw - nw) > 1) {
+                issues.pixelNits.push(`store icon size ${sw.toFixed(1)} vs nav ${nw.toFixed(1)}`);
+              }
+            }
+          } else if (store && !storeIcon) {
+            issues.pixelNits.push("store link missing icon-slot (must match nav)");
+          }
+
+          // Zero middle-dot rule (prefer 0, hard max 1) — screen content only
+          {
+            const text = root.innerText || "";
+            const dots = (text.match(/·/g) || []).length;
+            if (dots > 1) {
+              issues.pixelNits.push(`middle-dot count ${dots} (max 1, prefer 0)`);
             }
           }
+
+          // No native <select> in buyer chrome
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push("native <select> visible");
+          });
+
+          // No all-caps tracked eyebrows in product UI
+          root.querySelectorAll("h2, h3, .label-quiet, .rail-card h3, .section-title, .oc-label, .msg-details .k").forEach((el) => {
+            if (!visible(el)) return;
+            const cs = getComputedStyle(el);
+            if (cs.textTransform === "uppercase" && parseFloat(cs.letterSpacing) > 0) {
+              issues.pixelNits.push(`eyebrow style on ${el.className || el.tagName}: "${(el.textContent || "").trim().slice(0, 24)}"`);
+            }
+          });
 
           // Search dropdown is an overlay (absolute), not in flow
           const results = root.querySelector("[data-search-results]");
@@ -1202,7 +1290,7 @@ async function main() {
           }
         }
 
-        // Filled cart: count-chip visible and inside pill (cart screen)
+        // Filled cart: count-chip visible, inside pill, optically centred (cart screen)
         if (screen === "cart") {
           const cart = root.querySelector("[data-cart-pill]");
           const countChip = cart && cart.querySelector(".count-chip, [data-cart-count]");
@@ -1217,7 +1305,38 @@ async function main() {
             if ((countChip.textContent || "").trim() === "0") {
               issues.pixelNits.push("filled cart shows 0");
             }
+            const bg = getComputedStyle(countChip).backgroundColor || "";
+            if (bg !== "rgb(44, 62, 224)") {
+              issues.pixelNits.push(`filled count-chip fill ${bg} (want JOOLA blue)`);
+            }
+            const range = document.createRange();
+            range.selectNodeContents(countChip);
+            const tr = range.getBoundingClientRect();
+            if (tr.width > 0 && tr.height > 0) {
+              const dx = Math.abs((tr.left + tr.right) / 2 - (br.left + br.right) / 2);
+              const dy = Math.abs((tr.top + tr.bottom) / 2 - (br.top + br.bottom) / 2);
+              if (dx > 0.5 || dy > 0.5) {
+                issues.pixelNits.push(
+                  `filled count-chip optical centre Δx=${dx.toFixed(2)} Δy=${dy.toFixed(2)} (max 0.5)`
+                );
+              }
+            }
           }
+          // Hard rules on every buyer screen with chrome
+          const dots = ((root.innerText || "").match(/·/g) || []).length;
+          if (dots > 1) issues.pixelNits.push(`cart middle-dot count ${dots} (max 1)`);
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push("cart shows native <select>");
+          });
+        }
+
+        // Middle-dot + no-select on remaining screens
+        if (["catalog", "templates", "invoices", "messages"].includes(screen)) {
+          const dots = ((root.innerText || "").match(/·/g) || []).length;
+          if (dots > 1) issues.pixelNits.push(`${screen} middle-dot count ${dots} (max 1)`);
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push(`${screen} shows native <select>`);
+          });
         }
 
         // Net 30 beside credit — cart summary (credit shown once, where it matters)
@@ -1295,6 +1414,7 @@ async function main() {
         orderTotal: ledger.orderTotal,
         creditUsed: ledger.credit.used,
         creditLimit: ledger.credit.limit,
+        creditAvailable: ledger.credit.available,
         perseusQty: ledger.perseusQty,
         perseusUnit: ledger.perseusUnit,
         buyerBySku: Object.fromEntries(
