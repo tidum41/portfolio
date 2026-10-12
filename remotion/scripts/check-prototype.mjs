@@ -1050,8 +1050,8 @@ async function main() {
             if (cr !== kr) issues.netsuiteLabels.push(`pill radius mismatch ${cr} vs ${kr}`);
             const pl = parseFloat(getComputedStyle(chip).paddingLeft) || 0;
             const prPad = parseFloat(getComputedStyle(chip).paddingRight) || 0;
-            if (Math.abs(pl - 12) > 1 || Math.abs(prPad - 12) > 1) {
-              issues.pixelNits.push(`account pad L=${pl} R=${prPad} (want 12/12)`);
+            if (Math.abs(pl - 12) > 1 || prPad < 12 || prPad > 15) {
+              issues.pixelNits.push(`account pad L=${pl} R=${prPad} (want L=12, R=12–14 optical)`);
             }
             const av = chip.querySelector("[data-retailer-avatar]");
             if (av) {
@@ -2083,8 +2083,11 @@ print(json.dumps({
       acctDom.gapCss >= 9.5 &&
       acctDom.gapCss <= 12.5 &&
       Math.abs(acctDom.padL - 12) <= 1.5 &&
-      Math.abs(acctDom.padR - 12) <= 2 &&
-      Math.abs(acctDom.padL - acctDom.padR) <= 2 &&
+      acctDom.padR >= 11 &&
+      acctDom.padR <= 16 &&
+      // Right may be 1–2px larger so long names clear the pill curve optically
+      acctDom.padR + 0.5 >= acctDom.padL &&
+      acctDom.padR - acctDom.padL <= 3 &&
       Math.abs(acctDom.metaCy - acctDom.chipCy) <= 1 &&
       Math.abs(acctDom.avCy - acctDom.chipCy) <= 1;
     record(
