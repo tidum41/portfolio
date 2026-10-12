@@ -124,7 +124,7 @@ async function main() {
     await page.waitForTimeout(150);
 
     const result = await page.evaluate(
-      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, perseusQty, perseusUnit }) => {
+      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, perseusQty, perseusUnit, buyerBySku }) => {
         const issues = {
           images: [],
           overlaps: [],
@@ -133,6 +133,12 @@ async function main() {
           avatar: [],
           ledger: [],
           emdash: [],
+          skuPrice: [],
+          searchPlaceholder: [],
+          footerBand: [],
+          joolaMark: [],
+          numericAlign: [],
+          mediaSurface: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -333,6 +339,167 @@ async function main() {
           }
         }
 
+        // 1. Same SKU → same buyer price everywhere it appears on this screen
+        const bySku = {};
+        root.querySelectorAll("[data-sku]").forEach((el) => {
+          if (!visible(el)) return;
+          const sku = el.getAttribute("data-sku");
+          const attr = parseFloat(el.getAttribute("data-buyer-price") || "NaN");
+          const priceEl = el.querySelector("[data-display-price]") || el.querySelector(".price") || el.querySelector(".meta");
+          const texts = parseMoneyLocal(priceEl ? priceEl.textContent : el.textContent);
+          const shown = texts.find((n) => buyerBySku[sku] != null && Math.abs(n - buyerBySku[sku]) < 0.01) ?? texts[0];
+          if (!bySku[sku]) bySku[sku] = [];
+          bySku[sku].push({ attr, shown, from: el.className || el.tagName });
+        });
+        Object.keys(bySku).forEach((sku) => {
+          const expected = buyerBySku[sku];
+          const vals = bySku[sku];
+          vals.forEach((v) => {
+            if (expected != null && v.attr === v.attr && Math.abs(v.attr - expected) > 0.009) {
+              issues.skuPrice.push(`SKU ${sku} data-buyer-price ${v.attr} != ledger ${expected}`);
+            }
+            if (expected != null && v.shown != null && Math.abs(v.shown - expected) > 0.009) {
+              issues.skuPrice.push(`SKU ${sku} shows $${v.shown} != ledger buyer $${expected} (${v.from})`);
+            }
+          });
+          const uniqueShown = [...new Set(vals.map((v) => v.shown).filter((n) => n === n))];
+          if (uniqueShown.length > 1) {
+            issues.skuPrice.push(`SKU ${sku} disagrees on-screen: ${uniqueShown.join(" vs ")}`);
+          }
+        });
+
+        // 2. Placeholder hidden when search has a value
+        if (screen === "qo-desktop") {
+          const field = root.querySelector("[data-search-field]");
+          if (field) {
+            const hasValue = field.classList.contains("has-value") || !!field.getAttribute("data-search-value");
+            const ph = field.querySelector(".placeholder");
+            if (hasValue && ph) {
+              const st = getComputedStyle(ph);
+              if (st.display !== "none" && st.visibility !== "hidden" && st.opacity !== "0") {
+                const r = ph.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) {
+                  issues.searchPlaceholder.push("placeholder visible while field has value");
+                }
+              }
+            }
+            if (hasValue && /Search by name/i.test(field.innerText)) {
+              issues.searchPlaceholder.push("placeholder text still in visible innerText");
+            }
+          }
+        }
+
+        // 3. No blank band >64px under sticky footer
+        if (screen === "qo-desktop" || screen === "qo-mobile") {
+          const footer = root.querySelector("[data-order-footer], .order-footer");
+          if (footer && visible(footer)) {
+            const fr = footer.getBoundingClientRect();
+            const gap = window.innerHeight - fr.bottom;
+            if (gap > 64) {
+              issues.footerBand.push(`blank band ${Math.round(gap)}px under sticky footer`);
+            }
+          }
+        }
+
+        // 4. JOOLA Sales uses JOOLA mark, not Engage avatar
+        if (screen === "messages") {
+          const inbox = root.querySelector("[data-inbox-joola]");
+          if (!inbox || !inbox.querySelector("[data-joola-mark]")) {
+            issues.joolaMark.push("inbox JOOLA Sales missing data-joola-mark");
+          }
+          if (inbox && inbox.querySelector("[data-retailer-avatar]")) {
+            issues.joolaMark.push("inbox JOOLA Sales still uses Engage retailer avatar");
+          }
+          const sam = root.querySelector("[data-msg-sam]");
+          if (!sam || !sam.querySelector("[data-joola-mark]")) {
+            issues.joolaMark.push("Sam bubble missing JOOLA mark");
+          }
+        }
+
+        // 5. Numeric invoice Amount column right-aligned to header
+        if (screen === "invoices" && invHead && invRows.length) {
+          const headAmt = invHead.querySelector(".num") || invHead.children[4];
+          const rowAmt = invRows[0].querySelector("[data-col='amount'], .amt");
+          if (headAmt && rowAmt) {
+            const hs = getComputedStyle(headAmt).textAlign;
+            const rs = getComputedStyle(rowAmt).textAlign;
+            if (hs !== "right" || rs !== "right") {
+              issues.numericAlign.push(`Amount text-align head=${hs} row=${rs}`);
+            }
+            const hr = headAmt.getBoundingClientRect();
+            const rr = rowAmt.getBoundingClientRect();
+            if (Math.abs(hr.right - rr.right) > 2) {
+              issues.numericAlign.push(
+                `Amount right edge head=${Math.round(hr.right)} row=${Math.round(rr.right)}`
+              );
+            }
+          }
+          // Tight action column: gap between status pill and Download PDF button
+          const status = invRows[0].children[5];
+          const btn = invRows[0].querySelector(".action button");
+          if (status && btn) {
+            const gap = btn.getBoundingClientRect().left - status.getBoundingClientRect().right;
+            if (gap > 48) {
+              issues.numericAlign.push(`STATUS→PDF gap ${Math.round(gap)}px > 48`);
+            }
+          }
+        }
+
+        // 6. Catalog product media: one surface, consistent size (img fills media; no nested pad)
+        if (screen === "catalog") {
+          const medias = [...root.querySelectorAll("[data-product-media], .rec-card .media, .cat-card .media")].filter(visible);
+          const heights = medias.map((el) => Math.round(el.getBoundingClientRect().height));
+          const uniqueH = [...new Set(heights)];
+          if (uniqueH.length > 1) {
+            issues.mediaSurface.push(`inconsistent media heights: ${uniqueH.join(", ")}`);
+          }
+          medias.forEach((el) => {
+            const cs = getComputedStyle(el);
+            const pad =
+              (parseFloat(cs.paddingTop) || 0) +
+              (parseFloat(cs.paddingRight) || 0) +
+              (parseFloat(cs.paddingBottom) || 0) +
+              (parseFloat(cs.paddingLeft) || 0);
+            if (pad > 1) {
+              issues.mediaSurface.push(`media has padding ${pad}px (double container)`);
+            }
+            const img = el.querySelector("img");
+            if (img) {
+              const er = el.getBoundingClientRect();
+              const ir = img.getBoundingClientRect();
+              if (Math.abs(ir.width - er.width) > 4 || Math.abs(ir.height - er.height) > 4) {
+                issues.mediaSurface.push(
+                  `img ${Math.round(ir.width)}x${Math.round(ir.height)} inset in media ${Math.round(er.width)}x${Math.round(er.height)}`
+                );
+              }
+              const fit = getComputedStyle(img).objectFit;
+              if (fit !== "cover" && fit !== "fill") {
+                issues.mediaSurface.push(`img object-fit=${fit} (want cover/fill, not letterboxed contain)`);
+              }
+            }
+            // media should be flush to card top (no outer grey frame above)
+            const card = el.closest(".rec-card, .cat-card");
+            if (card) {
+              const cr = card.getBoundingClientRect();
+              const er = el.getBoundingClientRect();
+              if (er.top - cr.top > 2) {
+                issues.mediaSurface.push(`media inset ${Math.round(er.top - cr.top)}px from card top`);
+              }
+            }
+          });
+        }
+
+        function parseMoneyLocal(text) {
+          const out = [];
+          if (!text) return out;
+          const re = /\$[\d,]+(?:\.\d{2})?/g;
+          let m;
+          while ((m = re.exec(text))) {
+            out.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+          }
+          return out;
+        }
+
         return issues;
       },
       {
@@ -344,6 +511,9 @@ async function main() {
         creditLimit: ledger.credit.limit,
         perseusQty: ledger.perseusQty,
         perseusUnit: ledger.perseusUnit,
+        buyerBySku: Object.fromEntries(
+          Object.values(ledger.products).map((p) => [p.sku, p.buyerPrice])
+        ),
       }
     );
 
@@ -355,8 +525,24 @@ async function main() {
       ["avatar<=40", result.avatar],
       ["ledger", result.ledger],
       ["no-emdash", result.emdash],
+      ["sku-price", result.skuPrice],
+      ["search-ph", result.searchPlaceholder],
+      ["footer-band", result.footerBand],
+      ["joola-mark", result.joolaMark],
+      ["numeric-align", result.numericAlign],
+      ["media-surface", result.mediaSurface],
     ];
     for (const [name, list] of checks) {
+      // Screen-scoped checks: skip empty N/A as PASS only when relevant
+      const scoped = {
+        "search-ph": ["qo-desktop"],
+        "footer-band": ["qo-desktop", "qo-mobile"],
+        "joola-mark": ["messages"],
+        "numeric-align": ["invoices"],
+        "media-surface": ["catalog"],
+        "sku-price": ["qo-desktop", "catalog", "cart", "templates"],
+      };
+      if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
     }
   }

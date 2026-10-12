@@ -43,11 +43,11 @@
   --col-x: 40px;
   --inv-invoice: 140px;
   --inv-order: 120px;
-  --inv-issued: 140px;
-  --inv-due: 140px;
-  --inv-amount: 140px;
-  --inv-status: 140px;
-  --inv-action: 1fr;
+  --inv-issued: 130px;
+  --inv-due: 130px;
+  --inv-amount: 120px;
+  --inv-status: 120px;
+  --inv-action: 148px;
 }
 
 * { box-sizing: border-box; }
@@ -104,7 +104,8 @@ img { display: block; max-width: 100%; }
 }
 
 .screen { display: none; background: var(--page); min-height: calc(100vh - var(--switcher-h)); }
-.screen.active { display: flex; flex-direction: column; }
+.screen.active { display: flex; flex-direction: column; min-height: calc(100vh - var(--switcher-h)); }
+.screen .page { flex: 1 1 auto; }
 .screen.mobile-wrap {
   max-width: 390px;
   margin: 0 auto;
@@ -270,7 +271,10 @@ img { display: block; max-width: 100%; }
   font-size: 16px;
   color: var(--faint);
 }
-.search-field strong { color: var(--ink); font-weight: 600; }
+.search-field .placeholder { color: var(--faint); }
+.search-field .value { color: var(--ink); font-weight: 600; }
+.search-field.has-value .placeholder { display: none; }
+.search-field:not(.has-value) .value { display: none; }
 .search-results {
   position: absolute;
   top: 58px; left: 0; right: 0;
@@ -406,6 +410,7 @@ img { display: block; max-width: 100%; }
 .order-footer {
   position: sticky;
   bottom: 0;
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -414,6 +419,7 @@ img { display: block; max-width: 100%; }
   background: #fff;
   border-top: 1px solid var(--line);
   box-shadow: 0 -8px 24px rgba(20,20,18,0.06);
+  flex-shrink: 0;
 }
 .order-footer .total {
   font-size: 38px;
@@ -454,40 +460,40 @@ img { display: block; max-width: 100%; }
 .rec-card {
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 16px;
+  padding: 0 0 16px;
   background: #fff;
+  overflow: hidden;
 }
 .rec-card .media {
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--band);
-  border-radius: 8px;
-  padding: 16px;
+  height: 240px;
+  background: #eee;
+  overflow: hidden;
 }
 .rec-card .media img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 .rec-card .chip {
   display: inline-block;
-  margin-top: 12px;
+  margin: 12px 16px 0;
   font-size: 12px;
   font-weight: 700;
   color: var(--blue);
 }
-.rec-card .title { margin-top: 6px; font-size: 18px; font-weight: 700; }
+.rec-card .title { margin: 6px 16px 0; font-size: 18px; font-weight: 700; }
 .rec-card .price-row {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-top: 6px;
+  margin: 6px 16px 0;
   font-variant-numeric: tabular-nums;
 }
 .rec-card .price { font-size: 18px; font-weight: 700; }
 .rec-card .msrp { font-size: 14px; color: var(--faint); text-decoration: line-through; }
+.rec-card .moq { margin: 4px 16px 0; }
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -497,21 +503,25 @@ img { display: block; max-width: 100%; }
 .cat-card {
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 12px;
+  padding: 0 0 12px;
+  background: #fff;
+  overflow: hidden;
 }
 .cat-card .media {
-  height: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--band);
-  border-radius: 8px;
-  padding: 12px;
+  height: 240px;
+  background: #eee;
+  overflow: hidden;
 }
-.cat-card .media img { width: 100%; height: 100%; object-fit: contain; }
-.cat-card .title { margin-top: 10px; font-size: 14px; font-weight: 600; }
-.cat-card .price { margin-top: 4px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.cat-card .moq { margin-top: 2px; font-size: 12px; color: var(--muted); }
+.cat-card .media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.cat-card .title { margin: 10px 12px 0; font-size: 14px; font-weight: 600; }
+.cat-card .price { margin: 4px 12px 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cat-card .moq { margin: 2px 12px 0; font-size: 12px; color: var(--muted); }
 
 /* Invoices */
 .credit-card {
@@ -545,13 +555,18 @@ img { display: block; max-width: 100%; }
 }
 .credit-card .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
-.invoice-table { margin-top: 32px; width: 100%; }
+.invoice-table {
+  margin-top: 32px;
+  width: max-content;
+  max-width: 100%;
+}
 .invoice-head, .invoice-row {
   display: grid;
   grid-template-columns: var(--inv-invoice) var(--inv-order) var(--inv-issued) var(--inv-due) var(--inv-amount) var(--inv-status) var(--inv-action);
   column-gap: 16px;
   align-items: center;
   padding: 16px 8px;
+  width: max-content;
 }
 .invoice-head {
   border-bottom: 1.5px solid var(--ink);
@@ -564,6 +579,10 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--muted);
+}
+.invoice-head > div.num,
+.invoice-row .amt {
+  text-align: right;
 }
 .invoice-row { border-bottom: 1px solid var(--wash); }
 .invoice-row .id { font-size: 14px; font-weight: 700; }
@@ -586,7 +605,7 @@ img { display: block; max-width: 100%; }
 .status.Due { background: #fff6da; color: #8a6100; }
 .status.Overdue { background: #fde8e6; color: #c0392b; }
 .status.Paid { background: #e7f4ee; color: #198754; }
-.invoice-row .action { justify-self: end; }
+.invoice-row .action { justify-self: stretch; }
 .invoice-row .action button {
   height: 36px;
   padding: 0 14px;
@@ -594,6 +613,7 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--ink);
   font-size: 13px;
   font-weight: 600;
+  width: 100%;
 }
 
 /* Messages: full-bleed, same chrome */
@@ -615,6 +635,35 @@ img { display: block; max-width: 100%; }
   border-radius: 8px;
   background: #fff;
   border: 1px solid var(--line);
+}
+.joola-mark {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  flex-shrink: 0;
+}
+.joola-mark img {
+  width: 100%;
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+.bubble.sam .who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bubble.sam .joola-mark {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 4px;
 }
 .thread {
   display: flex;
@@ -767,6 +816,14 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  function joolaMarkHtml(cls) {
+    return (
+      '<div class="joola-mark' + (cls ? " " + cls : "") + '" data-joola-mark>' +
+      '<img src="joola-logo.png" alt="JOOLA" width="36" height="12">' +
+      "</div>"
+    );
+  }
+
   function chrome(activeTab) {
     var pills = NAV.map(function (n) {
       return (
@@ -805,7 +862,7 @@ img { display: block; max-width: 100%; }
     return (
       '<div class="price-block">' +
       '<div class="strike">' + money(product.msrp) + "</div>" +
-      '<div class="unit" data-unit-price="' + unit + '">' + money(unit) + " ea</div>" +
+      '<div class="unit" data-unit-price="' + unit + '" data-display-price>' + money(unit) + " ea</div>" +
       hint +
       "</div>"
     );
@@ -835,7 +892,7 @@ img { display: block; max-width: 100%; }
           "</div>";
       }
       rows +=
-        '<div class="order-row" data-order-row data-sku="' + p.sku + '" data-product="' + p.id + '">' +
+        '<div class="order-row" data-order-row data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '" data-product="' + p.id + '">' +
         '<img class="thumb" src="' + p.image + '" alt="' + p.name + '" width="56" height="56">' +
         '<div><div class="prod-name">' + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · MOQ " + p.moq + "</div></div>" +
         unitPriceHtml(p, line.qty) +
@@ -872,15 +929,18 @@ img { display: block; max-width: 100%; }
 
   function searchHtml() {
     var p = L.products.perseus;
-    var unit = L.perseusUnit;
+    var typed = "600558";
     return (
       '<div class="search-row">' +
       '<div class="search-wrap">' +
-      '<div class="search-field" data-search-field><span>Search by name, category, or SKU</span> <strong>600558</strong></div>' +
+      '<div class="search-field has-value" data-search-field data-search-value="' + typed + '">' +
+      '<span class="placeholder">Search by name, category, or SKU</span>' +
+      '<span class="value">' + typed + "</span>" +
+      "</div>" +
       '<div class="search-results" data-search-results>' +
-      '<div class="search-result" data-search-result>' +
+      '<div class="search-result" data-search-result data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
       '<img src="' + p.image + '" alt="' + p.name + '" width="44" height="44">' +
-      "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(unit) + " · MOQ " + p.moq + "</div></div>" +
+      "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(p.buyerPrice) + " · MOQ " + p.moq + "</div></div>" +
       "</div></div></div>" +
       '<button type="button" class="btn-outline">Bulk upload</button>' +
       "</div>"
@@ -909,14 +969,13 @@ img { display: block; max-width: 100%; }
     var rec = L.recommended
       .map(function (id, i) {
         var p = L.products[id];
-        var unit = L.priceAt(p, 24);
         return (
-          '<div class="rec-card" data-rec-card>' +
-          '<div class="media"><img src="' + p.image + '" alt="' + p.name + '"></div>' +
+          '<div class="rec-card" data-rec-card data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
+          '<div class="media" data-product-media><img src="' + p.image + '" alt="' + p.name + '"></div>' +
           '<div class="chip">' + chips[i] + "</div>" +
           '<div class="title">' + p.name + "</div>" +
-          '<div class="price-row"><span class="price">' + money(unit) + '</span><span class="msrp">' + money(p.msrp) + "</span></div>" +
-          '<div class="moq" style="margin-top:4px;font-size:12px;color:var(--muted);">MOQ ' + p.moq + " · as low as " + money(unit) + " at 24+</div>" +
+          '<div class="price-row"><span class="price" data-display-price>' + money(p.buyerPrice) + '</span><span class="msrp">' + money(p.msrp) + "</span></div>" +
+          '<div class="moq" style="font-size:12px;color:var(--muted);">MOQ ' + p.moq + "</div>" +
           "</div>"
         );
       })
@@ -926,12 +985,11 @@ img { display: block; max-width: 100%; }
     var grid = allIds
       .map(function (id) {
         var p = L.products[id];
-        var unit = L.priceAt(p, Math.max(p.moq, 1));
         return (
-          '<div class="cat-card" data-catalog-card>' +
-          '<div class="media"><img src="' + p.image + '" alt="' + p.name + '"></div>' +
+          '<div class="cat-card" data-catalog-card data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
+          '<div class="media" data-product-media><img src="' + p.image + '" alt="' + p.name + '"></div>' +
           '<div class="title">' + p.fullName + "</div>" +
-          '<div class="price">' + money(unit) + "</div>" +
+          '<div class="price" data-display-price>' + money(p.buyerPrice) + "</div>" +
           '<div class="moq">MOQ ' + p.moq + "</div>" +
           "</div>"
         );
@@ -972,7 +1030,7 @@ img { display: block; max-width: 100%; }
         var p = L.products[line.productId];
         var amount = L.lineAmount(line);
         return (
-          '<div class="cart-line" data-cart-line>' +
+          '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
           '<img src="' + p.image + '" alt="' + p.name + '" width="56" height="56">' +
           "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">' + line.qty + " × " + money(L.priceAt(p, line.qty)) + "</div></div>" +
           '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
@@ -1027,7 +1085,7 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<div class="invoice-table" data-invoice-table>' +
       '<div class="invoice-head" data-invoice-head>' +
-      "<div>Invoice</div><div>Order</div><div>Issued</div><div>Due</div><div>Amount</div><div>Status</div><div></div>" +
+      '<div>Invoice</div><div>Order</div><div>Issued</div><div>Due</div><div class="num">Amount</div><div>Status</div><div></div>' +
       "</div>" +
       rows +
       "</div></div></section>"
@@ -1040,7 +1098,7 @@ img { display: block; max-width: 100%; }
       chrome("messages") +
       '<div class="messages-layout">' +
       '<aside class="inbox"><h2>Inbox</h2>' +
-      '<div class="inbox-item">' + avatarHtml() +
+      '<div class="inbox-item" data-inbox-joola>' + joolaMarkHtml() +
       "<div><div style=\"font-size:13px;font-weight:700;\">JOOLA Sales</div><div style=\"font-size:12px;color:var(--muted);margin-top:2px;\">Perseus Pro V restock</div></div>" +
       "</div></aside>" +
       '<div class="thread">' +
@@ -1049,7 +1107,8 @@ img { display: block; max-width: 100%; }
       '<div class="bubble anna" data-msg-anna><div class="who"><b>' + L.retailer.buyer + '</b> <span>· ' + L.retailer.name + "</span></div>" +
       L.messages.anna +
       "</div>" +
-      '<div class="bubble sam" data-msg-sam><div class="who"><b>Sam Ortiz</b> <span>· JOOLA Sales</span></div>' +
+      '<div class="bubble sam" data-msg-sam><div class="who">' + joolaMarkHtml("sm") +
+      "<span><b>Sam Ortiz</b> <span>· JOOLA Sales</span></span></div>" +
       L.messages.sam +
       "</div>" +
       "</div>" +

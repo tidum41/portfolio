@@ -107,6 +107,12 @@
     },
   };
 
+  /** One browse/buyer unit price per SKU (best unlocked tier). Catalog + search use this. */
+  Object.keys(products).forEach(function (id) {
+    var p = products[id];
+    p.buyerPrice = p.tiers[p.tiers.length - 1].price;
+  });
+
   /**
    * Story order on Quick Order / Cart / INV-1042 / Messages:
    * Perseus Pro V × 120 at $134.98 (24+ tier) = $16,197.60.
