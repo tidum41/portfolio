@@ -945,13 +945,14 @@ export const JoolaB2B = () => {
   const cursor = frame < INTRO ? null : cursorAt(frame);
 
   if (frame < INTRO) {
+    // Minimal brand hold: logo alone on clean white (no pattern / accent bar).
+    // Full intro motion options A–C are still frames for Mudit approval first.
     const p = interpolate(frame, [0, 10], [0, 1], { ...clamp, easing: EASE_OUT });
     return (
       <AbsoluteFill style={{ background: C.paper, ...face }}>
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: p }}>
           <Img src={joolaLogo} style={{ width: 280, height: "auto" }} />
         </div>
-        <div style={{ position: "absolute", left: "50%", bottom: 120, width: 48, height: 3, marginLeft: -24, borderRadius: 2, background: C.blue, opacity: p }} />
       </AbsoluteFill>
     );
   }

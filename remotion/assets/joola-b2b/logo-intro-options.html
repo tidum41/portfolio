@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JOOLA logo intro options — still frames</title>
+<style>
+@font-face {
+  font-family: "FKGroteskNeue";
+  font-weight: 400;
+  src: url("fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "FKGroteskNeue";
+  font-weight: 500;
+  src: url("fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
+}
+:root {
+  --ink: #1a1a1a;
+  --blue: #2c3ee0;
+  --lime: #fef632;
+  --paper: #ffffff;
+  --sidebar: #fbfcfd;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "FKGroteskNeue", sans-serif;
+  background: #111;
+  color: #fff;
+  padding: 24px;
+}
+h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
+.cite {
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+  max-width: 960px;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+.cite a { color: #9ab0ff; }
+.option { margin-bottom: 40px; }
+.option h2 { font-size: 16px; font-weight: 500; margin: 0 0 6px; }
+.spec {
+  font-size: 13px;
+  color: rgba(255,255,255,.75);
+  margin: 0 0 14px;
+  max-width: 900px;
+  line-height: 1.45;
+}
+.frames {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.frame {
+  width: 320px;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.frame .label {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 5;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,.45);
+  background: rgba(255,255,255,.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.frame.dark .label { color: rgba(255,255,255,.7); background: rgba(0,0,0,.45); }
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 140px;
+  transform: translate(-50%, -50%);
+  display: block;
+}
+.logo.invert { filter: brightness(0) invert(1); }
+.ui-hint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--sidebar) 0 72px, #fff 72px);
+  opacity: 0;
+}
+.ui-hint::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  width: 48px;
+  height: 14px;
+  background: #111;
+  border-radius: 2px;
+}
+.ui-hint::after {
+  content: "";
+  position: absolute;
+  left: 88px;
+  top: 40px;
+  width: 120px;
+  height: 10px;
+  background: #e6e8ef;
+  border-radius: 2px;
+}
+/* Option A frames */
+#a1 .logo { transform: translate(-50%, -50%); }
+#a2 .logo { transform: translate(-50%, -50%) scale(1.02); }
+#a3 .logo {
+  transform: translate(20%, -50%);
+  filter: blur(0.6px);
+}
+#a4 .logo {
+  transform: translate(120%, -50%);
+  filter: blur(4px);
+  opacity: .35;
+}
+#a4 .ui-hint { opacity: 1; }
+#a5 .logo { display: none; }
+#a5 .ui-hint { opacity: 1; }
+#a5 .ui-hint::after { width: 160px; background: #dfe2ea; }
+
+/* Option B — mask wipe on black */
+.frame.dark { background: #0a0a0a; }
+#b1 { background: #0a0a0a; }
+#b1 .logo { opacity: 0; }
+#b2 .logo {
+  clip-path: inset(0 70% 0 0);
+  opacity: 1;
+}
+#b3 .logo {
+  clip-path: inset(0 30% 0 0);
+}
+#b4 .logo { clip-path: inset(0 0 0 0); }
+#b5 .logo {
+  transform: translate(-50%, -50%) scale(.92);
+  opacity: .9;
+}
+#b5::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 40%;
+  background: linear-gradient(transparent, #fff);
+}
+#b6 {
+  background: #fff;
+}
+#b6 .logo { display: none; }
+#b6 .ui-hint { opacity: 1; }
+
+/* Option C — scale into sidebar logo */
+#c1 .logo { width: 160px; }
+#c2 .logo { width: 120px; transform: translate(-50%, -50%); }
+#c3 .logo {
+  width: 84px;
+  left: 36px;
+  top: 28px;
+  transform: none;
+}
+#c3 .ui-hint { opacity: .55; }
+#c4 .logo {
+  width: 84px;
+  left: 20px;
+  top: 18px;
+  transform: none;
+}
+#c4 .ui-hint { opacity: 1; }
+#c5 .logo {
+  width: 84px;
+  left: 20px;
+  top: 18px;
+  transform: none;
+}
+#c5 .ui-hint { opacity: 1; }
+#c5 .ui-hint::after { width: 180px; height: 8px; top: 70px; }
+
+.contact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+.contact .frame { width: 100%; height: 160px; }
+</style>
+</head>
+<body>
+  <h1>JOOLA logo intro — still-frame options (no Remotion animation yet)</h1>
+  <p class="cite">
+    Brand research: JOOLA USA site CSS exposes <code>color-secondary-3: #2c3ee0</code> and lime <code>color-secondary-1: #fef632</code> with primary ink <code>#1a1a1a</code>
+    (<a href="https://joola.com/">joola.com</a> theme tokens). The 2020 Trinity “J” wordmark is documented on
+    <a href="https://joola.com/pages/about-us">joola.com/about-us</a>; Design Tagebuch notes the international rebrand’s purple/lime pair,
+    while the live US storefront and this B2B prototype use black logo marks on white with blue <code>#2C3EE0</code>.
+    No background pattern — logo alone on a clean brand field.
+  </p>
+
+  <section class="option" id="option-a">
+    <h2>A — Hold, then slide out with directional motion blur</h2>
+    <p class="spec">Motion: 36f @ 30fps. Hold 0–12f (ease-out opacity 0→1, 8f). Slide X +120% of frame width over 18f with ease-in [0.55,0,1,1]; directional blur 0→8px over the exit, UI fades in last 10f underneath. No pattern.</p>
+    <div class="frames">
+      <div class="frame" id="a1"><span class="label">A1 hold</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="a2"><span class="label">A2 settle</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="a3"><span class="label">A3 exit start</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="a4"><span class="label">A4 blur exit</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="a5"><span class="label">A5 UI</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+    </div>
+  </section>
+
+  <section class="option" id="option-b">
+    <h2>B — Mask / wipe reveal on black, hand-off to UI</h2>
+    <p class="spec">Motion: 40f. Black field. Horizontal wipe reveals inverted white logo 0–16f (ease-out). Hold 8f. Soft bottom wipe to white UI over 16f while logo opacity drops. Blur ≤2px on the hand-off only.</p>
+    <div class="frames">
+      <div class="frame dark" id="b1"><span class="label">B1 black</span><img class="logo invert" src="joola-logo.png" alt=""></div>
+      <div class="frame dark" id="b2"><span class="label">B2 wipe 30%</span><img class="logo invert" src="joola-logo.png" alt=""></div>
+      <div class="frame dark" id="b3"><span class="label">B3 wipe 70%</span><img class="logo invert" src="joola-logo.png" alt=""></div>
+      <div class="frame dark" id="b4"><span class="label">B4 full mark</span><img class="logo invert" src="joola-logo.png" alt=""></div>
+      <div class="frame dark" id="b5"><span class="label">B5 hand-off</span><img class="logo invert" src="joola-logo.png" alt=""></div>
+      <div class="frame" id="b6"><span class="label">B6 UI</span><div class="ui-hint" style="opacity:1"></div></div>
+    </div>
+  </section>
+
+  <section class="option" id="option-c">
+    <h2>C — Match cut: logo scales into sidebar brand mark</h2>
+    <p class="spec">Motion: 32f. Centered black logo on white 0–10f. Scale + translate to sidebar slot (left 20px / top 18px / width 84px) over 18f with ease [0.22,1,0.36,1]; UI chrome fades in from f12. Blur 0 (hard match cut). Ends on Quick Order shell.</p>
+    <div class="frames">
+      <div class="frame" id="c1"><span class="label">C1 center</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="c2"><span class="label">C2 shrink</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="c3"><span class="label">C3 dock</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="c4"><span class="label">C4 chrome</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame" id="c5"><span class="label">C5 UI live</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+    </div>
+  </section>
+</body>
+</html>

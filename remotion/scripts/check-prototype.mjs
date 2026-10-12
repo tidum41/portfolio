@@ -25,6 +25,7 @@ const SCREENS = [
   "messages",
   "qo-mobile",
 ];
+// "states" is a QA sheet screen — not part of product film checks
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -145,6 +146,11 @@ async function main() {
           singleAccent: [],
           statusPill: [],
           imageContain: [],
+          multiLine: [],
+          ia: [],
+          interactionStates: [],
+          qoRail: [],
+          msgContext: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -659,6 +665,113 @@ async function main() {
           }
         });
 
+        // 13. Multi-line order: ≥2 rows; line totals sum to order total; INV-1042 matches
+        if (screen === "qo-desktop" || screen === "cart") {
+          const lines = [...root.querySelectorAll("[data-order-row], [data-cart-line]")].filter(visible);
+          if (lines.length < 2) {
+            issues.multiLine.push(`only ${lines.length} order line(s); want multi-line`);
+          }
+          const sum = lines.reduce((s, el) => {
+            const t = el.querySelector("[data-line-total]");
+            const n = t ? parseFloat(String(t.getAttribute("data-line-total") || t.textContent.replace(/[$,]/g, ""))) : NaN;
+            return s + (n === n ? n : 0);
+          }, 0);
+          if (Math.abs(sum - orderTotal) > 0.02) {
+            issues.multiLine.push(`line sum $${sum.toFixed(2)} != orderTotal $${orderTotal.toFixed(2)}`);
+          }
+        }
+        if (screen === "invoices") {
+          const inv = root.querySelector('[data-invoice-id="INV-1042"] [data-invoice-amount]');
+          if (inv) {
+            const n = parseFloat(inv.getAttribute("data-invoice-amount") || "NaN");
+            if (Math.abs(n - orderTotal) > 0.02) {
+              issues.multiLine.push(`INV-1042 $${n} != orderTotal $${orderTotal.toFixed(2)}`);
+            }
+          } else {
+            issues.multiLine.push("INV-1042 amount missing");
+          }
+        }
+        if (screen === "messages") {
+          if (!foundMoney.some((f) => Math.abs(f - orderTotal) <= 0.009)) {
+            issues.multiLine.push("messages missing orderTotal");
+          }
+        }
+
+        // 14. IA: no Open cart under Account; account panel holds credit
+        if (["qo-desktop", "catalog", "invoices", "messages"].includes(screen)) {
+          const side = root.querySelector("[data-sidebar], .sidebar");
+          if (side && /Open cart/i.test(side.textContent || "")) {
+            issues.ia.push("sidebar still contains Open cart");
+          }
+          const panel = root.querySelector("[data-account-panel]");
+          if (!panel || !visible(panel)) {
+            issues.ia.push("account panel missing");
+          } else if (!/\$/.test(panel.textContent || "")) {
+            issues.ia.push("account panel missing credit figures");
+          }
+          const cart = root.querySelector("[data-cart-pill], .cart-pill");
+          if (!cart || !visible(cart)) issues.ia.push("cart pill missing from top bar");
+        }
+
+        // 15. Interaction state CSS hooks exist (hover/focus-visible/disabled/toast)
+        if (screen === "qo-desktop" || screen === "states") {
+          const cssText = [...document.styleSheets]
+            .map((sheet) => {
+              try {
+                return [...sheet.cssRules].map((r) => r.cssText).join("\n");
+              } catch {
+                return "";
+              }
+            })
+            .join("\n");
+          ["btn-primary:hover", "btn-primary:focus-visible", "btn-primary:active", ":disabled", ".toast", "nav-item:hover", "qty-stepper button:hover"].forEach((needle) => {
+            if (!cssText.includes(needle) && !cssText.includes(needle.replace(".", ""))) {
+              // softer: check substrings
+            }
+          });
+          const need = [":hover", ":focus-visible", ":active", ":disabled", ".toast"];
+          need.forEach((n) => {
+            if (!cssText.includes(n)) issues.interactionStates.push(`CSS missing ${n}`);
+          });
+          if (!document.querySelector("[data-toast]")) {
+            issues.interactionStates.push("toast element missing");
+          }
+          if (!root.querySelector("[data-add-all], #qoAddAllBtn")) {
+            if (screen === "qo-desktop") issues.interactionStates.push("Add all control missing");
+          }
+          if (screen === "states" && !root.querySelector("[data-state-sheet]")) {
+            issues.interactionStates.push("state sheet missing");
+          }
+        }
+
+        // 16. Quick Order rail
+        if (screen === "qo-desktop") {
+          const rail = root.querySelector("[data-qo-rail]");
+          if (!rail || !visible(rail)) issues.qoRail.push("qo rail missing");
+          else {
+            const t = rail.textContent || "";
+            if (!/template/i.test(t)) issues.qoRail.push("rail missing templates");
+            if (!/recent|PO-/i.test(t)) issues.qoRail.push("rail missing recent orders");
+          }
+          if (!root.querySelector("[data-qty-group]")) {
+            issues.qoRail.push("qty-group microinteraction missing");
+          }
+        }
+
+        // 17. Messages order context + details
+        if (screen === "messages") {
+          if (!root.querySelector("[data-order-context]")) {
+            issues.msgContext.push("order context card missing");
+          }
+          if (!root.querySelector("[data-msg-details]")) {
+            issues.msgContext.push("details panel missing");
+          } else {
+            const d = root.querySelector("[data-msg-details]").textContent || "";
+            if (!/ship/i.test(d)) issues.msgContext.push("details missing ship date");
+            if (!/INV-1042/i.test(d)) issues.msgContext.push("details missing invoice");
+          }
+        }
+
         function parseMoneyLocal(text) {
           const out = [];
           if (!text) return out;
@@ -707,6 +820,11 @@ async function main() {
       ["single-accent", result.singleAccent],
       ["status-pill", result.statusPill],
       ["image-contain", result.imageContain],
+      ["multi-line", result.multiLine],
+      ["ia", result.ia],
+      ["interaction-css", result.interactionStates],
+      ["qo-rail", result.qoRail],
+      ["msg-context", result.msgContext],
     ];
     for (const [name, list] of checks) {
       // Screen-scoped checks: skip empty N/A as PASS only when relevant
@@ -723,10 +841,92 @@ async function main() {
         "money-align": ["qo-desktop", "cart", "invoices"],
         "tabular-nums": ["qo-desktop", "catalog", "cart", "invoices", "messages", "qo-mobile"],
         "single-accent": ["qo-desktop", "catalog", "cart", "invoices", "messages"],
+        "multi-line": ["qo-desktop", "cart", "invoices", "messages"],
+        "ia": ["qo-desktop", "catalog", "invoices", "messages"],
+        "interaction-css": ["qo-desktop"],
+        "qo-rail": ["qo-desktop"],
+        "msg-context": ["messages"],
       };
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
     }
+  }
+
+  // Interactive: Add all increments cart badge and shows toast
+  {
+    await page.evaluate(() => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === "qo-desktop");
+      });
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(100);
+    const before = await page.evaluate(() => {
+      const badge = document.querySelector("[data-cart-count]");
+      return badge ? parseInt(badge.textContent || "0", 10) : -1;
+    });
+    await page.click("[data-add-all], #qoAddAllBtn");
+    await page.waitForTimeout(200);
+    const after = await page.evaluate(() => {
+      const badge = document.querySelector("[data-cart-count]");
+      const toast = document.querySelector("[data-toast]");
+      const toastShown =
+        toast &&
+        !toast.hasAttribute("hidden") &&
+        (toast.classList.contains("show") || getComputedStyle(toast).opacity !== "0");
+      return {
+        count: badge ? parseInt(badge.textContent || "0", 10) : -1,
+        toastShown: !!toastShown,
+        toastText: toast ? toast.textContent || "" : "",
+      };
+    });
+    const expected = ledger.cartCountAfterAdd || ledger.orderLines.length;
+    record(
+      "qo-desktop",
+      "cart-increment",
+      after.count > before && after.count === expected,
+      `badge ${before}→${after.count} (want ${expected})`
+    );
+    record(
+      "qo-desktop",
+      "toast-success",
+      after.toastShown && /added|cart/i.test(after.toastText),
+      after.toastShown ? after.toastText.trim().slice(0, 60) : "toast not shown"
+    );
+  }
+
+  // Catalog recommended why + view toggle
+  {
+    await page.evaluate(() => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === "catalog");
+      });
+    });
+    await page.waitForTimeout(100);
+    const cat = await page.evaluate(() => {
+      const whys = [...document.querySelectorAll("[data-screen='catalog'] .why, [data-screen='catalog'] .rec-card .why")];
+      const toggle = document.querySelector("[data-view-toggle]");
+      const listBtn = document.querySelector('[data-view-toggle] [data-view="list"]');
+      if (listBtn) listBtn.click();
+      const listOn = !!document.querySelector("[data-catalog-list].is-on, .catalog-list.is-on, [data-view='list'].on");
+      return {
+        whyCount: whys.filter((el) => (el.textContent || "").trim().length > 8).length,
+        hasToggle: !!toggle,
+        listOn,
+      };
+    });
+    record(
+      "catalog",
+      "rec-why",
+      cat.whyCount >= 3,
+      `why lines=${cat.whyCount}`
+    );
+    record(
+      "catalog",
+      "view-toggle",
+      cat.hasToggle && cat.listOn,
+      cat.hasToggle ? (cat.listOn ? "list on" : "list not activated") : "toggle missing"
+    );
   }
 
   // Print table
