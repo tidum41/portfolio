@@ -1,0 +1,332 @@
+/* Card lab — isolated from site chrome. Flat quiet canvas only. */
+
+.card-lab {
+  --cl-bg: #f4f4f4;
+  --cl-surface: #ffffff;
+  --cl-primary: #111111;
+  --cl-secondary: #5c5c5c;
+  --cl-tertiary: #6b6b6b;
+  --cl-hairline: rgba(0, 0, 0, 0.08);
+  --cl-media-0: #e6e6e6;
+  --cl-media-1: #e3e6ea;
+  --cl-media-2: #e9e4de;
+  --cl-page-pad: 48px;
+  --cl-section-gap: 96px;
+  --cl-variant-gap: 48px;
+  --cl-col: 360px;
+  --cl-max: 1180px;
+
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: var(--cl-page-pad);
+  background: var(--cl-bg);
+  color: var(--cl-primary);
+  font-family: var(--font-areal), Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+.card-lab *,
+.card-lab *::before,
+.card-lab *::after {
+  box-sizing: border-box;
+}
+
+.card-lab[data-theme="dark"] {
+  --cl-bg: #141414;
+  --cl-surface: #1e1e1e;
+  --cl-primary: #f2f2f2;
+  --cl-secondary: #a3a3a3;
+  --cl-tertiary: #969696;
+  --cl-hairline: rgba(255, 255, 255, 0.08);
+  --cl-media-0: #2a2a2a;
+  --cl-media-1: #272b30;
+  --cl-media-2: #2e2a26;
+}
+
+.card-lab__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size:
+    4px 4px,
+    4px 4px,
+    24px 24px,
+    24px 24px;
+}
+
+.card-lab[data-theme="dark"] .card-lab__grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+}
+
+.card-lab__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--cl-max);
+}
+
+.card-lab__title {
+  margin: 0 0 48px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--cl-secondary);
+}
+
+.card-lab__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cl-section-gap);
+}
+
+.card-lab__section-head {
+  margin: 0 0 24px;
+}
+
+.card-lab__section-name {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
+.card-lab__section-intent {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--cl-secondary);
+}
+
+.card-lab__row {
+  display: grid;
+  grid-template-columns: repeat(3, var(--cl-col));
+  gap: var(--cl-variant-gap);
+  align-items: stretch;
+  justify-content: start;
+}
+
+.card-lab__variant {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-lab__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 100%;
+}
+
+.card-lab__spec {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--cl-tertiary);
+}
+
+/* Direction 1 — framed inset */
+.card-lab__frame {
+  background: var(--cl-surface);
+  /* hairline via inset box-shadow only */
+  box-shadow: inset 0 0 0 1px var(--cl-hairline);
+  width: 100%;
+}
+
+.card-lab__frame-media {
+  width: 100%;
+  display: block;
+}
+
+.card-lab__frame-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-lab__frame-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--cl-primary);
+  line-height: 20px;
+}
+
+.card-lab__frame-desc {
+  margin: 0;
+  font-weight: 400;
+  color: var(--cl-secondary);
+  line-height: 20px;
+}
+
+/* Direction 2 — edge tiles */
+.card-lab__tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+.card-lab__tile-media {
+  width: 100%;
+  display: block;
+}
+
+.card-lab__tile-caption {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-lab__tile-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--cl-primary);
+  line-height: 20px;
+}
+
+.card-lab__tile-desc {
+  margin: 0;
+  font-weight: 400;
+  color: var(--cl-secondary);
+  line-height: 20px;
+}
+
+/* Direction 3 — text-first row */
+.card-lab__text-row {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  background: var(--cl-surface);
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 16px;
+}
+
+.card-lab__text-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-lab__text-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--cl-primary);
+  line-height: 20px;
+}
+
+.card-lab__text-desc {
+  margin: 0;
+  font-weight: 400;
+  color: var(--cl-secondary);
+  line-height: 20px;
+}
+
+.card-lab__preview {
+  flex: 0 0 96px;
+  width: 96px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.card-lab__preview-media {
+  width: 100%;
+  display: block;
+}
+
+/* Fine pointer: preview hidden until hover; opacity + 4px translate only */
+@media (hover: hover) and (pointer: fine) {
+  .card-lab__preview {
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+  }
+
+  .card-lab__text-row:hover .card-lab__preview,
+  .card-lab__text-row:focus-within .card-lab__preview {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Touch / no-hover: preview always inline under text */
+@media (hover: none), (pointer: coarse) {
+  .card-lab__text-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-lab__preview {
+    flex: 0 0 auto;
+    width: 100%;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lab__preview {
+    transition: none !important;
+  }
+}
+
+/* Placeholder media block */
+.card-lab__media {
+  position: relative;
+  width: 100%;
+  background: var(--cl-media-0);
+}
+
+.card-lab__media--1 {
+  background: var(--cl-media-1);
+}
+
+.card-lab__media--2 {
+  background: var(--cl-media-2);
+}
+
+.card-lab__media-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  background: color-mix(in srgb, var(--cl-primary) 12%, transparent);
+}
+
+@media (max-width: 900px) {
+  .card-lab {
+    --cl-page-pad: 16px;
+    --cl-variant-gap: 48px;
+  }
+
+  .card-lab__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-lab__variant {
+    width: 100%;
+  }
+}

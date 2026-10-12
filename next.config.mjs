@@ -12,6 +12,9 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Keep the Next.js "Issue" badge off every route (card-lab screenshots).
+  devIndicators: false,
+
   // Required for Sanity Studio (mounted at /studio, a real production route)
   // — @sanity/ui and the sanity package both use styled-components
   // internally at runtime, this isn't for our own app code. This transform

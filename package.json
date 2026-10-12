@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "studio": "sanity dev",
     "seed:sviz": "node scripts/seed-sviz.mjs",
-    "bench:nav": "node scripts/bench-nav-jank.cjs"
+    "bench:nav": "node scripts/bench-nav-jank.cjs",
+    "verify:card-lab": "node scripts/verify-card-lab.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

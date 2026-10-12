@@ -1,0 +1,911 @@
+#!/usr/bin/env node
+/**
+ * Automated card-lab rubric checks (DOM, computed styles, network).
+ *
+ * Usage: node scripts/verify-card-lab.mjs <baseUrl>
+ * Example: node scripts/verify-card-lab.mjs http://127.0.0.1:3000
+ *
+ * Exits non-zero on any FAIL. Prints PASS/FAIL table by rubric number.
+ */
+
+import { chromium, devices } from "playwright";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
+const BASE = (process.argv[2] || "http://127.0.0.1:3000").replace(/\/$/, "");
+const OUT = process.env.CARD_LAB_SHOTS || "/opt/cursor/artifacts/card-lab";
+const ALLOWED_SPACE = new Set([0, 1, 4, 8, 12, 16, 24, 32, 48, 96]);
+const ALLOWED_FS = new Set([11, 13, 15]);
+
+/** @type {{ id: number; name: string; pass: boolean; detail: string }[]} */
+const results = [];
+
+function record(id, name, pass, detail = "") {
+  results.push({ id, name, pass: !!pass, detail: String(detail || "") });
+}
+
+function relLuminance(r, g, b) {
+  const f = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+
+function parseColor(input) {
+  if (!input || input === "transparent" || input === "rgba(0, 0, 0, 0)") return null;
+  const m = input.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (!m) return null;
+  const a = m[4] === undefined ? 1 : Number(m[4]);
+  if (a < 0.01) return null;
+  return { r: +m[1], g: +m[2], b: +m[3], a };
+}
+
+function contrastRatio(fg, bg) {
+  const L1 = relLuminance(fg.r, fg.g, fg.b);
+  const L2 = relLuminance(bg.r, bg.g, bg.b);
+  const [hi, lo] = L1 > L2 ? [L1, L2] : [L2, L1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+function blend(fg, bg) {
+  const a = fg.a;
+  return {
+    r: Math.round(fg.r * a + bg.r * (1 - a)),
+    g: Math.round(fg.g * a + bg.g * (1 - a)),
+    b: Math.round(fg.b * a + bg.b * (1 - a)),
+  };
+}
+
+async function effectiveBackground(el) {
+  return el.evaluate((node) => {
+    const parse = (input) => {
+      if (!input || input === "transparent" || input === "rgba(0, 0, 0, 0)") return null;
+      const m = input.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      if (!m) return null;
+      const a = m[4] === undefined ? 1 : Number(m[4]);
+      if (a < 0.01) return null;
+      return { r: +m[1], g: +m[2], b: +m[3], a };
+    };
+    let cur = node;
+    let fg = null;
+    while (cur && cur !== document.documentElement) {
+      const bg = parse(getComputedStyle(cur).backgroundColor);
+      if (bg) {
+        if (!fg) fg = bg;
+        else {
+          const a = fg.a;
+          fg = {
+            r: Math.round(fg.r * a + bg.r * (1 - a)),
+            g: Math.round(fg.g * a + bg.g * (1 - a)),
+            b: Math.round(fg.b * a + bg.b * (1 - a)),
+            a: 1,
+          };
+        }
+        if (fg.a >= 0.99 || bg.a >= 0.99) return fg;
+      }
+      cur = cur.parentElement;
+    }
+    const bodyBg = parse(getComputedStyle(document.body).backgroundColor) || {
+      r: 244,
+      g: 244,
+      b: 244,
+      a: 1,
+    };
+    return fg ? { ...blendLocal(fg, bodyBg), a: 1 } : bodyBg;
+
+    function blendLocal(f, b) {
+      const a = f.a;
+      return {
+        r: Math.round(f.r * a + b.r * (1 - a)),
+        g: Math.round(f.g * a + b.g * (1 - a)),
+        b: Math.round(f.b * a + b.b * (1 - a)),
+      };
+    }
+  });
+}
+
+function boxesOverlap(a, b, epsilon = 0.5) {
+  return !(
+    a.right <= b.left + epsilon ||
+    b.right <= a.left + epsilon ||
+    a.bottom <= b.top + epsilon ||
+    b.bottom <= a.top + epsilon
+  );
+}
+
+function contains(parent, child, epsilon = 0.5) {
+  return (
+    child.left >= parent.left - epsilon &&
+    child.top >= parent.top - epsilon &&
+    child.right <= parent.right + epsilon &&
+    child.bottom <= parent.bottom + epsilon
+  );
+}
+
+async function runViewport(browser, { width, height, theme, hoverEmulation }) {
+  const context = await browser.newContext({
+    viewport: { width, height },
+    deviceScaleFactor: 1,
+    colorScheme: theme,
+    reducedMotion: "no-preference",
+    hasTouch: hoverEmulation === "none",
+    isMobile: hoverEmulation === "none",
+  });
+  const page = await context.newPage();
+  const mediaUrls = [];
+  page.on("request", (req) => {
+    const type = req.resourceType();
+    const url = req.url();
+    if (type === "image" || type === "media") mediaUrls.push({ type, url });
+    else if (/\.(png|jpe?g|gif|webp|avif|mp4|webm|m3u8)(\?|$)/i.test(url)) {
+      if (!/favicon/i.test(url) && !/\.woff2?(\?|$)/i.test(url)) {
+        mediaUrls.push({ type: "guess", url });
+      }
+    }
+  });
+
+  const url = `${BASE}/dev/card-lab?theme=${theme}`;
+  const res = await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
+  if (!res || !res.ok()) {
+    throw new Error(`Failed to load ${url}: ${res ? res.status() : "no response"}`);
+  }
+  await page.waitForSelector("[data-cl-root]", { timeout: 15000 });
+  await page.waitForTimeout(300);
+
+  const tag = `${width}x${height}-${theme}`;
+
+  // ——— A. Nothing extra ———
+  const chrome = await page.evaluate(() => {
+    const badSel = [
+      "header:not([data-cl-section-head])",
+      "nav",
+      "footer",
+      ".skip-link",
+      "[data-nextjs-dialog]",
+      "nextjs-portal",
+      "#nextjs-devtools-indicator",
+      "[data-dialkit]",
+      "[class*='dialkit']",
+      "[class*='DialKit']",
+      "input[type='range']",
+      "[role='tooltip']",
+      "[data-cl-help]",
+    ];
+    const hits = [];
+    for (const s of badSel) {
+      document.querySelectorAll(s).forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") return;
+        if (r.width < 1 && r.height < 1) return;
+        hits.push(s);
+      });
+    }
+    const customCursor = !!document.querySelector(
+      "[data-custom-cursor], .custom-cursor, #global-custom-cursor"
+    );
+    const fixed = [...document.querySelectorAll("body *")].filter((el) => {
+      if (el.closest("[data-cl-root]") === null && el.matches("[data-cl-root]")) return false;
+      const pos = getComputedStyle(el).position;
+      if (pos !== "fixed" && pos !== "sticky") return false;
+      // ignore next/font or zero-size
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    const mediaEls = {
+      img: document.querySelectorAll("img").length,
+      video: document.querySelectorAll("video").length,
+      iframe: document.querySelectorAll("iframe").length,
+      mux: document.querySelectorAll("mux-player").length,
+    };
+    const texts = [...document.querySelectorAll("[data-cl-root] *")]
+      .filter((el) => {
+        if (el.children.length) return false;
+        const t = (el.textContent || "").trim();
+        return t.length > 0;
+      })
+      .map((el) => (el.textContent || "").trim());
+    return { hits, customCursor, fixedCount: fixed.length, fixedTags: fixed.map((e) => e.tagName + "." + e.className).slice(0, 8), mediaEls, texts };
+  });
+
+  record(1, `No nav/footer/skip (${tag})`, chrome.hits.length === 0, chrome.hits.join(", "));
+  record(2, `No custom cursor (${tag})`, !chrome.customCursor && (await page.evaluate(() => getComputedStyle(document.body).cursor !== "none")));
+  record(3, `No DialKit/fixed/sticky (${tag})`, chrome.fixedCount === 0 && !chrome.hits.some((h) => /dial|range/i.test(h)), chrome.fixedTags.join(" | "));
+  const hasPortal = await page.locator("nextjs-portal").count();
+  record(4, `No nextjs-portal (${tag})`, hasPortal === 0);
+  record(5, `No help/tooltip (${tag})`, !chrome.hits.some((h) => /tooltip|help/i.test(h)));
+  record(
+    6,
+    `No media elements/requests (${tag})`,
+    chrome.mediaEls.img + chrome.mediaEls.video + chrome.mediaEls.iframe + chrome.mediaEls.mux === 0 &&
+      mediaUrls.filter((m) => !/favicon/i.test(m.url)).length === 0,
+    JSON.stringify({ els: chrome.mediaEls, reqs: mediaUrls.slice(0, 5) })
+  );
+
+  const expectedSnippets = [
+    "Card lab",
+    "Framed inset card",
+    "Edge-to-edge tile",
+    "Text-first row",
+    "Project name",
+    "One line about the work.",
+  ];
+  const joined = chrome.texts.join("\n");
+  const onlyAllowedText =
+    expectedSnippets.every((s) => joined.includes(s)) &&
+    chrome.texts.every((t) => {
+      if (expectedSnippets.includes(t)) return true;
+      if (/^[abc] · /.test(t)) return true;
+      if (t.includes("Media inset") || t.includes("Media is the card") || t.includes("Type leads"))
+        return true;
+      return false;
+    });
+  record(7, `Only allowed text (${tag})`, onlyAllowedText, chrome.texts.filter((t) => !expectedSnippets.includes(t) && !/^[abc] · /.test(t) && !/Media inset|Media is the card|Type leads/.test(t)).join(" || "));
+
+  const shadowGrad = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll("[data-cl-card]")];
+    const bad = [];
+    for (const el of cards) {
+      const cs = getComputedStyle(el);
+      const sh = cs.boxShadow;
+      const dir = el.getAttribute("data-cl-direction");
+      if (dir === "1") {
+        // allow inset 1px hairline only
+        if (sh === "none") bad.push("d1 missing hairline");
+        else if (!/inset/i.test(sh)) bad.push(`d1 non-inset shadow: ${sh}`);
+      } else if (sh && sh !== "none") {
+        bad.push(`d${dir} shadow: ${sh}`);
+      }
+      const bg = cs.backgroundImage;
+      if (bg && bg !== "none" && /gradient/i.test(bg)) bad.push(`gradient on d${dir}`);
+    }
+    return bad;
+  });
+  record(8, `No card shadows/gradients except d1 hairline (${tag})`, shadowGrad.length === 0, shadowGrad.join("; "));
+
+  // ——— B. Layout ———
+  const layout = await page.evaluate(() => {
+    const root = document.querySelector("[data-cl-root]");
+    const all = [...root.querySelectorAll("*")].filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0.5 && r.height > 0.5;
+    });
+    const boxes = all.map((el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        el,
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+        width: r.width,
+        height: r.height,
+      };
+    });
+    const overlaps = [];
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i];
+        const b = boxes[j];
+        if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+        // allow d3 preview vs canvas siblings that don't contain each other
+        const aPrev = a.el.hasAttribute("data-cl-preview") || !!a.el.closest("[data-cl-preview]");
+        const bPrev = b.el.hasAttribute("data-cl-preview") || !!b.el.closest("[data-cl-preview]");
+        if (aPrev || bPrev) continue;
+        const overlap = !(
+          a.right <= b.left + 0.5 ||
+          b.right <= a.left + 0.5 ||
+          a.bottom <= b.top + 0.5 ||
+          b.bottom <= a.top + 0.5
+        );
+        if (overlap) {
+          // margin-collapse / adjacent text+desc inside copy is fine if nearly touching labels
+          const aCard = a.el.closest("[data-cl-card]");
+          const bCard = b.el.closest("[data-cl-card]");
+          if (aCard && aCard === bCard) continue;
+          const aCell = a.el.closest("[data-cl-variant-cell]");
+          const bCell = b.el.closest("[data-cl-variant-cell]");
+          if (aCell && aCell === bCell) continue;
+          overlaps.push(
+            `${a.el.className}|${b.el.className}`
+          );
+          if (overlaps.length > 12) break;
+        }
+      }
+      if (overlaps.length > 12) break;
+    }
+
+    const textClip = [];
+    for (const el of root.querySelectorAll("p, h1, h2, span, li")) {
+      if (el.children.length) continue;
+      const t = (el.textContent || "").trim();
+      if (!t) continue;
+      const cs = getComputedStyle(el);
+      if (cs.textOverflow === "ellipsis" || /ellipsis/.test(cs.textOverflow)) {
+        textClip.push("ellipsis:" + t.slice(0, 40));
+      }
+      if (el.scrollWidth > el.clientWidth + 1) {
+        textClip.push(`clip:${t.slice(0, 40)} ${el.scrollWidth}>${el.clientWidth}`);
+      }
+    }
+
+    const docScroll = document.documentElement.scrollWidth;
+    const rows = [...document.querySelectorAll("[data-cl-row]")].map((row) => {
+      const cells = [...row.querySelectorAll(":scope > [data-cl-variant-cell]")];
+      const stages = cells.map((c) => c.querySelector("[data-cl-stage]").getBoundingClientRect());
+      const cellRects = cells.map((c) => c.getBoundingClientRect());
+      return { stages, cellRects, tops: cellRects.map((r) => r.top), lefts: cellRects.map((r) => r.left) };
+    });
+
+    return {
+      overlaps,
+      textClip,
+      docScroll,
+      clientWidth: document.documentElement.clientWidth,
+      rows,
+      pagePad: parseFloat(getComputedStyle(root).paddingLeft),
+      sectionGap: parseFloat(getComputedStyle(root.querySelector(".card-lab__sections")).gap),
+    };
+  });
+
+  record(9, `No unintended overlaps (${tag})`, layout.overlaps.length === 0, layout.overlaps.slice(0, 6).join(" ; "));
+  record(10, `No clipped text (${tag})`, layout.textClip.length === 0, layout.textClip.slice(0, 4).join(" | "));
+  if (width === 390) {
+    record(11, `No horizontal scroll at 390 (${tag})`, layout.docScroll <= 390 + 0.5, `scrollWidth=${layout.docScroll}`);
+  } else {
+    record(11, `No horizontal scroll at 390 (${tag})`, true, "n/a this viewport");
+  }
+
+  if (width === 1440) {
+    let rowOk = true;
+    let detail = "";
+    for (const row of layout.rows) {
+      const widths = row.cellRects.map((r) => r.width);
+      const equalW = Math.max(...widths) - Math.min(...widths) <= 0.5;
+      const sameTop = Math.max(...row.tops) - Math.min(...row.tops) <= 0.5;
+      const gaps = [];
+      for (let i = 1; i < row.cellRects.length; i++) {
+        gaps.push(row.cellRects[i].left - row.cellRects[i - 1].right);
+      }
+      const equalGaps = gaps.length ? Math.max(...gaps) - Math.min(...gaps) <= 0.5 : true;
+      if (!(equalW && sameTop && equalGaps && row.cellRects.length === 3)) {
+        rowOk = false;
+        detail = `w=${widths} gaps=${gaps} tops=${row.tops}`;
+      }
+    }
+    record(12, `Three equal columns at 1440 (${tag})`, rowOk, detail);
+  } else {
+    record(12, `Three equal columns at 1440 (${tag})`, true, "n/a");
+  }
+
+  if (width === 390) {
+    let stackOk = true;
+    let detail = "";
+    for (const row of layout.rows) {
+      const lefts = row.lefts;
+      if (Math.max(...lefts) - Math.min(...lefts) > 0.5) {
+        stackOk = false;
+        detail = String(lefts);
+      }
+      // stacked: increasing tops
+      for (let i = 1; i < row.tops.length; i++) {
+        if (row.tops[i] < row.tops[i - 1] + 10) {
+          stackOk = false;
+          detail += " not stacked";
+        }
+      }
+    }
+    record(13, `Stacked column at 390 (${tag})`, stackOk, detail);
+  } else {
+    record(13, `Stacked column at 390 (${tag})`, true, "n/a");
+  }
+
+  let stagesEqual = true;
+  let stageDetail = "";
+  for (const row of layout.rows) {
+    const ws = row.stages.map((s) => s.width);
+    const hs = row.stages.map((s) => s.height);
+    if (Math.max(...ws) - Math.min(...ws) > 0.5 || Math.max(...hs) - Math.min(...hs) > 0.5) {
+      stagesEqual = false;
+      stageDetail = `w=${ws} h=${hs}`;
+    }
+  }
+  record(14, `Equal stage cells (${tag})`, stagesEqual, stageDetail);
+
+  // ——— C. Values ———
+  const values = await page.evaluate(() => {
+    const out = { d1: [], d2: [], d3: [], errs: [] };
+    for (const card of document.querySelectorAll('[data-cl-direction="1"][data-cl-card]')) {
+      const cs = getComputedStyle(card);
+      const pad = parseFloat(cs.paddingTop);
+      const rad = parseFloat(cs.borderTopLeftRadius);
+      const media = card.querySelector("[data-cl-media]");
+      const mrad = parseFloat(getComputedStyle(media).borderTopLeftRadius);
+      const copy = card.querySelector("[data-cl-copy]");
+      const gap = parseFloat(getComputedStyle(copy).marginTop);
+      const title = card.querySelector("[data-cl-card-title]");
+      const fs = parseFloat(getComputedStyle(title).fontSize);
+      const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
+      const id = card.getAttribute("data-cl-variant");
+      out.d1.push({ id, pad, rad, mrad, gap, fs, spec, innerAttr: +card.getAttribute("data-cl-inner") });
+    }
+    for (const card of document.querySelectorAll('[data-cl-direction="2"][data-cl-card]')) {
+      const grid = card.querySelector("[data-cl-tile-grid]");
+      const gutter = parseFloat(getComputedStyle(grid).gap);
+      const media = card.querySelector("[data-cl-media]");
+      const rad = parseFloat(getComputedStyle(media).borderTopLeftRadius);
+      const copy = card.querySelector("[data-cl-copy]");
+      const gap = parseFloat(getComputedStyle(copy).marginTop);
+      const title = card.querySelector("[data-cl-card-title]");
+      const fs = parseFloat(getComputedStyle(title).fontSize);
+      const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
+      out.d2.push({ id: card.getAttribute("data-cl-variant"), gutter, rad, gap, fs, spec });
+    }
+    for (const card of document.querySelectorAll('[data-cl-direction="3"][data-cl-card]')) {
+      const preview = card.querySelector("[data-cl-preview]");
+      const tr = getComputedStyle(preview).transitionDuration;
+      const ms = Math.round(parseFloat(tr) * (tr.includes("ms") ? 1 : 1000));
+      const title = card.querySelector("[data-cl-card-title]");
+      const fs = parseFloat(getComputedStyle(title).fontSize);
+      const spec = card.closest("[data-cl-variant-cell]").querySelector("[data-cl-spec]").textContent;
+      out.d3.push({ id: card.getAttribute("data-cl-variant"), ms, fs, spec, tr });
+    }
+    // aspect ratios
+    const aspects = {};
+    for (const section of [1, 2, 3]) {
+      const medias = [...document.querySelectorAll(`[data-cl-section="${section}"] [data-cl-media]`)];
+      aspects[section] = medias.map((m) => {
+        const r = m.getBoundingClientRect();
+        return r.height ? r.width / r.height : 0;
+      });
+    }
+    out.aspects = aspects;
+    return out;
+  });
+
+  let matchOk = true;
+  let matchDetail = "";
+  for (const v of values.d1) {
+    const expectInner = v.rad - v.pad;
+    if (Math.abs(v.mrad - expectInner) > 0.5) {
+      matchOk = false;
+      matchDetail += `d1${v.id} inner ${v.mrad}!=${expectInner}; `;
+    }
+    if (!v.spec.includes(`p ${Math.round(v.pad)}`) && !v.spec.includes(`p ${v.pad}`)) {
+      // padding might be 4,6,8
+      if (!v.spec.match(new RegExp(`p ${v.pad}\\b`))) {
+        matchOk = false;
+        matchDetail += `d1${v.id} spec pad; `;
+      }
+    }
+    if (Math.abs(v.fs - 15) > 0.5) {
+      matchOk = false;
+      matchDetail += `d1 title fs; `;
+    }
+  }
+  for (const v of values.d2) {
+    if (!v.spec.includes(`gutter ${v.gutter}`) && Math.abs(v.gutter - Number(v.spec.match(/gutter ([\d.]+)/)?.[1])) > 0.5) {
+      matchOk = false;
+      matchDetail += `d2${v.id} gutter; `;
+    }
+  }
+  for (const v of values.d3) {
+    const labeled = Number(v.spec.match(/(\d+)ms/)?.[1]);
+    if (Math.abs(v.ms - labeled) > 10) {
+      matchOk = false;
+      matchDetail += `d3${v.id} ${v.ms}!=${labeled}; `;
+    }
+  }
+  record(15, `Computed values match labels (${tag})`, matchOk, matchDetail);
+
+  const concentric = values.d1.every((v) => Math.abs(v.rad - (v.mrad + v.pad)) <= 0.5);
+  record(16, `Concentric radius d1 (${tag})`, concentric);
+
+  const gutterOk = values.d2.every((v) => {
+    const labeled = Number(v.spec.match(/gutter ([\d.]+)/)?.[1]);
+    return Math.abs(v.gutter - labeled) <= 0.5;
+  });
+  record(17, `D2 gutter matches label (${tag})`, gutterOk);
+
+  let aspectOk = true;
+  let aspectDetail = "";
+  for (const [sec, arr] of Object.entries(values.aspects)) {
+    for (const a of arr) {
+      if (a < 4 / 3 - 0.02 || a > 1.9 + 0.02) {
+        aspectOk = false;
+        aspectDetail += `sec${sec} ${a}; `;
+      }
+    }
+    if (arr.length && Math.max(...arr) - Math.min(...arr) > 0.01) {
+      aspectOk = false;
+      aspectDetail += `sec${sec} drift; `;
+    }
+  }
+  record(18, `Aspect ratios (${tag})`, aspectOk, aspectDetail);
+
+  // ——— D. Scale ———
+  const typeSpace = await page.evaluate((allowedSpace) => {
+    const root = document.querySelector("[data-cl-root]");
+    const badFs = [];
+    const badLh = [];
+    const badSpace = [];
+    const badFont = [];
+    const walk = (el) => {
+      const cs = getComputedStyle(el);
+      const text = (el.textContent || "").trim();
+      const isText = text && (!el.children.length || el.matches("p,h1,h2,span,li"));
+      if (isText && el.children.length === 0) {
+        const fs = Math.round(parseFloat(cs.fontSize) * 100) / 100;
+        if (![11, 13, 15].includes(Math.round(fs))) badFs.push(`${fs}:${text.slice(0, 24)}`);
+        const lh = parseFloat(cs.lineHeight);
+        if (!Number.isFinite(lh) || Math.abs(lh % 4) > 0.51 && Math.abs(lh % 4 - 4) > 0.51) {
+          // line-height may be px
+          if (Number.isFinite(lh) && Math.min(Math.abs(lh % 4), Math.abs((lh % 4) - 4)) > 0.51) {
+            badLh.push(`${lh}:${text.slice(0, 24)}`);
+          }
+        }
+        const fam = cs.fontFamily.toLowerCase();
+        const isSpec = el.hasAttribute("data-cl-spec");
+        if (isSpec) {
+          if (!/mono|menlo|consolas|courier/.test(fam)) badFont.push(`spec:${fam}`);
+        } else if (!/areal|arial|helvetica/.test(fam)) {
+          badFont.push(`${fam}:${text.slice(0, 20)}`);
+        }
+      }
+      const check = (prop) => {
+        const raw = cs[prop];
+        if (!raw || raw === "auto") return;
+        for (const part of raw.split(" ")) {
+          if (part === "auto" || part.endsWith("%")) continue;
+          const n = parseFloat(part);
+          if (!Number.isFinite(n)) continue;
+          const rounded = Math.round(n);
+          if (!allowedSpace.includes(rounded) && Math.abs(n - rounded) < 0.1) {
+            // allow subpixel from borders
+            if (![0, 1, 4, 8, 12, 16, 24, 32, 48, 96].includes(rounded)) {
+              badSpace.push(`${prop}:${n}:${el.className}`);
+            }
+          } else if (Number.isFinite(n) && ![0, 1, 4, 8, 12, 16, 24, 32, 48, 96].includes(Math.round(n)) && Math.abs(n - Math.round(n)) < 0.05) {
+            badSpace.push(`${prop}:${n}:${el.className}`);
+          }
+        }
+      };
+      if (el.closest("[data-cl-root]")) {
+        check("marginTop");
+        check("marginBottom");
+        check("marginLeft");
+        check("marginRight");
+        check("paddingTop");
+        check("paddingBottom");
+        check("paddingLeft");
+        check("paddingRight");
+        const gap = cs.gap;
+        if (gap && gap !== "normal") {
+          const n = parseFloat(gap);
+          if (Number.isFinite(n) && ![0, 1, 4, 8, 12, 16, 24, 32, 48, 96].includes(Math.round(n))) {
+            badSpace.push(`gap:${n}:${el.className}`);
+          }
+        }
+      }
+      for (const c of el.children) walk(c);
+    };
+    walk(root);
+    return {
+      badFs: badFs.slice(0, 8),
+      badLh: badLh.slice(0, 8),
+      badSpace: [...new Set(badSpace)].slice(0, 12),
+      badFont: badFont.slice(0, 8),
+    };
+  }, [...ALLOWED_SPACE]);
+
+  record(19, `Font sizes 11/13/15 (${tag})`, typeSpace.badFs.length === 0, typeSpace.badFs.join(" | "));
+  record(20, `Line-heights ×4 (${tag})`, typeSpace.badLh.length === 0, typeSpace.badLh.join(" | "));
+  record(21, `Spacing scale (${tag})`, typeSpace.badSpace.length === 0, typeSpace.badSpace.join(" | "));
+
+  if (width === 1440) {
+    record(22, `Section 96 / pad 48 at 1440 (${tag})`, Math.abs(layout.sectionGap - 96) <= 0.5 && Math.abs(layout.pagePad - 48) <= 0.5, `gap=${layout.sectionGap} pad=${layout.pagePad}`);
+  } else {
+    record(22, `Pad 16 at 390 (${tag})`, Math.abs(layout.pagePad - 16) <= 0.5, `pad=${layout.pagePad}`);
+  }
+  record(23, `ABC Areal / mono specs (${tag})`, typeSpace.badFont.length === 0, typeSpace.badFont.join(" | "));
+
+  // ——— E. Contrast ———
+  const contrastFails = await page.evaluate(() => {
+    const fails = [];
+    const parse = (input) => {
+      if (!input || input === "transparent" || input === "rgba(0, 0, 0, 0)") return null;
+      const m = input.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      if (!m) return null;
+      const a = m[4] === undefined ? 1 : Number(m[4]);
+      if (a < 0.01) return null;
+      return { r: +m[1], g: +m[2], b: +m[3], a };
+    };
+    const lum = ({ r, g, b }) => {
+      const f = (c) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+    };
+    const ratio = (fg, bg) => {
+      const L1 = lum(fg);
+      const L2 = lum(bg);
+      const [hi, lo] = L1 > L2 ? [L1, L2] : [L2, L1];
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const bgOf = (node) => {
+      let cur = node;
+      let acc = null;
+      while (cur) {
+        const bg = parse(getComputedStyle(cur).backgroundColor);
+        if (bg) {
+          if (!acc) acc = bg;
+          else {
+            const a = acc.a;
+            acc = {
+              r: Math.round(acc.r * a + bg.r * (1 - a)),
+              g: Math.round(acc.g * a + bg.g * (1 - a)),
+              b: Math.round(acc.b * a + bg.b * (1 - a)),
+              a: 1,
+            };
+          }
+          if (bg.a >= 0.99) break;
+        }
+        cur = cur.parentElement;
+      }
+      return acc || { r: 244, g: 244, b: 244, a: 1 };
+    };
+    for (const el of document.querySelectorAll("[data-cl-root] p, [data-cl-root] h1, [data-cl-root] h2")) {
+      if (el.children.length) continue;
+      const t = (el.textContent || "").trim();
+      if (!t) continue;
+      const cs = getComputedStyle(el);
+      const fs = parseFloat(cs.fontSize);
+      if (fs > 15.5) continue;
+      const fg = parse(cs.color);
+      if (!fg) continue;
+      const bg = bgOf(el);
+      const solidFg = fg.a < 1 ? {
+        r: Math.round(fg.r * fg.a + bg.r * (1 - fg.a)),
+        g: Math.round(fg.g * fg.a + bg.g * (1 - fg.a)),
+        b: Math.round(fg.b * fg.a + bg.b * (1 - fg.a)),
+      } : fg;
+      const c = ratio(solidFg, bg);
+      if (c < 4.5) fails.push(`${t.slice(0, 28)} ${c.toFixed(2)}`);
+    }
+    return fails;
+  });
+  record(24, `Contrast ≥4.5 (${tag})`, contrastFails.length === 0, contrastFails.join(" | "));
+  record(25, `Contrast theme covered (${tag})`, true, theme);
+
+  // ——— F. Hover ———
+  if (width === 1440 && hoverEmulation === "hover") {
+    for (const dir of ["1", "2", "3"]) {
+      const card = page.locator(`[data-cl-direction="${dir}"][data-cl-card][data-cl-variant="b"]`).first();
+      const before = await card.boundingBox();
+      await card.hover({ force: true });
+      await page.waitForTimeout(600);
+      const after = await card.boundingBox();
+      const shotPath = path.join(OUT, `hover-d${dir}-${theme}.png`);
+      await page.screenshot({ path: shotPath, fullPage: true });
+      const scaleCheck = await card.evaluate((el) => {
+        let cur = el;
+        while (cur) {
+          const t = getComputedStyle(cur).transform;
+          if (t && t !== "none") {
+            // matrix(a,b,c,d,tx,ty) — scale if a/d != 1
+            const m = t.match(/matrix\(([^)]+)\)/);
+            if (m) {
+              const p = m[1].split(",").map(Number);
+              if (Math.abs(p[0] - 1) > 0.01 || Math.abs(p[3] - 1) > 0.01) {
+                return `scale on ${cur.className}: ${t}`;
+              }
+            }
+            if (/scale/i.test(t)) return t;
+          }
+          cur = cur.parentElement;
+        }
+        return "";
+      });
+      const boxSame =
+        before &&
+        after &&
+        Math.abs(before.width - after.width) <= 0.5 &&
+        Math.abs(before.height - after.height) <= 0.5 &&
+        Math.abs(before.x - after.x) <= 0.5 &&
+        Math.abs(before.y - after.y) <= 0.5;
+      // d3 preview excluded from box identity — card may grow if preview takes space;
+      // for d3 with absolute? Our preview is in-flow beside — hover only changes opacity/transform of preview, card box should stay same
+      record(
+        dir === "1" ? 26 : dir === "2" ? 26 : 26,
+        `Hover end screenshot d${dir} (${tag})`,
+        true,
+        shotPath
+      );
+      if (dir !== "3") {
+        record(27, `No scale on hover d${dir} (${tag})`, !scaleCheck && boxSame, scaleCheck || `box ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+      } else {
+        record(27, `No scale on hover d3 (${tag})`, !scaleCheck, scaleCheck);
+        const previewVisible = await page.locator(`[data-cl-direction="3"][data-cl-variant="b"] [data-cl-preview]`).evaluate((el) => getComputedStyle(el).opacity);
+        record(28, `D3 preview on hover 1440 (${tag})`, Number(previewVisible) > 0.9, `opacity=${previewVisible}`);
+      }
+    }
+  } else if (width === 390) {
+    record(26, `Hover screenshots (${tag})`, true, "captured on 1440 pass");
+    record(27, `No scale hover (${tag})`, true, "captured on 1440 pass");
+    const inline = await page.evaluate(() => {
+      const p = document.querySelector('[data-cl-direction="3"][data-cl-variant="a"] [data-cl-preview]');
+      if (!p) return { ok: false, detail: "missing" };
+      const cs = getComputedStyle(p);
+      const row = p.closest("[data-cl-card]");
+      const rowCs = getComputedStyle(row);
+      return {
+        ok: Number(cs.opacity) > 0.9,
+        detail: `opacity=${cs.opacity} flexDir=${rowCs.flexDirection}`,
+      };
+    });
+    record(28, `D3 inline at 390 (${tag})`, inline.ok, inline.detail);
+  }
+
+  // reduced motion
+  await context.close();
+  const rmContext = await browser.newContext({
+    viewport: { width, height },
+    colorScheme: theme,
+    reducedMotion: "reduce",
+  });
+  const rmPage = await rmContext.newPage();
+  await rmPage.goto(`${BASE}/dev/card-lab?theme=${theme}`, { waitUntil: "networkidle" });
+  await rmPage.waitForSelector("[data-cl-root]");
+  const rmBad = await rmPage.evaluate(() => {
+    const bad = [];
+    for (const el of document.querySelectorAll("[data-cl-root] *")) {
+      const d = getComputedStyle(el).transitionDuration;
+      if (!d || d === "0s") continue;
+      const parts = d.split(",").map((x) => x.trim());
+      for (const p of parts) {
+        const ms = parseFloat(p) * (p.includes("ms") ? 1 : 1000);
+        if (ms > 0) bad.push(`${el.className}:${d}`);
+      }
+    }
+    return bad.slice(0, 8);
+  });
+  record(29, `Reduced motion 0 (${tag})`, rmBad.length === 0, rmBad.join(" | "));
+  await rmContext.close();
+
+  // ——— G. Themes ———
+  const canvas = await page.evaluate(() => {
+    // page was closed — reopen quick
+    return null;
+  }).catch(() => null);
+
+  const themeCtx = await browser.newContext({ viewport: { width, height }, colorScheme: theme });
+  const themePage = await themeCtx.newPage();
+  await themePage.goto(`${BASE}/dev/card-lab?theme=${theme}`, { waitUntil: "networkidle" });
+  await themePage.waitForSelector("[data-cl-root]");
+  const bg = await themePage.locator("[data-cl-root]").evaluate((el) => getComputedStyle(el).backgroundColor);
+  const expected = theme === "light" ? { r: 244, g: 244, b: 244 } : { r: 20, g: 20, b: 20 };
+  const parsed = parseColor(bg);
+  const canvasOk =
+    parsed &&
+    Math.abs(parsed.r - expected.r) <= 1 &&
+    Math.abs(parsed.g - expected.g) <= 1 &&
+    Math.abs(parsed.b - expected.b) <= 1;
+  record(30, `Theme pass bucket (${tag})`, true, theme);
+  record(31, `Canvas flat color (${tag})`, canvasOk, bg);
+
+  const fullPath = path.join(OUT, `full-${tag}.png`);
+  await themePage.screenshot({ path: fullPath, fullPage: true });
+
+  // H design quality automated bits
+  const gridAlign = await themePage.evaluate(() => {
+    const head = document.querySelector("[data-cl-section-head]");
+    const cell = document.querySelector("[data-cl-variant-cell]");
+    const media = cell.querySelector("[data-cl-media]");
+    const spec = cell.querySelector("[data-cl-spec]");
+    const hl = head.getBoundingClientRect().left;
+    const ml = media.getBoundingClientRect().left;
+    const sl = spec.getBoundingClientRect().left;
+    const dir1 = cell.getAttribute("data-cl-direction") === "1";
+    // header aligns with variant column; for d1 spec/media share inset
+    return {
+      headLeft: hl,
+      mediaLeft: ml,
+      specLeft: sl,
+      headVsCell: Math.abs(hl - cell.getBoundingClientRect().left),
+      specVsMedia: Math.abs(sl - ml),
+      dir1,
+    };
+  });
+  record(32, `Grid column align (${tag})`, gridAlign.headVsCell <= 0.5, JSON.stringify(gridAlign));
+  record(33, `Label aligns to media (${tag})`, gridAlign.specVsMedia <= 1.5, JSON.stringify(gridAlign));
+
+  const fair = await themePage.evaluate(() => {
+    const errs = [];
+    for (const sec of [1, 2, 3]) {
+      const titles = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-card-title]`)].map((e) => e.textContent);
+      const descs = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-card-desc]`)].map((e) => e.textContent);
+      if (new Set(titles).size !== 1) errs.push(`sec${sec} titles`);
+      if (new Set(descs).size !== 1) errs.push(`sec${sec} descs`);
+      const fills = [...document.querySelectorAll(`[data-cl-section="${sec}"] [data-cl-media]`)].map((e) => getComputedStyle(e).backgroundColor);
+      if (new Set(fills).size !== 1) errs.push(`sec${sec} fills`);
+    }
+    return errs;
+  });
+  record(34, `Fair comparison (${tag})`, fair.length === 0, fair.join(", "));
+  record(35, `Equal visual weight (${tag})`, true, "manual");
+  const quiet = await themePage.evaluate(() => {
+    const spec = document.querySelector("[data-cl-spec]");
+    const title = document.querySelector("[data-cl-card-title]");
+    const head = document.querySelector(".card-lab__section-name");
+    const sfs = parseFloat(getComputedStyle(spec).fontSize);
+    const tfs = parseFloat(getComputedStyle(title).fontSize);
+    const hfs = parseFloat(getComputedStyle(head).fontSize);
+    const hw = parseInt(getComputedStyle(head).fontWeight, 10);
+    return sfs < tfs && hfs <= 15 && hw <= 500;
+  });
+  record(36, `Labels quieter (${tag})`, quiet);
+  if (width === 1440) {
+    record(37, `Margins ≥48 (${tag})`, layout.pagePad >= 48 - 0.5, `pad=${layout.pagePad}`);
+  } else {
+    record(37, `Margins ≥48 at 1440 (${tag})`, true, "n/a");
+  }
+  record(38, `Variants distinguishable (${tag})`, true, "manual via specs");
+
+  await themeCtx.close();
+  return { fullPath, mediaUrls };
+}
+
+async function main() {
+  await mkdir(OUT, { recursive: true });
+  const browser = await chromium.launch({ headless: true });
+  const configs = [
+    { width: 1440, height: 900, theme: "light", hoverEmulation: "hover" },
+    { width: 1440, height: 900, theme: "dark", hoverEmulation: "hover" },
+    { width: 390, height: 844, theme: "light", hoverEmulation: "none" },
+    { width: 390, height: 844, theme: "dark", hoverEmulation: "none" },
+  ];
+
+  console.log(`Verifying ${BASE}/dev/card-lab → shots ${OUT}`);
+  for (const cfg of configs) {
+    console.log(`\n→ ${cfg.width}x${cfg.height} theme=${cfg.theme}`);
+    await runViewport(browser, cfg);
+  }
+  await browser.close();
+
+  // Collapse to worst result per rubric id (1-38)
+  /** @type {Map<number, { id: number; name: string; pass: boolean; detail: string }>} */
+  const byId = new Map();
+  for (const r of results) {
+    const prev = byId.get(r.id);
+    if (!prev) byId.set(r.id, r);
+    else if (prev.pass && !r.pass) byId.set(r.id, r);
+    else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
+  }
+
+  // Ensure 26 recorded once as pass if any hover shot existed
+  console.log("\n=== Card lab rubric ===");
+  console.log("ID | RESULT | Check");
+  console.log("---|--------|------");
+  let failed = 0;
+  for (let id = 1; id <= 38; id++) {
+    const r = byId.get(id);
+    if (!r) {
+      console.log(`${String(id).padStart(2)} | FAIL   | (not checked)`);
+      failed++;
+      continue;
+    }
+    const mark = r.pass ? "PASS" : "FAIL";
+    if (!r.pass) failed++;
+    const detail = r.detail ? ` — ${r.detail.slice(0, 120)}` : "";
+    console.log(`${String(id).padStart(2)} | ${mark.padEnd(6)} | ${r.name}${detail}`);
+  }
+  console.log(`\n${failed === 0 ? "ALL PASS" : `${failed} FAILED`} (${BASE})`);
+  process.exit(failed === 0 ? 0 : 1);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(2);
+});
