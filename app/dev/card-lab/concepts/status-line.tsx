@@ -12,13 +12,18 @@ export type StatusLineVariant = ConceptVariant & {
   linePosition: "under-media" | "under-title" | "on-media";
 };
 
-function statusText(sep: StatusLineVariant["separator"]): string {
+function statusText(
+  sep: StatusLineVariant["separator"],
+  right: string = PROJECT.status
+): string {
   const left = "sviz";
-  const right = PROJECT.status;
   if (sep === "pipe") return `${left} | ${right}`;
   if (sep === "dot") return `${left} · ${right}`;
   return `${left} / ${right}`;
 }
+
+/** Quiet hover: status right-hand shifts from shipped date → live state. */
+const STATUS_HOVER = "Watching now";
 
 function StatusLineCard({
   v,
@@ -28,7 +33,14 @@ function StatusLineCard({
   ctx?: RenderContext;
 }) {
   const force = !!ctx?.forceHover;
-  const status = statusText(v.separator);
+  const statusRest = statusText(v.separator);
+  const statusHover = statusText(v.separator, STATUS_HOVER);
+  const statusLine = (
+    <p className="cl-status__line" data-cl-status-line>
+      <span className="cl-status__line-rest">{statusRest}</span>
+      <span className="cl-status__line-hover">{statusHover}</span>
+    </p>
+  );
 
   return (
     <div
@@ -51,25 +63,21 @@ function StatusLineCard({
           play={force}
         />
         {v.linePosition === "on-media" ? (
-          <p className="cl-status__line cl-status__line--on" data-cl-status-line>
-            {status}
+          <p
+            className="cl-status__line cl-status__line--on"
+            data-cl-status-line
+          >
+            <span className="cl-status__line-rest">{statusRest}</span>
+            <span className="cl-status__line-hover">{statusHover}</span>
           </p>
         ) : null}
       </div>
       <div className="cl-status__copy" data-cl-copy>
-        {v.linePosition === "under-media" ? (
-          <p className="cl-status__line" data-cl-status-line>
-            {status}
-          </p>
-        ) : null}
+        {v.linePosition === "under-media" ? statusLine : null}
         <p className="cl-status__title" data-cl-card-title>
           {PROJECT.title}
         </p>
-        {v.linePosition === "under-title" ? (
-          <p className="cl-status__line" data-cl-status-line>
-            {status}
-          </p>
-        ) : null}
+        {v.linePosition === "under-title" ? statusLine : null}
         {v.linePosition === "on-media" ? (
           <div className="cl-status__line-spacer" aria-hidden="true" />
         ) : null}
@@ -87,7 +95,7 @@ export const statusLine: ConceptDefinition<StatusLineVariant> = {
   overrideKey: "d7",
   name: "Status line under flush media",
   intent:
-    "A spare status line under flush media; hover brightens the frame and shifts the title.",
+    "A spare status line under flush media; hover brightens the frame and swaps the status copy.",
   aspect: ASPECT,
   mediaIndex: 0,
   variants: [

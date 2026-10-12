@@ -156,6 +156,12 @@ export default function WireframeMedia({
             <li>
               <i className="cl-wire__line cl-wire__line--short" />
             </li>
+            <li>
+              <i className="cl-wire__line" />
+            </li>
+            <li>
+              <i className="cl-wire__line cl-wire__line--mid" />
+            </li>
           </ul>
         </div>
       ) : null}
@@ -183,6 +189,9 @@ export default function WireframeMedia({
         </div>
       ) : null}
       <div className="cl-wire__dock" data-cl-wire-dock aria-hidden="true">
+        <i />
+        <i />
+        <i />
         <i />
         <i />
         <i />

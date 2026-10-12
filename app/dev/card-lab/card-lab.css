@@ -408,14 +408,14 @@
   flex: 0 0 var(--cl-wire-top-clear, 0px);
   height: var(--cl-wire-top-clear, 0px);
   min-height: var(--cl-wire-top-clear, 0px);
-  /* Distinct pad above chrome so overlay chips never read as covering dots. */
-  background: #d0d0d0;
-  border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+  /* Darker pad so white/tinted overlay chips separate from media grey. */
+  background: #b8b8b8;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.18);
 }
 
 .card-lab[data-theme="dark"] .cl-wire__clear {
-  background: #1a1a1a;
-  border-bottom-color: rgba(242, 242, 242, 0.12);
+  background: #0f0f0f;
+  border-bottom-color: rgba(242, 242, 242, 0.16);
 }
 
 .cl-wire__chrome {
@@ -528,6 +528,7 @@
 .cl-wire__cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 8px;
   flex: 1 1 auto;
   min-height: 0;
@@ -538,7 +539,7 @@
   display: block;
   border-radius: 4px;
   background: currentColor;
-  min-height: 24px;
+  min-height: 28px;
   height: 100%;
 }
 
@@ -593,13 +594,13 @@
 }
 
 .cl-wire__stage {
-  flex: 1 1 55%;
+  flex: 1 1 42%;
   border-radius: 4px;
   background: color-mix(in srgb, currentColor 55%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
+  min-height: 64px;
   position: relative;
 }
 
@@ -616,8 +617,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  flex: 1 1 30%;
-  min-height: 56px;
+  flex: 1 1 38%;
+  min-height: 72px;
   align-content: stretch;
 }
 
@@ -625,7 +626,7 @@
   display: block;
   border-radius: 4px;
   background: currentColor;
-  min-height: 48px;
+  min-height: 56px;
   height: 100%;
 }
 
@@ -648,14 +649,15 @@
   justify-content: flex-start;
   gap: 8px;
   min-height: 0;
+  flex: 1 1 auto;
 }
 
 .cl-wire__player-main {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex: 1 1 60%;
-  min-height: 80px;
+  flex: 0 0 auto;
+  min-height: 72px;
 }
 
 .cl-wire__disc {
@@ -696,10 +698,10 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1 1 35%;
+  gap: 6px;
+  flex: 1 1 auto;
   justify-content: space-evenly;
-  min-height: 64px;
+  min-height: 96px;
 }
 
 .cl-wire__playlist li {
@@ -757,18 +759,22 @@
 /* Bottom dock so media frames never read as half-empty. */
 .cl-wire__dock {
   flex: 0 0 auto;
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
   padding: 0 8px 8px;
   margin-top: auto;
 }
 
 .cl-wire__dock i {
   display: block;
-  flex: 1 1 0;
-  height: 20px;
+  height: 18px;
   border-radius: 4px;
   background: currentColor;
+}
+
+.cl-wire__dock i:nth-child(n + 4) {
+  height: 12px;
 }
 
 .cl-wire__veil {
@@ -861,17 +867,17 @@
   white-space: nowrap;
 }
 
-/* Tinted: ink on light plate with a firm border so it separates from grey media. */
+/* Tinted: white plate + ink border on the darker clear pad (≥3:1 plate-vs-pad). */
 .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #111111;
-  background: #f4f4f4;
-  box-shadow: inset 0 0 0 1px #111111;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1.5px #111111;
 }
 
 .card-lab[data-theme="dark"] .cl-expand__chip[data-cl-chip-fill="tinted"] {
   color: #f2f2f2;
-  background: #2a2a2a;
-  box-shadow: inset 0 0 0 1px #f2f2f2;
+  background: #1a1a1a;
+  box-shadow: inset 0 0 0 1.5px #f2f2f2;
 }
 
 .cl-expand__chip-hover {
@@ -1226,14 +1232,14 @@
 .cl-status__media {
   width: 100%;
   display: block;
-  filter: brightness(0.97);
+  filter: brightness(0.94);
   transition: filter 160ms ease-out;
 }
 
 .cl-status:hover .cl-status__media,
 .cl-status:focus-within .cl-status__media,
 .cl-status[data-cl-force-hover="1"] .cl-status__media {
-  filter: brightness(1.04);
+  filter: brightness(1.08);
 }
 
 .cl-status .cl-wire__body {
@@ -1243,7 +1249,7 @@
 .cl-status:hover .cl-wire__body,
 .cl-status:focus-within .cl-wire__body,
 .cl-status[data-cl-force-hover="1"] .cl-wire__body {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
 }
 
 .cl-status__line {
@@ -1251,6 +1257,27 @@
   font-size: 13px;
   line-height: 20px;
   color: var(--cl-secondary);
+}
+
+.cl-status__line-rest,
+.cl-status__line-hover {
+  display: inline;
+}
+
+.cl-status__line-hover {
+  display: none;
+}
+
+.cl-status:hover .cl-status__line-rest,
+.cl-status:focus-within .cl-status__line-rest,
+.cl-status[data-cl-force-hover="1"] .cl-status__line-rest {
+  display: none;
+}
+
+.cl-status:hover .cl-status__line-hover,
+.cl-status:focus-within .cl-status__line-hover,
+.cl-status[data-cl-force-hover="1"] .cl-status__line-hover {
+  display: inline;
 }
 
 .cl-status__line--on {
@@ -1268,6 +1295,18 @@
   height: 20px;
   margin: 0;
   pointer-events: none;
+}
+
+.cl-status__copy {
+  display: flex;
+  flex-direction: column;
+  transition: transform 160ms ease-out;
+}
+
+.cl-status:hover .cl-status__copy,
+.cl-status:focus-within .cl-status__copy,
+.cl-status[data-cl-force-hover="1"] .cl-status__copy {
+  transform: translateX(6px);
 }
 
 .cl-status__title {
@@ -1871,10 +1910,17 @@
 .cl-stagger__copy--aside .cl-stagger__chips {
   flex-wrap: nowrap;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .cl-stagger__copy--aside .cl-stagger__chip {
   flex: 0 0 auto;
+}
+
+.cl-stagger__copy--aside .cl-stagger__desc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cl-stagger__title {
@@ -1999,13 +2045,30 @@
   transition-delay: 0ms;
 }
 
+/* Narrow: stack title → meta → chips (intentional; avoid reveal-above-title). */
 @media (max-width: 900px) {
-  .cl-stagger__copy--aside {
-    grid-template-columns: 1fr;
+  .cl-stagger:hover .cl-stagger__copy--aside,
+  .cl-stagger:focus-within .cl-stagger__copy--aside,
+  .cl-stagger[data-cl-force-hover="1"] .cl-stagger__copy--aside {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .cl-stagger__copy--aside .cl-stagger__title {
+    grid-column: unset;
+    order: 1;
   }
 
   .cl-stagger__copy--aside .cl-stagger__reveal {
-    grid-column: 1;
+    grid-column: unset;
+    grid-row: unset;
+    order: 2;
+  }
+
+  .cl-stagger__copy--aside .cl-stagger__chips {
+    flex-wrap: nowrap;
   }
 }
 
