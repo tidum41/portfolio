@@ -1,13 +1,10 @@
-import PlaceholderMedia from "../shell/PlaceholderMedia";
+import WireframeMedia from "../shell/WireframeMedia";
 import { applyFieldOverrides } from "./tokens";
+import { projectById } from "./projects";
 import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "4 / 3";
-const MEDIA_INDEX = 0;
-const REST = "B2B / Client work";
-const HOVER = "B2B / Client work / Quick order redesign";
-const TITLE = "Stardog";
-const DESC = "Product designer on quick order.";
+const PROJECT = projectById("todolist");
 
 export type ExpandingChipVariant = ConceptVariant & {
   id: "a" | "b" | "c";
@@ -33,21 +30,24 @@ function ExpandingChipCard({
       data-cl-chip-placement={v.placement}
       data-cl-chip-fill={v.fill}
       data-cl-force-hover={force ? "1" : "0"}
+      data-cl-project={PROJECT.id}
     >
-      {v.placement === "above-media" ? (
-        <div className="cl-expand__chip-row" data-cl-chip-row>
-          <span className="cl-expand__chip" data-cl-chip data-cl-chip-fill={v.fill}>
-            <span className="cl-expand__chip-rest">{REST}</span>
-            <span className="cl-expand__chip-hover" aria-hidden={!force}>
-              {HOVER}
-            </span>
-          </span>
-        </div>
-      ) : null}
+      {/* Reserved chip rail so media tops align across on-media / above-media */}
+      <div className="cl-expand__chip-rail" data-cl-chip-rail>
+        <span
+          className={`cl-expand__chip${v.placement === "above-media" ? " cl-expand__chip--in-rail" : " cl-expand__chip--ghost"}`}
+          data-cl-chip
+          data-cl-chip-fill={v.fill}
+          aria-hidden={v.placement !== "above-media"}
+        >
+          <span className="cl-expand__chip-rest">{PROJECT.taxonomyRest}</span>
+          <span className="cl-expand__chip-hover">{PROJECT.taxonomyHover}</span>
+        </span>
+      </div>
       <div className="cl-expand__media-wrap" data-cl-media-wrap>
-        <PlaceholderMedia
+        <WireframeMedia
+          kind={PROJECT.wireframe}
           aspect={ASPECT}
-          mediaIndex={MEDIA_INDEX}
           radius={8}
           className="cl-expand__media"
         />
@@ -57,19 +57,17 @@ function ExpandingChipCard({
             data-cl-chip
             data-cl-chip-fill={v.fill}
           >
-            <span className="cl-expand__chip-rest">{REST}</span>
-            <span className="cl-expand__chip-hover" aria-hidden={!force}>
-              {HOVER}
-            </span>
+            <span className="cl-expand__chip-rest">{PROJECT.taxonomyRest}</span>
+            <span className="cl-expand__chip-hover">{PROJECT.taxonomyHover}</span>
           </span>
         ) : null}
       </div>
       <div className="cl-expand__copy" data-cl-copy>
         <p className="cl-expand__title" data-cl-card-title>
-          {TITLE}
+          {PROJECT.title}
         </p>
         <p className="cl-expand__desc" data-cl-card-desc>
-          {DESC}
+          {PROJECT.subtitle}
         </p>
       </div>
     </div>
@@ -84,7 +82,7 @@ export const expandingChip: ConceptDefinition<ExpandingChipVariant> = {
   intent:
     "A solid chip on the media edge grows into a longer taxonomy path on hover.",
   aspect: ASPECT,
-  mediaIndex: MEDIA_INDEX,
+  mediaIndex: 0,
   variants: [
     { id: "a", placement: "on-media", fill: "solid" },
     { id: "b", placement: "above-media", fill: "solid" },

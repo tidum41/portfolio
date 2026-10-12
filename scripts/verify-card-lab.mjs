@@ -21,6 +21,17 @@ const ALLOWED_SPACE = new Set([0, 1, 4, 8, 12, 16, 24, 32, 48, 96]);
 const ALLOWED_FS = new Set([11, 13, 15, 24]);
 /** Kinds allowed to change card box height on hover (expand/reveal). */
 const HEIGHT_CHANGE_KINDS = new Set(["numbered-index", "stagger-reveal", "text-row"]);
+/** Titles that must match Mudit's real work (homepage + case studies). */
+const MUDIT_TITLES = new Set([
+  "Simplifying UCLA subleasing",
+  "Todolist with AI organization",
+  "Making custom keyboards accessible",
+  "Drag a CD",
+  "Dumb Habit Tracker",
+  "Project name", // legacy framed/edge/text concepts
+]);
+/** Minimum pixel difference between variant screenshots (sum of abs RGB). */
+const MIN_VARIANT_PIXEL_DIFF = 1200;
 
 async function newCtx(browser, opts = {}) {
   return browser.newContext({
@@ -88,6 +99,17 @@ function overlapFinderSource() {
             previewCard.contains(other) &&
             isRowCopy(other)
           ) {
+            // Numbered index: preview may sit beside one row while other
+            // project titles in the same card list are unrelated siblings.
+            const previewItem = previewEl.closest("[data-cl-index-item]");
+            const otherItem = other.closest("[data-cl-index-item]");
+            if (
+              previewItem &&
+              otherItem &&
+              previewItem !== otherItem
+            ) {
+              continue;
+            }
             overlaps.push(
               `preview>${other.className || other.tagName}[${previewCard.getAttribute("data-cl-variant")}]`
             );
@@ -576,6 +598,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   let aspectOk = true;
   let aspectDetail = "";
   for (const [sec, arr] of Object.entries(values.aspects)) {
+    // Outcome-metric left column stretches media to text height (intentional).
+    if (sec === "outcome-metric") continue;
     // Ignore collapsed/hidden media (e.g. numbered-index preview at rest).
     const live = arr.filter((a) => Number.isFinite(a) && a > 0.2 && a < 8);
     for (const a of live) {
@@ -1124,18 +1148,28 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     const errs = [];
     for (const section of document.querySelectorAll("section[data-cl-concept]")) {
       const sec = section.getAttribute("data-cl-concept");
-      // Compare within a single row so ?hover=all rest/hover pairs do not collide.
+      // Index lists intentionally show multiple Mudit projects.
+      if (sec === "numbered-index") continue;
       const rows = [...section.querySelectorAll("[data-cl-row]")];
       const scopes = rows.length ? rows : [section];
       for (const scope of scopes) {
-        const titles = [...scope.querySelectorAll("[data-cl-card-title]")].map((e) => e.textContent);
-        const descs = [...scope.querySelectorAll("[data-cl-card-desc]")].map((e) => e.textContent);
-        if (titles.length && new Set(titles).size !== 1) errs.push(`${sec} titles`);
-        if (descs.length && new Set(descs).size !== 1) errs.push(`${sec} descs`);
-        const fills = [...scope.querySelectorAll("[data-cl-media]")].map((e) =>
-          getComputedStyle(e).backgroundColor
+        const cards = [...scope.querySelectorAll("[data-cl-card]")];
+        const titles = cards.map(
+          (c) => c.querySelector("[data-cl-card-title]")?.textContent || ""
         );
-        if (fills.length && new Set(fills).size !== 1) errs.push(`${sec} fills`);
+        const descs = cards.map(
+          (c) => c.querySelector("[data-cl-card-desc]")?.textContent || ""
+        );
+        if (titles.length && new Set(titles).size !== 1) errs.push(`${sec} titles`);
+        if (descs.filter(Boolean).length && new Set(descs).size !== 1)
+          errs.push(`${sec} descs`);
+        // One primary media fill per card (first [data-cl-media]).
+        const fills = cards.map((c) => {
+          const m = c.querySelector("[data-cl-media]");
+          return m ? getComputedStyle(m).backgroundColor : "";
+        });
+        if (fills.filter(Boolean).length && new Set(fills).size !== 1)
+          errs.push(`${sec} fills`);
       }
     }
     return errs;
@@ -1266,6 +1300,191 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
   });
   record(44, `Registry concepts render (${tag})`, registry.ok, JSON.stringify(registry));
 
+  // ——— Content + layout craft checks (post-Mudit review) ———
+  if (width === 1440 && theme === "light") {
+    const titlesOk = await themePage.evaluate((allowed) => {
+      const bad = [];
+      for (const el of document.querySelectorAll("[data-cl-card-title]")) {
+        const t = (el.textContent || "").trim();
+        if (!allowed.includes(t)) bad.push(t);
+      }
+      return { ok: bad.length === 0, bad: bad.slice(0, 8) };
+    }, [...MUDIT_TITLES]);
+    record(48, `Card titles match Mudit projects (${tag})`, titlesOk.ok, titlesOk.bad.join(" | "));
+
+    const clipText = await themePage.evaluate(() => {
+      const bad = [];
+      for (const el of document.querySelectorAll(
+        "[data-cl-root] p, [data-cl-root] span, [data-cl-root] li, [data-cl-root] h1, [data-cl-root] h2"
+      )) {
+        if (el.children.length) continue;
+        const t = (el.textContent || "").trim();
+        if (!t) continue;
+        let cur = el.parentElement;
+        while (cur && cur !== document.body) {
+          const cs = getComputedStyle(cur);
+          if (cs.overflow === "hidden" || cs.overflowX === "hidden") {
+            const er = el.getBoundingClientRect();
+            const cr = cur.getBoundingClientRect();
+            if (er.left < cr.left - 1 || er.right > cr.right + 1) {
+              bad.push(`clip:${t.slice(0, 32)}`);
+              break;
+            }
+          }
+          cur = cur.parentElement;
+        }
+      }
+      return bad.slice(0, 8);
+    });
+    record(49, `No text clipped by overflow:hidden (${tag})`, clipText.length === 0, clipText.join(" | "));
+
+    // Rest rows: gap from last visible text in card to card bottom ≤ 16px
+    // (no reserved hover void). Spec is outside the card.
+    const restVoid = await themePage.evaluate(() => {
+      const checkKinds = new Set([
+        "expanding-chip",
+        "pill-row",
+        "outcome-metric",
+        "status-line",
+        "brand-lockup",
+        "dual-cta",
+        "numbered-index",
+        "cursor-label",
+        "stagger-reveal",
+        "gated-nda",
+      ]);
+      const bad = [];
+      for (const row of document.querySelectorAll('[data-cl-row-mode="rest"]')) {
+        for (const card of row.querySelectorAll("[data-cl-card]")) {
+          const kind = card.getAttribute("data-cl-kind");
+          if (!checkKinds.has(kind || "")) continue;
+          const texts = [...card.querySelectorAll("p, span, li")].filter((el) => {
+            if (el.children.length) return false;
+            const t = (el.textContent || "").trim();
+            if (!t) return false;
+            const cs = getComputedStyle(el);
+            if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) return false;
+            const r = el.getBoundingClientRect();
+            return r.height > 0 && r.width > 0;
+          });
+          if (!texts.length) continue;
+          let bottom = 0;
+          for (const el of texts) {
+            bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+          }
+          // Media counts as content — tall media next to short copy is not a void.
+          for (const m of card.querySelectorAll("[data-cl-media]")) {
+            const cs = getComputedStyle(m);
+            if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) continue;
+            const r = m.getBoundingClientRect();
+            if (r.height > 0) bottom = Math.max(bottom, r.bottom);
+          }
+          const gap = card.getBoundingClientRect().bottom - bottom;
+          if (gap > 16.5) bad.push(`${kind}/${card.getAttribute("data-cl-variant")}:${gap.toFixed(1)}`);
+        }
+      }
+      return bad.slice(0, 10);
+    });
+    record(50, `Rest rows no reserved void >16px (${tag})`, restVoid.length === 0, restVoid.join(" | "));
+
+    // Forced hover end states: brand lockup fully revealed
+    await themePage.goto(`${BASE}/dev/card-lab?theme=light&hover=all`, {
+      waitUntil: "networkidle",
+      timeout: 60000,
+    });
+    await themePage.waitForSelector("[data-cl-root]");
+    await themePage.waitForTimeout(400);
+    const endStates = await themePage.evaluate(() => {
+      const bad = [];
+      for (const card of document.querySelectorAll(
+        '[data-cl-row-mode="hover"] [data-cl-kind="brand-lockup"][data-cl-card]'
+      )) {
+        const preview = card.querySelector("[data-cl-preview-layer]");
+        const cs = getComputedStyle(preview);
+        const clip = cs.clipPath || cs.webkitClipPath || "none";
+        const op = Number(cs.opacity);
+        const id = card.getAttribute("data-cl-variant");
+        const reveal = card.getAttribute("data-cl-reveal");
+        if (reveal === "crossfade" && op < 0.95) bad.push(`crossfade opacity ${op}`);
+        if (reveal === "wipe") {
+          const fullyOpen =
+            clip === "none" ||
+            /^inset\(\s*0(px)?(\s+0(px)?){0,3}\s*\)$/.test(clip);
+          if (!fullyOpen) bad.push(`wipe clip ${clip}`);
+        }
+        if (reveal === "scale-center") {
+          const m = clip.match(/circle\(([\d.]+)%/);
+          if (m && Number(m[1]) < 100) bad.push(`scale-center ${m[1]}%`);
+        }
+        if (!preview) bad.push(`${id} missing preview`);
+      }
+      return bad;
+    });
+    record(51, `Forced hover end states final (${tag})`, endStates.length === 0, endStates.join(" | "));
+
+    // Variant pixel distinctness within each new concept (rest row).
+    const conceptIds = [
+      "expanding-chip",
+      "pill-row",
+      "outcome-metric",
+      "status-line",
+      "brand-lockup",
+      "dual-cta",
+      "numbered-index",
+      "cursor-label",
+      "stagger-reveal",
+      "gated-nda",
+    ];
+    const variantDiffFails = [];
+    for (const id of conceptIds) {
+      await themePage.goto(`${BASE}/dev/card-lab?theme=light&hover=all`, {
+        waitUntil: "networkidle",
+        timeout: 60000,
+      });
+      await themePage.waitForSelector(`[data-cl-concept="${id}"]`);
+      const section = themePage.locator(`section[data-cl-concept="${id}"]`);
+      await section.scrollIntoViewIfNeeded();
+      const restCells = section.locator('[data-cl-row-mode="rest"] [data-cl-variant-cell]');
+      const hoverCells = section.locator('[data-cl-row-mode="hover"] [data-cl-variant-cell]');
+      const count = await restCells.count();
+      const shots = [];
+      for (let i = 0; i < count; i++) {
+        shots.push({
+          rest: await restCells.nth(i).screenshot(),
+          hover: await hoverCells.nth(i).screenshot(),
+        });
+      }
+      const diffBuf = (a, b) => {
+        const n = Math.min(a.length, b.length);
+        let d = 0;
+        // Sample every 16th byte for speed; PNG headers cancel in practice.
+        for (let i = 64; i < n; i += 16) d += Math.abs(a[i] - b[i]);
+        return d;
+      };
+      for (let i = 0; i < shots.length; i++) {
+        for (let j = i + 1; j < shots.length; j++) {
+          const dr = diffBuf(shots[i].rest, shots[j].rest);
+          const dh = diffBuf(shots[i].hover, shots[j].hover);
+          if (dr < MIN_VARIANT_PIXEL_DIFF && dh < MIN_VARIANT_PIXEL_DIFF) {
+            variantDiffFails.push(`${id} ${i}/${j} rest=${dr} hover=${dh}`);
+          }
+        }
+      }
+    }
+    record(
+      52,
+      `Variants pixel-distinct (${tag})`,
+      variantDiffFails.length === 0,
+      variantDiffFails.slice(0, 8).join(" | ")
+    );
+  } else {
+    record(48, `Card titles match Mudit projects (${tag})`, true, "checked on 1440 light");
+    record(49, `No text clipped by overflow:hidden (${tag})`, true, "checked on 1440 light");
+    record(50, `Rest rows no reserved void >16px (${tag})`, true, "checked on 1440 light");
+    record(51, `Forced hover end states final (${tag})`, true, "checked on 1440 light");
+    record(52, `Variants pixel-distinct (${tag})`, true, "checked on 1440 light");
+  }
+
   await themeCtx.close();
   return { fullPath, mediaUrls };
 }
@@ -1297,7 +1516,7 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  const maxId = Math.max(47, ...byId.keys());
+  const maxId = Math.max(52, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");

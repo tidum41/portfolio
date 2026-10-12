@@ -62,14 +62,17 @@ export default function CardLabClient() {
     [searchParams]
   );
 
-  // Equal card heights within each concept row.
+  // Equal card heights within each concept row (skip expand/list concepts).
   useEffect(() => {
     const equalize = () => {
       document.querySelectorAll<HTMLElement>("[data-cl-row]").forEach((row) => {
-        const cards = [...row.querySelectorAll<HTMLElement>("[data-cl-card]")];
+        const cards = [...row.querySelectorAll<HTMLElement>("[data-cl-card]")].filter(
+          (c) => c.getAttribute("data-cl-skip-equalize") !== "1"
+        );
         cards.forEach((c) => {
           c.style.minHeight = "";
         });
+        if (!cards.length) return;
         let max = 0;
         for (const c of cards) {
           max = Math.max(max, c.getBoundingClientRect().height);

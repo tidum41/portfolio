@@ -1,11 +1,10 @@
-import PlaceholderMedia from "../shell/PlaceholderMedia";
+import WireframeMedia from "../shell/WireframeMedia";
 import { applyFieldOverrides } from "./tokens";
+import { projectById } from "./projects";
 import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "16 / 10";
-const MEDIA_INDEX = 1;
-const TITLE = "JOOLA paddle studio";
-const DESC = "Hardware companion for table tennis.";
+const PROJECT = projectById("sviz");
 
 export type StatusLineVariant = ConceptVariant & {
   id: "a" | "b" | "c";
@@ -14,9 +13,11 @@ export type StatusLineVariant = ConceptVariant & {
 };
 
 function statusText(sep: StatusLineVariant["separator"]): string {
-  if (sep === "pipe") return "JOOLA | Shipped 2026";
-  if (sep === "dot") return "JOOLA · Shipped 2026";
-  return "JOOLA / Shipped 2026";
+  const left = "sviz";
+  const right = PROJECT.status;
+  if (sep === "pipe") return `${left} | ${right}`;
+  if (sep === "dot") return `${left} · ${right}`;
+  return `${left} / ${right}`;
 }
 
 function StatusLineCard({
@@ -39,15 +40,16 @@ function StatusLineCard({
       data-cl-separator={v.separator}
       data-cl-line-pos={v.linePosition}
       data-cl-force-hover={force ? "1" : "0"}
+      data-cl-project={PROJECT.id}
     >
       <div className="cl-status__media-wrap" data-cl-media-wrap>
-        <PlaceholderMedia
+        <WireframeMedia
+          kind={PROJECT.wireframe}
           aspect={ASPECT}
-          mediaIndex={MEDIA_INDEX}
           radius={8}
           className="cl-status__media"
+          play={force}
         />
-        <span className="cl-status__play" data-cl-play aria-hidden="true" />
         {v.linePosition === "on-media" ? (
           <p className="cl-status__line cl-status__line--on" data-cl-status-line>
             {status}
@@ -61,7 +63,7 @@ function StatusLineCard({
           </p>
         ) : null}
         <p className="cl-status__title" data-cl-card-title>
-          {TITLE}
+          {PROJECT.title}
         </p>
         {v.linePosition === "under-title" ? (
           <p className="cl-status__line" data-cl-status-line>
@@ -69,7 +71,7 @@ function StatusLineCard({
           </p>
         ) : null}
         <p className="cl-status__desc" data-cl-card-desc>
-          {DESC}
+          {PROJECT.subtitle}
         </p>
       </div>
     </div>
@@ -84,7 +86,7 @@ export const statusLine: ConceptDefinition<StatusLineVariant> = {
   intent:
     "A spare status line under flush media; hover brightens the frame and shifts the title.",
   aspect: ASPECT,
-  mediaIndex: MEDIA_INDEX,
+  mediaIndex: 0,
   variants: [
     { id: "a", separator: "slash", linePosition: "under-media" },
     { id: "b", separator: "pipe", linePosition: "under-title" },

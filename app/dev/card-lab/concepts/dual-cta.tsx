@@ -1,16 +1,15 @@
-import PlaceholderMedia from "../shell/PlaceholderMedia";
+import WireframeMedia from "../shell/WireframeMedia";
 import { applyFieldOverrides } from "./tokens";
+import { projectById } from "./projects";
 import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "16 / 10";
-const MEDIA_INDEX = 1;
-const TITLE = "Retail ads UX";
-const DESC = "Design engineering on ad tools.";
+const PROJECT = projectById("todolist");
 
 export type DualCtaVariant = ConceptVariant & {
   id: "a" | "b" | "c";
-  ctaPlacement: "center" | "bottom";
-  edge: "gradient" | "hairline" | "none";
+  ctaPlacement: "center" | "bottom" | "stack";
+  edge: "gradient" | "hairline";
 };
 
 function DualCtaCard({
@@ -31,26 +30,21 @@ function DualCtaCard({
       data-cl-cta-placement={v.ctaPlacement}
       data-cl-edge={v.edge}
       data-cl-force-hover={force ? "1" : "0"}
+      data-cl-project={PROJECT.id}
     >
       <div className="cl-dual__media-wrap" data-cl-media-wrap>
-        {v.edge !== "none" ? (
-          <span
-            className="cl-dual__edge"
-            data-cl-edge-layer
-            data-cl-edge={v.edge}
-            aria-hidden="true"
-          />
-        ) : null}
-        <PlaceholderMedia
+        <span
+          className="cl-dual__edge"
+          data-cl-edge-layer
+          data-cl-edge={v.edge}
+          aria-hidden="true"
+        />
+        <WireframeMedia
+          kind={PROJECT.wireframe}
           aspect={ASPECT}
-          mediaIndex={MEDIA_INDEX}
           radius={12}
           className="cl-dual__media"
-        />
-        <div
-          className="cl-dual__dim"
-          data-cl-dim
-          aria-hidden="true"
+          dimmed
         />
         <div
           className={`cl-dual__ctas cl-dual__ctas--${v.ctaPlacement}`}
@@ -60,16 +54,16 @@ function DualCtaCard({
             View case study
           </span>
           <span className="cl-dual__cta" data-cl-cta>
-            Live site
+            {PROJECT.liveLabel}
           </span>
         </div>
       </div>
       <div className="cl-dual__copy" data-cl-copy>
         <p className="cl-dual__title" data-cl-card-title>
-          {TITLE}
+          {PROJECT.title}
         </p>
         <p className="cl-dual__desc" data-cl-card-desc>
-          {DESC}
+          {PROJECT.subtitle}
         </p>
       </div>
     </div>
@@ -84,11 +78,11 @@ export const dualCta: ConceptDefinition<DualCtaVariant> = {
   intent:
     "Two CTA pills fade in over dimmed media; a gradient hairline can rim the edge.",
   aspect: ASPECT,
-  mediaIndex: MEDIA_INDEX,
+  mediaIndex: 0,
   variants: [
     { id: "a", ctaPlacement: "center", edge: "gradient" },
     { id: "b", ctaPlacement: "bottom", edge: "gradient" },
-    { id: "c", ctaPlacement: "center", edge: "hairline" },
+    { id: "c", ctaPlacement: "stack", edge: "hairline" },
   ],
   label: (v) => `${v.id} · ctas ${v.ctaPlacement} · edge ${v.edge}`,
   applyOverrides: (v, params) => applyFieldOverrides("d9", v.id, v, params),

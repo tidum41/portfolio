@@ -1,12 +1,10 @@
-import PlaceholderMedia from "../shell/PlaceholderMedia";
+import WireframeMedia from "../shell/WireframeMedia";
 import { applyFieldOverrides } from "./tokens";
+import { projectById } from "./projects";
 import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "16 / 10";
-const MEDIA_INDEX = 1;
-const TITLE = "Cut reorder time from 6 clicks to 1";
-const DESC = "Quick order redesign for B2B buyers.";
-const PILLS = ["Design lead", "B2B", "Checkout"] as const;
+const PROJECT = projectById("bruinlease");
 
 export type PillRowVariant = ConceptVariant & {
   id: "a" | "b" | "c";
@@ -30,29 +28,30 @@ function PillRowCard({
       data-cl-variant={v.id}
       data-cl-pill-style={v.pillStyle}
       data-cl-force-hover={force ? "1" : "0"}
+      data-cl-project={PROJECT.id}
     >
       <div className="cl-pills__stage" data-cl-media-wrap>
-        <PlaceholderMedia
+        <WireframeMedia
+          kind={PROJECT.wireframe}
           aspect={ASPECT}
-          mediaIndex={MEDIA_INDEX}
           radius={12}
           className="cl-pills__media"
         />
       </div>
       <div className="cl-pills__copy" data-cl-copy>
         <p className="cl-pills__title" data-cl-card-title>
-          {TITLE}
+          {PROJECT.title}
         </p>
         <p className="cl-pills__desc" data-cl-card-desc>
-          {DESC}
+          {PROJECT.subtitle}
         </p>
         {v.pillStyle === "plain" ? (
           <p className="cl-pills__plain" data-cl-pill-row>
-            {PILLS.join(" · ")}
+            {PROJECT.pills.join(" · ")}
           </p>
         ) : (
           <ul className="cl-pills__row" data-cl-pill-row>
-            {PILLS.map((p) => (
+            {PROJECT.pills.map((p) => (
               <li
                 key={p}
                 className="cl-pills__pill"
@@ -77,7 +76,7 @@ export const pillRow: ConceptDefinition<PillRowVariant> = {
   intent:
     "Outcome-sentence title with a role and domain pill row always visible.",
   aspect: ASPECT,
-  mediaIndex: MEDIA_INDEX,
+  mediaIndex: 0,
   variants: [
     { id: "a", pillStyle: "filled" },
     { id: "b", pillStyle: "outlined" },

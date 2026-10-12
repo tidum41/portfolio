@@ -1,13 +1,10 @@
-import PlaceholderMedia from "../shell/PlaceholderMedia";
+import WireframeMedia from "../shell/WireframeMedia";
 import { applyFieldOverrides } from "./tokens";
+import { projectById } from "./projects";
 import type { ConceptDefinition, ConceptVariant, RenderContext } from "./types";
 
 const ASPECT = "4 / 3";
-const MEDIA_INDEX = 0;
-const TITLE = "Table redesign";
-const DESC = "Unifying reorder surfaces for ops.";
-const METRIC_A = "83% faster reorders";
-const METRIC_B = "11 → 1 tables";
+const PROJECT = projectById("bruinlease");
 
 export type OutcomeMetricVariant = ConceptVariant & {
   id: "a" | "b" | "c";
@@ -23,8 +20,7 @@ function OutcomeMetricCard({
   ctx?: RenderContext;
 }) {
   const force = !!ctx?.forceHover;
-  const metrics =
-    v.metricCount === 2 ? [METRIC_A, METRIC_B] : [METRIC_A];
+  const metrics = PROJECT.metrics.slice(0, v.metricCount);
 
   return (
     <div
@@ -36,20 +32,22 @@ function OutcomeMetricCard({
       data-cl-metric-placement={v.metricPlacement}
       data-cl-metric-count={String(v.metricCount)}
       data-cl-force-hover={force ? "1" : "0"}
+      data-cl-project={PROJECT.id}
     >
       {v.metricPlacement === "left" ? (
         <div className="cl-metric__text" data-cl-copy>
           <p className="cl-metric__title" data-cl-card-title>
-            {TITLE}
+            {PROJECT.title}
           </p>
           <p className="cl-metric__desc" data-cl-card-desc>
-            {DESC}
+            {PROJECT.subtitle}
           </p>
           <div className="cl-metric__metrics" data-cl-metrics>
             {metrics.map((m) => (
-              <p key={m} className="cl-metric__value" data-cl-metric>
-                {m}
-              </p>
+              <div key={m.line} className="cl-metric__metric" data-cl-metric>
+                <p className="cl-metric__value">{m.value}</p>
+                <p className="cl-metric__caption">{m.line.replace(m.value, "").trim() || m.line}</p>
+              </div>
             ))}
           </div>
           <span className="cl-metric__cta" data-cl-cta>
@@ -58,19 +56,22 @@ function OutcomeMetricCard({
         </div>
       ) : null}
       <div className="cl-metric__media-wrap" data-cl-media-wrap>
-        <PlaceholderMedia
+        <WireframeMedia
+          kind={PROJECT.wireframe}
           aspect={ASPECT}
-          mediaIndex={MEDIA_INDEX}
+          fill={v.metricPlacement === "left"}
           radius={16}
           className="cl-metric__media"
+          play={force}
         />
         {v.metricPlacement === "on-media" ? (
           <div className="cl-metric__on-media" data-cl-copy>
             <div className="cl-metric__metrics" data-cl-metrics>
               {metrics.map((m) => (
-                <p key={m} className="cl-metric__value" data-cl-metric>
-                  {m}
-                </p>
+                <div key={m.line} className="cl-metric__metric" data-cl-metric>
+                  <p className="cl-metric__value">{m.value}</p>
+                  <p className="cl-metric__caption">{m.line.replace(m.value, "").trim() || m.line}</p>
+                </div>
               ))}
             </div>
             <span className="cl-metric__cta" data-cl-cta>
@@ -82,10 +83,10 @@ function OutcomeMetricCard({
       {v.metricPlacement === "on-media" ? (
         <div className="cl-metric__below" data-cl-copy-secondary>
           <p className="cl-metric__title" data-cl-card-title>
-            {TITLE}
+            {PROJECT.title}
           </p>
           <p className="cl-metric__desc" data-cl-card-desc>
-            {DESC}
+            {PROJECT.subtitle}
           </p>
         </div>
       ) : null}
@@ -101,7 +102,7 @@ export const outcomeMetric: ConceptDefinition<OutcomeMetricVariant> = {
   intent:
     "A large outcome metric sits beside or on the media with a black pill CTA.",
   aspect: ASPECT,
-  mediaIndex: MEDIA_INDEX,
+  mediaIndex: 0,
   variants: [
     { id: "a", metricPlacement: "left", metricCount: 1 },
     { id: "b", metricPlacement: "left", metricCount: 2 },
