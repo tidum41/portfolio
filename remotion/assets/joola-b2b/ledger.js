@@ -145,7 +145,35 @@
     Math.round(perseusUnit * perseusLine.qty * 100) / 100;
 
   var shipDate = "Fri, Oct 17";
+  /** Story order id (buyer-facing). NetSuite also has a separate SO tranid. */
   var orderId = "PO-120";
+  /** Maps to NetSuite otherRefNum; optional at checkout (left blank until filled). */
+  var customerPo = "";
+  /** Sales order status in NetSuite Advanced Shipping flow. */
+  var orderStatus = "Pending Fulfillment";
+
+  var shipTos = [
+    {
+      id: "engage-main",
+      label: "Engage Pickleball - Main",
+      detail: "1847 Industrial Blvd, Austin TX",
+    },
+    {
+      id: "engage-north",
+      label: "Engage Pickleball - North",
+      detail: "2200 Research Park, Round Rock TX",
+    },
+  ];
+  var shipToId = "engage-main";
+
+  /** Quiet line availability (location / stock) - not a warehouse picker. */
+  var lineFulfillment = {
+    perseus: { warehouse: "CA", availability: "In stock" },
+    hyperion: { warehouse: "CA", availability: "In stock" },
+    scorpeus: { warehouse: "TX", availability: "In stock" },
+    hc40: { warehouse: "CA", availability: "Ships in 2 days" },
+    bag: { warehouse: "TX", availability: "In stock" },
+  };
 
   /**
    * INV-1042 is the open invoice for this Quick Order (full cart on Net 30).
@@ -273,8 +301,12 @@
     catalogExtra: ["hc40", "bag"],
     orderLines: orderLines,
     orderId: orderId,
+    customerPo: customerPo,
     shipDate: shipDate,
-    orderStatus: "Processing",
+    shipTos: shipTos,
+    shipToId: shipToId,
+    lineFulfillment: lineFulfillment,
+    orderStatus: orderStatus,
     orderTotal: orderTotal,
     /** Pill amount mirrors the open order; badge starts at 0 until Add all. */
     cartTotal: orderTotal,

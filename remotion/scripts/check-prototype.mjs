@@ -151,6 +151,8 @@ async function main() {
           interactionStates: [],
           qoRail: [],
           msgContext: [],
+          cartCheckout: [],
+          netsuiteLabels: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -769,6 +771,53 @@ async function main() {
             const d = root.querySelector("[data-msg-details]").textContent || "";
             if (!/ship/i.test(d)) issues.msgContext.push("details missing ship date");
             if (!/INV-1042/i.test(d)) issues.msgContext.push("details missing invoice");
+            if (!/Pending Fulfillment|Pending Approval|Billed/i.test(d)) {
+              issues.netsuiteLabels.push("order details missing NetSuite SO status");
+            }
+          }
+        }
+
+        // 18. Cart checkout: PO, ship date, ship-to, collapsed warehouse notes, returns path
+        if (screen === "cart") {
+          const box = root.querySelector("[data-cart-checkout]");
+          if (!box || !visible(box)) {
+            issues.cartCheckout.push("cart checkout block missing");
+          } else {
+            if (!box.querySelector('[data-field="po"]')) issues.cartCheckout.push("PO field missing");
+            if (!box.querySelector('[data-field="ship-date"]')) issues.cartCheckout.push("ship date missing");
+            if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
+            const notes = box.querySelector("[data-warehouse-notes]");
+            if (!notes) issues.cartCheckout.push("warehouse notes missing");
+            else if (notes.open) issues.cartCheckout.push("warehouse notes should start collapsed");
+            if (!box.querySelector("[data-returns-link]")) {
+              issues.cartCheckout.push("returns / RMA link missing");
+            }
+            if (/order type/i.test(box.textContent || "")) {
+              issues.cartCheckout.push("order type dropdown must not appear on cart");
+            }
+          }
+          const primaries = [...root.querySelectorAll(".btn-primary")].filter(visible);
+          if (primaries.length !== 1) {
+            issues.cartCheckout.push(`want 1 primary CTA, found ${primaries.length}`);
+          } else if (!/Place order/i.test(primaries[0].textContent || "")) {
+            issues.cartCheckout.push("primary CTA should be Place order");
+          }
+        }
+
+        // Quiet ships-from on Quick Order lines
+        if (screen === "qo-desktop") {
+          const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
+          const withShip = rows.filter((el) => /Ships from/i.test(el.textContent || ""));
+          if (withShip.length < 2) {
+            issues.netsuiteLabels.push("order lines missing ships-from availability");
+          }
+        }
+
+        // Net 30 beside credit in account panel
+        if (["qo-desktop", "invoices"].includes(screen)) {
+          const panel = root.querySelector("[data-account-panel]");
+          if (panel && visible(panel) && !/Net 30/i.test(panel.textContent || "")) {
+            issues.netsuiteLabels.push("account panel missing Net 30 terms next to credit");
           }
         }
 
@@ -825,6 +874,8 @@ async function main() {
       ["interaction-css", result.interactionStates],
       ["qo-rail", result.qoRail],
       ["msg-context", result.msgContext],
+      ["cart-checkout", result.cartCheckout],
+      ["netsuite-labels", result.netsuiteLabels],
     ];
     for (const [name, list] of checks) {
       // Screen-scoped checks: skip empty N/A as PASS only when relevant
@@ -846,6 +897,8 @@ async function main() {
         "interaction-css": ["qo-desktop"],
         "qo-rail": ["qo-desktop"],
         "msg-context": ["messages"],
+        "cart-checkout": ["cart"],
+        "netsuite-labels": ["qo-desktop", "invoices", "messages"],
       };
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));

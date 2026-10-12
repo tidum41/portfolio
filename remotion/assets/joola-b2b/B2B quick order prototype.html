@@ -1024,10 +1024,17 @@ img { display: block; max-width: 100%; }
 }
 .status.Processing,
 .status.Due,
-.status.Pending {
+.status.Pending,
+.status.PendingFulfillment,
+.status.PendingApproval {
   background: var(--pending-bg);
   color: var(--pending);
   border-color: rgba(138, 97, 0, 0.22);
+}
+.status.Billed {
+  background: var(--paid-bg);
+  color: var(--paid);
+  border-color: rgba(25, 135, 84, 0.22);
 }
 .status.Overdue,
 .status.Failed {
@@ -1379,6 +1386,120 @@ img { display: block; max-width: 100%; }
   padding: 3px;
 }
 .cart-line .line-total { text-align: right; }
+.cart-checkout {
+  margin-top: 20px;
+  max-width: 720px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+.cart-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.cart-field .control,
+.cart-field select,
+.cart-field input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+  font-family: inherit;
+}
+.cart-field .control {
+  display: flex;
+  align-items: center;
+  color: var(--ink);
+}
+.cart-field.span-2 { grid-column: 1 / -1; }
+.cart-disclosure {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 10px;
+}
+.cart-disclosure summary {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.cart-disclosure summary::-webkit-details-marker { display: none; }
+.cart-disclosure summary::before {
+  content: "+ ";
+  font-weight: 500;
+  color: var(--faint);
+}
+.cart-disclosure[open] summary::before { content: "- "; }
+.cart-disclosure textarea {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  color: var(--ink);
+  background: #fff;
+}
+.cart-returns {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cart-returns a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.btn-text {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease-out;
+}
+.btn-text:hover { color: var(--ink); }
+.btn-text:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.rail-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.rail-link:hover { color: var(--ink); }
 .cart-summary {
   margin-top: 24px;
   max-width: 360px;
@@ -1520,7 +1641,7 @@ img { display: block; max-width: 100%; }
       '<div class="sidebar-section">Account</div>' +
       '<div class="account-panel" data-account-panel>' +
       '<div class="org">' + L.retailer.name + "</div>" +
-      '<div class="credit-line">Used <span data-credit-used>' + money(L.credit.used) + "</span></div>" +
+      '<div class="credit-line">' + L.terms + ' · used <span data-credit-used>' + money(L.credit.used) + "</span></div>" +
       '<div class="credit-line">Available <span data-credit-available>' + money(L.credit.available) + "</span></div>" +
       "</div>" +
       "</aside>" +
@@ -1614,6 +1735,7 @@ img { display: block; max-width: 100%; }
         lastCat = p.category;
       }
       var amount = L.lineAmount(line);
+      var fulfill = L.lineFulfillment[line.productId] || { warehouse: "CA", availability: "In stock" };
       var rowClass = "order-row" + (line.productId === "perseus" ? " has-presets" : "");
       rows +=
         '<div class="' +
@@ -1634,8 +1756,10 @@ img { display: block; max-width: 100%; }
         p.fullName +
         '</div><div class="prod-sku">SKU ' +
         p.sku +
-        " · MOQ " +
-        p.moq +
+        " · Ships from " +
+        fulfill.warehouse +
+        " · " +
+        fulfill.availability +
         "</div></div>" +
         unitPriceHtml(p, line.qty) +
         '<div class="qty-cell">' +
@@ -1651,7 +1775,7 @@ img { display: block; max-width: 100%; }
     });
 
     return (
-      '<div class="section-title">This order</div>' +
+      '<div class="section-title">Lines</div>' +
       '<div class="order-table" data-order-table>' +
       '<div class="order-head" data-order-head>' +
       "<div></div><div>Product</div><div class=\"end\">Price</div><div class=\"qty-h end\">Quantity</div><div class=\"end\">Line total</div><div></div>" +
@@ -1692,10 +1816,11 @@ img { display: block; max-width: 100%; }
       .join("");
     return (
       '<aside class="qo-rail" data-qo-rail>' +
-      '<div class="rail-card"><h3>Saved templates</h3>' +
+      '<div class="rail-card"><h3>Templates</h3>' +
       tpl +
+      '<button type="button" class="rail-link">Upload CSV</button>' +
       "</div>" +
-      '<div class="rail-card"><h3>Recent orders</h3>' +
+      '<div class="rail-card"><h3>Recent</h3>' +
       recent +
       "</div>" +
       "</aside>"
@@ -1708,17 +1833,15 @@ img { display: block; max-width: 100%; }
       "<div><div class=\"meta\" data-line-count>" +
       L.orderLines.length +
       (L.orderLines.length === 1 ? " line" : " lines") +
-      " · " +
-      L.terms +
       '</div><div class="total" id="qoFooterTotal" data-order-total>' +
       money(L.orderTotal) +
       '</div><div class="inline-success' +
       (cartUi.added ? " show" : "") +
       '" data-inline-success>' +
-      (cartUi.added ? "All lines added to cart" : "") +
+      (cartUi.added ? "Added to cart" : "") +
       "</div></div>" +
-      '<div style="display:flex;gap:10px;">' +
-      '<button type="button" class="btn-outline">Save template</button>' +
+      '<div style="display:flex;gap:14px;align-items:center;">' +
+      '<button type="button" class="btn-text">Save as template</button>' +
       '<button type="button" class="btn-primary" id="qoAddAllBtn" data-add-all' +
       (cartUi.added ? " disabled" : "") +
       ">" +
@@ -1735,15 +1858,14 @@ img { display: block; max-width: 100%; }
       '<div class="search-row">' +
       '<div class="search-wrap">' +
       '<div class="search-field has-value" data-search-field data-search-value="' + typed + '">' +
-      '<span class="placeholder">Search by name, category, or SKU</span>' +
+      '<span class="placeholder">Search by name or SKU</span>' +
       '<span class="value">' + typed + "</span>" +
       "</div>" +
       '<div class="search-results" data-search-results>' +
       '<div class="search-result" data-search-result data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
       '<img src="' + p.image + '" alt="' + p.name + '" width="28" height="28">' +
-      "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(p.buyerPrice) + " · MOQ " + p.moq + "</div></div>" +
+      "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(p.buyerPrice) + "</div></div>" +
       "</div></div></div>" +
-      '<button type="button" class="btn-outline">Bulk upload</button>' +
       "</div>"
     );
   }
@@ -1753,10 +1875,10 @@ img { display: block; max-width: 100%; }
       '<section class="screen active" data-screen="qo-desktop">' +
       shellOpen("qo-desktop") +
       '<div class="page">' +
-      "<h1>Build a bulk order</h1>" +
-      '<p class="lede">Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects ' +
+      "<h1>Quick order</h1>" +
+      '<p class="lede">Add SKUs and quantities. Prices are for ' +
       L.retailer.name +
-      "'s wholesale tier.</p>" +
+      ".</p>" +
       searchHtml() +
       '<div class="qo-layout">' +
       '<div class="qo-main">' +
@@ -1841,15 +1963,15 @@ img { display: block; max-width: 100%; }
       shellOpen("catalog") +
       '<div class="page">' +
       "<h1>Catalog</h1>" +
-      '<p class="lede">Browse everything available to ' +
+      '<p class="lede">Products available to ' +
       L.retailer.name +
-      ", or start from Recommended for you.</p>" +
-      '<div class="section-title">Recommended for you</div>' +
+      ".</p>" +
+      '<div class="section-title">Recommended</div>' +
       '<div class="rec-rail">' +
       rec +
       "</div>" +
       '<div class="catalog-toolbar">' +
-      '<div class="section-title">Paddles &amp; pickleball goods</div>' +
+      '<div class="section-title">All products</div>' +
       '<div class="view-toggle" data-view-toggle>' +
       '<button type="button" data-view="cards" class="' +
       (catalogView === "cards" ? "on" : "") +
@@ -1886,9 +2008,9 @@ img { display: block; max-width: 100%; }
       shellOpen("templates") +
       '<div class="page">' +
       "<h1>Templates</h1>" +
-      '<p class="lede">Shared with everyone on <strong>' +
+      '<p class="lede">Saved orders for ' +
       L.retailer.name +
-      "</strong>.</p>" +
+      ".</p>" +
       '<div class="templates-list" data-templates-list>' +
       cards +
       "</div>" +
@@ -1907,12 +2029,26 @@ img { display: block; max-width: 100%; }
       .map(function (line) {
         var p = L.products[line.productId];
         var amount = L.lineAmount(line);
+        var fulfill = L.lineFulfillment[line.productId] || { warehouse: "CA", availability: "In stock" };
         return (
           '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
           '<img src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
-          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · " + line.qty + " × " + money(L.priceAt(p, line.qty)) + "</div></div>" +
+          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · " + line.qty + " × " + money(L.priceAt(p, line.qty)) + " · " + fulfill.warehouse + "</div></div>" +
           '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
           "</div>"
+        );
+      })
+      .join("");
+    var shipOptions = L.shipTos
+      .map(function (a) {
+        return (
+          '<option value="' +
+          a.id +
+          '"' +
+          (a.id === L.shipToId ? " selected" : "") +
+          ">" +
+          a.label +
+          "</option>"
         );
       })
       .join("");
@@ -1921,13 +2057,38 @@ img { display: block; max-width: 100%; }
       shellOpen("cart", filledCart()) +
       '<div class="page">' +
       "<h1>Cart</h1>" +
-      '<p class="lede">Ready to place on ' + L.terms + " terms.</p>" +
+      '<p class="lede">Review lines, then place the order.</p>' +
       '<div class="cart-lines">' + lines + "</div>" +
+      '<div class="cart-checkout" data-cart-checkout>' +
+      '<div class="cart-field" data-field="po">' +
+      '<label for="cart-po">Your PO # <span style="font-weight:400;color:var(--faint)">(optional)</span></label>' +
+      '<input id="cart-po" type="text" placeholder="e.g. ENG-9812" value="' +
+      (L.customerPo || "") +
+      '" autocomplete="off">' +
+      "</div>" +
+      '<div class="cart-field" data-field="ship-date">' +
+      '<label for="cart-ship-date">Requested ship date</label>' +
+      '<div class="control" id="cart-ship-date">' +
+      L.shipDate +
+      "</div>" +
+      "</div>" +
+      '<div class="cart-field span-2" data-field="ship-to">' +
+      '<label for="cart-ship-to">Ship to</label>' +
+      '<select id="cart-ship-to">' +
+      shipOptions +
+      "</select>" +
+      "</div>" +
+      '<details class="cart-disclosure" data-warehouse-notes>' +
+      "<summary>Notes for warehouse</summary>" +
+      '<textarea placeholder="Dock hours, pallet notes, or receiving instructions" aria-label="Notes for warehouse"></textarea>' +
+      "</details>" +
+      '<div class="cart-returns" data-returns-link>Need a replacement or warranty? <a href="#returns">Request a return</a></div>' +
+      "</div>" +
       '<div class="cart-summary">' +
-      '<div class="meta" style="font-size:13px;color:var(--muted);margin-bottom:6px;">Order total · ' + L.terms + "</div>" +
+      '<div class="meta" style="font-size:13px;color:var(--muted);margin-bottom:6px;">Order total</div>' +
       '<div class="big" data-order-total data-cart-total>' + money(L.cartTotal) + "</div>" +
       '<div class="note" style="margin-top:12px;font-size:12px;color:var(--muted);">' +
-      L.terms + " credit: " + money(L.credit.used) + " of " + money(L.credit.limit) + " used · " + money(L.credit.available) + " available</div>" +
+      L.terms + ": " + money(L.credit.available) + " available of " + money(L.credit.limit) + "</div>" +
       '<button type="button" class="btn-primary" style="margin-top:16px;">Place order</button>' +
       "</div></div>" +
       shellClose() +
@@ -1966,12 +2127,12 @@ img { display: block; max-width: 100%; }
       '<section class="screen" data-screen="invoices">' +
       shellOpen("invoices", filledCart()) +
       '<div class="page">' +
-      "<h1>Invoices &amp; terms</h1>" +
-      '<p class="lede">Track what has been billed to your account, what is still open, and how much of your credit line is available for Quick order.</p>' +
+      "<h1>Invoices</h1>" +
+      '<p class="lede">Open balances and credit on ' + L.terms + ".</p>" +
       '<div class="credit-card" data-credit-card>' +
-      '<div class="row"><span>' + L.terms + ' credit line used</span><span data-credit-used>' + money(L.credit.used) + " of " + money(L.credit.limit) + "</span></div>" +
+      '<div class="row"><span>' + L.terms + ' used</span><span data-credit-used>' + money(L.credit.used) + " of " + money(L.credit.limit) + "</span></div>" +
       '<div class="credit-bar" data-credit-bar><i style="width:' + L.credit.pct + '%" data-credit-fill></i></div>' +
-      '<div class="note" data-credit-available>' + money(L.credit.available) + " available for new Quick order purchases on " + L.terms + " terms.</div>" +
+      '<div class="note" data-credit-available>' + money(L.credit.available) + " available</div>" +
       "</div>" +
       '<div class="invoice-table" data-invoice-table>' +
       '<div class="invoice-head" data-invoice-head>' +
@@ -2001,12 +2162,6 @@ img { display: block; max-width: 100%; }
       '<div><div class="oc-label">Order</div><div class="oc-value">' +
       L.orderId +
       '</div></div>' +
-      '<div><div class="oc-label">Invoice</div><div class="oc-value">' +
-      inv.id +
-      '</div></div>' +
-      '<div><div class="oc-label">Ship date</div><div class="oc-value">' +
-      L.shipDate +
-      '</div></div>' +
       '<div><div class="oc-label">Amount</div><div class="oc-value" data-order-total>' +
       money(L.orderTotal) +
       "</div></div>" +
@@ -2029,7 +2184,9 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<aside class="msg-details" data-msg-details>' +
       "<h2>Order details</h2>" +
-      '<div class="detail-row"><div class="k">Status</div><div class="v"><span class="status Pending">Pending</span></div></div>' +
+      '<div class="detail-row"><div class="k">Status</div><div class="v"><span class="status PendingFulfillment">' +
+      L.orderStatus +
+      "</span></div></div>" +
       '<div class="detail-row"><div class="k">Ship date</div><div class="v">' +
       L.shipDate +
       "</div></div>" +
@@ -2041,9 +2198,6 @@ img { display: block; max-width: 100%; }
       "</div></div>" +
       '<div class="detail-row"><div class="k">Terms</div><div class="v">' +
       L.terms +
-      "</div></div>" +
-      '<div class="detail-row"><div class="k">Lines</div><div class="v" data-line-count>' +
-      L.orderLines.length +
       "</div></div>" +
       "</aside>" +
       "</div>" +
@@ -2066,7 +2220,7 @@ img { display: block; max-width: 100%; }
       '<div class="state-row"><span class="state-label">Disabled</span><button type="button" class="btn-primary" disabled>Added</button></div>' +
       "</div>" +
       '<div class="state-block"><h3>Outline + nav</h3>' +
-      '<div class="state-row"><span class="state-label">Outline</span><button type="button" class="btn-outline">Save template</button></div>' +
+      '<div class="state-row"><span class="state-label">Secondary</span><button type="button" class="btn-text">Save as template</button></div>' +
       '<div class="state-row"><span class="state-label">Nav</span><button type="button" class="nav-item active" style="width:auto">' +
       icon("order") +
       "<span>Quick order</span></button>" +
@@ -2118,15 +2272,15 @@ img { display: block; max-width: 100%; }
       '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
       '<span style="display:flex;align-items:center;gap:6px;">' + avatarHtml() + '<span style="font-size:11px;">' + L.retailer.name + "</span></span></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
-      "<h1 style=\"font-size:28px;\">Build a bulk order</h1>" +
-      '<p class="lede">Pricing for ' + L.retailer.name + ".</p>" +
+      "<h1 style=\"font-size:28px;\">Quick order</h1>" +
+      '<p class="lede">Prices for ' + L.retailer.name + ".</p>" +
       '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line-soft);height:50px;">' +
       '<img src="' + p.image + '" alt="" width="36" height="36" style="object-fit:contain;border:1px solid var(--line);border-radius:6px;background:var(--band);padding:3px;">' +
       "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + "</div>" +
       '<div style="margin-top:2px;font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea · qty " + L.perseusQty + "</div></div></div>" +
       '<div style="margin-top:20px;font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
-      '<div class="order-footer" data-order-footer><button type="button" class="btn-outline" style="flex:1;justify-content:center;">Save</button><button type="button" class="btn-primary" style="flex:1;justify-content:center;">Add all to cart</button></div>' +
+      '<div class="order-footer" data-order-footer><button type="button" class="btn-primary" style="flex:1;justify-content:center;">Add all to cart</button></div>' +
       "</section>"
     );
   }
@@ -2202,7 +2356,7 @@ img { display: block; max-width: 100%; }
       el.setAttribute("aria-label", "Cart, " + money(cartUi.total));
     });
     document.querySelectorAll("[data-inline-success]").forEach(function (el) {
-      el.textContent = "All lines added to cart";
+      el.textContent = "Added to cart";
       el.classList.add("show");
     });
     document.querySelectorAll("[data-add-all]").forEach(function (btn) {
