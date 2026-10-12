@@ -1835,23 +1835,29 @@
   width: 100%;
   display: block;
   /* Light blur so the wireframe still reads through the gate. */
-  filter: blur(3px);
+  filter: blur(2.5px);
   transition: filter 200ms ease-out;
 }
 
+.cl-gate .cl-wire {
+  /* Stronger chrome so blur still shows UI structure. */
+  color: rgba(17, 17, 17, 0.42);
+  background: #d8d8d8;
+}
+
 .cl-gate[data-cl-gate="frost-lock"] .cl-gate__media {
-  filter: blur(5px) saturate(0.7);
+  filter: blur(4px) saturate(0.7);
 }
 
 .cl-gate__veil {
   position: absolute;
   inset: 0;
-  background: rgba(20, 20, 20, 0.22);
+  background: rgba(20, 20, 20, 0.14);
   pointer-events: none;
 }
 
 .cl-gate[data-cl-gate="frost-lock"] .cl-gate__veil {
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.38);
 }
 
 .cl-gate__lock,
