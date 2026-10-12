@@ -24,7 +24,12 @@ export type ConceptKind =
   | "numbered-index"
   | "cursor-label"
   | "stagger-reveal"
-  | "gated-nda";
+  | "gated-nda"
+  | "row-wash"
+  | "attribution-fade"
+  | "chevron-reveal"
+  | "grayscale-color"
+  | "expand-caption";
 
 export type VariantId = "a" | "b" | "c" | string;
 

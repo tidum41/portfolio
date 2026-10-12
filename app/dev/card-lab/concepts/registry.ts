@@ -23,6 +23,11 @@ import { numberedIndex } from "./numbered-index";
 import { cursorLabel } from "./cursor-label";
 import { staggerReveal } from "./stagger-reveal";
 import { gatedNda } from "./gated-nda";
+import { rowWash } from "./row-wash";
+import { attributionFade } from "./attribution-fade";
+import { chevronReveal } from "./chevron-reveal";
+import { grayscaleColor } from "./grayscale-color";
+import { expandCaption } from "./expand-caption";
 
 // Heterogeneous variant shapes — registry erases V at the boundary.
 export const CONCEPTS = [
@@ -39,6 +44,11 @@ export const CONCEPTS = [
   cursorLabel,
   staggerReveal,
   gatedNda,
+  rowWash,
+  attributionFade,
+  chevronReveal,
+  grayscaleColor,
+  expandCaption,
 ] as unknown as readonly ConceptDefinition<ConceptVariant>[];
 
 export type { ConceptDefinition, ConceptKind, ConceptVariant } from "./types";

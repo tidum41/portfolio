@@ -1357,6 +1357,11 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
         "cursor-label",
         "stagger-reveal",
         "gated-nda",
+        "row-wash",
+        "attribution-fade",
+        "chevron-reveal",
+        "grayscale-color",
+        "expand-caption",
       ]);
       const bad = [];
       for (const row of document.querySelectorAll('[data-cl-row-mode="rest"]')) {
@@ -1439,6 +1444,11 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       "cursor-label",
       "stagger-reveal",
       "gated-nda",
+      "row-wash",
+      "attribution-fade",
+      "chevron-reveal",
+      "grayscale-color",
+      "expand-caption",
     ];
     const variantDiffFails = [];
     for (const id of conceptIds) {
@@ -1546,6 +1556,124 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
       expandTops.ok,
       expandTops.detail
     );
+
+    // ——— New concepts 11–15 ———
+    const rowWash = await themePage.evaluate(() => {
+      const rest = document.querySelector(
+        '[data-cl-row-mode="rest"] [data-cl-kind="row-wash"] [data-cl-wash-row]'
+      );
+      const hover = document.querySelector(
+        '[data-cl-row-mode="hover"] [data-cl-kind="row-wash"] [data-cl-wash-active="1"]'
+      );
+      if (!rest || !hover) return { ok: false, detail: "missing rows" };
+      const rb = getComputedStyle(rest).backgroundColor;
+      const hb = getComputedStyle(hover).backgroundColor;
+      const pad = getComputedStyle(hover).padding;
+      const rad = getComputedStyle(hover).borderTopLeftRadius;
+      const ok =
+        (rb === "rgba(0, 0, 0, 0)" || rb === "transparent") &&
+        hb === "rgb(245, 245, 245)" &&
+        rad === "12px" &&
+        (pad === "12px 16px" || pad.startsWith("12px"));
+      return { ok, detail: `rest=${rb} hover=${hb} pad=${pad} rad=${rad}` };
+    });
+    record(55, `Row wash hover fill (${tag})`, rowWash.ok, rowWash.detail);
+
+    const attrFade = await themePage.evaluate(() => {
+      const rest = document.querySelector(
+        '[data-cl-row-mode="rest"] [data-cl-kind="attribution-fade"] [data-cl-attr-fade]'
+      );
+      const hover = document.querySelector(
+        '[data-cl-row-mode="hover"] [data-cl-kind="attribution-fade"] [data-cl-attr-fade]'
+      );
+      if (!rest || !hover) return { ok: false, detail: "missing fade" };
+      const ro = Number(getComputedStyle(rest).opacity);
+      const ho = Number(getComputedStyle(hover).opacity);
+      return {
+        ok: ro < 0.05 && ho > 0.95,
+        detail: `restOp=${ro} hoverOp=${ho}`,
+      };
+    });
+    record(56, `Attribution fade opacity (${tag})`, attrFade.ok, attrFade.detail);
+
+    const chev = await themePage.evaluate(() => {
+      const rest = document.querySelector(
+        '[data-cl-row-mode="rest"] [data-cl-kind="chevron-reveal"] [data-cl-chev-trail]'
+      );
+      const hover = document.querySelector(
+        '[data-cl-row-mode="hover"] [data-cl-kind="chevron-reveal"] [data-cl-chev-active="1"] [data-cl-chev-trail]'
+      );
+      if (!rest || !hover) return { ok: false, detail: "missing trail" };
+      const ro = Number(getComputedStyle(rest).opacity);
+      const ho = Number(getComputedStyle(hover).opacity);
+      const tx = getComputedStyle(hover).transform;
+      return {
+        ok: ro < 0.05 && ho > 0.95,
+        detail: `restOp=${ro} hoverOp=${ho} transform=${tx}`,
+      };
+    });
+    record(57, `Chevron trail reveal (${tag})`, chev.ok, chev.detail);
+
+    const grey = await themePage.evaluate(() => {
+      const cards = [...document.querySelectorAll(
+        '[data-cl-row-mode="rest"] [data-cl-kind="grayscale-color"][data-cl-card]'
+      )];
+      if (cards.length < 3) return { ok: false, detail: `cards=${cards.length}` };
+      const filters = cards.map((c) => {
+        const m = c.querySelector(".cl-grey__media");
+        return getComputedStyle(m).filter;
+      });
+      const colored = cards.every((c) =>
+        c.querySelector('[data-cl-wire-colored="1"]')
+      );
+      const ok =
+        colored &&
+        filters[0].includes("grayscale(1)") &&
+        filters[1].includes("grayscale(0.5)") &&
+        filters[2].includes("grayscale(1)") &&
+        filters[2].includes("brightness");
+      return { ok, detail: `colored=${colored} filters=${filters.join(" | ")}` };
+    });
+    record(58, `Grayscale rest filters (${tag})`, grey.ok, grey.detail);
+
+    const xcap = await themePage.evaluate(() => {
+      const restCards = [...document.querySelectorAll(
+        '[data-cl-row-mode="rest"] [data-cl-kind="expand-caption"][data-cl-card]'
+      )];
+      const hoverCards = [...document.querySelectorAll(
+        '[data-cl-row-mode="hover"] [data-cl-kind="expand-caption"][data-cl-card]'
+      )];
+      if (restCards.length < 3 || hoverCards.length < 3) {
+        return { ok: false, detail: "missing cards" };
+      }
+      const approaches = restCards.map((c) => c.getAttribute("data-cl-approach"));
+      const restH = restCards.map((c) => c.getBoundingClientRect().height);
+      const hoverH = hoverCards.map((c) => c.getBoundingClientRect().height);
+      // No jump: each variant's rest height ≈ hover height (reserve or overlay).
+      const jumps = restH.map((h, i) => Math.abs(hoverH[i] - h));
+      const noJump = jumps.every((j) => j <= 2);
+      const hoverCaps = hoverCards.map((c) => {
+        const cap = c.querySelector("[data-cl-xcap-captions]");
+        return Number(getComputedStyle(cap).opacity);
+      });
+      const capsVisible = hoverCaps.every((o) => o > 0.95);
+      const restCaps = restCards.map((c) => {
+        const cap = c.querySelector("[data-cl-xcap-captions]");
+        return Number(getComputedStyle(cap).opacity);
+      });
+      const capsHidden = restCaps.every((o) => o < 0.05);
+      return {
+        ok:
+          noJump &&
+          capsVisible &&
+          capsHidden &&
+          approaches.includes("reserve") &&
+          approaches.includes("absolute-bottom") &&
+          approaches.includes("absolute-fade"),
+        detail: `approaches=${approaches.join(",")} jumps=${jumps.map((j) => j.toFixed(1)).join(",")} restOp=${restCaps} hoverOp=${hoverCaps}`,
+      };
+    });
+    record(59, `Expand-caption no jump + approaches (${tag})`, xcap.ok, xcap.detail);
   } else {
     record(48, `Card titles match Mudit projects (${tag})`, true, "checked on 1440 light");
     record(49, `No text clipped by overflow:hidden (${tag})`, true, "checked on 1440 light");
@@ -1554,6 +1682,11 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     record(52, `Variants pixel-distinct (${tag})`, true, "checked on 1440 light");
     record(53, `No chip overlapping wireframe chrome/body (${tag})`, true, "checked on 1440 light");
     record(54, `Expanding-chip media tops aligned (${tag})`, true, "checked on 1440 light");
+    record(55, `Row wash hover fill (${tag})`, true, "checked on 1440 light");
+    record(56, `Attribution fade opacity (${tag})`, true, "checked on 1440 light");
+    record(57, `Chevron trail reveal (${tag})`, true, "checked on 1440 light");
+    record(58, `Grayscale rest filters (${tag})`, true, "checked on 1440 light");
+    record(59, `Expand-caption no jump + approaches (${tag})`, true, "checked on 1440 light");
   }
 
   await themeCtx.close();
@@ -1587,7 +1720,7 @@ async function main() {
     else if (prev.pass === r.pass && r.detail && !prev.detail) byId.set(r.id, r);
   }
 
-  const maxId = Math.max(54, ...byId.keys());
+  const maxId = Math.max(59, ...byId.keys());
   console.log("\n=== Card lab rubric ===");
   console.log("ID | RESULT | Check");
   console.log("---|--------|------");

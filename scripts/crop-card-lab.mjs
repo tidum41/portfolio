@@ -8,6 +8,7 @@ await mkdir(OUT, { recursive: true });
 const concepts = [
   "expanding-chip","pill-row","outcome-metric","status-line","brand-lockup",
   "dual-cta","numbered-index","cursor-label","stagger-reveal","gated-nda",
+  "row-wash","attribution-fade","chevron-reveal","grayscale-color","expand-caption",
 ];
 
 const browser = await chromium.launch({ headless: true });

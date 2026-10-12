@@ -7,6 +7,8 @@
   --cl-secondary: #5c5c5c;
   --cl-tertiary: #6b6b6b;
   --cl-hairline: rgba(0, 0, 0, 0.08);
+  /* Single accent token for attribution / role reveals (ink-adjacent coral). */
+  --cl-accent: #b84a2e;
   --cl-media-0: #e6e6e6;
   --cl-media-1: #e3e6ea;
   --cl-media-2: #e9e4de;
@@ -39,6 +41,7 @@
   --cl-secondary: #a3a3a3;
   --cl-tertiary: #969696;
   --cl-hairline: rgba(255, 255, 255, 0.08);
+  --cl-accent: #e07a5f;
   --cl-media-0: #2a2a2a;
   --cl-media-1: #272b30;
   --cl-media-2: #2e2a26;
@@ -2228,6 +2231,480 @@
   color: var(--cl-secondary);
 }
 
+/* Colored wire accents — visible under grayscale→color. */
+.cl-wire--colored {
+  background: #dce3ea;
+}
+
+.cl-wire--colored .cl-wire__chrome span:nth-child(1) {
+  background: #e24b4a;
+}
+.cl-wire--colored .cl-wire__chrome span:nth-child(2) {
+  background: #e2b33c;
+}
+.cl-wire--colored .cl-wire__chrome span:nth-child(3) {
+  background: #4aa35a;
+}
+
+.cl-wire--colored .cl-wire__chrome-bar,
+.cl-wire--colored .cl-wire__search,
+.cl-wire--colored .cl-wire__btn {
+  background: #3d6b8c;
+  opacity: 0.85;
+}
+
+.cl-wire--colored .cl-wire__cards i:nth-child(odd),
+.cl-wire--colored .cl-wire__related i:nth-child(2) {
+  background: #c45c3e;
+  opacity: 0.7;
+}
+
+.cl-wire--colored .cl-wire__cards i:nth-child(even),
+.cl-wire--colored .cl-wire__side i:nth-child(2n) {
+  background: #2f6f6a;
+  opacity: 0.65;
+}
+
+.cl-wire--colored .cl-wire__dock i:nth-child(1) {
+  background: #3d6b8c;
+  opacity: 0.55;
+}
+.cl-wire--colored .cl-wire__dock i:nth-child(2) {
+  background: #c45c3e;
+  opacity: 0.55;
+}
+.cl-wire--colored .cl-wire__dock i:nth-child(3) {
+  background: #4aa35a;
+  opacity: 0.55;
+}
+
+.card-lab[data-theme="dark"] .cl-wire--colored {
+  background: #243040;
+}
+
+/* ——— 14 Row wash ——— */
+.cl-wash {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cl-wash__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: transparent;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cl-wash__row:hover,
+.cl-wash__row:focus-within,
+.cl-wash__row--active {
+  background: rgb(245, 245, 245);
+}
+
+.card-lab[data-theme="dark"] .cl-wash__row:hover,
+.card-lab[data-theme="dark"] .cl-wash__row:focus-within,
+.card-lab[data-theme="dark"] .cl-wash__row--active {
+  background: rgb(36, 36, 36);
+}
+
+.cl-wash__thumb {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.cl-wash__thumb-media {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cl-wash__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cl-wash__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
+.cl-wash__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+.cl-wash__desc--1 {
+  white-space: nowrap;
+}
+
+.cl-wash__desc--2 {
+  max-height: 40px;
+  overflow: hidden;
+}
+
+/* ——— 15 Attribution fade ——— */
+.cl-attr {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cl-attr__media {
+  width: 100%;
+  display: block;
+}
+
+.cl-attr__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cl-attr__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
+.cl-attr__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+.cl-attr__fade {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.cl-attr__fade--accent {
+  color: var(--cl-accent);
+}
+
+.cl-attr__fade--grey {
+  color: var(--cl-secondary);
+}
+
+.cl-attr:hover .cl-attr__fade,
+.cl-attr:focus-within .cl-attr__fade,
+.cl-attr[data-cl-force-hover="1"] .cl-attr__fade {
+  opacity: 1;
+}
+
+/* ——— 16 Chevron reveal ——— */
+.cl-chev {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cl-chev__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 16px;
+  background: transparent;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cl-chev__row:hover,
+.cl-chev__row:focus-within,
+.cl-chev__row--active {
+  background: rgb(245, 245, 245);
+}
+
+.card-lab[data-theme="dark"] .cl-chev__row:hover,
+.card-lab[data-theme="dark"] .cl-chev__row:focus-within,
+.card-lab[data-theme="dark"] .cl-chev__row--active {
+  background: rgb(36, 36, 36);
+}
+
+.cl-chev__tile {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.cl-chev__tile-media {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cl-chev__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-chev__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
+.cl-chev__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+.cl-chev__trail {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  color: var(--cl-primary);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.2s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cl-chev__row:hover .cl-chev__trail,
+.cl-chev__row:focus-within .cl-chev__trail,
+.cl-chev__row--active .cl-chev__trail {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cl-chev__trail-text {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+.cl-chev__trail-icon {
+  display: block;
+}
+
+/* ——— 17 Grayscale to colour ——— */
+.cl-grey {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cl-grey__media-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 8px;
+  background: color-mix(in srgb, var(--cl-primary) 4%, transparent);
+}
+
+.cl-grey__media {
+  width: 100%;
+  display: block;
+  transition: filter 0.4s;
+}
+
+.cl-grey[data-cl-rest-filter="full"] .cl-grey__media {
+  filter: grayscale(1);
+}
+
+.cl-grey[data-cl-rest-filter="half"] .cl-grey__media {
+  filter: grayscale(0.5);
+}
+
+.cl-grey[data-cl-rest-filter="dim-grey"] .cl-grey__media {
+  filter: grayscale(1) brightness(0.85);
+}
+
+.cl-grey:hover .cl-grey__media,
+.cl-grey:focus-within .cl-grey__media,
+.cl-grey[data-cl-force-hover="1"] .cl-grey__media {
+  filter: grayscale(0) brightness(1);
+}
+
+.cl-grey__copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-grey__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
+.cl-grey__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+/* ——— 18 Expand plus caption ——— */
+.cl-xcap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cl-xcap__frame {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cl-xcap__media-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.cl-xcap__media {
+  width: 100%;
+  display: block;
+}
+
+.cl-xcap__band {
+  height: var(--cl-xcap-band, 60px);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  background: var(--cl-surface);
+}
+
+.cl-xcap[data-cl-approach="reserve"] .cl-xcap__captions {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.cl-xcap[data-cl-approach="reserve"]:hover .cl-xcap__captions,
+.cl-xcap[data-cl-approach="reserve"]:focus-within .cl-xcap__captions,
+.cl-xcap[data-cl-approach="reserve"][data-cl-force-hover="1"] .cl-xcap__captions {
+  opacity: 1;
+}
+
+.cl-xcap[data-cl-approach="absolute-bottom"] .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-fade"] .cl-xcap__captions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--cl-xcap-band, 60px);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+  pointer-events: none;
+}
+
+.cl-xcap[data-cl-approach="absolute-bottom"] .cl-xcap__captions {
+  background: var(--cl-surface);
+  transform: translateY(8px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.cl-xcap[data-cl-approach="absolute-fade"] .cl-xcap__captions {
+  background: linear-gradient(
+    to top,
+    rgba(244, 244, 244, 0.96) 0%,
+    rgba(244, 244, 244, 0.85) 70%,
+    rgba(244, 244, 244, 0) 100%
+  );
+}
+
+.card-lab[data-theme="dark"] .cl-xcap[data-cl-approach="absolute-fade"] .cl-xcap__captions {
+  background: linear-gradient(
+    to top,
+    rgba(20, 20, 20, 0.96) 0%,
+    rgba(20, 20, 20, 0.85) 70%,
+    rgba(20, 20, 20, 0) 100%
+  );
+}
+
+.cl-xcap[data-cl-approach="absolute-bottom"]:hover .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-bottom"]:focus-within .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-bottom"][data-cl-force-hover="1"] .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-fade"]:hover .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-fade"]:focus-within .cl-xcap__captions,
+.cl-xcap[data-cl-approach="absolute-fade"][data-cl-force-hover="1"] .cl-xcap__captions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cl-xcap__captions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.cl-xcap__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+.cl-xcap__meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cl-secondary);
+}
+
+.cl-xcap__role {
+  color: var(--cl-accent);
+  font-weight: 500;
+}
+
+.cl-xcap__year {
+  color: var(--cl-secondary);
+}
+
+.cl-xcap__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cl-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cl-expand__chip,
   .cl-status__media,
@@ -2248,7 +2725,13 @@
   .cl-gate__request,
   .cl-gate__media,
   .cl-metric__cta,
-  .cl-wire__shimmer {
+  .cl-wire__shimmer,
+  .cl-wash__row,
+  .cl-attr__fade,
+  .cl-chev__row,
+  .cl-chev__trail,
+  .cl-grey__media,
+  .cl-xcap__captions {
     transition: none !important;
     animation: none !important;
   }

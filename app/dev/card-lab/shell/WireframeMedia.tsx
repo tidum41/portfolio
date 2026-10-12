@@ -15,6 +15,8 @@ export default function WireframeMedia({
   fill = false,
   /** Reserve a clear top band (px) so an overlay chip does not cover chrome. */
   topClear = 0,
+  /** Paint a few UI bars in brand accents so grayscale→color is visible. */
+  colored = false,
 }: {
   kind: WireframeKind;
   aspect: string;
@@ -27,13 +29,15 @@ export default function WireframeMedia({
   /** Stretch to parent height instead of locking aspect ratio. */
   fill?: boolean;
   topClear?: number;
+  colored?: boolean;
 }) {
   return (
     <div
-      className={`cl-wire${className ? ` ${className}` : ""}${dimmed ? " cl-wire--dimmed" : ""}${play ? " cl-wire--play" : ""}${fill ? " cl-wire--fill" : ""}${topClear > 0 ? " cl-wire--top-clear" : ""}`}
+      className={`cl-wire${className ? ` ${className}` : ""}${dimmed ? " cl-wire--dimmed" : ""}${play ? " cl-wire--play" : ""}${fill ? " cl-wire--fill" : ""}${topClear > 0 ? " cl-wire--top-clear" : ""}${colored ? " cl-wire--colored" : ""}`}
       data-cl-media
       data-cl-wireframe={kind}
       data-cl-aspect={fill ? "fill" : aspect}
+      data-cl-wire-colored={colored ? "1" : undefined}
       style={{
         aspectRatio: fill ? undefined : aspect,
         borderRadius: radius !== undefined ? `${radius}px` : undefined,
