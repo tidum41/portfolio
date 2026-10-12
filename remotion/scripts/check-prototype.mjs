@@ -780,15 +780,44 @@ async function main() {
         // 18. Cart checkout: PO, ship date, ship-to, collapsed warehouse notes, returns path
         if (screen === "cart") {
           const box = root.querySelector("[data-cart-checkout]");
+          const layout = root.querySelector("[data-cart-layout]");
+          const summary = root.querySelector("[data-cart-summary]");
+          if (!layout || !visible(layout)) issues.cartCheckout.push("two-column cart layout missing");
+          if (!summary || !visible(summary)) issues.cartCheckout.push("sticky summary missing");
+          if (summary) {
+            const st = getComputedStyle(summary);
+            if (st.position !== "sticky" && st.position !== "fixed") {
+              issues.cartCheckout.push(`summary position=${st.position} (want sticky)`);
+            }
+            if (!/After placing|After this order/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("summary missing after-placing credit copy");
+            }
+            if (!/Calculated at invoice/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("summary missing tax note");
+            }
+          }
           if (!box || !visible(box)) {
             issues.cartCheckout.push("cart checkout block missing");
           } else {
             if (!box.querySelector('[data-field="po"]')) issues.cartCheckout.push("PO field missing");
             if (!box.querySelector('[data-field="ship-date"]')) issues.cartCheckout.push("ship date missing");
             if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
+            if (!box.querySelector("[data-ship-address]")) {
+              issues.cartCheckout.push("ship-to address line missing");
+            }
             const notes = box.querySelector("[data-warehouse-notes]");
             if (!notes) issues.cartCheckout.push("warehouse notes missing");
             else if (notes.open) issues.cartCheckout.push("warehouse notes should start collapsed");
+            else {
+              const sum = notes.querySelector("summary");
+              const t = (sum?.textContent || "").trim();
+              if (/^[-−–—+]/.test(t)) {
+                issues.cartCheckout.push(`warehouse summary has stray prefix: "${t.slice(0, 24)}"`);
+              }
+              if (!sum?.querySelector(".chev")) {
+                issues.cartCheckout.push("warehouse disclosure missing chevron");
+              }
+            }
             if (!box.querySelector("[data-returns-link]")) {
               issues.cartCheckout.push("returns / RMA link missing");
             }
@@ -804,12 +833,31 @@ async function main() {
           }
         }
 
-        // Quiet ships-from on Quick Order lines
+        // Quiet warehouse / availability on Quick Order lines; no category grouping noise
         if (screen === "qo-desktop") {
           const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
-          const withShip = rows.filter((el) => /Ships from/i.test(el.textContent || ""));
+          const withShip = rows.filter((el) => /\b(CA|TX)\b/.test(el.textContent || ""));
           if (withShip.length < 2) {
-            issues.netsuiteLabels.push("order lines missing ships-from availability");
+            issues.netsuiteLabels.push("order lines missing warehouse availability");
+          }
+          if (root.querySelector(".cat-label")) {
+            issues.netsuiteLabels.push("category grouping labels should be dropped (cognitive load)");
+          }
+          const bestSpam = (root.innerText || "").match(/Best price unlocked/gi) || [];
+          if (bestSpam.length > 0) {
+            issues.netsuiteLabels.push(`Best price unlocked spam ×${bestSpam.length}`);
+          }
+          const staged = root.querySelector("[data-order-footer] [data-line-count]");
+          if (!staged || !/Staged|In cart/i.test(staged.textContent || "")) {
+            issues.netsuiteLabels.push("footer missing staged vs cart distinction");
+          }
+          const results = root.querySelector("[data-search-results]");
+          if (results && visible(results) && !results.classList.contains("is-closed") && !results.hasAttribute("hidden")) {
+            // Dropdown open while SKU already in table covers the header
+            issues.netsuiteLabels.push("search dropdown still open over table (SKU already staged)");
+          }
+          if (root.querySelector(".sidebar-section")) {
+            issues.netsuiteLabels.push("orphan ACCOUNT sidebar section heading");
           }
         }
 

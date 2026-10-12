@@ -17,7 +17,6 @@
 :root {
   --ink: #1a1a1a;
   --blue: #2c3ee0;
-  --lime: #fef632;
   --paper: #ffffff;
   --sidebar: #fbfcfd;
 }
@@ -27,7 +26,7 @@ body {
   font-family: "FKGroteskNeue", sans-serif;
   background: #111;
   color: #fff;
-  padding: 24px;
+  padding: 24px 24px 48px;
 }
 h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
 .cite {
@@ -35,9 +34,20 @@ h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
   color: rgba(255,255,255,.65);
   max-width: 960px;
   line-height: 1.5;
-  margin-bottom: 28px;
+  margin-bottom: 12px;
 }
 .cite a { color: #9ab0ff; }
+.brand-call {
+  font-size: 13px;
+  color: rgba(255,255,255,.85);
+  max-width: 960px;
+  line-height: 1.45;
+  margin: 0 0 28px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+}
 .option { margin-bottom: 40px; }
 .option h2 { font-size: 16px; font-weight: 500; margin: 0 0 6px; }
 .spec {
@@ -49,8 +59,22 @@ h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
 }
 .frames {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   flex-wrap: wrap;
+}
+.frame-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 320px;
+}
+.frame-wrap .cap {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  padding: 0 2px;
 }
 .frame {
   width: 320px;
@@ -60,182 +84,163 @@ h1 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
   background: var(--paper);
   border: 1px solid rgba(255,255,255,.12);
 }
-.frame .label {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  z-index: 5;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,.45);
-  background: rgba(255,255,255,.85);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.frame.dark .label { color: rgba(255,255,255,.7); background: rgba(0,0,0,.45); }
+.frame.dark { background: #0a0a0a; }
 .logo {
   position: absolute;
   left: 50%;
   top: 50%;
   width: 140px;
+  height: auto;
   transform: translate(-50%, -50%);
   display: block;
+  pointer-events: none;
 }
-.logo.invert { filter: brightness(0) invert(1); }
-.ui-hint {
+.ui-shot {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, var(--sidebar) 0 72px, #fff 72px);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left top;
   opacity: 0;
+  display: block;
 }
-.ui-hint::before {
-  content: "";
+/* Directional motion-blur stack for exit stills */
+.blur-stack {
   position: absolute;
-  left: 12px;
-  top: 14px;
-  width: 48px;
-  height: 14px;
-  background: #111;
-  border-radius: 2px;
+  left: 50%;
+  top: 50%;
+  width: 140px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
-.ui-hint::after {
-  content: "";
+.blur-stack img {
   position: absolute;
-  left: 88px;
-  top: 40px;
-  width: 120px;
-  height: 10px;
-  background: #e6e8ef;
-  border-radius: 2px;
+  left: 0;
+  top: 0;
+  width: 140px;
+  height: auto;
+  display: block;
 }
-/* Option A frames */
-#a1 .logo { transform: translate(-50%, -50%); }
+/* Option A */
+#a1 .logo, #a2 .logo { transform: translate(-50%, -50%); }
 #a2 .logo { transform: translate(-50%, -50%) scale(1.02); }
-#a3 .logo {
-  transform: translate(20%, -50%);
-  filter: blur(0.6px);
+#a3 .blur-stack {
+  transform: translate(18%, -50%);
+  width: 180px;
 }
-#a4 .logo {
-  transform: translate(120%, -50%);
-  filter: blur(4px);
-  opacity: .35;
+#a3 .blur-stack img:nth-child(1) { opacity: .22; transform: translateX(-18px); filter: blur(3px); }
+#a3 .blur-stack img:nth-child(2) { opacity: .4; transform: translateX(-8px); filter: blur(2px); }
+#a3 .blur-stack img:nth-child(3) { opacity: .85; transform: translateX(0); filter: blur(1.2px); }
+#a3 .blur-stack img:nth-child(4) { opacity: .35; transform: translateX(10px); filter: blur(2.5px); }
+#a4 .blur-stack {
+  transform: translate(95%, -50%);
+  width: 200px;
+  opacity: .55;
 }
-#a4 .ui-hint { opacity: 1; }
-#a5 .logo { display: none; }
-#a5 .ui-hint { opacity: 1; }
-#a5 .ui-hint::after { width: 160px; background: #dfe2ea; }
+#a4 .blur-stack img:nth-child(1) { opacity: .15; transform: translateX(-28px) scaleX(1.35); filter: blur(6px); }
+#a4 .blur-stack img:nth-child(2) { opacity: .3; transform: translateX(-12px) scaleX(1.2); filter: blur(4px); }
+#a4 .blur-stack img:nth-child(3) { opacity: .55; transform: translateX(0) scaleX(1.1); filter: blur(3px); }
+#a4 .blur-stack img:nth-child(4) { opacity: .2; transform: translateX(16px) scaleX(1.25); filter: blur(5px); }
+#a4 .ui-shot { opacity: .55; }
+#a5 .ui-shot { opacity: 1; }
 
-/* Option B — mask wipe on black */
-.frame.dark { background: #0a0a0a; }
-#b1 { background: #0a0a0a; }
+/* Option B — white mark on black (asset is white-on-transparent; no CSS invert) */
 #b1 .logo { opacity: 0; }
 #b2 .logo {
   clip-path: inset(0 70% 0 0);
   opacity: 1;
 }
-#b3 .logo {
-  clip-path: inset(0 30% 0 0);
-}
+#b3 .logo { clip-path: inset(0 30% 0 0); }
 #b4 .logo { clip-path: inset(0 0 0 0); }
 #b5 .logo {
   transform: translate(-50%, -50%) scale(.92);
-  opacity: .9;
+  opacity: .85;
 }
+#b5 .ui-shot { opacity: .35; }
 #b5::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 40%;
+  height: 45%;
   background: linear-gradient(transparent, #fff);
+  pointer-events: none;
 }
-#b6 {
-  background: #fff;
-}
-#b6 .logo { display: none; }
-#b6 .ui-hint { opacity: 1; }
+#b6 { background: #fff; }
+#b6 .ui-shot { opacity: 1; }
 
-/* Option C — scale into sidebar logo */
+/* Option C — scale into sidebar */
 #c1 .logo { width: 160px; }
-#c2 .logo { width: 120px; transform: translate(-50%, -50%); }
+#c2 .logo { width: 120px; }
 #c3 .logo {
   width: 84px;
   left: 36px;
   top: 28px;
   transform: none;
 }
-#c3 .ui-hint { opacity: .55; }
-#c4 .logo {
-  width: 84px;
-  left: 20px;
-  top: 18px;
-  transform: none;
-}
-#c4 .ui-hint { opacity: 1; }
-#c5 .logo {
-  width: 84px;
-  left: 20px;
-  top: 18px;
-  transform: none;
-}
-#c5 .ui-hint { opacity: 1; }
-#c5 .ui-hint::after { width: 180px; height: 8px; top: 70px; }
-
-.contact {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 12px;
-}
-.contact .frame { width: 100%; height: 160px; }
+#c3 .ui-shot { opacity: .4; }
+#c4 .logo { display: none; }
+#c4 .ui-shot { opacity: 1; }
+#c5 .logo { display: none; }
+#c5 .ui-shot { opacity: 1; }
 </style>
 </head>
 <body>
   <h1>JOOLA logo intro — still-frame options (no Remotion animation yet)</h1>
   <p class="cite">
-    Brand research: JOOLA USA site CSS exposes <code>color-secondary-3: #2c3ee0</code> and lime <code>color-secondary-1: #fef632</code> with primary ink <code>#1a1a1a</code>
-    (<a href="https://joola.com/">joola.com</a> theme tokens). The 2020 Trinity “J” wordmark is documented on
-    <a href="https://joola.com/pages/about-us">joola.com/about-us</a>; Design Tagebuch notes the international rebrand’s purple/lime pair,
-    while the live US storefront and this B2B prototype use black logo marks on white with blue <code>#2C3EE0</code>.
-    No background pattern — logo alone on a clean brand field.
+    Brand research: JOOLA USA theme tokens expose <code>color-secondary-3: #2c3ee0</code> and lime <code>#fef632</code> with ink <code>#1a1a1a</code>
+    (<a href="https://joola.com/">joola.com</a>). The 2020 Trinity “J” wordmark is on
+    <a href="https://joola.com/pages/about-us">joola.com/about-us</a>; official downloads list a black logo package
+    (<a href="http://www.joola.at/de/information/download.htm">joola.at logo download</a>).
+  </p>
+  <p class="brand-call">
+    Brand call: the live lockup is a high-contrast badge (black “J” on white + white JOOLA on black). Primary field for intro stills A/C is <strong>white</strong> (matches joola.com / B2B chrome). Option B keeps that same lockup on a black cinematic field — no CSS invert (invert was blanking the mark).
   </p>
 
   <section class="option" id="option-a">
     <h2>A — Hold, then slide out with directional motion blur</h2>
-    <p class="spec">Motion: 36f @ 30fps. Hold 0–12f (ease-out opacity 0→1, 8f). Slide X +120% of frame width over 18f with ease-in [0.55,0,1,1]; directional blur 0→8px over the exit, UI fades in last 10f underneath. No pattern.</p>
+    <p class="spec">Motion: 36f @ 30fps. Hold 0–12f. Slide X +120% over 18f with ease-in; directional blur via trailing ghost copies. Hand-off frames show real Quick Order chrome.</p>
     <div class="frames">
-      <div class="frame" id="a1"><span class="label">A1 hold</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="a2"><span class="label">A2 settle</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="a3"><span class="label">A3 exit start</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="a4"><span class="label">A4 blur exit</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="a5"><span class="label">A5 UI</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame-wrap"><div class="cap">A1 hold</div><div class="frame" id="a1"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">A2 settle</div><div class="frame" id="a2"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">A3 exit start</div><div class="frame" id="a3">
+        <div class="blur-stack" aria-hidden="true">
+          <img src="joola-logo.png" alt=""><img src="joola-logo.png" alt=""><img src="joola-logo.png" alt=""><img src="joola-logo.png" alt="">
+        </div>
+      </div></div>
+      <div class="frame-wrap"><div class="cap">A4 blur exit</div><div class="frame" id="a4">
+        <img class="ui-shot" src="handoff-qo.png" alt="Quick order">
+        <div class="blur-stack" aria-hidden="true">
+          <img src="joola-logo.png" alt=""><img src="joola-logo.png" alt=""><img src="joola-logo.png" alt=""><img src="joola-logo.png" alt="">
+        </div>
+      </div></div>
+      <div class="frame-wrap"><div class="cap">A5 UI</div><div class="frame" id="a5"><img class="ui-shot" src="handoff-qo.png" alt="Quick order"></div></div>
     </div>
   </section>
 
   <section class="option" id="option-b">
     <h2>B — Mask / wipe reveal on black, hand-off to UI</h2>
-    <p class="spec">Motion: 40f. Black field. Horizontal wipe reveals inverted white logo 0–16f (ease-out). Hold 8f. Soft bottom wipe to white UI over 16f while logo opacity drops. Blur ≤2px on the hand-off only.</p>
+    <p class="spec">Motion: 40f. Black field. Horizontal wipe reveals the real JOOLA lockup (no invert). Soft wipe to white Quick Order UI.</p>
     <div class="frames">
-      <div class="frame dark" id="b1"><span class="label">B1 black</span><img class="logo invert" src="joola-logo.png" alt=""></div>
-      <div class="frame dark" id="b2"><span class="label">B2 wipe 30%</span><img class="logo invert" src="joola-logo.png" alt=""></div>
-      <div class="frame dark" id="b3"><span class="label">B3 wipe 70%</span><img class="logo invert" src="joola-logo.png" alt=""></div>
-      <div class="frame dark" id="b4"><span class="label">B4 full mark</span><img class="logo invert" src="joola-logo.png" alt=""></div>
-      <div class="frame dark" id="b5"><span class="label">B5 hand-off</span><img class="logo invert" src="joola-logo.png" alt=""></div>
-      <div class="frame" id="b6"><span class="label">B6 UI</span><div class="ui-hint" style="opacity:1"></div></div>
+      <div class="frame-wrap"><div class="cap">B1 black</div><div class="frame dark" id="b1"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">B2 wipe 30%</div><div class="frame dark" id="b2"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">B3 wipe 70%</div><div class="frame dark" id="b3"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">B4 full mark</div><div class="frame dark" id="b4"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">B5 hand-off</div><div class="frame dark" id="b5"><img class="ui-shot" src="handoff-qo.png" alt=""><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">B6 UI</div><div class="frame" id="b6"><img class="ui-shot" src="handoff-qo.png" alt="Quick order"></div></div>
     </div>
   </section>
 
   <section class="option" id="option-c">
     <h2>C — Match cut: logo scales into sidebar brand mark</h2>
-    <p class="spec">Motion: 32f. Centered black logo on white 0–10f. Scale + translate to sidebar slot (left 20px / top 18px / width 84px) over 18f with ease [0.22,1,0.36,1]; UI chrome fades in from f12. Blur 0 (hard match cut). Ends on Quick Order shell.</p>
+    <p class="spec">Motion: 32f. Centered lockup on white, then scale into sidebar over real Quick Order chrome. Caps sit outside frames. C4/C5 are pure UI (logo lives in the screenshot sidebar).</p>
     <div class="frames">
-      <div class="frame" id="c1"><span class="label">C1 center</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="c2"><span class="label">C2 shrink</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="c3"><span class="label">C3 dock</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="c4"><span class="label">C4 chrome</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
-      <div class="frame" id="c5"><span class="label">C5 UI live</span><img class="logo" src="joola-logo.png" alt=""><div class="ui-hint"></div></div>
+      <div class="frame-wrap"><div class="cap">C1 center</div><div class="frame" id="c1"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">C2 shrink</div><div class="frame" id="c2"><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">C3 dock</div><div class="frame" id="c3"><img class="ui-shot" src="handoff-qo.png" alt=""><img class="logo" src="joola-logo.png" alt="JOOLA"></div></div>
+      <div class="frame-wrap"><div class="cap">C4 chrome</div><div class="frame" id="c4"><img class="ui-shot" src="handoff-qo.png" alt="Quick order"></div></div>
+      <div class="frame-wrap"><div class="cap">C5 UI live</div><div class="frame" id="c5"><img class="ui-shot" src="handoff-qo.png" alt="Quick order"></div></div>
     </div>
   </section>
 </body>

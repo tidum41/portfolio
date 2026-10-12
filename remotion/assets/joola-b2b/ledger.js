@@ -171,7 +171,7 @@
     perseus: { warehouse: "CA", availability: "In stock" },
     hyperion: { warehouse: "CA", availability: "In stock" },
     scorpeus: { warehouse: "TX", availability: "In stock" },
-    hc40: { warehouse: "CA", availability: "Ships in 2 days" },
+    hc40: { warehouse: "CA", availability: "2-day ship" },
     bag: { warehouse: "TX", availability: "In stock" },
   };
 
@@ -230,6 +230,11 @@
     ) / 100;
   var creditLimit = 50000;
   var creditAvailable = Math.round((creditLimit - creditUsed) * 100) / 100;
+  /**
+   * INV-1042 already books this restock on the credit line, so
+   * creditAvailable IS the balance after placing this order.
+   */
+  var creditAfterOrder = creditAvailable;
 
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
@@ -320,6 +325,7 @@
       limit: creditLimit,
       used: creditUsed,
       available: creditAvailable,
+      afterOrder: creditAfterOrder,
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
     },
     messages: messages,

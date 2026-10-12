@@ -30,9 +30,9 @@ What a placed customer order becomes inside NetSuite. Used to choose which field
 - [Viewing the status of sales orders](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N1220604.html) — full status list with Advanced Shipping, including **Billed**
 - [Managing customer credit limits and holds](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_N1080144.html)
 
-## 2. External SuiteCommerce / MyAccount B2B portal
+## 2. SuiteCommerce / MyAccount customer portal (reference)
 
-What NetSuite’s own customer surface already trains buyers to expect.
+What NetSuite’s own **buyer** surface already trains customers to expect. Our prototype stays in this lane.
 
 | Capability | Where it lives | Relevance |
 | --- | --- | --- |
@@ -68,14 +68,15 @@ Only fields that remove a phone call or a failed AP match without bloating the f
 
 | Candidate | Rejected because |
 | --- | --- |
-| Order type dropdown (new / replacement / warranty) on every order | Internal SO classification; confuses customers and duplicates Returns/RMA. Mudit: show only where it matters. |
+| Any sales-rep / NetSuite admin view | Out of scope; portal is buyer-only. |
+| Order type dropdown (new / replacement / warranty) | Internal SO classification; customers use Returns/RMA instead. |
 | Ship via / carrier picker | Logistics chooses; wrong primary action for a buyer. |
 | Custom form / rep-only fields | Not customer-facing. |
 | Credit hold banner as default chrome | Rare edge; credit used/available already answers “can I order?” |
-| Full status taxonomy on invoice rows (Partially Fulfilled, Pending Billing/Partially Fulfilled, …) | Invoice screen is AR; overload. SO detail can grow later if film needs it. |
+| Full status taxonomy on invoice rows (Partially Fulfilled, Pending Billing/Partially Fulfilled, …) | Invoice screen is AR; overload. |
 | Bulk CSV upload as a peer CTA to search | Demoted (link in rail). Primary job is search → qty → add. |
 | Duplicate long ledes explaining credit + terms on every page | Cut; credit panel + one cart note suffice. |
-| “Save template” as equal-weight primary next to Add all | Demoted to secondary outline / text so each screen has one obvious primary. |
+| “Save template” as equal-weight primary next to Add all | Demoted to secondary text so each screen has one obvious primary. |
 
 ## 5. Cognitive pass (non-NetSuite) applied alongside
 
