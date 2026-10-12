@@ -988,16 +988,22 @@
   filter: brightness(1.03);
 }
 
-.cl-metric:hover .cl-metric__value,
-.cl-metric:focus-within .cl-metric__value,
-.cl-metric[data-cl-force-hover="1"] .cl-metric__value {
+.cl-metric[data-cl-metric-placement="left"]:hover .cl-metric__value,
+.cl-metric[data-cl-metric-placement="left"]:focus-within .cl-metric__value,
+.cl-metric[data-cl-metric-placement="left"][data-cl-force-hover="1"] .cl-metric__value {
   color: #000000;
 }
 
-.card-lab[data-theme="dark"] .cl-metric:hover .cl-metric__value,
-.card-lab[data-theme="dark"] .cl-metric:focus-within .cl-metric__value,
-.card-lab[data-theme="dark"] .cl-metric[data-cl-force-hover="1"] .cl-metric__value {
+.card-lab[data-theme="dark"] .cl-metric[data-cl-metric-placement="left"]:hover .cl-metric__value,
+.card-lab[data-theme="dark"] .cl-metric[data-cl-metric-placement="left"]:focus-within .cl-metric__value,
+.card-lab[data-theme="dark"] .cl-metric[data-cl-metric-placement="left"][data-cl-force-hover="1"] .cl-metric__value {
   color: #ffffff;
+}
+
+.cl-metric[data-cl-metric-placement="left"]:hover .cl-metric__media-wrap,
+.cl-metric[data-cl-metric-placement="left"]:focus-within .cl-metric__media-wrap,
+.cl-metric[data-cl-metric-placement="left"][data-cl-force-hover="1"] .cl-metric__media-wrap {
+  transform: translateY(-4px);
 }
 
 .cl-metric__media-wrap {
@@ -1005,6 +1011,7 @@
   min-width: 0;
   display: flex;
   align-items: stretch;
+  transition: transform 150ms ease-out;
 }
 
 .cl-metric__media {
@@ -1161,6 +1168,47 @@
   gap: 8px;
   z-index: 1;
   transition: opacity 300ms ease-out;
+}
+
+/* mark-word: horizontal lockup + side bands so rest ≠ plain */
+.cl-brand__lockup--mark-word {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.cl-brand__bands {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 300ms ease-out;
+}
+
+.cl-brand[data-cl-force-hover="1"] .cl-brand__bands {
+  transition: none;
+}
+
+.cl-brand__bands i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.cl-brand__bands i:first-child {
+  left: 0;
+}
+
+.cl-brand__bands i:last-child {
+  right: 0;
+}
+
+.cl-brand:hover .cl-brand__bands,
+.cl-brand:focus-within .cl-brand__bands,
+.cl-brand[data-cl-force-hover="1"] .cl-brand__bands {
+  opacity: 0;
 }
 
 .cl-brand__wordmark {
@@ -1786,23 +1834,24 @@
 .cl-gate__media {
   width: 100%;
   display: block;
-  filter: blur(8px);
+  /* Light blur so the wireframe still reads through the gate. */
+  filter: blur(3px);
   transition: filter 200ms ease-out;
 }
 
 .cl-gate[data-cl-gate="frost-lock"] .cl-gate__media {
-  filter: blur(12px) saturate(0.75);
+  filter: blur(5px) saturate(0.7);
 }
 
 .cl-gate__veil {
   position: absolute;
   inset: 0;
-  background: rgba(20, 20, 20, 0.28);
+  background: rgba(20, 20, 20, 0.22);
   pointer-events: none;
 }
 
 .cl-gate[data-cl-gate="frost-lock"] .cl-gate__veil {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.42);
 }
 
 .cl-gate__lock,
@@ -1884,7 +1933,13 @@
 .cl-gate:hover .cl-gate__media,
 .cl-gate:focus-within .cl-gate__media,
 .cl-gate[data-cl-force-hover="1"] .cl-gate__media {
-  filter: blur(4px);
+  filter: blur(1.5px);
+}
+
+.cl-gate[data-cl-gate="frost-lock"]:hover .cl-gate__media,
+.cl-gate[data-cl-gate="frost-lock"]:focus-within .cl-gate__media,
+.cl-gate[data-cl-gate="frost-lock"][data-cl-force-hover="1"] .cl-gate__media {
+  filter: blur(2.5px) saturate(0.85);
 }
 
 .cl-gate__lock-icon {

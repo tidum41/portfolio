@@ -42,7 +42,16 @@ function BrandLockupCard({
           color: PROJECT.brandInk,
         }}
       >
-        <div className="cl-brand__lockup" data-cl-lockup>
+        {v.lockup === "mark-word" ? (
+          <span className="cl-brand__bands" aria-hidden="true">
+            <i />
+            <i />
+          </span>
+        ) : null}
+        <div
+          className={`cl-brand__lockup cl-brand__lockup--${v.lockup}`}
+          data-cl-lockup
+        >
           <svg
             className="cl-brand__mark"
             viewBox="0 0 48 32"
