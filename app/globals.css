@@ -8,7 +8,7 @@
   --font-sans:        var(--font-areal), Arial, Helvetica, sans-serif;
   --font-sans-medium: var(--font-areal), Arial, Helvetica, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
-  --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
+  --font-mono:    var(--font-areal), ui-monospace, monospace;
 
   /* Colors */
   --color-bg:             #FBFBFB;

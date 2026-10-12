@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
@@ -28,10 +27,9 @@ import {
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
 
-// ABC Areal replaces Helvetica Neue for --font-sans / --font-sans-medium.
+// ABC Areal is the only sans on the site. Georgia stays on page titles.
 // Variable file axes: wght 400–700 (default 400), slnt -12–0 (default 0),
-// DRKM 0–1 (default 0). Leave DRKM at the light default — the page is light
-// type on #FBFBFB even though html sets color-scheme: dark.
+// DRKM 0–1 (default 0). Leave DRKM at the light default.
 // The woff2 is gitignored: Dinamo EULA §10 forbids public repositories.
 const areal = localFont({
   src: "../fonts/ABCArealVariable.woff2",
@@ -40,13 +38,6 @@ const areal = localFont({
   display: "swap",
   adjustFontFallback: "Arial",
 });
-
-// Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
-// Site body copy stays on --font-sans (Areal) / --font-mono (Söhne Mono).
-// preload: false — Geist is only used inside the CD player + habit embed,
-// which mount after first paint.
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
 
 const OG_IMAGES = [
   {
@@ -138,7 +129,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html
       lang="en"
-      className={`${areal.variable} ${geistSans.variable} ${geistMono.variable}`}
+      className={areal.variable}
       data-theme="dark"
       data-scroll-behavior="smooth"
       // Unconditionally "playing" in the static, server-rendered HTML — not
