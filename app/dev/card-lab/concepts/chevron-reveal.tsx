@@ -92,6 +92,7 @@ function ChevronRevealCard({
                 kind={p.wireframe}
                 aspect="1 / 1"
                 radius={12}
+                compact
                 className="cl-chev__tile-media"
               />
             </div>

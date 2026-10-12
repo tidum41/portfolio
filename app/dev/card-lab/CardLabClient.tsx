@@ -62,7 +62,7 @@ export default function CardLabClient() {
     [searchParams]
   );
 
-  // Equal card + stage heights within each concept row (skip expand/list).
+  // Equal stage heights every row; card min-heights skip expand/list concepts.
   useEffect(() => {
     const equalize = () => {
       document.querySelectorAll<HTMLElement>("[data-cl-row]").forEach((row) => {
@@ -76,15 +76,17 @@ export default function CardLabClient() {
         stages.forEach((s) => {
           s.style.minHeight = "";
         });
-        if (!cards.length) return;
-        let maxCard = 0;
-        for (const c of cards) {
-          maxCard = Math.max(maxCard, c.getBoundingClientRect().height);
+        if (cards.length) {
+          let maxCard = 0;
+          for (const c of cards) {
+            maxCard = Math.max(maxCard, c.getBoundingClientRect().height);
+          }
+          const cardH = Math.ceil(maxCard);
+          cards.forEach((c) => {
+            c.style.minHeight = `${cardH}px`;
+          });
         }
-        const cardH = Math.ceil(maxCard);
-        cards.forEach((c) => {
-          c.style.minHeight = `${cardH}px`;
-        });
+        if (!stages.length) return;
         let maxStage = 0;
         for (const s of stages) {
           maxStage = Math.max(maxStage, s.getBoundingClientRect().height);

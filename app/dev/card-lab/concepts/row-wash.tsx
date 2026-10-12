@@ -52,6 +52,7 @@ function RowWashCard({
                   kind={p.wireframe}
                   aspect="1 / 1"
                   radius={8}
+                  compact
                   className="cl-wash__thumb-media"
                 />
               </div>

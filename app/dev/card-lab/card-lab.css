@@ -2282,6 +2282,66 @@
   background: #243040;
 }
 
+/* Compact thumbs: keep chrome + a single stage; drop dense chrome that overflows 48px. */
+.cl-wire--compact .cl-wire__chrome {
+  padding: 4px;
+  gap: 2px;
+}
+
+.cl-wire--compact .cl-wire__chrome span {
+  width: 4px;
+  height: 4px;
+}
+
+.cl-wire--compact .cl-wire__chrome-bar {
+  height: 4px;
+  margin-left: 4px;
+}
+
+.cl-wire--compact .cl-wire__body {
+  padding: 0 4px 4px;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.cl-wire--compact .cl-wire__meta,
+.cl-wire--compact .cl-wire__related,
+.cl-wire--compact .cl-wire__playlist,
+.cl-wire--compact .cl-wire__side,
+.cl-wire--compact .cl-wire__toolbar {
+  display: none;
+}
+
+.cl-wire--compact .cl-wire__stage,
+.cl-wire--compact .cl-wire__cards,
+.cl-wire--compact .cl-wire__list,
+.cl-wire--compact .cl-wire__player-main,
+.cl-wire--compact .cl-wire__phone {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.cl-wire--compact .cl-wire__related i,
+.cl-wire--compact .cl-wire__cards i {
+  min-height: 0;
+}
+
+.cl-wire--compact .cl-wire__playbtn {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.cl-wire--compact .cl-wire__disc {
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+}
+
+.cl-wire--compact .cl-wire__body--listings {
+  grid-template-columns: 1fr;
+}
+
 /* ——— 14 Row wash ——— */
 .cl-wash {
   width: 100%;
@@ -2323,7 +2383,8 @@
 .cl-wash__thumb-media {
   width: 100%;
   height: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .cl-wash__copy {
@@ -2458,7 +2519,8 @@
 .cl-chev__tile-media {
   width: 100%;
   height: 100%;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .cl-chev__copy {

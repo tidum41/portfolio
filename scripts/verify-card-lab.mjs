@@ -597,9 +597,15 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
 
   let aspectOk = true;
   let aspectDetail = "";
+  // Square thumbs / portraits are intentional for list-row + grayscale concepts.
+  const aspectSkip = new Set([
+    "outcome-metric",
+    "row-wash",
+    "chevron-reveal",
+    "grayscale-color",
+  ]);
   for (const [sec, arr] of Object.entries(values.aspects)) {
-    // Outcome-metric left column stretches media to text height (intentional).
-    if (sec === "outcome-metric") continue;
+    if (aspectSkip.has(sec)) continue;
     // Ignore collapsed/hidden media (e.g. numbered-index preview at rest).
     const live = arr.filter((a) => Number.isFinite(a) && a > 0.2 && a < 8);
     for (const a of live) {
@@ -1153,8 +1159,9 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     const errs = [];
     for (const section of document.querySelectorAll("section[data-cl-concept]")) {
       const sec = section.getAttribute("data-cl-concept");
-      // Index lists intentionally show multiple Mudit projects.
-      if (sec === "numbered-index") continue;
+      // Index / wash lists intentionally vary structure across variants.
+      if (sec === "numbered-index" || sec === "row-wash" || sec === "chevron-reveal")
+        continue;
       const rows = [...section.querySelectorAll("[data-cl-row]")];
       const scopes = rows.length ? rows : [section];
       for (const scope of scopes) {

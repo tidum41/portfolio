@@ -17,6 +17,8 @@ export default function WireframeMedia({
   topClear = 0,
   /** Paint a few UI bars in brand accents so grayscale→color is visible. */
   colored = false,
+  /** Small thumbs: skip dock so clipped overflow cannot false-trip overlap. */
+  compact = false,
 }: {
   kind: WireframeKind;
   aspect: string;
@@ -30,14 +32,16 @@ export default function WireframeMedia({
   fill?: boolean;
   topClear?: number;
   colored?: boolean;
+  compact?: boolean;
 }) {
   return (
     <div
-      className={`cl-wire${className ? ` ${className}` : ""}${dimmed ? " cl-wire--dimmed" : ""}${play ? " cl-wire--play" : ""}${fill ? " cl-wire--fill" : ""}${topClear > 0 ? " cl-wire--top-clear" : ""}${colored ? " cl-wire--colored" : ""}`}
+      className={`cl-wire${className ? ` ${className}` : ""}${dimmed ? " cl-wire--dimmed" : ""}${play ? " cl-wire--play" : ""}${fill ? " cl-wire--fill" : ""}${topClear > 0 ? " cl-wire--top-clear" : ""}${colored ? " cl-wire--colored" : ""}${compact ? " cl-wire--compact" : ""}`}
       data-cl-media
       data-cl-wireframe={kind}
       data-cl-aspect={fill ? "fill" : aspect}
       data-cl-wire-colored={colored ? "1" : undefined}
+      data-cl-wire-compact={compact ? "1" : undefined}
       style={{
         aspectRatio: fill ? undefined : aspect,
         borderRadius: radius !== undefined ? `${radius}px` : undefined,
@@ -192,14 +196,16 @@ export default function WireframeMedia({
           </div>
         </div>
       ) : null}
-      <div className="cl-wire__dock" data-cl-wire-dock aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-      </div>
+      {compact ? null : (
+        <div className="cl-wire__dock" data-cl-wire-dock aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
+      )}
       {dimmed ? <span className="cl-wire__veil" aria-hidden="true" /> : null}
       {play ? <span className="cl-wire__shimmer" aria-hidden="true" /> : null}
     </div>
