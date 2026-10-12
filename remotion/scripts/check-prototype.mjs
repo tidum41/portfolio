@@ -1071,6 +1071,33 @@ async function main() {
             }
           }
 
+          // Shop joola.com text x = nav icon x
+          const store = root.querySelector("[data-store-link]");
+          const navIcon = root.querySelector(".nav-item .icon-slot");
+          if (store && navIcon && visible(store) && visible(navIcon)) {
+            const padL = parseFloat(getComputedStyle(store).paddingLeft) || 0;
+            const sx = store.getBoundingClientRect().left + padL;
+            const ix = navIcon.getBoundingClientRect().left;
+            if (Math.abs(sx - ix) > 1.5) {
+              issues.pixelNits.push(`store text x=${Math.round(sx)} vs nav icon x=${Math.round(ix)}`);
+            }
+          }
+
+          // Search dropdown is an overlay (absolute), not in flow
+          const results = root.querySelector("[data-search-results]");
+          if (results) {
+            const pos = getComputedStyle(results).position;
+            if (pos !== "absolute" && pos !== "fixed") {
+              issues.pixelNits.push(`search-results position=${pos} (want absolute overlay)`);
+            }
+          }
+
+          // Reorder rows need an Add affordance
+          const railAdds = root.querySelectorAll("[data-qo-rail] [data-rail-add] .rail-action");
+          if (railAdds.length < 1) {
+            issues.pixelNits.push("reorder rail missing Add actions");
+          }
+
           // Footer: label/value stack, no ready-chip
           const footer = root.querySelector("[data-order-footer]");
           if (footer && visible(footer)) {
@@ -1307,6 +1334,199 @@ async function main() {
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
     }
+  }
+
+  // Layout shift: film-critical QO states must keep shell geometry fixed
+  {
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForFunction(() => window.JOOLA_LEDGER && document.querySelector("[data-screen]"));
+    await page.evaluate(() => document.fonts.ready);
+
+    const measure = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-screen="qo-desktop"].active');
+        if (!root) return null;
+        const box = (sel) => {
+          const el = root.querySelector(sel);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return {
+            x: Math.round(r.x * 10) / 10,
+            y: Math.round(r.y * 10) / 10,
+            w: Math.round(r.width * 10) / 10,
+            h: Math.round(r.height * 10) / 10,
+          };
+        };
+        return {
+          page: box(".page"),
+          layout: box(".qo-layout"),
+          table: box("[data-order-table]"),
+          rail: box("[data-qo-rail]"),
+          search: box("[data-search-field]"),
+          footer: box("[data-order-footer]"),
+        };
+      });
+
+    const activateQo = async () => {
+      await page.evaluate(() => {
+        document.querySelectorAll(".screen").forEach((el) => {
+          el.classList.toggle("active", el.getAttribute("data-screen") === "qo-desktop");
+        });
+        window.scrollTo(0, 0);
+      });
+      await page.waitForTimeout(80);
+    };
+
+    const setSearch = async ({ value, open }) => {
+      await page.evaluate(
+        ({ value, open }) => {
+          const root = document.querySelector('[data-screen="qo-desktop"].active');
+          const field = root.querySelector("[data-search-field]");
+          const results = root.querySelector("[data-search-results]");
+          const valEl = field && field.querySelector(".value");
+          if (field) {
+            if (value) {
+              field.classList.add("has-value");
+              field.setAttribute("data-search-value", value);
+              if (valEl) valEl.textContent = value;
+            } else {
+              field.classList.remove("has-value");
+              field.setAttribute("data-search-value", "");
+              if (valEl) valEl.textContent = "";
+            }
+          }
+          if (results) {
+            if (open) {
+              results.removeAttribute("hidden");
+              results.classList.remove("is-closed");
+              // Ensure at least one result row for open state
+              if (!results.querySelector("[data-search-result]")) {
+                const p = window.JOOLA_LEDGER.products.perseus;
+                results.innerHTML =
+                  '<div class="search-result" data-search-result data-sku="' +
+                  p.sku +
+                  '"><div><div class="title">' +
+                  p.name +
+                  '</div><div class="meta">SKU ' +
+                  p.sku +
+                  "</div></div></div>";
+              }
+            } else {
+              results.setAttribute("hidden", "");
+              results.classList.add("is-closed");
+            }
+          }
+        },
+        { value, open }
+      );
+      await page.waitForTimeout(40);
+    };
+
+    await activateQo();
+
+    const snapshots = {};
+    // empty — no query, results closed
+    await setSearch({ value: "", open: false });
+    snapshots.empty = await measure();
+    // typing — name typed, dropdown still closed
+    await setSearch({ value: "Perseus", open: false });
+    snapshots.typing = await measure();
+    // results open — overlay only
+    await setSearch({ value: "Perseus", open: true });
+    snapshots.resultsOpen = await measure();
+    // line added — table already has lines; keep results closed
+    await setSearch({ value: "Perseus", open: false });
+    snapshots.lineAdded = await measure();
+    // qty changed
+    await page.evaluate(() => window.__setPerseusQty(24));
+    await page.waitForTimeout(120);
+    await activateQo();
+    await setSearch({ value: "Perseus", open: false });
+    snapshots.qtyChanged = await measure();
+    // restore story qty then add to cart
+    await page.evaluate(() => window.__setPerseusQty(120));
+    await page.waitForTimeout(120);
+    await activateQo();
+    await setSearch({ value: "Perseus", open: false });
+    await page.click('[data-screen="qo-desktop"].active [data-add-all], [data-screen="qo-desktop"].active #qoAddAllBtn');
+    await page.waitForTimeout(200);
+    snapshots.addedToCart = await measure();
+
+    // Also compare dedicated qo-search screen against qo-desktop results-open
+    await page.evaluate(() => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === "qo-search");
+      });
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(100);
+    const searchScreen = await page.evaluate(() => {
+      const root = document.querySelector('[data-screen="qo-search"].active');
+      if (!root) return null;
+      const box = (sel) => {
+        const el = root.querySelector(sel);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return {
+          x: Math.round(r.x * 10) / 10,
+          y: Math.round(r.y * 10) / 10,
+          w: Math.round(r.width * 10) / 10,
+          h: Math.round(r.height * 10) / 10,
+        };
+      };
+      return { page: box(".page"), layout: box(".qo-layout"), table: box("[data-order-table]"), rail: box("[data-qo-rail]") };
+    });
+
+    const keys = ["page", "layout", "table", "rail", "search"];
+    const eps = 1; // px tolerance
+    const diffs = [];
+    const baseline = snapshots.empty;
+    for (const [name, snap] of Object.entries(snapshots)) {
+      if (name === "empty" || !snap || !baseline) continue;
+      for (const k of keys) {
+        const a = baseline[k];
+        const b = snap[k];
+        if (!a || !b) {
+          diffs.push(`${name}.${k} missing`);
+          continue;
+        }
+        // Height of table/rail may change with qty presets / cart — compare x/w (column geometry)
+        if (Math.abs(a.x - b.x) > eps || Math.abs(a.w - b.w) > eps) {
+          diffs.push(`${name}.${k} x/w ${a.x}/${a.w}→${b.x}/${b.w}`);
+        }
+      }
+      // Footer y may shift only if content height changes; x/w must hold
+      if (baseline.footer && snap.footer) {
+        if (Math.abs(baseline.footer.x - snap.footer.x) > eps || Math.abs(baseline.footer.w - snap.footer.w) > eps) {
+          diffs.push(`${name}.footer x/w drift`);
+        }
+      }
+    }
+    if (searchScreen && snapshots.resultsOpen) {
+      for (const k of ["page", "layout", "table", "rail"]) {
+        const a = snapshots.resultsOpen[k];
+        const b = searchScreen[k];
+        if (!a || !b) {
+          diffs.push(`qo-search.${k} missing`);
+          continue;
+        }
+        if (Math.abs(a.x - b.x) > eps || Math.abs(a.w - b.w) > eps) {
+          diffs.push(`qo-search.${k} x/w ${a.x}/${a.w} vs open ${b.x}/${b.w}`);
+        }
+      }
+    }
+
+    record(
+      "qo-desktop",
+      "layout-shift",
+      diffs.length === 0,
+      diffs.length ? diffs.slice(0, 6).join("; ") : "empty/typing/open/qty/cart + qo-search stable"
+    );
+
+    // Reload so subsequent interactive checks start clean
+    await page.reload({ waitUntil: "networkidle" });
+    await page.waitForFunction(() => window.JOOLA_LEDGER && document.querySelector("[data-screen]"));
+    await page.evaluate(() => document.fonts.ready);
   }
 
   // Interactive: Add all increments cart badge and shows toast

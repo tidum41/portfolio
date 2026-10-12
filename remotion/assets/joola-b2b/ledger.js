@@ -299,7 +299,7 @@
     {
       id: "tpl-match",
       name: "Match kit",
-      detail: "Paddles + HC-40 + Tour Elite Bag",
+      detail: "3 items",
     },
   ];
 
