@@ -14,12 +14,14 @@ function isTopWindow() {
 
 /**
  * Single DialRoot for local `next dev`. Hidden on Vercel/production
- * (DialKit's default) and in iframes. Labs (`/dev/*`) open the panel;
- * the rest of the site starts collapsed.
+ * (DialKit's default) and in iframes. Most labs (`/dev/*`) open the
+ * panel; card-lab starts collapsed so DialKit never covers the cards.
  */
 export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
-  return <DialRoot defaultOpen={pathname.startsWith("/dev")} />;
+  const openByDefault =
+    pathname.startsWith("/dev") && !pathname.startsWith("/dev/card-lab");
+  return <DialRoot defaultOpen={openByDefault} />;
 }
