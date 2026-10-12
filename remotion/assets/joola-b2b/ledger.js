@@ -282,7 +282,7 @@
     {
       id: "tpl-perseus",
       name: "Perseus restock",
-      detail: "SKU 600558 · " + perseusLine.qty + " units · " + money(perseusOrderTotal),
+      detail: perseusLine.qty + " units · " + money(perseusOrderTotal),
     },
     {
       id: "tpl-match",

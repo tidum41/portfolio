@@ -181,17 +181,34 @@ img { display: block; max-width: 100%; }
 }
 .sidebar-brand img { width: 84px; height: auto; }
 .wholesale-pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 10px;
+  height: 28px;
+  padding: 0 10px;
+  margin: 0 0 12px;
+  font-size: var(--text-meta);
   font-weight: 500;
   color: var(--blue);
+  box-sizing: border-box;
+  line-height: 1;
+}
+/* Same 20px slot as nav icons so label shares nav text x-position */
+.wholesale-pill .wholesale-slot {
+  width: var(--icon-slot);
+  height: var(--icon-slot);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .wholesale-pill .dot {
-  width: 6px; height: 6px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--blue);
+  display: block;
+  flex-shrink: 0;
 }
 .sidebar-nav {
   display: flex;
@@ -331,7 +348,6 @@ img { display: block; max-width: 100%; }
   align-items: center;
   gap: 10px;
   overflow: visible;
-  padding-right: 4px; /* room for cart badge */
 }
 /* Matched pills: account chip + cart share height, radius, border */
 .account-chip,
@@ -368,30 +384,20 @@ img { display: block; max-width: 100%; }
   max-height: var(--avatar);
   border-radius: 50%;
   overflow: hidden;
-  background: var(--band);
-  border: 1px solid var(--line);
+  background: var(--blue-soft);
+  border: 1px solid rgba(44, 62, 224, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 2px;
-}
-.retailer-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-.retailer-avatar.avatar-failed {
-  background: var(--failed) !important;
-  border-color: #8e2a20 !important;
-}
-.retailer-avatar.avatar-failed::after {
-  content: "!";
-  color: #fff;
+  padding: 0;
+  color: var(--blue);
+  font-size: 11px;
   font-weight: 500;
-  font-size: 12px;
   line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  user-select: none;
 }
 .account-meta {
   display: flex;
@@ -422,9 +428,9 @@ img { display: block; max-width: 100%; }
 .cart-pill {
   position: relative;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 10px 0 12px;
   font-variant-numeric: tabular-nums;
-  overflow: visible;
+  overflow: hidden;
   transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.15s ease-out;
 }
 .cart-pill:hover { background: var(--band); }
@@ -434,29 +440,25 @@ img { display: block; max-width: 100%; }
 }
 .cart-pill:active { transform: scale(0.98); }
 .cart-pill:disabled { opacity: 0.45; cursor: not-allowed; }
-.cart-pill .badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--failed);
-  border: 2px solid #fff;
-  box-sizing: border-box;
-  font-size: 10px;
-  font-weight: 500;
-  color: #fff;
-  display: flex;
+/* Count lives inside the pill as a chip — never an overlapping corner badge */
+.cart-pill .count-chip {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--failed);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 500;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
 }
-.cart-pill .badge.is-zero { background: var(--faint); }
+.cart-pill .count-chip[hidden] { display: none !important; }
 .cart-pill.bump .cart-amount-display,
-.cart-pill.bump .badge {
+.cart-pill.bump .count-chip {
   animation: typeBump 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes typeBump {
@@ -508,6 +510,10 @@ img { display: block; max-width: 100%; }
   padding: 28px 28px 100px;
   width: 100%;
   flex: 1 1 auto;
+}
+/* Tighten QO content block at wide viewports so empty space feels intentional */
+[data-screen="qo-desktop"] .page {
+  max-width: 1080px;
 }
 .page h1 {
   margin: 0;
@@ -678,9 +684,21 @@ img { display: block; max-width: 100%; }
   text-overflow: ellipsis;
   max-width: 100%;
 }
-.price-block { display: flex; flex-direction: column; gap: 1px; align-items: flex-end; }
+.price-block { display: flex; flex-direction: column; gap: 1px; align-items: flex-end; width: 100%; }
 .price-block .strike { font-size: 12px; color: var(--faint); text-decoration: line-through; }
-.price-block .unit { font-size: 14px; font-variant-numeric: tabular-nums; }
+.price-block .unit {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.price-block .ea {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--faint);
+  margin-left: 3px;
+}
 .price-block .hint { font-size: 11px; color: var(--muted); }
 .price-block .hint b { color: var(--ink); font-weight: 500; }
 .qty-presets button .best-tag {
@@ -727,10 +745,24 @@ img { display: block; max-width: 100%; }
   background: #fff;
 }
 .qty-stepper button {
-  width: 36px; height: 100%;
-  font-size: 18px;
+  width: 36px;
+  min-width: 36px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
   transition: color 0.15s ease-out, background-color 0.15s ease-out;
+  padding: 0;
+}
+.qty-stepper button .step-icon {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  display: block;
 }
 .qty-stepper button:hover { color: var(--ink); background: var(--band); }
 .qty-stepper button:focus-visible {
@@ -1162,7 +1194,7 @@ img { display: block; max-width: 100%; }
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--rail-w);
   gap: 28px;
-  align-items: start;
+  align-items: stretch;
   margin-top: 8px;
 }
 .qo-main { min-width: 0; }
@@ -1173,14 +1205,16 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 420px;
+  align-self: stretch;
+  min-height: 100%;
 }
 .rail-card {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fff;
   padding: 14px;
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  min-height: 0;
 }
 .rail-card h3 {
   margin: 0 0 10px;
@@ -1204,6 +1238,9 @@ img { display: block; max-width: 100%; }
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Messages */
@@ -1544,6 +1581,8 @@ img { display: block; max-width: 100%; }
   font-size: var(--text-ui);
   color: var(--ink);
   font-weight: 500;
+  cursor: pointer;
+  width: fit-content;
 }
 .need-by-row input[type="checkbox"] {
   width: 16px;
@@ -1569,8 +1608,24 @@ img { display: block; max-width: 100%; }
   padding: 0 12px;
   display: flex;
   align-items: center;
+  gap: 8px;
   font-size: var(--text-ui);
   color: var(--ink);
+}
+.need-by .date-control[hidden] { display: none !important; }
+.need-by .date-control .cal-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  stroke: var(--muted);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.need-by .date-control .date-value {
+  flex: 1;
+  min-width: 0;
 }
 .cart-returns {
   grid-column: 1 / -1;
@@ -1787,11 +1842,36 @@ img { display: block; max-width: 100%; }
   }
 
   function avatarHtml() {
-    var size = 24;
+    var initial = (L.retailer.name || "?").charAt(0).toUpperCase();
     return (
-      '<div class="retailer-avatar" data-retailer-avatar style="width:' + size + "px;height:" + size + "px;min-width:" + size + "px;min-height:" + size + "px;max-width:" + size + "px;max-height:" + size + 'px;">' +
-      '<img src="' + L.retailer.avatar + '" alt="' + L.retailer.name + '" width="' + size + '" height="' + size + '" onerror="this.closest(\'[data-retailer-avatar]\').classList.add(\'avatar-failed\'); this.remove();">' +
+      '<div class="retailer-avatar" data-retailer-avatar aria-hidden="true">' +
+      initial +
       "</div>"
+    );
+  }
+
+  function stepIcon(kind) {
+    /* Equal 12×12 minus/plus glyphs, optically centred in the 36px hit area */
+    if (kind === "minus") {
+      return (
+        '<svg class="step-icon" viewBox="0 0 12 12" aria-hidden="true">' +
+        '<path d="M2.5 6h7"/>' +
+        "</svg>"
+      );
+    }
+    return (
+      '<svg class="step-icon" viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M6 2.5v7M2.5 6h7"/>' +
+      "</svg>"
+    );
+  }
+
+  function calendarIcon() {
+    return (
+      '<svg class="cal-icon" viewBox="0 0 14 14" aria-hidden="true">' +
+      '<rect x="1.5" y="2.5" width="11" height="10" rx="1.5"/>' +
+      '<path d="M1.5 5.5h11M4.5 1.5v2.5M9.5 1.5v2.5"/>' +
+      "</svg>"
     );
   }
 
@@ -1820,7 +1900,7 @@ img { display: block; max-width: 100%; }
       '<div class="sidebar-brand">' +
       '<img src="joola-logo.png" alt="JOOLA" width="84" height="28">' +
       "</div>" +
-      '<div class="wholesale-pill" style="padding:0 10px 12px;"><span class="dot"></span>Wholesale</div>' +
+      '<div class="wholesale-pill" data-wholesale-pill><span class="wholesale-slot"><span class="dot"></span></span>Wholesale</div>' +
       '<nav class="sidebar-nav">' + items + "</nav>" +
       '<div class="sidebar-divider"></div>' +
       '<div class="account-panel" data-account-panel>' +
@@ -1842,7 +1922,9 @@ img { display: block; max-width: 100%; }
       '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
       "<span>Cart</span>" +
       '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
-      '<span class="badge cart-badge-display' + (count === 0 ? " is-zero" : "") + '" data-cart-count>' + count + "</span>" +
+      '<span class="count-chip" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
+      (count === 0 ? "" : count) +
+      "</span>" +
       "</button>" +
       "</div></header>"
     );
@@ -1862,11 +1944,13 @@ img { display: block; max-width: 100%; }
     var next = L.nextTier(product, qty);
     /** Buyer sees wholesale unit + next-break hint only — no MSRP strikethrough noise. */
     var hint = next
-      ? '<div class="hint">Buy ' + next.min + '+ for <b>' + money(next.price) + " ea</b></div>"
+      ? '<div class="hint">Buy ' + next.min + '+ for <b>' + money(next.price) + '</b><span class="ea">ea</span></div>'
       : "";
     return (
       '<div class="price-block">' +
-      '<div class="unit" data-unit-price="' + unit + '" data-display-price>' + money(unit) + " ea</div>" +
+      '<div class="unit" data-unit-price="' + unit + '" data-display-price>' +
+      money(unit) +
+      '<span class="ea">ea</span></div>' +
       hint +
       "</div>"
     );
@@ -1900,14 +1984,18 @@ img { display: block; max-width: 100%; }
       '<div class="qty-group" data-qty-group data-product="' +
       line.productId +
       '">' +
-      '<div class="qty-stepper">' +
-      '<button type="button" data-action="dec" aria-label="Decrease">-</button>' +
+      '<div class="qty-stepper" data-qty-stepper>' +
+      '<button type="button" data-action="dec" aria-label="Decrease">' +
+      stepIcon("minus") +
+      "</button>" +
       '<div class="qty" data-qty="' +
       line.qty +
       '">' +
       line.qty +
       "</div>" +
-      '<button type="button" data-action="inc" aria-label="Increase">+</button>' +
+      '<button type="button" data-action="inc" aria-label="Increase">' +
+      stepIcon("plus") +
+      "</button>" +
       "</div>" +
       presets +
       "</div>"
@@ -2272,12 +2360,15 @@ img { display: block; max-width: 100%; }
       "</div>" +
       "</div>" +
       '<div class="need-by" data-field="need-by" data-need-by>' +
-      '<label class="need-by-row">' +
-      '<input type="checkbox" id="need-by-check">' +
-      "<span>Need it by a certain date</span>" +
+      '<label class="need-by-row" for="need-by-check">' +
+      '<input type="checkbox" id="need-by-check" data-need-by-check>' +
+      "<span>Need it by</span>" +
       "</label>" +
-      '<div class="date-control" id="need-by-date">' +
+      '<div class="date-control" id="need-by-date" data-need-by-date hidden>' +
+      calendarIcon() +
+      '<span class="date-value">' +
       L.shipDate +
+      "</span>" +
       "</div>" +
       '<div class="hint">Optional rush request. Your JOOLA rep will confirm timing. This does not schedule a ship date.</div>' +
       "</div>" +
@@ -2448,14 +2539,18 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<div class="state-row"><span class="state-label">Disabled</span>' +
       '<div class="qty-group" data-qty-group><div class="qty-stepper">' +
-      '<button type="button" disabled>-</button><div class="qty">12</div><button type="button" disabled>+</button>' +
+      '<button type="button" disabled>' +
+      stepIcon("minus") +
+      '</button><div class="qty">12</div><button type="button" disabled>' +
+      stepIcon("plus") +
+      "</button>" +
       '</div><div class="qty-presets"><button type="button" disabled>12</button><button type="button" disabled>24</button><button type="button" disabled>60</button><button type="button" disabled>120</button></div></div>' +
       "</div></div>" +
       '<div class="state-block"><h3>Cart + status</h3>' +
-      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="badge is-zero" data-cart-count>0</span></button></div>' +
+      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
       '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display">' +
       money(L.orderTotal) +
-      '</span><span class="badge">' +
+      '</span><span class="count-chip">' +
       L.cartCountAfterAdd +
       "</span></button></div>" +
       '<div class="state-row"><span class="state-label">Pills</span><span class="status Paid">Paid</span><span class="status Pending">Pending</span><span class="status Overdue">Overdue</span></div>' +
@@ -2551,14 +2646,24 @@ img { display: block; max-width: 100%; }
     });
   }
 
+  function syncCartCountChip(el, count) {
+    if (!el) return;
+    if (count === 0) {
+      el.setAttribute("hidden", "");
+      el.textContent = "";
+    } else {
+      el.removeAttribute("hidden");
+      el.textContent = String(count);
+    }
+  }
+
   function applyAddAll() {
     cartUi.count = L.cartCountAfterAdd;
     cartUi.total = L.orderTotal;
     cartUi.added = true;
     L.cartCount = cartUi.count;
     document.querySelectorAll("[data-cart-count]").forEach(function (el) {
-      el.textContent = String(cartUi.count);
-      el.classList.toggle("is-zero", cartUi.count === 0);
+      syncCartCountChip(el, cartUi.count);
     });
     document.querySelectorAll("[data-cart-pill] [data-cart-total]").forEach(function (el) {
       el.textContent = money(cartUi.total);
@@ -2628,6 +2733,16 @@ img { display: block; max-width: 100%; }
             b.classList.toggle("on", b.getAttribute("data-view") === catalogView);
           });
         }
+      });
+    });
+
+    document.querySelectorAll("[data-need-by-check]").forEach(function (check) {
+      check.addEventListener("change", function () {
+        var wrap = check.closest("[data-need-by]");
+        var date = wrap && wrap.querySelector("[data-need-by-date]");
+        if (!date) return;
+        if (check.checked) date.removeAttribute("hidden");
+        else date.setAttribute("hidden", "");
       });
     });
   }

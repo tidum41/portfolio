@@ -153,6 +153,7 @@ async function main() {
           msgContext: [],
           cartCheckout: [],
           netsuiteLabels: [],
+          pixelNits: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -754,6 +755,16 @@ async function main() {
             const t = rail.textContent || "";
             if (!/template/i.test(t)) issues.qoRail.push("rail missing templates");
             if (!/recent|PO-/i.test(t)) issues.qoRail.push("rail missing recent orders");
+            // Template meta must stay one line (no SKU · units · $ wrapping)
+            rail.querySelectorAll(".rail-item .meta").forEach((meta) => {
+              if (!visible(meta)) return;
+              if (/SKU\s*\d+/i.test(meta.textContent || "")) {
+                issues.pixelNits.push("template meta still includes SKU");
+              }
+              if (meta.scrollHeight > meta.clientHeight + 1 || meta.getBoundingClientRect().height > 20) {
+                issues.pixelNits.push("template meta wraps to 2+ lines");
+              }
+            });
           }
           if (!root.querySelector("[data-qty-group]")) {
             issues.qoRail.push("qty-group microinteraction missing");
@@ -806,8 +817,27 @@ async function main() {
             if (box.querySelector('[data-field="ship-date"]') || /Requested ship date/i.test(box.textContent || "")) {
               issues.cartCheckout.push("requested ship date must not appear (buyer cannot schedule)");
             }
-            if (!box.querySelector("[data-need-by], [data-field='need-by']")) {
+            const needBy = box.querySelector("[data-need-by], [data-field='need-by']");
+            if (!needBy) {
               issues.cartCheckout.push("need-by rush request missing");
+            } else {
+              const label = (needBy.querySelector(".need-by-row")?.textContent || "").trim();
+              if (!/^Need it by$/i.test(label.replace(/\s+/g, " ").replace(/^\s*/, ""))) {
+                // Allow checkbox-adjacent label text "Need it by"
+                if (!/Need it by/i.test(label) || /certain date/i.test(label)) {
+                  issues.pixelNits.push(`need-by label="${label.slice(0, 40)}" (want "Need it by")`);
+                }
+              }
+              const date = needBy.querySelector("[data-need-by-date], #need-by-date");
+              const check = needBy.querySelector("[data-need-by-check], #need-by-check");
+              if (!date) {
+                issues.pixelNits.push("need-by date control missing");
+              } else if (!date.hasAttribute("hidden") && !(check && check.checked)) {
+                issues.pixelNits.push("need-by date visible while unchecked");
+              }
+              if (date && !date.querySelector(".cal-icon, svg")) {
+                issues.pixelNits.push("need-by date missing calendar icon");
+              }
             }
             if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
             if (!box.querySelector("[data-ship-address]")) {
@@ -889,14 +919,41 @@ async function main() {
             if (av) {
               const aw = av.getBoundingClientRect().width;
               if (Math.abs(aw - 24) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 24)`);
+              // Initial letter (not hamburger/menu image glyph)
+              const txt = (av.textContent || "").trim();
+              if (!/^[A-Z]$/.test(txt)) {
+                issues.pixelNits.push(`account avatar initial="${txt}" (want single letter)`);
+              }
+              if (av.querySelector("img")) {
+                issues.pixelNits.push("account avatar still uses image (hamburger risk)");
+              }
             }
-            const badge = cart.querySelector(".badge");
-            if (badge && visible(badge) && !badge.classList.contains("is-zero")) {
-              const br = badge.getBoundingClientRect();
-              const pr = cart.getBoundingClientRect();
-              // Badge should sit on the corner without sinking inside the pill body
-              if (br.top > pr.top + 2) issues.netsuiteLabels.push("cart badge too low (misplaced)");
-              if (br.right < pr.right - 2) issues.netsuiteLabels.push("cart badge inset too far");
+            // Count chip inside pill — never corner badge; hidden when empty
+            const countChip = cart.querySelector(".count-chip, [data-cart-count]");
+            if (!countChip) {
+              issues.pixelNits.push("cart count-chip missing");
+            } else {
+              const shown = visible(countChip);
+              const n = parseInt((countChip.textContent || "").trim() || "0", 10);
+              if (!shown) {
+                if ((countChip.textContent || "").trim() === "0") {
+                  issues.pixelNits.push("empty cart shows '0' in hidden chip");
+                }
+              } else {
+                if (n === 0) issues.pixelNits.push("empty cart shows visible '0' badge");
+                const br = countChip.getBoundingClientRect();
+                const pr = cart.getBoundingClientRect();
+                // Chip must sit fully inside the pill (not overlapping the outer edge)
+                if (br.top < pr.top - 0.5 || br.bottom > pr.bottom + 0.5) {
+                  issues.pixelNits.push("count-chip vertically overflows cart pill");
+                }
+                if (br.left < pr.left - 0.5 || br.right > pr.right + 0.5) {
+                  issues.pixelNits.push("count-chip horizontally overflows cart pill");
+                }
+                if (cart.querySelector(".badge:not(.count-chip)")) {
+                  issues.pixelNits.push("legacy corner .badge still present");
+                }
+              }
             }
           }
           root.querySelectorAll(".nav-item .icon-slot").forEach((slot) => {
@@ -916,6 +973,140 @@ async function main() {
           const ff = getComputedStyle(root).fontFamily || "";
           if (!/FKGroteskNeue/i.test(ff)) {
             issues.netsuiteLabels.push(`UI font not FK Grotesk: ${ff.slice(0, 40)}`);
+          }
+
+          // Stepper: SVG minus/plus, equal hit areas, equal icon sizes
+          const stepper = root.querySelector("[data-qty-stepper], .qty-stepper");
+          if (stepper && visible(stepper)) {
+            const btns = [...stepper.querySelectorAll("button")];
+            if (btns.length < 2) {
+              issues.pixelNits.push("stepper missing ± buttons");
+            } else {
+              const [dec, inc] = [btns[0], btns[btns.length - 1]];
+              const dw = dec.getBoundingClientRect().width;
+              const iw = inc.getBoundingClientRect().width;
+              if (Math.abs(dw - iw) > 1 || Math.abs(dw - 36) > 2) {
+                issues.pixelNits.push(`stepper hit areas ${dw.toFixed(1)} vs ${iw.toFixed(1)} (want 36)`);
+              }
+              const dIcon = dec.querySelector(".step-icon, svg");
+              const iIcon = inc.querySelector(".step-icon, svg");
+              if (!dIcon || !iIcon) {
+                issues.pixelNits.push("stepper missing SVG ± icons");
+              } else {
+                const dr = dIcon.getBoundingClientRect();
+                const ir = iIcon.getBoundingClientRect();
+                if (Math.abs(dr.width - ir.width) > 1 || Math.abs(dr.height - ir.height) > 1) {
+                  issues.pixelNits.push("stepper ± icon sizes unequal");
+                }
+                if (/^[-−–—]$/.test((dec.textContent || "").trim())) {
+                  issues.pixelNits.push("stepper still uses hyphen/minus text glyph");
+                }
+              }
+            }
+          }
+
+          // Price "ea" secondary + right edge vs Price header
+          const orderHead = root.querySelector("[data-order-head]");
+          const priceHead = orderHead
+            ? [...orderHead.children].find((c) => /^price$/i.test(c.textContent.trim()))
+            : null;
+          const unit = root.querySelector(".price-block .unit");
+          if (unit && visible(unit)) {
+            const ea = unit.querySelector(".ea");
+            if (!ea) {
+              issues.pixelNits.push("price missing .ea secondary span");
+            } else {
+              const cs = getComputedStyle(ea);
+              const fs = parseFloat(cs.fontSize) || 0;
+              if (fs > 12.5) issues.pixelNits.push(`ea font-size ${fs}px (want ~11)`);
+              const color = cs.color || "";
+              // faint grey — not full ink
+              if (/rgb\(26,\s*26,\s*26\)/i.test(color) || color === "rgb(0, 0, 0)") {
+                issues.pixelNits.push("ea color not secondary/faint");
+              }
+            }
+            if (priceHead) {
+              const hr = priceHead.getBoundingClientRect();
+              const ur = unit.getBoundingClientRect();
+              if (Math.abs(hr.right - ur.right) > 2) {
+                issues.pixelNits.push(
+                  `price right edge head=${Math.round(hr.right)} unit=${Math.round(ur.right)}`
+                );
+              }
+            }
+          }
+
+          // Wholesale pill: dot centred, label x = nav text x
+          const wholesale = root.querySelector("[data-wholesale-pill], .wholesale-pill");
+          const navItem = root.querySelector(".nav-item");
+          if (wholesale && navItem && visible(wholesale)) {
+            const slot = wholesale.querySelector(".wholesale-slot");
+            const dot = wholesale.querySelector(".dot");
+            if (!slot || !dot) {
+              issues.pixelNits.push("wholesale missing slot/dot");
+            } else {
+              const wr = wholesale.getBoundingClientRect();
+              const dr = dot.getBoundingClientRect();
+              const midW = (wr.top + wr.bottom) / 2;
+              const midD = (dr.top + dr.bottom) / 2;
+              if (Math.abs(midW - midD) > 2) {
+                issues.pixelNits.push(`wholesale dot not vertically centred (Δ${(midW - midD).toFixed(1)}px)`);
+              }
+              const navLabel = navItem.querySelector("span:not(.icon-slot)");
+              const wholesaleTextX = slot.getBoundingClientRect().right + 10; // gap to label
+              // Compare label text left edges via range or child text position
+              const wText = [...wholesale.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+              // Fallback: wholesale label starts after slot+gap; nav label after icon-slot+gap
+              const navSlot = navItem.querySelector(".icon-slot");
+              if (navSlot && navLabel) {
+                const navTextLeft = navLabel.getBoundingClientRect().left;
+                const wholeLabel = wholesale.childNodes;
+                // Measure by creating a temp — use getBoundingClientRect of wholesale vs computing
+                // Label is text node after slot; approximate with slot.right + gap from computed
+                const gap = parseFloat(getComputedStyle(wholesale).gap) || 10;
+                const approxLabelLeft = slot.getBoundingClientRect().right + gap;
+                if (Math.abs(approxLabelLeft - navTextLeft) > 2) {
+                  issues.pixelNits.push(
+                    `wholesale label x=${Math.round(approxLabelLeft)} vs nav text x=${Math.round(navTextLeft)}`
+                  );
+                }
+              }
+              void wholesaleTextX;
+              void wText;
+            }
+          }
+
+          // QO page max-width intentional at 1440
+          const page = root.querySelector(".page");
+          if (page) {
+            const cs = getComputedStyle(page);
+            const maxW = cs.maxWidth;
+            if (!maxW || maxW === "none") {
+              issues.pixelNits.push("qo page missing max-width (wide empty feel)");
+            } else {
+              const n = parseFloat(maxW);
+              if (!(n > 900 && n <= 1200)) {
+                issues.pixelNits.push(`qo page max-width=${maxW} (want ~1080)`);
+              }
+            }
+          }
+        }
+
+        // Filled cart: count-chip visible and inside pill (cart screen)
+        if (screen === "cart") {
+          const cart = root.querySelector("[data-cart-pill]");
+          const countChip = cart && cart.querySelector(".count-chip, [data-cart-count]");
+          if (!cart || !countChip || !visible(countChip)) {
+            issues.pixelNits.push("filled cart missing visible count-chip");
+          } else {
+            const br = countChip.getBoundingClientRect();
+            const pr = cart.getBoundingClientRect();
+            if (br.top < pr.top - 0.5 || br.bottom > pr.bottom + 0.5 || br.left < pr.left - 0.5 || br.right > pr.right + 0.5) {
+              issues.pixelNits.push("filled cart count-chip overflows pill");
+            }
+            if ((countChip.textContent || "").trim() === "0") {
+              issues.pixelNits.push("filled cart shows 0");
+            }
           }
         }
 
@@ -982,6 +1173,7 @@ async function main() {
       ["msg-context", result.msgContext],
       ["cart-checkout", result.cartCheckout],
       ["netsuite-labels", result.netsuiteLabels],
+      ["pixel-nits", result.pixelNits],
     ];
     for (const [name, list] of checks) {
       // Screen-scoped checks: skip empty N/A as PASS only when relevant
@@ -1005,6 +1197,7 @@ async function main() {
         "msg-context": ["messages"],
         "cart-checkout": ["cart"],
         "netsuite-labels": ["qo-desktop", "invoices", "messages"],
+        "pixel-nits": ["qo-desktop", "cart"],
       };
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
@@ -1022,7 +1215,8 @@ async function main() {
     await page.waitForTimeout(100);
     const before = await page.evaluate(() => {
       const badge = document.querySelector("[data-cart-count]");
-      return badge ? parseInt(badge.textContent || "0", 10) : -1;
+      if (!badge || badge.hasAttribute("hidden") || !(badge.textContent || "").trim()) return 0;
+      return parseInt(badge.textContent, 10) || 0;
     });
     await page.click("[data-add-all], #qoAddAllBtn");
     await page.waitForTimeout(200);
@@ -1033,18 +1227,28 @@ async function main() {
         toast &&
         !toast.hasAttribute("hidden") &&
         (toast.classList.contains("show") || getComputedStyle(toast).opacity !== "0");
+      const countText = badge && !badge.hasAttribute("hidden") ? (badge.textContent || "").trim() : "";
       return {
-        count: badge ? parseInt(badge.textContent || "0", 10) : -1,
+        count: countText ? parseInt(countText, 10) : 0,
+        hidden: !badge || badge.hasAttribute("hidden"),
         toastShown: !!toastShown,
         toastText: toast ? toast.textContent || "" : "",
+        insidePill: (() => {
+          if (!badge || badge.hasAttribute("hidden")) return true;
+          const pill = badge.closest(".cart-pill, [data-cart-pill]");
+          if (!pill) return false;
+          const br = badge.getBoundingClientRect();
+          const pr = pill.getBoundingClientRect();
+          return br.top >= pr.top - 0.5 && br.bottom <= pr.bottom + 0.5 && br.left >= pr.left - 0.5 && br.right <= pr.right + 0.5;
+        })(),
       };
     });
     const expected = ledger.cartCountAfterAdd || ledger.orderLines.length;
     record(
       "qo-desktop",
       "cart-increment",
-      after.count > before && after.count === expected,
-      `badge ${before}→${after.count} (want ${expected})`
+      after.count > before && after.count === expected && !after.hidden && after.insidePill,
+      `chip ${before}→${after.count} (want ${expected}) inside=${after.insidePill}`
     );
     record(
       "qo-desktop",
