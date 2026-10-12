@@ -316,13 +316,16 @@ img { display: block; max-width: 100%; }
   background: #fff;
   overflow: visible;
   box-sizing: border-box;
+  width: 100%;
 }
-/* Match page/footer content edge so chrome doesn’t float past the table */
+/* Full-bleed topbar rule; right pad so account/cart align with 1120 content edge */
 [data-screen="qo-desktop"] .topbar,
 [data-screen="qo-search"] .topbar,
 [data-screen="cart"] .topbar {
-  max-width: var(--content-max);
-  width: 100%;
+  padding-right: max(
+    var(--content-pad-x),
+    calc(100% - var(--content-max) + var(--content-pad-x))
+  );
 }
 /* Global search removed — Quick Order owns product search (see design-spec) */
 .topbar-right {
@@ -1662,8 +1665,8 @@ img { display: block; max-width: 100%; }
 .cart-main .cart-checkout { margin-top: 20px; max-width: none; }
 .cart-line {
   display: grid;
-  /* thumb | product | qty×price | total — fixed money columns share baseline */
-  grid-template-columns: 40px minmax(0, 1fr) 132px 112px;
+  /* thumb | product | money (qty×price + total) */
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   column-gap: 16px;
   align-items: center;
   min-height: 50px;
@@ -1681,8 +1684,15 @@ img { display: block; max-width: 100%; }
   padding: 3px;
 }
 .cart-line .cart-prod { min-width: 0; }
+.cart-line .cart-money {
+  display: grid;
+  grid-template-columns: 132px 112px;
+  column-gap: 16px;
+  align-items: baseline;
+  justify-items: end;
+}
 .cart-line .cart-unit {
-  /* Same size as line-total so centres/baselines match; quieter colour/weight */
+  width: 132px;
   font-size: var(--text-body);
   font-weight: 400;
   color: var(--muted);
@@ -1692,6 +1702,7 @@ img { display: block; max-width: 100%; }
   line-height: 1.2;
 }
 .cart-line .line-total {
+  width: 112px;
   font-size: var(--text-body);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -2727,6 +2738,7 @@ img { display: block; max-width: 100%; }
           "</div>" +
           avail +
           "</div>" +
+          '<div class="cart-money">' +
           '<div class="cart-unit">' +
           line.qty +
           " × " +
@@ -2737,7 +2749,7 @@ img { display: block; max-width: 100%; }
           '">' +
           money(amount) +
           "</div>" +
-          "</div>"
+          "</div></div>"
         );
       })
       .join("");

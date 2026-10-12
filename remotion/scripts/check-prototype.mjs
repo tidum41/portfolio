@@ -588,11 +588,10 @@ async function main() {
           if (unit && total) {
             const ur = unit.getBoundingClientRect();
             const tr = total.getBoundingClientRect();
-            const ucy = (ur.top + ur.bottom) / 2;
-            const tcy = (tr.top + tr.bottom) / 2;
-            if (Math.abs(ucy - tcy) > 1.5) {
+            // Shared baseline (bottom of glyph box) within 1.5px
+            if (Math.abs(ur.bottom - tr.bottom) > 1.5) {
               issues.pixelNits.push(
-                `cart unit/total centre Δ=${Math.abs(ucy - tcy).toFixed(1)}px`
+                `cart unit/total baseline Δ=${Math.abs(ur.bottom - tr.bottom).toFixed(1)}px`
               );
             }
           }
