@@ -14,8 +14,17 @@ import path from "node:path";
 
 const BASE = (process.argv[2] || "http://127.0.0.1:3000").replace(/\/$/, "");
 const OUT = process.env.CARD_LAB_SHOTS || "/opt/cursor/artifacts/card-lab";
+/** Optional Playwright storageState path (Vercel Deployment Protection cookie). */
+const STORAGE = process.env.CARD_LAB_STORAGE || "";
 const ALLOWED_SPACE = new Set([0, 1, 4, 8, 12, 16, 24, 32, 48, 96]);
 const ALLOWED_FS = new Set([11, 13, 15]);
+
+async function newCtx(browser, opts = {}) {
+  return browser.newContext({
+    ...(STORAGE ? { storageState: STORAGE } : {}),
+    ...opts,
+  });
+}
 
 /** @type {{ id: number; name: string; pass: boolean; detail: string }[]} */
 const results = [];
@@ -124,7 +133,7 @@ function contains(parent, child, epsilon = 0.5) {
 }
 
 async function runViewport(browser, { width, height, theme, hoverEmulation }) {
-  const context = await browser.newContext({
+  const context = await newCtx(browser, {
     viewport: { width, height },
     deviceScaleFactor: 1,
     colorScheme: theme,
@@ -751,7 +760,7 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
 
   // reduced motion
   await context.close();
-  const rmContext = await browser.newContext({
+  const rmContext = await newCtx(browser, {
     viewport: { width, height },
     colorScheme: theme,
     reducedMotion: "reduce",
@@ -782,7 +791,10 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
     return null;
   }).catch(() => null);
 
-  const themeCtx = await browser.newContext({ viewport: { width, height }, colorScheme: theme });
+  const themeCtx = await newCtx(browser, {
+    viewport: { width, height },
+    colorScheme: theme,
+  });
   const themePage = await themeCtx.newPage();
   await themePage.goto(`${BASE}/dev/card-lab?theme=${theme}`, { waitUntil: "networkidle" });
   await themePage.waitForSelector("[data-cl-root]");
