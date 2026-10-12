@@ -6,9 +6,11 @@
  * Usage: node remotion/scripts/check-prototype.mjs
  */
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, mkdtempSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import { chromium } from "playwright-core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +23,7 @@ const SCREENS = [
   "catalog",
   "templates",
   "cart",
+  "confirmation",
   "invoices",
   "messages",
   "qo-mobile",
@@ -300,13 +303,18 @@ async function main() {
               );
             }
           }
-          // credit bar visible
+          // credit bar visible — 6px flush track
           const bar = root.querySelector("[data-credit-bar]");
-          const fill = root.querySelector("[data-credit-fill]");
           if (!bar || !visible(bar)) issues.clipped.push("credit bar missing/invisible");
-          if (fill) {
-            const fr = fill.getBoundingClientRect();
-            if (fr.width < 2) issues.clipped.push("credit bar fill has no width");
+          else {
+            const br = bar.getBoundingClientRect();
+            if (br.width < 40) issues.clipped.push("credit bar fill has no width");
+            const h = br.height;
+            if (Math.abs(h - 6) > 1) issues.pixelNits.push(`credit bar height ${h.toFixed(1)}px (want 6)`);
+            const kids = [...bar.children].filter((el) => visible(el));
+            if (kids.length > 0) {
+              issues.pixelNits.push("credit bar still has segment children (want single gradient track)");
+            }
           }
         }
 
@@ -342,7 +350,17 @@ async function main() {
         // Invoices credit meter shows available (not wordy used/limit sentence)
         if (screen === "invoices") must.push(creditAvailable, orderTotal);
         if (screen === "messages") must.push(orderTotal);
+        if (screen === "confirmation") must.push(orderTotal);
         if (screen === "qo-desktop") must.push(perseusUnit);
+
+        // Confirmation receipt
+        if (screen === "confirmation") {
+          const panel = root.querySelector("[data-confirm-panel]");
+          if (!panel || !visible(panel)) issues.ia.push("confirmation panel missing");
+          else if (!/Order placed|Thanks/i.test(panel.textContent || "")) {
+            issues.ia.push("confirmation missing placed acknowledgement");
+          }
+        }
         must.forEach((n) => {
           if (!foundMoney.some((f) => Math.abs(f - n) <= 0.009)) {
             issues.ledger.push(`missing required $${n.toFixed(2)}`);
@@ -726,7 +744,7 @@ async function main() {
         }
 
         // 14. IA: no Open cart; credit lives in cart summary (not sidebar); store link present
-        if (["qo-desktop", "catalog", "invoices", "messages"].includes(screen)) {
+        if (["qo-desktop", "catalog", "cart", "confirmation", "invoices", "messages"].includes(screen)) {
           const side = root.querySelector("[data-sidebar], .sidebar");
           if (side && /Open cart/i.test(side.textContent || "")) {
             issues.ia.push("sidebar still contains Open cart");
@@ -871,8 +889,21 @@ async function main() {
             if (/After placing/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("wordy after-placing credit sentence still present");
             }
-            if (!/Net 30/i.test(summary.textContent || "") || !/available/i.test(summary.textContent || "")) {
-              issues.cartCheckout.push("credit meter missing Net 30 + available label");
+            if (!/Net 30 credit/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("credit meter missing 'Net 30 credit' label");
+            }
+            if (!/left after this order/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("credit meter missing 'left after this order' label");
+            }
+            const bar = summary.querySelector("[data-credit-bar]");
+            if (bar) {
+              const cs = getComputedStyle(bar);
+              if (Math.abs(parseFloat(cs.height) - 6) > 1) {
+                issues.cartCheckout.push(`credit bar height ${cs.height} (want 6px)`);
+              }
+              if (!String(cs.backgroundImage || "").includes("linear-gradient")) {
+                issues.cartCheckout.push("credit bar missing flush linear-gradient track");
+              }
             }
             if (!/Calculated at invoice/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("summary missing tax note");
@@ -1011,23 +1042,28 @@ async function main() {
           if (chip && cart && visible(chip) && visible(cart)) {
             const ch = chip.getBoundingClientRect().height;
             const kh = cart.getBoundingClientRect().height;
-            if (Math.abs(ch - kh) > 1 || Math.abs(ch - 32) > 1.5) {
-              issues.netsuiteLabels.push(`pill heights chip=${ch.toFixed(1)} cart=${kh.toFixed(1)} (want 32)`);
+            if (Math.abs(ch - kh) > 1 || Math.abs(ch - 36) > 1.5) {
+              issues.netsuiteLabels.push(`pill heights chip=${ch.toFixed(1)} cart=${kh.toFixed(1)} (want 36)`);
             }
             const cr = getComputedStyle(chip).borderRadius;
             const kr = getComputedStyle(cart).borderRadius;
             if (cr !== kr) issues.netsuiteLabels.push(`pill radius mismatch ${cr} vs ${kr}`);
+            const pl = parseFloat(getComputedStyle(chip).paddingLeft) || 0;
+            const prPad = parseFloat(getComputedStyle(chip).paddingRight) || 0;
+            if (Math.abs(pl - 12) > 1 || Math.abs(prPad - 12) > 1) {
+              issues.pixelNits.push(`account pad L=${pl} R=${prPad} (want 12/12)`);
+            }
             const av = chip.querySelector("[data-retailer-avatar]");
             if (av) {
               const aw = av.getBoundingClientRect().width;
-              if (Math.abs(aw - 24) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 24)`);
+              if (Math.abs(aw - 28) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 28)`);
               const img = av.querySelector("img");
               if (!img || !/engage-logo/i.test(img.getAttribute("src") || "")) {
                 issues.pixelNits.push("account chip missing Engage logo asset");
               }
               const gap = parseFloat(getComputedStyle(chip).gap) || 0;
-              if (Math.abs(gap - 8) > 1) {
-                issues.pixelNits.push(`account chip gap ${gap}px (want 8)`);
+              if (gap < 9.5 || gap > 12.5) {
+                issues.pixelNits.push(`account chip gap ${gap}px (want 10–12)`);
               }
             }
             // Count chip inside pill — never corner badge; hidden when empty
@@ -1768,6 +1804,304 @@ async function main() {
       "toast-success",
       after.toastShown && /added|cart/i.test(after.toastText),
       after.toastShown ? after.toastText.trim().slice(0, 60) : "toast not shown"
+    );
+  }
+
+  // Pixel-ink checks (PIL): badge digit, badge↔text cap centre, account pad, credit flush
+  {
+    await page.evaluate(() => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === "cart");
+      });
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(140);
+    const tmp = mkdtempSync(join(tmpdir(), "joola-ink-"));
+    const cartPillPath = join(tmp, "cart-pill.png");
+    const badgePath = join(tmp, "badge.png");
+    const acctPath = join(tmp, "account.png");
+    const creditPath = join(tmp, "credit.png");
+    await page.locator('[data-screen="cart"] [data-cart-pill]').screenshot({ path: cartPillPath });
+    await page.locator('[data-screen="cart"] [data-cart-count]').screenshot({ path: badgePath });
+    await page.locator('[data-screen="cart"] [data-account-chip]').screenshot({ path: acctPath });
+    await page.locator('[data-screen="cart"] [data-credit-bar]').screenshot({ path: creditPath });
+    const gapDom = await page.evaluate(() => {
+      const cart = document.querySelector('[data-screen="cart"] [data-cart-pill]');
+      const badge = cart && cart.querySelector("[data-cart-count]");
+      const spans = cart ? [...cart.querySelectorAll(":scope > span:not(.count-chip)")] : [];
+      if (!badge || !spans.length) return null;
+      const last = spans[spans.length - 1].getBoundingClientRect();
+      const br = badge.getBoundingClientRect();
+      return {
+        gap: br.left - last.right,
+        bw: br.width,
+        bh: br.height,
+        fs: parseFloat(getComputedStyle(badge).fontSize) || 0,
+        lh: getComputedStyle(badge).lineHeight,
+      };
+    });
+    const acctDom = await page.evaluate(() => {
+      const chip = document.querySelector('[data-screen="cart"] [data-account-chip]');
+      const av = chip && chip.querySelector("[data-retailer-avatar]");
+      const meta = chip && chip.querySelector(".account-meta");
+      if (!chip || !av || !meta) return null;
+      const cr = chip.getBoundingClientRect();
+      const ar = av.getBoundingClientRect();
+      const mr = meta.getBoundingClientRect();
+      const name = meta.querySelector(".name");
+      const role = meta.querySelector(".role");
+      // Right optical edge = max text scroll/offset width within meta
+      let textRight = mr.left;
+      [name, role].forEach((el) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        // range for glyph box
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const tr = range.getBoundingClientRect();
+        textRight = Math.max(textRight, tr.right || r.right);
+      });
+      return {
+        h: cr.height,
+        av: ar.width,
+        gap: ar.left - cr.left > 0 ? parseFloat(getComputedStyle(chip).gap) || 0 : 0,
+        padL: ar.left - cr.left,
+        padR: cr.right - textRight,
+        gapCss: parseFloat(getComputedStyle(chip).gap) || 0,
+        metaCy: (mr.top + mr.bottom) / 2,
+        chipCy: (cr.top + cr.bottom) / 2,
+        avCy: (ar.top + ar.bottom) / 2,
+      };
+    });
+    const py = `
+from PIL import Image
+import json
+
+def is_blue(r,g,b,a=255):
+  return a >= 180 and abs(r-44)<55 and abs(g-62)<55 and abs(b-224)<55
+
+def is_dark(r,g,b,a=255):
+  return a >= 180 and (r+g+b) < 520
+
+def is_wash(r,g,b,a=255):
+  # remaining track / soft greys
+  if a < 180: return False
+  if is_blue(r,g,b,a): return False
+  if is_dark(r,g,b,a): return False
+  return 180 <= r <= 250 and 180 <= g <= 250 and 180 <= b <= 250 and max(r,g,b)-min(r,g,b) < 40
+
+def is_muted_fill(r,g,b,a=255):
+  # used-credit grey (#9a9aa3-ish), not wash, not ink text
+  if a < 180: return False
+  if is_blue(r,g,b,a): return False
+  avg = (r+g+b)/3
+  return 120 <= avg <= 200 and max(r,g,b)-min(r,g,b) < 35
+
+badge = Image.open(${JSON.stringify(badgePath)}).convert("RGBA")
+pill = Image.open(${JSON.stringify(cartPillPath)}).convert("RGBA")
+acct = Image.open(${JSON.stringify(acctPath)}).convert("RGBA")
+credit = Image.open(${JSON.stringify(creditPath)}).convert("RGBA")
+bw, bh = badge.size
+# --- digit ink centre inside badge ---
+ink = []
+for y in range(bh):
+  for x in range(bw):
+    r,g,b,a = badge.getpixel((x,y))
+    if a < 200: continue
+    if is_blue(r,g,b,a): continue
+    if r>235 and g>235 and b>235: continue
+    ink.append((x,y))
+digit_ok = False
+dx = dy = 99.0
+if ink:
+  cx = sum(p[0] for p in ink)/len(ink)
+  cy = sum(p[1] for p in ink)/len(ink)
+  dx = abs(cx - (bw-1)/2)
+  dy = abs(cy - (bh-1)/2)
+  digit_ok = dx <= 1.0 and dy <= 1.0
+
+# --- badge circle vs text glyph ink (cap-height centre) on full cart pill ---
+pw, ph = pill.size
+blue_pts = []
+for y in range(ph):
+  for x in range(pw):
+    r,g,b,a = pill.getpixel((x,y))
+    if is_blue(r,g,b,a):
+      blue_pts.append((x,y))
+badge_cy = None
+badge_cx = None
+badge_left = None
+if blue_pts:
+  badge_left = min(p[0] for p in blue_pts)
+  badge_right = max(p[0] for p in blue_pts)
+  badge_top = min(p[1] for p in blue_pts)
+  badge_bot = max(p[1] for p in blue_pts)
+  badge_cx = (badge_left + badge_right) / 2
+  badge_cy = (badge_top + badge_bot) / 2
+
+# Text ink to the left of the badge (Cart + amount). Cap band = top→~72% of ink height.
+text_ink = []
+x_limit = (badge_left - 4) if badge_left is not None else pw
+for y in range(ph):
+  for x in range(max(0, x_limit)):
+    r,g,b,a = pill.getpixel((x,y))
+    if is_dark(r,g,b,a):
+      text_ink.append((x,y))
+cap_dy = 99.0
+cap_ok = False
+text_cap_cy = None
+if text_ink and badge_cy is not None:
+  ys = sorted(p[1] for p in text_ink)
+  top = ys[0]
+  bot = ys[-1]
+  # Cap-height centre: midpoint of upper 72% of the ink box (no descenders in Cart/$ figures)
+  cap_bot = top + (bot - top) * 0.72
+  text_cap_cy = (top + cap_bot) / 2
+  # Also compare to full ink centre (figures ≈ cap height)
+  ink_cy = (top + bot) / 2
+  # Prefer the tighter of ink-centre vs cap-band centre
+  cap_dy = min(abs(badge_cy - text_cap_cy), abs(badge_cy - ink_cy))
+  cap_ok = cap_dy <= 1.25
+
+# Ink gap: rightmost text ink x → badge left
+gap_ink = 99.0
+if text_ink and badge_left is not None:
+  gap_ink = badge_left - max(p[0] for p in text_ink)
+
+# --- account chip optical pad (left border→logo vs rightmost text ink→right border) ---
+aw, ah = acct.size
+# Find logo tile: clustered non-white near left
+logo_right = None
+logo_left = None
+for x in range(aw):
+  col_dark = 0
+  for y in range(ah):
+    r,g,b,a = acct.getpixel((x,y))
+    if a < 200: continue
+    if r+g+b < 700:
+      col_dark += 1
+  if col_dark >= max(3, ah // 6):
+    if logo_left is None:
+      logo_left = x
+    logo_right = x
+  elif logo_left is not None and x > logo_left + 8:
+    break
+# Text ink right of logo
+acct_text = []
+start = (logo_right + 2) if logo_right is not None else 0
+for y in range(ah):
+  for x in range(start, aw):
+    r,g,b,a = acct.getpixel((x,y))
+    if is_dark(r,g,b,a):
+      acct_text.append((x,y))
+pad_l = pad_r = 99.0
+pad_ok = False
+meta_cy_ok = False
+if logo_left is not None and acct_text:
+  pad_l = logo_left  # content starts after ~1px border antialias
+  text_right = max(p[0] for p in acct_text)
+  pad_r = (aw - 1) - text_right
+  # Optical equality within 2px (border AA)
+  pad_ok = abs(pad_l - pad_r) <= 2.5 and 9 <= pad_l <= 16 and 9 <= pad_r <= 16
+  # Two-line meta optical centre vs pill/logo centre
+  tys = sorted(p[1] for p in acct_text)
+  meta_cy = (tys[0] + tys[-1]) / 2
+  meta_cy_ok = abs(meta_cy - (ah - 1) / 2) <= 1.5
+
+# --- credit bar: flush segments, no stub/gap columns ---
+cw, ch = credit.size
+# Sample mid-row colours left→right; classify used / order / remain
+mid = ch // 2
+cols = []
+for x in range(cw):
+  r,g,b,a = credit.getpixel((x, mid))
+  if is_blue(r,g,b,a):
+    cols.append("o")  # order
+  elif is_muted_fill(r,g,b,a):
+    cols.append("u")  # used
+  else:
+    cols.append("r")  # remaining / wash
+# Collapse runs
+runs = []
+for c in cols:
+  if not runs or runs[-1][0] != c:
+    runs.append([c, 1])
+  else:
+    runs[-1][1] += 1
+# Expect pattern u+ o+ r* (order may be absent if tiny) — no r stub between u and o, no gaps
+seq = "".join(r[0] for r in runs)
+flush_ok = False
+# Allow u o r / u r / o r / u o
+if seq in ("uor", "ur", "or", "uo", "u", "o", "r"):
+  flush_ok = True
+elif seq.startswith("uor") or seq.startswith("uo") or seq.startswith("ur"):
+  flush_ok = "r" not in seq[1:seq.find("o")+1] if "o" in seq else True
+# Explicit stub/gap: remaining sandwiched before order ends, or single-pixel foreign run mid-fill
+gap_runs = [r for r in runs if r[0] == "r" and r != runs[-1]]
+stub_fail = any(r[1] <= 3 for r in gap_runs) or (len(gap_runs) > 0 and "o" in seq and seq.index("r") < seq.rfind("o"))
+# Edge meeting: first and last columns should be fill (not transparent hole)
+edge_ok = cols[0] in ("u", "o", "r") and cols[-1] in ("u", "o", "r") and ch >= 5 and ch <= 8
+flush_ok = flush_ok and not stub_fail and edge_ok and "u" in seq
+
+print(json.dumps({
+  "digit_ok": digit_ok, "dx": dx, "dy": dy, "ink_n": len(ink),
+  "cap_ok": cap_ok, "cap_dy": cap_dy, "gap_ink": gap_ink,
+  "badge_cy": badge_cy, "text_cap_cy": text_cap_cy,
+  "pad_ok": pad_ok, "pad_l": pad_l, "pad_r": pad_r, "meta_cy_ok": meta_cy_ok,
+  "flush_ok": flush_ok, "credit_seq": seq, "credit_h": ch, "stub_fail": stub_fail,
+}))
+`;
+    const inkRun = spawnSync("python3", ["-c", py], { encoding: "utf8" });
+    let ink = {};
+    try {
+      ink = JSON.parse((inkRun.stdout || "").trim().split("\n").pop());
+    } catch {
+      ink = { err: (inkRun.stderr || inkRun.stdout || "").slice(0, 200) };
+    }
+    record(
+      "cart",
+      "badge-ink",
+      !!ink.digit_ok,
+      ink.digit_ok
+        ? `digit ink Δx=${Number(ink.dx).toFixed(2)} Δy=${Number(ink.dy).toFixed(2)} (≤1px)`
+        : `digit ink fail Δx=${ink.dx} Δy=${ink.dy} n=${ink.ink_n} ${ink.err || ""}`.slice(0, 100)
+    );
+    const gapOk = gapDom && gapDom.gap >= 7 && gapDom.gap <= 9;
+    const sizeOk = gapDom && Math.abs(gapDom.bw - 18) <= 1 && Math.abs(gapDom.bh - 18) <= 1 && Math.abs(gapDom.fs - 11) <= 0.5;
+    record(
+      "cart",
+      "badge-cap",
+      !!(ink.cap_ok && gapOk && sizeOk && Number(ink.gap_ink) >= 6 && Number(ink.gap_ink) <= 12),
+      ink.cap_ok != null
+        ? `ink cap Δ=${Number(ink.cap_dy).toFixed(2)} gapDom=${gapDom ? gapDom.gap.toFixed(1) : "?"} gapInk=${Number(ink.gap_ink).toFixed(1)} size=${gapDom ? `${gapDom.bw}x${gapDom.bh}@${gapDom.fs}` : "?"}`
+        : `missing ${ink.err || ""}`.slice(0, 100)
+    );
+    const acctPadOk =
+      acctDom &&
+      Math.abs(acctDom.h - 36) <= 1.5 &&
+      Math.abs(acctDom.av - 28) <= 1.5 &&
+      acctDom.gapCss >= 9.5 &&
+      acctDom.gapCss <= 12.5 &&
+      Math.abs(acctDom.padL - 12) <= 1.5 &&
+      Math.abs(acctDom.padR - 12) <= 2 &&
+      Math.abs(acctDom.padL - acctDom.padR) <= 2 &&
+      Math.abs(acctDom.metaCy - acctDom.chipCy) <= 1 &&
+      Math.abs(acctDom.avCy - acctDom.chipCy) <= 1;
+    record(
+      "cart",
+      "account-pad",
+      !!(acctPadOk && ink.meta_cy_ok),
+      acctDom
+        ? `h=${acctDom.h.toFixed(1)} av=${acctDom.av.toFixed(1)} gap=${acctDom.gapCss} pad L=${acctDom.padL.toFixed(1)} R=${acctDom.padR.toFixed(1)} metaΔ=${Math.abs(acctDom.metaCy - acctDom.chipCy).toFixed(2)}`
+        : `account pad fail ${ink.err || ""}`.slice(0, 80)
+    );
+    record(
+      "cart",
+      "credit-flush",
+      !!(ink.flush_ok && ink.credit_h >= 5 && ink.credit_h <= 8),
+      ink.credit_seq
+        ? `seq=${ink.credit_seq} h=${ink.credit_h} stub=${ink.stub_fail}`
+        : `credit flush fail ${ink.err || ""}`.slice(0, 80)
     );
   }
 

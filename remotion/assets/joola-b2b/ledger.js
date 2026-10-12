@@ -314,7 +314,7 @@
       role: "Buyer",
       logo: "engage-logo.png",
       avatar: "engage-logo.png",
-      avatarSize: 24,
+      avatarSize: 28,
     },
     storeUrl: "https://joola.com",
     searchQuery: "Perseus",
