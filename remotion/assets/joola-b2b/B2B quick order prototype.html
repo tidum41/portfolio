@@ -1497,7 +1497,9 @@ img { display: block; max-width: 100%; }
     );
   }
 
-  function shellOpen(activeTab) {
+  function shellOpen(activeTab, cartOverride) {
+    var count = cartOverride ? cartOverride.count : cartUi.count;
+    var total = cartOverride ? cartOverride.total : cartUi.total;
     var items = NAV.map(function (n) {
       return (
         '<button type="button" class="nav-item' + (n.id === activeTab ? " active" : "") + '" data-tab="' + n.id + '">' +
@@ -1531,13 +1533,18 @@ img { display: block; max-width: 100%; }
       avatarHtml() +
       '<div class="account-meta"><div class="name">' + L.retailer.name + '</div><div class="role">' + L.retailer.buyer + " · " + L.retailer.role + "</div></div>" +
       "</button>" +
-      '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(cartUi.total) + '">' +
+      '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
       "<span>Cart</span>" +
-      '<span class="cart-amount-display" data-cart-total>' + money(cartUi.total) + "</span>" +
-      '<span class="badge cart-badge-display' + (cartUi.count === 0 ? " is-zero" : "") + '" data-cart-count>' + cartUi.count + "</span>" +
+      '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
+      '<span class="badge cart-badge-display' + (count === 0 ? " is-zero" : "") + '" data-cart-count>' + count + "</span>" +
       "</button>" +
       "</div></header>"
     );
+  }
+
+  /** Cart / invoices / messages show the open order in chrome; QO starts empty until Add all. */
+  function filledCart() {
+    return { count: L.cartCountAfterAdd, total: L.orderTotal };
   }
 
   function shellClose() {
@@ -1911,7 +1918,7 @@ img { display: block; max-width: 100%; }
       .join("");
     return (
       '<section class="screen" data-screen="cart">' +
-      shellOpen("cart") +
+      shellOpen("cart", filledCart()) +
       '<div class="page">' +
       "<h1>Cart</h1>" +
       '<p class="lede">Ready to place on ' + L.terms + " terms.</p>" +
@@ -1957,7 +1964,7 @@ img { display: block; max-width: 100%; }
 
     return (
       '<section class="screen" data-screen="invoices">' +
-      shellOpen("invoices") +
+      shellOpen("invoices", filledCart()) +
       '<div class="page">' +
       "<h1>Invoices &amp; terms</h1>" +
       '<p class="lede">Track what has been billed to your account, what is still open, and how much of your credit line is available for Quick order.</p>' +
@@ -1981,7 +1988,7 @@ img { display: block; max-width: 100%; }
     var inv = L.invoices[0];
     return (
       '<section class="screen" data-screen="messages">' +
-      shellOpen("messages") +
+      shellOpen("messages", filledCart()) +
       '<div class="messages-layout">' +
       '<aside class="inbox"><h2>Inbox</h2>' +
       '<div class="inbox-item" data-inbox-joola>' +
