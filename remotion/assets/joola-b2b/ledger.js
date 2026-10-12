@@ -26,6 +26,13 @@
     return null;
   }
 
+  /** Qty presets ≤3, category-aware (paddles case packs, ball cases, bag packs). */
+  var PRESETS = {
+    Paddles: [6, 12, 24],
+    Balls: [12, 48, 100],
+    Bags: [1, 3, 6],
+  };
+
   var products = {
     perseus: {
       id: "perseus",
@@ -36,6 +43,7 @@
       msrp: 299.95,
       image: "products/perseus.jpg",
       moq: 1,
+      presets: PRESETS.Paddles,
       tiers: [
         { min: 1, price: 179.97 },
         { min: 6, price: 164.97 },
@@ -52,6 +60,7 @@
       msrp: 229.95,
       image: "products/hyperion.jpg",
       moq: 1,
+      presets: PRESETS.Paddles,
       tiers: [
         { min: 1, price: 137.97 },
         { min: 6, price: 126.47 },
@@ -68,6 +77,7 @@
       msrp: 299.95,
       image: "products/scorpeus.jpg",
       moq: 1,
+      presets: PRESETS.Paddles,
       tiers: [
         { min: 1, price: 179.97 },
         { min: 6, price: 164.97 },
@@ -84,6 +94,7 @@
       msrp: 9.95,
       image: "products/hc40.jpg",
       moq: 12,
+      presets: PRESETS.Balls,
       tiers: [
         { min: 12, price: 6.47 },
         { min: 24, price: 5.97 },
@@ -99,6 +110,7 @@
       msrp: 109.95,
       image: "products/bag.jpg",
       moq: 1,
+      presets: PRESETS.Bags,
       tiers: [
         { min: 1, price: 71.47 },
         { min: 3, price: 65.97 },
@@ -296,9 +308,12 @@
       name: "Engage Pickleball",
       buyer: "Anna Bright",
       role: "Buyer",
-      avatar: "engage-avatar.png",
+      logo: "engage-logo.png",
+      avatar: "engage-logo.png",
       avatarSize: 24,
     },
+    storeUrl: "https://joola.com",
+    searchQuery: "Perseus",
     terms: "Net 30",
     products: products,
     recommended: ["perseus", "hyperion", "scorpeus"],

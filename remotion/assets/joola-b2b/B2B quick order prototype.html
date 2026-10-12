@@ -9,23 +9,26 @@
   font-family: "FKGroteskNeue";
   font-weight: 400;
   font-style: normal;
+  font-display: block;
   src: url("fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "FKGroteskNeue";
   font-weight: 500;
   font-style: normal;
+  font-display: block;
   src: url("fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "FKGroteskNeue";
   font-weight: 700;
   font-style: normal;
+  font-display: block;
   src: url("fonts/FKGroteskNeue-700-normal.woff2") format("woff2");
 }
 
 :root {
-  /* Colour */
+  /* Colour — 3 greys + one accent */
   --ink: #1a1a1a;
   --muted: #5c5c66;
   --faint: #8a8a96;
@@ -46,13 +49,13 @@
   --failed-bg: rgba(176, 23, 95, 0.10);
   --failed-border: rgba(208, 50, 117, 0.22);
   --best: #198754;
-  /* Type (FK Grotesk Neue only — brand mark is the logo image) */
-  --font-ui: "FKGroteskNeue", -apple-system, "Segoe UI", sans-serif;
-  --text-title: 28px;
+  /* Type — FK Grotesk Neue only; 4 sizes, 2 weights */
+  --font-ui: "FKGroteskNeue", "FK Grotesk Neue", sans-serif;
+  --text-title: 24px;
   --text-body: 14px;
   --text-ui: 13px;
   --text-meta: 12px;
-  --text-micro: 11px;
+  --text-micro: 12px; /* alias → meta; do not introduce a 5th size */
   /* Radii */
   --radius-pill: 999px;
   --radius-control: 8px;
@@ -64,8 +67,10 @@
   --topbar-h: 48px;
   --pill-h: 32px;
   --avatar: 24px;
-  --icon-slot: 20px;
+  --icon-slot: 16px;
   --icon-size: 16px;
+  --icon-stroke: 1.5;
+  --chip-gap: 8px;
   --row-h: 50px;
   --head-h: 40px;
   --control-h: 40px;
@@ -175,40 +180,25 @@ img { display: block; max-width: 100%; }
 }
 .sidebar-brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   padding: 4px 8px 16px;
 }
 .sidebar-brand img { width: 84px; height: auto; }
-.wholesale-pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 28px;
-  padding: 0 10px;
-  margin: 0 0 12px;
-  font-size: var(--text-meta);
-  font-weight: 500;
-  color: var(--blue);
-  box-sizing: border-box;
-  line-height: 1;
-}
-/* Same 20px slot as nav icons so label shares nav text x-position */
-.wholesale-pill .wholesale-slot {
-  width: var(--icon-slot);
-  height: var(--icon-slot);
+/* Wholesale as a tidy text chip under the logo — no blue dot */
+.wholesale-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.wholesale-pill .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--blue);
-  display: block;
-  flex-shrink: 0;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 .sidebar-nav {
   display: flex;
@@ -218,9 +208,9 @@ img { display: block; max-width: 100%; }
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: 32px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: var(--radius-control);
   font-size: var(--text-ui);
   font-weight: 400;
@@ -244,7 +234,9 @@ img { display: block; max-width: 100%; }
   height: var(--icon-size);
   stroke: currentColor;
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: var(--icon-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
   display: block;
 }
 .nav-item:hover { background: rgba(112, 115, 147, 0.06); color: var(--ink); }
@@ -262,46 +254,37 @@ img { display: block; max-width: 100%; }
   background: var(--blue-soft);
   color: var(--blue);
   font-weight: 500;
+  /* Same padding as default/hover — no layout jump */
+  padding: 0 8px;
 }
 .sidebar-divider {
   height: 1px;
   background: var(--line);
   margin: 12px 8px;
 }
-.sidebar-section {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--faint);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 4px 10px 8px;
-}
-.sidebar-meta,
-.account-panel {
+.sidebar-footer {
   margin-top: auto;
-  padding: 12px 10px 4px;
-  font-size: 12px;
+  padding: 8px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar-store {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  height: 28px;
+  font-size: var(--text-meta);
+  font-weight: 400;
   color: var(--faint);
-  line-height: 1.4;
+  text-decoration: none;
+  border-radius: var(--radius-control);
 }
-.account-panel .org {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink);
-}
-.account-panel .credit-line {
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  margin-top: 6px;
-  line-height: 1.45;
-}
-.account-panel .credit-line span { color: var(--ink); font-weight: 500; }
-.sidebar-meta .bal {
-  font-size: 13px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  margin-top: 2px;
+.sidebar-store:hover { color: var(--muted); background: rgba(112, 115, 147, 0.06); }
+.sidebar-store .ext {
+  font-size: var(--text-meta);
+  line-height: 1;
 }
 
 .main-column {
@@ -336,11 +319,11 @@ img { display: block; max-width: 100%; }
   color: var(--faint);
 }
 .top-search .icon-slot svg {
-  width: 14px;
-  height: 14px;
+  width: var(--icon-size);
+  height: var(--icon-size);
   stroke: currentColor;
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: var(--icon-stroke);
 }
 .topbar-right {
   margin-left: auto;
@@ -367,7 +350,7 @@ img { display: block; max-width: 100%; }
   line-height: 1;
 }
 .account-chip {
-  gap: 8px;
+  gap: var(--chip-gap);
   padding: 0 12px 0 4px;
 }
 .account-chip:hover { background: var(--band); }
@@ -380,24 +363,21 @@ img { display: block; max-width: 100%; }
   height: var(--avatar);
   min-width: var(--avatar);
   min-height: var(--avatar);
-  max-width: var(--avatar);
-  max-height: var(--avatar);
-  border-radius: 50%;
+  border-radius: 6px;
   overflow: hidden;
-  background: var(--blue-soft);
-  border: 1px solid rgba(44, 62, 224, 0.18);
+  background: var(--band);
+  border: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 0;
-  color: var(--blue);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  user-select: none;
+  padding: 2px;
+}
+.retailer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .account-meta {
   display: flex;
@@ -407,10 +387,9 @@ img { display: block; max-width: 100%; }
   text-align: left;
   min-width: 0;
   padding: 0;
-  /* Optical vertical center of the two-line stack inside 32px pill */
-  margin-top: 0;
 }
 .account-meta .name {
+  font-family: var(--font-ui);
   font-size: var(--text-ui);
   font-weight: 500;
   line-height: 14px;
@@ -418,7 +397,8 @@ img { display: block; max-width: 100%; }
   color: var(--ink);
 }
 .account-meta .role {
-  font-size: var(--text-micro);
+  font-family: var(--font-ui);
+  font-size: var(--text-meta);
   font-weight: 400;
   line-height: 12px;
   height: 12px;
@@ -451,7 +431,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius-pill);
   background: var(--failed);
   color: #fff;
-  font-size: 10px;
+  font-size: var(--text-meta);
   font-weight: 500;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -694,21 +674,15 @@ img { display: block; max-width: 100%; }
   white-space: nowrap;
 }
 .price-block .ea {
-  font-size: 11px;
+  font-size: var(--text-meta);
   font-weight: 400;
   color: var(--faint);
   margin-left: 3px;
 }
-.price-block .hint { font-size: 11px; color: var(--muted); }
+.price-block .hint { font-size: var(--text-meta); color: var(--muted); }
 .price-block .hint b { color: var(--ink); font-weight: 500; }
 .qty-presets button .best-tag {
-  display: block;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--best);
-  line-height: 1;
-  margin-top: -2px;
+  display: none; /* cut: presets already signal pack size */
 }
 .qty-group .qty-presets button.has-best {
   height: 32px;
@@ -777,7 +751,7 @@ img { display: block; max-width: 100%; }
 .qty-stepper .qty {
   flex: 1;
   text-align: center;
-  font-size: 17px;
+  font-size: var(--text-body);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
@@ -796,7 +770,7 @@ img { display: block; max-width: 100%; }
 }
 .qty-group .qty-presets button {
   flex: 1;
-  font-size: 11px;
+  font-size: var(--text-meta);
   font-weight: 500;
   color: var(--muted);
   padding: 0;
@@ -820,7 +794,7 @@ img { display: block; max-width: 100%; }
   font-weight: 500;
 }
 .qty-presets button {
-  font-size: 11px;
+  font-size: var(--text-meta);
   font-weight: 500;
   color: var(--muted);
   padding: 2px 6px;
@@ -835,7 +809,7 @@ img { display: block; max-width: 100%; }
   background: var(--blue-soft);
 }
 .line-total {
-  font-size: 19px;
+  font-size: var(--text-body);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -849,19 +823,34 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 28px;
+  padding: 12px 28px;
   background: #fff;
   border-top: 1px solid var(--line);
   flex-shrink: 0;
 }
+.order-footer .footer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
 .order-footer .total {
-  font-size: 30px;
+  font-family: var(--font-ui);
+  font-size: var(--text-title);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-feature-settings: "tnum" 1;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
-.order-footer .meta { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.order-footer .meta {
+  font-family: var(--font-ui);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.3;
+}
 .btn-primary {
   height: 40px;
   display: inline-flex;
@@ -1187,36 +1176,29 @@ img { display: block; max-width: 100%; }
   background: #fff;
 }
 
-/* Quick Order layout + rail */
+/* Quick Order layout + single Reorder rail */
 .qo-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--rail-w);
   gap: 28px;
-  align-items: stretch;
-  margin-top: 8px;
+  align-items: start;
+  margin-top: 20px;
 }
 .qo-main { min-width: 0; }
 .qo-rail {
   width: var(--rail-w);
   position: sticky;
   top: calc(var(--switcher-h) + 12px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-self: stretch;
-  min-height: 100%;
 }
 .rail-card {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
   background: #fff;
   padding: 14px;
-  flex: 1 1 0;
-  min-height: 0;
 }
 .rail-card h3 {
   margin: 0 0 10px;
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1679,7 +1661,7 @@ img { display: block; max-width: 100%; }
   color: var(--muted);
 }
 .cart-summary .sum-total .big {
-  font-size: 28px;
+  font-size: var(--text-title);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -1696,20 +1678,7 @@ img { display: block; max-width: 100%; }
   justify-content: center;
   margin-top: 16px;
 }
-.ready-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 8px;
-  margin-left: 8px;
-  border-radius: var(--radius-status);
-  font-size: var(--text-micro);
-  font-weight: 500;
-  color: var(--muted);
-  background: var(--band);
-  border: 1px solid var(--line);
-  vertical-align: middle;
-}
+/* ready-chip removed — footer is a clean label/value stack */
 .btn-text {
   height: 40px;
   display: inline-flex;
@@ -1786,6 +1755,7 @@ img { display: block; max-width: 100%; }
   <div id="devSwitcher">
     <span class="label">Screens</span>
     <button type="button" class="tab-btn active" data-tab="qo-desktop">Quick Order</button>
+    <button type="button" class="tab-btn" data-tab="qo-search">QO · Name search</button>
     <button type="button" class="tab-btn" data-tab="catalog">Catalog</button>
     <button type="button" class="tab-btn" data-tab="templates">Templates</button>
     <button type="button" class="tab-btn" data-tab="cart">Cart</button>
@@ -1823,27 +1793,32 @@ img { display: block; max-width: 100%; }
   ];
 
   function icon(name) {
+    /* Lucide-style 24 viewBox, 1.5 stroke, 16px render */
     var paths = {
-      order: '<path d="M4 6h12M4 10h12M4 14h8"/>',
-      catalog: '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/>',
-      templates: '<path d="M5 3h8l2 2v12H5z"/><path d="M13 3v3h3"/>',
-      invoices: '<path d="M5 3h10v14H5z"/><path d="M8 7h4M8 10h4M8 13h2"/>',
-      messages: '<path d="M3 5h14v10H7l-4 3V5z"/>',
-      search: '<circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2L17 17"/>',
+      order: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+      catalog: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+      templates: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+      invoices: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M12 16H8"/>',
+      messages: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+      search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     };
     return (
       '<span class="icon-slot" aria-hidden="true">' +
-      '<svg viewBox="0 0 20 20">' +
+      '<svg viewBox="0 0 24 24">' +
       (paths[name] || "") +
       "</svg></span>"
     );
   }
 
   function avatarHtml() {
-    var initial = (L.retailer.name || "?").charAt(0).toUpperCase();
+    var src = L.retailer.logo || L.retailer.avatar || "engage-logo.png";
     return (
-      '<div class="retailer-avatar" data-retailer-avatar aria-hidden="true">' +
-      initial +
+      '<div class="retailer-avatar" data-retailer-avatar>' +
+      '<img src="' +
+      src +
+      '" alt="' +
+      L.retailer.name +
+      '" width="24" height="24">' +
       "</div>"
     );
   }
@@ -1898,21 +1873,21 @@ img { display: block; max-width: 100%; }
       '<aside class="sidebar" data-sidebar>' +
       '<div class="sidebar-brand">' +
       '<img src="joola-logo.png" alt="JOOLA" width="84" height="28">' +
+      '<span class="wholesale-chip" data-wholesale-chip>Wholesale</span>' +
       "</div>" +
-      '<div class="wholesale-pill" data-wholesale-pill><span class="wholesale-slot"><span class="dot"></span></span>Wholesale</div>' +
       '<nav class="sidebar-nav">' + items + "</nav>" +
-      '<div class="sidebar-divider"></div>' +
-      '<div class="account-panel" data-account-panel>' +
-      '<div class="org">' + L.retailer.name + "</div>" +
-      '<div class="credit-line">' + L.terms + ' · used <span data-credit-used>' + money(L.credit.used) + "</span></div>" +
-      '<div class="credit-line">Available <span data-credit-available>' + money(L.credit.available) + "</span></div>" +
+      '<div class="sidebar-footer">' +
+      '<div class="sidebar-divider" style="margin:0 0 4px;"></div>' +
+      '<a class="sidebar-store" data-store-link href="' +
+      (L.storeUrl || "https://joola.com") +
+      '" target="_blank" rel="noopener">Shop joola.com<span class="ext" aria-hidden="true">↗</span></a>' +
       "</div>" +
       "</aside>" +
       '<div class="main-column">' +
       '<header class="topbar" data-topbar>' +
       '<div class="top-search">' +
       icon("search") +
-      "<span>Search SKUs, orders, invoices</span></div>" +
+      "<span>Search products, orders, invoices</span></div>" +
       '<div class="topbar-right">' +
       '<button type="button" class="account-chip" data-account-chip>' +
       avatarHtml() +
@@ -1956,20 +1931,25 @@ img { display: block; max-width: 100%; }
   }
 
   function qtyGroupHtml(line) {
+    var p = L.products[line.productId];
+    var presetVals = (p && p.presets ? p.presets : []).slice(0, 3);
     var presets = "";
-    if (line.productId === "perseus") {
-      var p = L.products.perseus;
+    if (presetVals.length) {
       var bestMin = p.tiers[p.tiers.length - 1].min;
       presets =
-        '<div class="qty-presets">' +
-        [12, 24, 60, 120]
+        '<div class="qty-presets" data-qty-presets>' +
+        presetVals
           .map(function (n) {
+            var setAttr =
+              line.productId === "perseus"
+                ? ' data-set-perseus="' + n + '"'
+                : ' data-set-qty="' + n + '"';
             return (
               '<button type="button" class="' +
               (n === line.qty ? "on" : "") +
-              '" data-set-perseus="' +
-              n +
-              '" title="' +
+              '"' +
+              setAttr +
+              ' title="' +
               (n === bestMin ? "Best unit price from " + n + "+" : "") +
               '">' +
               n +
@@ -1980,7 +1960,9 @@ img { display: block; max-width: 100%; }
         "</div>";
     }
     return (
-      '<div class="qty-group" data-qty-group data-product="' +
+      '<div class="qty-group' +
+      (presetVals.length ? " has-presets" : "") +
+      '" data-qty-group data-product="' +
       line.productId +
       '">' +
       '<div class="qty-stepper" data-qty-stepper>' +
@@ -2007,7 +1989,11 @@ img { display: block; max-width: 100%; }
       var p = L.products[line.productId];
       var amount = L.lineAmount(line);
       var fulfill = L.lineFulfillment[line.productId] || { warehouse: "CA", availability: "In stock" };
-      var rowClass = "order-row" + (line.productId === "perseus" ? " has-presets" : "");
+      var stockNote =
+        fulfill.availability && !/^in stock$/i.test(fulfill.availability)
+          ? " · " + fulfill.availability
+          : "";
+      var rowClass = "order-row" + (p.presets && p.presets.length ? " has-presets" : "");
       rows +=
         '<div class="' +
         rowClass +
@@ -2027,8 +2013,7 @@ img { display: block; max-width: 100%; }
         p.fullName +
         '</div><div class="prod-sku">SKU ' +
         p.sku +
-        " · " +
-        fulfill.availability +
+        stockNote +
         "</div></div>" +
         unitPriceHtml(p, line.qty) +
         '<div class="qty-cell">' +
@@ -2044,7 +2029,6 @@ img { display: block; max-width: 100%; }
     });
 
     return (
-      '<div class="section-title">Lines</div>' +
       '<div class="order-table" data-order-table>' +
       '<div class="order-head" data-order-head>' +
       "<div></div><div>Product</div><div class=\"end\">Price</div><div class=\"qty-h end\">Quantity</div><div class=\"end\">Line total</div><div></div>" +
@@ -2055,41 +2039,32 @@ img { display: block; max-width: 100%; }
   }
 
   function qoRailHtml() {
-    var tpl = L.templates
-      .map(function (t) {
+    /* One compact Reorder rail: recent orders + saved templates */
+    var items = [];
+    L.recentOrders.forEach(function (o) {
+      items.push({
+        name: o.id + " · " + o.label,
+        meta: o.when + " · " + o.lines + " lines · " + money(o.total),
+      });
+    });
+    L.templates.forEach(function (t) {
+      items.push({ name: t.name, meta: "Saved · " + t.detail });
+    });
+    var body = items
+      .map(function (it) {
         return (
           '<div class="rail-item"><div class="name">' +
-          t.name +
+          it.name +
           '</div><div class="meta">' +
-          t.detail +
-          "</div></div>"
-        );
-      })
-      .join("");
-    var recent = L.recentOrders
-      .map(function (o) {
-        return (
-          '<div class="rail-item"><div class="name">' +
-          o.id +
-          " · " +
-          o.label +
-          '</div><div class="meta">' +
-          o.when +
-          " · " +
-          o.lines +
-          " lines · " +
-          money(o.total) +
+          it.meta +
           "</div></div>"
         );
       })
       .join("");
     return (
       '<aside class="qo-rail" data-qo-rail>' +
-      '<div class="rail-card"><h3>Templates</h3>' +
-      tpl +
-      "</div>" +
       '<div class="rail-card"><h3>Reorder</h3>' +
-      recent +
+      body +
       "</div>" +
       "</aside>"
     );
@@ -2099,50 +2074,87 @@ img { display: block; max-width: 100%; }
     var ready = !cartUi.added;
     return (
       '<div class="order-footer" data-order-footer>' +
-      "<div><div class=\"meta\" data-line-count>" +
+      '<div class="footer-stack">' +
+      '<div class="meta" data-line-count>' +
       (ready ? "Ready · " : "In cart · ") +
       L.orderLines.length +
       (L.orderLines.length === 1 ? " line" : " lines") +
-      (ready ? '<span class="ready-chip">Not in cart yet</span>' : "") +
-      '</div><div class="total" id="qoFooterTotal" data-order-total>' +
+      "</div>" +
+      '<div class="total" id="qoFooterTotal" data-order-total>' +
       money(L.orderTotal) +
-      '</div><div class="inline-success' +
+      "</div>" +
+      '<div class="inline-success' +
       (cartUi.added ? " show" : "") +
       '" data-inline-success>' +
       (cartUi.added ? "Added to cart" : "") +
       "</div></div>" +
-      '<div style="display:flex;gap:14px;align-items:center;">' +
-      '<button type="button" class="btn-text">Save as template</button>' +
       '<button type="button" class="btn-primary" id="qoAddAllBtn" data-add-all' +
       (cartUi.added ? " disabled" : "") +
       ">" +
       (cartUi.added ? "Added" : "Add all to cart") +
       "</button>" +
-      "</div></div>"
+      "</div>"
     );
   }
 
-  function searchHtml() {
-    var p = L.products.perseus;
-    var typed = "600558";
-    var alreadyInOrder = L.orderLines.some(function (line) {
-      return line.productId === "perseus";
-    });
-    /** Dropdown closed once the SKU is already a line — avoids covering the table head. */
+  function searchHtml(opts) {
+    opts = opts || {};
+    var open = !!opts.open;
+    var typed = L.searchQuery || "Perseus";
+    var q = typed.toLowerCase();
+    var matches = Object.keys(L.products)
+      .map(function (id) {
+        return L.products[id];
+      })
+      .filter(function (p) {
+        return (
+          p.name.toLowerCase().indexOf(q) !== -1 ||
+          p.fullName.toLowerCase().indexOf(q) !== -1 ||
+          String(p.sku).indexOf(q) !== -1
+        );
+      });
+    var results =
+      '<div class="search-results' +
+      (open ? "" : " is-closed") +
+      '" data-search-results' +
+      (open ? "" : " hidden") +
+      ">" +
+      matches
+        .map(function (p) {
+          return (
+            '<div class="search-result" data-search-result data-sku="' +
+            p.sku +
+            '" data-buyer-price="' +
+            p.buyerPrice +
+            '">' +
+            '<img src="' +
+            p.image +
+            '" alt="' +
+            p.name +
+            '" width="28" height="28">' +
+            '<div><div class="title">' +
+            p.name +
+            '</div><div class="meta">SKU ' +
+            p.sku +
+            " · " +
+            money(p.buyerPrice) +
+            "</div></div></div>"
+          );
+        })
+        .join("") +
+      "</div>";
     return (
       '<div class="search-row">' +
       '<div class="search-wrap">' +
-      '<div class="search-field has-value" data-search-field data-search-value="' + typed + '">' +
+      '<div class="search-field has-value" data-search-field data-search-value="' +
+      typed +
+      '">' +
       '<span class="placeholder">Search by name or SKU</span>' +
-      '<span class="value">' + typed + "</span>" +
+      '<span class="value">' +
+      typed +
+      "</span>" +
       "</div>" +
-      (alreadyInOrder
-        ? '<div class="search-results is-closed" data-search-results hidden></div>'
-        : '<div class="search-results" data-search-results>' +
-          '<div class="search-result" data-search-result data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
-          '<img src="' + p.image + '" alt="' + p.name + '" width="28" height="28">' +
-          "<div><div class=\"title\">" + p.name + '</div><div class="meta">SKU ' + p.sku + " · " + money(p.buyerPrice) + "</div></div>" +
-          "</div></div>") +
+      results +
       "</div></div>"
     );
   }
@@ -2153,10 +2165,28 @@ img { display: block; max-width: 100%; }
       shellOpen("qo-desktop") +
       '<div class="page">' +
       "<h1>Quick order</h1>" +
-      '<p class="lede">Add SKUs and quantities. Prices are for ' +
-      L.retailer.name +
-      ".</p>" +
-      searchHtml() +
+      searchHtml({ open: false }) +
+      '<div class="qo-layout">' +
+      '<div class="qo-main">' +
+      orderTableHtml() +
+      "</div>" +
+      qoRailHtml() +
+      "</div>" +
+      "</div>" +
+      footerHtml() +
+      shellClose() +
+      "</section>"
+    );
+  }
+
+  /** Dev screen: name search open for film / critic crops */
+  function screenQuickOrderSearch() {
+    return (
+      '<section class="screen" data-screen="qo-search">' +
+      shellOpen("qo-desktop") +
+      '<div class="page">' +
+      "<h1>Quick order</h1>" +
+      searchHtml({ open: true }) +
       '<div class="qo-layout">' +
       '<div class="qo-main">' +
       orderTableHtml() +
@@ -2310,7 +2340,16 @@ img { display: block; max-width: 100%; }
         return (
           '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
           '<img src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
-          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + " · " + line.qty + " × " + money(L.priceAt(p, line.qty)) + " · " + fulfill.availability + "</div></div>" +
+          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' +
+          p.sku +
+          " · " +
+          line.qty +
+          " × " +
+          money(L.priceAt(p, line.qty)) +
+          (fulfill.availability && !/^in stock$/i.test(fulfill.availability)
+            ? " · " + fulfill.availability
+            : "") +
+          "</div></div>" +
           '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
           "</div>"
         );
@@ -2338,7 +2377,6 @@ img { display: block; max-width: 100%; }
       shellOpen("cart", filledCart()) +
       '<div class="page">' +
       "<h1>Cart</h1>" +
-      '<p class="lede">Review lines, then place the order.</p>' +
       '<div class="cart-layout" data-cart-layout>' +
       '<div class="cart-main">' +
       '<div class="cart-lines">' + lines + "</div>" +
@@ -2543,7 +2581,7 @@ img { display: block; max-width: 100%; }
       '</button><div class="qty">12</div><button type="button" disabled>' +
       stepIcon("plus") +
       "</button>" +
-      '</div><div class="qty-presets"><button type="button" disabled>12</button><button type="button" disabled>24</button><button type="button" disabled>60</button><button type="button" disabled>120</button></div></div>' +
+      '</div><div class="qty-presets"><button type="button" disabled>6</button><button type="button" disabled>12</button><button type="button" disabled>24</button></div></div>' +
       "</div></div>" +
       '<div class="state-block"><h3>Cart + status</h3>' +
       '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
@@ -2593,6 +2631,7 @@ img { display: block; max-width: 100%; }
   function render() {
     document.getElementById("app").innerHTML =
       screenQuickOrder() +
+      screenQuickOrderSearch() +
       screenCatalog() +
       screenTemplates() +
       screenCart() +

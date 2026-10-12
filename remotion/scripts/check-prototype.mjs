@@ -103,6 +103,7 @@ async function main() {
   const page = await browser.newPage({ viewport: VIEWPORT });
   await page.goto(base, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.JOOLA_LEDGER && document.querySelector("[data-screen]"));
+  await page.evaluate(() => document.fonts.ready);
 
   const rows = [];
   let failed = false;
@@ -154,6 +155,9 @@ async function main() {
           cartCheckout: [],
           netsuiteLabels: [],
           pixelNits: [],
+          fontsLoaded: [],
+          typeScale: [],
+          lessBetter: [],
         };
         const root = document.querySelector(`[data-screen="${screen}"]`);
         if (!root || !root.classList.contains("active")) {
@@ -700,17 +704,17 @@ async function main() {
           }
         }
 
-        // 14. IA: no Open cart under Account; account panel holds credit
+        // 14. IA: no Open cart; credit lives in cart summary (not sidebar); store link present
         if (["qo-desktop", "catalog", "invoices", "messages"].includes(screen)) {
           const side = root.querySelector("[data-sidebar], .sidebar");
           if (side && /Open cart/i.test(side.textContent || "")) {
             issues.ia.push("sidebar still contains Open cart");
           }
-          const panel = root.querySelector("[data-account-panel]");
-          if (!panel || !visible(panel)) {
-            issues.ia.push("account panel missing");
-          } else if (!/\$/.test(panel.textContent || "")) {
-            issues.ia.push("account panel missing credit figures");
+          if (side && /\$[\d,]+\.\d{2}/.test(side.textContent || "") && /Net 30|Available|used/i.test(side.textContent || "")) {
+            issues.ia.push("credit figures must not appear in sidebar (cart summary only)");
+          }
+          if (!side || !side.querySelector("[data-store-link]")) {
+            issues.ia.push("sidebar missing Shop joola.com store link");
           }
           const cart = root.querySelector("[data-cart-pill], .cart-pill");
           if (!cart || !visible(cart)) issues.ia.push("cart pill missing from top bar");
@@ -747,22 +751,25 @@ async function main() {
           }
         }
 
-        // 16. Quick Order rail
+        // 16. Quick Order — single Reorder rail
         if (screen === "qo-desktop") {
           const rail = root.querySelector("[data-qo-rail]");
           if (!rail || !visible(rail)) issues.qoRail.push("qo rail missing");
           else {
+            const cards = [...rail.querySelectorAll(".rail-card")].filter(visible);
+            if (cards.length !== 1) {
+              issues.qoRail.push(`want 1 Reorder rail card, found ${cards.length}`);
+            }
             const t = rail.textContent || "";
-            if (!/template/i.test(t)) issues.qoRail.push("rail missing templates");
-            if (!/recent|PO-/i.test(t)) issues.qoRail.push("rail missing recent orders");
-            // Template meta must stay one line (no SKU · units · $ wrapping)
+            if (!/Reorder/i.test(t)) issues.qoRail.push("rail missing Reorder heading");
+            if (!/PO-/i.test(t)) issues.qoRail.push("rail missing recent orders");
             rail.querySelectorAll(".rail-item .meta").forEach((meta) => {
               if (!visible(meta)) return;
               if (/SKU\s*\d+/i.test(meta.textContent || "")) {
-                issues.pixelNits.push("template meta still includes SKU");
+                issues.pixelNits.push("rail meta still includes SKU");
               }
               if (meta.scrollHeight > meta.clientHeight + 1 || meta.getBoundingClientRect().height > 20) {
-                issues.pixelNits.push("template meta wraps to 2+ lines");
+                issues.pixelNits.push("rail meta wraps to 2+ lines");
               }
             });
           }
@@ -861,12 +868,16 @@ async function main() {
           }
         }
 
-        // Buyer-facing QO lines: availability phrase, no warehouse codes / staged jargon
+        // Buyer-facing QO lines: stock only when NOT in stock; no warehouse codes
         if (screen === "qo-desktop") {
           const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
-          const withAvail = rows.filter((el) => /In stock|2-day ship|day ship|Backorder/i.test(el.textContent || ""));
-          if (withAvail.length < 2) {
-            issues.netsuiteLabels.push("order lines missing availability phrasing");
+          const inStockSpam = rows.filter((el) => /In stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          if (inStockSpam.length > 0) {
+            issues.netsuiteLabels.push("In stock should be omitted (show only exceptions)");
+          }
+          const exception = rows.filter((el) => /2-day ship|day ship|Backorder|Low stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          if (exception.length < 1) {
+            issues.netsuiteLabels.push("expected at least one non-stock availability exception");
           }
           const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(el.querySelector(".prod-sku")?.textContent || ""));
           if (withWh.length > 0) {
@@ -919,13 +930,13 @@ async function main() {
             if (av) {
               const aw = av.getBoundingClientRect().width;
               if (Math.abs(aw - 24) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 24)`);
-              // Initial letter (not hamburger/menu image glyph)
-              const txt = (av.textContent || "").trim();
-              if (!/^[A-Z]$/.test(txt)) {
-                issues.pixelNits.push(`account avatar initial="${txt}" (want single letter)`);
+              const img = av.querySelector("img");
+              if (!img || !/engage-logo/i.test(img.getAttribute("src") || "")) {
+                issues.pixelNits.push("account chip missing Engage logo asset");
               }
-              if (av.querySelector("img")) {
-                issues.pixelNits.push("account avatar still uses image (hamburger risk)");
+              const gap = parseFloat(getComputedStyle(chip).gap) || 0;
+              if (Math.abs(gap - 8) > 1) {
+                issues.pixelNits.push(`account chip gap ${gap}px (want 8)`);
               }
             }
             // Count chip inside pill — never corner badge; hidden when empty
@@ -959,14 +970,27 @@ async function main() {
           root.querySelectorAll(".nav-item .icon-slot").forEach((slot) => {
             if (!visible(slot)) return;
             const r = slot.getBoundingClientRect();
-            if (Math.abs(r.width - 20) > 1.5 || Math.abs(r.height - 20) > 1.5) {
-              issues.netsuiteLabels.push(`icon-slot ${Math.round(r.width)}x${Math.round(r.height)} (want 20)`);
+            if (Math.abs(r.width - 16) > 1.5 || Math.abs(r.height - 16) > 1.5) {
+              issues.netsuiteLabels.push(`icon-slot ${Math.round(r.width)}x${Math.round(r.height)} (want 16)`);
             }
             const svg = slot.querySelector("svg");
             if (svg) {
               const sr = svg.getBoundingClientRect();
               if (Math.abs(sr.width - 16) > 2 || Math.abs(sr.height - 16) > 2) {
                 issues.netsuiteLabels.push(`nav icon ${Math.round(sr.width)}px (want 16)`);
+              }
+              const sw = parseFloat(getComputedStyle(svg).strokeWidth) || 0;
+              // stroke-width may be attribute; check attr
+              const attr = parseFloat(svg.getAttribute("stroke-width") || "") || sw;
+              void attr;
+            }
+            const nav = slot.closest(".nav-item");
+            if (nav) {
+              const gap = parseFloat(getComputedStyle(nav).gap) || 0;
+              if (Math.abs(gap - 8) > 1) issues.pixelNits.push(`nav gap ${gap}px (want 8)`);
+              const padL = parseFloat(getComputedStyle(nav).paddingLeft) || 0;
+              if (nav.classList.contains("active") && Math.abs(padL - 8) > 1) {
+                issues.pixelNits.push(`active nav padding ${padL}px (want 8)`);
               }
             }
           });
@@ -1018,7 +1042,7 @@ async function main() {
             } else {
               const cs = getComputedStyle(ea);
               const fs = parseFloat(cs.fontSize) || 0;
-              if (fs > 12.5) issues.pixelNits.push(`ea font-size ${fs}px (want ~11)`);
+              if (fs > 13) issues.pixelNits.push(`ea font-size ${fs}px (want ≤12 meta)`);
               const color = cs.color || "";
               // faint grey — not full ink
               if (/rgb\(26,\s*26,\s*26\)/i.test(color) || color === "rgb(0, 0, 0)") {
@@ -1036,43 +1060,71 @@ async function main() {
             }
           }
 
-          // Wholesale pill: dot centred, label x = nav text x
-          const wholesale = root.querySelector("[data-wholesale-pill], .wholesale-pill");
-          const navItem = root.querySelector(".nav-item");
-          if (wholesale && navItem && visible(wholesale)) {
-            const slot = wholesale.querySelector(".wholesale-slot");
-            const dot = wholesale.querySelector(".dot");
-            if (!slot || !dot) {
-              issues.pixelNits.push("wholesale missing slot/dot");
-            } else {
-              const wr = wholesale.getBoundingClientRect();
-              const dr = dot.getBoundingClientRect();
-              const midW = (wr.top + wr.bottom) / 2;
-              const midD = (dr.top + dr.bottom) / 2;
-              if (Math.abs(midW - midD) > 2) {
-                issues.pixelNits.push(`wholesale dot not vertically centred (Δ${(midW - midD).toFixed(1)}px)`);
+          // Wholesale as tidy chip under logo (no blue dot)
+          const wholesale = root.querySelector("[data-wholesale-chip], .wholesale-chip");
+          if (!wholesale || !visible(wholesale)) {
+            issues.pixelNits.push("wholesale chip missing");
+          } else {
+            if (wholesale.querySelector(".dot")) issues.pixelNits.push("wholesale still has blue dot");
+            if (!/^Wholesale$/i.test((wholesale.textContent || "").trim())) {
+              issues.pixelNits.push("wholesale chip label wrong");
+            }
+          }
+
+          // Footer: label/value stack, no ready-chip
+          const footer = root.querySelector("[data-order-footer]");
+          if (footer && visible(footer)) {
+            if (footer.querySelector(".ready-chip") || /Not in cart yet/i.test(footer.textContent || "")) {
+              issues.pixelNits.push("footer still has Not in cart yet chip");
+            }
+            if (!footer.querySelector(".footer-stack")) {
+              issues.pixelNits.push("footer missing label/value stack");
+            }
+            const total = footer.querySelector(".total, [data-order-total]");
+            if (total) {
+              const fs = getComputedStyle(total).fontFamily || "";
+              if (!/FKGroteskNeue/i.test(fs)) {
+                issues.fontsLoaded.push(`footer total font fallback: ${fs.slice(0, 48)}`);
               }
-              const navLabel = navItem.querySelector("span:not(.icon-slot)");
-              const wholesaleTextX = slot.getBoundingClientRect().right + 10; // gap to label
-              // Compare label text left edges via range or child text position
-              const wText = [...wholesale.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
-              // Fallback: wholesale label starts after slot+gap; nav label after icon-slot+gap
-              const navSlot = navItem.querySelector(".icon-slot");
-              if (navSlot && navLabel) {
-                const navTextLeft = navLabel.getBoundingClientRect().left;
-                const wholeLabel = wholesale.childNodes;
-                // Measure by creating a temp — use getBoundingClientRect of wholesale vs computing
-                // Label is text node after slot; approximate with slot.right + gap from computed
-                const gap = parseFloat(getComputedStyle(wholesale).gap) || 10;
-                const approxLabelLeft = slot.getBoundingClientRect().right + gap;
-                if (Math.abs(approxLabelLeft - navTextLeft) > 2) {
-                  issues.pixelNits.push(
-                    `wholesale label x=${Math.round(approxLabelLeft)} vs nav text x=${Math.round(navTextLeft)}`
-                  );
-                }
-              }
-              void wholesaleTextX;
-              void wText;
+              const size = parseFloat(getComputedStyle(total).fontSize) || 0;
+              if (size > 26) issues.typeScale.push(`footer total ${size}px (want ≤24 title)`);
+            }
+          }
+
+          // Less clutter: no lede, no Lines heading, ≤3 presets
+          if (root.querySelector(".page > .lede")) {
+            issues.lessBetter.push("QO lede still present");
+          }
+          if (/^Lines$/m.test(root.innerText || "") && root.querySelector(".section-title")) {
+            const st = [...root.querySelectorAll(".section-title")].find((el) => /^Lines$/i.test(el.textContent || ""));
+            if (st && visible(st)) issues.lessBetter.push("Lines heading still present");
+          }
+          root.querySelectorAll("[data-qty-presets], .qty-presets").forEach((pg) => {
+            if (!visible(pg)) return;
+            const n = pg.querySelectorAll("button").length;
+            if (n > 3) issues.lessBetter.push(`presets count ${n} (max 3)`);
+          });
+
+          // Name search field value
+          const field = root.querySelector("[data-search-field]");
+          if (field) {
+            const val = field.getAttribute("data-search-value") || "";
+            if (!/[A-Za-z]{3,}/.test(val) || /^\d+$/.test(val.trim())) {
+              issues.lessBetter.push(`search value "${val}" should be a product name for the film`);
+            }
+          }
+
+          // Fonts actually loaded
+          // (also asserted after loop via document.fonts — see fontsLoaded fill below)
+          const moneyEl = root.querySelector(".order-footer .total, [data-order-total]");
+          const bodyFF = getComputedStyle(root).fontFamily;
+          if (moneyEl) {
+            const mFF = getComputedStyle(moneyEl).fontFamily;
+            if (!/FKGroteskNeue/i.test(mFF)) {
+              issues.fontsLoaded.push("money total not FK Grotesk Neue");
+            }
+            if (mFF.split(",")[0].replace(/["']/g, "").trim() !== bodyFF.split(",")[0].replace(/["']/g, "").trim()) {
+              issues.fontsLoaded.push("money family differs from body");
             }
           }
 
@@ -1110,12 +1162,59 @@ async function main() {
           }
         }
 
-        // Net 30 beside credit in account panel
-        if (["qo-desktop", "invoices"].includes(screen)) {
-          const panel = root.querySelector("[data-account-panel]");
-          if (panel && visible(panel) && !/Net 30/i.test(panel.textContent || "")) {
-            issues.netsuiteLabels.push("account panel missing Net 30 terms next to credit");
+        // Net 30 beside credit — cart summary (credit shown once, where it matters)
+        if (screen === "cart") {
+          const summary = root.querySelector("[data-cart-summary]");
+          if (!summary || !/Net 30/i.test(summary.textContent || "")) {
+            issues.netsuiteLabels.push("cart summary missing Net 30 credit copy");
           }
+        }
+        if (screen === "invoices") {
+          const page = root.querySelector(".page");
+          if (page && !/Net 30/i.test(page.textContent || "")) {
+            issues.netsuiteLabels.push("invoices page missing Net 30 terms");
+          }
+        }
+
+        // Fonts loaded (document.fonts) — run once per evaluate on qo-desktop
+        if (screen === "qo-desktop") {
+          const ok400 = document.fonts.check('400 14px "FKGroteskNeue"');
+          const ok500 = document.fonts.check('500 14px "FKGroteskNeue"');
+          if (!ok400) issues.fontsLoaded.push("FKGroteskNeue 400 not loaded");
+          if (!ok500) issues.fontsLoaded.push("FKGroteskNeue 500 not loaded");
+
+          // Type scale: ≤4 sizes from the token set, 2 weights, 3 greys
+          const allowedSizes = new Set(["12px", "13px", "14px", "24px"]);
+          const sizes = new Set();
+          const weights = new Set();
+          const greySample = ["ink", "muted", "faint"].map((t) => {
+            const s = document.createElement("span");
+            s.style.color = `var(--${t})`;
+            root.appendChild(s);
+            const c = getComputedStyle(s).color;
+            s.remove();
+            return c;
+          });
+          const greySet = new Set(greySample);
+          const usedGreys = new Set();
+          const walk = (el) => {
+            if (!el || el.nodeType !== 1) return;
+            const st = getComputedStyle(el);
+            if (st.display === "none" || st.visibility === "hidden") return;
+            const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+            if (hasText) {
+              sizes.add(st.fontSize);
+              weights.add(st.fontWeight);
+              if (greySet.has(st.color)) usedGreys.add(st.color);
+            }
+            [...el.children].forEach(walk);
+          };
+          walk(root);
+          const rogue = [...sizes].filter((s) => !allowedSizes.has(s));
+          if (rogue.length) issues.typeScale.push(`rogue sizes: ${rogue.join(", ")}`);
+          if (sizes.size > 4) issues.typeScale.push(`${sizes.size} sizes (target ≤4)`);
+          if (weights.size > 2) issues.typeScale.push(`${weights.size} weights (target 2)`);
+          if (usedGreys.size > 3) issues.typeScale.push(`${usedGreys.size} greys (target 3)`);
         }
 
         function parseMoneyLocal(text) {
@@ -1174,6 +1273,9 @@ async function main() {
       ["cart-checkout", result.cartCheckout],
       ["netsuite-labels", result.netsuiteLabels],
       ["pixel-nits", result.pixelNits],
+      ["fonts-loaded", result.fontsLoaded],
+      ["type-scale", result.typeScale],
+      ["less-better", result.lessBetter],
     ];
     for (const [name, list] of checks) {
       // Screen-scoped checks: skip empty N/A as PASS only when relevant
@@ -1196,8 +1298,11 @@ async function main() {
         "qo-rail": ["qo-desktop"],
         "msg-context": ["messages"],
         "cart-checkout": ["cart"],
-        "netsuite-labels": ["qo-desktop", "invoices", "messages"],
+        "netsuite-labels": ["qo-desktop", "cart", "invoices", "messages"],
         "pixel-nits": ["qo-desktop", "cart"],
+        "fonts-loaded": ["qo-desktop"],
+        "type-scale": ["qo-desktop"],
+        "less-better": ["qo-desktop"],
       };
       if (scoped[name] && !scoped[name].includes(screen)) continue;
       record(screen, name, list.length === 0, list.slice(0, 4).join("; "));
