@@ -30,7 +30,7 @@ import { Analytics } from '@vercel/analytics/next';
 // ABC Areal is the only sans on the site. Georgia stays on page titles.
 // Variable file axes: wght 400–700 (default 400), slnt -12–0 (default 0),
 // DRKM 0–1 (default 0). Leave DRKM at the light default.
-// The woff2 is gitignored: Dinamo EULA §10 forbids public repositories.
+// The variable woff2 is committed so preview builds can load it.
 const areal = localFont({
   src: "../fonts/ABCArealVariable.woff2",
   variable: "--font-areal",
