@@ -1,10 +1,12 @@
 # NetSuite notes for JOOLA B2B portal (design pass)
 
-Research for the customer-facing Quick Order prototype. Goal: keep ordering cognitively simple while reflecting how JOOLA’s NetSuite sales orders actually work.
+**Scope (Mudit):** Work only on the **customer-facing B2B portal UI**. Do not build internal sales-rep screens, NetSuite admin, custom forms, or order-type tooling. NetSuite research below is background so customer-side fields stay accurate: PO #, ship-to, ship date, warehouse notes, terms, status labels, returns path.
 
-## 1. Internal Sales Order record
+Goal: keep ordering cognitively simple while reflecting how a buyer’s order lands in JOOLA’s NetSuite sales orders.
 
-Source of truth for what a placed order becomes inside NetSuite.
+## 1. Sales Order record (research only — not a UI to build)
+
+What a placed customer order becomes inside NetSuite. Used to choose which fields belong on the **buyer** portal; not a brief for a rep console.
 
 | Concept | NetSuite field / behavior | Notes for B2B UI |
 | --- | --- | --- |
