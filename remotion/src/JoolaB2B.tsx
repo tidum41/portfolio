@@ -1,46 +1,65 @@
+import logo from "../assets/joola-b2b/engage-mark.png";
+import joolaLogo from "../assets/joola-b2b/joola-logo.png";
 import "./joola/fonts";
 import { FONT } from "./joola/fonts";
 import { money, photos } from "./joola/products";
-import { C, EASE_IN_OUT, clamp } from "./joola/theme";
+import { C, EASE_IN_OUT, EASE_OUT, clamp } from "./joola/theme";
 import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 
 export const JOOLA_FPS = 30;
+/** 16.0s. Logo, then the order, invoices, and the reply. The loop seam is the cut back to the logo. */
+export const JOOLA_DURATION = 480;
 
-/** Each move is 16 frames, inside the 12–18 frame ease-in-out window. */
-const PAN = 16;
-const HOLD_SEARCH = 24;
-const HOLD_REC = 24;
-const HOLD_ORDER = 36;
-const HOLD_MSG = 28;
-const HOLD_END = 24;
+/** Laid out at 960×540 and scaled onto 1920×1080. One screen fills the frame. */
+const PAGE_W = 960;
+const PAGE_H = 540;
+const SCALE = 1920 / PAGE_W;
+const CHROME = 44;
+const PAD = 48;
 
-const PAN_REC = HOLD_SEARCH;
-const PAN_ORDER = PAN_REC + PAN + HOLD_REC;
-const PAN_MSG = PAN_ORDER + PAN + HOLD_ORDER;
-const PAN_HOME = PAN_MSG + PAN + HOLD_MSG;
-
-export const JOOLA_DURATION = PAN_HOME + PAN + HOLD_END;
-
-const HEADER = 58;
-const SEARCH_H = 300;
-const REC_H = 460;
-const ORDER_H = 1022;
-const MSG_H = 508;
-
-const Y_REC = SEARCH_H - HEADER;
-const Y_ORDER = SEARCH_H + REC_H - HEADER;
-/** Land on the thread with the order still filling the frame above it. */
-const Y_MSG = SEARCH_H + REC_H + ORDER_H + MSG_H - 1080;
-
+const QTY = 120;
+const SKU = "600558";
 const PLACEHOLDER = "Search by name, category, or SKU";
-const WARN = "#8A6100";
+const ANNA = "Perseus Pro V, SKU 600558. When can you restock 120 units?";
+const REP = "120 units of Perseus Pro V ship Friday.";
+
+/** Search field is pinned so the caret and the cursor share one coordinate. */
+const FIELD_TOP = 214;
+const FIELD_H = 46;
+const FIELD_LEFT = PAD;
+const FIELD_W = 460;
+
+/** A short straight approach, then a 2-frame dip. The pointer stays put between clicks. */
+const MOVE = 10;
+const DIP = 2;
+const NAV_F = 8;
+const INTRO = 24;
+const QTY_FROM = 12;
+
+const FIELD_AT = INTRO;
+const FIELD_ARRIVE = FIELD_AT + MOVE;
+const TYPE_AT = INTRO + 14;
+const CARET_DROP = TYPE_AT + SKU.length * 2 + 2;
+const RESULT_AT = INTRO + 30;
+const ROW_AT = INTRO + 42;
+const ROW_ARRIVE = ROW_AT + MOVE;
+const CUT_REC = INTRO + 100;
+const CUT_ORDER = INTRO + 184;
+const ADD_AT = INTRO + 190;
+const ADD_ARRIVE = ADD_AT + MOVE;
+const COUNT_AT = ADD_ARRIVE + DIP;
+const COUNT_END = COUNT_AT + 12;
+const CUT_INV = INTRO + 286;
+const CUT_MSG = INTRO + 360;
 
 const face: CSSProperties = {
   fontFamily: FONT,
   color: C.ink,
-  lineHeight: 1.5,
+  lineHeight: 1.45,
 };
+
+const NAV = ["Quick Order", "Catalog", "Invoices", "Messages"] as const;
 
 const PADDLES = [
   {
@@ -67,142 +86,89 @@ const PADDLES = [
     strike: null,
     sku: "600567",
   },
-];
+].map((paddle) => ({
+  ...paddle,
+  line: Math.round(paddle.price * QTY * 100) / 100,
+}));
 
-type Line = {
-  cat: string;
-  name: string;
-  sku: string;
-  moq: string;
-  low?: boolean;
-  strike: number;
-  unit: number;
-  hint: string;
-  best?: boolean;
-  qty: number;
-  line: number;
-  photo?: string;
-};
+const ORDER_TOTAL = Math.round(PADDLES.reduce((sum, paddle) => sum + paddle.line, 0) * 100) / 100;
 
-const LINES: Line[] = [
-  {
-    cat: "Paddles",
-    name: "Perseus Pro V Pickleball Paddle",
-    sku: "600558",
-    moq: "MOQ 1",
-    strike: 299.95,
-    unit: 164.97,
-    hint: "Buy 12+ for $149.98 ea",
-    qty: 6,
-    line: 989.82,
-    photo: photos.perseus,
-  },
-  {
-    cat: "Paddles",
-    name: "Hyperion Pro IV 14mm Pickleball Paddle",
-    sku: "600572",
-    moq: "MOQ 1",
-    low: true,
-    strike: 229.95,
-    unit: 114.98,
-    hint: "Buy 24+ for $103.48 ea",
-    qty: 12,
-    line: 1379.76,
-    photo: photos.hyperion,
-  },
-  {
-    cat: "Paddles",
-    name: "Scorpeus Pro IV 16mm Pickleball Paddle",
-    sku: "600588",
-    moq: "MOQ 1",
-    strike: 229.95,
-    unit: 103.48,
-    hint: "Best price unlocked",
-    best: true,
-    qty: 24,
-    line: 2483.52,
-  },
-  {
-    cat: "Balls",
-    name: "Indoor 3-Star Balls (6-Pack)",
-    sku: "411032",
-    moq: "MOQ 12 (1 case)",
-    strike: 24.99,
-    unit: 16.24,
-    hint: "Buy 24+ for $14.99 ea",
-    qty: 12,
-    line: 194.88,
-  },
-  {
-    cat: "Apparel",
-    name: "Ben Johns Signature Hoodie",
-    sku: "803221",
-    moq: "MOQ 6 (half-dozen)",
-    strike: 69.99,
-    unit: 41.99,
-    hint: "Buy 12+ for $38.49 ea",
-    qty: 8,
-    line: 335.92,
-  },
-  {
-    cat: "Apparel",
-    name: "Vision Performance Tee",
-    sku: "810044",
-    moq: "MOQ 6 (half-dozen)",
-    strike: 34.99,
-    unit: 17.5,
-    hint: "Best price unlocked",
-    best: true,
-    qty: 24,
-    line: 420,
-  },
-  {
-    cat: "Apparel",
-    name: "Court Cap",
-    sku: "810099",
-    moq: "MOQ 6 (half-dozen)",
-    strike: 24.99,
-    unit: 13.74,
-    hint: "Buy 24+ for $12.50 ea",
-    qty: 12,
-    line: 164.88,
-  },
-  {
-    cat: "Accessories",
-    name: "Overgrip 3-Pack",
-    sku: "902017",
-    moq: "MOQ 12 (1 display box)",
-    strike: 11.99,
-    unit: 7.19,
-    hint: "Buy 48+ for $6.59 ea",
-    qty: 36,
-    line: 258.84,
-  },
-];
+const BTN_W = 168;
+const BTN_H = 46;
+const FOOTER_H = 84;
+const ADD_LEFT = PAGE_W - PAD - BTN_W;
+const ADD_TOP = PAGE_H - FOOTER_H + (FOOTER_H - BTN_H) / 2;
 
-const VISIBLE_TOTAL = LINES.reduce((sum, line) => sum + line.line, 0);
-
-function leg(frame: number, at: number, from: number, to: number) {
-  const p = interpolate(frame, [at, at + PAN], [0, 1], {
-    ...clamp,
-    easing: EASE_IN_OUT,
-  });
-  return from + (to - from) * p;
-}
-
-function cameraY(frame: number) {
-  if (frame >= PAN_HOME) return leg(frame, PAN_HOME, Y_MSG, 0);
-  if (frame >= PAN_MSG) return leg(frame, PAN_MSG, Y_ORDER, Y_MSG);
-  if (frame >= PAN_ORDER) return leg(frame, PAN_ORDER, Y_REC, Y_ORDER);
-  if (frame >= PAN_REC) return leg(frame, PAN_REC, 0, Y_REC);
+function activeIndex(frame: number) {
+  if (frame >= CUT_MSG) return 3;
+  if (frame >= CUT_INV) return 2;
+  if (frame >= CUT_ORDER) return 0;
+  if (frame >= CUT_REC) return 1;
   return 0;
 }
 
-function ExpandIcon() {
+/** 12 on the order, then a 12-frame count to 120. Totals use the same number. */
+function shownQty(frame: number) {
+  if (frame < COUNT_AT) return QTY_FROM;
+  const p = interpolate(frame, [COUNT_AT, COUNT_END], [0, 1], {
+    ...clamp,
+    easing: EASE_OUT,
+  });
+  return Math.round(QTY_FROM + (QTY - QTY_FROM) * p);
+}
+
+/** Underline draws under the destination word only. It never travels across the others. */
+function underlineP(frame: number) {
+  const cuts = [CUT_REC, CUT_ORDER, CUT_INV, CUT_MSG];
+  let at = 0;
+  for (const cut of cuts) if (frame >= cut) at = cut;
+  if (at === 0) return 1;
+  return interpolate(frame, [at, at + NAV_F], [0.28, 1], {
+    ...clamp,
+    easing: EASE_OUT,
+  });
+}
+
+function typedCount(frame: number) {
+  if (frame < TYPE_AT) return 0;
+  return Math.min(SKU.length, Math.floor((frame - TYPE_AT) / 2) + 1);
+}
+
+function move(frame: number, start: number, end: number, from: number, to: number) {
+  return interpolate(frame, [start, end], [from, to], {
+    ...clamp,
+    easing: EASE_IN_OUT,
+  });
+}
+
+function StrokeCheck({ color }: { color: string }) {
   return (
-    <svg width={20} height={20} viewBox="0 0 20 20" style={{ display: "block" }}>
+    <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block", flexShrink: 0 }}>
       <path
-        d="M8 4.5H4.5V8M12 4.5h3.5V8M8 15.5H4.5V12M12 15.5h3.5V12"
+        d="M3.2 8.3 6.3 11.4 12.8 4.6"
+        fill="none"
+        stroke={color}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block", flexShrink: 0 }}>
+      <path
+        d="M8 10.25V2.75M8 2.75 5.25 5.5M8 2.75l2.75 2.75"
+        fill="none"
+        stroke={C.muted}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2.75 10.25v1.5A1.75 1.75 0 0 0 4.5 13.5h7a1.75 1.75 0 0 0 1.75-1.75v-1.5"
         fill="none"
         stroke={C.muted}
         strokeWidth={1.75}
@@ -213,82 +179,35 @@ function ExpandIcon() {
   );
 }
 
-function SendIcon() {
+function Pointer({ x, y, dip }: { x: number; y: number; dip: number }) {
   return (
-    <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block" }}>
-      <path
-        d="M8 12.5V3.5M8 3.5 4.75 6.75M8 3.5l3.25 3.25"
-        fill="none"
-        stroke={C.buttonText}
-        strokeWidth={1.75}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        zIndex: 8,
+        transform: dip ? "translateY(1px)" : undefined,
+        pointerEvents: "none",
+      }}
+    >
+      <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block", filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.28))" }}>
+        <path
+          d="M1.4 1.1 1.6 12.6 4.8 9.6 7.4 13.8 9 12.9 6.4 8.7 10.6 8.4Z"
+          fill={C.ink}
+          stroke="#fff"
+          strokeWidth={1}
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 }
 
-function RemoveIcon() {
-  return (
-    <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block" }}>
-      <path
-        d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-        fill="none"
-        stroke={C.faint}
-        strokeWidth={1.75}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+function Chrome({ frame }: { frame: number }) {
+  const active = activeIndex(frame);
+  const mark = underlineP(frame);
 
-function BagIcon() {
-  return (
-    <svg width={16} height={16} viewBox="0 0 24 24" style={{ display: "block" }}>
-      <path
-        d="M5.61 23H5C3.27 23 1.9 21.54 2.01 19.81L2.75 7.93C2.78 7.4 3.22 6.99 3.75 6.99H7.81L8.61 19.8C8.72 21.53 7.35 22.99 5.62 22.99L5.61 23Z"
-        fill="none"
-        stroke="white"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.81 7H19.93C20.99 7 21.86 7.82 21.93 8.88L22.55 18.76C22.69 21.06 20.86 23.01 18.56 23.01H5.81"
-        fill="none"
-        stroke="white"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.81 9V4.5C11.81 2.57 13.38 1 15.31 1C17.24 1 18.81 2.57 18.81 4.5V9"
-        fill="none"
-        stroke="white"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.81 7V4.5C6.81 2.57 8.38 1 10.31 1"
-        fill="none"
-        stroke="white"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function Chrome() {
-  const pill: CSSProperties = {
-    padding: "10px 14px",
-    borderRadius: 5,
-    fontSize: 14,
-    fontWeight: 700,
-    color: C.muted,
-  };
   return (
     <div
       style={{
@@ -296,204 +215,231 @@ function Chrome() {
         top: 0,
         left: 0,
         right: 0,
-        height: HEADER,
-        zIndex: 2,
+        height: CHROME,
+        zIndex: 3,
         background: C.paper,
         borderBottom: `1px solid ${C.lineStrong}`,
         display: "flex",
         alignItems: "center",
-        padding: "0 16px",
-        gap: 24,
+        padding: `0 ${PAD}px`,
+        gap: 8,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-        <div style={{ width: 8, height: 8, borderRadius: 99, background: C.blue }} />
-        <div style={{ fontSize: 12, fontWeight: 700, color: C.blue }}>Wholesale</div>
-      </div>
-      <div style={{ display: "flex", gap: 4 }}>
-        {["Quick Order", "Catalog", "Templates", "Order History", "Invoices & Terms", "Messages"].map(
-          (label) => (
-            <div key={label} style={pill}>
+      <div style={{ display: "flex", alignItems: "center", height: 32 }}>
+        {NAV.map((label, i) => {
+          const on = i === active;
+          return (
+            <div
+              key={label}
+              style={{
+                position: "relative",
+                padding: "6px 10px 8px",
+                fontSize: 13,
+                fontWeight: 700,
+                lineHeight: 1,
+                color: on ? C.ink : C.muted,
+                whiteSpace: "nowrap",
+              }}
+            >
               {label}
+              {on ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 10,
+                    right: 10,
+                    bottom: 1,
+                    height: 2,
+                    borderRadius: 1,
+                    background: C.ink,
+                    transform: `scaleX(${mark})`,
+                    transformOrigin: "left center",
+                  }}
+                />
+              ) : null}
             </div>
-          ),
-        )}
+          );
+        })}
       </div>
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20, flexShrink: 0 }}>
+      <div
+        style={{
+          marginLeft: "auto",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: C.field,
+          borderRadius: 99,
+          padding: "4px 12px 4px 8px",
+        }}
+      >
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: C.field,
+            width: 28,
+            height: 28,
             borderRadius: 99,
-            padding: "8px 14px 8px 8px",
+            overflow: "hidden",
+            background: C.paper,
+            flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 99,
-              background: C.blueWash,
-              color: C.blue,
-              fontSize: 11,
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            EP
-          </div>
-          <div style={{ lineHeight: 1.25 }}>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>Engage Pickleball</div>
-            <div style={{ fontSize: 11, color: C.faint }}>Anna Bright · Buyer</div>
+          <Img src={logo} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+        <div style={{ lineHeight: 1.15 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>Engage Pickleball</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: C.faint, whiteSpace: "nowrap" }}>
+            Anna Bright · Buyer
           </div>
         </div>
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: C.ink,
-            color: C.paper,
-            borderRadius: 99,
-            padding: "10px 14px",
-          }}
-        >
-          <BagIcon />
-          <div style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>$1,664.60</div>
-          <div
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              width: 18,
-              height: 18,
-              borderRadius: 99,
-              background: "#C0392B",
-              color: C.paper,
-              border: `2px solid ${C.paper}`,
-              fontSize: 10,
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            3
-          </div>
-        </div>
+        <svg width={14} height={8} viewBox="0 0 16 16" style={{ display: "block", flexShrink: 0 }}>
+          <path d="m2 5 6 6 6-6" fill="none" stroke={C.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </div>
   );
 }
 
-function SearchSection() {
+function SearchScreen({ frame }: { frame: number }) {
+  const count = typedCount(frame);
+  const typed = SKU.slice(0, count);
+  const focused = frame >= FIELD_ARRIVE && frame < CUT_REC;
+  const caret = focused && frame < CARET_DROP;
+  const show = frame >= RESULT_AT && frame < CUT_REC;
+  const added = frame >= ROW_ARRIVE + DIP;
+  const p = show
+    ? interpolate(frame, [RESULT_AT, RESULT_AT + 10], [0, 1], { ...clamp, easing: EASE_OUT })
+    : 0;
+
   return (
-    <div style={{ height: SEARCH_H, boxSizing: "border-box", padding: `${HEADER + 32}px 16px 0`, background: C.paper }}>
-      <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.2 }}>Build a bulk order</div>
-      <div style={{ marginTop: 8, maxWidth: 640, fontSize: 16, color: C.muted, lineHeight: 1.5 }}>
-        Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects
-        Engage Pickleball's wholesale tier.
+    <div style={{ height: "100%", boxSizing: "border-box" }}>
+      <div style={{ position: "absolute", left: PAD, top: CHROME + 28, right: PAD }}>
+        <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.15 }}>Build a bulk order</div>
+        <div style={{ marginTop: 8, maxWidth: 560, fontSize: 15, color: C.muted, lineHeight: 1.45 }}>
+          Search or upload SKUs to add multiple products and quantities in one view. Pricing reflects
+          Engage Pickleball's wholesale tier.
+        </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24 }}>
-        <div style={{ position: "relative", width: 420, flexShrink: 0 }}>
+      <div
+        style={{
+          position: "absolute",
+          left: FIELD_LEFT,
+          top: FIELD_TOP,
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 10,
+        }}
+      >
+        <div style={{ position: "relative", width: FIELD_W, flexShrink: 0 }}>
           <div
             style={{
-              height: 46,
+              height: FIELD_H,
               display: "flex",
               alignItems: "center",
               paddingLeft: 40,
               borderRadius: 10,
               background: C.field,
               fontSize: 15,
-              color: C.faint,
+              color: focused ? C.ink : C.faint,
             }}
           >
-            {PLACEHOLDER}
+            <span>{focused ? typed : PLACEHOLDER}</span>
+            {caret ? (
+              <span
+                style={{
+                  width: 1.5,
+                  height: 16,
+                  marginLeft: 1,
+                  background: C.ink,
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
           </div>
           <svg width={16} height={16} viewBox="0 0 24 24" style={{ position: "absolute", left: 14, top: 15 }}>
             <circle cx="11" cy="11" r="7" fill="none" stroke={C.faint} strokeWidth={1.75} />
             <path d="m21 21-4.3-4.3" fill="none" stroke={C.faint} strokeWidth={1.75} strokeLinecap="round" />
           </svg>
+          {show ? (
+            <div
+              style={{
+                position: "absolute",
+                top: FIELD_H + 8,
+                left: 0,
+                width: FIELD_W,
+                padding: 6,
+                borderRadius: 10,
+                background: C.paper,
+                border: `1px solid ${C.lineStrong}`,
+                boxShadow: "0 10px 28px rgba(20,20,18,0.14)",
+                opacity: p,
+                transform: `translateY(${(1 - p) * 12}px)`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 8, borderRadius: 5 }}>
+                <Img
+                  src={photos.perseus}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 5,
+                    objectFit: "cover",
+                    background: C.field,
+                    flexShrink: 0,
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>Perseus Pro V</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>SKU 600558 · {money(299.95)} · MOQ 1</div>
+                </div>
+                {added ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700 }}>
+                    <StrokeCheck color={C.ink} />
+                    Added
+                  </div>
+                ) : (
+                  <svg width={16} height={16} viewBox="0 0 16 16" style={{ display: "block", flexShrink: 0 }}>
+                    <path
+                      d="M6 3.5 10.5 8 6 12.5"
+                      fill="none"
+                      stroke={C.faint}
+                      strokeWidth={1.75}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
         <div
           style={{
-            height: 46,
-            boxSizing: "border-box",
+            height: FIELD_H,
             display: "flex",
             alignItems: "center",
             gap: 8,
-            padding: "0 18px",
-            borderRadius: 6,
-            border: `1.5px solid ${C.ink}`,
+            padding: "0 14px",
+            borderRadius: 10,
+            border: `1px solid ${C.lineStrong}`,
+            background: C.paper,
             fontSize: 14,
-            fontWeight: 700,
+            fontWeight: 500,
             flexShrink: 0,
           }}
         >
-          <svg width={15} height={15} viewBox="0 0 24 24">
-            <path d="M12 3v12m0 0 4-4m-4 4-4-4" fill="none" stroke={C.ink} strokeWidth={2} strokeLinecap="round" />
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke={C.ink} strokeWidth={2} strokeLinecap="round" />
-          </svg>
+          <UploadIcon />
           Bulk upload
         </div>
-        <div style={{ marginLeft: "auto", fontSize: 13, color: C.faint }}>{LINES.length} lines in this order</div>
       </div>
     </div>
   );
 }
 
-function StillPhoto({
-  src,
-  sku,
-  blur,
-}: {
-  src: string;
-  sku: string;
-  blur: number;
-}) {
-  const id = `move-${sku}`;
-  const moving = blur > 0.4;
+function RecommendedScreen() {
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
-      {moving ? (
-        <svg width={0} height={0} style={{ position: "absolute" }}>
-          <filter id={id}>
-            <feGaussianBlur stdDeviation={`0 ${blur.toFixed(2)}`} />
-          </filter>
-        </svg>
-      ) : null}
-      <Img
-        src={src}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          filter: moving ? `url(#${id})` : undefined,
-        }}
-      />
-    </div>
-  );
-}
-
-function RecommendedSection({ blur }: { blur: number }) {
-  return (
-    <div
-      style={{
-        height: REC_H,
-        boxSizing: "border-box",
-        background: C.band,
-        borderTop: `1px solid ${C.line}`,
-        borderBottom: `1px solid ${C.line}`,
-        padding: "24px 16px 0",
-      }}
-    >
+    <div style={{ height: "100%", background: C.band, padding: `${CHROME + 22}px ${PAD}px 0`, boxSizing: "border-box" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.4 }}>Recommended For You</div>
+        <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>Recommended For You</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div
             style={{
@@ -512,8 +458,9 @@ function RecommendedSection({ blur }: { blur: number }) {
                 borderRadius: 99,
                 background: C.paper,
                 position: "absolute",
-                left: 16,
+                left: 2,
                 top: 2,
+                transform: "translateX(14px)",
               }}
             />
           </div>
@@ -521,21 +468,20 @@ function RecommendedSection({ blur }: { blur: number }) {
         </div>
       </div>
       <div style={{ marginTop: 4, fontSize: 13, color: C.muted }}>Based on your orders.</div>
-      <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+      <div style={{ display: "flex", gap: 14, marginTop: 16 }}>
         {PADDLES.map((paddle) => (
-          <div key={paddle.sku} style={{ width: 224, flexShrink: 0 }}>
+          <div key={paddle.sku} style={{ width: 268, flexShrink: 0 }}>
             <div
               style={{
-                width: 224,
-                height: 224,
+                width: 268,
+                height: 248,
                 borderRadius: 10,
                 overflow: "hidden",
                 position: "relative",
-                background: C.paper,
-                border: `1px solid ${C.lineStrong}`,
+                background: "#F3F3F3",
               }}
             >
-              <StillPhoto src={paddle.src} sku={paddle.sku} blur={blur} />
+              <Img src={paddle.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div
                 style={{
                   position: "absolute",
@@ -553,14 +499,20 @@ function RecommendedSection({ blur }: { blur: number }) {
                 {paddle.chip}
               </div>
             </div>
-            <div style={{ marginTop: 6, fontSize: 13, fontWeight: 500, color: C.muted }}>Pickleball paddle</div>
-            <div style={{ marginTop: 6, fontSize: 14, fontWeight: 600 }}>{paddle.name}</div>
-            <div style={{ marginTop: 6, display: "flex", alignItems: "baseline", gap: 8 }}>
+            <div style={{ marginTop: 8, fontSize: 15, fontWeight: 700, lineHeight: 1.25 }}>{paddle.name}</div>
+            <div style={{ marginTop: 2, display: "flex", alignItems: "baseline", gap: 8 }}>
               <span style={{ fontSize: 15, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
                 {money(paddle.price)}
               </span>
               {paddle.strike != null ? (
-                <span style={{ fontSize: 11, color: C.faint, textDecoration: "line-through" }}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: C.faint,
+                    textDecoration: "line-through",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
                   {money(paddle.strike)}
                 </span>
               ) : null}
@@ -572,267 +524,269 @@ function RecommendedSection({ blur }: { blur: number }) {
   );
 }
 
-function headerCell(extra: CSSProperties): CSSProperties {
+function OrderScreen({ frame }: { frame: number }) {
+  const committed = frame >= COUNT_AT;
+  const qty = shownQty(frame);
+  const total = Math.round(PADDLES.reduce((sum, paddle) => sum + paddle.price * qty, 0) * 100) / 100;
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: C.paper }}>
+      <div style={{ height: CHROME, flexShrink: 0 }} />
+      <div style={{ padding: `20px ${PAD}px 0`, flex: 1, display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 14,
+            padding: "0 0 10px",
+            borderBottom: `1.5px solid ${C.ink}`,
+          }}
+        >
+          <div style={{ width: 56, flexShrink: 0 }} />
+          <div style={head(true)}>Product</div>
+          <div style={{ ...head(false), width: 120 }}>Price</div>
+          <div style={{ ...head(false), width: 132, textAlign: "center" }}>Quantity</div>
+          <div style={{ ...head(false), width: 128, textAlign: "right" }}>Line total</div>
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-evenly" }}>
+          {PADDLES.map((line, i) => (
+            <div
+              key={line.sku}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                borderBottom: i < PADDLES.length - 1 ? `1px solid ${C.line}` : undefined,
+              }}
+            >
+              <Img
+                src={line.src}
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 10,
+                  objectFit: "cover",
+                  background: "#F3F3F3",
+                  flexShrink: 0,
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.25 }}>{line.name}</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>SKU {line.sku} · MOQ 1</div>
+              </div>
+              <div style={{ width: 120, flexShrink: 0, textAlign: "left" }}>
+                {line.strike != null ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.faint,
+                      textDecoration: "line-through",
+                      lineHeight: 1.2,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {money(line.strike)}
+                  </div>
+                ) : null}
+                <div style={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>{money(line.price)} ea</div>
+              </div>
+              <div style={{ width: 132, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+                <div
+                  style={{
+                    width: 112,
+                    height: 40,
+                    borderRadius: 10,
+                    background: C.field,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ width: 32, textAlign: "center", fontSize: 16, color: C.muted }}>–</div>
+                  <div
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      fontSize: 15,
+                      fontWeight: 600,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {qty}
+                  </div>
+                  <div style={{ width: 32, textAlign: "center", fontSize: 16, color: C.muted }}>+</div>
+                </div>
+              </div>
+              <div
+                style={{
+                  width: 128,
+                  flexShrink: 0,
+                  textAlign: "right",
+                  fontSize: 17,
+                  fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {money(Math.round(line.price * qty * 100) / 100)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div
+        style={{
+          height: FOOTER_H,
+          borderTop: `1.5px solid ${C.ink}`,
+          boxShadow: "0 -8px 24px rgba(20,20,18,0.06)",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          padding: `0 ${PAD}px`,
+          background: C.paper,
+          position: "relative",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 13, color: C.muted, lineHeight: 1 }}>3 lines</div>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 36,
+              fontWeight: 700,
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+              minHeight: 36,
+            }}
+          >
+            {money(total)}
+          </div>
+        </div>
+        <div
+          style={{
+            marginLeft: "auto",
+            marginRight: BTN_W + 8,
+            height: BTN_H,
+            display: "flex",
+            alignItems: "center",
+            padding: "0 16px",
+            borderRadius: 6,
+            border: `1.5px solid ${C.ink}`,
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        >
+          Save as template
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: ADD_LEFT,
+            top: (FOOTER_H - BTN_H) / 2,
+            width: BTN_W,
+            height: BTN_H,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            borderRadius: 6,
+            background: C.black,
+            color: C.buttonText,
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        >
+          {committed ? (
+            <>
+              <StrokeCheck color={C.buttonText} />
+              Added
+            </>
+          ) : (
+            "Add All To Cart"
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function head(grow: boolean): CSSProperties {
   return {
+    flex: grow ? 1 : undefined,
+    minWidth: grow ? 0 : undefined,
     flexShrink: 0,
     fontSize: 11,
     fontWeight: 700,
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     color: C.muted,
-    lineHeight: 1.4,
+    lineHeight: 1.2,
     textAlign: "left",
-    ...extra,
   };
 }
 
-function Thumb({ src, sku, blur }: { src?: string; sku: string; blur: number }) {
+function InvoiceScreen() {
+  const rows = [
+    { id: "INV-1042", po: "PO-120", status: "Processing", tone: "wait" as const, amount: money(ORDER_TOTAL) },
+    { id: "INV-1038", po: "PO-118", status: "Due in 12 days", tone: "due" as const, amount: "$4,200.00" },
+    { id: "INV-1031", po: "PO-114", status: "Paid", tone: "paid" as const, amount: "$2,640.00" },
+  ];
   return (
-    <div
-      style={{
-        width: 56,
-        height: 56,
-        borderRadius: 10,
-        overflow: "hidden",
-        position: "relative",
-        background: C.field,
-        border: `1px solid ${C.lineStrong}`,
-        flexShrink: 0,
-      }}
-    >
-      {src ? <StillPhoto src={src} sku={`row-${sku}`} blur={blur} /> : null}
+    <div style={{ height: "100%", background: C.paper, padding: `${CHROME + 22}px ${PAD}px 0`, boxSizing: "border-box" }}>
+      <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>Invoices & terms</div>
+      <div style={{ marginTop: 6, fontSize: 13, color: C.muted }}>Net 30 · $4,200 of $10,000 used</div>
+      <div style={{ marginTop: 10, height: 6, borderRadius: 99, background: C.line }}>
+        <div style={{ width: "42%", height: "100%", borderRadius: 99, background: C.blue }} />
+      </div>
+      <div style={{ marginTop: 18 }}>
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              padding: "14px 0",
+              borderBottom: `1px solid ${C.line}`,
+            }}
+          >
+            <div style={{ width: 92, fontSize: 14, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{row.id}</div>
+            <div style={{ width: 80, fontSize: 13, color: C.muted }}>{row.po}</div>
+            <div style={{ flex: 1 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  padding: "3px 8px",
+                  borderRadius: 99,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: row.tone === "paid" ? C.greenWash : row.tone === "due" ? "#FFF6D8" : C.field,
+                  color: row.tone === "paid" ? C.green : row.tone === "due" ? "#8A6100" : C.muted,
+                }}
+              >
+                {row.status}
+              </span>
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{row.amount}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function OrderSection({ blur }: { blur: number }) {
-  let lastCat = "";
-  const rows: ReactNode[] = [];
-  LINES.forEach((line, i) => {
-    if (line.cat !== lastCat) {
-      lastCat = line.cat;
-      rows.push(
-        <div
-          key={`cat-${line.cat}`}
-          style={{
-            padding: i === 0 ? "8px 8px 6px" : "20px 8px 6px",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: C.muted,
-          }}
-        >
-          {line.cat}
-        </div>,
-      );
-    }
-    rows.push(
-      <div
-        key={line.sku}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          padding: "14px 8px",
-          borderBottom: `1px solid ${C.line}`,
-        }}
-      >
-        <Thumb src={line.photo} sku={line.sku} blur={blur} />
-        <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>{line.name}</div>
-          <div style={{ fontSize: 11.5, color: C.muted }}>
-            SKU {line.sku} · {line.moq}
-            {line.low ? <span style={{ fontWeight: 700, color: WARN }}> · Low stock</span> : null}
-          </div>
-        </div>
-        <div style={{ width: 150, flexShrink: 0 }}>
-          <div style={{ fontSize: 12, color: C.faint, textDecoration: "line-through", lineHeight: 1.3 }}>
-            {money(line.strike)}
-          </div>
-          <div style={{ fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>{money(line.unit)} ea</div>
-          <div style={{ fontSize: 11, color: line.best ? C.green : C.muted, fontWeight: line.best ? 600 : 400 }}>
-            {line.best ? (
-              line.hint
-            ) : (
-              <>
-                <span style={{ color: C.muted }}>{line.hint.replace(/\$[\d,.]+ ea$/, "")}</span>
-                <span style={{ fontWeight: 700, color: C.ink }}>{line.hint.match(/\$[\d,.]+ ea$/)?.[0]}</span>
-              </>
-            )}
-          </div>
-        </div>
-        <div style={{ width: 170, flexShrink: 0 }}>
-          <div
-            style={{
-              width: 120,
-              height: 40,
-              borderRadius: 10,
-              background: C.field,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ width: 36, textAlign: "center", fontSize: 16 }}>–</div>
-            <div style={{ flex: 1, textAlign: "center", fontSize: 15, fontWeight: 600 }}>{line.qty}</div>
-            <div style={{ width: 36, textAlign: "center", fontSize: 16 }}>+</div>
-          </div>
-        </div>
-        <div
-          style={{
-            width: 130,
-            flexShrink: 0,
-            textAlign: "right",
-            fontSize: 17,
-            fontWeight: 700,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {money(line.line)}
-        </div>
-        <div style={{ width: 40, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-          <RemoveIcon />
-        </div>
-      </div>,
-    );
-  });
-
+function MessageScreen() {
   return (
     <div
       style={{
-        height: ORDER_H,
+        height: "100%",
         boxSizing: "border-box",
-        background: C.paper,
         display: "flex",
-        flexDirection: "column",
-        padding: "12px 16px 0",
+        alignItems: "center",
+        padding: `${CHROME}px ${PAD}px 0`,
       }}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          padding: "0 8px 12px",
-          borderBottom: `1.5px solid ${C.ink}`,
-        }}
-      >
-        <div style={{ width: 56, flexShrink: 0 }} />
-        <div style={headerCell({ flex: 1, minWidth: 0 })}>Product</div>
-        <div style={headerCell({ width: 150 })}>Price</div>
-        <div style={headerCell({ width: 170 })}>Quantity</div>
-        <div style={headerCell({ width: 130, textAlign: "right" })}>Line total</div>
-        <div style={{ width: 40, flexShrink: 0 }} />
-      </div>
-      <div>{rows}</div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          padding: "16px 0",
-          fontSize: 13,
-          fontWeight: 600,
-          color: C.muted,
-        }}
-      >
-        <svg width={12} height={12} viewBox="0 0 24 24">
-          <path d="m6 9 6 6 6-6" fill="none" stroke={C.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Show 5 more lines (13 total)
-      </div>
-      <div
-        style={{
-          marginTop: "auto",
-          borderTop: `1.5px solid ${C.ink}`,
-          boxShadow: "0 -8px 24px rgba(20,20,18,0.08)",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          padding: "16px 0",
-          background: C.paper,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1 }}>{LINES.length} lines</div>
-          <div style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-            {money(VISIBLE_TOTAL)}
-          </div>
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              height: 46,
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              padding: "0 20px",
-              borderRadius: 6,
-              border: `1.5px solid ${C.ink}`,
-              fontSize: 14,
-              fontWeight: 700,
-            }}
-          >
-            Save as template
-          </div>
-          <div
-            style={{
-              height: 46,
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              padding: "0 20px",
-              borderRadius: 6,
-              background: C.black,
-              color: C.buttonText,
-              fontSize: 14,
-              fontWeight: 700,
-            }}
-          >
-            Add All To Cart
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Bubble({
-  align,
-  who,
-  text,
-  fill,
-}: {
-  align: "start" | "end";
-  who: string;
-  text: string;
-  fill: string;
-}) {
-  return (
-    <div
-      style={{
-        alignSelf: align === "end" ? "flex-end" : "flex-start",
-        maxWidth: "80%",
-        padding: "10px 14px",
-        borderRadius: 10,
-        background: fill,
-        border: `1px solid ${C.lineStrong}`,
-      }}
-    >
-      <div style={{ fontSize: 12, fontWeight: 500, color: C.muted }}>{who}</div>
-      <div style={{ fontSize: 14, marginTop: 4, lineHeight: 1.45 }}>{text}</div>
-    </div>
-  );
-}
-
-function MessageSection() {
-  return (
-    <div style={{ height: MSG_H, boxSizing: "border-box", background: C.paper, padding: "28px 16px 0" }}>
-      <div
-        style={{
-          width: 640,
-          margin: "0 auto",
+          width: "100%",
           borderRadius: 10,
           border: `1px solid ${C.lineStrong}`,
           background: C.paper,
@@ -844,28 +798,42 @@ function MessageSection() {
           style={{
             display: "flex",
             alignItems: "center",
-            padding: "12px 16px",
+            gap: 12,
+            padding: "14px 16px",
             borderBottom: `1px solid ${C.lineStrong}`,
           }}
         >
           <div style={{ fontSize: 16, fontWeight: 700 }}>Message sales</div>
-          <div style={{ marginLeft: "auto" }}>
-            <ExpandIcon />
-          </div>
+          <div style={{ marginLeft: "auto", fontSize: 13, fontWeight: 500, color: C.muted }}>JOOLA Sales</div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16, background: C.band }}>
-          <Bubble
-            align="end"
-            who="Anna Bright · Engage Pickleball"
-            text="Perseus Pro V, SKU 600558. When can you restock 120 units?"
-            fill={C.field}
-          />
-          <Bubble
-            align="start"
-            who="Sam Ortiz · JOOLA Sales"
-            text="120 units of Perseus Pro V ship Friday."
-            fill={C.paper}
-          />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 18, background: C.band }}>
+          <div style={{ alignSelf: "flex-end", maxWidth: "78%" }}>
+            <Bubble who="Anna Bright" role="Buyer" text={ANNA} fill={C.field} />
+            <div
+              style={{
+                marginTop: 4,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 4,
+                fontSize: 11,
+                color: C.faint,
+              }}
+            >
+              <svg width={12} height={12} viewBox="0 0 16 16" style={{ display: "block" }}>
+                <path
+                  d="M3.2 8.3 6.3 11.4 12.8 4.6"
+                  fill="none"
+                  stroke={C.faint}
+                  strokeWidth={1.75}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Sent
+            </div>
+          </div>
+          <Bubble who="Sam Ortiz" role="JOOLA Sales" text={REP} fill={C.paper} />
         </div>
         <div
           style={{
@@ -903,7 +871,16 @@ function MessageSection() {
               flexShrink: 0,
             }}
           >
-            <SendIcon />
+            <svg width={16} height={16} viewBox="0 0 16 16">
+              <path
+                d="M8 12.5V3.5M8 3.5 4.75 6.75M8 3.5l3.25 3.25"
+                fill="none"
+                stroke={C.buttonText}
+                strokeWidth={1.75}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
         </div>
       </div>
@@ -911,23 +888,115 @@ function MessageSection() {
   );
 }
 
+function Bubble({ who, role, text, fill }: { who: string; role: string; text: string; fill: string }) {
+  return (
+    <div
+      style={{
+        padding: "10px 14px",
+        borderRadius: 10,
+        background: fill,
+        border: `1px solid ${C.lineStrong}`,
+      }}
+    >
+      <div style={{ fontSize: 12, lineHeight: 1.3 }}>
+        <span style={{ fontWeight: 700 }}>{who}</span>
+        <span style={{ fontWeight: 500, color: C.muted }}> · {role}</span>
+      </div>
+      <div style={{ fontSize: 15, marginTop: 4, lineHeight: 1.4 }}>{text}</div>
+    </div>
+  );
+}
+
+/** Straight line, ease-out, then a 3-frame 1px dip. Absent before the approach and after the dip. */
+function leg(
+  frame: number,
+  start: number,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+) {
+  const arrive = start + MOVE;
+  const end = arrive + DIP - 1;
+  if (frame < start || frame > end) return null;
+  return {
+    x: move(frame, start, arrive, from.x, to.x),
+    y: move(frame, start, arrive, from.y, to.y),
+    dip: frame >= arrive ? 1 : 0,
+  };
+}
+
+function cursorAt(frame: number) {
+  const field = { x: FIELD_LEFT + 52, y: FIELD_TOP + 14 };
+  const row = { x: FIELD_LEFT + FIELD_W - 28, y: FIELD_TOP + FIELD_H + 30 };
+  const add = { x: ADD_LEFT + 16, y: ADD_TOP + 8 };
+
+  const moving =
+    leg(frame, FIELD_AT, { x: field.x - 36, y: field.y + 22 }, field) ??
+    leg(frame, ROW_AT, field, row) ??
+    leg(frame, ADD_AT, { x: add.x - 40, y: add.y - 24 }, add);
+  if (moving) return moving;
+  if (frame > FIELD_ARRIVE + DIP && frame < ROW_AT) return { ...field, dip: 0 };
+  if (frame > ROW_ARRIVE + DIP && frame < CUT_REC) return { ...row, dip: 0 };
+  if (frame > ADD_ARRIVE + DIP && frame < COUNT_END + 8) return { ...add, dip: 0 };
+  return null;
+}
+
 export const JoolaB2B = () => {
   const frame = useCurrentFrame();
-  const y = cameraY(frame);
-  const prev = cameraY(Math.max(0, frame - 1));
-  const dy = Math.abs(y - prev);
-  const blur = dy > 2 ? Math.min(5, (dy - 2) * 0.18) : 0;
+  const cursor = frame < INTRO ? null : cursorAt(frame);
+
+  if (frame < INTRO) {
+    const p = interpolate(frame, [0, 10], [0, 1], { ...clamp, easing: EASE_OUT });
+    return (
+      <AbsoluteFill style={{ background: C.paper, ...face }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: p }}>
+          <Img src={joolaLogo} style={{ width: 280, height: "auto" }} />
+        </div>
+        <div style={{ position: "absolute", left: "50%", bottom: 120, width: 48, height: 3, marginLeft: -24, borderRadius: 2, background: C.blue, opacity: p }} />
+      </AbsoluteFill>
+    );
+  }
 
   return (
-    <AbsoluteFill style={{ background: C.paper, overflow: "hidden" }}>
-      <div style={{ ...face, width: 1920, position: "relative" }}>
-        <div style={{ transform: `translateY(${-y}px)` }}>
-          <SearchSection />
-          <RecommendedSection blur={blur} />
-          <OrderSection blur={blur} />
-          <MessageSection />
-        </div>
-        <Chrome />
+    <AbsoluteFill style={{ background: C.paper }}>
+      <div
+        style={{
+          ...face,
+          width: PAGE_W,
+          height: PAGE_H,
+          transform: `scale(${SCALE})`,
+          transformOrigin: "top left",
+          position: "relative",
+          overflow: "hidden",
+          background: C.paper,
+        }}
+      >
+        {frame < CUT_REC ? (
+          <div style={{ position: "absolute", inset: 0 }}>
+            <SearchScreen frame={frame} />
+          </div>
+        ) : null}
+        {frame >= CUT_REC && frame < CUT_ORDER ? (
+          <div style={{ position: "absolute", inset: 0 }}>
+            <RecommendedScreen />
+          </div>
+        ) : null}
+        {frame >= CUT_ORDER && frame < CUT_INV ? (
+          <div style={{ position: "absolute", inset: 0 }}>
+            <OrderScreen frame={frame} />
+          </div>
+        ) : null}
+        {frame >= CUT_INV && frame < CUT_MSG ? (
+          <div style={{ position: "absolute", inset: 0 }}>
+            <InvoiceScreen />
+          </div>
+        ) : null}
+        {frame >= CUT_MSG ? (
+          <div style={{ position: "absolute", inset: 0 }}>
+            <MessageScreen />
+          </div>
+        ) : null}
+        <Chrome frame={frame} />
+        {cursor ? <Pointer x={cursor.x} y={cursor.y} dip={cursor.dip} /> : null}
       </div>
     </AbsoluteFill>
   );

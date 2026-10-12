@@ -4,7 +4,7 @@ Condensed reference of the reasoning behind this mockup, grouped by topic. Full 
 
 ## Navigation & wholesale identity
 - One identical wholesale sub-nav on every screen (brand dot, tabs, cart, account switcher) — three divergent versions early on read as "the nav keeps changing."
-- Identity order: **org first, person second and muted** ("Engage Pickleball" / "Anna Bright · Buyer") — shared-account B2B tool, not a personal consumer account.
+- Identity order: **org first, person second and muted** ("Pickleball Central" / "Anna Bright · Buyer") — shared-account B2B tool, not a personal consumer account.
 - "Wholesale" stated exactly once (in the sub-nav) — a duplicate tag next to the logo was redundant and physically collided with another control.
 - Main-header cart icon removed for B2B (shared storefront with DTC) — one cart, one icon, living where it also shows a running total.
 - Cart control is icon-only, no "Cart" text — icon + live $ + badge already say it.

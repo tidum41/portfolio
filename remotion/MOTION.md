@@ -6,14 +6,16 @@ All of this is driven by `useCurrentFrame()`. CSS transitions and CSS animations
 
 | Motion | What it is for | This film |
 | --- | --- | --- |
-| Hard cut | A new idea. Nothing travels. | Not between locations. Search, Recommended, the order, and Message sales are one page. The finished SKU and its result appear together. No caret. |
-| Ease-out settle (16–28px, 10–14 frames) | Something arrived because the user did it. | Yes. The Recommended thumb moves 14px in 8 frames. Four frames after it lands, the heading and the paddle row each move 24px over 12 frames, `cubic-bezier(0.23, 1, 0.32, 1)`. |
-| Crossfade | Two states of the same object, not a scene change. | No. A label swap is a step, not a fade. |
+| Hard cut | A new idea. Nothing travels. | Search, Recommended, the order, and Message sales replace each other in one frame. The active label is already the destination on that frame. The file ends on the message. The loop seam is the hard cut back to search. |
+| Ease-out settle (12px, 10 frames) | Something arrived because the user did it. | The search result settles 12px in 10 frames after the SKU is typed. Order quantities fade in over 8 frames after Add All To Cart. |
+| Nav underline | Which screen this is. | The destination word is ink on the cut frame. A 2px line draws under that word only, over 8 frames, `cubic-bezier(0.23, 1, 0.32, 1)`. It does not travel across the other labels. |
+| Typing | The field received the SKU. | `600558` at 2 frames per character, with a caret, after a cursor click. The caret drops before the result. |
+| Cursor press | A control was used. | The pointer moves in a short straight line over 7 frames, ease-out, stops, then dips 1px for 3 frames. It does not scale, arc, or wander. It clicks the search field, the result, and Add All To Cart, then it is gone. |
 | Scale press | A button squashing to show it was clicked. | No. It is not in the JOOLA prototype. |
-| Shared-element / crop move | The camera showing where the same object went. | The camera pans down one wholesale page, 16 frames, ease-in-out `cubic-bezier(0.77, 0, 0.175, 1)`. Same chrome the whole time. The return pan closes the loop. Not a wipe, not a crossfade. |
-| Motion blur | Only on something that is actually traveling in. Not type that is already resting. Not the whole frame. | Vertical blur on the paddle photos only while they are still moving. The settled frame has no filter. Names and prices are not blurred. |
-| Hold | Time to read the consequence, not time to watch an entrance. | Yes. After the result is already on screen. |
+| Shared-element / crop move | The camera showing where the same object went. | No. There is no page-long pan. |
+| Motion blur | Only on something that is actually traveling in. | No. The catalog cards are already in place. Blur on a settled photo read as an error. |
+| Hold | Time to read the consequence, not time to watch an entrance. | Yes. After the result, after the order total, and on the finished message. |
 
 ## Story
 
-Motion shows cause and effect. A control moves, then the result is already there. UI the user did not summon does not enter.
+Motion shows cause and effect. A cursor clicks, then the result is the next state. Each beat is its own surface. The active word matches that surface on the same frame. One quantity, 120, runs through the search, the order, and the reply.
