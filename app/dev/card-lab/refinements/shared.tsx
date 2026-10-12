@@ -23,6 +23,7 @@ export type ChipPlace = "below" | "over";
 
 export type RefCardProps = {
   forceHover?: boolean;
+  direction?: number;
   /** data-cl-variant + label id */
   id: string;
   axis: "type" | "colour" | "chips" | "spacing" | "hover";
@@ -111,6 +112,7 @@ export function RefinementCard(p: RefCardProps) {
       className={`cl-ref${force ? " cl-ref--force-hover" : ""}${p.dark ? " cl-ref--dark" : ""}`}
       data-cl-card
       data-cl-kind="refinement"
+      data-cl-direction={p.direction != null ? String(p.direction) : undefined}
       data-cl-axis={p.axis}
       data-cl-variant={p.id}
       data-cl-force-hover={force ? "1" : "0"}

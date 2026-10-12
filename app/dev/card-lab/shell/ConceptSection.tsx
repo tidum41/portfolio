@@ -24,6 +24,7 @@ function VariantRow({
   const ctx: RenderContext = {
     forceHover,
     hoverProgress: hoverProgress ?? (forceHover ? 1 : 0),
+    direction: index,
   };
 
   return (

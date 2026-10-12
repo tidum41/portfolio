@@ -70,6 +70,7 @@ export const refinementColour: ConceptDefinition<ColourVariant> = {
     <RefinementCard
       id={v.id}
       axis="colour"
+      direction={ctx?.direction}
       forceHover={ctx?.forceHover}
       metaColor={v.metaColor}
       titleColor={v.titleColor}

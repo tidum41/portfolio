@@ -40,6 +40,7 @@ export const refinementChips: ConceptDefinition<ChipsVariant> = {
     <RefinementCard
       id={v.id}
       axis="chips"
+      direction={ctx?.direction}
       forceHover={ctx?.forceHover}
       chip={v.chip}
       chipPlace={v.chipPlace}

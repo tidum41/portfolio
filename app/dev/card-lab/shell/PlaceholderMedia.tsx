@@ -1,6 +1,11 @@
+/**
+ * Legacy placeholder API — now the controlled Mux poster for fair comparison.
+ */
+import ControlledMedia, { CONTROLLED_ASPECT } from "./ControlledMedia";
+
 export default function PlaceholderMedia({
-  aspect,
-  mediaIndex,
+  aspect: _aspect,
+  mediaIndex: _mediaIndex,
   radius,
   className,
 }: {
@@ -9,17 +14,13 @@ export default function PlaceholderMedia({
   radius?: number;
   className?: string;
 }) {
+  void _aspect;
+  void _mediaIndex;
   return (
-    <div
-      className={`card-lab__media card-lab__media--${mediaIndex}${className ? ` ${className}` : ""}`}
-      data-cl-media
-      data-cl-aspect={aspect}
-      style={{
-        aspectRatio: aspect,
-        borderRadius: radius !== undefined ? `${radius}px` : undefined,
-      }}
-    >
-      <span className="card-lab__media-mark" aria-hidden="true" />
-    </div>
+    <ControlledMedia
+      aspect={CONTROLLED_ASPECT}
+      radius={radius}
+      className={className}
+    />
   );
 }

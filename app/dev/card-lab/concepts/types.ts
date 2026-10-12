@@ -47,6 +47,8 @@ export type RenderContext = {
    * Brand-lockup uses 0.5 to show reveal differences in screenshots.
    */
   hoverProgress?: number;
+  /** 1-based section index — mirrored onto data-cl-direction for verify. */
+  direction?: number;
 };
 
 export type ConceptDefinition<V extends ConceptVariant = ConceptVariant> = {
