@@ -168,13 +168,13 @@
     {
       id: "engage-main",
       name: "Engage Pickleball",
-      site: "Main",
+      site: "Main warehouse",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
       id: "engage-north",
       name: "Engage Pickleball",
-      site: "North",
+      site: "North warehouse",
       detail: "2200 Research Park, Round Rock TX",
     },
   ];

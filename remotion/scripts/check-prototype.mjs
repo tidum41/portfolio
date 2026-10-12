@@ -566,14 +566,35 @@ async function main() {
           });
         }
 
-        // 9. Data row heights 48–52px (skip preset-expanded rows)
-        root.querySelectorAll("[data-order-row]:not(.has-presets), [data-invoice-row], [data-cart-line]").forEach((el) => {
+        // 9. Data row heights 48–52px (skip preset/avail-expanded rows)
+        root.querySelectorAll("[data-order-row]:not(.has-presets):not(.has-avail), [data-invoice-row]").forEach((el) => {
           if (!visible(el)) return;
           const h = el.getBoundingClientRect().height;
           if (h < 47.5 || h > 52.5) {
             issues.rowHeight.push(
               `${el.className || "row"} height ${Math.round(h)}px outside 48-52`
             );
+          }
+        });
+        // Cart lines: qty×price column + total share a vertical centre; allow 48–60 for two-line product
+        root.querySelectorAll("[data-cart-line]:not(.has-avail)").forEach((el) => {
+          if (!visible(el)) return;
+          const h = el.getBoundingClientRect().height;
+          if (h < 47.5 || h > 60.5) {
+            issues.rowHeight.push(`cart-line height ${Math.round(h)}px outside 48-60`);
+          }
+          const unit = el.querySelector(".cart-unit");
+          const total = el.querySelector(".line-total");
+          if (unit && total) {
+            const ur = unit.getBoundingClientRect();
+            const tr = total.getBoundingClientRect();
+            const ucy = (ur.top + ur.bottom) / 2;
+            const tcy = (tr.top + tr.bottom) / 2;
+            if (Math.abs(ucy - tcy) > 1.5) {
+              issues.pixelNits.push(
+                `cart unit/total centre Δ=${Math.abs(ucy - tcy).toFixed(1)}px`
+              );
+            }
           }
         });
         const stickyHeads = root.querySelectorAll("[data-order-head], [data-invoice-head]");
@@ -926,15 +947,24 @@ async function main() {
         // Buyer-facing QO lines: stock only when NOT in stock; no warehouse codes
         if (screen === "qo-desktop") {
           const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
-          const inStockSpam = rows.filter((el) => /In stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          const skuText = (el) =>
+            (el.querySelector(".prod-sku")?.textContent || "") +
+            " " +
+            (el.querySelector(".avail-tag")?.textContent || "");
+          const inStockSpam = rows.filter((el) => /In stock/i.test(skuText(el)));
           if (inStockSpam.length > 0) {
             issues.netsuiteLabels.push("In stock should be omitted (show only exceptions)");
           }
-          const exception = rows.filter((el) => /2-day ship|day ship|Backorder|Low stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          const exception = rows.filter((el) =>
+            /2-day ship|day ship|Backorder|Low stock/i.test(skuText(el))
+          );
           if (exception.length < 1) {
             issues.netsuiteLabels.push("expected at least one non-stock availability exception");
           }
-          const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(el.querySelector(".prod-sku")?.textContent || ""));
+          if (exception.some((el) => !el.querySelector(".avail-tag"))) {
+            issues.netsuiteLabels.push("availability exception missing .avail-tag");
+          }
+          const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(skuText(el)));
           if (withWh.length > 0) {
             issues.netsuiteLabels.push("warehouse codes still shown to buyer");
           }
@@ -1274,7 +1304,7 @@ async function main() {
             }
           }
 
-          // QO page max-width intentional at 1440
+          // QO page max-width ~1120 so table+rail fill wide viewports
           const page = root.querySelector(".page");
           if (page) {
             const cs = getComputedStyle(page);
@@ -1283,8 +1313,16 @@ async function main() {
               issues.pixelNits.push("qo page missing max-width (wide empty feel)");
             } else {
               const n = parseFloat(maxW);
-              if (!(n > 900 && n <= 1200)) {
-                issues.pixelNits.push(`qo page max-width=${maxW} (want ~1080)`);
+              if (!(n >= 1100 && n <= 1140)) {
+                issues.pixelNits.push(`qo page max-width=${maxW} (want ~1120)`);
+              }
+            }
+            const footer = root.querySelector("[data-order-footer]");
+            if (footer) {
+              const fm = getComputedStyle(footer).maxWidth;
+              const fn = parseFloat(fm);
+              if (!fm || fm === "none" || Math.abs(fn - parseFloat(maxW)) > 1) {
+                issues.pixelNits.push(`footer max-width=${fm} (want match page ${maxW})`);
               }
             }
           }

@@ -35,9 +35,13 @@ Cmd-K is not justified without a command palette — omit.
 | `Ready · 4 lines` | Footer quiet `4 items`; CTA `Add 4 to cart` |
 | `Engage Pickleball · Main` | Address card: name bold, address muted, Change |
 
+## Content width
+
+QO, QO-search, and Cart share `--content-max: 1120px` and `--content-pad-x: 28px`. Sticky footer uses the same max-width and pad so left/right edges align with the page.
+
 ## Colour / type / icons
 
-Unchanged tokens from r5 (`--ink/muted/faint`, 12/13/14/24, icon 16 in 16 slot, gap 8).
+Unchanged tokens from r5 (`--ink/muted/faint`, 12/13/14/24, icon 16 in 16 slot, gap 8). Availability exceptions use a quiet grey `.avail-tag` (not orange).
 
 ### Cart count chip
 
