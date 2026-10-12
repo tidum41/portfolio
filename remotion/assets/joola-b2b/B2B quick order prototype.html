@@ -1321,13 +1321,11 @@ img { display: block; max-width: 100%; }
 
   function statusLabel(status) {
     if (status === "Processing" || status === "Due") return "Pending";
-    if (status === "Overdue") return "Failed";
     return status;
   }
 
   function statusClass(status) {
     if (status === "Processing" || status === "Due") return "Pending";
-    if (status === "Overdue") return "Failed";
     return status;
   }
 

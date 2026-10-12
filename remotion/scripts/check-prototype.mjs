@@ -641,11 +641,8 @@ async function main() {
             issues.statusPill.push(`font-size ${fs}px (want 12)`);
           }
           const label = (el.textContent || "").trim();
-          if (label && label !== label[0].toUpperCase() + label.slice(1).toLowerCase() && !/^[A-Z][a-z]+$/.test(label)) {
-            // sentence case: Paid, Pending, Failed
-            if (!/^(Paid|Pending|Failed|Due|Processing|Overdue)$/.test(label)) {
-              issues.statusPill.push(`label "${label}" not sentence case status`);
-            }
+          if (label && !/^(Paid|Pending|Overdue)$/.test(label)) {
+            issues.statusPill.push(`label "${label}" not in allowed set Paid|Pending|Overdue`);
           }
         });
 
