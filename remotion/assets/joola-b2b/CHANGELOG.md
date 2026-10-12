@@ -192,3 +192,4 @@ Art-direction and Mudit feedback pass on the HTML prototype before the next film
 - **Catalog listings** use real product photos with contain framing (joola.com-style: image, title, price, MOQ, CTA) instead of empty grey tiles for the lead cards.
 - **Film strings** in `JoolaB2B.tsx` renamed to Engage Pickleball so the Remotion composition still compiles against the same story; motion polish deferred.
 
+- **Critic pass follow-ups:** circular-masked Engage avatar (no square corners in the chip); Recommended rail uses wholesale prices with MSRP strikethrough; order category labels unified to blue 12px; Cart Net 30 credit copy aligned to $21,200 of $50,000; Scorpeus naming Pro V; Hyperion SKU unified to 300829; Recommended thumb inset increased so handles read.
