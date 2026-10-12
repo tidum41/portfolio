@@ -1413,8 +1413,8 @@ async function runViewport(browser, { width, height, theme, hoverEmulation }) {
           if (!fullyOpen) bad.push(`wipe clip ${clip}`);
         }
         if (reveal === "scale-center") {
-          const m = clip.match(/circle\(([\d.]+)%/);
-          if (m && Number(m[1]) < 100) bad.push(`scale-center ${m[1]}%`);
+          const fullyOpen = clip === "none" || /circle\(([\d.]+)%/.test(clip) && Number(clip.match(/circle\(([\d.]+)%/)[1]) >= 100;
+          if (!fullyOpen) bad.push(`scale-center ${clip}`);
         }
         if (!preview) bad.push(`${id} missing preview`);
       }
