@@ -72,8 +72,8 @@ export const TYPE_PO = [CLICK.po + 1, CLICK.po + 16] as const; // ENG-9812, 2f/c
 export const CART_MOVE = [198, 216] as const; // the one camera move on Cart: PO -> summary (0.6s)
 export const CREDIT_ANIM = [217, 229] as const; // number swaps at 217, bar width over 400ms
 export const CONF_XFADE = [CLICK.place, CLICK.place + 8] as const; // cart cross-fades to the centred chip
-export const CONF_ICON = [CONF_XFADE[1], CONF_XFADE[1] + 6] as const; // check: fade + 0.9 -> 1
-export const CONF_TEXT = CONF_ICON[0] + 2; // text 2f later (fade + 6px rise, 2f stagger)
+export const CONF_ICON = [CONF_XFADE[0] + 3, CONF_XFADE[0] + 9] as const; // check: fade + 0.9 -> 1
+export const CONF_TEXT = CONF_ICON[0] - 1; // text 2f later (fade + 6px rise, 2f stagger)
 export const HOLD_CONF = [CONF_TEXT + 8, 304] as const;
 export const FADE_OUT = [304, 313] as const; // 0.3s fade to the background colour
 export const LOGO_IN = [313, 322] as const; // 0.3s logo fade-up, then hold == frame 0
@@ -107,18 +107,15 @@ export const OH = 1080;
 export const UI_W = 1920;
 export const UI_H = 1080;
 export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 }; // intro/outro framing: sidebar + header + table start
-export const SEARCH_CAM: Cam = { cx: 600, cy: 330, s: 1.7 }; // Quick order base: 14px text = 11.2px at 676
+export const SEARCH_CAM: Cam = { cx: 448, cy: 218, s: 1.7 }; // Quick order base: 14px text = 11.2px at 676
 export const MOVES: Move[] = [
-  { a: QO_ZOOM[0], b: QO_ZOOM[1], to: { cx: 1430, cy: 470, s: 2.0 }, label: "QO zoom 1.18x onto Perseus qty + Add" },
-  { a: PILL_CUT, b: PILL_CUT, to: { cx: 1640, cy: 230, s: 2.3 }, label: "CUT to account + cart pill" },
-  { a: CART_CUT, b: CART_CUT, to: { cx: 560, cy: 430, s: 1.85 }, label: "CUT to Cart, PO framing" },
-  { a: CART_MOVE[0], b: CART_MOVE[1], to: { cx: 1368, cy: 260, s: 2.0 }, label: "Cart move 1.08x to summary + credit" },
+  { a: QO_ZOOM[0], b: QO_ZOOM[1], to: { cx: 1418, cy: 474, s: 1.9 }, label: "QO zoom 1.18x onto Perseus qty + Add" },
+  { a: PILL_CUT, b: PILL_CUT, to: { cx: 1521, cy: 23, s: 2.3 }, label: "CUT to account + cart pill" },
+  { a: CART_CUT, b: CART_CUT, to: { cx: 522, cy: 425, s: 1.85 }, label: "CUT to Cart, PO framing" },
+  { a: CART_MOVE[0], b: CART_MOVE[1], to: { cx: 1552, cy: 260, s: 2.0 }, label: "Cart move 1.08x to summary + credit" },
 ];
-export const clampCam = (c: Cam): Cam => ({
-  s: c.s,
-  cx: Math.min(Math.max(c.cx, OW / 2 / c.s), UI_W - OW / 2 / c.s),
-  cy: Math.min(Math.max(c.cy, OH / 2 / c.s), UI_H - OH / 2 / c.s),
-});
+// p10: no clamp; the camera centres each subject and the backdrop fills beyond the page
+export const clampCam = (c: Cam): Cam => c;
 export const camAt = (f: number): Cam => {
   let st: Cam = SEARCH_CAM;
   for (const m of MOVES) {

@@ -11,7 +11,7 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, CART_MOVE, CONF_ICON, CONF_TEXT, CONF_XFADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FADE_OUT, FPS,
+  OW, OH, CAM_E, clamp01, QO_ZOOM, CART_CUT, camAt, CLICK, CART_MOVE, CONF_XFADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FADE_OUT, FPS,
   INSERT, lerp, LOGO_IN, PILL_FILL, POINTER_OFF, prog, PTR_E, QTY_SET, RESULT_HOVER, SCREENS, TYPE_PO, TYPE_SEARCH, UI_E, UI_IN, type Cam,
 } from "./joola/timeline";
 
@@ -43,6 +43,42 @@ const ctr = (k: string): [number, number] => {
 /** Film-only compaction: lift the sticky Quick order footer to sit under the table/rail. */
 const FOOTER_LIFT = R["qo-search.footer"][1] - (R["qo-search.rail"][1] + R["qo-search.rail"][3] + 48);
 const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
+
+
+/* ---------- p10 spotlight: each beat's subject stays whole; everything else sinks into the backdrop ---------- */
+type Hole = [number, number, number, number];
+const H_SEARCH: Hole = [234, 110, 428, 214];
+const H_QTY: Hole = [1110, 229, 296, 92];
+const H_ADD: Hole = [1578, 660, 148, 66];
+const H_PILL: Hole = [1316, -4, 410, 54];
+const H_PO: Hole = [234, 380, 576, 88];
+const H_SUM: Hole = [1378, 110, 348, 300];
+const CP = R["confirmation.panel"];
+const H_CONF: Hole = [CP[0] - 12, CP[1] - 12, CP[2] + 24, CP[3] + 24];
+const CONF_CAM = { cx: CP[0] + CP[2] / 2, cy: CP[1] + CP[3] / 2, s: 2.0 };
+const lerpH = (a: Hole, b: Hole, t: number): Hole => a.map((v, i) => v + (b[i] - v) * t) as Hole;
+const holesAt = (f: number): [Hole, number][] => {
+  if (f < QO_ZOOM[0]) return [[H_SEARCH, 1]];
+  if (f < CLICK.add) {
+    const t = CAM_E(clamp01((f - QO_ZOOM[0]) / (QO_ZOOM[1] - QO_ZOOM[0])));
+    return [[lerpH(H_SEARCH, H_QTY, t), 1], [H_ADD, prog(f, CLICK.add - 16, CLICK.add - 8, FADE_E)]];
+  }
+  if (f < CART_CUT) return [[H_PILL, 1]];
+  if (f < CART_MOVE[0]) return [[H_PO, 1]];
+  return [[lerpH(H_PO, H_SUM, CAM_E(clamp01((f - CART_MOVE[0]) / (CART_MOVE[1] - CART_MOVE[0])))), 1]];
+};
+const Spotlight = ({ frame, conf = false }: { frame: number; conf?: boolean }) => (
+  <svg style={{ position: "absolute", left: -3000, top: -3000, zIndex: 10000, pointerEvents: "none" }} width={8000} height={8000} viewBox="-3000 -3000 8000 8000">
+    <defs>
+      <filter id={conf ? "spf2" : "spf"} x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation={5} /></filter>
+      <mask id={conf ? "spm2" : "spm"} maskUnits="userSpaceOnUse" x={-3000} y={-3000} width={8000} height={8000}>
+        <rect x={-3000} y={-3000} width={8000} height={8000} fill="#fff" />
+        <g filter={conf ? "url(#spf2)" : "url(#spf)"}>{(conf ? ([[H_CONF, 1]] as [Hole, number][]) : holesAt(frame)).map(([h, a], i) => <rect key={i} x={h[0]} y={h[1]} width={h[2]} height={h[3]} rx={12} fill="#000" fillOpacity={a} />)}</g>
+      </mask>
+    </defs>
+    <rect x={-3000} y={-3000} width={8000} height={8000} fill={BG} fillOpacity={0.86} mask={conf ? "url(#spm2)" : "url(#spm)"} />
+  </svg>
+);
 
 /* ---------- pointer (canvas coords); every move arrives just before its click ---------- */
 const addBtn = ctr("qo-search.addBtn");
@@ -158,11 +194,11 @@ function applyQuickOrder(root: HTMLElement, f: number) {
 
   // results: enter (fade + 6px rise, 200ms), first result selected (bg, 100ms), leave (fade, 120ms)
   const res = q(root, "[data-search-results]")!;
-  const open = f >= DROPDOWN_OPEN && f < ENTER + 4;
+  const open = f >= DROPDOWN_OPEN && f < ENTER;
   res.hidden = !open;
   res.classList.toggle("is-closed", !open);
   const dIn = prog(f, DROPDOWN_OPEN, DROPDOWN_OPEN + 6, UI_E);
-  const dOut = 1 - prog(f, ENTER, ENTER + 4, FADE_E);
+  const dOut = 1; // p10: the dropdown closes on Enter (no overlap with the table header)
   res.style.opacity = `${dIn * dOut}`;
   res.style.transform = `translateY(${(1 - dIn) * 6}px)`;
   const hit = q(res, "[data-search-result]");
@@ -266,7 +302,7 @@ function applyCart(root: HTMLElement, f: number) {
   // number swaps instantly at the start of the bar move; the bar width eases over 400ms
   const cp = prog(f, CREDIT_ANIM[0], CREDIT_ANIM[1], UI_E);
   const left = f >= CREDIT_ANIM[0] ? CREDIT_AFTER : CREDIT_BEFORE;
-  q(root, "[data-cart-summary] [data-credit-available]")!.textContent = `${money(left)} left of ${money(CREDIT_LIMIT)}`;
+  q(root, "[data-cart-summary] [data-credit-available]")!.textContent = `${money(left)} available of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
   const bar = q(root, "[data-cart-summary] [data-credit-bar]")!;
   const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
   bar.style.setProperty("--credit-used-end", `${used}%`);
@@ -275,9 +311,22 @@ function applyCart(root: HTMLElement, f: number) {
 }
 
 
+function applyConfirmation(root: HTMLElement, f: number) {
+  // motion spec fade: the real confirmation panel rises 6px while the screen cross-fades in (8f)
+  const p = prog(f, CONF_XFADE[0], CONF_XFADE[1], UI_E);
+  const panel = q(root, "[data-confirm-panel]")!;
+  panel.style.transform = p < 1 ? `translateY(${(1 - p) * 6}px)` : "";
+  // the order was placed, so the cart pill is empty again (prototype behaviour)
+  const amt = q(root, "[data-cart-pill] [data-cart-total]");
+  const chip = q(root, "[data-cart-pill] [data-cart-count]");
+  if (amt) amt.hidden = true;
+  if (chip) chip.hidden = true;
+}
+
 const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
   "qo-desktop": applyQuickOrder,
   cart: applyCart,
+  confirmation: applyConfirmation,
 };
 
 /* ---------- component ---------- */
@@ -330,12 +379,10 @@ export const JoolaB2B: React.FC = () => {
 
   const [spx, spy] = pointerAt(frame);
   const uiVisible = frame >= UI_IN && frame < CONF_XFADE[1];
-  // Order placed: the cart cross-fades (8f) to a centred Ramp-style chip on the background colour
+  // Order placed: the cart cross-fades (8f) to the prototype's real confirmation screen, centred
   const xf = prog(frame, CONF_XFADE[0], CONF_XFADE[1], FADE_E);
-  const chipOn = frame >= CONF_XFADE[0] && frame < LOGO_IN[0];
-  const chipOut = 1 - prog(frame, FADE_OUT[0], FADE_OUT[1], FADE_E);
-  const icon = prog(frame, CONF_ICON[0], CONF_ICON[1], UI_E);
-  const tx = (k: number) => prog(frame, CONF_TEXT + 2 * k, CONF_TEXT + 2 * k + 6, UI_E);
+  const confOn = frame >= CONF_XFADE[0] && frame < LOGO_IN[0];
+  const confOut = 1 - prog(frame, FADE_OUT[0], FADE_OUT[1], FADE_E);
   // logo card == frame 0; fades up from the background over 0.3s at the end of the loop
   const logoA = frame < UI_IN ? 1 : frame >= LOGO_IN[0] ? prog(frame, LOGO_IN[0], LOGO_IN[1], FADE_E) : 0;
   const logoW = 340;
@@ -347,23 +394,16 @@ export const JoolaB2B: React.FC = () => {
       <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS}</style>
       {uiVisible && (
-        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s * (1 + 0.06 * xf)}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
+        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
           <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
+          <Spotlight frame={frame} />
         </div>
       )}
-      {chipOn && (
-        <div style={{ position: "absolute", inset: 0, background: BG, opacity: xf, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ opacity: chipOut, display: "flex", alignItems: "center", gap: 26, padding: "30px 40px 30px 30px", background: "#fff", borderRadius: 18, boxShadow: "0 1px 2px rgba(26,26,26,0.06), 0 8px 28px rgba(26,26,26,0.06)", fontFamily: "FKGroteskNeue, sans-serif", color: "#1a1a1a" }}>
-            <div style={{ width: 72, height: 72, borderRadius: 14, background: "#2c3ee0", display: "flex", alignItems: "center", justifyContent: "center", opacity: icon, transform: `scale(${0.9 + 0.1 * icon})` }}>
-              <svg width={36} height={36} viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="#fff" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 38, fontWeight: 500, letterSpacing: "-0.01em", opacity: tx(0), transform: `translateY(${(1 - tx(0)) * 6}px)` }}>Order placed</div>
-              <div style={{ fontSize: 25, color: "#6b6b6b", marginTop: 6, opacity: tx(1), transform: `translateY(${(1 - tx(1)) * 6}px)` }}>
-                SO-48213 for <span style={{ color: "#1a1a1a" }}>$19,306.50</span> on Net 30
-              </div>
-              <div style={{ fontSize: 25, color: "#6b6b6b", marginTop: 2, opacity: tx(2), transform: `translateY(${(1 - tx(2)) * 6}px)` }}>PO ENG-9812, Collin Johns confirms the ship date</div>
-            </div>
+      {confOn && (
+        <div style={{ position: "absolute", inset: 0, opacity: xf * confOut, background: BG }}>
+          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${CONF_CAM.s}) translate(${-CONF_CAM.cx}px,${-CONF_CAM.cy}px)` }}>
+            <Layer key="confirmation" screen="confirmation" frame={frame} slide={0} />
+            <Spotlight frame={frame} conf />
           </div>
         </div>
       )}

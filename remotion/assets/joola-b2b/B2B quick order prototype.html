@@ -2523,6 +2523,23 @@ img { display: block; max-width: 100%; }
 .im-sum > div { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .im-sum .im-total { color: var(--ink); font-size: 14px; font-weight: 500; padding-top: 8px; }
 .im-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 24px; }
+
+/* ================= r15 (film pass 10) ================= */
+/* Primary hover: plain background darken; no opacity/scale so label and box never shift */
+.btn-primary { white-space: nowrap; justify-content: center; transition: background-color 0.15s ease-out; }
+.btn-primary:hover { opacity: 1; background: #2433c4; }
+.btn-primary:active { transform: none; opacity: 1; background: #1f2cad; }
+.btn-primary:disabled:hover { background: var(--blue); }
+#qoAddAllBtn { min-width: 121px; }
+/* Cart pill: Lucide shopping-cart, 16px, optically centred on the label */
+.cart-pill .cart-icon { flex-shrink: 0; margin-right: -2px; transform: translateY(-0.5px); color: var(--ink); }
+/* Net 30 meter: one track, one fill (used credit incl. this order) */
+.credit-bar[data-credit-bar] {
+  background-image: linear-gradient(to right, var(--blue) 0, var(--blue) var(--credit-order-end, 0%), var(--wash) var(--credit-order-end, 0%), var(--wash) 100%);
+}
+/* Upload CSV: quiet secondary next to search */
+.search-row .btn-upload { height: 36px; padding: 0 14px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.search-row .btn-upload:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -2673,6 +2690,7 @@ img { display: block; max-width: 100%; }
       '<div class="account-meta"><div class="name">' + L.retailer.name + '</div><div class="role">' + L.retailer.buyer + "</div></div>" +
       "</button>" +
       '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
+      '<svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>' +
       "<span>Cart</span>" +
       '<span class="cart-amount-display" data-cart-total' + (total ? "" : " hidden") + ">" + money(total) + "</span>" +
       '<span class="' + chipClass + '" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
@@ -2683,6 +2701,8 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  function moneyWhole(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+
   function creditMeterHtml(opts) {
     opts = opts || {};
     var showOrder = opts.includeOrder !== false;
@@ -2691,8 +2711,8 @@ img { display: block; max-width: 100%; }
     var leftLabel = L.terms + " credit";
     var priorAvail = L.credit.priorAvailable != null ? L.credit.priorAvailable : L.credit.available;
     var rightLabel = showOrder
-      ? money(L.credit.afterOrder) + " left of " + money(L.credit.limit)
-      : money(L.credit.available) + " left of " + money(L.credit.limit);
+      ? money(L.credit.afterOrder) + " available of " + moneyWhole(L.credit.limit)
+      : money(L.credit.available) + " available of " + moneyWhole(L.credit.limit);
     var tip =
       "<div class=\"credit-tip\" data-credit-tip role=\"tooltip\">" +
       "<div><strong>Used</strong> " +
@@ -2998,7 +3018,9 @@ img { display: block; max-width: 100%; }
       "</span>" +
       "</div>" +
       results +
-      "</div></div>"
+      "</div>" +
+      '<button type="button" class="btn-outline btn-upload" data-upload-csv>Upload CSV</button>' +
+      "</div>"
     );
   }
 
@@ -3584,8 +3606,8 @@ img { display: block; max-width: 100%; }
       '</div><div class="qty-presets"><button type="button" disabled>6</button><button type="button" disabled>12</button><button type="button" disabled>24</button></div></div>' +
       "</div></div>" +
       '<div class="state-block"><h3>Cart + status</h3>' +
-      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
-      '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><span>Cart</span><span class="cart-amount-display">' +
+      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
+      '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display">' +
       money(L.orderTotal) +
       '</span><span class="count-chip">' +
       L.cartCountAfterAdd +
@@ -3613,7 +3635,7 @@ img { display: block; max-width: 100%; }
     return (
       '<section class="screen mobile-wrap" data-screen="qo-mobile">' +
       '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
-      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart"><span>Cart</span><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip">' + L.cartCountAfterAdd + "</span></button></div>" +
+      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip">' + L.cartCountAfterAdd + "</span></button></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
       "<h1>Quick order</h1>" +
       '<p class="lede">Prices for ' + L.retailer.name + ".</p>" +
