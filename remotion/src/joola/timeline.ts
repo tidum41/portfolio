@@ -53,45 +53,50 @@ export const UI_E = bezier(0.2, 0, 0, 1); // UI + state changes
 export const FADE_E = bezier(0.4, 0, 0.2, 1); // fades
 export const PTR_E = bezier(0.3, 0, 0, 1); // cursor travel
 
-/* ---------- pass 13: full dashboard; search Perseus + qty 120, then Match kit template "Add to order" ---------- */
+/* ---------- pass 14: search Perseus + qty 120, push in on the Reorder rail, Match kit "Add to order",
+   Add 4 to cart (button never changes; the pill badge is the feedback), cart push-in on credit, crossfade to a
+   centred confirmation, fade to the logo card (= frame 0, seamless loop) ---------- */
 export const MORPH = [8, 32] as const; // logo glides from centre into the sidebar slot (0.8s), dashboard dissolves in
 export const UI_IN = MORPH[0];
-export const DURATION = 358; // 11.93s
 
 /** Cursor clicks (press 0.9 for 3f, back over 4f). ENTER is a keypress (no cursor). */
-export const CLICK = { search: 56, qty: 102, tpl: 136, tplAdd: 152, add: 190, pill: 236, place: 284 };
+export const CLICK = { search: 56, qty: 100, tpl: 134, tplAdd: 156, add: 194, pill: 238, place: 292 };
 export const ENTER = 74;
 export const TYPE_SEARCH = [CLICK.search + 1, CLICK.search + 14] as const; // "Perseus", 2f/char
 export const DROPDOWN_OPEN = 63;
 export const RESULT_HOVER = [70, 73] as const;
 export const INSERT = [ENTER, ENTER + 6] as const; // Perseus row: fade + 6px rise, 200ms (qty 1)
 export const QO_ZOOM = [34, 52] as const; // the one zoom: wide 1.4 -> 1.75 (1.25x), 0.6s
-export const RAIL_PAN = [80, 98] as const; // pan to qty/line totals + Reorder rail + footer (0.6s)
+export const RAIL_PAN = [80, 96] as const; // p14: 0.53s continuous pan with a slight zoom dip (1.75 -> 1.55 -> 1.75)
 export const TYPE_QTY = [CLICK.qty + 2, CLICK.qty + 6] as const; // "120": 1 -> 12 -> 120, values instant per key
 export const QTY_SET = TYPE_QTY[1];
+export const RAIL_PUSH = [112, 126] as const; // push in 1.2x on the Reorder rail so the metadata reads at 676px
 export const TPL_HOVER = [CLICK.tpl - 6, CLICK.tplAdd] as const; // real :hover on the Match kit template
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 6] as const; // Add to order / Replace order popover: fade + 6px rise
-export const POP_HOVER = CLICK.tplAdd - 5; // hover darken on "Add to order"
-export const TPL_ROWS = [CLICK.tplAdd, CLICK.tplAdd + 10] as const; // 3 rows fade + 6px rise, 2f (66ms) stagger
+export const POP_HOVER = CLICK.tplAdd - 8; // hover darken on "Add to order"
+export const TPL_ROWS = [CLICK.tplAdd + 6, CLICK.tplAdd + 16] as const; // 3 rows fade + 6px rise, 2f (66ms) stagger
+export const RAIL_PULL = [172, 188] as const; // back to 1.75: rows + footer
 export const HEADER_PAN = [CLICK.add + 4, CLICK.add + 22] as const; // up to the real header (0.6s)
 export const PILL_FILL = [HEADER_PAN[1], HEADER_PAN[1] + 5] as const; // amount swaps, badge 0.6 -> 1 over 160ms
-export const PILL_CUT = -1;
 export const CART_CUT = CLICK.pill; // hard cut on the pill click (same camera: pill stays put)
-export const CREDIT_ANIM = [246, 258] as const; // number swaps at 246, bar width over 400ms
-export const CONF_CUT = CLICK.place; // hard cut to the real confirmation screen
-export const CONF_XFADE = [CONF_CUT, CONF_CUT + 6] as const;
-export const OUT_ZOOM = [316, 334] as const; // back to the wide framing (1.25x out)
-export const MORPH_OUT = [334, 358] as const; // logo lifts from the sidebar slot back to centre
-export const LOGO_IN = MORPH_OUT;
-export const FADE_OUT = MORPH_OUT;
-export const POINTER_OFF = CLICK.place + 1;
+export const CART_PUSH = [246, 262] as const; // push in 1.2x on the order summary + credit line
+export const CREDIT_ANIM = [266, 278] as const; // number swaps at 266, bar width over 400ms
+export const CONF_CUT = CLICK.place;
+export const CONF_XFADE = [CONF_CUT, CONF_CUT + 8] as const; // 8f crossfade to the centred confirmation
+export const CONF_HOLD = [CONF_XFADE[1], CONF_XFADE[1] + 24] as const; // 0.8s read
+export const END_FADE = [CONF_HOLD[1], CONF_HOLD[1] + 14] as const; // UI fades out, centred logo card fades in
+export const DURATION = END_FADE[1] + 8; // logo card holds 8f, then frame 0 (same card) — seamless loop
+export const MORPH_OUT = END_FADE;
+export const LOGO_IN = END_FADE;
+export const FADE_OUT = END_FADE;
+export const POINTER_OFF = CLICK.place + 6;
 
 export const SCREENS: [string, number, number][] = [
   ["qo-desktop", -1, -1],
   ["cart", CART_CUT, CART_CUT],
-  ["confirmation", CONF_CUT, CONF_CUT],
+  ["confirmation", CONF_CUT, CONF_XFADE[1]],
 ];
-export const CUTS = [CART_CUT, CONF_CUT];
+export const CUTS = [CART_CUT];
 
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
@@ -106,21 +111,25 @@ export const CONTENT_ANIMS: [string, number, number][] = [
 
 /* ---------- camera ---------- */
 export type Cam = { cx: number; cy: number; s: number };
-export type Move = { a: number; b: number; to: Cam; label: string };
+export type Move = { a: number; b: number; to: Cam; label: string; dip?: number; ease?: (t: number) => number };
 /** Output frame = the portfolio card's 4:3 media slot; the UI itself is still laid out at 1920x1080. */
 export const OW = 1440;
 export const OH = 1080;
 export const UI_W = 1920;
 export const UI_H = 1080;
-export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 }; // intro/outro framing: sidebar + header + table start
+export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 };
 export const SEARCH_CAM: Cam = { cx: 514, cy: 386, s: 1.4 }; // wide: sidebar logo slot, header, search, table
+export const PAN_E = bezier(0.5, 0, 0.4, 1); // p14: near-symmetric pan curve (peak ~1.6x avg): reads as a continuous travel, not a slam
+export const CART_CAM: Cam = { cx: 1370, cy: 0, s: 1.75 };
+export const CONF_CAM: Cam = { cx: 1070, cy: 256, s: 2.0 };
 export const MOVES: Move[] = [
   { a: QO_ZOOM[0], b: QO_ZOOM[1], to: { cx: 560, cy: 320, s: 1.75 }, label: "zoom 1.25x to search + table" },
-  { a: RAIL_PAN[0], b: RAIL_PAN[1], to: { cx: 1370, cy: 470, s: 1.75 }, label: "pan to qty/line + Reorder rail + footer" },
-  { a: HEADER_PAN[0], b: HEADER_PAN[1], to: { cx: 1370, cy: 0, s: 1.75 }, label: "pan up to the real header (clamped)" },
-  { a: CART_CUT, b: CART_CUT, to: { cx: 1370, cy: 0, s: 1.75 }, label: "CUT to Cart, same camera" },
-  { a: CONF_CUT, b: CONF_CUT, to: { cx: 1070, cy: 0, s: 1.75 }, label: "CUT to confirmation" },
-  { a: OUT_ZOOM[0], b: OUT_ZOOM[1], to: { cx: 514, cy: 386, s: 1.4 }, label: "zoom out 1.25x to wide" },
+  { a: RAIL_PAN[0], b: RAIL_PAN[1], to: { cx: 1370, cy: 470, s: 1.75 }, label: "pan to qty/line + Reorder rail (zoom dip)", dip: 0.3, ease: PAN_E },
+  { a: RAIL_PUSH[0], b: RAIL_PUSH[1], to: { cx: 1400, cy: 440, s: 2.1 }, label: "push 1.2x on the Reorder rail", ease: PAN_E },
+  { a: RAIL_PULL[0], b: RAIL_PULL[1], to: { cx: 1370, cy: 490, s: 1.75 }, label: "pull back to rows + footer", ease: PAN_E },
+  { a: HEADER_PAN[0], b: HEADER_PAN[1], to: CART_CAM, label: "pan up to the real header (clamped)", ease: PAN_E },
+  { a: CART_CUT, b: CART_CUT, to: CART_CAM, label: "CUT to Cart, same camera" },
+  { a: CART_PUSH[0], b: CART_PUSH[1], to: { cx: 1552, cy: 260, s: 2.1 }, label: "push 1.2x on summary + credit", ease: PAN_E },
 ];
 // p10: no clamp; the camera centres each subject and the backdrop fills beyond the page
 export const clampCam = (c: Cam): Cam => ({
@@ -128,6 +137,8 @@ export const clampCam = (c: Cam): Cam => ({
   cx: Math.min(Math.max(c.cx, OW / 2 / c.s), UI_W - OW / 2 / c.s),
   cy: Math.min(Math.max(c.cy, OH / 2 / c.s), UI_H - OH / 2 / c.s),
 });
+/** Confirmation is shown in its own centred camera (crossfade layer). */
+export const confCam = (): Cam => clampCam(CONF_CAM);
 export const camAt = (f: number): Cam => {
   let st: Cam = SEARCH_CAM;
   for (const m of MOVES) {
@@ -135,9 +146,11 @@ export const camAt = (f: number): Cam => {
     const from = clampCam(st);
     if (m.b === m.a) { st = m.to; continue; } // hard cut
     if (f <= m.b) {
-      const t = CAM_E((f - m.a) / (m.b - m.a));
+      const u = (f - m.a) / (m.b - m.a);
+      const t = (m.ease || CAM_E)(u);
       const to = clampCam(m.to);
-      return clampCam({ cx: lerp(from.cx, to.cx, t), cy: lerp(from.cy, to.cy, t), s: lerp(from.s, to.s, t) });
+      const s = lerp(from.s, to.s, t) - (m.dip || 0) * Math.sin(Math.PI * t);
+      return clampCam({ cx: lerp(from.cx, to.cx, t), cy: lerp(from.cy, to.cy, t), s });
     }
     st = m.to;
   }

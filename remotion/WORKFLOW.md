@@ -71,3 +71,13 @@ appearing items fade + 6px rise over 200ms; badge 0.6->1 over 160ms, no overshoo
 - Story beats should use different products (search Perseus, then apply Match kit template) and the prototype must offer the real choice (Add to order / Replace order) before the film shows it.
 - Keep the cursor off text being typed (offset pointer right/below the digits).
 - OCR expectations must only list text that is actually in frame at that camera.
+
+## Pass 14 lessons
+- Card-sheet tiles: when frames/step does not fill the grid, the empty tiles are black; pick the step so the tiles are full, then still check the real last frame.
+- Loop: end on the exact frame-0 card. Fade the UI out to the card background first, then fade the logo in; never overlap them and never zoom the dashboard back out (the wide outro framed a floating panel next to the sidebar).
+- Between two different layouts, use a staggered dissolve (A out over 5f, B in over the last 5f of 8f) so the two never read double. check-film flags these as cuts; list them as allowed.
+- Click feedback lives in one place: the "Add 4 to cart" button keeps its label, width and colour (4f instant press tint only); the pill badge is the feedback. No inline success text, no disabled state.
+- A popover must stay on screen through its button press (close 4f after), or the click reads as a jump.
+- Long pans (>1000 stage px): symmetric curve (bezier .5,0,.4,1) plus a slight zoom dip (-0.3) cuts peak screen speed ~20% and reads as a continuous travel.
+- Readability: push in 1.2x (1.75 -> 2.1) when the beat is about small metadata (rail meta, credit line) rather than restyling the UI.
+- Read caches image paths: write review images to new filenames each time.

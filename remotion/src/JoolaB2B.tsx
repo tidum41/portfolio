@@ -11,8 +11,8 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, MORPH_OUT, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
-  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, SCREENS, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam,
+  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
+  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam, CART_PUSH, CONF_XFADE, END_FADE, confCam,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -55,7 +55,7 @@ const P = {
   qty: ctr("qo-search.qty0"),
   add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
   pill: [1600, 32] as [number, number],
-  tpl: [1672, 560] as [number, number], // "Apply" on the saved Match kit template
+  tpl: [1640, 562] as [number, number], // the saved Match kit template row
   tplAdd: [1640, 622] as [number, number], // "Add to order" in the popover
   qtyIn: [1224, 266] as [number, number],
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
@@ -80,7 +80,9 @@ const KEYS: Key[] = [
   [HEADER_PAN[0] + 2, P.add, CLICK.add],
   [CLICK.pill - 10, P.pill, CLICK.pill], // cursor leads up to the header
   [CLICK.pill + 4, P.pill, CLICK.pill],
-  [CLICK.place - 22, P.pill, CLICK.pill],
+  [CART_PUSH[0], P.pill, CLICK.pill],
+  [CART_PUSH[1], P.pill, CART_PUSH[1]], // rides with the pill during the push-in
+  [CLICK.place - 18, P.pill, CART_PUSH[1]],
   [CLICK.place - 6, P.place, CLICK.place],
 ];
 const pointerAt = (f: number): [number, number] => {
@@ -128,8 +130,8 @@ const qa = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll(s
 const press = (el: HTMLElement | null, f: number, c: number) => {
   if (!el) return;
   const d = f - c;
-  const on = d >= 0 && d <= 6;
-  const k = on ? 1 - d / 6 : 0;
+  const on = d >= 0 && d <= 3; // p14: instant 4-frame press tint, no fade
+  const k = on ? 1 : 0;
   // p13: colour-only press (the prototype has no press scale), so nothing moves on click
   const primary = el.classList.contains("btn-primary");
   el.style.transform = "";
@@ -155,21 +157,22 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // Reorder rail: real :hover on the saved "Match kit" template, tap -> Add to order / Replace order popover
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
-  const popOpen = f >= CLICK.tpl && f < CLICK.tplAdd;
+  const POP_CLOSE = CLICK.tplAdd + 4; // p14: the popover stays through the "Add to order" press, then closes
+  const popOpen = f >= CLICK.tpl && f < POP_CLOSE + 3;
   if (tpl) {
     const hv = prog(f, TPL_HOVER[0], TPL_HOVER[0] + 4, FADE_E);
-    const lit = f >= TPL_HOVER[0] && f < CLICK.tplAdd;
+    const lit = f >= TPL_HOVER[0] && f < POP_CLOSE + 3;
     tpl.classList.toggle("is-open", popOpen);
     tpl.dataset.filmBg = lit ? "var(--band)" : "";
     tpl.style.backgroundColor = lit ? "var(--band)" : "";
     const act = q(tpl, ".rail-action");
-    if (act) act.style.opacity = lit ? `${popOpen ? 1 : hv}` : "0";
+    if (act) act.style.opacity = lit && !popOpen ? `${hv}` : "0"; // p14: hidden while the popover is open (prototype)
     press(tpl, f, CLICK.tpl);
   }
   if (pop && tpl) {
     pop.hidden = !popOpen;
     pop.style.top = `${tpl.offsetTop + tpl.offsetHeight + 4}px`;
-    const pin = prog(f, POP_IN[0], POP_IN[1], UI_E);
+    const pin = prog(f, POP_IN[0], POP_IN[1], UI_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E));
     pop.style.opacity = `${pin}`;
     pop.style.transform = `translateY(${(1 - pin) * 6}px)`;
     const addOpt = q(pop, '[data-tpl-apply="add"]')!;
@@ -244,24 +247,10 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const total = (inserted ? line : 0) + (tplIn ? OTHER_LINES : 0);
   q(root, "[data-order-footer] [data-order-total]")!.textContent = money(r2(total));
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
-  // r11 applyAddAll(): button -> "Added" (disabled), inline "Added to cart"
-  const added = f >= CLICK.add;
-  // lock geometry: width fixed to the "Add 4 to cart" label, so "Added" never reflows the footer
-  add.style.width = "";
+  // p14 prototype: the button never changes on click (same label, width, colour); the cart pill is the feedback
   add.style.whiteSpace = "nowrap";
-  add.textContent = "Add 4 to cart";
-  const lockW = add.offsetWidth;
-  add.textContent = added ? "Added" : `Add ${lines} to cart`;
-  add.style.width = `${lockW}px`;
-  add.style.justifyContent = "center";
-  add.disabled = added;
-  if (!added) press(add, f, CLICK.add);
-  else add.style.transform = "";
-  const ok = q(root, "[data-inline-success]");
-  if (ok) {
-    ok.textContent = added ? "Added to cart" : "";
-    ok.classList.toggle("show", added);
-  }
+  add.textContent = `Add ${lines} to cart`;
+  press(add, f, CLICK.add);
   pill(root, f);
 }
 
@@ -332,7 +321,7 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
     const root = ref.current!;
     APPLY[screen](root, frame);
     const brand = q(root, ".sidebar-brand img");
-    if (brand) brand.style.visibility = frame < MORPH[1] || frame >= MORPH_OUT[0] ? "hidden" : "";
+    if (brand) brand.style.visibility = frame < MORPH[1] ? "hidden" : "";
     const page = q(root, ".page, .messages-layout");
     if (page) page.style.transform = slide ? `translateX(${slide}px)` : "";
   });
@@ -353,7 +342,7 @@ const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale
   </svg>
 );
 
-export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) => {
+export const JoolaB2B: React.FC = () => {
   const frame = useCurrentFrame();
   const [handle] = useState(() => delayRender("r11 fonts + images"));
   useLayoutEffect(() => {
@@ -365,41 +354,39 @@ export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) =
   }, [handle]);
 
   const cam = camAt(frame);
-  let idx = 0;
-  for (let i = 1; i < SCREENS.length; i++) if (frame >= SCREENS[i][1]) idx = i;
-  const cur = SCREENS[idx];
+  const inX = frame >= CONF_XFADE[0];
+  // cart -> confirmation: staggered 8f dissolve (cart out over 5f, confirmation in over the last 5f) so the two layouts never read double
+  const xOut = prog(frame, CONF_XFADE[0], CONF_XFADE[0] + 5, FADE_E);
+  const xf = prog(frame, CONF_XFADE[1] - 5, CONF_XFADE[1], FADE_E);
+  const scr = frame >= CLICK.pill ? "cart" : "qo-desktop";
 
   const [spx, spy] = pointerAt(frame);
-  // logo: centre card (frame 0) <-> the real sidebar logo slot, one continuous ease-out each way
-  const slotCam = camAt(frame < 175 ? MORPH[1] : MORPH_OUT[0]);
-  const [sx, sy] = toScreen(slotCam, LOGO[0], LOGO[1]);
-  const sw = LOGO[2] * slotCam.s;
+  // intro: logo glides from the centre card into the real sidebar slot (variant A)
+  const [sx, sy] = toScreen(camAt(MORPH[1]), LOGO[0], LOGO[1]);
+  const sw = LOGO[2] * camAt(MORPH[1]).s;
   const logoW = 340;
   const cX = OW / 2 - logoW / 2, cY = OH / 2 - (logoW * LOGO_AR) / 2;
   const mIn = prog(frame, MORPH[0], MORPH[1], CAM_E);
-  const mOut = prog(frame, MORPH_OUT[0], MORPH_OUT[1], CAM_E);
-  const m = frame < 175 ? mIn : 1 - mOut; // 0 = centre card, 1 = in the sidebar slot
-  const logoOn = frame < MORPH[1] || frame >= MORPH_OUT[0];
-  const lw = lerp(logoW, sw, m);
-  const lx = lerp(cX, sx, m), ly = lerp(cY, sy, m);
-  // the dashboard arrives with the logo: A = dissolve in, B = rect reveal growing out of the logo slot
-  const uiT = frame < 175 ? prog(frame, MORPH[0], MORPH[1], FADE_E) : 1 - prog(frame, MORPH_OUT[0], MORPH_OUT[1], FADE_E);
-  const uiOn = frame >= MORPH[0] && frame < MORPH_OUT[1];
-  const reveal = frame < 175 ? mIn : 1 - mOut;
-  const clip = variant === "B" && reveal < 1
-    ? `inset(${lerp(sy - 6, 0, reveal)}px ${lerp(OW - sx - sw - 6, 0, reveal)}px ${lerp(OH - sy - sw * LOGO_AR - 6, 0, reveal)}px ${lerp(sx - 6, 0, reveal)}px round ${lerp(8, 0, reveal)}px)`
-    : undefined;
-  const uiOpacity = variant === "B" ? 1 : uiT;
+  const intro = frame < MORPH[1];
+  const outro = frame >= END_FADE[0];
+  const lw = intro ? lerp(logoW, sw, mIn) : logoW;
+  const lx = intro ? lerp(cX, sx, mIn) : cX, ly = intro ? lerp(cY, sy, mIn) : cY;
+  // outro: simple centred fade. The UI fades to the card background, then the logo card (= frame 0) fades in; they never overlap
+  const uiOut = prog(frame, END_FADE[0], END_FADE[0] + 8, FADE_E);
+  const logoT = prog(frame, END_FADE[0] + 6, END_FADE[1], FADE_E);
+  const logoOpacity = intro ? 1 : outro ? logoT : 0;
+  const uiOpacity = intro ? prog(frame, MORPH[0], MORPH[1], FADE_E) : 1 - uiOut;
+  const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
   const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
+  const ptrOpacity = 1 - prog(frame, CLICK.place + 1, POINTER_OFF, FADE_E);
   // subtle directional motion blur, only while the camera is travelling fast (never on text at rest)
   const ca = camAt(frame - 0.5), cb = camAt(frame + 0.5);
   const vx = (cb.cx - ca.cx) * cam.s, vy = (cb.cy - ca.cy) * cam.s; // stage px per frame
-  const vz = Math.abs(cb.s - ca.s) * 600; // zoom: edge speed approx
-  const sp = Math.hypot(vx, vy);
-  const blurK = (v: number) => Math.min(2.2, Math.max(0, (Math.abs(v) - 14) * 0.035));
-  const bx = blurK(vx) + (sp < 1 ? blurK(vz) * 0.5 : 0), by = blurK(vy) + (sp < 1 ? blurK(vz) * 0.5 : 0);
-  const nearCut = [CLICK.pill, CLICK.place].some((c) => Math.abs(frame - c) <= 1);
-  const blurOn = !nearCut && (bx > 0.05 || by > 0.05);
+  const blurK = (v: number) => Math.min(2.5, Math.max(0, (Math.abs(v) - 12) * 0.03));
+  const bx = blurK(vx), by = blurK(vy);
+  const nearCut = Math.abs(frame - CLICK.pill) <= 1;
+  const blurOn = !nearCut && !inX && (bx > 0.05 || by > 0.05);
+  const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
 
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
@@ -408,21 +395,28 @@ export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) =
       <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS}</style>
       {uiOn && (
-        <div style={{ position: "absolute", inset: 0, opacity: uiOpacity, clipPath: clip }}>
+        <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
           {blurOn && (
             <svg width={0} height={0} style={{ position: "absolute" }}>
               <filter id="mblur" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation={`${(bx / cam.s).toFixed(2)} ${(by / cam.s).toFixed(2)}`} /></filter>
             </svg>
           )}
-          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)`, filter: blurOn ? "url(#mblur)" : undefined }}>
-            <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
-          </div>
+          {xOut < 1 && (
+            <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(cam), filter: blurOn ? "url(#mblur)" : undefined, opacity: 1 - xOut }}>
+              <Layer key={scr} screen={scr} frame={frame} slide={0} />
+            </div>
+          )}
+          {inX && (
+            <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(confCam()), opacity: xf }}>
+              <Layer key="confirmation" screen="confirmation" frame={frame} slide={0} />
+            </div>
+          )}
         </div>
       )}
-      {logoOn && (
-        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR }} />
+      {logoOpacity > 0 && (
+        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity }} />
       )}
-      {showPtr && <Cursor x={spx} y={spy} scale={cursorScale(frame)} />}
+      {showPtr && <div style={{ opacity: ptrOpacity }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} /></div>}
       </div>
     </AbsoluteFill>
   );

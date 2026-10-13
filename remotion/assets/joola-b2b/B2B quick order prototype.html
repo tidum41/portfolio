@@ -2545,7 +2545,7 @@ img { display: block; max-width: 100%; }
 /* Saved template: choose Add to order or Replace order (popover under the template card, overlays; no reflow) */
 .rail-card { position: relative; }
 .rail-item.is-open { background: var(--band); }
-.rail-item.is-open .rail-action { opacity: 1; }
+.rail-item.is-open .rail-action { opacity: 0; } /* p14: while the Add to order / Replace order popover is open, it is the only action */
 .tpl-pop {
   position: absolute; left: 12px; right: 12px; z-index: 40;
   display: flex; flex-direction: column; gap: 6px; padding: 8px;
@@ -2942,7 +2942,7 @@ img { display: block; max-width: 100%; }
           "</span>" +
           (it.amt ? '<span class="meta-amt">' + it.amt + "</span>" : "") +
           "</span></span>" +
-          '<span class="rail-action">' + (it.tplId ? "Apply" : "Add") + "</span>" +
+          '<span class="rail-action">' + (it.tplId ? "Use" : "Add") + "</span>" +
           "</button>"
         );
       })
@@ -2966,7 +2966,7 @@ img { display: block; max-width: 100%; }
 
   function footerHtml() {
     var n = L.orderLines.length;
-    var cta = cartUi.added ? "Added" : "Add " + n + " to cart";
+    var cta = "Add " + n + " to cart"; // p14: the button never changes on click; the cart pill badge is the feedback
     return (
       '<div class="order-footer" data-order-footer>' +
       '<div class="footer-stack">' +
@@ -2976,14 +2976,8 @@ img { display: block; max-width: 100%; }
       '<div class="total" id="qoFooterTotal" data-order-total>' +
       money(L.orderTotal) +
       "</div>" +
-      '<div class="inline-success' +
-      (cartUi.added ? " show" : "") +
-      '" data-inline-success>' +
-      (cartUi.added ? "Added to cart" : "") +
-      "</div></div>" +
-      '<button type="button" class="btn-primary" id="qoAddAllBtn" data-add-all' +
-      (cartUi.added ? " disabled" : "") +
-      ">" +
+      "</div>" +
+      '<button type="button" class="btn-primary" id="qoAddAllBtn" data-add-all>' +
       cta +
       "</button>" +
       "</div>"
@@ -3849,19 +3843,10 @@ img { display: block; max-width: 100%; }
     document.querySelectorAll("[data-cart-pill]").forEach(function (el) {
       el.setAttribute("aria-label", "Cart, " + money(cartUi.total));
     });
-    document.querySelectorAll("[data-inline-success]").forEach(function (el) {
-      el.textContent = "Added to cart";
-      el.classList.add("show");
-    });
-    document.querySelectorAll("[data-add-all]").forEach(function (btn) {
-      btn.disabled = true;
-      btn.textContent = "Added";
-    });
     document.querySelectorAll("[data-order-footer] [data-line-count]").forEach(function (el) {
       el.textContent = itemCountLabel(L.orderLines.length);
     });
     bumpCartPills();
-    showToast(itemCountLabel(L.orderLines.length) + ", " + money(L.orderTotal));
   }
 
   function bind() {
