@@ -11,9 +11,9 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, PUSH_E, clamp01, PRICE_FLASH, bezier, BUBBLE, CAM_E, camAt, CLICK, CONTENT_IN, CONTENT_OUT, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
-  LOGO_IN, LOGO_OUT, PILL_FILL, PRESET_COUNT, prog, PUSH, QTY_COMMIT, QTY_COUNT, QTY_KEYS, QTY_SELECT, SCREENS, SETTLE,
-  SIDEBAR_IN, SIDEBAR_OUT, TYPE_PO, TYPE_SEARCH, type Cam,
+  OW, OH, PUSH_E, clamp01, PRICE_FLASH, bezier, CAM_E, camAt, CLICK, CONF_CUT, CONF_FADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
+  LOGO_CARD, PILL_CUT, PILL_FILL, PRESET_COUNT, prog, QTY_COMMIT, QTY_COUNT, QTY_KEYS, QTY_SELECT, SCREENS, SETTLE,
+  TYPE_PO, TYPE_SEARCH, UI_IN, type Cam,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -60,28 +60,27 @@ const P = {
   msg: ctr("confirmation.msgBtn"),
 };
 const PATH: [number, [number, number]][] = [
-  [22, P.start],
-  [CLICK.search - 2, P.search],
+  [UI_IN, [P.search[0] + 60, P.search[1] + 70]],
+  [CLICK.search - 1, P.search],
   [CLICK.search + 5, [P.search[0] + 20, P.search[1] + 34]], // off the field so typing reads
   [CLICK.result - 6, [P.search[0] + 20, P.search[1] + 34]],
   [CLICK.result - 1, P.result],
-  [CLICK.preset - 2, P.preset],
+  [CLICK.preset - 6, P.result],
+  [CLICK.preset - 1, P.preset],
   [CLICK.qty - 7, P.preset],
   [CLICK.qty - 1, P.qty],
   [CLICK.qty + 4, [P.qty[0] + 34, P.qty[1] + 40]], // off the digits
-  [CLICK.add - 8, [P.qty[0] + 34, P.qty[1] + 40]],
+  [CLICK.add - 9, [P.qty[0] + 34, P.qty[1] + 40]],
   [CLICK.add - 1, P.add],
-  [CLICK.pill - 8, P.add],
+  [PILL_CUT + 8, [P.pill[0] - 40, P.pill[1] + 150]],
   [CLICK.pill - 1, P.pill],
-  [CLICK.po - 8, [P.pill[0] - 600, P.pill[1] + 300]],
+  [CLICK.po - 9, [P.pill[0] - 600, P.pill[1] + 300]],
   [CLICK.po - 1, P.po],
   [CLICK.po + 5, [P.po[0] + 40, P.po[1] + 40]], // below the PO field
   [CLICK.place - 10, [P.po[0] + 500, P.po[1] + 60]],
   [CLICK.place - 1, P.place],
-  [CLICK.msg - 10, [P.msg[0] + 140, P.msg[1] + 30]],
-  [CLICK.msg - 1, P.msg],
 ];
-const POINTER_VIS = [20, 26, CLICK.msg + 2 + PUSH, CLICK.msg + 2 + PUSH + 10] as const;
+const pointerOn = (f: number) => f >= UI_IN && f < CONF_CUT;
 const POINTER_E = bezier(0.5, 0, 0.25, 1);
 const pointerAt = (f: number): [number, number] => {
   if (f <= PATH[0][0]) return PATH[0][1];
@@ -136,8 +135,8 @@ const press = (el: HTMLElement | null, f: number, c: number) => {
   const d = f - c;
   const on = d >= 0 && d <= 6;
   const k = on ? 1 - d / 6 : 0;
-  el.style.transform = on ? `scale(${1 - 0.03 * k})` : "";
-  el.style.opacity = on ? `${1 - 0.14 * k}` : "";
+  el.style.transform = on ? `scale(${1 - 0.02 * k})` : "";
+  el.style.opacity = on ? `${1 - 0.1 * k}` : "";
 };
 const caret = (host: HTMLElement, on: boolean) => {
   let c = q(host, ":scope > .film-caret");
@@ -226,7 +225,14 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   // r11 applyAddAll(): button -> "Added" (disabled), inline "Added to cart"
   const added = f >= CLICK.add + 2;
+  // lock geometry: width fixed to the "Add 4 to cart" label, so "Added" never reflows the footer
+  add.style.width = "";
+  add.style.whiteSpace = "nowrap";
+  add.textContent = "Add 4 to cart";
+  const lockW = add.offsetWidth;
   add.textContent = added ? "Added" : `Add ${lines} to cart`;
+  add.style.width = `${lockW}px`;
+  add.style.justifyContent = "center";
   add.disabled = added;
   if (!added) press(add, f, CLICK.add);
   else add.style.transform = "";
@@ -245,18 +251,17 @@ function pill(root: HTMLElement, f: number) {
   press(pl, f, CLICK.pill);
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
-  if (f < PILL_FILL[0]) {
-    amt.hidden = true;
-    chip.hidden = true;
-    return;
-  }
+  // geometry locked: amount + badge always laid out, only revealed at the snap (pill never grows)
   amt.hidden = false;
   chip.hidden = false;
   amt.textContent = money(ORDER_TOTAL);
   chip.textContent = "4";
   amt.style.whiteSpace = "nowrap";
+  const on = f >= PILL_FILL[0];
+  amt.style.visibility = on ? "" : "hidden";
+  chip.style.visibility = on ? "" : "hidden";
   const t = clamp01((f - PILL_FILL[0]) / (PILL_FILL[1] - PILL_FILL[0]));
-  chip.style.transform = `scale(${1 + 0.2 * Math.sin(t * Math.PI)})`;
+  chip.style.transform = on && t < 1 ? `scale(${1 + 0.08 * Math.sin(t * Math.PI)})` : "";
 }
 
 function applyCart(root: HTMLElement, f: number) {
@@ -293,47 +298,31 @@ function applyCart(root: HTMLElement, f: number) {
 }
 
 function applyConfirmation(root: HTMLElement, f: number) {
-  const p = prog(f, CLICK.place + 2, CLICK.place + 2 + PUSH, CAM_E);
+  // hard cut to the centred screen; the card fades up 10px in place (calm ease-out, no scale)
+  const p = prog(f, CONF_FADE[0], CONF_FADE[1], SETTLE);
   const panel = q(root, "[data-confirm-panel]")!;
-  panel.style.transform = `scale(${0.96 + 0.04 * p})`;
-  panel.style.transformOrigin = "50% 30%";
-  press(q(root, ".confirm-actions .btn-text"), f, CLICK.msg);
-}
-
-function applyMessages(root: HTMLElement, f: number) {
-  // the order was placed, so the cart is empty again (as on r11's confirmation screen)
+  panel.style.opacity = `${p}`;
+  panel.style.transform = p < 1 ? `translateY(${(1 - p) * 10}px)` : "";
+  // the order was placed, so the cart pill is empty again (r11)
   const amt = q(root, "[data-cart-pill] [data-cart-total]");
   const chip = q(root, "[data-cart-pill] [data-cart-count]");
   if (amt) amt.hidden = true;
   if (chip) chip.hidden = true;
-  const sam = q(root, "[data-msg-sam]")!;
-  const b = prog(f, BUBBLE[0], BUBBLE[1], SETTLE);
-  sam.style.opacity = `${b}`;
-  sam.style.transform = `translateY(${(1 - b) * 12}px)`;
 }
 
 const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
   "qo-desktop": applyQuickOrder,
   cart: applyCart,
   confirmation: applyConfirmation,
-  messages: applyMessages,
 };
 
 /* ---------- component ---------- */
 const LOGO = R["qo-search.logo"]; // sidebar logo slot (canvas)
 const LOGO_AR = LOGO[3] / LOGO[2];
-const MAIN_X = 220; // r11 sidebar width: main column starts here
-const PUSH_DIST = 1700; // incoming page travels the full main column
-const PARALLAX = 420;
+const PUSH_DIST = 24; // incoming page rises in from 24px right
 
 /** Shell build/teardown: 0 = only the logo, 1 = full UI. sidebar and content are separate. */
-type Shell = { sidebar: number; content: number };
-const shellAt = (f: number): Shell => ({
-  sidebar: prog(f, SIDEBAR_IN[0], SIDEBAR_IN[1]) * (1 - prog(f, SIDEBAR_OUT[0], SIDEBAR_OUT[1])),
-  content: prog(f, CONTENT_IN[0], CONTENT_IN[1]) * (1 - prog(f, CONTENT_OUT[0], CONTENT_OUT[1])),
-});
-
-const Layer: React.FC<{ screen: string; frame: number; slide: number; clipLeft?: number; shell: Shell }> = ({ screen, frame, slide, clipLeft, shell }) => {
+const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number }> = ({ screen, frame, slide, opacity = 1 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [markup] = useState(() => ({ __html: html(screen) }));
   useLayoutEffect(() => {
@@ -341,26 +330,12 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; clipLeft?:
     APPLY[screen](root, frame);
     const page = q(root, ".page, .messages-layout");
     if (page) page.style.transform = slide ? `translateX(${slide}px)` : "";
-    // content area (topbar + page) slides in from / away to the right with a fade
-    const main = q(root, ".main-column")!;
-    main.style.opacity = `${shell.content}`;
-    main.style.transform = shell.content < 1 ? `translateX(${(1 - shell.content) * 120}px)` : "";
-    // sidebar grows out of / collapses into its logo: vertical first, then horizontal
-    const sb = q(root, ".sidebar")!;
-    const v = Math.min(1, shell.sidebar * 2); // 0..0.5: width, 0.5..1: height
-    const hz = Math.max(0, shell.sidebar * 2 - 1);
-    const lx = LOGO[0] - 8, ly = LOGO[1] - 8, lw = LOGO[2] + 16, lh = LOGO[3] + 16;
-    const right = lerp(220 - (lx + lw), 0, v);
-    const bottom = lerp(1080 - (ly + lh), 0, hz);
-    sb.style.clipPath = shell.sidebar < 1 ? `inset(${lerp(ly, 0, v)}px ${right}px ${bottom}px ${lerp(lx, 0, v)}px round ${lerp(8, 0, v)}px)` : "";
-    const brand = q(root, ".sidebar-brand img");
-    if (brand) brand.style.visibility = shell.sidebar <= 0.001 ? "hidden" : "";
   });
   return (
     <div
       ref={ref}
       className="film-layer"
-      style={{ position: "absolute", left: 0, top: 0, width: 1920, height: 1080, overflow: "hidden", clipPath: clipLeft ? `inset(0 0 0 ${clipLeft}px)` : undefined }}
+      style={{ position: "absolute", left: 0, top: 0, width: 1920, height: 1080, overflow: "hidden", opacity, background: "#fff" }}
       dangerouslySetInnerHTML={markup}
     />
   );
@@ -369,9 +344,9 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; clipLeft?:
 const Cursor: React.FC<{ x: number; y: number; press: number; ring: number; opacity: number }> = ({ x, y, press: pr, ring, opacity }) => (
   <div style={{ position: "absolute", left: x, top: y, opacity, pointerEvents: "none" }}>
     {ring >= 0 && (
-      <div style={{ position: "absolute", left: -28, top: -28, width: 56, height: 56, borderRadius: "50%", border: "3px solid rgba(44,62,224,0.55)", transform: `scale(${0.35 + ring * 0.85})`, opacity: 1 - ring }} />
+      <div style={{ position: "absolute", left: -28, top: -28, width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(44,62,224,0.4)", transform: `scale(${0.5 + ring * 0.4})`, opacity: (1 - ring) * 0.8 }} />
     )}
-    <svg width={34} height={44} viewBox="0 0 17 22" style={{ position: "absolute", left: -3, top: -2, transformOrigin: "3px 2px", transform: `scale(${1 - 0.18 * pr})`, filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))" }}>
+    <svg width={34} height={44} viewBox="0 0 17 22" style={{ position: "absolute", left: -3, top: -2, transformOrigin: "3px 2px", transform: `scale(${1 - 0.06 * pr})`, filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.28))" }}>
       <path d="M1.5 1.5 L1.5 17.5 L5.6 13.6 L8.4 20 L11 18.9 L8.3 12.6 L14 12.6 Z" fill="#111" stroke="#fff" strokeWidth={1.4} strokeLinejoin="round" />
     </svg>
   </div>
@@ -392,42 +367,30 @@ export const JoolaB2B: React.FC = () => {
   let idx = 0;
   for (let i = 1; i < SCREENS.length; i++) if (frame >= SCREENS[i][1]) idx = i;
   const cur = SCREENS[idx];
-  const tIn = idx > 0 ? prog(frame, cur[1], cur[2], PUSH_E) : 1;
+  const tIn = idx > 0 && cur[2] > cur[1] ? prog(frame, cur[1], cur[2], PUSH_E) : 1;
   const prev = idx > 0 && tIn < 1 ? SCREENS[idx - 1] : null;
-  const shell = shellAt(frame);
-
-  // Flying logo (intro: centre -> slot; outro: slot -> centre, mirrored easing)
-  const lp = frame < LOGO_OUT[0] ? prog(frame, LOGO_IN[0], LOGO_IN[1]) : 1 - prog(frame, LOGO_OUT[0], LOGO_OUT[1]);
-  const flying = frame <= LOGO_IN[1] || frame >= LOGO_OUT[0];
-  const [sx, sy] = toScreen(cam, LOGO[0], LOGO[1]);
-  const bigW = 520;
-  const logoW = lerp(bigW, LOGO[2] * cam.s, lp);
-  const logoX = lerp(OW / 2 - bigW / 2, sx, lp);
-  const logoY = lerp(OH / 2 - (bigW * LOGO_AR) / 2, sy, lp);
 
   const [px, py] = pointerAt(frame);
   const [spx, spy] = toScreen(cam, px, py);
-  const pOpacity = prog(frame, POINTER_VIS[0], POINTER_VIS[1]) * (1 - prog(frame, POINTER_VIS[2], POINTER_VIS[3]));
-  const uiVisible = shell.sidebar > 0 || shell.content > 0;
+  const uiVisible = frame >= UI_IN && frame < LOGO_CARD;
+  const logoW = 340; // logo card: centred, static (frame 0 == the end of the loop)
 
   return (
     <AbsoluteFill style={{ background: "#fff", overflow: "hidden" }}>
       {/* Comp is 1920x1440 so the prototype keeps its 1920px-viewport layout (it has a min-width:1800px query);
           everything below is staged in a 1440x1080 (4:3) space and scaled up 4/3. */}
       <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
-      <style>{CSS + (flying ? ".film-layer .sidebar-brand img{visibility:hidden!important}" : "")}</style>
-      {uiVisible && (
+      <style>{CSS}</style>
+      {uiVisible ? (
         <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
-          {/* push: incoming page slides over from the right at full contrast, outgoing parallaxes left */}
-          {prev && <Layer key={prev[0]} screen={prev[0]} frame={frame} slide={-PARALLAX * tIn} shell={shell} />}
-          <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={prev ? PUSH_DIST * (1 - tIn) : 0} clipLeft={prev ? MAIN_X + PUSH_DIST * (1 - tIn) : 0} shell={shell} />
-          {prev && (
-            <div style={{ position: "absolute", top: 0, bottom: 0, left: MAIN_X + PUSH_DIST * (1 - tIn) - 28, width: 28, background: "linear-gradient(to right, rgba(26,26,26,0), rgba(26,26,26,0.08))" }} />
-          )}
+          {/* Cart arrives as a short calm crossfade + 24px slide (a long push reads as a cut at this zoom) */}
+          {prev && <Layer key={prev[0]} screen={prev[0]} frame={frame} slide={0} />}
+          <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={prev ? PUSH_DIST * (1 - tIn) : 0} opacity={prev ? tIn : 1} />
         </div>
+      ) : (
+        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: Math.round(OW / 2 - logoW / 2), top: Math.round(OH / 2 - (logoW * LOGO_AR) / 2), width: logoW, height: logoW * LOGO_AR }} />
       )}
-      {flying && <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: logoX, top: logoY, width: logoW, height: logoW * LOGO_AR }} />}
-      {pOpacity > 0 && <Cursor x={spx} y={spy} press={pressAmt(frame)} ring={ringAt(frame)} opacity={pOpacity} />}
+      {uiVisible && pointerOn(frame) && <Cursor x={spx} y={spy} press={pressAmt(frame)} ring={ringAt(frame)} opacity={1} />}
       </div>
     </AbsoluteFill>
   );

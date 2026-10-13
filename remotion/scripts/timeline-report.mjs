@@ -9,8 +9,9 @@ const T = await import("/tmp/tl/timeline.js");
 const N = T.DURATION;
 const cams = Array.from({ length: N }, (_, f) => T.camAt(f));
 // screen-space speed of the frame centre's content + zoom rate (px/frame on the 1920 output)
+const CUTS = new Set(T.CUTS || []);
 const vel = cams.map((c, f) => {
-  if (f === 0) return 0;
+  if (f === 0 || CUTS.has(f)) return 0; // intentional hard cuts are not camera motion
   const p = cams[f - 1];
   const pan = Math.hypot((c.cx - p.cx) * c.s, (c.cy - p.cy) * c.s);
   const zoom = Math.abs(c.s - p.s) * 960; // edge displacement from zoom
@@ -25,6 +26,8 @@ for (const [name, a, b] of T.CONTENT_ANIMS) {
 }
 let worstZoom = { delta: 0, at: 0 };
 for (let f = 0; f + 24 < N; f++) {
+  let cut = false; for (let k = f + 1; k <= f + 24; k++) if (CUTS.has(k)) cut = true;
+  if (cut) continue;
   const d = Math.abs(cams[f + 24].s - cams[f].s);
   if (d > worstZoom.delta) worstZoom = { delta: +d.toFixed(3), at: f };
 }
@@ -35,6 +38,7 @@ const out = {
   peak_camera_speed_px_per_frame: +peak.v.toFixed(1), peak_frame: peak.f,
   worst_zoom_change_in_24_frames: worstZoom,
   content_anims_vs_camera: overlaps,
+  hard_cuts: [...CUTS],
   any_overlap: overlaps.some((o) => o.camera_moving_frames.length),
 };
 writeFileSync(process.argv[2] || "/tmp/timing.json", JSON.stringify(out, null, 1));

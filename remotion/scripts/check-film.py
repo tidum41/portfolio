@@ -35,6 +35,7 @@ med = float(np.median(d))
 def nb(k):
     v = [d[j] for j in (k - 2, k - 1, k + 1, k + 2) if 0 <= j < len(d)]
     return sum(v) / len(v)
+ALLOWED_CUTS = json.load(open("scripts/film-expect.json")).get("_allowed_cuts", [])
 cuts = [{"frame": k + 1, "diff": round(x, 2)} for k, x in enumerate(d) if x > 4 and x > 2.5 * nb(k)]
 fast = [{"frame": k + 1, "diff": round(x, 2)} for k, x in enumerate(d) if x > 8]
 seam = float(np.abs(F[-1] - F[0]).mean())
@@ -49,7 +50,7 @@ def ocr(path):
     run = lambda p, m: subprocess.run(["tesseract", p, "-", "--psm", m], capture_output=True, text=True).stdout
     return run(path, "11") + "\n" + run(path, "6") + "\n" + run(inv, "11")
 m = L["money"]["order"]
-EXPECT = json.load(open("scripts/film-expect.json"))
+EXPECT = {k: v for k, v in json.load(open("scripts/film-expect.json")).items() if not k.startswith("_")}
 ocr_res, all_text = [], ""
 for f, want in EXPECT.items():
     p = f"/tmp/ocr_{f}.png"; frame_png(int(f), p)
@@ -80,12 +81,12 @@ subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", film, "-vf",
     "drawtext=text='%{n}':fontsize=40:x=12:y=12:fontcolor=red:box=1:boxcolor=white@0.7,select=not(mod(n\\,6)),scale=640:-1,tile=4x4:padding=4:color=gray",
     "-vsync", "0", f"{out}/contact-640-%02d.png"], check=True)
 res = {"frames": n, "seconds": round(n / FPS, 2), "median_step": round(med, 4), "max_step": round(max(d), 2),
-       "max_step_frame": int(np.argmax(d)) + 1, "frozen_runs_over_0.4s": runs, "hard_cuts": cuts, "very_fast_frames_over_8": fast,
+       "max_step_frame": int(np.argmax(d)) + 1, "frozen_runs_over_0.4s": runs, "hard_cuts": cuts, "allowed_cuts": ALLOWED_CUTS, "unexpected_cuts": [c for c in cuts if not any(abs(c["frame"] - a) <= 1 for a in ALLOWED_CUTS)], "very_fast_frames_over_8": fast,
        "loop_seam_diff": round(seam, 3), "loop_seam_vs_median_step": round(seam / max(med, 1e-6), 2),
        "ledger": L, "ocr_checks": ocr_res, "ocr_forbidden_hits": forbidden, "ocr_allcaps_words": [c[0] for c in caps],
-       "pass": {"no_freeze": not runs, "no_cuts": not cuts, "seam_ok": seam < max(3 * med, 0.6),
+       "pass": {"no_freeze": not runs, "no_cuts": not [c for c in cuts if not any(abs(c["frame"] - a) <= 1 for a in ALLOWED_CUTS)], "seam_ok": seam < max(3 * med, 0.6),
                 "numbers_ok": all(not r["missing"] for r in ocr_res), "no_forbidden": not any(forbidden.values())}}
 json.dump(res, open(f"{out}/checks.json", "w"), indent=1)
-print(json.dumps({k: res[k] for k in ["frames", "median_step", "max_step", "max_step_frame", "frozen_runs_over_0.4s", "hard_cuts", "loop_seam_diff", "pass", "ocr_allcaps_words"]}, indent=0))
+print(json.dumps({k: res[k] for k in ["frames", "median_step", "max_step", "max_step_frame", "frozen_runs_over_0.4s", "hard_cuts", "unexpected_cuts", "loop_seam_diff", "pass", "ocr_allcaps_words"]}, indent=0))
 print([r for r in ocr_res if r["missing"]])
 print({k: v for k, v in forbidden.items() if v})
