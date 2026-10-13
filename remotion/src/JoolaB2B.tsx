@@ -11,9 +11,9 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
-  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, TPL_HOVER, TYPE_SEARCH, UI_E, type Cam, CONF_XFADE, END_FADE,
-  LEAD, UI_W, UI_H, PAN_AB, PAN_BC, CART_FADE,
+  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TYPE_QTY,
+  INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, type Cam, CONF_XFADE, END_FADE,
+  UI_W, UI_H, CART_FADE,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -25,7 +25,6 @@ const OTHER_LINES = 2483.52 + 262.56 + 362.82; // Hyperion 24, HC-40 48, Tour El
 const ORDER_TOTAL = 19306.5;
 const CREDIT_LIMIT = 50000;
 const CREDIT_PRIOR_USED = 5000;
-const CREDIT_BEFORE = CREDIT_LIMIT - CREDIT_PRIOR_USED; // 45,000.00
 const CREDIT_AFTER = CREDIT_LIMIT - CREDIT_PRIOR_USED - ORDER_TOTAL; // 25,693.50
 const PO = "ENG-9812";
 const SEARCH = "Perseus";
@@ -36,82 +35,14 @@ const unitAt = (q: number) => {
 };
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-const ctr = (k: string): [number, number] => {
-  const r = R[k];
-  return [r[0] + r[2] / 2, r[1] + r[3] / 2];
-};
 
-/** Film-only compaction: lift the sticky Quick order footer to sit under the table/rail. */
-const FOOTER_LIFT = 0; // p15: the footer stays at its real sticky position (the wide shot shows the full page)
-const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
-
-
-/* ---------- pointer (canvas coords); every move arrives just before its click ---------- */
-const addBtn = ctr("qo-search.addBtn");
-const P = {
-  start: [760, 560] as [number, number],
-  search: [330, 142] as [number, number],
-  result: [340, 196] as [number, number],
-  preset: ctr("qo-search.preset24"),
-  qty: ctr("qo-search.qty0"),
-  add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
-  pill: [1170, 30] as [number, number],
-  tpl: [1130, 556] as [number, number], // the saved Match kit template row
-  tplAdd: [ctr("qo-search.tplAdd")[0] + 10, ctr("qo-search.tplAdd")[1] + 4] as [number, number], // "Add to order" in the popover
-  qtyIn: [772, 264] as [number, number], // p15: inside the field, left of the digits (not on "+")
-  place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
-  msg: ctr("confirmation.msgBtn"),
-};
-/** Cursor keys: [frame, UI point, frame whose camera projects it]. Travel is interpolated in SCREEN space
- *  (the cursor moves first, the camera follows) and holds its screen position across hard cuts. */
-type Key = [number, [number, number], number];
-const offQty: [number, number] = [P.qtyIn[0] + 50, P.qtyIn[1] + 64];
-const KEYS: Key[] = [
-  [MORPH[1], [560, 420], MORPH[1]],
-  [CLICK.search - LEAD, P.search, CLICK.search],
-  [ENTER + 4, P.search, CLICK.search],
-  [CLICK.qty - LEAD, P.qtyIn, CLICK.qty],
-  [TYPE_QTY[1] + 4, P.qtyIn, CLICK.qty],
-  [TYPE_QTY[1] + 10, offQty, CLICK.qty], // off the digits
-  [PAN_AB[0], offQty, CLICK.qty],
-  [PAN_AB[1], offQty, PAN_AB[1]], // rides with the page during the pan
-  [CLICK.tpl - LEAD, P.tpl, CLICK.tpl],
-  [CLICK.tpl + 4, P.tpl, CLICK.tpl],
-  [CLICK.tplAdd - LEAD, P.tplAdd, CLICK.tplAdd],
-  [TPL_ROWS[1], P.tplAdd, CLICK.tplAdd],
-  [CLICK.add - LEAD, P.add, CLICK.add],
-  [PAN_BC[0], P.add, CLICK.add],
-  [PAN_BC[1], P.add, PAN_BC[1]], // rides with the page (off-frame below) during the pan up
-  [CLICK.pill - LEAD, P.pill, CLICK.pill],
-  [CREDIT_ANIM[1] + 2, P.pill, CLICK.pill],
-  [CLICK.place - LEAD, P.place, CLICK.place],
-];
-const pointerAt = (f: number): [number, number] => {
-  const sp = (k: Key) => toScreen(camAt(k[2]), k[1][0], k[1][1]) as [number, number];
-  if (f <= KEYS[0][0]) return sp(KEYS[0]);
-  for (let i = 0; i < KEYS.length - 1; i++) {
-    if (f <= KEYS[i + 1][0]) {
-      const a = sp(KEYS[i]), b = sp(KEYS[i + 1]);
-      const t = prog(f, KEYS[i][0], KEYS[i + 1][0], PTR_E);
-      return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
-    }
-  }
-  return sp(KEYS[KEYS.length - 1]);
-};
-/** Click: 0.9 for 3 frames, back to 1 over 4 frames. */
-const cursorScale = (f: number) => {
-  for (const c of Object.values(CLICK)) {
-    const d = f - c;
-    if (d >= 0 && d < 3) return 0.9;
-    if (d >= 3 && d < 7) return lerp(0.9, 1, (d - 2) / 4);
-  }
-  return 1;
-};
+import { pointerAt, cursorScale } from "./joola/pointer";
 
 /* ---------- markup ---------- */
 const A = staticFile("joola-b2b");
+// p17: the prototype's own :hover / :active rules, driven by the film cursor (hit-tested every frame)
 const CSS =
-  PROTO_CSS.split("__A__").join(A) +
+  PROTO_CSS.split("__A__").join(A).split(":hover").join(".film-hover").split(":active").join(".film-active") +
   `
 :root{--switcher-h:0px !important}
 #devSwitcher{display:none!important}
@@ -127,18 +58,6 @@ const html = (k: string) =>
 
 const q = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T | null;
 const qa = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll(sel)) as HTMLElement[];
-/** r11 :active feedback (scale .98, opacity .88) held for a few frames around the click. */
-const press = (el: HTMLElement | null, f: number, c: number) => {
-  if (!el) return;
-  const d = f - c;
-  const on = d >= 0 && d <= 3; // p14: instant 4-frame press tint, no fade
-  const k = on ? 1 : 0;
-  // p13: colour-only press (the prototype has no press scale), so nothing moves on click
-  const primary = el.classList.contains("btn-primary");
-  el.style.transform = "";
-  el.style.opacity = "";
-  el.style.backgroundColor = on && k > 0.3 ? (primary ? "#1f2cad" : "var(--wash)") : el.dataset.filmBg || "";
-};
 const caret = (host: HTMLElement, on: boolean) => {
   let c = q(host, ":scope > .film-caret");
   if (on && !c) {
@@ -153,33 +72,19 @@ const typedCount = (f: number, a: number, b: number, len: number) =>
 
 /* ---------- per-screen state ---------- */
 function applyQuickOrder(root: HTMLElement, f: number) {
-  q(root, "[data-order-footer]")!.style.transform = `translateY(${-FOOTER_LIFT}px)`;
 
-  // Reorder rail: real :hover on the saved "Match kit" template, tap -> Add to order / Replace order popover
+  // Reorder rail: Match kit click -> Add to order / Replace order popover (hover + press come from the cursor hit-test)
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
-  const POP_CLOSE = CLICK.tplAdd + 4; // p14: the popover stays through the "Add to order" press, then closes
+  const POP_CLOSE = CLICK.tplAdd + 4; // the popover stays through the "Add to order" press, then closes
   const popOpen = f >= CLICK.tpl && f < POP_CLOSE + 3;
-  if (tpl) {
-    const hv = prog(f, TPL_HOVER[0], TPL_HOVER[0] + 4, FADE_E);
-    const lit = f >= TPL_HOVER[0] && f < POP_CLOSE + 3;
-    tpl.classList.toggle("is-open", popOpen);
-    tpl.dataset.filmBg = lit ? "var(--band)" : "";
-    tpl.style.backgroundColor = lit ? "var(--band)" : "";
-    const act = q(tpl, ".rail-action");
-    if (act) act.style.opacity = lit && !popOpen ? `${hv}` : "0"; // p14: hidden while the popover is open (prototype)
-    press(tpl, f, CLICK.tpl);
-  }
+  if (tpl) tpl.classList.toggle("is-open", popOpen);
   if (pop && tpl) {
     pop.hidden = !popOpen;
     pop.style.top = `${tpl.offsetTop + tpl.offsetHeight + 4}px`;
     const pin = prog(f, POP_IN[0], POP_IN[1], UI_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E));
     pop.style.opacity = `${pin}`;
     pop.style.transform = `translateY(${(1 - pin) * 6}px)`;
-    const addOpt = q(pop, '[data-tpl-apply="add"]')!;
-    addOpt.dataset.filmBg = f >= POP_HOVER ? "#2433c4" : "";
-    addOpt.style.backgroundColor = addOpt.dataset.filmBg;
-    press(addOpt, f, CLICK.tplAdd);
   }
 
   // Search: click -> focus ring + caret, then typing (2f per character, cursor still)
@@ -191,7 +96,13 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   if (val.firstChild && val.firstChild.nodeType === 3) val.firstChild.textContent = typed;
   else val.insertBefore(document.createTextNode(typed), val.firstChild);
   caret(val, focused && typed.length > 0);
-  caret(field, focused && typed.length === 0);
+  // empty + focused: the caret sits at the start of the placeholder (absolutely placed, so nothing shifts)
+  const ph = q(field, ".placeholder");
+  if (ph) {
+    caret(ph, focused && typed.length === 0);
+    const pc = q(ph, ":scope > .film-caret");
+    if (pc) { pc.style.position = "absolute"; pc.style.marginLeft = "-2px"; pc.style.marginTop = "2px"; if (ph.firstChild !== pc) ph.insertBefore(pc, ph.firstChild); }
+  }
   field.style.borderColor = focused ? "var(--blue)" : "";
   field.style.boxShadow = focused ? "0 0 0 3px rgba(44,62,224,0.14)" : "";
 
@@ -204,9 +115,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const dOut = 1; // p10: the dropdown closes on Enter (no overlap with the table header)
   res.style.opacity = `${dIn * dOut}`;
   res.style.transform = `translateY(${(1 - dIn) * 6}px)`;
-  const hit = q(res, "[data-search-result]");
-  const hv = prog(f, RESULT_HOVER[0], RESULT_HOVER[1], FADE_E);
-  if (hit) hit.style.background = hv > 0 ? `rgba(241,242,244,${hv})` : "";
 
   // Perseus row enters on Enter: fade + 6px rise over 200ms; rows below make room on the same curve
   const rows = qa(root, "[data-order-row]");
@@ -251,7 +159,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // p14 prototype: the button never changes on click (same label, width, colour); the cart pill is the feedback
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lines} to cart`;
-  press(add, f, CLICK.add);
   pill(root, f);
 }
 
@@ -259,7 +166,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
 function pill(root: HTMLElement, f: number) {
   const pl = q(root, "[data-cart-pill]");
   if (!pl) return;
-  press(pl, f, CLICK.pill);
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
   // geometry locked: amount + badge always laid out, only revealed at the snap (pill never grows)
@@ -283,14 +189,13 @@ function applyCart(root: HTMLElement, f: number) {
   input.setAttribute("value", PO);
 
   // number swaps instantly at the start of the bar move; the bar width eases over 400ms
-  const cp = prog(f, CREDIT_ANIM[0], CREDIT_ANIM[1], UI_E);
-  const left = f >= CREDIT_ANIM[0] ? CREDIT_AFTER : CREDIT_BEFORE;
+  const cp = 1; // p17: the prototype's real Cart state (this order already counted against credit)
+  const left = CREDIT_AFTER;
   q(root, "[data-cart-summary] [data-credit-available]")!.textContent = `${money(left)} available of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
   const bar = q(root, "[data-cart-summary] [data-credit-bar]")!;
   const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
   bar.style.setProperty("--credit-used-end", `${used}%`);
   bar.style.setProperty("--credit-order-end", `${used + ((ORDER_TOTAL * cp) / CREDIT_LIMIT) * 100}%`);
-  press(q(root, "[data-place-order]"), f, CLICK.place);
 }
 
 
@@ -321,8 +226,6 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
   useLayoutEffect(() => {
     const root = ref.current!;
     APPLY[screen](root, frame);
-    const brand = q(root, ".sidebar-brand img");
-    if (brand) brand.style.visibility = frame < MORPH[1] ? "hidden" : "";
     const page = q(root, ".page, .messages-layout");
     if (page) page.style.transform = slide ? `translateX(${slide}px)` : "";
   });
@@ -338,7 +241,7 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
 
 /** macOS arrow, ~1.3% of frame width, black with a white outline and a 15% soft shadow. Tip at (x, y). */
 const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale }) => (
-  <svg width={19} height={25} viewBox="0 0 17 22" style={{ position: "absolute", left: x - 1.7, top: y - 1.7, transformOrigin: "1.7px 1.7px", transform: `scale(${scale})`, filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))", overflow: "visible" }}>
+  <svg width={19} height={25} viewBox="0 0 17 22" style={{ position: "absolute", pointerEvents: "none", left: x - 1.7, top: y - 1.7, transformOrigin: "1.7px 1.7px", transform: `scale(${scale})`, filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))", overflow: "visible" }}>
     <path d="M1.5 1.5 L1.5 17.5 L5.6 13.6 L8.4 20 L11 18.9 L8.3 12.6 L14 12.6 Z" fill="#111" stroke="#fff" strokeWidth={1.3} strokeLinejoin="round" />
   </svg>
 );
@@ -370,33 +273,46 @@ export const JoolaB2B: React.FC = () => {
     : [{ screen: scrAt(frame), cam: camAt(frame), o: 1 }];
 
   const [spx, spy] = pointerAt(frame);
-  // intro: logo glides from the centre card into the real sidebar slot (variant A)
-  const [sx, sy] = toScreen(camAt(MORPH[1]), LOGO[0], LOGO[1]);
-  const sw = LOGO[2] * camAt(MORPH[1]).s;
+  // intro (mirror of the outro): the centred logo card fades out, then shot A fades in
   const logoW = 340;
-  const cX = OW / 2 - logoW / 2, cY = OH / 2 - (logoW * LOGO_AR) / 2;
-  const mIn = prog(frame, MORPH[0], MORPH[1], CAM_E);
+  const lw = logoW, lx = OW / 2 - logoW / 2, ly = OH / 2 - (logoW * LOGO_AR) / 2;
   const intro = frame < MORPH[1];
   const outro = frame >= END_FADE[0];
-  const lw = intro ? lerp(logoW, sw, mIn) : logoW;
-  const lx = intro ? lerp(cX, sx, mIn) : cX, ly = intro ? lerp(cY, sy, mIn) : cY;
-  // outro: simple centred fade. The UI fades to the card background, then the logo card (= frame 0) fades in; they never overlap
   const uiOut = prog(frame, END_FADE[0], END_FADE[0] + 8, FADE_E);
   const logoT = prog(frame, END_FADE[0] + 6, END_FADE[1], FADE_E);
-  const logoOpacity = intro ? 1 : outro ? logoT : 0;
-  const uiOpacity = intro ? prog(frame, MORPH[0], MORPH[1], FADE_E) : 1 - uiOut;
+  const logoOpacity = intro ? 1 - prog(frame, MORPH[0], MORPH[0] + 5, FADE_E) : outro ? logoT : 0;
+  const uiOpacity = intro ? prog(frame, MORPH[0] + 3, MORPH[1], FADE_E) : 1 - uiOut;
   const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
-  const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
-  // the cursor dips out over the Cart fade and comes back on the same pill in the new framing
-  const ptrDip = 1; // p16: same camera across the Cart cut, so the cursor simply stays on the pill
-  const ptrOpacity = (1 - prog(frame, CLICK.place + 1, POINTER_OFF, FADE_E)) * ptrDip;
+  // one cursor for the whole film: fades in once the dashboard is up, fades out with it
+  const showPtr = frame >= MORPH[1] && frame < END_FADE[0] + 8;
+  const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - uiOut);
+  const stageRef = useRef<HTMLDivElement>(null);
+  // the prototype's own hover / press states: hit-test the hotspot every frame (children have applied their state)
+  useLayoutEffect(() => {
+    const st = stageRef.current;
+    if (!st) return;
+    st.querySelectorAll(".film-hover, .film-active").forEach((e) => e.classList.remove("film-hover", "film-active"));
+    if (!showPtr) return;
+    // hover only once the cursor has slowed onto something (a fast pass over the rail or credit bar would flash states)
+    const [qx, qy] = pointerAt(frame - 1);
+    if (Math.hypot(spx - qx, spy - qy) > 6) return;
+    const k = 1920 / OW;
+    let el = document.elementFromPoint(spx * k, spy * k) as HTMLElement | null;
+    const pressing = Object.values(CLICK).some((c) => frame - c >= 0 && frame - c < 4);
+    st.setAttribute("data-hit", el ? `${el.tagName}.${el.className}` : "");
+    while (el && el !== st && !el.classList.contains("film-layer")) {
+      el.classList.add("film-hover");
+      if (pressing) el.classList.add("film-active");
+      el = el.parentElement;
+    }
+  });
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
 
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
       {/* Comp is 1920x1440 so the prototype keeps its 1920px-viewport layout (it has a min-width:1800px query);
           everything below is staged in a 1440x1080 (4:3) space and scaled up 4/3. */}
-      <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
+      <div ref={stageRef} style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS}</style>
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
@@ -408,9 +324,9 @@ export const JoolaB2B: React.FC = () => {
         </div>
       )}
       {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity }} />
+        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, pointerEvents: "none" }} />
       )}
-      {showPtr && <div style={{ opacity: ptrOpacity }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} /></div>}
+      {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} /></div>}
       </div>
     </AbsoluteFill>
   );
