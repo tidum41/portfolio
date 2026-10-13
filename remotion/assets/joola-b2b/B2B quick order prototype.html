@@ -2540,6 +2540,31 @@ img { display: block; max-width: 100%; }
 /* Upload CSV: quiet secondary next to search */
 .search-row .btn-upload { height: 36px; padding: 0 14px; font-size: 13px; color: var(--muted); font-weight: 500; }
 .search-row .btn-upload:hover { color: var(--ink); }
+
+/* ================= r16 (film pass 13) ================= */
+/* Saved template: choose Add to order or Replace order (popover under the template card, overlays; no reflow) */
+.rail-card { position: relative; }
+.rail-item.is-open { background: var(--band); }
+.rail-item.is-open .rail-action { opacity: 1; }
+.tpl-pop {
+  position: absolute; left: 12px; right: 12px; z-index: 40;
+  display: flex; flex-direction: column; gap: 6px; padding: 8px;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(26, 26, 26, 0.08);
+}
+.tpl-pop[hidden] { display: none; }
+.tpl-pop .tpl-choice { height: 32px; width: 100%; padding: 0 12px; font-size: 13px; justify-content: center; }
+.order-row[hidden] { display: none !important; }
+/* Press feedback by colour only (no scale), so nothing moves on click */
+.cart-pill:active, .account-chip:active, .rail-item:active, .btn-outline:active { transform: none; }
+.cart-pill:active { background: var(--wash); }
+/* Shift fixes: "Added to cart" overlays left of the button (footer height + button position never change) */
+.order-footer .inline-success { position: absolute; right: 165px; top: 50%; transform: translateY(-50%); margin: 0; white-space: nowrap; }
+/* Cart pill: amount + badge always hold their space, so the pill and account chip never move when the cart fills */
+.cart-pill .cart-amount-display[hidden] { display: inline-flex !important; visibility: hidden; }
+.cart-pill .cart-amount-display { min-width: var(--cart-amt-w, 76px); justify-content: flex-start; }
+.cart-pill .count-chip[hidden] { display: inline-flex !important; visibility: hidden; }
+.cart-pill:has(.count-chip[hidden]) { padding-right: 8px !important; }
 </style>
 </head>
 <body>
@@ -2692,7 +2717,7 @@ img { display: block; max-width: 100%; }
       '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
       '<svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>' +
       "<span>Cart</span>" +
-      '<span class="cart-amount-display" data-cart-total' + (total ? "" : " hidden") + ">" + money(total) + "</span>" +
+      '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
       '<span class="' + chipClass + '" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
       (count === 0 ? "" : count) +
       "</span>" +
@@ -2898,6 +2923,7 @@ img { display: block; max-width: 100%; }
     L.templates.forEach(function (t) {
       items.push({
         id: "Saved",
+        tplId: t.id,
         name: t.name,
         left: t.detail,
         amt: "",
@@ -2906,7 +2932,7 @@ img { display: block; max-width: 100%; }
     var body = items
       .map(function (it) {
         return (
-          '<button type="button" class="rail-item" data-rail-add>' +
+          '<button type="button" class="rail-item" data-rail-add' + (it.tplId ? ' data-template="' + it.tplId + '" aria-haspopup="menu"' : "") + ">" +
           '<span class="rail-copy">' +
           (it.id ? '<span class="rail-id">' + it.id + "</span>" : "") +
           '<span class="name">' +
@@ -2916,7 +2942,7 @@ img { display: block; max-width: 100%; }
           "</span>" +
           (it.amt ? '<span class="meta-amt">' + it.amt + "</span>" : "") +
           "</span></span>" +
-          '<span class="rail-action">Add</span>' +
+          '<span class="rail-action">' + (it.tplId ? "Apply" : "Add") + "</span>" +
           "</button>"
         );
       })
@@ -2925,6 +2951,10 @@ img { display: block; max-width: 100%; }
       '<aside class="qo-rail" data-qo-rail>' +
       '<div class="rail-card"><h3 class="label-quiet">Reorder</h3>' +
       body +
+      '<div class="tpl-pop" data-tpl-pop role="menu" hidden>' +
+      '<button type="button" class="btn-primary tpl-choice" data-tpl-apply="add" role="menuitem">Add to order</button>' +
+      '<button type="button" class="btn-outline tpl-choice" data-tpl-apply="replace" role="menuitem">Replace order</button>' +
+      "</div>" +
       "</div>" +
       "</aside>"
     );
@@ -3664,6 +3694,7 @@ img { display: block; max-width: 100%; }
       screenMobile() +
       screenStates();
     bind();
+    syncQo();
     show(current);
     syncToastHidden();
   }
@@ -3813,7 +3844,7 @@ img { display: block; max-width: 100%; }
     });
     document.querySelectorAll("[data-cart-pill] [data-cart-total]").forEach(function (el) {
       el.textContent = money(cartUi.total);
-      el.hidden = !cartUi.total;
+      el.hidden = false;
     });
     document.querySelectorAll("[data-cart-pill]").forEach(function (el) {
       el.setAttribute("aria-label", "Cart, " + money(cartUi.total));
@@ -3858,6 +3889,30 @@ img { display: block; max-width: 100%; }
         window.__setPerseusQty(next);
       });
     });
+
+    document.querySelectorAll("[data-template]").forEach(function (item) {
+      item.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var card = item.closest(".rail-card");
+        var pop = card && card.querySelector("[data-tpl-pop]");
+        if (!pop) return;
+        var open = !pop.hidden && pop.getAttribute("data-for") === item.getAttribute("data-template");
+        closeTplPop();
+        if (open) return;
+        pop.setAttribute("data-for", item.getAttribute("data-template"));
+        pop.style.top = item.offsetTop + item.offsetHeight + 4 + "px";
+        pop.hidden = false;
+        item.classList.add("is-open");
+      });
+    });
+    document.querySelectorAll("[data-tpl-apply]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        var pop = b.closest("[data-tpl-pop]");
+        applyTemplate(pop.getAttribute("data-for"), b.getAttribute("data-tpl-apply"));
+      });
+    });
+    document.addEventListener("click", closeTplPop);
 
     document.querySelectorAll("[data-add-all]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -3955,6 +4010,44 @@ img { display: block; max-width: 100%; }
       });
     });
   }
+
+  /* Quick order lines the buyer has built (search adds Perseus; templates add or replace). */
+  var qoLines = ["perseus"];
+  function qoTotals() {
+    var lines = L.orderLines.filter(function (l) { return qoLines.indexOf(l.productId) !== -1; });
+    var total = Math.round(lines.reduce(function (s, l) { return s + L.lineAmount(l); }, 0) * 100) / 100;
+    return { n: lines.length, total: total };
+  }
+  function syncQo() {
+    document.querySelectorAll("[data-order-row]").forEach(function (row) {
+      row.hidden = qoLines.indexOf(row.getAttribute("data-product")) === -1;
+    });
+    var t = qoTotals();
+    document.querySelectorAll("[data-order-footer]").forEach(function (f) {
+      var meta = f.querySelector("[data-line-count]");
+      var tot = f.querySelector("[data-order-total]");
+      var btn = f.querySelector("[data-add-all]");
+      if (meta) meta.textContent = itemCountLabel(t.n);
+      if (tot) tot.textContent = money(t.total);
+      if (btn && !cartUi.added) btn.textContent = "Add " + t.n + " to cart";
+    });
+  }
+  function closeTplPop() {
+    document.querySelectorAll("[data-tpl-pop]").forEach(function (p) { p.hidden = true; });
+    document.querySelectorAll("[data-template].is-open").forEach(function (b) { b.classList.remove("is-open"); });
+  }
+  function applyTemplate(tplId, mode) {
+    var tpl = L.templates.find(function (t) { return t.id === tplId; });
+    if (!tpl) return;
+    var ids = tpl.lines.map(function (l) { return l.productId; });
+    if (mode === "replace") qoLines = ids.slice();
+    else ids.forEach(function (id) { if (qoLines.indexOf(id) === -1) qoLines.push(id); });
+    closeTplPop();
+    syncQo();
+    var t = qoTotals();
+    showToast(tpl.name + (mode === "replace" ? " replaced the order, " : " added, ") + itemCountLabel(t.n) + ", " + money(t.total));
+  }
+  window.__applyTemplate = applyTemplate;
 
   window.__setPerseusQty = function (qty) {
     var line = L.orderLines.find(function (l) {

@@ -62,3 +62,12 @@ appearing items fade + 6px rise over 200ms; badge 0.6->1 over 160ms, no overshoo
 10 Ramp-style framing tried with a spotlight dim - rejected later. Prototype fixes: hover darken not opacity, cart icon, single-colour credit bar, Upload CSV restored (removed in 737bee5).
 11 isolated components on a backdrop - rejected: looked floating, lost the dashboard. Cut PO typing.
 12 full dashboard again, search back, one-tap saved "Perseus restock, 120 units" reorder (real rail hover "Add"), header pan instead of floating pill, logo morphs into the sidebar slot (variant A dissolve, B rect reveal).
+
+## Pass 13 lessons
+- Layout shifts come from the prototype, not the film: fix them there and prove it with a Playwright bounding-box diff (0px) before and after each click. Root causes found: an inline "Added to cart" line inserted into the sticky footer (grew 72 to 103px, moving divider and button) and a hidden cart amount appearing (pill widened 75 to 182px, right-aligned, so everything slid left). Fix: absolutely position transient messages; always render values with a reserved min-width; use visibility instead of display for badges.
+- Press feedback is colour only. No :active scale in the prototype, no scale in the film.
+- Across a hard cut, keep the camera identical if the same element (e.g. header pill) is on both screens, or it jumps.
+- Motion blur: SVG feGaussianBlur on the camera layer, std per axis proportional to camera velocity above 14 stage px/frame, capped at 2.2px, disabled within 1 frame of cuts. Text at rest is never blurred.
+- Story beats should use different products (search Perseus, then apply Match kit template) and the prototype must offer the real choice (Add to order / Replace order) before the film shows it.
+- Keep the cursor off text being typed (offset pointer right/below the digits).
+- OCR expectations must only list text that is actually in frame at that camera.

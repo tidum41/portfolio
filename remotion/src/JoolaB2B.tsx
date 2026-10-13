@@ -11,8 +11,8 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, MORPH_OUT,
-  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, QTY_SET, RESULT_HOVER, SCREENS, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam,
+  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, MORPH_OUT, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
+  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, SCREENS, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -41,7 +41,7 @@ const ctr = (k: string): [number, number] => {
 };
 
 /** Film-only compaction: lift the sticky Quick order footer to sit under the table/rail. */
-const FOOTER_LIFT = R["qo-search.footer"][1] - (R["qo-search.rail"][1] + R["qo-search.rail"][3] + 48);
+const FOOTER_LIFT = R["qo-search.footer"][1] - 700; // p13: footer sits just below the template popover (bottom 684)
 const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
 
 
@@ -55,7 +55,9 @@ const P = {
   qty: ctr("qo-search.qty0"),
   add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
   pill: [1600, 32] as [number, number],
-  tpl: [1686, 490] as [number, number], // "Add" on the saved Perseus restock template (Reorder rail)
+  tpl: [1672, 560] as [number, number], // "Apply" on the saved Match kit template
+  tplAdd: [1640, 622] as [number, number], // "Add to order" in the popover
+  qtyIn: [1224, 266] as [number, number],
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
   msg: ctr("confirmation.msgBtn"),
 };
@@ -66,12 +68,17 @@ const KEYS: Key[] = [
   [MORPH[1], [700, 560], MORPH[1]],
   [QO_ZOOM[0] - 2, [700, 560], QO_ZOOM[0]],
   [CLICK.search - 6, P.search, CLICK.search], // cursor leads, the zoom follows
-  [ENTER + 8, P.search, CLICK.search],
-  [CLICK.tpl - 10, P.tpl, CLICK.tpl], // leads the pan to the rail
-  [CLICK.tpl + 10, P.tpl, CLICK.tpl],
-  [CLICK.add - 6, P.add, CLICK.add],
+  [ENTER + 4, P.search, CLICK.search],
+  [CLICK.qty - 6, P.qtyIn, CLICK.qty], // leads the pan to the qty field
+  [TYPE_QTY[1] + 4, P.qtyIn, CLICK.qty],
+  [TYPE_QTY[1] + 12, [P.qtyIn[0] + 50, P.qtyIn[1] + 64], CLICK.qty], // off the digits
+  [CLICK.tpl - 8, P.tpl, CLICK.tpl],
+  [CLICK.tpl + 6, P.tpl, CLICK.tpl],
+  [CLICK.tplAdd - 6, P.tplAdd, CLICK.tplAdd],
+  [CLICK.tplAdd + 10, P.tplAdd, CLICK.tplAdd],
+  [CLICK.add - 8, P.add, CLICK.add],
   [HEADER_PAN[0] + 2, P.add, CLICK.add],
-  [CLICK.pill - 8, P.pill, CLICK.pill], // cursor leads up to the header
+  [CLICK.pill - 10, P.pill, CLICK.pill], // cursor leads up to the header
   [CLICK.pill + 4, P.pill, CLICK.pill],
   [CLICK.place - 22, P.pill, CLICK.pill],
   [CLICK.place - 6, P.place, CLICK.place],
@@ -123,8 +130,11 @@ const press = (el: HTMLElement | null, f: number, c: number) => {
   const d = f - c;
   const on = d >= 0 && d <= 6;
   const k = on ? 1 - d / 6 : 0;
-  el.style.transform = on ? `scale(${1 - 0.02 * k})` : "";
-  el.style.opacity = on ? `${1 - 0.1 * k}` : "";
+  // p13: colour-only press (the prototype has no press scale), so nothing moves on click
+  const primary = el.classList.contains("btn-primary");
+  el.style.transform = "";
+  el.style.opacity = "";
+  el.style.backgroundColor = on && k > 0.3 ? (primary ? "#1f2cad" : "var(--wash)") : el.dataset.filmBg || "";
 };
 const caret = (host: HTMLElement, on: boolean) => {
   let c = q(host, ":scope > .film-caret");
@@ -142,14 +152,30 @@ const typedCount = (f: number, a: number, b: number, len: number) =>
 function applyQuickOrder(root: HTMLElement, f: number) {
   q(root, "[data-order-footer]")!.style.transform = `translateY(${-FOOTER_LIFT}px)`;
 
-  // Reorder rail: the real :hover state on "Perseus restock" (bg + "Add" action, 120ms), then the tap
-  const tpl = qa(root, ".rail-item").find((e) => e.textContent!.includes("Perseus restock"));
+  // Reorder rail: real :hover on the saved "Match kit" template, tap -> Add to order / Replace order popover
+  const tpl = q(root, '[data-template="tpl-match"]');
+  const pop = q(root, "[data-tpl-pop]");
+  const popOpen = f >= CLICK.tpl && f < CLICK.tplAdd;
   if (tpl) {
-    const hv = prog(f, TPL_HOVER[0], TPL_HOVER[0] + 4, FADE_E) * (1 - prog(f, TPL_HOVER[1], TPL_HOVER[1] + 4, FADE_E));
-    tpl.style.background = hv > 0 ? "var(--band)" : "";
+    const hv = prog(f, TPL_HOVER[0], TPL_HOVER[0] + 4, FADE_E);
+    const lit = f >= TPL_HOVER[0] && f < CLICK.tplAdd;
+    tpl.classList.toggle("is-open", popOpen);
+    tpl.dataset.filmBg = lit ? "var(--band)" : "";
+    tpl.style.backgroundColor = lit ? "var(--band)" : "";
     const act = q(tpl, ".rail-action");
-    if (act) act.style.opacity = `${hv}`;
+    if (act) act.style.opacity = lit ? `${popOpen ? 1 : hv}` : "0";
     press(tpl, f, CLICK.tpl);
+  }
+  if (pop && tpl) {
+    pop.hidden = !popOpen;
+    pop.style.top = `${tpl.offsetTop + tpl.offsetHeight + 4}px`;
+    const pin = prog(f, POP_IN[0], POP_IN[1], UI_E);
+    pop.style.opacity = `${pin}`;
+    pop.style.transform = `translateY(${(1 - pin) * 6}px)`;
+    const addOpt = q(pop, '[data-tpl-apply="add"]')!;
+    addOpt.dataset.filmBg = f >= POP_HOVER ? "#2433c4" : "";
+    addOpt.style.backgroundColor = addOpt.dataset.filmBg;
+    press(addOpt, f, CLICK.tplAdd);
   }
 
   // Search: click -> focus ring + caret, then typing (2f per character, cursor still)
@@ -187,10 +213,23 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   pr.style.opacity = `${ip}`;
   pr.style.transform = `translateY(${(1 - ip) * 6}px)`;
   pr.style.background = "";
-  rows.slice(1).forEach((r) => (r.style.transform = inserted ? `translateY(${-(1 - ip) * 87}px)` : ""));
+  pr.hidden = false;
+  // Match kit "Add to order": its 3 lines join below Perseus, fade + 6px rise, 66ms stagger
+  const tplIn = f >= TPL_ROWS[0];
+  rows.slice(1).forEach((r, i) => {
+    r.hidden = false;
+    r.style.display = tplIn ? "" : "none";
+    const t = prog(f, TPL_ROWS[0] + 2 * i, TPL_ROWS[0] + 2 * i + 6, UI_E);
+    r.style.opacity = `${t}`;
+    r.style.transform = `translateY(${(1 - t) * 6}px)`;
+  });
 
   // Qty: click the field -> 120 (instant); price tier 179.97 -> 134.98 and line total swap on the same frame
-  const qty = f >= QTY_SET ? 120 : 1;
+  // Qty: click the field, type "120" (2f per key); price tier and line total follow each keystroke instantly
+  const QTY_STEPS = [1, 12, 120];
+  const qty = f < TYPE_QTY[0] ? 1 : QTY_STEPS[Math.min(2, Math.floor((f - TYPE_QTY[0]) / 2))];
+  const qFocus = f >= CLICK.qty && f < TYPE_QTY[1] + 14;
+  q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(44,62,224,0.9)" : "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
   qa(pr, "[data-set-perseus]").forEach((b) => b.classList.remove("on"));
@@ -200,9 +239,9 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   q(pr, ".line-total")!.textContent = money(line);
 
   // Footer
-  const lines = inserted ? 4 : 3;
-  q(root, "[data-line-count]")!.textContent = `${lines} items`;
-  const total = inserted ? OTHER_LINES + line : OTHER_LINES;
+  const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
+  q(root, "[data-line-count]")!.textContent = `${lines} ${lines === 1 ? "item" : "items"}`;
+  const total = (inserted ? line : 0) + (tplIn ? OTHER_LINES : 0);
   q(root, "[data-order-footer] [data-order-total]")!.textContent = money(r2(total));
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   // r11 applyAddAll(): button -> "Added" (disabled), inline "Added to cart"
@@ -236,11 +275,11 @@ function pill(root: HTMLElement, f: number) {
   // geometry locked: amount + badge always laid out, only revealed at the snap (pill never grows)
   amt.hidden = false;
   chip.hidden = false;
-  amt.textContent = money(ORDER_TOTAL);
+  const on = f >= PILL_FILL[0];
+  amt.textContent = money(on ? ORDER_TOTAL : 0); // $0.00 -> $19,306.50, instant; the width is reserved
   chip.textContent = "4";
   amt.style.whiteSpace = "nowrap";
-  const on = f >= PILL_FILL[0];
-  amt.style.visibility = on ? "" : "hidden";
+  amt.style.visibility = "";
   chip.style.visibility = on ? "" : "hidden";
   // badge grows into place 0.6 -> 1 over 160ms, no overshoot; the amount swaps instantly
   const t = prog(f, PILL_FILL[0], PILL_FILL[1], UI_E);
@@ -352,6 +391,15 @@ export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) =
     : undefined;
   const uiOpacity = variant === "B" ? 1 : uiT;
   const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
+  // subtle directional motion blur, only while the camera is travelling fast (never on text at rest)
+  const ca = camAt(frame - 0.5), cb = camAt(frame + 0.5);
+  const vx = (cb.cx - ca.cx) * cam.s, vy = (cb.cy - ca.cy) * cam.s; // stage px per frame
+  const vz = Math.abs(cb.s - ca.s) * 600; // zoom: edge speed approx
+  const sp = Math.hypot(vx, vy);
+  const blurK = (v: number) => Math.min(2.2, Math.max(0, (Math.abs(v) - 14) * 0.035));
+  const bx = blurK(vx) + (sp < 1 ? blurK(vz) * 0.5 : 0), by = blurK(vy) + (sp < 1 ? blurK(vz) * 0.5 : 0);
+  const nearCut = [CLICK.pill, CLICK.place].some((c) => Math.abs(frame - c) <= 1);
+  const blurOn = !nearCut && (bx > 0.05 || by > 0.05);
 
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
@@ -361,7 +409,12 @@ export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) =
       <style>{CSS}</style>
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity, clipPath: clip }}>
-          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
+          {blurOn && (
+            <svg width={0} height={0} style={{ position: "absolute" }}>
+              <filter id="mblur" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation={`${(bx / cam.s).toFixed(2)} ${(by / cam.s).toFixed(2)}`} /></filter>
+            </svg>
+          )}
+          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)`, filter: blurOn ? "url(#mblur)" : undefined }}>
             <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
           </div>
         </div>
