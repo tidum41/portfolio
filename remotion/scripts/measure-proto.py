@@ -5,10 +5,11 @@ P="file:///workspace/portfolio/remotion/assets/joola-b2b/B2B%20quick%20order%20p
 T={
  "qo-search":{"logo":".sidebar-brand img","search":"[data-search-field]","result":"[data-search-result]",
    "row0":"[data-order-row]","preset24":"[data-set-perseus='24']","qty0":"[data-order-row] .qty","line0":"[data-order-row] .line-total",
-   "footer":"[data-order-footer]","footerTotal":"[data-order-footer] [data-order-total]","addBtn":"[data-add-all]","cartPill":"[data-cart-pill]","table":"[data-order-table]"},
+   "footer":"[data-order-footer]","footerTotal":"[data-order-footer] [data-order-total]","addBtn":"[data-add-all]","cartPill":"[data-cart-pill]","table":"[data-order-table]","rail":"[data-qo-rail]"},
  "cart":{"po":"[data-po-input]","summary":"[data-cart-summary]","credit":"[data-credit-meter]","place":"[data-place-order]","lines":".cart-lines"},
  "confirmation":{"panel":"[data-confirm-panel]","msgBtn":".confirm-actions .btn-text","orderId":"[data-order-id]"},
- "messages":{"thread":".msg-thread, .thread, main","viewInv":"a,button","details":".order-details, aside:last-of-type"},
+ "messages":{"thread":".thread","viewInv":"[data-open-invoice]","details":"[data-msg-details]","body":".thread-body","sam":"[data-msg-sam]","anna":"[data-msg-anna]","ctx":"[data-order-context]"},
+ "messages-modal":{"panel":".im-panel","close":".im-close"},
  "invoices":{"credit":"[data-credit-card]","row":"[data-invoice-row]","table":"[data-invoice-table]"},
 }
 async def m():
@@ -18,6 +19,13 @@ async def m():
     await pg.add_style_tag(content=":root{--switcher-h:0px !important}#devSwitcher{display:none!important}")
     out={}
     for scr,sels in T.items():
+      if scr=="messages-modal":
+        await pg.evaluate("document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.dataset.screen==='messages'));document.querySelector('[data-inv-modal]').hidden=false")
+        await pg.wait_for_timeout(150)
+        for k,sel in sels.items():
+          r=await pg.evaluate(f"(()=>{{const r=document.querySelector('[data-screen=messages] {sel}').getBoundingClientRect();return [r.x,r.y,r.width,r.height].map(v=>Math.round(v*10)/10)}})()")
+          out[f"{scr}.{k}"]=r
+        continue
       if scr=="confirmation":
         await pg.evaluate("(()=>{const i=document.querySelector('[data-po-input]');i.value='ENG-9812';document.querySelector('[data-place-order]').click()})()")
       await pg.evaluate(f"document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.dataset.screen==='{scr}'))")
