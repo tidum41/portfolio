@@ -40,40 +40,41 @@ export const bezier = (x1: number, y1: number, x2: number, y2: number) => {
     return sy(t);
   };
 };
-export const CAM_E = bezier(0.65, 0, 0.35, 1);
+export const CAM_E = bezier(0.45, 0, 0.15, 1); // quick, ease-out weighted
+export const PUSH_E = bezier(0.33, 0.4, 0.2, 1); // strong ease-out; 12% on frame 1 so it reads as a push, not a cut
 export const SETTLE = bezier(0.33, 1, 0.68, 1);
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- beats (frames) ---------- */
-export const LOGO_IN = [0, 18] as const; // centre -> sidebar slot
-export const SIDEBAR_IN = [14, 28] as const; // sidebar grows out of the logo
-export const CONTENT_IN = [22, 34] as const; // content area slides in
+/* ---------- beats (frames) — pass 7: 12.0s, snappy ---------- */
+export const LOGO_IN = [0, 10] as const; // centre -> sidebar slot
+export const SIDEBAR_IN = [8, 16] as const; // sidebar grows out of the logo
+export const CONTENT_IN = [12, 20] as const; // content area slides in
 
-export const CLICK = { search: 64, result: 92, preset: 138, qty: 152, add: 224, pill: 270, po: 336, place: 418, msg: 512 };
-export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 23] as const; // 7 chars, 3f each
-export const DROPDOWN_OPEN = CLICK.search + 11; // after "Per"
-export const INSERT = [CLICK.result + 2, CLICK.result + 12] as const;
-export const PRESET_COUNT = [CLICK.preset + 1, CLICK.preset + 11] as const;
-export const QTY_SELECT = [CLICK.qty, CLICK.qty + 5] as const; // "24" highlighted
-export const QTY_KEYS = [[CLICK.qty + 5, "1"], [CLICK.qty + 10, "12"], [CLICK.qty + 15, "120"]] as const; // 5f per char
-export const QTY_COMMIT = CLICK.qty + 22; // Enter after a visible beat with the caret after "120"
-export const QTY_COUNT = [QTY_COMMIT + 1, QTY_COMMIT + 13] as const;
-export const QTY_SETTLE_HOLD = [QTY_COUNT[1], QTY_COUNT[1] + 12] as const; // 0.4s on $16,197.60 before the camera moves
-export const NAME_HOLD = [INSERT[1], INSERT[1] + 12] as const; // Perseus name + $179.97 readable before the pan
-export const PRICE_FLASH = [CLICK.preset + 1, CLICK.preset + 22] as const; // tier price 179.97 -> 134.98 highlighted
-export const PILL_FILL = [250, 262] as const; // after the camera has settled on the pill
-export const PUSH = 33; // 1.1s screen push, camera still
-export const TYPE_PO = [CLICK.po + 2, CLICK.po + 26] as const; // 8 chars, 3f each
-export const CREDIT_ANIM = [396, 412] as const;
-export const HOLD_CONF = [474, 510] as const; // reading hold, camera + UI still
-export const HOLD_ANNA = [567, 582] as const; // read Anna's question
-export const BUBBLE = [605, 617] as const;
-export const HOLD_REPLY = [617, 653] as const; // reading hold on Collin's reply
-export const CONTENT_OUT = [685, 701] as const; // content area slides/fades away
-export const SIDEBAR_OUT = [697, 713] as const; // sidebar collapses into its logo
-export const LOGO_OUT = [711, 729] as const; // logo grows back to centre
+export const CLICK = { search: 35, result: 54, preset: 81, qty: 92, add: 122, pill: 152, po: 182, place: 226, msg: 274 };
+export const TYPE_SEARCH = [CLICK.search + 1, CLICK.search + 15] as const; // "Perseus", 2f/char
+export const DROPDOWN_OPEN = CLICK.search + 7; // after "Per"
+export const INSERT = [CLICK.result + 1, CLICK.result + 6] as const;
+export const NAME_HOLD = [INSERT[1], INSERT[1] + 6] as const; // Perseus name + $179.97 read before the pan
+export const PRESET_COUNT = [CLICK.preset + 1, CLICK.preset + 2] as const; // instant snap
+export const PRICE_FLASH = [CLICK.preset + 1, CLICK.preset + 9] as const; // ~0.25s subtle tier-price highlight
+export const QTY_SELECT = [CLICK.qty, CLICK.qty + 1] as const;
+export const QTY_KEYS = [[CLICK.qty + 1, "120"]] as const; // 120 set directly
+export const QTY_COMMIT = CLICK.qty + 2;
+export const QTY_COUNT = [QTY_COMMIT + 1, QTY_COMMIT + 2] as const; // instant
+export const QTY_SETTLE_HOLD = [QTY_COUNT[1], 108] as const; // read $16,197.60
+export const PILL_FILL = [140, 148] as const; // pill total snaps, badge pops 1 -> 1.2 -> 1
+export const PUSH = 12; // 0.4s screen push, strong ease-out
+export const TYPE_PO = [CLICK.po + 1, CLICK.po + 9] as const; // ENG-9812, 1f/char
+export const CREDIT_ANIM = [208, 216] as const;
+export const HOLD_CREDIT = [216, CLICK.place] as const;
+export const HOLD_CONF = [254, 272] as const;
+export const BUBBLE = [302, 307] as const;
+export const HOLD_REPLY = [307, 325] as const;
+export const CONTENT_OUT = [339, 346] as const;
+export const SIDEBAR_OUT = [344, 352] as const;
+export const LOGO_OUT = [350, 360] as const;
 export const DURATION = LOGO_OUT[1]; // last frame == frame 0 state
 
 export const SCREENS: [string, number, number][] = [
@@ -88,23 +89,20 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["logo in", LOGO_IN[0], LOGO_IN[1]],
   ["sidebar in", SIDEBAR_IN[0], SIDEBAR_IN[1]],
   ["content in", CONTENT_IN[0], CONTENT_IN[1]],
-  ["search focus + typing", CLICK.search, TYPE_SEARCH[1]],
-  ["dropdown open", DROPDOWN_OPEN, DROPDOWN_OPEN + 6],
+  ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["result click + row insert", CLICK.result, INSERT[1]],
   ["Perseus name hold", NAME_HOLD[0], NAME_HOLD[1]],
-  ["preset 24 + count + tier price flash", CLICK.preset, PRICE_FLASH[1]],
-  ["qty select + typing 120 + count + settle hold", CLICK.qty, QTY_SETTLE_HOLD[1]],
-  ["add click + Added state", CLICK.add, CLICK.add + 6],
-  ["pill fill + bump", PILL_FILL[0], PILL_FILL[0] + 19],
+  ["preset 24 snap + price highlight", CLICK.preset, PRICE_FLASH[1]],
+  ["qty 120 + hold", CLICK.qty, QTY_SETTLE_HOLD[1]],
+  ["add click + Added", CLICK.add, CLICK.add + 6],
+  ["pill snap + badge pop", PILL_FILL[0], PILL_FILL[1]],
   ["pill click + push to cart", CLICK.pill, CLICK.pill + 2 + PUSH],
   ["PO typing", CLICK.po, TYPE_PO[1]],
-  ["credit bar", CREDIT_ANIM[0], CREDIT_ANIM[1]],
+  ["credit bar + hold", CREDIT_ANIM[0], HOLD_CREDIT[1]],
   ["place click + push to confirmation", CLICK.place, CLICK.place + 2 + PUSH],
-  ["confirmation reading hold", HOLD_CONF[0], HOLD_CONF[1]],
+  ["confirmation hold", HOLD_CONF[0], HOLD_CONF[1]],
   ["message click + push to messages", CLICK.msg, CLICK.msg + 2 + PUSH],
-  ["Collin reply bubble", BUBBLE[0], BUBBLE[1]],
-  ["Anna question hold", HOLD_ANNA[0], HOLD_ANNA[1]],
-  ["reply reading hold", HOLD_REPLY[0], HOLD_REPLY[1]],
+  ["Collin reply bubble + hold", BUBBLE[0], HOLD_REPLY[1]],
   ["content out", CONTENT_OUT[0], CONTENT_OUT[1]],
   ["sidebar collapse", SIDEBAR_OUT[0], SIDEBAR_OUT[1]],
   ["logo out", LOGO_OUT[0], LOGO_OUT[1]],
@@ -120,16 +118,15 @@ export const UI_W = 1920;
 export const UI_H = 1080;
 export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 }; // intro/outro framing: sidebar + header + table start
 export const MOVES: Move[] = [
-  { a: 34, b: 62, to: { cx: 600, cy: 330, s: 1.9 }, label: "to search + dropdown" },
-  { a: 116, b: 136, to: { cx: 1060, cy: 280, s: 2.0 }, label: "to Perseus qty + line total" },
-  { a: 200, b: 222, to: { cx: 1340, cy: 470, s: 1.7 }, label: "to line totals + add button" },
-  { a: 230, b: 248, to: { cx: 1541, cy: 284, s: 1.9 }, label: "to cart pill" },
-  { a: 307, b: 334, to: { cx: 560, cy: 430, s: 1.85 }, label: "to PO field" },
-  { a: 364, b: 394, to: { cx: 1368, cy: 260, s: 2.0 }, label: "to summary + credit" },
-  { a: 454, b: 473, to: { cx: 1070, cy: 270, s: 2.0 }, label: "to confirmation" },
-  { a: 548, b: 566, to: { cx: 1186, cy: 300, s: 1.7 }, label: "to Anna's question" },
-  { a: 583, b: 603, to: { cx: 880, cy: 330, s: 1.8 }, label: "to Collin's reply" },
-  { a: 654, b: 684, to: WIDE, label: "pull out to wide" },
+  { a: 20, b: 33, to: { cx: 600, cy: 330, s: 1.9 }, label: "to search" },
+  { a: 66, b: 79, to: { cx: 1060, cy: 280, s: 2.0 }, label: "to Perseus qty + line total" },
+  { a: 108, b: 120, to: { cx: 1500, cy: 520, s: 1.9 }, label: "to add button" },
+  { a: 128, b: 139, to: { cx: 1541, cy: 284, s: 1.9 }, label: "pan up to cart pill (no zoom)" },
+  { a: 167, b: 180, to: { cx: 560, cy: 430, s: 1.85 }, label: "to PO field" },
+  { a: 194, b: 207, to: { cx: 1368, cy: 260, s: 2.0 }, label: "to summary + credit" },
+  { a: 241, b: 253, to: { cx: 1070, cy: 270, s: 2.0 }, label: "to confirmation" },
+  { a: 289, b: 301, to: { cx: 880, cy: 330, s: 1.8 }, label: "to Collin's reply" },
+  { a: 325, b: 338, to: WIDE, label: "pull out to wide" },
 ];
 export const clampCam = (c: Cam): Cam => ({
   s: c.s,
