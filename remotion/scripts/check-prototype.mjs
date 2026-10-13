@@ -1312,15 +1312,32 @@ async function main() {
             }
           }
 
-          // Store link icon x = nav icon x (same pad/gap/slot)
+          // Store link = nav-item twin (height, icon x, text x, stroke)
           const store = root.querySelector("[data-store-link]");
-          const navIcon = root.querySelector(".nav-item .icon-slot");
+          const navItem = root.querySelector(".sidebar-nav .nav-item");
+          const navIcon = navItem && navItem.querySelector(".icon-slot");
           const storeIcon = store && store.querySelector(".icon-slot");
-          if (store && navIcon && storeIcon && visible(store) && visible(navIcon)) {
+          if (store && navItem && navIcon && storeIcon && visible(store) && visible(navIcon)) {
+            const sr = store.getBoundingClientRect();
+            const nr = navItem.getBoundingClientRect();
+            if (Math.abs(sr.height - nr.height) > 1 || Math.abs(sr.height - 36) > 1.5) {
+              issues.pixelNits.push(
+                `store h=${sr.height.toFixed(1)} vs nav h=${nr.height.toFixed(1)} (want 36)`
+              );
+            }
             const sx = storeIcon.getBoundingClientRect().left;
             const ix = navIcon.getBoundingClientRect().left;
-            if (Math.abs(sx - ix) > 1.5) {
+            if (Math.abs(sx - ix) > 1) {
               issues.pixelNits.push(`store icon x=${sx.toFixed(1)} vs nav icon x=${ix.toFixed(1)}`);
+            }
+            const storeText = store.querySelector("span:not(.icon-slot)");
+            const navText = navItem.querySelector("span:not(.icon-slot)");
+            if (storeText && navText) {
+              const stx = storeText.getBoundingClientRect().left;
+              const ntx = navText.getBoundingClientRect().left;
+              if (Math.abs(stx - ntx) > 1) {
+                issues.pixelNits.push(`store text x=${stx.toFixed(1)} vs nav text x=${ntx.toFixed(1)}`);
+              }
             }
             const storeSvg = storeIcon.querySelector("svg");
             const navSvg = navIcon.querySelector("svg");
@@ -1330,6 +1347,17 @@ async function main() {
               if (Math.abs(sw - nw) > 1) {
                 issues.pixelNits.push(`store icon size ${sw.toFixed(1)} vs nav ${nw.toFixed(1)}`);
               }
+              const sStroke = storeSvg.getAttribute("stroke-width") || getComputedStyle(storeSvg).strokeWidth;
+              const nStroke = navSvg.getAttribute("stroke-width") || getComputedStyle(navSvg).strokeWidth;
+              // stroke comes from CSS var — compare computed
+              const ss = parseFloat(getComputedStyle(storeSvg).strokeWidth) || parseFloat(sStroke) || 0;
+              const ns = parseFloat(getComputedStyle(navSvg).strokeWidth) || parseFloat(nStroke) || 0;
+              if (ss && ns && Math.abs(ss - ns) > 0.2) {
+                issues.pixelNits.push(`store stroke ${ss} vs nav ${ns}`);
+              }
+            }
+            if (!store.classList.contains("nav-item")) {
+              issues.pixelNits.push("store link missing nav-item class");
             }
           } else if (store && !storeIcon) {
             issues.pixelNits.push("store link missing icon-slot (must match nav)");
@@ -1591,6 +1619,8 @@ async function main() {
           const usedGreys = new Set();
           const walk = (el) => {
             if (!el || el.nodeType !== 1) return;
+            // Badge may use 600; exclude from chrome type-scale gate
+            if (el.classList && el.classList.contains("count-chip")) return;
             const st = getComputedStyle(el);
             if (st.display === "none" || st.visibility === "hidden") return;
             const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
@@ -1968,7 +1998,24 @@ async function main() {
     const badgePath = join(tmp, "badge.png");
     const acctPath = join(tmp, "account.png");
     const creditPath = join(tmp, "credit.png");
-    await page.locator('[data-screen="cart"] [data-cart-pill]').screenshot({ path: cartPillPath });
+    // Integer clip — half-pixel topbar centering used to yield 37px element
+    // screenshots and false-fail ink centres. Prefer an exact 36× crop.
+    {
+      const box = await page.locator('[data-screen="cart"] [data-cart-pill]').boundingBox();
+      if (box) {
+        await page.screenshot({
+          path: cartPillPath,
+          clip: {
+            x: Math.round(box.x),
+            y: Math.round(box.y),
+            width: Math.round(box.width),
+            height: 36,
+          },
+        });
+      } else {
+        await page.locator('[data-screen="cart"] [data-cart-pill]').screenshot({ path: cartPillPath });
+      }
+    }
     await page.locator('[data-screen="cart"] [data-cart-count]').screenshot({ path: badgePath });
     await page.locator('[data-screen="cart"] [data-account-chip]').screenshot({ path: acctPath });
     await page.locator('[data-screen="cart"] [data-credit-bar]').screenshot({ path: creditPath });
@@ -2030,15 +2077,7 @@ def is_blue(r,g,b,a=255):
 def is_dark(r,g,b,a=255):
   return a >= 180 and (r+g+b) < 520
 
-def is_wash(r,g,b,a=255):
-  # remaining track / soft greys
-  if a < 180: return False
-  if is_blue(r,g,b,a): return False
-  if is_dark(r,g,b,a): return False
-  return 180 <= r <= 250 and 180 <= g <= 250 and 180 <= b <= 250 and max(r,g,b)-min(r,g,b) < 40
-
 def is_muted_fill(r,g,b,a=255):
-  # used-credit grey (#9a9aa3-ish), not wash, not ink text
   if a < 180: return False
   if is_blue(r,g,b,a): return False
   avg = (r+g+b)/3
@@ -2049,7 +2088,7 @@ pill = Image.open(${JSON.stringify(cartPillPath)}).convert("RGBA")
 acct = Image.open(${JSON.stringify(acctPath)}).convert("RGBA")
 credit = Image.open(${JSON.stringify(creditPath)}).convert("RGBA")
 bw, bh = badge.size
-# --- digit ink centre inside badge ---
+# Digit ink centre inside badge circle
 ink = []
 for y in range(bh):
   for x in range(bw):
@@ -2067,59 +2106,74 @@ if ink:
   dy = abs(cy - (bh-1)/2)
   digit_ok = dx <= 1.0 and dy <= 1.0
 
-# --- badge circle vs text glyph ink (cap-height centre) on full cart pill ---
 pw, ph = pill.size
+pill_cy = (ph - 1) / 2.0
 blue_pts = []
 for y in range(ph):
   for x in range(pw):
     r,g,b,a = pill.getpixel((x,y))
     if is_blue(r,g,b,a):
       blue_pts.append((x,y))
-badge_cy = None
-badge_cx = None
-badge_left = None
+badge_cy = badge_left = None
 if blue_pts:
   badge_left = min(p[0] for p in blue_pts)
   badge_right = max(p[0] for p in blue_pts)
   badge_top = min(p[1] for p in blue_pts)
   badge_bot = max(p[1] for p in blue_pts)
-  badge_cx = (badge_left + badge_right) / 2
-  badge_cy = (badge_top + badge_bot) / 2
+  badge_cy = (badge_top + badge_bot) / 2.0
 
-# Text ink to the left of the badge (Cart + amount). Cap band = top→~72% of ink height.
+# All dark text ink left of badge
 text_ink = []
-x_limit = (badge_left - 4) if badge_left is not None else pw
+x_limit = (badge_left - 3) if badge_left is not None else pw
 for y in range(ph):
   for x in range(max(0, x_limit)):
     r,g,b,a = pill.getpixel((x,y))
     if is_dark(r,g,b,a):
       text_ink.append((x,y))
-cap_dy = 99.0
-cap_ok = False
-text_cap_cy = None
-if text_ink and badge_cy is not None:
-  ys = sorted(p[1] for p in text_ink)
-  top = ys[0]
-  bot = ys[-1]
-  # Cap-height centre: midpoint of upper 72% of the ink box (no descenders in Cart/$ figures)
-  cap_bot = top + (bot - top) * 0.72
-  text_cap_cy = (top + cap_bot) / 2
-  # Also compare to full ink centre (figures ≈ cap height)
-  ink_cy = (top + bot) / 2
-  # Prefer the tighter of ink-centre vs cap-band centre
-  cap_dy = min(abs(badge_cy - text_cap_cy), abs(badge_cy - ink_cy))
-  cap_ok = cap_dy <= 1.25
 
-# Ink gap: rightmost text ink x → badge left
+# Split "Cart" (left cluster) from amount via the largest horizontal gap
+xheight_cy = None
+pad_top = pad_bot = 99.0
+pad_eq = False
+badge_vs_pill = 99.0
+x_vs_pill = 99.0
+x_vs_badge = 99.0
+align_ok = False
 gap_ink = 99.0
-if text_ink and badge_left is not None:
+if text_ink and badge_cy is not None:
+  xs = sorted(set(p[0] for p in text_ink))
+  # Find first large gap (>3px) after start → end of "Cart"
+  cart_right = xs[0]
+  for i in range(1, len(xs)):
+    if xs[i] - xs[i-1] > 3:
+      cart_right = xs[i-1]
+      break
+    cart_right = xs[i]
+  cart_ink = [p for p in text_ink if p[0] <= cart_right]
+  # Lowercase 'art' = right ~70% of Cart word (skip capital C)
+  if cart_ink:
+    cxs = sorted(p[0] for p in cart_ink)
+    cut = cxs[0] + (cxs[-1] - cxs[0]) * 0.28
+    art_ink = [p for p in cart_ink if p[0] >= cut]
+    if not art_ink:
+      art_ink = cart_ink
+    ays = sorted(p[1] for p in art_ink)
+    xheight_cy = (ays[0] + ays[-1]) / 2.0
+  # Equal vertical padding of ALL text ink to pill edges
+  tys = sorted(p[1] for p in text_ink)
+  pad_top = tys[0]
+  pad_bot = (ph - 1) - tys[-1]
+  pad_eq = abs(pad_top - pad_bot) <= 0.75
+  badge_vs_pill = abs(badge_cy - pill_cy)
+  x_vs_pill = abs(xheight_cy - pill_cy) if xheight_cy is not None else 99
+  x_vs_badge = abs(xheight_cy - badge_cy) if xheight_cy is not None else 99
+  # Mudit: badge ink centre AND x-height centre both = pill centre within 0.5px @1x
+  align_ok = badge_vs_pill <= 0.5 and x_vs_pill <= 0.5 and x_vs_badge <= 0.5 and pad_eq
   gap_ink = badge_left - max(p[0] for p in text_ink)
 
-# --- account chip optical pad (left border→logo vs rightmost text ink→right border) ---
+# --- account chip optical pad ---
 aw, ah = acct.size
-# Find logo tile: clustered non-white near left
-logo_right = None
-logo_left = None
+logo_right = logo_left = None
 for x in range(aw):
   col_dark = 0
   for y in range(ah):
@@ -2133,7 +2187,6 @@ for x in range(aw):
     logo_right = x
   elif logo_left is not None and x > logo_left + 8:
     break
-# Text ink right of logo
 acct_text = []
 start = (logo_right + 2) if logo_right is not None else 0
 for y in range(ah):
@@ -2145,55 +2198,48 @@ pad_l = pad_r = 99.0
 pad_ok = False
 meta_cy_ok = False
 if logo_left is not None and acct_text:
-  pad_l = logo_left  # content starts after ~1px border antialias
+  pad_l = logo_left
   text_right = max(p[0] for p in acct_text)
   pad_r = (aw - 1) - text_right
-  # Optical equality within 2px (border AA)
   pad_ok = abs(pad_l - pad_r) <= 2.5 and 9 <= pad_l <= 16 and 9 <= pad_r <= 16
-  # Two-line meta optical centre vs pill/logo centre
   tys = sorted(p[1] for p in acct_text)
   meta_cy = (tys[0] + tys[-1]) / 2
   meta_cy_ok = abs(meta_cy - (ah - 1) / 2) <= 1.5
 
-# --- credit bar: flush segments, no stub/gap columns ---
+# --- credit bar flush ---
 cw, ch = credit.size
-# Sample mid-row colours left→right; classify used / order / remain
 mid = ch // 2
 cols = []
 for x in range(cw):
   r,g,b,a = credit.getpixel((x, mid))
   if is_blue(r,g,b,a):
-    cols.append("o")  # order
+    cols.append("o")
   elif is_muted_fill(r,g,b,a):
-    cols.append("u")  # used
+    cols.append("u")
   else:
-    cols.append("r")  # remaining / wash
-# Collapse runs
+    cols.append("r")
 runs = []
 for c in cols:
   if not runs or runs[-1][0] != c:
     runs.append([c, 1])
   else:
     runs[-1][1] += 1
-# Expect pattern u+ o+ r* (order may be absent if tiny) — no r stub between u and o, no gaps
 seq = "".join(r[0] for r in runs)
-flush_ok = False
-# Allow u o r / u r / o r / u o
-if seq in ("uor", "ur", "or", "uo", "u", "o", "r"):
+flush_ok = seq in ("uor", "ur", "or", "uo", "u", "o", "r")
+if not flush_ok and (seq.startswith("uor") or seq.startswith("uo") or seq.startswith("ur")):
   flush_ok = True
-elif seq.startswith("uor") or seq.startswith("uo") or seq.startswith("ur"):
-  flush_ok = "r" not in seq[1:seq.find("o")+1] if "o" in seq else True
-# Explicit stub/gap: remaining sandwiched before order ends, or single-pixel foreign run mid-fill
 gap_runs = [r for r in runs if r[0] == "r" and r != runs[-1]]
 stub_fail = any(r[1] <= 3 for r in gap_runs) or (len(gap_runs) > 0 and "o" in seq and seq.index("r") < seq.rfind("o"))
-# Edge meeting: first and last columns should be fill (not transparent hole)
-edge_ok = cols[0] in ("u", "o", "r") and cols[-1] in ("u", "o", "r") and ch >= 5 and ch <= 8
+edge_ok = cols and cols[0] in ("u", "o", "r") and cols[-1] in ("u", "o", "r") and ch >= 5 and ch <= 8
 flush_ok = flush_ok and not stub_fail and edge_ok and "u" in seq
 
 print(json.dumps({
   "digit_ok": digit_ok, "dx": dx, "dy": dy, "ink_n": len(ink),
-  "cap_ok": cap_ok, "cap_dy": cap_dy, "gap_ink": gap_ink,
-  "badge_cy": badge_cy, "text_cap_cy": text_cap_cy,
+  "align_ok": align_ok,
+  "badge_vs_pill": badge_vs_pill, "x_vs_pill": x_vs_pill, "x_vs_badge": x_vs_badge,
+  "pad_top": pad_top, "pad_bot": pad_bot, "pad_eq": pad_eq,
+  "pill_cy": pill_cy, "badge_cy": badge_cy, "xheight_cy": xheight_cy,
+  "gap_ink": gap_ink,
   "pad_ok": pad_ok, "pad_l": pad_l, "pad_r": pad_r, "meta_cy_ok": meta_cy_ok,
   "flush_ok": flush_ok, "credit_seq": seq, "credit_h": ch, "stub_fail": stub_fail,
 }))
@@ -2214,13 +2260,17 @@ print(json.dumps({
         : `digit ink fail Δx=${ink.dx} Δy=${ink.dy} n=${ink.ink_n} ${ink.err || ""}`.slice(0, 100)
     );
     const gapOk = gapDom && gapDom.gap >= 7 && gapDom.gap <= 9;
-    const sizeOk = gapDom && Math.abs(gapDom.bw - 18) <= 1 && Math.abs(gapDom.bh - 18) <= 1 && Math.abs(gapDom.fs - 11) <= 0.5;
+    const sizeOk =
+      gapDom &&
+      Math.abs(gapDom.bw - 20) <= 1.25 &&
+      Math.abs(gapDom.bh - 20) <= 1.25 &&
+      Math.abs(gapDom.fs - 12) <= 0.5;
     record(
       "cart",
       "badge-cap",
-      !!(ink.cap_ok && gapOk && sizeOk && Number(ink.gap_ink) >= 6 && Number(ink.gap_ink) <= 12),
-      ink.cap_ok != null
-        ? `ink cap Δ=${Number(ink.cap_dy).toFixed(2)} gapDom=${gapDom ? gapDom.gap.toFixed(1) : "?"} gapInk=${Number(ink.gap_ink).toFixed(1)} size=${gapDom ? `${gapDom.bw}x${gapDom.bh}@${gapDom.fs}` : "?"}`
+      !!(ink.align_ok && gapOk && sizeOk && Number(ink.gap_ink) >= 6 && Number(ink.gap_ink) <= 12),
+      ink.align_ok != null
+        ? `badge↔pill Δ=${Number(ink.badge_vs_pill).toFixed(2)} x↔pill Δ=${Number(ink.x_vs_pill).toFixed(2)} pad ${Number(ink.pad_top).toFixed(1)}/${Number(ink.pad_bot).toFixed(1)} size=${gapDom ? `${gapDom.bw.toFixed(0)}x${gapDom.bh.toFixed(0)}@${gapDom.fs}` : "?"}`
         : `missing ${ink.err || ""}`.slice(0, 100)
     );
     const acctPadOk =

@@ -51,6 +51,17 @@ const nextConfig = {
         destination: "/resume.pdf",
         permanent: false,
       },
+      {
+        // JOOLA B2B HTML prototype (static under public/joola-b2b)
+        source: "/joola-b2b",
+        destination: "/joola-b2b/B2B%20quick%20order%20prototype.html",
+        permanent: false,
+      },
+      {
+        source: "/joola-b2b/",
+        destination: "/joola-b2b/B2B%20quick%20order%20prototype.html",
+        permanent: false,
+      },
     ];
   },
   async headers() {

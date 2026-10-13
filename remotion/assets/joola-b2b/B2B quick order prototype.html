@@ -5,12 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>JOOLA B2B Quick Order (design)</title>
 <style>
+/*
+ * FK Grotesk Neue ships with uneven ascender/descender metrics: glyph ink
+ * sits high in the em-box, so CSS box-centre ≠ optical centre in every
+ * lh:1 pill/button/chip. Override once here so flex/grid centering is
+ * optically correct without per-component padding nudges.
+ * Measured: ascent 85% / descent 15% / line-gap 0 → cap-ink pads equal
+ * in 36px cart pill (and 20px chips) at 1×; progressive text-box trim
+ * below locks the same result where supported.
+ */
 @font-face {
   font-family: "FKGroteskNeue";
   font-weight: 400;
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: "FKGroteskNeue";
@@ -18,6 +30,9 @@
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: "FKGroteskNeue";
@@ -25,6 +40,9 @@
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-700-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 
 :root {
@@ -108,6 +126,26 @@ html, body {
 button, input, select, textarea { font: inherit; font-family: var(--font-ui); }
 button { cursor: pointer; border: 0; background: none; color: inherit; }
 img { display: block; max-width: 100%; }
+/*
+ * Cap↔alphabetic trim where supported: the used box matches glyph ink, so
+ * flex/grid centre = optical centre. Font-face overrides above cover engines
+ * without text-box. Single-line chrome only — multi-line meta keeps its
+ * explicit line boxes.
+ */
+.cart-pill > span:not(.count-chip),
+.cart-pill .count-chip,
+.wholesale-chip,
+.ship-card .ship-tag,
+.ship-option .ship-tag,
+.btn-primary,
+.btn-outline,
+.btn-text,
+.btn-send,
+.status,
+.nav-item > span,
+.rec-card .chip {
+  text-box: trim-both cap alphabetic;
+}
 .tnum, [data-display-price], [data-unit-price], [data-line-total],
 [data-order-total], [data-cart-total], [data-invoice-amount],
 [data-credit-used], [data-credit-available], .qty, .amt, .price,
@@ -212,15 +250,19 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
+  height: 36px;
   padding: 0 8px;
   border-radius: var(--radius-control);
   font-size: var(--text-ui);
   font-weight: 400;
+  line-height: 1;
   color: var(--muted);
   text-align: left;
   width: 100%;
   transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+.nav-item > span {
+  line-height: 1;
 }
 .nav-item .icon-slot,
 .icon-slot {
@@ -263,39 +305,32 @@ img { display: block; max-width: 100%; }
 .sidebar-divider {
   height: 1px;
   background: var(--line);
-  margin: 12px 8px;
+  /* Same 4px rhythm as .sidebar-nav gap; 8px x-inset matches nav pad */
+  margin: 4px 8px;
 }
 .sidebar-footer {
   margin-top: auto;
-  padding: 8px 0 4px; /* match nav: no extra horizontal pad so link x = icon x */
+  padding: 0 0 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px; /* same gap as .sidebar-nav */
 }
-/* Store link = nav row (same height, pad, gap, icon slot) */
-.sidebar-store {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px;
-  height: 32px;
-  font-size: var(--text-ui);
-  font-weight: 400;
-  color: var(--muted);
+/* Store link = identical nav-item (no extra chrome / colour / size) */
+a.nav-item.sidebar-store {
   text-decoration: none;
-  border-radius: var(--radius-control);
-  width: 100%;
+  color: var(--muted);
   box-sizing: border-box;
 }
-.sidebar-store:hover { color: var(--ink); background: rgba(112, 115, 147, 0.06); }
-.sidebar-store .icon-slot svg {
-  width: var(--icon-size);
-  height: var(--icon-size);
-  stroke: currentColor;
-  fill: none;
-  stroke-width: var(--icon-stroke);
-  stroke-linecap: round;
-  stroke-linejoin: round;
+a.nav-item.sidebar-store:hover {
+  color: var(--ink);
+  background: rgba(112, 115, 147, 0.06);
+}
+a.nav-item.sidebar-store:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+a.nav-item.sidebar-store:active {
+  background: rgba(112, 115, 147, 0.12);
 }
 
 .main-column {
@@ -313,7 +348,11 @@ img { display: block; max-width: 100%; }
   justify-content: flex-end;
   gap: 12px;
   padding: 0 var(--content-pad-x);
-  border-bottom: 1px solid var(--line);
+  /* Hairline via inset shadow so the 48px content box stays even —
+     a border-bottom would shrink flex space to 47px and park pills on .5px,
+     which makes element screenshots 37px and throws ink centres off. */
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 var(--line);
   background: #fff;
   overflow: visible;
   box-sizing: border-box;
@@ -416,8 +455,12 @@ img { display: block; max-width: 100%; }
 /* Buyer name only — no "· Buyer" punctuation belt */
 
 .cart-pill {
-  position: relative;
+  /* Flex row @ 36px — every child on the pill’s vertical centre */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
+  height: var(--pill-h);
   padding: 0 12px;
   font-variant-numeric: tabular-nums;
   overflow: visible;
@@ -430,38 +473,47 @@ img { display: block; max-width: 100%; }
 }
 .cart-pill:active { transform: scale(0.98); }
 .cart-pill:disabled { opacity: 0.45; cursor: not-allowed; }
-/* Text spans share a fixed line box so badge centres on cap-height centre */
+/*
+ * Label + amount: line-height 1, no padding/baseline/position nudges.
+ * Optical centre comes from @font-face ascent/descent overrides + text-box
+ * trim (see top of stylesheet) — not per-span padding-top hacks.
+ */
 .cart-pill > span:not(.count-chip) {
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
   line-height: 1;
+  height: auto;
+  position: static;
+  vertical-align: unset;
 }
-/* Count chip: 18px circle, 11/500 tnum, flex-centred digit — no baseline tricks */
+/* Badge: 20px circle, 12/1/600 tnum, grid-centred on the pill */
 .cart-pill .count-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   box-sizing: border-box;
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   margin: 0;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: var(--blue);
   color: #fff;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
   text-align: center;
+  position: static;
+  vertical-align: unset;
 }
 .cart-pill .count-chip.is-wide {
   width: auto;
-  min-width: 22px;
+  min-width: 20px;
   padding: 0 6px;
   border-radius: var(--radius-pill);
 }
@@ -2312,6 +2364,9 @@ img { display: block; max-width: 100%; }
       messages: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
       search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
       external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+      /* Lucide arrow-up-right, optically fitted to the same 16px ink
+         box as nav icons (stock path sits 2–4px right/small in the slot). */
+      "arrow-up-right": '<path d="M4 19 18 5"/><path d="M4 5h14v14"/>',
       close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     };
     return (
@@ -2390,11 +2445,11 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<nav class="sidebar-nav">' + items + "</nav>" +
       '<div class="sidebar-footer">' +
-      '<div class="sidebar-divider" style="margin:0 0 4px;"></div>' +
-      '<a class="sidebar-store" data-store-link href="' +
+      '<div class="sidebar-divider" data-sidebar-divider></div>' +
+      '<a class="nav-item sidebar-store" data-store-link href="' +
       (L.storeUrl || "https://joola.com") +
       '" target="_blank" rel="noopener">' +
-      icon("external") +
+      icon("arrow-up-right") +
       "<span>Back to joola.com store</span></a>" +
       "</div>" +
       "</aside>" +
