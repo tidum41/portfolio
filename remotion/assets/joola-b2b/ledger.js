@@ -260,6 +260,8 @@
 
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
+    annaTime: "10:31 AM",
+    samTime: "10:42 AM",
     sam:
       "120 units of Perseus Pro V ship " +
       shipDate +
@@ -320,16 +322,66 @@
         100
     ) / 100;
 
+  /** Saved templates carry their own line items so the Templates screen can expand them. */
+  function tplLines(lines) {
+    return lines.map(function (l) {
+      return { productId: l.productId, qty: l.qty, amount: lineAmount(l) };
+    });
+  }
+  function tplTotal(lines) {
+    return Math.round(lines.reduce(function (s, l) { return s + l.amount; }, 0) * 100) / 100;
+  }
+  var tplPerseusLines = tplLines([{ productId: "perseus", qty: perseusLine.qty }]);
+  var tplMatchLines = tplLines([
+    { productId: "hyperion", qty: 24 },
+    { productId: "hc40", qty: 48 },
+    { productId: "bag", qty: 6 },
+  ]);
   var templates = [
     {
       id: "tpl-perseus",
       name: "Perseus restock",
+      savedBy: "Ben Johns",
+      updated: "Sep 30",
+      lines: tplPerseusLines,
+      total: tplTotal(tplPerseusLines),
       detail: perseusLine.qty + " units, " + money(perseusOrderTotal),
     },
     {
       id: "tpl-match",
       name: "Match kit",
-      detail: "3 items",
+      savedBy: "Federico Staksrud",
+      updated: "Aug 14",
+      lines: tplMatchLines,
+      total: tplTotal(tplMatchLines),
+      detail: "3 products, " + money(tplTotal(tplMatchLines)),
+    },
+  ];
+
+  /** JOOLA-side people. Names are JOOLA-sponsored pros used as stand-ins. */
+  var rep = { name: "Collin Johns", role: "Your JOOLA sales rep" };
+  var threads = [
+    {
+      id: "restock",
+      name: rep.name,
+      role: "Sales rep",
+      preview: "Perseus Pro V restock",
+      time: "10:42 AM",
+      active: true,
+    },
+    {
+      id: "ar",
+      name: "Simone Jardim",
+      role: "Accounts receivable",
+      preview: "INV-1021 is past due",
+      time: "Mon",
+    },
+    {
+      id: "warranty",
+      name: "Tyson McGuffin",
+      role: "Warranty",
+      preview: "Return approved for 2 paddles",
+      time: "Oct 2",
     },
   ];
 
@@ -383,6 +435,8 @@
     recentOrders: recentOrders,
     recentAvg: recentAvg,
     templates: templates,
+    rep: rep,
+    threads: threads,
     money: money,
     priceAt: priceAt,
     nextTier: nextTier,

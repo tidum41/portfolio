@@ -2255,6 +2255,170 @@ img { display: block; max-width: 100%; }
 [data-order-total].bump {
   animation: typeBump 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* ================= r13 polish layer ================= */
+:root {
+  --content-max: 1360px;
+  --card-bg: #f2f3f5;   /* matches product photo backdrop: one tile colour */
+}
+@media (min-width: 1800px) { :root { --content-max: 1520px; } }
+#devSwitcher .label { text-transform: none; letter-spacing: 0; font-size: 12px; }
+
+/* One content width on every desktop screen; topbar pills align to it */
+.screen:not(.mobile-wrap) .page:not(.page-confirm) { max-width: var(--content-max); }
+.screen .topbar {
+  padding-right: max(var(--content-pad-x), calc(100% - var(--content-max) + var(--content-pad-x)));
+}
+.screen:not(.mobile-wrap) .order-footer { max-width: var(--content-max); }
+[data-screen="messages"] .topbar { padding-right: var(--content-pad-x); }
+
+/* Dividers: keep only structural ones (topbar, sticky footer, table head) */
+.order-row, .invoice-row, .cart-line, .rail-item, .ship-option,
+.catalog-grid.is-list .cat-card { border-bottom: 0 !important; border-top: 0 !important; }
+.cart-lines, .order-table, .invoice-table, .catalog-grid.is-list { border-top: 0 !important; }
+.cart-summary .sum-total { border-top: 0 !important; padding-top: 12px; margin-top: 8px; }
+.sidebar-footer { border-top: 0 !important; }
+.order-row, .invoice-row { border-radius: 8px; }
+.order-row:hover, .invoice-row:hover { background: var(--band); }
+.invoice-head, .order-head { border-bottom: 1px solid var(--line) !important; }
+.cart-line { padding-top: 10px; padding-bottom: 10px; }
+.rail-item { padding-top: 10px; padding-bottom: 10px; }
+.confirm-rows .row { border: 0 !important; }
+
+/* Invoices: fluid columns that use the width */
+.invoice-head, .invoice-row {
+  grid-template-columns: minmax(120px,1.1fr) minmax(100px,1fr) minmax(110px,1fr) minmax(110px,1fr) minmax(120px,1fr) minmax(110px,0.9fr) 140px !important;
+  padding-left: 12px; padding-right: 12px; width: 100% !important; column-gap: 24px !important;
+}
+.invoice-table { width: 100% !important; }
+.invoice-row { min-height: 56px; }
+.credit-card { max-width: 420px; }
+
+/* ---------- Product cards (joola.com: tile, contain, title, price) ---------- */
+.rec-rail, .catalog-grid:not(.is-list) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 20px;
+  margin-top: 16px;
+}
+@media (min-width: 1800px) {
+  .rec-rail, .catalog-grid:not(.is-list) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.rec-card, .catalog-grid:not(.is-list) .cat-card {
+  border: 0; border-radius: 0; padding: 0; background: transparent; overflow: visible; cursor: pointer;
+}
+.rec-card .media, .catalog-grid:not(.is-list) .cat-card .media {
+  height: auto; aspect-ratio: 1 / 1; background: var(--card-bg); border-radius: 8px;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.rec-card .media img, .catalog-grid:not(.is-list) .cat-card .media img {
+  width: 100%; height: 100%; object-fit: contain;
+  transition: transform .25s ease-out;
+}
+.rec-card:hover .media img, .cat-card:hover .media img { transform: scale(1.03); }
+.card-body { padding: 12px 2px 0; display: flex; flex-direction: column; gap: 4px; }
+.rec-card .title, .cat-card .title { margin: 0 !important; font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.rec-card .price-row, .cat-card .price-row { margin: 0; display: flex; gap: 8px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.rec-card .price, .cat-card .price { margin: 0 !important; font-size: 14px; font-weight: 400; color: var(--ink); }
+.rec-card .msrp, .cat-card .msrp { font-size: 13px; color: var(--faint); text-decoration: line-through; }
+.rec-card .why, .cat-card .moq { margin: 0 !important; font-size: 12px; color: var(--muted); }
+.catalog-toolbar { margin-top: 48px; }
+.catalog-grid.is-list .cat-card .card-body { display: contents; }
+.catalog-grid.is-list .cat-card .media { background: var(--card-bg); border: 0; aspect-ratio: 1/1; }
+.catalog-grid.is-list .cat-card .media img { width: 84%; height: 84%; margin: 8%; object-fit: contain;  }
+.catalog-grid.is-list .cat-card { grid-template-columns: 56px 1fr 180px 120px; }
+/* Same tile treatment on every thumbnail */
+.order-row img.thumb, .cart-line img, .search-result img {
+  background: var(--card-bg) !important; border: 0 !important; object-fit: contain !important;
+  border-radius: 6px; padding: 3px; 
+}
+
+/* ---------- Templates ---------- */
+.templates-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; max-width: none; }
+.tpl-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.tpl-head {
+  width: 100%; display: grid; grid-template-columns: 1fr auto 20px; align-items: center; gap: 24px;
+  padding: 16px 20px; text-align: left; border-radius: 12px;
+}
+.tpl-head:hover { background: var(--band); }
+.tpl-head:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.tpl-title { display: flex; flex-direction: column; gap: 4px; }
+.tpl-title .name { font-size: 14px; font-weight: 500; }
+.tpl-title .meta { font-size: 13px; color: var(--muted); }
+.tpl-total { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chev { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s ease; justify-self: end; }
+.tpl-card.is-open .chev { transform: rotate(180deg); }
+.tpl-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+.tpl-card.is-open .tpl-body { grid-template-rows: 1fr; }
+.tpl-inner { overflow: hidden; min-height: 0; padding: 0 20px; }
+.tpl-card.is-open .tpl-inner { padding-bottom: 16px; }
+.tpl-line { display: grid; grid-template-columns: 44px 1fr 160px 120px; gap: 16px; align-items: center; padding: 8px 0; }
+.tpl-thumb { width: 44px; height: 44px; border-radius: 6px; background: var(--card-bg); display: flex; align-items: center; justify-content: center; }
+.tpl-thumb img { width: 84%; height: 84%; object-fit: contain;  }
+.tpl-unit { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.tpl-amt { font-size: 14px; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+.tpl-actions { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding-top: 12px; }
+.template-card { display: none; }
+
+/* ---------- Messages ---------- */
+.messages-layout { grid-template-columns: 280px minmax(0, 1fr) 280px; }
+.inbox { border-right: 0 !important; padding: 20px 12px; }
+.inbox h2 { font-size: 14px !important; color: var(--ink) !important; margin: 0 8px 12px !important; }
+.inbox-item {
+  width: 100%; height: auto !important; padding: 10px !important; gap: 12px !important; background: transparent !important;
+  border-radius: 10px; text-align: left; align-items: center;
+}
+.inbox-item:hover { background: var(--band) !important; }
+.inbox-item.is-active { background: var(--blue-soft) !important; }
+.mark { display: inline-flex; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+.mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ib-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ib-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ib-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.ib-time { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.ib-prev { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread { background: #fff; }
+.thread-head {
+  flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 12px !important;
+  padding: 20px 32px 0 !important; border-bottom: 0 !important; min-height: 0 !important;
+}
+.th-name { font-size: 14px; font-weight: 500; }
+.th-role { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.order-context {
+  margin: 20px 32px 0 !important; border: 0 !important; background: var(--band) !important;
+  grid-template-columns: repeat(3, 1fr) !important; padding: 14px 16px !important; border-radius: 10px !important;
+}
+.order-context .oc-value { font-size: 14px !important; }
+.thread-body { padding: 24px 32px !important; gap: 20px !important; }
+.day { align-self: center; font-size: 12px; color: var(--faint); }
+.msg { display: flex; flex-direction: column; gap: 6px; max-width: 64%; }
+.msg.me { align-self: flex-end; align-items: flex-end; }
+.msg.them { align-self: flex-start; flex-direction: row; align-items: flex-end; gap: 10px; }
+.msg.them > div { display: flex; flex-direction: column; gap: 6px; }
+.msg-meta { font-size: 12px; font-weight: 500; color: var(--ink); display: flex; gap: 8px; align-items: baseline; padding: 0 4px; }
+.msg-meta .t { font-weight: 400; color: var(--faint); font-variant-numeric: tabular-nums; }
+.bubble { max-width: none !important; font-size: 14px !important; line-height: 1.5 !important; padding: 10px 14px !important; border: 0 !important; }
+.bubble.anna { border-radius: 16px 16px 4px 16px !important; background: var(--ink) !important; }
+.bubble.sam { border-radius: 16px 16px 16px 4px !important; background: var(--band) !important; }
+.thread-compose { border-top: 0 !important; padding: 12px 32px 24px !important; }
+.composer {
+  flex: 1; display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 6px 0 18px;
+  border: 1px solid var(--line); border-radius: 999px; background: #fff;
+}
+.composer .field { flex: 1; border: 0 !important; background: none !important; padding: 0 !important; height: auto !important; color: var(--faint); font-size: 14px; }
+.composer .btn-send { width: 36px !important; height: 36px !important; border-radius: 50% !important; }
+.composer .btn-send svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.msg-details { border-left: 0 !important; padding: 20px !important; gap: 16px !important; }
+.msg-details h2 { font-size: 14px !important; color: var(--ink) !important; }
+
+/* Badges + pills: one height, optically centred text */
+.status, .confirm-tag, .ship-tag, .avail-tag {
+  display: inline-flex !important; align-items: center; justify-content: center;
+  height: 22px !important; padding: 0 8px !important; line-height: 1 !important;
+  font-size: 12px !important; font-weight: 500 !important; border-radius: 999px !important;
+  border: 0 !important; padding-top: 1px !important; box-sizing: border-box; white-space: nowrap;
+}
+.count-chip { line-height: 1 !important; padding-top: 1px !important; }
+.wholesale-chip { border-radius: 999px !important; }
 </style>
 </head>
 <body>
@@ -2390,7 +2554,6 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<nav class="sidebar-nav">' + items + "</nav>" +
       '<div class="sidebar-footer">' +
-      '<div class="sidebar-divider" style="margin:0 0 4px;"></div>' +
       '<a class="sidebar-store" data-store-link href="' +
       (L.storeUrl || "https://joola.com") +
       '" target="_blank" rel="noopener">' +
@@ -2424,8 +2587,8 @@ img { display: block; max-width: 100%; }
     var leftLabel = L.terms + " credit";
     var priorAvail = L.credit.priorAvailable != null ? L.credit.priorAvailable : L.credit.available;
     var rightLabel = showOrder
-      ? "Uses " + money(L.credit.thisOrder) + " of " + money(priorAvail) + " available"
-      : money(L.credit.available) + " available";
+      ? money(L.credit.afterOrder) + " left of " + money(L.credit.limit)
+      : money(L.credit.available) + " left of " + money(L.credit.limit);
     var tip =
       "<div class=\"credit-tip\" data-credit-tip role=\"tooltip\">" +
       "<div><strong>Used</strong> " +
@@ -2792,20 +2955,18 @@ img { display: block; max-width: 100%; }
           '" alt="' +
           p.name +
           '"></div>' +
-          '<div class="chip">' +
-          meta.reason +
-          "</div>" +
-          (meta.detail ? '<div class="why">' + meta.detail + "</div>" : "") +
+          '<div class="card-body">' +
           '<div class="title">' +
-          p.name +
+          p.fullName +
           "</div>" +
           '<div class="price-row"><span class="price" data-display-price>' +
           money(p.buyerPrice) +
           '</span><span class="msrp">' +
           money(p.msrp) +
           "</span></div>" +
-          '<div class="moq">MOQ ' +
-          p.moq +
+          '<div class="why">' +
+          meta.reason +
+          "</div>" +
           "</div>" +
           "</div>"
         );
@@ -2827,14 +2988,18 @@ img { display: block; max-width: 100%; }
           '" alt="' +
           p.name +
           '"></div>' +
+          '<div class="card-body">' +
           '<div class="title">' +
           p.fullName +
           "</div>" +
-          '<div class="price" data-display-price>' +
+          '<div class="price-row"><span class="price" data-display-price>' +
           money(p.buyerPrice) +
-          "</div>" +
-          '<div class="moq">MOQ ' +
+          '</span><span class="msrp">' +
+          money(p.msrp) +
+          "</span></div>" +
+          '<div class="moq">Min. order ' +
           p.moq +
+          "</div>" +
           "</div>" +
           "</div>"
         );
@@ -2874,15 +3039,39 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  var chevronSvg =
+    '<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
+
   function screenTemplates() {
     var cards = L.templates
-      .map(function (t) {
+      .map(function (t, i) {
+        var open = i === 0;
+        var lines = t.lines
+          .map(function (l) {
+            var p = L.products[l.productId];
+            return (
+              '<div class="tpl-line">' +
+              '<div class="tpl-thumb"><img src="' + p.image + '" alt="' + p.name + '"></div>' +
+              '<div><div class="prod-name">' + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + "</div></div>" +
+              '<div class="tpl-unit">' + l.qty + " × " + money(L.priceAt(p, l.qty)) + "</div>" +
+              '<div class="tpl-amt">' + money(l.amount) + "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+        var units = t.lines.reduce(function (s, l) { return s + l.qty; }, 0);
         return (
-          '<div class="template-card"><h3>' +
-          t.name +
-          "</h3><p>" +
-          t.detail +
-          "</p></div>"
+          '<div class="tpl-card' + (open ? " is-open" : "") + '" data-tpl-card>' +
+          '<button type="button" class="tpl-head" data-tpl-toggle aria-expanded="' + open + '">' +
+          '<span class="tpl-title"><span class="name">' + t.name + "</span>" +
+          '<span class="meta">' + t.lines.length + (t.lines.length === 1 ? " product, " : " products, ") + units + " units. Saved by " + t.savedBy + ", " + t.updated + "</span></span>" +
+          '<span class="tpl-total">' + money(t.total) + "</span>" +
+          chevronSvg +
+          "</button>" +
+          '<div class="tpl-body"><div class="tpl-inner">' +
+          lines +
+          '<div class="tpl-actions"><button type="button" class="btn-text">Edit</button><button type="button" class="btn-primary" data-tpl-add>Add to cart</button></div>' +
+          "</div></div></div>"
         );
       })
       .join("");
@@ -3090,7 +3279,7 @@ img { display: block; max-width: 100%; }
       "<h1>Order placed</h1>" +
       '<span class="confirm-tag" data-confirm-status>Awaiting rep confirmation</span>' +
       "</div>" +
-      '<p class="confirm-lede">You\'ll get the invoice by email when it ships.</p>' +
+      '<p class="confirm-lede">' + L.rep.name + ' confirms the ship date. The invoice arrives by email when it ships.</p>' +
       '<div class="confirm-rows" data-confirm-rows>' +
       '<div class="row"><span class="k">Order</span><span class="v" data-order-id>' +
       L.orderId +
@@ -3113,7 +3302,7 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<div class="confirm-actions">' +
       '<button type="button" class="btn-primary" data-tab="qo-desktop">Back to Quick order</button>' +
-      '<button type="button" class="btn-text" data-tab="messages">Message your rep</button>' +
+      '<button type="button" class="btn-text" data-tab="messages">Message ' + L.rep.name.split(" ")[0] + '</button>' +
       "</div></div></div>" +
       shellClose() +
       "</section>"
@@ -3168,60 +3357,52 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  function markImg(size) {
+    return '<span class="mark" style="width:' + size + 'px;height:' + size + 'px"><img src="joola-mark.png" alt="JOOLA" width="' + size + '" height="' + size + '"></span>';
+  }
+
   function screenMessages() {
     var inv = L.invoices[0];
+    var threads = L.threads
+      .map(function (t) {
+        return (
+          '<button type="button" class="inbox-item' + (t.active ? " is-active" : "") + '"' + (t.active ? " data-inbox-joola" : "") + ">" +
+          markImg(32) +
+          '<span class="ib-copy"><span class="ib-top"><span class="ib-name">' + t.name + '</span><span class="ib-time">' + t.time + "</span></span>" +
+          '<span class="ib-prev">' + t.preview + "</span></span>" +
+          "</button>"
+        );
+      })
+      .join("");
     return (
       '<section class="screen" data-screen="messages">' +
       shellOpen("messages", filledCart()) +
       '<div class="messages-layout">' +
-      '<aside class="inbox"><h2>Inbox</h2>' +
-      '<div class="inbox-item" data-inbox-joola>' +
-      joolaMarkHtml() +
-      '<div><div style="font-size:13px;font-weight:500;">JOOLA Sales</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Perseus Pro V restock</div></div>' +
-      "</div></aside>" +
+      '<aside class="inbox"><h2>Messages</h2>' + threads + "</aside>" +
       '<div class="thread">' +
-      '<div class="thread-head"><div style="font-weight:500;">Sam Ortiz</div><div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;">JOOLA Sales</div></div>' +
+      '<div class="thread-head">' + markImg(36) +
+      '<div><div class="th-name">' + L.rep.name + '</div><div class="th-role">' + L.rep.role + "</div></div></div>" +
       '<div class="order-context" data-order-context>' +
-      '<div><div class="oc-label">Order</div><div class="oc-value">' +
-      L.orderId +
-      '</div></div>' +
-      '<div><div class="oc-label">Amount</div><div class="oc-value" data-order-total>' +
-      money(L.orderTotal) +
-      "</div></div>" +
+      '<div><div class="oc-label">Order</div><div class="oc-value">' + L.orderId + "</div></div>" +
+      '<div><div class="oc-label">Amount</div><div class="oc-value" data-order-total>' + money(L.orderTotal) + "</div></div>" +
+      '<div><div class="oc-label">Ships</div><div class="oc-value">' + L.shipDate + "</div></div>" +
       "</div>" +
       '<div class="thread-body">' +
-      '<div class="bubble anna" data-msg-anna><div class="who"><b>' +
-      L.retailer.buyer +
-      '</b><div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;">' +
-      L.retailer.name +
-      "</div></div>" +
-      L.messages.anna +
+      '<div class="day">Today</div>' +
+      '<div class="msg me" data-msg-anna><div class="msg-meta">' + L.retailer.buyer + '<span class="t">' + L.messages.annaTime + "</span></div>" +
+      '<div class="bubble anna">' + L.messages.anna + "</div></div>" +
+      '<div class="msg them" data-msg-sam>' + markImg(28) + '<div><div class="msg-meta">' + L.rep.name + '<span class="t">' + L.messages.samTime + "</span></div>" +
+      '<div class="bubble sam">' + L.messages.sam + "</div></div></div>" +
       "</div>" +
-      '<div class="bubble sam" data-msg-sam><div class="who">' +
-      joolaMarkHtml("sm") +
-      "<span><b>Sam Ortiz</b><div style=\"font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;\">JOOLA Sales</div></span></div>" +
-      L.messages.sam +
-      "</div>" +
-      "</div>" +
-      '<div class="thread-compose"><div class="field">Message the sales team</div><button type="button" class="btn-send" aria-label="Send">↑</button></div>' +
+      '<div class="thread-compose"><div class="composer"><span class="field">Message ' + L.rep.name.split(" ")[0] + '</span><button type="button" class="btn-send" aria-label="Send"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button></div></div>' +
       "</div>" +
       '<aside class="msg-details" data-msg-details>' +
       "<h2>Order details</h2>" +
-      '<div class="detail-row"><div class="k">Status</div><div class="v"><span class="status PendingFulfillment">' +
-      L.orderStatus +
-      "</span></div></div>" +
-      '<div class="detail-row"><div class="k">Ship date</div><div class="v">' +
-      L.shipDate +
-      "</div></div>" +
-      '<div class="detail-row"><div class="k">Invoice</div><div class="v">' +
-      inv.id +
-      "</div></div>" +
-      '<div class="detail-row"><div class="k">Amount</div><div class="v" data-order-total>' +
-      money(L.orderTotal) +
-      "</div></div>" +
-      '<div class="detail-row"><div class="k">Terms</div><div class="v">' +
-      L.terms +
-      "</div></div>" +
+      '<div class="detail-row"><div class="k">Status</div><div class="v"><span class="status PendingFulfillment">' + L.orderStatus + "</span></div></div>" +
+      '<div class="detail-row"><div class="k">Ship date</div><div class="v">' + L.shipDate + "</div></div>" +
+      '<div class="detail-row"><div class="k">Invoice</div><div class="v">' + inv.id + "</div></div>" +
+      '<div class="detail-row"><div class="k">Amount</div><div class="v" data-order-total>' + money(L.orderTotal) + "</div></div>" +
+      '<div class="detail-row"><div class="k">Terms</div><div class="v">' + L.terms + "</div></div>" +
       "</aside>" +
       "</div>" +
       shellClose() +
@@ -3299,12 +3480,12 @@ img { display: block; max-width: 100%; }
       '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
       '<span style="display:flex;align-items:center;gap:6px;">' + avatarHtml() + '<span style="font-size:11px;">' + L.retailer.name + "</span></span></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
-      "<h1 style=\"font-size:28px;\">Quick order</h1>" +
+      "<h1>Quick order</h1>" +
       '<p class="lede">Prices for ' + L.retailer.name + ".</p>" +
-      '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line-soft);height:50px;">' +
+      '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;height:56px;">' +
       '<img src="' + p.image + '" alt="" width="36" height="36" style="object-fit:contain;border:1px solid var(--line);border-radius:6px;background:var(--band);padding:3px;">' +
       "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + "</div>" +
-      '<div style="margin-top:2px;font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea</div>" +
+      '<div style="margin-top:2px;font-weight:500;font-size:14px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea</div>" +
       '<div style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;">Qty ' + L.perseusQty + "</div></div></div>" +
       '<div style="margin-top:20px;font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
@@ -3683,6 +3864,17 @@ img { display: block; max-width: 100%; }
 
   render();
 })();
+  </script>
+  <script>
+  /* Templates: real expand / collapse */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-tpl-toggle]");
+    if (!b) return;
+    var card = b.closest("[data-tpl-card]");
+    var open = !card.classList.contains("is-open");
+    card.classList.toggle("is-open", open);
+    b.setAttribute("aria-expanded", String(open));
+  });
   </script>
 </body>
 </html>
