@@ -1014,7 +1014,7 @@ export default function DevEditor({ initialData, initialDs }: Props) {
   return (
     <div style={{
       display: "flex", height: "100vh", background: BG, color: TEXT,
-      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", overflow: "hidden",
+      fontFamily: "var(--font-sans)", overflow: "hidden",
     }}>
       {/* Left — section navigator */}
       <LeftSidebar active={section} onSelect={handleSectionSelect} caseStudyLabel="BruinLease" />

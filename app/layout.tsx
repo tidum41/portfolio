@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
@@ -27,12 +27,17 @@ import {
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
 
-// Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
-// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-// preload: false — body copy is local HN/Söhne. Geist is only used inside
-// the CD player + habit embed, which mount after first paint.
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
+// ABC Areal is the only sans on the site. Georgia stays on page titles.
+// Variable file axes: wght 400–700 (default 400), slnt -12–0 (default 0),
+// DRKM 0–1 (default 0). Leave DRKM at the light default.
+// The variable woff2 is committed so preview builds can load it.
+const areal = localFont({
+  src: "../fonts/ABCArealVariable.woff2",
+  variable: "--font-areal",
+  weight: "400 700",
+  display: "swap",
+  adjustFontFallback: "Arial",
+});
 
 const OG_IMAGES = [
   {
@@ -124,7 +129,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={areal.variable}
       data-theme="dark"
       data-scroll-behavior="smooth"
       // Unconditionally "playing" in the static, server-rendered HTML — not
