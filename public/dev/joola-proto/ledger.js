@@ -283,6 +283,10 @@
       reason: "Low stock at your store",
       detail: "Engage on-hand estimate: 3 units",
     },
+    hc40: {
+      reason: "Pairs with paddles",
+      detail: "Ordered with Perseus 5 of 6 times",
+    },
   };
 
   /**
@@ -398,9 +402,9 @@
     searchQuery: "Perseus",
     terms: "Net 30",
     products: products,
-    recommended: ["perseus", "hyperion", "scorpeus"],
+    recommended: ["perseus", "hyperion", "scorpeus", "hc40"],
     recommendedMeta: recommendedMeta,
-    catalogExtra: ["hc40", "bag"],
+    catalogExtra: ["bag"],
     orderLines: orderLines,
     orderId: orderId,
     customerPo: customerPo,
