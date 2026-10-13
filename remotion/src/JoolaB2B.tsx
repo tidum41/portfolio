@@ -11,7 +11,7 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, bezier, BUBBLE, CAM_E, camAt, CLICK, CONTENT_IN, CONTENT_OUT, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
+  OW, OH, PRICE_FLASH, bezier, BUBBLE, CAM_E, camAt, CLICK, CONTENT_IN, CONTENT_OUT, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
   LOGO_IN, LOGO_OUT, PILL_FILL, PRESET_COUNT, prog, PUSH, QTY_COMMIT, QTY_COUNT, QTY_KEYS, QTY_SELECT, SCREENS, SETTLE,
   SIDEBAR_IN, SIDEBAR_OUT, TYPE_PO, TYPE_SEARCH, type Cam,
 } from "./joola/timeline";
@@ -62,19 +62,22 @@ const P = {
 const PATH: [number, [number, number]][] = [
   [40, P.start],
   [CLICK.search - 2, P.search],
-  [CLICK.result - 12, P.search],
+  [CLICK.search + 8, [P.search[0] + 20, P.search[1] + 34]], // off the field so typing reads
+  [CLICK.result - 12, [P.search[0] + 20, P.search[1] + 34]],
   [CLICK.result - 2, P.result],
   [CLICK.preset - 2, P.preset],
   [CLICK.qty - 12, P.preset],
   [CLICK.qty - 2, P.qty],
-  [QTY_COMMIT + 4, P.qty],
+  [CLICK.qty + 6, [P.qty[0] + 34, P.qty[1] + 40]], // off the digits while 120 is typed
+  [QTY_COMMIT + 4, [P.qty[0] + 34, P.qty[1] + 40]],
   [QTY_COMMIT + 30, [P.qty[0] + 60, P.qty[1] + 80]],
   [CLICK.add - 2, P.add],
   [CLICK.pill - 14, P.add],
   [CLICK.pill - 2, P.pill],
   [CLICK.po - 20, [P.pill[0] - 600, P.pill[1] + 300]],
   [CLICK.po - 2, P.po],
-  [CLICK.place - 20, [P.po[0] + 500, P.po[1] + 40]],
+  [CLICK.po + 8, [P.po[0] + 40, P.po[1] + 40]], // below the PO field
+  [CLICK.place - 20, [P.po[0] + 500, P.po[1] + 60]],
   [CLICK.place - 2, P.place],
   [CLICK.msg - 16, [P.msg[0] + 140, P.msg[1] + 30]],
   [CLICK.msg - 2, P.msg],
@@ -203,7 +206,13 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   qa(pr, "[data-set-perseus]").forEach((b) => b.classList.toggle("on", b.getAttribute("data-set-perseus") === "24" && qty === 24));
   press(q(pr, "[data-set-perseus='24']"), f, CLICK.preset);
   const unit = unitAt(qty);
-  q(pr, ".unit")!.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
+  const unitEl = q(pr, ".unit")!;
+  unitEl.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
+  // tier price drop (ledger.js Perseus tiers: 1 -> 179.97, 24 -> 134.98): brief highlight so the change reads
+  const fl = Math.min(prog(f, PRICE_FLASH[0], PRICE_FLASH[0] + 4, SETTLE), 1 - prog(f, PRICE_FLASH[1] - 8, PRICE_FLASH[1], SETTLE));
+  unitEl.style.background = fl > 0 ? `rgba(254,246,51,${0.85 * fl})` : "";
+  unitEl.style.borderRadius = "4px";
+  unitEl.style.boxShadow = fl > 0 ? `0 0 0 4px rgba(254,246,51,${0.85 * fl})` : "";
   const prevQty = qty === 120 ? 24 : 1;
   const [ca, cb] = qty === 120 ? QTY_COUNT : qty === 24 ? PRESET_COUNT : INSERT;
   const lineFrom = r2(unitAt(prevQty) * prevQty);
