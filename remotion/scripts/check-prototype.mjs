@@ -6,9 +6,11 @@
  * Usage: node remotion/scripts/check-prototype.mjs
  */
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, mkdtempSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import { chromium } from "playwright-core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +23,7 @@ const SCREENS = [
   "catalog",
   "templates",
   "cart",
+  "confirmation",
   "invoices",
   "messages",
   "qo-mobile",
@@ -126,7 +129,7 @@ async function main() {
     await page.waitForTimeout(150);
 
     const result = await page.evaluate(
-      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, perseusQty, perseusUnit, buyerBySku }) => {
+      ({ screen, allowedMoney, cartTotal, orderTotal, creditUsed, creditLimit, creditAvailable, creditPriorUsed, creditPriorAvailable, creditAfterOrder, perseusQty, perseusUnit, buyerBySku }) => {
         const issues = {
           images: [],
           overlaps: [],
@@ -144,6 +147,7 @@ async function main() {
           tabularNums: [],
           moneyAlign: [],
           rowHeight: [],
+          creditReconcile: [],
           singleAccent: [],
           statusPill: [],
           imageContain: [],
@@ -300,13 +304,18 @@ async function main() {
               );
             }
           }
-          // credit bar visible
+          // credit bar visible — 6px flush track
           const bar = root.querySelector("[data-credit-bar]");
-          const fill = root.querySelector("[data-credit-fill]");
           if (!bar || !visible(bar)) issues.clipped.push("credit bar missing/invisible");
-          if (fill) {
-            const fr = fill.getBoundingClientRect();
-            if (fr.width < 2) issues.clipped.push("credit bar fill has no width");
+          else {
+            const br = bar.getBoundingClientRect();
+            if (br.width < 40) issues.clipped.push("credit bar fill has no width");
+            const h = br.height;
+            if (Math.abs(h - 6) > 1) issues.pixelNits.push(`credit bar height ${h.toFixed(1)}px (want 6)`);
+            const kids = [...bar.children].filter((el) => visible(el));
+            if (kids.length > 0) {
+              issues.pixelNits.push("credit bar still has segment children (want single gradient track)");
+            }
           }
         }
 
@@ -339,9 +348,96 @@ async function main() {
         // Key totals must appear on relevant screens
         const must = [];
         if (screen === "qo-desktop" || screen === "cart") must.push(orderTotal, cartTotal);
-        if (screen === "invoices") must.push(creditUsed, creditLimit, orderTotal);
+        // Invoices credit meter shows available (not wordy used/limit sentence)
+        if (screen === "invoices") must.push(creditAvailable, orderTotal);
         if (screen === "messages") must.push(orderTotal);
+        if (screen === "confirmation") must.push(orderTotal);
         if (screen === "qo-desktop") must.push(perseusUnit);
+
+        // Confirmation receipt
+        if (screen === "confirmation") {
+          const panel = root.querySelector("[data-confirm-panel]");
+          if (!panel || !visible(panel)) issues.ia.push("confirmation panel missing");
+          else {
+            const h1 = panel.querySelector("h1");
+            if (!h1 || !/^Order placed$/i.test((h1.textContent || "").trim())) {
+              issues.ia.push("confirmation H1 must be 'Order placed'");
+            }
+            if (panel.querySelector(".confirm-kicker")) {
+              issues.ia.push("confirmation eyebrow/kicker must be removed");
+            }
+            if (!/invoice by email when it ships/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation missing invoice-by-email copy");
+            }
+            if (/INV-1042 will show/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation must not promise invoice number before billing");
+            }
+            const tag = panel.querySelector("[data-confirm-status], .confirm-tag");
+            if (!tag || !/Awaiting rep confirmation/i.test(tag.textContent || "")) {
+              issues.ia.push("confirmation missing 'Awaiting rep confirmation' status tag");
+            }
+            if (/Confirmed by your rep within 1 business day/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation still uses old bold status sentence");
+            }
+            const oid = panel.querySelector("[data-order-id]");
+            if (!oid || !/^SO-\d+/i.test((oid.textContent || "").trim())) {
+              issues.ia.push("confirmation order id must be JOOLA SO-… number");
+            }
+            if (/PO-120/i.test(panel.textContent || "")) {
+              issues.ia.push("confirmation still shows PO-120 as order id");
+            }
+            if (panel.querySelector("[data-confirm-po]") && visible(panel.querySelector("[data-confirm-po]"))) {
+              const pv = (panel.querySelector("[data-customer-po]")?.textContent || "").trim();
+              if (!pv) issues.ia.push("confirmation shows empty Your PO row");
+            }
+            const primary = panel.querySelector(".confirm-actions .btn-primary");
+            const secondary = panel.querySelector(".confirm-actions .btn-text");
+            if (!primary || !/Back to Quick order|Start a new order/i.test(primary.textContent || "")) {
+              issues.ia.push("confirmation primary must be Back to Quick order");
+            }
+            if (primary && /View invoices/i.test(primary.textContent || "")) {
+              issues.ia.push("confirmation primary must not be View invoices (none yet)");
+            }
+            if (!secondary || !/Message your rep|View order/i.test(secondary.textContent || "")) {
+              issues.ia.push("confirmation missing Message your rep / View order secondary");
+            }
+            // Card must hug content — not stretch toward viewport height
+            const pr = panel.getBoundingClientRect();
+            const vh = window.innerHeight || 1080;
+            if (pr.height > vh * 0.55) {
+              issues.ia.push(`confirmation card too tall (${Math.round(pr.height)}px) — should hug content`);
+            }
+          }
+          // Cart chrome emptied after place
+          const pill = root.querySelector("[data-cart-pill]");
+          const badge = pill && pill.querySelector("[data-cart-count]");
+          const totalEl = pill && pill.querySelector("[data-cart-total]");
+          const totalTxt = (totalEl && totalEl.textContent) || "";
+          const totalN = parseFloat(totalTxt.replace(/[$,]/g, "")) || 0;
+          if (!pill || totalN > 0.009) {
+            issues.ia.push(`confirmation cart pill still shows ${totalTxt.trim() || "amount"} (want empty/$0)`);
+          }
+          if (badge && visible(badge) && (badge.textContent || "").trim()) {
+            issues.ia.push("confirmation cart badge still visible after place");
+          }
+        }
+
+        // No visible label/value row with an empty value (any screen)
+        root.querySelectorAll(".confirm-rows .row, .detail-row, .sum-row, .msg-details .detail-row").forEach((row) => {
+          if (!visible(row)) return;
+          const k = row.querySelector(".k, .sum-row > span:first-child, [class='k']");
+          const v = row.querySelector(".v, .sum-row > span:last-child, [data-customer-po], [data-needby-value]");
+          // confirm/detail rows
+          const label = row.querySelector(":scope > .k");
+          const value = row.querySelector(":scope > .v");
+          if (label && value) {
+            const lt = (label.textContent || "").trim();
+            const vt = (value.textContent || "").trim();
+            if (lt && !vt) {
+              issues.ia.push(`empty value for label "${lt}" on ${screen}`);
+            }
+          }
+        });
         must.forEach((n) => {
           if (!foundMoney.some((f) => Math.abs(f - n) <= 0.009)) {
             issues.ledger.push(`missing required $${n.toFixed(2)}`);
@@ -565,14 +661,34 @@ async function main() {
           });
         }
 
-        // 9. Data row heights 48–52px (skip preset-expanded rows)
-        root.querySelectorAll("[data-order-row]:not(.has-presets), [data-invoice-row], [data-cart-line]").forEach((el) => {
+        // 9. Data row heights 48–52px (skip preset/avail-expanded rows)
+        root.querySelectorAll("[data-order-row]:not(.has-presets):not(.has-avail), [data-invoice-row]").forEach((el) => {
           if (!visible(el)) return;
           const h = el.getBoundingClientRect().height;
           if (h < 47.5 || h > 52.5) {
             issues.rowHeight.push(
               `${el.className || "row"} height ${Math.round(h)}px outside 48-52`
             );
+          }
+        });
+        // Cart lines: qty×price column + total share a vertical centre; allow 48–60 for two-line product
+        root.querySelectorAll("[data-cart-line]:not(.has-avail)").forEach((el) => {
+          if (!visible(el)) return;
+          const h = el.getBoundingClientRect().height;
+          if (h < 47.5 || h > 60.5) {
+            issues.rowHeight.push(`cart-line height ${Math.round(h)}px outside 48-60`);
+          }
+          const unit = el.querySelector(".cart-unit");
+          const total = el.querySelector(".line-total");
+          if (unit && total) {
+            const ur = unit.getBoundingClientRect();
+            const tr = total.getBoundingClientRect();
+            // Shared baseline (bottom of glyph box) within 1.5px
+            if (Math.abs(ur.bottom - tr.bottom) > 1.5) {
+              issues.pixelNits.push(
+                `cart unit/total baseline Δ=${Math.abs(ur.bottom - tr.bottom).toFixed(1)}px`
+              );
+            }
           }
         });
         const stickyHeads = root.querySelectorAll("[data-order-head], [data-invoice-head]");
@@ -705,7 +821,7 @@ async function main() {
         }
 
         // 14. IA: no Open cart; credit lives in cart summary (not sidebar); store link present
-        if (["qo-desktop", "catalog", "invoices", "messages"].includes(screen)) {
+        if (["qo-desktop", "catalog", "cart", "confirmation", "invoices", "messages"].includes(screen)) {
           const side = root.querySelector("[data-sidebar], .sidebar");
           if (side && /Open cart/i.test(side.textContent || "")) {
             issues.ia.push("sidebar still contains Open cart");
@@ -713,8 +829,18 @@ async function main() {
           if (side && /\$[\d,]+\.\d{2}/.test(side.textContent || "") && /Net 30|Available|used/i.test(side.textContent || "")) {
             issues.ia.push("credit figures must not appear in sidebar (cart summary only)");
           }
-          if (!side || !side.querySelector("[data-store-link]")) {
-            issues.ia.push("sidebar missing Shop joola.com store link");
+          const storeLink = side && side.querySelector("[data-store-link]");
+          if (!storeLink) {
+            issues.ia.push("sidebar missing store link");
+          } else if (!/Back to joola\.com store|Shop retail store/i.test(storeLink.textContent || "")) {
+            issues.ia.push(`store link copy="${(storeLink.textContent || "").trim().slice(0, 40)}"`);
+          }
+          if (side && side.querySelector(".top-search, [data-top-search]")) {
+            issues.ia.push("global top-bar search must be removed (QO owns search)");
+          }
+          const topbar = root.querySelector("[data-topbar], .topbar");
+          if (topbar && topbar.querySelector(".top-search, [data-top-search]")) {
+            issues.ia.push("global top-bar search still present");
           }
           const cart = root.querySelector("[data-cart-pill], .cart-pill");
           if (!cart || !visible(cart)) issues.ia.push("cart pill missing from top bar");
@@ -834,8 +960,41 @@ async function main() {
             if (st.position !== "sticky" && st.position !== "fixed") {
               issues.cartCheckout.push(`summary position=${st.position} (want sticky)`);
             }
-            if (!/After placing|After this order/i.test(summary.textContent || "")) {
-              issues.cartCheckout.push("summary missing after-placing credit copy");
+            if (!summary.querySelector("[data-credit-meter], [data-credit-bar]")) {
+              issues.cartCheckout.push("summary missing Net 30 credit meter");
+            }
+            if (/After placing/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("wordy after-placing credit sentence still present");
+            }
+            if (!/Net 30 credit/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("credit meter missing 'Net 30 credit' label");
+            }
+            const usesRe = new RegExp(
+              `Uses \\$${orderTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of \\$${creditPriorAvailable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} available`
+            );
+            if (!usesRe.test(summary.textContent || "")) {
+              issues.cartCheckout.push(
+                `credit meter must say exact Uses $${orderTotal.toFixed(2)} of $${creditPriorAvailable.toFixed(2)} available`
+              );
+            }
+            if (/left after this order/i.test(summary.textContent || "")) {
+              issues.cartCheckout.push("legacy 'left after this order' credit copy still present");
+            }
+            if (summary.querySelector("[data-size-note]")) {
+              issues.cartCheckout.push("size warning should not fire on hero demo cart");
+            }
+            if (!summary.querySelector("[data-credit-tip]")) {
+              issues.cartCheckout.push("credit meter missing used/this order/left tooltip");
+            }
+            const bar = summary.querySelector("[data-credit-bar]");
+            if (bar) {
+              const cs = getComputedStyle(bar);
+              if (Math.abs(parseFloat(cs.height) - 6) > 1) {
+                issues.cartCheckout.push(`credit bar height ${cs.height} (want 6px)`);
+              }
+              if (!String(cs.backgroundImage || "").includes("linear-gradient")) {
+                issues.cartCheckout.push("credit bar missing flush linear-gradient track");
+              }
             }
             if (!/Calculated at invoice/i.test(summary.textContent || "")) {
               issues.cartCheckout.push("summary missing tax note");
@@ -873,13 +1032,20 @@ async function main() {
                 issues.pixelNits.push("need-by date missing calendar icon");
               }
             }
-            if (!box.querySelector('[data-field="ship-to"] select')) issues.cartCheckout.push("ship-to select missing");
+            if (box.querySelector('[data-field="ship-to"] select') || box.querySelector("select")) {
+              issues.cartCheckout.push("native select still visible (want address card)");
+            }
+            if (!box.querySelector("[data-ship-card], .ship-card")) {
+              issues.cartCheckout.push("ship-to address card missing");
+            }
             if (!box.querySelector("[data-ship-address]")) {
               issues.cartCheckout.push("ship-to address line missing");
             }
-            const shipSelect = box.querySelector('[data-field="ship-to"] select');
-            if (shipSelect && /Engage Pickleball\s*-\s/.test(shipSelect.textContent || "")) {
-              issues.cartCheckout.push("ship-to uses hyphen; want · or en dash");
+            if (!box.querySelector("[data-ship-change], .ship-change")) {
+              issues.cartCheckout.push("ship-to Change affordance missing");
+            }
+            if (/Engage Pickleball\s*[·\-]\s/.test(box.querySelector('[data-field="ship-to"]')?.textContent || "")) {
+              issues.cartCheckout.push("ship-to still uses punctuation belt in label");
             }
             if (box.querySelector("[data-warehouse-notes]") || /Notes for warehouse/i.test(box.textContent || "")) {
               issues.cartCheckout.push("warehouse notes must not appear for buyers");
@@ -902,15 +1068,24 @@ async function main() {
         // Buyer-facing QO lines: stock only when NOT in stock; no warehouse codes
         if (screen === "qo-desktop") {
           const rows = [...root.querySelectorAll("[data-order-row]")].filter(visible);
-          const inStockSpam = rows.filter((el) => /In stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          const skuText = (el) =>
+            (el.querySelector(".prod-sku")?.textContent || "") +
+            " " +
+            (el.querySelector(".avail-tag")?.textContent || "");
+          const inStockSpam = rows.filter((el) => /In stock/i.test(skuText(el)));
           if (inStockSpam.length > 0) {
             issues.netsuiteLabels.push("In stock should be omitted (show only exceptions)");
           }
-          const exception = rows.filter((el) => /2-day ship|day ship|Backorder|Low stock/i.test(el.querySelector(".prod-sku")?.textContent || ""));
+          const exception = rows.filter((el) =>
+            /2-day ship|day ship|Backorder|Low stock/i.test(skuText(el))
+          );
           if (exception.length < 1) {
             issues.netsuiteLabels.push("expected at least one non-stock availability exception");
           }
-          const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(el.querySelector(".prod-sku")?.textContent || ""));
+          if (exception.some((el) => !el.querySelector(".avail-tag"))) {
+            issues.netsuiteLabels.push("availability exception missing .avail-tag");
+          }
+          const withWh = rows.filter((el) => /Ships from|\bCA\b|\bTX\b/.test(skuText(el)));
           if (withWh.length > 0) {
             issues.netsuiteLabels.push("warehouse codes still shown to buyer");
           }
@@ -922,8 +1097,15 @@ async function main() {
             issues.netsuiteLabels.push(`Best price unlocked spam ×${bestSpam.length}`);
           }
           const footerMeta = root.querySelector("[data-order-footer] [data-line-count]");
-          if (!footerMeta || !/Ready|In cart/i.test(footerMeta.textContent || "")) {
-            issues.netsuiteLabels.push("footer missing ready vs cart distinction");
+          if (!footerMeta || !/\d+\s+items?/i.test(footerMeta.textContent || "")) {
+            issues.netsuiteLabels.push("footer missing quiet item count (e.g. 4 items)");
+          }
+          if (/Ready\s*·|In cart\s*·/i.test(footerMeta?.textContent || "")) {
+            issues.netsuiteLabels.push("footer still uses Ready/In cart · lines pattern");
+          }
+          const addBtn = root.querySelector("[data-add-all], #qoAddAllBtn");
+          if (addBtn && !/Add\s+\d+\s+to cart|Added/i.test(addBtn.textContent || "")) {
+            issues.netsuiteLabels.push(`footer CTA="${(addBtn.textContent || "").trim()}" (want Add N to cart)`);
           }
           if (/Staged/i.test(root.innerText || "")) {
             issues.netsuiteLabels.push("staged jargon still present");
@@ -951,23 +1133,28 @@ async function main() {
           if (chip && cart && visible(chip) && visible(cart)) {
             const ch = chip.getBoundingClientRect().height;
             const kh = cart.getBoundingClientRect().height;
-            if (Math.abs(ch - kh) > 1 || Math.abs(ch - 32) > 1.5) {
-              issues.netsuiteLabels.push(`pill heights chip=${ch.toFixed(1)} cart=${kh.toFixed(1)} (want 32)`);
+            if (Math.abs(ch - kh) > 1 || Math.abs(ch - 36) > 1.5) {
+              issues.netsuiteLabels.push(`pill heights chip=${ch.toFixed(1)} cart=${kh.toFixed(1)} (want 36)`);
             }
             const cr = getComputedStyle(chip).borderRadius;
             const kr = getComputedStyle(cart).borderRadius;
             if (cr !== kr) issues.netsuiteLabels.push(`pill radius mismatch ${cr} vs ${kr}`);
+            const pl = parseFloat(getComputedStyle(chip).paddingLeft) || 0;
+            const prPad = parseFloat(getComputedStyle(chip).paddingRight) || 0;
+            if (Math.abs(pl - 12) > 1 || prPad < 12 || prPad > 15) {
+              issues.pixelNits.push(`account pad L=${pl} R=${prPad} (want L=12, R=12–14 optical)`);
+            }
             const av = chip.querySelector("[data-retailer-avatar]");
             if (av) {
               const aw = av.getBoundingClientRect().width;
-              if (Math.abs(aw - 24) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 24)`);
+              if (Math.abs(aw - 28) > 1.5) issues.netsuiteLabels.push(`avatar ${aw.toFixed(1)}px (want 28)`);
               const img = av.querySelector("img");
               if (!img || !/engage-logo/i.test(img.getAttribute("src") || "")) {
                 issues.pixelNits.push("account chip missing Engage logo asset");
               }
               const gap = parseFloat(getComputedStyle(chip).gap) || 0;
-              if (Math.abs(gap - 8) > 1) {
-                issues.pixelNits.push(`account chip gap ${gap}px (want 8)`);
+              if (gap < 9.5 || gap > 12.5) {
+                issues.pixelNits.push(`account chip gap ${gap}px (want 10–12)`);
               }
             }
             // Count chip inside pill — never corner badge; hidden when empty
@@ -991,6 +1178,29 @@ async function main() {
                 }
                 if (br.left < pr.left - 0.5 || br.right > pr.right + 0.5) {
                   issues.pixelNits.push("count-chip horizontally overflows cart pill");
+                }
+                const bg = getComputedStyle(countChip).backgroundColor || "";
+                if (bg !== "rgb(44, 62, 224)") {
+                  issues.pixelNits.push(`count-chip fill ${bg} (want JOOLA blue)`);
+                }
+                const range = document.createRange();
+                range.selectNodeContents(countChip);
+                const tr = range.getBoundingClientRect();
+                if (tr.width > 0 && tr.height > 0) {
+                  const dx = Math.abs((tr.left + tr.right) / 2 - (br.left + br.right) / 2);
+                  const dy = Math.abs((tr.top + tr.bottom) / 2 - (br.top + br.bottom) / 2);
+                  if (dx > 0.5 || dy > 0.5) {
+                    issues.pixelNits.push(
+                      `count-chip optical centre Δx=${dx.toFixed(2)} Δy=${dy.toFixed(2)} (max 0.5)`
+                    );
+                  }
+                }
+                const pillCy = (pr.top + pr.bottom) / 2;
+                const chipCy = (br.top + br.bottom) / 2;
+                if (Math.abs(pillCy - chipCy) > 1) {
+                  issues.pixelNits.push(
+                    `count-chip not vertically centred on pill (Δ=${Math.abs(pillCy - chipCy).toFixed(2)})`
+                  );
                 }
                 if (cart.querySelector(".badge:not(.count-chip)")) {
                   issues.pixelNits.push("legacy corner .badge still present");
@@ -1102,17 +1312,79 @@ async function main() {
             }
           }
 
-          // Shop joola.com text x = nav icon x
+          // Store link = nav-item twin (height, icon x, text x, stroke)
           const store = root.querySelector("[data-store-link]");
-          const navIcon = root.querySelector(".nav-item .icon-slot");
-          if (store && navIcon && visible(store) && visible(navIcon)) {
-            const padL = parseFloat(getComputedStyle(store).paddingLeft) || 0;
-            const sx = store.getBoundingClientRect().left + padL;
+          const navItem = root.querySelector(".sidebar-nav .nav-item");
+          const navIcon = navItem && navItem.querySelector(".icon-slot");
+          const storeIcon = store && store.querySelector(".icon-slot");
+          if (store && navItem && navIcon && storeIcon && visible(store) && visible(navIcon)) {
+            const sr = store.getBoundingClientRect();
+            const nr = navItem.getBoundingClientRect();
+            if (Math.abs(sr.height - nr.height) > 1 || Math.abs(sr.height - 36) > 1.5) {
+              issues.pixelNits.push(
+                `store h=${sr.height.toFixed(1)} vs nav h=${nr.height.toFixed(1)} (want 36)`
+              );
+            }
+            const sx = storeIcon.getBoundingClientRect().left;
             const ix = navIcon.getBoundingClientRect().left;
-            if (Math.abs(sx - ix) > 1.5) {
-              issues.pixelNits.push(`store text x=${Math.round(sx)} vs nav icon x=${Math.round(ix)}`);
+            if (Math.abs(sx - ix) > 1) {
+              issues.pixelNits.push(`store icon x=${sx.toFixed(1)} vs nav icon x=${ix.toFixed(1)}`);
+            }
+            const storeText = store.querySelector("span:not(.icon-slot)");
+            const navText = navItem.querySelector("span:not(.icon-slot)");
+            if (storeText && navText) {
+              const stx = storeText.getBoundingClientRect().left;
+              const ntx = navText.getBoundingClientRect().left;
+              if (Math.abs(stx - ntx) > 1) {
+                issues.pixelNits.push(`store text x=${stx.toFixed(1)} vs nav text x=${ntx.toFixed(1)}`);
+              }
+            }
+            const storeSvg = storeIcon.querySelector("svg");
+            const navSvg = navIcon.querySelector("svg");
+            if (storeSvg && navSvg) {
+              const sw = storeSvg.getBoundingClientRect().width;
+              const nw = navSvg.getBoundingClientRect().width;
+              if (Math.abs(sw - nw) > 1) {
+                issues.pixelNits.push(`store icon size ${sw.toFixed(1)} vs nav ${nw.toFixed(1)}`);
+              }
+              const sStroke = storeSvg.getAttribute("stroke-width") || getComputedStyle(storeSvg).strokeWidth;
+              const nStroke = navSvg.getAttribute("stroke-width") || getComputedStyle(navSvg).strokeWidth;
+              // stroke comes from CSS var — compare computed
+              const ss = parseFloat(getComputedStyle(storeSvg).strokeWidth) || parseFloat(sStroke) || 0;
+              const ns = parseFloat(getComputedStyle(navSvg).strokeWidth) || parseFloat(nStroke) || 0;
+              if (ss && ns && Math.abs(ss - ns) > 0.2) {
+                issues.pixelNits.push(`store stroke ${ss} vs nav ${ns}`);
+              }
+            }
+            if (!store.classList.contains("nav-item")) {
+              issues.pixelNits.push("store link missing nav-item class");
+            }
+          } else if (store && !storeIcon) {
+            issues.pixelNits.push("store link missing icon-slot (must match nav)");
+          }
+
+          // Zero middle-dot rule (prefer 0, hard max 1) — screen content only
+          {
+            const text = root.innerText || "";
+            const dots = (text.match(/·/g) || []).length;
+            if (dots > 1) {
+              issues.pixelNits.push(`middle-dot count ${dots} (max 1, prefer 0)`);
             }
           }
+
+          // No native <select> in buyer chrome
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push("native <select> visible");
+          });
+
+          // No all-caps tracked eyebrows in product UI
+          root.querySelectorAll("h2, h3, .label-quiet, .rail-card h3, .section-title, .oc-label, .msg-details .k").forEach((el) => {
+            if (!visible(el)) return;
+            const cs = getComputedStyle(el);
+            if (cs.textTransform === "uppercase" && parseFloat(cs.letterSpacing) > 0) {
+              issues.pixelNits.push(`eyebrow style on ${el.className || el.tagName}: "${(el.textContent || "").trim().slice(0, 24)}"`);
+            }
+          });
 
           // Search dropdown is an overlay (absolute), not in flow
           const results = root.querySelector("[data-search-results]");
@@ -1186,7 +1458,7 @@ async function main() {
             }
           }
 
-          // QO page max-width intentional at 1440
+          // QO page max-width ~1120 so table+rail fill wide viewports
           const page = root.querySelector(".page");
           if (page) {
             const cs = getComputedStyle(page);
@@ -1195,14 +1467,22 @@ async function main() {
               issues.pixelNits.push("qo page missing max-width (wide empty feel)");
             } else {
               const n = parseFloat(maxW);
-              if (!(n > 900 && n <= 1200)) {
-                issues.pixelNits.push(`qo page max-width=${maxW} (want ~1080)`);
+              if (!(n >= 1100 && n <= 1140)) {
+                issues.pixelNits.push(`qo page max-width=${maxW} (want ~1120)`);
+              }
+            }
+            const footer = root.querySelector("[data-order-footer]");
+            if (footer) {
+              const fm = getComputedStyle(footer).maxWidth;
+              const fn = parseFloat(fm);
+              if (!fm || fm === "none" || Math.abs(fn - parseFloat(maxW)) > 1) {
+                issues.pixelNits.push(`footer max-width=${fm} (want match page ${maxW})`);
               }
             }
           }
         }
 
-        // Filled cart: count-chip visible and inside pill (cart screen)
+        // Filled cart: count-chip visible, inside pill, optically centred (cart screen)
         if (screen === "cart") {
           const cart = root.querySelector("[data-cart-pill]");
           const countChip = cart && cart.querySelector(".count-chip, [data-cart-count]");
@@ -1217,7 +1497,38 @@ async function main() {
             if ((countChip.textContent || "").trim() === "0") {
               issues.pixelNits.push("filled cart shows 0");
             }
+            const bg = getComputedStyle(countChip).backgroundColor || "";
+            if (bg !== "rgb(44, 62, 224)") {
+              issues.pixelNits.push(`filled count-chip fill ${bg} (want JOOLA blue)`);
+            }
+            const range = document.createRange();
+            range.selectNodeContents(countChip);
+            const tr = range.getBoundingClientRect();
+            if (tr.width > 0 && tr.height > 0) {
+              const dx = Math.abs((tr.left + tr.right) / 2 - (br.left + br.right) / 2);
+              const dy = Math.abs((tr.top + tr.bottom) / 2 - (br.top + br.bottom) / 2);
+              if (dx > 0.5 || dy > 0.5) {
+                issues.pixelNits.push(
+                  `filled count-chip optical centre Δx=${dx.toFixed(2)} Δy=${dy.toFixed(2)} (max 0.5)`
+                );
+              }
+            }
           }
+          // Hard rules on every buyer screen with chrome
+          const dots = ((root.innerText || "").match(/·/g) || []).length;
+          if (dots > 1) issues.pixelNits.push(`cart middle-dot count ${dots} (max 1)`);
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push("cart shows native <select>");
+          });
+        }
+
+        // Middle-dot + no-select on remaining screens
+        if (["catalog", "templates", "invoices", "messages"].includes(screen)) {
+          const dots = ((root.innerText || "").match(/·/g) || []).length;
+          if (dots > 1) issues.pixelNits.push(`${screen} middle-dot count ${dots} (max 1)`);
+          root.querySelectorAll("select").forEach((sel) => {
+            if (visible(sel)) issues.pixelNits.push(`${screen} shows native <select>`);
+          });
         }
 
         // Net 30 beside credit — cart summary (credit shown once, where it matters)
@@ -1231,6 +1542,57 @@ async function main() {
           const page = root.querySelector(".page");
           if (page && !/Net 30/i.test(page.textContent || "")) {
             issues.netsuiteLabels.push("invoices page missing Net 30 terms");
+          }
+        }
+
+        // Credit figures must reconcile on cart + invoices (same ledger)
+        if (screen === "cart" || screen === "invoices") {
+          const t = root.innerText || "";
+          const need = [
+            ["thisOrder", orderTotal],
+            ["priorAvailable", creditPriorAvailable],
+            ["afterOrder", creditAfterOrder],
+            ["limit", creditLimit],
+          ];
+          // Cart Uses line must include thisOrder + priorAvailable
+          if (screen === "cart") {
+            need.forEach(([name, n]) => {
+              if (name === "limit") return; // limit may only appear in tip/invoices
+              if (!t.includes(n.toLocaleString("en-US", { style: "currency", currency: "USD" })) &&
+                  !t.includes("$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","))) {
+                // fallback parse
+                const monies = [];
+                const re = /\$[\d,]+(?:\.\d{2})?/g;
+                let m;
+                while ((m = re.exec(t))) monies.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+                if (!monies.some((x) => Math.abs(x - n) <= 0.009)) {
+                  issues.creditReconcile.push(`cart missing credit ${name}=$${n.toFixed(2)}`);
+                }
+              }
+            });
+            // Arithmetic: priorUsed + thisOrder + afterOrder === limit
+            if (Math.abs(creditPriorUsed + orderTotal + creditAfterOrder - creditLimit) > 0.009) {
+              issues.creditReconcile.push("ledger prior+order+left ≠ limit");
+            }
+            if (Math.abs(creditPriorAvailable - (creditLimit - creditPriorUsed)) > 0.009) {
+              issues.creditReconcile.push("priorAvailable ≠ limit − priorUsed");
+            }
+            if (Math.abs(creditPriorAvailable - orderTotal - creditAfterOrder) > 0.009) {
+              issues.creditReconcile.push("priorAvailable − thisOrder ≠ afterOrder");
+            }
+          }
+          if (screen === "invoices") {
+            const monies = [];
+            const re = /\$[\d,]+(?:\.\d{2})?/g;
+            let m;
+            while ((m = re.exec(t))) monies.push(Math.round(parseFloat(m[0].replace(/[$,]/g, "")) * 100) / 100);
+            if (!monies.some((x) => Math.abs(x - creditAvailable) <= 0.009) &&
+                !monies.some((x) => Math.abs(x - creditAfterOrder) <= 0.009)) {
+              issues.creditReconcile.push(`invoices missing available/left $${creditAvailable.toFixed(2)}`);
+            }
+            if (!monies.some((x) => Math.abs(x - orderTotal) <= 0.009)) {
+              issues.creditReconcile.push(`invoices missing order total $${orderTotal.toFixed(2)}`);
+            }
           }
         }
 
@@ -1257,6 +1619,8 @@ async function main() {
           const usedGreys = new Set();
           const walk = (el) => {
             if (!el || el.nodeType !== 1) return;
+            // Badge may use 600; exclude from chrome type-scale gate
+            if (el.classList && el.classList.contains("count-chip")) return;
             const st = getComputedStyle(el);
             if (st.display === "none" || st.visibility === "hidden") return;
             const hasText = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
@@ -1295,6 +1659,10 @@ async function main() {
         orderTotal: ledger.orderTotal,
         creditUsed: ledger.credit.used,
         creditLimit: ledger.credit.limit,
+        creditAvailable: ledger.credit.available,
+        creditPriorUsed: ledger.credit.priorUsed,
+        creditPriorAvailable: ledger.credit.priorAvailable,
+        creditAfterOrder: ledger.credit.afterOrder,
         perseusQty: ledger.perseusQty,
         perseusUnit: ledger.perseusUnit,
         buyerBySku: Object.fromEntries(
@@ -1329,6 +1697,7 @@ async function main() {
       ["qo-rail", result.qoRail],
       ["msg-context", result.msgContext],
       ["cart-checkout", result.cartCheckout],
+      ["credit-reconcile", result.creditReconcile],
       ["netsuite-labels", result.netsuiteLabels],
       ["pixel-nits", result.pixelNits],
       ["fonts-loaded", result.fontsLoaded],
@@ -1351,11 +1720,12 @@ async function main() {
         "tabular-nums": ["qo-desktop", "catalog", "cart", "invoices", "messages", "qo-mobile"],
         "single-accent": ["qo-desktop", "catalog", "cart", "invoices", "messages"],
         "multi-line": ["qo-desktop", "cart", "invoices", "messages"],
-        "ia": ["qo-desktop", "catalog", "invoices", "messages"],
+        "ia": ["qo-desktop", "catalog", "cart", "confirmation", "invoices", "messages"],
         "interaction-css": ["qo-desktop"],
         "qo-rail": ["qo-desktop"],
         "msg-context": ["messages"],
         "cart-checkout": ["cart"],
+        "credit-reconcile": ["cart", "invoices"],
         "netsuite-labels": ["qo-desktop", "cart", "invoices", "messages"],
         "pixel-nits": ["qo-desktop", "cart"],
         "fonts-loaded": ["qo-desktop"],
@@ -1611,6 +1981,327 @@ async function main() {
       "toast-success",
       after.toastShown && /added|cart/i.test(after.toastText),
       after.toastShown ? after.toastText.trim().slice(0, 60) : "toast not shown"
+    );
+  }
+
+  // Pixel-ink checks (PIL): badge digit, badge↔text cap centre, account pad, credit flush
+  {
+    await page.evaluate(() => {
+      document.querySelectorAll(".screen").forEach((el) => {
+        el.classList.toggle("active", el.getAttribute("data-screen") === "cart");
+      });
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(140);
+    const tmp = mkdtempSync(join(tmpdir(), "joola-ink-"));
+    const cartPillPath = join(tmp, "cart-pill.png");
+    const badgePath = join(tmp, "badge.png");
+    const acctPath = join(tmp, "account.png");
+    const creditPath = join(tmp, "credit.png");
+    // Integer clip — half-pixel topbar centering used to yield 37px element
+    // screenshots and false-fail ink centres. Prefer an exact 36× crop.
+    {
+      const box = await page.locator('[data-screen="cart"] [data-cart-pill]').boundingBox();
+      if (box) {
+        await page.screenshot({
+          path: cartPillPath,
+          clip: {
+            x: Math.round(box.x),
+            y: Math.round(box.y),
+            width: Math.round(box.width),
+            height: 36,
+          },
+        });
+      } else {
+        await page.locator('[data-screen="cart"] [data-cart-pill]').screenshot({ path: cartPillPath });
+      }
+    }
+    await page.locator('[data-screen="cart"] [data-cart-count]').screenshot({ path: badgePath });
+    await page.locator('[data-screen="cart"] [data-account-chip]').screenshot({ path: acctPath });
+    await page.locator('[data-screen="cart"] [data-credit-bar]').screenshot({ path: creditPath });
+    const gapDom = await page.evaluate(() => {
+      const cart = document.querySelector('[data-screen="cart"] [data-cart-pill]');
+      const badge = cart && cart.querySelector("[data-cart-count]");
+      const spans = cart ? [...cart.querySelectorAll(":scope > span:not(.count-chip)")] : [];
+      if (!badge || !spans.length) return null;
+      const last = spans[spans.length - 1].getBoundingClientRect();
+      const br = badge.getBoundingClientRect();
+      return {
+        gap: br.left - last.right,
+        bw: br.width,
+        bh: br.height,
+        fs: parseFloat(getComputedStyle(badge).fontSize) || 0,
+        lh: getComputedStyle(badge).lineHeight,
+      };
+    });
+    const acctDom = await page.evaluate(() => {
+      const chip = document.querySelector('[data-screen="cart"] [data-account-chip]');
+      const av = chip && chip.querySelector("[data-retailer-avatar]");
+      const meta = chip && chip.querySelector(".account-meta");
+      if (!chip || !av || !meta) return null;
+      const cr = chip.getBoundingClientRect();
+      const ar = av.getBoundingClientRect();
+      const mr = meta.getBoundingClientRect();
+      const name = meta.querySelector(".name");
+      const role = meta.querySelector(".role");
+      // Right optical edge = max text scroll/offset width within meta
+      let textRight = mr.left;
+      [name, role].forEach((el) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        // range for glyph box
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const tr = range.getBoundingClientRect();
+        textRight = Math.max(textRight, tr.right || r.right);
+      });
+      return {
+        h: cr.height,
+        av: ar.width,
+        gap: ar.left - cr.left > 0 ? parseFloat(getComputedStyle(chip).gap) || 0 : 0,
+        padL: ar.left - cr.left,
+        padR: cr.right - textRight,
+        gapCss: parseFloat(getComputedStyle(chip).gap) || 0,
+        metaCy: (mr.top + mr.bottom) / 2,
+        chipCy: (cr.top + cr.bottom) / 2,
+        avCy: (ar.top + ar.bottom) / 2,
+      };
+    });
+    const py = `
+from PIL import Image
+import json
+
+def is_blue(r,g,b,a=255):
+  return a >= 180 and abs(r-44)<55 and abs(g-62)<55 and abs(b-224)<55
+
+def is_dark(r,g,b,a=255):
+  return a >= 180 and (r+g+b) < 520
+
+def is_muted_fill(r,g,b,a=255):
+  if a < 180: return False
+  if is_blue(r,g,b,a): return False
+  avg = (r+g+b)/3
+  return 120 <= avg <= 200 and max(r,g,b)-min(r,g,b) < 35
+
+badge = Image.open(${JSON.stringify(badgePath)}).convert("RGBA")
+pill = Image.open(${JSON.stringify(cartPillPath)}).convert("RGBA")
+acct = Image.open(${JSON.stringify(acctPath)}).convert("RGBA")
+credit = Image.open(${JSON.stringify(creditPath)}).convert("RGBA")
+bw, bh = badge.size
+# Digit ink centre inside badge circle
+ink = []
+for y in range(bh):
+  for x in range(bw):
+    r,g,b,a = badge.getpixel((x,y))
+    if a < 200: continue
+    if is_blue(r,g,b,a): continue
+    if r>235 and g>235 and b>235: continue
+    ink.append((x,y))
+digit_ok = False
+dx = dy = 99.0
+if ink:
+  cx = sum(p[0] for p in ink)/len(ink)
+  cy = sum(p[1] for p in ink)/len(ink)
+  dx = abs(cx - (bw-1)/2)
+  dy = abs(cy - (bh-1)/2)
+  digit_ok = dx <= 1.0 and dy <= 1.0
+
+pw, ph = pill.size
+pill_cy = (ph - 1) / 2.0
+blue_pts = []
+for y in range(ph):
+  for x in range(pw):
+    r,g,b,a = pill.getpixel((x,y))
+    if is_blue(r,g,b,a):
+      blue_pts.append((x,y))
+badge_cy = badge_left = None
+if blue_pts:
+  badge_left = min(p[0] for p in blue_pts)
+  badge_right = max(p[0] for p in blue_pts)
+  badge_top = min(p[1] for p in blue_pts)
+  badge_bot = max(p[1] for p in blue_pts)
+  badge_cy = (badge_top + badge_bot) / 2.0
+
+# All dark text ink left of badge
+text_ink = []
+x_limit = (badge_left - 3) if badge_left is not None else pw
+for y in range(ph):
+  for x in range(max(0, x_limit)):
+    r,g,b,a = pill.getpixel((x,y))
+    if is_dark(r,g,b,a):
+      text_ink.append((x,y))
+
+# Split "Cart" (left cluster) from amount via the largest horizontal gap
+xheight_cy = None
+pad_top = pad_bot = 99.0
+pad_eq = False
+badge_vs_pill = 99.0
+x_vs_pill = 99.0
+x_vs_badge = 99.0
+align_ok = False
+gap_ink = 99.0
+if text_ink and badge_cy is not None:
+  xs = sorted(set(p[0] for p in text_ink))
+  # Find first large gap (>3px) after start → end of "Cart"
+  cart_right = xs[0]
+  for i in range(1, len(xs)):
+    if xs[i] - xs[i-1] > 3:
+      cart_right = xs[i-1]
+      break
+    cart_right = xs[i]
+  cart_ink = [p for p in text_ink if p[0] <= cart_right]
+  # Lowercase 'art' = right ~70% of Cart word (skip capital C)
+  if cart_ink:
+    cxs = sorted(p[0] for p in cart_ink)
+    cut = cxs[0] + (cxs[-1] - cxs[0]) * 0.28
+    art_ink = [p for p in cart_ink if p[0] >= cut]
+    if not art_ink:
+      art_ink = cart_ink
+    ays = sorted(p[1] for p in art_ink)
+    xheight_cy = (ays[0] + ays[-1]) / 2.0
+  # Equal vertical padding of ALL text ink to pill edges
+  tys = sorted(p[1] for p in text_ink)
+  pad_top = tys[0]
+  pad_bot = (ph - 1) - tys[-1]
+  pad_eq = abs(pad_top - pad_bot) <= 0.75
+  badge_vs_pill = abs(badge_cy - pill_cy)
+  x_vs_pill = abs(xheight_cy - pill_cy) if xheight_cy is not None else 99
+  x_vs_badge = abs(xheight_cy - badge_cy) if xheight_cy is not None else 99
+  # Mudit: badge ink centre AND x-height centre both = pill centre within 0.5px @1x
+  align_ok = badge_vs_pill <= 0.5 and x_vs_pill <= 0.5 and x_vs_badge <= 0.5 and pad_eq
+  gap_ink = badge_left - max(p[0] for p in text_ink)
+
+# --- account chip optical pad ---
+aw, ah = acct.size
+logo_right = logo_left = None
+for x in range(aw):
+  col_dark = 0
+  for y in range(ah):
+    r,g,b,a = acct.getpixel((x,y))
+    if a < 200: continue
+    if r+g+b < 700:
+      col_dark += 1
+  if col_dark >= max(3, ah // 6):
+    if logo_left is None:
+      logo_left = x
+    logo_right = x
+  elif logo_left is not None and x > logo_left + 8:
+    break
+acct_text = []
+start = (logo_right + 2) if logo_right is not None else 0
+for y in range(ah):
+  for x in range(start, aw):
+    r,g,b,a = acct.getpixel((x,y))
+    if is_dark(r,g,b,a):
+      acct_text.append((x,y))
+pad_l = pad_r = 99.0
+pad_ok = False
+meta_cy_ok = False
+if logo_left is not None and acct_text:
+  pad_l = logo_left
+  text_right = max(p[0] for p in acct_text)
+  pad_r = (aw - 1) - text_right
+  pad_ok = abs(pad_l - pad_r) <= 2.5 and 9 <= pad_l <= 16 and 9 <= pad_r <= 16
+  tys = sorted(p[1] for p in acct_text)
+  meta_cy = (tys[0] + tys[-1]) / 2
+  meta_cy_ok = abs(meta_cy - (ah - 1) / 2) <= 1.5
+
+# --- credit bar flush ---
+cw, ch = credit.size
+mid = ch // 2
+cols = []
+for x in range(cw):
+  r,g,b,a = credit.getpixel((x, mid))
+  if is_blue(r,g,b,a):
+    cols.append("o")
+  elif is_muted_fill(r,g,b,a):
+    cols.append("u")
+  else:
+    cols.append("r")
+runs = []
+for c in cols:
+  if not runs or runs[-1][0] != c:
+    runs.append([c, 1])
+  else:
+    runs[-1][1] += 1
+seq = "".join(r[0] for r in runs)
+flush_ok = seq in ("uor", "ur", "or", "uo", "u", "o", "r")
+if not flush_ok and (seq.startswith("uor") or seq.startswith("uo") or seq.startswith("ur")):
+  flush_ok = True
+gap_runs = [r for r in runs if r[0] == "r" and r != runs[-1]]
+stub_fail = any(r[1] <= 3 for r in gap_runs) or (len(gap_runs) > 0 and "o" in seq and seq.index("r") < seq.rfind("o"))
+edge_ok = cols and cols[0] in ("u", "o", "r") and cols[-1] in ("u", "o", "r") and ch >= 5 and ch <= 8
+flush_ok = flush_ok and not stub_fail and edge_ok and "u" in seq
+
+print(json.dumps({
+  "digit_ok": digit_ok, "dx": dx, "dy": dy, "ink_n": len(ink),
+  "align_ok": align_ok,
+  "badge_vs_pill": badge_vs_pill, "x_vs_pill": x_vs_pill, "x_vs_badge": x_vs_badge,
+  "pad_top": pad_top, "pad_bot": pad_bot, "pad_eq": pad_eq,
+  "pill_cy": pill_cy, "badge_cy": badge_cy, "xheight_cy": xheight_cy,
+  "gap_ink": gap_ink,
+  "pad_ok": pad_ok, "pad_l": pad_l, "pad_r": pad_r, "meta_cy_ok": meta_cy_ok,
+  "flush_ok": flush_ok, "credit_seq": seq, "credit_h": ch, "stub_fail": stub_fail,
+}))
+`;
+    const inkRun = spawnSync("python3", ["-c", py], { encoding: "utf8" });
+    let ink = {};
+    try {
+      ink = JSON.parse((inkRun.stdout || "").trim().split("\n").pop());
+    } catch {
+      ink = { err: (inkRun.stderr || inkRun.stdout || "").slice(0, 200) };
+    }
+    record(
+      "cart",
+      "badge-ink",
+      !!ink.digit_ok,
+      ink.digit_ok
+        ? `digit ink Δx=${Number(ink.dx).toFixed(2)} Δy=${Number(ink.dy).toFixed(2)} (≤1px)`
+        : `digit ink fail Δx=${ink.dx} Δy=${ink.dy} n=${ink.ink_n} ${ink.err || ""}`.slice(0, 100)
+    );
+    const gapOk = gapDom && gapDom.gap >= 7 && gapDom.gap <= 9;
+    const sizeOk =
+      gapDom &&
+      Math.abs(gapDom.bw - 20) <= 1.25 &&
+      Math.abs(gapDom.bh - 20) <= 1.25 &&
+      Math.abs(gapDom.fs - 12) <= 0.5;
+    record(
+      "cart",
+      "badge-cap",
+      !!(ink.align_ok && gapOk && sizeOk && Number(ink.gap_ink) >= 6 && Number(ink.gap_ink) <= 12),
+      ink.align_ok != null
+        ? `badge↔pill Δ=${Number(ink.badge_vs_pill).toFixed(2)} x↔pill Δ=${Number(ink.x_vs_pill).toFixed(2)} pad ${Number(ink.pad_top).toFixed(1)}/${Number(ink.pad_bot).toFixed(1)} size=${gapDom ? `${gapDom.bw.toFixed(0)}x${gapDom.bh.toFixed(0)}@${gapDom.fs}` : "?"}`
+        : `missing ${ink.err || ""}`.slice(0, 100)
+    );
+    const acctPadOk =
+      acctDom &&
+      Math.abs(acctDom.h - 36) <= 1.5 &&
+      Math.abs(acctDom.av - 28) <= 1.5 &&
+      acctDom.gapCss >= 9.5 &&
+      acctDom.gapCss <= 12.5 &&
+      Math.abs(acctDom.padL - 12) <= 1.5 &&
+      acctDom.padR >= 11 &&
+      acctDom.padR <= 16 &&
+      // Right may be 1–2px larger so long names clear the pill curve optically
+      acctDom.padR + 0.5 >= acctDom.padL &&
+      acctDom.padR - acctDom.padL <= 3 &&
+      Math.abs(acctDom.metaCy - acctDom.chipCy) <= 1 &&
+      Math.abs(acctDom.avCy - acctDom.chipCy) <= 1;
+    record(
+      "cart",
+      "account-pad",
+      !!(acctPadOk && ink.meta_cy_ok),
+      acctDom
+        ? `h=${acctDom.h.toFixed(1)} av=${acctDom.av.toFixed(1)} gap=${acctDom.gapCss} pad L=${acctDom.padL.toFixed(1)} R=${acctDom.padR.toFixed(1)} metaΔ=${Math.abs(acctDom.metaCy - acctDom.chipCy).toFixed(2)}`
+        : `account pad fail ${ink.err || ""}`.slice(0, 80)
+    );
+    record(
+      "cart",
+      "credit-flush",
+      !!(ink.flush_ok && ink.credit_h >= 5 && ink.credit_h <= 8),
+      ink.credit_seq
+        ? `seq=${ink.credit_seq} h=${ink.credit_h} stub=${ink.stub_fail}`
+        : `credit flush fail ${ink.err || ""}`.slice(0, 80)
     );
   }
 

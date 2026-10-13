@@ -1,83 +1,63 @@
-# JOOLA B2B portal — design tokens (round 5 · less but better)
+# JOOLA B2B portal — design tokens (round 8)
 
 Customer-facing wholesale portal only. Enforce via CSS variables + `check-prototype.mjs`.
 
 ## Principles
 
-- **Less but better:** one rail, one credit surface, stock only when not in stock.
-- **One family:** FK Grotesk Neue only (logo images for brand marks). Money uses the same family + `tabular-nums`.
-- **Tight type:** 4 sizes, 2 weights, 3 greys. No 700 in chrome.
+- **Less but better.** Empathy in every control.
+- **One family:** FK Grotesk Neue (logo images for marks). Money: same family + `tabular-nums`.
+- **Tight type:** 4 sizes, 2 weights, 3 greys.
+- **Zero middle dots (hard):** at most **1** `·` per screen, preferably **0**. Separate with hierarchy, stacking, spacing, columns, tnum — never punctuation belts.
 
-## Fonts
+## Heading / label rule
 
-| Role | Face | Weight | Where |
-| --- | --- | --- | --- |
-| Brand mark | `joola-logo.png` | — | Sidebar brand, message JOOLA marks |
-| Retailer mark | `engage-logo.png` | — | Account pill (24px) |
-| UI / body | **FK Grotesk Neue** | 400 | Body, table cells, meta, inputs |
-| UI / emphasis | FK Grotesk Neue | 500 | Nav active, buttons, h1, org name, totals |
+| Role | Size | Weight | Case | Colour | Tracking |
+| --- | --- | --- | --- | --- | --- |
+| Page title | 24px | 500 | Sentence | ink | −0.01em |
+| Section label | 13px | 500 | Sentence | ink | normal |
+| Quiet label | 12px | 500 | Sentence | faint | **none** — no uppercase, no letter-spacing |
 
-`@font-face` must load 400 + 500 (`document.fonts.check`). Computed `font-family` on body, nav, and money totals must start with `FKGroteskNeue` — never a system fallback alone.
+**Forbidden:** all-caps tracked eyebrows (`REORDER`, `TEMPLATES`, etc.).
 
-## Type scale (4)
+## Search IA (one search)
 
-| Token | Size | Weight | Use |
-| --- | --- | --- | --- |
-| `--text-title` | 24px | 500 | Page `h1` |
-| `--text-body` | 14px | 400/500 | Body, totals, product names |
-| `--text-ui` | 13px | 400/500 | Nav, pills, buttons, table primary |
-| `--text-meta` | 12px | 400 | SKU, hints, section labels, secondary |
+**Decision:** Quick Order owns the only product search (types a name/SKU → add line).  
+**Remove** the global top-bar search. Wholesale buyers on this surface are building an order; a second discovery search competes and duplicates. Catalog keeps its own browse; Messages/Invoices do not need a chrome search in this prototype.  
+Cmd-K is not justified without a command palette — omit.
 
-Footer total uses `--text-title` (24px / 500) + tnum — same family as body.
+## Separators (no ·)
 
-## Greys (3) + accent
-
-| Token | Value | Use |
-| --- | --- | --- |
-| `--ink` | `#1a1a1a` | Primary text |
-| `--muted` | `#5c5c66` | Secondary |
-| `--faint` | `#8a8a96` | Tertiary / placeholders / section labels |
-| `--blue` | `#2c3ee0` | Single accent |
-
-## Icons (Lucide-like)
-
-| Token | Value |
+| Was | Now |
 | --- | --- |
-| `--icon-slot` | **16px** |
-| `--icon-size` | **16px** |
-| `--icon-stroke` | **1.5** |
-| Nav gap | **8px** |
-| Nav row | **32px** height, padding `0 8px` (active = hover padding) |
+| `SKU 600558 · 120 × $134.98` | SKU line; qty × price on meta or in columns |
+| Rail `Sep 18 · 3 lines · $3,802.40` | Stacked: date + lines (muted); amount right, tnum |
+| `Anna Bright · Buyer` | Role line: `Anna Bright` only (Buyer implied by portal) |
+| `Ready · 4 lines` | Footer quiet `4 items`; CTA `Add 4 to cart` |
+| `Engage Pickleball · Main` | Address card: name bold, address muted, Change |
 
-ViewBox `0 0 24 24`, stroke icons, no fill. Labels share one x (slot + gap).
+## Content width
 
-## Spacing / sizes
+QO, QO-search, and Cart share `--content-max: 1120px` and `--content-pad-x: 28px`. Sticky footer uses the same max-width and pad so left/right edges align with the page.
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--pill-h` | 32px | Account chip **and** cart pill |
-| `--avatar` | 24px | Retailer logo in account chip |
-| `--chip-gap` | 8px | Avatar→text, name→role stack uses 4px |
-| `--sidebar-w` | 220px | Sidebar |
-| Wholesale | Text chip under logo (no blue dot) | |
-| Store link | Quiet bottom link `Shop joola.com ↗` | |
+## Colour / type / icons
 
-## Account chip (8pt grid)
+Unchanged tokens from r5 (`--ink/muted/faint`, 12/13/14/24, icon 16 in 16 slot, gap 8). Availability exceptions use a quiet grey `.avail-tag` (not orange).
 
-- Height 32; padding `0 12px 0 4px`; gap 8 between logo and text.
-- Name: 13/500, line-height 14. Role: 12/400 faint, line-height 12. Stack gap 2px (optical) within 8pt rhythm.
-- Logo: 24×24 rounded (6px), object-fit contain, band background.
+### Cart count chip
 
-## Quick Order IA
+- Perfect circle **18×18** (or pill if count ≥ 10)
+- Fill: `--blue` (not magenta)
+- Number: white, 12/500, tnum, flex-centred (bbox centre Δ ≤ 0.5px vs chip centre)
+- Vertically centred on the Cart pill
 
-- No page lede; no “Lines” heading.
-- One **Reorder** rail (recent + saved templates merged).
-- Search types **product name** (e.g. `Perseus`); results show name · SKU · price.
-- Qty presets: **≤3**, category-aware (paddles `6/12/24`, balls `12/48/100`, bags `1/3/6`). Stepper kept.
-- Row meta: SKU always; availability only when not “In stock”.
-- Footer: label + total stack (4px/8px); no “Not in cart yet” chip.
-- Credit: cart summary only (not sidebar).
+### Credit
 
-## Checks
+Thin segmented bar: prior used | this order | remaining. Single label: `Net 30` + `$X available`.
 
-`pixel-nits` + `type-scale` + `fonts-loaded` + search-by-name + presets-max-3 + single-rail + no-sidebar-credit.
+### Ship-to
+
+Selectable address **card** (not native `<select>`). Name, address, Change.
+
+### Store link
+
+Nav-identical row: 16px external-link icon + `Back to joola.com store`. Same padding/gap/x as nav items.

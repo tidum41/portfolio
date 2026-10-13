@@ -5,12 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>JOOLA B2B Quick Order (design)</title>
 <style>
+/*
+ * FK Grotesk Neue ships with uneven ascender/descender metrics: glyph ink
+ * sits high in the em-box, so CSS box-centre ≠ optical centre in every
+ * lh:1 pill/button/chip. Override once here so flex/grid centering is
+ * optically correct without per-component padding nudges.
+ * Measured: ascent 85% / descent 15% / line-gap 0 → cap-ink pads equal
+ * in 36px cart pill (and 20px chips) at 1×; progressive text-box trim
+ * below locks the same result where supported.
+ */
 @font-face {
   font-family: "FKGroteskNeue";
   font-weight: 400;
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: "FKGroteskNeue";
@@ -18,6 +30,9 @@
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 @font-face {
   font-family: "FKGroteskNeue";
@@ -25,6 +40,9 @@
   font-style: normal;
   font-display: block;
   src: url("fonts/FKGroteskNeue-700-normal.woff2") format("woff2");
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
 }
 
 :root {
@@ -39,6 +57,7 @@
   --wash: #eceef2;
   --blue: #2c3ee0;
   --blue-soft: rgba(44, 62, 224, 0.08);
+  --credit-used: var(--faint); /* used segment = faint grey, not a 4th grey */
   --page: #ffffff;
   --canvas: #ededec;
   --paid: #198754;
@@ -65,13 +84,13 @@
   --switcher-h: 48px;
   --sidebar-w: 220px;
   --topbar-h: 48px;
-  --pill-h: 32px;
-  --avatar: 24px;
+  --pill-h: 36px;
+  --avatar: 28px;
   --icon-slot: 16px;
   --icon-size: 16px;
   --icon-stroke: 1.5;
-  --chip-gap: 8px;
-  --row-h: 50px;
+  --chip-gap: 12px;
+  --row-h: 52px;
   --head-h: 40px;
   --control-h: 40px;
   --col-thumb: 48px;
@@ -81,6 +100,8 @@
   --col-total: 120px;
   --col-x: 28px;
   --rail-w: 240px;
+  --content-max: 1120px;
+  --content-pad-x: 28px;
   --inv-invoice: 132px;
   --inv-order: 112px;
   --inv-issued: 124px;
@@ -105,6 +126,26 @@ html, body {
 button, input, select, textarea { font: inherit; font-family: var(--font-ui); }
 button { cursor: pointer; border: 0; background: none; color: inherit; }
 img { display: block; max-width: 100%; }
+/*
+ * Cap↔alphabetic trim where supported: the used box matches glyph ink, so
+ * flex/grid centre = optical centre. Font-face overrides above cover engines
+ * without text-box. Single-line chrome only — multi-line meta keeps its
+ * explicit line boxes.
+ */
+.cart-pill > span:not(.count-chip),
+.cart-pill .count-chip,
+.wholesale-chip,
+.ship-card .ship-tag,
+.ship-option .ship-tag,
+.btn-primary,
+.btn-outline,
+.btn-text,
+.btn-send,
+.status,
+.nav-item > span,
+.rec-card .chip {
+  text-box: trim-both cap alphabetic;
+}
 .tnum, [data-display-price], [data-unit-price], [data-line-total],
 [data-order-total], [data-cart-total], [data-invoice-amount],
 [data-credit-used], [data-credit-available], .qty, .amt, .price,
@@ -203,21 +244,25 @@ img { display: block; max-width: 100%; }
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 .nav-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
+  height: 36px;
   padding: 0 8px;
   border-radius: var(--radius-control);
   font-size: var(--text-ui);
   font-weight: 400;
+  line-height: 1;
   color: var(--muted);
   text-align: left;
   width: 100%;
   transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+.nav-item > span {
+  line-height: 1;
 }
 .nav-item .icon-slot,
 .icon-slot {
@@ -260,33 +305,32 @@ img { display: block; max-width: 100%; }
 .sidebar-divider {
   height: 1px;
   background: var(--line);
-  margin: 12px 8px;
+  /* Same 4px rhythm as .sidebar-nav gap; 8px x-inset matches nav pad */
+  margin: 4px 8px;
 }
 .sidebar-footer {
   margin-top: auto;
-  padding: 8px 0 4px; /* match nav: no extra horizontal pad so link x = icon x */
+  padding: 0 0 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px; /* same gap as .sidebar-nav */
 }
-.sidebar-store {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 8px; /* same as .nav-item — text starts at icon x */
-  height: 28px;
-  font-size: var(--text-meta);
-  font-weight: 400;
-  color: var(--faint);
+/* Store link = identical nav-item (no extra chrome / colour / size) */
+a.nav-item.sidebar-store {
   text-decoration: none;
-  border-radius: var(--radius-control);
-  width: 100%;
+  color: var(--muted);
   box-sizing: border-box;
 }
-.sidebar-store:hover { color: var(--muted); background: rgba(112, 115, 147, 0.06); }
-.sidebar-store .ext {
-  font-size: var(--text-meta);
-  line-height: 1;
+a.nav-item.sidebar-store:hover {
+  color: var(--ink);
+  background: rgba(112, 115, 147, 0.06);
+}
+a.nav-item.sidebar-store:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+a.nav-item.sidebar-store:active {
+  background: rgba(112, 115, 147, 0.12);
 }
 
 .main-column {
@@ -301,37 +345,34 @@ img { display: block; max-width: 100%; }
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--line);
+  padding: 0 var(--content-pad-x);
+  /* Hairline via inset shadow so the 48px content box stays even —
+     a border-bottom would shrink flex space to 47px and park pills on .5px,
+     which makes element screenshots 37px and throws ink centres off. */
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 var(--line);
   background: #fff;
   overflow: visible;
+  box-sizing: border-box;
+  width: 100%;
 }
-.top-search {
-  height: var(--pill-h);
-  width: min(420px, 46%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px 0 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: var(--band);
-  font-size: var(--text-ui);
-  color: var(--faint);
+/* Full-bleed topbar rule; right pad so account/cart align with 1120 content edge */
+[data-screen="qo-desktop"] .topbar,
+[data-screen="qo-search"] .topbar,
+[data-screen="cart"] .topbar {
+  padding-right: max(
+    var(--content-pad-x),
+    calc(100% - var(--content-max) + var(--content-pad-x))
+  );
 }
-.top-search .icon-slot svg {
-  width: var(--icon-size);
-  height: var(--icon-size);
-  stroke: currentColor;
-  fill: none;
-  stroke-width: var(--icon-stroke);
-}
+/* Global search removed — Quick Order owns product search (see design-spec) */
 .topbar-right {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   overflow: visible;
 }
 /* Matched pills: account chip + cart share height, radius, border */
@@ -353,7 +394,8 @@ img { display: block; max-width: 100%; }
 }
 .account-chip {
   gap: var(--chip-gap);
-  padding: 0 12px 0 4px;
+  /* 12px content pad; +2px on the right so long name clears the curve optically */
+  padding: 0 14px 0 12px;
 }
 .account-chip:hover { background: var(--band); }
 .account-chip:focus-visible {
@@ -373,7 +415,7 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 2px;
+  padding: 0;
 }
 .retailer-avatar img {
   width: 100%;
@@ -385,34 +427,43 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 0;
   text-align: left;
   min-width: 0;
   padding: 0;
+  /* Two lines: 15 + 13 = 28 → optically centres with 28px logo tile inside 36px pill */
+  height: 28px;
 }
 .account-meta .name {
   font-family: var(--font-ui);
   font-size: var(--text-ui);
   font-weight: 500;
-  line-height: 14px;
-  height: 14px;
+  line-height: 15px;
+  height: 15px;
   color: var(--ink);
+  letter-spacing: 0;
 }
 .account-meta .role {
   font-family: var(--font-ui);
   font-size: var(--text-meta);
   font-weight: 400;
-  line-height: 12px;
-  height: 12px;
+  line-height: 13px;
+  height: 13px;
   color: var(--faint);
+  letter-spacing: 0;
 }
+/* Buyer name only — no "· Buyer" punctuation belt */
 
 .cart-pill {
-  position: relative;
+  /* Flex row @ 36px — every child on the pill’s vertical centre */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
-  padding: 0 10px 0 12px;
+  height: var(--pill-h);
+  padding: 0 12px;
   font-variant-numeric: tabular-nums;
-  overflow: hidden;
+  overflow: visible;
   transition: background-color 0.15s ease-out, border-color 0.15s ease-out, transform 0.15s ease-out;
 }
 .cart-pill:hover { background: var(--band); }
@@ -422,21 +473,49 @@ img { display: block; max-width: 100%; }
 }
 .cart-pill:active { transform: scale(0.98); }
 .cart-pill:disabled { opacity: 0.45; cursor: not-allowed; }
-/* Count lives inside the pill as a chip — never an overlapping corner badge */
+/*
+ * Label + amount: line-height 1, no padding/baseline/position nudges.
+ * Optical centre comes from @font-face ascent/descent overrides + text-box
+ * trim (see top of stylesheet) — not per-span padding-top hacks.
+ */
+.cart-pill > span:not(.count-chip) {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: 1;
+  height: auto;
+  position: static;
+  vertical-align: unset;
+}
+/* Badge: 20px circle, 12/1/600 tnum, grid-centred on the pill */
 .cart-pill .count-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--radius-pill);
-  background: var(--failed);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue);
   color: #fff;
-  font-size: var(--text-meta);
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: center;
+  position: static;
+  vertical-align: unset;
+}
+.cart-pill .count-chip.is-wide {
+  width: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
 }
 .cart-pill .count-chip[hidden] { display: none !important; }
 .cart-pill.bump .cart-amount-display,
@@ -463,14 +542,32 @@ img { display: block; max-width: 100%; }
   font-size: 13px;
   color: var(--ink);
   display: none;
+  align-items: flex-start;
+  gap: 12px;
 }
-.toast.show { display: block; animation: toastIn 0.28s ease-out; }
+.toast.show {
+  display: flex;
+  animation: toastIn 0.28s ease-out;
+}
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.toast .toast-copy { flex: 1; min-width: 0; }
 .toast .toast-title { font-weight: 500; margin-bottom: 2px; }
 .toast .toast-body { color: var(--muted); font-variant-numeric: tabular-nums; }
+.toast .toast-undo {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--blue);
+  line-height: 1;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+}
+.toast .toast-undo[hidden] { display: none !important; }
+.toast .toast-undo:hover { color: var(--ink); }
 .inline-success {
   display: none;
   align-items: center;
@@ -489,14 +586,24 @@ img { display: block; max-width: 100%; }
 }
 
 .page {
-  padding: 28px 28px 100px;
+  padding: 28px var(--content-pad-x) 100px;
   width: 100%;
   flex: 1 1 auto;
+  box-sizing: border-box;
 }
-/* Same content width for every QO film state — search open must not reflow */
+/* Same content width for QO + cart — table/rail fill ~1120, footer matches edges */
 [data-screen="qo-desktop"] .page,
-[data-screen="qo-search"] .page {
-  max-width: 1080px;
+[data-screen="qo-search"] .page,
+[data-screen="cart"] .page {
+  max-width: var(--content-max);
+}
+[data-screen="qo-desktop"] .order-footer,
+[data-screen="qo-search"] .order-footer {
+  max-width: var(--content-max);
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: var(--content-pad-x);
+  padding-right: var(--content-pad-x);
 }
 .page h1 {
   margin: 0;
@@ -504,7 +611,7 @@ img { display: block; max-width: 100%; }
   font-size: var(--text-title);
   line-height: 1.15;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 .page .lede {
   margin: 8px 0 0;
@@ -588,7 +695,19 @@ img { display: block; max-width: 100%; }
   padding: 2px;
 }
 .search-result .title { font-size: 13px; font-weight: 500; }
-.search-result .meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.search-result .meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.search-result .meta .meta-price {
+  font-weight: 500;
+  color: var(--ink);
+}
 
 .section-title {
   margin: 24px 0 10px;
@@ -642,17 +761,32 @@ img { display: block; max-width: 100%; }
 .order-head .qty-h,
 .order-row .qty-cell { text-align: right; }
 .order-row {
-  min-height: 50px;
-  height: 50px;
+  min-height: var(--row-h);
+  height: var(--row-h);
   border-bottom: 1px solid var(--line-soft);
   transition: background-color 0.15s ease-out;
 }
 .order-row:hover { background: rgba(44, 62, 224, 0.03); }
-.order-row.has-presets {
+.order-row.has-presets,
+.order-row.has-avail {
   height: auto;
-  min-height: 50px;
-  padding: 6px 12px;
+  min-height: var(--row-h);
+  padding: 8px 12px;
   align-items: center;
+}
+.avail-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin-top: 4px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--wash);
+  color: var(--muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
 }
 .order-row img.thumb {
   width: 36px; height: 36px;
@@ -660,7 +794,7 @@ img { display: block; max-width: 100%; }
   border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--band);
-  padding: 3px;
+  padding: 4px;
 }
 .order-row > div:nth-child(2),
 .cart-line > div:nth-child(2) {
@@ -866,15 +1000,17 @@ img { display: block; max-width: 100%; }
 .order-footer .meta {
   font-family: var(--font-ui);
   font-size: var(--text-meta);
-  font-weight: 400;
-  color: var(--muted);
+  font-weight: 500;
+  color: var(--faint);
   line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
 }
 .btn-primary {
   height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: 8px;
   background: var(--blue);
   color: #fff;
@@ -897,7 +1033,7 @@ img { display: block; max-width: 100%; }
   height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
@@ -921,7 +1057,7 @@ img { display: block; max-width: 100%; }
   height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 16px;
   border-radius: 8px;
   background: var(--blue);
   color: #fff;
@@ -1036,11 +1172,11 @@ img { display: block; max-width: 100%; }
   display: grid;
   grid-template-columns: 56px 1fr 120px 80px;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   border-radius: 0;
   border: 0;
   border-bottom: 1px solid var(--line-soft);
-  padding: 8px 4px;
+  padding: 8px 0;
   min-height: 56px;
 }
 .catalog-grid.is-list .cat-card .media {
@@ -1063,39 +1199,188 @@ img { display: block; max-width: 100%; }
 .cat-card .price { margin: 4px 12px 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: left; }
 .cat-card .moq { margin: 2px 12px 0; font-size: 12px; color: var(--muted); }
 
-/* Invoices */
+/* Credit meter — one 6px track: used | this order | remaining (flush, no gaps) */
+.credit-meter {
+  margin-top: 16px;
+  position: relative;
+}
+.credit-meter-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.credit-meter-label .avail {
+  color: var(--muted);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+.credit-bar {
+  margin-top: 8px;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--wash); /* remaining track */
+  overflow: hidden;
+  position: relative;
+}
+/* Single flush fill via gradient stops — no per-segment radius/gaps/stubs */
+.credit-bar[data-credit-bar] {
+  background-image: linear-gradient(
+    to right,
+    var(--credit-used) 0,
+    var(--credit-used) var(--credit-used-end, 0%),
+    var(--blue) var(--credit-used-end, 0%),
+    var(--blue) var(--credit-order-end, 0%),
+    var(--wash) var(--credit-order-end, 0%),
+    var(--wash) 100%
+  );
+  background-color: var(--wash);
+  cursor: default;
+}
+.credit-bar > i { display: none; } /* segments encoded in gradient */
+.credit-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 200px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(26, 26, 26, 0.08);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease-out;
+  z-index: 4;
+}
+.credit-tip strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.credit-meter:hover .credit-tip,
+.credit-meter:focus-within .credit-tip {
+  opacity: 1;
+}
 .credit-card {
   width: 380px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 18px;
+  padding: 16px;
   margin-top: 20px;
   background: #fff;
 }
-.credit-card .row {
+.credit-card .credit-meter { margin-top: 0; }
+.cart-notice {
+  margin-top: 12px;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cart-notice.is-warn {
+  color: var(--ink);
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  background: var(--band);
+  border: 1px solid var(--line);
+  white-space: normal;
+}
+.cart-field .po-warn {
+  margin-top: 6px;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  display: none;
+}
+.cart-field .po-warn.show { display: block; }
+/* Confirmation: page/card hug content — never stretch to viewport height */
+[data-screen="confirmation"] .page.page-confirm {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 24px;
+  padding-bottom: 48px;
+  min-height: 0;
+}
+.confirm-panel {
+  margin-top: 0;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px;
+  background: #fff;
+}
+.confirm-panel .confirm-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.confirm-panel h1 { margin: 0; }
+.confirm-panel .confirm-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
+.confirm-panel .confirm-lede {
+  margin: 8px 0 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.confirm-rows {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.confirm-rows .row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
+  gap: 16px;
+  font-size: var(--text-ui);
+}
+.confirm-rows .row[hidden] { display: none !important; }
+.confirm-rows .row .k { color: var(--faint); font-weight: 500; }
+.confirm-rows .row .v {
+  color: var(--ink);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
-.credit-card .row span:first-child { color: var(--muted); font-weight: 400; }
-.credit-card .row span:last-child { font-variant-numeric: tabular-nums; }
-.credit-bar {
-  margin-top: 10px;
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--wash);
-  overflow: hidden;
+.confirm-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
-.credit-bar > i {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--blue);
-}
-.credit-card .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .invoice-table {
   margin-top: 24px;
   width: max-content;
@@ -1213,14 +1498,15 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   background: #fff;
-  padding: 14px;
+  padding: 16px;
 }
-.rail-card h3 {
-  margin: 0 0 10px;
+.rail-card h3,
+.label-quiet {
+  margin: 0 0 12px;
   font-size: var(--text-meta);
   font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: normal;
+  text-transform: none;
   color: var(--faint);
 }
 .rail-item {
@@ -1255,19 +1541,40 @@ img { display: block; max-width: 100%; }
   min-width: 0;
   padding-right: 0;
 }
-.rail-item .name,
-.rail-item .meta {
+.rail-item .rail-id {
   display: block;
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--faint);
+  line-height: 1.25;
   white-space: nowrap;
-  overflow: visible; /* never ellipsis-truncate prices or titles */
-  text-overflow: clip;
 }
-.rail-item .name { font-size: 13px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.rail-item .name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: visible;
+}
 .rail-item .meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   line-height: 1.35;
+  white-space: nowrap;
+}
+.rail-item .meta .meta-left { min-width: 0; color: var(--muted); }
+.rail-item .meta .meta-amt {
+  flex-shrink: 0;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 /* Add overlays the right edge on hover — no reserved column */
 .rail-item .rail-action {
@@ -1312,7 +1619,14 @@ img { display: block; max-width: 100%; }
   padding: 16px 12px;
   background: var(--sidebar-bg);
 }
-.inbox h2 { margin: 0 0 10px; font-size: 13px; font-weight: 500; color: var(--faint); letter-spacing: 0.04em; text-transform: uppercase; }
+.inbox h2 {
+  margin: 0 0 10px;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--faint);
+  letter-spacing: normal;
+  text-transform: none;
+}
 .inbox-item {
   display: flex;
   gap: 10px;
@@ -1359,10 +1673,12 @@ img { display: block; max-width: 100%; }
 }
 .thread-head {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 48px;
-  padding: 0 20px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  min-height: 48px;
+  height: auto;
+  padding: 8px 20px;
   border-bottom: 1px solid var(--line);
   font-size: 14px;
   font-weight: 500;
@@ -1385,12 +1701,15 @@ img { display: block; max-width: 100%; }
 }
 .bubble .who { font-size: 12px; margin-bottom: 6px; }
 .bubble .who b { font-weight: 500; }
-.bubble .who span { color: var(--muted); font-weight: 400; }
+.bubble .who span,
+.bubble .who div { color: var(--muted); font-weight: 400; }
 .bubble.anna {
   align-self: flex-end;
   background: var(--ink);
   color: #fff;
 }
+.bubble.anna .who span,
+.bubble.anna .who div { color: rgba(255, 255, 255, 0.65); }
 .bubble.anna .who span { color: rgba(255,255,255,0.65); }
 .bubble.sam {
   align-self: flex-start;
@@ -1447,10 +1766,10 @@ img { display: block; max-width: 100%; }
   gap: 8px 16px;
 }
 .order-context .oc-label {
-  font-size: 11px;
+  font-size: var(--text-meta);
   font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: normal;
+  text-transform: none;
   color: var(--faint);
 }
 .order-context .oc-value {
@@ -1470,10 +1789,10 @@ img { display: block; max-width: 100%; }
 }
 .msg-details h2 {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: normal;
+  text-transform: none;
   color: var(--faint);
 }
 .msg-details .detail-row {
@@ -1482,11 +1801,11 @@ img { display: block; max-width: 100%; }
   gap: 2px;
 }
 .msg-details .detail-row .k {
-  font-size: 11px;
+  font-size: var(--text-meta);
   color: var(--faint);
   font-weight: 500;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: normal;
+  text-transform: none;
 }
 .msg-details .detail-row .v {
   font-size: 14px;
@@ -1567,23 +1886,97 @@ img { display: block; max-width: 100%; }
 .cart-main .cart-checkout { margin-top: 20px; max-width: none; }
 .cart-line {
   display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: 14px;
+  /* thumb | product | money (qty×price + total) | remove */
+  grid-template-columns: 40px minmax(0, 1fr) auto 32px;
+  column-gap: 12px;
   align-items: center;
-  height: 50px;
-  min-height: 50px;
-  padding: 0 4px;
+  min-height: var(--row-h);
+  height: auto;
+  padding: 8px 0;
   border-bottom: 1px solid var(--line-soft);
 }
+.cart-line.is-removed { display: none; }
+.cart-line .line-remove {
+  justify-self: end;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--faint);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease-out, color 0.12s ease-out, background-color 0.12s ease-out;
+}
+.cart-line .line-remove svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+}
+.cart-line:hover .line-remove,
+.cart-line:focus-within .line-remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cart-line .line-remove:hover { color: var(--ink); background: var(--band); }
+.cart-line .line-remove:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  color: var(--ink);
+}
+@media (hover: none) {
+  .cart-line .line-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+.cart-line.has-avail { min-height: 60px; }
 .cart-line img {
   width: 36px; height: 36px;
   object-fit: contain;
   border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--band);
-  padding: 3px;
+  padding: 4px;
 }
-.cart-line .line-total { text-align: right; }
+.cart-line .cart-prod { min-width: 0; }
+.cart-line .cart-money {
+  display: grid;
+  grid-template-columns: 132px 112px;
+  column-gap: 16px;
+  align-items: baseline;
+  justify-items: end;
+}
+.cart-line .cart-unit {
+  width: 132px;
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.cart-line .line-total {
+  width: 112px;
+  font-size: var(--text-body);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.2;
+  color: var(--ink);
+}
 .cart-checkout {
   margin-top: 20px;
   max-width: 720px;
@@ -1596,7 +1989,7 @@ img { display: block; max-width: 100%; }
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .cart-field .control,
 .cart-field select,
@@ -1619,11 +2012,104 @@ img { display: block; max-width: 100%; }
 }
 .cart-field.span-2 { grid-column: 1 / -1; }
 .cart-field .addr {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: var(--text-meta);
   color: var(--muted);
   line-height: 1.4;
 }
+/* Ship-to: selectable address card (no native select) */
+.ship-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+.ship-card:hover { background: var(--band); }
+.ship-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.ship-card.is-open { border-color: var(--blue); }
+.ship-card-body { min-width: 0; flex: 1 1 auto; }
+.ship-card .ship-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.ship-card .ship-tag,
+.ship-option .ship-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--wash);
+  color: var(--muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
+.ship-card .ship-addr {
+  margin-top: 4px;
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--faint);
+  line-height: 1.4;
+}
+.ship-card .ship-change {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--blue);
+  padding: 2px 0 0;
+  line-height: 1.3;
+}
+.ship-menu {
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  overflow: hidden;
+  max-width: 420px;
+}
+.ship-menu[hidden] { display: none !important; }
+.ship-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: #fff;
+  cursor: pointer;
+}
+.ship-option:first-child { border-top: 0; }
+.ship-option:hover { background: var(--band); }
+.ship-option.is-selected { background: var(--blue-soft); }
+.ship-option .ship-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+}
+.ship-option .ship-addr { margin-top: 4px; font-size: var(--text-meta); color: var(--faint); }
 .need-by {
   grid-column: 1 / -1;
   display: flex;
@@ -1686,7 +2172,7 @@ img { display: block; max-width: 100%; }
 }
 .cart-returns {
   grid-column: 1 / -1;
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 13px;
   color: var(--muted);
 }
@@ -1712,7 +2198,7 @@ img { display: block; max-width: 100%; }
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 18px;
+  padding: 16px;
   background: #fff;
 }
 .cart-summary .sum-row {
@@ -1731,8 +2217,8 @@ img { display: block; max-width: 100%; }
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  margin-top: 14px;
-  padding-top: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--line);
   font-size: 13px;
   color: var(--muted);
@@ -1744,12 +2230,7 @@ img { display: block; max-width: 100%; }
   letter-spacing: -0.02em;
   color: var(--ink);
 }
-.cart-summary .credit-note {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
-}
+.cart-summary .credit-meter { margin-top: 16px; }
 .cart-summary .btn-primary {
   width: 100%;
   justify-content: center;
@@ -1832,10 +2313,11 @@ img { display: block; max-width: 100%; }
   <div id="devSwitcher">
     <span class="label">Screens</span>
     <button type="button" class="tab-btn active" data-tab="qo-desktop">Quick Order</button>
-    <button type="button" class="tab-btn" data-tab="qo-search">QO · Name search</button>
+    <button type="button" class="tab-btn" data-tab="qo-search">QO search</button>
     <button type="button" class="tab-btn" data-tab="catalog">Catalog</button>
     <button type="button" class="tab-btn" data-tab="templates">Templates</button>
     <button type="button" class="tab-btn" data-tab="cart">Cart</button>
+    <button type="button" class="tab-btn" data-tab="confirmation">Confirmation</button>
     <button type="button" class="tab-btn" data-tab="invoices">Invoices &amp; Terms</button>
     <button type="button" class="tab-btn" data-tab="messages">Messages</button>
     <button type="button" class="tab-btn" data-tab="qo-mobile">Quick Order Mobile</button>
@@ -1844,8 +2326,11 @@ img { display: block; max-width: 100%; }
 
   <div id="app"></div>
   <div class="toast" data-toast hidden aria-live="polite">
-    <div class="toast-title">Added to cart</div>
-    <div class="toast-body" data-toast-body></div>
+    <div class="toast-copy">
+      <div class="toast-title" data-toast-title>Added to cart</div>
+      <div class="toast-body" data-toast-body></div>
+    </div>
+    <button type="button" class="toast-undo" data-toast-undo hidden>Undo</button>
   </div>
 
   <script src="ledger.js"></script>
@@ -1878,6 +2363,11 @@ img { display: block; max-width: 100%; }
       invoices: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M12 16H8"/>',
       messages: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
       search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+      external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+      /* Lucide arrow-up-right, optically fitted to the same 16px ink
+         box as nav icons (stock path sits 2–4px right/small in the slot). */
+      "arrow-up-right": '<path d="M4 19 18 5"/><path d="M4 5h14v14"/>',
+      close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     };
     return (
       '<span class="icon-slot" aria-hidden="true">' +
@@ -1895,7 +2385,7 @@ img { display: block; max-width: 100%; }
       src +
       '" alt="' +
       L.retailer.name +
-      '" width="24" height="24">' +
+      '" width="28" height="28">' +
       "</div>"
     );
   }
@@ -1937,6 +2427,7 @@ img { display: block; max-width: 100%; }
   function shellOpen(activeTab, cartOverride) {
     var count = cartOverride ? cartOverride.count : cartUi.count;
     var total = cartOverride ? cartOverride.total : cartUi.total;
+    var chipClass = "count-chip" + (count >= 10 ? " is-wide" : "");
     var items = NAV.map(function (n) {
       return (
         '<button type="button" class="nav-item' + (n.id === activeTab ? " active" : "") + '" data-tab="' + n.id + '">' +
@@ -1954,26 +2445,25 @@ img { display: block; max-width: 100%; }
       "</div>" +
       '<nav class="sidebar-nav">' + items + "</nav>" +
       '<div class="sidebar-footer">' +
-      '<div class="sidebar-divider" style="margin:0 0 4px;"></div>' +
-      '<a class="sidebar-store" data-store-link href="' +
+      '<div class="sidebar-divider" data-sidebar-divider></div>' +
+      '<a class="nav-item sidebar-store" data-store-link href="' +
       (L.storeUrl || "https://joola.com") +
-      '" target="_blank" rel="noopener">Shop joola.com<span class="ext" aria-hidden="true">↗</span></a>' +
+      '" target="_blank" rel="noopener">' +
+      icon("arrow-up-right") +
+      "<span>Back to joola.com store</span></a>" +
       "</div>" +
       "</aside>" +
       '<div class="main-column">' +
       '<header class="topbar" data-topbar>' +
-      '<div class="top-search">' +
-      icon("search") +
-      "<span>Search products, orders, invoices</span></div>" +
       '<div class="topbar-right">' +
       '<button type="button" class="account-chip" data-account-chip>' +
       avatarHtml() +
-      '<div class="account-meta"><div class="name">' + L.retailer.name + '</div><div class="role">' + L.retailer.buyer + " · " + L.retailer.role + "</div></div>" +
+      '<div class="account-meta"><div class="name">' + L.retailer.name + '</div><div class="role">' + L.retailer.buyer + "</div></div>" +
       "</button>" +
       '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
       "<span>Cart</span>" +
       '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
-      '<span class="count-chip" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
+      '<span class="' + chipClass + '" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
       (count === 0 ? "" : count) +
       "</span>" +
       "</button>" +
@@ -1981,9 +2471,52 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  function creditMeterHtml(opts) {
+    opts = opts || {};
+    var showOrder = opts.includeOrder !== false;
+    var usedEnd = showOrder ? L.credit.priorPct : L.credit.pct;
+    var orderEnd = showOrder ? L.credit.priorPct + L.credit.orderPct : L.credit.pct;
+    var leftLabel = L.terms + " credit";
+    var priorAvail = L.credit.priorAvailable != null ? L.credit.priorAvailable : L.credit.available;
+    var rightLabel = showOrder
+      ? "Uses " + money(L.credit.thisOrder) + " of " + money(priorAvail) + " available"
+      : money(L.credit.available) + " available";
+    var tip =
+      "<div class=\"credit-tip\" data-credit-tip role=\"tooltip\">" +
+      "<div><strong>Used</strong> " +
+      money(showOrder ? L.credit.priorUsed : L.credit.used) +
+      "</div>" +
+      (showOrder
+        ? "<div><strong>This order</strong> " + money(L.credit.thisOrder) + "</div>"
+        : "") +
+      "<div><strong>Left</strong> " +
+      money(showOrder ? L.credit.afterOrder : L.credit.available) +
+      "</div></div>";
+    return (
+      '<div class="credit-meter" data-credit-meter data-credit-after tabindex="0">' +
+      '<div class="credit-meter-label">' +
+      "<span>" + leftLabel + "</span>" +
+      '<span class="avail" data-credit-available>' + rightLabel + "</span>" +
+      "</div>" +
+      tip +
+      '<div class="credit-bar" data-credit-bar data-credit-fill style="' +
+      "--credit-used-end:" + usedEnd + "%;--credit-order-end:" + orderEnd + "%;" +
+      '" aria-label="' +
+      leftLabel +
+      ": " +
+      rightLabel +
+      '"></div></div>'
+    );
+  }
+
   /** Cart / invoices / messages show the open order in chrome; QO starts empty until Add all. */
   function filledCart() {
     return { count: L.cartCountAfterAdd, total: L.orderTotal };
+  }
+
+  /** Confirmation: order placed — chrome cart is empty. */
+  function emptyCart() {
+    return { count: 0, total: 0 };
   }
 
   function shellClose() {
@@ -2068,9 +2601,12 @@ img { display: block; max-width: 100%; }
       var fulfill = L.lineFulfillment[line.productId] || { warehouse: "CA", availability: "In stock" };
       var stockNote =
         fulfill.availability && !/^in stock$/i.test(fulfill.availability)
-          ? " · " + fulfill.availability
+          ? '<div class="avail-tag">' + fulfill.availability + "</div>"
           : "";
-      var rowClass = "order-row" + (p.presets && p.presets.length ? " has-presets" : "");
+      var rowClass =
+        "order-row" +
+        (p.presets && p.presets.length ? " has-presets" : "") +
+        (stockNote ? " has-avail" : "");
       rows +=
         '<div class="' +
         rowClass +
@@ -2090,8 +2626,9 @@ img { display: block; max-width: 100%; }
         p.fullName +
         '</div><div class="prod-sku">SKU ' +
         p.sku +
+        "</div>" +
         stockNote +
-        "</div></div>" +
+        "</div>" +
         unitPriceHtml(p, line.qty) +
         '<div class="qty-cell">' +
         qtyGroupHtml(line) +
@@ -2120,21 +2657,32 @@ img { display: block; max-width: 100%; }
     var items = [];
     L.recentOrders.forEach(function (o) {
       items.push({
-        name: o.id + " · " + o.label,
-        meta: o.when + " · " + o.lines + " lines · " + money(o.total),
+        id: o.id,
+        name: o.label,
+        left: o.when + ", " + o.lines + (o.lines === 1 ? " line" : " lines"),
+        amt: money(o.total),
       });
     });
     L.templates.forEach(function (t) {
-      items.push({ name: t.name, meta: "Saved · " + t.detail });
+      items.push({
+        id: "Saved",
+        name: t.name,
+        left: t.detail,
+        amt: "",
+      });
     });
     var body = items
       .map(function (it) {
         return (
           '<button type="button" class="rail-item" data-rail-add>' +
-          '<span class="rail-copy"><span class="name">' +
+          '<span class="rail-copy">' +
+          (it.id ? '<span class="rail-id">' + it.id + "</span>" : "") +
+          '<span class="name">' +
           it.name +
-          '</span><span class="meta">' +
-          it.meta +
+          '</span><span class="meta"><span class="meta-left">' +
+          it.left +
+          "</span>" +
+          (it.amt ? '<span class="meta-amt">' + it.amt + "</span>" : "") +
           "</span></span>" +
           '<span class="rail-action">Add</span>' +
           "</button>"
@@ -2143,22 +2691,25 @@ img { display: block; max-width: 100%; }
       .join("");
     return (
       '<aside class="qo-rail" data-qo-rail>' +
-      '<div class="rail-card"><h3>Reorder</h3>' +
+      '<div class="rail-card"><h3 class="label-quiet">Reorder</h3>' +
       body +
       "</div>" +
       "</aside>"
     );
   }
 
+  function itemCountLabel(n) {
+    return n + (n === 1 ? " item" : " items");
+  }
+
   function footerHtml() {
-    var ready = !cartUi.added;
+    var n = L.orderLines.length;
+    var cta = cartUi.added ? "Added" : "Add " + n + " to cart";
     return (
       '<div class="order-footer" data-order-footer>' +
       '<div class="footer-stack">' +
       '<div class="meta" data-line-count>' +
-      (ready ? "Ready · " : "In cart · ") +
-      L.orderLines.length +
-      (L.orderLines.length === 1 ? " line" : " lines") +
+      itemCountLabel(n) +
       "</div>" +
       '<div class="total" id="qoFooterTotal" data-order-total>' +
       money(L.orderTotal) +
@@ -2171,7 +2722,7 @@ img { display: block; max-width: 100%; }
       '<button type="button" class="btn-primary" id="qoAddAllBtn" data-add-all' +
       (cartUi.added ? " disabled" : "") +
       ">" +
-      (cartUi.added ? "Added" : "Add all to cart") +
+      cta +
       "</button>" +
       "</div>"
     );
@@ -2214,11 +2765,11 @@ img { display: block; max-width: 100%; }
             '" width="28" height="28">' +
             '<div><div class="title">' +
             p.name +
-            '</div><div class="meta">SKU ' +
+            '</div><div class="meta"><span>SKU ' +
             p.sku +
-            " · " +
+            ' </span><span class="meta-price">' +
             money(p.buyerPrice) +
-            "</div></div></div>"
+            "</span></div></div></div>"
           );
         })
         .join("") +
@@ -2411,26 +2962,95 @@ img { display: block; max-width: 100%; }
     );
   }
 
+  function shipCardHtml(selected) {
+    var menu = L.shipTos
+      .map(function (a) {
+        return (
+          '<button type="button" class="ship-option' +
+          (a.id === selected.id ? " is-selected" : "") +
+          '" data-ship-option="' +
+          a.id +
+          '">' +
+          '<div class="ship-name">' +
+          a.name +
+          ' <span class="ship-tag">' +
+          a.site +
+          "</span></div>" +
+          '<div class="ship-addr">' +
+          a.detail +
+          "</div></button>"
+        );
+      })
+      .join("");
+    return (
+      '<div class="cart-field span-2" data-field="ship-to">' +
+      "<label>Ship to</label>" +
+      '<button type="button" class="ship-card" data-ship-card aria-haspopup="listbox" aria-expanded="false">' +
+      '<div class="ship-card-body">' +
+      '<div class="ship-name">' +
+      selected.name +
+      ' <span class="ship-tag">' +
+      selected.site +
+      "</span></div>" +
+      '<div class="ship-addr" data-ship-address>' +
+      selected.detail +
+      "</div></div>" +
+      '<span class="ship-change" data-ship-change>Change</span>' +
+      "</button>" +
+      '<div class="ship-menu" data-ship-menu hidden role="listbox">' +
+      menu +
+      "</div></div>"
+    );
+  }
+
   function screenCart() {
     var lines = L.orderLines
       .map(function (line) {
         var p = L.products[line.productId];
         var amount = L.lineAmount(line);
         var fulfill = L.lineFulfillment[line.productId] || { warehouse: "CA", availability: "In stock" };
+        var hasAvail =
+          fulfill.availability && !/^in stock$/i.test(fulfill.availability);
+        var avail = hasAvail
+          ? '<div class="avail-tag">' + fulfill.availability + "</div>"
+          : "";
         return (
-          '<div class="cart-line" data-cart-line data-sku="' + p.sku + '" data-buyer-price="' + p.buyerPrice + '">' +
-          '<img src="' + p.image + '" alt="' + p.name + '" width="36" height="36">' +
-          "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' +
+          '<div class="cart-line' +
+          (hasAvail ? " has-avail" : "") +
+          '" data-cart-line data-sku="' +
           p.sku +
-          " · " +
+          '" data-buyer-price="' +
+          p.buyerPrice +
+          '">' +
+          '<img src="' +
+          p.image +
+          '" alt="' +
+          p.name +
+          '" width="36" height="36">' +
+          '<div class="cart-prod"><div class="prod-name">' +
+          p.fullName +
+          '</div><div class="prod-sku">SKU ' +
+          p.sku +
+          "</div>" +
+          avail +
+          "</div>" +
+          '<div class="cart-money">' +
+          '<div class="cart-unit">' +
           line.qty +
           " × " +
           money(L.priceAt(p, line.qty)) +
-          (fulfill.availability && !/^in stock$/i.test(fulfill.availability)
-            ? " · " + fulfill.availability
-            : "") +
-          "</div></div>" +
-          '<div class="line-total" data-line-total="' + amount + '">' + money(amount) + "</div>" +
+          "</div>" +
+          '<div class="line-total" data-line-total="' +
+          amount +
+          '">' +
+          money(amount) +
+          "</div>" +
+          "</div>" +
+          '<button type="button" class="line-remove" data-line-remove aria-label="Remove ' +
+          p.name +
+          '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' +
+          "</button>" +
           "</div>"
         );
       })
@@ -2439,19 +3059,22 @@ img { display: block; max-width: 100%; }
       L.shipTos.find(function (a) {
         return a.id === L.shipToId;
       }) || L.shipTos[0];
-    var shipOptions = L.shipTos
-      .map(function (a) {
-        return (
-          '<option value="' +
-          a.id +
-          '"' +
-          (a.id === L.shipToId ? " selected" : "") +
-          ">" +
-          a.label +
-          "</option>"
-        );
-      })
-      .join("");
+    var recentAvg = L.recentAvg || 0;
+    var sizeRatio = recentAvg > 0 ? L.cartTotal / recentAvg : 0;
+    var largerThanUsual = recentAvg > 0 && sizeRatio > 3;
+    var overCredit = L.credit.priorUsed + L.cartTotal > L.credit.limit + 0.009;
+    var notices = "";
+    if (overCredit) {
+      notices +=
+        '<div class="cart-notice is-warn" data-credit-hold>This order exceeds remaining Net 30 credit. Your rep will need to approve before it ships.</div>';
+    } else if (largerThanUsual) {
+      var mult = Math.round(sizeRatio);
+      if (mult < 4) mult = 4;
+      notices +=
+        '<div class="cart-notice" data-size-note>About ' +
+        mult +
+        "× your usual order. Check quantities.</div>";
+    }
     return (
       '<section class="screen" data-screen="cart">' +
       shellOpen("cart", filledCart()) +
@@ -2465,17 +3088,10 @@ img { display: block; max-width: 100%; }
       '<label for="cart-po">Your PO # <span style="font-weight:400;color:var(--faint)">(optional)</span></label>' +
       '<input id="cart-po" type="text" placeholder="e.g. ENG-9812" value="' +
       (L.customerPo || "") +
-      '" autocomplete="off">' +
+      '" autocomplete="off" data-po-input>' +
+      '<div class="po-warn" data-po-warn>This PO matches an open invoice. Confirm it is not a duplicate.</div>' +
       "</div>" +
-      '<div class="cart-field span-2" data-field="ship-to">' +
-      '<label for="cart-ship-to">Ship to</label>' +
-      '<select id="cart-ship-to">' +
-      shipOptions +
-      "</select>" +
-      '<div class="addr" data-ship-address>' +
-      selectedShip.detail +
-      "</div>" +
-      "</div>" +
+      shipCardHtml(selectedShip) +
       '<div class="need-by" data-field="need-by" data-need-by>' +
       '<label class="need-by-row" for="need-by-check">' +
       '<input type="checkbox" id="need-by-check" data-need-by-check>' +
@@ -2487,7 +3103,7 @@ img { display: block; max-width: 100%; }
       L.shipDate +
       "</span>" +
       "</div>" +
-      '<div class="hint">Optional rush request. Your JOOLA rep will confirm timing. This does not schedule a ship date.</div>' +
+      '<div class="hint">Your rep confirms timing.</div>' +
       "</div>" +
       '<div class="cart-returns" data-returns-link>Need a replacement or warranty? <a href="#returns">Request a return</a></div>' +
       "</div></div>" +
@@ -2500,16 +3116,60 @@ img { display: block; max-width: 100%; }
       '<div class="sum-total"><span>Total</span><span class="big" data-order-total>' +
       money(L.cartTotal) +
       "</span></div>" +
-      '<div class="credit-note" data-credit-after>' +
-      "After placing · " +
-      money(L.credit.afterOrder) +
-      " left on " +
-      L.terms +
-      " (" +
-      money(L.credit.limit) +
-      " limit)</div>" +
-      '<button type="button" class="btn-primary">Place order</button>' +
+      creditMeterHtml({ includeOrder: true }) +
+      notices +
+      '<button type="button" class="btn-primary" data-place-order data-tab="confirmation">Place order</button>' +
       "</aside></div></div>" +
+      shellClose() +
+      "</section>"
+    );
+  }
+
+  function screenConfirmation() {
+    var ship =
+      L.shipTos.find(function (a) {
+        return a.id === L.shipToId;
+      }) || L.shipTos[0];
+    /** Only render optional rows when they have a value (never empty label/value). */
+    var poRow = L.customerPo
+      ? '<div class="row" data-confirm-po><span class="k">Your PO</span><span class="v" data-customer-po>' +
+        L.customerPo +
+        "</span></div>"
+      : "";
+    return (
+      '<section class="screen" data-screen="confirmation">' +
+      shellOpen("cart", emptyCart()) +
+      '<div class="page page-confirm">' +
+      '<div class="confirm-panel" data-confirm-panel>' +
+      '<div class="confirm-title-row">' +
+      "<h1>Order placed</h1>" +
+      '<span class="confirm-tag" data-confirm-status>Awaiting rep confirmation</span>' +
+      "</div>" +
+      '<p class="confirm-lede">You\'ll get the invoice by email when it ships.</p>' +
+      '<div class="confirm-rows" data-confirm-rows>' +
+      '<div class="row"><span class="k">Order</span><span class="v" data-order-id>' +
+      L.orderId +
+      "</span></div>" +
+      poRow +
+      '<div class="row"><span class="k">Total</span><span class="v" data-order-total>' +
+      money(L.orderTotal) +
+      "</span></div>" +
+      '<div class="row"><span class="k">Ship to</span><span class="v">' +
+      ship.name +
+      ", " +
+      ship.site +
+      "</span></div>" +
+      '<div class="row"><span class="k">Lines</span><span class="v">' +
+      itemCountLabel(L.orderLines.length) +
+      "</span></div>" +
+      '<div class="row"><span class="k">Terms</span><span class="v">' +
+      L.terms +
+      "</span></div>" +
+      "</div>" +
+      '<div class="confirm-actions">' +
+      '<button type="button" class="btn-primary" data-tab="qo-desktop">Back to Quick order</button>' +
+      '<button type="button" class="btn-text" data-tab="messages">Message your rep</button>' +
+      "</div></div></div>" +
       shellClose() +
       "</section>"
     );
@@ -2549,9 +3209,8 @@ img { display: block; max-width: 100%; }
       "<h1>Invoices</h1>" +
       '<p class="lede">Open balances and credit on ' + L.terms + ".</p>" +
       '<div class="credit-card" data-credit-card>' +
-      '<div class="row"><span>' + L.terms + ' used</span><span data-credit-used>' + money(L.credit.used) + " of " + money(L.credit.limit) + "</span></div>" +
-      '<div class="credit-bar" data-credit-bar><i style="width:' + L.credit.pct + '%" data-credit-fill></i></div>' +
-      '<div class="note" data-credit-available>' + money(L.credit.available) + " available</div>" +
+      creditMeterHtml({ includeOrder: true }) +
+      '<div hidden data-credit-used>' + money(L.credit.used) + "</div>" +
       "</div>" +
       '<div class="invoice-table" data-invoice-table>' +
       '<div class="invoice-head" data-invoice-head>' +
@@ -2576,7 +3235,7 @@ img { display: block; max-width: 100%; }
       '<div><div style="font-size:13px;font-weight:500;">JOOLA Sales</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Perseus Pro V restock</div></div>' +
       "</div></aside>" +
       '<div class="thread">' +
-      '<div class="thread-head">Sam Ortiz · JOOLA Sales</div>' +
+      '<div class="thread-head"><div style="font-weight:500;">Sam Ortiz</div><div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;">JOOLA Sales</div></div>' +
       '<div class="order-context" data-order-context>' +
       '<div><div class="oc-label">Order</div><div class="oc-value">' +
       L.orderId +
@@ -2588,14 +3247,14 @@ img { display: block; max-width: 100%; }
       '<div class="thread-body">' +
       '<div class="bubble anna" data-msg-anna><div class="who"><b>' +
       L.retailer.buyer +
-      "</b> <span>· " +
+      '</b><div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;">' +
       L.retailer.name +
-      "</span></div>" +
+      "</div></div>" +
       L.messages.anna +
       "</div>" +
       '<div class="bubble sam" data-msg-sam><div class="who">' +
       joolaMarkHtml("sm") +
-      "<span><b>Sam Ortiz</b> <span>· JOOLA Sales</span></span></div>" +
+      "<span><b>Sam Ortiz</b><div style=\"font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;\">JOOLA Sales</div></span></div>" +
       L.messages.sam +
       "</div>" +
       "</div>" +
@@ -2673,11 +3332,11 @@ img { display: block; max-width: 100%; }
       '<div class="state-row"><span class="state-label">Pills</span><span class="status Paid">Paid</span><span class="status Pending">Pending</span><span class="status Overdue">Overdue</span></div>' +
       "</div>" +
       '<div class="state-block"><h3>Toast</h3>' +
-      '<div class="toast show" style="position:relative;bottom:auto;right:auto;" data-toast-demo><div class="toast-title">Added to cart</div><div class="toast-body">' +
-      L.orderLines.length +
-      " lines · " +
+      '<div class="toast show" style="position:relative;bottom:auto;right:auto;" data-toast-demo><div class="toast-copy"><div class="toast-title">Added to cart</div><div class="toast-body">' +
+      itemCountLabel(L.orderLines.length) +
+      ", " +
       money(L.orderTotal) +
-      "</div></div></div>" +
+      "</div></div></div></div>" +
       '<div class="state-block"><h3>Templates empty / loading</h3>' +
       '<div class="templates-empty" style="display:block;margin-top:0;">No saved templates yet.</div>' +
       '<div class="templates-skeleton" style="display:flex;margin-top:12px;"><div class="skel-card"></div><div class="skel-card"></div></div>' +
@@ -2700,10 +3359,11 @@ img { display: block; max-width: 100%; }
       '<div style="margin-top:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line-soft);height:50px;">' +
       '<img src="' + p.image + '" alt="" width="36" height="36" style="object-fit:contain;border:1px solid var(--line);border-radius:6px;background:var(--band);padding:3px;">' +
       "<div><div class=\"prod-name\">" + p.fullName + '</div><div class="prod-sku">SKU ' + p.sku + "</div>" +
-      '<div style="margin-top:2px;font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea · qty " + L.perseusQty + "</div></div></div>" +
-      '<div style="margin-top:20px;font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;" data-order-total>' + money(L.orderTotal) + "</div>" +
+      '<div style="margin-top:2px;font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;">' + money(L.perseusUnit) + " ea</div>" +
+      '<div style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;">Qty ' + L.perseusQty + "</div></div></div>" +
+      '<div style="margin-top:20px;font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;" data-order-total>' + money(L.orderTotal) + "</div>" +
       "</div>" +
-      '<div class="order-footer" data-order-footer><button type="button" class="btn-primary" style="flex:1;justify-content:center;">Add all to cart</button></div>' +
+      '<div class="order-footer" data-order-footer><button type="button" class="btn-primary" style="flex:1;justify-content:center;">Add ' + L.orderLines.length + " to cart</button></div>" +
       "</section>"
     );
   }
@@ -2715,6 +3375,7 @@ img { display: block; max-width: 100%; }
       screenCatalog() +
       screenTemplates() +
       screenCart() +
+      screenConfirmation() +
       screenInvoices() +
       screenMessages() +
       screenMobile() +
@@ -2726,7 +3387,60 @@ img { display: block; max-width: 100%; }
 
   var current = "qo-desktop";
 
+  function syncConfirmationFromCart() {
+    var cartRoot = document.querySelector('[data-screen="cart"]');
+    var conf = document.querySelector('[data-screen="confirmation"]');
+    if (!cartRoot || !conf) return;
+    var rows = conf.querySelector("[data-confirm-rows]");
+    if (!rows) return;
+    var poInput = cartRoot.querySelector("[data-po-input]");
+    var needCheck = cartRoot.querySelector("[data-need-by-check]");
+    var po = ((poInput && poInput.value) || "").trim();
+    var poRow = conf.querySelector("[data-confirm-po]");
+    if (po) {
+      if (!poRow) {
+        poRow = document.createElement("div");
+        poRow.className = "row";
+        poRow.setAttribute("data-confirm-po", "");
+        poRow.innerHTML =
+          '<span class="k">Your PO</span><span class="v" data-customer-po></span>';
+        var orderRow = rows.querySelector("[data-order-id]");
+        var insertAfter = orderRow && orderRow.closest(".row");
+        if (insertAfter && insertAfter.nextSibling) {
+          rows.insertBefore(poRow, insertAfter.nextSibling);
+        } else {
+          rows.appendChild(poRow);
+        }
+      }
+      var poVal = poRow.querySelector("[data-customer-po]");
+      if (poVal) poVal.textContent = po;
+    } else if (poRow) {
+      poRow.remove();
+    }
+    var needRow = conf.querySelector("[data-confirm-needby]");
+    if (needCheck && needCheck.checked) {
+      if (!needRow) {
+        needRow = document.createElement("div");
+        needRow.className = "row";
+        needRow.setAttribute("data-confirm-needby", "");
+        needRow.innerHTML =
+          '<span class="k">Need by</span><span class="v" data-needby-value>' +
+          L.shipDate +
+          "</span>";
+        var shipRow = null;
+        rows.querySelectorAll(".row").forEach(function (r) {
+          if (/Ship to/i.test((r.querySelector(".k") || {}).textContent || "")) shipRow = r;
+        });
+        if (shipRow && shipRow.nextSibling) rows.insertBefore(needRow, shipRow.nextSibling);
+        else rows.appendChild(needRow);
+      }
+    } else if (needRow) {
+      needRow.remove();
+    }
+  }
+
   function show(id) {
+    if (id === "confirmation") syncConfirmationFromCart();
     current = id;
     document.querySelectorAll(".screen").forEach(function (el) {
       el.classList.toggle("active", el.getAttribute("data-screen") === id);
@@ -2742,18 +3456,47 @@ img { display: block; max-width: 100%; }
     if (!toast.classList.contains("show")) toast.setAttribute("hidden", "");
   }
 
-  function showToast(body) {
+  function hideToast() {
     var toast = document.querySelector("[data-toast]");
     if (!toast) return;
+    toast.classList.remove("show");
+    toast.setAttribute("hidden", "");
+    var undo = toast.querySelector("[data-toast-undo]");
+    if (undo) {
+      undo.setAttribute("hidden", "");
+      undo.onclick = null;
+    }
+    showToast._undo = null;
+  }
+
+  function showToast(body, opts) {
+    opts = opts || {};
+    var toast = document.querySelector("[data-toast]");
+    if (!toast) return;
+    var titleEl = toast.querySelector("[data-toast-title]");
     var bodyEl = toast.querySelector("[data-toast-body]");
-    if (bodyEl) bodyEl.textContent = body;
+    var undo = toast.querySelector("[data-toast-undo]");
+    if (titleEl) titleEl.textContent = opts.title || "Added to cart";
+    if (bodyEl) bodyEl.textContent = body || "";
+    if (undo) {
+      if (opts.onUndo) {
+        undo.removeAttribute("hidden");
+        undo.onclick = function () {
+          clearTimeout(showToast._t);
+          opts.onUndo();
+          hideToast();
+        };
+        showToast._undo = opts.onUndo;
+      } else {
+        undo.setAttribute("hidden", "");
+        undo.onclick = null;
+        showToast._undo = null;
+      }
+    }
     toast.removeAttribute("hidden");
     toast.classList.add("show");
     clearTimeout(showToast._t);
-    showToast._t = setTimeout(function () {
-      toast.classList.remove("show");
-      toast.setAttribute("hidden", "");
-    }, 3200);
+    showToast._t = setTimeout(hideToast, opts.ms || 3200);
   }
 
   function bumpCartPills() {
@@ -2769,9 +3512,11 @@ img { display: block; max-width: 100%; }
     if (count === 0) {
       el.setAttribute("hidden", "");
       el.textContent = "";
+      el.classList.remove("is-wide");
     } else {
       el.removeAttribute("hidden");
       el.textContent = String(count);
+      el.classList.toggle("is-wide", count >= 10);
     }
   }
 
@@ -2798,13 +3543,10 @@ img { display: block; max-width: 100%; }
       btn.textContent = "Added";
     });
     document.querySelectorAll("[data-order-footer] [data-line-count]").forEach(function (el) {
-      el.innerHTML =
-        "In cart · " +
-        L.orderLines.length +
-        (L.orderLines.length === 1 ? " line" : " lines");
+      el.textContent = itemCountLabel(L.orderLines.length);
     });
     bumpCartPills();
-    showToast(L.orderLines.length + " lines · " + money(L.orderTotal));
+    showToast(itemCountLabel(L.orderLines.length) + ", " + money(L.orderTotal));
   }
 
   function bind() {
@@ -2863,6 +3605,71 @@ img { display: block; max-width: 100%; }
         else date.setAttribute("hidden", "");
       });
     });
+
+    document.querySelectorAll("[data-line-remove]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var line = btn.closest("[data-cart-line]");
+        if (!line || line.classList.contains("is-removed")) return;
+        var nameEl = line.querySelector(".prod-name");
+        var name = (nameEl && nameEl.textContent) || "Line";
+        line.classList.add("is-removed");
+        showToast(name + " removed", {
+          title: "Removed from cart",
+          ms: 2800,
+          onUndo: function () {
+            line.classList.remove("is-removed");
+          },
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-po-input]").forEach(function (input) {
+      var warn = input.parentElement && input.parentElement.querySelector("[data-po-warn]");
+      var openPos = L.invoices
+        .filter(function (inv) {
+          return inv.open;
+        })
+        .map(function (inv) {
+          return String(inv.order || "").toLowerCase();
+        });
+      function syncPoWarn() {
+        if (!warn) return;
+        var v = (input.value || "").trim().toLowerCase();
+        var dup = v && openPos.some(function (po) {
+          return po && po === v;
+        });
+        warn.classList.toggle("show", !!dup);
+      }
+      input.addEventListener("input", syncPoWarn);
+      syncPoWarn();
+    });
+
+    document.querySelectorAll("[data-ship-card]").forEach(function (card) {
+      card.addEventListener("click", function () {
+        var field = card.closest('[data-field="ship-to"]');
+        var menu = field && field.querySelector("[data-ship-menu]");
+        if (!menu) return;
+        var open = menu.hasAttribute("hidden");
+        if (open) {
+          menu.removeAttribute("hidden");
+          card.classList.add("is-open");
+          card.setAttribute("aria-expanded", "true");
+        } else {
+          menu.setAttribute("hidden", "");
+          card.classList.remove("is-open");
+          card.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+    document.querySelectorAll("[data-ship-option]").forEach(function (opt) {
+      opt.addEventListener("click", function () {
+        var id = opt.getAttribute("data-ship-option");
+        if (!id) return;
+        L.shipToId = id;
+        render();
+        show("cart");
+      });
+    });
   }
 
   window.__setPerseusQty = function (qty) {
@@ -2895,7 +3702,11 @@ img { display: block; max-width: 100%; }
       ) / 100;
     L.credit.available = Math.round((L.credit.limit - L.credit.used) * 100) / 100;
     L.credit.afterOrder = L.credit.available;
+    L.credit.thisOrder = L.orderTotal;
+    L.credit.priorUsed = Math.round((L.credit.used - L.orderTotal) * 100) / 100;
     L.credit.pct = Math.round((L.credit.used / L.credit.limit) * 1000) / 10;
+    L.credit.priorPct = Math.round((L.credit.priorUsed / L.credit.limit) * 1000) / 10;
+    L.credit.orderPct = Math.round((L.orderTotal / L.credit.limit) * 1000) / 10;
     L.messages.sam =
       "120 units of Perseus Pro V ship " +
       L.shipDate +

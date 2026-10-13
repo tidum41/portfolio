@@ -157,9 +157,9 @@
     Math.round(perseusUnit * perseusLine.qty * 100) / 100;
 
   var shipDate = "Fri, Oct 17";
-  /** Story order id (buyer-facing). NetSuite also has a separate SO tranid. */
-  var orderId = "PO-120";
-  /** Maps to NetSuite otherRefNum; optional at checkout (left blank until filled). */
+  /** JOOLA sales order number (NetSuite SO tranid). Buyer PO is separate. */
+  var orderId = "SO-48213";
+  /** Maps to NetSuite otherRefNum; optional at checkout (blank until entered). */
   var customerPo = "";
   /** Sales order status in NetSuite Advanced Shipping flow. */
   var orderStatus = "Pending Fulfillment";
@@ -167,12 +167,14 @@
   var shipTos = [
     {
       id: "engage-main",
-      label: "Engage Pickleball · Main",
+      name: "Engage Pickleball",
+      site: "Main warehouse",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
       id: "engage-north",
-      label: "Engage Pickleball · North",
+      name: "Engage Pickleball",
+      site: "North warehouse",
       detail: "2200 Research Park, Round Rock TX",
     },
   ];
@@ -206,7 +208,7 @@
       order: "PO-118",
       issued: "Sep 18, 2026",
       due: "Oct 18, 2026",
-      amount: 3802.4,
+      amount: 3800.0,
       status: "Due",
       open: true,
     },
@@ -230,6 +232,14 @@
     },
   ];
 
+  /**
+   * Round credit seed: limit $50,000 · open balance (ex-this-order) $5,000 ·
+   * available before place $45,000 · after this order $25,693.50.
+   * INV-1039 ($3,800) + INV-1021 ($1,200) = $5,000 prior used.
+   * INV-1042 books this restock, so available after place = limit − open.
+   */
+  var creditLimit = 50000;
+  var creditPriorUsed = 5000;
   var creditUsed =
     Math.round(
       invoices
@@ -240,13 +250,13 @@
           return s + inv.amount;
         }, 0) * 100
     ) / 100;
-  var creditLimit = 50000;
+  /** Sanity: open invoices must equal priorUsed + this order. */
+  if (Math.abs(creditUsed - (creditPriorUsed + orderTotal)) > 0.009) {
+    creditUsed = Math.round((creditPriorUsed + orderTotal) * 100) / 100;
+  }
   var creditAvailable = Math.round((creditLimit - creditUsed) * 100) / 100;
-  /**
-   * INV-1042 already books this restock on the credit line, so
-   * creditAvailable IS the balance after placing this order.
-   */
   var creditAfterOrder = creditAvailable;
+  var creditPriorAvailable = Math.round((creditLimit - creditPriorUsed) * 100) / 100;
 
   var messages = {
     anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
@@ -265,7 +275,7 @@
     },
     hyperion: {
       reason: "Your history",
-      detail: "Last bought Sep 12 · usually every 6 weeks",
+      detail: "Last bought Sep 12, usually every 6 weeks",
     },
     scorpeus: {
       reason: "Low stock at your store",
@@ -273,28 +283,48 @@
     },
   };
 
+  /**
+   * Last 3 restocks for reorder rail + size warning.
+   * PO-118 total matches INV-1039. Average is high enough that the hero
+   * cart (~$19.3k) is under 3× and does not trip the anomalous-size notice.
+   */
   var recentOrders = [
     {
       id: "PO-118",
       label: "Match week restock",
       when: "Sep 18",
-      total: 3802.4,
+      total: 3800.0,
       lines: 3,
     },
     {
-      id: "PO-110",
-      label: "Balls + bags",
-      when: "Aug 12",
-      total: 1200.0,
-      lines: 2,
+      id: "PO-104",
+      label: "Back-to-school",
+      when: "Jul 28",
+      total: 8400.0,
+      lines: 4,
+    },
+    {
+      id: "PO-098",
+      label: "Club pack",
+      when: "Jun 20",
+      total: 9200.0,
+      lines: 5,
     },
   ];
+  var recentAvg =
+    Math.round(
+      (recentOrders.reduce(function (s, o) {
+        return s + o.total;
+      }, 0) /
+        recentOrders.length) *
+        100
+    ) / 100;
 
   var templates = [
     {
       id: "tpl-perseus",
       name: "Perseus restock",
-      detail: perseusLine.qty + " units · " + money(perseusOrderTotal),
+      detail: perseusLine.qty + " units, " + money(perseusOrderTotal),
     },
     {
       id: "tpl-match",
@@ -310,7 +340,7 @@
       role: "Buyer",
       logo: "engage-logo.png",
       avatar: "engage-logo.png",
-      avatarSize: 24,
+      avatarSize: 28,
     },
     storeUrl: "https://joola.com",
     searchQuery: "Perseus",
@@ -339,12 +369,19 @@
     credit: {
       limit: creditLimit,
       used: creditUsed,
+      priorUsed: creditPriorUsed,
+      thisOrder: orderTotal,
+      /** Available before placing this order. */
+      priorAvailable: creditPriorAvailable,
       available: creditAvailable,
       afterOrder: creditAfterOrder,
       pct: Math.round((creditUsed / creditLimit) * 1000) / 10,
+      priorPct: Math.round((creditPriorUsed / creditLimit) * 1000) / 10,
+      orderPct: Math.round((orderTotal / creditLimit) * 1000) / 10,
     },
     messages: messages,
     recentOrders: recentOrders,
+    recentAvg: recentAvg,
     templates: templates,
     money: money,
     priceAt: priceAt,
@@ -359,6 +396,9 @@
         creditUsed,
         creditLimit,
         creditAvailable,
+        creditPriorUsed,
+        creditPriorAvailable,
+        creditAfterOrder,
       ];
       orderLines.forEach(function (line) {
         amounts.push(lineAmount(line));
