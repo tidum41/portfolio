@@ -724,6 +724,18 @@ img { display: block; max-width: 100%; }
   transition: background-color 0.15s ease-out;
 }
 .order-row:hover { background: rgba(44, 62, 224, 0.03); }
+/* p18: one soft fade-out when a row is added — never stack a hover flash on top */
+.order-row.is-just-added {
+  animation: rowJustAdded 0.45s ease-out forwards;
+}
+.order-row.is-just-added:hover {
+  background: rgba(44, 62, 224, 0.07);
+  animation: rowJustAdded 0.45s ease-out forwards;
+}
+@keyframes rowJustAdded {
+  0% { background-color: rgba(44, 62, 224, 0.07); }
+  100% { background-color: transparent; }
+}
 .order-row.has-presets,
 .order-row.has-avail {
   height: auto;
@@ -2290,6 +2302,11 @@ img { display: block; max-width: 100%; }
 .sidebar-footer { border-top: 0 !important; }
 .order-row, .invoice-row { border-radius: 8px; }
 .order-row:hover, .invoice-row:hover { background: var(--band); }
+.order-row.is-just-added,
+.order-row.is-just-added:hover {
+  /* win over the band hover so the single soft fade is the only highlight */
+  background-color: rgba(44, 62, 224, 0.07);
+}
 .invoice-head, .order-head { border-bottom: 1px solid var(--line) !important; }
 .cart-line { padding-top: 10px; padding-bottom: 10px; }
 .rail-item { padding-top: 10px; padding-bottom: 10px; }
@@ -2543,28 +2560,83 @@ img { display: block; max-width: 100%; }
 
 /* ================= r16 (film pass 13) ================= */
 /* Saved template: choose Add to order or Replace order (popover under the template card, overlays; no reflow) */
-.rail-card { position: relative; }
+.rail-card { position: relative; overflow: visible; }
+.qo-rail { overflow: visible; }
 .rail-item.is-open { background: var(--band); }
 .rail-item.is-open .rail-action { opacity: 0; } /* p14: while the Add to order / Replace order popover is open, it is the only action */
 .tpl-pop {
-  position: absolute; left: 12px; right: 12px; z-index: 40;
+  /* p18: fixed overlay so opening never grows rail scrollHeight or shifts siblings */
+  position: fixed; z-index: 80;
   display: flex; flex-direction: column; gap: 6px; padding: 8px;
+  box-sizing: border-box;
   background: #fff; border: 1px solid var(--line); border-radius: 10px;
   box-shadow: 0 8px 20px rgba(26, 26, 26, 0.08);
+  transform: none !important;
 }
-.tpl-pop[hidden] { display: none; }
-.tpl-pop .tpl-choice { height: 32px; width: 100%; padding: 0 12px; font-size: 13px; justify-content: center; }
+.tpl-pop[hidden] { display: none !important; }
+.tpl-pop .tpl-choice {
+  height: 32px; width: 100%; padding: 0 12px; font-size: 13px; justify-content: center;
+  box-sizing: border-box; transform: none !important;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out !important;
+}
+.tpl-pop .tpl-choice:hover,
+.tpl-pop .tpl-choice:active,
+.tpl-pop .btn-primary:active,
+.tpl-pop .btn-outline:active {
+  transform: none !important;
+  opacity: 1 !important;
+}
 .order-row[hidden] { display: none !important; }
 /* Press feedback by colour only (no scale), so nothing moves on click */
-.cart-pill:active, .account-chip:active, .rail-item:active, .btn-outline:active { transform: none; }
+.cart-pill:active, .account-chip:active, .rail-item:active, .btn-outline:active, .btn-primary:active { transform: none; }
 .cart-pill:active { background: var(--wash); }
 /* Shift fixes: "Added to cart" overlays left of the button (footer height + button position never change) */
 .order-footer .inline-success { position: absolute; right: 165px; top: 50%; transform: translateY(-50%); margin: 0; white-space: nowrap; }
-/* Cart pill: amount + badge always hold their space, so the pill and account chip never move when the cart fills */
-.cart-pill .cart-amount-display[hidden] { display: inline-flex !important; visibility: hidden; }
-.cart-pill .cart-amount-display { min-width: var(--cart-amt-w, 76px); justify-content: flex-start; }
-.cart-pill .count-chip[hidden] { display: inline-flex !important; visibility: hidden; }
-.cart-pill:has(.count-chip[hidden]) { padding-right: 8px !important; }
+
+/* ================= r18 (film pass 18) ================= */
+/* Cart pill: icon + total only; hugs content; width eases when the total/badge change */
+.cart-pill {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 0 12px !important;
+  gap: 8px !important;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, width 0.3s ease-out !important;
+  will-change: width;
+}
+.cart-pill:has(.count-chip[hidden]) { padding-right: 12px !important; }
+.cart-pill .cart-amount-display {
+  min-width: 0 !important;
+  justify-content: flex-start;
+  display: inline-flex !important;
+  visibility: visible !important;
+}
+.cart-pill .cart-amount-display[hidden] {
+  display: inline-flex !important;
+  visibility: visible !important; /* empty state still shows $0.00 */
+}
+.cart-pill .count-chip[hidden] { display: none !important; }
+.cart-pill .count-chip {
+  transform-origin: center;
+  transition: transform 0.16s ease-out, opacity 0.16s ease-out;
+}
+.cart-pill .count-chip.chip-in {
+  animation: chipIn 0.16s ease-out;
+}
+@keyframes chipIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.topbar-right { transition: none; }
+/* Place order → Order placed shared-element morph */
+[data-confirm-panel].is-morphing {
+  will-change: transform;
+  transform-origin: top left;
+}
+[data-cart-summary].is-morph-exit {
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+}
 </style>
 </head>
 <body>
@@ -2716,7 +2788,6 @@ img { display: block; max-width: 100%; }
       "</button>" +
       '<button type="button" class="cart-pill" data-tab="cart" data-cart-pill aria-label="Cart, ' + money(total) + '">' +
       '<svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>' +
-      "<span>Cart</span>" +
       '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
       '<span class="' + chipClass + '" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
       (count === 0 ? "" : count) +
@@ -3630,8 +3701,8 @@ img { display: block; max-width: 100%; }
       '</div><div class="qty-presets"><button type="button" disabled>6</button><button type="button" disabled>12</button><button type="button" disabled>24</button></div></div>' +
       "</div></div>" +
       '<div class="state-block"><h3>Cart + status</h3>' +
-      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
-      '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display">' +
+      '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
+      '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display">' +
       money(L.orderTotal) +
       '</span><span class="count-chip">' +
       L.cartCountAfterAdd +
@@ -3659,7 +3730,7 @@ img { display: block; max-width: 100%; }
     return (
       '<section class="screen mobile-wrap" data-screen="qo-mobile">' +
       '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
-      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span>Cart</span><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip">' + L.cartCountAfterAdd + "</span></button></div>" +
+      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart" aria-label="Cart, ' + money(L.orderTotal) + '"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip">' + L.cartCountAfterAdd + "</span></button></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
       "<h1>Quick order</h1>" +
       '<p class="lede">Prices for ' + L.retailer.name + ".</p>" +
@@ -3815,17 +3886,42 @@ img { display: block; max-width: 100%; }
     });
   }
 
-  function syncCartCountChip(el, count) {
+  function syncCartCountChip(el, count, animateIn) {
     if (!el) return;
     if (count === 0) {
       el.setAttribute("hidden", "");
       el.textContent = "";
-      el.classList.remove("is-wide");
+      el.classList.remove("is-wide", "chip-in");
     } else {
+      var wasHidden = el.hasAttribute("hidden");
       el.removeAttribute("hidden");
       el.textContent = String(count);
       el.classList.toggle("is-wide", count >= 10);
+      if (animateIn && wasHidden) {
+        el.classList.remove("chip-in");
+        void el.offsetWidth;
+        el.classList.add("chip-in");
+      }
     }
+  }
+
+  /** p18: measure → set explicit width → ease to new content width (hugs $0.00 / filled totals). */
+  function animateCartPillWidths() {
+    document.querySelectorAll("[data-cart-pill]").forEach(function (pill) {
+      var from = pill.getBoundingClientRect().width;
+      pill.style.transition = "none";
+      pill.style.width = "max-content";
+      var to = pill.getBoundingClientRect().width;
+      pill.style.width = from.toFixed(2) + "px";
+      void pill.offsetWidth;
+      pill.style.transition = "width 0.3s ease-out";
+      pill.style.width = to.toFixed(2) + "px";
+      var done = function () {
+        pill.style.width = "max-content";
+        pill.removeEventListener("transitionend", done);
+      };
+      pill.addEventListener("transitionend", done);
+    });
   }
 
   function applyAddAll() {
@@ -3834,7 +3930,7 @@ img { display: block; max-width: 100%; }
     cartUi.added = true;
     L.cartCount = cartUi.count;
     document.querySelectorAll("[data-cart-count]").forEach(function (el) {
-      syncCartCountChip(el, cartUi.count);
+      syncCartCountChip(el, cartUi.count, true);
     });
     document.querySelectorAll("[data-cart-pill] [data-cart-total]").forEach(function (el) {
       el.textContent = money(cartUi.total);
@@ -3846,14 +3942,108 @@ img { display: block; max-width: 100%; }
     document.querySelectorAll("[data-order-footer] [data-line-count]").forEach(function (el) {
       el.textContent = itemCountLabel(L.orderLines.length);
     });
+    animateCartPillWidths();
     bumpCartPills();
+  }
+
+  function flashJustAddedRow(row) {
+    if (!row) return;
+    row.classList.remove("is-just-added");
+    void row.offsetWidth;
+    row.classList.add("is-just-added");
+    clearTimeout(row._justAddedT);
+    row._justAddedT = setTimeout(function () {
+      row.classList.remove("is-just-added");
+    }, 480);
+  }
+
+  /** FLIP morph: cart summary box → confirmation panel (~0.45s ease-in-out). */
+  function morphPlaceOrder() {
+    var cartRoot = document.querySelector('[data-screen="cart"].active') || document.querySelector('[data-screen="cart"]');
+    var summary = cartRoot && cartRoot.querySelector("[data-cart-summary]");
+    if (!summary) {
+      show("confirmation");
+      return;
+    }
+    var from = summary.getBoundingClientRect();
+    summary.classList.add("is-morph-exit");
+    show("confirmation");
+    var panel = document.querySelector('[data-screen="confirmation"].active [data-confirm-panel]');
+    if (!panel) return;
+    var to = panel.getBoundingClientRect();
+    var sx = from.width / Math.max(1, to.width);
+    var sy = from.height / Math.max(1, to.height);
+    var dx = from.left - to.left;
+    var dy = from.top - to.top;
+    panel.classList.add("is-morphing");
+    panel.style.transition = "none";
+    panel.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ")";
+    var inner = panel.querySelector(".confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions");
+    var parts = panel.querySelectorAll(".confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions");
+    parts.forEach(function (p) {
+      p.style.opacity = "0";
+      p.style.transition = "opacity 0.28s ease-in-out 0.12s";
+    });
+    void panel.offsetWidth;
+    requestAnimationFrame(function () {
+      panel.style.transition = "transform 0.45s ease-in-out";
+      panel.style.transform = "none";
+      parts.forEach(function (p) { p.style.opacity = "1"; });
+    });
+    setTimeout(function () {
+      panel.classList.remove("is-morphing");
+      panel.style.transition = "";
+      panel.style.transform = "";
+      parts.forEach(function (p) {
+        p.style.opacity = "";
+        p.style.transition = "";
+      });
+      summary.classList.remove("is-morph-exit");
+    }, 480);
+  }
+
+  function positionTplPop(pop, item) {
+    var r = item.getBoundingClientRect();
+    pop.style.position = "fixed";
+    pop.style.left = Math.round(r.left + 12) + "px";
+    pop.style.width = Math.round(Math.max(160, r.width - 24)) + "px";
+    pop.style.right = "auto";
+    pop.style.top = Math.round(r.bottom + 4) + "px";
   }
 
   function bind() {
     document.querySelectorAll("[data-tab]").forEach(function (el) {
-      el.addEventListener("click", function () {
+      el.addEventListener("click", function (ev) {
+        if (el.hasAttribute("data-place-order")) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          morphPlaceOrder();
+          return;
+        }
         var tab = el.getAttribute("data-tab");
         if (tab) show(tab);
+      });
+    });
+
+    document.querySelectorAll("[data-search-result]").forEach(function (res) {
+      res.addEventListener("click", function () {
+        var sku = res.getAttribute("data-sku");
+        var productId = null;
+        Object.keys(L.products).forEach(function (id) {
+          if (L.products[id].sku === sku) productId = id;
+        });
+        if (!productId) return;
+        var wasNew = qoLines.indexOf(productId) === -1;
+        if (wasNew) qoLines.push(productId);
+        syncQo();
+        var results = res.closest("[data-search-results]");
+        if (results) {
+          results.hidden = true;
+          results.classList.add("is-closed");
+        }
+        var row = document.querySelector('[data-order-row][data-product="' + productId + '"]');
+        // Always one soft highlight on the chosen row; never a second hover flash
+        flashJustAddedRow(row);
       });
     });
 
@@ -3885,10 +4075,15 @@ img { display: block; max-width: 100%; }
         closeTplPop();
         if (open) return;
         pop.setAttribute("data-for", item.getAttribute("data-template"));
-        pop.style.top = item.offsetTop + item.offsetHeight + 4 + "px";
+        positionTplPop(pop, item);
         pop.hidden = false;
         item.classList.add("is-open");
       });
+    });
+    window.addEventListener("resize", function () {
+      var openItem = document.querySelector("[data-template].is-open");
+      var pop = document.querySelector("[data-tpl-pop]:not([hidden])");
+      if (openItem && pop) positionTplPop(pop, openItem);
     });
     document.querySelectorAll("[data-tpl-apply]").forEach(function (b) {
       b.addEventListener("click", function (ev) {

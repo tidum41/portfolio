@@ -3,7 +3,7 @@ import asyncio, json
 from playwright.async_api import async_playwright
 # p16: film viewport 1312x756. 1312 = narrowest width where the Quick order table (min-content ~766px) clears the Reorder rail; 756 = shortest height where the sticky footer (72px) clears the template popover (bottom 684)
 VW, VH = 1312, 756
-P="file:///workspace/portfolio/remotion/assets/joola-b2b/B2B%20quick%20order%20prototype.html"
+P="file:///workspace/remotion/assets/joola-b2b/B2B%20quick%20order%20prototype.html"
 T={
  "qo-search":{"logo":".sidebar-brand img","search":"[data-search-field]","result":"[data-search-result]",
    "row0":"[data-order-row]","preset24":"[data-set-perseus='24']","qty0":"[data-order-row] .qty","line0":"[data-order-row] .line-total",
@@ -29,9 +29,16 @@ async def m():
           out[f"{scr}.{k}"]=r
         continue
       if scr=="confirmation":
-        await pg.evaluate("(()=>{const i=document.querySelector('[data-po-input]');i.value='ENG-9812';document.querySelector('[data-place-order]').click()})()")
+        # p18: Place order morphs — set PO then activate the screen directly (skip the FLIP)
+        await pg.evaluate("(()=>{const i=document.querySelector('[data-po-input]'); if(i) i.value='ENG-9812';})()")
       await pg.evaluate(f"document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.dataset.screen==='{scr}'))")
       await pg.wait_for_timeout(150)
+      if scr=="confirmation":
+        await pg.evaluate("""(()=>{const p=document.querySelector('[data-screen=confirmation] [data-confirm-panel]');
+          if(!p) return; p.classList.remove('is-morphing'); p.style.transform=''; p.style.transition='';
+          p.querySelectorAll('.confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions').forEach(el=>{el.style.opacity='';el.style.transition='';});
+        })()""")
+        await pg.wait_for_timeout(50)
       for k,s in sels.items():
         r=await pg.evaluate(f"""(()=>{{const root=document.querySelector('[data-screen="{scr}"]');let els=[...root.querySelectorAll({json.dumps(s)})];
           if('{k}'==='viewInv') els=els.filter(e=>/View invoice/.test(e.textContent));

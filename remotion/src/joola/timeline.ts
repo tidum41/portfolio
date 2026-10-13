@@ -2,12 +2,8 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Rules (critic passes 3 + 4):
- *  - camera moves and UI actions never overlap: camera first, settle, then the UI action
- *  - no zoom change bigger than 0.6x inside any 0.8s (24-frame) window
- *  - every state change follows a visible pointer click
- *  - screen pushes run with the camera still and last 1.0s
- *  - reading holds: Confirmation and Collin's reply ~1.2s each with nothing moving but the pointer
+ * Pass 18: sidebar-visible framings, cart-pill width ease, Place-order→Order-placed morph,
+ * single just-added row highlight. Still ≤3 story moves, ~9–10s, one continuous cursor.
  */
 export const FPS = 30;
 
@@ -40,51 +36,53 @@ export const bezier = (x1: number, y1: number, x2: number, y2: number) => {
     return sy(t);
   };
 };
-export const CAM_E = bezier(0.4, 0, 0.2, 1); // p13: soft start, long ease-out tail, no overshoot
-export const PUSH_E = bezier(0.33, 0.4, 0.2, 1); // strong ease-out; 12% on frame 1 so it reads as a push, not a cut
+export const CAM_E = bezier(0.4, 0, 0.2, 1);
+export const PUSH_E = bezier(0.33, 0.4, 0.2, 1);
 export const SETTLE = bezier(0.33, 1, 0.68, 1);
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- beats (frames) — pass 9: MOTION SPEC (motion-refs/report.md) ---------- */
-// spec easings
-export const UI_E = bezier(0.2, 0, 0, 1); // UI + state changes
-export const FADE_E = bezier(0.4, 0, 0.2, 1); // fades
-export const PTR_E = bezier(0.3, 0, 0, 1); // cursor travel
-
-/* ---------- pass 17: one continuous cursor drives every change (hover, then press). Three story moves:
-   A (search + first row) -> B (Reorder rail) -> B2 (rows + footer + header pill: Add and badge in one frame);
-   hard cut to Cart on B2's framing, then move 3 to the order summary; dissolve to Order placed. ~8.9s. ---------- */
-/** One curve family for every cursor and camera move. */
+export const UI_E = bezier(0.2, 0, 0, 1);
+export const FADE_E = bezier(0.4, 0, 0.2, 1);
+export const PTR_E = bezier(0.3, 0, 0, 1);
 export const MOVE_E = bezier(0.45, 0, 0.25, 1);
-export const MORPH = [6, 16] as const; // intro: logo card dissolves into shot A (mirror of the outro)
+export const EASE_OUT = bezier(0.2, 0, 0, 1); // pill width ~0.3s ease-out
+export const INOUT_E = bezier(0.45, 0, 0.55, 1); // order morph ~0.45s ease-in-out
+
+/* ---------- pass 18 beats ---------- */
+/** Intro: logo glides into the sidebar slot while the dashboard fades up. */
+export const MORPH = [4, 22] as const;
 export const UI_IN = MORPH[0];
-export const LEAD = 2; // hover settles this many frames before the press
-export const CLICK = { search: 32, result: 57, qty: 74, tpl: 116, tplAdd: 130, add: 164, pill: 190, place: 226 };
-export const ENTER = CLICK.result + 3; // the result shows its press, then the row is added
-export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const; // "Perseus", 2f/char
-export const DROPDOWN_OPEN = 40;
-export const RESULT_HOVER = [55, 57] as const;
+export const LEAD = 2;
+export const CLICK = { search: 36, result: 61, qty: 78, tpl: 120, tplAdd: 134, add: 168, pill: 194, place: 230 };
+export const ENTER = CLICK.result + 3;
+export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
+export const DROPDOWN_OPEN = 44;
+export const RESULT_HOVER = [59, 61] as const;
 export const INSERT = [ENTER, ENTER + 6] as const;
-export const TYPE_QTY = [CLICK.qty + 2, CLICK.qty + 6] as const; // "120": 1 -> 12 -> 120, values instant per key
+/** Soft just-added highlight (single fade-out); hover suppressed while active. */
+export const ROW_HL = [ENTER, ENTER + 14] as const;
+export const TYPE_QTY = [CLICK.qty + 2, CLICK.qty + 6] as const;
 export const QTY_SET = TYPE_QTY[1];
-export const PAN_AB = [92, 110] as const; // move 1: qty read -> Reorder rail (0.6s)
+export const PAN_AB = [96, 114] as const; // move 1
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
-export const POP_IN = [CLICK.tpl, CLICK.tpl + 6] as const;
+export const POP_IN = [CLICK.tpl, CLICK.tpl + 5] as const; // opacity only (no translate)
 export const POP_HOVER = CLICK.tplAdd - LEAD;
 export const TPL_ROWS = [CLICK.tplAdd + 6, CLICK.tplAdd + 16] as const;
-export const PAN_BC = [144, 160] as const; // move 2: ease out to rows + footer + header (Add and its badge in one frame)
-export const PILL_FILL = [CLICK.add + 2, CLICK.add + 7] as const; // badge fires 2f after the press, same frame
-export const CART_CUT = CLICK.pill; // hard cut on the pill click, same framing: pill and cursor stay put
+export const PAN_BC = [148, 164] as const; // move 2
+export const PILL_FILL = [CLICK.add + 2, CLICK.add + 11] as const; // width ease ~0.3s
+export const CART_CUT = CLICK.pill;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
-export const PAN_CART = [194, 216] as const; // move 3: to the order summary (total, credit, Place order)
-export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const; // p17: Cart shows the prototype's real credit (no film-only animation)
-export const CONF_CUT = CLICK.place + 3; // Place order shows its press before the dissolve
-export const CONF_XFADE = [CONF_CUT, CONF_CUT + 8] as const;
-export const CONF_HOLD = [CONF_XFADE[1], CONF_XFADE[1] + 15] as const;
+export const PAN_CART = [198, 220] as const; // move 3
+export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
+export const CONF_CUT = CLICK.place + 3;
+/** Shared-element morph cart summary → Order placed panel (~0.45s). */
+export const CONF_MORPH = [CONF_CUT, CONF_CUT + 14] as const;
+export const CONF_XFADE = CONF_MORPH; // alias
+export const CONF_HOLD = [CONF_MORPH[1], CONF_MORPH[1] + 16] as const;
 export const END_FADE = [CONF_HOLD[1], CONF_HOLD[1] + 12] as const;
-export const DURATION = END_FADE[1] + 6; // logo card holds 6f, then frame 0 (same card): seamless loop
+export const DURATION = END_FADE[1] + 6;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
@@ -96,29 +94,34 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["qty click + 120", CLICK.qty, TYPE_QTY[1]],
   ["template popover", CLICK.tpl, POP_IN[1]],
   ["template rows", TPL_ROWS[0], TPL_ROWS[1]],
-  ["badge pop", PILL_FILL[0], PILL_FILL[1]],
+  ["badge + pill width", PILL_FILL[0], PILL_FILL[1]],
+  ["order morph", CONF_MORPH[0], CONF_MORPH[1]],
 ];
 
 /* ---------- camera ---------- */
 export type Cam = { cx: number; cy: number; s: number };
 export type Move = { a: number; b: number; to: Cam; label: string; dip?: number; ease?: (t: number) => number };
-/** Output frame = the portfolio card's 4:3 media slot; the UI itself is still laid out at 1920x1080. */
 export const OW = 1440;
 export const OH = 1080;
-export const UI_W = 1312; // p16: film viewport (narrowest width where the table clears the rail), 4:3
+export const UI_W = 1312;
 export const UI_H = 756;
-export const INOUT_E = bezier(0.45, 0, 0.55, 1); // ease-in-out for the push-ins
 export const PAN_E = MOVE_E;
-/** A: search + table through line total, content area only (x 220..1020); framed so title, search and row 1 sit optically centred. 1.8x */
-export const SHOT_A: Cam = { cx: 620, cy: 230, s: 1.8 };
-/** B: qty + line totals + Reorder rail + popover (x 553..1311, y 188..756), 1.9x */
-export const SHOT_B: Cam = { cx: 932, cy: 472, s: 1.9 };
-/** B2: rows from the product names, rail, footer Add button and header pill in one frame (x 280..1312), 1.395x */
-export const SHOT_B2: Cam = { cx: 774, cy: 378, s: OW / 1076 }; // x 236..1312: "Quick order" title and Cart product names whole
-/** Cart summary: line totals + summary + header pill, optically centred, 1.92x */
-export const SHOT_SUM: Cam = { cx: 965, cy: 189, s: 1.92 }; // x 590..1340, y -92..470: lines + summary + pill, no cut-off PO field or ship-to "Change"
-/** Order placed: panel centred under the header, 1.9x */
-export const SHOT_D: Cam = { cx: 766, cy: 284, s: 1.9 };
+
+/**
+ * Readable at 676px: card_px ≈ css_px * s * 676/1440.
+ * 13px UI ≈ 10px on card needs s ≳ 1.64. Keep sidebar (220px) peeking on open/close + QO shots.
+ */
+/** A: sidebar logo/nav + search + row through line total (right edge clears $16,197.60). */
+export const SHOT_A: Cam = { cx: 508, cy: 250, s: 1.48 };
+/** B: qty + Reorder rail + popover (story move 1 target). */
+export const SHOT_B: Cam = { cx: 900, cy: 470, s: 1.85 };
+/** B2: Quick order title + rows + footer + full cart pill (right edge clear). Thin sidebar strip. */
+export const SHOT_B2: Cam = { cx: 750, cy: 378, s: 1.28 };
+/** Cart summary: subtotal + credit line + Place order fully in frame. */
+export const SHOT_SUM: Cam = { cx: 1020, cy: 255, s: 1.55 };
+/** Order placed: full confirmation panel (values unclipped). */
+export const SHOT_D: Cam = { cx: 770, cy: 250, s: 1.4 };
+
 export const WIDE = SHOT_A;
 export const CART_CAM = SHOT_B2;
 export const CONF_CAM = SHOT_D;
@@ -126,9 +129,8 @@ export const MOVES: Move[] = [
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B, label: "move 1: qty -> Reorder rail", ease: MOVE_E },
   { a: PAN_BC[0], b: PAN_BC[1], to: SHOT_B2, label: "move 2: ease out to footer + header pill", ease: MOVE_E },
   { a: PAN_CART[0], b: PAN_CART[1], to: SHOT_SUM, label: "move 3: Cart -> order summary", ease: MOVE_E },
-  { a: CONF_CUT, b: CONF_CUT, to: SHOT_D, label: "dissolve to Order placed (centred)" },
+  { a: CONF_MORPH[0], b: CONF_MORPH[1], to: SHOT_D, label: "morph to Order placed", ease: INOUT_E },
 ];
-// p10: no clamp; the camera centres each subject and the backdrop fills beyond the page
 export const clampCam = (c: Cam): Cam => {
   const hw = OW / 2 / c.s, hh = OH / 2 / c.s;
   return {
@@ -137,14 +139,13 @@ export const clampCam = (c: Cam): Cam => {
     cy: 2 * hh >= UI_H ? UI_H / 2 : Math.min(Math.max(c.cy, hh), UI_H - hh),
   };
 };
-/** Confirmation is shown in its own centred camera (crossfade layer). */
 export const confCam = (): Cam => clampCam(CONF_CAM);
 export const camAt = (f: number): Cam => {
   let st: Cam = WIDE;
   for (const m of MOVES) {
     if (f < m.a) return st;
     const from = st;
-    if (m.b === m.a) { st = m.to; continue; } // hard cut
+    if (m.b === m.a) { st = m.to; continue; }
     if (f <= m.b) {
       const u = (f - m.a) / (m.b - m.a);
       const t = (m.ease || CAM_E)(u);

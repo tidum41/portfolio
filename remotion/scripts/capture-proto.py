@@ -3,14 +3,42 @@ import asyncio, json
 from playwright.async_api import async_playwright
 # p16: film viewport 1312x756. 1312 = narrowest width where the Quick order table (min-content ~766px) clears the Reorder rail; 756 = shortest height where the sticky footer (72px) clears the template popover (bottom 684)
 VW, VH = 1312, 756
-P="file:///workspace/portfolio/remotion/assets/joola-b2b/B2B%20quick%20order%20prototype.html"
+P="file:///workspace/remotion/assets/joola-b2b/B2B%20quick%20order%20prototype.html"
 async def m():
   async with async_playwright() as p:
     b=await p.chromium.launch(executable_path="/usr/bin/google-chrome"); pg=await b.new_page(viewport={"width":VW,"height":VH})
     await pg.goto(P); await pg.wait_for_timeout(1000)
-    await pg.evaluate("(()=>{const i=document.querySelector('[data-po-input]');i.value='ENG-9812';document.querySelector('[data-place-order]').click()})()")
+    # p18: set PO for confirmation copy; never click Place order (it FLIP-morphs and leaves is-morph-exit)
+    await pg.evaluate("""(()=>{
+      const i=document.querySelector('[data-po-input]'); if(i) i.value='ENG-9812';
+      const L=window.JOOLA_LEDGER; if(L) L.customerPo='ENG-9812';
+      document.querySelectorAll('.is-morph-exit, .is-morphing').forEach(e=>{
+        e.classList.remove('is-morph-exit','is-morphing');
+        e.style.opacity=''; e.style.transform=''; e.style.transition='';
+      });
+      // activate cart then confirmation so syncConfirmationFromCart runs via show()
+      const confBtn=[...document.querySelectorAll('#devSwitcher .tab-btn')].find(b=>b.getAttribute('data-tab')==='confirmation');
+      // Directly sync PO row into confirmation markup
+      const conf=document.querySelector('[data-screen=confirmation]');
+      const rows=conf && conf.querySelector('[data-confirm-rows]');
+      if(rows && !conf.querySelector('[data-confirm-po]')){
+        const poRow=document.createElement('div');
+        poRow.className='row'; poRow.setAttribute('data-confirm-po','');
+        poRow.innerHTML='<span class="k">Your PO</span><span class="v" data-customer-po>ENG-9812</span>';
+        const orderRow=rows.querySelector('[data-order-id]') && rows.querySelector('[data-order-id]').closest('.row');
+        if(orderRow && orderRow.nextSibling) rows.insertBefore(poRow, orderRow.nextSibling); else rows.appendChild(poRow);
+      } else if(conf){
+        const v=conf.querySelector('[data-customer-po]'); if(v) v.textContent='ENG-9812';
+      }
+      document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active', e.dataset.screen==='qo-desktop'));
+    })()""")
+    await pg.wait_for_timeout(200)
     css=await pg.evaluate("document.querySelector('style').textContent")
-    secs=await pg.evaluate("""Object.fromEntries([...document.querySelectorAll('#app > section.screen')].map(s=>[s.dataset.screen, s.outerHTML.replace('class="screen active"','class="screen"')]))""")
+    secs=await pg.evaluate("""Object.fromEntries([...document.querySelectorAll('#app > section.screen')].map(s=>{
+      let h=s.outerHTML.replace('class="screen active"','class="screen"');
+      h=h.replace(/\\bis-morph-exit\\b/g,'').replace(/\\bis-morphing\\b/g,'').replace(/style=\"opacity:\\s*0;?\"/g,'');
+      return [s.dataset.screen, h];
+    }))""")
     toast=await pg.evaluate("document.querySelector('[data-toast]').outerHTML")
     css=css.replace('url("fonts/','url("__A__/fonts/')
     # the Remotion page is wider than the film viewport: resolve width media queries for VW now
