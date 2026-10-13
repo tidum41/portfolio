@@ -81,3 +81,12 @@ appearing items fade + 6px rise over 200ms; badge 0.6->1 over 160ms, no overshoo
 - Long pans (>1000 stage px): symmetric curve (bezier .5,0,.4,1) plus a slight zoom dip (-0.3) cuts peak screen speed ~20% and reads as a continuous travel.
 - Readability: push in 1.2x (1.75 -> 2.1) when the beat is about small metadata (rail meta, credit line) rather than restyling the UI.
 - Read caches image paths: write review images to new filenames each time.
+
+## Pass 15: locked wide plus push-in (the default from now on)
+- Every screen is ONE locked wide shot of the full dashboard (Quick order + Cart: s 0.83, sidebar to rail edge + 24px; Order placed: s 1.07 sidebar + panel). The camera is still in the wide; no pans.
+- Each micro-interaction gets exactly one push-in of ~1.15x (12f / 0.4s ease-in-out bezier .45,0,.55,1), holds while the change happens, then eases back. Never two moves in a row toward different targets; never move between beats.
+- Clamp push-ins to the dashboard content box (x 0..1736), not the 1920 page, or a push toward a right-edge element turns into a sideways pan revealing empty margin. Consequence: at 1.15x from a full-dashboard wide, pushes cannot truly centre edge elements; the UI's own states (hover, press tint, popover, badge) carry the highlight.
+- The cursor arrives LEAD = 6f before every click and is still during camera moves (keys hold screen position over the push).
+- Screens change with short staggered dissolves (6f to Cart, 8f to Order placed); list those frames in film-expect _allowed_cuts.
+- No motion blur when there are no pans. Fill outside the page with white (box-shadow on the camera layer) when the wide is taller than the page.
+- Trade-off to report honestly: a full-dashboard wide at 676px puts 14px UI text at ~5.5px; only push-in frames and big numbers are legible.

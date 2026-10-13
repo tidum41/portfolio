@@ -12,7 +12,8 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
-  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam, CART_PUSH, CONF_XFADE, END_FADE, confCam,
+  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, TPL_HOVER, TYPE_SEARCH, UI_E, type Cam, CONF_XFADE, END_FADE,
+  LEAD, PUSH_QTY, PUSH_TPL, OUT_TPL, PUSH_PILL, CART_FADE, PUSH_CREDIT,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -41,7 +42,7 @@ const ctr = (k: string): [number, number] => {
 };
 
 /** Film-only compaction: lift the sticky Quick order footer to sit under the table/rail. */
-const FOOTER_LIFT = R["qo-search.footer"][1] - 700; // p13: footer sits just below the template popover (bottom 684)
+const FOOTER_LIFT = 0; // p15: the footer stays at its real sticky position (the wide shot shows the full page)
 const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
 
 
@@ -57,33 +58,34 @@ const P = {
   pill: [1600, 32] as [number, number],
   tpl: [1640, 562] as [number, number], // the saved Match kit template row
   tplAdd: [1640, 622] as [number, number], // "Add to order" in the popover
-  qtyIn: [1224, 266] as [number, number],
+  qtyIn: [1186, 274] as [number, number], // p15: inside the field, left of the digits (not on "+")
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
   msg: ctr("confirmation.msgBtn"),
 };
 /** Cursor keys: [frame, UI point, frame whose camera projects it]. Travel is interpolated in SCREEN space
  *  (the cursor moves first, the camera follows) and holds its screen position across hard cuts. */
 type Key = [number, [number, number], number];
+const offQty: [number, number] = [P.qtyIn[0] + 50, P.qtyIn[1] + 64];
 const KEYS: Key[] = [
-  [MORPH[1], [700, 560], MORPH[1]],
-  [QO_ZOOM[0] - 2, [700, 560], QO_ZOOM[0]],
-  [CLICK.search - 6, P.search, CLICK.search], // cursor leads, the zoom follows
+  [MORPH[1], [900, 600], MORPH[1]],
+  [CLICK.search - LEAD, P.search, CLICK.search], // the cursor arrives a beat before every click
   [ENTER + 4, P.search, CLICK.search],
-  [CLICK.qty - 6, P.qtyIn, CLICK.qty], // leads the pan to the qty field
+  [PUSH_QTY[1], P.search, CLICK.search], // still while the camera pushes in
+  [CLICK.qty - LEAD, P.qtyIn, CLICK.qty],
   [TYPE_QTY[1] + 4, P.qtyIn, CLICK.qty],
-  [TYPE_QTY[1] + 12, [P.qtyIn[0] + 50, P.qtyIn[1] + 64], CLICK.qty], // off the digits
-  [CLICK.tpl - 8, P.tpl, CLICK.tpl],
-  [CLICK.tpl + 6, P.tpl, CLICK.tpl],
-  [CLICK.tplAdd - 6, P.tplAdd, CLICK.tplAdd],
-  [CLICK.tplAdd + 10, P.tplAdd, CLICK.tplAdd],
-  [CLICK.add - 8, P.add, CLICK.add],
-  [HEADER_PAN[0] + 2, P.add, CLICK.add],
-  [CLICK.pill - 10, P.pill, CLICK.pill], // cursor leads up to the header
-  [CLICK.pill + 4, P.pill, CLICK.pill],
-  [CART_PUSH[0], P.pill, CLICK.pill],
-  [CART_PUSH[1], P.pill, CART_PUSH[1]], // rides with the pill during the push-in
-  [CLICK.place - 18, P.pill, CART_PUSH[1]],
-  [CLICK.place - 6, P.place, CLICK.place],
+  [TYPE_QTY[1] + 10, offQty, CLICK.qty], // off the digits
+  [PUSH_TPL[1], offQty, CLICK.qty], // still while the camera eases out and pushes in again
+  [CLICK.tpl - LEAD, P.tpl, CLICK.tpl],
+  [CLICK.tpl + 4, P.tpl, CLICK.tpl],
+  [CLICK.tplAdd - LEAD, P.tplAdd, CLICK.tplAdd],
+  [OUT_TPL[1], P.tplAdd, CLICK.tplAdd],
+  [CLICK.add - LEAD, P.add, CLICK.add],
+  [PUSH_PILL[1], P.add, CLICK.add],
+  [PILL_FILL[1] + 2, P.add, CLICK.add], // badge appears with nothing else moving
+  [CLICK.pill - LEAD, P.pill, CLICK.pill - 1],
+  [PUSH_CREDIT[1], P.pill, CLICK.pill - 1],
+  [CREDIT_ANIM[1], P.pill, CLICK.pill - 1],
+  [CLICK.place - LEAD, P.place, CLICK.place - 1],
 ];
 const pointerAt = (f: number): [number, number] => {
   const sp = (k: Key) => toScreen(camAt(k[2]), k[1][0], k[1][1]) as [number, number];
@@ -353,12 +355,20 @@ export const JoolaB2B: React.FC = () => {
     ]).then(() => continueRender(handle));
   }, [handle]);
 
-  const cam = camAt(frame);
-  const inX = frame >= CONF_XFADE[0];
-  // cart -> confirmation: staggered 8f dissolve (cart out over 5f, confirmation in over the last 5f) so the two layouts never read double
-  const xOut = prog(frame, CONF_XFADE[0], CONF_XFADE[0] + 5, FADE_E);
-  const xf = prog(frame, CONF_XFADE[1] - 5, CONF_XFADE[1], FADE_E);
-  const scr = frame >= CLICK.pill ? "cart" : "qo-desktop";
+  // screens: one layer; during a fade the outgoing layer keeps its last camera, the incoming one starts wide
+  const TR: [number, number, string, string][] = [
+    [CART_FADE[0], CART_FADE[1] - CART_FADE[0], "qo-desktop", "cart"],
+    [CONF_XFADE[0], CONF_XFADE[1] - CONF_XFADE[0], "cart", "confirmation"],
+  ];
+  const scrAt = (f: number) => (f >= CONF_XFADE[0] ? "confirmation" : f >= CART_FADE[0] ? "cart" : "qo-desktop");
+  const tr = TR.find(([a, n]) => frame >= a && frame < a + n);
+  // staggered dissolve: outgoing fades over the first ~60%, incoming over the last ~60%, so layouts never read double
+  const layers: { screen: string; cam: Cam; o: number }[] = tr
+    ? [
+        { screen: tr[2], cam: camAt(tr[0] - 1), o: 1 - prog(frame, tr[0], tr[0] + Math.ceil(tr[1] * 0.6), FADE_E) },
+        { screen: tr[3], cam: camAt(frame), o: prog(frame, tr[0] + tr[1] - Math.ceil(tr[1] * 0.6), tr[0] + tr[1], FADE_E) },
+      ]
+    : [{ screen: scrAt(frame), cam: camAt(frame), o: 1 }];
 
   const [spx, spy] = pointerAt(frame);
   // intro: logo glides from the centre card into the real sidebar slot (variant A)
@@ -379,13 +389,6 @@ export const JoolaB2B: React.FC = () => {
   const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
   const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
   const ptrOpacity = 1 - prog(frame, CLICK.place + 1, POINTER_OFF, FADE_E);
-  // subtle directional motion blur, only while the camera is travelling fast (never on text at rest)
-  const ca = camAt(frame - 0.5), cb = camAt(frame + 0.5);
-  const vx = (cb.cx - ca.cx) * cam.s, vy = (cb.cy - ca.cy) * cam.s; // stage px per frame
-  const blurK = (v: number) => Math.min(2.5, Math.max(0, (Math.abs(v) - 12) * 0.03));
-  const bx = blurK(vx), by = blurK(vy);
-  const nearCut = Math.abs(frame - CLICK.pill) <= 1;
-  const blurOn = !nearCut && !inX && (bx > 0.05 || by > 0.05);
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
 
   return (
@@ -396,21 +399,11 @@ export const JoolaB2B: React.FC = () => {
       <style>{CSS}</style>
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
-          {blurOn && (
-            <svg width={0} height={0} style={{ position: "absolute" }}>
-              <filter id="mblur" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation={`${(bx / cam.s).toFixed(2)} ${(by / cam.s).toFixed(2)}`} /></filter>
-            </svg>
-          )}
-          {xOut < 1 && (
-            <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(cam), filter: blurOn ? "url(#mblur)" : undefined, opacity: 1 - xOut }}>
-              <Layer key={scr} screen={scr} frame={frame} slide={0} />
+          {layers.map((l) => l.o > 0 && (
+            <div key={l.screen} style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
+              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} />
             </div>
-          )}
-          {inX && (
-            <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(confCam()), opacity: xf }}>
-              <Layer key="confirmation" screen="confirmation" frame={frame} slide={0} />
-            </div>
-          )}
+          ))}
         </div>
       )}
       {logoOpacity > 0 && (
