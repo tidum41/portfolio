@@ -20,8 +20,6 @@ export default function PrimaryRouteWarmup() {
   useEffect(() => {
     let idleId = 0;
     let timeoutId = 0;
-    let heavyIdleId = 0;
-    let heavyTimeoutId = 0;
 
     const warmJs = () => {
       void import("@/components/AboutPageContent");
@@ -41,18 +39,15 @@ export default function PrimaryRouteWarmup() {
       }
     };
 
-    const warmHeavy = () => {
-      void import("@/components/CDPlayer");
-    };
+    // Do not warm-import CDPlayer on Work — it pulls the album-art module
+    // graph into the home session before the user opens the CD modal.
 
     const schedule = () => {
       warmJs();
       if (typeof window.requestIdleCallback === "function") {
         idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
-        heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
       } else {
         timeoutId = window.setTimeout(warmAssets, 400);
-        heavyTimeoutId = window.setTimeout(warmHeavy, 1200);
       }
     };
 
@@ -63,11 +58,7 @@ export default function PrimaryRouteWarmup() {
       if (idleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(idleId);
       }
-      if (heavyIdleId && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(heavyIdleId);
-      }
       if (timeoutId) window.clearTimeout(timeoutId);
-      if (heavyTimeoutId) window.clearTimeout(heavyTimeoutId);
     };
   }, [pathname]);
 

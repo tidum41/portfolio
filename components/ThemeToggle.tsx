@@ -144,9 +144,14 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         lineHeight: 0,
         WebkitTapHighlightColor: "transparent",
         // 44px tap target; 15px icon stays visually the same, centered.
+        // flexShrink:0 + minWidth so a cramped mobile nav can't collapse
+        // the box to ~10px while the icon still paints outside it.
         position: "relative",
         width: 44,
         height: 44,
+        minWidth: 44,
+        minHeight: 44,
+        flexShrink: 0,
         boxSizing: "border-box",
         justifyContent: "center",
       }}

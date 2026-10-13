@@ -6,13 +6,11 @@ export const metadata: Metadata = {
   description:
     "About Mudit Mahajan — UCLA product designer. Experience at JOOLA, Beacons AI, Dialogue AI, and more.",
   alternates: { canonical: `${SITE_URL}/about` },
-  // Keep /about reachable by URL + nav, but keep the homepage as the only
-  // primary search result for "Mudit Mahajan" / muditm.com.
   robots: {
-    index: false,
+    index: true,
     follow: true,
     googleBot: {
-      index: false,
+      index: true,
       follow: true,
     },
   },

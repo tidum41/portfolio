@@ -201,7 +201,14 @@ export default function AboutPageContent({
         <ScrollReveal>
           <section style={{ marginBottom: "var(--space-7)" }}>
             <SectionLabel>drag my favorite CDs!</SectionLabel>
-            <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+            {/* Mount only while About is visible — idle-warming the about shell
+                used to mount CDPlayer under display:none and pull album art
+                into the Work home first-load. */}
+            {visible ? (
+              <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+            ) : (
+              <div style={{ marginTop: 16, minHeight: 520 }} aria-hidden />
+            )}
           </section>
         </ScrollReveal>
 

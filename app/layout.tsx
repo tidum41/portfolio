@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { preload } from "react-dom";
 import "./globals.css";
 import "dialkit/styles.css";
 import Nav from "@/components/Nav";
@@ -120,6 +121,16 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
   const dsStyle = designSystemToCss(ds);
+
+  // Preload the first work-grid Mux poster — it's the typical mobile LCP once
+  // the intro releases. Keep in sync with MuxAutoplayCard / muxPosterUrl(…, 640).
+  const firstMuxId = projects.find((p) => p.mediaType === "video" && p.muxPlaybackId)?.muxPlaybackId;
+  if (firstMuxId) {
+    preload(
+      `https://image.mux.com/${firstMuxId}/thumbnail.webp?time=1&width=640`,
+      { as: "image" },
+    );
+  }
 
   return (
     <html
