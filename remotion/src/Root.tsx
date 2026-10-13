@@ -12,6 +12,15 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1440}
       />
+      <Composition
+        id="JoolaB2BLogoB"
+        component={JoolaB2B}
+        defaultProps={{ variant: "B" as const }}
+        durationInFrames={JOOLA_DURATION}
+        fps={JOOLA_FPS}
+        width={1920}
+        height={1440}
+      />
     </>
   );
 };

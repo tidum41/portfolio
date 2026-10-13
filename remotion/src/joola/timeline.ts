@@ -53,47 +53,51 @@ export const UI_E = bezier(0.2, 0, 0, 1); // UI + state changes
 export const FADE_E = bezier(0.4, 0, 0.2, 1); // fades
 export const PTR_E = bezier(0.3, 0, 0, 1); // cursor travel
 
-export const UI_IN = 24; // logo card 0..23 (0.8s), hard cut to the isolated Perseus row
-export const DURATION = 354; // 11.8s
+/* ---------- pass 12: full dashboard, logo morph in/out, search, one-tap reorder ---------- */
+export const MORPH = [8, 32] as const; // logo glides from centre into the sidebar slot (0.8s ease-out)
+export const UI_IN = MORPH[0]; // dashboard appears under the moving logo
+export const DURATION = 350; // 11.67s
 
-/** p11: no search beat. Clicks (press 0.9 for 3f, back over 4f). search/ENTER sit before frame 0 so the
- *  Perseus row is already in the order when the film opens. */
-export const CLICK = { search: -100, qty: 58, add: 116, pill: 170, po: 186, place: 290 };
-export const ENTER = -50;
-export const TYPE_SEARCH = [-99, -86] as const;
-export const DROPDOWN_OPEN = -90;
-export const RESULT_HOVER = [-95, -92] as const;
-export const INSERT = [ENTER, ENTER + 6] as const;
-export const QO_ZOOM = [40, 54] as const; // row pan: product cell -> qty + line total (0.47s ease-out)
-export const ADD_PAN = [88, 102] as const; // row -> Add 4 to cart (0.47s ease-out)
-export const QTY_SET = CLICK.qty; // 120 / $134.98 / $16,197.60 swap on the click frame
-export const PILL_CUT = CLICK.add; // hard cut on the Add click
-export const PILL_FILL = [PILL_CUT, PILL_CUT + 5] as const; // badge 0.6 -> 1 over 160ms, amount swaps instantly
+/** Cursor clicks (press 0.9 for 3f, back over 4f). ENTER is a keypress (no cursor). */
+export const CLICK = { search: 60, tpl: 122, add: 162, pill: 214, place: 266 };
+export const ENTER = 80;
+export const TYPE_SEARCH = [CLICK.search + 1, CLICK.search + 14] as const; // "Perseus", 2f/char
+export const DROPDOWN_OPEN = 67;
+export const RESULT_HOVER = [74, 77] as const;
+export const INSERT = [ENTER, ENTER + 6] as const; // Perseus row: fade + 6px rise, 200ms (qty 1)
+export const QO_ZOOM = [38, 54] as const; // the one zoom: wide 1.4 -> 1.75 (1.25x)
+export const RAIL_PAN = [90, 106] as const; // pan to row totals + Reorder rail + Add (0.53s ease-out)
+export const TPL_HOVER = [CLICK.tpl - 8, CLICK.tpl + 16] as const; // real :hover state on the saved template
+export const QTY_SET = CLICK.tpl; // one tap: Perseus restock -> 120 / $134.98 / $16,197.60 (instant)
+export const HEADER_PAN = [CLICK.add + 4, CLICK.add + 18] as const; // up to the real header (0.47s ease-out)
+export const PILL_FILL = [HEADER_PAN[1], HEADER_PAN[1] + 5] as const; // amount swaps, badge 0.6 -> 1 over 160ms
+export const PILL_CUT = -1; // unused (no isolated pill)
 export const CART_CUT = CLICK.pill; // hard cut on the pill click
-export const TYPE_PO = [CLICK.po + 1, CLICK.po + 16] as const; // ENG-9812, 2f/char
-export const CART_MOVE = [224, 238] as const; // PO -> summary (0.47s ease-out)
-export const CREDIT_ANIM = [244, 256] as const; // number swaps at 244, bar width over 400ms
-export const CONF_CUT = CLICK.place; // hard cut to the plain backdrop on the click
-export const CONF_XFADE = [CONF_CUT + 2, CONF_CUT + 12] as const; // panel fades in + 6px rise over a clean backdrop
-export const HOLD_CONF = [CONF_XFADE[1], 332] as const;
-export const FADE_OUT = [332, 341] as const; // 0.3s fade to the background colour
-export const LOGO_IN = [341, 350] as const; // 0.3s logo fade-up, then hold == frame 0
-export const POINTER_OFF = CLICK.place + 1; // cursor hidden on the confirmation + logo
+export const CREDIT_ANIM = [228, 240] as const; // number swaps at 228, bar width over 400ms
+export const CONF_CUT = CLICK.place; // hard cut to the real confirmation screen
+export const CONF_XFADE = [CONF_CUT, CONF_CUT + 6] as const; // panel 6px settle (no fade, cut)
+export const OUT_ZOOM = [306, 322] as const; // back to the wide framing (1.25x out)
+export const MORPH_OUT = [324, 348] as const; // logo lifts from the sidebar slot back to centre
+export const LOGO_IN = MORPH_OUT; // compat
+export const FADE_OUT = MORPH_OUT; // compat
+export const POINTER_OFF = CLICK.place + 1; // cursor hidden on the confirmation + outro
 
 export const SCREENS: [string, number, number][] = [
   ["qo-desktop", -1, -1],
   ["cart", CART_CUT, CART_CUT],
+  ["confirmation", CONF_CUT, CONF_CUT],
 ];
 /** Intentional hard cuts (frame where the new picture first appears). */
-export const CUTS = [UI_IN, PILL_CUT, CART_CUT, CONF_CUT];
+export const CUTS = [CART_CUT, CONF_CUT];
 
 /** Every UI (content) animation window. The camera must be still inside these. */
 export const CONTENT_ANIMS: [string, number, number][] = [
-  ["qty click + 120", CLICK.qty, CLICK.qty + 7],
+  ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
+  ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
+  ["enter + row insert", ENTER, INSERT[1]],
+  ["template hover + tap", TPL_HOVER[0] + 8, CLICK.tpl + 7],
   ["badge pop", PILL_FILL[0] + 1, PILL_FILL[1]],
-  ["PO click + typing", CLICK.po, TYPE_PO[1]],
   ["credit bar", CREDIT_ANIM[0], CREDIT_ANIM[1]],
-  ["place click + confirmation", CLICK.place, HOLD_CONF[1]],
 ];
 
 /* ---------- camera ---------- */
@@ -105,16 +109,21 @@ export const OH = 1080;
 export const UI_W = 1920;
 export const UI_H = 1080;
 export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 }; // intro/outro framing: sidebar + header + table start
-export const SEARCH_CAM: Cam = { cx: 588, cy: 271, s: 2.0 }; // Perseus row, product cell
+export const SEARCH_CAM: Cam = { cx: 514, cy: 386, s: 1.4 }; // wide: sidebar logo slot, header, search, table
 export const MOVES: Move[] = [
-  { a: QO_ZOOM[0], b: QO_ZOOM[1], to: { cx: 1144, cy: 271, s: 2.0 }, label: "row pan to qty + line total" },
-  { a: ADD_PAN[0], b: ADD_PAN[1], to: { cx: 1651.5, cy: 693.6, s: 2.0 }, label: "pan to Add 4 to cart" },
-  { a: PILL_CUT, b: PILL_CUT, to: { cx: 1525.8, cy: 23, s: 2.3 }, label: "CUT to account + cart pill" },
-  { a: CART_CUT, b: CART_CUT, to: { cx: 522, cy: 423, s: 2.0 }, label: "CUT to PO field" },
-  { a: CART_MOVE[0], b: CART_MOVE[1], to: { cx: 1552, cy: 259.6, s: 2.0 }, label: "pan to summary card" },
+  { a: QO_ZOOM[0], b: QO_ZOOM[1], to: { cx: 560, cy: 320, s: 1.75 }, label: "zoom 1.25x to search + table" },
+  { a: RAIL_PAN[0], b: RAIL_PAN[1], to: { cx: 1370, cy: 420, s: 1.75 }, label: "pan to qty/line + Reorder rail + Add" },
+  { a: HEADER_PAN[0], b: HEADER_PAN[1], to: { cx: 1370, cy: 0, s: 1.75 }, label: "pan up to the real header (clamped)" },
+  { a: CART_CUT, b: CART_CUT, to: { cx: 1300, cy: 0, s: 1.75 }, label: "CUT to Cart: header + lines + summary" },
+  { a: CONF_CUT, b: CONF_CUT, to: { cx: 1070, cy: 0, s: 1.75 }, label: "CUT to confirmation" },
+  { a: OUT_ZOOM[0], b: OUT_ZOOM[1], to: { cx: 514, cy: 386, s: 1.4 }, label: "zoom out 1.25x to wide" },
 ];
 // p10: no clamp; the camera centres each subject and the backdrop fills beyond the page
-export const clampCam = (c: Cam): Cam => c;
+export const clampCam = (c: Cam): Cam => ({
+  s: c.s,
+  cx: Math.min(Math.max(c.cx, OW / 2 / c.s), UI_W - OW / 2 / c.s),
+  cy: Math.min(Math.max(c.cy, OH / 2 / c.s), UI_H - OH / 2 / c.s),
+});
 export const camAt = (f: number): Cam => {
   let st: Cam = SEARCH_CAM;
   for (const m of MOVES) {

@@ -11,8 +11,8 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, QO_ZOOM, ADD_PAN, CONF_CUT, CART_CUT, camAt, CLICK, CART_MOVE, CONF_XFADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FADE_OUT, FPS,
-  INSERT, lerp, LOGO_IN, PILL_FILL, POINTER_OFF, prog, PTR_E, QTY_SET, RESULT_HOVER, SCREENS, TYPE_PO, TYPE_SEARCH, UI_E, UI_IN, type Cam,
+  OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, MORPH_OUT,
+  INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, QTY_SET, RESULT_HOVER, SCREENS, TPL_HOVER, TYPE_SEARCH, UI_E, HEADER_PAN, QO_ZOOM, type Cam,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -45,28 +45,6 @@ const FOOTER_LIFT = R["qo-search.footer"][1] - (R["qo-search.rail"][1] + R["qo-s
 const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
 
 
-/* ---------- p11 isolation: only the real component is drawn, clipped to its own box, on the plain backdrop ---------- */
-type Box = [number, number, number, number, number]; // x, y, w, h, radius (film UI coords)
-const B_ROW: Box = [248, 227.6, 1196, 87, 8];
-const B_ADD: Box = [1591, 673.6, 121, 40, 8];
-const B_ACCT: Box = [1339.6, 5, 178.4, 36, 18];
-const B_PILL: Box = [1530, 5, 182, 36, 18];
-const B_PO: Box = [236, 379.6, 572, 82, 12];
-const B_SUM: Box = [1392, 123.6, 320, 272, 12];
-const CP = R["confirmation.panel"];
-const B_CONF: Box = [CP[0], CP[1], CP[2], CP[3], 12];
-const CONF_CAM = { cx: CP[0] + CP[2] / 2, cy: CP[1] + CP[3] / 2, s: 2.0 };
-const boxesAt = (f: number): Box[] => (f < CLICK.add ? [B_ROW, B_ADD] : f < CART_CUT ? [B_ACCT, B_PILL] : [B_PO, B_SUM]);
-const ClipDefs = ({ id, boxes }: { id: string; boxes: Box[] }) => (
-  <svg width={0} height={0} style={{ position: "absolute" }}>
-    <defs>
-      <clipPath id={id} clipPathUnits="userSpaceOnUse">
-        {boxes.map((b, i) => <rect key={i} x={b[0] - 0.5} y={b[1] - 0.5} width={b[2] + 1} height={b[3] + 1} rx={b[4]} />)}
-      </clipPath>
-    </defs>
-  </svg>
-);
-
 /* ---------- pointer (canvas coords); every move arrives just before its click ---------- */
 const addBtn = ctr("qo-search.addBtn");
 const P = {
@@ -76,8 +54,8 @@ const P = {
   preset: ctr("qo-search.preset24"),
   qty: ctr("qo-search.qty0"),
   add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
-  pill: [1640, 26] as [number, number],
-  po: [380, 436] as [number, number],
+  pill: [1600, 32] as [number, number],
+  tpl: [1686, 490] as [number, number], // "Add" on the saved Perseus restock template (Reorder rail)
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
   msg: ctr("confirmation.msgBtn"),
 };
@@ -85,20 +63,18 @@ const P = {
  *  (the cursor moves first, the camera follows) and holds its screen position across hard cuts. */
 type Key = [number, [number, number], number];
 const KEYS: Key[] = [
-  [UI_IN, [760, 330], UI_IN],
-  [QO_ZOOM[0] - 4, [760, 330], UI_IN],
-  [CLICK.qty - 6, P.qty, CLICK.qty], // cursor leads, camera follows the pan
-  [CLICK.qty + 4, P.qty, CLICK.qty],
-  [CLICK.qty + 14, [P.qty[0] + 40, P.qty[1] + 72], CLICK.qty], // off the digits
-  [ADD_PAN[0] - 2, [P.qty[0] + 40, P.qty[1] + 72], CLICK.qty],
-  [CLICK.add - 8, P.add, CLICK.add - 1],
-  [CLICK.add + 22, P.add, CLICK.add - 1], // stays put on screen through the cut, then travels
-  [CLICK.pill - 8, P.pill, CLICK.pill - 1],
-  [CLICK.pill + 4, P.pill, CLICK.pill - 1],
-  [CLICK.po - 6, P.po, CLICK.po],
-  [CART_MOVE[0] - 4, P.po, CLICK.po],
-  [CART_MOVE[1] + 2, P.place, CLICK.place], // cursor leads the pan to Place order and rests on the button
-  [CLICK.place - 4, P.place, CLICK.place],
+  [MORPH[1], [700, 560], MORPH[1]],
+  [QO_ZOOM[0] - 2, [700, 560], QO_ZOOM[0]],
+  [CLICK.search - 6, P.search, CLICK.search], // cursor leads, the zoom follows
+  [ENTER + 8, P.search, CLICK.search],
+  [CLICK.tpl - 10, P.tpl, CLICK.tpl], // leads the pan to the rail
+  [CLICK.tpl + 10, P.tpl, CLICK.tpl],
+  [CLICK.add - 6, P.add, CLICK.add],
+  [HEADER_PAN[0] + 2, P.add, CLICK.add],
+  [CLICK.pill - 8, P.pill, CLICK.pill], // cursor leads up to the header
+  [CLICK.pill + 4, P.pill, CLICK.pill],
+  [CLICK.place - 22, P.pill, CLICK.pill],
+  [CLICK.place - 6, P.place, CLICK.place],
 ];
 const pointerAt = (f: number): [number, number] => {
   const sp = (k: Key) => toScreen(camAt(k[2]), k[1][0], k[1][1]) as [number, number];
@@ -166,6 +142,16 @@ const typedCount = (f: number, a: number, b: number, len: number) =>
 function applyQuickOrder(root: HTMLElement, f: number) {
   q(root, "[data-order-footer]")!.style.transform = `translateY(${-FOOTER_LIFT}px)`;
 
+  // Reorder rail: the real :hover state on "Perseus restock" (bg + "Add" action, 120ms), then the tap
+  const tpl = qa(root, ".rail-item").find((e) => e.textContent!.includes("Perseus restock"));
+  if (tpl) {
+    const hv = prog(f, TPL_HOVER[0], TPL_HOVER[0] + 4, FADE_E) * (1 - prog(f, TPL_HOVER[1], TPL_HOVER[1] + 4, FADE_E));
+    tpl.style.background = hv > 0 ? "var(--band)" : "";
+    const act = q(tpl, ".rail-action");
+    if (act) act.style.opacity = `${hv}`;
+    press(tpl, f, CLICK.tpl);
+  }
+
   // Search: click -> focus ring + caret, then typing (2f per character, cursor still)
   const field = q(root, "[data-search-field]")!;
   const typed = SEARCH.slice(0, typedCount(f, TYPE_SEARCH[0], TYPE_SEARCH[1], SEARCH.length));
@@ -207,8 +193,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const qty = f >= QTY_SET ? 120 : 1;
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
-  const ring = prog(f, CLICK.qty, CLICK.qty + 3, FADE_E) * (1 - prog(f, CLICK.qty + 18, CLICK.qty + 21, FADE_E));
-  q(pr, "[data-qty-stepper]")!.style.boxShadow = ring > 0 ? `0 0 0 2px rgba(44,62,224,${ring})` : "";
   qa(pr, "[data-set-perseus]").forEach((b) => b.classList.remove("on"));
   const unit = unitAt(qty);
   q(pr, ".unit")!.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
@@ -264,27 +248,10 @@ function pill(root: HTMLElement, f: number) {
 }
 
 function applyCart(root: HTMLElement, f: number) {
+  // PO already on file (shown on the confirmation); no PO entry beat in p12
   const input = q<HTMLInputElement>(root, "[data-po-input]")!;
-  const n = typedCount(f, TYPE_PO[0], TYPE_PO[1], PO.length);
-  input.value = PO.slice(0, n);
-  input.setAttribute("value", input.value);
-  const focused = f >= CLICK.po && f < CART_MOVE[0];
-  input.style.borderColor = focused ? "var(--blue)" : "";
-  input.style.boxShadow = focused ? "0 0 0 3px rgba(44,62,224,0.14)" : "";
-  let c = q(input.parentElement!, ":scope > .film-caret");
-  if (!c) {
-    c = document.createElement("span");
-    c.className = "film-caret";
-    c.style.position = "absolute";
-    input.parentElement!.style.position = "relative";
-    input.parentElement!.appendChild(c);
-  }
-  const ctx = document.createElement("canvas").getContext("2d")!;
-  ctx.font = getComputedStyle(input).font;
-  const w = n ? ctx.measureText(input.value).width : 0;
-  c.style.display = focused ? "inline-block" : "none";
-  c.style.left = `${input.offsetLeft + parseFloat(getComputedStyle(input).paddingLeft) + w + 1}px`;
-  c.style.top = `${input.offsetTop + (input.offsetHeight - 16) / 2}px`;
+  input.value = PO;
+  input.setAttribute("value", PO);
 
   // number swaps instantly at the start of the bar move; the bar width eases over 400ms
   const cp = prog(f, CREDIT_ANIM[0], CREDIT_ANIM[1], UI_E);
@@ -299,10 +266,7 @@ function applyCart(root: HTMLElement, f: number) {
 
 
 function applyConfirmation(root: HTMLElement, f: number) {
-  // motion spec fade: the real confirmation panel rises 6px while the screen cross-fades in (8f)
-  const p = prog(f, CONF_XFADE[0], CONF_XFADE[1], UI_E);
-  const panel = q(root, "[data-confirm-panel]")!;
-  panel.style.transform = p < 1 ? `translateY(${(1 - p) * 6}px)` : "";
+  // hard cut to the real screen; nothing animates on the panel
   // the order was placed, so the cart pill is empty again (prototype behaviour)
   const amt = q(root, "[data-cart-pill] [data-cart-total]");
   const chip = q(root, "[data-cart-pill] [data-cart-count]");
@@ -328,6 +292,8 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
   useLayoutEffect(() => {
     const root = ref.current!;
     APPLY[screen](root, frame);
+    const brand = q(root, ".sidebar-brand img");
+    if (brand) brand.style.visibility = frame < MORPH[1] || frame >= MORPH_OUT[0] ? "hidden" : "";
     const page = q(root, ".page, .messages-layout");
     if (page) page.style.transform = slide ? `translateX(${slide}px)` : "";
   });
@@ -348,7 +314,7 @@ const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale
   </svg>
 );
 
-export const JoolaB2B: React.FC = () => {
+export const JoolaB2B: React.FC<{ variant?: "A" | "B" }> = ({ variant = "A" }) => {
   const frame = useCurrentFrame();
   const [handle] = useState(() => delayRender("r11 fonts + images"));
   useLayoutEffect(() => {
@@ -365,14 +331,27 @@ export const JoolaB2B: React.FC = () => {
   const cur = SCREENS[idx];
 
   const [spx, spy] = pointerAt(frame);
-  const uiVisible = frame >= UI_IN && frame < CONF_CUT;
-  // Order placed: the cart cross-fades (8f) to the prototype's real confirmation screen, centred
-  const xf = prog(frame, CONF_XFADE[0], CONF_XFADE[1], FADE_E);
-  const confOn = frame >= CONF_CUT && frame < LOGO_IN[0];
-  const confOut = 1 - prog(frame, FADE_OUT[0], FADE_OUT[1], FADE_E);
-  // logo card == frame 0; fades up from the background over 0.3s at the end of the loop
-  const logoA = frame < UI_IN ? 1 : frame >= LOGO_IN[0] ? prog(frame, LOGO_IN[0], LOGO_IN[1], FADE_E) : 0;
+  // logo: centre card (frame 0) <-> the real sidebar logo slot, one continuous ease-out each way
+  const slotCam = camAt(frame < 175 ? MORPH[1] : MORPH_OUT[0]);
+  const [sx, sy] = toScreen(slotCam, LOGO[0], LOGO[1]);
+  const sw = LOGO[2] * slotCam.s;
   const logoW = 340;
+  const cX = OW / 2 - logoW / 2, cY = OH / 2 - (logoW * LOGO_AR) / 2;
+  const mIn = prog(frame, MORPH[0], MORPH[1], CAM_E);
+  const mOut = prog(frame, MORPH_OUT[0], MORPH_OUT[1], CAM_E);
+  const m = frame < 175 ? mIn : 1 - mOut; // 0 = centre card, 1 = in the sidebar slot
+  const logoOn = frame < MORPH[1] || frame >= MORPH_OUT[0];
+  const lw = lerp(logoW, sw, m);
+  const lx = lerp(cX, sx, m), ly = lerp(cY, sy, m);
+  // the dashboard arrives with the logo: A = dissolve in, B = rect reveal growing out of the logo slot
+  const uiT = frame < 175 ? prog(frame, MORPH[0], MORPH[1], FADE_E) : 1 - prog(frame, MORPH_OUT[0], MORPH_OUT[1], FADE_E);
+  const uiOn = frame >= MORPH[0] && frame < MORPH_OUT[1];
+  const reveal = frame < 175 ? mIn : 1 - mOut;
+  const clip = variant === "B" && reveal < 1
+    ? `inset(${lerp(sy - 6, 0, reveal)}px ${lerp(OW - sx - sw - 6, 0, reveal)}px ${lerp(OH - sy - sw * LOGO_AR - 6, 0, reveal)}px ${lerp(sx - 6, 0, reveal)}px round ${lerp(8, 0, reveal)}px)`
+    : undefined;
+  const uiOpacity = variant === "B" ? 1 : uiT;
+  const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
 
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
@@ -380,24 +359,17 @@ export const JoolaB2B: React.FC = () => {
           everything below is staged in a 1440x1080 (4:3) space and scaled up 4/3. */}
       <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS}</style>
-      {uiVisible && (
-        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)`, clipPath: "url(#isoA)" }}>
-          <ClipDefs id="isoA" boxes={boxesAt(frame)} />
-          <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
-        </div>
-      )}
-      {confOn && (
-        <div style={{ position: "absolute", inset: 0, opacity: xf * confOut }}>
-          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${CONF_CAM.s}) translate(${-CONF_CAM.cx}px,${-CONF_CAM.cy}px)`, clipPath: "url(#isoC)" }}>
-            <ClipDefs id="isoC" boxes={[[B_CONF[0], B_CONF[1] + 6 * (1 - xf), B_CONF[2], B_CONF[3], 12]]} />
-            <Layer key="confirmation" screen="confirmation" frame={frame} slide={0} />
+      {uiOn && (
+        <div style={{ position: "absolute", inset: 0, opacity: uiOpacity, clipPath: clip }}>
+          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
+            <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
           </div>
         </div>
       )}
-      {logoA > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", opacity: logoA, left: Math.round(OW / 2 - logoW / 2), top: Math.round(OH / 2 - (logoW * LOGO_AR) / 2), width: logoW, height: logoW * LOGO_AR }} />
+      {logoOn && (
+        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR }} />
       )}
-      {uiVisible && frame < POINTER_OFF && <Cursor x={spx} y={spy} scale={cursorScale(frame)} />}
+      {showPtr && <Cursor x={spx} y={spy} scale={cursorScale(frame)} />}
       </div>
     </AbsoluteFill>
   );
