@@ -13,7 +13,7 @@ import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, CAM_E, MORPH, POP_IN, POP_HOVER, TPL_ROWS, TYPE_QTY,
   INSERT, lerp, PILL_FILL, POINTER_OFF, prog, PTR_E, RESULT_HOVER, TPL_HOVER, TYPE_SEARCH, UI_E, type Cam, CONF_XFADE, END_FADE,
-  LEAD, PUSH_QTY, PUSH_TPL, OUT_TPL, PUSH_PILL, CART_FADE, PUSH_CREDIT,
+  LEAD, UI_W, UI_H, PAN_AB, PAN_BC, CART_FADE,
 } from "./joola/timeline";
 
 export const JOOLA_FPS = FPS;
@@ -55,10 +55,10 @@ const P = {
   preset: ctr("qo-search.preset24"),
   qty: ctr("qo-search.qty0"),
   add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
-  pill: [1600, 32] as [number, number],
-  tpl: [1640, 562] as [number, number], // the saved Match kit template row
-  tplAdd: [1640, 622] as [number, number], // "Add to order" in the popover
-  qtyIn: [1186, 274] as [number, number], // p15: inside the field, left of the digits (not on "+")
+  pill: [1170, 30] as [number, number],
+  tpl: [1130, 556] as [number, number], // the saved Match kit template row
+  tplAdd: [ctr("qo-search.tplAdd")[0] + 10, ctr("qo-search.tplAdd")[1] + 4] as [number, number], // "Add to order" in the popover
+  qtyIn: [772, 264] as [number, number], // p15: inside the field, left of the digits (not on "+")
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
   msg: ctr("confirmation.msgBtn"),
 };
@@ -67,25 +67,24 @@ const P = {
 type Key = [number, [number, number], number];
 const offQty: [number, number] = [P.qtyIn[0] + 50, P.qtyIn[1] + 64];
 const KEYS: Key[] = [
-  [MORPH[1], [900, 600], MORPH[1]],
-  [CLICK.search - LEAD, P.search, CLICK.search], // the cursor arrives a beat before every click
+  [MORPH[1], [560, 420], MORPH[1]],
+  [CLICK.search - LEAD, P.search, CLICK.search],
   [ENTER + 4, P.search, CLICK.search],
-  [PUSH_QTY[1], P.search, CLICK.search], // still while the camera pushes in
   [CLICK.qty - LEAD, P.qtyIn, CLICK.qty],
   [TYPE_QTY[1] + 4, P.qtyIn, CLICK.qty],
   [TYPE_QTY[1] + 10, offQty, CLICK.qty], // off the digits
-  [PUSH_TPL[1], offQty, CLICK.qty], // still while the camera eases out and pushes in again
+  [PAN_AB[0], offQty, CLICK.qty],
+  [PAN_AB[1], offQty, PAN_AB[1]], // rides with the page during the pan
   [CLICK.tpl - LEAD, P.tpl, CLICK.tpl],
   [CLICK.tpl + 4, P.tpl, CLICK.tpl],
   [CLICK.tplAdd - LEAD, P.tplAdd, CLICK.tplAdd],
-  [OUT_TPL[1], P.tplAdd, CLICK.tplAdd],
+  [TPL_ROWS[1], P.tplAdd, CLICK.tplAdd],
   [CLICK.add - LEAD, P.add, CLICK.add],
-  [PUSH_PILL[1], P.add, CLICK.add],
-  [PILL_FILL[1] + 2, P.add, CLICK.add], // badge appears with nothing else moving
-  [CLICK.pill - LEAD, P.pill, CLICK.pill - 1],
-  [PUSH_CREDIT[1], P.pill, CLICK.pill - 1],
-  [CREDIT_ANIM[1], P.pill, CLICK.pill - 1],
-  [CLICK.place - LEAD, P.place, CLICK.place - 1],
+  [PAN_BC[0], P.add, CLICK.add],
+  [PAN_BC[1], P.add, PAN_BC[1]], // rides with the page (off-frame below) during the pan up
+  [CLICK.pill - LEAD, P.pill, CLICK.pill],
+  [CREDIT_ANIM[1] + 2, P.pill, CLICK.pill],
+  [CLICK.place - LEAD, P.place, CLICK.place],
 ];
 const pointerAt = (f: number): [number, number] => {
   const sp = (k: Key) => toScreen(camAt(k[2]), k[1][0], k[1][1]) as [number, number];
@@ -117,8 +116,8 @@ const CSS =
 :root{--switcher-h:0px !important}
 #devSwitcher{display:none!important}
 .film-layer *,.film-layer *::before,.film-layer *::after{transition:none!important;animation:none!important}
-.film-layer .screen.active{min-height:1080px;height:1080px}
-.film-layer #app{padding-top:0;min-height:1080px}
+.film-layer .screen.active{min-height:756px;height:756px}
+.film-layer #app{padding-top:0;min-height:756px}
 .film-layer .messages-layout{position:relative;z-index:0}
 .film-layer .inv-modal{z-index:1000}
 .film-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;background:var(--ink);vertical-align:-3px}
@@ -331,7 +330,7 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
     <div
       ref={ref}
       className="film-layer"
-      style={{ position: "absolute", left: 0, top: 0, width: 1920, height: 1080, overflow: "hidden", opacity, background: "#fff" }}
+      style={{ position: "absolute", left: 0, top: 0, width: UI_W, height: UI_H, overflow: "hidden", opacity, background: "#fff" }}
       dangerouslySetInnerHTML={markup}
     />
   );
@@ -388,7 +387,9 @@ export const JoolaB2B: React.FC = () => {
   const uiOpacity = intro ? prog(frame, MORPH[0], MORPH[1], FADE_E) : 1 - uiOut;
   const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
   const showPtr = frame >= MORPH[1] && frame < POINTER_OFF;
-  const ptrOpacity = 1 - prog(frame, CLICK.place + 1, POINTER_OFF, FADE_E);
+  // the cursor dips out over the Cart fade and comes back on the same pill in the new framing
+  const ptrDip = 1; // p16: same camera across the Cart cut, so the cursor simply stays on the pill
+  const ptrOpacity = (1 - prog(frame, CLICK.place + 1, POINTER_OFF, FADE_E)) * ptrDip;
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
 
   return (
@@ -400,7 +401,7 @@ export const JoolaB2B: React.FC = () => {
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
           {layers.map((l) => l.o > 0 && (
-            <div key={l.screen} style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
+            <div key={l.screen} style={{ position: "absolute", width: UI_W, height: UI_H, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
               <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} />
             </div>
           ))}

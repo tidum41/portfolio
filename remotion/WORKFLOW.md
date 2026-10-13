@@ -90,3 +90,11 @@ appearing items fade + 6px rise over 200ms; badge 0.6->1 over 160ms, no overshoo
 - Screens change with short staggered dissolves (6f to Cart, 8f to Order placed); list those frames in film-expect _allowed_cuts.
 - No motion blur when there are no pans. Fill outside the page with white (box-shadow on the camera layer) when the wide is taller than the page.
 - Trade-off to report honestly: a full-dashboard wide at 676px puts 14px UI text at ~5.5px; only push-in frames and big numbers are legible.
+
+## Pass 16: dense viewport, close shots, at most 3 story moves (supersedes p15's wide + push-in)
+- Render the prototype at the smallest real viewport its layout supports: 1312x756 here (1312 = narrowest width where the Quick order table, min-content ~766px, clears the Reorder rail; 756 = shortest height where the sticky footer clears the template popover). capture-proto.py and measure-proto.py share VW/VH; width media queries are resolved for VW at capture time, because the Remotion page itself is wider.
+- Frame shots on the story region, not the whole page: body text must read at 676px. card px = CSS px x s x 676/1440. Shot A 1.6x = 10.5px, shots B/C/D 1.9x = 12.5px (verified: the 121px Add button measures 108px on the card, 107.9 predicted).
+- At most 3 camera moves, each motivated by the story (table -> rail, footer -> header pill). No push-in/pull-out pairs. Everything else holds still.
+- Reuse one framing across a hard cut when the same element is on both screens (pill: Quick order -> Cart). Centre the subject optically: Order placed's panel sits centred in the content area.
+- Fire a state change as the camera lands when the change is off-frame at click time (badge, 12f after the Add click).
+- OCR misses white-on-blue button labels; verify them in the zoomed crops instead.
