@@ -11,7 +11,7 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, CAM_E, clamp01, QO_ZOOM, CART_CUT, camAt, CLICK, CART_MOVE, CONF_XFADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FADE_OUT, FPS,
+  OW, OH, QO_ZOOM, ADD_PAN, CONF_CUT, CART_CUT, camAt, CLICK, CART_MOVE, CONF_XFADE, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FADE_OUT, FPS,
   INSERT, lerp, LOGO_IN, PILL_FILL, POINTER_OFF, prog, PTR_E, QTY_SET, RESULT_HOVER, SCREENS, TYPE_PO, TYPE_SEARCH, UI_E, UI_IN, type Cam,
 } from "./joola/timeline";
 
@@ -45,44 +45,30 @@ const FOOTER_LIFT = R["qo-search.footer"][1] - (R["qo-search.rail"][1] + R["qo-s
 const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
 
 
-/* ---------- p10 spotlight: each beat's subject stays whole; everything else sinks into the backdrop ---------- */
-type Hole = [number, number, number, number];
-const H_SEARCH: Hole = [234, 110, 428, 214];
-const H_QTY: Hole = [1110, 229, 296, 92];
-const H_ADD: Hole = [1578, 660, 148, 66];
-const H_PILL: Hole = [1316, -4, 410, 54];
-const H_PO: Hole = [234, 380, 576, 88];
-const H_SUM: Hole = [1378, 110, 348, 300];
+/* ---------- p11 isolation: only the real component is drawn, clipped to its own box, on the plain backdrop ---------- */
+type Box = [number, number, number, number, number]; // x, y, w, h, radius (film UI coords)
+const B_ROW: Box = [248, 227.6, 1196, 87, 8];
+const B_ADD: Box = [1591, 673.6, 121, 40, 8];
+const B_ACCT: Box = [1339.6, 5, 178.4, 36, 18];
+const B_PILL: Box = [1530, 5, 182, 36, 18];
+const B_PO: Box = [236, 379.6, 572, 82, 12];
+const B_SUM: Box = [1392, 123.6, 320, 272, 12];
 const CP = R["confirmation.panel"];
-const H_CONF: Hole = [CP[0] - 12, CP[1] - 12, CP[2] + 24, CP[3] + 24];
+const B_CONF: Box = [CP[0], CP[1], CP[2], CP[3], 12];
 const CONF_CAM = { cx: CP[0] + CP[2] / 2, cy: CP[1] + CP[3] / 2, s: 2.0 };
-const lerpH = (a: Hole, b: Hole, t: number): Hole => a.map((v, i) => v + (b[i] - v) * t) as Hole;
-const holesAt = (f: number): [Hole, number][] => {
-  if (f < QO_ZOOM[0]) return [[H_SEARCH, 1]];
-  if (f < CLICK.add) {
-    const t = CAM_E(clamp01((f - QO_ZOOM[0]) / (QO_ZOOM[1] - QO_ZOOM[0])));
-    return [[lerpH(H_SEARCH, H_QTY, t), 1], [H_ADD, prog(f, CLICK.add - 16, CLICK.add - 8, FADE_E)]];
-  }
-  if (f < CART_CUT) return [[H_PILL, 1]];
-  if (f < CART_MOVE[0]) return [[H_PO, 1]];
-  return [[lerpH(H_PO, H_SUM, CAM_E(clamp01((f - CART_MOVE[0]) / (CART_MOVE[1] - CART_MOVE[0])))), 1]];
-};
-const Spotlight = ({ frame, conf = false }: { frame: number; conf?: boolean }) => (
-  <svg style={{ position: "absolute", left: -3000, top: -3000, zIndex: 10000, pointerEvents: "none" }} width={8000} height={8000} viewBox="-3000 -3000 8000 8000">
+const boxesAt = (f: number): Box[] => (f < CLICK.add ? [B_ROW, B_ADD] : f < CART_CUT ? [B_ACCT, B_PILL] : [B_PO, B_SUM]);
+const ClipDefs = ({ id, boxes }: { id: string; boxes: Box[] }) => (
+  <svg width={0} height={0} style={{ position: "absolute" }}>
     <defs>
-      <filter id={conf ? "spf2" : "spf"} x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation={5} /></filter>
-      <mask id={conf ? "spm2" : "spm"} maskUnits="userSpaceOnUse" x={-3000} y={-3000} width={8000} height={8000}>
-        <rect x={-3000} y={-3000} width={8000} height={8000} fill="#fff" />
-        <g filter={conf ? "url(#spf2)" : "url(#spf)"}>{(conf ? ([[H_CONF, 1]] as [Hole, number][]) : holesAt(frame)).map(([h, a], i) => <rect key={i} x={h[0]} y={h[1]} width={h[2]} height={h[3]} rx={12} fill="#000" fillOpacity={a} />)}</g>
-      </mask>
+      <clipPath id={id} clipPathUnits="userSpaceOnUse">
+        {boxes.map((b, i) => <rect key={i} x={b[0] - 0.5} y={b[1] - 0.5} width={b[2] + 1} height={b[3] + 1} rx={b[4]} />)}
+      </clipPath>
     </defs>
-    <rect x={-3000} y={-3000} width={8000} height={8000} fill={BG} fillOpacity={0.86} mask={conf ? "url(#spm2)" : "url(#spm)"} />
   </svg>
 );
 
 /* ---------- pointer (canvas coords); every move arrives just before its click ---------- */
 const addBtn = ctr("qo-search.addBtn");
-const QO_ZOOM_A = 68;
 const P = {
   start: [760, 560] as [number, number],
   search: [330, 142] as [number, number],
@@ -90,8 +76,8 @@ const P = {
   preset: ctr("qo-search.preset24"),
   qty: ctr("qo-search.qty0"),
   add: [addBtn[0] + 46, addBtn[1] - FOOTER_LIFT + 10] as [number, number],
-  pill: [1594, 30] as [number, number],
-  po: [360, 434] as [number, number],
+  pill: [1640, 26] as [number, number],
+  po: [380, 436] as [number, number],
   place: [ctr("cart.place")[0] + 100, ctr("cart.place")[1] + 10] as [number, number],
   msg: ctr("confirmation.msgBtn"),
 };
@@ -99,19 +85,20 @@ const P = {
  *  (the cursor moves first, the camera follows) and holds its screen position across hard cuts. */
 type Key = [number, [number, number], number];
 const KEYS: Key[] = [
-  [UI_IN, [470, 330], UI_IN],
-  [CLICK.search - 6, P.search, CLICK.search],
-  [QO_ZOOM_A, P.search, QO_ZOOM_A],
-  [CLICK.qty - 12, P.qty, CLICK.qty],
+  [UI_IN, [760, 330], UI_IN],
+  [QO_ZOOM[0] - 4, [760, 330], UI_IN],
+  [CLICK.qty - 6, P.qty, CLICK.qty], // cursor leads, camera follows the pan
   [CLICK.qty + 4, P.qty, CLICK.qty],
-  [CLICK.qty + 14, [P.qty[0] + 70, P.qty[1] + 26], CLICK.qty],
-  [CLICK.add - 6, P.add, CLICK.add - 1],
-  [CLICK.add + 4, P.add, CLICK.add - 1], // stays put on screen through the cut
-  [CLICK.pill - 6, P.pill, CLICK.pill - 1],
-  [CLICK.pill + 2, P.pill, CLICK.pill - 1],
+  [CLICK.qty + 14, [P.qty[0] + 40, P.qty[1] + 72], CLICK.qty], // off the digits
+  [ADD_PAN[0] - 2, [P.qty[0] + 40, P.qty[1] + 72], CLICK.qty],
+  [CLICK.add - 8, P.add, CLICK.add - 1],
+  [CLICK.add + 22, P.add, CLICK.add - 1], // stays put on screen through the cut, then travels
+  [CLICK.pill - 8, P.pill, CLICK.pill - 1],
+  [CLICK.pill + 4, P.pill, CLICK.pill - 1],
   [CLICK.po - 6, P.po, CLICK.po],
-  [TYPE_PO[1], P.po, CLICK.po],
-  [CLICK.place - 31, P.place, CLICK.place],
+  [CART_MOVE[0] - 4, P.po, CLICK.po],
+  [CART_MOVE[1] + 2, P.place, CLICK.place], // cursor leads the pan to Place order and rests on the button
+  [CLICK.place - 4, P.place, CLICK.place],
 ];
 const pointerAt = (f: number): [number, number] => {
   const sp = (k: Key) => toScreen(camAt(k[2]), k[1][0], k[1][1]) as [number, number];
@@ -378,10 +365,10 @@ export const JoolaB2B: React.FC = () => {
   const cur = SCREENS[idx];
 
   const [spx, spy] = pointerAt(frame);
-  const uiVisible = frame >= UI_IN && frame < CONF_XFADE[1];
+  const uiVisible = frame >= UI_IN && frame < CONF_CUT;
   // Order placed: the cart cross-fades (8f) to the prototype's real confirmation screen, centred
   const xf = prog(frame, CONF_XFADE[0], CONF_XFADE[1], FADE_E);
-  const confOn = frame >= CONF_XFADE[0] && frame < LOGO_IN[0];
+  const confOn = frame >= CONF_CUT && frame < LOGO_IN[0];
   const confOut = 1 - prog(frame, FADE_OUT[0], FADE_OUT[1], FADE_E);
   // logo card == frame 0; fades up from the background over 0.3s at the end of the loop
   const logoA = frame < UI_IN ? 1 : frame >= LOGO_IN[0] ? prog(frame, LOGO_IN[0], LOGO_IN[1], FADE_E) : 0;
@@ -394,16 +381,16 @@ export const JoolaB2B: React.FC = () => {
       <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS}</style>
       {uiVisible && (
-        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
+        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)`, clipPath: "url(#isoA)" }}>
+          <ClipDefs id="isoA" boxes={boxesAt(frame)} />
           <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={0} />
-          <Spotlight frame={frame} />
         </div>
       )}
       {confOn && (
-        <div style={{ position: "absolute", inset: 0, opacity: xf * confOut, background: BG }}>
-          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${CONF_CAM.s}) translate(${-CONF_CAM.cx}px,${-CONF_CAM.cy}px)` }}>
+        <div style={{ position: "absolute", inset: 0, opacity: xf * confOut }}>
+          <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${CONF_CAM.s}) translate(${-CONF_CAM.cx}px,${-CONF_CAM.cy}px)`, clipPath: "url(#isoC)" }}>
+            <ClipDefs id="isoC" boxes={[[B_CONF[0], B_CONF[1] + 6 * (1 - xf), B_CONF[2], B_CONF[3], 12]]} />
             <Layer key="confirmation" screen="confirmation" frame={frame} slide={0} />
-            <Spotlight frame={frame} conf />
           </div>
         </div>
       )}
