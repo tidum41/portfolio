@@ -10,7 +10,7 @@ export const RemotionRoot: React.FC = () => {
         durationInFrames={JOOLA_DURATION}
         fps={JOOLA_FPS}
         width={1920}
-        height={1080}
+        height={1440}
       />
     </>
   );

@@ -51,7 +51,7 @@ export const LOGO_IN = [0, 18] as const; // centre -> sidebar slot
 export const SIDEBAR_IN = [14, 28] as const; // sidebar grows out of the logo
 export const CONTENT_IN = [22, 34] as const; // content area slides in
 
-export const CLICK = { search: 64, result: 92, preset: 124, qty: 138, add: 198, pill: 218, po: 283, place: 365, msg: 459 };
+export const CLICK = { search: 64, result: 92, preset: 124, qty: 138, add: 198, pill: 244, po: 310, place: 392, msg: 486 };
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 23] as const; // 7 chars, 3f each
 export const DROPDOWN_OPEN = CLICK.search + 11; // after "Per"
 export const INSERT = [CLICK.result + 2, CLICK.result + 12] as const;
@@ -60,16 +60,17 @@ export const QTY_SELECT = [CLICK.qty, CLICK.qty + 5] as const; // "24" highlight
 export const QTY_KEYS = [[CLICK.qty + 5, "1"], [CLICK.qty + 10, "12"], [CLICK.qty + 15, "120"]] as const; // 5f per char
 export const QTY_COMMIT = CLICK.qty + 22; // Enter after a visible beat with the caret after "120"
 export const QTY_COUNT = [QTY_COMMIT + 1, QTY_COMMIT + 13] as const;
-export const PILL_FILL = [CLICK.add + 2, CLICK.add + 14] as const;
+export const PILL_FILL = [224, 236] as const; // after the camera has settled on the pill
 export const PUSH = 33; // 1.1s screen push, camera still
 export const TYPE_PO = [CLICK.po + 2, CLICK.po + 26] as const; // 8 chars, 3f each
-export const CREDIT_ANIM = [343, 359] as const;
-export const BUBBLE = [496, 508] as const;
-export const HOLD_CONF = [421, 457] as const; // reading hold, camera + UI still
-export const HOLD_REPLY = [508, 544] as const; // reading hold on Collin's reply
-export const CONTENT_OUT = [576, 592] as const; // content area slides/fades away
-export const SIDEBAR_OUT = [588, 604] as const; // sidebar collapses into its logo
-export const LOGO_OUT = [602, 620] as const; // logo grows back to centre
+export const CREDIT_ANIM = [370, 386] as const;
+export const HOLD_CONF = [448, 484] as const; // reading hold, camera + UI still
+export const HOLD_ANNA = [541, 556] as const; // read Anna's question
+export const BUBBLE = [579, 591] as const;
+export const HOLD_REPLY = [591, 627] as const; // reading hold on Collin's reply
+export const CONTENT_OUT = [659, 675] as const; // content area slides/fades away
+export const SIDEBAR_OUT = [671, 687] as const; // sidebar collapses into its logo
+export const LOGO_OUT = [685, 703] as const; // logo grows back to centre
 export const DURATION = LOGO_OUT[1]; // last frame == frame 0 state
 
 export const SCREENS: [string, number, number][] = [
@@ -89,7 +90,8 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["result click + row insert", CLICK.result, INSERT[1]],
   ["preset 24 + count", CLICK.preset, PRESET_COUNT[1]],
   ["qty select + typing 120 + count", CLICK.qty, QTY_COUNT[1]],
-  ["add click + pill fill", CLICK.add, PILL_FILL[1] + 8],
+  ["add click + Added state", CLICK.add, CLICK.add + 6],
+  ["pill fill + bump", PILL_FILL[0], PILL_FILL[0] + 19],
   ["pill click + push to cart", CLICK.pill, CLICK.pill + 2 + PUSH],
   ["PO typing", CLICK.po, TYPE_PO[1]],
   ["credit bar", CREDIT_ANIM[0], CREDIT_ANIM[1]],
@@ -97,6 +99,7 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["confirmation reading hold", HOLD_CONF[0], HOLD_CONF[1]],
   ["message click + push to messages", CLICK.msg, CLICK.msg + 2 + PUSH],
   ["Collin reply bubble", BUBBLE[0], BUBBLE[1]],
+  ["Anna question hold", HOLD_ANNA[0], HOLD_ANNA[1]],
   ["reply reading hold", HOLD_REPLY[0], HOLD_REPLY[1]],
   ["content out", CONTENT_OUT[0], CONTENT_OUT[1]],
   ["sidebar collapse", SIDEBAR_OUT[0], SIDEBAR_OUT[1]],
@@ -106,22 +109,31 @@ export const CONTENT_ANIMS: [string, number, number][] = [
 /* ---------- camera ---------- */
 export type Cam = { cx: number; cy: number; s: number };
 export type Move = { a: number; b: number; to: Cam; label: string };
+/** Output frame = the portfolio card's 4:3 media slot; the UI itself is still laid out at 1920x1080. */
+export const OW = 1440;
+export const OH = 1080;
+export const UI_W = 1920;
+export const UI_H = 1080;
+export const WIDE: Cam = { cx: 533, cy: 400, s: 1.35 }; // intro/outro framing: sidebar + header + table start
 export const MOVES: Move[] = [
-  { a: 34, b: 62, to: { cx: 600, cy: 338, s: 1.6 }, label: "to search + table" },
-  { a: 104, b: 122, to: { cx: 860, cy: 300, s: 1.75 }, label: "to Perseus row" },
-  { a: 174, b: 196, to: { cx: 985, cy: 432, s: 1.25 }, label: "to rows + footer + pill" },
-  { a: 254, b: 281, to: { cx: 560, cy: 430, s: 1.85 }, label: "to PO field" },
-  { a: 311, b: 341, to: { cx: 1552, cy: 260, s: 1.85 }, label: "to summary + credit" },
-  { a: 401, b: 420, to: { cx: 1070, cy: 300, s: 1.6 }, label: "to confirmation (same framing for messages)" },
-  { a: 545, b: 575, to: { cx: 960, cy: 540, s: 1.0 }, label: "pull out to full frame" },
+  { a: 34, b: 62, to: { cx: 600, cy: 330, s: 1.9 }, label: "to search + dropdown" },
+  { a: 104, b: 122, to: { cx: 1060, cy: 280, s: 2.0 }, label: "to Perseus qty + line total" },
+  { a: 174, b: 196, to: { cx: 1340, cy: 470, s: 1.7 }, label: "to line totals + add button" },
+  { a: 204, b: 222, to: { cx: 1541, cy: 284, s: 1.9 }, label: "to cart pill" },
+  { a: 281, b: 308, to: { cx: 560, cy: 430, s: 1.85 }, label: "to PO field" },
+  { a: 338, b: 368, to: { cx: 1560, cy: 260, s: 2.0 }, label: "to summary + credit" },
+  { a: 428, b: 447, to: { cx: 1070, cy: 270, s: 2.0 }, label: "to confirmation" },
+  { a: 522, b: 540, to: { cx: 1204, cy: 300, s: 1.78 }, label: "to Anna's question" },
+  { a: 557, b: 577, to: { cx: 880, cy: 330, s: 1.8 }, label: "to Collin's reply" },
+  { a: 628, b: 658, to: WIDE, label: "pull out to wide" },
 ];
 export const clampCam = (c: Cam): Cam => ({
   s: c.s,
-  cx: Math.min(Math.max(c.cx, 960 / c.s), 1920 - 960 / c.s),
-  cy: Math.min(Math.max(c.cy, 540 / c.s), 1080 - 540 / c.s),
+  cx: Math.min(Math.max(c.cx, OW / 2 / c.s), UI_W - OW / 2 / c.s),
+  cy: Math.min(Math.max(c.cy, OH / 2 / c.s), UI_H - OH / 2 / c.s),
 });
 export const camAt = (f: number): Cam => {
-  let st: Cam = { cx: 960, cy: 540, s: 1 };
+  let st: Cam = WIDE;
   for (const m of MOVES) {
     if (f < m.a) return clampCam(st);
     const from = clampCam(st);

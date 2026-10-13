@@ -11,7 +11,7 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  bezier, BUBBLE, CAM_E, camAt, CLICK, CONTENT_IN, CONTENT_OUT, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
+  OW, OH, bezier, BUBBLE, CAM_E, camAt, CLICK, CONTENT_IN, CONTENT_OUT, CREDIT_ANIM, DROPDOWN_OPEN, DURATION, FPS, INSERT, lerp,
   LOGO_IN, LOGO_OUT, PILL_FILL, PRESET_COUNT, prog, PUSH, QTY_COMMIT, QTY_COUNT, QTY_KEYS, QTY_SELECT, SCREENS, SETTLE,
   SIDEBAR_IN, SIDEBAR_OUT, TYPE_PO, TYPE_SEARCH, type Cam,
 } from "./joola/timeline";
@@ -43,7 +43,7 @@ const ctr = (k: string): [number, number] => {
 
 /** Film-only compaction: lift the sticky Quick order footer to sit under the table/rail. */
 const FOOTER_LIFT = R["qo-search.footer"][1] - (R["qo-search.rail"][1] + R["qo-search.rail"][3] + 48);
-const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + 960, (y - cam.cy) * cam.s + 540];
+const toScreen = (cam: Cam, x: number, y: number) => [(x - cam.cx) * cam.s + OW / 2, (y - cam.cy) * cam.s + OH / 2];
 
 /* ---------- pointer (canvas coords); every move arrives just before its click ---------- */
 const addBtn = ctr("qo-search.addBtn");
@@ -399,8 +399,8 @@ export const JoolaB2B: React.FC = () => {
   const [sx, sy] = toScreen(cam, LOGO[0], LOGO[1]);
   const bigW = 520;
   const logoW = lerp(bigW, LOGO[2] * cam.s, lp);
-  const logoX = lerp(960 - bigW / 2, sx, lp);
-  const logoY = lerp(540 - (bigW * LOGO_AR) / 2, sy, lp);
+  const logoX = lerp(OW / 2 - bigW / 2, sx, lp);
+  const logoY = lerp(OH / 2 - (bigW * LOGO_AR) / 2, sy, lp);
 
   const [px, py] = pointerAt(frame);
   const [spx, spy] = toScreen(cam, px, py);
@@ -409,9 +409,12 @@ export const JoolaB2B: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ background: "#fff", overflow: "hidden" }}>
+      {/* Comp is 1920x1440 so the prototype keeps its 1920px-viewport layout (it has a min-width:1800px query);
+          everything below is staged in a 1440x1080 (4:3) space and scaled up 4/3. */}
+      <div style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
       <style>{CSS + (flying ? ".film-layer .sidebar-brand img{visibility:hidden!important}" : "")}</style>
       {uiVisible && (
-        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(960px,540px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
+        <div style={{ position: "absolute", width: 1920, height: 1080, transformOrigin: "0 0", transform: `translate(${OW / 2}px,${OH / 2}px) scale(${cam.s}) translate(${-cam.cx}px,${-cam.cy}px)` }}>
           {/* push: incoming page slides over from the right at full contrast, outgoing parallaxes left */}
           {prev && <Layer key={prev[0]} screen={prev[0]} frame={frame} slide={-PARALLAX * tIn} shell={shell} />}
           <Layer key={cur[0]} screen={cur[0]} frame={frame} slide={prev ? PUSH_DIST * (1 - tIn) : 0} clipLeft={prev ? MAIN_X + PUSH_DIST * (1 - tIn) : 0} shell={shell} />
@@ -422,6 +425,7 @@ export const JoolaB2B: React.FC = () => {
       )}
       {flying && <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: logoX, top: logoY, width: logoW, height: logoW * LOGO_AR }} />}
       {pOpacity > 0 && <Cursor x={spx} y={spy} press={pressAmt(frame)} ring={ringAt(frame)} opacity={pOpacity} />}
+      </div>
     </AbsoluteFill>
   );
 };

@@ -16,7 +16,7 @@ rep:L.rep&&(L.rep.name||L.rep),buyer:L.retailer.buyer,perseusUnit:L.perseusUnit,
 lines:L.orderLines.map(l=>({id:l.productId,qty:l.qty,amt:L.lineAmount(l)})),credit:c,
 money:{order:L.money(L.orderTotal)}}))'''], capture_output=True, text=True, check=True).stdout)
 # ---- frames
-w, h = 480, 270
+w, h = 480, 360  # 4:3 card film
 raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", film, "-vf", f"scale={w}:{h},format=gray", "-f", "rawvideo", "-"], capture_output=True).stdout
 F = np.frombuffer(raw, np.uint8).reshape(-1, h, w).astype(np.int16)
 n = len(F)
