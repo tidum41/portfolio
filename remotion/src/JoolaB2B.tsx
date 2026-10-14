@@ -94,13 +94,21 @@ const CSS =
 .film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
 .film-layer .cart-pill.film-active{background:var(--wash)!important}
-/* Distance: focal words are full ink. Qty weight stays 500 so the caret measurement holds. */
-.film-layer .search-field .value{font-weight:700!important;color:var(--ink)!important}
+/* Distance: totals, the confirmation title, and buttons are full ink.
+   The search value stays at the prototype weight (500). */
 .film-layer .sum-total .big,
 .film-layer .confirm-panel h1,
 .film-layer .confirm-rows .v,
 .film-layer .cart-amount-display{font-weight:700!important;color:var(--ink)!important}
 .film-layer .btn-primary{font-weight:700!important}
+/* Cards size to their content. Shared width, padding, and radius. */
+.film-layer .cart-summary,
+.film-layer .confirm-panel{
+  height:auto!important;min-height:0!important;max-height:none!important;
+  width:480px!important;max-width:480px!important;min-width:480px!important;
+  padding:24px!important;border-radius:12px!important;border-width:1px!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+}
 .film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
 .film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important}
 .film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important}
