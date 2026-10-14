@@ -2792,6 +2792,76 @@ img { display: block; max-width: 100%; }
   border-width: 1px !important;
   box-sizing: border-box !important;
 }
+
+/* ================= r26 (film pass 26) ================= */
+/* The Quick order title was line-height 1.15, which is 27.6px on a 24px
+   font. Everything under it sat 0.4px off the grid, and the Add / popover
+   position rounded the other way between renders. 28px is a whole pixel. */
+[data-screen="qo-desktop"] .page h1 {
+  line-height: 28px;
+  height: 28px;
+}
+/* "Reorder" was line-height: normal, so its box followed the font and the
+   rows below it could gain or lose a pixel. The box is 15px. */
+[data-screen="qo-desktop"] .rail-card > h3 {
+  height: 15px;
+  line-height: 15px;
+  margin: 0 0 12px;
+}
+/* Add is an integer chip: 40×24 at y=24 inside the 72px row.
+   translateY(-50%) was the shift once the row was not on a whole pixel. */
+[data-screen="qo-desktop"] .rail-item .rail-action {
+  top: 24px;
+  right: 4px;
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  transform: none !important;
+  line-height: 24px;
+  box-sizing: border-box;
+}
+[data-screen="qo-desktop"] .tpl-pop .tpl-choice {
+  height: 32px !important;
+  min-height: 32px;
+  max-height: 32px;
+  margin: 0;
+  padding: 0 12px;
+  transform: none !important;
+}
+/* Place order → Placing order → emerald fill → check. The summary stays put. */
+[data-place-order] {
+  position: relative;
+  overflow: hidden;
+}
+[data-place-order] .order-fill {
+  position: absolute;
+  inset: 0;
+  background: #12824a;
+  clip-path: circle(0px at var(--fill-x, 50%) var(--fill-y, 50%));
+  pointer-events: none;
+  z-index: 0;
+}
+[data-place-order].is-success .order-fill {
+  transition: clip-path 320ms cubic-bezier(0.2, 0, 0, 1);
+  clip-path: circle(280px at var(--fill-x, 50%) var(--fill-y, 50%));
+}
+[data-place-order] .order-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 1;
+  pointer-events: none;
+}
+[data-place-order] .order-spin {
+  display: block;
+  flex: none;
+  animation: order-spin 0.7s linear infinite;
+}
+@keyframes order-spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -4198,12 +4268,47 @@ img { display: block; max-width: 100%; }
   }
 
   function positionTplPop(pop, item) {
-    var r = item.getBoundingClientRect();
+    /* Integer layout: the row's offsetTop/Height are whole pixels, and the
+       card's border is the 1px between its border-box and that padding edge.
+       Reading getBoundingClientRect().bottom reintroduced the 1px flip. */
+    var card = item.closest(".rail-card");
+    var cr = card.getBoundingClientRect();
+    var border = parseFloat(getComputedStyle(card).borderTopWidth) || 0;
+    var top = cr.top + border + item.offsetTop + item.offsetHeight + 4;
+    var left = cr.left + (parseFloat(getComputedStyle(card).borderLeftWidth) || 0) + item.offsetLeft + 12;
     pop.style.position = "fixed";
-    pop.style.left = Math.round(r.left + 12) + "px";
-    pop.style.width = Math.round(Math.max(160, r.width - 24)) + "px";
+    pop.style.margin = "0";
+    pop.style.transform = "none";
+    pop.style.left = Math.round(left) + "px";
+    pop.style.width = Math.max(160, item.offsetWidth - 24) + "px";
     pop.style.right = "auto";
-    pop.style.top = Math.round(r.bottom + 4) + "px";
+    pop.style.top = Math.round(top) + "px";
+  }
+
+  var PLACE_SPIN = '<svg class="order-spin" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M9 1.6a7.4 7.4 0 1 1-7.4 7.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"></path></svg>';
+  var PLACE_CHECK = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  function runPlaceOrder(btn, ev) {
+    if (btn.dataset.placing === "1") return;
+    btn.dataset.placing = "1";
+    var br = btn.getBoundingClientRect();
+    btn.style.setProperty("--fill-x", (ev.clientX - br.left) + "px");
+    btn.style.setProperty("--fill-y", (ev.clientY - br.top) + "px");
+    btn.textContent = "";
+    btn.insertAdjacentHTML("beforeend",
+      '<span class="order-fill" aria-hidden="true"></span>' +
+      '<span class="order-face" data-face="idle">Place order</span>' +
+      '<span class="order-face" data-face="proc">' + PLACE_SPIN + '<span>Placing order</span></span>' +
+      '<span class="order-face" data-face="done">' + PLACE_CHECK + '</span>');
+    btn.querySelector('[data-face="idle"]').style.visibility = "hidden";
+    btn.querySelector('[data-face="done"]').style.visibility = "hidden";
+    btn.classList.add("is-placing");
+    window.setTimeout(function () {
+      btn.classList.remove("is-placing");
+      btn.classList.add("is-success");
+      btn.querySelector('[data-face="proc"]').style.visibility = "hidden";
+      btn.querySelector('[data-face="done"]').style.visibility = "visible";
+    }, 700);
+    window.setTimeout(function () { morphPlaceOrder(); }, 700 + 320 + 400);
   }
 
   function bind() {
@@ -4212,7 +4317,7 @@ img { display: block; max-width: 100%; }
         if (el.hasAttribute("data-place-order")) {
           ev.preventDefault();
           ev.stopPropagation();
-          morphPlaceOrder();
+          runPlaceOrder(el, ev);
           return;
         }
         var tab = el.getAttribute("data-tab");

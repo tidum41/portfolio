@@ -55,7 +55,7 @@ export const prog = (f: number, a: number, b: number, e: (t: number) => number =
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /* ---------- pass 25 beats ---------- */
-/** Intro: logo glides into the sidebar slot on a dashboard shot (sidebar + header). */
+/** Intro hold, then a hard cut to the dashboard. No opacity dissolve. */
 export const MORPH = [4, 18] as const;
 export const UI_IN = MORPH[0];
 export const LEAD = 2;
@@ -109,8 +109,11 @@ export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
 export const PROC_XFADE = [337, 341] as const;
 /** Press, then "Placing order" holds ~0.73s once the label is solid. */
 export const PROC = [338, 363] as const;
-/** Check draws and the button eases to emerald. ~250ms. */
-export const CHECK_DRAW = [363, 371] as const;
+/**
+ * Emerald fills the same button. 10 frame-intervals = 333ms, ease-out.
+ * The label is already a check on the first of these frames.
+ */
+export const CHECK_DRAW = [363, 373] as const;
 /** "Order placed" on the green button, ~0.4s. */
 export const SUCCESS_HOLD = [371, 383] as const;
 /** Summary content fades. The card chrome stays. */
@@ -168,20 +171,21 @@ export const SHOT_OPEN: Cam = { cx: 328, cy: 210, s: 2.24 };
  * Search field. Frame stops at the field (page x ~648) so the Price header
  * is not a sliced "Pri", and Quick order stays whole on the left.
  */
-export const SHOT_A: Cam = { cx: 440, cy: 148, s: 3.45 };
+export const SHOT_A: Cam = { cx: 440, cy: 148.4, s: 3.45 };
 /** Qty 120, below the search field so that field is not a sliced pill. */
-export const SHOT_B: Cam = { cx: 803, cy: 332, s: 3.3 };
+export const SHOT_B: Cam = { cx: 803, cy: 332.4, s: 3.3 };
 /**
  * Add to order. Match kit is whole; the card above and the footer
  * Add button are outside the frame so nothing is sliced.
  */
-/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out. */
-export const SHOT_B2: Cam = { cx: 1158, cy: 595, s: 6.4 };
+/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out.
+ *  cy +0.4 follows the Quick order title locking to a 28px line box. */
+export const SHOT_B2: Cam = { cx: 1158, cy: 595.4, s: 6.4 };
 /** Add 4 to cart. Low enough that the rail price above the footer is out of frame. */
 /** Add 4 lines to cart. Centre is the wider label. */
-export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748, s: 4.4 };
+export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 /** The order table, framed so three new rows can arrive under Perseus. */
-export const SHOT_ROWS: Cam = { cx: 640, cy: 370, s: 1.78 };
+export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
 /**
  * Filled pill centred. Right edge stays at 1284, filled width 151,
  * so the centre is 1208.5. cy is the pill's vertical centre.
