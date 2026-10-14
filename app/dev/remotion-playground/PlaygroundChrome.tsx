@@ -12,7 +12,8 @@ const HIDE_SITE_CHROME = `
   html[data-remotion-playground] #agentation-root {
     display: none !important;
   }
-  html[data-remotion-playground] main > *:not([data-remotion-playground-root]) {
+  /* Hide persistent site shells only — not the playground's own <main> children */
+  html[data-remotion-playground] main#main-content > *:not(:has([data-remotion-playground-root])) {
     display: none !important;
   }
   html[data-remotion-playground] body {
