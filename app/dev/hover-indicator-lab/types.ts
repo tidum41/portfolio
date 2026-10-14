@@ -11,9 +11,16 @@ export type LabProject = {
 
 export type PillVariantId = "cursor-pill-cherry" | "cursor-pill-icon" | "cursor-pill-compact";
 
+export type DockVariantId =
+  | "dock-xmb-glow"
+  | "dock-halftone-caret"
+  | "dock-decode"
+  | "dock-ps-segment"
+  | "dock-tooltip";
+
 export type VariantId =
   | PillVariantId
-  | "dock-tooltip"
+  | DockVariantId
   | "cursor-morph"
   | "corner-chip"
   | "inline-subtext";
@@ -23,6 +30,31 @@ export const VARIANTS: {
   label: string;
   hint: string;
 }[] = [
+  {
+    id: "dock-xmb-glow",
+    label: "Dock · XMB glow line",
+    hint: "Frosted chip with a thin horizontal highlight and soft bloom — PS3 menu energy, not macOS chrome.",
+  },
+  {
+    id: "dock-halftone-caret",
+    label: "Dock · halftone caret",
+    hint: "Same rise/fade; caret is a dot-matrix wedge echoing nav halftone morph.",
+  },
+  {
+    id: "dock-decode",
+    label: "Dock · decode type-in",
+    hint: "Label resolves from glyphs in ~150ms; ghost width reserved so nothing jumps.",
+  },
+  {
+    id: "dock-ps-segment",
+    label: "Dock · PS segment pill",
+    hint: "Segmented Case study / Demo with subtle face-button marks on the active side.",
+  },
+  {
+    id: "dock-tooltip",
+    label: "macOS Dock tooltip",
+    hint: "Top-centre chip fades and rises 4px with a caret (reference).",
+  },
   {
     id: "cursor-pill-cherry",
     label: "Cursor pill · Cherry-style",
@@ -37,11 +69,6 @@ export const VARIANTS: {
     id: "cursor-pill-compact",
     label: "Cursor pill · tight follow",
     hint: "Short copy, snappier follow, less lag.",
-  },
-  {
-    id: "dock-tooltip",
-    label: "macOS Dock tooltip",
-    hint: "Top-centre chip fades and rises 4px with a caret.",
   },
   {
     id: "cursor-morph",

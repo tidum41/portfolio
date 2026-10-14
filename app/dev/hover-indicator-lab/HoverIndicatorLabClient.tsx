@@ -11,7 +11,7 @@ import { isVariantId, VARIANTS } from "./types";
 const LAB_Z = 50;
 
 export default function HoverIndicatorLabClient({ projects }: { projects: LabProject[] }) {
-  const [variantId, setVariantId] = useState<VariantId>("cursor-pill-cherry");
+  const [variantId, setVariantId] = useState<VariantId>("dock-xmb-glow");
   const [morphActive, setMorphActive] = useState(false);
 
   const variantIndex = VARIANTS.findIndex((v) => v.id === variantId);
@@ -36,8 +36,9 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         cycle(-1);
-      } else if (/^[1-7]$/.test(e.key)) {
-        const next = VARIANTS[Number(e.key) - 1];
+      } else if (/^[1-9]$/.test(e.key) || e.key === "0") {
+        const idx = e.key === "0" ? 9 : Number(e.key) - 1;
+        const next = VARIANTS[idx];
         if (next) {
           setVariantId(next.id);
           setMorphActive(false);
@@ -135,9 +136,9 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
             maxWidth: 640,
           }}
         >
-          Three tiles: internal case study, external demo, and both. Cherry-style cursor pills lead the
-          switcher (solid fill, 13–14px type). ~150ms ease, no bounce. Touch shows labels on-card; reduced
-          motion skips trail lag.
+          Three tiles: internal case study, external demo, and both. PS3/XMB dock labels lead the switcher
+          (rise + fade, ≤180ms, no bounce). Cursor pills and other directions follow. Touch shows labels
+          on-card; reduced motion skips trail lag and decode effects.
         </p>
 
         {projects.length === 0 ? (
@@ -180,7 +181,7 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
         }}
       >
         <div style={{ opacity: 0.5, marginBottom: 6, letterSpacing: "0.04em", fontSize: 11 }}>
-          ← → cycle · 1–7 jump · switcher above
+          ← → cycle · 1–{Math.min(9, VARIANTS.length)} jump · switcher above
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11 }}>
           <Link href="/" style={{ color: "inherit" }}>

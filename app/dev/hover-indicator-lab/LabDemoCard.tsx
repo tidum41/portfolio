@@ -6,6 +6,8 @@ import { useReducedMotion } from "framer-motion";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { useIsMobile } from "@/components/useIsMobile";
+import DockTooltipLayer from "./DockTooltipLayer";
+import { isDockVariant } from "./dockVariants";
 import { HilabArrowIcon, HilabChipArrow, HilabPlayIcon } from "./icons";
 import type { CardKind, LabProject, PillVariantId, VariantId } from "./types";
 import { isPillVariant, kindLabel, kindShort, pillCopy } from "./types";
@@ -73,7 +75,7 @@ export default function LabDemoCard({
 
   const kind = project.kind;
   const showPill = !!pillVariant && (hovered || staticUi);
-  const showDock = variant === "dock-tooltip" && (hovered || staticUi);
+  const showDock = isDockVariant(variant) && (hovered || staticUi);
   const showChip = variant === "corner-chip" && (hovered || staticUi);
   const showMorph = variant === "cursor-morph" && hovered && !staticUi;
   const showInline = variant === "inline-subtext";
@@ -159,7 +161,7 @@ export default function LabDemoCard({
         )
       : null;
 
-  const dockReserve = variant === "dock-tooltip";
+  const dockReserve = isDockVariant(variant);
 
   return (
     <>
@@ -182,11 +184,8 @@ export default function LabDemoCard({
                 : { position: "relative" }
             }
           >
-            {variant === "dock-tooltip" && (
-              <div className="hilab-dock" data-visible={showDock ? "true" : "false"} aria-hidden>
-                <div className="hilab-dock__bubble">{kindLabel(kind)}</div>
-                <div className="hilab-dock__caret" />
-              </div>
+            {isDockVariant(variant) && (
+              <DockTooltipLayer variant={variant} kind={kind} visible={showDock} />
             )}
 
             <div
