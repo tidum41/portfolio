@@ -10,8 +10,9 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
-  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, CONF_FADE, CONF_GROW, PROC_XFADE,
+  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
+  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
+  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
 
@@ -20,7 +21,8 @@ export const JOOLA_DURATION = DURATION;
 
 const PERSEUS_TIER = [[1, 179.97], [6, 164.97], [12, 149.98], [24, 134.98]] as const;
 const OTHER_LINES = 2483.52 + 262.56 + 362.82;
-const ORDER_TOTAL = 19306.5;
+const QTY_FINAL = 12;
+const ORDER_TOTAL = 4908.66;
 const CREDIT_LIMIT = 50000;
 const CREDIT_PRIOR_USED = 5000;
 const CREDIT_AFTER = CREDIT_LIMIT - CREDIT_PRIOR_USED - ORDER_TOTAL;
@@ -92,7 +94,7 @@ const CSS =
 .film-layer .rail-item .rail-id,
 .film-layer .rail-item .name,
 .film-layer .rail-item .meta{line-height:16px!important}
-.film-layer .tpl-pop{position:absolute!important;margin:0!important;transform:none!important;transition:none!important}
+.film-layer .tpl-pop{position:absolute!important;margin:0!important;transition:none!important}
 .film-layer .tpl-pop .tpl-choice{
   height:32px!important;box-sizing:border-box!important;font-weight:500!important;
   border-width:1px!important;transform:none!important;transition:none!important;opacity:1!important;
@@ -120,11 +122,11 @@ const CSS =
   padding:24px!important;border-radius:12px!important;border-width:1px!important;
   box-sizing:border-box!important;overflow:hidden!important;
 }
-.film-layer [data-place-order]{position:relative!important;overflow:hidden!important}
-.film-layer .order-fill{
-  position:absolute!important;inset:0!important;z-index:0!important;margin:0!important;
-  background:#12824a!important;pointer-events:none!important;
-}
+.film-layer [data-place-order]{position:relative!important;overflow:hidden!important;width:430px!important;height:40px!important;min-width:430px!important;max-width:430px!important}
+.film-roll{display:inline-flex;align-items:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap}
+.film-roll .slot{display:inline-block;position:relative;overflow:hidden;height:1em;line-height:1em}
+.film-roll .col{display:block}
+.film-roll .glyph{display:block;height:1em;line-height:1em}
 .film-layer .film-face,.film-layer .order-face{
   position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
@@ -198,11 +200,66 @@ function placeQtyCaret(qtyEl: HTMLElement) {
   qtyEl.appendChild(caret);
 }
 
+const BLUE = "#2c3ee0";
+const EMERALD = "#12824a";
+const mix = (a: string, b: string, t: number) => {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const A = p(a), B = p(b);
+  return `#${A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
+};
+
+/** Old glyph leaves upward, new glyph enters from below. Unchanged glyphs stay. */
+function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at: number) {
+  const t = frame < at ? 0 : frame >= at + ROLL_F ? 1 : EASE_OUT(clamp01((frame - at) / ROLL_F));
+  const shown = t >= 1 ? to : from;
+  if (t <= 0 || t >= 1 || from === to) {
+    el.textContent = shown;
+    return;
+  }
+  const n = Math.max(from.length, to.length);
+  const a = from.padStart(n, " ");
+  const b = to.padStart(n, " ");
+  el.replaceChildren();
+  const blur = Math.sin(Math.PI * t) * 0.55;
+  for (let i = 0; i < n; i++) {
+    if (a[i] === " " && b[i] === " ") continue;
+    const slot = document.createElement("span");
+    slot.className = "slot";
+    if (a[i] === b[i]) {
+      slot.textContent = b[i];
+      el.appendChild(slot);
+      continue;
+    }
+    const col = document.createElement("span");
+    col.className = "col";
+    const oldG = document.createElement("span");
+    oldG.className = "glyph";
+    oldG.textContent = a[i] === " " ? "\u00a0" : a[i];
+    const newG = document.createElement("span");
+    newG.className = "glyph";
+    newG.textContent = b[i] === " " ? "\u00a0" : b[i];
+    col.append(oldG, newG);
+    col.style.transform = `translateY(${(-t * 100).toFixed(2)}%)`;
+    if (blur > 0.04) col.style.filter = `blur(${blur.toFixed(2)}px)`;
+    slot.appendChild(col);
+    el.appendChild(slot);
+  }
+}
+
+function showRoll(el: HTMLElement, segments: { at: number; text: string }[], frame: number) {
+  el.classList.add("film-roll");
+  let i = 0;
+  while (i + 1 < segments.length && frame >= segments[i + 1].at) i++;
+  const to = segments[i].text;
+  const from = i === 0 ? to : segments[i - 1].text;
+  paintRoll(el, from, to, frame, i === 0 ? frame + 1 : segments[i].at);
+}
+
 function applyQuickOrder(root: HTMLElement, f: number) {
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
   const POP_CLOSE = CLICK.tplAdd + 4;
-  const popOpen = f >= CLICK.tpl && f < POP_CLOSE + 3;
+  const popOpen = f >= CLICK.tpl && f < POP_CLOSE;
   if (tpl) tpl.classList.toggle("is-open", popOpen);
   if (pop && tpl) {
     pop.hidden = !popOpen;
@@ -216,11 +273,12 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     // Rounding a live rect here is what flipped the menu by a pixel.
     pop.style.top = `${tpl.offsetTop + 72 + 4}px`;
     pop.style.margin = "0";
-    pop.style.transform = "none";
-    const pin = popOpen
-      ? prog(f, POP_IN[0], POP_IN[1], FADE_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E))
-      : 0;
-    pop.style.opacity = `${pin}`;
+    // Solid on every frame it is open. A 100ms scale from the top anchor,
+    // never a partial opacity that shows the card through the menu.
+    const sc = popOpen ? lerp(0.98, 1, prog(f, POP_IN[0], POP_IN[1], MOVE_E)) : 1;
+    pop.style.setProperty("opacity", "1", "important");
+    pop.style.setProperty("transform-origin", "top center", "important");
+    pop.style.setProperty("transform", `scale(${sc})`, "important");
   }
 
   const field = q(root, "[data-search-field]")!;
@@ -269,25 +327,45 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     r.style.transform = `translateY(${(1 - t) * 6}px)`;
   });
 
-  const qty = f < CLICK.qty ? 1 : 120;
-  const qFocus = f >= CLICK.qty && f < CLICK.tpl;
-  // Neutral focus ring — no blue glow on the stepper.
-  q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(26,26,26,0.35)" : "";
+  const qty = f < CLICK.qty ? 1 : QTY_FINAL;
+  q(pr, "[data-qty-stepper]")!.style.boxShadow = "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
-  if (qFocus && Math.floor((f - CLICK.qty) / 8) % 2 === 0) placeQtyCaret(qtyEl);
-  // never show blue/selected preset fills in the film
   qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
+  const chip = q(pr, `[data-set-perseus="${QTY_FINAL}"]`);
+  if (chip && f >= CLICK.qty) chip.classList.add("on");
   const unit = unitAt(qty);
-  q(pr, ".unit")!.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
+  const unitEl = q(pr, ".unit")!;
+  let unitRoll = q(unitEl, ":scope > .film-roll");
+  const ea = q(unitEl, ".ea");
+  if (!ea) unitEl.insertAdjacentHTML("beforeend", `<span class="ea">ea</span>`);
+  if (!unitRoll) {
+    unitRoll = document.createElement("span");
+    unitRoll.className = "film-roll";
+    unitEl.insertBefore(unitRoll, unitEl.firstChild);
+  }
+  Array.from(unitEl.childNodes).forEach((n) => {
+    if (n !== unitRoll && n !== q(unitEl, ".ea") && n.nodeType === 3) n.parentNode?.removeChild(n);
+  });
+  const one = money(unitAt(1));
+  const twelve = money(unitAt(QTY_FINAL));
+  showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f);
   const line = r2(unit * qty);
-  q(pr, ".line-total")!.textContent = money(line);
+  const lineEl = q(pr, ".line-total")!;
+  showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f);
 
   const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
   const lineWord = `${lines} ${lines === 1 ? "line" : "lines"}`;
   q(root, "[data-line-count]")!.textContent = lineWord;
-  const total = (inserted ? line : 0) + (tplIn ? OTHER_LINES : 0);
-  q(root, "[data-order-footer] [data-order-total]")!.textContent = money(r2(total));
+  const totalEl = q(root, "[data-order-footer] [data-order-total]")!;
+  const perseusOnly = money(r2(unitAt(1) * 1));
+  const perseusTwelve = money(r2(unitAt(QTY_FINAL) * QTY_FINAL));
+  showRoll(totalEl, [
+    { at: 0, text: money(0) },
+    { at: INSERT[0], text: perseusOnly },
+    { at: CLICK.qty, text: perseusTwelve },
+    { at: TPL_ROWS[0], text: money(ORDER_TOTAL) },
+  ], f);
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lineWord} to cart`;
@@ -306,13 +384,10 @@ function pill(root: HTMLElement, f: number) {
   const chip = q(pl, "[data-cart-count]")!;
   const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
   const wpx = lerp(PILL_W0, PILL_W1, tw);
-  // Swap the full total on the first frame the eased width can hold every glyph.
-  // Showing it earlier clips "$19,306.50" down to a partial string.
-  const showTotal = wpx >= PILL_NUM_W;
   amt.hidden = false;
-  amt.textContent = money(showTotal ? ORDER_TOTAL : 0);
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
+  showRoll(amt, [{ at: 0, text: money(0) }, { at: PILL_ROLL, text: money(ORDER_TOTAL) }], f);
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
@@ -373,11 +448,6 @@ const SUMMARY_BOX_H = 298;
 const SPIN_SVG = `<svg class="film-spin" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M9 1.6a7.4 7.4 0 1 1-7.4 7.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const CHECK_SVG = `<svg class="film-draw" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path data-draw d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-/** Click sits 48px right of the button centre: (215+48)/430. */
-const FILL_X = "263px";
-const FILL_Y = "20px";
-const FILL_R = 280;
-
 function placeButton(root: HTMLElement, f: number) {
   const btn = q<HTMLButtonElement>(root, "[data-place-order]");
   if (!btn) return;
@@ -386,7 +456,7 @@ function placeButton(root: HTMLElement, f: number) {
     btn.textContent = "";
     btn.insertAdjacentHTML(
       "beforeend",
-      `<span class="order-fill" data-fill></span><span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}</span>`,
+      `<span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}</span>`,
     );
   }
   // The label swaps in one frame. A crossfade of two words reads as a double exposure.
@@ -400,13 +470,16 @@ function placeButton(root: HTMLElement, f: number) {
   const spin = q<SVGElement>(btn, ".film-spin");
   if (spin) spin.style.transform = `rotate(${(f - PROC_XFADE[0]) * 24}deg)`;
   const path = q<SVGPathElement>(btn, "[data-draw]");
-  if (path) path.style.strokeDashoffset = "0";
-  const fill = q(btn, "[data-fill]");
-  if (fill) {
-    const t = success ? prog(f, CHECK_DRAW[0], CHECK_DRAW[1], UI_E) : 0;
-    fill.style.clipPath = `circle(${t * FILL_R}px at ${FILL_X} ${FILL_Y})`;
+  if (path && success) {
+    const len = path.getTotalLength();
+    const t = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], EASE_OUT);
+    path.style.strokeDasharray = `${len}`;
+    // A hair of the stroke is already there on the first frame, so the button is never blank.
+    path.style.strokeDashoffset = `${len * (1 - Math.max(t, 0.08))}`;
   }
-  btn.style.removeProperty("background-color");
+  const ct = f < PLACE_COLOR[0] ? 0 : prog(f, PLACE_COLOR[0], PLACE_COLOR[1], EASE_OUT);
+  if (ct > 0) btn.style.setProperty("background-color", mix(BLUE, EMERALD, ct), "important");
+  else btn.style.removeProperty("background-color");
 }
 
 function applyConfirmation(root: HTMLElement, f: number) {
@@ -500,16 +573,30 @@ export const JoolaB2B: React.FC = () => {
   // the confirmation card is the subject.
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
-  // Hard cut both ways. A dissolve leaves a grey card and a grey logo.
+  // Logo and UI never share a frame. Each fades against the solid ground.
   const logoW0 = 340;
-  const intro = frame < MORPH[1];
-  const outro = frame >= END_FADE[0];
   const lw = logoW0;
   const lx = OW / 2 - logoW0 / 2;
   const ly = OH / 2 - (logoW0 * LOGO_AR) / 2;
-  const logoOpacity = intro || outro ? 1 : 0;
-  const uiOpacity = !intro && !outro ? 1 : 0;
-  const uiOn = frame >= MORPH[1] && frame < END_FADE[0];
+  let logoOpacity = 0;
+  let logoScale = 1;
+  if (frame <= LOGO_OUT[1]) {
+    const t = prog(frame, LOGO_OUT[0], LOGO_OUT[1], MOVE_E);
+    logoOpacity = 1 - t;
+    logoScale = lerp(1, 0.96, t);
+  } else if (frame >= LOGO_IN[0]) {
+    const t = prog(frame, LOGO_IN[0], LOGO_IN[1], MOVE_E);
+    logoOpacity = t;
+    logoScale = lerp(0.96, 1, t);
+  }
+  const uiOpacity = frame < UI_IN[0] || frame >= UI_OUT[1]
+    ? 0
+    : frame < UI_IN[1]
+      ? prog(frame, UI_IN[0], UI_IN[1], MOVE_E)
+      : frame < UI_OUT[0]
+        ? 1
+        : 1 - prog(frame, UI_OUT[0], UI_OUT[1], MOVE_E);
+  const uiOn = uiOpacity > 0;
   // The Place order hotspot is higher in its card than the confirmation actions,
   // so a cursor frozen across the cut sits in the blank middle of Order placed.
   // The press is still on screen through frame 269; the cut removes the pointer.
@@ -547,7 +634,7 @@ export const JoolaB2B: React.FC = () => {
         </div>
       )}
       {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, pointerEvents: "none" }} />
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, pointerEvents: "none" }} />
       )}
       {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>
