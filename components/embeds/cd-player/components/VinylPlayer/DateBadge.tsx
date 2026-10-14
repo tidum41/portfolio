@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { Album } from '../../data/albums';
 import styles from './DateBadge.module.css';
 
-/** Blocky retro speaker — pixel-art feel, matches IBM Plex Mono aesthetic */
+/** Blocky retro speaker — pixel-art feel. */
 function RetroSpeakerIcon() {
   return (
     <svg width="38" height="38" viewBox="0 0 24 24" fill="none" aria-hidden>

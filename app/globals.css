@@ -1,55 +1,14 @@
 @import "tailwindcss";
 
-/* ─── Helvetica Neue — local system font, precise variant binding ─────────── */
-@font-face {
-  font-family: "HN";
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-UltraLight"), local("Helvetica Neue UltraLight");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Thin"), local("Helvetica Neue Thin");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Bold"), local("Helvetica Neue Bold");
-}
-
+/* ABC Areal is loaded with next/font/local in app/layout.tsx as --font-areal.
+   The file's wght axis is 400–700. Its dark-mode axis stays at the light default.
+   Arial leads the fallback stack so a missed load shifts less than Helvetica Neue. */
 @theme {
-  /* Fonts */
-  --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Fonts — medium is the same family; callers set font-weight: 500. */
+  --font-sans:        var(--font-areal), Arial, Helvetica, sans-serif;
+  --font-sans-medium: var(--font-areal), Arial, Helvetica, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
-  --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
+  --font-mono:    var(--font-areal), ui-monospace, monospace;
 
   /* Colors */
   --color-bg:             #FBFBFB;
@@ -83,7 +42,7 @@
 
   /* Typography scale */
   --font-display:     Georgia, 'Times New Roman', serif;
-  /* Title roles — Georgia for who/brand (home, about); HN Medium for docs (CS) */
+  /* Title roles — Georgia for who/brand (home, about); Areal medium for docs (CS) */
   --font-page-title:  var(--font-display);
   --font-doc-title:   var(--font-sans-medium);
   /* clamp() so .cs-hero-title (both case-study pages) scales down on narrow

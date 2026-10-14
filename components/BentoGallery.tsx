@@ -1440,7 +1440,7 @@ export default function BentoGallery({
         background: "transparent",
         border: "none",
         color: zpBtnColor,
-        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontSize: 18,
         fontWeight: 300,
         lineHeight: 1,
@@ -1589,8 +1589,7 @@ export default function BentoGallery({
                                                 ? "rgba(255,255,255,0.15)"
                                                 : "rgba(0,0,0,0.15)",
                                             fontSize: 11,
-                                            fontFamily:
-                                                "Helvetica Neue, Helvetica, Arial, sans-serif",
+                                            fontFamily: "var(--font-sans)",
                                             letterSpacing: "0.08em",
                                         }}
                                     >
@@ -1612,7 +1611,7 @@ export default function BentoGallery({
                                         alignItems: "flex-start",
                                         gap: 6,
                                         fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
+                                            "var(--font-sans)",
                                         fontSize: 11,
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
@@ -1701,7 +1700,7 @@ export default function BentoGallery({
                                         alignItems: "flex-start",
                                         gap: 6,
                                         fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
+                                            "var(--font-sans)",
                                         fontSize: 11,
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
