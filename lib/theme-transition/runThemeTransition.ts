@@ -27,20 +27,28 @@ function setNewLayerMask(url: string, pixelated: boolean): void {
     `
     : "";
   sheet.textContent = `
+    ::view-transition-group(root) {
+      animation-duration: var(--theme-transition-duration, 550ms);
+      animation-timing-function: linear;
+    }
     ::view-transition-old(root) {
       animation: none !important;
       z-index: 1;
+      opacity: 1 !important;
     }
     ::view-transition-new(root) {
       animation: none !important;
+      opacity: 1 !important;
       z-index: 2;
       mask-image: url("${url}");
       mask-size: 100% 100%;
       mask-repeat: no-repeat;
-      mask-mode: alpha;
+      /* Opaque PNG tiles: alpha is always 255 — luminance uses RGB for coverage. */
+      mask-mode: luminance;
       -webkit-mask-image: url("${url}");
       -webkit-mask-size: 100% 100%;
       -webkit-mask-repeat: no-repeat;
+      -webkit-mask-source-type: luminance;
       ${crisp}
     }
   `;
@@ -49,7 +57,9 @@ function setNewLayerMask(url: string, pixelated: boolean): void {
 function clearVtStyles(): void {
   const el = document.getElementById(VT_STYLE_ID);
   if (el) el.textContent = "";
-  document.documentElement.removeAttribute("data-theme-transition");
+  const html = document.documentElement;
+  html.removeAttribute("data-theme-transition");
+  html.style.removeProperty("--theme-transition-duration");
 }
 
 function animateMask(
@@ -140,7 +150,9 @@ export async function runThemeTransition(
     return;
   }
 
-  document.documentElement.setAttribute("data-theme-transition", mode);
+  const html = document.documentElement;
+  html.setAttribute("data-theme-transition", mode);
+  html.style.setProperty("--theme-transition-duration", `${durationMs}ms`);
 
   const transition = startViewTransition(() => {
     apply();
