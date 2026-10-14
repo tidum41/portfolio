@@ -6,7 +6,7 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, lerp, MORPH, MOVE_E, OW, OH, PILL_FILL, PILL_SHOT,
+  camAt, CART_CUT, CLICK, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
   prog, type Cam,
 } from "./timeline";
 
@@ -18,19 +18,19 @@ export const toPage = (cam: Cam, x: number, y: number): Pt => [(x - OW / 2) / ca
 
 const PILL_RIGHT = R["qo-search.cartPill"][0] + R["qo-search.cartPill"][2];
 const PILL_CY = R["qo-search.cartPill"][1] + R["qo-search.cartPill"][3] / 2;
-const PILL_W1 = 151;
 
 /** Hotspot targets (page px), each inside the real hit box. */
 export const P = {
   start: [420, 280] as Pt,
   search: [330, 142] as Pt,
   result: [560, 198] as Pt,
-  qty: [770, 257] as Pt,
+  // Right side of the qty field, in the empty space beside "120", not on a preset.
+  qty: [R["qo-search.qty0"][0] + R["qo-search.qty0"][2] * 0.8, R["qo-search.qty0"][1] + R["qo-search.qty0"][3] / 2] as Pt,
   tpl: [1130, 556] as Pt,
   tplAdd: [ctr("qo-search.tplAdd")[0], ctr("qo-search.tplAdd")[1]] as Pt,
   add: [ctr("qo-search.addBtn")[0] + 18, ctr("qo-search.addBtn")[1]] as Pt,
   // Final cart icon (pill grows left). Not on the amount.
-  pillIcon: [PILL_RIGHT - PILL_W1 + 22, PILL_CY] as Pt,
+  pillIcon: [PILL_RIGHT - PILL_W1 + 20, PILL_CY] as Pt,
   // Right of the Place order label, well inside the button — not on the top edge.
   place: [ctr("cart.place")[0] + 48, ctr("cart.place")[1]] as Pt,
 };
@@ -49,8 +49,8 @@ export const KEYS: Key[] = [
   [CLICK.tplAdd + 6, P.tplAdd],
   [CLICK.add - 2, P.add],
   [CLICK.add + 4, P.add],
-  // Travel across the pill hard cut, then rest on the icon while the total is read.
-  [PILL_SHOT + 12, P.pillIcon],
+  // Travel across the pill hard cut and arrive on the still-empty cart icon.
+  [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],
   [CART_CUT - 6, P.pillIcon],
   // Travel across the summary hard cut and arrive inside Place order.
   [CART_CUT + 16, P.place],
@@ -58,6 +58,12 @@ export const KEYS: Key[] = [
 ];
 const sp = (k: Key): Pt => toScreen(camAt(k[0]), k[1][0], k[1][1]);
 export const pointerAt = (f: number): Pt => {
+  // Ride the cart icon while the pill grows left. Same curve as the width,
+  // so the cursor stays on the icon instead of waiting in the space it opens.
+  if (f >= PILL_ARRIVE && f <= CART_CUT - 6) {
+    const r = pillRectAt(f);
+    return toScreen(camAt(f), r[0] + 20, r[1] + r[3] / 2);
+  }
   if (f <= KEYS[0][0]) return sp(KEYS[0]);
   for (let i = 0; i < KEYS.length - 1; i++) {
     const [fa, pa] = KEYS[i], [fb, pb] = KEYS[i + 1];
@@ -79,12 +85,16 @@ export const pageAt = (f: number): Pt => {
 export const inRect = (p: Pt, r: Rect, pad = 0) =>
   p[0] >= r[0] - pad && p[0] <= r[0] + r[2] + pad && p[1] >= r[1] - pad && p[1] <= r[1] + r[3] + pad;
 
-/** Pill hugs: right edge fixed, width eases empty → filled. */
+/** Pill hugs: right edge fixed, width eases empty → filled on the UI ease-out. */
 export const pillRectAt = (f: number): Rect => {
-  const t = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], MOVE_E) : 0;
-  const w = lerp(R["qo-search.cartPill"][2], PILL_W1, f >= PILL_FILL[0] ? t : 0);
+  const t = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
+  const w = lerp(PILL_W0, PILL_W1, t);
   return [PILL_RIGHT - w, R["qo-search.cartPill"][1], w, R["qo-search.cartPill"][3]];
 };
+
+/** I-beam while the hotspot is over the qty field; arrow everywhere else. */
+export const cursorKind = (f: number): "arrow" | "ibeam" =>
+  inRect(pageAt(f), R["qo-search.qty0"], 1) ? "ibeam" : "arrow";
 
 /**
  * Hover turns on when the hotspot enters `rect` and stays on until `until`,

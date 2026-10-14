@@ -197,7 +197,7 @@ img { display: block; max-width: 100%; }
   gap: 8px;
   padding: 4px 8px 16px;
 }
-.sidebar-brand img { width: 84px; height: auto; }
+.sidebar-brand img { width: 120px; height: auto; }
 /* Wholesale as a tidy text chip under the logo — no blue dot */
 .wholesale-chip {
   display: inline-flex;
@@ -2689,6 +2689,34 @@ img { display: block; max-width: 100%; }
   outline: 2px solid var(--blue);
   outline-offset: -3px;
 }
+
+/* ================= r21 (film pass 21) ================= */
+/* Match kit was 72.078px tall (fractional line boxes). The popover is placed
+   at the row's bottom, so that fraction sat on a device-pixel boundary and the
+   whole menu jumped 1px. Integer line boxes lock the row at 72px. */
+.rail-item {
+  box-sizing: border-box;
+  height: 72px;
+}
+.rail-item .rail-id,
+.rail-item .name,
+.rail-item .meta { line-height: 16px; }
+/* Add / Replace: colour only. Border width and weight stay put, so hover
+   cannot change the button's box or the menu's edges. */
+.tpl-pop .tpl-choice,
+.tpl-pop .tpl-choice:hover,
+.tpl-pop .tpl-choice:active {
+  height: 32px !important;
+  box-sizing: border-box !important;
+  font-weight: 500 !important;
+  border-width: 1px !important;
+  transform: none !important;
+  transition: none !important;
+  opacity: 1 !important;
+}
+.tpl-pop .btn-primary,
+.tpl-pop .btn-primary:hover,
+.tpl-pop .btn-primary:active { border-color: transparent !important; }
 </style>
 </head>
 <body>
@@ -2798,7 +2826,7 @@ img { display: block; max-width: 100%; }
   function joolaMarkHtml(cls) {
     return (
       '<div class="joola-mark' + (cls ? " " + cls : "") + '" data-joola-mark>' +
-      '<img src="joola-logo.png" alt="JOOLA" width="36" height="12">' +
+      '<img src="joola-logo.svg" alt="JOOLA" width="36" height="12">' +
       "</div>"
     );
   }
@@ -2819,7 +2847,7 @@ img { display: block; max-width: 100%; }
       '<div class="app-shell" data-wholesale-chrome>' +
       '<aside class="sidebar" data-sidebar>' +
       '<div class="sidebar-brand">' +
-      '<img src="joola-logo.png" alt="JOOLA" width="84" height="28">' +
+      '<img src="joola-logo.svg" alt="JOOLA" width="120" height="38">' +
       '<span class="wholesale-chip" data-wholesale-chip>Wholesale</span>' +
       "</div>" +
       '<nav class="sidebar-nav">' + items + "</nav>" +

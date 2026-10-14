@@ -198,6 +198,14 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 21 — popover lock, qty caret, cart gesture, logo
+
+- **Reorder row is 72px, not 72.078.** Line boxes are 16px, so the Match kit bottom is a whole pixel. The Add to order / Replace order menu is placed with rounded coordinates and only fades its opacity.
+- **Quantity 120 is one click.** The cursor becomes an I-beam over the field, a caret blinks inside it, and the value swaps from 1 to 120 on that frame.
+- **Cart pill is one gesture.** After the press, the pill holds $0.00, then its width eases on a single ease-out. The total swaps in once the width can hold every digit, and the count badge scales from 0.6 to 1 as the last beat. No bounce.
+- **JOOLA mark** is the official horizontal lockup SVG from joola.com.
+- **Summary card** sits fully inside the frame (the previous crop clipped the top radius). Order placed keeps the header rule in frame.
+
 ## Film pass 20 — template row, cart pill, Place order
 
 - **Template row stays put when Add/Replace opens.** The focus ring is inset (`outline-offset: -3px`) so it cannot extend the scrollable overflow, and mousedown calls `preventDefault` so the click does not focus-scroll the row. The popover is `position: fixed`. The row's border and transform are locked. Its `margin: 0 -6px` is left alone — zeroing that margin slides the row 6px to the right. Bounding box of Match kit is unchanged across rest, hover, press, and open.

@@ -2,9 +2,9 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 20: ~12s. After Add to cart, each shot has one centred focal point:
- * the cart pill updating, a hard cut to the order total + Place order, then Order placed.
- * Hover is latched (no hit-test flicker). Order placed is a hard cut plus a short scale settle.
+ * Pass 21: ~12s. Popover is opacity-only. Qty 120 is one frame.
+ * The cart pill is one gesture: a beat on $0, one ease-out width, the total
+ * swaps once the width can hold it, then the badge scales in. No bounce.
  */
 export const FPS = 30;
 
@@ -66,19 +66,29 @@ export const RESULT_HOVER = [CLICK.result - 2, CLICK.result] as const;
 export const INSERT = [ENTER, ENTER + 6] as const;
 /** Kept for API compat; no blue just-added tint. */
 export const ROW_HL = [ENTER, ENTER] as const;
-export const TYPE_QTY = [CLICK.qty + 2, CLICK.qty + 6] as const;
-export const QTY_SET = TYPE_QTY[1];
+/** Value swaps 1 → 120 on the click frame. The range is a single frame. */
+export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
+export const QTY_SET = CLICK.qty;
 export const PAN_AB = [100, 114] as const; // move 1: qty -> reorder
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 5] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
 export const TPL_ROWS = [CLICK.tplAdd + 6, CLICK.tplAdd + 16] as const;
 export const PAN_BC = [166, 180] as const; // move 2: reorder -> Add button
-/** Hard cut to a tight, centred cart pill. The width/total update happens here, not on the Add shot. */
+/** Hard cut to a tight cart pill still showing $0.00. */
 export const PILL_SHOT = 188;
-export const PILL_FILL = [190, 214] as const; // width ease once the pill is the subject
+export const PILL_W0 = 85;
+export const PILL_W1 = 151;
+/** Width at which "$19,306.50" fits next to the icon, before the badge takes space. */
+export const PILL_NUM_W = 130;
+/** Cursor lands on the empty cart icon, then rides it as the pill grows. */
+export const PILL_ARRIVE = 200;
+/** One ease-out (cubic-bezier 0.2,0,0,1) after the $0 beat. Not an ease-in-out. */
+export const PILL_FILL = [200, 214] as const;
+/** Badge is the last beat: scale 0.6→1 over 5 frames, overlapping the end of the width. */
+export const PILL_BADGE = [213, 218] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
-export const CART_CUT = 228;
+export const CART_CUT = 234;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
 export const PAN_CART = [CART_CUT, CART_CUT] as const; // no pan; hard cut
 export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
@@ -99,10 +109,10 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
   ["result click + row insert", ENTER, INSERT[1]],
-  ["qty click + 120", CLICK.qty, TYPE_QTY[1]],
+  ["qty click + 120", CLICK.qty, CLICK.qty + 1],
   ["template popover", CLICK.tpl, POP_IN[1]],
   ["template rows", TPL_ROWS[0], TPL_ROWS[1]],
-  ["pill width + total", PILL_FILL[0], PILL_FILL[1]],
+  ["pill width + total + badge", PILL_FILL[0], PILL_BADGE[1]],
   ["order settle", CONF_SETTLE[0], CONF_SETTLE[1]],
 ];
 
@@ -131,10 +141,18 @@ export const SHOT_B2: Cam = { cx: 800, cy: 378, s: 1.48 };
 /** Tight pill: filled pill centred. Crop stays under the search field. */
 /** Pill update: full account chip stays in frame while the pill grows left. */
 export const SHOT_PILL: Cam = { cx: 1112, cy: -12, s: 4.05 };
-/** Summary hero: the card (total + Place order) centred, line list out of frame. */
-export const SHOT_SUM: Cam = { cx: 1130, cy: 262, s: 3.75 };
-/** Order placed panel centred, header chrome out of frame. */
-export const SHOT_D: Cam = { cx: 766, cy: 252, s: 2.72 };
+/**
+ * Summary hero. cy is high enough that the card's top radius clears the frame
+ * (cy 262 left only ~6px and clipped the top corners) and the Place order
+ * button still clears the bottom. A header sliver would pull the line-item
+ * prices in or shove the card off centre, so this shot stays on the card.
+ */
+export const SHOT_SUM: Cam = { cx: 1130, cy: 258, s: 3.75 };
+/**
+ * Order placed, centred. Frame top sits at y≈42 so the header's bottom rule
+ * is in frame and the account chip (ends y≈41) is not sliced.
+ */
+export const SHOT_D: Cam = { cx: 766, cy: 241, s: 2.72 };
 
 export const WIDE = SHOT_OPEN;
 export const CART_CAM = SHOT_SUM;

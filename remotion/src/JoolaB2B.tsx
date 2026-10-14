@@ -9,11 +9,11 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TYPE_QTY,
-  INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, CONF_SETTLE, END_FADE,
+  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
+  INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, CONF_SETTLE, END_FADE,
   UI_W, UI_H, CART_CUT, lerp, MOVE_E,
 } from "./joola/timeline";
-import { pointerAt, cursorScale, toScreen, hoverState } from "./joola/pointer";
+import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -26,8 +26,6 @@ const CREDIT_PRIOR_USED = 5000;
 const CREDIT_AFTER = CREDIT_LIMIT - CREDIT_PRIOR_USED - ORDER_TOTAL;
 const PO = "ENG-9812";
 const SEARCH = "Perseus";
-const PILL_W0 = 85; // empty: icon + $0.00
-const PILL_W1 = 151; // filled: icon + $19,306.50 + badge
 const unitAt = (q: number) => {
   let p: number = PERSEUS_TIER[0][1];
   for (const [min, price] of PERSEUS_TIER) if (q >= min) p = price;
@@ -76,7 +74,25 @@ const CSS =
 }
 /* Prototype pins the menu with position:fixed !important. Inside the scaled stage that
    escapes the rail; absolute coords below are relative to the rail card. */
-.film-layer .tpl-pop{position:absolute!important;margin:0!important;transform:none!important}
+.film-layer .rail-item{
+  height:72px!important;min-height:72px!important;max-height:72px!important;
+  box-sizing:border-box!important;border-width:0!important;
+}
+.film-layer .rail-item .rail-id,
+.film-layer .rail-item .name,
+.film-layer .rail-item .meta{line-height:16px!important}
+.film-layer .tpl-pop{position:absolute!important;margin:0!important;transform:none!important;transition:none!important}
+.film-layer .tpl-pop .tpl-choice{
+  height:32px!important;box-sizing:border-box!important;font-weight:500!important;
+  border-width:1px!important;transform:none!important;transition:none!important;opacity:1!important;
+}
+.film-layer .tpl-pop .btn-primary{border-color:transparent!important}
+.film-layer .qty-stepper .qty{position:relative}
+.film-qty-caret{
+  position:absolute;top:50%;left:calc(50% + 22px);width:1.5px;height:14px;margin-top:-7px;
+  background:#1a1a1a;pointer-events:none;
+}
+.film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
 .film-layer .cart-pill.film-active{background:var(--wash)!important}
 .film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
@@ -110,18 +126,19 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   if (tpl) tpl.classList.toggle("is-open", popOpen);
   if (pop && tpl) {
     pop.hidden = !popOpen;
-    // p18: fixed-like overlay via absolute coords; opacity only (no translate / layout shift)
-    const r = tpl.getBoundingClientRect();
-    const host = root.getBoundingClientRect();
+    // Integer pixels, identical every frame. The row is 72px tall; reading a
+    // fractional offsetHeight here is what shifted the menu by a device pixel.
     pop.style.position = "absolute";
-    pop.style.left = `${tpl.offsetLeft + 12}px`;
-    pop.style.width = `${Math.max(160, tpl.offsetWidth - 24)}px`;
+    pop.style.left = `${Math.round(tpl.offsetLeft) + 12}px`;
+    pop.style.width = `${Math.max(160, Math.round(tpl.offsetWidth) - 24)}px`;
     pop.style.right = "auto";
-    pop.style.top = `${tpl.offsetTop + tpl.offsetHeight + 4}px`;
-    const pin = prog(f, POP_IN[0], POP_IN[1], UI_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E));
-    pop.style.opacity = `${pin}`;
+    pop.style.top = `${Math.round(tpl.offsetTop) + 72 + 4}px`;
+    pop.style.margin = "0";
     pop.style.transform = "none";
-    void r; void host;
+    const pin = popOpen
+      ? prog(f, POP_IN[0], POP_IN[1], FADE_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E))
+      : 0;
+    pop.style.opacity = `${pin}`;
   }
 
   const field = q(root, "[data-search-field]")!;
@@ -170,13 +187,17 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     r.style.transform = `translateY(${(1 - t) * 6}px)`;
   });
 
-  const QTY_STEPS = [1, 12, 120];
-  const qty = f < TYPE_QTY[0] ? 1 : QTY_STEPS[Math.min(2, Math.floor((f - TYPE_QTY[0]) / 2))];
-  const qFocus = f >= CLICK.qty && f < TYPE_QTY[1] + 14;
-  // p19: neutral focus ring — no blue glow on the stepper
+  const qty = f < CLICK.qty ? 1 : 120;
+  const qFocus = f >= CLICK.qty && f < CLICK.tpl;
+  // Neutral focus ring — no blue glow on the stepper.
   q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(26,26,26,0.35)" : "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
+  if (qFocus && Math.floor((f - CLICK.qty) / 8) % 2 === 0) {
+    const mark = document.createElement("span");
+    mark.className = "film-qty-caret";
+    qtyEl.appendChild(mark);
+  }
   // never show blue/selected preset fills in the film
   qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
   const unit = unitAt(qty);
@@ -199,28 +220,28 @@ function pill(root: HTMLElement, f: number) {
   if (!pl) return;
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
-  const on = f >= PILL_FILL[0];
-  const tw = prog(f, PILL_FILL[0], PILL_FILL[1], MOVE_E);
+  const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
+  const wpx = lerp(PILL_W0, PILL_W1, tw);
+  // Swap the full total on the first frame the eased width can hold every glyph.
+  // Showing it earlier clips "$19,306.50" down to a partial string.
+  const showTotal = wpx >= PILL_NUM_W;
   amt.hidden = false;
-  amt.textContent = money(on ? ORDER_TOTAL : 0);
+  amt.textContent = money(showTotal ? ORDER_TOTAL : 0);
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
-  // hug content: ease width empty → filled (account chip rides along via flex)
-  const wpx = lerp(PILL_W0, PILL_W1, on ? tw : 0);
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
-  if (on) {
-    const showBadge = tw >= 0.9;
-    chip.hidden = !showBadge;
-    chip.style.visibility = showBadge ? "" : "hidden";
-    chip.textContent = "4";
-    const bt = showBadge ? prog(f, PILL_FILL[0] + Math.round((PILL_FILL[1] - PILL_FILL[0]) * 0.9), PILL_FILL[1], UI_E) : 0;
+  const showBadge = f >= PILL_BADGE[0];
+  chip.hidden = !showBadge;
+  chip.textContent = "4";
+  if (showBadge) {
+    const bt = prog(f, PILL_BADGE[0], PILL_BADGE[1], EASE_OUT);
+    chip.style.visibility = "";
     chip.style.opacity = `${bt}`;
-    chip.style.transform = `scale(${0.6 + 0.4 * bt})`;
+    chip.style.transform = `scale(${lerp(0.6, 1, bt)})`;
   } else {
-    chip.hidden = true;
     chip.style.visibility = "hidden";
     chip.style.opacity = "0";
     chip.style.transform = "scale(0.6)";
@@ -306,10 +327,17 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
   );
 };
 
-const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale }) => (
-  <svg width={19} height={25} viewBox="0 0 17 22" style={{ position: "absolute", pointerEvents: "none", left: x - 1.7, top: y - 1.7, transformOrigin: "1.7px 1.7px", transform: `scale(${scale})`, filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))", overflow: "visible" }}>
-    <path d="M1.5 1.5 L1.5 17.5 L5.6 13.6 L8.4 20 L11 18.9 L8.3 12.6 L14 12.6 Z" fill="#111" stroke="#fff" strokeWidth={1.3} strokeLinejoin="round" />
-  </svg>
+const Cursor: React.FC<{ x: number; y: number; scale: number; kind: "arrow" | "ibeam" }> = ({ x, y, scale, kind }) => (
+  kind === "ibeam" ? (
+    <svg width={15} height={23} viewBox="0 0 15 23" style={{ position: "absolute", pointerEvents: "none", left: x - 7.5, top: y - 11.5, transformOrigin: "7.5px 11.5px", transform: `scale(${scale})`, overflow: "visible" }}>
+      <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" />
+      <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#111" strokeWidth={1.35} strokeLinecap="butt" />
+    </svg>
+  ) : (
+    <svg width={19} height={25} viewBox="0 0 17 22" style={{ position: "absolute", pointerEvents: "none", left: x - 1.7, top: y - 1.7, transformOrigin: "1.7px 1.7px", transform: `scale(${scale})`, filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))", overflow: "visible" }}>
+      <path d="M1.5 1.5 L1.5 17.5 L5.6 13.6 L8.4 20 L11 18.9 L8.3 12.6 L14 12.6 Z" fill="#111" stroke="#fff" strokeWidth={1.3} strokeLinejoin="round" />
+    </svg>
+  )
 );
 
 export const JoolaB2B: React.FC = () => {
@@ -378,9 +406,9 @@ export const JoolaB2B: React.FC = () => {
         </div>
       )}
       {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.png`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, pointerEvents: "none" }} />
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, pointerEvents: "none" }} />
       )}
-      {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} /></div>}
+      {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>
     </AbsoluteFill>
   );
