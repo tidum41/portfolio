@@ -4,7 +4,7 @@
  * UI from scripts/capture-proto.py → joola/proto.generated.ts. Timing in joola/timeline.ts.
  */
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame, useRemotionEnvironment } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import { DEFAULT_FILM_CONFIG, mergeFilmConfig, type FilmConfig } from "./joola/film-config";
@@ -16,7 +16,7 @@ import type { Cam } from "./joola/timeline-state";
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
 
-export type JoolaB2BProps = { filmConfig?: FilmConfig };
+export type JoolaB2BProps = { filmConfig?: FilmConfig; /** Next/public URL prefix, e.g. /joola-b2b */ assetBase?: string };
 
 const PERSEUS_TIER = [[1, 179.97], [6, 164.97], [12, 149.98], [24, 134.98]] as const;
 const OTHER_LINES = 2483.52 + 262.56 + 362.82;
@@ -36,9 +36,9 @@ const unitAt = (q: number) => {
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-const A = staticFile("joola-b2b");
-const CSS =
-  PROTO_CSS.split("__A__").join(A).split(":hover").join(".film-hover").split(":active").join(".film-active") +
+const defaultAssetBase = () => staticFile("joola-b2b");
+const filmCss = (assetRoot: string) =>
+  PROTO_CSS.split("__A__").join(assetRoot).split(":hover").join(".film-hover").split(":active").join(".film-active") +
   `
 :root{--switcher-h:0px !important}
 #devSwitcher{display:none!important}
@@ -60,8 +60,8 @@ const CSS =
 .film-layer .qty-group .qty-presets button.film-active{background:var(--wash)!important}
 .film-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;background:var(--ink);vertical-align:-3px}
 `;
-const html = (k: string) =>
-  `<div id="app">${PROTO_SCREENS[k].split("__A__").join(A).replace('class="screen"', 'class="screen active"')}</div>`;
+const screenHtml = (k: string, assetRoot: string) =>
+  `<div id="app">${PROTO_SCREENS[k].split("__A__").join(assetRoot).replace('class="screen"', 'class="screen active"')}</div>`;
 
 const q = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as T | null;
 const qa = (root: ParentNode, sel: string) => Array.from(root.querySelectorAll(sel)) as HTMLElement[];
@@ -267,9 +267,9 @@ const LOGO = R["qo-search.logo"];
 const LOGO_AR = LOGO[3] / LOGO[2];
 const BG = "#f5f4f1";
 
-const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number; tl: TimelineState }> = ({ screen, frame, slide, opacity = 1, tl }) => {
+const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number; tl: TimelineState; assetRoot: string }> = ({ screen, frame, slide, opacity = 1, tl, assetRoot }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [markup] = useState(() => ({ __html: html(screen) }));
+  const [markup] = useState(() => ({ __html: screenHtml(screen, assetRoot) }));
   const apply = useMemo(() => makeApply(tl), [tl]);
   useLayoutEffect(() => {
     const root = ref.current!;
@@ -293,7 +293,9 @@ const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale
   </svg>
 );
 
-export const JoolaB2B: React.FC<JoolaB2BProps> = ({ filmConfig }) => {
+export const JoolaB2B: React.FC<JoolaB2BProps> = ({ filmConfig, assetBase }) => {
+  const A = assetBase ?? defaultAssetBase();
+  const { isPlayer } = useRemotionEnvironment();
   const tl = useMemo(
     () => createTimelineState(filmConfig ? mergeFilmConfig(filmConfig) : DEFAULT_FILM_CONFIG),
     [filmConfig],
@@ -304,14 +306,19 @@ export const JoolaB2B: React.FC<JoolaB2BProps> = ({ filmConfig }) => {
   } = tl;
   const { pointerAt, cursorScale } = ptr;
   const frame = useCurrentFrame();
-  const [handle] = useState(() => delayRender("r11 fonts + images"));
   useLayoutEffect(() => {
+    if (isPlayer) return;
+    const handle = delayRender("r11 fonts + images");
+    const timeout = setTimeout(() => continueRender(handle), 4000);
     const imgs = Array.from(document.querySelectorAll(".film-layer img, .film-logo")) as HTMLImageElement[];
     Promise.all([
-      ...["400", "500", "700"].map((w) => document.fonts.load(`${w} 16px FKGroteskNeue`)),
+      ...["400", "500", "700"].map((w) => document.fonts.load(`${w} 16px FKGroteskNeue`).catch(() => undefined)),
       ...imgs.map((i) => (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = r; i.onerror = r; }))),
-    ]).then(() => continueRender(handle));
-  }, [handle]);
+    ]).finally(() => {
+      clearTimeout(timeout);
+      continueRender(handle);
+    });
+  }, [isPlayer, A]);
 
   const TR: [number, number, string, string][] = [
     [CART_FADE[0], Math.max(1, CART_FADE[1] - CART_FADE[0]), "qo-desktop", "cart"],
@@ -379,12 +386,12 @@ export const JoolaB2B: React.FC<JoolaB2BProps> = ({ filmConfig }) => {
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
       <div ref={stageRef} style={{ position: "absolute", left: 0, top: 0, width: OW, height: OH, overflow: "hidden", transformOrigin: "0 0", transform: `scale(${1920 / OW})` }}>
-      <style>{CSS}</style>
+      <style>{filmCss(A)}</style>
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
           {layers.map((l) => l.o > 0 && (
             <div key={l.screen} style={{ position: "absolute", width: UI_W, height: UI_H, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
-              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} tl={tl} />
+              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} tl={tl} assetRoot={A} />
             </div>
           ))}
         </div>

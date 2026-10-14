@@ -19,6 +19,7 @@ export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
+  const hide = pathname.startsWith("/dev/remotion-playground");
 
   // Warm primary routes immediately so first archive/about click isn't waiting
   // on idle. Cheap if the destination is already cached.
@@ -164,6 +165,8 @@ export default function Nav() {
       dotsEndScale: [1, 0.5, 1.5, 0.01],
     },
   });
+
+  if (hide) return null;
 
   return (
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>

@@ -1,10 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { TECHNIQUE_PARAM_LINKS } from "./playground-meta";
 
 function linkifyTechniques(text: string) {
-  const parts: React.ReactNode[] = [];
+  const parts: ReactNode[] = [];
   let remaining = text;
   const keys = Object.keys(TECHNIQUE_PARAM_LINKS).sort((a, b) => b.length - a.length);
   while (remaining.length > 0) {

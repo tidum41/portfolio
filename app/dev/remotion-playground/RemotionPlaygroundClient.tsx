@@ -1,9 +1,8 @@
 "use client";
 
-import { Player, type PlayerRef } from "@remotion/player";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { PlayerRef } from "@remotion/player";
 import Link from "next/link";
-import { JoolaB2B } from "@joola-remotion/JoolaB2B";
 import {
   DEFAULT_FILM_CONFIG,
   mergeFilmConfig,
@@ -22,10 +21,21 @@ import {
   REF_GALLERY,
 } from "./playground-meta";
 import { ReportMarkdown } from "./ReportMarkdown";
+import { CONTROL_GROUPS, fieldDisplayValue, fieldHintSuffix, type ControlField } from "./control-groups";
+import { JoolaFilmPlayer } from "./JoolaFilmPlayer";
 
 const COMP_W = 1920;
 const COMP_H = 1440;
 const CARD_W = 676;
+const FPS = 30;
+
+function subscribeResize(cb: () => void) {
+  window.addEventListener("resize", cb);
+  return () => window.removeEventListener("resize", cb);
+}
+function getViewportWidth() {
+  return typeof window !== "undefined" ? window.innerWidth : 1024;
+}
 
 function loadStored(): FilmConfig {
   try {
@@ -44,6 +54,7 @@ function Num({
   min,
   max,
   step = 1,
+  hint,
   onChange,
 }: {
   id: string;
@@ -52,13 +63,17 @@ function Num({
   min: number;
   max: number;
   step?: number;
+  hint?: string | null;
   onChange: (n: number) => void;
 }) {
   return (
     <label id={id} className="flex flex-col gap-1 text-xs text-neutral-600">
       <span className="flex justify-between gap-2">
         <span>{label}</span>
-        <span className="tabular-nums text-neutral-900">{step < 1 ? value.toFixed(2) : value}</span>
+        <span className="tabular-nums text-neutral-900">
+          {step < 1 ? value.toFixed(2) : value}
+          {hint ? <span className="text-neutral-400 ml-1">({hint})</span> : null}
+        </span>
       </span>
       <input
         type="range"
@@ -87,9 +102,9 @@ function ShotEditor({
   return (
     <div className="rounded-lg border border-neutral-200 p-3 space-y-2" id={`param-camera-${prefix}`}>
       <p className="text-xs font-medium text-neutral-800">{title}</p>
-      <Num label="Center X" value={shot.cx} min={200} max={1100} onChange={(cx) => onChange({ ...shot, cx })} id={`${prefix}-cx`} />
-      <Num label="Center Y" value={shot.cy} min={80} max={600} onChange={(cy) => onChange({ ...shot, cy })} id={`${prefix}-cy`} />
-      <Num label="Zoom" value={shot.s} min={1} max={2.5} step={0.01} onChange={(s) => onChange({ ...shot, s })} id={`${prefix}-s`} />
+      <Num label="Centre X (px)" value={shot.cx} min={200} max={1100} onChange={(cx) => onChange({ ...shot, cx })} id={`${prefix}-cx`} />
+      <Num label="Centre Y (px)" value={shot.cy} min={80} max={600} onChange={(cy) => onChange({ ...shot, cy })} id={`${prefix}-cy`} />
+      <Num label="Zoom (×)" value={shot.s} min={1} max={2.5} step={0.01} onChange={(s) => onChange({ ...shot, s })} id={`${prefix}-s`} />
     </div>
   );
 }
@@ -162,6 +177,89 @@ function PreviewOverlay({
   );
 }
 
+function renderField(
+  field: ControlField,
+  config: FilmConfig,
+  duration: number,
+  patch: (fn: (c: FilmConfig) => FilmConfig) => void,
+  easingOpts: typeof EASING_OPTIONS,
+) {
+  if (field.kind === "morph") {
+    return (
+      <div key={field.id} id={field.id} className="space-y-2">
+        <Num
+          id="morph-start"
+          label={field.labelStart}
+          value={config.morph[0]}
+          min={0}
+          max={40}
+          hint={`${(config.morph[0] / FPS).toFixed(2)}s`}
+          onChange={(n) => patch((c) => ({ ...c, morph: [n, c.morph[1]] }))}
+        />
+        <Num
+          id="morph-end"
+          label={field.labelEnd}
+          value={config.morph[1]}
+          min={4}
+          max={80}
+          hint={`${(config.morph[1] / FPS).toFixed(2)}s`}
+          onChange={(n) => patch((c) => ({ ...c, morph: [c.morph[0], n] }))}
+        />
+      </div>
+    );
+  }
+  if (field.kind === "easing") {
+    const opts = easingOpts.filter((o) =>
+      field.options === "cursor" ? true : ["camera", "move", "inOut", "ui", "easeOut"].includes(o.value),
+    );
+    return (
+      <label key={field.id} id={field.id} className="text-xs text-neutral-600 flex flex-col gap-1">
+        {field.label}
+        <select
+          className="border border-neutral-200 rounded-md px-2 py-1.5 text-sm bg-white"
+          value={field.get(config)}
+          onChange={(e) => patch((c) => field.set(c, e.target.value as EasingPreset))}
+        >
+          {opts.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+  if (field.kind === "shot") {
+    const shot = config.camera[field.shotKey] as { cx: number; cy: number; s: number };
+    if (typeof shot !== "object" || shot === null) return null;
+    return (
+      <ShotEditor
+        key={field.id}
+        title={field.title}
+        prefix={String(field.shotKey)}
+        shot={shot}
+        onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, [field.shotKey]: s } }))}
+      />
+    );
+  }
+  const display = fieldDisplayValue(field, config);
+  const hint = fieldHintSuffix(field, config);
+  const min = field.min ?? 0;
+  const max = field.max ?? (field.kind === "frames" ? duration : 3);
+  const step = field.kind === "seconds" ? (field.step ?? 0.03) : 1;
+  return (
+    <Num
+      key={field.id}
+      id={field.id}
+      label={field.label}
+      value={display}
+      min={min}
+      max={max}
+      step={step}
+      hint={hint}
+      onChange={(v) => patch((c) => (field.kind === "seconds" ? field.set(c, v) : field.set(c, Math.round(v))))}
+    />
+  );
+}
+
 export default function RemotionPlaygroundClient() {
   const [tab, setTab] = useState<"play" | "refs">("play");
   const [config, setConfig] = useState<FilmConfig>(DEFAULT_FILM_CONFIG);
@@ -169,28 +267,31 @@ export default function RemotionPlaygroundClient() {
   const [overlay, setOverlay] = useState(false);
   const [frame, setFrame] = useState(0);
   const [reportMd, setReportMd] = useState("");
+  const [assetOk, setAssetOk] = useState(true);
   const playerRef = useRef<PlayerRef>(null);
+  const vw = useSyncExternalStore(subscribeResize, getViewportWidth, () => 1024);
 
   useEffect(() => {
     setConfig(loadStored());
-    fetch("/motion-refs/report.md").then((r) => r.text()).then(setReportMd);
+    fetch("/motion-refs/report.md").then((r) => r.text()).then(setReportMd).catch(() => setReportMd(""));
+    fetch("/joola-b2b/joola-logo.png", { method: "HEAD" })
+      .then((r) => setAssetOk(r.ok))
+      .catch(() => setAssetOk(false));
   }, []);
 
   const tl = useMemo(() => createTimelineState(config), [config]);
   const duration = tl.DURATION;
+  const blocks = useMemo(() => beatBlocks(config), [config]);
+  const previewW = cardSize ? Math.min(CARD_W, vw - 24) : Math.min(920, vw - 24);
+  const previewH = Math.round(previewW * (COMP_H / COMP_W));
 
   useEffect(() => {
     const el = playerRef.current;
     if (!el) return;
-    const onFrame = ({ detail }: { detail: { frame: number } }) => {
-      setFrame(detail.frame);
-    };
+    const onFrame = ({ detail }: { detail: { frame: number } }) => setFrame(detail.frame);
     el.addEventListener("frameupdate", onFrame);
     return () => el.removeEventListener("frameupdate", onFrame);
-  }, [duration, config]);
-  const blocks = useMemo(() => beatBlocks(config), [config]);
-  const previewW = cardSize ? CARD_W : Math.min(920, typeof window !== "undefined" ? window.innerWidth - 48 : 920);
-  const previewH = Math.round(previewW * (COMP_H / COMP_W));
+  }, [duration, config, tab]);
 
   const patch = useCallback((fn: (c: FilmConfig) => FilmConfig) => {
     setConfig((prev) => {
@@ -198,7 +299,7 @@ export default function RemotionPlaygroundClient() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {
-        /* ignore quota */
+        /* ignore */
       }
       return next;
     });
@@ -214,205 +315,139 @@ export default function RemotionPlaygroundClient() {
     await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
   };
 
-  return (
-    <div className="min-h-screen bg-[#f5f4f1] text-neutral-900">
-      <header className="border-b border-neutral-200/80 bg-white/80 backdrop-blur px-4 py-3 flex flex-wrap items-center gap-3 justify-between sticky top-0 z-20">
-        <div>
-          <p className="text-sm font-medium">JOOLA B2B film — Remotion playground</p>
-          <p className="text-xs text-neutral-500">Tweak timings & camera; preview updates instantly.</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Link href="/dev" className="text-neutral-500 hover:text-neutral-800">← Dev tools</Link>
-          <button type="button" onClick={() => setTab("play")} className={`px-3 py-1.5 rounded-full ${tab === "play" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
-            Playground
-          </button>
-          <button type="button" onClick={() => setTab("refs")} className={`px-3 py-1.5 rounded-full ${tab === "refs" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
-            References
-          </button>
-        </div>
-      </header>
+  const header = (
+    <header className="shrink-0 border-b border-neutral-200/80 bg-white/90 backdrop-blur px-3 py-2 flex flex-wrap items-center gap-2 justify-between">
+      <div className="min-w-0">
+        <p className="text-sm font-medium truncate">JOOLA film playground</p>
+        <p className="text-[11px] text-neutral-500 hidden sm:block">Timings & camera — preview updates live</p>
+      </div>
+      <div className="flex items-center gap-1.5 text-xs shrink-0">
+        <Link href="/dev" className="text-neutral-500 hover:text-neutral-800 px-2 py-1">Dev</Link>
+        <button type="button" onClick={() => setTab("play")} className={`px-3 py-1.5 rounded-full ${tab === "play" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
+          Playground
+        </button>
+        <button type="button" onClick={() => setTab("refs")} className={`px-3 py-1.5 rounded-full ${tab === "refs" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
+          References
+        </button>
+      </div>
+    </header>
+  );
 
-      {tab === "refs" ? (
-        <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
+  if (tab === "refs") {
+    return (
+      <>
+        {header}
+        <main className="flex-1 min-h-0 overflow-y-auto px-3 py-4 max-w-5xl mx-auto w-full space-y-8">
           {REF_GALLERY.map((group) => (
             <section key={group.source}>
-              <h2 className="text-sm font-semibold mb-3">{group.source}</h2>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <h2 className="text-sm font-semibold mb-2">{group.source}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {group.images.map((img) => (
                   <figure key={img.src} className="rounded-xl overflow-hidden border border-neutral-200 bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.src} alt={img.title} className="w-full h-auto" />
+                    <img src={img.src} alt={img.title} className="w-full h-auto" loading="lazy" />
                     <figcaption className="text-xs px-3 py-2 text-neutral-600">{img.title}</figcaption>
                   </figure>
                 ))}
               </div>
             </section>
           ))}
-          <section className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 className="text-sm font-semibold mb-4">Motion spec (report.md)</h2>
+          <section className="bg-white rounded-xl border border-neutral-200 p-4 sm:p-6">
+            <h2 className="text-sm font-semibold mb-3">Motion spec (report.md)</h2>
             {reportMd ? <ReportMarkdown source={reportMd} /> : <p className="text-sm text-neutral-500">Loading…</p>}
           </section>
         </main>
-      ) : (
-        <main className="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-[1fr_340px] gap-6">
-          <section className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <label className="inline-flex items-center gap-2 bg-white border border-neutral-200 rounded-full px-3 py-1.5">
-                <input type="checkbox" checked={cardSize} onChange={(e) => setCardSize(e.target.checked)} />
-                676px card preview
-              </label>
-              <label className="inline-flex items-center gap-2 bg-white border border-neutral-200 rounded-full px-3 py-1.5">
-                <input type="checkbox" checked={overlay} onChange={(e) => setOverlay(e.target.checked)} />
-                Debug overlay (cursor path, clicks, camera)
-              </label>
-              <span className="tabular-nums text-neutral-600">Frame {frame} / {duration - 1}</span>
-            </div>
+      </>
+    );
+  }
 
-            <div className="relative rounded-xl overflow-hidden border border-neutral-200 bg-white shadow-sm mx-auto" style={{ width: previewW }}>
-              <Player
-                key={`player-${duration}`}
+  return (
+    <>
+      {header}
+      <main className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+        <section className="flex-1 min-h-0 flex flex-col min-w-0 border-b lg:border-b-0 lg:border-r border-neutral-200/80">
+          <div className="shrink-0 px-3 py-2 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs bg-[#f5f4f1]">
+            <label className="inline-flex items-center gap-1.5 bg-white border border-neutral-200 rounded-full px-2.5 py-1">
+              <input type="checkbox" checked={cardSize} onChange={(e) => setCardSize(e.target.checked)} />
+              676px card
+            </label>
+            <label className="inline-flex items-center gap-1.5 bg-white border border-neutral-200 rounded-full px-2.5 py-1">
+              <input type="checkbox" checked={overlay} onChange={(e) => setOverlay(e.target.checked)} />
+              Debug overlay
+            </label>
+            <span className="tabular-nums text-neutral-600">Frame {frame} / {duration - 1}</span>
+            {!assetOk && (
+              <span className="text-red-700">Assets missing — run prebuild or refresh after deploy</span>
+            )}
+          </div>
+
+          <div className="shrink-0 flex justify-center px-2 pb-2 bg-[#f5f4f1]">
+            <div className="relative rounded-xl overflow-hidden border border-neutral-200 bg-white shadow-sm" style={{ width: previewW, height: previewH }}>
+              <JoolaFilmPlayer
                 ref={playerRef}
-                component={JoolaB2B}
-                inputProps={{ filmConfig: config }}
+                filmConfig={config}
                 durationInFrames={duration}
-                compositionWidth={COMP_W}
-                compositionHeight={COMP_H}
                 fps={tl.FPS}
-                style={{ width: previewW, height: previewH }}
-                controls
-                loop
-                clickToPlay
-                spaceKeyToPlayOrPause
-                acknowledgeRemotionLicense
+                width={previewW}
+                height={previewH}
               />
               {overlay && <PreviewOverlay frame={frame} config={config} width={previewW} height={previewH} />}
             </div>
+          </div>
 
-            <div className="bg-white rounded-xl border border-neutral-200 p-4 space-y-2">
-              <p className="text-xs font-medium text-neutral-700">Timeline</p>
-              <div className="relative h-10 rounded-md overflow-hidden bg-neutral-100">
-                {blocks.map((b) => (
-                  <div
-                    key={b.id}
-                    title={b.label}
-                    className="absolute top-0 bottom-0 text-[10px] text-neutral-800/80 px-1 truncate flex items-center"
-                    style={{
-                      left: `${(b.start / duration) * 100}%`,
-                      width: `${((b.end - b.start) / duration) * 100}%`,
-                      background: b.color,
-                    }}
-                  >
-                    {b.label}
-                  </div>
-                ))}
-                {clickFrames(config).map((c) => (
-                  <div
-                    key={c.key}
-                    className="absolute top-0 bottom-0 w-0.5 bg-red-600/80"
-                    style={{ left: `${(c.frame / duration) * 100}%` }}
-                    title={c.label}
-                  />
-                ))}
+          <div className="shrink-0 px-3 pb-3 bg-[#f5f4f1] space-y-1.5">
+            <p className="text-[11px] font-medium text-neutral-600">Timeline</p>
+            <div className="relative h-9 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200/80">
+              {blocks.map((b) => (
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-neutral-900 z-10"
-                  style={{ left: `${(frame / duration) * 100}%` }}
+                  key={b.id}
+                  title={b.label}
+                  className="absolute top-0 bottom-0 text-[9px] sm:text-[10px] text-neutral-800/90 px-0.5 truncate flex items-center"
+                  style={{
+                    left: `${(b.start / duration) * 100}%`,
+                    width: `${((b.end - b.start) / duration) * 100}%`,
+                    background: b.color,
+                  }}
                 />
+              ))}
+              {clickFrames(config).map((c) => (
+                <div
+                  key={c.key}
+                  className="absolute top-0 bottom-0 w-0.5 bg-red-600/80"
+                  style={{ left: `${(c.frame / duration) * 100}%` }}
+                  title={c.label}
+                />
+              ))}
+              <div className="absolute top-0 bottom-0 w-0.5 bg-neutral-900 z-10" style={{ left: `${(frame / duration) * 100}%` }} />
+            </div>
+            <p className="text-xs sm:text-sm text-neutral-800 leading-snug line-clamp-2">
+              <span className="text-neutral-500 text-[10px] uppercase tracking-wide mr-1.5">Now</span>
+              {describeFrame(config, frame)}
+            </p>
+          </div>
+        </section>
+
+        <aside className="w-full lg:w-[min(360px,38vw)] shrink-0 overflow-y-auto bg-white px-3 py-3 space-y-3 text-sm">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={reset} className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-xs">
+              Reset
+            </button>
+            <button type="button" onClick={copyJson} className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-xs">
+              Copy JSON
+            </button>
+            <span className="text-[10px] text-neutral-500 self-center">Saved locally</span>
+          </div>
+          {CONTROL_GROUPS.map((group) => (
+            <section key={group.title} className="border-t border-neutral-100 pt-3 space-y-2">
+              <div>
+                <p className="text-xs font-semibold text-neutral-900">{group.title}</p>
+                <p className="text-[11px] text-neutral-500 leading-snug mt-0.5">{group.hint}</p>
               </div>
-              <p className="text-sm text-neutral-800 leading-snug">
-                <span className="text-neutral-500 text-xs uppercase tracking-wide mr-2">Now</span>
-                {describeFrame(config, frame)}
-              </p>
-            </div>
-          </section>
-
-          <aside className="bg-white rounded-xl border border-neutral-200 p-4 space-y-4 max-h-[calc(100vh-5rem)] overflow-y-auto text-sm">
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={reset} className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-xs">
-                Reset
-              </button>
-              <button type="button" onClick={copyJson} className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-xs">
-                Copy config JSON
-              </button>
-              <span className="text-[11px] text-neutral-500 self-center">Auto-saved to localStorage</span>
-            </div>
-
-            <div id="param-morph" className="space-y-2 border-t border-neutral-100 pt-3">
-              <p className="text-xs font-semibold">Logo intro morph</p>
-              <Num label="Start frame" value={config.morph[0]} min={0} max={40} onChange={(n) => patch((c) => ({ ...c, morph: [n, c.morph[1]] }))} id="morph-start" />
-              <Num label="End frame" value={config.morph[1]} min={4} max={60} onChange={(n) => patch((c) => ({ ...c, morph: [c.morph[0], n] }))} id="morph-end" />
-            </div>
-
-            <div className="space-y-2 border-t border-neutral-100 pt-3">
-              <p className="text-xs font-semibold">Cursor</p>
-              <Num id="param-clickLead" label="Hover lead before click (frames)" value={config.clickLead} min={0} max={12} onChange={(n) => patch((c) => ({ ...c, clickLead: n }))} />
-              <label className="text-xs text-neutral-600 flex flex-col gap-1">
-                Travel easing
-                <select
-                  id="param-cursorMovePreset"
-                  className="border border-neutral-200 rounded-md px-2 py-1.5 text-sm"
-                  value={config.cursorMovePreset}
-                  onChange={(e) => patch((c) => ({ ...c, cursorMovePreset: e.target.value as EasingPreset }))}
-                >
-                  {EASING_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="space-y-2 border-t border-neutral-100 pt-3">
-              <p className="text-xs font-semibold">Click frames</p>
-              {(Object.keys(config.clicks) as (keyof FilmConfig["clicks"])[]).map((key) => (
-                <Num
-                  key={key}
-                  id={`param-clicks-${key}`}
-                  label={key}
-                  value={config.clicks[key]}
-                  min={0}
-                  max={duration}
-                  onChange={(n) => patch((c) => ({ ...c, clicks: { ...c.clicks, [key]: n } }))}
-                />
-              ))}
-            </div>
-
-            <div className="space-y-2 border-t border-neutral-100 pt-3">
-              <p className="text-xs font-semibold">Beat durations & holds</p>
-              {(Object.keys(config.beats) as (keyof FilmConfig["beats"])[]).map((key) => (
-                <Num
-                  key={key}
-                  id={`param-beats-${key}`}
-                  label={key}
-                  value={config.beats[key]}
-                  min={0}
-                  max={120}
-                  onChange={(n) => patch((c) => ({ ...c, beats: { ...c.beats, [key]: n } }))}
-                />
-              ))}
-            </div>
-
-            <div className="space-y-2 border-t border-neutral-100 pt-3">
-              <p className="text-xs font-semibold">Camera shots</p>
-              <ShotEditor title="Shot A — search / table" prefix="shotA" shot={config.camera.shotA} onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, shotA: s } }))} />
-              <ShotEditor title="Shot B — reorder rail" prefix="shotB" shot={config.camera.shotB} onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, shotB: s } }))} />
-              <ShotEditor title="Shot B2 — footer + pill" prefix="shotB2" shot={config.camera.shotB2} onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, shotB2: s } }))} />
-              <ShotEditor title="Cart summary" prefix="shotSummary" shot={config.camera.shotSummary} onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, shotSummary: s } }))} />
-              <ShotEditor title="Order placed" prefix="shotOrderPlaced" shot={config.camera.shotOrderPlaced} onChange={(s) => patch((c) => ({ ...c, camera: { ...c.camera, shotOrderPlaced: s } }))} />
-              <label className="text-xs text-neutral-600 flex flex-col gap-1">
-                Story pan easing
-                <select
-                  className="border border-neutral-200 rounded-md px-2 py-1.5 text-sm"
-                  value={config.camera.moveEasing}
-                  onChange={(e) => patch((c) => ({ ...c, camera: { ...c.camera, moveEasing: e.target.value as EasingPreset } }))}
-                >
-                  {EASING_OPTIONS.filter((o) => ["camera", "move", "inOut", "ui", "easeOut"].includes(o.value)).map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </aside>
-        </main>
-      )}
-    </div>
+              {group.fields.map((f) => renderField(f, config, duration, patch, EASING_OPTIONS))}
+            </section>
+          ))}
+        </aside>
+      </main>
+    </>
   );
 }

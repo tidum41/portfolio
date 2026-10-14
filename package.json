@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/sync-joola-public.mjs",
     "dev": "next dev --turbopack --port 3000",
     "prebuild": "node scripts/sync-joola-public.mjs",
     "build": "next build",
