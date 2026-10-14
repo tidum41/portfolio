@@ -197,3 +197,8 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Kept from the prior v22 attempt:** Net 30 story lock to $16,197.60, Recommended three paddles with contain thumbs + wholesale/MSRP, quantity presets + `window.__setPerseusQty`, "This order" title, status pills, Hyperion SKU 300829 / Scorpeus Pro V naming.
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
+
+## Film pass 20 — template row, cart pill, Place order
+
+- **Template row stays put when Add/Replace opens.** The focus ring is inset (`outline-offset: -3px`) so it cannot extend the scrollable overflow, and mousedown calls `preventDefault` so the click does not focus-scroll the row. The popover is `position: fixed`. The row's border and transform are locked. Its `margin: 0 -6px` is left alone — zeroing that margin slides the row 6px to the right. Bounding box of Match kit is unchanged across rest, hover, press, and open.
+- **Cart pill and Place order change colour only.** No scale on hover or active. Background does not transition, so the colour cannot restart mid-fade. The pill's width may still ease once.

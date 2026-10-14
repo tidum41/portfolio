@@ -1,7 +1,8 @@
 /**
- * JOOLA B2B wholesale: buyer story film (p19), seamless loop.
+ * JOOLA B2B wholesale: buyer story film (p20), seamless loop.
  *
  * UI from scripts/capture-proto.py → joola/proto.generated.ts. Timing in joola/timeline.ts.
+ * After Add to cart: tight pill update, hard cut to the summary, hard cut + scale settle to Order placed.
  */
 import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
@@ -9,10 +10,10 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TYPE_QTY,
-  INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, EASE_OUT, INOUT_E, type Cam, CONF_MORPH, END_FADE,
-  UI_W, UI_H, CART_FADE, lerp, MOVE_E,
+  INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, CONF_SETTLE, END_FADE,
+  UI_W, UI_H, CART_CUT, lerp, MOVE_E,
 } from "./joola/timeline";
-import { pointerAt, cursorScale, toScreen } from "./joola/pointer";
+import { pointerAt, cursorScale, toScreen, hoverState } from "./joola/pointer";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -57,6 +58,31 @@ const CSS =
 .film-layer .qty-group .qty-presets button.film-hover{background:var(--band)!important;color:var(--ink)!important}
 .film-layer .qty-presets button.film-active,
 .film-layer .qty-group .qty-presets button.film-active{background:var(--wash)!important}
+/* Colour only. Higher specificity than the prototype's !important width/background transitions,
+   so hover and active cannot restart a fade or scale the control. */
+.film-layer .cart-pill,
+.film-layer .btn-primary,
+.film-layer .btn-outline,
+.film-layer .tpl-choice,
+.film-layer .rail-item{
+  transition:none!important;animation:none!important;transform:none!important;
+}
+/* max-content !important would ignore the per-frame width and snap the total. */
+.film-layer .cart-pill{
+  width:var(--film-pill-w, max-content)!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  flex-shrink:0!important;
+}
+/* Prototype pins the menu with position:fixed !important. Inside the scaled stage that
+   escapes the rail; absolute coords below are relative to the rail card. */
+.film-layer .tpl-pop{position:absolute!important;margin:0!important;transform:none!important}
+.film-layer .cart-pill.film-hover{background:var(--band)!important}
+.film-layer .cart-pill.film-active{background:var(--wash)!important}
+.film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
+.film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important}
+.film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important}
+.film-layer .btn-outline.film-active{background:var(--wash)!important;opacity:1!important}
 .film-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;background:var(--ink);vertical-align:-3px}
 `;
 const html = (k: string) =>
@@ -174,20 +200,23 @@ function pill(root: HTMLElement, f: number) {
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
   const on = f >= PILL_FILL[0];
-  const tw = prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT);
+  const tw = prog(f, PILL_FILL[0], PILL_FILL[1], MOVE_E);
   amt.hidden = false;
   amt.textContent = money(on ? ORDER_TOTAL : 0);
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   // hug content: ease width empty → filled (account chip rides along via flex)
-  pl.style.width = `${lerp(PILL_W0, PILL_W1, on ? tw : 0)}px`;
+  const wpx = lerp(PILL_W0, PILL_W1, on ? tw : 0);
+  pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
+  pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
   if (on) {
-    chip.hidden = false;
-    chip.style.visibility = "";
+    const showBadge = tw >= 0.9;
+    chip.hidden = !showBadge;
+    chip.style.visibility = showBadge ? "" : "hidden";
     chip.textContent = "4";
-    const bt = prog(f, PILL_FILL[0], PILL_FILL[0] + 5, UI_E);
+    const bt = showBadge ? prog(f, PILL_FILL[0] + Math.round((PILL_FILL[1] - PILL_FILL[0]) * 0.9), PILL_FILL[1], UI_E) : 0;
     chip.style.opacity = `${bt}`;
     chip.style.transform = `scale(${0.6 + 0.4 * bt})`;
   } else {
@@ -199,26 +228,26 @@ function pill(root: HTMLElement, f: number) {
 }
 
 function applyCart(root: HTMLElement, f: number) {
-  const input = q<HTMLInputElement>(root, "[data-po-input]")!;
-  input.value = PO;
-  input.setAttribute("value", PO);
+  const input = q<HTMLInputElement>(root, "[data-po-input]");
+  if (input) {
+    input.value = PO;
+    input.setAttribute("value", PO);
+  }
   const left = CREDIT_AFTER;
-  q(root, "[data-cart-summary] [data-credit-available]")!.textContent = `${money(left)} available of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
-  const bar = q(root, "[data-cart-summary] [data-credit-bar]")!;
-  const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
-  bar.style.setProperty("--credit-used-end", `${used}%`);
-  bar.style.setProperty("--credit-order-end", `${used + (ORDER_TOTAL / CREDIT_LIMIT) * 100}%`);
+  const avail = q(root, "[data-cart-summary] [data-credit-available]");
+  if (avail) avail.textContent = `${money(left)} available of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
+  const bar = q(root, "[data-cart-summary] [data-credit-bar]");
+  if (bar) {
+    const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
+    bar.style.setProperty("--credit-used-end", `${used}%`);
+    bar.style.setProperty("--credit-order-end", `${used + (ORDER_TOTAL / CREDIT_LIMIT) * 100}%`);
+  }
   pill(root, f);
-  // during morph: fade the summary as the confirm panel takes over
   const sum = q(root, "[data-cart-summary]");
   if (sum) {
     sum.classList.remove("is-morph-exit");
-    if (f >= CONF_MORPH[0] && f < CONF_MORPH[1]) {
-      const t = prog(f, CONF_MORPH[0], CONF_MORPH[0] + 8, FADE_E);
-      sum.style.opacity = `${1 - t}`;
-    } else {
-      sum.style.opacity = "1";
-    }
+    sum.style.opacity = "1";
+    sum.style.transition = "none";
   }
 }
 
@@ -232,23 +261,19 @@ function applyConfirmation(root: HTMLElement, f: number) {
 
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
-  const from = R["cart.summary"];
-  const to = R["confirmation.panel"];
+  // Hard cut already swapped the screen. The card settles with a uniform scale
+  // (type stays sharp; a non-uniform FLIP smeared it at 676px).
   const parts = qa(panel, ".confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions");
-  if (f >= CONF_MORPH[0] && f < CONF_MORPH[1]) {
-    const t = prog(f, CONF_MORPH[0], CONF_MORPH[1], INOUT_E);
-    const x = lerp(from[0], to[0], t);
-    const y = lerp(from[1], to[1], t);
-    const w = lerp(from[2], to[2], t);
-    const h = lerp(from[3], to[3], t);
-    panel.style.transformOrigin = "top left";
-    panel.style.transform = `translate(${x - to[0]}px, ${y - to[1]}px) scale(${w / to[2]}, ${h / to[3]})`;
-    const contentT = prog(f, CONF_MORPH[0] + 4, CONF_MORPH[1], FADE_E);
-    parts.forEach((p) => { p.style.opacity = `${contentT}`; });
+  parts.forEach((p) => { p.style.opacity = ""; p.style.transition = "none"; });
+  if (f < CONF_SETTLE[1]) {
+    const t = prog(f, CONF_SETTLE[0], CONF_SETTLE[1], EASE_OUT);
+    const s = lerp(0.97, 1, t);
+    const y = lerp(6, 0, t);
+    panel.style.transformOrigin = "center center";
+    panel.style.transform = `translateY(${y}px) scale(${s})`;
   } else {
     panel.style.transform = "";
     panel.style.transformOrigin = "";
-    parts.forEach((p) => { p.style.opacity = ""; });
   }
 }
 
@@ -298,26 +323,13 @@ export const JoolaB2B: React.FC = () => {
     ]).then(() => continueRender(handle));
   }, [handle]);
 
-  const TR: [number, number, string, string][] = [
-    [CART_FADE[0], Math.max(1, CART_FADE[1] - CART_FADE[0]), "qo-desktop", "cart"],
-  ];
-  const scrAt = (f: number) => (f >= CONF_MORPH[0] ? "confirmation" : f >= CART_FADE[0] ? "cart" : "qo-desktop");
-  const tr = TR.find(([a, n]) => frame >= a && frame < a + n);
-  const morphT = prog(frame, CONF_MORPH[0], CONF_MORPH[1], INOUT_E);
-  const layers: { screen: string; cam: Cam; o: number }[] =
-    frame >= CONF_MORPH[0] && frame < CONF_MORPH[1]
-      ? [
-          { screen: "cart", cam: camAt(frame), o: 1 - morphT },
-          { screen: "confirmation", cam: camAt(frame), o: 1 },
-        ]
-      : tr
-        ? [
-            { screen: tr[2], cam: camAt(tr[0] - 1), o: 1 - prog(frame, tr[0], tr[0] + Math.ceil(tr[1] * 0.6), FADE_E) },
-            { screen: tr[3], cam: camAt(frame), o: prog(frame, tr[0] + tr[1] - Math.ceil(tr[1] * 0.6), tr[0] + tr[1], FADE_E) },
-          ]
-        : [{ screen: scrAt(frame), cam: camAt(frame), o: 1 }];
+  const screen = frame >= CONF_CUT ? "confirmation" : frame >= CART_CUT ? "cart" : "qo-desktop";
+  const cam = camAt(frame);
 
-  const [spx, spy] = pointerAt(frame);
+  // Freeze the cursor in screen space across the order-placed cut. Resting on
+  // Place order would otherwise reproject through the new camera and jump.
+  const ptrFrame = Math.min(frame, CONF_CUT - 1);
+  const [spx, spy] = pointerAt(ptrFrame);
   // Logo glide: centred card → real sidebar slot under shot A
   const logoW0 = 340;
   const [slotX, slotY] = toScreen(camAt(MORPH[1]), LOGO[0], LOGO[1]);
@@ -332,30 +344,24 @@ export const JoolaB2B: React.FC = () => {
   const logoOpacity = intro ? 1 - prog(frame, MORPH[1] - 4, MORPH[1], FADE_E) : outro ? logoOut : 0;
   const uiOpacity = intro ? prog(frame, MORPH[0] + 6, MORPH[1], FADE_E) : 1 - uiOut;
   const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
-  const showPtr = frame >= MORPH[1] && frame < END_FADE[0] + 8;
-  const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - uiOut);
+  const showPtr = frame >= MORPH[1] && frame < CONF_CUT + 4;
+  const ptrFade = prog(frame, CONF_CUT - 1, CONF_CUT + 3, FADE_E);
+  const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - ptrFade);
   const stageRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const st = stageRef.current;
     if (!st) return;
     st.querySelectorAll(".film-hover, .film-active").forEach((e) => e.classList.remove("film-hover", "film-active"));
-    if (!showPtr) return;
-    const [qx, qy] = pointerAt(frame - 1);
-    if (Math.hypot(spx - qx, spy - qy) > 6) return;
-    const k = 1920 / OW;
-    let el = document.elementFromPoint(spx * k, spy * k) as HTMLElement | null;
-    const pressing = Object.values(CLICK).some((c) => frame - c >= 0 && frame - c < 4);
-    st.setAttribute("data-hit", el ? `${el.tagName}.${el.className}` : "");
-    while (el && el !== st && !el.classList.contains("film-layer")) {
-      // p19: no blue wash on rows; press = film-active only (neutral darken / own-colour)
-      if (el.classList?.contains("order-row") || el.classList?.contains("is-just-added")) {
-        el = el.parentElement;
-        continue;
-      }
+    if (frame >= CONF_CUT) return;
+    const layer = st.querySelector(".film-layer");
+    if (!layer) return;
+    // Geometry + latch. Classes are set once per state, never from a moving hit-test.
+    for (const h of hoverState(frame)) {
+      const el = layer.querySelector(h.sel);
+      if (!el) continue;
       el.classList.add("film-hover");
-      if (pressing) el.classList.add("film-active");
-      el = el.parentElement;
+      if (h.active) el.classList.add("film-active");
     }
   });
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
@@ -366,11 +372,9 @@ export const JoolaB2B: React.FC = () => {
       <style>{CSS}</style>
       {uiOn && (
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
-          {layers.map((l) => l.o > 0 && (
-            <div key={l.screen} style={{ position: "absolute", width: UI_W, height: UI_H, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
-              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} />
-            </div>
-          ))}
+          <div style={{ position: "absolute", width: UI_W, height: UI_H, transformOrigin: "0 0", transform: camT(cam), boxShadow: "0 0 0 600px #fff" }}>
+            <Layer key={screen} screen={screen} frame={frame} slide={0} />
+          </div>
         </div>
       )}
       {logoOpacity > 0 && (

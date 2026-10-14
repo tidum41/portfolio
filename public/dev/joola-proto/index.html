@@ -1492,9 +1492,11 @@ img { display: block; max-width: 100%; }
 }
 .rail-item:first-of-type { border-top: 0; }
 .rail-item:hover { background: var(--band); }
+.rail-item:focus,
 .rail-item:focus-visible {
+  /* Inset ring: an outside outline-offset was scrolling the row ~1px into view */
   outline: 2px solid var(--blue);
-  outline-offset: 1px;
+  outline-offset: -3px;
 }
 .rail-item .rail-copy {
   display: flex;
@@ -2634,6 +2636,58 @@ img { display: block; max-width: 100%; }
 [data-cart-summary].is-morph-exit {
   opacity: 0;
   transition: opacity 0.2s ease-in;
+}
+
+/* ================= r20 (film pass 20) ================= */
+/* Template row must not move when Add/Replace opens.
+   Cause that still could: focus outline-offset outside the row (scroll-into-view),
+   a popover that participates in flow, scroll anchoring, or a border/transform on :active.
+   The ring is inset, the popover is fixed, and the row's box is locked. */
+.rail-item {
+  /* keep margin: 0 -6px from the row rule — zeroing it slides the row 6px right */
+  border: 0 !important;
+  transform: none !important;
+  scroll-margin: 0;
+  overflow-anchor: none;
+}
+.rail-card, .qo-rail { overflow-anchor: none; }
+.tpl-pop {
+  position: fixed !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+/* Cart pill and Place order: colour only. Background does not transition,
+   so a hover/active class cannot restart a fade. Width may ease once. */
+.cart-pill,
+.cart-pill:hover,
+.cart-pill:active,
+.cart-pill:focus,
+.cart-pill:focus-visible {
+  transform: none !important;
+  transition: width 0.3s ease-out !important;
+}
+.cart-pill:hover { background: var(--band) !important; }
+.cart-pill:active { background: var(--wash) !important; }
+.cart-pill .count-chip,
+.cart-pill.bump .cart-amount-display,
+.cart-pill.bump .count-chip {
+  transition: none !important;
+  animation: none !important;
+}
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus,
+.btn-primary:focus-visible {
+  transform: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+}
+.btn-primary:hover { background: #2433c4 !important; }
+.btn-primary:active { background: #1a2599 !important; }
+.btn-primary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -3px;
 }
 </style>
 </head>
@@ -4064,6 +4118,8 @@ img { display: block; max-width: 100%; }
     });
 
     document.querySelectorAll("[data-template]").forEach(function (item) {
+      /* mousedown focus was able to scroll the row by the outside focus ring */
+      item.addEventListener("mousedown", function (ev) { ev.preventDefault(); });
       item.addEventListener("click", function (ev) {
         ev.stopPropagation();
         var card = item.closest(".rail-card");
