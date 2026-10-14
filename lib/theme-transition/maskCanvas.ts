@@ -1,6 +1,7 @@
-import { drawBayerDissolveMask, type Point } from "./bayer";
 import { drawHalftoneRevealMask } from "./halftoneReveal";
+import { ditherMaskDataUrl } from "./ditherCanvasMask";
 import type { ThemeTransitionMode } from "./preference";
+import type { Point } from "./bayer";
 
 let sharedCanvas: HTMLCanvasElement | null = null;
 
@@ -21,15 +22,24 @@ export function maskDataUrlForProgress(
   progress: number,
   origin: Point,
 ): string {
+  if (mode === "dither") {
+    return ditherMaskDataUrl(progress, origin);
+  }
+
   const w = window.innerWidth;
   const h = window.innerHeight;
-  const ctx = getCanvas(w, h);
-  if (mode === "dither") {
-    const cell = w <= 480 ? 5 : 6;
-    drawBayerDissolveMask(ctx, w, h, progress, cell, origin);
-  } else {
-    const pitch = w <= 480 ? 10 : 12;
-    drawHalftoneRevealMask(ctx, w, h, progress, pitch, origin);
-  }
+  const pitch = w <= 480 ? 10 : 12;
+  const scale = 4;
+  const lw = Math.ceil(w / scale);
+  const lh = Math.ceil(h / scale);
+  const ctx = getCanvas(lw, lh);
+  drawHalftoneRevealMask(
+    ctx,
+    lw,
+    lh,
+    progress,
+    Math.max(2, pitch / scale),
+    { x: origin.x / scale, y: origin.y / scale },
+  );
   return sharedCanvas!.toDataURL("image/png");
 }

@@ -18,8 +18,14 @@ function ensureVtStyleSheet(): HTMLStyleElement {
   return el;
 }
 
-function setNewLayerMask(url: string): void {
+function setNewLayerMask(url: string, pixelated: boolean): void {
   const sheet = ensureVtStyleSheet();
+  const crisp = pixelated
+    ? `
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    `
+    : "";
   sheet.textContent = `
     ::view-transition-old(root) {
       animation: none !important;
@@ -35,6 +41,7 @@ function setNewLayerMask(url: string): void {
       -webkit-mask-image: url("${url}");
       -webkit-mask-size: 100% 100%;
       -webkit-mask-repeat: no-repeat;
+      ${crisp}
     }
   `;
 }
@@ -50,20 +57,21 @@ function animateMask(
   origin: { x: number; y: number },
   durationMs: number,
 ): Promise<void> {
+  const pixelated = mode === "dither";
   return new Promise((resolve) => {
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / durationMs);
       const p = easeOutCubic(t);
-      setNewLayerMask(maskDataUrlForProgress(mode, p, origin));
+      setNewLayerMask(maskDataUrlForProgress(mode, p, origin), pixelated);
       if (t < 1) {
         raf = requestAnimationFrame(tick);
       } else {
         resolve();
       }
     };
-    setNewLayerMask(maskDataUrlForProgress(mode, 0, origin));
+    setNewLayerMask(maskDataUrlForProgress(mode, 0, origin), pixelated);
     raf = requestAnimationFrame(tick);
   });
 }
