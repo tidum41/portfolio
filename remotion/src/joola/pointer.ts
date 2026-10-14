@@ -6,8 +6,8 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
-  prog, type Cam,
+  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
+  ADD_CUT, prog, type Cam,
 } from "./timeline";
 
 export type Pt = [number, number];
@@ -28,33 +28,41 @@ export const P = {
   qty: [R["qo-search.qty0"][0] + R["qo-search.qty0"][2] * 0.8, R["qo-search.qty0"][1] + R["qo-search.qty0"][3] / 2] as Pt,
   tpl: [1130, 556] as Pt,
   tplAdd: [ctr("qo-search.tplAdd")[0], ctr("qo-search.tplAdd")[1]] as Pt,
-  add: [ctr("qo-search.addBtn")[0] + 18, ctr("qo-search.addBtn")[1]] as Pt,
+  add: [ctr("qo-search.addBtn")[0], ctr("qo-search.addBtn")[1]] as Pt,
   // Final cart icon (pill grows left). Not on the amount.
   pillIcon: [PILL_RIGHT - PILL_W1 + 20, PILL_CY] as Pt,
   // Right of the Place order label, well inside the button — not on the top edge.
   place: [ctr("cart.place")[0] + 48, ctr("cart.place")[1]] as Pt,
+  // Below the summary button, off the "Placing order" label.
+  away: [1160, 448] as Pt,
 };
 export type Key = [number, Pt];
 export const KEYS: Key[] = [
   [MORPH[1], P.start],
-  [CLICK.search - 4, P.search],
+  [CLICK.search - 6, P.search],
   [CLICK.search + 15, P.search],
-  [CLICK.result - 4, P.result],
+  [CLICK.result - 8, P.result],
   [CLICK.result + 3, P.result],
-  [CLICK.qty - 4, P.qty],
+  [CLICK.qty - 8, P.qty],
   [CLICK.qty + 8, P.qty],
-  [CLICK.tpl - 3, P.tpl],
+  [CLICK.tpl - 8, P.tpl],
   [CLICK.tpl + 4, P.tpl],
-  [CLICK.tplAdd - 5, P.tplAdd],
-  [CLICK.tplAdd + 6, P.tplAdd],
-  [CLICK.add - 2, P.add],
-  [CLICK.add + 4, P.add],
+  // Settled ~0.67s on Add to order before the press, then 8 frames after.
+  [CLICK.tplAdd - 20, P.tplAdd],
+  [CLICK.tplAdd + 8, P.tplAdd],
+  // Same page point across the rows cut, so the cursor leaves with the rail
+  // instead of crossing the product names. Then it enters the Add button shot.
+  [ADD_CUT, P.tplAdd],
+  [CLICK.add - 20, P.add],
+  [CLICK.add + 8, P.add],
   // Travel across the pill hard cut and arrive on the still-empty cart icon.
   [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],
   [CART_CUT - 6, P.pillIcon],
-  // Travel across the summary hard cut and arrive inside Place order.
-  [CART_CUT + 16, P.place],
-  [CLICK.place + 4, P.place],
+  // On Place order ~0.67s before the press. Ease off the label while it says Placing order.
+  [CLICK.place - 20, P.place],
+  [CLICK.place + 2, P.place],
+  [CLICK.place + 10, P.away],
+  [CONF_FADE[0], P.away],
 ];
 const sp = (k: Key): Pt => toScreen(camAt(k[0]), k[1][0], k[1][1]);
 export const pointerAt = (f: number): Pt => {

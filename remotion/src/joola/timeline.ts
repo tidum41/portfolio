@@ -54,14 +54,14 @@ export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- pass 20 beats (~12.2s) ---------- */
+/* ---------- pass 25 beats ---------- */
 /** Intro: logo glides into the sidebar slot on a dashboard shot (sidebar + header). */
 export const MORPH = [4, 18] as const;
 export const UI_IN = MORPH[0];
 export const LEAD = 2;
-/** Ease from the dashboard shot into the table shot before the first click. */
+/** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
-export const CLICK = { search: 36, result: 68, qty: 86, tpl: 118, tplAdd: 146, add: 182, place: 266 };
+export const CLICK = { search: 36, result: 66, qty: 90, tpl: 136, tplAdd: 170, add: 248, place: 334 };
 export const ENTER = CLICK.result + 3;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -72,49 +72,65 @@ export const ROW_HL = [ENTER, ENTER] as const;
 /** Value swaps 1 → 120 on the click frame. The range is a single frame. */
 export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
 export const QTY_SET = CLICK.qty;
-/** Search shot settles, then a push onto the qty before the 120 click. */
-export const QTY_MOVE = [78, 86] as const;
-export const PAN_AB = [100, 114] as const; // qty -> Add to order
+/** Eye travels onto the new row as it inserts, and lands while the qty is still 1. */
+export const QTY_MOVE = [69, 82] as const;
+/** 20 frames, 0.67s. Same MOVE_E. Scale step is about 12% smaller than pass 24. */
+export const PAN_AB = [106, 126] as const;
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 5] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
-export const TPL_ROWS = [CLICK.tplAdd + 6, CLICK.tplAdd + 16] as const;
 /**
- * Hard cut onto the Add button as the popover finishes closing, so the shot
- * does not sit on an empty Match kit card. The button already reads Add 4.
+ * The three template rows start after the cut to the table, so they arrive
+ * where the eye already is. Perseus is already on the order.
  */
-export const ADD_CUT = 153;
+export const ROWS_CUT = 182;
+export const TPL_ROWS = [188, 204] as const;
+/** Hard cut onto Add 4 lines to cart once the new rows have been readable. */
+export const ADD_CUT = 216;
 export const PAN_BC = [ADD_CUT, ADD_CUT] as const;
 /** Hard cut to a tight cart pill still showing $0.00. */
-export const PILL_SHOT = 188;
+export const PILL_SHOT = 260;
 export const PILL_W0 = 85;
 export const PILL_W1 = 151;
 /** Width at which "$19,306.50" fits next to the icon, before the badge takes space. */
 export const PILL_NUM_W = 130;
 /** Cursor lands on the empty cart icon, then rides it as the pill grows. */
-export const PILL_ARRIVE = 200;
-/** One ease-out (cubic-bezier 0.2,0,0,1) after the $0 beat. Not an ease-in-out. */
-export const PILL_FILL = [200, 214] as const;
+export const PILL_ARRIVE = 266;
+/** One ease-out after a beat on $0.00. Not an ease-in-out. */
+export const PILL_FILL = [272, 286] as const;
 /** Badge is the last beat: scale 0.6→1 over 5 frames, overlapping the end of the width. */
-export const PILL_BADGE = [213, 218] as const;
+export const PILL_BADGE = [285, 290] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
-export const CART_CUT = 234;
+export const CART_CUT = 302;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
-export const PAN_CART = [CART_CUT, CART_CUT] as const; // no pan; hard cut
+export const PAN_CART = [CART_CUT, CART_CUT] as const;
 export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
-/** Hard cut after the Place order press, then an 8-frame scale settle. */
-export const CONF_CUT = CLICK.place + 4;
-export const CONF_SETTLE = [CONF_CUT, CONF_CUT + 8] as const;
-export const CONF_MORPH = CONF_SETTLE; // alias so older imports still compile
-export const CONF_XFADE = CONF_SETTLE;
+/** "Place order" crossfades to the processing face. Done as the hold becomes readable. */
+export const PROC_XFADE = [337, 341] as const;
+/** Press, then "Placing order" holds ~0.73s once the label is solid. */
+export const PROC = [338, 363] as const;
+/** Check draws and the button eases to emerald. ~250ms. */
+export const CHECK_DRAW = [363, 371] as const;
+/** "Order placed" on the green button, ~0.4s. */
+export const SUCCESS_HOLD = [371, 383] as const;
+/** Summary content fades. The card chrome stays. */
+export const CONF_FADE = [383, 387] as const;
+export const CONF_CUT = 387;
+/** Top-anchored height ease, ~300ms, MOVE_E. */
+export const CONF_GROW = [387, 396] as const;
+/** Short recenter once the card has grown. */
+export const CONF_RECENTER = [402, 412] as const;
+export const CONF_SETTLE = CONF_GROW;
+export const CONF_MORPH = CONF_GROW;
+export const CONF_XFADE = CONF_FADE;
 /** Hold Order placed ~1.5s before the logo. */
-export const CONF_HOLD = [CONF_SETTLE[1], CONF_SETTLE[1] + 45] as const;
-export const END_FADE = [CONF_HOLD[1], CONF_HOLD[1] + 36] as const;
+export const CONF_HOLD = [412, 457] as const;
+export const END_FADE = [457, 475] as const;
 export const DURATION = END_FADE[1] + 6;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [ROWS_CUT, ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
@@ -123,7 +139,8 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["template popover", CLICK.tpl, POP_IN[1]],
   ["template rows", TPL_ROWS[0], TPL_ROWS[1]],
   ["pill width + total + badge", PILL_FILL[0], PILL_BADGE[1]],
-  ["order settle", CONF_SETTLE[0], CONF_SETTLE[1]],
+  ["placing order", PROC[0], CHECK_DRAW[1]],
+  ["order placed grow", CONF_GROW[0], CONF_RECENTER[1]],
 ];
 
 /* ---------- camera ---------- */
@@ -145,7 +162,8 @@ export const PAN_E = MOVE_E;
  * Logo in the sidebar. Frame stops at the search field so Upload CSV
  * and the Price header are not sliced letters.
  */
-export const SHOT_OPEN: Cam = { cx: 332, cy: 210, s: 2.28 };
+/** Wide enough that the search field's right radius is whole, and Upload CSV stays out. */
+export const SHOT_OPEN: Cam = { cx: 328, cy: 210, s: 2.24 };
 /**
  * Search field. Frame stops at the field (page x ~648) so the Price header
  * is not a sliced "Pri", and Quick order stays whole on the left.
@@ -157,9 +175,13 @@ export const SHOT_B: Cam = { cx: 803, cy: 332, s: 3.3 };
  * Add to order. Match kit is whole; the card above and the footer
  * Add button are outside the frame so nothing is sliced.
  */
-export const SHOT_B2: Cam = { cx: 1158, cy: 608, s: 6.2 };
+/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out. */
+export const SHOT_B2: Cam = { cx: 1158, cy: 595, s: 6.4 };
 /** Add 4 to cart. Low enough that the rail price above the footer is out of frame. */
-export const SHOT_ADD: Cam = { cx: 1223.5, cy: 748, s: 4.4 };
+/** Add 4 lines to cart. Centre is the wider label. */
+export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748, s: 4.4 };
+/** The order table, framed so three new rows can arrive under Perseus. */
+export const SHOT_ROWS: Cam = { cx: 640, cy: 370, s: 1.78 };
 /**
  * Filled pill centred. Right edge stays at 1284, filled width 151,
  * so the centre is 1208.5. cy is the pill's vertical centre.
@@ -171,8 +193,17 @@ export const SHOT_PILL: Cam = { cx: 1208.5, cy: 23, s: 8.8 };
  * the frame (the number sits ~25px from the card edge). d=6 lifts the card
  * a hair without clipping the title. The 24px total is the larger focal.
  */
-export const SHOT_SUM: Cam = { cx: 1044, cy: 299.59375, s: 2.95 };
-export const SHOT_D: Cam = { cx: 766, cy: 248, s: 2.95 };
+/**
+ * Both cards share s=2.68 (~9% smaller than pass 24's 2.95) and are centred
+ * on their own content. cy values are corrected after the height:auto stills.
+ */
+export const CARD_S = 2.68;
+/** Centred on the height:auto summary (page centre y 273.11). */
+export const SHOT_SUM: Cam = { cx: 1044, cy: 273.11, s: CARD_S };
+/** Confirmation top locked to the summary's screen top while the card grows. */
+export const SHOT_GROW: Cam = { cx: 766, cy: 221.07, s: CARD_S };
+/** Centred on the height:auto confirmation (page centre y 238.23). */
+export const SHOT_D: Cam = { cx: 766, cy: 238.23, s: CARD_S };
 
 export const WIDE = SHOT_OPEN;
 export const CART_CAM = SHOT_SUM;
@@ -181,10 +212,12 @@ export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: logo -> search", ease: MOVE_E },
   { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
+  { a: ROWS_CUT, b: ROWS_CUT, to: SHOT_ROWS, label: "cut: template rows arrive" },
   { a: ADD_CUT, b: ADD_CUT, to: SHOT_ADD, label: "cut: Add to cart" },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
-  { a: CONF_CUT, b: CONF_CUT, to: SHOT_D, label: "cut: order placed" },
+  { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },
+  { a: CONF_RECENTER[0], b: CONF_RECENTER[1], to: SHOT_D, label: "recenter order placed", ease: MOVE_E },
 ];
 export const clampCam = (c: Cam): Cam => {
   const hw = OW / 2 / c.s, hh = OH / 2 / c.s;

@@ -11,7 +11,7 @@ import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
   INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
-  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E,
+  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, CONF_FADE, CONF_GROW, PROC_XFADE,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
 
@@ -101,14 +101,24 @@ const CSS =
 .film-layer .confirm-rows .v,
 .film-layer .cart-amount-display{font-weight:700!important;color:var(--ink)!important}
 .film-layer .btn-primary{font-weight:700!important}
-/* Cards size to their content. Shared width, padding, and radius. */
+/* Cards size to their content. Height is set per frame (auto, or the grow). */
 .film-layer .cart-summary,
 .film-layer .confirm-panel{
-  height:auto!important;min-height:0!important;max-height:none!important;
+  min-height:0!important;max-height:none!important;
   width:480px!important;max-width:480px!important;min-width:480px!important;
   padding:24px!important;border-radius:12px!important;border-width:1px!important;
   box-sizing:border-box!important;overflow:hidden!important;
 }
+.film-layer [data-place-order]{position:relative!important}
+.film-layer .film-face{
+  position:absolute!important;inset:0!important;margin:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:8px!important;white-space:nowrap!important;pointer-events:none!important;
+}
+.film-layer .film-spin,.film-layer .film-draw{display:block!important;flex:none!important}
+/* The cart and confirmation shots are the card. A topbar rule in that frame is a sliced hairline. */
+.film-layer [data-screen="cart"] .topbar,
+.film-layer [data-screen="confirmation"] .topbar{border-bottom-color:transparent!important}
 .film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
 .film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important}
 .film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important}
@@ -257,12 +267,13 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   q(pr, ".line-total")!.textContent = money(line);
 
   const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
-  q(root, "[data-line-count]")!.textContent = `${lines} ${lines === 1 ? "item" : "items"}`;
+  const lineWord = `${lines} ${lines === 1 ? "line" : "lines"}`;
+  q(root, "[data-line-count]")!.textContent = lineWord;
   const total = (inserted ? line : 0) + (tplIn ? OTHER_LINES : 0);
   q(root, "[data-order-footer] [data-order-total]")!.textContent = money(r2(total));
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
-  add.textContent = `Add ${lines} to cart`;
+  add.textContent = `Add ${lineWord} to cart`;
   pill(root, f);
   // The tight pill frame covers the retailer name once the pill is full, and
   // slices "Pickleball" while the pill is still $0. Hide the chip for that shot.
@@ -312,7 +323,7 @@ function applyCart(root: HTMLElement, f: number) {
   }
   const left = CREDIT_AFTER;
   const avail = q(root, "[data-cart-summary] [data-credit-available]");
-  if (avail) avail.textContent = `${money(left)} available of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
+  if (avail) avail.textContent = `${money(left)} left of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
   const bar = q(root, "[data-cart-summary] [data-credit-bar]");
   if (bar) {
     const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
@@ -330,7 +341,65 @@ function applyCart(root: HTMLElement, f: number) {
     sum.classList.remove("is-morph-exit");
     sum.style.opacity = "1";
     sum.style.transition = "none";
+    sum.style.setProperty("height", "auto", "important");
+    const fade = f < CONF_FADE[0] ? 1 : 1 - prog(f, CONF_FADE[0], CONF_FADE[1], MOVE_E);
+    qa(sum, ":scope > .sum-row, :scope > .sum-total, :scope > .credit-meter, :scope > [data-place-order]").forEach((el) => {
+      el.style.opacity = `${fade}`;
+    });
   }
+  placeButton(root, f);
+}
+
+/** Summary border-box. Replaced after the height:auto still; the grow starts here. */
+const SUMMARY_BOX_H = 298;
+
+const BLUE = "#2c3ee0";
+const EMERALD = "#12824a";
+const mix = (a: string, b: string, t: number) => {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const A = p(a), B = p(b);
+  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`;
+};
+
+const SPIN_SVG = `<svg class="film-spin" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M9 1.6a7.4 7.4 0 1 1-7.4 7.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+const CHECK_SVG = `<svg class="film-draw" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path data-draw d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function placeButton(root: HTMLElement, f: number) {
+  const btn = q<HTMLButtonElement>(root, "[data-place-order]");
+  if (!btn) return;
+  if (btn.dataset.filmFaces !== "1") {
+    btn.dataset.filmFaces = "1";
+    btn.textContent = "";
+    btn.insertAdjacentHTML(
+      "beforeend",
+      `<span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}<span>Order placed</span></span>`,
+    );
+    const path = q<SVGPathElement>(btn, "[data-draw]");
+    if (path) {
+      const len = path.getTotalLength();
+      path.dataset.len = String(len);
+      path.style.strokeDasharray = `${len}`;
+    }
+  }
+  // The label swaps in one frame. A crossfade of two words reads as a double exposure.
+  const placing = f >= PROC_XFADE[0];
+  const success = f >= CHECK_DRAW[0];
+  const done = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], MOVE_E);
+  const face = (name: string) => q(btn, `[data-face="${name}"]`);
+  const idleEl = face("idle"), procEl = face("proc"), doneEl = face("done");
+  if (idleEl) idleEl.style.opacity = placing ? "0" : "1";
+  if (procEl) procEl.style.opacity = placing && !success ? "1" : "0";
+  if (doneEl) doneEl.style.opacity = success ? "1" : "0";
+  const spin = q<SVGElement>(btn, ".film-spin");
+  if (spin) spin.style.transform = `rotate(${(f - PROC_XFADE[0]) * 24}deg)`;
+  const path = q<SVGPathElement>(btn, "[data-draw]");
+  if (path) {
+    const len = Number(path.dataset.len || "16");
+    const drawn = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], UI_E);
+    path.style.strokeDashoffset = `${len * (1 - drawn)}`;
+  }
+  if (f >= CHECK_DRAW[0]) btn.style.setProperty("background-color", mix(BLUE, EMERALD, done), "important");
+  else btn.style.removeProperty("background-color");
 }
 
 function applyConfirmation(root: HTMLElement, f: number) {
@@ -345,12 +414,23 @@ function applyConfirmation(root: HTMLElement, f: number) {
   qa(root, ".account-chip, .cart-pill").forEach((el) => { el.style.visibility = "hidden"; });
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
-  // Hard cut. The card is already the same box as the summary, so it stays
-  // still — a scale settle would slide the edges off the summary's.
-  const parts = qa(panel, ".confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions");
-  parts.forEach((p) => { p.style.opacity = ""; p.style.transition = "none"; });
   panel.style.transform = "none";
-  panel.style.transformOrigin = "center center";
+  panel.style.setProperty("height", "auto", "important");
+  const nat = panel.offsetHeight;
+  const grown = prog(f, CONF_GROW[0], CONF_GROW[1], MOVE_E);
+  panel.style.setProperty("height", `${lerp(SUMMARY_BOX_H, nat, grown)}px`, "important");
+  const bits = [
+    q(panel, ".confirm-title-row"),
+    q(panel, ".confirm-lede"),
+    ...qa(panel, ".confirm-rows .row"),
+    q(panel, ".confirm-actions"),
+  ].filter((el): el is HTMLElement => !!el);
+  bits.forEach((el, i) => {
+    const a = CONF_CUT - 2 + i * 2;
+    const u = prog(f, a, a + 5, UI_E);
+    el.style.opacity = `${u}`;
+    el.style.transform = `translateY(${(1 - u) * 4}px)`;
+  });
 }
 
 const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
@@ -409,8 +489,8 @@ export const JoolaB2B: React.FC = () => {
   const screen = frame >= CONF_CUT ? "confirmation" : frame >= CART_CUT ? "cart" : "qo-desktop";
   const cam = camAt(frame);
 
-  // Freeze the cursor in screen space across the order-placed cut. Resting on
-  // Place order would otherwise reproject through the new camera and jump.
+  // The cursor eases off the button during "Placing order" and is gone once
+  // the confirmation card is the subject.
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
   // Logo glide: centred card → real sidebar slot under shot A
@@ -419,8 +499,9 @@ export const JoolaB2B: React.FC = () => {
   const glide = prog(frame, MORPH[0], MORPH[1], MOVE_E);
   const intro = frame < MORPH[1];
   const outro = frame >= END_FADE[0];
-  const uiOut = prog(frame, END_FADE[0], END_FADE[0] + 8, FADE_E);
-  const logoOut = prog(frame, END_FADE[0] + 6, END_FADE[1], FADE_E);
+  // Hard cut to the lockup. A crossfade here sits on a grey card and a grey logo.
+  const uiOut = frame >= END_FADE[0] ? 1 : 0;
+  const logoOut = frame >= END_FADE[0] ? 1 : 0;
   const lw = intro ? lerp(logoW0, LOGO[2], glide) : logoW0;
   const lx = intro ? lerp(OW / 2 - logoW0 / 2, slotX, glide) : OW / 2 - logoW0 / 2;
   const ly = intro ? lerp(OH / 2 - (logoW0 * LOGO_AR) / 2, slotY, glide) : OH / 2 - (logoW0 * LOGO_AR) / 2;
@@ -431,7 +512,7 @@ export const JoolaB2B: React.FC = () => {
   // so a cursor frozen across the cut sits in the blank middle of Order placed.
   // The press is still on screen through frame 269; the cut removes the pointer.
   const showPtr = frame >= MORPH[1] && frame < CONF_CUT;
-  const ptrFade = prog(frame, CONF_CUT - 1, CONF_CUT + 3, FADE_E);
+  const ptrFade = prog(frame, CONF_FADE[0], CONF_FADE[1], FADE_E);
   const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - ptrFade);
   const stageRef = useRef<HTMLDivElement>(null);
 

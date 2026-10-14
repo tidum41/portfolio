@@ -59,6 +59,7 @@
   --failed-bg: rgba(176, 23, 95, 0.10);
   --failed-border: rgba(208, 50, 117, 0.22);
   --best: #198754;
+  --success: #12824a; /* order-placed check and button */
   /* Type — FK Grotesk Neue only; 4 sizes, 2 weights */
   --font-ui: "FKGroteskNeue", "FK Grotesk Neue", sans-serif;
   --text-title: 24px;
@@ -1298,7 +1299,59 @@ img { display: block; max-width: 100%; }
   align-items: center;
   gap: 12px;
 }
+/* 22px disc. translateY is the cap-height correction, set after measurement. */
+.confirm-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  /* Cap centre of the 24px title sits 0.8px above the flex line-box centre. */
+  transform: translateY(-0.8px);
+}
+.confirm-check svg { display: block; }
 .confirm-panel h1 { margin: 0; }
+.confirm-lede .inline-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.confirm-lede .inline-link:hover { color: var(--blue); }
+.orders-table { margin-top: 24px; border-top: 1px solid var(--line); width: 100%; max-width: 100%; }
+.orders-head, .orders-row {
+  display: grid;
+  grid-template-columns: 140px 160px minmax(180px, 1fr) 140px;
+  column-gap: 16px;
+  align-items: center;
+  padding: 0 8px;
+}
+.orders-head {
+  height: 40px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--faint);
+}
+.orders-row {
+  height: 48px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.orders-row .amt, .orders-head .num { text-align: right; font-variant-numeric: tabular-nums; }
+.orders-row .amt { font-weight: 500; color: var(--ink); }
 .confirm-panel .confirm-tag {
   display: inline-flex;
   align-items: center;
@@ -2747,7 +2800,8 @@ img { display: block; max-width: 100%; }
     <button type="button" class="tab-btn active" data-tab="qo-desktop">Quick Order</button>
     <button type="button" class="tab-btn" data-tab="qo-search">QO search</button>
     <button type="button" class="tab-btn" data-tab="catalog">Catalog</button>
-    <button type="button" class="tab-btn" data-tab="templates">Templates</button>
+    <button type="button" class="tab-btn" data-tab="templates">Saved orders</button>
+    <button type="button" class="tab-btn" data-tab="orders">Orders</button>
     <button type="button" class="tab-btn" data-tab="cart">Cart</button>
     <button type="button" class="tab-btn" data-tab="confirmation">Confirmation</button>
     <button type="button" class="tab-btn" data-tab="invoices">Invoices &amp; Terms</button>
@@ -2781,7 +2835,8 @@ img { display: block; max-width: 100%; }
   var NAV = [
     { id: "qo-desktop", label: "Quick order", icon: "order" },
     { id: "catalog", label: "Catalog", icon: "catalog" },
-    { id: "templates", label: "Templates", icon: "templates" },
+    { id: "templates", label: "Saved orders", icon: "templates" },
+    { id: "orders", label: "Orders", icon: "orders" },
     { id: "invoices", label: "Invoices", icon: "invoices" },
     { id: "messages", label: "Messages", icon: "messages" },
   ];
@@ -2792,6 +2847,7 @@ img { display: block; max-width: 100%; }
       order: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
       catalog: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
       templates: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
+      orders: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><rect x="3" y="5" width="2" height="2" rx="0.4"/><rect x="3" y="11" width="2" height="2" rx="0.4"/><rect x="3" y="17" width="2" height="2" rx="0.4"/>',
       invoices: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
       messages: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
       search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
@@ -2909,8 +2965,8 @@ img { display: block; max-width: 100%; }
     var leftLabel = L.terms + " credit";
     var priorAvail = L.credit.priorAvailable != null ? L.credit.priorAvailable : L.credit.available;
     var rightLabel = showOrder
-      ? money(L.credit.afterOrder) + " available of " + moneyWhole(L.credit.limit)
-      : money(L.credit.available) + " available of " + moneyWhole(L.credit.limit);
+      ? money(L.credit.afterOrder) + " left of " + moneyWhole(L.credit.limit)
+      : money(L.credit.available) + " left of " + moneyWhole(L.credit.limit);
     var tip =
       "<div class=\"credit-tip\" data-credit-tip role=\"tooltip\">" +
       "<div><strong>Used</strong> " +
@@ -3115,7 +3171,7 @@ img { display: block; max-width: 100%; }
           "</span>" +
           (it.amt ? '<span class="meta-amt">' + it.amt + "</span>" : "") +
           "</span></span>" +
-          '<span class="rail-action">' + (it.tplId ? "Use" : "Add") + "</span>" +
+          '<span class="rail-action">Add</span>' +
           "</button>"
         );
       })
@@ -3134,12 +3190,12 @@ img { display: block; max-width: 100%; }
   }
 
   function itemCountLabel(n) {
-    return n + (n === 1 ? " item" : " items");
+    return n + (n === 1 ? " line" : " lines");
   }
 
   function footerHtml() {
     var n = L.orderLines.length;
-    var cta = "Add " + n + " to cart"; // p14: the button never changes on click; the cart pill badge is the feedback
+    var cta = "Add " + itemCountLabel(n) + " to cart";
     return (
       '<div class="order-footer" data-order-footer>' +
       '<div class="footer-stack">' +
@@ -3209,7 +3265,7 @@ img { display: block; max-width: 100%; }
       '<div class="search-field has-value" data-search-field data-search-value="' +
       typed +
       '">' +
-      '<span class="placeholder">Search by name or SKU</span>' +
+      '<span class="placeholder">Search name or SKU</span>' +
       '<span class="value">' +
       typed +
       "</span>" +
@@ -3403,7 +3459,7 @@ img { display: block; max-width: 100%; }
       '<section class="screen" data-screen="templates">' +
       shellOpen("templates") +
       '<div class="page">' +
-      "<h1>Templates</h1>" +
+      "<h1>Saved orders</h1>" +
       '<p class="lede">Saved orders for ' +
       L.retailer.name +
       ".</p>" +
@@ -3569,8 +3625,8 @@ img { display: block; max-width: 100%; }
       '<div class="sum-row"><span>Subtotal</span><span data-order-total data-cart-total>' +
       money(L.cartTotal) +
       "</span></div>" +
-      '<div class="sum-row"><span>Shipping</span><span>Confirmed on invoice</span></div>' +
-      '<div class="sum-row"><span>Tax</span><span>Calculated at invoice</span></div>' +
+      '<div class="sum-row"><span>Shipping</span><span>Calculated when it ships</span></div>' +
+      '<div class="sum-row"><span>Tax</span><span>Calculated when it ships</span></div>' +
       '<div class="sum-total"><span>Total</span><span class="big" data-order-total>' +
       money(L.cartTotal) +
       "</span></div>" +
@@ -3600,10 +3656,11 @@ img { display: block; max-width: 100%; }
       '<div class="page page-confirm">' +
       '<div class="confirm-panel" data-confirm-panel>' +
       '<div class="confirm-title-row">' +
+      '<span class="confirm-check" data-confirm-check aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16"><path d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
       "<h1>Order placed</h1>" +
-      '<span class="confirm-tag" data-confirm-status>Awaiting rep confirmation</span>' +
+      '<span class="confirm-tag" data-confirm-status>Ship date pending</span>' +
       "</div>" +
-      '<p class="confirm-lede">' + L.rep.name + ' confirms the ship date. The invoice arrives by email when it ships.</p>' +
+      '<p class="confirm-lede">Collin Johns will confirm your ship date. Track it in <button type="button" class="inline-link" data-tab="orders">Order history</button>.</p>' +
       '<div class="confirm-rows" data-confirm-rows>' +
       '<div class="row"><span class="k">Order</span><span class="v" data-order-id>' +
       L.orderId +
@@ -3641,6 +3698,41 @@ img { display: block; max-width: 100%; }
   function statusClass(status) {
     if (status === "Processing" || status === "Due") return "Pending";
     return status;
+  }
+
+  function screenOrders() {
+    var past = L.recentOrders.map(function (o) {
+      var inv = L.invoices.filter(function (i) { return i.order === o.id; })[0];
+      var status = inv ? statusLabel(inv.status) : "Paid";
+      var cls = inv ? statusClass(inv.status) : "Paid";
+      return (
+        '<div class="orders-row">' +
+        '<div>' + o.id + '</div>' +
+        '<div>' + o.when + '</div>' +
+        '<div><span class="status ' + cls + '">' + status + '</span></div>' +
+        '<div class="amt">' + money(o.total) + '</div>' +
+        "</div>"
+      );
+    }).join("");
+    return (
+      '<section class="screen" data-screen="orders">' +
+      shellOpen("orders", filledCart()) +
+      '<div class="page">' +
+      "<h1>Orders</h1>" +
+      '<p class="lede">Orders for ' + L.retailer.name + ".</p>" +
+      '<div class="orders-table">' +
+      '<div class="orders-head"><div>Order</div><div>Date</div><div>Status</div><div class="num">Total</div></div>' +
+      '<div class="orders-row">' +
+      '<div>' + L.orderId + '</div>' +
+      '<div>' + L.shipDate + '</div>' +
+      '<div><span class="confirm-tag">Ship date pending</span></div>' +
+      '<div class="amt">' + money(L.orderTotal) + '</div>' +
+      "</div>" +
+      past +
+      "</div></div>" +
+      shellClose() +
+      "</section>"
+    );
   }
 
   function screenInvoices() {
@@ -3854,6 +3946,7 @@ img { display: block; max-width: 100%; }
       screenQuickOrderSearch() +
       screenCatalog() +
       screenTemplates() +
+      screenOrders() +
       screenCart() +
       screenConfirmation() +
       screenInvoices() +
@@ -4313,7 +4406,7 @@ img { display: block; max-width: 100%; }
       var btn = f.querySelector("[data-add-all]");
       if (meta) meta.textContent = itemCountLabel(t.n);
       if (tot) tot.textContent = money(t.total);
-      if (btn && !cartUi.added) btn.textContent = "Add " + t.n + " to cart";
+      if (btn && !cartUi.added) btn.textContent = "Add " + itemCountLabel(t.n) + " to cart";
     });
   }
   function closeTplPop() {

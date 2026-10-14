@@ -198,6 +198,16 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 25 — the order, then the confirmation
+
+- **Search stays the prototype weight.** The typed Perseus is weight 500. The summary total, the confirmation title and values, the pill amount, and the primary buttons stay weight 700.
+- **The move onto Match kit is slower.** Twenty frames, the same curve as the other moves. The end frame is tight enough that the line above Match kit and the footer rule stay outside it.
+- **The cursor arrives and holds** on Add to order, Add 4 lines to cart, and Place order before the press, then leaves the label while the button says Placing order.
+- **Both order cards are a little smaller than pass 24 and centred on their own content.** Same scale, same side margins. The summary is the shorter card. Shipping and tax both read “Calculated when it ships.” The credit line reads “$25,693.50 left of $50,000.”
+- **Place order stays one button.** The press darkens it. The label becomes “Placing order,” the check draws, and the button eases to emerald `#12824a`. The summary stays at full strength. Then the card grows from the top and the confirmation rises into it. The green check beside “Order placed” sits on the title’s cap centre.
+- **The logo outro is a cut, not a fade.** The lockup arrives black. A dissolve was leaving a grey card and a grey logo.
+- **Copy.** Sidebar and page title say Saved orders. The rail action says Add. The footer counts lines. The confirmation says “Ship date pending” and “Collin Johns will confirm your ship date. Track it in Order history.” Order history opens the Orders page.
+
 ## Film pass 24 — readable from across the desk
 
 - **Each beat is framed on its focal.** Search, qty 120, Add to order, Add to cart, the cart total, Place order, and Order placed are tight enough that the point reads at 676px and at 400px with a 1px blur. Three moves remain (logo to search, search to qty, qty to Add to order). The rest are hard cuts.
