@@ -1,5 +1,5 @@
 /**
- * JOOLA B2B wholesale: buyer story film (p18), seamless loop.
+ * JOOLA B2B wholesale: buyer story film (p19), seamless loop.
  *
  * UI from scripts/capture-proto.py → joola/proto.generated.ts. Timing in joola/timeline.ts.
  */
@@ -10,7 +10,7 @@ import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TYPE_QTY,
   INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, EASE_OUT, INOUT_E, type Cam, CONF_MORPH, END_FADE,
-  UI_W, UI_H, CART_FADE, ROW_HL, lerp, MOVE_E,
+  UI_W, UI_H, CART_FADE, lerp, MOVE_E,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, toScreen } from "./joola/pointer";
 
@@ -46,8 +46,17 @@ const CSS =
 .film-layer #app{padding-top:0;min-height:756px}
 .film-layer .messages-layout{position:relative;z-index:0}
 .film-layer .inv-modal{z-index:1000}
+.film-layer .order-row.is-just-added,
 .film-layer .order-row.is-just-added.film-hover,
-.film-layer .order-row.is-just-added .film-hover{background:inherit!important}
+.film-layer .order-row.is-just-added .film-hover{background:transparent!important}
+.film-layer .search-result.film-hover{background:var(--band)!important}
+.film-layer .search-result.film-active{background:var(--wash)!important}
+.film-layer .qty-presets button.on,
+.film-layer .qty-group .qty-presets button.on{color:var(--ink)!important;background:var(--wash)!important;border-color:var(--line)!important}
+.film-layer .qty-presets button.film-hover,
+.film-layer .qty-group .qty-presets button.film-hover{background:var(--band)!important;color:var(--ink)!important}
+.film-layer .qty-presets button.film-active,
+.film-layer .qty-group .qty-presets button.film-active{background:var(--wash)!important}
 .film-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;background:var(--ink);vertical-align:-3px}
 `;
 const html = (k: string) =>
@@ -122,11 +131,9 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   pr.style.opacity = `${ip}`;
   pr.style.transform = `translateY(${(1 - ip) * 6}px)`;
   pr.hidden = false;
-  // p18: ONE soft highlight fade-out — never stack film-hover on top
-  const hl = inserted ? 1 - prog(f, ROW_HL[0], ROW_HL[1], FADE_E) : 0;
-  const justAdded = inserted && f < ROW_HL[1];
-  pr.classList.toggle("is-just-added", justAdded);
-  pr.style.background = hl > 0.02 ? `rgba(44, 62, 224, ${0.07 * hl})` : "";
+  // p19: no blue just-added / press fill — cursor press is the only feedback
+  pr.classList.remove("is-just-added");
+  pr.style.background = "";
 
   const tplIn = f >= TPL_ROWS[0];
   rows.slice(1).forEach((r, i) => {
@@ -140,10 +147,12 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const QTY_STEPS = [1, 12, 120];
   const qty = f < TYPE_QTY[0] ? 1 : QTY_STEPS[Math.min(2, Math.floor((f - TYPE_QTY[0]) / 2))];
   const qFocus = f >= CLICK.qty && f < TYPE_QTY[1] + 14;
-  q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(44,62,224,0.9)" : "";
+  // p19: neutral focus ring — no blue glow on the stepper
+  q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(26,26,26,0.35)" : "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
-  qa(pr, "[data-set-perseus]").forEach((b) => b.classList.remove("on"));
+  // never show blue/selected preset fills in the film
+  qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
   const unit = unitAt(qty);
   q(pr, ".unit")!.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
   const line = r2(unit * qty);
@@ -339,7 +348,7 @@ export const JoolaB2B: React.FC = () => {
     const pressing = Object.values(CLICK).some((c) => frame - c >= 0 && frame - c < 4);
     st.setAttribute("data-hit", el ? `${el.tagName}.${el.className}` : "");
     while (el && el !== st && !el.classList.contains("film-layer")) {
-      // p18: never hover-tint order rows (enter highlight is the only flash; qty focus must not re-tint)
+      // p19: no blue wash on rows; press = film-active only (neutral darken / own-colour)
       if (el.classList?.contains("order-row") || el.classList?.contains("is-just-added")) {
         el = el.parentElement;
         continue;

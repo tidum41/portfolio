@@ -1,5 +1,5 @@
 /**
- * p18: ONE continuous cursor. Keys are [frame, page point]; each key is projected with the camera at its own frame and
+ * p19: ONE continuous cursor. Keys are [frame, page point]; each key is projected with the camera at its own frame and
  * the cursor travels between keys in screen space on MOVE_E with a slight arc.
  */
 import { R } from "./proto-rects.generated";
