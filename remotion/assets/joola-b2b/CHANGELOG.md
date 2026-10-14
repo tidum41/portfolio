@@ -198,6 +198,12 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 22 — one order card, measured qty caret, centred pill
+
+- **Place order and Order placed share one box.** Both are 480×340, padding 24, radius 12. The summary column is 480 so the card is that width, not a 320px rail stretched by overflow. The confirmation no longer scales on the cut; both cameras use the same scale and each card's centre, so the hard cut is the same chrome.
+- **Quantity caret is measured.** It sits 1–2px after the ink of the last digit of 120, at the digit cap height, not at a guessed offset from the field centre.
+- **Cart pill shot is centred.** The camera's vertical centre is the pill's centre, so the chip and pill sit in the middle of the frame.
+
 ## Film pass 21 — popover lock, qty caret, cart gesture, logo
 
 - **Reorder row is 72px, not 72.078.** Line boxes are 16px, so the Match kit bottom is a whole pixel. The Add to order / Replace order menu is placed with rounded coordinates and only fades its opacity.

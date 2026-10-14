@@ -139,20 +139,15 @@ export const SHOT_B: Cam = { cx: 925, cy: 455, s: 2.05 };
 /** B2: the Add-to-cart framing from pass 19 (header pill + footer share the frame). */
 export const SHOT_B2: Cam = { cx: 800, cy: 378, s: 1.48 };
 /** Tight pill: filled pill centred. Crop stays under the search field. */
-/** Pill update: full account chip stays in frame while the pill grows left. */
-export const SHOT_PILL: Cam = { cx: 1112, cy: -12, s: 4.05 };
+/** Pill update: account chip + pill, centred. cy is the pill's vertical centre (top 5, height 36). */
+export const SHOT_PILL: Cam = { cx: 1112, cy: 23, s: 4.05 };
 /**
- * Summary hero. cy is high enough that the card's top radius clears the frame
- * (cy 262 left only ~6px and clipped the top corners) and the Place order
- * button still clears the bottom. A header sliver would pull the line-item
- * prices in or shove the card off centre, so this shot stays on the card.
+ * Place order and Order placed share one scale and each card's page centre,
+ * so a 480×340 card lands on the same screen box. s=2.7 leaves ~30px of page
+ * around the card (radii stay inside the frame).
  */
-export const SHOT_SUM: Cam = { cx: 1130, cy: 258, s: 3.75 };
-/**
- * Order placed, centred. Frame top sits at y≈42 so the header's bottom rule
- * is in frame and the account chip (ends y≈41) is not sliced.
- */
-export const SHOT_D: Cam = { cx: 766, cy: 241, s: 2.72 };
+export const SHOT_SUM: Cam = { cx: 1044, cy: 293.59375, s: 2.7 };
+export const SHOT_D: Cam = { cx: 766, cy: 242, s: 2.7 };
 
 export const WIDE = SHOT_OPEN;
 export const CART_CAM = SHOT_SUM;

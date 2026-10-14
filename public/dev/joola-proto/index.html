@@ -2717,6 +2717,28 @@ img { display: block; max-width: 100%; }
 .tpl-pop .btn-primary,
 .tpl-pop .btn-primary:hover,
 .tpl-pop .btn-primary:active { border-color: transparent !important; }
+
+/* ================= r22 (film pass 22) ================= */
+/* Place order and Order placed are one card: same box, padding, and radius
+   so a hard cut between them reads as the same chrome. The summary is the
+   shorter card; the shared height is the confirmation's box, and the extra
+   space stays below Place order. */
+.cart-layout {
+  grid-template-columns: minmax(0, 1fr) 480px;
+}
+.cart-summary,
+.confirm-panel {
+  width: 480px !important;
+  max-width: 480px !important;
+  min-width: 480px !important;
+  height: 340px !important;
+  min-height: 340px !important;
+  max-height: 340px !important;
+  padding: 24px !important;
+  border-radius: 12px !important;
+  border-width: 1px !important;
+  box-sizing: border-box !important;
+}
 </style>
 </head>
 <body>

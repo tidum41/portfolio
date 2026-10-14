@@ -2,7 +2,7 @@
  * JOOLA B2B wholesale: buyer story film (p20), seamless loop.
  *
  * UI from scripts/capture-proto.py → joola/proto.generated.ts. Timing in joola/timeline.ts.
- * After Add to cart: tight pill update, hard cut to the summary, hard cut + scale settle to Order placed.
+ * After Add to cart: centred pill, hard cut to the summary, hard cut to Order placed.
  */
 import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
@@ -10,7 +10,7 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, CONF_SETTLE, END_FADE,
+  INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
   UI_W, UI_H, CART_CUT, lerp, MOVE_E,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
@@ -89,8 +89,7 @@ const CSS =
 .film-layer .tpl-pop .btn-primary{border-color:transparent!important}
 .film-layer .qty-stepper .qty{position:relative}
 .film-qty-caret{
-  position:absolute;top:50%;left:calc(50% + 22px);width:1.5px;height:14px;margin-top:-7px;
-  background:#1a1a1a;pointer-events:none;
+  position:absolute;width:1px;margin:0;background:#1a1a1a;pointer-events:none;
 }
 .film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
@@ -117,6 +116,47 @@ const caret = (host: HTMLElement, on: boolean) => {
 };
 const typedCount = (f: number, a: number, b: number, len: number) =>
   Math.max(0, Math.min(len, Math.floor(interpolate(f, [a, b], [0, len + 0.999], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))));
+
+let qtyInk: CanvasRenderingContext2D | null = null;
+/** Tabular advance of one FK Grotesk Neue 500 14px digit, from a DOM range
+ *  on the untransformed field (1: 9.25, 2: 9.25, 0: 9.265). Range and SVG
+ *  lengths inside the scaled film both return the proportional width (~7.8),
+ *  which plants the caret in the 0. A 4× screenshot of that same "0" put the
+ *  ink 0.61px before the advance. */
+const TABULAR_DIGIT = 9.25;
+const DIGIT_SIDEBEARING = 0.61;
+function placeQtyCaret(qtyEl: HTMLElement) {
+  const raw = qtyEl.textContent ?? "";
+  if (!raw) return;
+  const cs = getComputedStyle(qtyEl);
+  const host = qtyEl.getBoundingClientRect();
+  if (host.width < 1) return;
+  const toLocal = (px: number) => px * (qtyEl.offsetWidth / host.width);
+  const mark = document.createElement("span");
+  mark.style.cssText = "display:inline-block;width:0;height:0;vertical-align:baseline";
+  qtyEl.appendChild(mark);
+  const baseline = toLocal(mark.getBoundingClientRect().top - host.top);
+  mark.remove();
+  if (!qtyInk) qtyInk = document.createElement("canvas").getContext("2d");
+  let asc = 11, desc = 0;
+  if (qtyInk) {
+    qtyInk.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = qtyInk.measureText("0");
+    if (m.fontBoundingBoxAscent >= 12) {
+      asc = m.actualBoundingBoxAscent;
+      desc = m.actualBoundingBoxDescent;
+    }
+  }
+  const textW = TABULAR_DIGIT * raw.length;
+  const advanceRight = (qtyEl.clientWidth - textW) / 2 + textW;
+  const caret = document.createElement("span");
+  caret.className = "film-qty-caret";
+  caret.style.left = `${advanceRight - DIGIT_SIDEBEARING + 1.3}px`;
+  caret.style.top = `${baseline - asc}px`;
+  // Canvas ascent stops short of the painted baseline stroke (~1px).
+  caret.style.height = `${Math.max(1, asc + desc + 1)}px`;
+  qtyEl.appendChild(caret);
+}
 
 function applyQuickOrder(root: HTMLElement, f: number) {
   const tpl = q(root, '[data-template="tpl-match"]');
@@ -193,11 +233,7 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(26,26,26,0.35)" : "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
-  if (qFocus && Math.floor((f - CLICK.qty) / 8) % 2 === 0) {
-    const mark = document.createElement("span");
-    mark.className = "film-qty-caret";
-    qtyEl.appendChild(mark);
-  }
+  if (qFocus && Math.floor((f - CLICK.qty) / 8) % 2 === 0) placeQtyCaret(qtyEl);
   // never show blue/selected preset fills in the film
   qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
   const unit = unitAt(qty);
@@ -282,20 +318,12 @@ function applyConfirmation(root: HTMLElement, f: number) {
 
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
-  // Hard cut already swapped the screen. The card settles with a uniform scale
-  // (type stays sharp; a non-uniform FLIP smeared it at 676px).
+  // Hard cut. The card is already the same box as the summary, so it stays
+  // still — a scale settle would slide the edges off the summary's.
   const parts = qa(panel, ".confirm-title-row, .confirm-lede, .confirm-rows, .confirm-actions");
   parts.forEach((p) => { p.style.opacity = ""; p.style.transition = "none"; });
-  if (f < CONF_SETTLE[1]) {
-    const t = prog(f, CONF_SETTLE[0], CONF_SETTLE[1], EASE_OUT);
-    const s = lerp(0.97, 1, t);
-    const y = lerp(6, 0, t);
-    panel.style.transformOrigin = "center center";
-    panel.style.transform = `translateY(${y}px) scale(${s})`;
-  } else {
-    panel.style.transform = "";
-    panel.style.transformOrigin = "";
-  }
+  panel.style.transform = "none";
+  panel.style.transformOrigin = "center center";
 }
 
 const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
