@@ -42,7 +42,10 @@ if [ "$MODE" = draft ]; then
   exit $?
 fi
 # Full quality stays chunked so a 1920 render does not blow memory.
-CONC=${CONC:-2}; T=$(mktemp -d); STEP=42
+# Two pages starting together can photograph a chunk's first frames before the
+# camera transform has painted (a zoomed fragment, then a snap). One page does
+# not. Pass CONC=2 only if you re-check those frames.
+CONC=${CONC:-1}; T=$(mktemp -d); STEP=42
 : > "$T/list.txt"
 for ((a=0; a<N; a+=STEP)); do b=$((a+STEP-1)); ((b>=N)) && b=$((N-1))
   for t in 1 2 3 4; do npx remotion render $COMP "$T/c$a.mp4" --frames=$a-$b --browser-executable="$CHROME" --log=error --concurrency=$CONC --timeout=120000 >/dev/null 2>&1 && break; echo "retry $a-$b"; done

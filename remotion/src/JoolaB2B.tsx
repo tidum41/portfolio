@@ -13,7 +13,7 @@ import {
   INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, CONF_FADE, CONF_GROW, PROC_XFADE,
 } from "./joola/timeline";
-import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
+import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -78,6 +78,17 @@ const CSS =
   height:72px!important;min-height:72px!important;max-height:72px!important;
   box-sizing:border-box!important;border-width:0!important;
 }
+.film-layer [data-screen="qo-desktop"] .page h1{
+  line-height:28px!important;height:28px!important;
+}
+.film-layer [data-screen="qo-desktop"] .rail-card > h3{
+  height:15px!important;line-height:15px!important;margin:0 0 12px!important;
+}
+.film-layer .rail-item .rail-action{
+  top:24px!important;right:4px!important;width:40px!important;height:24px!important;
+  margin:0!important;padding:0!important;transform:none!important;line-height:24px!important;
+  box-sizing:border-box!important;
+}
 .film-layer .rail-item .rail-id,
 .film-layer .rail-item .name,
 .film-layer .rail-item .meta{line-height:16px!important}
@@ -109,9 +120,13 @@ const CSS =
   padding:24px!important;border-radius:12px!important;border-width:1px!important;
   box-sizing:border-box!important;overflow:hidden!important;
 }
-.film-layer [data-place-order]{position:relative!important}
-.film-layer .film-face{
-  position:absolute!important;inset:0!important;margin:0!important;
+.film-layer [data-place-order]{position:relative!important;overflow:hidden!important}
+.film-layer .order-fill{
+  position:absolute!important;inset:0!important;z-index:0!important;margin:0!important;
+  background:#12824a!important;pointer-events:none!important;
+}
+.film-layer .film-face,.film-layer .order-face{
+  position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
   gap:8px!important;white-space:nowrap!important;pointer-events:none!important;
 }
@@ -194,10 +209,12 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     // Integer pixels, identical every frame. The row is 72px tall; reading a
     // fractional offsetHeight here is what shifted the menu by a device pixel.
     pop.style.position = "absolute";
-    pop.style.left = `${Math.round(tpl.offsetLeft) + 12}px`;
-    pop.style.width = `${Math.max(160, Math.round(tpl.offsetWidth) - 24)}px`;
+    pop.style.left = `${tpl.offsetLeft + 12}px`;
+    pop.style.width = `${Math.max(160, tpl.offsetWidth - 24)}px`;
     pop.style.right = "auto";
-    pop.style.top = `${Math.round(tpl.offsetTop) + 72 + 4}px`;
+    // offsetTop/Width are integers once the row and the Reorder label are locked.
+    // Rounding a live rect here is what flipped the menu by a pixel.
+    pop.style.top = `${tpl.offsetTop + 72 + 4}px`;
     pop.style.margin = "0";
     pop.style.transform = "none";
     const pin = popOpen
@@ -353,16 +370,13 @@ function applyCart(root: HTMLElement, f: number) {
 /** Summary border-box. Replaced after the height:auto still; the grow starts here. */
 const SUMMARY_BOX_H = 298;
 
-const BLUE = "#2c3ee0";
-const EMERALD = "#12824a";
-const mix = (a: string, b: string, t: number) => {
-  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const A = p(a), B = p(b);
-  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`;
-};
-
 const SPIN_SVG = `<svg class="film-spin" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M9 1.6a7.4 7.4 0 1 1-7.4 7.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const CHECK_SVG = `<svg class="film-draw" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path data-draw d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/** Click sits 48px right of the button centre: (215+48)/430. */
+const FILL_X = "263px";
+const FILL_Y = "20px";
+const FILL_R = 280;
 
 function placeButton(root: HTMLElement, f: number) {
   const btn = q<HTMLButtonElement>(root, "[data-place-order]");
@@ -372,34 +386,27 @@ function placeButton(root: HTMLElement, f: number) {
     btn.textContent = "";
     btn.insertAdjacentHTML(
       "beforeend",
-      `<span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}<span>Order placed</span></span>`,
+      `<span class="order-fill" data-fill></span><span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}</span>`,
     );
-    const path = q<SVGPathElement>(btn, "[data-draw]");
-    if (path) {
-      const len = path.getTotalLength();
-      path.dataset.len = String(len);
-      path.style.strokeDasharray = `${len}`;
-    }
   }
   // The label swaps in one frame. A crossfade of two words reads as a double exposure.
   const placing = f >= PROC_XFADE[0];
   const success = f >= CHECK_DRAW[0];
-  const done = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], MOVE_E);
   const face = (name: string) => q(btn, `[data-face="${name}"]`);
   const idleEl = face("idle"), procEl = face("proc"), doneEl = face("done");
-  if (idleEl) idleEl.style.opacity = placing ? "0" : "1";
-  if (procEl) procEl.style.opacity = placing && !success ? "1" : "0";
-  if (doneEl) doneEl.style.opacity = success ? "1" : "0";
+  if (idleEl) idleEl.style.visibility = placing ? "hidden" : "visible";
+  if (procEl) procEl.style.visibility = placing && !success ? "visible" : "hidden";
+  if (doneEl) doneEl.style.visibility = success ? "visible" : "hidden";
   const spin = q<SVGElement>(btn, ".film-spin");
   if (spin) spin.style.transform = `rotate(${(f - PROC_XFADE[0]) * 24}deg)`;
   const path = q<SVGPathElement>(btn, "[data-draw]");
-  if (path) {
-    const len = Number(path.dataset.len || "16");
-    const drawn = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], UI_E);
-    path.style.strokeDashoffset = `${len * (1 - drawn)}`;
+  if (path) path.style.strokeDashoffset = "0";
+  const fill = q(btn, "[data-fill]");
+  if (fill) {
+    const t = success ? prog(f, CHECK_DRAW[0], CHECK_DRAW[1], UI_E) : 0;
+    fill.style.clipPath = `circle(${t * FILL_R}px at ${FILL_X} ${FILL_Y})`;
   }
-  if (f >= CHECK_DRAW[0]) btn.style.setProperty("background-color", mix(BLUE, EMERALD, done), "important");
-  else btn.style.removeProperty("background-color");
+  btn.style.removeProperty("background-color");
 }
 
 function applyConfirmation(root: HTMLElement, f: number) {
@@ -493,27 +500,22 @@ export const JoolaB2B: React.FC = () => {
   // the confirmation card is the subject.
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
-  // Logo glide: centred card → real sidebar slot under shot A
+  // Hard cut both ways. A dissolve leaves a grey card and a grey logo.
   const logoW0 = 340;
-  const [slotX, slotY] = toScreen(camAt(MORPH[1]), LOGO[0], LOGO[1]);
-  const glide = prog(frame, MORPH[0], MORPH[1], MOVE_E);
   const intro = frame < MORPH[1];
   const outro = frame >= END_FADE[0];
-  // Hard cut to the lockup. A crossfade here sits on a grey card and a grey logo.
-  const uiOut = frame >= END_FADE[0] ? 1 : 0;
-  const logoOut = frame >= END_FADE[0] ? 1 : 0;
-  const lw = intro ? lerp(logoW0, LOGO[2], glide) : logoW0;
-  const lx = intro ? lerp(OW / 2 - logoW0 / 2, slotX, glide) : OW / 2 - logoW0 / 2;
-  const ly = intro ? lerp(OH / 2 - (logoW0 * LOGO_AR) / 2, slotY, glide) : OH / 2 - (logoW0 * LOGO_AR) / 2;
-  const logoOpacity = intro ? 1 - prog(frame, MORPH[1] - 4, MORPH[1], FADE_E) : outro ? logoOut : 0;
-  const uiOpacity = intro ? prog(frame, MORPH[0] + 6, MORPH[1], FADE_E) : 1 - uiOut;
-  const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
+  const lw = logoW0;
+  const lx = OW / 2 - logoW0 / 2;
+  const ly = OH / 2 - (logoW0 * LOGO_AR) / 2;
+  const logoOpacity = intro || outro ? 1 : 0;
+  const uiOpacity = !intro && !outro ? 1 : 0;
+  const uiOn = frame >= MORPH[1] && frame < END_FADE[0];
   // The Place order hotspot is higher in its card than the confirmation actions,
   // so a cursor frozen across the cut sits in the blank middle of Order placed.
   // The press is still on screen through frame 269; the cut removes the pointer.
   const showPtr = frame >= MORPH[1] && frame < CONF_CUT;
   const ptrFade = prog(frame, CONF_FADE[0], CONF_FADE[1], FADE_E);
-  const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - ptrFade);
+  const ptrOpacity = 1 - ptrFade;
   const stageRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
