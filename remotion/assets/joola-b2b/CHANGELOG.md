@@ -198,6 +198,14 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 24 — readable from across the desk
+
+- **Each beat is framed on its focal.** Search, qty 120, Add to order, Add to cart, the cart total, Place order, and Order placed are tight enough that the point reads at 676px and at 400px with a 1px blur. Three moves remain (logo to search, search to qty, qty to Add to order). The rest are hard cuts.
+- **Key text is full weight.** Search value, the summary total, the confirmation title and values, the pill amount, and primary buttons are weight 700. Grey labels stay labels. The cursor is 1.25×.
+- **The two order cards share one bigger scale.** Both are scale 2.95 with the same 6px lift, so the cut does not move the card. On a 676px frame the borders land on the same x. The SO number is as large as that frame allows without clipping the digits.
+- **The filled cart pill is centred.** The camera sits on the filled pill, not the account chip. The chip is hidden for that shot so the $0 frame does not slice the retailer name.
+- **The Add button cut waits until the popover has closed,** so the shot does not rest on an empty Match kit card. The button already says Add 4.
+
 ## Film pass 23 — card scale, Add framing, one curve family
 
 - **Place order and Order placed sit at 66% of the frame.** Both cameras use scale 1.98 and the same 16px lift, so the 480×340 card keeps equal side margins and sits slightly above centre. The header rule stays in frame. The line-price column would be cut at this scale, so the film hides that column and the header pills; the page and the rule are the context.

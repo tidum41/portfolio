@@ -72,12 +72,19 @@ export const ROW_HL = [ENTER, ENTER] as const;
 /** Value swaps 1 → 120 on the click frame. The range is a single frame. */
 export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
 export const QTY_SET = CLICK.qty;
-export const PAN_AB = [100, 114] as const; // move 1: qty -> reorder
+/** Search shot settles, then a push onto the qty before the 120 click. */
+export const QTY_MOVE = [78, 86] as const;
+export const PAN_AB = [100, 114] as const; // qty -> Add to order
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 5] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
 export const TPL_ROWS = [CLICK.tplAdd + 6, CLICK.tplAdd + 16] as const;
-export const PAN_BC = [166, 180] as const; // move 2: reorder -> Add button
+/**
+ * Hard cut onto the Add button as the popover finishes closing, so the shot
+ * does not sit on an empty Match kit card. The button already reads Add 4.
+ */
+export const ADD_CUT = 153;
+export const PAN_BC = [ADD_CUT, ADD_CUT] as const;
 /** Hard cut to a tight cart pill still showing $0.00. */
 export const PILL_SHOT = 188;
 export const PILL_W0 = 85;
@@ -107,7 +114,7 @@ export const DURATION = END_FADE[1] + 6;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
@@ -129,42 +136,52 @@ export const UI_H = 756;
 export const PAN_E = MOVE_E;
 
 /**
- * Readable at 676px: card_px ≈ css_px * s * 676/1440.
- * Opening shot is wide enough to show the sidebar logo and the header bar.
- * After Add, shots are unclamped so an edge control (pill, summary) can sit in the centre.
+ * Pass 24: focal text aims for ~14px cap height at 676px.
+ * Measured on the pass-23 qty digits: 14px type at s=1.8 is ~9.4px tall at 676,
+ * so 13px type needs s ≳ 2.9 and 14px type needs s ≳ 2.7.
+ * Three moves (open -> search, search -> qty, qty -> Add to order), then cuts.
  */
-/** First screen: full sidebar (logo + nav) and the header bar, search still readable. */
-export const SHOT_OPEN: Cam = { cx: 439, cy: 329, s: 1.64 };
-/** A: search + Perseus row through the line total. */
-export const SHOT_A: Cam = { cx: 605, cy: 300, s: 1.8 };
-/** B: qty + Reorder rail + popover. */
-export const SHOT_B: Cam = { cx: 925, cy: 455, s: 2.05 };
 /**
- * B2: header, the full footer total, and the Add button, with the button
- * inside the frame. s=1.36 is the widest of the table shots so "$19,306.50"
- * and "Add 4 to cart" are not cut by the edge.
+ * Logo in the sidebar. Frame stops at the search field so Upload CSV
+ * and the Price header are not sliced letters.
  */
-export const SHOT_B2: Cam = { cx: 769, cy: 378, s: 1.36 };
-/** Tight pill: filled pill centred. Crop stays under the search field. */
-/** Pill update: account chip + pill, centred. cy is the pill's vertical centre (top 5, height 36). */
-export const SHOT_PILL: Cam = { cx: 1112, cy: 23, s: 4.05 };
+export const SHOT_OPEN: Cam = { cx: 332, cy: 210, s: 2.28 };
+/**
+ * Search field. Frame stops at the field (page x ~648) so the Price header
+ * is not a sliced "Pri", and Quick order stays whole on the left.
+ */
+export const SHOT_A: Cam = { cx: 440, cy: 148, s: 3.45 };
+/** Qty 120, below the search field so that field is not a sliced pill. */
+export const SHOT_B: Cam = { cx: 803, cy: 332, s: 3.3 };
+/**
+ * Add to order. Match kit is whole; the card above and the footer
+ * Add button are outside the frame so nothing is sliced.
+ */
+export const SHOT_B2: Cam = { cx: 1158, cy: 608, s: 6.2 };
+/** Add 4 to cart. Low enough that the rail price above the footer is out of frame. */
+export const SHOT_ADD: Cam = { cx: 1223.5, cy: 748, s: 4.4 };
+/**
+ * Filled pill centred. Right edge stays at 1284, filled width 151,
+ * so the centre is 1208.5. cy is the pill's vertical centre.
+ */
+export const SHOT_PILL: Cam = { cx: 1208.5, cy: 23, s: 8.8 };
 /**
  * Place order and Order placed share one scale and the same offset from each
- * card's page centre, so a 480×340 card lands on the same screen box.
- * s=1.98 is 66% of the frame (480*s/1440). cy is 16px below the card centre,
- * which lifts the card slightly above true centre and keeps the header rule
- * inside both frames with equal left and right margins.
+ * card's page centre. s=2.95 is the largest scale that keeps SO-48213 inside
+ * the frame (the number sits ~25px from the card edge). d=6 lifts the card
+ * a hair without clipping the title. The 24px total is the larger focal.
  */
-export const SHOT_SUM: Cam = { cx: 1044, cy: 309.59375, s: 1.98 };
-export const SHOT_D: Cam = { cx: 766, cy: 258, s: 1.98 };
+export const SHOT_SUM: Cam = { cx: 1044, cy: 299.59375, s: 2.95 };
+export const SHOT_D: Cam = { cx: 766, cy: 248, s: 2.95 };
 
 export const WIDE = SHOT_OPEN;
 export const CART_CAM = SHOT_SUM;
 export const CONF_CAM = SHOT_D;
 export const MOVES: Move[] = [
-  { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: dashboard -> table", ease: MOVE_E },
-  { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B, label: "move 1: qty -> Reorder rail", ease: MOVE_E },
-  { a: PAN_BC[0], b: PAN_BC[1], to: SHOT_B2, label: "move 2: Reorder -> Add", ease: MOVE_E },
+  { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: logo -> search", ease: MOVE_E },
+  { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
+  { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
+  { a: ADD_CUT, b: ADD_CUT, to: SHOT_ADD, label: "cut: Add to cart" },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_D, label: "cut: order placed" },

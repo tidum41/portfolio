@@ -11,7 +11,7 @@ import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
   INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
-  UI_W, UI_H, CART_CUT, lerp, MOVE_E,
+  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
 
@@ -94,6 +94,13 @@ const CSS =
 .film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
 .film-layer .cart-pill.film-active{background:var(--wash)!important}
+/* Distance: focal words are full ink. Qty weight stays 500 so the caret measurement holds. */
+.film-layer .search-field .value{font-weight:700!important;color:var(--ink)!important}
+.film-layer .sum-total .big,
+.film-layer .confirm-panel h1,
+.film-layer .confirm-rows .v,
+.film-layer .cart-amount-display{font-weight:700!important;color:var(--ink)!important}
+.film-layer .btn-primary{font-weight:700!important}
 .film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
 .film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important}
 .film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important}
@@ -249,6 +256,11 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lines} to cart`;
   pill(root, f);
+  // The tight pill frame covers the retailer name once the pill is full, and
+  // slices "Pickleball" while the pill is still $0. Hide the chip for that shot.
+  if (f >= PILL_SHOT && f < CART_CUT) {
+    qa(root, ".account-chip").forEach((el) => { el.style.visibility = "hidden"; });
+  }
 }
 
 function pill(root: HTMLElement, f: number) {

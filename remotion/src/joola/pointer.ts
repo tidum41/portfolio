@@ -131,13 +131,15 @@ export const hoverState = (frame: number): { id: HoverId; sel: string; active: b
     .map((s) => ({ id: s.id, sel: s.sel, active: press(s.click) }));
 };
 
+/** 1.25x so the arrow still reads when the card is across a desk. Press dips to 0.9 of that. */
 export const cursorScale = (f: number) => {
+  const base = 1.25;
   for (const c of Object.values(CLICK)) {
     const d = f - c;
-    if (d >= 0 && d < 3) return 0.9;
-    if (d >= 3 && d < 7) return lerp(0.9, 1, (d - 2) / 4);
+    if (d >= 0 && d < 3) return base * 0.9;
+    if (d >= 3 && d < 7) return base * lerp(0.9, 1, (d - 2) / 4);
   }
-  return 1;
+  return base;
 };
 export const CLICK_TARGETS: [keyof typeof CLICK, string][] = [
   ["search", "qo-search.search"], ["result", "qo-search.result"], ["qty", "qo-search.qty0"], ["tpl", "qo-search.tplMatch"],
