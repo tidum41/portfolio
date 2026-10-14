@@ -3,19 +3,20 @@
  *
  * UI from scripts/capture-proto.py → joola/proto.generated.ts. Timing in joola/timeline.ts.
  */
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
-import {
-  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TYPE_QTY,
-  INSERT, PILL_FILL, prog, TYPE_SEARCH, UI_E, EASE_OUT, INOUT_E, type Cam, CONF_MORPH, END_FADE,
-  UI_W, UI_H, CART_FADE, lerp, MOVE_E,
-} from "./joola/timeline";
-import { pointerAt, cursorScale, toScreen } from "./joola/pointer";
+import { DEFAULT_FILM_CONFIG, mergeFilmConfig, type FilmConfig } from "./joola/film-config";
+import { createTimelineState, type TimelineState } from "./joola/timeline-state";
+import { FPS, DURATION } from "./joola/timeline";
+import { buildPointerData, toScreen } from "./joola/pointer";
+import type { Cam } from "./joola/timeline-state";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
+
+export type JoolaB2BProps = { filmConfig?: FilmConfig };
 
 const PERSEUS_TIER = [[1, 179.97], [6, 164.97], [12, 149.98], [24, 134.98]] as const;
 const OTHER_LINES = 2483.52 + 262.56 + 362.82;
@@ -76,7 +77,8 @@ const caret = (host: HTMLElement, on: boolean) => {
 const typedCount = (f: number, a: number, b: number, len: number) =>
   Math.max(0, Math.min(len, Math.floor(interpolate(f, [a, b], [0, len + 0.999], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))));
 
-function applyQuickOrder(root: HTMLElement, f: number) {
+function applyQuickOrder(root: HTMLElement, f: number, tl: TimelineState) {
+  const { CLICK, POP_IN, UI_E, FADE_E, prog, TYPE_SEARCH, DROPDOWN_OPEN, ENTER, INSERT, TPL_ROWS, TYPE_QTY } = tl;
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
   const POP_CLOSE = CLICK.tplAdd + 4;
@@ -165,10 +167,11 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lines} to cart`;
-  pill(root, f);
+  pill(root, f, tl);
 }
 
-function pill(root: HTMLElement, f: number) {
+function pill(root: HTMLElement, f: number, tl: TimelineState) {
+  const { PILL_FILL, EASE_OUT, prog, UI_E, lerp } = tl;
   const pl = q(root, "[data-cart-pill]");
   if (!pl) return;
   const amt = q(pl, "[data-cart-total]")!;
@@ -198,7 +201,8 @@ function pill(root: HTMLElement, f: number) {
   }
 }
 
-function applyCart(root: HTMLElement, f: number) {
+function applyCart(root: HTMLElement, f: number, tl: TimelineState) {
+  const { CONF_MORPH, FADE_E, prog } = tl;
   const input = q<HTMLInputElement>(root, "[data-po-input]")!;
   input.value = PO;
   input.setAttribute("value", PO);
@@ -208,7 +212,7 @@ function applyCart(root: HTMLElement, f: number) {
   const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
   bar.style.setProperty("--credit-used-end", `${used}%`);
   bar.style.setProperty("--credit-order-end", `${used + (ORDER_TOTAL / CREDIT_LIMIT) * 100}%`);
-  pill(root, f);
+  pill(root, f, tl);
   // during morph: fade the summary as the confirm panel takes over
   const sum = q(root, "[data-cart-summary]");
   if (sum) {
@@ -222,7 +226,8 @@ function applyCart(root: HTMLElement, f: number) {
   }
 }
 
-function applyConfirmation(root: HTMLElement, f: number) {
+function applyConfirmation(root: HTMLElement, f: number, tl: TimelineState) {
+  const { CONF_MORPH, INOUT_E, FADE_E, prog, lerp } = tl;
   const amt = q(root, "[data-cart-pill] [data-cart-total]");
   const chip = q(root, "[data-cart-pill] [data-cart-count]");
   if (amt) { amt.hidden = false; amt.textContent = money(0); }
@@ -252,22 +257,23 @@ function applyConfirmation(root: HTMLElement, f: number) {
   }
 }
 
-const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
-  "qo-desktop": applyQuickOrder,
-  cart: applyCart,
-  confirmation: applyConfirmation,
-};
+const makeApply = (tl: TimelineState): Record<string, (r: HTMLElement, f: number) => void> => ({
+  "qo-desktop": (r, f) => applyQuickOrder(r, f, tl),
+  cart: (r, f) => applyCart(r, f, tl),
+  confirmation: (r, f) => applyConfirmation(r, f, tl),
+});
 
 const LOGO = R["qo-search.logo"];
 const LOGO_AR = LOGO[3] / LOGO[2];
 const BG = "#f5f4f1";
 
-const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number }> = ({ screen, frame, slide, opacity = 1 }) => {
+const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number; tl: TimelineState }> = ({ screen, frame, slide, opacity = 1, tl }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [markup] = useState(() => ({ __html: html(screen) }));
+  const apply = useMemo(() => makeApply(tl), [tl]);
   useLayoutEffect(() => {
     const root = ref.current!;
-    APPLY[screen](root, frame);
+    apply[screen](root, frame);
     const page = q(root, ".page, .messages-layout");
     if (page) page.style.transform = slide ? `translateX(${slide}px)` : "";
   });
@@ -275,7 +281,7 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
     <div
       ref={ref}
       className="film-layer"
-      style={{ position: "absolute", left: 0, top: 0, width: UI_W, height: UI_H, overflow: "hidden", opacity, background: "#fff" }}
+      style={{ position: "absolute", left: 0, top: 0, width: tl.UI_W, height: tl.UI_H, overflow: "hidden", opacity, background: "#fff" }}
       dangerouslySetInnerHTML={markup}
     />
   );
@@ -287,7 +293,16 @@ const Cursor: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale
   </svg>
 );
 
-export const JoolaB2B: React.FC = () => {
+export const JoolaB2B: React.FC<JoolaB2BProps> = ({ filmConfig }) => {
+  const tl = useMemo(
+    () => createTimelineState(filmConfig ? mergeFilmConfig(filmConfig) : DEFAULT_FILM_CONFIG),
+    [filmConfig],
+  );
+  const ptr = useMemo(() => buildPointerData(tl), [tl]);
+  const {
+    OW, OH, camAt, CLICK, CART_FADE, CONF_MORPH, END_FADE, FADE_E, MORPH, MOVE_E, prog, lerp, UI_W, UI_H,
+  } = tl;
+  const { pointerAt, cursorScale } = ptr;
   const frame = useCurrentFrame();
   const [handle] = useState(() => delayRender("r11 fonts + images"));
   useLayoutEffect(() => {
@@ -303,6 +318,7 @@ export const JoolaB2B: React.FC = () => {
   ];
   const scrAt = (f: number) => (f >= CONF_MORPH[0] ? "confirmation" : f >= CART_FADE[0] ? "cart" : "qo-desktop");
   const tr = TR.find(([a, n]) => frame >= a && frame < a + n);
+  const { INOUT_E } = tl;
   const morphT = prog(frame, CONF_MORPH[0], CONF_MORPH[1], INOUT_E);
   const layers: { screen: string; cam: Cam; o: number }[] =
     frame >= CONF_MORPH[0] && frame < CONF_MORPH[1]
@@ -368,7 +384,7 @@ export const JoolaB2B: React.FC = () => {
         <div style={{ position: "absolute", inset: 0, opacity: uiOpacity }}>
           {layers.map((l) => l.o > 0 && (
             <div key={l.screen} style={{ position: "absolute", width: UI_W, height: UI_H, transformOrigin: "0 0", transform: camT(l.cam), opacity: l.o, boxShadow: "0 0 0 600px #fff" }}>
-              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} />
+              <Layer key={l.screen} screen={l.screen} frame={frame} slide={0} tl={tl} />
             </div>
           ))}
         </div>

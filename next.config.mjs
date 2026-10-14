@@ -5,12 +5,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["remotion", "@remotion/player"],
   // Pin the Turbopack/project root to this package so a parent-directory
   // package-lock.json (e.g. ~/package-lock.json) can't make Next resolve
   // modules relative to the wrong folder — that was surfacing as
   // "Can't resolve '@/components/PhoneEmbed'" against a stale page.tsx.
   turbopack: {
     root: __dirname,
+    resolveAlias: {
+      "@joola-remotion": path.join(__dirname, "remotion/src"),
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias["@joola-remotion"] = path.join(__dirname, "remotion/src");
+    return config;
   },
   // Required for Sanity Studio (mounted at /studio, a real production route)
   // — @sanity/ui and the sanity package both use styled-components
