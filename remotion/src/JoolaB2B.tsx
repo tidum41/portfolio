@@ -300,6 +300,11 @@ function applyCart(root: HTMLElement, f: number) {
     bar.style.setProperty("--credit-order-end", `${used + (ORDER_TOTAL / CREDIT_LIMIT) * 100}%`);
   }
   pill(root, f);
+  // The centred 66% frame bisects the line-price column and clips the header
+  // pills. Hide both so the margin is the page and the header rule is the context.
+  const main = q(root, ".cart-main");
+  if (main) main.style.opacity = "0";
+  qa(root, ".account-chip, .cart-pill").forEach((el) => { el.style.visibility = "hidden"; });
   const sum = q(root, "[data-cart-summary]");
   if (sum) {
     sum.classList.remove("is-morph-exit");
@@ -316,6 +321,8 @@ function applyConfirmation(root: HTMLElement, f: number) {
   const pl = q(root, "[data-cart-pill]");
   if (pl) pl.style.width = `${PILL_W0}px`;
 
+  // Same header treatment as the summary so the cut does not reveal a clipped chip.
+  qa(root, ".account-chip, .cart-pill").forEach((el) => { el.style.visibility = "hidden"; });
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
   // Hard cut. The card is already the same box as the summary, so it stays
@@ -400,7 +407,10 @@ export const JoolaB2B: React.FC = () => {
   const logoOpacity = intro ? 1 - prog(frame, MORPH[1] - 4, MORPH[1], FADE_E) : outro ? logoOut : 0;
   const uiOpacity = intro ? prog(frame, MORPH[0] + 6, MORPH[1], FADE_E) : 1 - uiOut;
   const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
-  const showPtr = frame >= MORPH[1] && frame < CONF_CUT + 4;
+  // The Place order hotspot is higher in its card than the confirmation actions,
+  // so a cursor frozen across the cut sits in the blank middle of Order placed.
+  // The press is still on screen through frame 269; the cut removes the pointer.
+  const showPtr = frame >= MORPH[1] && frame < CONF_CUT;
   const ptrFade = prog(frame, CONF_CUT - 1, CONF_CUT + 3, FADE_E);
   const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - ptrFade);
   const stageRef = useRef<HTMLDivElement>(null);

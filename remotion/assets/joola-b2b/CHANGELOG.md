@@ -198,6 +198,14 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 23 — card scale, Add framing, one curve family
+
+- **Place order and Order placed sit at 66% of the frame.** Both cameras use scale 1.98 and the same 16px lift, so the 480×340 card keeps equal side margins and sits slightly above centre. The header rule stays in frame. The line-price column would be cut at this scale, so the film hides that column and the header pills; the page and the rule are the context.
+- **Add shot shows the whole total and the whole button.** The previous framing clipped `$19,306.50` to `06.50` and cut `Add 4 to cart`.
+- **One curve family.** Camera, cursor, and fades share one curve. Inserts, the pill width, and the badge share one ease-out.
+- **The pointer leaves on the Order placed cut.** Frozen across the cut, it sat in the blank above the confirmation buttons. The press still shows on Place order.
+- **Draft renders are the default.** `scripts/render-chunks.sh` renders a 720×540 draft (`--scale=0.375`) and scales it to 676×508. `--final` is the one 1920×1440 render. `--width`/`--height` crops this film; do not use them.
+
 ## Film pass 22 — one order card, measured qty caret, centred pill
 
 - **Place order and Order placed share one box.** Both are 480×340, padding 24, radius 12. The summary column is 480 so the card is that width, not a 320px rail stretched by overflow. The confirmation no longer scales on the cut; both cameras use the same scale and each card's centre, so the hard cut is the same chrome.

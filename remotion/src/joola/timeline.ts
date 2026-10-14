@@ -37,19 +37,22 @@ export const bezier = (x1: number, y1: number, x2: number, y2: number) => {
     return sy(t);
   };
 };
-export const CAM_E = bezier(0.4, 0, 0.2, 1);
-export const PUSH_E = bezier(0.33, 0.4, 0.2, 1);
-export const SETTLE = bezier(0.33, 1, 0.68, 1);
+/**
+ * One curve family. Travel (camera, cursor, fades) is MOVE_E.
+ * UI entrances (insert, pill width, badge) are the shared ease-out.
+ */
+export const MOVE_E = bezier(0.45, 0, 0.25, 1);
+export const CAM_E = MOVE_E;
+export const FADE_E = MOVE_E;
+export const PUSH_E = MOVE_E;
+export const PTR_E = MOVE_E;
+export const INOUT_E = MOVE_E;
+export const SETTLE = MOVE_E;
+export const EASE_OUT = bezier(0.2, 0, 0, 1);
+export const UI_E = EASE_OUT;
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-export const UI_E = bezier(0.2, 0, 0, 1);
-export const FADE_E = bezier(0.4, 0, 0.2, 1);
-export const PTR_E = bezier(0.3, 0, 0, 1);
-export const MOVE_E = bezier(0.45, 0, 0.25, 1);
-export const EASE_OUT = bezier(0.2, 0, 0, 1); // pill width + order settle
-export const INOUT_E = bezier(0.45, 0, 0.55, 1);
 
 /* ---------- pass 20 beats (~12.2s) ---------- */
 /** Intro: logo glides into the sidebar slot on a dashboard shot (sidebar + header). */
@@ -136,18 +139,24 @@ export const SHOT_OPEN: Cam = { cx: 439, cy: 329, s: 1.64 };
 export const SHOT_A: Cam = { cx: 605, cy: 300, s: 1.8 };
 /** B: qty + Reorder rail + popover. */
 export const SHOT_B: Cam = { cx: 925, cy: 455, s: 2.05 };
-/** B2: the Add-to-cart framing from pass 19 (header pill + footer share the frame). */
-export const SHOT_B2: Cam = { cx: 800, cy: 378, s: 1.48 };
+/**
+ * B2: header, the full footer total, and the Add button, with the button
+ * inside the frame. s=1.36 is the widest of the table shots so "$19,306.50"
+ * and "Add 4 to cart" are not cut by the edge.
+ */
+export const SHOT_B2: Cam = { cx: 769, cy: 378, s: 1.36 };
 /** Tight pill: filled pill centred. Crop stays under the search field. */
 /** Pill update: account chip + pill, centred. cy is the pill's vertical centre (top 5, height 36). */
 export const SHOT_PILL: Cam = { cx: 1112, cy: 23, s: 4.05 };
 /**
- * Place order and Order placed share one scale and each card's page centre,
- * so a 480×340 card lands on the same screen box. s=2.7 leaves ~30px of page
- * around the card (radii stay inside the frame).
+ * Place order and Order placed share one scale and the same offset from each
+ * card's page centre, so a 480×340 card lands on the same screen box.
+ * s=1.98 is 66% of the frame (480*s/1440). cy is 16px below the card centre,
+ * which lifts the card slightly above true centre and keeps the header rule
+ * inside both frames with equal left and right margins.
  */
-export const SHOT_SUM: Cam = { cx: 1044, cy: 293.59375, s: 2.7 };
-export const SHOT_D: Cam = { cx: 766, cy: 242, s: 2.7 };
+export const SHOT_SUM: Cam = { cx: 1044, cy: 309.59375, s: 1.98 };
+export const SHOT_D: Cam = { cx: 766, cy: 258, s: 1.98 };
 
 export const WIDE = SHOT_OPEN;
 export const CART_CAM = SHOT_SUM;
