@@ -151,8 +151,8 @@ html[data-theme="dark"] .hilab-root {
   position: absolute;
   left: 50%;
   top: 0;
-  transform: translate(-50%, calc(-100% - 10px));
-  z-index: 4;
+  z-index: 5;
+  transform: translate(-50%, calc(-100% - 8px));
   pointer-events: none;
   opacity: 0;
   translate: 0 4px;
@@ -223,9 +223,14 @@ html[data-theme="dark"] .hilab-root {
     translate var(--hilab-enter) var(--hilab-ease);
 }
 
+.hilab-dock[data-visible="true"],
 .hilab-chip[data-visible="true"] {
   opacity: 1;
   translate: 0 0;
+}
+
+.hilab-dock[data-visible="true"] {
+  transform: translate(-50%, calc(-100% - 10px));
 }
 
 .hilab-inline-slot {

@@ -7,11 +7,24 @@ import ProjectCardLift from "@/components/ProjectCardLift";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { useIsMobile } from "@/components/useIsMobile";
 import { HilabArrowIcon, HilabChipArrow, HilabPlayIcon } from "./icons";
-import type { CardKind, LabProject, VariantId } from "./types";
-import { kindLabel, kindShort } from "./types";
+import type { CardKind, LabProject, PillVariantId, VariantId } from "./types";
+import { isPillVariant, kindLabel, kindShort, pillCopy } from "./types";
 import { usePointerFollow } from "./usePointerFollow";
 
-function PillContent({ kind }: { kind: CardKind }) {
+function pillOffset(variant: PillVariantId) {
+  if (variant === "cursor-pill-icon") return { x: 18, y: 20 };
+  if (variant === "cursor-pill-compact") return { x: 12, y: 14 };
+  return { x: 14, y: 16 };
+}
+
+function pillLerp(variant: PillVariantId) {
+  if (variant === "cursor-pill-compact") return 0.38;
+  if (variant === "cursor-pill-icon") return 0.22;
+  return 0.18;
+}
+
+function PillContent({ kind, variant }: { kind: CardKind; variant: PillVariantId }) {
+  const showIcon = variant !== "cursor-pill-compact" || kind !== "both";
   const icon =
     kind === "demo" ? (
       <HilabPlayIcon size={13} />
@@ -23,11 +36,12 @@ function PillContent({ kind }: { kind: CardKind }) {
         <HilabPlayIcon size={11} />
       </>
     );
+  const large = variant !== "cursor-pill-compact";
 
   return (
-    <span className="hilab-pill">
-      {icon}
-      {kindLabel(kind)}
+    <span className={large ? "hilab-pill hilab-pill--14" : "hilab-pill"}>
+      {showIcon && icon}
+      {pillCopy(kind, variant)}
     </span>
   );
 }
@@ -39,27 +53,26 @@ export default function LabDemoCard({
 }: {
   project: LabProject;
   variant: VariantId;
-  morphActive: boolean;
   onMorphActiveChange: (active: boolean) => void;
 }) {
   const isMobile = useIsMobile();
   const reduced = useReducedMotion();
-  const staticUi = isMobile || !!reduced;
+  const staticUi = isMobile;
   const [hovered, setHovered] = useState(false);
   const [entering, setEntering] = useState(false);
   const [morphPos, setMorphPos] = useState({ x: 0, y: 0 });
   const enterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const pillActive = variant === "cursor-pill";
-  const offset = { x: 14, y: 16 };
+  const pillVariant = isPillVariant(variant) ? variant : null;
+  const offset = pillVariant ? pillOffset(pillVariant) : { x: 14, y: 16 };
 
   const { pos, setTarget, snapTo, stop } = usePointerFollow({
-    lerp: 0.2,
-    enabled: pillActive && hovered && !staticUi,
+    lerp: pillVariant ? pillLerp(pillVariant) : 0.2,
+    enabled: !!pillVariant && hovered && !staticUi,
   });
 
   const kind = project.kind;
-  const showPill = pillActive && (hovered || staticUi);
+  const showPill = !!pillVariant && (hovered || staticUi);
   const showDock = variant === "dock-tooltip" && (hovered || staticUi);
   const showChip = variant === "corner-chip" && (hovered || staticUi);
   const showMorph = variant === "cursor-morph" && hovered && !staticUi;
@@ -67,21 +80,21 @@ export default function LabDemoCard({
 
   const onMove = useCallback(
     (e: React.PointerEvent) => {
-      if (pillActive) {
+      if (pillVariant) {
         setTarget(e.clientX + offset.x, e.clientY + offset.y);
       }
       if (variant === "cursor-morph" && !staticUi) {
         setMorphPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [offset.x, offset.y, pillActive, setTarget, staticUi, variant],
+    [offset.x, offset.y, pillVariant, setTarget, staticUi, variant],
   );
 
   const onEnter = useCallback(
     (e: React.PointerEvent) => {
       setHovered(true);
       if (variant === "cursor-morph" && !staticUi) onMorphActiveChange(true);
-      if (pillActive) {
+      if (pillVariant) {
         snapTo(e.clientX + offset.x, e.clientY + offset.y);
         setEntering(true);
         if (enterTimer.current) clearTimeout(enterTimer.current);
@@ -91,7 +104,7 @@ export default function LabDemoCard({
         setMorphPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [offset.x, offset.y, onMorphActiveChange, pillActive, reduced, snapTo, staticUi, variant],
+    [offset.x, offset.y, onMorphActiveChange, pillVariant, reduced, snapTo, staticUi, variant],
   );
 
   const onLeave = useCallback(() => {
@@ -108,7 +121,7 @@ export default function LabDemoCard({
   }, []);
 
   const pillPortal =
-    showPill && pillActive && !staticUi && typeof document !== "undefined"
+    showPill && pillVariant && !staticUi && typeof document !== "undefined"
       ? createPortal(
           <div
             className="hilab-pill-portal"
@@ -121,7 +134,7 @@ export default function LabDemoCard({
               } as React.CSSProperties
             }
           >
-            <PillContent kind={kind} />
+            <PillContent kind={kind} variant={pillVariant} />
           </div>,
           document.body,
         )
@@ -190,9 +203,9 @@ export default function LabDemoCard({
                 </div>
               )}
 
-              {pillActive && staticUi && (
+              {pillVariant && staticUi && (
                 <div className="hilab-static-pill">
-                  <PillContent kind={kind} />
+                  <PillContent kind={kind} variant={pillVariant} />
                 </div>
               )}
 

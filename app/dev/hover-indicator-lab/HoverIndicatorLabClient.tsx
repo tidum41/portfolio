@@ -11,7 +11,7 @@ import { isVariantId, VARIANTS } from "./types";
 const LAB_Z = 50;
 
 export default function HoverIndicatorLabClient({ projects }: { projects: LabProject[] }) {
-  const [variantId, setVariantId] = useState<VariantId>("cursor-pill");
+  const [variantId, setVariantId] = useState<VariantId>("cursor-pill-cherry");
   const [morphActive, setMorphActive] = useState(false);
 
   const variantIndex = VARIANTS.findIndex((v) => v.id === variantId);
@@ -36,7 +36,7 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         cycle(-1);
-      } else if (/^[1-5]$/.test(e.key)) {
+      } else if (/^[1-7]$/.test(e.key)) {
         const next = VARIANTS[Number(e.key) - 1];
         if (next) {
           setVariantId(next.id);
@@ -135,8 +135,9 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
             maxWidth: 640,
           }}
         >
-          Three tiles: internal case study, external demo, and both. Five hover directions using site tokens —
-          ~150ms, no bounce. Coarse pointers and reduced motion keep labels visible without hover.
+          Three tiles: internal case study, external demo, and both. Cherry-style cursor pills lead the
+          switcher (solid fill, 13–14px type). ~150ms ease, no bounce. Touch shows labels on-card; reduced
+          motion skips trail lag.
         </p>
 
         {projects.length === 0 ? (
@@ -155,7 +156,6 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
                 key={`${p.id}-${p.kind}`}
                 project={p}
                 variant={variantId}
-                morphActive={morphActive}
                 onMorphActiveChange={setMorphActive}
               />
             ))}
@@ -180,7 +180,7 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
         }}
       >
         <div style={{ opacity: 0.5, marginBottom: 6, letterSpacing: "0.04em", fontSize: 11 }}>
-          ← → cycle · 1–5 jump · switcher above
+          ← → cycle · 1–7 jump · switcher above
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11 }}>
           <Link href="/" style={{ color: "inherit" }}>
