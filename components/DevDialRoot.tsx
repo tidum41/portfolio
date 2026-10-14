@@ -21,5 +21,6 @@ export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
+  if (pathname.startsWith("/dev/remotion-playground")) return null;
   return <DialRoot defaultOpen={pathname.startsWith("/dev")} />;
 }

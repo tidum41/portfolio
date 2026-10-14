@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@joola-remotion/*": [
+        "./remotion/src/*"
       ]
     },
     "target": "ES2017"

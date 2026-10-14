@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FOOTER_LINKS } from "@/lib/site";
 
@@ -33,6 +34,7 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
 }
 
 export default function Footer() {
+  const pathname = usePathname();
   // Cursor IDE's browser preview injects data-cursor-ref onto SSR'd links
   // before React hydrates — defer link rendering in dev so server/client DOM
   // match. Production keeps full SSR for SEO/crawlers.
@@ -45,6 +47,8 @@ export default function Footer() {
   if (!mounted) {
     return <FooterShell />;
   }
+
+  if (pathname.startsWith("/dev/remotion-playground")) return null;
 
   return (
     <FooterShell>

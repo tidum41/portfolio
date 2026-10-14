@@ -12,6 +12,8 @@
 # next.js
 /.next/
 /out/
+# Copied from remotion/public on prebuild (see scripts/sync-joola-public.mjs)
+/public/joola-b2b/
 
 # production
 /build
