@@ -15,8 +15,9 @@ Chrome for everything (Remotion, Playwright): `/usr/bin/google-chrome`.
 | Timeline | `src/joola/timeline.ts` | all frames, easings (cubic-bezier), camera MOVES (a==b = hard cut), clampCam |
 | Film | `src/JoolaB2B.tsx` | per-frame DOM state in useLayoutEffect (typing, qty, pill, credit), cursor, logo morph |
 | Timing check | `node scripts/timeline-report.mjs out/timing.json` | camera velocity, worst zoom, overlaps of camera moves with UI animations |
-| Render | `scripts/render-chunks.sh out.mp4 N [CompId]` | 42-frame chunks, concurrency 2 (CONC=1 if the shared box is short on memory), retries, lossless concat |
-| Verify | `python3 scripts/check-film.py film.mp4 outdir` | frame-diff jump/cut scan vs `_allowed_cuts`, freeze runs, loop seam, OCR of ledger numbers (`scripts/film-expect.json`: frame -> expected strings), forbidden strings (middle dot, old names), all-caps |
+| Render (draft, default) | `scripts/render-chunks.sh out.mp4 N [--draft]` | Fast full-length draft. Remotion renders at `--scale=0.375` (exact 720×540: `0.35` makes the height `503.99999999999994` and the encoder rejects it). The script then scales to 676×508. Do not pass `--width`/`--height`: that resizes the composition and crops this film, because the stage is hardcoded at 1440×1080. JPEG quality 60, CRF 28, x264 veryfast, concurrency = all cores. Layout variants are stills (`--scale=0.375`), not videos. |
+| Render (final, once) | `scripts/render-chunks.sh out.mp4 N --final` | The single 1920×1440 delivery render. 42-frame chunks, concurrency 2 (`CONC=1` if memory is short), retries, lossless concat. Do this once, after draft review. |
+| Verify | `python3 scripts/check-film.py film.mp4 outdir` | frame-diff jump/cut scan vs `_allowed_cuts`, freeze runs, loop seam, OCR of ledger numbers (`scripts/film-expect.json`: frame -> expected strings), forbidden strings (middle dot, old names), all-caps. Run on the final film. |
 | Card size | `ffmpeg -i film.mp4 -vf scale=676:508:flags=lanczos ... film-card-size.mp4` | the real portfolio slot (676px wide at 1440 viewport; 327px on mobile) |
 | Deploy prototype | Vercel MCP `create_deployment` to project `joola-proto` (inline index.html, reuse unchanged files by sha), then `get_access_to_vercel_url` for a share link |
 
@@ -24,8 +25,8 @@ Composition is 1920x1440 (4:3) so the prototype keeps its 1920px layout (min-wid
 Readable size: screen px = CSS px x camera scale x 0.4698 at 676 wide. 14px text needs s >= 1.67; 12px needs ~1.95.
 
 ## 2. Review process (every pass)
-1. `tsc --noEmit`, then stills of key frames (`npx remotion still JoolaB2B f.png --frame=N --scale=0.3523`) in a grid before rendering.
-2. Full render, check-film.py, update film-expect.json when beats move (OCR frames + allowed cuts).
+1. `tsc --noEmit`, then draft stills of the frames being judged (`npx remotion still JoolaB2B f.png --frame=N --scale=0.375 --browser-executable=/usr/bin/google-chrome`). Layout variants are stills side by side, never extra videos. Do not override width or height.
+2. Polish on drafts: `scripts/render-chunks.sh draft.mp4 N` (the default `--draft`). Save the first full-length draft to the artifacts folder as `draft-film.mp4` so it can be watched while later loops run. One `--final` 1920×1440 render only after the draft loops. Then check-film.py, and update film-expect.json when beats move (OCR frames + allowed cuts).
 3. Card-size sheet (16 frames, 676px) and **zoomed crops** (PIL crop + 2x) of every value change, cursor rest, transition midpoint.
    Grids lie: tile boundaries make content look like it is in the wrong frame - open single frames when in doubt.
    Use unique /tmp names; the box is shared and other agents overwrite /tmp/c1.png etc.

@@ -197,3 +197,48 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Kept from the prior v22 attempt:** Net 30 story lock to $16,197.60, Recommended three paddles with contain thumbs + wholesale/MSRP, quantity presets + `window.__setPerseusQty`, "This order" title, status pills, Hyperion SKU 300829 / Scorpeus Pro V naming.
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
+
+## Film pass 25 — the order, then the confirmation
+
+- **Search stays the prototype weight.** The typed Perseus is weight 500. The summary total, the confirmation title and values, the pill amount, and the primary buttons stay weight 700.
+- **The move onto Match kit is slower.** Twenty frames, the same curve as the other moves. The end frame is tight enough that the line above Match kit and the footer rule stay outside it.
+- **The cursor arrives and holds** on Add to order, Add 4 lines to cart, and Place order before the press, then leaves the label while the button says Placing order.
+- **Both order cards are a little smaller than pass 24 and centred on their own content.** Same scale, same side margins. The summary is the shorter card. Shipping and tax both read “Calculated when it ships.” The credit line reads “$25,693.50 left of $50,000.”
+- **Place order stays one button.** The press darkens it. The label becomes “Placing order,” the check draws, and the button eases to emerald `#12824a`. The summary stays at full strength. Then the card grows from the top and the confirmation rises into it. The green check beside “Order placed” sits on the title’s cap centre.
+- **The logo outro is a cut, not a fade.** The lockup arrives black. A dissolve was leaving a grey card and a grey logo.
+- **Copy.** Sidebar and page title say Saved orders. The rail action says Add. The footer counts lines. The confirmation says “Ship date pending” and “Collin Johns will confirm your ship date. Track it in Order history.” Order history opens the Orders page.
+
+## Film pass 24 — readable from across the desk
+
+- **Each beat is framed on its focal.** Search, qty 120, Add to order, Add to cart, the cart total, Place order, and Order placed are tight enough that the point reads at 676px and at 400px with a 1px blur. Three moves remain (logo to search, search to qty, qty to Add to order). The rest are hard cuts.
+- **Key text is full weight.** Search value, the summary total, the confirmation title and values, the pill amount, and primary buttons are weight 700. Grey labels stay labels. The cursor is 1.25×.
+- **The two order cards share one bigger scale.** Both are scale 2.95 with the same 6px lift, so the cut does not move the card. On a 676px frame the borders land on the same x. The SO number is as large as that frame allows without clipping the digits.
+- **The filled cart pill is centred.** The camera sits on the filled pill, not the account chip. The chip is hidden for that shot so the $0 frame does not slice the retailer name.
+- **The Add button cut waits until the popover has closed,** so the shot does not rest on an empty Match kit card. The button already says Add 4.
+
+## Film pass 23 — card scale, Add framing, one curve family
+
+- **Place order and Order placed sit at 66% of the frame.** Both cameras use scale 1.98 and the same 16px lift, so the 480×340 card keeps equal side margins and sits slightly above centre. The header rule stays in frame. The line-price column would be cut at this scale, so the film hides that column and the header pills; the page and the rule are the context.
+- **Add shot shows the whole total and the whole button.** The previous framing clipped `$19,306.50` to `06.50` and cut `Add 4 to cart`.
+- **One curve family.** Camera, cursor, and fades share one curve. Inserts, the pill width, and the badge share one ease-out.
+- **The pointer leaves on the Order placed cut.** Frozen across the cut, it sat in the blank above the confirmation buttons. The press still shows on Place order.
+- **Draft renders are the default.** `scripts/render-chunks.sh` renders a 720×540 draft (`--scale=0.375`) and scales it to 676×508. `--final` is the one 1920×1440 render. `--width`/`--height` crops this film; do not use them.
+
+## Film pass 22 — one order card, measured qty caret, centred pill
+
+- **Place order and Order placed share one box.** Both are 480×340, padding 24, radius 12. The summary column is 480 so the card is that width, not a 320px rail stretched by overflow. The confirmation no longer scales on the cut; both cameras use the same scale and each card's centre, so the hard cut is the same chrome.
+- **Quantity caret is measured.** It sits 1–2px after the ink of the last digit of 120, at the digit cap height, not at a guessed offset from the field centre.
+- **Cart pill shot is centred.** The camera's vertical centre is the pill's centre, so the chip and pill sit in the middle of the frame.
+
+## Film pass 21 — popover lock, qty caret, cart gesture, logo
+
+- **Reorder row is 72px, not 72.078.** Line boxes are 16px, so the Match kit bottom is a whole pixel. The Add to order / Replace order menu is placed with rounded coordinates and only fades its opacity.
+- **Quantity 120 is one click.** The cursor becomes an I-beam over the field, a caret blinks inside it, and the value swaps from 1 to 120 on that frame.
+- **Cart pill is one gesture.** After the press, the pill holds $0.00, then its width eases on a single ease-out. The total swaps in once the width can hold every digit, and the count badge scales from 0.6 to 1 as the last beat. No bounce.
+- **JOOLA mark** is the official horizontal lockup SVG from joola.com.
+- **Summary card** sits fully inside the frame (the previous crop clipped the top radius). Order placed keeps the header rule in frame.
+
+## Film pass 20 — template row, cart pill, Place order
+
+- **Template row stays put when Add/Replace opens.** The focus ring is inset (`outline-offset: -3px`) so it cannot extend the scrollable overflow, and mousedown calls `preventDefault` so the click does not focus-scroll the row. The popover is `position: fixed`. The row's border and transform are locked. Its `margin: 0 -6px` is left alone — zeroing that margin slides the row 6px to the right. Bounding box of Match kit is unchanged across rest, hover, press, and open.
+- **Cart pill and Place order change colour only.** No scale on hover or active. Background does not transition, so the colour cannot restart mid-fade. The pill's width may still ease once.
