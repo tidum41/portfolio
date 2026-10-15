@@ -5,14 +5,16 @@ import ProjectCardLift from "@/components/ProjectCardLift";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { useIsMobile } from "@/components/useIsMobile";
 import DockTooltipPortal from "./DockTooltipPortal";
-import type { DockPlacementMode, LabProject } from "./types";
+import type { AnchoredAppearance, DockPlacementMode, LabProject } from "./types";
 
 export default function LabDemoCard({
   project,
   dockPlacement,
+  anchoredAppearance,
 }: {
   project: LabProject;
   dockPlacement: DockPlacementMode;
+  anchoredAppearance: AnchoredAppearance;
 }) {
   const isMobile = useIsMobile();
   const staticUi = isMobile;
@@ -107,6 +109,7 @@ export default function LabDemoCard({
           visible={showDock}
           leaving={dockLeaving}
           placement={placement}
+          anchoredAppearance={anchoredAppearance}
           anchorEl={anchorEl}
           pointer={pointer}
         />

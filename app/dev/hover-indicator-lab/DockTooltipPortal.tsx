@@ -4,7 +4,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import DockTooltipLayer from "./DockTooltipLayer";
 import { computeAnchoredDockPosition } from "./dockPosition";
-import type { CardKind, DockPlacementMode } from "./types";
+import type { AnchoredAppearance, CardKind, DockPlacementMode } from "./types";
 import { useDockFollowPointer } from "./useDockFollowPointer";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
   visible: boolean;
   leaving: boolean;
   placement: DockPlacementMode;
+  anchoredAppearance: AnchoredAppearance;
   anchorEl: HTMLElement | null;
   pointer: { x: number; y: number };
 };
@@ -21,6 +22,7 @@ export default function DockTooltipPortal({
   visible,
   leaving,
   placement,
+  anchoredAppearance,
   anchorEl,
   pointer,
 }: Props) {
@@ -102,6 +104,7 @@ export default function DockTooltipPortal({
     <div
       className="hilab-dock-portal"
       data-placement={placement}
+      data-appearance={isAnchored ? anchoredAppearance : undefined}
       data-visible={portalVisible ? "true" : "false"}
       data-leaving={leaving ? "true" : "false"}
       style={{
