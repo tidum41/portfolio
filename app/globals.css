@@ -365,24 +365,22 @@ html.theme-switching *::after {
   outline: none;
 }
 
-/* ─── Nav tap-target expansion ────────────────────────────────────── */
+/* ─── Nav spacing matches main. Safe-area insets are 0 without a notch,
+   so desktop padding stays 24px. The min-height below is main's own
+   rule: it sizes the line box, and the ::before covers the rest of
+   the 44px target without a min-width. ──────────────────────────── */
 .site-nav {
   gap: 40px;
   padding-top: calc(24px + env(safe-area-inset-top));
   padding-bottom: 24px;
 }
-@media (max-width: 767px) {
-  .site-nav { gap: 4px; }
-}
-nav a,
-.nav-link,
-.footer-link {
+nav a {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 44px;
   min-height: 44px;
+  /* Avoid 300ms double-tap delay / gesture conflicts that can flash
+     press feedback without firing the follow-up click on mobile. */
   touch-action: manipulation;
 }
 .footer-inner {
@@ -590,13 +588,23 @@ html[data-theme="dark"] .interactive-badge {
    Applies to every pointer type, not just touch (pointer: coarse) —
    mouse hover near the edge of these controls should also count,
    not just accidental-tap forgiveness on touchscreens. */
-a.nav-link {
+/* Text links keep their visual box. The hit area is at least 44×44 and
+   does not change gap, alignment, or line height. */
+nav a,
+a.nav-link,
+a.footer-link {
   position: relative;
 }
-a.nav-link::before {
+nav a::before,
+a.nav-link::before,
+a.footer-link::before {
   content: "";
   position: absolute;
-  inset: -12px -8px;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 .theme-toggle-btn::before {
   content: "";

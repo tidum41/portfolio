@@ -21,8 +21,6 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 8px;
           padding: 24px var(--page-px);
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
           min-height: 69px;
