@@ -428,8 +428,8 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // A zoom from the kit onto the table has to cross the rows. Hide a label
   // only while the frame cuts it, so a still never shows a sliced word.
   concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
-  // The pill frame covers the retailer name, and a wider framing would cut
-  // the page title. Hide both so the hold is the pill, not a sliced word.
+  // The header cart framing can slice the retailer name. The title sits off
+  // the left edge. Hide both so the hold is the pill, not a cut word.
   if (f >= PILL_SHOT && f < CART_CUT) {
     qa(root, ".account-chip, .page > h1").forEach((el) => { el.style.visibility = "hidden"; });
   }
@@ -762,7 +762,7 @@ export const JoolaB2B: React.FC = () => {
     if (frame >= CONF_CUT) return;
     const layer = st.querySelector(".film-layer");
     if (!layer) return;
-    // Geometry + latch. Classes are set once per state, never from a moving hit-test.
+    // Add to cart and the cart pill follow the tip. The earlier controls stay latched.
     for (const h of hoverState(frame)) {
       const el = layer.querySelector(h.sel);
       if (!el) continue;

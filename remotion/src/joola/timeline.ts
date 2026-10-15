@@ -2,12 +2,11 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 30: one camera move from the kit onto a framing that holds the new
- * lines and Add to cart together. The cursor does the guiding after that.
- * The cart pill keeps the full total and the badge inside the frame, and a
- * colour press on the pill cuts to the unchanged Place order summary.
- * Logo intro (0–11) and the outro fade/scale keep their lengths. The final
- * 15 frames are still the settled logo. Duration stays 12.5s.
+ * Pass 31: the cursor stays one on-screen size. Add to cart takes hover and
+ * press from the tip, then a hard cut shows the header cart update in frame.
+ * The cursor clicks that pill, holds, and only then cuts to Place order.
+ * Logo intro (0–11), the outro, and the Order placed frames are unchanged.
+ * Duration stays 12.5s.
  */
 export const FPS = 30;
 
@@ -65,7 +64,7 @@ export const MORPH = [0, UI_IN[1]] as const;
 export const LEAD = 2;
 /** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
-export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 198, pill: 244, place: 268 };
+export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 192, pill: 238, place: 268 };
 export const ENTER = CLICK.result + 3;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -102,16 +101,17 @@ export const ROWS_CUT = ROWS_ZOOM[0];
 export const TPL_ROWS = [147, 147] as const;
 /**
  * Cursor only. The camera holds. The pointer travels from the new line
- * onto Add to cart and lands before the press.
+ * onto Add to cart and lands before the press. The short rest on the row
+ * (173–178) gives these frames to the cart handoff.
  */
-export const ADD_MOVE = [186, 194] as const;
+export const ADD_MOVE = [178, 186] as const;
 export const ADD_CUT = ADD_MOVE[1];
 export const PAN_BC = ADD_MOVE;
 /**
- * Hard cut to the cart pill. The cursor has already landed on it, on the wide
- * shot, so the close-up opens with the pointer on the icon.
+ * Hard cut to the header cart, before the amount moves. The camera holds
+ * this framing through the roll, the badge, and the pill click.
  */
-export const PILL_SHOT = 211;
+export const PILL_SHOT = 196;
 /**
  * Empty pill for the icon plus "$0.00". Filled pill for "$4,908.66" at weight
  * 700 plus the 20px badge. Both include slack so the $ and the circle clear
@@ -122,18 +122,19 @@ export const PILL_W1 = 156;
 /** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
 export const PILL_NUM_W = 124;
 /**
- * Cursor lands on the header cart the frame before the close-up, still on the
- * wide shot, then rides the icon through the grow, the roll, and the press.
- * Nine frames from the end of the Add press, straight up the right side.
+ * The cursor waits below the pill while the width, the roll, and the badge
+ * play, then lands on the icon. The press is 3 frames. Six more frames
+ * (200ms) hold the released hover before the Place order cut.
  */
-export const PILL_ARRIVE = 210;
+export const PILL_PARK = 208;
+export const PILL_ARRIVE = 232;
 /** Digit roll starts the frame the width finishes. 14 frames, 467ms. */
-export const PILL_ROLL = 221;
+export const PILL_ROLL = 202;
 export const ROLL_PILL_F = 14;
 /** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
-export const PILL_FILL = [213, 221] as const;
+export const PILL_FILL = [196, 202] as const;
 /** Badge after the digits have settled. Scale 0.6→1, colour only on the pill itself. */
-export const PILL_BADGE = [235, 241] as const;
+export const PILL_BADGE = [216, 222] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
 export const CART_CUT = 247;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
@@ -229,10 +230,13 @@ export const SHOT_BOTH: Cam = { cx: 766, cy: 378, s: 1.32 };
 export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
 /**
- * Filled pill centred. Right edge stays at 1284, filled width PILL_W1,
- * so the centre is 1284 - PILL_W1/2. s=7.6 leaves about 18px of page on
- * either side of that pill, including while it is still the empty width.
+ * Header cart, held for the whole update. s=5.6 keeps the filled pill
+ * (x 1128–1284, y 5–41) about 50 page px inside the frame, so the amount
+ * cannot meet the edge. The table starts at y 187, below the frame.
+ * Not a second zoom: the camera is this shot from the cut until Place order.
  */
+export const SHOT_HEADER: Cam = { cx: 1206, cy: 84, s: 5.6 };
+/** Old macro on the pill. Not a camera target. */
 export const SHOT_PILL: Cam = { cx: 1284 - PILL_W1 / 2, cy: 23, s: 7.6 };
 /**
  * Place order and Order placed share one scale and the same offset from each
@@ -260,7 +264,7 @@ export const MOVES: Move[] = [
   { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
   { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_BOTH, label: "zoom out to lines + Add to cart", ease: MOVE_E },
-  { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
+  { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_HEADER, label: "cut: header cart" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },
   { a: CONF_RECENTER[0], b: CONF_RECENTER[1], to: SHOT_D, label: "recenter order placed", ease: MOVE_E },
