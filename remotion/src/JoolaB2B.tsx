@@ -7,7 +7,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
-import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, ROWS_ZOOM,
   INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
@@ -15,7 +14,7 @@ import {
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
-import { clearDigitCache, measureBox, measureLine, measureText, paintLockedRoll } from "./joola/digit-roll";
+import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -277,7 +276,7 @@ function showStable(
   amt.style.minWidth = `${used}px`;
 }
 
-const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1";
+const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1, .rail-id, .rail-copy .name, .rail-copy .meta-left, .rail-copy .meta-amt, .rail-card > h3";
 
 /**
  * Hide a table label only when the zoom frame cuts through its glyphs.
@@ -429,10 +428,10 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // A zoom from the kit onto the table has to cross the rows. Hide a label
   // only while the frame cuts it, so a still never shows a sliced word.
   concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
-  // The tight pill frame covers the retailer name once the pill is full, and
-  // slices "Pickleball" while the pill is still $0. Hide the chip for that shot.
+  // The pill frame covers the retailer name, and a wider framing would cut
+  // the page title. Hide both so the hold is the pill, not a sliced word.
   if (f >= PILL_SHOT && f < CART_CUT) {
-    qa(root, ".account-chip").forEach((el) => { el.style.visibility = "hidden"; });
+    qa(root, ".account-chip, .page > h1").forEach((el) => { el.style.visibility = "hidden"; });
   }
 }
 
@@ -452,12 +451,13 @@ function pill(root: HTMLElement, f: number) {
   const zeroLine = measureLine(amt, from);
   // Whole pixels. Height and baseline stay the line box for the whole shot,
   // so the digits do not step when the roll starts or ends.
-  const fullW = Math.round(line.w);
-  const zeroW = Math.round(zeroLine.w);
+  // Two extra pixels so a rounded column cannot shave the $ against overflow.
+  const fullW = Math.ceil(line.w) + 2;
+  const zeroW = Math.ceil(zeroLine.w) + 2;
   const grow = f >= PILL_FILL[0] ? tw : 0;
   const amtW = Math.round(lerp(zeroW, fullW, f >= PILL_ROLL ? 1 : grow));
-  const h = Math.max(1, Math.round(line.h));
-  const baseline = Math.round(line.base);
+  const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
+  const h = Math.max(Math.round(line.h), Math.ceil(fontPx * 1.45));
   amt.style.position = "relative";
   amt.style.setProperty("display", "block", "important");
   amt.style.setProperty("width", `${amtW}px`, "important");
@@ -465,23 +465,21 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("height", `${h}px`, "important");
   amt.style.setProperty("min-height", `${h}px`, "important");
   amt.style.setProperty("overflow", "hidden", "important");
+  amt.style.setProperty("transform", "none", "important");
   amt.style.setProperty("flex-shrink", "0", "important");
   amt.style.setProperty("text-box", "none", "important");
-  let paint = q(amt, ":scope > .film-paint");
-  if (!paint) {
-    amt.replaceChildren();
-    paint = document.createElement("span");
-    paint.className = "film-paint";
-    amt.appendChild(paint);
-  }
+  amt.style.setProperty("line-height", `${h}px`, "important");
   const { from: rollFrom, to: rollTo, t } = f >= PILL_ROLL
     ? rollAt([{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F)
     : { from, to: from, t: 0 };
-  paintLockedRoll(paint, rollFrom, rollTo, t, {
-    maxBlur: blurCap(camAt(f).s),
-    align: "right",
-    pixel: true,
-    lock: { w: amtW, h, baseline },
+  // DOM overflow does not clip the traveling glyph inside the scaled stage.
+  // The canvas bitmap is the amount box, so the next line cannot paint through.
+  paintCanvasRoll(amt, rollFrom, rollTo, t, {
+    w: amtW,
+    h,
+    scale: Math.ceil(camAt(f).s * (1920 / OW)),
+    baseline: line.base,
+    lineH: line.h,
   });
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
@@ -641,8 +639,6 @@ const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
   confirmation: applyConfirmation,
 };
 
-const LOGO = R["qo-search.logo"];
-const LOGO_AR = LOGO[3] / LOGO[2];
 const BG = "#f5f4f1";
 
 const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number }> = ({ screen, frame, slide, opacity = 1 }) => {
@@ -725,10 +721,13 @@ export const JoolaB2B: React.FC = () => {
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
   // Logo and UI never share a frame. Each fades against the solid ground.
-  const logoW0 = 340;
+  // Settled mark is 32% of the 1920 frame (inside the 30–35% band). The SVG
+  // viewBox is the artwork, so this width is the ink, not a padded box.
+  const logoW0 = Math.round(1920 * 0.32);
+  const logoH0 = logoW0 * (157.76 / 500);
   const lw = logoW0;
-  const lx = OW / 2 - logoW0 / 2;
-  const ly = OH / 2 - (logoW0 * LOGO_AR) / 2;
+  const lx = (1920 - logoW0) / 2;
+  const ly = (1440 - logoH0) / 2;
   let logoOpacity = 0;
   let logoScale = 1;
   if (frame <= LOGO_OUT[1]) {
@@ -784,11 +783,11 @@ export const JoolaB2B: React.FC = () => {
           </div>
         </div>
       )}
-      {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
-      )}
       {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>
+      {logoOpacity > 0 && (
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: logoH0, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
+      )}
     </AbsoluteFill>
   );
 };

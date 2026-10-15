@@ -179,7 +179,12 @@ export function paintLockedRoll(
   };
   // One line box for every column, measured from the DOM face (not canvas ink).
   const line = measureLine(el, "8");
-  const slotH = Math.max(pixel ? 1 : 0.01, pixel ? Math.ceil(line.h) : snap(line.h));
+  // The pill's measured line box is shorter than the ink ($ and the comma
+  // hang out of it). Give the pill roll a window tall enough for that ink.
+  const fontPx = parseFloat(getComputedStyle(el).fontSize) || 0;
+  const slotH = pixel
+    ? Math.max(Math.ceil(line.h), Math.ceil(fontPx * 1.45))
+    : Math.max(0.01, snap(line.h));
   const n = Math.max(from.length, to.length);
   const a = align === "right" ? from.padStart(n, " ") : from.padEnd(n, " ");
   const b = align === "right" ? to.padStart(n, " ") : to.padEnd(n, " ");
@@ -191,7 +196,9 @@ export function paintLockedRoll(
   }
   const rawSum = cols.reduce((s, c) => s + c.w, 0);
   const baseline = snap(opts.lock.baseline);
-  const marginTop = snap(baseline - line.base);
+  // Pill columns start at the top of the window. A positive margin pushed the
+  // ink out of the box, and the scaled stage does not clip that overflow.
+  const marginTop = pixel ? 0 : snap(baseline - line.base);
   el.classList.add("j-roll");
   el.style.setProperty("text-box", "none", "important");
   el.style.setProperty("display", "flex", "important");
@@ -200,6 +207,12 @@ export function paintLockedRoll(
   el.style.setProperty("overflow", "hidden", "important");
   el.style.setProperty("width", "100%", "important");
   el.style.setProperty("height", "100%", "important");
+  // A transform on this element escapes the stage's scale and paints the
+  // next glyph through the pill. The pill roll moves with `top` instead.
+  if (pixel) {
+    el.style.setProperty("transform", "none", "important");
+    el.style.setProperty("border-radius", "0.01px", "important");
+  }
   el.style.whiteSpace = "nowrap";
   el.style.fontVariantNumeric = "tabular-nums";
   el.style.fontFeatureSettings = '"tnum" 1';
@@ -219,7 +232,8 @@ export function paintLockedRoll(
     tx.style.fontVariantNumeric = "tabular-nums";
     tx.style.fontFeatureSettings = '"tnum" 1';
     tx.style.setProperty("text-box", "none", "important");
-    tx.style.setProperty("overflow", "hidden", "important");
+    // The slot is the clip. A fixed height here slices the comma and the $.
+    if (!pixel) tx.style.setProperty("overflow", "hidden", "important");
     into.appendChild(tx);
   };
   for (const c of cols) {
@@ -229,11 +243,13 @@ export function paintLockedRoll(
     slot.style.position = "relative";
     slot.style.display = "block";
     slot.style.flex = "0 0 auto";
-    slot.style.setProperty("overflow", "clip", "important");
-    slot.style.setProperty("clip-path", "inset(0)", "important");
+    slot.style.setProperty("overflow", "hidden", "important");
     slot.style.setProperty("width", px(c.w), "important");
     slot.style.setProperty("height", px(slotH), "important");
     slot.style.setProperty("max-height", px(slotH), "important");
+    // Inside the scaled stage, overflow does not clip unless the box also
+    // has a radius. 0.01px is enough to form the clip and does not round the ink.
+    if (pixel) slot.style.setProperty("transform", "none", "important");
     slot.style.marginTop = px(marginTop);
     if (c.a === c.b || tt === 0 || tt === 1) {
       place(tt >= 1 ? c.b : c.a, slot);
@@ -245,8 +261,18 @@ export function paintLockedRoll(
       col.style.top = "0";
       col.style.width = "100%";
       const dy = snap(-tt * slotH);
-      col.style.transform = `translateY(${dy}px)`;
-      if (blur >= 0.35) col.style.filter = `blur(${blur.toFixed(2)}px)`;
+      // Absolute + translateY both paint through overflow once the stage is
+      // scaled. A negative margin stays in flow, so the slot can clip it.
+      if (pixel) {
+        col.style.position = "relative";
+        col.style.display = "block";
+        col.style.top = "auto";
+        col.style.marginTop = `${dy}px`;
+        col.style.transform = "none";
+      } else {
+        col.style.transform = `translateY(${dy}px)`;
+        if (blur >= 0.35) col.style.filter = `blur(${blur.toFixed(2)}px)`;
+      }
       [c.a, c.b].forEach((ch) => {
         const cell = document.createElement("span");
         cell.style.display = "block";
@@ -261,6 +287,114 @@ export function paintLockedRoll(
     el.appendChild(slot);
   }
   return snap(rawSum);
+}
+
+/**
+ * Pill roll drawn into a canvas the size of the amount. DOM overflow does not
+ * clip a transformed or overflowing child once the stage is scaled, so the
+ * next glyph was painting through the pill. A canvas clip cannot escape.
+ * `scale` is the film-pixel scale so the type stays sharp at the close-up.
+ */
+export function paintCanvasRoll(
+  host: HTMLElement,
+  from: string,
+  to: string,
+  t: number,
+  opts: { w: number; h: number; scale: number; baseline: number; lineH: number },
+) {
+  let canvas = host.querySelector("canvas");
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    host.replaceChildren();
+    canvas = document.createElement("canvas");
+    canvas.style.display = "block";
+    host.appendChild(canvas);
+  }
+  const w = Math.max(1, opts.w);
+  const h = Math.max(1, opts.h);
+  const scale = Math.max(1, opts.scale);
+  const pw = Math.round(w * scale);
+  const ph = Math.round(h * scale);
+  if (canvas.width !== pw) canvas.width = pw;
+  if (canvas.height !== ph) canvas.height = ph;
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const cs = getComputedStyle(host);
+  // The context is reused across frames. A clip from the rolling frame would
+  // otherwise stay in place and shave the settled $.
+  ctx.save();
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const family = cs.fontFamily.split(",")[0].replace(/["']/g, "").trim();
+  ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} "${family}"`;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = cs.letterSpacing || "0px";
+  ctx.fillStyle = cs.color || "#1a1a1a";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.beginPath();
+  ctx.rect(0, 0, w, h);
+  ctx.clip();
+  const tt = from === to || t <= 0 ? 0 : t >= 1 ? 1 : t;
+  let digitW = 0;
+  for (const d of "0123456789") digitW = Math.max(digitW, ctx.measureText(d).width);
+  const widthOf = (ch: string) => {
+    if (ch === " ") return 0;
+    if (ch >= "0" && ch <= "9") return digitW;
+    return ctx.measureText(ch).width;
+  };
+  const pad = Math.max(0, (h - opts.lineH) / 2);
+  const base = pad + opts.baseline;
+  // The roll window is one digit. A window as tall as the $ left room for
+  // the next total to show underneath. The $ and comma open to their full
+  // ink only once the roll has settled, so the resting amount is not shaved.
+  const inkOf = (ch: string) => {
+    const m = ctx.measureText(ch);
+    return { a: m.actualBoundingBoxAscent || 0, d: m.actualBoundingBoxDescent || 0 };
+  };
+  const digit = inkOf("0");
+  let asc = digit.a;
+  let desc = digit.d;
+  for (const ch of new Set((from + to).replace(/ /g, ""))) {
+    const m = inkOf(ch);
+    asc = Math.max(asc, m.a);
+    desc = Math.max(desc, m.d);
+  }
+  if (digit.a < 1) {
+    asc = opts.lineH * 0.8;
+    desc = Math.max(desc, opts.lineH * 0.2);
+  }
+  const settle = tt <= 0 || tt >= 1 ? 1 : tt > 0.92 ? (tt - 0.92) / 0.08 : 0;
+  const useAsc = digit.a + (asc - digit.a) * settle;
+  const useDesc = digit.d + (desc - digit.d) * settle;
+  const bandTop = Math.max(0, base - useAsc - 0.4);
+  const bandBot = Math.min(h, base + useDesc + 0.4);
+  const travel = Math.max(1, (digit.a || useAsc) + (digit.d || useDesc));
+  const n = Math.max(from.length, to.length);
+  const a = from.padStart(n, " ");
+  const b = to.padStart(n, " ");
+  const cols: { a: string; b: string; w: number }[] = [];
+  for (let i = 0; i < n; i++) cols.push({ a: a[i], b: b[i], w: Math.max(widthOf(a[i]), widthOf(b[i])) });
+  let x = Math.max(0, w - cols.reduce((s, c) => s + c.w, 0));
+  const bandH = Math.max(1, bandBot - bandTop);
+  for (const c of cols) {
+    if (c.w <= 0) { continue; }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x - 1, bandTop, c.w + 2, bandH);
+    ctx.clip();
+    const cx = x + c.w / 2;
+    if (c.a === c.b || tt <= 0 || tt >= 1) {
+      const ch = tt >= 1 ? c.b : c.a;
+      if (ch !== " ") ctx.fillText(ch, cx, base);
+    } else {
+      if (c.a !== " ") ctx.fillText(c.a, cx, base - tt * travel);
+      if (c.b !== " ") ctx.fillText(c.b, cx, base + (1 - tt) * travel);
+    }
+    ctx.restore();
+    x += c.w;
+  }
+  ctx.restore();
 }
 
 export function paintDigitRoll(

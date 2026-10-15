@@ -2,9 +2,12 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 29: same motions as pass 28, holds trimmed so the film is 12.5s.
+ * Pass 30: one camera move from the kit onto a framing that holds the new
+ * lines and Add to cart together. The cursor does the guiding after that.
+ * The cart pill keeps the full total and the badge inside the frame, and a
+ * colour press on the pill cuts to the unchanged Place order summary.
  * Logo intro (0–11) and the outro fade/scale keep their lengths. The final
- * 15 frames are still the settled logo.
+ * 15 frames are still the settled logo. Duration stays 12.5s.
  */
 export const FPS = 30;
 
@@ -62,7 +65,7 @@ export const MORPH = [0, UI_IN[1]] as const;
 export const LEAD = 2;
 /** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
-export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 198, place: 268 };
+export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 198, pill: 244, place: 268 };
 export const ENTER = CLICK.result + 3;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -87,10 +90,10 @@ export const POP_HOVER = CLICK.tplAdd - LEAD;
  * where the eye already is. Perseus is already on the order.
  */
 /**
- * 18 frames, 0.6s, MOVE_E. Starts after the popover has closed and held.
- * The kit lines are not in the table yet, so the zoom is the only motion.
+ * One zoom, 24 frames. The only camera move between the kit and the cart pill.
+ * Lands on a framing that holds the new lines and Add to cart together.
  */
-export const ROWS_ZOOM = [149, 167] as const;
+export const ROWS_ZOOM = [149, 173] as const;
 export const ROWS_CUT = ROWS_ZOOM[0];
 /**
  * The three kit lines are already in the table before the zoom starts.
@@ -98,21 +101,32 @@ export const ROWS_CUT = ROWS_ZOOM[0];
  */
 export const TPL_ROWS = [147, 147] as const;
 /**
- * Eased move from the table onto Add to cart. Not a cut.
- * Lands before the press so the button can be read with the cursor on it.
+ * Cursor only. The camera holds. The pointer travels from the new line
+ * onto Add to cart and lands before the press.
  */
-export const ADD_MOVE = [175, 193] as const;
+export const ADD_MOVE = [186, 194] as const;
 export const ADD_CUT = ADD_MOVE[1];
 export const PAN_BC = ADD_MOVE;
-/** Hard cut to a tight cart pill still showing $0.00. */
-export const PILL_SHOT = 207;
-export const PILL_W0 = 85;
-/** Filled pill for "$4,908.66" at weight 700 plus the badge. Right edge stays 1284. */
-export const PILL_W1 = 143;
+/**
+ * Hard cut to the cart pill. The cursor has already landed on it, on the wide
+ * shot, so the close-up opens with the pointer on the icon.
+ */
+export const PILL_SHOT = 211;
+/**
+ * Empty pill for the icon plus "$0.00". Filled pill for "$4,908.66" at weight
+ * 700 plus the 20px badge. Both include slack so the $ and the circle clear
+ * the radius. Right edge stays 1284; the pill grows left.
+ */
+export const PILL_W0 = 92;
+export const PILL_W1 = 156;
 /** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
-export const PILL_NUM_W = 115;
-/** Cursor lands on the empty cart icon, then rides it as the pill grows. */
-export const PILL_ARRIVE = 211;
+export const PILL_NUM_W = 124;
+/**
+ * Cursor lands on the header cart the frame before the close-up, still on the
+ * wide shot, then rides the icon through the grow, the roll, and the press.
+ * Nine frames from the end of the Add press, straight up the right side.
+ */
+export const PILL_ARRIVE = 210;
 /** Digit roll starts the frame the width finishes. 14 frames, 467ms. */
 export const PILL_ROLL = 221;
 export const ROLL_PILL_F = 14;
@@ -204,16 +218,22 @@ export const SHOT_B: Cam = { cx: 803, cy: 332.4, s: 3.3 };
 /** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out.
  *  cy +0.4 follows the Quick order title locking to a 28px line box. */
 export const SHOT_B2: Cam = { cx: 1158, cy: 595.4, s: 6.4 };
-/** Add 4 to cart. Low enough that the rail price above the footer is out of frame. */
-/** Add 4 lines to cart. Centre is the wider label. */
+/**
+ * Kit lines and Add 4 lines to cart in one hold. s=1.32 is the widest scale
+ * that keeps the table (x 248) and the button (right edge 1284) inside with
+ * the sidebar (220) just out, so no nav label is sliced. The view is taller
+ * than the page, so the header and the footer are both in frame.
+ */
+export const SHOT_BOTH: Cam = { cx: 766, cy: 378, s: 1.32 };
+/** Kept so a report can name the old tight shots. Not a camera target. */
 export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
-/** The order table, framed so three new rows can arrive under Perseus. */
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
 /**
- * Filled pill centred. Right edge stays at 1284, filled width 142,
- * so the centre is 1213. cy is the pill's vertical centre.
+ * Filled pill centred. Right edge stays at 1284, filled width PILL_W1,
+ * so the centre is 1284 - PILL_W1/2. s=7.6 leaves about 18px of page on
+ * either side of that pill, including while it is still the empty width.
  */
-export const SHOT_PILL: Cam = { cx: 1213, cy: 23, s: 8.8 };
+export const SHOT_PILL: Cam = { cx: 1284 - PILL_W1 / 2, cy: 23, s: 7.6 };
 /**
  * Place order and Order placed share one scale and the same offset from each
  * card's page centre. s=2.95 is the largest scale that keeps SO-48213 inside
@@ -239,8 +259,7 @@ export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: logo -> search", ease: MOVE_E },
   { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
-  { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_ROWS, label: "zoom out to the order", ease: MOVE_E },
-  { a: ADD_MOVE[0], b: ADD_MOVE[1], to: SHOT_ADD, label: "ease: order -> Add to cart", ease: MOVE_E },
+  { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_BOTH, label: "zoom out to lines + Add to cart", ease: MOVE_E },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },
