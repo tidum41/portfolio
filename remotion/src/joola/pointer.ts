@@ -6,7 +6,7 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
+  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_W0, PILL_W1,
   ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, prog, type Cam,
 } from "./timeline";
 
@@ -58,14 +58,19 @@ export const KEYS: Key[] = [
   [CLICK.tpl + 4, P.tpl],
   // Settled on Add to order before the press. The zoom starts the next move.
   [CLICK.tplAdd - 8, P.tplAdd],
+  // The zoom reveals the lines. The cursor arrives on the new line as it settles,
+  // holds, then travels onto Add to cart before the press.
   [ROWS_ZOOM[0], P.tplAdd],
   [ROWS_ZOOM[1], P.rowIn],
   [ADD_MOVE[0], P.rowIn],
   [ADD_MOVE[1], P.add],
-  // Press is 3 frames, then a 2-frame hold, then the 8-frame travel onto the pill.
-  [CLICK.add + 5, P.add],
+  // Press is 3 frames. Then a straight travel up to the header cart, landing
+  // the frame before the close-up so the cut opens with the cursor on the icon.
+  [CLICK.add + 3, P.add],
   [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],
-  [CART_CUT - 6, P.pillIcon],
+  // The cut is the click. Land just above Place order, then settle onto it.
+  // A screen-space blend from the pill icon would drop the cursor on the credit line.
+  [CART_CUT, [P.place[0], P.place[1] - 28]],
   [CLICK.place - 9, P.place],
   [CLICK.place + 2, P.place],
   [CLICK.place + 10, P.away],
@@ -75,7 +80,7 @@ const sp = (k: Key): Pt => toScreen(camAt(k[0]), k[1][0], k[1][1]);
 export const pointerAt = (f: number): Pt => {
   // Ride the cart icon while the pill grows left. Same curve as the width,
   // so the cursor stays on the icon instead of waiting in the space it opens.
-  if (f >= PILL_ARRIVE && f <= CART_CUT - 6) {
+  if (f >= PILL_ARRIVE && f < CART_CUT) {
     const r = pillRectAt(f);
     return toScreen(camAt(f), r[0] + 20, r[1] + r[3] / 2);
   }
@@ -138,7 +143,8 @@ export const hoverState = (frame: number): { id: HoverId; sel: string; active: b
     { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd, press: 4 },
     // Add to cart: the press is 3 frames. Hover ends with it.
     { id: "add", sel: "[data-add-all]", rectAt: fixed(R["qo-search.addBtn"]), from: CLICK.add - 24, until: CLICK.add + 3, click: CLICK.add, press: 3 },
-    { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, from: PILL_SHOT, until: CART_CUT, click: -1, press: 4 },
+    // Hover, then a 3-frame colour press. The cut on the next frame is the click.
+    { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, from: PILL_ARRIVE, until: CART_CUT, click: CLICK.pill, press: 3 },
     { id: "place", sel: "[data-place-order]", rectAt: fixed(R["cart.place"]), from: CART_CUT, until: CLICK.place + 4, click: CLICK.place, press: 4 },
   ];
   return specs

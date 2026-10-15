@@ -15,7 +15,7 @@ import {
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
-import { clearDigitCache, measureBox, measureLine, measureText, paintLockedRoll } from "./joola/digit-roll";
+import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -277,7 +277,7 @@ function showStable(
   amt.style.minWidth = `${used}px`;
 }
 
-const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1";
+const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1, .rail-id, .rail-copy .name, .rail-copy .meta-left, .rail-copy .meta-amt, .rail-card > h3";
 
 /**
  * Hide a table label only when the zoom frame cuts through its glyphs.
@@ -429,10 +429,10 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // A zoom from the kit onto the table has to cross the rows. Hide a label
   // only while the frame cuts it, so a still never shows a sliced word.
   concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
-  // The tight pill frame covers the retailer name once the pill is full, and
-  // slices "Pickleball" while the pill is still $0. Hide the chip for that shot.
+  // The pill frame covers the retailer name, and a wider framing would cut
+  // the page title. Hide both so the hold is the pill, not a sliced word.
   if (f >= PILL_SHOT && f < CART_CUT) {
-    qa(root, ".account-chip").forEach((el) => { el.style.visibility = "hidden"; });
+    qa(root, ".account-chip, .page > h1").forEach((el) => { el.style.visibility = "hidden"; });
   }
 }
 
@@ -452,12 +452,13 @@ function pill(root: HTMLElement, f: number) {
   const zeroLine = measureLine(amt, from);
   // Whole pixels. Height and baseline stay the line box for the whole shot,
   // so the digits do not step when the roll starts or ends.
-  const fullW = Math.round(line.w);
-  const zeroW = Math.round(zeroLine.w);
+  // Two extra pixels so a rounded column cannot shave the $ against overflow.
+  const fullW = Math.ceil(line.w) + 2;
+  const zeroW = Math.ceil(zeroLine.w) + 2;
   const grow = f >= PILL_FILL[0] ? tw : 0;
   const amtW = Math.round(lerp(zeroW, fullW, f >= PILL_ROLL ? 1 : grow));
-  const h = Math.max(1, Math.round(line.h));
-  const baseline = Math.round(line.base);
+  const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
+  const h = Math.max(Math.round(line.h), Math.ceil(fontPx * 1.45));
   amt.style.position = "relative";
   amt.style.setProperty("display", "block", "important");
   amt.style.setProperty("width", `${amtW}px`, "important");
@@ -465,23 +466,21 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("height", `${h}px`, "important");
   amt.style.setProperty("min-height", `${h}px`, "important");
   amt.style.setProperty("overflow", "hidden", "important");
+  amt.style.setProperty("transform", "none", "important");
   amt.style.setProperty("flex-shrink", "0", "important");
   amt.style.setProperty("text-box", "none", "important");
-  let paint = q(amt, ":scope > .film-paint");
-  if (!paint) {
-    amt.replaceChildren();
-    paint = document.createElement("span");
-    paint.className = "film-paint";
-    amt.appendChild(paint);
-  }
+  amt.style.setProperty("line-height", `${h}px`, "important");
   const { from: rollFrom, to: rollTo, t } = f >= PILL_ROLL
     ? rollAt([{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F)
     : { from, to: from, t: 0 };
-  paintLockedRoll(paint, rollFrom, rollTo, t, {
-    maxBlur: blurCap(camAt(f).s),
-    align: "right",
-    pixel: true,
-    lock: { w: amtW, h, baseline },
+  // DOM overflow does not clip the traveling glyph inside the scaled stage.
+  // The canvas bitmap is the amount box, so the next line cannot paint through.
+  paintCanvasRoll(amt, rollFrom, rollTo, t, {
+    w: amtW,
+    h,
+    scale: Math.ceil(camAt(f).s * (1920 / OW)),
+    baseline: line.base,
+    lineH: line.h,
   });
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
