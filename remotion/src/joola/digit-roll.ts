@@ -112,8 +112,155 @@ function clearRoll(el: HTMLElement) {
   el.style.removeProperty("text-box");
 }
 
+/** Layout box of an on-stage element, baseline from a zero-width mark. */
+export function measureBox(el: HTMLElement, mark: HTMLElement): { w: number; h: number; base: number } {
+  const box = layoutBox(el);
+  let sy = 1;
+  let node: Element | null = el;
+  while (node) {
+    const t = getComputedStyle(node).transform;
+    if (t && t !== "none") sy *= new DOMMatrix(t).d || 1;
+    node = node.parentElement;
+  }
+  const base = (mark.getBoundingClientRect().top - el.getBoundingClientRect().top) / (sy || 1);
+  return { w: box.w, h: box.h, base };
+}
+
 export function measureText(el: HTMLElement, text: string) {
   return metrics(el, text).w;
+}
+
+/** Line box of `text` in `el`'s font, in layout pixels. The probe is unscaled. */
+export function measureLine(el: HTMLElement, text: string): { w: number; h: number; base: number } {
+  const ready = !document.fonts || document.fonts.status === "loaded";
+  if (!ready) cache.clear();
+  const hit = probeFor(el);
+  hit.probe.insertBefore(hit.probe.ownerDocument.createTextNode(text), hit.mark);
+  const box = layoutBox(hit.probe);
+  const base = hit.mark.getBoundingClientRect().top - box.top;
+  const n = hit.probe.firstChild;
+  if (n && n.nodeType === 3) n.parentNode?.removeChild(n);
+  return { w: box.w, h: box.h, base };
+}
+
+export type LockBox = { w: number; h: number; baseline: number };
+
+/** Drop measured glyph widths. The first paint of a page can run before the face is ready. */
+export function clearDigitCache() {
+  cache.clear();
+}
+
+/**
+ * Per-digit roll inside a box that does not change size between the settled
+ * frames and the moving ones. Every column is the same line box, so a comma
+ * and a dollar sign roll through the window instead of a slot as short as
+ * their own ink. Digit columns share one advance (tabular).
+ * `pixel` rounds every edge and the travel to whole layout pixels.
+ */
+export function paintLockedRoll(
+  el: HTMLElement,
+  from: string,
+  to: string,
+  t: number,
+  opts: { maxBlur?: number; align?: "left" | "right"; lock: LockBox; pixel?: boolean },
+): number {
+  const maxBlur = opts.maxBlur != null ? opts.maxBlur : 1;
+  const align = opts.align || "left";
+  const pixel = !!opts.pixel;
+  const snap = (n: number) => (pixel ? Math.round(n) : Math.round(n * 64) / 64);
+  const px = (n: number) => `${snap(n)}px`;
+  const tt = from === to || t <= 0 ? 0 : t >= 1 ? 1 : t;
+  let digitW = 0;
+  for (const d of "0123456789") digitW = Math.max(digitW, metrics(el, d).w);
+  const widthOf = (ch: string) => {
+    if (ch === " ") return 0;
+    if (ch >= "0" && ch <= "9") return digitW;
+    return metrics(el, ch).w;
+  };
+  // One line box for every column, measured from the DOM face (not canvas ink).
+  const line = measureLine(el, "8");
+  const slotH = Math.max(pixel ? 1 : 0.01, pixel ? Math.ceil(line.h) : snap(line.h));
+  const n = Math.max(from.length, to.length);
+  const a = align === "right" ? from.padStart(n, " ") : from.padEnd(n, " ");
+  const b = align === "right" ? to.padStart(n, " ") : to.padEnd(n, " ");
+  type Col = { a: string; b: string; w: number };
+  const cols: Col[] = [];
+  for (let i = 0; i < n; i++) {
+    const w = Math.max(widthOf(a[i]), widthOf(b[i]));
+    cols.push({ a: a[i], b: b[i], w: snap(w) });
+  }
+  const rawSum = cols.reduce((s, c) => s + c.w, 0);
+  const baseline = snap(opts.lock.baseline);
+  const marginTop = snap(baseline - line.base);
+  el.classList.add("j-roll");
+  el.style.setProperty("text-box", "none", "important");
+  el.style.setProperty("display", "flex", "important");
+  el.style.setProperty("justify-content", align === "right" ? "flex-end" : "flex-start", "important");
+  el.style.setProperty("align-items", "flex-start", "important");
+  el.style.setProperty("overflow", "hidden", "important");
+  el.style.setProperty("width", "100%", "important");
+  el.style.setProperty("height", "100%", "important");
+  el.style.whiteSpace = "nowrap";
+  el.style.fontVariantNumeric = "tabular-nums";
+  el.style.fontFeatureSettings = '"tnum" 1';
+  el.style.lineHeight = "normal";
+  el.replaceChildren();
+  const blur = Math.sin(Math.PI * tt) * maxBlur;
+  const place = (ch: string, into: HTMLElement) => {
+    if (ch === " ") return;
+    const tx = document.createElement("span");
+    tx.className = "j-roll-glyph";
+    tx.textContent = ch;
+    tx.style.display = "block";
+    tx.style.height = px(slotH);
+    tx.style.textAlign = "center";
+    tx.style.lineHeight = "normal";
+    tx.style.whiteSpace = "pre";
+    tx.style.fontVariantNumeric = "tabular-nums";
+    tx.style.fontFeatureSettings = '"tnum" 1';
+    tx.style.setProperty("text-box", "none", "important");
+    tx.style.setProperty("overflow", "hidden", "important");
+    into.appendChild(tx);
+  };
+  for (const c of cols) {
+    if (c.w <= 0) continue;
+    const slot = document.createElement("span");
+    slot.className = "j-roll-slot";
+    slot.style.position = "relative";
+    slot.style.display = "block";
+    slot.style.flex = "0 0 auto";
+    slot.style.setProperty("overflow", "clip", "important");
+    slot.style.setProperty("clip-path", "inset(0)", "important");
+    slot.style.setProperty("width", px(c.w), "important");
+    slot.style.setProperty("height", px(slotH), "important");
+    slot.style.setProperty("max-height", px(slotH), "important");
+    slot.style.marginTop = px(marginTop);
+    if (c.a === c.b || tt === 0 || tt === 1) {
+      place(tt >= 1 ? c.b : c.a, slot);
+    } else {
+      const col = document.createElement("span");
+      col.className = "j-roll-col";
+      col.style.position = "absolute";
+      col.style.left = "0";
+      col.style.top = "0";
+      col.style.width = "100%";
+      const dy = snap(-tt * slotH);
+      col.style.transform = `translateY(${dy}px)`;
+      if (blur >= 0.35) col.style.filter = `blur(${blur.toFixed(2)}px)`;
+      [c.a, c.b].forEach((ch) => {
+        const cell = document.createElement("span");
+        cell.style.display = "block";
+        cell.style.position = "relative";
+        cell.style.height = px(slotH);
+        cell.style.setProperty("overflow", "hidden", "important");
+        place(ch, cell);
+        col.appendChild(cell);
+      });
+      slot.appendChild(col);
+    }
+    el.appendChild(slot);
+  }
+  return snap(rawSum);
 }
 
 export function paintDigitRoll(

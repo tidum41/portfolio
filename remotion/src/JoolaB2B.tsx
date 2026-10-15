@@ -15,7 +15,7 @@ import {
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
-import { measureText, paintDigitRoll } from "./joola/digit-roll";
+import { clearDigitCache, measureBox, measureLine, measureText, paintLockedRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -135,6 +135,25 @@ const CSS =
   align-items:flex-start!important;
 }
 .film-layer .j-roll-slot{overflow:hidden!important}
+/* Price rolls sit in the line box they replace, so "ea" and the row do not jump. */
+.film-layer .film-amt{
+  display:inline-block; position:relative; vertical-align:baseline;
+  line-height:normal; white-space:nowrap;
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+}
+.film-layer .film-sizer{visibility:hidden}
+.film-layer .film-base{display:inline-block;width:0;height:0;vertical-align:baseline}
+.film-layer .film-paint{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;text-box:none!important}
+.film-layer .line-total,.film-layer [data-order-footer] [data-order-total]{text-align:right}
+.film-layer .cart-pill .count-chip{
+  width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important;
+  flex:0 0 20px!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
+  display:grid!important;place-items:center!important;
+  font-variant-numeric:tabular-nums!important;font-feature-settings:"tnum" 1!important;
+  line-height:20px!important;font-size:12px!important;
+  transform-origin:10px 10px!important;
+}
+.film-layer .cart-pill .cart-amount-display{flex-shrink:0!important}
 .film-layer .film-face,.film-layer .order-face{
   position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
@@ -181,14 +200,7 @@ function blurCap(s: number) {
 }
 
 /** Prototype digit roll. t is eased here; the painter only places glyphs. */
-function showRoll(
-  el: HTMLElement,
-  segments: { at: number; text: string }[],
-  frame: number,
-  dur: number,
-  maxBlur: number,
-  align: "left" | "right" = "left",
-) {
+function rollAt(segments: { at: number; text: string }[], frame: number, dur: number) {
   let i = 0;
   while (i + 1 < segments.length && frame >= segments[i + 1].at) i++;
   const to = segments[i].text;
@@ -196,7 +208,73 @@ function showRoll(
   const at = i === 0 ? frame + 1 : segments[i].at;
   const raw = frame < at ? 0 : frame >= at + dur ? 1 : (frame - at) / dur;
   const t = raw <= 0 || raw >= 1 ? raw : EASE_OUT(clamp01(raw));
-  paintDigitRoll(el, from, to, t, { maxBlur, align });
+  return { from, to, t };
+}
+
+/**
+ * The number paints into an absolute layer. A hidden sizer keeps the line box,
+ * so the roll cannot change the height or the position of the neighbours.
+ * The box is the widest string this element will show, from the first frame.
+ */
+function showStable(
+  el: HTMLElement,
+  segments: { at: number; text: string }[],
+  frame: number,
+  dur: number,
+  maxBlur: number,
+  align: "left" | "right" = "right",
+) {
+  const { from, to, t } = rollAt(segments, frame, dur);
+  const block = el.classList.contains("line-total") || el.hasAttribute("data-order-total");
+  let amt = block ? q(el, ":scope > .film-amt") : el;
+  if (block && !amt) {
+    el.classList.remove("j-roll");
+    el.style.display = "";
+    el.style.width = "";
+    el.style.height = "";
+    el.style.overflow = "";
+    el.replaceChildren();
+    amt = document.createElement("span");
+    amt.className = "film-amt";
+    el.appendChild(amt);
+  }
+  if (!amt) return;
+  el.style.textAlign = align;
+  amt.classList.add("film-amt");
+  let sizer = q(amt, ":scope > .film-sizer");
+  let paint = q(amt, ":scope > .film-paint");
+  if (!sizer || !paint) {
+    amt.replaceChildren();
+    sizer = document.createElement("span");
+    sizer.className = "film-sizer";
+    const mark = document.createElement("span");
+    mark.className = "film-base";
+    sizer.appendChild(mark);
+    paint = document.createElement("span");
+    paint.className = "film-paint";
+    amt.appendChild(sizer);
+    amt.appendChild(paint);
+  }
+  // Right-aligned cells lock to the widest value up front, so the edge never moves.
+  // The footer total is left-aligned and only as wide as the value on screen.
+  const samples = align === "right" ? segments.map((s) => s.text) : [from, to];
+  let wide = samples[0];
+  let wideW = -1;
+  for (const sample of samples) {
+    const w = measureText(amt, sample);
+    if (w > wideW) { wideW = w; wide = sample; }
+  }
+  const textNode = Array.from(sizer.childNodes).find((n) => n.nodeType === 3);
+  if (!textNode) sizer.appendChild(document.createTextNode(wide));
+  else if (textNode.textContent !== wide) textNode.textContent = wide;
+  const mark = q(sizer, ":scope > .film-base");
+  const line = mark ? measureBox(amt, mark) : measureLine(amt, wide);
+  const used = paintLockedRoll(paint, from, to, t, {
+    maxBlur,
+    align,
+    lock: { w: line.w, h: line.h, baseline: line.base },
+  });
+  amt.style.minWidth = `${used}px`;
 }
 
 const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1";
@@ -318,9 +396,9 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const one = money(unitAt(1));
   const twelve = money(unitAt(QTY_FINAL));
   const blur = blurCap(camAt(f).s);
-  showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f, ROLL_F, blur);
+  showStable(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f, ROLL_F, blur);
   const lineEl = q(pr, ".line-total")!;
-  showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f, ROLL_F, blur);
+  showStable(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f, ROLL_F, blur);
 
   const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
   if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
@@ -331,12 +409,12 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const totalEl = q(root, "[data-order-footer] [data-order-total]")!;
   const perseusOnly = money(r2(unitAt(1) * 1));
   const perseusTwelve = money(r2(unitAt(QTY_FINAL) * QTY_FINAL));
-  showRoll(totalEl, [
+  showStable(totalEl, [
     { at: 0, text: money(0) },
     { at: INSERT[0], text: perseusOnly },
     { at: CLICK.qty, text: perseusTwelve },
     { at: TPL_ROWS[0], text: money(ORDER_TOTAL) },
-  ], f, ROLL_F, blur);
+  ], f, ROLL_F, blur, "left");
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lineWord} to cart`;
@@ -364,39 +442,72 @@ function pill(root: HTMLElement, f: number) {
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
   const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
-  const wpx = lerp(PILL_W0, PILL_W1, tw);
+  const wpx = Math.round(lerp(PILL_W0, PILL_W1, tw));
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   const from = money(0);
   const to = money(ORDER_TOTAL);
-  const zeroW = measureText(amt, from);
-  const fullW = measureText(amt, to);
-  // The amount box eases to the final width with $0.00 pinned to the right,
-  // so the cents column does not jump when the roll starts.
-  if (f < PILL_ROLL) {
-    const grow = f >= PILL_FILL[0] ? tw : 0;
-    amt.classList.remove("j-roll");
-    amt.replaceChildren(document.createTextNode(from));
-    amt.style.display = "inline-block";
-    amt.style.textAlign = "right";
-    amt.style.width = `${lerp(zeroW, fullW, grow).toFixed(2)}px`;
-    amt.style.removeProperty("text-box");
-  } else {
-    showRoll(amt, [{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F, blurCap(camAt(f).s), "right");
+  const line = measureLine(amt, to);
+  const zeroLine = measureLine(amt, from);
+  // Whole pixels. Height and baseline stay the line box for the whole shot,
+  // so the digits do not step when the roll starts or ends.
+  const fullW = Math.round(line.w);
+  const zeroW = Math.round(zeroLine.w);
+  const grow = f >= PILL_FILL[0] ? tw : 0;
+  const amtW = Math.round(lerp(zeroW, fullW, f >= PILL_ROLL ? 1 : grow));
+  const h = Math.max(1, Math.round(line.h));
+  const baseline = Math.round(line.base);
+  amt.style.position = "relative";
+  amt.style.setProperty("display", "block", "important");
+  amt.style.setProperty("width", `${amtW}px`, "important");
+  amt.style.setProperty("min-width", `${amtW}px`, "important");
+  amt.style.setProperty("height", `${h}px`, "important");
+  amt.style.setProperty("min-height", `${h}px`, "important");
+  amt.style.setProperty("overflow", "hidden", "important");
+  amt.style.setProperty("flex-shrink", "0", "important");
+  amt.style.setProperty("text-box", "none", "important");
+  let paint = q(amt, ":scope > .film-paint");
+  if (!paint) {
+    amt.replaceChildren();
+    paint = document.createElement("span");
+    paint.className = "film-paint";
+    amt.appendChild(paint);
   }
+  const { from: rollFrom, to: rollTo, t } = f >= PILL_ROLL
+    ? rollAt([{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F)
+    : { from, to: from, t: 0 };
+  paintLockedRoll(paint, rollFrom, rollTo, t, {
+    maxBlur: blurCap(camAt(f).s),
+    align: "right",
+    pixel: true,
+    lock: { w: amtW, h, baseline },
+  });
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
+  // The badge keeps its 20px slot once the pill is wide enough, so the
+  // number does not move when the circle fades in.
+  const slot = f >= PILL_ROLL;
   const showBadge = f >= PILL_BADGE[0];
-  chip.hidden = !showBadge;
+  chip.hidden = !slot;
   chip.textContent = "4";
+  chip.style.setProperty("width", "20px", "important");
+  chip.style.setProperty("height", "20px", "important");
+  chip.style.setProperty("min-width", "20px", "important");
+  chip.style.setProperty("max-width", "20px", "important");
+  chip.style.setProperty("flex", "0 0 20px", "important");
+  chip.style.setProperty("margin", "0", "important");
+  chip.style.setProperty("padding", "0", "important");
+  chip.style.setProperty("transform-origin", "10px 10px", "important");
   if (showBadge) {
     const bt = prog(f, PILL_BADGE[0], PILL_BADGE[1], EASE_OUT);
+    const sc = bt >= 1 ? 1 : lerp(0.6, 1, bt);
     chip.style.visibility = "";
     chip.style.opacity = `${bt}`;
-    chip.style.transform = `scale(${lerp(0.6, 1, bt)})`;
+    // Settled frame has no transform, so the circle cannot sit a subpixel off its slot.
+    chip.style.transform = sc === 1 ? "none" : `scale(${sc.toFixed(3)})`;
   } else {
     chip.style.visibility = "hidden";
     chip.style.opacity = "0";
@@ -553,29 +664,58 @@ const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: 
   );
 };
 
-const Cursor: React.FC<{ x: number; y: number; scale: number; kind: "arrow" | "ibeam" }> = ({ x, y, scale, kind }) => (
-  kind === "ibeam" ? (
-    <svg width={15} height={23} viewBox="0 0 15 23" style={{ position: "absolute", pointerEvents: "none", left: x - 7.5, top: y - 11.5, transformOrigin: "7.5px 11.5px", transform: `scale(${scale})`, overflow: "visible" }}>
-      <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" />
-      <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#111" strokeWidth={1.35} strokeLinecap="butt" />
-    </svg>
-  ) : (
-    <svg width={19} height={25} viewBox="0 0 17 22" style={{ position: "absolute", pointerEvents: "none", left: x - 1.7, top: y - 1.7, transformOrigin: "1.7px 1.7px", transform: `scale(${scale})`, filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.15))", overflow: "visible" }}>
+/** Stage px → whole film px. The stage is scaled by 1920/1440, so a 0.75 step is 1px. */
+const snapFilm = (n: number) => Math.round(n * (1920 / OW)) / (1920 / OW);
+
+/**
+ * Drawn at the final size, not CSS-scaled from a 19px bitmap, so the arrow
+ * stays sharp at card width. The hotspot is the tip, snapped to a film pixel.
+ */
+const Cursor: React.FC<{ x: number; y: number; scale: number; kind: "arrow" | "ibeam" }> = ({ x, y, scale, kind }) => {
+  if (kind === "ibeam") {
+    const w = 15 * scale;
+    const h = 23 * scale;
+    return (
+      <svg width={w} height={h} viewBox="0 0 15 23" style={{ position: "absolute", pointerEvents: "none", left: snapFilm(x - w / 2), top: snapFilm(y - h / 2), overflow: "visible" }}>
+        <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" />
+        <path d="M3 2.5 H12 M7.5 2.5 V20.5 M3 20.5 H12" fill="none" stroke="#111" strokeWidth={1.35} strokeLinecap="butt" />
+      </svg>
+    );
+  }
+  const w = 19 * scale;
+  const h = 25 * scale;
+  const hx = (1.7 / 17) * w;
+  const hy = (1.7 / 22) * h;
+  return (
+    <svg width={w} height={h} viewBox="0 0 17 22" shapeRendering="geometricPrecision" style={{ position: "absolute", pointerEvents: "none", left: snapFilm(x - hx), top: snapFilm(y - hy), overflow: "visible", filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.18))" }}>
       <path d="M1.5 1.5 L1.5 17.5 L5.6 13.6 L8.4 20 L11 18.9 L8.3 12.6 L14 12.6 Z" fill="#111" stroke="#fff" strokeWidth={1.3} strokeLinejoin="round" />
     </svg>
-  )
-);
+  );
+};
 
 export const JoolaB2B: React.FC = () => {
   const frame = useCurrentFrame();
   const [handle] = useState(() => delayRender("r11 fonts + images"));
+  const [fontsReady, setFontsReady] = useState(false);
+  const cacheCleared = useRef(false);
+  // The first layout paints before the face is ready and would be the frame
+  // Remotion captures. Clear the metric cache and paint again, then release.
+  if (fontsReady && !cacheCleared.current) {
+    clearDigitCache();
+    cacheCleared.current = true;
+  }
   useLayoutEffect(() => {
+    let cancel = false;
     const imgs = Array.from(document.querySelectorAll(".film-layer img, .film-logo")) as HTMLImageElement[];
     Promise.all([
       ...["400", "500", "700"].map((w) => document.fonts.load(`${w} 16px FKGroteskNeue`)),
       ...imgs.map((i) => (i.complete ? Promise.resolve() : new Promise((r) => { i.onload = r; i.onerror = r; }))),
-    ]).then(() => continueRender(handle));
-  }, [handle]);
+    ]).then(() => { if (!cancel) setFontsReady(true); });
+    return () => { cancel = true; };
+  }, []);
+  useLayoutEffect(() => {
+    if (fontsReady) continueRender(handle);
+  }, [fontsReady, handle]);
 
   const screen = frame >= CONF_CUT ? "confirmation" : frame >= CART_CUT ? "cart" : "qo-desktop";
   const cam = camAt(frame);
