@@ -208,6 +208,13 @@ async function reverseProbe(page) {
     const overlay = document.getElementById("theme-transition-overlay");
     const canvas = overlay instanceof HTMLCanvasElement ? overlay : null;
     function revealedFraction() {
+      const reveal = document.getAnimations().find((anim) => anim.animationName === "theme-dither-reveal");
+      if (reveal) {
+        const timing = reveal.effect?.getComputedTiming?.();
+        const dur = timing?.duration;
+        const time = Number(reveal.currentTime);
+        if (typeof dur === "number" && dur > 0 && Number.isFinite(time)) return time / dur;
+      }
       if (!(canvas instanceof HTMLCanvasElement)) return null;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return null;

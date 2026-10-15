@@ -9,7 +9,7 @@ import { setThemeTransitionMode } from "@/lib/theme-transition/preference";
 
 const MODES: { id: ThemeTransitionMode; label: string; hint: string }[] = [
   { id: "default", label: "Instant", hint: "Snap with no mask" },
-  { id: "dither", label: "A — Bayer dither", hint: "Default. Ordered dissolve ~300ms, reverses mid-click" },
+  { id: "dither", label: "A — Bayer dither", hint: "Default. 3px grain, ~560ms, reverses mid-click" },
   { id: "halftone", label: "B — Halftone dots", hint: "Radial dot grid ~500ms, also reversible" },
 ];
 

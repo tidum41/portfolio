@@ -4,22 +4,16 @@ import {
   type SiteTheme,
 } from "./applyTheme";
 import type { Point } from "./bayer";
-import {
-  DITHER_DURATION_MS,
-  ditherCutoffForProgress,
-  ditherFrameIndex,
-  warmDitherFrames,
-  type DitherFrames,
-} from "./ditherFrames";
+import { DITHER_CELL_PX, DITHER_DURATION_MS, ditherRevealKeyframes } from "./ditherMask";
 import { maskDataUrlForProgress } from "./maskCanvas";
 import type { ThemeTransitionMode } from "./preference";
 
 const VT_STYLE_ID = "theme-transition-vt-style";
-const OVERLAY_ID = "theme-transition-overlay";
 const HALFTONE_MS = 500;
-/** Seek the first presented frame into the curve so the click's own paint
- *  already shows dither, instead of a fully hidden mask that looks unchanged. */
+/** Halftone only. Dither's first keyframe is already the hidden state. */
 const START_LEAD_MS = 16;
+const REVEAL_NAME = "theme-dither-reveal";
+const HOLD_NAME = "theme-vt-hold";
 
 type MaskMode = Exclude<ThemeTransitionMode, "default">;
 
@@ -33,31 +27,18 @@ type Flight = {
   dur: number;
   themeAt0: SiteTheme;
   themeAt1: SiteTheme;
-  frames: DitherFrames | null;
   vt: ViewTransition;
   raf: number;
   timer: number;
-  lastFrame: number;
   pending: Array<() => void>;
-  overlay: OverlayBuf | null;
   /** False until the snapshot is on screen. Clicks before that cancel or retarget without advancing the clock. */
   visible: boolean;
 };
 
-type OverlayBuf = {
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  image: ImageData;
-  tilesX: number;
-  tilesY: number;
-};
+type NamedAnim = Animation & { animationName: string };
 
 let flight: Flight | null = null;
 let toggleForwarder = false;
-
-const SAFARI_MASK = typeof navigator !== "undefined" &&
-  /safari/i.test(navigator.userAgent) &&
-  !/chrome|chromium|android/i.test(navigator.userAgent);
 
 /**
  * The root snapshot is the thing under the cursor, so a click on the toggle
@@ -89,17 +70,6 @@ function installToggleForwarder(): void {
   );
 }
 
-function applyDitherMask(url: string): void {
-  const value = `url("${url}")`;
-  document.documentElement.style.setProperty("--theme-dither-mask", value);
-  if (!SAFARI_MASK) return;
-  const el = document.getElementById(VT_STYLE_ID);
-  if (!el?.textContent) return;
-  el.textContent = el.textContent
-    .replace(/-webkit-mask-image:\s*[^;]+;/g, `-webkit-mask-image: ${value};`)
-    .replace(/(?<!-webkit-)mask-image:\s*[^;]+;/g, `mask-image: ${value};`);
-}
-
 function easeOutCubic(t: number): number {
   return 1 - (1 - t) ** 3;
 }
@@ -118,12 +88,8 @@ function ensureVtStyleSheet(): HTMLStyleElement {
   return el;
 }
 
-function holdCss(): string {
+function pointerCss(): string {
   return `
-    @keyframes theme-vt-hold {
-      from { opacity: 1; }
-      to { opacity: 1; }
-    }
     /* The root snapshot replaces the document for hit testing. Every pseudo
        in that tree has to ignore pointers or a click on the toggle lands on
        <html> and the in-flight dissolve cannot reverse. */
@@ -134,48 +100,72 @@ function holdCss(): string {
     ::view-transition-new(root) {
       pointer-events: none;
     }
-    ::view-transition-group(root) {
-      animation: theme-vt-hold 60s linear infinite;
-    }
-    ::view-transition-old(root) {
-      animation: theme-vt-hold 60s linear infinite;
-      mix-blend-mode: normal;
-      opacity: 1;
-      z-index: 1;
+  `;
+}
+
+function holdKeyframes(): string {
+  return `
+    @keyframes ${HOLD_NAME} {
+      from { opacity: 1; }
+      to { opacity: 1; }
     }
   `;
 }
 
 function installDitherSheet(): void {
-  const crisp = `
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-  `;
-  ensureVtStyleSheet().textContent = `
-    ${holdCss()}
+  const el = ensureVtStyleSheet();
+  if (el.dataset.kind === "dither" && el.textContent) return;
+  el.dataset.kind = "dither";
+  const tile = DITHER_CELL_PX * 8;
+  el.textContent = `
+    ${holdKeyframes()}
+    @keyframes ${REVEAL_NAME} {
+      ${ditherRevealKeyframes()}
+    }
+    ${pointerCss()}
+    ::view-transition-group(root),
+    ::view-transition-old(root) {
+      animation: ${HOLD_NAME} 3s linear forwards;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(root) {
+      opacity: 1;
+      z-index: 1;
+    }
     ::view-transition-new(root) {
-      animation: theme-vt-hold 60s linear infinite;
+      animation: ${REVEAL_NAME} ${DITHER_DURATION_MS}ms linear both;
       mix-blend-mode: normal;
       opacity: 1;
       z-index: 2;
-      mask-image: var(--theme-dither-mask);
-      mask-size: 100% 100%;
-      mask-repeat: no-repeat;
+      mask-size: ${tile}px ${tile}px;
+      mask-repeat: repeat;
+      mask-position: 0 0;
       mask-mode: luminance;
-      -webkit-mask-image: var(--theme-dither-mask);
-      -webkit-mask-size: 100% 100%;
-      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-size: ${tile}px ${tile}px;
+      -webkit-mask-repeat: repeat;
+      -webkit-mask-position: 0 0;
       -webkit-mask-source-type: luminance;
-      ${crisp}
     }
   `;
 }
 
 function installHalftoneSheet(url: string): void {
-  ensureVtStyleSheet().textContent = `
-    ${holdCss()}
+  const el = ensureVtStyleSheet();
+  el.dataset.kind = "halftone";
+  el.textContent = `
+    ${holdKeyframes()}
+    ${pointerCss()}
+    ::view-transition-group(root) {
+      animation: ${HOLD_NAME} 60s linear infinite;
+    }
+    ::view-transition-old(root) {
+      animation: ${HOLD_NAME} 60s linear infinite;
+      mix-blend-mode: normal;
+      opacity: 1;
+      z-index: 1;
+    }
     ::view-transition-new(root) {
-      animation: theme-vt-hold 60s linear infinite;
+      animation: ${HOLD_NAME} 60s linear infinite;
       mix-blend-mode: normal;
       opacity: 1;
       z-index: 2;
@@ -193,52 +183,68 @@ function installHalftoneSheet(url: string): void {
 
 function clearVtStyles(): void {
   const el = document.getElementById(VT_STYLE_ID);
-  if (el) el.textContent = "";
+  // The dither sheet is one precomputed animation. Wiping it makes the next
+  // click parse every tile again, which is the hitch this path is avoiding.
+  if (el && el.dataset.kind !== "dither") el.textContent = "";
   const html = document.documentElement;
   html.removeAttribute("data-theme-transition");
   html.style.removeProperty("--theme-dither-mask");
   html.style.removeProperty("--theme-transition-duration");
 }
 
-function ensureOverlay(frames: DitherFrames): OverlayBuf {
-  let canvas = document.getElementById(OVERLAY_ID) as HTMLCanvasElement | null;
-  if (!canvas) {
-    canvas = document.createElement("canvas");
-    canvas.id = OVERLAY_ID;
-    canvas.setAttribute("aria-hidden", "true");
-    canvas.style.cssText =
-      "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1";
-    document.body.appendChild(canvas);
+function namedAnimations(): NamedAnim[] {
+  const out: NamedAnim[] = [];
+  for (const anim of document.getAnimations()) {
+    if (!("animationName" in anim)) continue;
+    const name = (anim as { animationName?: unknown }).animationName;
+    if (name !== REVEAL_NAME && name !== HOLD_NAME) continue;
+    out.push(anim as NamedAnim);
   }
-  if (canvas.width !== frames.tilesX || canvas.height !== frames.tilesY) {
-    canvas.width = frames.tilesX;
-    canvas.height = frames.tilesY;
-  }
-  const ctx = canvas.getContext("2d", { alpha: true, willReadFrequently: true });
-  if (!ctx) throw new Error("2d context unavailable");
-  ctx.imageSmoothingEnabled = false;
-  return {
-    canvas,
-    ctx,
-    image: ctx.createImageData(frames.tilesX, frames.tilesY),
-    tilesX: frames.tilesX,
-    tilesY: frames.tilesY,
-  };
+  return out;
 }
 
-/** Transparent pixels are the revealed new theme — the bench reads this back. */
-function paintOverlay(buf: OverlayBuf, map: Uint8Array, cutoff: number): void {
-  const data = buf.image.data;
-  for (let i = 0; i < map.length; i++) {
-    const revealed = map[i] < cutoff;
-    const o = i * 4;
-    const cover = revealed ? 0 : 255;
-    data[o] = cover;
-    data[o + 1] = cover;
-    data[o + 2] = cover;
-    data[o + 3] = cover;
+function setDitherPlayback(to: 0 | 1): void {
+  const rate = to === 1 ? 1 : -1;
+  // Only the mask animation reverses. Reversing the opacity hold finishes
+  // the view transition immediately, which cuts the dissolve off.
+  for (const anim of namedAnimations()) {
+    if (anim.animationName === REVEAL_NAME) anim.playbackRate = rate;
   }
-  buf.ctx.putImageData(buf.image, 0, 0);
+}
+
+function revealCurrentTime(): number {
+  const reveal = namedAnimations().find((anim) => anim.animationName === REVEAL_NAME);
+  const time = Number(reveal?.currentTime);
+  return Number.isFinite(time) ? time : 0;
+}
+
+/** Backstop only. Read the clock before flipping playbackRate — after a
+ *  reverse, currentTime can report 0 for a frame and a short timer would
+ *  skip the dissolve before it plays backward. */
+function watchReveal(f: Flight): void {
+  const reveal = namedAnimations().find((anim) => anim.animationName === REVEAL_NAME);
+  if (!reveal) return;
+  reveal.finished.then(() => {
+    if (flight === f) settle(f, f.to === 1 ? f.themeAt1 : f.themeAt0);
+  }).catch(() => {
+    /* playbackRate changes can replace the promise; the timer still settles */
+  });
+}
+
+function scheduleDitherEnd(f: Flight, remainingMs: number): void {
+  window.clearTimeout(f.timer);
+  f.timer = window.setTimeout(() => {
+    if (flight !== f) return;
+    const reveal = namedAnimations().find((anim) => anim.animationName === REVEAL_NAME);
+    const time = revealCurrentTime();
+    const atBoundary = f.to === 1 ? time >= DITHER_DURATION_MS - 24 : time <= 24;
+    if (reveal && !atBoundary) {
+      const left = f.to === 1 ? DITHER_DURATION_MS - time : time;
+      scheduleDitherEnd(f, left);
+      return;
+    }
+    settle(f, f.to === 1 ? f.themeAt1 : f.themeAt0);
+  }, Math.max(48, remainingMs) + 90);
 }
 
 function sample(f: Flight, now: number): number {
@@ -248,31 +254,22 @@ function sample(f: Flight, now: number): number {
   return f.from + (f.to - f.from) * eased;
 }
 
-function paint(f: Flight, progress: number): void {
-  if (f.mode === "dither" && f.frames) {
-    const frame = ditherFrameIndex(progress);
-    if (frame === f.lastFrame) return;
-    f.lastFrame = frame;
-    const url = f.frames.urls[frame] ?? f.frames.urls[f.frames.urls.length - 1];
-    applyDitherMask(url);
-    if (f.overlay) paintOverlay(f.overlay, f.frames.map, ditherCutoffForProgress(progress));
-    return;
-  }
+function paintHalftone(f: Flight, progress: number): void {
   installHalftoneSheet(maskDataUrlForProgress("halftone", progress, f.origin));
 }
 
-function retarget(f: Flight, to: 0 | 1, now: number): void {
+function retargetHalftone(f: Flight, to: 0 | 1, now: number): void {
   const progress = sample(f, now);
   f.from = progress;
   f.to = to;
   f.t0 = now;
   f.dur = Math.max(16, Math.abs(to - progress) * f.fullMs);
-  scheduleEnd(f);
+  scheduleHalftoneEnd(f);
 }
 
 /** Frames drive the stipple. A timer is the backstop so a stalled
  *  requestAnimationFrame cannot leave the snapshot up for the hold's 60s. */
-function scheduleEnd(f: Flight): void {
+function scheduleHalftoneEnd(f: Flight): void {
   window.clearTimeout(f.timer);
   f.timer = window.setTimeout(() => {
     if (flight === f) tick(f);
@@ -286,13 +283,12 @@ function endViewTransition(vt: ViewTransition): void {
   } catch {
     /* already finished or unsupported */
   }
-  for (const anim of document.getAnimations()) {
-    if ("animationName" in anim && anim.animationName === "theme-vt-hold") anim.cancel();
-  }
+  for (const anim of namedAnimations()) anim.cancel();
 }
 
 function settle(f: Flight, theme: SiteTheme): void {
-  if (flight === f) flight = null;
+  if (flight !== f) return;
+  flight = null;
   cancelAnimationFrame(f.raf);
   window.clearTimeout(f.timer);
   if (readTheme() !== theme) commitTheme(theme);
@@ -314,22 +310,22 @@ function settle(f: Flight, theme: SiteTheme): void {
   });
 }
 
-function armClock(f: Flight, now: number): void {
+function armHalftoneClock(f: Flight, now: number): void {
   f.visible = true;
   f.from = 0;
   f.to = f.to === 0 ? 0 : 1;
   f.t0 = now - (f.to === 1 ? START_LEAD_MS : 0);
   f.dur = Math.max(16, Math.abs(f.to - f.from) * f.fullMs);
-  paint(f, sample(f, now));
+  paintHalftone(f, sample(f, now));
   f.raf = requestAnimationFrame(() => tick(f));
-  scheduleEnd(f);
+  scheduleHalftoneEnd(f);
 }
 
 function tick(f: Flight): void {
-  if (flight !== f) return;
+  if (flight !== f || f.mode !== "halftone") return;
   const now = performance.now();
   const progress = sample(f, now);
-  paint(f, progress);
+  paintHalftone(f, progress);
   const done = (f.to === 1 && progress >= 1) || (f.to === 0 && progress <= 0);
   if (done) {
     settle(f, f.to === 1 ? f.themeAt1 : f.themeAt0);
@@ -347,19 +343,13 @@ function begin(
   const themeAt0 = readTheme();
   const themeAt1 = nextTheme;
   const fullMs = mode === "dither" ? DITHER_DURATION_MS : HALFTONE_MS;
-  const frames = mode === "dither" ? warmDitherFrames(origin) : null;
 
   const html = document.documentElement;
   html.setAttribute("data-theme-transition", mode);
   html.style.setProperty("--theme-transition-duration", `${fullMs}ms`);
 
-  if (mode === "dither" && frames) {
-    installDitherSheet();
-    const lead = frames.urls[1] ?? frames.urls[0];
-    applyDitherMask(lead);
-  } else {
-    installHalftoneSheet(maskDataUrlForProgress("halftone", 0, origin));
-  }
+  if (mode === "dither") installDitherSheet();
+  else installHalftoneSheet(maskDataUrlForProgress("halftone", 0, origin));
 
   const startViewTransition = document.startViewTransition?.bind(document);
   if (!startViewTransition) {
@@ -390,20 +380,34 @@ function begin(
     dur: fullMs,
     themeAt0,
     themeAt1,
-    frames,
     vt,
     raf: 0,
     timer: 0,
-    lastFrame: -1,
     pending: [resolve],
-    overlay: frames ? ensureOverlay(frames) : null,
     visible: false,
   };
   flight = next;
 
+  if (mode === "dither") {
+    vt.finished.then(
+      () => {
+        if (flight === next) settle(next, next.to === 1 ? next.themeAt1 : next.themeAt0);
+      },
+      () => {
+        /* skipTransition rejects an already-finished transition */
+      },
+    );
+  }
+
   vt.ready.then(() => {
     if (flight !== next) return;
-    armClock(next, performance.now());
+    if (next.mode === "dither") {
+      next.visible = true;
+      watchReveal(next);
+      scheduleDitherEnd(next, Math.max(0, DITHER_DURATION_MS - revealCurrentTime()));
+      return;
+    }
+    armHalftoneClock(next, performance.now());
   }).catch(() => {
     if (flight === next) settle(next, next.to === 0 ? next.themeAt0 : next.themeAt1);
   });
@@ -440,9 +444,9 @@ export type RunThemeTransitionOptions = {
 };
 
 /**
- * Swaps `data-theme`. Dither and halftone reveal through a View Transition
- * mask. A second call while one is running reverses from the current
- * progress instead of waiting or restarting at 0.
+ * Swaps `data-theme`. Dither reveals through one repeating Bayer tile on the
+ * view-transition snapshot; a second call reverses that CSS animation from
+ * the current frame. Halftone still steps a mask on requestAnimationFrame.
  */
 export function runThemeTransition(
   nextTheme: SiteTheme,
@@ -473,16 +477,24 @@ export function runThemeTransition(
       const to: 0 | 1 = nextTheme === active.themeAt1 ? 1 : 0;
       active.pending.push(resolve);
       if (!active.visible) {
-        // Snapshot isn't on screen yet. Reversing cancels; otherwise keep going.
         if (to === 0) settle(active, active.themeAt0);
         return;
       }
-      if (to !== active.to) {
-        const now = performance.now();
-        retarget(active, to, now);
+      if (to === active.to) return;
+      if (active.mode === "dither") {
+        const time = revealCurrentTime();
+        active.to = to;
+        setDitherPlayback(to);
+        const remaining = to === 0 ? time : DITHER_DURATION_MS - time;
+        watchReveal(active);
+        scheduleDitherEnd(active, remaining);
         if (readTheme() !== nextTheme) commitTheme(nextTheme);
-        paint(active, sample(active, performance.now()));
+        return;
       }
+      const now = performance.now();
+      retargetHalftone(active, to, now);
+      if (readTheme() !== nextTheme) commitTheme(nextTheme);
+      paintHalftone(active, sample(active, performance.now()));
     });
   }
 
@@ -493,6 +505,7 @@ export function runThemeTransition(
   });
 }
 
-export function warmThemeTransition(origin: Point): void {
-  warmDitherFrames(origin);
+export function warmThemeTransition(_origin: Point): void {
+  ditherRevealKeyframes();
+  if (typeof document !== "undefined") installDitherSheet();
 }

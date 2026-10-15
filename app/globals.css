@@ -209,6 +209,20 @@ p, li       { text-wrap: pretty; }
   text-wrap: stable;
   max-width: 100%;
 }
+/* Display type and captions are decoration. Body copy stays selectable,
+   and so do real links (including the ones set inside the hero line). */
+.hero-heading,
+.cs-hero-title,
+.cs-hero-tagline,
+.ps-polaroid-cap,
+.display-type {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.display-type a {
+  -webkit-user-select: text;
+  user-select: text;
+}
 /* Keep "at ucla" together so the line doesn't orphan "ucla" on a third
    row when the 390px wrap boundary sits between the words. */
 .hero-sub-end {
