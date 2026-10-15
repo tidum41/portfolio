@@ -2,11 +2,12 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 31: the cursor stays one on-screen size. Add to cart takes hover and
- * press from the tip, then a hard cut shows the header cart update in frame.
- * The cursor clicks that pill, holds, and only then cuts to Place order.
- * Logo intro (0–11), the outro, and the Order placed frames are unchanged.
- * Duration stays 12.5s.
+ * Pass 32: hover follows the cursor tip, with a small edge hysteresis and an
+ * 80ms colour ramp. The Saved orders popup holds 200ms longer before the
+ * click. The header total rolls in 400ms, and the count circle uses that
+ * same ease from the same frame. The six frames come back out of that
+ * update, so the pill click, Place order, the logo, and the 12.5s length
+ * stay put.
  */
 export const FPS = 30;
 
@@ -64,7 +65,7 @@ export const MORPH = [0, UI_IN[1]] as const;
 export const LEAD = 2;
 /** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
-export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 192, pill: 238, place: 268 };
+export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 148, add: 198, pill: 238, place: 268 };
 export const ENTER = CLICK.result + 3;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -92,26 +93,26 @@ export const POP_HOVER = CLICK.tplAdd - LEAD;
  * One zoom, 24 frames. The only camera move between the kit and the cart pill.
  * Lands on a framing that holds the new lines and Add to cart together.
  */
-export const ROWS_ZOOM = [149, 173] as const;
+export const ROWS_ZOOM = [155, 179] as const;
 export const ROWS_CUT = ROWS_ZOOM[0];
 /**
  * The three kit lines are already in the table before the zoom starts.
  * The tight Match kit shot does not show them. The zoom is the reveal.
  */
-export const TPL_ROWS = [147, 147] as const;
+export const TPL_ROWS = [153, 153] as const;
 /**
  * Cursor only. The camera holds. The pointer travels from the new line
  * onto Add to cart and lands before the press. The short rest on the row
- * (173–178) gives these frames to the cart handoff.
+ * (179–184) gives these frames to the cart handoff.
  */
-export const ADD_MOVE = [178, 186] as const;
+export const ADD_MOVE = [184, 192] as const;
 export const ADD_CUT = ADD_MOVE[1];
 export const PAN_BC = ADD_MOVE;
 /**
  * Hard cut to the header cart, before the amount moves. The camera holds
  * this framing through the roll, the badge, and the pill click.
  */
-export const PILL_SHOT = 196;
+export const PILL_SHOT = 202;
 /**
  * Empty pill for the icon plus "$0.00". Filled pill for "$4,908.66" at weight
  * 700 plus the 20px badge. Both include slack so the $ and the circle clear
@@ -126,15 +127,20 @@ export const PILL_NUM_W = 124;
  * play, then lands on the icon. The press is 3 frames. Six more frames
  * (200ms) hold the released hover before the Place order cut.
  */
-export const PILL_PARK = 208;
+export const PILL_PARK = 214;
+/** Cursor leaves the park two frames after the roll and the badge have settled. */
+export const PILL_HOLD = 222;
 export const PILL_ARRIVE = 232;
-/** Digit roll starts the frame the width finishes. 14 frames, 467ms. */
-export const PILL_ROLL = 202;
-export const ROLL_PILL_F = 14;
+/**
+ * Digit roll starts the frame the width finishes. 12 frames, 400ms.
+ * The count circle uses this same window and the same ease-out.
+ */
+export const PILL_ROLL = 208;
+export const ROLL_PILL_F = 12;
 /** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
-export const PILL_FILL = [196, 202] as const;
-/** Badge after the digits have settled. Scale 0.6→1, colour only on the pill itself. */
-export const PILL_BADGE = [216, 222] as const;
+export const PILL_FILL = [202, 208] as const;
+/** Same start, length, and ease as the roll. Scale 0.6→1 with the digits. */
+export const PILL_BADGE = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
 export const CART_CUT = 247;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
