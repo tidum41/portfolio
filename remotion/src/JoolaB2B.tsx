@@ -8,10 +8,10 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import {
-  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TPL_IN,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
+  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, FLOW_E,
+  INSERT, FILL, FILL_STAGGER, FILL_F, FILL_END, ADD_GROW, PILL_AMT1, PILL_ROLL, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
-  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
+  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind, type HoverKind } from "./joola/pointer";
 import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
@@ -236,14 +236,20 @@ function blurCap(s: number) {
 }
 
 /** Prototype digit roll. t is eased here; the painter only places glyphs. */
-function rollAt(segments: { at: number; text: string }[], frame: number, dur: number) {
+function rollAt(
+  segments: { at: number; text: string; dur?: number }[],
+  frame: number,
+  dur: number,
+  ease: (t: number) => number = EASE_OUT,
+) {
   let i = 0;
   while (i + 1 < segments.length && frame >= segments[i + 1].at) i++;
   const to = segments[i].text;
   const from = i === 0 ? to : segments[i - 1].text;
   const at = i === 0 ? frame + 1 : segments[i].at;
-  const raw = frame < at ? 0 : frame >= at + dur ? 1 : (frame - at) / dur;
-  const t = raw <= 0 || raw >= 1 ? raw : EASE_OUT(clamp01(raw));
+  const segDur = segments[i].dur ?? dur;
+  const raw = frame < at ? 0 : frame >= at + segDur ? 1 : (frame - at) / segDur;
+  const t = raw <= 0 || raw >= 1 ? raw : ease(clamp01(raw));
   return { from, to, t };
 }
 
@@ -254,13 +260,14 @@ function rollAt(segments: { at: number; text: string }[], frame: number, dur: nu
  */
 function showStable(
   el: HTMLElement,
-  segments: { at: number; text: string }[],
+  segments: { at: number; text: string; dur?: number }[],
   frame: number,
   dur: number,
   maxBlur: number,
   align: "left" | "right" = "right",
+  ease: (t: number) => number = EASE_OUT,
 ) {
-  const { from, to, t } = rollAt(segments, frame, dur);
+  const { from, to, t } = rollAt(segments, frame, dur, ease);
   const block = el.classList.contains("line-total") || el.hasAttribute("data-order-total");
   let amt = block ? q(el, ":scope > .film-amt") : el;
   if (block && !amt) {
@@ -357,10 +364,12 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   field.style.boxShadow = focused ? "0 0 0 3px rgba(44,62,224,0.14)" : "";
 
   const res = q(root, "[data-search-results]")!;
-  const open = f >= DROPDOWN_OPEN && f < ENTER;
+  // Opens on the search ease. Closes with the row, so the click never leaves an empty frame.
+  const closing = f < ENTER ? 0 : prog(f, ENTER, INSERT[1], FLOW_E);
+  const dIn = f < ENTER ? prog(f, DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F, UI_E) : 1 - closing;
+  const open = f >= DROPDOWN_OPEN && dIn > 0.001;
   res.hidden = !open;
   res.classList.toggle("is-closed", !open);
-  const dIn = prog(f, DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F, UI_E);
   res.style.opacity = `${dIn}`;
   res.style.transform = `translateY(${(1 - dIn) * 6}px)`;
 
@@ -368,7 +377,7 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const pr = rows[0];
   const inserted = f >= INSERT[0];
   pr.style.display = inserted ? "" : "none";
-  const ip = prog(f, INSERT[0], INSERT[1], UI_E);
+  const ip = prog(f, INSERT[0], INSERT[1], FLOW_E);
   pr.style.opacity = `${ip}`;
   pr.style.transform = `translateY(${(1 - ip) * 6}px)`;
   pr.hidden = false;
@@ -376,14 +385,15 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   pr.classList.remove("is-just-added");
   pr.style.background = "";
 
-  // The kit lines ease in on the wide shot. The cut is what reveals them.
-  const tplIn = f >= TPL_ROWS[0];
-  const tp = prog(f, TPL_ROWS[0], TPL_ROWS[0] + TPL_IN, UI_E);
-  rows.slice(1).forEach((r) => {
+  // One staggered landing, and only after Add to order. Same ease, two frames apart.
+  rows.slice(1).forEach((r, i) => {
+    const a = FILL + i * FILL_STAGGER;
+    const tp = prog(f, a, a + FILL_F, FLOW_E);
+    const on = f >= a;
     r.hidden = false;
-    r.style.display = tplIn ? "" : "none";
-    r.style.opacity = tplIn ? `${tp}` : "0";
-    r.style.transform = tplIn ? `translateY(${(1 - tp) * 6}px)` : "";
+    r.style.display = on ? "" : "none";
+    r.style.opacity = on ? `${tp}` : "0";
+    r.style.transform = on ? `translateY(${(1 - tp) * 10}px)` : "";
   });
 
   const qty = f < CLICK.qty ? 1 : QTY_FINAL;
@@ -408,34 +418,34 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const one = money(unitAt(1));
   const twelve = money(unitAt(QTY_FINAL));
   const blur = blurCap(camAt(f).s);
-  showStable(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f, ROLL_F, blur);
+  showStable(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve, dur: ROLL_F }], f, ROLL_F, blur, "right", FLOW_E);
   const lineEl = q(pr, ".line-total")!;
-  showStable(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f, ROLL_F, blur);
+  showStable(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)), dur: ROLL_F }], f, ROLL_F, blur, "right", FLOW_E);
 
   const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
   if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
 
-  const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
-  const lineWord = `${lines} ${lines === 1 ? "line" : "lines"}`;
-  q(root, "[data-line-count]")!.textContent = lineWord;
+  const lines = (inserted ? 1 : 0) + (f >= ADD_GROW[1] ? 3 : 0);
+  const lineWord = lines === 0 ? "" : `${lines} ${lines === 1 ? "line" : "lines"}`;
+  q(root, "[data-line-count]")!.textContent = lines === 0 ? "0 lines" : lineWord;
   const totalEl = q(root, "[data-order-footer] [data-order-total]")!;
   const perseusOnly = money(r2(unitAt(1) * 1));
   const perseusTwelve = money(r2(unitAt(QTY_FINAL) * QTY_FINAL));
   showStable(totalEl, [
     { at: 0, text: money(0) },
-    { at: INSERT[0], text: perseusOnly },
-    { at: CLICK.qty, text: perseusTwelve },
-    { at: TPL_ROWS[0], text: money(ORDER_TOTAL) },
-  ], f, ROLL_F, blur, "left");
+    { at: INSERT[0], text: perseusOnly, dur: INSERT[1] - INSERT[0] },
+    { at: CLICK.qty, text: perseusTwelve, dur: ROLL_F },
+    { at: FILL, text: money(ORDER_TOTAL), dur: FILL_END - FILL },
+  ], f, ROLL_F, blur, "left", FLOW_E);
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
-  add.textContent = `Add ${lineWord} to cart`;
-  // "Add 4 lines to cart" is 12px wider than "Add 1 line". Lock it before the
-  // camera eases onto the button so the label change does not shift the box.
-  if (lines >= 4) {
+  add.textContent = lines === 0 ? "Add to cart" : `Add ${lineWord} to cart`;
+  // The wider label eases in with the lines, and is finished before the read.
+  if (f >= FILL) {
+    const w = lerp(143.3, 155, prog(f, ADD_GROW[0], ADD_GROW[1], FLOW_E));
     add.style.boxSizing = "border-box";
-    add.style.width = "155px";
-    add.style.minWidth = "155px";
+    add.style.width = `${w}px`;
+    add.style.minWidth = `${w}px`;
   }
   pill(root, f);
   // The header cart framing can slice the retailer name. The title sits off
@@ -450,22 +460,62 @@ function pill(root: HTMLElement, f: number) {
   if (!pl) return;
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
-  const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
-  const wpx = Math.round(lerp(PILL_W0, PILL_W1, tw));
+  // Until the header cut, keep p33's empty pill so the account chip does not shift.
+  if (f < PILL_SHOT) {
+    const from = money(0);
+    const zeroLine = measureLine(amt, from);
+    const amtW = Math.ceil(zeroLine.w) + 2;
+    const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
+    const h = Math.max(Math.round(zeroLine.h), Math.ceil(fontPx * 1.45));
+    amt.hidden = false;
+    amt.style.visibility = "";
+    amt.style.whiteSpace = "nowrap";
+    amt.style.position = "relative";
+    amt.style.setProperty("display", "block", "important");
+    amt.style.setProperty("width", `${amtW}px`, "important");
+    amt.style.setProperty("min-width", `${amtW}px`, "important");
+    amt.style.setProperty("height", `${h}px`, "important");
+    amt.style.setProperty("min-height", `${h}px`, "important");
+    amt.style.setProperty("overflow", "hidden", "important");
+    amt.style.setProperty("transform", "none", "important");
+    amt.style.setProperty("flex-shrink", "0", "important");
+    amt.style.setProperty("text-box", "none", "important");
+    amt.style.setProperty("line-height", `${h}px`, "important");
+    paintCanvasRoll(amt, from, from, 0, {
+      w: amtW, h, scale: Math.ceil(camAt(f).s * (1920 / OW)), baseline: zeroLine.base, lineH: zeroLine.h,
+    });
+    const canvas0 = amt.querySelector("canvas");
+    if (canvas0) canvas0.style.marginLeft = "0";
+    pl.style.setProperty("--film-pill-w", "92px");
+    pl.style.minWidth = "0";
+    pl.style.overflow = "hidden";
+    pl.style.justifyContent = "flex-start";
+    pl.style.removeProperty("padding");
+    pl.style.removeProperty("border-width");
+    pl.style.removeProperty("box-sizing");
+    pl.style.removeProperty("gap");
+    chip.hidden = true;
+    chip.style.visibility = "hidden";
+    chip.style.opacity = "0";
+    chip.style.transform = "scale(0.6)";
+    chip.style.setProperty("display", "flex", "important");
+    chip.style.setProperty("width", "20px", "important");
+    chip.style.setProperty("min-width", "20px", "important");
+    chip.style.setProperty("max-width", "20px", "important");
+    chip.style.setProperty("flex", "0 0 20px", "important");
+    chip.style.setProperty("margin", "0", "important");
+    return;
+  }
+  const box = pillBox(f);
+  const { t, amt: amtW, badge, pull, w: wpx } = box;
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   const from = money(0);
   const to = money(ORDER_TOTAL);
   const line = measureLine(amt, to);
-  const zeroLine = measureLine(amt, from);
   // Whole pixels. Height and baseline stay the line box for the whole shot,
   // so the digits do not step when the roll starts or ends.
-  // Two extra pixels so a rounded column cannot shave the $ against overflow.
-  const fullW = Math.ceil(line.w) + 2;
-  const zeroW = Math.ceil(zeroLine.w) + 2;
-  const grow = f >= PILL_FILL[0] ? tw : 0;
-  const amtW = Math.round(lerp(zeroW, fullW, f >= PILL_ROLL ? 1 : grow));
   const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
   const h = Math.max(Math.round(line.h), Math.ceil(fontPx * 1.45));
   amt.style.position = "relative";
@@ -479,29 +529,28 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("flex-shrink", "0", "important");
   amt.style.setProperty("text-box", "none", "important");
   amt.style.setProperty("line-height", `${h}px`, "important");
-  // One ease for the digits and the count circle. The painter does not ease again.
-  const motion = f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, EASE_OUT) : 0;
-  const rollFrom = from;
-  const rollTo = f >= PILL_ROLL ? to : from;
-  const t = motion;
-  // DOM overflow does not clip the traveling glyph inside the scaled stage.
-  // The canvas bitmap is the amount box, so the next line cannot paint through.
-  paintCanvasRoll(amt, rollFrom, rollTo, t, {
-    w: amtW,
+  // The canvas is always the settled tabular width and sits on the right of
+  // the growing box, so a narrow frame clips the unread left columns, not the $.
+  paintCanvasRoll(amt, from, f >= PILL_ROLL ? to : from, t, {
+    w: PILL_AMT1,
     h,
     scale: Math.ceil(camAt(f).s * (1920 / OW)),
     baseline: line.base,
     lineH: line.h,
   });
+  const canvas = amt.querySelector("canvas");
+  if (canvas) canvas.style.marginLeft = `${amtW - PILL_AMT1}px`;
+  // 12px pad each side, 1px border, for both the empty and the filled total.
+  pl.style.setProperty("box-sizing", "border-box", "important");
+  pl.style.setProperty("padding", "0 12px", "important");
+  pl.style.setProperty("gap", "8px", "important");
+  pl.style.setProperty("border-width", "1px", "important");
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
-  // The badge keeps its 20px slot once the pill is wide enough, so the
-  // number does not move when the circle fades in.
-  const slot = f >= PILL_ROLL;
-  const showBadge = f >= PILL_BADGE[0];
-  chip.hidden = !slot;
+  const icon = q<SVGElement>(pl, ".cart-icon");
+  if (icon) icon.style.setProperty("margin-right", "-2px", "important");
   let fig = chip.querySelector(".count-fig");
   if (!fig) {
     chip.textContent = "";
@@ -510,24 +559,29 @@ function pill(root: HTMLElement, f: number) {
     chip.appendChild(fig);
   }
   fig.textContent = "4";
-  chip.style.setProperty("width", "20px", "important");
+  const showBadge = badge > 0;
+  chip.hidden = !showBadge;
+  // The prototype's [hidden] rule is display:none !important. An inline flex
+  // would beat it and leave a 20px hole beside $0.00, so hide with inline too.
+  chip.style.setProperty("display", showBadge ? "flex" : "none", "important");
+  chip.style.setProperty("width", `${badge}px`, "important");
   chip.style.setProperty("height", "20px", "important");
-  chip.style.setProperty("min-width", "20px", "important");
-  chip.style.setProperty("max-width", "20px", "important");
-  chip.style.setProperty("flex", "0 0 20px", "important");
+  chip.style.setProperty("min-width", `${badge}px`, "important");
+  chip.style.setProperty("max-width", `${badge}px`, "important");
+  chip.style.setProperty("flex", `0 0 ${badge}px`, "important");
   chip.style.setProperty("margin", "0", "important");
+  chip.style.setProperty("margin-left", `${pull}px`, "important");
   chip.style.setProperty("padding", "0", "important");
-  chip.style.setProperty("display", "flex", "important");
   chip.style.setProperty("align-items", "center", "important");
   chip.style.setProperty("justify-content", "center", "important");
   chip.style.setProperty("line-height", "1", "important");
   chip.style.setProperty("text-box", "none", "important");
+  chip.style.setProperty("overflow", "hidden", "important");
   chip.style.setProperty("transform-origin", "center center", "important");
   if (showBadge) {
-    const bt = motion;
-    const sc = bt >= 1 ? 1 : lerp(0.6, 1, bt);
+    const sc = t >= 1 ? 1 : lerp(0.6, 1, t);
     chip.style.visibility = "";
-    chip.style.opacity = `${bt}`;
+    chip.style.opacity = `${t}`;
     // Settled frame has no transform, so the circle cannot sit a subpixel off its slot.
     chip.style.transform = sc === 1 ? "none" : `scale(${sc.toFixed(3)})`;
   } else {
@@ -796,7 +850,21 @@ export const JoolaB2B: React.FC = () => {
     for (const h of hoverState(frame)) {
       const el = q(layer, h.sel);
       if (!el) continue;
+      // The stylesheet hover/press colours are on .film-hover / .film-active.
+      // The class waits until the 80ms ramp has landed, so it cannot skip the mix.
+      el.classList.toggle("film-active", h.active);
+      el.classList.toggle("film-hover", !h.active && h.mix >= 1);
       paintHover(el, h.kind, h.mix, h.active);
+    }
+    // placeButton paints the blue→emerald morph in the cart layer, which runs
+    // before this effect. The strip above would leave the check on rest blue.
+    if (frame >= PLACE_COLOR[0] && frame < CONF_CUT) {
+      const btn = q<HTMLElement>(layer, "[data-place-order]");
+      if (btn) {
+        const ct = prog(frame, PLACE_COLOR[0], PLACE_COLOR[1], EASE_OUT);
+        btn.classList.remove("film-hover", "film-active");
+        btn.style.setProperty("background-color", mix(BLUE, EMERALD, ct), "important");
+      }
     }
   });
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
