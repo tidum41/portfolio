@@ -247,7 +247,7 @@ html[data-theme="dark"] .hilab-root {
   display: none;
 }
 
-/* Anchored only — refined surface (motion unchanged) */
+/* Anchored only — refined surface (motion unchanged; same pill + caret geometry as current) */
 .hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] {
   --hilab-tooltip-bg: color-mix(in srgb, #ffffff 97%, var(--color-bg));
   --hilab-tooltip-border: color-mix(in srgb, #000 11%, transparent);
@@ -255,8 +255,6 @@ html[data-theme="dark"] .hilab-root {
     0 0 0 0.5px color-mix(in srgb, #000 10%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 6px 20px rgba(0, 0, 0, 0.1);
-  --hilab-tooltip-inset: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  --hilab-caret-shadow: 2px 2px 5px rgba(0, 0, 0, 0.08);
 }
 
 html[data-theme="dark"] .hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] {
@@ -266,26 +264,10 @@ html[data-theme="dark"] .hilab-dock-portal[data-placement="anchored"][data-appea
     0 0 0 0.5px color-mix(in srgb, #fff 10%, transparent),
     0 2px 4px rgba(0, 0, 0, 0.35),
     0 10px 28px rgba(0, 0, 0, 0.42);
-  --hilab-tooltip-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --hilab-caret-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 .hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] .hilab-dock__bubble {
   border-width: 0.5px;
-  box-shadow: var(--hilab-tooltip-shadow), var(--hilab-tooltip-inset);
-}
-
-.hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] .hilab-dock__caret {
-  border-width: 0.5px;
-  box-shadow: var(--hilab-caret-shadow);
-}
-
-.hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] .hilab-dock--flipped .hilab-dock__caret {
-  box-shadow: var(--hilab-caret-shadow-flipped, -2px -2px 6px rgba(0, 0, 0, 0.28));
-}
-
-html:not([data-theme="dark"]) .hilab-dock-portal[data-placement="anchored"][data-appearance="refined"] .hilab-dock--flipped .hilab-dock__caret {
-  --hilab-caret-shadow-flipped: -2px -2px 5px rgba(0, 0, 0, 0.08);
 }
 
 .hilab-dock[data-visible="true"] {
