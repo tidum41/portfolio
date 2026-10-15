@@ -8,6 +8,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
+import { allowIdlePrefetch } from "@/lib/networkHint";
 
 const CD_POSTERS = [
   "/images/cd-player-poster-light.webp",
@@ -46,6 +47,7 @@ export default function PrimaryRouteWarmup() {
     };
 
     const schedule = () => {
+      if (!allowIdlePrefetch()) return;
       warmJs();
       if (typeof window.requestIdleCallback === "function") {
         idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });

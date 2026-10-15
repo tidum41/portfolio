@@ -46,10 +46,10 @@ export default function BentoHero({ featured, top, bottom, style, priority = tru
   });
 
   // Side cells: enough for ~320px column @2x.
-  const sideSizes = "(max-width: 767px) 50vw, 480px";
+  const sideSizes = "(max-width: 767px) calc(50vw - 24px), 480px";
   // Featured cell is CSS-scaled (~1.3× by default) — request extra pixels so
   // the magnified crop stays sharp on retina (display × dpr × zoom ≈ 800–900).
-  const featuredSizes = "(max-width: 767px) 100vw, 900px";
+  const featuredSizes = "(max-width: 767px) calc(50vw - 24px), 900px";
 
   return (
     <div

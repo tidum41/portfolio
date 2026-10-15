@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { preconnect } from "react-dom";
+import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
+import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -50,6 +53,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  return null;
+export default async function Home() {
+  const warm = await getMuxCardWarmup();
+  for (const origin of warm.preconnect) {
+    preconnect(origin, { crossOrigin: "anonymous" });
+  }
+  return (
+    <>
+      {/* Download the player with the HTML. Reduced motion never plays it. */}
+      <link
+        rel="preload"
+        as="script"
+        href={HLS_LIGHT_SRC}
+        media="(prefers-reduced-motion: no-preference)"
+      />
+      {/* Phone cards only. Desktop already starts from the full ladder, and
+          a wide layout should not pay for the 480p startup segments. */}
+      {warm.preload.map((item) => (
+        <link
+          key={item.href}
+          rel="preload"
+          as="fetch"
+          href={item.href}
+          crossOrigin="anonymous"
+          media={
+            item.aboveFold
+              ? "(max-width: 800px) and (prefers-reduced-motion: no-preference)"
+              : "(min-width: 768px) and (max-width: 800px) and (prefers-reduced-motion: no-preference)"
+          }
+        />
+      ))}
+    </>
+  );
 }

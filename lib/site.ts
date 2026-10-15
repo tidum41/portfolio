@@ -12,7 +12,7 @@ export const HERO_HEADLINE =
  * isn't stitching mismatched phrases from separate strings.
  */
 export const SITE_DESCRIPTION =
-  `${HERO_HEADLINE}. Currently @ JOOLA | cognitive science @ UCLA`;
+  `${HERO_HEADLINE}. Cognitive science @ UCLA`;
 
 /** Default social / Open Graph image (1200×630). */
 export const OG_IMAGE_PATH = "/og-default.png";

@@ -1537,7 +1537,7 @@ export default function BentoGallery({
                             className="bento-cell"
                             onClick={(e) => onCellClick(e, i)}
                             onMouseEnter={() => {
-                                if (!gst.current.moved && window.matchMedia("(hover: hover)").matches) setHoveredIdx(i);
+                                if (!gst.current.moved && window.matchMedia("(hover: hover) and (pointer: fine)").matches) setHoveredIdx(i);
                             }}
                             onMouseLeave={() => setHoveredIdx(null)}
                             role="button"
@@ -1673,7 +1673,7 @@ export default function BentoGallery({
                                                 marginTop: 1,
                                             }}
                                         >
-                                            <span style={{ position: "absolute", inset: -10 }} />
+                                            <span style={{ position: "absolute", left: "50%", top: "50%", width: 44, height: 44, transform: "translate(-50%, -50%)" }} />
                                             <LinkIcon />
                                         </a>
                                     )}
@@ -1747,7 +1747,7 @@ export default function BentoGallery({
                                                 marginTop: 1,
                                             }}
                                         >
-                                            <span style={{ position: "absolute", inset: -10 }} />
+                                            <span style={{ position: "absolute", left: "50%", top: "50%", width: 44, height: 44, transform: "translate(-50%, -50%)" }} />
                                             <LinkIcon />
                                         </a>
                                     )}
@@ -1851,7 +1851,7 @@ export default function BentoGallery({
                     onClick={() => zoomBy(1 / 1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {
-                        if (window.matchMedia("(hover: hover)").matches)
+                        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches)
                             (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
                     }}
                     onMouseLeave={(e) => {
@@ -1910,7 +1910,7 @@ export default function BentoGallery({
                             WebkitTapHighlightColor: "transparent",
                         } as CSSProperties}
                         onMouseEnter={(e) => {
-                            if (window.matchMedia("(hover: hover)").matches)
+                            if (window.matchMedia("(hover: hover) and (pointer: fine)").matches)
                                 (e.currentTarget as HTMLElement).style.opacity = String(thumbHoverOpacityVal);
                         }}
                         onMouseLeave={(e) => {
@@ -1928,7 +1928,7 @@ export default function BentoGallery({
                     onClick={() => zoomBy(1.35)}
                     style={zpBtn}
                     onMouseEnter={(e) => {
-                        if (window.matchMedia("(hover: hover)").matches)
+                        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches)
                             (e.currentTarget as HTMLElement).style.color = zpBtnHoverColor;
                     }}
                     onMouseLeave={(e) => {

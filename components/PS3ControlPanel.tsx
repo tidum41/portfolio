@@ -97,9 +97,8 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
 function readSavedPos() { try { const r = sessionStorage.getItem(POS_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KEY, JSON.stringify(pos)); } catch {} }
 
-// Anchors the pill under the "currently @ JOOLA..." hero line, left-aligned
-// to it at every breakpoint (found via its JOOLA link, since the <p> itself
-// has no stable selector) — that line is an unconstrained-width flex sibling
+// Anchors the pill under the hero subtitle, left-aligned
+// to it at every breakpoint (the subtitle carries data-hero-sub) — that line is an unconstrained-width flex sibling
 // of the heading, so its own left edge already equals the page's real left
 // content edge (page-px in from the true left, whatever --grid-max-w's
 // centering margin is at the current width). Same rule from mobile straight
@@ -109,7 +108,7 @@ function savePos(pos: {x:number;y:number}) { try { sessionStorage.setItem(POS_KE
 // routinely lost that margin or put the pill on the wrong side entirely.
 /** Layout box of `el`, ignoring CSS translates (offset* is transform-agnostic).
  *  getBoundingClientRect includes the hero subtitle's entrance translateY,
- *  so docking to it made the menu pill chase the JOOLA / UCLA line. */
+ *  so docking to it made the menu pill chase the subtitle. */
 function layoutDocumentRect(el: HTMLElement): { left: number; top: number; width: number; height: number } | null {
   const width = el.offsetWidth;
   const height = el.offsetHeight;
@@ -165,8 +164,7 @@ function untransformedViewportRect(el: HTMLElement): DOMRect | null {
 
 function computeHeroAlignedPos(): {x:number;y:number} | null {
   if (typeof window === "undefined") return null;
-  const joolaLink = document.querySelector<HTMLElement>('a[href="https://joola.com"]');
-  const heroP = joolaLink?.closest("p");
+  const heroP = document.querySelector<HTMLElement>("[data-hero-sub]");
   if (!heroP) return null;
   // Prefer offset chain (ignores transforms). Fall back to undoing matrices
   // if an offsetParent is missing (transformed containing blocks).
@@ -630,25 +628,43 @@ html[data-theme=dark] .ps3cp input[type=range]::-moz-range-thumb { background:rg
 html[data-theme=dark] .ps3cp input[type=range]:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-slider-track:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 4px; border-radius: 2px; }
 html[data-theme=dark] .ps3cp-slider-track:focus-visible { outline-color: rgba(255,255,255,0.72); }
+.ps3cp-header { position: relative; }
+.ps3cp-header::before { content:""; position:absolute; left:0; right:0; top:-8px; bottom:-8px; }
 .ps3cp-header:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: -3px; border-radius: 999px; }
 html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,255,0.72); }
 .ps3cp-ibtn { display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;border:none;background:none;color:rgba(0,0,0,0.72);padding:0;transition:color 120ms ease,transform 120ms ease;position:relative; }
 .ps3cp-ibtn svg { display:block; opacity:1; }
-.ps3cp-ibtn::before { content:"";position:absolute;inset:-8px; }
-.ps3cp-ibtn:hover { color:rgba(0,0,0,0.88); }
-.ps3cp-ibtn:active { transform:scale(0.96); }
+.ps3cp-ibtn::before { content:"";position:absolute;inset:-10px; }
+@media (hover: hover) and (pointer: fine) {
+  .ps3cp-ibtn:hover { color:rgba(0,0,0,0.88); }
+  .ps3cp-ibtn:active { transform:scale(0.96); }
+}
+@media (hover: none), (pointer: coarse) {
+  .ps3cp-ibtn:active { color:rgba(0,0,0,0.88); }
+}
 .ps3cp-ibtn:focus-visible { outline:2px solid rgba(0,0,0,0.65); outline-offset:2px; }
 html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255,0.72); }
 .ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
+.ps3cp-custom-color-btn { position:relative; }
+.ps3cp-custom-color-btn::before { content:"";position:absolute;inset:-13px; }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
-.ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
+@media (hover: hover) and (pointer: fine) {
+  .ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
+}
 .ps3cp-swatch-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
 html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
-.ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; }
-.ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
-.ps3cp-mode-btn:active { transform:scale(0.96); }
+.ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; min-height:44px; }
+@media (hover: hover) and (pointer: fine) {
+  .ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
+  .ps3cp-mode-btn:active { transform:scale(0.96); }
+}
+@media (hover: none), (pointer: coarse) {
+  .ps3cp-mode-btn:active { background:rgba(0,0,0,0.07); }
+}
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
-.ps3cp-color-swatch:active { transform:scale(0.96)!important; }
+@media (hover: hover) and (pointer: fine) {
+  .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
+}
 .ps3cp-color-swatch:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
 html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
@@ -811,7 +827,7 @@ export default function PS3ControlPanel({
     };
     findAndPlace(0);
     // Re-read the untransformed rest box when the subtitle starts and when
-    // webfonts settle — both used to shift the JOOLA / UCLA line (and wrap
+    // webfonts settle — both used to shift the subtitle (and wrap
     // it on mobile) after the first measure.
     let cancelled = false;
     const reanchor = () => {
@@ -1115,7 +1131,7 @@ export default function PS3ControlPanel({
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
-      // First load: the JOOLA / UCLA line owns the Y settle. Sliding the pill
+      // First load: the subtitle owns the Y settle. Sliding the pill
       // too made the pair look like a position jump. Soft-nav return still
       // uses the shared 8px fade-up.
       transform: shown || revealKindRef.current === "first" ? "translateY(0px)" : `translateY(${REVEAL_Y}px)`,
@@ -1225,13 +1241,17 @@ export default function PS3ControlPanel({
               <button key={i} className="ps3cp-swatch-btn" onClick={() => pickPreset(i)}
                 aria-label={`Color preset ${p.swatch}`} aria-pressed={activePreset === i}
                 style={{
-                  width: "100%", height: 18, borderRadius: 4, backgroundColor: p.swatch,
+                  width: "100%", height: 44, border: "none", background: "transparent",
+                  padding: 0, flexShrink: 0, display: "flex", alignItems: "center",
+                }}>
+                <span style={{
+                  display: "block", width: "100%", height: 18, borderRadius: 4, backgroundColor: p.swatch,
                   boxShadow: activePreset === i
                     ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
                     : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.15)" : "inset 0 0 0 1px rgba(0,0,0,0.12)"),
                   transform: activePreset === i ? "scale(1.04)" : "scale(1)",
-                  padding: 0, flexShrink: 0,
                 }} />
+              </button>
             ))}
           </div>
           <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>

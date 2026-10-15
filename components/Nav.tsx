@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
@@ -15,7 +15,11 @@ const links = [
   { href: "/about",    label: "about" },
 ];
 
-export default function Nav() {
+export default function Nav({
+  words,
+}: {
+  words: Record<(typeof links)[number]["label"], ReactNode>;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
@@ -169,8 +173,7 @@ export default function Nav() {
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>
       <div data-nav-container style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <nav
-          className="flex items-center justify-end"
-          style={{ gap: 40, paddingTop: 24, paddingBottom: 24 }}
+          className="site-nav flex items-center justify-end"
           aria-label="Main navigation"
         >
           <VolumeControl dk={dk} />
@@ -184,6 +187,7 @@ export default function Nav() {
                 label={label}
                 isActive={isActive}
                 dk={dk}
+                resting={words[label]}
               />
             );
           })}

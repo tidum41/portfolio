@@ -1,16 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "dialkit/styles.css";
-import Nav from "@/components/Nav";
+import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
-import DevToolbar from "@/components/DevToolbar";
-import DevDialRoot from "@/components/DevDialRoot";
+import { DevDialSlot, DevToolbarSlot } from "@/components/DevChrome";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentAboutShell from "@/components/PersistentAboutShell";
@@ -26,6 +24,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
 // Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
@@ -42,6 +41,12 @@ const OG_IMAGES = [
     alt: OG_IMAGE_ALT,
   },
 ];
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -119,6 +124,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     () =>
       [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
+  // Already returns an empty warmup if Mux is unreachable, so a video-CDN
+  // blip cannot take the rest of the layout down with it.
+  const muxWarm = await getMuxCardWarmup();
   const dsStyle = designSystemToCss(ds);
 
   return (
@@ -170,11 +178,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         {/* Injected via useServerInsertedHTML so React 19 never sees a
             <script> in the component tree (raw script / next/script both warn). */}
-        <BootScripts jsonLd={getSiteJsonLd()} />
+        <BootScripts
+          jsonLd={getSiteJsonLd()}
+          playlists={Object.fromEntries(
+            muxWarm.preload
+              .filter((item) => item.playbackId)
+              .map((item) => [item.playbackId as string, item.href]),
+          )}
+        />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
         <UiSoundRoot />
-        <Nav />
+        <NavFrame />
         <PrimaryRouteWarmup />
         <PrimaryTabSync />
         <main id="main-content" style={{ position: "relative" }}>
@@ -187,10 +202,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <AnimationProvider>
             {children}
           </AnimationProvider>
-          {process.env.NODE_ENV === "development" && <DevDialRoot />}
+          <DevDialSlot />
         </main>
         <Footer />
-        {process.env.NODE_ENV === "development" && <DevToolbar />}
+        <DevToolbarSlot />
         <Analytics />
       </body>
     </html>

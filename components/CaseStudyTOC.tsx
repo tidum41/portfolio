@@ -170,7 +170,8 @@ export default function CaseStudyTOC({
         style={{
           ...NO_TAP_HIGHLIGHT,
           display: "flex", alignItems: "flex-start", gap: 2,
-          minHeight: 40,
+          minHeight: 44,
+          minWidth: 44,
           marginLeft: 0,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",

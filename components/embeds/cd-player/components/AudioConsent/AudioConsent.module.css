@@ -80,8 +80,10 @@
   border-color: rgba(0,0,0,0.60);
 }
 
-.btnOn:hover {
-  background-color: #333333;
+@media (hover: hover) and (pointer: fine) {
+  .btnOn:hover {
+    background-color: #333333;
+  }
 }
 
 .btnOff {
@@ -89,6 +91,8 @@
   color: rgba(0, 0, 0, 0.65);
 }
 
-.btnOff:hover {
-  background-color: #9E9E9E;
+@media (hover: hover) and (pointer: fine) {
+  .btnOff:hover {
+    background-color: #9E9E9E;
+  }
 }

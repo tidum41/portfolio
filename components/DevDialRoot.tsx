@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { DialRoot } from "dialkit";
+import "dialkit/styles.css";
 import { usePathname } from "next/navigation";
 
 function subscribe() {
