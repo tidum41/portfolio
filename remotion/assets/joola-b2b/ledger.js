@@ -1,7 +1,7 @@
 /**
  * Single source of truth for the JOOLA B2B wholesale prototype.
  * Every screen reads this ledger. Story: Anna Bright at Engage Pickleball
- * builds a multi-line restock on Net 30; hero line is Perseus Pro V × 120.
+ * builds a multi-line restock on Net 30; hero line is Perseus Pro V × 12.
  */
 (function (root) {
   "use strict";
@@ -127,11 +127,11 @@
 
   /**
    * Story order on Quick Order / Cart / INV-1042 / Messages:
-   * Multi-line restock led by Perseus Pro V × 120 at $134.98.
+   * Multi-line restock led by Perseus Pro V × 12 at $149.98.
    * Related SKUs from the same catalog keep the table full and realistic.
    */
   var orderLines = [
-    { productId: "perseus", qty: 120 },
+    { productId: "perseus", qty: 12 },
     { productId: "hyperion", qty: 24 },
     { productId: "hc40", qty: 48 },
     { productId: "bag", qty: 6 },
@@ -234,7 +234,7 @@
 
   /**
    * Round credit seed: limit $50,000 · open balance (ex-this-order) $5,000 ·
-   * available before place $45,000 · after this order $25,693.50.
+   * available before place $45,000 · after this order $40,091.34.
    * INV-1039 ($3,800) + INV-1021 ($1,200) = $5,000 prior used.
    * INV-1042 books this restock, so available after place = limit − open.
    */
@@ -259,11 +259,11 @@
   var creditPriorAvailable = Math.round((creditLimit - creditPriorUsed) * 100) / 100;
 
   var messages = {
-    anna: "Perseus Pro V, SKU 600558. When can you restock 120 units?",
+    anna: "Perseus Pro V, SKU 600558. When can you restock 12 units?",
     annaTime: "10:31 AM",
     samTime: "10:42 AM",
     sam:
-      "120 units of Perseus Pro V ship " +
+      "12 units of Perseus Pro V ship " +
       shipDate +
       ". Invoice INV-1042 for " +
       money(orderTotal) +
@@ -292,7 +292,7 @@
   /**
    * Last 3 restocks for reorder rail + size warning.
    * PO-118 total matches INV-1039. Average is high enough that the hero
-   * cart (~$19.3k) is under 3× and does not trip the anomalous-size notice.
+   * cart (~$4.9k) is under 3× and does not trip the anomalous-size notice.
    */
   var recentOrders = [
     {

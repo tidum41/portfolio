@@ -198,6 +198,13 @@ Restored from Mudit's Mac zip (`remotion-v21-local.zip`, SHA-1 `a96f48fc…`), t
 - **Mechanical gate:** `remotion/scripts/check-prototype.mjs` walks every screen at 1920×1080 and fails on empty images, overlaps, clipped text, misaligned table columns (>2px), avatars >40px, ledger mismatches, or em dashes.
 - **Follow-up fixes (still v22):** one `buyerPrice` per SKU across Catalog Recommended + grid; search placeholder hidden when typed; sticky footer pinned (no blank band); JOOLA mark on JOOLA Sales inbox + Sam bubble; Amount column right-aligned with a tighter invoice grid; single 220px product media surface (no nested grey tile). Script checks: `sku-price`, `search-ph`, `footer-band`, `joola-mark`, `numeric-align`, `media-surface`.
 
+## Film pass 26 — a cut, a still Add button, emerald from the click
+
+- **The intro is a cut.** The lockup holds, then the dashboard is there. The old glide faded the logo out over the last few frames and left a grey frame. The outro was already a cut. The intro matches it.
+- **The Add chip stopped moving.** The row was already 72px. The Quick order title was line-height 1.15, which is 27.6px, so everything under it sat 0.4px off the grid. The menu was placed by rounding a live rectangle, and that rounding flipped by a pixel between renders. The title is now a 28px line. The Reorder label is a 15px box. Add is a 40×24 chip at y 24, with no translate. The menu’s top is the row’s integer offset plus 72 plus 4.
+- **Place order fills with emerald.** The button still says Placing order, with the spinner, and it does not change size. Then #12824a spreads from the click, ease-out, about a third of a second, and the label becomes a check. The summary stays at full strength. The confirmation is the same screen as pass 25.
+- **Two chunk starts were re-rendered.** Frames 84–85 and 378–379 had been photographed before the camera transform painted. They are the same hold as the frames beside them. The final render uses one browser page so a chunk does not open on a fragment.
+
 ## Film pass 25 — the order, then the confirmation
 
 - **Search stays the prototype weight.** The typed Perseus is weight 500. The summary total, the confirmation title and values, the pill amount, and the primary buttons stay weight 700.

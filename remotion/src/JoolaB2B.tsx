@@ -10,17 +10,18 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_NUM_W, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
-  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, CONF_FADE, CONF_GROW, PROC_XFADE,
+  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
+  UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
+  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
-import { pointerAt, cursorScale, toScreen, hoverState, cursorKind } from "./joola/pointer";
+import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
 
 const PERSEUS_TIER = [[1, 179.97], [6, 164.97], [12, 149.98], [24, 134.98]] as const;
-const OTHER_LINES = 2483.52 + 262.56 + 362.82;
-const ORDER_TOTAL = 19306.5;
+const QTY_FINAL = 12;
+const ORDER_TOTAL = 4908.66;
 const CREDIT_LIMIT = 50000;
 const CREDIT_PRIOR_USED = 5000;
 const CREDIT_AFTER = CREDIT_LIMIT - CREDIT_PRIOR_USED - ORDER_TOTAL;
@@ -78,19 +79,26 @@ const CSS =
   height:72px!important;min-height:72px!important;max-height:72px!important;
   box-sizing:border-box!important;border-width:0!important;
 }
+.film-layer [data-screen="qo-desktop"] .page h1{
+  line-height:28px!important;height:28px!important;
+}
+.film-layer [data-screen="qo-desktop"] .rail-card > h3{
+  height:15px!important;line-height:15px!important;margin:0 0 12px!important;
+}
+.film-layer .rail-item .rail-action{
+  top:24px!important;right:4px!important;width:40px!important;height:24px!important;
+  margin:0!important;padding:0!important;transform:none!important;line-height:24px!important;
+  box-sizing:border-box!important;
+}
 .film-layer .rail-item .rail-id,
 .film-layer .rail-item .name,
 .film-layer .rail-item .meta{line-height:16px!important}
-.film-layer .tpl-pop{position:absolute!important;margin:0!important;transform:none!important;transition:none!important}
+.film-layer .tpl-pop{position:absolute!important;margin:0!important;transition:none!important}
 .film-layer .tpl-pop .tpl-choice{
   height:32px!important;box-sizing:border-box!important;font-weight:500!important;
   border-width:1px!important;transform:none!important;transition:none!important;opacity:1!important;
 }
 .film-layer .tpl-pop .btn-primary{border-color:transparent!important}
-.film-layer .qty-stepper .qty{position:relative}
-.film-qty-caret{
-  position:absolute;width:1px;margin:0;background:#1a1a1a;pointer-events:none;
-}
 .film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
 .film-layer .cart-pill.film-active{background:var(--wash)!important}
@@ -109,9 +117,14 @@ const CSS =
   padding:24px!important;border-radius:12px!important;border-width:1px!important;
   box-sizing:border-box!important;overflow:hidden!important;
 }
-.film-layer [data-place-order]{position:relative!important}
-.film-layer .film-face{
-  position:absolute!important;inset:0!important;margin:0!important;
+.film-layer [data-place-order]{position:relative!important;overflow:hidden!important;width:430px!important;height:40px!important;min-width:430px!important;max-width:430px!important}
+.film-roll{display:inline-flex;align-items:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:baseline}
+.film-layer .line-total.film-roll{display:flex;justify-content:flex-end;width:100%}
+.film-roll .slot{display:inline-block;position:relative;overflow:hidden;height:1em;line-height:1em}
+.film-roll .col{display:block;will-change:transform}
+.film-roll .glyph{display:block;height:1em;line-height:1em}
+.film-layer .film-face,.film-layer .order-face{
+  position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
   gap:8px!important;white-space:nowrap!important;pointer-events:none!important;
 }
@@ -142,68 +155,86 @@ const caret = (host: HTMLElement, on: boolean) => {
 const typedCount = (f: number, a: number, b: number, len: number) =>
   Math.max(0, Math.min(len, Math.floor(interpolate(f, [a, b], [0, len + 0.999], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))));
 
-let qtyInk: CanvasRenderingContext2D | null = null;
-/** Tabular advance of one FK Grotesk Neue 500 14px digit, from a DOM range
- *  on the untransformed field (1: 9.25, 2: 9.25, 0: 9.265). Range and SVG
- *  lengths inside the scaled film both return the proportional width (~7.8),
- *  which plants the caret in the 0. A 4× screenshot of that same "0" put the
- *  ink 0.61px before the advance. */
-const TABULAR_DIGIT = 9.25;
-const DIGIT_SIDEBEARING = 0.61;
-function placeQtyCaret(qtyEl: HTMLElement) {
-  const raw = qtyEl.textContent ?? "";
-  if (!raw) return;
-  const cs = getComputedStyle(qtyEl);
-  const host = qtyEl.getBoundingClientRect();
-  if (host.width < 1) return;
-  const toLocal = (px: number) => px * (qtyEl.offsetWidth / host.width);
-  const mark = document.createElement("span");
-  mark.style.cssText = "display:inline-block;width:0;height:0;vertical-align:baseline";
-  qtyEl.appendChild(mark);
-  const baseline = toLocal(mark.getBoundingClientRect().top - host.top);
-  mark.remove();
-  if (!qtyInk) qtyInk = document.createElement("canvas").getContext("2d");
-  let asc = 11, desc = 0;
-  if (qtyInk) {
-    qtyInk.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-    const m = qtyInk.measureText("0");
-    if (m.fontBoundingBoxAscent >= 12) {
-      asc = m.actualBoundingBoxAscent;
-      desc = m.actualBoundingBoxDescent;
-    }
+const BLUE = "#2c3ee0";
+const EMERALD = "#12824a";
+const mix = (a: string, b: string, t: number) => {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const A = p(a), B = p(b);
+  return `#${A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
+};
+
+/** Old glyph leaves upward, new glyph enters from below. Unchanged glyphs stay.
+ *  The column is two lines, so -50% of it is one line. -100% would empty the slot. */
+function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at: number) {
+  const t = frame < at ? 0 : frame >= at + ROLL_F ? 1 : EASE_OUT(clamp01((frame - at) / ROLL_F));
+  const shown = t >= 1 ? to : from;
+  if (t <= 0 || t >= 1 || from === to) {
+    el.textContent = shown;
+    return;
   }
-  const textW = TABULAR_DIGIT * raw.length;
-  const advanceRight = (qtyEl.clientWidth - textW) / 2 + textW;
-  const caret = document.createElement("span");
-  caret.className = "film-qty-caret";
-  caret.style.left = `${advanceRight - DIGIT_SIDEBEARING + 1.3}px`;
-  caret.style.top = `${baseline - asc}px`;
-  // Canvas ascent stops short of the painted baseline stroke (~1px).
-  caret.style.height = `${Math.max(1, asc + desc + 1)}px`;
-  qtyEl.appendChild(caret);
+  const n = Math.max(from.length, to.length);
+  const a = from.padStart(n, " ");
+  const b = to.padStart(n, " ");
+  el.replaceChildren();
+  const blur = Math.sin(Math.PI * t) * 0.6;
+  for (let i = 0; i < n; i++) {
+    if (a[i] === " " && b[i] === " ") continue;
+    const slot = document.createElement("span");
+    slot.className = "slot";
+    if (a[i] === b[i]) {
+      slot.textContent = b[i];
+      el.appendChild(slot);
+      continue;
+    }
+    const col = document.createElement("span");
+    col.className = "col";
+    const oldG = document.createElement("span");
+    oldG.className = "glyph";
+    oldG.textContent = a[i] === " " ? "\u00a0" : a[i];
+    const newG = document.createElement("span");
+    newG.className = "glyph";
+    newG.textContent = b[i] === " " ? "\u00a0" : b[i];
+    col.append(oldG, newG);
+    col.style.transform = `translateY(${(-t * 50).toFixed(2)}%)`;
+    if (blur > 0.04) col.style.filter = `blur(${blur.toFixed(2)}px)`;
+    slot.appendChild(col);
+    el.appendChild(slot);
+  }
+}
+
+function showRoll(el: HTMLElement, segments: { at: number; text: string }[], frame: number) {
+  el.classList.add("film-roll");
+  let i = 0;
+  while (i + 1 < segments.length && frame >= segments[i + 1].at) i++;
+  const to = segments[i].text;
+  const from = i === 0 ? to : segments[i - 1].text;
+  paintRoll(el, from, to, frame, i === 0 ? frame + 1 : segments[i].at);
 }
 
 function applyQuickOrder(root: HTMLElement, f: number) {
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
   const POP_CLOSE = CLICK.tplAdd + 4;
-  const popOpen = f >= CLICK.tpl && f < POP_CLOSE + 3;
+  const popOpen = f >= CLICK.tpl && f < POP_CLOSE;
   if (tpl) tpl.classList.toggle("is-open", popOpen);
   if (pop && tpl) {
     pop.hidden = !popOpen;
     // Integer pixels, identical every frame. The row is 72px tall; reading a
     // fractional offsetHeight here is what shifted the menu by a device pixel.
     pop.style.position = "absolute";
-    pop.style.left = `${Math.round(tpl.offsetLeft) + 12}px`;
-    pop.style.width = `${Math.max(160, Math.round(tpl.offsetWidth) - 24)}px`;
+    pop.style.left = `${tpl.offsetLeft + 12}px`;
+    pop.style.width = `${Math.max(160, tpl.offsetWidth - 24)}px`;
     pop.style.right = "auto";
-    pop.style.top = `${Math.round(tpl.offsetTop) + 72 + 4}px`;
+    // offsetTop/Width are integers once the row and the Reorder label are locked.
+    // Rounding a live rect here is what flipped the menu by a pixel.
+    pop.style.top = `${tpl.offsetTop + 72 + 4}px`;
     pop.style.margin = "0";
-    pop.style.transform = "none";
-    const pin = popOpen
-      ? prog(f, POP_IN[0], POP_IN[1], FADE_E) * (1 - prog(f, POP_CLOSE, POP_CLOSE + 3, FADE_E))
-      : 0;
-    pop.style.opacity = `${pin}`;
+    // Solid on every frame it is open. A 100ms scale from the top anchor,
+    // never a partial opacity that shows the card through the menu.
+    const sc = popOpen ? lerp(0.98, 1, prog(f, POP_IN[0], POP_IN[1], UI_E)) : 1;
+    pop.style.setProperty("opacity", "1", "important");
+    pop.style.setProperty("transform-origin", "top center", "important");
+    pop.style.setProperty("transform", `scale(${sc})`, "important");
   }
 
   const field = q(root, "[data-search-field]")!;
@@ -252,25 +283,46 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     r.style.transform = `translateY(${(1 - t) * 6}px)`;
   });
 
-  const qty = f < CLICK.qty ? 1 : 120;
-  const qFocus = f >= CLICK.qty && f < CLICK.tpl;
-  // Neutral focus ring — no blue glow on the stepper.
-  q(pr, "[data-qty-stepper]")!.style.boxShadow = qFocus ? "0 0 0 2px rgba(26,26,26,0.35)" : "";
+  const qty = f < CLICK.qty ? 1 : QTY_FINAL;
+  q(pr, "[data-qty-stepper]")!.style.boxShadow = "";
   const qtyEl = q(pr, ".qty")!;
   qtyEl.textContent = `${qty}`;
-  if (qFocus && Math.floor((f - CLICK.qty) / 8) % 2 === 0) placeQtyCaret(qtyEl);
-  // never show blue/selected preset fills in the film
   qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
-  const unit = unitAt(qty);
-  q(pr, ".unit")!.innerHTML = `${money(unit)}<span class="ea">ea</span>`;
-  const line = r2(unit * qty);
-  q(pr, ".line-total")!.textContent = money(line);
+  const chip = q(pr, `[data-set-perseus="${QTY_FINAL}"]`);
+  if (chip && f >= CLICK.qty) chip.classList.add("on");
+  const unitEl = q(pr, ".unit")!;
+  let unitRoll = q(unitEl, ":scope > .film-roll");
+  const ea = q(unitEl, ".ea");
+  if (!ea) unitEl.insertAdjacentHTML("beforeend", `<span class="ea">ea</span>`);
+  if (!unitRoll) {
+    unitRoll = document.createElement("span");
+    unitRoll.className = "film-roll";
+    unitEl.insertBefore(unitRoll, unitEl.firstChild);
+  }
+  Array.from(unitEl.childNodes).forEach((n) => {
+    if (n !== unitRoll && n !== q(unitEl, ".ea") && n.nodeType === 3) n.parentNode?.removeChild(n);
+  });
+  const one = money(unitAt(1));
+  const twelve = money(unitAt(QTY_FINAL));
+  showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f);
+  const lineEl = q(pr, ".line-total")!;
+  showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f);
+
+  const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
+  if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
 
   const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
   const lineWord = `${lines} ${lines === 1 ? "line" : "lines"}`;
   q(root, "[data-line-count]")!.textContent = lineWord;
-  const total = (inserted ? line : 0) + (tplIn ? OTHER_LINES : 0);
-  q(root, "[data-order-footer] [data-order-total]")!.textContent = money(r2(total));
+  const totalEl = q(root, "[data-order-footer] [data-order-total]")!;
+  const perseusOnly = money(r2(unitAt(1) * 1));
+  const perseusTwelve = money(r2(unitAt(QTY_FINAL) * QTY_FINAL));
+  showRoll(totalEl, [
+    { at: 0, text: money(0) },
+    { at: INSERT[0], text: perseusOnly },
+    { at: CLICK.qty, text: perseusTwelve },
+    { at: TPL_ROWS[0], text: money(ORDER_TOTAL) },
+  ], f);
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lineWord} to cart`;
@@ -289,13 +341,10 @@ function pill(root: HTMLElement, f: number) {
   const chip = q(pl, "[data-cart-count]")!;
   const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
   const wpx = lerp(PILL_W0, PILL_W1, tw);
-  // Swap the full total on the first frame the eased width can hold every glyph.
-  // Showing it earlier clips "$19,306.50" down to a partial string.
-  const showTotal = wpx >= PILL_NUM_W;
   amt.hidden = false;
-  amt.textContent = money(showTotal ? ORDER_TOTAL : 0);
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
+  showRoll(amt, [{ at: 0, text: money(0) }, { at: PILL_ROLL, text: money(ORDER_TOTAL) }], f);
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
@@ -322,9 +371,21 @@ function applyCart(root: HTMLElement, f: number) {
     input.setAttribute("value", PO);
   }
   const left = CREDIT_AFTER;
+  const totalText = money(ORDER_TOTAL);
+  const leftText = `${money(left)} left of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
+  qa(root, "[data-cart-summary] [data-order-total]").forEach((el) => { el.textContent = totalText; });
   const avail = q(root, "[data-cart-summary] [data-credit-available]");
-  if (avail) avail.textContent = `${money(left)} left of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
-  const bar = q(root, "[data-cart-summary] [data-credit-bar]");
+  if (avail) avail.textContent = leftText;
+  const tip = q(root, "[data-cart-summary] [data-credit-tip]");
+  if (tip) {
+    const rows = qa(tip, "div");
+    if (rows[0]) rows[0].innerHTML = `<strong>Used</strong> ${money(CREDIT_PRIOR_USED)}`;
+    if (rows[1]) rows[1].innerHTML = `<strong>This order</strong> ${totalText}`;
+    if (rows[2]) rows[2].innerHTML = `<strong>Left</strong> ${money(left)}`;
+  }
+  const barLabel = q(root, "[data-cart-summary] [data-credit-bar]");
+  if (barLabel) barLabel.setAttribute("aria-label", `Net 30 credit: ${leftText}`);
+  const bar = barLabel;
   if (bar) {
     const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
     bar.style.setProperty("--credit-used-end", `${used}%`);
@@ -353,14 +414,6 @@ function applyCart(root: HTMLElement, f: number) {
 /** Summary border-box. Replaced after the height:auto still; the grow starts here. */
 const SUMMARY_BOX_H = 298;
 
-const BLUE = "#2c3ee0";
-const EMERALD = "#12824a";
-const mix = (a: string, b: string, t: number) => {
-  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const A = p(a), B = p(b);
-  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`;
-};
-
 const SPIN_SVG = `<svg class="film-spin" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M9 1.6a7.4 7.4 0 1 1-7.4 7.4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const CHECK_SVG = `<svg class="film-draw" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path data-draw d="M3.2 8.3 L6.5 11.5 L12.8 4.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -372,33 +425,30 @@ function placeButton(root: HTMLElement, f: number) {
     btn.textContent = "";
     btn.insertAdjacentHTML(
       "beforeend",
-      `<span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}<span>Order placed</span></span>`,
+      `<span class="film-face" data-face="idle">Place order</span><span class="film-face" data-face="proc">${SPIN_SVG}<span>Placing order</span></span><span class="film-face" data-face="done">${CHECK_SVG}</span>`,
     );
-    const path = q<SVGPathElement>(btn, "[data-draw]");
-    if (path) {
-      const len = path.getTotalLength();
-      path.dataset.len = String(len);
-      path.style.strokeDasharray = `${len}`;
-    }
   }
   // The label swaps in one frame. A crossfade of two words reads as a double exposure.
   const placing = f >= PROC_XFADE[0];
   const success = f >= CHECK_DRAW[0];
-  const done = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], MOVE_E);
   const face = (name: string) => q(btn, `[data-face="${name}"]`);
   const idleEl = face("idle"), procEl = face("proc"), doneEl = face("done");
-  if (idleEl) idleEl.style.opacity = placing ? "0" : "1";
-  if (procEl) procEl.style.opacity = placing && !success ? "1" : "0";
-  if (doneEl) doneEl.style.opacity = success ? "1" : "0";
+  if (idleEl) idleEl.style.visibility = placing ? "hidden" : "visible";
+  if (procEl) procEl.style.visibility = placing && !success ? "visible" : "hidden";
+  if (doneEl) doneEl.style.visibility = success ? "visible" : "hidden";
   const spin = q<SVGElement>(btn, ".film-spin");
   if (spin) spin.style.transform = `rotate(${(f - PROC_XFADE[0]) * 24}deg)`;
   const path = q<SVGPathElement>(btn, "[data-draw]");
-  if (path) {
-    const len = Number(path.dataset.len || "16");
-    const drawn = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], UI_E);
+  if (path && success) {
+    const len = path.getTotalLength();
+    const t = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], EASE_OUT);
+    path.style.strokeDasharray = `${len}`;
+    // t is 0 on the first frame, which hides the whole stroke and leaves a blank green button.
+    const drawn = Math.max(t, 0.12);
     path.style.strokeDashoffset = `${len * (1 - drawn)}`;
   }
-  if (f >= CHECK_DRAW[0]) btn.style.setProperty("background-color", mix(BLUE, EMERALD, done), "important");
+  const ct = f < PLACE_COLOR[0] ? 0 : prog(f, PLACE_COLOR[0], PLACE_COLOR[1], EASE_OUT);
+  if (ct > 0) btn.style.setProperty("background-color", mix(BLUE, EMERALD, ct), "important");
   else btn.style.removeProperty("background-color");
 }
 
@@ -412,6 +462,7 @@ function applyConfirmation(root: HTMLElement, f: number) {
 
   // Same header treatment as the summary so the cut does not reveal a clipped chip.
   qa(root, ".account-chip, .cart-pill").forEach((el) => { el.style.visibility = "hidden"; });
+  qa(root, "[data-confirm-panel] [data-order-total]").forEach((el) => { el.textContent = money(ORDER_TOTAL); });
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
   panel.style.transform = "none";
@@ -493,27 +544,36 @@ export const JoolaB2B: React.FC = () => {
   // the confirmation card is the subject.
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
-  // Logo glide: centred card → real sidebar slot under shot A
+  // Logo and UI never share a frame. Each fades against the solid ground.
   const logoW0 = 340;
-  const [slotX, slotY] = toScreen(camAt(MORPH[1]), LOGO[0], LOGO[1]);
-  const glide = prog(frame, MORPH[0], MORPH[1], MOVE_E);
-  const intro = frame < MORPH[1];
-  const outro = frame >= END_FADE[0];
-  // Hard cut to the lockup. A crossfade here sits on a grey card and a grey logo.
-  const uiOut = frame >= END_FADE[0] ? 1 : 0;
-  const logoOut = frame >= END_FADE[0] ? 1 : 0;
-  const lw = intro ? lerp(logoW0, LOGO[2], glide) : logoW0;
-  const lx = intro ? lerp(OW / 2 - logoW0 / 2, slotX, glide) : OW / 2 - logoW0 / 2;
-  const ly = intro ? lerp(OH / 2 - (logoW0 * LOGO_AR) / 2, slotY, glide) : OH / 2 - (logoW0 * LOGO_AR) / 2;
-  const logoOpacity = intro ? 1 - prog(frame, MORPH[1] - 4, MORPH[1], FADE_E) : outro ? logoOut : 0;
-  const uiOpacity = intro ? prog(frame, MORPH[0] + 6, MORPH[1], FADE_E) : 1 - uiOut;
-  const uiOn = frame >= MORPH[0] && frame < END_FADE[1];
+  const lw = logoW0;
+  const lx = OW / 2 - logoW0 / 2;
+  const ly = OH / 2 - (logoW0 * LOGO_AR) / 2;
+  let logoOpacity = 0;
+  let logoScale = 1;
+  if (frame <= LOGO_OUT[1]) {
+    const t = prog(frame, LOGO_OUT[0], LOGO_OUT[1], MOVE_E);
+    logoOpacity = 1 - t;
+    logoScale = lerp(1, 0.96, t);
+  } else if (frame >= LOGO_IN[0]) {
+    const t = prog(frame, LOGO_IN[0], LOGO_IN[1], MOVE_E);
+    logoOpacity = t;
+    logoScale = lerp(0.96, 1, t);
+  }
+  const uiOpacity = frame < UI_IN[0] || frame >= UI_OUT[1]
+    ? 0
+    : frame < UI_IN[1]
+      ? prog(frame, UI_IN[0], UI_IN[1], MOVE_E)
+      : frame < UI_OUT[0]
+        ? 1
+        : 1 - prog(frame, UI_OUT[0], UI_OUT[1], MOVE_E);
+  const uiOn = uiOpacity > 0;
   // The Place order hotspot is higher in its card than the confirmation actions,
   // so a cursor frozen across the cut sits in the blank middle of Order placed.
   // The press is still on screen through frame 269; the cut removes the pointer.
   const showPtr = frame >= MORPH[1] && frame < CONF_CUT;
   const ptrFade = prog(frame, CONF_FADE[0], CONF_FADE[1], FADE_E);
-  const ptrOpacity = prog(frame, MORPH[1], MORPH[1] + 4, FADE_E) * (1 - ptrFade);
+  const ptrOpacity = 1 - ptrFade;
   const stageRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -545,7 +605,7 @@ export const JoolaB2B: React.FC = () => {
         </div>
       )}
       {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, pointerEvents: "none" }} />
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
       )}
       {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>

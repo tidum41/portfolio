@@ -2,9 +2,9 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 21: ~12s. Popover is opacity-only. Qty 120 is one frame.
- * The cart pill is one gesture: a beat on $0, one ease-out width, the total
- * swaps once the width can hold it, then the badge scales in. No bounce.
+ * Pass 27: qty is one click on the 12 chip. Popover is solid.
+ * After Add to order, one zoom-out shows the Match kit lines land.
+ * The cart pill eases its width, then the total rolls. No bounce.
  */
 export const FPS = 30;
 
@@ -54,10 +54,11 @@ export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- pass 25 beats ---------- */
-/** Intro: logo glides into the sidebar slot on a dashboard shot (sidebar + header). */
-export const MORPH = [4, 18] as const;
-export const UI_IN = MORPH[0];
+/* ---------- pass 27 beats ---------- */
+/** Logo leaves first (quick), then the dashboard fades up off the solid ground. */
+export const LOGO_OUT = [0, 5] as const;
+export const UI_IN = [5, 11] as const;
+export const MORPH = [0, UI_IN[1]] as const;
 export const LEAD = 2;
 /** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
@@ -69,33 +70,41 @@ export const RESULT_HOVER = [CLICK.result - 2, CLICK.result] as const;
 export const INSERT = [ENTER, ENTER + 6] as const;
 /** Kept for API compat; no blue just-added tint. */
 export const ROW_HL = [ENTER, ENTER] as const;
-/** Value swaps 1 → 120 on the click frame. The range is a single frame. */
+/** One click on the 12 chip. Dependent money rolls for 6 frames (200ms). */
 export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
 export const QTY_SET = CLICK.qty;
+export const ROLL_F = 6;
 /** Eye travels onto the new row as it inserts, and lands while the qty is still 1. */
 export const QTY_MOVE = [69, 82] as const;
 /** 20 frames, 0.67s. Same MOVE_E. Scale step is about 12% smaller than pass 24. */
 export const PAN_AB = [106, 126] as const;
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
-export const POP_IN = [CLICK.tpl, CLICK.tpl + 5] as const;
+/** Solid on the open frame. Scale 0.98→1 over 3 frames (100ms), opacity stays 1. */
+export const POP_IN = [CLICK.tpl, CLICK.tpl + 3] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
 /**
  * The three template rows start after the cut to the table, so they arrive
  * where the eye already is. Perseus is already on the order.
  */
-export const ROWS_CUT = 182;
-export const TPL_ROWS = [188, 204] as const;
+/** 18 frames, 0.6s, MOVE_E. Replaces the hard cut onto the table. */
+export const ROWS_ZOOM = [176, 194] as const;
+export const ROWS_CUT = ROWS_ZOOM[0];
+/** Lines settle during the second half of the zoom and finish as it lands. */
+export const TPL_ROWS = [184, 194] as const;
 /** Hard cut onto Add 4 lines to cart once the new rows have been readable. */
 export const ADD_CUT = 216;
 export const PAN_BC = [ADD_CUT, ADD_CUT] as const;
 /** Hard cut to a tight cart pill still showing $0.00. */
 export const PILL_SHOT = 260;
 export const PILL_W0 = 85;
-export const PILL_W1 = 151;
-/** Width at which "$19,306.50" fits next to the icon, before the badge takes space. */
-export const PILL_NUM_W = 130;
+/** Filled pill for "$4,908.66" plus the badge. Right edge stays 1284. */
+export const PILL_W1 = 142;
+/** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
+export const PILL_NUM_W = 121;
 /** Cursor lands on the empty cart icon, then rides it as the pill grows. */
 export const PILL_ARRIVE = 266;
+/** Digit roll starts once the eased width can hold "$4,908.66". 6 frames, 200ms. */
+export const PILL_ROLL = 278;
 /** One ease-out after a beat on $0.00. Not an ease-in-out. */
 export const PILL_FILL = [272, 286] as const;
 /** Badge is the last beat: scale 0.6→1 over 5 frames, overlapping the end of the width. */
@@ -109,8 +118,9 @@ export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
 export const PROC_XFADE = [337, 341] as const;
 /** Press, then "Placing order" holds ~0.73s once the label is solid. */
 export const PROC = [338, 363] as const;
-/** Check draws and the button eases to emerald. ~250ms. */
-export const CHECK_DRAW = [363, 371] as const;
+/** Whole-button colour, 5 frames ≈ 167ms, then the check stroke, 8 frames ≈ 267ms. */
+export const PLACE_COLOR = [355, 360] as const;
+export const CHECK_DRAW = [360, 368] as const;
 /** "Order placed" on the green button, ~0.4s. */
 export const SUCCESS_HOLD = [371, 383] as const;
 /** Summary content fades. The card chrome stays. */
@@ -123,19 +133,22 @@ export const CONF_RECENTER = [402, 412] as const;
 export const CONF_SETTLE = CONF_GROW;
 export const CONF_MORPH = CONF_GROW;
 export const CONF_XFADE = CONF_FADE;
-/** Hold Order placed ~1.5s before the logo. */
+/** Hold Order placed, then fade the UI to the ground before the logo. */
 export const CONF_HOLD = [412, 457] as const;
-export const END_FADE = [457, 475] as const;
-export const DURATION = END_FADE[1] + 6;
+/** UI fades to the solid ground, then the logo fades and scales 0.96→1 over 9 frames (300ms). */
+export const UI_OUT = [457, 465] as const;
+export const LOGO_IN = [465, 474] as const;
+export const END_FADE = [UI_OUT[0], 488] as const;
+export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [ROWS_CUT, ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
   ["result click + row insert", ENTER, INSERT[1]],
-  ["qty click + 120", CLICK.qty, CLICK.qty + 1],
+  ["qty chip 12 + digit roll", CLICK.qty, CLICK.qty + ROLL_F],
   ["template popover", CLICK.tpl, POP_IN[1]],
   ["template rows", TPL_ROWS[0], TPL_ROWS[1]],
   ["pill width + total + badge", PILL_FILL[0], PILL_BADGE[1]],
@@ -168,25 +181,26 @@ export const SHOT_OPEN: Cam = { cx: 328, cy: 210, s: 2.24 };
  * Search field. Frame stops at the field (page x ~648) so the Price header
  * is not a sliced "Pri", and Quick order stays whole on the left.
  */
-export const SHOT_A: Cam = { cx: 440, cy: 148, s: 3.45 };
-/** Qty 120, below the search field so that field is not a sliced pill. */
-export const SHOT_B: Cam = { cx: 803, cy: 332, s: 3.3 };
+export const SHOT_A: Cam = { cx: 440, cy: 148.4, s: 3.45 };
+/** Qty row, below the search field so that field is not a sliced pill. */
+export const SHOT_B: Cam = { cx: 803, cy: 332.4, s: 3.3 };
 /**
  * Add to order. Match kit is whole; the card above and the footer
  * Add button are outside the frame so nothing is sliced.
  */
-/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out. */
-export const SHOT_B2: Cam = { cx: 1158, cy: 595, s: 6.4 };
+/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out.
+ *  cy +0.4 follows the Quick order title locking to a 28px line box. */
+export const SHOT_B2: Cam = { cx: 1158, cy: 595.4, s: 6.4 };
 /** Add 4 to cart. Low enough that the rail price above the footer is out of frame. */
 /** Add 4 lines to cart. Centre is the wider label. */
-export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748, s: 4.4 };
+export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 /** The order table, framed so three new rows can arrive under Perseus. */
-export const SHOT_ROWS: Cam = { cx: 640, cy: 370, s: 1.78 };
+export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
 /**
- * Filled pill centred. Right edge stays at 1284, filled width 151,
- * so the centre is 1208.5. cy is the pill's vertical centre.
+ * Filled pill centred. Right edge stays at 1284, filled width 142,
+ * so the centre is 1213. cy is the pill's vertical centre.
  */
-export const SHOT_PILL: Cam = { cx: 1208.5, cy: 23, s: 8.8 };
+export const SHOT_PILL: Cam = { cx: 1213, cy: 23, s: 8.8 };
 /**
  * Place order and Order placed share one scale and the same offset from each
  * card's page centre. s=2.95 is the largest scale that keeps SO-48213 inside
@@ -212,7 +226,7 @@ export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: logo -> search", ease: MOVE_E },
   { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
-  { a: ROWS_CUT, b: ROWS_CUT, to: SHOT_ROWS, label: "cut: template rows arrive" },
+  { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_ROWS, label: "zoom out: match kit lines land", ease: MOVE_E },
   { a: ADD_CUT, b: ADD_CUT, to: SHOT_ADD, label: "cut: Add to cart" },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },

@@ -24,8 +24,8 @@ export const P = {
   start: [420, 280] as Pt,
   search: [330, 142] as Pt,
   result: [560, 198] as Pt,
-  // Right side of the qty field, in the empty space beside "120", not on a preset.
-  qty: [R["qo-search.qty0"][0] + R["qo-search.qty0"][2] * 0.8, R["qo-search.qty0"][1] + R["qo-search.qty0"][3] / 2] as Pt,
+  // Centre of the 12 preset chip.
+  qty: [R["qo-search.preset12"][0] + R["qo-search.preset12"][2] / 2, R["qo-search.preset12"][1] + R["qo-search.preset12"][3] / 2] as Pt,
   tpl: [1130, 556] as Pt,
   tplAdd: [ctr("qo-search.tplAdd")[0], ctr("qo-search.tplAdd")[1]] as Pt,
   add: [ctr("qo-search.addBtn")[0], ctr("qo-search.addBtn")[1]] as Pt,
@@ -100,9 +100,8 @@ export const pillRectAt = (f: number): Rect => {
   return [PILL_RIGHT - w, R["qo-search.cartPill"][1], w, R["qo-search.cartPill"][3]];
 };
 
-/** I-beam while the hotspot is over the qty field; arrow everywhere else. */
-export const cursorKind = (f: number): "arrow" | "ibeam" =>
-  inRect(pageAt(f), R["qo-search.qty0"], 1) ? "ibeam" : "arrow";
+/** The qty beat is a chip click, so the pointer stays an arrow. */
+export const cursorKind = (_f: number): "arrow" | "ibeam" => "arrow";
 
 /**
  * Hover turns on when the hotspot enters `rect` and stays on until `until`,
@@ -123,11 +122,12 @@ export const latched = (frame: number, rectAt: (f: number) => Rect, from: number
 };
 
 const fixed = (r: Rect) => () => r;
-export type HoverId = "result" | "tpl" | "tplAdd" | "add" | "pill" | "place";
+export type HoverId = "result" | "qty" | "tpl" | "tplAdd" | "add" | "pill" | "place";
 export const hoverState = (frame: number): { id: HoverId; sel: string; active: boolean }[] => {
   const press = (c: number) => frame >= c && frame < c + 4;
   const specs: { id: HoverId; sel: string; rectAt: (f: number) => Rect; from: number; until: number; click: number }[] = [
     { id: "result", sel: "[data-search-result]", rectAt: fixed(R["qo-search.result"]), from: CLICK.result - 20, until: CLICK.result + 4, click: CLICK.result },
+    { id: "qty", sel: "[data-set-perseus='12']", rectAt: fixed(R["qo-search.preset12"]), from: CLICK.qty - 16, until: CLICK.qty + 4, click: CLICK.qty },
     { id: "tpl", sel: "[data-template='tpl-match']", rectAt: fixed(R["qo-search.tplMatch"]), from: CLICK.tpl - 24, until: CLICK.tplAdd + 4, click: CLICK.tpl },
     { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd },
     { id: "add", sel: "[data-add-all]", rectAt: fixed(R["qo-search.addBtn"]), from: CLICK.add - 24, until: CLICK.add + 4, click: CLICK.add },
@@ -150,7 +150,7 @@ export const cursorScale = (f: number) => {
   return base;
 };
 export const CLICK_TARGETS: [keyof typeof CLICK, string][] = [
-  ["search", "qo-search.search"], ["result", "qo-search.result"], ["qty", "qo-search.qty0"], ["tpl", "qo-search.tplMatch"],
+  ["search", "qo-search.search"], ["result", "qo-search.result"], ["qty", "qo-search.preset12"], ["tpl", "qo-search.tplMatch"],
   ["tplAdd", "qo-search.tplAdd"], ["add", "qo-search.addBtn"], ["place", "cart.place"],
 ];
 export const clickReport = () =>
