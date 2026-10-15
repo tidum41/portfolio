@@ -88,9 +88,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   }, []);
 
   useEffect(() => afterIntroIdle(() => {
-    const origin = originFromButton();
-    if (origin) warmThemeTransition(origin);
-  }), []);
+    warmThemeTransition(originFromButton() ?? { x: 0, y: 0 });
+  }, 100), []);
 
   const toggle = () => {
     // Read the live attribute. React state lags a frame, and a second click

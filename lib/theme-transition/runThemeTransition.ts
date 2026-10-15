@@ -4,7 +4,7 @@ import {
   type SiteTheme,
 } from "./applyTheme";
 import type { Point } from "./bayer";
-import { DITHER_CELL_PX, DITHER_DURATION_MS, ditherRevealKeyframes } from "./ditherMask";
+import { abortDitherWarm, DITHER_CELL_PX, DITHER_DURATION_MS, ditherRevealKeyframes, warmDitherAssets } from "./ditherMask";
 import { maskDataUrlForProgress } from "./maskCanvas";
 import type { ThemeTransitionMode } from "./preference";
 
@@ -145,6 +145,11 @@ function installDitherSheet(): void {
       -webkit-mask-repeat: repeat;
       -webkit-mask-position: 0 0;
       -webkit-mask-source-type: luminance;
+    }
+    /* Idle warm captures the other theme under the current snapshot. */
+    html[data-dither-warm-vt="1"]::view-transition-new(root) {
+      opacity: 0 !important;
+      animation: none !important;
     }
   `;
 }
@@ -351,6 +356,8 @@ function begin(
   if (mode === "dither") installDitherSheet();
   else installHalftoneSheet(maskDataUrlForProgress("halftone", 0, origin));
 
+  abortDitherWarm();
+
   const startViewTransition = document.startViewTransition?.bind(document);
   if (!startViewTransition) {
     clearVtStyles();
@@ -506,6 +513,7 @@ export function runThemeTransition(
 }
 
 export function warmThemeTransition(_origin: Point): void {
-  ditherRevealKeyframes();
-  if (typeof document !== "undefined") installDitherSheet();
+  if (typeof document === "undefined") return;
+  installDitherSheet();
+  void warmDitherAssets();
 }
