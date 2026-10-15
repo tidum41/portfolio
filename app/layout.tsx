@@ -24,6 +24,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
 // Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
@@ -117,6 +118,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     () =>
       [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
   );
+  // Already returns an empty warmup if Mux is unreachable, so a video-CDN
+  // blip cannot take the rest of the layout down with it.
+  const muxWarm = await getMuxCardWarmup();
   const dsStyle = designSystemToCss(ds);
 
   return (
@@ -168,7 +172,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         {/* Injected via useServerInsertedHTML so React 19 never sees a
             <script> in the component tree (raw script / next/script both warn). */}
-        <BootScripts jsonLd={getSiteJsonLd()} />
+        <BootScripts
+          jsonLd={getSiteJsonLd()}
+          playlists={Object.fromEntries(
+            muxWarm.preload
+              .filter((item) => item.playbackId)
+              .map((item) => [item.playbackId as string, item.href]),
+          )}
+        />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
         <UiSoundRoot />

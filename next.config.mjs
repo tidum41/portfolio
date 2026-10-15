@@ -1,7 +1,17 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// The grid player loads this file by URL so the browser can fetch it with
+// the HTML, instead of waiting for a hashed bundle after hydration.
+const hlsLightSrc = path.join(__dirname, "node_modules/hls.js/dist/hls.light.min.js");
+const hlsLightDest = path.join(__dirname, "public/vendor/hls-light.min.js");
+if (fs.existsSync(hlsLightSrc)) {
+  fs.mkdirSync(path.dirname(hlsLightDest), { recursive: true });
+  fs.copyFileSync(hlsLightSrc, hlsLightDest);
+}
 
 // `next build` runs with NODE_ENV=production. `next dev` does not, so local
 // tuning still loads the real DialKit package.
@@ -24,7 +34,9 @@ const nextConfig = {
     if (!dev) {
       config.resolve.alias = {
         ...config.resolve.alias,
-        dialkit: path.join(__dirname, "lib/dialkit-prod.tsx"),
+        // Exact match only, so `dialkit/store` still resolves to the real
+        // package. The production stub imports the store's value resolver.
+        "dialkit$": path.join(__dirname, "lib/dialkit-prod.tsx"),
       };
     }
     return config;

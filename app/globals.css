@@ -1142,6 +1142,14 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-fit: contain;
   --media-object-position: center;
   --media-background-color: transparent;
+  /* The still underneath is the frame we start on. Hide the element until
+     that frame has decoded so a black first paint can't cover it. */
+  opacity: 0;
+}
+.mux-media-slot[data-frame="shown"] mux-player,
+.mux-media-slot[data-frame="shown"] .mux-cover,
+.mux-media-slot[data-frame="shown"] video.mux-cover {
+  opacity: 1;
 }
 .mux-cover {
   --controls: none;
