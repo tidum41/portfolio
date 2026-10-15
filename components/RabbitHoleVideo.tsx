@@ -135,6 +135,8 @@ function createHopAnimator(
     let direction: 1 | -1 = 1;
     let intervalId = 0;
     let running = false;
+    // True only while the autoplay CTA owns the interval.
+    let onceMode = false;
 
     function render() {
         svg.style.transform = computeSpriteTransform(translateX, direction, getFilled(), getFilledScale());
@@ -165,7 +167,9 @@ function createHopAnimator(
     }
 
     function start() {
-        if (running) return;
+        // A real hover/tap during the CTA takes over: keep the same interval
+        // but stop the CTA from ending it when the patrol returns home.
+        if (running) { onceMode = false; return; }
         running = true;
         intervalId = window.setInterval(tick, getFrameMs());
     }
@@ -178,8 +182,10 @@ function createHopAnimator(
         if (running) return;
         let sawFarEnd = false;
         running = true;
+        onceMode = true;
         intervalId = window.setInterval(() => {
             tick();
+            if (!onceMode) return;
             if (direction === -1) sawFarEnd = true;
             if (sawFarEnd && direction === 1 && translateX === 0) {
                 stop();
@@ -189,6 +195,7 @@ function createHopAnimator(
     }
     function stop() {
         running = false;
+        onceMode = false;
         clearInterval(intervalId);
         seqIndex = 0;
         translateX = 0;
