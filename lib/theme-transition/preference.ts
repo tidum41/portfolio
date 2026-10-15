@@ -33,7 +33,7 @@ export function getThemeTransitionMode(): ThemeTransitionMode {
   } catch {
     /* ignore */
   }
-  return "default";
+  return "dither"; // local test: dither on by default
 }
 
 export function setThemeTransitionMode(mode: ThemeTransitionMode): void {
