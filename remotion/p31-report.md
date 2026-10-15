@@ -16,6 +16,10 @@ The click cuts to the cart pill in the header and holds that framing. The pill w
 
 The cursor waits under the pill while that plays, then moves onto the icon. Hover starts when the tip enters. The press is three frames. It holds the released hover for six frames (200ms), and only then cuts to Place order. Those six frames come from the old rest on the new line. The cursor lands just above Place order, as before.
 
+## Badge
+
+The 4 was high in the circle because the film set the badge line-height to 20px, so the line box filled the circle and the cap sat above centre. It is now a flex box with line-height 1, and the prototype cap-trim is turned off. The tabular side bearing of 4 is under half a film pixel. After that, the ink was still 2.5px high at 1920, so the digit carries a 0.33px downward nudge. On the settled header frame the glyph box is 0.5px left and 0.5px below the circle centre. The badge only ever shows 4.
+
 ## Check
 
 `check-film.py` once on the 1920×1440 film: 375 frames, no unexpected cuts, seam diff 0.019, ledger strings present. The frozen runs are the green-button hold and the settled logo.
