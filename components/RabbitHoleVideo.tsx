@@ -568,6 +568,7 @@ export function RabbitHoleVideo(Component: ComponentType): ComponentType {
                 player.setAttribute("autoplay", "muted");
                 player.setAttribute("loop", "");
                 player.setAttribute("muted", "");
+                player.setAttribute("playsinline", "");
                 player.setAttribute("no-controls", "");
                 player.style.cssText = `
                     position: absolute; top: 50%; left: 50%;

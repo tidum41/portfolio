@@ -10,7 +10,11 @@ export type MuxCardWarm = {
    * `playbackId` is set on the playlist URL so the player can open that
    * exact file (the one already in the preload cache).
    */
-  preload: { href: string; playbackId?: string }[];
+  /**
+   * `aboveFold` is the first card in a single column (a phone). The other
+   * column's card is only on screen once the grid is two columns.
+   */
+  preload: { href: string; playbackId?: string; aboveFold?: boolean }[];
 };
 
 const EMPTY: MuxCardWarm = { preconnect: [], preload: [] };
@@ -110,7 +114,11 @@ async function loadWarm(ids: string[]): Promise<MuxCardWarm> {
     const hit = settled[index];
     if (!hit) return;
     for (const url of hit.urls) {
-      preload.push({ href: url, playbackId: url === hit.playlist ? id : undefined });
+      preload.push({
+        href: url,
+        playbackId: url === hit.playlist ? id : undefined,
+        aboveFold: index === 0,
+      });
       try {
         origins.add(new URL(url).origin);
       } catch {
@@ -131,7 +139,7 @@ export function getMuxCardWarmup(): Promise<MuxCardWarm> {
     .then((projects) => {
       const ids = startupPlaybackIds(projects);
       if (!ids.length) return EMPTY;
-      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v2", ids.join(",")], {
+      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v3", ids.join(",")], {
         revalidate: 3600,
       })();
     })

@@ -140,13 +140,15 @@ export default function PhoneMockup({
   const playPauseButton = videoSrc && !muxPlaybackId ? (
     <button
       onClick={togglePlay}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
+      }}
       onMouseLeave={() => setIsHovered(false)}
       aria-label={isPlaying ? "Pause" : "Play"}
       className="phone-mockup-play-btn"
       style={{
         position: "absolute", top: 8, right: 8, zIndex: 10,
-        width: 32, height: 32, borderRadius: "50%",
+        width: 44, height: 44, borderRadius: "50%",
         background: "var(--color-placeholder)",
         boxShadow: isHovered ? "inset 0 0 0 1.5px var(--color-text-muted)" : "none",
         border: "none", cursor: "pointer",

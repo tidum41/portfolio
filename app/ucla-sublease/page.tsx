@@ -475,7 +475,7 @@ async function BruinLeaseContent() {
                       src={cs.problemImage}
                       alt="Fragmented subleasing platforms"
                       fill
-                      sizes="(max-width: 768px) 100vw, 750px"
+                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
                       style={{ objectFit: "cover" }}
                     />
                   </div>

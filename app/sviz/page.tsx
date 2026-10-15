@@ -261,7 +261,7 @@ export default function SvizPage() {
                 alt="sviz YouTube channel"
                 width={1596}
                 height={1388}
-                sizes="(max-width: 750px) 100vw, 750px"
+                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
                 style={{ width: "100%", height: "auto", display: "block" }}
                 priority
               />
@@ -337,7 +337,7 @@ async function SvizContent() {
                   alt="Filming setup for a keyboard review"
                   width={3024}
                   height={4032}
-                  sizes="(max-width: 420px) 100vw, 420px"
+                  sizes="(max-width: 767px) calc(100vw - 48px), 420px"
                   style={{ width: "100%", height: "auto", display: "block" }}
                 />
               </MediaCard>

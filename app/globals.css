@@ -165,6 +165,7 @@
 /* ─── Base reset ──────────────────────────────────────────────────── */
 html {
   color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "kern" 1, "liga" 1;
@@ -194,6 +195,33 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* Notch and home indicator. Horizontal inset lives here so full-bleed
+     layers and the page gutter share one edge. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+a,
+button,
+summary,
+label,
+[role="button"],
+[role="link"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Colour-only press. Hover treatments stay on fine pointers so a tap
+   cannot leave a control looking hovered. */
+@media (hover: none), (pointer: coarse) {
+  a:active,
+  button:active,
+  summary:active,
+  [role="button"]:active,
+  [role="link"]:active {
+    color: var(--color-text-muted);
+  }
 }
 main#main-content {
   flex: 1 0 auto;
@@ -202,7 +230,7 @@ main#main-content {
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
 /* Hero type must not re-wrap after first layout — `balance` / `pretty`
-   reflow the JOOLA · UCLA line (and the pill that docks to it) on load. */
+   reflow the subtitle (and the pill that docks to it) on load. */
 .hero-heading,
 .hero-sub {
   text-wrap: wrap;
@@ -338,14 +366,27 @@ html.theme-switching *::after {
 }
 
 /* ─── Nav tap-target expansion ────────────────────────────────────── */
-nav a {
+.site-nav {
+  gap: 40px;
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: 24px;
+}
+@media (max-width: 767px) {
+  .site-nav { gap: 4px; }
+}
+nav a,
+.nav-link,
+.footer-link {
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 44px;
   min-height: 44px;
-  /* Avoid 300ms double-tap delay / gesture conflicts that can flash
-     press feedback without firing the follow-up click on mobile. */
   touch-action: manipulation;
+}
+.footer-inner {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 /* ─── Project card hover ───────────────────────────────────────────
@@ -446,26 +487,19 @@ html[data-theme="dark"] .project-card::before {
   font-weight: 500;
   text-decoration: none;
   transition: color 0.3s ease;
+  position: relative;
+}
+.hero-ucla::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 @media (hover: hover) and (pointer: fine) {
   .hero-ucla:hover { color: rgb(53, 121, 204); }
-}
-
-/* ─── "JOOLA" hover accent — a real link ─────────────────────────── */
-.hero-joola {
-  color: inherit;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .hero-joola:hover { color: #fef633; }
-}
-
-/* ─── Hero subtitle middle dot — a touch larger than body text ──── */
-.hero-dot {
-  font-size: 1.3em;
-  line-height: 1;
 }
 
 /* ─── ProjectPopup close button — same 24px/radius-6/invisible-hit-area-
@@ -490,12 +524,16 @@ html[data-theme="dark"] .project-card::before {
 .popup-close-btn::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  /* 24px icon + 10px each side = 44px tap target. */
+  inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
   .popup-close-btn:hover { color: var(--color-text-primary); }
+  .popup-close-btn:active { transform: scale(0.96); }
 }
-.popup-close-btn:active { transform: scale(0.96); }
+@media (hover: none), (pointer: coarse) {
+  .popup-close-btn:active { color: var(--color-text-primary); }
+}
 
 /* ─── InteractiveBadge border — neutral grey, lighter/more visible than
    --color-border-subtle (used for purely decorative dividers), so the badge
@@ -632,7 +670,9 @@ html[data-theme="dark"] .project-image {
 
 /* ─── Back button — scale on press + adequate hit area ───────────── */
 .back-btn { transition: color 0.2s ease, transform 80ms ease, background-color 1s ease, border-color 1s ease; }
-.back-btn:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) {
+  .back-btn:active { transform: scale(0.96); }
+}
 
 /* ─── Case study 3-column layout ────────────────────────────────────
    Desktop  : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
@@ -1100,7 +1140,7 @@ html[data-theme="dark"] .ps-polaroid-cap {
 }
 @media (max-width: 767px) {
   .bento-hint-pill { top: 88px; }
-  .bento-zoom-panel { bottom: 56px; height: 44px; }
+  .bento-zoom-panel { bottom: 56px; height: 44px; min-height: 44px; box-sizing: border-box; }
   .bento-zoom-track {
     min-height: 44px;
     display: flex;

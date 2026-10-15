@@ -21,7 +21,10 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 8px;
           padding: 24px var(--page-px);
+          padding-bottom: calc(24px + env(safe-area-inset-bottom));
           min-height: 69px;
         }
       `}</style>
@@ -50,6 +53,7 @@ export default function Footer() {
     <FooterShell>
       <Link
         href="/"
+        className="footer-link"
         style={{ ...linkStyle, color: "var(--color-text-muted)" }}
       >
         Mudit Mahajan
@@ -63,6 +67,7 @@ export default function Footer() {
                 href={href}
                 target={href.startsWith("mailto") ? undefined : "_blank"}
                 rel="noopener noreferrer"
+                className="footer-link"
                 style={{ ...linkStyle, color: "var(--color-text-primary)" }}
               >
                 {label}

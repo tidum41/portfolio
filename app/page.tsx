@@ -76,7 +76,11 @@ export default async function Home() {
           as="fetch"
           href={item.href}
           crossOrigin="anonymous"
-          media="(max-width: 800px) and (prefers-reduced-motion: no-preference)"
+          media={
+            item.aboveFold
+              ? "(max-width: 800px) and (prefers-reduced-motion: no-preference)"
+              : "(min-width: 768px) and (max-width: 800px) and (prefers-reduced-motion: no-preference)"
+          }
         />
       ))}
     </>

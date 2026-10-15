@@ -669,7 +669,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                               fill
                               className="project-image"
                               style={{ objectFit: "cover" }}
-                              sizes="(max-width: 768px) 100vw, 50vw"
+                              sizes="(max-width: 767px) calc(100vw - 48px), 50vw"
                             />
                           </div>
                         </div>
@@ -768,7 +768,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                               fill
                               className="project-image"
                               style={{ objectFit: "cover" }}
-                              sizes="(max-width: 768px) 100vw, 50vw"
+                              sizes="(max-width: 767px) calc(100vw - 48px), 50vw"
                             />
                           </div>
                         </div>

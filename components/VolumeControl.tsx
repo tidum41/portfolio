@@ -9,6 +9,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { playUiSound, setUiSoundVolume, warmUiSounds } from "@/lib/uiSound";
 
 const ICON_SIZE = 17;
+const TAP_SIZE = 44;
 const SLIDER_WIDTH = 72;
 const GAP = 8;
 
@@ -220,7 +221,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         alignItems: "center",
         justifyContent: "flex-end",
         gap: GAP,
-        width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
+        width: isCompact ? TAP_SIZE : TAP_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="none" />
@@ -258,8 +259,8 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           lineHeight: 0,
           WebkitTapHighlightColor: "transparent",
           position: "relative",
-          width: ICON_SIZE,
-          height: ICON_SIZE,
+          width: TAP_SIZE,
+          height: TAP_SIZE,
           flexShrink: 0,
         }}
       >
