@@ -7,10 +7,14 @@ import { computeAnchoredDockPosition } from "./dockPosition";
 import type { AnchoredAppearance, CardKind, DockPlacementMode } from "./types";
 import { useDockFollowPointer } from "./useDockFollowPointer";
 
+type PillPhase = "pre" | "in" | "open" | "leaving";
+
 type Props = {
   kind: CardKind;
   visible: boolean;
   leaving: boolean;
+  phase?: PillPhase;
+  motion?: { inMs: number; outMs: number; ease: string };
   placement: DockPlacementMode;
   anchoredAppearance: AnchoredAppearance;
   anchorEl: HTMLElement | null;
@@ -21,6 +25,8 @@ export default function DockTooltipPortal({
   kind,
   visible,
   leaving,
+  phase = "open",
+  motion,
   placement,
   anchoredAppearance,
   anchorEl,
@@ -109,6 +115,13 @@ export default function DockTooltipPortal({
       data-leaving={leaving ? "true" : "false"}
       style={{
         transform: `translate3d(${x}px, ${y}px, 0)`,
+        ...(motion
+          ? {
+              ["--pill-in" as string]: `${motion.inMs}ms`,
+              ["--pill-out" as string]: `${motion.outMs}ms`,
+              ["--pill-ease" as string]: motion.ease,
+            }
+          : {}),
         ...(showCaret ? { ["--hilab-caret-shift" as string]: `${anchored.caretShiftX}px` } : {}),
         ...(anchored.flipped ? { ["--hilab-dock-flipped" as string]: "1" } : {}),
       }}
@@ -117,6 +130,7 @@ export default function DockTooltipPortal({
         <DockTooltipLayer
           kind={kind}
           visible={visible && !leaving}
+          phase={phase}
           showCaret={showCaret}
           placement={placement}
           flipped={isAnchored && anchored.flipped}

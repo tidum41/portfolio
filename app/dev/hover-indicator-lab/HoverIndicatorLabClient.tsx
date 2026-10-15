@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LabDemoCard from "./LabDemoCard";
+import SharedDock from "./SharedDock";
 import "./hilab.css";
 import type { AnchoredAppearance, DockPlacementMode, LabProject } from "./types";
 
@@ -75,16 +76,14 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
         {projects.length === 0 ? (
           <p className="hilab-empty">No project thumbnails loaded.</p>
         ) : (
-          <div className="hilab-grid">
-            {projects.map((p) => (
-              <LabDemoCard
-                key={`${p.id}-${p.kind}`}
-                project={p}
-                dockPlacement={dockPlacement}
-                anchoredAppearance={anchoredAppearance}
-              />
-            ))}
-          </div>
+          <>
+            <div className="hilab-grid">
+              {projects.map((p) => (
+                <LabDemoCard key={`${p.id}-${p.kind}`} project={p} />
+              ))}
+            </div>
+            <SharedDock placement={dockPlacement} appearance={anchoredAppearance} />
+          </>
         )}
       </div>
     </div>

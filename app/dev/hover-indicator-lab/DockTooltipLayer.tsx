@@ -6,12 +6,14 @@ import { kindShort } from "./types";
 export default function DockTooltipLayer({
   kind,
   visible,
+  phase = "open",
   showCaret = true,
   placement = "anchored",
   flipped = false,
 }: {
   kind: CardKind;
   visible: boolean;
+  phase?: "pre" | "in" | "open" | "leaving";
   showCaret?: boolean;
   placement?: DockPlacementMode;
   flipped?: boolean;
@@ -26,7 +28,7 @@ export default function DockTooltipLayer({
     .join(" ");
 
   return (
-    <div className={dockClass} data-visible={visible ? "true" : "false"} aria-hidden>
+    <div className={dockClass} data-visible={visible ? "true" : "false"} data-phase={phase} aria-hidden>
       <div className="hilab-dock__bubble">{kindShort(kind)}</div>
       {showCaret ? <div className="hilab-dock__caret" aria-hidden /> : null}
     </div>
