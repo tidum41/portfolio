@@ -2,12 +2,10 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 33: 14.0s. One thing moves at a time. The cursor arrives, dwells,
- * clicks, and the result holds before the next travel. The open push is the
- * only zoom. Qty, saved orders, the kit lines, and the header are hard cuts.
- * Place order, the check, the card grow, and both logo fades keep their
- * pass-32 lengths. Four still frames come off the settled card and four off
- * the settled logo so the price, the kit lines, and the popup can sit.
+ * Pass 34: 14.0s. Frames 0–89 and everything from the cart cut (300) keep
+ * their pass-33 values. From 3s to 10s the buyer finishes one team order in
+ * a single framing: add Perseus, set 12, the other lines land, add to cart.
+ * Saved orders is gone. One camera ease, while the cursor rests.
  */
 export const FPS = 30;
 
@@ -50,6 +48,8 @@ export const CAM_E = bezier(0.42, 0, 0.16, 1);
 export const FADE_E = MOVE_E;
 export const PUSH_E = MOVE_E;
 export const PTR_E = bezier(0.42, 0, 0.18, 1);
+/** Middle of the film only. Symmetric ease-in-out. Not used before frame 90 or from the cart cut. */
+export const FLOW_E = bezier(0.65, 0, 0.35, 1);
 export const INOUT_E = MOVE_E;
 export const SETTLE = MOVE_E;
 export const EASE_OUT = bezier(0.2, 0, 0, 1);
@@ -58,7 +58,7 @@ export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- pass 33 beats (420 frames, cart cut at 300) ---------- */
+/* ---------- pass 34 beats (420 frames, cart cut at 300) ---------- */
 /** Logo leaves first (quick), then the dashboard fades up off the solid ground. */
 export const LOGO_OUT = [0, 5] as const;
 export const UI_IN = [5, 11] as const;
@@ -69,43 +69,37 @@ export const LEAD = 2;
  * the whole way. It travels to the field only after the push has settled.
  */
 export const OPEN_MOVE = [12, 30] as const;
-export const CLICK = { search: 50, result: 96, qty: 126, tpl: 160, tplAdd: 192, add: 226, pill: 296, place: 321 };
+export const CLICK = { search: 50, result: 119, qty: 160, add: 243, pill: 296, place: 321 };
 export const ENTER = CLICK.result;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 16] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
 /** Dropdown eases in over 8 frames. It finishes as the hold before the next travel starts. */
 export const DROP_F = 8;
 export const RESULT_HOVER = [CLICK.result - 2, CLICK.result] as const;
-/** Row eases in over 6 frames, then rests, then the cut to the qty chips. */
-export const INSERT = [ENTER, ENTER + 6] as const;
+/**
+ * Zoom out from the search field onto the whole order. 24 frames (800ms),
+ * FLOW_E, cursor glued to the result. Starts at frame 90 so frames 0–89 and
+ * the first frame of the move still match the pass-33 search hold.
+ */
+export const REFRAME = [90, 114] as const;
+/** The Perseus line eases in over 12 frames. The dropdown leaves on the same ease. */
+export const INSERT = [ENTER, ENTER + 12] as const;
 /** Kept for API compat; no blue just-added tint. */
 export const ROW_HL = [ENTER, ENTER] as const;
-/** One click on the 12 chip. Dependent money rolls for 8 frames. */
+/** One click on the 12 chip. The line price rolls for 10 frames. */
 export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
 export const QTY_SET = CLICK.qty;
-export const ROLL_F = 8;
-/** Hard cut from the search field onto the qty chips. The cursor keeps its screen pixel. */
-export const CUT_QTY = 106;
-export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
-/** Popup scale 0.98→1 over 6 frames. Opacity stays 1. Then the cursor rests. */
-export const POP_IN = [CLICK.tpl, CLICK.tpl + 6] as const;
-export const POP_HOVER = CLICK.tplAdd - LEAD;
-/** Hard cut from the qty row onto Match kit. */
-export const CUT_B2 = 146;
+export const ROLL_F = 10;
 /**
- * Hard cut from the popup onto the table. The three kit lines ease in here.
- * The tight Match kit shot does not show them, so the cut is the reveal.
+ * The other three lines land as one gesture. 2 frames apart (~67ms, the
+ * frame step nearest 40–60ms) and the same 12-frame ease.
  */
-export const CUT_BOTH = 196;
-export const ROWS_CUT = CUT_BOTH;
-export const TPL_ROWS = [CUT_BOTH, CUT_BOTH] as const;
-/** Kit lines ease in over 4 frames, then sit before the cursor moves. */
-export const TPL_IN = 4;
-/**
- * Hard cut to the header cart, before the amount moves. The cursor keeps its
- * screen pixel, travels up under the pill, and only then does the pill change.
- */
-export const PILL_SHOT = 230;
+export const FILL = 182;
+export const FILL_STAGGER = 2;
+export const FILL_F = 18;
+export const FILL_END = FILL + FILL_STAGGER * 2 + FILL_F;
+/** The button is "Add 4 lines" once it is wide enough, before the read hold. */
+export const ADD_GROW = [FILL, FILL + 14] as const;
 /**
  * Empty pill for the icon plus "$0.00". Filled pill for "$4,908.66" at weight
  * 700 plus the 20px badge. Both include slack so the $ and the circle clear
@@ -115,20 +109,15 @@ export const PILL_W0 = 92;
 export const PILL_W1 = 156;
 /** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
 export const PILL_NUM_W = 124;
-/** Cursor arrives under the pill and rests before the width eases, then the roll. */
-export const PILL_PARK = 246;
-/** Cursor leaves the park once the roll and the badge have held. */
-export const PILL_HOLD = 280;
-export const PILL_ARRIVE = 290;
 /**
- * Digit roll starts the frame the width finishes. 12 frames, 400ms.
- * The count circle uses this same window and the same ease-out.
+ * Width, the $ roll, and the count circle start on the Add to cart release
+ * (click + 3). The roll and the circle share 9 frames (~300ms) of FLOW_E.
+ * The width uses the same curve over 5 frames, so the digits are still on
+ * $0.00 while the pill opens and the roll itself is never clipped.
  */
-export const PILL_ROLL = 260;
-export const ROLL_PILL_F = 12;
-/** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
-export const PILL_FILL = [252, 260] as const;
-/** Same start, length, and ease as the roll. Scale 0.6→1 with the digits. */
+export const PILL_ROLL = CLICK.add + 3;
+export const ROLL_PILL_F = 9;
+export const PILL_FILL = [PILL_ROLL, PILL_ROLL + 5] as const;
 export const PILL_BADGE = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
 /**
  * Hard cut to the cart summary. Everything from here to the last frame is the
@@ -168,17 +157,15 @@ export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [CUT_QTY, CUT_B2, CUT_BOTH, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results dropdown", DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F],
+  ["reframe onto the order", REFRAME[0], REFRAME[1]],
   ["row insert", INSERT[0], INSERT[1]],
   ["qty digit roll", CLICK.qty, CLICK.qty + ROLL_F],
-  ["template popover", POP_IN[0], POP_IN[1]],
-  ["template rows", TPL_ROWS[0], TPL_ROWS[0] + TPL_IN],
-  ["pill width", PILL_FILL[0], PILL_FILL[1]],
-  ["pill digit roll", PILL_ROLL, PILL_ROLL + ROLL_PILL_F],
-  ["pill badge", PILL_BADGE[0], PILL_BADGE[1]],
+  ["order fills", FILL, FILL_END],
+  ["pill width, roll, badge", PILL_ROLL, PILL_ROLL + ROLL_PILL_F],
   ["placing order", PROC[0], CHECK_DRAW[1]],
   ["order placed grow", CONF_GROW[0], CONF_GROW[1]],
 ];
@@ -225,6 +212,12 @@ export const SHOT_B2: Cam = { cx: 1158, cy: 595.4, s: 6.4 };
  * than the page, so the header and the footer are both in frame.
  */
 export const SHOT_BOTH: Cam = { cx: 766, cy: 378, s: 1.32 };
+/**
+ * The whole order, held from the end of the zoom through the cart click.
+ * s=1.35 keeps the result, the 12 chip, all four rows, Add to cart, and the
+ * filled pill inside, with the sidebar (220) just outside the left edge.
+ */
+export const SHOT_ORDER: Cam = { cx: 768, cy: 378, s: 1.35 };
 /** Kept so a report can name the old tight shots. Not a camera target. */
 export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
@@ -260,10 +253,7 @@ export const CART_CAM = SHOT_SUM;
 export const CONF_CAM = SHOT_D;
 export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: rest, then search", ease: CAM_E },
-  { a: CUT_QTY, b: CUT_QTY, to: SHOT_B, label: "cut: qty" },
-  { a: CUT_B2, b: CUT_B2, to: SHOT_B2, label: "cut: saved orders" },
-  { a: CUT_BOTH, b: CUT_BOTH, to: SHOT_BOTH, label: "cut: lines + add" },
-  { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_HEADER, label: "cut: header cart" },
+  { a: REFRAME[0], b: REFRAME[1], to: SHOT_ORDER, label: "ease: the whole order", ease: FLOW_E },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },
   { a: CONF_RECENTER[0], b: CONF_RECENTER[1], to: SHOT_D, label: "recenter order placed", ease: MOVE_E },
