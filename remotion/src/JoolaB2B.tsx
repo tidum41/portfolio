@@ -9,9 +9,9 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TPL_IN,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
+  INSERT, PILL_AMT1, PILL_ROLL, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
-  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
+  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind, type HoverKind } from "./joola/pointer";
 import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
@@ -450,22 +450,62 @@ function pill(root: HTMLElement, f: number) {
   if (!pl) return;
   const amt = q(pl, "[data-cart-total]")!;
   const chip = q(pl, "[data-cart-count]")!;
-  const tw = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
-  const wpx = Math.round(lerp(PILL_W0, PILL_W1, tw));
+  // Until the header cut, keep p33's empty pill so the account chip does not shift.
+  if (f < PILL_SHOT) {
+    const from = money(0);
+    const zeroLine = measureLine(amt, from);
+    const amtW = Math.ceil(zeroLine.w) + 2;
+    const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
+    const h = Math.max(Math.round(zeroLine.h), Math.ceil(fontPx * 1.45));
+    amt.hidden = false;
+    amt.style.visibility = "";
+    amt.style.whiteSpace = "nowrap";
+    amt.style.position = "relative";
+    amt.style.setProperty("display", "block", "important");
+    amt.style.setProperty("width", `${amtW}px`, "important");
+    amt.style.setProperty("min-width", `${amtW}px`, "important");
+    amt.style.setProperty("height", `${h}px`, "important");
+    amt.style.setProperty("min-height", `${h}px`, "important");
+    amt.style.setProperty("overflow", "hidden", "important");
+    amt.style.setProperty("transform", "none", "important");
+    amt.style.setProperty("flex-shrink", "0", "important");
+    amt.style.setProperty("text-box", "none", "important");
+    amt.style.setProperty("line-height", `${h}px`, "important");
+    paintCanvasRoll(amt, from, from, 0, {
+      w: amtW, h, scale: Math.ceil(camAt(f).s * (1920 / OW)), baseline: zeroLine.base, lineH: zeroLine.h,
+    });
+    const canvas0 = amt.querySelector("canvas");
+    if (canvas0) canvas0.style.marginLeft = "0";
+    pl.style.setProperty("--film-pill-w", "92px");
+    pl.style.minWidth = "0";
+    pl.style.overflow = "hidden";
+    pl.style.justifyContent = "flex-start";
+    pl.style.removeProperty("padding");
+    pl.style.removeProperty("border-width");
+    pl.style.removeProperty("box-sizing");
+    pl.style.removeProperty("gap");
+    chip.hidden = true;
+    chip.style.visibility = "hidden";
+    chip.style.opacity = "0";
+    chip.style.transform = "scale(0.6)";
+    chip.style.setProperty("display", "flex", "important");
+    chip.style.setProperty("width", "20px", "important");
+    chip.style.setProperty("min-width", "20px", "important");
+    chip.style.setProperty("max-width", "20px", "important");
+    chip.style.setProperty("flex", "0 0 20px", "important");
+    chip.style.setProperty("margin", "0", "important");
+    return;
+  }
+  const box = pillBox(f);
+  const { t, amt: amtW, badge, pull, w: wpx } = box;
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   const from = money(0);
   const to = money(ORDER_TOTAL);
   const line = measureLine(amt, to);
-  const zeroLine = measureLine(amt, from);
   // Whole pixels. Height and baseline stay the line box for the whole shot,
   // so the digits do not step when the roll starts or ends.
-  // Two extra pixels so a rounded column cannot shave the $ against overflow.
-  const fullW = Math.ceil(line.w) + 2;
-  const zeroW = Math.ceil(zeroLine.w) + 2;
-  const grow = f >= PILL_FILL[0] ? tw : 0;
-  const amtW = Math.round(lerp(zeroW, fullW, f >= PILL_ROLL ? 1 : grow));
   const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
   const h = Math.max(Math.round(line.h), Math.ceil(fontPx * 1.45));
   amt.style.position = "relative";
@@ -479,29 +519,28 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("flex-shrink", "0", "important");
   amt.style.setProperty("text-box", "none", "important");
   amt.style.setProperty("line-height", `${h}px`, "important");
-  // One ease for the digits and the count circle. The painter does not ease again.
-  const motion = f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, EASE_OUT) : 0;
-  const rollFrom = from;
-  const rollTo = f >= PILL_ROLL ? to : from;
-  const t = motion;
-  // DOM overflow does not clip the traveling glyph inside the scaled stage.
-  // The canvas bitmap is the amount box, so the next line cannot paint through.
-  paintCanvasRoll(amt, rollFrom, rollTo, t, {
-    w: amtW,
+  // The canvas is always the settled tabular width and sits on the right of
+  // the growing box, so a narrow frame clips the unread left columns, not the $.
+  paintCanvasRoll(amt, from, f >= PILL_ROLL ? to : from, t, {
+    w: PILL_AMT1,
     h,
     scale: Math.ceil(camAt(f).s * (1920 / OW)),
     baseline: line.base,
     lineH: line.h,
   });
+  const canvas = amt.querySelector("canvas");
+  if (canvas) canvas.style.marginLeft = `${amtW - PILL_AMT1}px`;
+  // 12px pad each side, 1px border, for both the empty and the filled total.
+  pl.style.setProperty("box-sizing", "border-box", "important");
+  pl.style.setProperty("padding", "0 12px", "important");
+  pl.style.setProperty("gap", "8px", "important");
+  pl.style.setProperty("border-width", "1px", "important");
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
-  // The badge keeps its 20px slot once the pill is wide enough, so the
-  // number does not move when the circle fades in.
-  const slot = f >= PILL_ROLL;
-  const showBadge = f >= PILL_BADGE[0];
-  chip.hidden = !slot;
+  const icon = q<SVGElement>(pl, ".cart-icon");
+  if (icon) icon.style.setProperty("margin-right", "-2px", "important");
   let fig = chip.querySelector(".count-fig");
   if (!fig) {
     chip.textContent = "";
@@ -510,24 +549,29 @@ function pill(root: HTMLElement, f: number) {
     chip.appendChild(fig);
   }
   fig.textContent = "4";
-  chip.style.setProperty("width", "20px", "important");
+  const showBadge = badge > 0;
+  chip.hidden = !showBadge;
+  // The prototype's [hidden] rule is display:none !important. An inline flex
+  // would beat it and leave a 20px hole beside $0.00, so hide with inline too.
+  chip.style.setProperty("display", showBadge ? "flex" : "none", "important");
+  chip.style.setProperty("width", `${badge}px`, "important");
   chip.style.setProperty("height", "20px", "important");
-  chip.style.setProperty("min-width", "20px", "important");
-  chip.style.setProperty("max-width", "20px", "important");
-  chip.style.setProperty("flex", "0 0 20px", "important");
+  chip.style.setProperty("min-width", `${badge}px`, "important");
+  chip.style.setProperty("max-width", `${badge}px`, "important");
+  chip.style.setProperty("flex", `0 0 ${badge}px`, "important");
   chip.style.setProperty("margin", "0", "important");
+  chip.style.setProperty("margin-left", `${pull}px`, "important");
   chip.style.setProperty("padding", "0", "important");
-  chip.style.setProperty("display", "flex", "important");
   chip.style.setProperty("align-items", "center", "important");
   chip.style.setProperty("justify-content", "center", "important");
   chip.style.setProperty("line-height", "1", "important");
   chip.style.setProperty("text-box", "none", "important");
+  chip.style.setProperty("overflow", "hidden", "important");
   chip.style.setProperty("transform-origin", "center center", "important");
   if (showBadge) {
-    const bt = motion;
-    const sc = bt >= 1 ? 1 : lerp(0.6, 1, bt);
+    const sc = t >= 1 ? 1 : lerp(0.6, 1, t);
     chip.style.visibility = "";
-    chip.style.opacity = `${bt}`;
+    chip.style.opacity = `${t}`;
     // Settled frame has no transform, so the circle cannot sit a subpixel off its slot.
     chip.style.transform = sc === 1 ? "none" : `scale(${sc.toFixed(3)})`;
   } else {
@@ -796,7 +840,21 @@ export const JoolaB2B: React.FC = () => {
     for (const h of hoverState(frame)) {
       const el = q(layer, h.sel);
       if (!el) continue;
+      // The stylesheet hover/press colours are on .film-hover / .film-active.
+      // The class waits until the 80ms ramp has landed, so it cannot skip the mix.
+      el.classList.toggle("film-active", h.active);
+      el.classList.toggle("film-hover", !h.active && h.mix >= 1);
       paintHover(el, h.kind, h.mix, h.active);
+    }
+    // placeButton paints the blue→emerald morph in the cart layer, which runs
+    // before this effect. The strip above would leave the check on rest blue.
+    if (frame >= PLACE_COLOR[0] && frame < CONF_CUT) {
+      const btn = q<HTMLElement>(layer, "[data-place-order]");
+      if (btn) {
+        const ct = prog(frame, PLACE_COLOR[0], PLACE_COLOR[1], EASE_OUT);
+        btn.classList.remove("film-hover", "film-active");
+        btn.style.setProperty("background-color", mix(BLUE, EMERALD, ct), "important");
+      }
     }
   });
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;

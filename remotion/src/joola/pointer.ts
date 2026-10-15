@@ -8,8 +8,8 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, CUT_B2, CUT_BOTH, CUT_QTY, DROPDOWN_OPEN, EASE_OUT, ENTER, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_HOLD, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
-  OPEN_MOVE, PTR_E, SHOT_A, SHOT_B, SHOT_B2, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, prog, type Cam,
+  camAt, CART_CUT, CLICK, CONF_FADE, CUT_B2, CUT_BOTH, CUT_QTY, DROPDOWN_OPEN, ENTER, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_HOLD, PILL_PARK, PILL_ROLL, PILL_SHOT, PILL_W1, ROLL_PILL_F,
+  OPEN_MOVE, PTR_E, SHOT_A, SHOT_B, SHOT_B2, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, pillBox, prog, type Cam,
 } from "./timeline";
 
 export type Pt = [number, number];
@@ -77,8 +77,11 @@ export const KEYS: Key[] = [
   [CUT_BOTH, linesLand],
   [208, linesLand],
   [220, P.add],
-  [CLICK.add + 3, P.add],
+  // Last pressed frame. The release is the cut, so this key cannot share that frame.
+  [CLICK.add + 2, P.add],
   [PILL_SHOT, headerLand],
+  // Same point through the roll, so the cursor does not travel across the amount.
+  [PILL_ROLL + ROLL_PILL_F, headerLand],
   [PILL_PARK, PARK],
   [PILL_HOLD, PARK],
   [PILL_ARRIVE, P.pillIcon],
@@ -128,10 +131,9 @@ export const addRectAt = (f: number): Rect => {
   return [right - 155, r[1], 155, r[3]];
 };
 
-/** Pill hugs: right edge fixed, width eases empty → filled on the UI ease-out. */
+/** Pill hugs: right edge fixed. Before the header cut the box is p33's 92px. */
 export const pillRectAt = (f: number): Rect => {
-  const t = f >= PILL_FILL[0] ? prog(f, PILL_FILL[0], PILL_FILL[1], EASE_OUT) : 0;
-  const w = lerp(PILL_W0, PILL_W1, t);
+  const w = f < PILL_SHOT ? 92 : pillBox(f).w;
   return [PILL_RIGHT - w, R["qo-search.cartPill"][1], w, R["qo-search.cartPill"][3]];
 };
 

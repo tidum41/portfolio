@@ -102,34 +102,61 @@ export const TPL_ROWS = [CUT_BOTH, CUT_BOTH] as const;
 /** Kit lines ease in over 4 frames, then sit before the cursor moves. */
 export const TPL_IN = 4;
 /**
- * Hard cut to the header cart, before the amount moves. The cursor keeps its
- * screen pixel, travels up under the pill, and only then does the pill change.
+ * Hard cut to the header cart on the Add to cart release. The cursor keeps its
+ * screen pixel, below the pill. The amount, the width, and the count circle
+ * start on this same frame.
  */
-export const PILL_SHOT = 230;
+export const PILL_SHOT = CLICK.add + 3;
 /**
- * Empty pill for the icon plus "$0.00". Filled pill for "$4,908.66" at weight
- * 700 plus the 20px badge. Both include slack so the $ and the circle clear
- * the radius. Right edge stays 1284; the pill grows left.
+ * Tabular advance of "$0.00" and "$4,908.66" at 13px / 700, from the face.
+ * The pill is border-box: 1px border + 12px pad each side, a 16px icon with
+ * a -2px margin, an 8px gap, the amount, and (once it grows in) an 8px gap
+ * plus a 20px badge. Right edge stays 1284; the pill grows left. Padding is
+ * 12px on both ends at $0.00 and at $4,908.66.
  */
-export const PILL_W0 = 92;
-export const PILL_W1 = 156;
-/** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
-export const PILL_NUM_W = 124;
-/** Cursor arrives under the pill and rests before the width eases, then the roll. */
-export const PILL_PARK = 246;
-/** Cursor leaves the park once the roll and the badge have held. */
+export const PILL_AMT0 = 38;
+export const PILL_AMT1 = 67;
+export const PILL_W0 = 2 + 24 + 14 + 8 + PILL_AMT0;
+export const PILL_W1 = PILL_W0 + (PILL_AMT1 - PILL_AMT0) + 8 + 20;
+/** Amount width once "$4,908.66" has settled. The badge is not included. */
+export const PILL_NUM_W = PILL_AMT1;
+/**
+ * The roll finishes, then the cursor rises to the park under the pill.
+ * 16 frames, the same travel p33 used from the landing to the park.
+ */
+export const PILL_PARK = PILL_SHOT + 9 + 16;
+/** Cursor leaves the park once the settled total has held. */
 export const PILL_HOLD = 280;
 export const PILL_ARRIVE = 290;
 /**
- * Digit roll starts the frame the width finishes. 12 frames, 400ms.
- * The count circle uses this same window and the same ease-out.
+ * Digit roll, pill width, and the count circle share one window: the release
+ * frame, then 9 frames (300ms), one ease-out.
  */
-export const PILL_ROLL = 260;
-export const ROLL_PILL_F = 12;
-/** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
-export const PILL_FILL = [252, 260] as const;
-/** Same start, length, and ease as the roll. Scale 0.6→1 with the digits. */
+export const PILL_ROLL = PILL_SHOT;
+export const ROLL_PILL_F = 9;
+export const PILL_FILL = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
 export const PILL_BADGE = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
+
+/** One eased t for the pill's width, the digits, and the count circle. */
+export const pillMotion = (f: number) =>
+  f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, EASE_OUT) : 0;
+
+/**
+ * Whole-pixel box for this frame. The badge slot grows with the same t, and
+ * a negative margin cancels the 8px flex gap until the circle has room, so
+ * the 12px end padding does not jump.
+ */
+export const pillBox = (f: number) => {
+  const t = pillMotion(f);
+  // The box leads the digits, same start and inside the same 300ms, so the $
+  // is on screen before the roll's middle. The ends stay the tabular widths.
+  const wt = Math.min(1, t / 0.35);
+  const amt = Math.round(lerp(PILL_AMT0, PILL_AMT1, wt));
+  const badge = Math.round(20 * wt);
+  const pull = Math.round(-8 * (1 - wt));
+  const extra = badge === 0 ? 0 : 8 + pull + badge;
+  return { t, amt, badge, pull, w: 48 + amt + extra };
+};
 /**
  * Hard cut to the cart summary. Everything from here to the last frame is the
  * pass-32 Place order / Order placed / logo outro block, shifted so the film
@@ -230,8 +257,8 @@ export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
 /**
  * Header cart, held for the whole update. s=5.6 keeps the filled pill
- * (x 1128–1284, y 5–41) about 50 page px inside the frame, so the amount
- * cannot meet the edge. The table starts at y 187, below the frame.
+ * (right edge 1284, y 5–41) inside the frame with the amount clear of the
+ * edge. The table starts at y 187, below the frame.
  * Not a second zoom: the camera is this shot from the cut until Place order.
  */
 export const SHOT_HEADER: Cam = { cx: 1206, cy: 84, s: 5.6 };
