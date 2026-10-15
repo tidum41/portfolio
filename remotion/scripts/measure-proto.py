@@ -6,7 +6,7 @@ VW, VH = 1312, 756
 P="file:///workspace/remotion/assets/joola-b2b/B2B%20quick%20order%20prototype.html"
 T={
  "qo-search":{"logo":".sidebar-brand img","search":"[data-search-field]","result":"[data-search-result]",
-   "row0":"[data-order-row]","preset24":"[data-set-perseus='24']","qty0":"[data-order-row] .qty","line0":"[data-order-row] .line-total",
+   "row0":"[data-order-row]","preset12":"[data-set-perseus='12']","preset24":"[data-set-perseus='24']","qty0":"[data-order-row] .qty","line0":"[data-order-row] .line-total",
    "footer":"[data-order-footer]","footerTotal":"[data-order-footer] [data-order-total]","addBtn":"[data-add-all]","cartPill":"[data-cart-pill]","tplMatch":"[data-template='tpl-match']","table":"[data-order-table]","rail":"[data-qo-rail]"},
  "cart":{"po":"[data-po-input]","summary":"[data-cart-summary]","credit":"[data-credit-meter]","place":"[data-place-order]","lines":".cart-lines"},
  "confirmation":{"panel":"[data-confirm-panel]","msgBtn":".confirm-actions .btn-text","orderId":"[data-order-id]"},

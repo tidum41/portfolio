@@ -44,11 +44,24 @@ def frame_png(f, path, scale=None):
     vf = f"select=eq(n\\,{f})" + (f",scale={scale}" if scale else "")
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", film, "-vf", vf, "-vframes", "1", path], check=True)
 def ocr(path):
-    Image.open(path).resize((3840, 2160), Image.LANCZOS).save(path)
+    # 4:3 keeps the zero in "Net 30". 16:9 keeps the Roman IV in "Hyperion Pro IV".
+    # Either scale alone drops one of those strings, so both are read.
+    im = Image.open(path)
     from PIL import ImageOps
-    inv = path.replace(".png", "_inv.png"); ImageOps.invert(Image.open(path).convert("RGB")).save(inv)
     run = lambda p, m: subprocess.run(["tesseract", p, "-", "--psm", m], capture_output=True, text=True).stdout
-    return run(path, "11") + "\n" + run(path, "6") + "\n" + run(inv, "11")
+    text = ""
+    for i, variant in enumerate((
+        im.resize((im.width * 2, im.height * 2), Image.LANCZOS),
+        im.resize((3840, 2160), Image.LANCZOS),
+    )):
+        vp = path.replace(".png", f"_{i}.png")
+        variant.save(vp)
+        inv = vp.replace(".png", "_inv.png")
+        ImageOps.invert(variant.convert("RGB")).save(inv)
+        text += run(vp, "11") + "\n" + run(vp, "6") + "\n" + run(inv, "11") + "\n"
+        if i == 0:
+            variant.save(path)
+    return text
 m = L["money"]["order"]
 EXPECT = {k: v for k, v in json.load(open("scripts/film-expect.json")).items() if not k.startswith("_")}
 ocr_res, all_text = [], ""

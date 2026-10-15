@@ -10,7 +10,7 @@ import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
-  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, END_FADE,
+  INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
@@ -20,7 +20,6 @@ export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
 
 const PERSEUS_TIER = [[1, 179.97], [6, 164.97], [12, 149.98], [24, 134.98]] as const;
-const OTHER_LINES = 2483.52 + 262.56 + 362.82;
 const QTY_FINAL = 12;
 const ORDER_TOTAL = 4908.66;
 const CREDIT_LIMIT = 50000;
@@ -100,10 +99,6 @@ const CSS =
   border-width:1px!important;transform:none!important;transition:none!important;opacity:1!important;
 }
 .film-layer .tpl-pop .btn-primary{border-color:transparent!important}
-.film-layer .qty-stepper .qty{position:relative}
-.film-qty-caret{
-  position:absolute;width:1px;margin:0;background:#1a1a1a;pointer-events:none;
-}
 .film-layer .cart-pill .count-chip{transform-origin:center center!important}
 .film-layer .cart-pill.film-hover{background:var(--band)!important}
 .film-layer .cart-pill.film-active{background:var(--wash)!important}
@@ -123,9 +118,10 @@ const CSS =
   box-sizing:border-box!important;overflow:hidden!important;
 }
 .film-layer [data-place-order]{position:relative!important;overflow:hidden!important;width:430px!important;height:40px!important;min-width:430px!important;max-width:430px!important}
-.film-roll{display:inline-flex;align-items:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap}
+.film-roll{display:inline-flex;align-items:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:baseline}
+.film-layer .line-total.film-roll{display:flex;justify-content:flex-end;width:100%}
 .film-roll .slot{display:inline-block;position:relative;overflow:hidden;height:1em;line-height:1em}
-.film-roll .col{display:block}
+.film-roll .col{display:block;will-change:transform}
 .film-roll .glyph{display:block;height:1em;line-height:1em}
 .film-layer .film-face,.film-layer .order-face{
   position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
@@ -159,47 +155,6 @@ const caret = (host: HTMLElement, on: boolean) => {
 const typedCount = (f: number, a: number, b: number, len: number) =>
   Math.max(0, Math.min(len, Math.floor(interpolate(f, [a, b], [0, len + 0.999], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))));
 
-let qtyInk: CanvasRenderingContext2D | null = null;
-/** Tabular advance of one FK Grotesk Neue 500 14px digit, from a DOM range
- *  on the untransformed field (1: 9.25, 2: 9.25, 0: 9.265). Range and SVG
- *  lengths inside the scaled film both return the proportional width (~7.8),
- *  which plants the caret in the 0. A 4× screenshot of that same "0" put the
- *  ink 0.61px before the advance. */
-const TABULAR_DIGIT = 9.25;
-const DIGIT_SIDEBEARING = 0.61;
-function placeQtyCaret(qtyEl: HTMLElement) {
-  const raw = qtyEl.textContent ?? "";
-  if (!raw) return;
-  const cs = getComputedStyle(qtyEl);
-  const host = qtyEl.getBoundingClientRect();
-  if (host.width < 1) return;
-  const toLocal = (px: number) => px * (qtyEl.offsetWidth / host.width);
-  const mark = document.createElement("span");
-  mark.style.cssText = "display:inline-block;width:0;height:0;vertical-align:baseline";
-  qtyEl.appendChild(mark);
-  const baseline = toLocal(mark.getBoundingClientRect().top - host.top);
-  mark.remove();
-  if (!qtyInk) qtyInk = document.createElement("canvas").getContext("2d");
-  let asc = 11, desc = 0;
-  if (qtyInk) {
-    qtyInk.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-    const m = qtyInk.measureText("0");
-    if (m.fontBoundingBoxAscent >= 12) {
-      asc = m.actualBoundingBoxAscent;
-      desc = m.actualBoundingBoxDescent;
-    }
-  }
-  const textW = TABULAR_DIGIT * raw.length;
-  const advanceRight = (qtyEl.clientWidth - textW) / 2 + textW;
-  const caret = document.createElement("span");
-  caret.className = "film-qty-caret";
-  caret.style.left = `${advanceRight - DIGIT_SIDEBEARING + 1.3}px`;
-  caret.style.top = `${baseline - asc}px`;
-  // Canvas ascent stops short of the painted baseline stroke (~1px).
-  caret.style.height = `${Math.max(1, asc + desc + 1)}px`;
-  qtyEl.appendChild(caret);
-}
-
 const BLUE = "#2c3ee0";
 const EMERALD = "#12824a";
 const mix = (a: string, b: string, t: number) => {
@@ -208,7 +163,8 @@ const mix = (a: string, b: string, t: number) => {
   return `#${A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
 };
 
-/** Old glyph leaves upward, new glyph enters from below. Unchanged glyphs stay. */
+/** Old glyph leaves upward, new glyph enters from below. Unchanged glyphs stay.
+ *  The column is two lines, so -50% of it is one line. -100% would empty the slot. */
 function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at: number) {
   const t = frame < at ? 0 : frame >= at + ROLL_F ? 1 : EASE_OUT(clamp01((frame - at) / ROLL_F));
   const shown = t >= 1 ? to : from;
@@ -220,7 +176,7 @@ function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at:
   const a = from.padStart(n, " ");
   const b = to.padStart(n, " ");
   el.replaceChildren();
-  const blur = Math.sin(Math.PI * t) * 0.55;
+  const blur = Math.sin(Math.PI * t) * 0.6;
   for (let i = 0; i < n; i++) {
     if (a[i] === " " && b[i] === " ") continue;
     const slot = document.createElement("span");
@@ -239,7 +195,7 @@ function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at:
     newG.className = "glyph";
     newG.textContent = b[i] === " " ? "\u00a0" : b[i];
     col.append(oldG, newG);
-    col.style.transform = `translateY(${(-t * 100).toFixed(2)}%)`;
+    col.style.transform = `translateY(${(-t * 50).toFixed(2)}%)`;
     if (blur > 0.04) col.style.filter = `blur(${blur.toFixed(2)}px)`;
     slot.appendChild(col);
     el.appendChild(slot);
@@ -275,7 +231,7 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     pop.style.margin = "0";
     // Solid on every frame it is open. A 100ms scale from the top anchor,
     // never a partial opacity that shows the card through the menu.
-    const sc = popOpen ? lerp(0.98, 1, prog(f, POP_IN[0], POP_IN[1], MOVE_E)) : 1;
+    const sc = popOpen ? lerp(0.98, 1, prog(f, POP_IN[0], POP_IN[1], UI_E)) : 1;
     pop.style.setProperty("opacity", "1", "important");
     pop.style.setProperty("transform-origin", "top center", "important");
     pop.style.setProperty("transform", `scale(${sc})`, "important");
@@ -334,7 +290,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   qa(root, ".qty-presets button.on, .qty-group .qty-presets button.on").forEach((b) => b.classList.remove("on"));
   const chip = q(pr, `[data-set-perseus="${QTY_FINAL}"]`);
   if (chip && f >= CLICK.qty) chip.classList.add("on");
-  const unit = unitAt(qty);
   const unitEl = q(pr, ".unit")!;
   let unitRoll = q(unitEl, ":scope > .film-roll");
   const ea = q(unitEl, ".ea");
@@ -350,9 +305,11 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const one = money(unitAt(1));
   const twelve = money(unitAt(QTY_FINAL));
   showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f);
-  const line = r2(unit * qty);
   const lineEl = q(pr, ".line-total")!;
   showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f);
+
+  const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
+  if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
 
   const lines = (inserted ? 1 : 0) + (tplIn ? 3 : 0);
   const lineWord = `${lines} ${lines === 1 ? "line" : "lines"}`;
@@ -414,9 +371,21 @@ function applyCart(root: HTMLElement, f: number) {
     input.setAttribute("value", PO);
   }
   const left = CREDIT_AFTER;
+  const totalText = money(ORDER_TOTAL);
+  const leftText = `${money(left)} left of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
+  qa(root, "[data-cart-summary] [data-order-total]").forEach((el) => { el.textContent = totalText; });
   const avail = q(root, "[data-cart-summary] [data-credit-available]");
-  if (avail) avail.textContent = `${money(left)} left of $${Math.round(CREDIT_LIMIT).toLocaleString("en-US")}`;
-  const bar = q(root, "[data-cart-summary] [data-credit-bar]");
+  if (avail) avail.textContent = leftText;
+  const tip = q(root, "[data-cart-summary] [data-credit-tip]");
+  if (tip) {
+    const rows = qa(tip, "div");
+    if (rows[0]) rows[0].innerHTML = `<strong>Used</strong> ${money(CREDIT_PRIOR_USED)}`;
+    if (rows[1]) rows[1].innerHTML = `<strong>This order</strong> ${totalText}`;
+    if (rows[2]) rows[2].innerHTML = `<strong>Left</strong> ${money(left)}`;
+  }
+  const barLabel = q(root, "[data-cart-summary] [data-credit-bar]");
+  if (barLabel) barLabel.setAttribute("aria-label", `Net 30 credit: ${leftText}`);
+  const bar = barLabel;
   if (bar) {
     const used = (CREDIT_PRIOR_USED / CREDIT_LIMIT) * 100;
     bar.style.setProperty("--credit-used-end", `${used}%`);
@@ -474,8 +443,9 @@ function placeButton(root: HTMLElement, f: number) {
     const len = path.getTotalLength();
     const t = prog(f, CHECK_DRAW[0], CHECK_DRAW[1], EASE_OUT);
     path.style.strokeDasharray = `${len}`;
-    // A hair of the stroke is already there on the first frame, so the button is never blank.
-    path.style.strokeDashoffset = `${len * (1 - Math.max(t, 0.08))}`;
+    // t is 0 on the first frame, which hides the whole stroke and leaves a blank green button.
+    const drawn = Math.max(t, 0.12);
+    path.style.strokeDashoffset = `${len * (1 - drawn)}`;
   }
   const ct = f < PLACE_COLOR[0] ? 0 : prog(f, PLACE_COLOR[0], PLACE_COLOR[1], EASE_OUT);
   if (ct > 0) btn.style.setProperty("background-color", mix(BLUE, EMERALD, ct), "important");
@@ -492,6 +462,7 @@ function applyConfirmation(root: HTMLElement, f: number) {
 
   // Same header treatment as the summary so the cut does not reveal a clipped chip.
   qa(root, ".account-chip, .cart-pill").forEach((el) => { el.style.visibility = "hidden"; });
+  qa(root, "[data-confirm-panel] [data-order-total]").forEach((el) => { el.textContent = money(ORDER_TOTAL); });
   const panel = q(root, "[data-confirm-panel]");
   if (!panel) return;
   panel.style.transform = "none";
@@ -634,7 +605,7 @@ export const JoolaB2B: React.FC = () => {
         </div>
       )}
       {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, pointerEvents: "none" }} />
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
       )}
       {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>
