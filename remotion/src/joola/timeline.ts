@@ -2,9 +2,10 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 27: qty is one click on the 12 chip. Popover is solid.
- * After Add to order, one zoom-out shows the Match kit lines land.
- * The cart pill eases its width, then the total rolls. No bounce.
+ * Pass 28: after Add to order, the camera eases out alone, holds, then the
+ * kit lines land. A second ease carries the cursor onto Add to cart.
+ * The cart total is the prototype's per-digit roll (about 450ms), after the
+ * pill is already wide enough to hold it.
  */
 export const FPS = 30;
 
@@ -86,29 +87,40 @@ export const POP_HOVER = CLICK.tplAdd - LEAD;
  * The three template rows start after the cut to the table, so they arrive
  * where the eye already is. Perseus is already on the order.
  */
-/** 18 frames, 0.6s, MOVE_E. Replaces the hard cut onto the table. */
-export const ROWS_ZOOM = [176, 194] as const;
+/**
+ * 18 frames, 0.6s, MOVE_E. Starts after the popover has closed and held.
+ * The kit lines are not in the table yet, so the zoom is the only motion.
+ */
+export const ROWS_ZOOM = [182, 200] as const;
 export const ROWS_CUT = ROWS_ZOOM[0];
-/** Lines settle during the second half of the zoom and finish as it lands. */
-export const TPL_ROWS = [184, 194] as const;
-/** Hard cut onto Add 4 lines to cart once the new rows have been readable. */
-export const ADD_CUT = 216;
-export const PAN_BC = [ADD_CUT, ADD_CUT] as const;
+/**
+ * The three kit lines are already in the table before the zoom starts.
+ * The tight Match kit shot does not show them. The zoom is the reveal.
+ */
+export const TPL_ROWS = [176, 176] as const;
+/**
+ * Eased move from the table onto Add to cart. Not a cut.
+ * Lands before the press so the button can be read with the cursor on it.
+ */
+export const ADD_MOVE = [218, 236] as const;
+export const ADD_CUT = ADD_MOVE[1];
+export const PAN_BC = ADD_MOVE;
 /** Hard cut to a tight cart pill still showing $0.00. */
 export const PILL_SHOT = 260;
 export const PILL_W0 = 85;
-/** Filled pill for "$4,908.66" plus the badge. Right edge stays 1284. */
-export const PILL_W1 = 142;
+/** Filled pill for "$4,908.66" at weight 700 plus the badge. Right edge stays 1284. */
+export const PILL_W1 = 143;
 /** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
-export const PILL_NUM_W = 121;
+export const PILL_NUM_W = 115;
 /** Cursor lands on the empty cart icon, then rides it as the pill grows. */
-export const PILL_ARRIVE = 266;
-/** Digit roll starts once the eased width can hold "$4,908.66". 6 frames, 200ms. */
-export const PILL_ROLL = 278;
-/** One ease-out after a beat on $0.00. Not an ease-in-out. */
-export const PILL_FILL = [272, 286] as const;
-/** Badge is the last beat: scale 0.6→1 over 5 frames, overlapping the end of the width. */
-export const PILL_BADGE = [285, 290] as const;
+export const PILL_ARRIVE = 264;
+/** Digit roll starts the frame the width finishes. 14 frames, 467ms. */
+export const PILL_ROLL = 276;
+export const ROLL_PILL_F = 14;
+/** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
+export const PILL_FILL = [268, 276] as const;
+/** Badge after the digits have settled. Scale 0.6→1, colour only on the pill itself. */
+export const PILL_BADGE = [290, 296] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
 export const CART_CUT = 302;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
@@ -143,7 +155,7 @@ export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [ADD_CUT, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results + select", DROPDOWN_OPEN, RESULT_HOVER[1]],
@@ -151,7 +163,9 @@ export const CONTENT_ANIMS: [string, number, number][] = [
   ["qty chip 12 + digit roll", CLICK.qty, CLICK.qty + ROLL_F],
   ["template popover", CLICK.tpl, POP_IN[1]],
   ["template rows", TPL_ROWS[0], TPL_ROWS[1]],
-  ["pill width + total + badge", PILL_FILL[0], PILL_BADGE[1]],
+  ["pill width", PILL_FILL[0], PILL_FILL[1]],
+  ["pill digit roll", PILL_ROLL, PILL_ROLL + ROLL_PILL_F],
+  ["pill badge", PILL_BADGE[0], PILL_BADGE[1]],
   ["placing order", PROC[0], CHECK_DRAW[1]],
   ["order placed grow", CONF_GROW[0], CONF_RECENTER[1]],
 ];
@@ -226,8 +240,8 @@ export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: logo -> search", ease: MOVE_E },
   { a: QTY_MOVE[0], b: QTY_MOVE[1], to: SHOT_B, label: "move: search -> qty", ease: MOVE_E },
   { a: PAN_AB[0], b: PAN_AB[1], to: SHOT_B2, label: "move: qty -> Add to order", ease: MOVE_E },
-  { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_ROWS, label: "zoom out: match kit lines land", ease: MOVE_E },
-  { a: ADD_CUT, b: ADD_CUT, to: SHOT_ADD, label: "cut: Add to cart" },
+  { a: ROWS_ZOOM[0], b: ROWS_ZOOM[1], to: SHOT_ROWS, label: "zoom out to the order", ease: MOVE_E },
+  { a: ADD_MOVE[0], b: ADD_MOVE[1], to: SHOT_ADD, label: "ease: order -> Add to cart", ease: MOVE_E },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_PILL, label: "cut: cart pill" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },

@@ -7,7 +7,7 @@
 import { R } from "./proto-rects.generated";
 import {
   camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
-  ADD_CUT, prog, type Cam,
+  ADD_MOVE, ROWS_ZOOM, prog, type Cam,
 } from "./timeline";
 
 export type Pt = [number, number];
@@ -29,6 +29,8 @@ export const P = {
   tpl: [1130, 556] as Pt,
   tplAdd: [ctr("qo-search.tplAdd")[0], ctr("qo-search.tplAdd")[1]] as Pt,
   add: [ctr("qo-search.addBtn")[0], ctr("qo-search.addBtn")[1]] as Pt,
+  // Hyperion row, on the thumbnail side of the name, so the new line is what the cursor is on.
+  rowIn: [286, 358] as Pt,
   // Final cart icon (pill grows left). Not on the amount.
   pillIcon: [PILL_RIGHT - PILL_W1 + 20, PILL_CY] as Pt,
   // Right of the Place order label, well inside the button — not on the top edge.
@@ -47,13 +49,15 @@ export const KEYS: Key[] = [
   [CLICK.qty + 8, P.qty],
   [CLICK.tpl - 8, P.tpl],
   [CLICK.tpl + 4, P.tpl],
-  // Settled ~0.67s on Add to order before the press, then 8 frames after.
+  // Settled on Add to order before the press, then through the close.
   [CLICK.tplAdd - 20, P.tplAdd],
   [CLICK.tplAdd + 8, P.tplAdd],
-  // Same page point across the rows cut, so the cursor leaves with the rail
-  // instead of crossing the product names. Then it enters the Add button shot.
-  [ADD_CUT, P.tplAdd],
-  [CLICK.add - 20, P.add],
+  // The zoom is the move. The cursor arrives on the row the lines will occupy.
+  [ROWS_ZOOM[0], P.tplAdd],
+  [ROWS_ZOOM[1], P.rowIn],
+  // Stays on that row while the lines land, then rides the ease onto Add to cart.
+  [ADD_MOVE[0], P.rowIn],
+  [ADD_MOVE[1], P.add],
   [CLICK.add + 8, P.add],
   // Travel across the pill hard cut and arrive on the still-empty cart icon.
   [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],

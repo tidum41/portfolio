@@ -9,12 +9,13 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import { R } from "./joola/proto-rects.generated";
 import {
-  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS,
+  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, ROWS_ZOOM,
   INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
-  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
+  LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
+import { measureText, paintDigitRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -118,11 +119,22 @@ const CSS =
   box-sizing:border-box!important;overflow:hidden!important;
 }
 .film-layer [data-place-order]{position:relative!important;overflow:hidden!important;width:430px!important;height:40px!important;min-width:430px!important;max-width:430px!important}
-.film-roll{display:inline-flex;align-items:flex-end;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:baseline}
-.film-layer .line-total.film-roll{display:flex;justify-content:flex-end;width:100%}
-.film-roll .slot{display:inline-block;position:relative;overflow:hidden;height:1em;line-height:1em}
-.film-roll .col{display:block;will-change:transform}
-.film-roll .glyph{display:block;height:1em;line-height:1em}
+/* The roll lives in the prototype. Each column clips to its own ink box
+   on a shared baseline, so text-box trim must not apply. */
+.film-layer .j-roll,
+.film-layer .j-roll .j-roll-slot,
+.film-layer .j-roll .j-roll-glyph{
+  text-box:none!important;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+}
+.film-layer .cart-pill .cart-amount-display.j-roll{
+  text-box:none!important;
+  line-height:normal!important;
+  display:inline-flex!important;
+  align-items:flex-start!important;
+}
+.film-layer .j-roll-slot{overflow:hidden!important}
 .film-layer .film-face,.film-layer .order-face{
   position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
@@ -163,52 +175,52 @@ const mix = (a: string, b: string, t: number) => {
   return `#${A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
 };
 
-/** Old glyph leaves upward, new glyph enters from below. Unchanged glyphs stay.
- *  The column is two lines, so -50% of it is one line. -100% would empty the slot. */
-function paintRoll(el: HTMLElement, from: string, to: string, frame: number, at: number) {
-  const t = frame < at ? 0 : frame >= at + ROLL_F ? 1 : EASE_OUT(clamp01((frame - at) / ROLL_F));
-  const shown = t >= 1 ? to : from;
-  if (t <= 0 || t >= 1 || from === to) {
-    el.textContent = shown;
-    return;
-  }
-  const n = Math.max(from.length, to.length);
-  const a = from.padStart(n, " ");
-  const b = to.padStart(n, " ");
-  el.replaceChildren();
-  const blur = Math.sin(Math.PI * t) * 0.6;
-  for (let i = 0; i < n; i++) {
-    if (a[i] === " " && b[i] === " ") continue;
-    const slot = document.createElement("span");
-    slot.className = "slot";
-    if (a[i] === b[i]) {
-      slot.textContent = b[i];
-      el.appendChild(slot);
-      continue;
-    }
-    const col = document.createElement("span");
-    col.className = "col";
-    const oldG = document.createElement("span");
-    oldG.className = "glyph";
-    oldG.textContent = a[i] === " " ? "\u00a0" : a[i];
-    const newG = document.createElement("span");
-    newG.className = "glyph";
-    newG.textContent = b[i] === " " ? "\u00a0" : b[i];
-    col.append(oldG, newG);
-    col.style.transform = `translateY(${(-t * 50).toFixed(2)}%)`;
-    if (blur > 0.04) col.style.filter = `blur(${blur.toFixed(2)}px)`;
-    slot.appendChild(col);
-    el.appendChild(slot);
-  }
+/** 1–2px on the 1920 film. The close pill shot must not magnify a 1px UI blur. */
+function blurCap(s: number) {
+  return Math.min(1, 1.5 / (s * (1920 / OW)));
 }
 
-function showRoll(el: HTMLElement, segments: { at: number; text: string }[], frame: number) {
-  el.classList.add("film-roll");
+/** Prototype digit roll. t is eased here; the painter only places glyphs. */
+function showRoll(
+  el: HTMLElement,
+  segments: { at: number; text: string }[],
+  frame: number,
+  dur: number,
+  maxBlur: number,
+  align: "left" | "right" = "left",
+) {
   let i = 0;
   while (i + 1 < segments.length && frame >= segments[i + 1].at) i++;
   const to = segments[i].text;
   const from = i === 0 ? to : segments[i - 1].text;
-  paintRoll(el, from, to, frame, i === 0 ? frame + 1 : segments[i].at);
+  const at = i === 0 ? frame + 1 : segments[i].at;
+  const raw = frame < at ? 0 : frame >= at + dur ? 1 : (frame - at) / dur;
+  const t = raw <= 0 || raw >= 1 ? raw : EASE_OUT(clamp01(raw));
+  paintDigitRoll(el, from, to, t, { maxBlur, align });
+}
+
+const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1";
+
+/**
+ * Hide a table label only when the zoom frame cuts through its glyphs.
+ * A 1px graze stays visible, so the Match kit does not vanish as a block.
+ */
+function concealCutText(root: HTMLElement, on: boolean) {
+  const nodes = root.querySelectorAll<HTMLElement>(CUT_TEXT);
+  if (!on) {
+    nodes.forEach((el) => { el.style.visibility = ""; });
+    return;
+  }
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const cut = 8;
+  nodes.forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return;
+    const over = Math.max(0, -r.left, -r.top, r.right - vw, r.bottom - vh);
+    const visible = r.right > cut && r.left < vw - cut && r.bottom > cut && r.top < vh - cut;
+    el.style.visibility = visible && over > cut ? "hidden" : "";
+  });
 }
 
 function applyQuickOrder(root: HTMLElement, f: number) {
@@ -274,13 +286,14 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   pr.classList.remove("is-just-added");
   pr.style.background = "";
 
+  // The lines are in the table before the zoom, so the camera reveals them
+  // instead of flying through the empty gap under Perseus.
   const tplIn = f >= TPL_ROWS[0];
-  rows.slice(1).forEach((r, i) => {
+  rows.slice(1).forEach((r) => {
     r.hidden = false;
     r.style.display = tplIn ? "" : "none";
-    const t = prog(f, TPL_ROWS[0] + 2 * i, TPL_ROWS[0] + 2 * i + 6, UI_E);
-    r.style.opacity = `${t}`;
-    r.style.transform = `translateY(${(1 - t) * 6}px)`;
+    r.style.opacity = "1";
+    r.style.transform = "none";
   });
 
   const qty = f < CLICK.qty ? 1 : QTY_FINAL;
@@ -304,9 +317,10 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   });
   const one = money(unitAt(1));
   const twelve = money(unitAt(QTY_FINAL));
-  showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f);
+  const blur = blurCap(camAt(f).s);
+  showRoll(unitRoll, [{ at: 0, text: one }, { at: CLICK.qty, text: twelve }], f, ROLL_F, blur);
   const lineEl = q(pr, ".line-total")!;
-  showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f);
+  showRoll(lineEl, [{ at: 0, text: one }, { at: CLICK.qty, text: money(r2(unitAt(QTY_FINAL) * QTY_FINAL)) }], f, ROLL_F, blur);
 
   const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
   if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
@@ -322,11 +336,21 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     { at: INSERT[0], text: perseusOnly },
     { at: CLICK.qty, text: perseusTwelve },
     { at: TPL_ROWS[0], text: money(ORDER_TOTAL) },
-  ], f);
+  ], f, ROLL_F, blur);
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
   add.textContent = `Add ${lineWord} to cart`;
+  // "Add 4 lines to cart" is 12px wider than "Add 1 line". Lock it before the
+  // camera eases onto the button so the label change does not shift the box.
+  if (lines >= 4) {
+    add.style.boxSizing = "border-box";
+    add.style.width = "155px";
+    add.style.minWidth = "155px";
+  }
   pill(root, f);
+  // A zoom from the kit onto the table has to cross the rows. Hide a label
+  // only while the frame cuts it, so a still never shows a sliced word.
+  concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
   // The tight pill frame covers the retailer name once the pill is full, and
   // slices "Pickleball" while the pill is still $0. Hide the chip for that shot.
   if (f >= PILL_SHOT && f < CART_CUT) {
@@ -344,7 +368,23 @@ function pill(root: HTMLElement, f: number) {
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
-  showRoll(amt, [{ at: 0, text: money(0) }, { at: PILL_ROLL, text: money(ORDER_TOTAL) }], f);
+  const from = money(0);
+  const to = money(ORDER_TOTAL);
+  const zeroW = measureText(amt, from);
+  const fullW = measureText(amt, to);
+  // The amount box eases to the final width with $0.00 pinned to the right,
+  // so the cents column does not jump when the roll starts.
+  if (f < PILL_ROLL) {
+    const grow = f >= PILL_FILL[0] ? tw : 0;
+    amt.classList.remove("j-roll");
+    amt.replaceChildren(document.createTextNode(from));
+    amt.style.display = "inline-block";
+    amt.style.textAlign = "right";
+    amt.style.width = `${lerp(zeroW, fullW, grow).toFixed(2)}px`;
+    amt.style.removeProperty("text-box");
+  } else {
+    showRoll(amt, [{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F, blurCap(camAt(f).s), "right");
+  }
   pl.style.setProperty("--film-pill-w", `${wpx}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
