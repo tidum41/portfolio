@@ -4,22 +4,19 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import DockTooltipLayer from "./DockTooltipLayer";
 import { computeAnchoredDockPosition } from "./dockPosition";
-import type { CardKind, DockPlacementMode, VariantId } from "./types";
+import type { CardKind, DockPlacementMode } from "./types";
 import { useDockFollowPointer } from "./useDockFollowPointer";
 
 type Props = {
-  variant: VariantId;
   kind: CardKind;
   visible: boolean;
   leaving: boolean;
   placement: DockPlacementMode;
   anchorEl: HTMLElement | null;
   pointer: { x: number; y: number };
-  onPointerSample?: (x: number, y: number) => void;
 };
 
 export default function DockTooltipPortal({
-  variant,
   kind,
   visible,
   leaving,
@@ -59,7 +56,7 @@ export default function DockTooltipPortal({
   useLayoutEffect(() => {
     if (placement !== "anchored" || !visible) return;
     remeasureAnchored();
-  }, [placement, visible, variant, kind, remeasureAnchored]);
+  }, [placement, visible, kind, remeasureAnchored]);
 
   useLayoutEffect(() => {
     if (placement !== "anchored" || !visible || !anchorEl) return;
@@ -115,7 +112,6 @@ export default function DockTooltipPortal({
     >
       <div ref={dockRef}>
         <DockTooltipLayer
-          variant={variant}
           kind={kind}
           visible={visible && !leaving}
           showCaret={showCaret}

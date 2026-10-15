@@ -28,10 +28,7 @@ function toLab(p: SanityProject, kind: LabProject["kind"]): LabProject | null {
   };
 }
 
-/**
- * Three demo tiles: internal case study, external demo, and a synthetic
- * "both" tile (same thumb as case study, dual signalling).
- */
+/** Three tiles: internal case study, external demo, and dual affordance copy. */
 export function pickLabProjects(all: SanityProject[]): LabProject[] {
   const caseStudySrc =
     all.find((p) => p.caseStudy && !isExternalHref(p.href)) ??
@@ -43,17 +40,18 @@ export function pickLabProjects(all: SanityProject[]): LabProject[] {
 
   const caseTile = caseStudySrc ? toLab(caseStudySrc, "case-study") : null;
   const demoTile = demoSrc ? toLab(demoSrc, "demo") : null;
-  const bothTile = caseStudySrc
-    ? toLab(
-        {
-          ...caseStudySrc,
-          _id: `${caseStudySrc._id}-hilab-both`,
-          title: caseStudySrc.title,
-          subtitle: "Signals both affordances",
-        },
-        "both",
-      )
-    : null;
+  const fourthSrc =
+    all.find(
+      (p) =>
+        p._id !== caseStudySrc?._id &&
+        p._id !== demoSrc?._id &&
+        projectImageUrl(p),
+    ) ?? null;
+  const bothTile = fourthSrc
+    ? toLab({ ...fourthSrc, _id: `${fourthSrc._id}-hilab-both` }, "both")
+    : caseStudySrc
+      ? toLab({ ...caseStudySrc, _id: `${caseStudySrc._id}-hilab-both` }, "both")
+      : null;
 
   return [caseTile, demoTile, bothTile].filter((x): x is LabProject => x != null);
 }

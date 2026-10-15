@@ -1,7 +1,7 @@
 export const DOCK_ANCHOR_GAP_PX = 8;
 export const DOCK_VIEWPORT_MARGIN_PX = 8;
-export const CURSOR_FOLLOW_OFFSET_X = 14;
-export const CURSOR_FOLLOW_OFFSET_Y = 18;
+export const CURSOR_FOLLOW_OFFSET_X = 10;
+export const CURSOR_FOLLOW_OFFSET_Y = 12;
 
 export function snapPx(n: number): number {
   return Math.round(n);

@@ -1,47 +1,99 @@
-/* Scoped to .hilab-root — dev lab only */
+/* Hover indicator lab — Apple-style dock tooltip only */
+
+html[data-hilab] body > header,
+html[data-hilab] body > footer,
+html[data-hilab] body > a.skip-link,
+html[data-hilab] #main-content > *:not(:has(.hilab-root)),
+html[data-hilab] .dialkit-root,
+html[data-hilab] [data-agentation] {
+  display: none !important;
+}
 
 .hilab-root {
-  --hilab-enter: 165ms;
-  --hilab-ease: var(--spring-panel);
-  --hilab-pill-bg: #2e2e2e;
-  --hilab-pill-fg: #fbfbfb;
-  --hilab-pill-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
-  --hilab-xmb-glow: color-mix(in srgb, rgb(53, 121, 204) 22%, transparent);
-  --hilab-xmb-line: color-mix(in srgb, var(--hilab-pill-fg) 42%, transparent);
-  --hilab-dock-surface: color-mix(in srgb, var(--hilab-pill-bg) 94%, transparent);
+  --hilab-enter: 140ms;
+  --hilab-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --hilab-tooltip-bg: color-mix(in srgb, #f5f5f7 92%, transparent);
+  --hilab-tooltip-fg: #1d1d1f;
+  --hilab-tooltip-border: color-mix(in srgb, #000 14%, transparent);
+  --hilab-tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+
+  position: fixed;
+  inset: 0;
+  z-index: 999997;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  overflow: auto;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  cursor: default;
 }
 
 html[data-theme="dark"] .hilab-root {
-  --hilab-pill-bg: #ededec;
-  --hilab-pill-fg: #101214;
-  --hilab-pill-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  --hilab-xmb-glow: color-mix(in srgb, rgb(120, 175, 255) 28%, transparent);
-  --hilab-xmb-line: color-mix(in srgb, var(--hilab-pill-fg) 55%, transparent);
-  --hilab-dock-surface: color-mix(in srgb, var(--hilab-pill-bg) 90%, #0a0c10);
+  --hilab-tooltip-bg: color-mix(in srgb, #3a3a3c 88%, transparent);
+  --hilab-tooltip-fg: #f5f5f7;
+  --hilab-tooltip-border: color-mix(in srgb, #fff 16%, transparent);
+  --hilab-tooltip-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
 }
 
-.hilab-btn {
-  appearance: none;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--color-text-primary) 16%, transparent);
-  color: var(--color-text-primary);
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  padding: 8px 12px;
-  border-radius: var(--radius-card);
-  cursor: pointer;
-  min-height: 44px;
-}
-
-.hilab-btn:hover {
-  background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+.hilab-toolbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .hilab-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+}
+
+.hilab-seg__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hilab-seg__btn[data-selected="true"] {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.hilab-canvas {
+  min-height: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 24px 48px;
+  box-sizing: border-box;
+}
+
+.hilab-grid {
+  width: 100%;
+  max-width: 880px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 40px;
+  align-items: start;
+}
+
+.hilab-empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-tertiary);
 }
 
 .hilab-card {
@@ -49,18 +101,10 @@ html[data-theme="dark"] .hilab-root {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  cursor: pointer;
-  isolation: isolate;
+  cursor: default;
 }
 
 .hilab-card__media {
-  position: relative;
-  border-radius: var(--radius-card);
-  overflow: visible;
-  background: transparent;
-}
-
-.hilab-card__media-inner {
   position: relative;
   border-radius: var(--radius-card);
   overflow: hidden;
@@ -72,7 +116,6 @@ html[data-theme="dark"] .hilab-root {
   width: 100%;
   height: auto;
   object-fit: cover;
-  vertical-align: middle;
 }
 
 .hilab-card__title {
@@ -93,83 +136,22 @@ html[data-theme="dark"] .hilab-root {
   margin: 4px 0 0;
 }
 
-.hilab-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.01em;
-  padding: 7px 11px;
-  border-radius: 999px;
-  background: var(--hilab-pill-bg);
-  color: var(--hilab-pill-fg);
-  box-shadow: var(--hilab-pill-shadow);
-  pointer-events: none;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.hilab-pill--14 {
-  font-size: 14px;
-  padding: 8px 12px;
-}
-
-.hilab-pill__icon {
-  flex-shrink: 0;
-  opacity: 0.92;
-}
-
-.hilab-pill-portal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10060;
-  pointer-events: none;
-  will-change: transform, opacity;
-  transform: translate3d(var(--hilab-px, 0px), var(--hilab-py, 0px), 0);
-  opacity: var(--hilab-pill-opacity, 0);
-  transition: opacity var(--hilab-enter) var(--hilab-ease);
-}
-
-.hilab-pill-portal[data-visible="true"] {
-  --hilab-pill-opacity: 1;
-}
-
-.hilab-pill-portal[data-entering="true"] .hilab-pill {
-  animation: hilab-pill-in var(--hilab-enter) var(--hilab-ease) both;
-}
-
-@keyframes hilab-pill-in {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 .hilab-dock-portal {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10062;
+  z-index: 1000000;
   pointer-events: none;
   opacity: 0;
-  translate: 0 4px;
+  translate: 0 3px;
   transition:
-    opacity 80ms var(--hilab-ease),
+    opacity 70ms var(--hilab-ease),
     translate var(--hilab-enter) var(--hilab-ease);
-  will-change: transform, opacity;
 }
 
 .hilab-dock-portal[data-placement="cursor-follow"] {
   translate: 0 0;
-  transition: opacity 80ms var(--hilab-ease);
+  transition: opacity 60ms var(--hilab-ease);
 }
 
 .hilab-dock-portal[data-visible="true"] {
@@ -199,7 +181,7 @@ html[data-theme="dark"] .hilab-root {
   align-items: center;
   pointer-events: none;
   opacity: 0;
-  translate: 0 4px;
+  translate: 0 3px;
   transition:
     opacity var(--hilab-enter) var(--hilab-ease),
     translate var(--hilab-enter) var(--hilab-ease);
@@ -214,30 +196,26 @@ html[data-theme="dark"] .hilab-root {
   flex-direction: column-reverse;
 }
 
-@media (hover: none), (pointer: coarse) {
-  .hilab-dock[data-visible="true"],
-  .hilab-chip[data-visible="true"] {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
 .hilab-dock__bubble {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  padding: 6px 10px;
-  border-radius: var(--radius-control);
-  background: var(--hilab-pill-bg);
-  color: var(--hilab-pill-fg);
-  font-family: var(--font-sans-medium);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--hilab-tooltip-bg);
+  color: var(--hilab-tooltip-fg);
+  border: 1px solid var(--hilab-tooltip-border);
+  font-family: system-ui, -apple-system, "SF Pro Text", var(--font-sans);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
-  box-shadow: var(--hilab-pill-shadow);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  box-shadow: var(--hilab-tooltip-shadow);
   white-space: nowrap;
+  backdrop-filter: blur(12px);
 }
 
 .hilab-dock__caret {
@@ -248,375 +226,42 @@ html[data-theme="dark"] .hilab-root {
   height: 8px;
   margin-left: -4px;
   transform: rotate(45deg);
+  background: var(--hilab-tooltip-bg);
+  border-right: 1px solid var(--hilab-tooltip-border);
+  border-bottom: 1px solid var(--hilab-tooltip-border);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.06);
   pointer-events: none;
-  flex-shrink: 0;
 }
 
 .hilab-dock--flipped .hilab-dock__caret {
   bottom: auto;
   top: -4px;
-  transform: rotate(45deg) scaleY(-1);
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid var(--hilab-tooltip-border);
+  border-top: 1px solid var(--hilab-tooltip-border);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .hilab-dock--no-caret .hilab-dock__caret {
   display: none;
 }
 
-.hilab-dock__caret--solid {
-  background: var(--hilab-pill-bg);
-  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* ── XMB glow ───────────────────────────────────────────────────── */
-.hilab-dock--xmb .hilab-dock__bubble {
-  flex-direction: column;
-  gap: 5px;
-  padding: 7px 12px 8px;
-  background: var(--hilab-dock-surface);
-  border: 1px solid color-mix(in srgb, var(--hilab-pill-fg) 10%, transparent);
-  box-shadow:
-    var(--hilab-pill-shadow),
-    0 0 22px var(--hilab-xmb-glow),
-    0 0 1px color-mix(in srgb, var(--hilab-pill-fg) 18%, transparent) inset;
-  backdrop-filter: blur(10px);
-}
-
-.hilab-dock__xmb-rule {
-  width: 100%;
-  height: 1px;
-  border-radius: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--hilab-xmb-line) 18%,
-    color-mix(in srgb, var(--hilab-pill-fg) 72%, transparent) 50%,
-    var(--hilab-xmb-line) 82%,
-    transparent 100%
-  );
-  opacity: 0.9;
-}
-
-.hilab-dock__xmb-text {
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.hilab-dock__caret--xmb {
-  width: 7px;
-  height: 7px;
-  margin-left: -3.5px;
-  bottom: -3px;
-  background: var(--hilab-dock-surface);
-  border-right: 1px solid color-mix(in srgb, var(--hilab-pill-fg) 8%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--hilab-pill-fg) 8%, transparent);
-  box-shadow: 2px 3px 8px var(--hilab-xmb-glow);
-}
-
-/* ── Halftone caret ─────────────────────────────────────────────── */
-.hilab-dock__bubble--halftone {
-  background: var(--hilab-pill-bg);
-  border: 1px solid color-mix(in srgb, var(--hilab-pill-fg) 8%, transparent);
-}
-
-.hilab-dock__caret--halftone {
-  width: 14px;
-  height: 8px;
-  margin-left: -7px;
-  bottom: -6px;
-  transform: none;
-  background: none;
-  background-image: radial-gradient(circle, var(--hilab-pill-bg) 38%, transparent 40%);
-  background-size: 4px 4px;
-  background-position: 0 0;
-  mask-image: linear-gradient(180deg, transparent 0%, #000 35%, #000 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 35%, #000 100%);
-  opacity: 0.95;
-}
-
-.hilab-dock--halftone .hilab-dock__bubble::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 -1px 0;
-  height: 3px;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--hilab-pill-fg) 35%, transparent) 35%, transparent 38%);
-  background-size: 3px 3px;
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-/* ── Decode type-in ─────────────────────────────────────────────── */
-.hilab-dock__bubble--decode {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  min-width: 0;
-}
-
-.hilab-dock__decode-wrap {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.hilab-dock__decode-ghost {
-  visibility: hidden;
-  pointer-events: none;
-  user-select: none;
-}
-
-.hilab-dock__decode-live {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-}
-
-.hilab-dock__caret--decode {
-  width: 6px;
-  height: 6px;
-  margin-left: -3px;
-  bottom: -3px;
-  background: var(--hilab-pill-bg);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--hilab-pill-fg) 12%, transparent);
-  animation: hilab-decode-blink 1s step-end infinite;
-}
-
-@keyframes hilab-decode-blink {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-.hilab-dock--decode[data-visible="false"] .hilab-dock__caret--decode {
-  animation: none;
-}
-
-/* ── PS segment pill ────────────────────────────────────────────── */
-.hilab-ps-mark {
-  flex-shrink: 0;
-  opacity: 0.55;
-  color: color-mix(in srgb, var(--hilab-pill-fg) 88%, transparent);
-}
-
-.hilab-dock__bubble--ps {
-  padding: 4px;
-  background: color-mix(in srgb, var(--hilab-pill-bg) 96%, var(--color-bg));
-  border: 1px solid color-mix(in srgb, var(--hilab-pill-fg) 12%, transparent);
-  position: relative;
-  overflow: hidden;
-}
-
-.hilab-dock__bubble--ps::before,
-.hilab-dock__bubble--ps::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  opacity: 0.12;
-  pointer-events: none;
-  background: currentColor;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-}
-
-.hilab-dock__bubble--ps::before {
-  top: 3px;
-  left: 4px;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='black' d='M6 2.2v7.6M2.2 6h7.6' stroke='black' stroke-width='1.35'/%3E%3C/svg%3E");
-}
-
-.hilab-dock__bubble--ps::after {
-  bottom: 3px;
-  right: 4px;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='black' d='M6 2.4L9.8 9.2H2.2z'/%3E%3C/svg%3E");
-}
-
-.hilab-dock__segments {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 0;
-  border-radius: calc(var(--radius-control) - 2px);
-  overflow: hidden;
-  background: color-mix(in srgb, var(--hilab-pill-fg) 6%, transparent);
-}
-
-.hilab-dock__seg {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-  color: color-mix(in srgb, var(--hilab-pill-fg) 72%, transparent);
-  white-space: nowrap;
-}
-
-.hilab-dock__seg[data-active="true"] {
-  background: var(--hilab-pill-bg);
-  color: var(--hilab-pill-fg);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hilab-pill-fg) 10%, transparent);
-}
-
-.hilab-dock__seg[data-active="true"] .hilab-ps-mark {
-  opacity: 0.85;
-}
-
-.hilab-dock__seg-div {
-  width: 1px;
-  align-self: stretch;
-  background: color-mix(in srgb, var(--hilab-pill-fg) 14%, transparent);
-  margin: 4px 0;
-}
-
-.hilab-dock__caret--ps {
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  bottom: -5px;
-  background: var(--hilab-pill-bg);
-  border-radius: 2px;
-  transform: rotate(45deg);
-  box-shadow: var(--hilab-pill-shadow);
-}
-
-.hilab-chip {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 9px;
-  border-radius: var(--radius-control);
-  background: var(--hilab-pill-bg);
-  color: var(--hilab-pill-fg);
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-  box-shadow: var(--hilab-pill-shadow);
-  pointer-events: none;
-  opacity: 0;
-  translate: 8px -8px;
-  transition:
-    opacity var(--hilab-enter) var(--hilab-ease),
-    translate var(--hilab-enter) var(--hilab-ease);
-}
-
-.hilab-dock[data-visible="true"],
-.hilab-chip[data-visible="true"] {
+.hilab-dock[data-visible="true"] {
   opacity: 1;
   translate: 0 0;
 }
 
-.hilab-inline-slot {
-  min-height: 22px;
-  margin-top: 4px;
-  overflow: hidden;
-}
-
-.hilab-inline-reveal {
-  display: block;
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 22px;
-  color: var(--color-text-card-sub);
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path var(--hilab-enter) var(--hilab-ease);
-}
-
-.hilab-card[data-hovered="true"] .hilab-inline-reveal,
-.hilab-card[data-static="true"] .hilab-inline-reveal {
-  clip-path: inset(0 0 0 0);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hilab-card[data-hovered="true"] .hilab-chip {
+@media (hover: none), (pointer: coarse) {
+  .hilab-dock[data-visible="true"] {
     opacity: 1;
     translate: 0 0;
   }
 }
 
-.hilab-card[data-static="true"] .hilab-chip {
-  opacity: 1;
-  translate: 0 0;
-}
-
-.hilab-morph-portal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10061;
-  width: 52px;
-  height: 52px;
-  margin: -26px 0 0 -26px;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate3d(var(--hilab-mx, 0px), var(--hilab-my, 0px), 0) scale(0.88);
-  transition:
-    opacity var(--hilab-enter) var(--hilab-ease),
-    transform var(--hilab-enter) var(--hilab-ease);
-}
-
-.hilab-morph-portal[data-visible="true"] {
-  opacity: 1;
-  transform: translate3d(var(--hilab-mx, 0px), var(--hilab-my, 0px), 0) scale(1);
-}
-
-.hilab-morph-portal__disc {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: var(--hilab-pill-bg);
-  color: var(--hilab-pill-fg);
-  box-shadow: var(--hilab-pill-shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 4px;
-  font-family: var(--font-sans-medium);
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: 0.02em;
-}
-
-.hilab-root[data-variant="cursor-morph"][data-morph-active="true"] {
-  cursor: none;
-}
-
-.hilab-root[data-variant="cursor-morph"][data-morph-active="true"] .hilab-card {
-  cursor: none;
-}
-
-.hilab-static-pill {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 3;
-  pointer-events: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hilab-pill-portal,
   .hilab-dock-portal,
-  .hilab-dock,
-  .hilab-chip,
-  .hilab-inline-reveal,
-  .hilab-morph-portal,
-  .hilab-pill-portal .hilab-pill,
-  .hilab-dock__caret--decode {
+  .hilab-dock {
     transition: none !important;
-    animation: none !important;
-  }
-
-  .hilab-pill-portal[data-entering="true"] .hilab-pill {
-    transform: none;
   }
 }
