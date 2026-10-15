@@ -37,3 +37,6 @@ next-env.d.ts
 
 # local agent / playwright captures
 .playwright-screenshots/
+
+# Copied from node_modules/hls.js on next config load. See next.config.mjs.
+/public/vendor/

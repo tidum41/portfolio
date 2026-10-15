@@ -7,7 +7,7 @@ export default function NotFound() {
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      minHeight: "60vh",
+      minHeight: "60dvh",
       textAlign: "center",
       fontFamily: "var(--font-sans)",
       padding: "0 var(--page-px)",

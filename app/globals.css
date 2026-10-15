@@ -165,6 +165,7 @@
 /* ─── Base reset ──────────────────────────────────────────────────── */
 html {
   color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "kern" 1, "liga" 1;
@@ -194,6 +195,33 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* Notch and home indicator. Horizontal inset lives here so full-bleed
+     layers and the page gutter share one edge. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+a,
+button,
+summary,
+label,
+[role="button"],
+[role="link"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Colour-only press. Hover treatments stay on fine pointers so a tap
+   cannot leave a control looking hovered. */
+@media (hover: none), (pointer: coarse) {
+  a:active,
+  button:active,
+  summary:active,
+  [role="button"]:active,
+  [role="link"]:active {
+    color: var(--color-text-muted);
+  }
 }
 main#main-content {
   flex: 1 0 auto;
@@ -202,7 +230,7 @@ main#main-content {
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
 /* Hero type must not re-wrap after first layout — `balance` / `pretty`
-   reflow the JOOLA · UCLA line (and the pill that docks to it) on load. */
+   reflow the subtitle (and the pill that docks to it) on load. */
 .hero-heading,
 .hero-sub {
   text-wrap: wrap;
@@ -337,7 +365,15 @@ html.theme-switching *::after {
   outline: none;
 }
 
-/* ─── Nav tap-target expansion ────────────────────────────────────── */
+/* ─── Nav spacing matches main. Safe-area insets are 0 without a notch,
+   so desktop padding stays 24px. The min-height below is main's own
+   rule: it sizes the line box, and the ::before covers the rest of
+   the 44px target without a min-width. ──────────────────────────── */
+.site-nav {
+  gap: 40px;
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: 24px;
+}
 nav a {
   position: relative;
   display: inline-flex;
@@ -346,6 +382,16 @@ nav a {
   /* Avoid 300ms double-tap delay / gesture conflicts that can flash
      press feedback without firing the follow-up click on mobile. */
   touch-action: manipulation;
+}
+.footer-inner {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+/* Archive pins the footer and insets the gallery by the one-line bar.
+   The stacked phone footer is taller, so the gallery clears it. */
+@media (max-width: 479px) {
+  .archive-frame {
+    bottom: 86px !important;
+  }
 }
 
 /* ─── Project card hover ───────────────────────────────────────────
@@ -446,26 +492,19 @@ html[data-theme="dark"] .project-card::before {
   font-weight: 500;
   text-decoration: none;
   transition: color 0.3s ease;
+  position: relative;
+}
+.hero-ucla::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 @media (hover: hover) and (pointer: fine) {
   .hero-ucla:hover { color: rgb(53, 121, 204); }
-}
-
-/* ─── "JOOLA" hover accent — a real link ─────────────────────────── */
-.hero-joola {
-  color: inherit;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .hero-joola:hover { color: #fef633; }
-}
-
-/* ─── Hero subtitle middle dot — a touch larger than body text ──── */
-.hero-dot {
-  font-size: 1.3em;
-  line-height: 1;
 }
 
 /* ─── ProjectPopup close button — same 24px/radius-6/invisible-hit-area-
@@ -490,12 +529,16 @@ html[data-theme="dark"] .project-card::before {
 .popup-close-btn::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  /* 24px icon + 10px each side = 44px tap target. */
+  inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
   .popup-close-btn:hover { color: var(--color-text-primary); }
+  .popup-close-btn:active { transform: scale(0.96); }
 }
-.popup-close-btn:active { transform: scale(0.96); }
+@media (hover: none), (pointer: coarse) {
+  .popup-close-btn:active { color: var(--color-text-primary); }
+}
 
 /* ─── InteractiveBadge border — neutral grey, lighter/more visible than
    --color-border-subtle (used for purely decorative dividers), so the badge
@@ -552,13 +595,23 @@ html[data-theme="dark"] .interactive-badge {
    Applies to every pointer type, not just touch (pointer: coarse) —
    mouse hover near the edge of these controls should also count,
    not just accidental-tap forgiveness on touchscreens. */
-a.nav-link {
+/* Text links keep their visual box. The hit area is at least 44×44 and
+   does not change gap, alignment, or line height. */
+nav a,
+a.nav-link,
+a.footer-link {
   position: relative;
 }
-a.nav-link::before {
+nav a::before,
+a.nav-link::before,
+a.footer-link::before {
   content: "";
   position: absolute;
-  inset: -12px -8px;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 .theme-toggle-btn::before {
   content: "";
@@ -632,7 +685,9 @@ html[data-theme="dark"] .project-image {
 
 /* ─── Back button — scale on press + adequate hit area ───────────── */
 .back-btn { transition: color 0.2s ease, transform 80ms ease, background-color 1s ease, border-color 1s ease; }
-.back-btn:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) {
+  .back-btn:active { transform: scale(0.96); }
+}
 
 /* ─── Case study 3-column layout ────────────────────────────────────
    Desktop  : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
@@ -1100,7 +1155,7 @@ html[data-theme="dark"] .ps-polaroid-cap {
 }
 @media (max-width: 767px) {
   .bento-hint-pill { top: 88px; }
-  .bento-zoom-panel { bottom: 56px; height: 44px; }
+  .bento-zoom-panel { bottom: 56px; height: 44px; min-height: 44px; box-sizing: border-box; }
   .bento-zoom-track {
     min-height: 44px;
     display: flex;
@@ -1142,6 +1197,14 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-fit: contain;
   --media-object-position: center;
   --media-background-color: transparent;
+  /* The still underneath is the frame we start on. Hide the element until
+     that frame has decoded so a black first paint can't cover it. */
+  opacity: 0;
+}
+.mux-media-slot[data-frame="shown"] mux-player,
+.mux-media-slot[data-frame="shown"] .mux-cover,
+.mux-media-slot[data-frame="shown"] video.mux-cover {
+  opacity: 1;
 }
 .mux-cover {
   --controls: none;

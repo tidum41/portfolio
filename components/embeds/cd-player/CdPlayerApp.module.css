@@ -234,10 +234,14 @@
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
   opacity: 0.85;
 }
 
-.audioErrorDismiss:hover {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .audioErrorDismiss:hover {
+    opacity: 1;
+  }
 }

@@ -9,7 +9,9 @@ import { markSoftNav } from "@/lib/instantNav";
 export const CASE_STUDY_LCP: Record<string, string> = {
   "/ucla-sublease":
     "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=1&width=1280",
-  "/sviz": "/images/sviz/hero-channel-screenshot.png",
+  // /sviz hero is a next/image with `priority`, which already emits the
+  // sized preload. Pointing this at the 1.7MB source PNG made hover and
+  // the document download the original in addition to the optimized image.
 };
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);

@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import MuxPlayer from "@mux/mux-player-react";
-import "@mux/mux-player";
+import { useRef, useEffect, useState, type ComponentType } from "react";
 import { useDialKit } from "dialkit";
+import { warmRootMargin } from "@/lib/networkHint";
 
 const REF_W = 344;
 const REF_H = 614;
@@ -66,6 +65,7 @@ export default function PhoneMockup({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [MuxPlayer, setMuxPlayer] = useState<ComponentType<any> | null>(null);
 
   // Per-instance dialkit key so each phone can be tuned independently
   const dialKey = `PhoneMockup/${instanceKey}`;
@@ -104,11 +104,24 @@ export default function PhoneMockup({
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setShouldLoad(true); obs.disconnect(); } },
-      { rootMargin: "400px" }
+      { rootMargin: warmRootMargin() }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // The player package is ~1MB. The poster is already the hero image, so
+  // the player script waits until the phone is near the viewport.
+  useEffect(() => {
+    if (!shouldLoad || !muxPlaybackId || MuxPlayer) return;
+    let cancel = false;
+    import("@mux/mux-player-react").then((mod) => {
+      if (!cancel) setMuxPlayer(() => mod.default);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [shouldLoad, muxPlaybackId, MuxPlayer]);
 
   const scale = containerWidth / REF_W;
   const intrinsicHeight = containerWidth * (REF_H / REF_W);
@@ -127,13 +140,15 @@ export default function PhoneMockup({
   const playPauseButton = videoSrc && !muxPlaybackId ? (
     <button
       onClick={togglePlay}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
+      }}
       onMouseLeave={() => setIsHovered(false)}
       aria-label={isPlaying ? "Pause" : "Play"}
       className="phone-mockup-play-btn"
       style={{
         position: "absolute", top: 8, right: 8, zIndex: 10,
-        width: 32, height: 32, borderRadius: "50%",
+        width: 44, height: 44, borderRadius: "50%",
         background: "var(--color-placeholder)",
         boxShadow: isHovered ? "inset 0 0 0 1.5px var(--color-text-muted)" : "none",
         border: "none", cursor: "pointer",
@@ -214,13 +229,13 @@ export default function PhoneMockup({
                   }}
                 />
               )}
-              {shouldLoad && muxPlaybackId && (
+              {shouldLoad && muxPlaybackId && MuxPlayer && (
                 <MuxPlayer
                   playbackId={muxPlaybackId}
                   streamType="on-demand"
                   autoPlay="muted"
                   loop muted playsInline nohotkeys
-                  preload="auto"
+                  preload="metadata"
                   poster={muxPoster}
                   style={{
                     display: "block",

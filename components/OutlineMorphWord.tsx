@@ -11,8 +11,7 @@ import {
 } from "framer-motion";
 import { OUTLINE_WORDS, type OutlineWord } from "./outlineMorphData";
 
-/** Same timing the /dev/nav-morph preview was approved at. */
-export const OUTLINE_MORPH_S = 0.32;
+import { OUTLINE_MORPH_S } from "./outlineMorphLoader";
 
 const WORDS = new Map<string, OutlineWord>(
   OUTLINE_WORDS.map((word) => [word.label, word]),
@@ -52,7 +51,10 @@ export default function OutlineMorphWord({
   pinned?: number | null;
 }) {
   const reduced = useReducedMotion();
-  const progress = useMotionValue(active ? 1 : 0);
+  // Start at rest (or a lab pin). Hover mounts this after the server letter,
+  // and the effect below eases from that rest pose into the dots — same
+  // 0.32s curve as when the word lived in the first-load bundle.
+  const progress = useMotionValue(pinned ?? 0);
   const word = WORDS.get(label);
 
   useEffect(() => {

@@ -60,17 +60,21 @@ function injectPickerStyles() {
             outline: 2px solid #2d68c4;
             outline-offset: 1px;
         }
-        .qfm-cal-day:hover:not([aria-disabled="true"]):not([aria-selected="true"]) {
+        @media (hover: hover) and (pointer: fine) {
+          .qfm-cal-day:hover:not([aria-disabled="true"]):not([aria-selected="true"]),
+          .qfm-cal-nav:hover {
             background: rgba(45,104,196,0.1);
             color: #2d68c4;
+          }
         }
-        .qfm-cal-nav:hover {
+        .qfm-cal-nav,
+        .qfm-cal-day { min-width: 44px; min-height: 44px; }
+        @media (hover: none), (pointer: coarse) {
+          .qfm-cal-nav:active,
+          .qfm-cal-day:active:not([aria-disabled="true"]) {
             background: rgba(45,104,196,0.1);
             color: #2d68c4;
-        }
-        .qfm-cal-nav:active,
-        .qfm-cal-day:active:not([aria-disabled="true"]) {
-            transform: scale(0.96);
+          }
         }
     `
     document.head.appendChild(el)

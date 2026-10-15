@@ -158,6 +158,7 @@ export default function PlaygroundPageClient({
 
     return (
         <div
+            className="archive-frame"
             style={{
             position: "fixed",
             top: 0,

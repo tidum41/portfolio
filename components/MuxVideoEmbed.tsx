@@ -114,6 +114,7 @@ export default function MuxVideoEmbed({
             autoPlay="muted"
             loop
             muted
+            playsInline
             className="mux-cover"
             onCanPlay={() => setPlayerReady(true)}
           />

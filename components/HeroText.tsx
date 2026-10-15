@@ -26,7 +26,7 @@ export default function HeroText() {
     // Do not set `_animated` until this intro actually finishes. Setting it
     // at effect start made StrictMode's remount see `instant` and return
     // before re-registering `intro-done` — the subtitle stayed at spawn
-    // (the JOOLA / UCLA line "never arriving", then popping).
+    // (the subtitle "never arriving", then popping).
     if (instant) return;
 
     function animateH1(delay = introTimings.heroDelay) {
@@ -128,18 +128,7 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        {"currently @ "}
-        <a
-          href="https://joola.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hero-joola"
-        >
-          JOOLA
-        </a>
-        {" "}
-        <span className="hero-dot">·</span>
-        {" cognitive science "}
+        {"cognitive science "}
         <span className="hero-sub-end">
           {"at "}
           <a

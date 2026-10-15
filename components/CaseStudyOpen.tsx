@@ -16,6 +16,8 @@ export default function CaseStudyOpen({
   metadata,
   muxPlaybackId,
   heroBg,
+  posterWidth,
+  posterHeight,
   children,
 }: {
   tagline: string;
@@ -23,6 +25,8 @@ export default function CaseStudyOpen({
   metadata: Meta[];
   muxPlaybackId?: string;
   heroBg?: string;
+  posterWidth?: number;
+  posterHeight?: number;
   children?: ReactNode;
 }) {
   return (
@@ -61,7 +65,11 @@ export default function CaseStudyOpen({
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
           <div style={{ background: heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
-            <MuxHero playbackId={muxPlaybackId} />
+            <MuxHero
+              playbackId={muxPlaybackId}
+              posterWidth={posterWidth}
+              posterHeight={posterHeight}
+            />
           </div>
         ) : (
           children

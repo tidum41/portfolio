@@ -22,7 +22,35 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           align-items: center;
           justify-content: space-between;
           padding: 24px var(--page-px);
+          padding-bottom: calc(24px + env(safe-area-inset-bottom));
           min-height: 69px;
+        }
+        .footer-links {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          line-height: 21px;
+        }
+        .footer-links li {
+          line-height: 21px;
+        }
+        /* Phone only. At 480px and up the row stays name-left, links-right. */
+        @media (max-width: 479px) {
+          .footer-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 20px;
+          }
+          .footer-links {
+            gap: 20px;
+          }
+          .footer-links a {
+            min-height: 0;
+          }
         }
       `}</style>
       <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto" }}>
@@ -50,19 +78,21 @@ export default function Footer() {
     <FooterShell>
       <Link
         href="/"
+        className="footer-link"
         style={{ ...linkStyle, color: "var(--color-text-muted)" }}
       >
         Mudit Mahajan
       </Link>
 
       <nav aria-label="Social links">
-        <ul style={{ display: "flex", alignItems: "center", gap: 16, listStyle: "none", margin: 0, padding: 0 }}>
+        <ul className="footer-links">
           {FOOTER_LINKS.map(({ label, href }) => (
             <li key={label}>
               <a
                 href={href}
                 target={href.startsWith("mailto") ? undefined : "_blank"}
                 rel="noopener noreferrer"
+                className="footer-link"
                 style={{ ...linkStyle, color: "var(--color-text-primary)" }}
               >
                 {label}

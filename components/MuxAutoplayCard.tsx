@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDialKit } from "dialkit";
-import MuxMediaSlot, { muxPosterUrl } from "@/components/MuxMediaSlot";
+import MuxMediaSlot, { muxCardStreamUrl, muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
+import { constrainedNetwork, warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
-import { onIntroDone } from "@/lib/introReady";
 
-/** Spread Mux remounts on work return so HLS/MSE init isn't one-frame. */
-const MOUNT_STAGGER_MS = 200;
+/** Later cards start a beat after the two that are on screen at intro end. */
+const LATER_CARD_STAGGER_MS = 120;
 /** Spread Mux teardown when leaving "/" so About/Archive paint + cursor
  *  aren't blocked by N× MediaSource destroys on one commit. */
 const UNMOUNT_STAGGER_MS = 90;
@@ -106,40 +106,69 @@ export default function MuxAutoplayCard({
     if (shouldLoad || !active) return;
     const container = containerRef.current;
     if (!container) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px 200px 0px" },
-    );
-    obs.observe(container);
-    return () => obs.disconnect();
+    let obs: IntersectionObserver | null = null;
+    const arm = (rootMargin: string) => {
+      obs?.disconnect();
+      obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setShouldLoad(true);
+            obs?.disconnect();
+          }
+        },
+        { rootMargin },
+      );
+      obs.observe(container);
+    };
+    // Tight until the first scroll, so the card below the fold does not
+    // compete with the two on screen during the intro. A flick then uses the
+    // wider margin; a slow or metered connection stays close to the card.
+    const resting = "80px 0px 140px 0px";
+    if (window.scrollY > 8) arm(warmRootMargin());
+    else arm(resting);
+    const widen = () => {
+      if (window.scrollY <= 8) return;
+      arm(warmRootMargin());
+      window.removeEventListener("scroll", widen);
+    };
+    window.addEventListener("scroll", widen, { passive: true });
+    return () => {
+      obs?.disconnect();
+      window.removeEventListener("scroll", widen);
+    };
   }, [shouldLoad, active]);
 
-  // Attach/detach are both staggered. Leave yields a paint first so soft-nav
-  // to About/Archive isn't one long Mux-destroy frame (cursor tip freezes).
-  // mountReady alone gates the player — `active` only schedules the timers.
-  // Wait for intro-done so HLS/MSE don't fight PS3Silk shader compile.
+  // The manifest for the on-screen cards is fetched as soon as they are near
+  // the viewport, during the intro. The player attaches a moment later so the
+  // silk shader can take the opening frames. Reduced motion keeps the still.
+  // Leave still yields a paint first so soft-nav to About/Archive isn't one
+  // long Mux-destroy frame. mountReady alone gates the player.
   useEffect(() => {
     let cancelled = false;
     let timeoutId = 0;
-    let cancelIntro = () => {};
 
     if (active && shouldLoad) {
-      const start = () => {
-        if (cancelled) return;
-        const delay = Math.max(0, mountOrder) * MOUNT_STAGGER_MS;
-        timeoutId = window.setTimeout(() => {
-          if (!cancelled) setMountReady(true);
-        }, delay);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+      }
+      preloadHlsModule();
+      // Phone cards already have their playlist and first segment preloaded
+      // from the HTML. Fetching the master again only steals that bandwidth.
+      const narrow = window.innerWidth < 800 || constrainedNetwork();
+      if (mountOrder <= 1 && !narrow) {
+        void fetch(muxCardStreamUrl(playbackId), { mode: "cors", credentials: "omit" }).catch(() => {});
+      }
+      const arm = () => {
+        if (!cancelled) setMountReady(true);
       };
-      cancelIntro = onIntroDone(start);
+      // A short beat so the silk shader can take the first frames, then the
+      // player attaches while the intro is still on screen.
+      const wait = mountOrder <= 1
+        ? 120
+        : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+      timeoutId = window.setTimeout(arm, wait);
       return () => {
         cancelled = true;
-        cancelIntro();
         window.clearTimeout(timeoutId);
       };
     }
@@ -152,7 +181,7 @@ export default function MuxAutoplayCard({
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [active, shouldLoad, mountOrder]);
+  }, [active, shouldLoad, mountOrder, playbackId]);
 
   // Soft-nav leave: pause immediately so decode doesn't fight About paint,
   // but keep the element mounted until `active` deferred-teardown fires.
@@ -201,6 +230,7 @@ export default function MuxAutoplayCard({
           alt=""
           aria-hidden
           decoding="async"
+          fetchPriority={mountOrder <= 1 ? "high" : "auto"}
           style={{
             position: "absolute",
             inset: 0,
