@@ -2867,6 +2867,27 @@ img { display: block; max-width: 100%; }
 }
 @keyframes order-spin { to { transform: rotate(360deg); } }
 @keyframes check-draw { to { stroke-dashoffset: 0; } }
+
+/* ================= r28 (film pass 28) ================= */
+/* Cart total: one glyph per column, tabular figures, slot = the font's line box.
+   overflow on the slot (not a trimmed em) so a rolling digit is never sliced.
+   Blur stays at or under 1px and only while the column is moving. */
+.j-roll,
+.j-roll .j-roll-slot,
+.j-roll .j-roll-glyph {
+  text-box: none !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+.cart-pill .cart-amount-display.j-roll {
+  text-box: none !important;
+  height: auto !important;
+  line-height: normal !important;
+  overflow: visible !important;
+  display: inline-flex !important;
+  align-items: flex-start !important;
+}
+.j-roll-slot { overflow: hidden; }
 </style>
 </head>
 <body>
@@ -2895,6 +2916,7 @@ img { display: block; max-width: 100%; }
   </div>
 
   <script src="ledger.js"></script>
+  <script src="digit-roll.js"></script>
   <script>
 (function () {
   var L = window.JOOLA_LEDGER;
@@ -4195,6 +4217,12 @@ img { display: block; max-width: 100%; }
   }
 
   function applyAddAll() {
+    var toText = money(L.orderTotal);
+    var fromText = "$0.00";
+    document.querySelectorAll("[data-cart-pill] [data-cart-total]").forEach(function (el) {
+      var current = (el.textContent || "").trim();
+      if (current) fromText = current;
+    });
     cartUi.count = L.cartCountAfterAdd;
     cartUi.total = L.orderTotal;
     cartUi.added = true;
@@ -4202,18 +4230,43 @@ img { display: block; max-width: 100%; }
     document.querySelectorAll("[data-cart-count]").forEach(function (el) {
       syncCartCountChip(el, cartUi.count, true);
     });
-    document.querySelectorAll("[data-cart-pill] [data-cart-total]").forEach(function (el) {
-      el.textContent = money(cartUi.total);
-      el.hidden = false;
-    });
     document.querySelectorAll("[data-cart-pill]").forEach(function (el) {
-      el.setAttribute("aria-label", "Cart, " + money(cartUi.total));
+      el.setAttribute("aria-label", "Cart, " + toText);
     });
     document.querySelectorAll("[data-order-footer] [data-line-count]").forEach(function (el) {
       el.textContent = itemCountLabel(L.orderLines.length);
     });
-    animateCartPillWidths();
-    bumpCartPills();
+    /* Width opens first, while the old total is still on screen. The digit
+       roll starts once the pill can hold the new string, so nothing clips. */
+    document.querySelectorAll("[data-cart-pill]").forEach(function (pill) {
+      var amt = pill.querySelector("[data-cart-total]");
+      if (!amt) return;
+      var fromPill = pill.getBoundingClientRect().width;
+      amt.textContent = toText;
+      amt.hidden = false;
+      pill.style.transition = "none";
+      pill.style.width = "max-content";
+      var toPill = pill.getBoundingClientRect().width;
+      amt.textContent = fromText;
+      pill.style.width = fromPill.toFixed(2) + "px";
+      void pill.offsetWidth;
+      pill.style.transition = "width 220ms cubic-bezier(0.2, 0, 0, 1)";
+      pill.style.width = toPill.toFixed(2) + "px";
+      var started = false;
+      var startRoll = function () {
+        if (started) return;
+        started = true;
+        if (window.JOOLA_ROLL) window.JOOLA_ROLL.play(amt, fromText, toText, 450);
+        else amt.textContent = toText;
+      };
+      var onEnd = function (ev) {
+        if (ev.propertyName !== "width") return;
+        pill.removeEventListener("transitionend", onEnd);
+        startRoll();
+      };
+      pill.addEventListener("transitionend", onEnd);
+      setTimeout(startRoll, 280);
+    });
   }
 
   function flashJustAddedRow(row) {
