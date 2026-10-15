@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
-import OutlineMorphWord, { OUTLINE_MORPH_S } from "./OutlineMorphWord";
+import {
+  OUTLINE_MORPH_S,
+  loadOutlineMorph,
+  type OutlineMorphComponent,
+} from "./outlineMorphLoader";
 import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
@@ -45,7 +49,7 @@ function warmPrimary(href: string) {
   }
 }
 
-export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
+export default function HalftoneNavLink({ href, label, isActive, dk, resting }: any & { resting?: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
@@ -77,6 +81,43 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
     dk?.enabled !== false && Boolean(dk?.keepEffectOn || isHovered || isTapped);
   const reduced = useReducedMotion();
   const morphMs = reduced ? 0 : OUTLINE_MORPH_S * 1000;
+  const [Morph, setMorph] = useState<OutlineMorphComponent | null>(null);
+  // Stay mounted after the first hover so the morph can ease back out.
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    let cancel = false;
+    const start = () => {
+      loadOutlineMorph().then((component) => {
+        if (!cancel) setMorph(() => component);
+      });
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(start, { timeout: 2500 });
+      return () => {
+        cancel = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+    const id = window.setTimeout(start, 1200);
+    return () => {
+      cancel = true;
+      window.clearTimeout(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!morphOn) return;
+    let cancel = false;
+    loadOutlineMorph().then((component) => {
+      if (cancel) return;
+      setMorph(() => component);
+      setArmed(true);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [morphOn]);
 
   const clearTapTimer = () => {
     if (tapTimeoutRef.current) {
@@ -292,7 +333,20 @@ export default function HalftoneNavLink({ href, label, isActive, dk }: any) {
       >
         {label}
       </span>
-      <OutlineMorphWord label={label} active={morphOn} emphasized={!!isActive} />
+      {armed && Morph ? (
+        <Morph label={label} active={morphOn} emphasized={!!isActive} />
+      ) : (
+        <span
+          style={{
+            color: isActive
+              ? "var(--color-text-primary)"
+              : "var(--color-text-muted)",
+            display: "contents",
+          }}
+        >
+          {resting}
+        </span>
+      )}
     </Link>
   );
 }

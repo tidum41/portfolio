@@ -3,6 +3,13 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// `next build` runs with NODE_ENV=production. `next dev` does not, so local
+// tuning still loads the real DialKit package.
+const dialkitAlias =
+  process.env.NODE_ENV === "production"
+    ? { dialkit: "./lib/dialkit-prod.tsx" }
+    : undefined;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Pin the Turbopack/project root to this package so a parent-directory
@@ -11,6 +18,16 @@ const nextConfig = {
   // "Can't resolve '@/components/PhoneEmbed'" against a stale page.tsx.
   turbopack: {
     root: __dirname,
+    ...(dialkitAlias ? { resolveAlias: dialkitAlias } : {}),
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        dialkit: path.join(__dirname, "lib/dialkit-prod.tsx"),
+      };
+    }
+    return config;
   },
   // Required for Sanity Studio (mounted at /studio, a real production route)
   // — @sanity/ui and the sanity package both use styled-components

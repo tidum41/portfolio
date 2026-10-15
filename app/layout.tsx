@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "dialkit/styles.css";
-import Nav from "@/components/Nav";
+import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
-import DevToolbar from "@/components/DevToolbar";
-import DevDialRoot from "@/components/DevDialRoot";
+import { DevDialSlot, DevToolbarSlot } from "@/components/DevChrome";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentAboutShell from "@/components/PersistentAboutShell";
@@ -174,7 +172,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
         <UiSoundRoot />
-        <Nav />
+        <NavFrame />
         <PrimaryRouteWarmup />
         <PrimaryTabSync />
         <main id="main-content" style={{ position: "relative" }}>
@@ -187,10 +185,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <AnimationProvider>
             {children}
           </AnimationProvider>
-          {process.env.NODE_ENV === "development" && <DevDialRoot />}
+          <DevDialSlot />
         </main>
         <Footer />
-        {process.env.NODE_ENV === "development" && <DevToolbar />}
+        <DevToolbarSlot />
         <Analytics />
       </body>
     </html>
