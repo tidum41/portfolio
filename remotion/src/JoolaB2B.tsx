@@ -7,7 +7,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
-import { R } from "./joola/proto-rects.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, ROWS_ZOOM,
   INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
@@ -640,8 +639,6 @@ const APPLY: Record<string, (r: HTMLElement, f: number) => void> = {
   confirmation: applyConfirmation,
 };
 
-const LOGO = R["qo-search.logo"];
-const LOGO_AR = LOGO[3] / LOGO[2];
 const BG = "#f5f4f1";
 
 const Layer: React.FC<{ screen: string; frame: number; slide: number; opacity?: number }> = ({ screen, frame, slide, opacity = 1 }) => {
@@ -724,10 +721,13 @@ export const JoolaB2B: React.FC = () => {
   const ptrFrame = Math.min(frame, CONF_CUT - 1);
   const [spx, spy] = pointerAt(ptrFrame);
   // Logo and UI never share a frame. Each fades against the solid ground.
-  const logoW0 = 340;
+  // Settled mark is 32% of the 1920 frame (inside the 30–35% band). The SVG
+  // viewBox is the artwork, so this width is the ink, not a padded box.
+  const logoW0 = Math.round(1920 * 0.32);
+  const logoH0 = logoW0 * (157.76 / 500);
   const lw = logoW0;
-  const lx = OW / 2 - logoW0 / 2;
-  const ly = OH / 2 - (logoW0 * LOGO_AR) / 2;
+  const lx = (1920 - logoW0) / 2;
+  const ly = (1440 - logoH0) / 2;
   let logoOpacity = 0;
   let logoScale = 1;
   if (frame <= LOGO_OUT[1]) {
@@ -783,11 +783,11 @@ export const JoolaB2B: React.FC = () => {
           </div>
         </div>
       )}
-      {logoOpacity > 0 && (
-        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: lw * LOGO_AR, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
-      )}
       {showPtr && <div style={{ opacity: ptrOpacity, pointerEvents: "none" }}><Cursor x={spx} y={spy} scale={cursorScale(frame)} kind={cursorKind(ptrFrame)} /></div>}
       </div>
+      {logoOpacity > 0 && (
+        <img className="film-logo" src={`${A}/joola-logo.svg`} style={{ position: "absolute", left: lx, top: ly, width: lw, height: logoH0, opacity: logoOpacity, transform: `scale(${logoScale})`, transformOrigin: "center center", pointerEvents: "none" }} />
+      )}
     </AbsoluteFill>
   );
 };

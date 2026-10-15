@@ -14,6 +14,12 @@ The pill is wider (92 empty, 156 with the total) and grows to the left, so the r
 
 The cursor arrives on the header cart. The pill takes a colour hover, then a colour press, and that click cuts to Place order. The cursor comes in just above Place order and is on the label before the click. The summary and the confirmation are unchanged.
 
+## Cursor and logo
+
+The arrow is 2.2× the original 1.25 (2.75× the SVG), drawn at that size. The tip fraction is unchanged, so the hotspot stays on the point. Press still dips to 0.9.
+
+The intro and outro mark is the same SVG, drawn at film pixels outside the stage scale. Settled, it is 614px wide on the 1920 frame, 32% of the width, centred. The fade and the 0.96→1 scale are the same lengths.
+
 ## Check
 
 `check-film.py` once on the 1920×1440 film: 375 frames, no unexpected cuts, seam diff 0.01, ledger strings present. The frozen runs are the hold after the zoom, the green-button hold, and the settled logo.

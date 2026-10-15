@@ -153,11 +153,12 @@ export const hoverState = (frame: number): { id: HoverId; sel: string; active: b
 };
 
 /**
- * 1.85× the SVG (about 1.5× the previous 1.25). Still a vector, so the arrow
- * stays crisp when the card is across a desk. Press dips to 0.9, then eases back.
+ * 2.2× the original 1.25 (2.75× the SVG). Drawn at that size, so the arrow
+ * stays a vector at card width. The tip fraction does not change with scale,
+ * so the hotspot stays on the point. Press dips to 0.9, then eases back.
  */
 export const cursorScale = (f: number) => {
-  const base = 1.85;
+  const base = 1.25 * 2.2;
   for (const c of Object.values(CLICK)) {
     const d = f - c;
     if (d >= 0 && d < 3) return base * 0.9;
