@@ -25,14 +25,14 @@ export default function PhotoGrid({ photos, showCaptions = true }: PhotoGridProp
             {/* Caption overlay */}
             {showCaptions && (
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-3 px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                <p className="text-xs text-white leading-snug">{photo.caption}</p>
+                <p className="display-type text-xs text-white leading-snug">{photo.caption}</p>
               </div>
             )}
           </div>
 
           {/* Always-visible caption below (fallback for touch devices) */}
           {showCaptions && (
-            <p className="text-xs text-subtle mt-2 px-0.5">{photo.caption}</p>
+            <p className="display-type text-xs text-subtle mt-2 px-0.5">{photo.caption}</p>
           )}
         </div>
       ))}

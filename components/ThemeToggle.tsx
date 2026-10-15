@@ -5,6 +5,9 @@ import { SUN_MASK_SVG, MOON_MASK_SVG, SUN_CLONE_INNER, MOON_CLONE_INNER } from "
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion } from "framer-motion";
+import { getThemeTransitionMode } from "@/lib/theme-transition/preference";
+import { runThemeTransition, warmThemeTransition } from "@/lib/theme-transition/runThemeTransition";
+import { afterIntroIdle } from "@/lib/introReady";
 
 const ICON_SIZE = 15;
 
@@ -65,6 +68,13 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
   const unlockThemeRaf1 = useRef(0);
   const unlockThemeRaf2 = useRef(0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const originFromButton = () => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return undefined;
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -77,10 +87,27 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
     if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
   }, []);
 
+  useEffect(() => afterIntroIdle(() => {
+    warmThemeTransition(originFromButton() ?? { x: 0, y: 0 });
+  }, 100), []);
+
   const toggle = () => {
-    const newDark = !isDark;
-    setIsDark(newDark);
+    // Read the live attribute. React state lags a frame, and a second click
+    // during the dissolve has to aim at the opposite of what's committed.
+    const currentDark = document.documentElement.getAttribute("data-theme") !== "light";
+    const newDark = !currentDark;
     const theme = newDark ? "dark" : "light";
+    const mode = getThemeTransitionMode();
+    const origin = originFromButton();
+    if (origin) warmThemeTransition(origin);
+
+    if (mode !== "default") {
+      setIsDark(newDark);
+      void runThemeTransition(theme, { mode, origin, reducedMotion: !!reduced });
+      return;
+    }
+
+    setIsDark(newDark);
     const html = document.documentElement;
     // Suppress standing hover color-tweens for one paint so the token
     // swap is a single frame, not a 200ms–1s chase across the tree.
@@ -110,7 +137,10 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
 
   return (
     <button
-      onClick={toggle}
+      ref={buttonRef}
+      onClick={() => {
+        void toggle();
+      }}
       data-ui-sound="option"
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
@@ -127,12 +157,15 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         setIsTapped(true);
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
         tapTimeoutRef.current = setTimeout(() => setIsTapped(false), 350);
+        const origin = originFromButton();
+        if (origin) warmThemeTransition(origin);
       }}
       onPointerCancel={() => {
         if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
         setIsTapped(false);
       }}
       className="nav-link theme-toggle-btn"
+      data-theme-toggle=""
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       style={{
         background: "none",

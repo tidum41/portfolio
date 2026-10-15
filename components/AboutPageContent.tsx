@@ -17,7 +17,7 @@ import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{
+    <h2 className="display-type" style={{
       fontFamily: "var(--font-page-title)",
       fontSize: 32,
       fontWeight: 400,
@@ -104,7 +104,7 @@ export default function AboutPageContent({
           <div className="about-hero">
             <div className="about-hero-bio">
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(0)}>
-                <h1 style={{
+                <h1 className="display-type" style={{
                   fontFamily: "var(--font-page-title)",
                   fontSize: 32,
                   fontWeight: 400,
@@ -116,7 +116,7 @@ export default function AboutPageContent({
               </Enter>
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
-                <p style={{
+                <p className="display-type" style={{
                   fontSize: 14,
                   lineHeight: 1.5,
                   color: "var(--color-text-muted)",

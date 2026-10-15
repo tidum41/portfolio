@@ -1601,6 +1601,7 @@ export default function BentoGallery({
 
                             {hasCaps && (
                                 <div
+                                    className="display-type"
                                     style={{
                                         // Shared first-line metrics with the focus overlay
                                         // so entering focus only changes wrap/overflow.
@@ -1686,6 +1687,7 @@ export default function BentoGallery({
                                 so the first line does not jump on focus. */}
                             {hasCaps && isActive && item.caption && (
                                 <div
+                                    className="display-type"
                                     style={{
                                         position: "absolute",
                                         left: 0,

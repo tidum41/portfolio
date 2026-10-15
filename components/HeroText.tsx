@@ -128,7 +128,7 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        {"currently @ "}
+        <span className="display-type">currently @ </span>
         <a
           href="https://joola.com"
           target="_blank"
@@ -137,11 +137,13 @@ export default function HeroText() {
         >
           JOOLA
         </a>
-        {" "}
-        <span className="hero-dot">·</span>
-        {" cognitive science "}
+        <span className="display-type">
+          {" "}
+          <span className="hero-dot">·</span>
+          {" cognitive science "}
+        </span>
         <span className="hero-sub-end">
-          {"at "}
+          <span className="display-type">at </span>
           <a
             href="https://www.ucla.edu/"
             target="_blank"

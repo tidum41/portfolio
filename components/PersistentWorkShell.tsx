@@ -23,6 +23,8 @@ import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import type { SanityProject } from "@/lib/sanity/queries";
+import ProjectHoverIndicator from "@/components/ProjectHoverIndicator";
+import { projectHoverLabel } from "@/components/projectHoverLabel";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
 function isExternalHref(href: string) {
@@ -621,7 +623,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-indicator={projectHoverLabel({ href: p.href, caseStudy: p.caseStudy })} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -636,7 +638,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-indicator={projectHoverLabel({ href: p.href, caseStudy: p.caseStudy })} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -675,6 +677,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               delay={rankDelay(projects.length)}
               className="project-card portfolio-grid-card"
               data-grid-card="cd"
+              data-indicator={projectHoverLabel({ popup: true })}
               role="button"
               tabIndex={0}
               aria-label="Open Drag a CD in a larger view"
@@ -720,7 +723,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-indicator={projectHoverLabel({ href: p.href, caseStudy: p.caseStudy })} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -735,7 +738,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-indicator={projectHoverLabel({ href: p.href, caseStudy: p.caseStudy })} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -773,6 +776,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               delay={rankDelay(projects.length + 1)}
               className="project-card portfolio-grid-card"
               data-grid-card="habit"
+              data-indicator={projectHoverLabel({ popup: true })}
               role="button"
               tabIndex={0}
               aria-label="Open Dumb Habit Tracker in a larger view"
@@ -811,6 +815,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
             visible={visible}
           />
         )}
+        <ProjectHoverIndicator />
       </div>
     </div>
 

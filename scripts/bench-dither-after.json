@@ -1,0 +1,19 @@
+{
+  "mode": "optimized",
+  "viewport": {
+    "w": 1440,
+    "h": 900
+  },
+  "cell": 6,
+  "tiles": {
+    "x": 240,
+    "y": 150
+  },
+  "maskPixels": 36000,
+  "samples": 12,
+  "avgDrawMs": 0.8999999997516474,
+  "avgEncodeMs": 0.5750000001862645,
+  "avgTotalMs": 1.5749999998758237,
+  "maxTotalMs": 9,
+  "estFpsCap": 634.9206349706934
+}
