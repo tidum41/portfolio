@@ -8,8 +8,8 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, CUT_B2, CUT_BOTH, CUT_QTY, DROPDOWN_OPEN, ENTER, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_HOLD, PILL_PARK, PILL_ROLL, PILL_SHOT, PILL_W1, ROLL_PILL_F,
-  OPEN_MOVE, PTR_E, SHOT_A, SHOT_B, SHOT_B2, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, pillBox, prog, type Cam,
+  ADD_GROW, camAt, CART_CUT, CLICK, CONF_FADE, CUT_TPL, DROPDOWN_OPEN, ENTER, FILL, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_ROLL, PILL_SHOT, PILL_W1, ROLL_PILL_F,
+  OPEN_MOVE, PTR_E, SHOT_B2, SHOT_HEADER, SHOT_ORDER, pillBox, prog, type Cam,
 } from "./timeline";
 
 export type Pt = [number, number];
@@ -45,16 +45,10 @@ export type Key = [number, Pt];
 /** Gentle curve. Perpendicular bow, small enough that the path does not loop. */
 const BOW = 0.06;
 
-/**
- * Waiting spot under the header pill. Close enough to the continuity landing
- * that the rise stays unhurried, and clear of the pill so the roll plays
- * before the cursor is on it.
- */
-const PARK: Pt = [1208, 64];
-const qtyLand: Pt = toPage(SHOT_B, ...toScreen(SHOT_A, P.result[0], P.result[1]));
-const tplLand: Pt = toPage(SHOT_B2, ...toScreen(SHOT_B, P.qty[0], P.qty[1]));
-const linesLand: Pt = toPage(SHOT_BOTH, ...toScreen(SHOT_B2, P.tplAdd[0], P.tplAdd[1]));
-const headerLand: Pt = toPage(SHOT_HEADER, ...toScreen(SHOT_BOTH, P.add[0], P.add[1]));
+/** Screen-continuous landing in the Match kit close-up. The card is already under the tip. */
+const tplLand: Pt = toPage(SHOT_B2, ...toScreen(SHOT_ORDER, P.qty[0], P.qty[1]));
+/** Add to cart's screen pixel, mapped into the header shot so the cut does not teleport. */
+const headerLand: Pt = toPage(SHOT_HEADER, ...toScreen(SHOT_ORDER, P.add[0], P.add[1]));
 
 export const KEYS: Key[] = [
   [MORPH[1], P.start],
@@ -64,26 +58,25 @@ export const KEYS: Key[] = [
   [44, P.search],
   [72, P.search],
   [90, P.result],
-  // Rest through the insert. The cut keeps the same screen pixel.
-  [CUT_QTY - 1, P.result],
-  [CUT_QTY, qtyLand],
-  [120, P.qty],
-  [CUT_B2 - 1, P.qty],
-  [CUT_B2, tplLand],
-  [154, P.tpl],
-  [174, P.tpl],
-  [186, P.tplAdd],
-  [CUT_BOTH - 1, P.tplAdd],
-  [CUT_BOTH, linesLand],
-  [208, linesLand],
-  [220, P.add],
+  // Rest through the cut onto the order, the click, the line, and the read.
+  [121, P.result],
+  [131, P.qty],
+  // Rest on 12 through the price and the read.
+  [CUT_TPL - 1, P.qty],
+  [CUT_TPL, tplLand],
+  [169, P.tpl],
+  // Rest through the template click and the popup opening.
+  [181, P.tpl],
+  [193, P.tplAdd],
+  // Rest through the Add to order click, the cut back, the stagger, and the read.
+  // Same point, so the cut keeps the cursor on the button that caused the lines.
+  [237, P.tplAdd],
+  [249, P.add],
   // Last pressed frame. The release is the cut, so this key cannot share that frame.
   [CLICK.add + 2, P.add],
   [PILL_SHOT, headerLand],
   // Same point through the roll, so the cursor does not travel across the amount.
   [PILL_ROLL + ROLL_PILL_F, headerLand],
-  [PILL_PARK, PARK],
-  [PILL_HOLD, PARK],
   [PILL_ARRIVE, P.pillIcon],
   [CLICK.pill + 2, P.pillIcon],
   // Hold on the icon through the frame before the cut. A shared point with
@@ -105,7 +98,10 @@ export const pointerAt = (f: number): Pt => {
     if (f <= fb) {
       if (pa === pb) return toScreen(camAt(f), pa[0], pa[1]);
       const a = sp(KEYS[i]), b = sp(KEYS[i + 1]);
-      const t = prog(f, fa, fb, PTR_E);
+      // PTR_E keeps frames 0–90 and the Place order approach. FLOW_E is only
+      // a travel whose both keys sit strictly inside the rewritten section.
+      const ease = fa > 90 && fb < CART_CUT ? FLOW_E : PTR_E;
+      const t = prog(f, fa, fb, ease);
       const dx = b[0] - a[0], dy = b[1] - a[1];
       const bow = BOW * Math.sin(Math.PI * t);
       return [lerp(a[0], b[0], t) + dy * bow, lerp(a[1], b[1], t) - dx * bow];
@@ -126,9 +122,10 @@ export const inRect = (p: Pt, r: Rect, pad = 0) =>
  */
 export const addRectAt = (f: number): Rect => {
   const r = R["qo-search.addBtn"];
-  if (f < TPL_ROWS[0]) return r;
+  if (f < ADD_GROW[0]) return r;
   const right = r[0] + r[2];
-  return [right - 155, r[1], 155, r[3]];
+  const w = lerp(r[2], 155, prog(f, ADD_GROW[0], ADD_GROW[1], FLOW_E));
+  return [right - w, r[1], w, r[3]];
 };
 
 /** Pill hugs: right edge fixed. Before the header cut the box is p33's 92px. */
@@ -180,9 +177,9 @@ const SPECS: Spec[] = [
   { id: "qty", sel: "[data-set-perseus='12']", kind: "chip", rectAt: fixed(R["qo-search.preset12"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f), click: CLICK.qty, press: 4 },
   { id: "qty24", sel: "[data-set-perseus='24']", kind: "chip", rectAt: fixed(R["qo-search.preset24"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
   { id: "rowPerseus", sel: "[data-product='perseus']", kind: "row", rectAt: fixed(R["qo-search.row0"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
-  { id: "rowHyperion", sel: "[data-product='hyperion']", kind: "row", rectAt: fixed([248, 314.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
-  { id: "rowHc40", sel: "[data-product='hc40']", kind: "row", rectAt: fixed([248, 401.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
-  { id: "rowBag", sel: "[data-product='bag']", kind: "row", rectAt: fixed([248, 488.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
+  { id: "rowHyperion", sel: "[data-product='hyperion']", kind: "row", rectAt: fixed([248, 314.6, 768, 87]), visible: (f) => f >= FILL && onQuickOrder(f) },
+  { id: "rowHc40", sel: "[data-product='hc40']", kind: "row", rectAt: fixed([248, 401.6, 768, 87]), visible: (f) => f >= FILL + FILL_STAGGER && onQuickOrder(f) },
+  { id: "rowBag", sel: "[data-product='bag']", kind: "row", rectAt: fixed([248, 488.6, 768, 87]), visible: (f) => f >= FILL + FILL_STAGGER * 2 && onQuickOrder(f) },
   { id: "railPerseus", sel: "[data-template='tpl-perseus']", kind: "rail", rectAt: fixed([1055, 447.6, 206, 72]), visible: onQuickOrder },
   { id: "tpl", sel: "[data-template='tpl-match']", kind: "rail", rectAt: fixed(R["qo-search.tplMatch"]), visible: onQuickOrder, click: CLICK.tpl, press: 4 },
   { id: "tplAdd", sel: "[data-tpl-apply='add']", kind: "primary", rectAt: fixed(R["qo-search.tplAdd"]), visible: popOpen, click: CLICK.tplAdd, press: 4 },
@@ -236,7 +233,10 @@ export const hoverState = (frame: number): HoverHit[] =>
  */
 export const cursorScale = (f: number) => {
   const base = 1.25 * 1.6;
-  for (const c of Object.values(CLICK)) {
+  // Search is inside 0–3s. The pill dip runs through frame 302, which is
+  // already on Place order, so it stays. Result, qty, the template, and Add
+  // are a colour change only.
+  for (const c of [CLICK.search, CLICK.pill, CLICK.place]) {
     const d = f - c;
     if (d >= 0 && d < 3) return base * 0.9;
     if (d >= 3 && d < 7) return base * lerp(0.9, 1, (d - 3) / 4);
