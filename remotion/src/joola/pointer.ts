@@ -3,11 +3,12 @@
  * points the cursor travels in screen space, so a camera hard cut mid-travel
  * does not teleport it. While it rests on one point it tracks that point.
  * Two keys that share one array track the page point through a cut and jump.
- * Add to cart and the cart pill take hover and press from the tip each frame.
+ * Every control the tip crosses takes hover from that tip: on once the tip is
+ * 2px inside, off once it is 2px outside, and the colour eases over 80ms.
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_BADGE, PILL_FILL, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
+  camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, EASE_OUT, ENTER, FPS, INSERT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_HOLD, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
   ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, prog, type Cam,
 } from "./timeline";
 
@@ -57,8 +58,8 @@ export const KEYS: Key[] = [
   [PAN_AB[0], P.qty],
   [CLICK.tpl - 3, P.tpl],
   [CLICK.tpl + 4, P.tpl],
-  // Settled on Add to order before the press. The zoom starts the next move.
-  [CLICK.tplAdd - 8, P.tplAdd],
+  // On Add to order 14 frames before the press (200ms more than the old 8).
+  [CLICK.tplAdd - 14, P.tplAdd],
   // The zoom reveals the lines. The cursor arrives on the new line as it settles,
   // holds, then travels onto Add to cart before the press.
   [ROWS_ZOOM[0], P.tplAdd],
@@ -72,7 +73,7 @@ export const KEYS: Key[] = [
   // amount and the badge update, and only then moves onto the icon.
   [PILL_SHOT, toPage(SHOT_HEADER, ...toScreen(SHOT_BOTH, P.add[0], P.add[1]))],
   [PILL_PARK, [1160, 60]],
-  [PILL_BADGE[1], [1160, 60]],
+  [PILL_HOLD, [1160, 60]],
   [PILL_ARRIVE, P.pillIcon],
   [CLICK.pill + 3, P.pillIcon],
   // Hold on the icon through the frame before the cut. A shared point with
@@ -131,51 +132,91 @@ export const pillRectAt = (f: number): Rect => {
 export const cursorKind = (_f: number): "arrow" | "ibeam" => "arrow";
 
 /**
- * Hover turns on when the hotspot enters `rect` and stays on until `until`,
- * unless the cursor clearly leaves (14px) before the press window.
- * Pure function of frame — no hit-test, no per-frame class restart.
+ * Edge band, in page px. Hover turns on only once the tip is this far inside,
+ * and stays on until the tip is this far outside. A skim along the border
+ * cannot flip the state every frame.
  */
-export const latched = (frame: number, rectAt: (f: number) => Rect, from: number, until: number) => {
-  if (frame < from || frame > until) return false;
-  let on = false;
-  const start = Math.max(from, frame - 48);
-  for (let t = start; t <= frame; t++) {
-    const p = pageAt(t);
-    const rect = rectAt(t);
-    if (inRect(p, rect, 0)) on = true;
-    else if (on && !inRect(p, rect, 14) && t < until - 4) on = false;
-  }
-  return on;
-};
+const HOVER_PAD = 2;
+/** Linear colour ramp. 80ms at 30fps is 2.4 frames, so one frame cannot finish a flip. */
+const HOVER_STEP = 1 / (0.08 * FPS);
 
+const edge = (p: Pt, r: Rect) => Math.min(p[0] - r[0], r[0] + r[2] - p[0], p[1] - r[1], r[1] + r[3] - p[1]);
 const fixed = (r: Rect) => () => r;
-export type HoverId = "result" | "qty" | "tpl" | "tplAdd" | "add" | "pill" | "place";
-type HitSpec = { id: HoverId; sel: string; rectAt: (f: number) => Rect; click: number; press: number };
 
-/** Hover while the tip is inside. Pressed only on the mousedown frames, and only while it is still inside. */
-const fromHit = (frame: number, s: HitSpec) => {
-  const over = inRect(pageAt(frame), s.rectAt(frame));
-  if (!over) return null;
-  return { id: s.id, sel: s.sel, active: frame >= s.click && frame < s.click + s.press };
+export type HoverKind = "chip" | "result" | "row" | "rail" | "primary" | "outline" | "pill";
+export type HoverHit = { id: string; sel: string; kind: HoverKind; mix: number; active: boolean };
+
+type Spec = {
+  id: string;
+  sel: string;
+  kind: HoverKind;
+  rectAt: (f: number) => Rect;
+  visible: (f: number) => boolean;
+  click?: number;
+  press?: number;
 };
 
-export const hoverState = (frame: number): { id: HoverId; sel: string; active: boolean }[] => {
-  const specs: { id: HoverId; sel: string; rectAt: (f: number) => Rect; from: number; until: number; click: number; press: number }[] = [
-    { id: "result", sel: "[data-search-result]", rectAt: fixed(R["qo-search.result"]), from: CLICK.result - 20, until: CLICK.result + 4, click: CLICK.result, press: 4 },
-    { id: "qty", sel: "[data-set-perseus='12']", rectAt: fixed(R["qo-search.preset12"]), from: CLICK.qty - 16, until: CLICK.qty + 4, click: CLICK.qty, press: 4 },
-    { id: "tpl", sel: "[data-template='tpl-match']", rectAt: fixed(R["qo-search.tplMatch"]), from: CLICK.tpl - 24, until: CLICK.tplAdd + 4, click: CLICK.tpl, press: 4 },
-    { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd, press: 4 },
-    { id: "place", sel: "[data-place-order]", rectAt: fixed(R["cart.place"]), from: CART_CUT, until: CLICK.place + 4, click: CLICK.place, press: 4 },
-  ];
-  const latchedHits = specs
-    .filter((s) => latched(frame, s.rectAt, s.from, s.until))
-    .map((s) => ({ id: s.id, sel: s.sel, active: s.click >= 0 && frame >= s.click && frame < s.click + s.press }));
-  const direct = [
-    fromHit(frame, { id: "add", sel: "[data-add-all]", rectAt: addRectAt, click: CLICK.add, press: 3 }),
-    fromHit(frame, { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, click: CLICK.pill, press: 3 }),
-  ].filter((h): h is { id: HoverId; sel: string; active: boolean } => h !== null);
-  return [...latchedHits, ...direct];
+const popOpen = (f: number) => f >= CLICK.tpl && f < CLICK.tplAdd + 4;
+const onQuickOrder = (f: number) => f < CART_CUT;
+
+/**
+ * Controls the tip actually crosses. Rows below Perseus and the popup
+ * buttons exist only while they are on screen, so a later sweep through
+ * their old coordinates does not light them up.
+ */
+const SPECS: Spec[] = [
+  { id: "result", sel: "[data-search-result]", kind: "result", rectAt: fixed(R["qo-search.result"]), visible: (f) => f >= DROPDOWN_OPEN && f < ENTER, click: CLICK.result, press: 4 },
+  { id: "dec", sel: "[data-product='perseus'] [data-action='dec']", kind: "chip", rectAt: fixed([721, 236.6, 36, 40]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
+  { id: "qty6", sel: "[data-set-perseus='6']", kind: "chip", rectAt: fixed([721, 277.6, 49, 28]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
+  { id: "qty", sel: "[data-set-perseus='12']", kind: "chip", rectAt: fixed(R["qo-search.preset12"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f), click: CLICK.qty, press: 4 },
+  { id: "qty24", sel: "[data-set-perseus='24']", kind: "chip", rectAt: fixed(R["qo-search.preset24"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
+  { id: "rowPerseus", sel: "[data-product='perseus']", kind: "row", rectAt: fixed(R["qo-search.row0"]), visible: (f) => f >= INSERT[0] && onQuickOrder(f) },
+  { id: "rowHyperion", sel: "[data-product='hyperion']", kind: "row", rectAt: fixed([248, 314.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
+  { id: "rowHc40", sel: "[data-product='hc40']", kind: "row", rectAt: fixed([248, 401.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
+  { id: "rowBag", sel: "[data-product='bag']", kind: "row", rectAt: fixed([248, 488.6, 768, 87]), visible: (f) => f >= TPL_ROWS[0] && onQuickOrder(f) },
+  { id: "railPerseus", sel: "[data-template='tpl-perseus']", kind: "rail", rectAt: fixed([1055, 447.6, 206, 72]), visible: onQuickOrder },
+  { id: "tpl", sel: "[data-template='tpl-match']", kind: "rail", rectAt: fixed(R["qo-search.tplMatch"]), visible: onQuickOrder, click: CLICK.tpl, press: 4 },
+  { id: "tplAdd", sel: "[data-tpl-apply='add']", kind: "primary", rectAt: fixed(R["qo-search.tplAdd"]), visible: popOpen, click: CLICK.tplAdd, press: 4 },
+  { id: "replace", sel: "[data-tpl-apply='replace']", kind: "outline", rectAt: fixed([1076, 643, 164, 32]), visible: popOpen },
+  { id: "add", sel: "[data-add-all]", kind: "primary", rectAt: addRectAt, visible: onQuickOrder, click: CLICK.add, press: 3 },
+  { id: "pill", sel: "[data-cart-pill]", kind: "pill", rectAt: pillRectAt, visible: onQuickOrder, click: CLICK.pill, press: 3 },
+  { id: "place", sel: "[data-place-order]", kind: "primary", rectAt: fixed(R["cart.place"]), visible: (f) => f >= CART_CUT && f < CONF_FADE[0], click: CLICK.place, press: 4 },
+];
+
+type Mem = { on: boolean; mix: number };
+const hoverMem = new Map<string, Mem[]>();
+
+/** Pure in the frame. The ramp is integrated from frame 0 so a still matches the film. */
+const hoverAt = (spec: Spec, frame: number): Mem => {
+  let arr = hoverMem.get(spec.id);
+  if (!arr) { arr = []; hoverMem.set(spec.id, arr); }
+  if (arr[frame]) return arr[frame];
+  let i = arr.length;
+  let prev: Mem = i === 0 ? { on: false, mix: 0 } : arr[i - 1];
+  for (; i <= frame; i++) {
+    let on = prev.on;
+    if (!spec.visible(i)) on = false;
+    else {
+      const m = edge(pageAt(i), spec.rectAt(i));
+      if (!on && m >= HOVER_PAD) on = true;
+      else if (on && m < -HOVER_PAD) on = false;
+    }
+    const target = on ? 1 : 0;
+    let mix = prev.mix + Math.sign(target - prev.mix) * Math.min(HOVER_STEP, Math.abs(target - prev.mix));
+    if (!spec.visible(i)) mix = 0;
+    prev = { on, mix };
+    arr[i] = prev;
+  }
+  return arr[frame];
 };
+
+export const hoverState = (frame: number): HoverHit[] =>
+  SPECS.flatMap((s) => {
+    const { on, mix } = hoverAt(s, frame);
+    const active = on && s.click != null && s.press != null && frame >= s.click && frame < s.click + s.press;
+    if (mix <= 0 && !active) return [];
+    return [{ id: s.id, sel: s.sel, kind: s.kind, mix, active }];
+  });
 
 /**
  * On-screen size is 1.6× the original 1.25. The arrow is painted outside the

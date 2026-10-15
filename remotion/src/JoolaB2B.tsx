@@ -13,7 +13,7 @@ import {
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
 } from "./joola/timeline";
-import { pointerAt, cursorScale, hoverState, cursorKind } from "./joola/pointer";
+import { pointerAt, cursorScale, hoverState, cursorKind, type HoverKind } from "./joola/pointer";
 import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
@@ -93,6 +93,8 @@ const CSS =
 .film-layer .rail-item .rail-id,
 .film-layer .rail-item .name,
 .film-layer .rail-item .meta{line-height:16px!important}
+/* The Add label fades with the same 80ms hover ramp as the row. Open menus keep it hidden. */
+.film-layer .rail-item .rail-action{opacity:var(--film-hov, 0)!important}
 .film-layer .tpl-pop{position:absolute!important;margin:0!important;transition:none!important}
 .film-layer .tpl-pop .tpl-choice{
   height:32px!important;box-sizing:border-box!important;font-weight:500!important;
@@ -200,6 +202,33 @@ const mix = (a: string, b: string, t: number) => {
   const A = p(a), B = p(b);
   return `#${A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
 };
+
+const BAND = "#f4f5f7";
+const WASH = "#eceef2";
+const INK = "#1a1a1a";
+const MUTED = "#5c5c66";
+const BLUE_HOV = "#2433c4";
+const BLUE_HOT = "#1a2599";
+
+/** Frame-accurate stand-in for an 80ms background/colour transition. */
+function paintHover(el: HTMLElement, kind: HoverKind, amount: number, active: boolean) {
+  const pct = (amount * 100).toFixed(1);
+  const blend = (rest: string, hov: string) => `color-mix(in srgb, ${hov} ${pct}%, ${rest})`;
+  if (kind === "rail") el.style.setProperty("--film-hov", el.classList.contains("is-open") ? "0" : amount.toFixed(3));
+  if (kind === "chip") {
+    const selected = el.classList.contains("on");
+    const restBg = selected ? WASH : "transparent";
+    const restFg = selected ? INK : MUTED;
+    el.style.setProperty("background-color", active ? WASH : blend(restBg, BAND), "important");
+    el.style.setProperty("color", active ? INK : blend(restFg, INK), "important");
+    return;
+  }
+  const open = kind === "rail" && el.classList.contains("is-open");
+  const rest = kind === "primary" ? BLUE : kind === "outline" || kind === "pill" ? "#fff" : open ? BAND : "transparent";
+  const hov = kind === "primary" ? BLUE_HOV : BAND;
+  const hot = kind === "primary" ? BLUE_HOT : WASH;
+  el.style.setProperty("background-color", active ? hot : blend(rest, hov), "important");
+}
 
 /** 1–2px on the 1920 film. The close pill shot must not magnify a 1px UI blur. */
 function blurCap(s: number) {
@@ -477,9 +506,11 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("flex-shrink", "0", "important");
   amt.style.setProperty("text-box", "none", "important");
   amt.style.setProperty("line-height", `${h}px`, "important");
-  const { from: rollFrom, to: rollTo, t } = f >= PILL_ROLL
-    ? rollAt([{ at: 0, text: from }, { at: PILL_ROLL, text: to }], f, ROLL_PILL_F)
-    : { from, to: from, t: 0 };
+  // One ease for the digits and the count circle. The painter does not ease again.
+  const motion = f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, EASE_OUT) : 0;
+  const rollFrom = from;
+  const rollTo = f >= PILL_ROLL ? to : from;
+  const t = motion;
   // DOM overflow does not clip the traveling glyph inside the scaled stage.
   // The canvas bitmap is the amount box, so the next line cannot paint through.
   paintCanvasRoll(amt, rollFrom, rollTo, t, {
@@ -520,7 +551,7 @@ function pill(root: HTMLElement, f: number) {
   chip.style.setProperty("text-box", "none", "important");
   chip.style.setProperty("transform-origin", "center center", "important");
   if (showBadge) {
-    const bt = prog(f, PILL_BADGE[0], PILL_BADGE[1], EASE_OUT);
+    const bt = motion;
     const sc = bt >= 1 ? 1 : lerp(0.6, 1, bt);
     chip.style.visibility = "";
     chip.style.opacity = `${bt}`;
@@ -782,12 +813,17 @@ export const JoolaB2B: React.FC = () => {
     if (frame >= CONF_CUT) return;
     const layer = st.querySelector(".film-layer");
     if (!layer) return;
-    // Add to cart and the cart pill follow the tip. The earlier controls stay latched.
+    // Colour is sampled from the 80ms ramp. A CSS transition would follow wall
+    // clock time between seeks, not the frame.
+    qa(layer, "[data-search-result], [data-set-perseus], [data-action='dec'], [data-order-row], [data-rail-add], [data-tpl-apply], [data-add-all], [data-cart-pill], [data-place-order]").forEach((el) => {
+      el.style.removeProperty("background-color");
+      el.style.removeProperty("color");
+      el.style.removeProperty("--film-hov");
+    });
     for (const h of hoverState(frame)) {
-      const el = layer.querySelector(h.sel);
+      const el = q(layer, h.sel);
       if (!el) continue;
-      el.classList.add("film-hover");
-      if (h.active) el.classList.add("film-active");
+      paintHover(el, h.kind, h.mix, h.active);
     }
   });
   const camT = (c: Cam) => `translate(${OW / 2}px,${OH / 2}px) scale(${c.s}) translate(${-c.cx}px,${-c.cy}px)`;
