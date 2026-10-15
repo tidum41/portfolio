@@ -8,12 +8,9 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, EASE_OUT, ENTER, FPS, INSERT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_HOLD, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
-  ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, prog, type Cam,
+  camAt, CART_CUT, CLICK, CONF_FADE, CUT_B2, CUT_BOTH, CUT_QTY, DROPDOWN_OPEN, EASE_OUT, ENTER, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_HOLD, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
+  OPEN_MOVE, PTR_E, SHOT_A, SHOT_B, SHOT_B2, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, prog, type Cam,
 } from "./timeline";
-
-/** Cursor is on the search field two frames before that move ends. */
-const OPEN_MOVE_END = OPEN_MOVE[1] - 2;
 
 export type Pt = [number, number];
 export type Rect = [number, number, number, number];
@@ -44,38 +41,48 @@ export const P = {
   away: [1160, 448] as Pt,
 };
 export type Key = [number, Pt];
+
+/** Gentle curve. Perpendicular bow, small enough that the path does not loop. */
+const BOW = 0.06;
+
+/**
+ * Waiting spot under the header pill. Close enough to the continuity landing
+ * that the rise stays unhurried, and clear of the pill so the roll plays
+ * before the cursor is on it.
+ */
+const PARK: Pt = [1208, 64];
+const qtyLand: Pt = toPage(SHOT_B, ...toScreen(SHOT_A, P.result[0], P.result[1]));
+const tplLand: Pt = toPage(SHOT_B2, ...toScreen(SHOT_B, P.qty[0], P.qty[1]));
+const linesLand: Pt = toPage(SHOT_BOTH, ...toScreen(SHOT_B2, P.tplAdd[0], P.tplAdd[1]));
+const headerLand: Pt = toPage(SHOT_HEADER, ...toScreen(SHOT_BOTH, P.add[0], P.add[1]));
+
 export const KEYS: Key[] = [
   [MORPH[1], P.start],
-  // Lands during the open move. The travel from frame 11 is still 19 frames.
-  [OPEN_MOVE_END, P.search],
-  [CLICK.search + 15, P.search],
-  // 7-frame travel onto the result, then a short hold, then the camera.
-  [CLICK.result - 3, P.result],
-  [QTY_MOVE[0], P.result],
-  [QTY_MOVE[1], P.qty],
-  // Stay on the chip until the camera leaves. Sliding across "12" on the still
-  // reads as the number drifting under the cursor.
-  [PAN_AB[0], P.qty],
-  [CLICK.tpl - 3, P.tpl],
-  [CLICK.tpl + 4, P.tpl],
-  // On Add to order 14 frames before the press (200ms more than the old 8).
-  [CLICK.tplAdd - 14, P.tplAdd],
-  // The zoom reveals the lines. The cursor arrives on the new line as it settles,
-  // holds, then travels onto Add to cart before the press.
-  [ROWS_ZOOM[0], P.tplAdd],
-  [ROWS_ZOOM[1], P.rowIn],
-  [ADD_MOVE[0], P.rowIn],
-  [ADD_MOVE[1], P.add],
-  // Press is 3 frames. The release is still on the button.
+  // The open push moves the page under a resting cursor.
+  [OPEN_MOVE[1], P.start],
+  // Onto the field, dwell, click, type, hold the results.
+  [44, P.search],
+  [72, P.search],
+  [90, P.result],
+  // Rest through the insert. The cut keeps the same screen pixel.
+  [CUT_QTY - 1, P.result],
+  [CUT_QTY, qtyLand],
+  [120, P.qty],
+  [CUT_B2 - 1, P.qty],
+  [CUT_B2, tplLand],
+  [154, P.tpl],
+  [174, P.tpl],
+  [186, P.tplAdd],
+  [CUT_BOTH - 1, P.tplAdd],
+  [CUT_BOTH, linesLand],
+  [208, linesLand],
+  [220, P.add],
   [CLICK.add + 3, P.add],
-  // Same screen pixel as the button, under the header camera, so the cut
-  // does not throw the arrow. Then it waits below the pill while the
-  // amount and the badge update, and only then moves onto the icon.
-  [PILL_SHOT, toPage(SHOT_HEADER, ...toScreen(SHOT_BOTH, P.add[0], P.add[1]))],
-  [PILL_PARK, [1160, 60]],
-  [PILL_HOLD, [1160, 60]],
+  [PILL_SHOT, headerLand],
+  [PILL_PARK, PARK],
+  [PILL_HOLD, PARK],
   [PILL_ARRIVE, P.pillIcon],
-  [CLICK.pill + 3, P.pillIcon],
+  [CLICK.pill + 2, P.pillIcon],
   // Hold on the icon through the frame before the cut. A shared point with
   // the next key would slide the arrow off the pill during that hold.
   [CART_CUT - 1, [P.pillIcon[0], P.pillIcon[1]]],
@@ -95,9 +102,9 @@ export const pointerAt = (f: number): Pt => {
     if (f <= fb) {
       if (pa === pb) return toScreen(camAt(f), pa[0], pa[1]);
       const a = sp(KEYS[i]), b = sp(KEYS[i + 1]);
-      const t = prog(f, fa, fb, MOVE_E);
+      const t = prog(f, fa, fb, PTR_E);
       const dx = b[0] - a[0], dy = b[1] - a[1];
-      const bow = 0.045 * Math.sin(Math.PI * t);
+      const bow = BOW * Math.sin(Math.PI * t);
       return [lerp(a[0], b[0], t) + dy * bow, lerp(a[1], b[1], t) - dx * bow];
     }
   }

@@ -8,7 +8,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import {
-  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, ROWS_ZOOM,
+  OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, TPL_ROWS, TPL_IN,
   INSERT, PILL_BADGE, PILL_FILL, PILL_ROLL, PILL_W0, PILL_W1, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, ROLL_PILL_F, clamp01,
@@ -313,30 +313,6 @@ function showStable(
   amt.style.minWidth = `${used}px`;
 }
 
-const CUT_TEXT = ".prod-name, .prod-sku, .unit, .line-total, .order-head > div, .search-field, .page > h1, .rail-id, .rail-copy .name, .rail-copy .meta-left, .rail-copy .meta-amt, .rail-card > h3";
-
-/**
- * Hide a table label only when the zoom frame cuts through its glyphs.
- * A 1px graze stays visible, so the Match kit does not vanish as a block.
- */
-function concealCutText(root: HTMLElement, on: boolean) {
-  const nodes = root.querySelectorAll<HTMLElement>(CUT_TEXT);
-  if (!on) {
-    nodes.forEach((el) => { el.style.visibility = ""; });
-    return;
-  }
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const cut = 8;
-  nodes.forEach((el) => {
-    const r = el.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) return;
-    const over = Math.max(0, -r.left, -r.top, r.right - vw, r.bottom - vh);
-    const visible = r.right > cut && r.left < vw - cut && r.bottom > cut && r.top < vh - cut;
-    el.style.visibility = visible && over > cut ? "hidden" : "";
-  });
-}
-
 function applyQuickOrder(root: HTMLElement, f: number) {
   const tpl = q(root, '[data-template="tpl-match"]');
   const pop = q(root, "[data-tpl-pop]");
@@ -384,7 +360,7 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const open = f >= DROPDOWN_OPEN && f < ENTER;
   res.hidden = !open;
   res.classList.toggle("is-closed", !open);
-  const dIn = prog(f, DROPDOWN_OPEN, DROPDOWN_OPEN + 6, UI_E);
+  const dIn = prog(f, DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F, UI_E);
   res.style.opacity = `${dIn}`;
   res.style.transform = `translateY(${(1 - dIn) * 6}px)`;
 
@@ -400,14 +376,14 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   pr.classList.remove("is-just-added");
   pr.style.background = "";
 
-  // The lines are in the table before the zoom, so the camera reveals them
-  // instead of flying through the empty gap under Perseus.
+  // The kit lines ease in on the wide shot. The cut is what reveals them.
   const tplIn = f >= TPL_ROWS[0];
+  const tp = prog(f, TPL_ROWS[0], TPL_ROWS[0] + TPL_IN, UI_E);
   rows.slice(1).forEach((r) => {
     r.hidden = false;
     r.style.display = tplIn ? "" : "none";
-    r.style.opacity = "1";
-    r.style.transform = "none";
+    r.style.opacity = tplIn ? `${tp}` : "0";
+    r.style.transform = tplIn ? `translateY(${(1 - tp) * 6}px)` : "";
   });
 
   const qty = f < CLICK.qty ? 1 : QTY_FINAL;
@@ -462,9 +438,6 @@ function applyQuickOrder(root: HTMLElement, f: number) {
     add.style.minWidth = "155px";
   }
   pill(root, f);
-  // A zoom from the kit onto the table has to cross the rows. Hide a label
-  // only while the frame cuts it, so a still never shows a sliced word.
-  concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
   // The header cart framing can slice the retailer name. The title sits off
   // the left edge. Hide both so the hold is the pill, not a cut word.
   if (f >= PILL_SHOT && f < CART_CUT) {
