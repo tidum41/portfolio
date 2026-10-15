@@ -386,6 +386,13 @@ nav a {
 .footer-inner {
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
+/* Archive pins the footer and insets the gallery by the one-line bar.
+   The stacked phone footer is taller, so the gallery clears it. */
+@media (max-width: 479px) {
+  .archive-frame {
+    bottom: 86px !important;
+  }
+}
 
 /* ─── Project card hover ───────────────────────────────────────────
    Soft plate wraps the whole tile (media + label).
