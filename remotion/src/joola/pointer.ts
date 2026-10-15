@@ -1,13 +1,14 @@
 /**
- * p20: ONE continuous cursor. Keys are [frame, page point]. Between two different
+ * ONE continuous cursor. Keys are [frame, page point]. Between two different
  * points the cursor travels in screen space, so a camera hard cut mid-travel
  * does not teleport it. While it rests on one point it tracks that point.
- * Hover is geometric with latch — not elementFromPoint — so it cannot flicker.
+ * Two keys that share one array track the page point through a cut and jump.
+ * Add to cart and the cart pill take hover and press from the tip each frame.
  */
 import { R } from "./proto-rects.generated";
 import {
-  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_W0, PILL_W1,
-  ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, prog, type Cam,
+  camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_BADGE, PILL_FILL, PILL_PARK, PILL_SHOT, PILL_W0, PILL_W1,
+  ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, SHOT_BOTH, SHOT_HEADER, TPL_ROWS, prog, type Cam,
 } from "./timeline";
 
 /** Cursor is on the search field two frames before that move ends. */
@@ -64,10 +65,19 @@ export const KEYS: Key[] = [
   [ROWS_ZOOM[1], P.rowIn],
   [ADD_MOVE[0], P.rowIn],
   [ADD_MOVE[1], P.add],
-  // Press is 3 frames. Then a straight travel up to the header cart, landing
-  // the frame before the close-up so the cut opens with the cursor on the icon.
+  // Press is 3 frames. The release is still on the button.
   [CLICK.add + 3, P.add],
-  [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],
+  // Same screen pixel as the button, under the header camera, so the cut
+  // does not throw the arrow. Then it waits below the pill while the
+  // amount and the badge update, and only then moves onto the icon.
+  [PILL_SHOT, toPage(SHOT_HEADER, ...toScreen(SHOT_BOTH, P.add[0], P.add[1]))],
+  [PILL_PARK, [1160, 60]],
+  [PILL_BADGE[1], [1160, 60]],
+  [PILL_ARRIVE, P.pillIcon],
+  [CLICK.pill + 3, P.pillIcon],
+  // Hold on the icon through the frame before the cut. A shared point with
+  // the next key would slide the arrow off the pill during that hold.
+  [CART_CUT - 1, [P.pillIcon[0], P.pillIcon[1]]],
   // The cut is the click. Land just above Place order, then settle onto it.
   // A screen-space blend from the pill icon would drop the cursor on the credit line.
   [CART_CUT, [P.place[0], P.place[1] - 28]],
@@ -78,12 +88,6 @@ export const KEYS: Key[] = [
 ];
 const sp = (k: Key): Pt => toScreen(camAt(k[0]), k[1][0], k[1][1]);
 export const pointerAt = (f: number): Pt => {
-  // Ride the cart icon while the pill grows left. Same curve as the width,
-  // so the cursor stays on the icon instead of waiting in the space it opens.
-  if (f >= PILL_ARRIVE && f < CART_CUT) {
-    const r = pillRectAt(f);
-    return toScreen(camAt(f), r[0] + 20, r[1] + r[3] / 2);
-  }
   if (f <= KEYS[0][0]) return sp(KEYS[0]);
   for (let i = 0; i < KEYS.length - 1; i++) {
     const [fa, pa] = KEYS[i], [fb, pb] = KEYS[i + 1];
@@ -104,6 +108,17 @@ export const pageAt = (f: number): Pt => {
 };
 export const inRect = (p: Pt, r: Rect, pad = 0) =>
   p[0] >= r[0] - pad && p[0] <= r[0] + r[2] + pad && p[1] >= r[1] - pad && p[1] <= r[1] + r[3] + pad;
+
+/**
+ * "Add 4 lines to cart" is locked to 155px and grows left. The right edge
+ * stays the prototype's. Before that label, the box is the prototype rect.
+ */
+export const addRectAt = (f: number): Rect => {
+  const r = R["qo-search.addBtn"];
+  if (f < TPL_ROWS[0]) return r;
+  const right = r[0] + r[2];
+  return [right - 155, r[1], 155, r[3]];
+};
 
 /** Pill hugs: right edge fixed, width eases empty → filled on the UI ease-out. */
 export const pillRectAt = (f: number): Rect => {
@@ -135,30 +150,42 @@ export const latched = (frame: number, rectAt: (f: number) => Rect, from: number
 
 const fixed = (r: Rect) => () => r;
 export type HoverId = "result" | "qty" | "tpl" | "tplAdd" | "add" | "pill" | "place";
+type HitSpec = { id: HoverId; sel: string; rectAt: (f: number) => Rect; click: number; press: number };
+
+/** Hover while the tip is inside. Pressed only on the mousedown frames, and only while it is still inside. */
+const fromHit = (frame: number, s: HitSpec) => {
+  const over = inRect(pageAt(frame), s.rectAt(frame));
+  if (!over) return null;
+  return { id: s.id, sel: s.sel, active: frame >= s.click && frame < s.click + s.press };
+};
+
 export const hoverState = (frame: number): { id: HoverId; sel: string; active: boolean }[] => {
   const specs: { id: HoverId; sel: string; rectAt: (f: number) => Rect; from: number; until: number; click: number; press: number }[] = [
     { id: "result", sel: "[data-search-result]", rectAt: fixed(R["qo-search.result"]), from: CLICK.result - 20, until: CLICK.result + 4, click: CLICK.result, press: 4 },
     { id: "qty", sel: "[data-set-perseus='12']", rectAt: fixed(R["qo-search.preset12"]), from: CLICK.qty - 16, until: CLICK.qty + 4, click: CLICK.qty, press: 4 },
     { id: "tpl", sel: "[data-template='tpl-match']", rectAt: fixed(R["qo-search.tplMatch"]), from: CLICK.tpl - 24, until: CLICK.tplAdd + 4, click: CLICK.tpl, press: 4 },
     { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd, press: 4 },
-    // Add to cart: the press is 3 frames. Hover ends with it.
-    { id: "add", sel: "[data-add-all]", rectAt: fixed(R["qo-search.addBtn"]), from: CLICK.add - 24, until: CLICK.add + 3, click: CLICK.add, press: 3 },
-    // Hover, then a 3-frame colour press. The cut on the next frame is the click.
-    { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, from: PILL_ARRIVE, until: CART_CUT, click: CLICK.pill, press: 3 },
     { id: "place", sel: "[data-place-order]", rectAt: fixed(R["cart.place"]), from: CART_CUT, until: CLICK.place + 4, click: CLICK.place, press: 4 },
   ];
-  return specs
+  const latchedHits = specs
     .filter((s) => latched(frame, s.rectAt, s.from, s.until))
     .map((s) => ({ id: s.id, sel: s.sel, active: s.click >= 0 && frame >= s.click && frame < s.click + s.press }));
+  const direct = [
+    fromHit(frame, { id: "add", sel: "[data-add-all]", rectAt: addRectAt, click: CLICK.add, press: 3 }),
+    fromHit(frame, { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, click: CLICK.pill, press: 3 }),
+  ].filter((h): h is { id: HoverId; sel: string; active: boolean } => h !== null);
+  return [...latchedHits, ...direct];
 };
 
 /**
- * 2.2× the original 1.25 (2.75× the SVG). Drawn at that size, so the arrow
- * stays a vector at card width. The tip fraction does not change with scale,
- * so the hotspot stays on the point. Press dips to 0.9, then eases back.
+ * On-screen size is 1.6× the original 1.25. The arrow is painted outside the
+ * camera, so this draw scale is the on-screen size at every zoom: a page-space
+ * arrow would grow with cam.s, and dividing by cam.s would shrink the close-ups
+ * to a speck. The tip fraction does not change with scale. Press dips to 0.9,
+ * then eases back.
  */
 export const cursorScale = (f: number) => {
-  const base = 1.25 * 2.2;
+  const base = 1.25 * 1.6;
   for (const c of Object.values(CLICK)) {
     const d = f - c;
     if (d >= 0 && d < 3) return base * 0.9;

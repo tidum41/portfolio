@@ -144,13 +144,21 @@ const CSS =
 .film-layer .film-base{display:inline-block;width:0;height:0;vertical-align:baseline}
 .film-layer .film-paint{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;text-box:none!important}
 .film-layer .line-total,.film-layer [data-order-footer] [data-order-total]{text-align:right}
+/* Flex + line-height 1 centers the em box. The prototype's cap trim is off so
+   it cannot move the ink. The tabular 4 still paints 2.5 film px high at
+   s=5.6. A 0.33px translate on the figure is the optical correction. */
 .film-layer .cart-pill .count-chip{
   width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important;
   flex:0 0 20px!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
-  display:grid!important;place-items:center!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
   font-variant-numeric:tabular-nums!important;font-feature-settings:"tnum" 1!important;
-  line-height:20px!important;font-size:12px!important;
-  transform-origin:10px 10px!important;
+  line-height:1!important;font-size:12px!important;font-weight:500!important;
+  text-box:none!important;
+  transform-origin:center center!important;
+}
+.film-layer .cart-pill .count-chip .count-fig{
+  display:block;line-height:1;text-box:none;
+  transform:translateY(0.33px);
 }
 .film-layer .cart-pill .cart-amount-display{flex-shrink:0!important}
 .film-layer .film-face,.film-layer .order-face{
@@ -428,8 +436,8 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   // A zoom from the kit onto the table has to cross the rows. Hide a label
   // only while the frame cuts it, so a still never shows a sliced word.
   concealCutText(root, f > ROWS_ZOOM[0] && f < ROWS_ZOOM[1]);
-  // The pill frame covers the retailer name, and a wider framing would cut
-  // the page title. Hide both so the hold is the pill, not a sliced word.
+  // The header cart framing can slice the retailer name. The title sits off
+  // the left edge. Hide both so the hold is the pill, not a cut word.
   if (f >= PILL_SHOT && f < CART_CUT) {
     qa(root, ".account-chip, .page > h1").forEach((el) => { el.style.visibility = "hidden"; });
   }
@@ -490,7 +498,14 @@ function pill(root: HTMLElement, f: number) {
   const slot = f >= PILL_ROLL;
   const showBadge = f >= PILL_BADGE[0];
   chip.hidden = !slot;
-  chip.textContent = "4";
+  let fig = chip.querySelector(".count-fig");
+  if (!fig) {
+    chip.textContent = "";
+    fig = document.createElement("span");
+    fig.className = "count-fig";
+    chip.appendChild(fig);
+  }
+  fig.textContent = "4";
   chip.style.setProperty("width", "20px", "important");
   chip.style.setProperty("height", "20px", "important");
   chip.style.setProperty("min-width", "20px", "important");
@@ -498,7 +513,12 @@ function pill(root: HTMLElement, f: number) {
   chip.style.setProperty("flex", "0 0 20px", "important");
   chip.style.setProperty("margin", "0", "important");
   chip.style.setProperty("padding", "0", "important");
-  chip.style.setProperty("transform-origin", "10px 10px", "important");
+  chip.style.setProperty("display", "flex", "important");
+  chip.style.setProperty("align-items", "center", "important");
+  chip.style.setProperty("justify-content", "center", "important");
+  chip.style.setProperty("line-height", "1", "important");
+  chip.style.setProperty("text-box", "none", "important");
+  chip.style.setProperty("transform-origin", "center center", "important");
   if (showBadge) {
     const bt = prog(f, PILL_BADGE[0], PILL_BADGE[1], EASE_OUT);
     const sc = bt >= 1 ? 1 : lerp(0.6, 1, bt);
@@ -762,7 +782,7 @@ export const JoolaB2B: React.FC = () => {
     if (frame >= CONF_CUT) return;
     const layer = st.querySelector(".film-layer");
     if (!layer) return;
-    // Geometry + latch. Classes are set once per state, never from a moving hit-test.
+    // Add to cart and the cart pill follow the tip. The earlier controls stay latched.
     for (const h of hoverState(frame)) {
       const el = layer.querySelector(h.sel);
       if (!el) continue;
