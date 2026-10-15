@@ -2,12 +2,11 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { preload } from "react-dom";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import InViewLoopVideo from "@/components/InViewLoopVideo";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
-import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
 /** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
@@ -231,13 +230,11 @@ My heavy online presence ultimately led me to create the NorCal Keyboard Group, 
 const LOCAL_HERO_IMAGE    = "/images/sviz/hero-channel-screenshot.png";
 const LOCAL_PROCESS_IMAGE = "/images/sviz/process-camera.jpeg";
 const LOCAL_SOLUTION_VIDEO = "/images/sviz/solution-video.webm";
+const LOCAL_SOLUTION_POSTER = "/images/sviz/solution-poster.webp";
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SvizPage() {
-  const lcp = CASE_STUDY_LCP["/sviz"];
-  if (lcp) preload(lcp, { as: "image" });
-
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
@@ -320,13 +317,9 @@ async function SvizContent() {
               </div>
               <Paragraphs text={cs.solutionBody} />
               <MediaCard style={{ margin: "24px 0 8px", aspectRatio: "16/9" }}>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video
+                <InViewLoopVideo
                   src={solutionVideoSrc}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
+                  poster={LOCAL_SOLUTION_POSTER}
                   style={{ width: "100%", height: "auto", display: "block" }}
                 />
               </MediaCard>

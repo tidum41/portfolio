@@ -24,6 +24,8 @@ export default function MuxMediaSlot({
   style,
   fill = false,
   playing = true,
+  posterWidth,
+  posterHeight,
 }: {
   playbackId: string;
   thumbnailTime?: number;
@@ -33,6 +35,12 @@ export default function MuxMediaSlot({
   fill?: boolean;
   /** Pause without tearing down HLS (soft-nav). */
   playing?: boolean;
+  /**
+   * Intrinsic poster size. CSS is `width: 100%; height: auto`, so without
+   * these the slot is 0px tall until the thumbnail arrives and the hero jumps.
+   */
+  posterWidth?: number;
+  posterHeight?: number;
 }) {
   const poster = muxPosterUrl(playbackId, fill ? 640 : 1280, thumbnailTime);
   const src = muxHlsUrl(playbackId);
@@ -153,6 +161,8 @@ export default function MuxMediaSlot({
           src={poster}
           alt=""
           aria-hidden
+          width={posterWidth}
+          height={posterHeight}
           decoding="async"
           fetchPriority="high"
           onLoad={kickPlay}

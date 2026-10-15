@@ -414,6 +414,8 @@ export default function BruinLeasePage() {
             metadata={FB.metadata}
             muxPlaybackId={FB.heroMuxId}
             heroBg={FB.heroBg}
+            posterWidth={1280}
+            posterHeight={1067}
           />
           <Suspense fallback={null}>
             <BruinLeaseContent />

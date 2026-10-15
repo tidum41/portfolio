@@ -1,8 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import MuxPlayer from "@mux/mux-player-react";
-import "@mux/mux-player";
+import { useRef, useEffect, useState, type ComponentType } from "react";
 import { useDialKit } from "dialkit";
 
 const REF_W = 344;
@@ -66,6 +64,7 @@ export default function PhoneMockup({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [MuxPlayer, setMuxPlayer] = useState<ComponentType<any> | null>(null);
 
   // Per-instance dialkit key so each phone can be tuned independently
   const dialKey = `PhoneMockup/${instanceKey}`;
@@ -109,6 +108,19 @@ export default function PhoneMockup({
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // The player package is ~1MB. The poster is already the hero image, so
+  // the player script waits until the phone is near the viewport.
+  useEffect(() => {
+    if (!shouldLoad || !muxPlaybackId || MuxPlayer) return;
+    let cancel = false;
+    import("@mux/mux-player-react").then((mod) => {
+      if (!cancel) setMuxPlayer(() => mod.default);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [shouldLoad, muxPlaybackId, MuxPlayer]);
 
   const scale = containerWidth / REF_W;
   const intrinsicHeight = containerWidth * (REF_H / REF_W);
@@ -214,13 +226,13 @@ export default function PhoneMockup({
                   }}
                 />
               )}
-              {shouldLoad && muxPlaybackId && (
+              {shouldLoad && muxPlaybackId && MuxPlayer && (
                 <MuxPlayer
                   playbackId={muxPlaybackId}
                   streamType="on-demand"
                   autoPlay="muted"
                   loop muted playsInline nohotkeys
-                  preload="auto"
+                  preload="metadata"
                   poster={muxPoster}
                   style={{
                     display: "block",
