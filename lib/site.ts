@@ -3,9 +3,11 @@
 export const SITE_URL = "https://www.muditm.com";
 export const SITE_NAME = "mudit mahajan";
 
-/** Visible homepage hero — single source of truth for on-page + SEO copy. */
+/** Visible homepage hero — single source of truth for on-page + SEO copy.
+ *  Must contain the exact substring "rabbit holes" — RabbitHoleVideo
+ *  wraps that phrase as the hop/popup trigger. */
 export const HERO_HEADLINE =
-  "I'm Mudit, a product designer with a love for people, curiosity, and rabbit holes";
+  "I'm Mudit — I design products at the intersection of cognitive science and interface craft, following rabbit holes";
 
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
@@ -17,7 +19,7 @@ export const SITE_DESCRIPTION =
 /** Default social / Open Graph image (1200×630). */
 export const OG_IMAGE_PATH = "/og-default.png";
 export const OG_IMAGE_ALT =
-  "mudit mahajan — product design, people, and rabbit holes";
+  "mudit mahajan — product design at the intersection of cognitive science and interface craft";
 
 /** Self-hosted resume (also reachable at /resume). */
 export const RESUME_PATH = "/resume.pdf";
