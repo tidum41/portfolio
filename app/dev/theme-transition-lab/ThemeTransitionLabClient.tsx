@@ -8,9 +8,9 @@ import type { ThemeTransitionMode } from "@/lib/theme-transition/preference";
 import { setThemeTransitionMode } from "@/lib/theme-transition/preference";
 
 const MODES: { id: ThemeTransitionMode; label: string; hint: string }[] = [
-  { id: "default", label: "Production (instant)", hint: "Current shipped behavior" },
-  { id: "dither", label: "A — Bayer dither", hint: "PS3-XMB ordered dissolve ~550ms" },
-  { id: "halftone", label: "B — Halftone dots", hint: "Radial dot grid ~500ms" },
+  { id: "default", label: "Instant", hint: "Snap with no mask" },
+  { id: "dither", label: "A — Bayer dither", hint: "Default. Ordered dissolve ~300ms, reverses mid-click" },
+  { id: "halftone", label: "B — Halftone dots", hint: "Radial dot grid ~500ms, also reversible" },
 ];
 
 function syncQueryParam(mode: ThemeTransitionMode) {
@@ -84,9 +84,10 @@ export default function ThemeTransitionLabClient() {
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "32px var(--page-px) 80px" }}>
         <p style={{ lineHeight: 1.65, color: "var(--color-text-secondary)", marginTop: 0 }}>
-          Pick a transition, then use the theme toggle (top right). Production sites keep the instant swap
-          until you add <code>?transition=dither</code> or <code>?transition=halftone</code> — or select a
-          prototype below (persisted for the tab via sessionStorage).
+          Bayer dither is the default theme change. Pick another mode, then use the toggle (top right).
+          The choice sticks for this tab. Add <code>?transition=halftone</code>, <code>?transition=dither</code>,
+          or <code>?transition=default</code> to override. Click again while a mask is running and it reverses
+          from the current frame.
         </p>
 
         <fieldset

@@ -11,7 +11,7 @@ export function useThemeTransitionMode(): [
   ThemeTransitionMode,
   (mode: ThemeTransitionMode) => void,
 ] {
-  const [mode, setMode] = useState<ThemeTransitionMode>("default");
+  const [mode, setMode] = useState<ThemeTransitionMode>("dither");
 
   useEffect(() => {
     setMode(getThemeTransitionMode());

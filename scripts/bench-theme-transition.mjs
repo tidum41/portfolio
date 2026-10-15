@@ -10,8 +10,17 @@
  *   node scripts/bench-theme-transition.mjs --url http://localhost:3000/
  */
 import { chromium, webkit } from "playwright";
-import sharp from "/Users/m/Documents/claude code/portfolio/node_modules/sharp/lib/index.js";
 import fs from "node:fs";
+
+const sharp = await loadSharp();
+
+async function loadSharp() {
+  try {
+    return (await import("sharp")).default;
+  } catch {
+    return (await import("/Users/m/Documents/claude code/portfolio/node_modules/sharp/lib/index.js")).default;
+  }
+}
 
 const args = process.argv.slice(2);
 const browserName = args.includes("--browser")
@@ -283,9 +292,14 @@ async function main() {
   let reverse = null;
   try {
     pixels = await pixelDelay(page, toggle);
-    await page.waitForTimeout(80);
+    await page.waitForTimeout(40);
     const midClickAt = await page.evaluate(() => performance.now());
-    await toggle.click({ delay: 0, timeout: 5000 });
+    const box = await toggle.boundingBox();
+    if (!box) throw new Error("toggle has no box");
+    // A root view-transition snapshot owns hit testing, so locator.click()
+    // waits until the dissolve ends. A coordinate click is what a second
+    // press actually delivers, and the page replays it onto the toggle.
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     reverse = await reverseProbe(page);
     reverse.midClickAt = midClickAt;
     reverse.themeAfterReverseWait = await page.evaluate(() =>
