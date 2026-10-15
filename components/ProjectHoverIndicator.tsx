@@ -6,10 +6,49 @@ import styles from "./ProjectHoverIndicator.module.css";
 
 const SHOW_DELAY_MS = 400;
 const LEAVE_GRACE_MS = 40;
-const LEAVE_FADE_MS = 120;
+const FALLBACK_IN_MS = 280;
+const FALLBACK_OUT_MS = 360;
+const FALLBACK_EASE = "cubic-bezier(0.25, 0, 0, 1)";
 
-type Phase = "open" | "leaving";
-type Ui = { label: string; phase: Phase };
+type Phase = "pre" | "in" | "open" | "leaving";
+type Motion = { inMs: number; outMs: number; ease: string };
+type Ui = { label: string; phase: Phase; motion: Motion };
+
+function parseDurationMs(value: string): number | null {
+  const v = value.trim();
+  if (!v) return null;
+  if (v.endsWith("ms")) return Number.parseFloat(v);
+  if (v.endsWith("s")) return Number.parseFloat(v) * 1000;
+  return null;
+}
+
+function firstTiming(value: string): string {
+  const v = value.trim();
+  if (v.startsWith("cubic-bezier(")) {
+    const end = v.indexOf(")");
+    return end === -1 ? v : v.slice(0, end + 1);
+  }
+  return v.split(",")[0]?.trim() ?? v;
+}
+
+/** The plate’s own transition, so the pill fades on the same clock. */
+function readCardMotion(card: HTMLElement): Motion {
+  const host = card.classList.contains("project-card")
+    ? card
+    : card.querySelector(".project-card");
+  const el = host instanceof HTMLElement ? host : card;
+  const cs = getComputedStyle(el);
+  const inMs = parseDurationMs(cs.getPropertyValue("--project-hover-in")) ?? FALLBACK_IN_MS;
+  const outMs = parseDurationMs(cs.getPropertyValue("--project-hover-out")) ?? FALLBACK_OUT_MS;
+  const plateEase = firstTiming(getComputedStyle(el, "::before").transitionTimingFunction);
+  const varEase = cs.getPropertyValue("--project-hover-ease").trim();
+  const ease = plateEase && plateEase !== "ease"
+    ? plateEase
+    : varEase && !varEase.startsWith("var(")
+      ? varEase
+      : cs.getPropertyValue("--expand-ease").trim() || FALLBACK_EASE;
+  return { inMs, outMs, ease };
+}
 
 function placePill(anchor: HTMLElement, pill: HTMLElement, root: HTMLElement): void {
   const media = anchor.querySelector(".project-img-wrap");
@@ -52,7 +91,7 @@ export default function ProjectHoverIndicator() {
       return 0;
     };
 
-    const publish = () => {
+    const publish = (visual: Phase) => {
       if (!card || (phase !== "open" && phase !== "leaving")) {
         anchorRef.current = null;
         setUi(null);
@@ -65,7 +104,14 @@ export default function ProjectHoverIndicator() {
         setUi(null);
         return;
       }
-      setUi({ label, phase });
+      const motion = readCardMotion(card);
+      const shown = reduced.matches && (visual === "pre" || visual === "leaving") ? "open" : visual;
+      if (reduced.matches && visual === "leaving") {
+        anchorRef.current = null;
+        setUi(null);
+        return;
+      }
+      setUi({ label, phase: shown, motion });
     };
 
     const cardFrom = (target: EventTarget | null) => {
@@ -85,7 +131,7 @@ export default function ProjectHoverIndicator() {
           graceTimer = clear(graceTimer);
           hideTimer = clear(hideTimer);
           phase = "open";
-          publish();
+          publish("open");
         }
         return;
       }
@@ -96,7 +142,7 @@ export default function ProjectHoverIndicator() {
 
       if (phase === "open" || phase === "leaving") {
         phase = "open";
-        publish();
+        publish("open");
         return;
       }
 
@@ -107,7 +153,7 @@ export default function ProjectHoverIndicator() {
       showTimer = window.setTimeout(() => {
         if (phase !== "waiting" || !card) return;
         phase = "open";
-        publish();
+        publish("pre");
       }, SHOW_DELAY_MS);
     };
 
@@ -125,18 +171,19 @@ export default function ProjectHoverIndicator() {
         if (phase === "waiting") {
           phase = "idle";
           card = null;
-          publish();
+          publish("open");
           return;
         }
+        const outMs = reduced.matches ? 0 : readCardMotion(leaving).outMs;
         phase = "leaving";
-        publish();
+        publish("leaving");
         hideTimer = clear(hideTimer);
         hideTimer = window.setTimeout(() => {
           if (phase !== "leaving") return;
           phase = "idle";
           card = null;
-          publish();
-        }, reduced.matches ? 0 : LEAVE_FADE_MS);
+          publish("open");
+        }, outMs);
       }, LEAVE_GRACE_MS);
     };
 
@@ -150,6 +197,14 @@ export default function ProjectHoverIndicator() {
       clear(hideTimer);
     };
   }, []);
+
+  useEffect(() => {
+    if (!ui || ui.phase !== "pre") return;
+    const id = requestAnimationFrame(() => {
+      setUi((cur) => (cur && cur.phase === "pre" ? { ...cur, phase: "in" } : cur));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [ui]);
 
   useLayoutEffect(() => {
     const anchor = anchorRef.current;
@@ -177,7 +232,18 @@ export default function ProjectHoverIndicator() {
   if (!ui || typeof document === "undefined") return null;
 
   return createPortal(
-    <div ref={rootRef} className={styles.root} data-project-hover data-phase={ui.phase} aria-hidden>
+    <div
+      ref={rootRef}
+      className={styles.root}
+      data-project-hover
+      data-phase={ui.phase}
+      aria-hidden
+      style={{
+        ["--pill-in" as string]: `${ui.motion.inMs}ms`,
+        ["--pill-out" as string]: `${ui.motion.outMs}ms`,
+        ["--pill-ease" as string]: ui.motion.ease,
+      }}
+    >
       <div ref={pillRef} className={styles.pill}>
         {ui.label}
       </div>
