@@ -22,6 +22,8 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
+import { afterIntroIdle } from "@/lib/introReady";
+import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -344,16 +346,28 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     setCdPosterFade(false);
   }, [heavyMediaLive]);
 
+  // Album covers are about a megabyte. The grid keeps its still until the
+  // browser is idle on a normal connection, or the person opens the card.
+  const [cdWarm, setCdWarm] = useState(false);
+  useEffect(() => {
+    if (openPopup === "cd") {
+      setCdWarm(true);
+      return;
+    }
+    if (cdWarm || !allowIdlePrefetch()) return;
+    return afterIntroIdle(() => setCdWarm(true), 4000);
+  }, [openPopup, cdWarm]);
+
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).
-  // Also wait for intro-done so the first-load tile is a poster until silk
-  // has finished compiling — live CD mounts right after.
+  // The still stays up through the intro, and on a slow connection until
+  // the card is opened.
   useEffect(() => {
-    if (!visible || !hasEverBeenActive || !introReleased) return;
+    if (!visible || !hasEverBeenActive || !introReleased || !cdWarm) return;
     if (openPopup === "cd") return;
     setCdPosterFade(true);
     setCdPosterOpacity(0);
-  }, [visible, hasEverBeenActive, openPopup, introReleased]);
+  }, [visible, hasEverBeenActive, openPopup, introReleased, cdWarm]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
@@ -879,10 +893,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       )}
 
       {/*
-        CD mounts while heavy media is live, or immediately when the modal
-        opens (idle teardown may have unmounted it). Habit stays popup-only.
+        CD waits for an idle moment on a normal connection. Opening the card
+        mounts it immediately, including after the idle teardown.
+        Habit stays popup-only.
       */}
-      {hasEverBeenActive && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
+      {hasEverBeenActive && cdWarm && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
         <EmbedPortal container={cdPortalTarget}>
           <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
         </EmbedPortal>

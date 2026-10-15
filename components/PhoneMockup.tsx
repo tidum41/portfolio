@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, type ComponentType } from "react";
 import { useDialKit } from "dialkit";
+import { warmRootMargin } from "@/lib/networkHint";
 
 const REF_W = 344;
 const REF_H = 614;
@@ -103,7 +104,7 @@ export default function PhoneMockup({
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setShouldLoad(true); obs.disconnect(); } },
-      { rootMargin: "400px" }
+      { rootMargin: warmRootMargin() }
     );
     obs.observe(el);
     return () => obs.disconnect();

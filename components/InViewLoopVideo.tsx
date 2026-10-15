@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { warmRootMargin } from "@/lib/networkHint";
 
 /**
  * Below-the-fold looping clip. The poster paints immediately; the media file
@@ -24,10 +25,11 @@ export default function InViewLoopVideo({
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (!entry?.isIntersecting) return;
-        setActive(true);
         obs.disconnect();
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        setActive(true);
       },
-      { rootMargin: "240px 0px" },
+      { rootMargin: warmRootMargin() },
     );
     obs.observe(el);
     return () => obs.disconnect();

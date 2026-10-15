@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { afterIntroIdle } from "@/lib/introReady";
+import { allowIdlePrefetch } from "@/lib/networkHint";
 
 const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
 
@@ -27,7 +28,12 @@ export default function PersistentAboutShell() {
 
   useEffect(() => {
     if (hasShown) return;
-    return afterIntroIdle(() => setHasShown(true), 4000);
+    return afterIntroIdle(() => {
+      // Album covers are about a megabyte. On a slow or metered connection
+      // they wait until About is actually opened.
+      if (!allowIdlePrefetch()) return;
+      setHasShown(true);
+    }, 4000);
   }, [hasShown]);
 
   return (
