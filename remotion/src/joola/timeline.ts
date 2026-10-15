@@ -2,10 +2,9 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 28: after Add to order, the camera eases out alone, holds, then the
- * kit lines land. A second ease carries the cursor onto Add to cart.
- * The cart total is the prototype's per-digit roll (about 450ms), after the
- * pill is already wide enough to hold it.
+ * Pass 29: same motions as pass 28, holds trimmed so the film is 12.5s.
+ * Logo intro (0–11) and the outro fade/scale keep their lengths. The final
+ * 15 frames are still the settled logo.
  */
 export const FPS = 30;
 
@@ -63,7 +62,7 @@ export const MORPH = [0, UI_IN[1]] as const;
 export const LEAD = 2;
 /** Ease from the dashboard shot into the search shot before the first click. */
 export const OPEN_MOVE = [20, 32] as const;
-export const CLICK = { search: 36, result: 66, qty: 90, tpl: 136, tplAdd: 170, add: 248, place: 334 };
+export const CLICK = { search: 35, result: 60, qty: 79, tpl: 120, tplAdd: 142, add: 198, place: 268 };
 export const ENTER = CLICK.result + 3;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 15] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -76,9 +75,9 @@ export const TYPE_QTY = [CLICK.qty, CLICK.qty] as const;
 export const QTY_SET = CLICK.qty;
 export const ROLL_F = 6;
 /** Eye travels onto the new row as it inserts, and lands while the qty is still 1. */
-export const QTY_MOVE = [69, 82] as const;
+export const QTY_MOVE = [63, 76] as const;
 /** 20 frames, 0.67s. Same MOVE_E. Scale step is about 12% smaller than pass 24. */
-export const PAN_AB = [106, 126] as const;
+export const PAN_AB = [95, 115] as const;
 export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 /** Solid on the open frame. Scale 0.98→1 over 3 frames (100ms), opacity stays 1. */
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 3] as const;
@@ -91,66 +90,66 @@ export const POP_HOVER = CLICK.tplAdd - LEAD;
  * 18 frames, 0.6s, MOVE_E. Starts after the popover has closed and held.
  * The kit lines are not in the table yet, so the zoom is the only motion.
  */
-export const ROWS_ZOOM = [182, 200] as const;
+export const ROWS_ZOOM = [149, 167] as const;
 export const ROWS_CUT = ROWS_ZOOM[0];
 /**
  * The three kit lines are already in the table before the zoom starts.
  * The tight Match kit shot does not show them. The zoom is the reveal.
  */
-export const TPL_ROWS = [176, 176] as const;
+export const TPL_ROWS = [147, 147] as const;
 /**
  * Eased move from the table onto Add to cart. Not a cut.
  * Lands before the press so the button can be read with the cursor on it.
  */
-export const ADD_MOVE = [218, 236] as const;
+export const ADD_MOVE = [175, 193] as const;
 export const ADD_CUT = ADD_MOVE[1];
 export const PAN_BC = ADD_MOVE;
 /** Hard cut to a tight cart pill still showing $0.00. */
-export const PILL_SHOT = 260;
+export const PILL_SHOT = 207;
 export const PILL_W0 = 85;
 /** Filled pill for "$4,908.66" at weight 700 plus the badge. Right edge stays 1284. */
 export const PILL_W1 = 143;
 /** Width at which "$4,908.66" fits next to the icon, before the badge takes space. */
 export const PILL_NUM_W = 115;
 /** Cursor lands on the empty cart icon, then rides it as the pill grows. */
-export const PILL_ARRIVE = 264;
+export const PILL_ARRIVE = 211;
 /** Digit roll starts the frame the width finishes. 14 frames, 467ms. */
-export const PILL_ROLL = 276;
+export const PILL_ROLL = 221;
 export const ROLL_PILL_F = 14;
 /** Width first, on its own. The number stays $0.00 until the pill can hold $4,908.66. */
-export const PILL_FILL = [268, 276] as const;
+export const PILL_FILL = [213, 221] as const;
 /** Badge after the digits have settled. Scale 0.6→1, colour only on the pill itself. */
-export const PILL_BADGE = [290, 296] as const;
+export const PILL_BADGE = [235, 241] as const;
 /** Hard cut to the cart summary: total + Place order are the hero. */
-export const CART_CUT = 302;
+export const CART_CUT = 247;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
 export const PAN_CART = [CART_CUT, CART_CUT] as const;
 export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
 /** "Place order" crossfades to the processing face. Done as the hold becomes readable. */
-export const PROC_XFADE = [337, 341] as const;
+export const PROC_XFADE = [271, 275] as const;
 /** Press, then "Placing order" holds ~0.73s once the label is solid. */
-export const PROC = [338, 363] as const;
+export const PROC = [271, 294] as const;
 /** Whole-button colour, 5 frames ≈ 167ms, then the check stroke, 8 frames ≈ 267ms. */
-export const PLACE_COLOR = [355, 360] as const;
-export const CHECK_DRAW = [360, 368] as const;
+export const PLACE_COLOR = [281, 286] as const;
+export const CHECK_DRAW = [286, 294] as const;
 /** "Order placed" on the green button, ~0.4s. */
-export const SUCCESS_HOLD = [371, 383] as const;
+export const SUCCESS_HOLD = [294, 300] as const;
 /** Summary content fades. The card chrome stays. */
-export const CONF_FADE = [383, 387] as const;
-export const CONF_CUT = 387;
+export const CONF_FADE = [300, 304] as const;
+export const CONF_CUT = 304;
 /** Top-anchored height ease, ~300ms, MOVE_E. */
-export const CONF_GROW = [387, 396] as const;
+export const CONF_GROW = [304, 313] as const;
 /** Short recenter once the card has grown. */
-export const CONF_RECENTER = [402, 412] as const;
+export const CONF_RECENTER = [319, 329] as const;
 export const CONF_SETTLE = CONF_GROW;
 export const CONF_MORPH = CONF_GROW;
 export const CONF_XFADE = CONF_FADE;
 /** Hold Order placed, then fade the UI to the ground before the logo. */
-export const CONF_HOLD = [412, 457] as const;
+export const CONF_HOLD = [329, 343] as const;
 /** UI fades to the solid ground, then the logo fades and scales 0.96→1 over 9 frames (300ms). */
-export const UI_OUT = [457, 465] as const;
-export const LOGO_IN = [465, 474] as const;
-export const END_FADE = [UI_OUT[0], 488] as const;
+export const UI_OUT = [343, 351] as const;
+export const LOGO_IN = [351, 360] as const;
+export const END_FADE = [UI_OUT[0], 374] as const;
 export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];

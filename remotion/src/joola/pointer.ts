@@ -7,8 +7,11 @@
 import { R } from "./proto-rects.generated";
 import {
   camAt, CART_CUT, CLICK, CONF_FADE, EASE_OUT, lerp, MORPH, MOVE_E, OW, OH, PILL_ARRIVE, PILL_FILL, PILL_SHOT, PILL_W0, PILL_W1,
-  ADD_MOVE, ROWS_ZOOM, prog, type Cam,
+  ADD_MOVE, OPEN_MOVE, PAN_AB, QTY_MOVE, ROWS_ZOOM, prog, type Cam,
 } from "./timeline";
+
+/** Cursor is on the search field two frames before that move ends. */
+const OPEN_MOVE_END = OPEN_MOVE[1] - 2;
 
 export type Pt = [number, number];
 export type Rect = [number, number, number, number];
@@ -41,29 +44,29 @@ export const P = {
 export type Key = [number, Pt];
 export const KEYS: Key[] = [
   [MORPH[1], P.start],
-  [CLICK.search - 6, P.search],
+  // Lands during the open move. The travel from frame 11 is still 19 frames.
+  [OPEN_MOVE_END, P.search],
   [CLICK.search + 15, P.search],
-  [CLICK.result - 8, P.result],
-  [CLICK.result + 3, P.result],
-  [CLICK.qty - 8, P.qty],
-  [CLICK.qty + 8, P.qty],
-  [CLICK.tpl - 8, P.tpl],
+  // 7-frame travel onto the result, then a short hold, then the camera.
+  [CLICK.result - 3, P.result],
+  [QTY_MOVE[0], P.result],
+  [QTY_MOVE[1], P.qty],
+  // Stay on the chip until the camera leaves. Sliding across "12" on the still
+  // reads as the number drifting under the cursor.
+  [PAN_AB[0], P.qty],
+  [CLICK.tpl - 3, P.tpl],
   [CLICK.tpl + 4, P.tpl],
-  // Settled on Add to order before the press, then through the close.
-  [CLICK.tplAdd - 20, P.tplAdd],
-  [CLICK.tplAdd + 8, P.tplAdd],
-  // The zoom is the move. The cursor arrives on the row the lines will occupy.
+  // Settled on Add to order before the press. The zoom starts the next move.
+  [CLICK.tplAdd - 8, P.tplAdd],
   [ROWS_ZOOM[0], P.tplAdd],
   [ROWS_ZOOM[1], P.rowIn],
-  // Stays on that row while the lines land, then rides the ease onto Add to cart.
   [ADD_MOVE[0], P.rowIn],
   [ADD_MOVE[1], P.add],
-  [CLICK.add + 8, P.add],
-  // Travel across the pill hard cut and arrive on the still-empty cart icon.
+  // Press is 3 frames, then a 2-frame hold, then the 8-frame travel onto the pill.
+  [CLICK.add + 5, P.add],
   [PILL_ARRIVE, [PILL_RIGHT - PILL_W0 + 20, PILL_CY]],
   [CART_CUT - 6, P.pillIcon],
-  // On Place order ~0.67s before the press. Ease off the label while it says Placing order.
-  [CLICK.place - 20, P.place],
+  [CLICK.place - 9, P.place],
   [CLICK.place + 2, P.place],
   [CLICK.place + 10, P.away],
   [CONF_FADE[0], P.away],
@@ -128,28 +131,31 @@ export const latched = (frame: number, rectAt: (f: number) => Rect, from: number
 const fixed = (r: Rect) => () => r;
 export type HoverId = "result" | "qty" | "tpl" | "tplAdd" | "add" | "pill" | "place";
 export const hoverState = (frame: number): { id: HoverId; sel: string; active: boolean }[] => {
-  const press = (c: number) => frame >= c && frame < c + 4;
-  const specs: { id: HoverId; sel: string; rectAt: (f: number) => Rect; from: number; until: number; click: number }[] = [
-    { id: "result", sel: "[data-search-result]", rectAt: fixed(R["qo-search.result"]), from: CLICK.result - 20, until: CLICK.result + 4, click: CLICK.result },
-    { id: "qty", sel: "[data-set-perseus='12']", rectAt: fixed(R["qo-search.preset12"]), from: CLICK.qty - 16, until: CLICK.qty + 4, click: CLICK.qty },
-    { id: "tpl", sel: "[data-template='tpl-match']", rectAt: fixed(R["qo-search.tplMatch"]), from: CLICK.tpl - 24, until: CLICK.tplAdd + 4, click: CLICK.tpl },
-    { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd },
-    { id: "add", sel: "[data-add-all]", rectAt: fixed(R["qo-search.addBtn"]), from: CLICK.add - 24, until: CLICK.add + 4, click: CLICK.add },
-    { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, from: PILL_SHOT, until: CART_CUT, click: -1 },
-    { id: "place", sel: "[data-place-order]", rectAt: fixed(R["cart.place"]), from: CART_CUT, until: CLICK.place + 4, click: CLICK.place },
+  const specs: { id: HoverId; sel: string; rectAt: (f: number) => Rect; from: number; until: number; click: number; press: number }[] = [
+    { id: "result", sel: "[data-search-result]", rectAt: fixed(R["qo-search.result"]), from: CLICK.result - 20, until: CLICK.result + 4, click: CLICK.result, press: 4 },
+    { id: "qty", sel: "[data-set-perseus='12']", rectAt: fixed(R["qo-search.preset12"]), from: CLICK.qty - 16, until: CLICK.qty + 4, click: CLICK.qty, press: 4 },
+    { id: "tpl", sel: "[data-template='tpl-match']", rectAt: fixed(R["qo-search.tplMatch"]), from: CLICK.tpl - 24, until: CLICK.tplAdd + 4, click: CLICK.tpl, press: 4 },
+    { id: "tplAdd", sel: "[data-tpl-apply='add']", rectAt: fixed(R["qo-search.tplAdd"]), from: CLICK.tplAdd - 20, until: CLICK.tplAdd + 4, click: CLICK.tplAdd, press: 4 },
+    // Add to cart: the press is 3 frames. Hover ends with it.
+    { id: "add", sel: "[data-add-all]", rectAt: fixed(R["qo-search.addBtn"]), from: CLICK.add - 24, until: CLICK.add + 3, click: CLICK.add, press: 3 },
+    { id: "pill", sel: "[data-cart-pill]", rectAt: pillRectAt, from: PILL_SHOT, until: CART_CUT, click: -1, press: 4 },
+    { id: "place", sel: "[data-place-order]", rectAt: fixed(R["cart.place"]), from: CART_CUT, until: CLICK.place + 4, click: CLICK.place, press: 4 },
   ];
   return specs
     .filter((s) => latched(frame, s.rectAt, s.from, s.until))
-    .map((s) => ({ id: s.id, sel: s.sel, active: press(s.click) }));
+    .map((s) => ({ id: s.id, sel: s.sel, active: s.click >= 0 && frame >= s.click && frame < s.click + s.press }));
 };
 
-/** 1.25x so the arrow still reads when the card is across a desk. Press dips to 0.9 of that. */
+/**
+ * 1.85× the SVG (about 1.5× the previous 1.25). Still a vector, so the arrow
+ * stays crisp when the card is across a desk. Press dips to 0.9, then eases back.
+ */
 export const cursorScale = (f: number) => {
-  const base = 1.25;
+  const base = 1.85;
   for (const c of Object.values(CLICK)) {
     const d = f - c;
     if (d >= 0 && d < 3) return base * 0.9;
-    if (d >= 3 && d < 7) return base * lerp(0.9, 1, (d - 2) / 4);
+    if (d >= 3 && d < 7) return base * lerp(0.9, 1, (d - 3) / 4);
   }
   return base;
 };
