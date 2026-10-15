@@ -153,18 +153,65 @@ html[data-theme="dark"] .hilab-root {
   }
 }
 
-.hilab-dock {
-  position: absolute;
-  left: 50%;
+.hilab-dock-portal {
+  position: fixed;
   top: 0;
-  z-index: 5;
-  transform: translate(-50%, calc(-100% - 8px));
+  left: 0;
+  z-index: 10062;
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 4px;
+  transition:
+    opacity 80ms var(--hilab-ease),
+    translate var(--hilab-enter) var(--hilab-ease);
+  will-change: transform, opacity;
+}
+
+.hilab-dock-portal[data-placement="cursor-follow"] {
+  translate: 0 0;
+  transition: opacity 80ms var(--hilab-ease);
+}
+
+.hilab-dock-portal[data-visible="true"] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.hilab-dock-portal[data-leaving="true"] {
+  opacity: 0;
+}
+
+.hilab-dock-portal[data-placement="cursor-follow"][data-visible="true"] .hilab-dock {
+  opacity: 1;
+  translate: 0 0;
+  transition: none;
+}
+
+.hilab-dock-portal[data-placement="anchored"][data-visible="true"] .hilab-dock[data-visible="true"] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.hilab-dock {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
   pointer-events: none;
   opacity: 0;
   translate: 0 4px;
   transition:
     opacity var(--hilab-enter) var(--hilab-ease),
     translate var(--hilab-enter) var(--hilab-ease);
+}
+
+.hilab-dock--follow {
+  translate: 0 0;
+  transition: none;
+}
+
+.hilab-dock--flipped {
+  flex-direction: column-reverse;
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -180,6 +227,7 @@ html[data-theme="dark"] .hilab-root {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 28px;
   padding: 6px 10px;
   border-radius: var(--radius-control);
   background: var(--hilab-pill-bg);
@@ -194,13 +242,24 @@ html[data-theme="dark"] .hilab-root {
 
 .hilab-dock__caret {
   position: absolute;
-  left: 50%;
+  left: calc(50% + var(--hilab-caret-shift, 0px));
   bottom: -4px;
   width: 8px;
   height: 8px;
   margin-left: -4px;
   transform: rotate(45deg);
   pointer-events: none;
+  flex-shrink: 0;
+}
+
+.hilab-dock--flipped .hilab-dock__caret {
+  bottom: auto;
+  top: -4px;
+  transform: rotate(45deg) scaleY(-1);
+}
+
+.hilab-dock--no-caret .hilab-dock__caret {
+  display: none;
 }
 
 .hilab-dock__caret--solid {
@@ -454,10 +513,6 @@ html[data-theme="dark"] .hilab-root {
   translate: 0 0;
 }
 
-.hilab-dock[data-visible="true"] {
-  transform: translate(-50%, calc(-100% - 10px));
-}
-
 .hilab-inline-slot {
   min-height: 22px;
   margin-top: 4px;
@@ -481,25 +536,15 @@ html[data-theme="dark"] .hilab-root {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .hilab-card[data-hovered="true"] .hilab-dock,
   .hilab-card[data-hovered="true"] .hilab-chip {
     opacity: 1;
     translate: 0 0;
   }
-
-  .hilab-card[data-hovered="true"] .hilab-dock {
-    transform: translate(-50%, calc(-100% - 10px));
-  }
 }
 
-.hilab-card[data-static="true"] .hilab-dock,
 .hilab-card[data-static="true"] .hilab-chip {
   opacity: 1;
   translate: 0 0;
-}
-
-.hilab-card[data-static="true"] .hilab-dock {
-  transform: translate(-50%, calc(-100% - 10px));
 }
 
 .hilab-morph-portal {
@@ -560,6 +605,7 @@ html[data-theme="dark"] .hilab-root {
 
 @media (prefers-reduced-motion: reduce) {
   .hilab-pill-portal,
+  .hilab-dock-portal,
   .hilab-dock,
   .hilab-chip,
   .hilab-inline-reveal,

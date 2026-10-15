@@ -6,10 +6,10 @@ import { useReducedMotion } from "framer-motion";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { useIsMobile } from "@/components/useIsMobile";
-import DockTooltipLayer from "./DockTooltipLayer";
+import DockTooltipPortal from "./DockTooltipPortal";
 import { isDockVariant } from "./dockVariants";
 import { HilabArrowIcon, HilabChipArrow, HilabPlayIcon } from "./icons";
-import type { CardKind, LabProject, PillVariantId, VariantId } from "./types";
+import type { CardKind, DockPlacementMode, LabProject, PillVariantId, VariantId } from "./types";
 import { isPillVariant, kindLabel, kindShort, pillCopy } from "./types";
 import { usePointerFollow } from "./usePointerFollow";
 
@@ -51,10 +51,12 @@ function PillContent({ kind, variant }: { kind: CardKind; variant: PillVariantId
 export default function LabDemoCard({
   project,
   variant,
+  dockPlacement,
   onMorphActiveChange,
 }: {
   project: LabProject;
   variant: VariantId;
+  dockPlacement: DockPlacementMode;
   onMorphActiveChange: (active: boolean) => void;
 }) {
   const isMobile = useIsMobile();
@@ -62,8 +64,12 @@ export default function LabDemoCard({
   const staticUi = isMobile;
   const [hovered, setHovered] = useState(false);
   const [entering, setEntering] = useState(false);
+  const [dockLeaving, setDockLeaving] = useState(false);
+  const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [morphPos, setMorphPos] = useState({ x: 0, y: 0 });
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const enterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dockLeaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pillVariant = isPillVariant(variant) ? variant : null;
   const offset = pillVariant ? pillOffset(pillVariant) : { x: 14, y: 16 };
@@ -75,13 +81,20 @@ export default function LabDemoCard({
 
   const kind = project.kind;
   const showPill = !!pillVariant && (hovered || staticUi);
-  const showDock = isDockVariant(variant) && (hovered || staticUi);
+  const dockVariant = isDockVariant(variant);
+  const dockFollow = dockVariant && dockPlacement === "cursor-follow" && !staticUi;
+  const dockAnchored = dockVariant && (dockPlacement === "anchored" || staticUi);
+  const showDock =
+    (dockAnchored && (hovered || staticUi)) || (dockFollow && hovered);
   const showChip = variant === "corner-chip" && (hovered || staticUi);
   const showMorph = variant === "cursor-morph" && hovered && !staticUi;
   const showInline = variant === "inline-subtext";
 
   const onMove = useCallback(
     (e: React.PointerEvent) => {
+      if (dockFollow) {
+        setPointer({ x: e.clientX, y: e.clientY });
+      }
       if (pillVariant) {
         setTarget(e.clientX + offset.x, e.clientY + offset.y);
       }
@@ -89,12 +102,17 @@ export default function LabDemoCard({
         setMorphPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [offset.x, offset.y, pillVariant, setTarget, staticUi, variant],
+    [dockFollow, offset.x, offset.y, pillVariant, setTarget, staticUi, variant],
   );
 
   const onEnter = useCallback(
     (e: React.PointerEvent) => {
       setHovered(true);
+      setDockLeaving(false);
+      if (dockLeaveTimer.current) clearTimeout(dockLeaveTimer.current);
+      if (dockFollow) {
+        setPointer({ x: e.clientX, y: e.clientY });
+      }
       if (variant === "cursor-morph" && !staticUi) onMorphActiveChange(true);
       if (pillVariant) {
         snapTo(e.clientX + offset.x, e.clientY + offset.y);
@@ -106,19 +124,28 @@ export default function LabDemoCard({
         setMorphPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [offset.x, offset.y, onMorphActiveChange, pillVariant, reduced, snapTo, staticUi, variant],
+    [dockFollow, offset.x, offset.y, onMorphActiveChange, pillVariant, reduced, snapTo, staticUi, variant],
   );
 
   const onLeave = useCallback(() => {
+    const wasDockFollow = dockFollow && hovered;
     setHovered(false);
     setEntering(false);
     stop();
+    if (wasDockFollow) {
+      setDockLeaving(true);
+      if (dockLeaveTimer.current) clearTimeout(dockLeaveTimer.current);
+      dockLeaveTimer.current = setTimeout(() => setDockLeaving(false), 80);
+    } else {
+      setDockLeaving(false);
+    }
     if (variant === "cursor-morph") onMorphActiveChange(false);
-  }, [onMorphActiveChange, stop, variant]);
+  }, [dockFollow, hovered, onMorphActiveChange, stop, variant]);
 
   useEffect(() => {
     return () => {
       if (enterTimer.current) clearTimeout(enterTimer.current);
+      if (dockLeaveTimer.current) clearTimeout(dockLeaveTimer.current);
     };
   }, []);
 
@@ -161,7 +188,20 @@ export default function LabDemoCard({
         )
       : null;
 
-  const dockReserve = isDockVariant(variant);
+  const dockPortal =
+    dockVariant && (showDock || dockLeaving)
+      ? (
+          <DockTooltipPortal
+            variant={variant}
+            kind={kind}
+            visible={showDock}
+            leaving={dockLeaving}
+            placement={staticUi ? "anchored" : dockPlacement}
+            anchorEl={anchorEl}
+            pointer={pointer}
+          />
+        )
+      : null;
 
   return (
     <>
@@ -176,19 +216,9 @@ export default function LabDemoCard({
         style={{ gap: 8 }}
       >
         <ProjectCardLift style={{ gap: 8 }}>
-          <div
-            className="project-media"
-            style={
-              dockReserve
-                ? { position: "relative", paddingTop: 40, marginTop: -40 }
-                : { position: "relative" }
-            }
-          >
-            {isDockVariant(variant) && (
-              <DockTooltipLayer variant={variant} kind={kind} visible={showDock} />
-            )}
-
+          <div className="project-media" style={{ position: "relative" }}>
             <div
+              ref={setAnchorEl}
               className="hilab-card__media project-img-wrap"
               style={{ aspectRatio: project.aspectRatio, overflow: "hidden" }}
             >
@@ -233,6 +263,7 @@ export default function LabDemoCard({
       </div>
       {pillPortal}
       {morphPortal}
+      {dockPortal}
     </>
   );
 }

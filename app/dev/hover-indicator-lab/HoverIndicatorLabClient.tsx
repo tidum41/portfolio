@@ -5,14 +5,17 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import LabDemoCard from "./LabDemoCard";
 import "./hilab.css";
-import type { LabProject, VariantId } from "./types";
+import type { DockPlacementMode, LabProject, VariantId } from "./types";
+import { isDockVariant } from "./dockVariants";
 import { isVariantId, VARIANTS } from "./types";
 
 const LAB_Z = 50;
 
 export default function HoverIndicatorLabClient({ projects }: { projects: LabProject[] }) {
   const [variantId, setVariantId] = useState<VariantId>("dock-xmb-glow");
+  const [dockPlacement, setDockPlacement] = useState<DockPlacementMode>("anchored");
   const [morphActive, setMorphActive] = useState(false);
+  const dockMode = isDockVariant(variantId);
 
   const variantIndex = VARIANTS.findIndex((v) => v.id === variantId);
   const variantMeta = VARIANTS[variantIndex] ?? VARIANTS[0];
@@ -95,6 +98,24 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
           <div style={{ fontSize: 12, opacity: 0.55, marginTop: 2, maxWidth: 520 }}>{variantMeta.hint}</div>
         </div>
 
+        {dockMode && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ opacity: 0.5 }}>Placement</span>
+            <select
+              className="hilab-btn"
+              style={{ minHeight: 40, padding: "6px 10px" }}
+              value={dockPlacement}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "anchored" || v === "cursor-follow") setDockPlacement(v);
+              }}
+            >
+              <option value="anchored">Anchored (caret)</option>
+              <option value="cursor-follow">Cursor follow</option>
+            </select>
+          </label>
+        )}
+
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
           <span style={{ opacity: 0.5 }}>Direction</span>
           <select
@@ -136,9 +157,10 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
             maxWidth: 640,
           }}
         >
-          Three tiles: internal case study, external demo, and both. PS3/XMB dock labels lead the switcher
-          (rise + fade, ≤180ms, no bounce). Cursor pills and other directions follow. Touch shows labels
-          on-card; reduced motion skips trail lag and decode effects.
+          Three tiles: internal case study, external demo, and both. Dock variants support anchored labels
+          (caret on the thumbnail top edge, viewport collision) or instant cursor-follow chips (no caret).
+          Cursor pills and other directions follow. Touch keeps anchored labels only; reduced motion skips
+          trail lag and decode effects.
         </p>
 
         {projects.length === 0 ? (
@@ -157,6 +179,7 @@ export default function HoverIndicatorLabClient({ projects }: { projects: LabPro
                 key={`${p.id}-${p.kind}`}
                 project={p}
                 variant={variantId}
+                dockPlacement={dockPlacement}
                 onMorphActiveChange={setMorphActive}
               />
             ))}

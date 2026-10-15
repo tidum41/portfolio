@@ -18,6 +18,8 @@ export type DockVariantId =
   | "dock-ps-segment"
   | "dock-tooltip";
 
+export type DockPlacementMode = "anchored" | "cursor-follow";
+
 export type VariantId =
   | PillVariantId
   | DockVariantId
