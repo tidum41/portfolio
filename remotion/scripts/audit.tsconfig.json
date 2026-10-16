@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "outDir": "/tmp/joola-audit",
+    "rootDir": "..",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "files": [
+    "../src/joola/timeline.ts",
+    "../src/joola/pointer.ts",
+    "../src/joola/proto-rects.generated.ts",
+    "hover-audit.ts"
+  ]
+}
