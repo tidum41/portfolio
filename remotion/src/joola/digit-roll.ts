@@ -311,7 +311,10 @@ export function paintSlideRoll(el: HTMLElement, from: string, to: string, t: num
   // Each column is only as tall as the ink it swaps, so the next glyph sits
   // against this one. A shared window as tall as the $ left a gap big enough
   // to read both totals at once.
-  const pad = 0.4;
+  // Room above the ascender and below the descender so the mask does not
+  // shave the $, the digits, or the comma. The slot grows around the same
+  // baseline, and the pill centers the host, so the ink does not shift.
+  const pad = 2;
   const line = measureLine(el, "8");
   const inkOf = (ch: string) => {
     if (ch === " ") return { asc: 0, desc: 0, base: 0 };
@@ -327,7 +330,11 @@ export function paintSlideRoll(el: HTMLElement, from: string, to: string, t: num
     const A = inkOf(a[i]);
     const B = inkOf(b[i]);
     const asc = Math.max(A.asc, B.asc);
-    const desc = Math.max(A.desc, B.desc);
+    // The period's canvas box stops on the ink, and the painted dot still
+    // crosses that edge. Give it a descent so the mask keeps the whole dot.
+    const desc = a[i] === "." || b[i] === "."
+      ? Math.max(A.desc, B.desc, 4)
+      : Math.max(A.desc, B.desc);
     const h = asc + desc + pad * 2;
     maxAsc = Math.max(maxAsc, asc);
     maxDesc = Math.max(maxDesc, desc);

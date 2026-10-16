@@ -2,9 +2,9 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 37: 15.0s. Frames 0–161 stay pass 36. The extra second is a pull-back
- * onto Saved orders and a longer cart roll, both before the cart pill click.
- * From that click to the last frame is the pass-36 tail, shifted 30 frames.
+ * Pass 38: 15.0s. Frames 0–242 match pass 37 (camera and cursor path).
+ * After the saved-order popup closes, one zoom replaces the lines cut.
+ * The cart pill click stays at 326, so the pass-37 tail is the same frames.
  */
 export const FPS = 30;
 
@@ -59,7 +59,7 @@ export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- pass 37 beats (450 frames, cart click at 326) ---------- */
+/* ---------- pass 38 beats (450 frames, cart click at 326) ---------- */
 /** Logo leaves first (quick), then the dashboard fades up off the solid ground. */
 export const LOGO_OUT = [0, 5] as const;
 export const UI_IN = [5, 11] as const;
@@ -70,7 +70,7 @@ export const LEAD = 2;
  * the whole way. It travels to the field only after the push has settled.
  */
 export const OPEN_MOVE = [12, 30] as const;
-export const CLICK = { search: 50, result: 97, qty: 151, tpl: 223, tplAdd: 239, add: 275, pill: 326, place: 351 };
+export const CLICK = { search: 50, result: 97, qty: 151, tpl: 223, tplAdd: 239, add: 282, pill: 326, place: 351 };
 export const ENTER = CLICK.result;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 16] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -101,17 +101,18 @@ export const POP_HOVER = CLICK.tplAdd - LEAD;
  */
 export const REVEAL = [168, 192] as const;
 /**
- * Hard cut back to the order on the Add to order release. The three kit
- * lines start on this frame. They never appear before the popup click.
+ * Popup is gone on this frame (u = 0). The zoom then eases to the order.
+ * 22 frames, 733ms, ease-in-out. Not a cut.
  */
-export const CUT_LINES = CLICK.tplAdd + 4;
+export const ZOOM_LINES = [CLICK.tplAdd + 4, CLICK.tplAdd + 4 + 22] as const;
 /**
- * The other three lines land as one gesture. 2 frames apart (~67ms) and the
- * same 18-frame ease. The cursor is still.
+ * Kit lines start once their names are inside the moving frame (frame 260),
+ * and finish as the zoom settles. 2 frames apart, 10-frame ease. They never
+ * appear before the popup click. The cursor stays on Add to order.
  */
-export const FILL = CUT_LINES;
+export const FILL = 260;
 export const FILL_STAGGER = 2;
-export const FILL_F = 18;
+export const FILL_F = 10;
 export const FILL_END = FILL + FILL_STAGGER * 2 + FILL_F;
 /** "Add 4 lines to cart" measured width. The button is this wide from the first frame. */
 export const ADD_W = 155;
@@ -145,7 +146,7 @@ export const PILL_BADGE = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
 /** 400ms after the roll lands. The cursor stays under the pill until here. */
 export const PILL_REST = PILL_ROLL + ROLL_PILL_F + 12;
 /** Cursor reaches the cart icon after that hold, and dwells before the click. */
-export const PILL_ARRIVE = PILL_REST + 16;
+export const PILL_ARRIVE = PILL_REST + 11;
 
 /** One eased t for the pill's width, the digits, and the count circle. */
 export const pillMotion = (f: number) =>
@@ -200,7 +201,7 @@ export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [CUT_LINES, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results dropdown", DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F],
@@ -315,7 +316,7 @@ export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: rest, then search", ease: CAM_E },
   { a: ZOOM_OUT[0], b: ZOOM_OUT[1], to: SHOT_QTY, label: "zoom out: the line", ease: FLOW_E },
   { a: REVEAL[0], b: REVEAL[1], to: SHOT_SAVED, label: "pull back: saved orders", ease: FLOW_E },
-  { a: CUT_LINES, b: CUT_LINES, to: SHOT_ORDER, label: "cut: lines land" },
+  { a: ZOOM_LINES[0], b: ZOOM_LINES[1], to: SHOT_ORDER, label: "zoom out: kit lines", ease: FLOW_E },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_HEADER, label: "cut: header cart" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
   { a: CONF_CUT, b: CONF_CUT, to: SHOT_GROW, label: "cut: order placed, top locked" },
