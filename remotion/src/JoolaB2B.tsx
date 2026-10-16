@@ -9,7 +9,7 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, FLOW_E,
-  INSERT, FILL, FILL_STAGGER, FILL_F, FILL_END, ADD_GROW, PILL_AMT1, PILL_ROLL, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
+  INSERT, FILL, FILL_STAGGER, FILL_F, FILL_END, ADD_W, PILL_AMT1, PILL_ROLL, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
@@ -172,10 +172,11 @@ const CSS =
 /* The cart and confirmation shots are the card. A topbar rule in that frame is a sliced hairline. */
 .film-layer [data-screen="cart"] .topbar,
 .film-layer [data-screen="confirmation"] .topbar{border-bottom-color:transparent!important}
-.film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important}
-.film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important}
-.film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important}
-.film-layer .btn-outline.film-active{background:var(--wash)!important;opacity:1!important}
+.film-layer .btn-primary.film-hover{background:#2433c4!important;opacity:1!important;transform:none!important}
+.film-layer .btn-primary.film-active{background:#1a2599!important;opacity:1!important;transform:none!important}
+.film-layer .btn-outline.film-hover{background:var(--band)!important;opacity:1!important;transform:none!important}
+.film-layer .btn-outline.film-active{background:var(--wash)!important;opacity:1!important;transform:none!important}
+.film-layer .cart-pill.film-hover,.film-layer .cart-pill.film-active{transform:none!important}
 .film-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;background:var(--ink);vertical-align:-3px}
 `;
 const html = (k: string) =>
@@ -425,7 +426,11 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   const restock = q(root, '[data-template="tpl-perseus"] .meta-left');
   if (restock) restock.textContent = `12 units, ${money(r2(unitAt(QTY_FINAL) * QTY_FINAL))}`;
 
-  const lines = (inserted ? 1 : 0) + (f >= ADD_GROW[1] ? 3 : 0);
+  const kit = [0, 1, 2].filter((i) => {
+    const a = FILL + i * FILL_STAGGER;
+    return prog(f, a, a + FILL_F, FLOW_E) > 0.08;
+  }).length;
+  const lines = (inserted ? 1 : 0) + kit;
   const lineWord = lines === 0 ? "" : `${lines} ${lines === 1 ? "line" : "lines"}`;
   q(root, "[data-line-count]")!.textContent = lines === 0 ? "0 lines" : lineWord;
   const totalEl = q(root, "[data-order-footer] [data-order-total]")!;
@@ -439,14 +444,16 @@ function applyQuickOrder(root: HTMLElement, f: number) {
   ], f, ROLL_F, blur, "left", FLOW_E);
   const add = q<HTMLButtonElement>(root, "[data-add-all]")!;
   add.style.whiteSpace = "nowrap";
+  add.style.boxSizing = "border-box";
+  add.style.width = `${ADD_W}px`;
+  add.style.minWidth = `${ADD_W}px`;
+  add.style.maxWidth = `${ADD_W}px`;
+  add.style.flexShrink = "0";
+  add.style.justifyContent = "center";
+  add.style.textAlign = "center";
+  add.style.fontVariantNumeric = "tabular-nums";
+  add.style.fontFeatureSettings = '"tnum" 1';
   add.textContent = lines === 0 ? "Add to cart" : `Add ${lineWord} to cart`;
-  // The wider label eases in with the lines, and is finished before the read.
-  if (f >= FILL) {
-    const w = lerp(143.3, 155, prog(f, ADD_GROW[0], ADD_GROW[1], FLOW_E));
-    add.style.boxSizing = "border-box";
-    add.style.width = `${w}px`;
-    add.style.minWidth = `${w}px`;
-  }
   pill(root, f);
   // The header cart framing can slice the retailer name. The title sits off
   // the left edge. Hide both so the hold is the pill, not a cut word.

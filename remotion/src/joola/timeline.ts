@@ -2,12 +2,11 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 35: 14.0s. Frames 0–90 and everything from the cart cut (300) keep
- * their pass-33 values. The middle keeps pass 34's locked order framing,
- * cursor dwells and arcs, reading holds, the 12-chip beat, and the staggered
- * kit lines. Those lines start only after the saved-orders popup's Add to
- * order click. The post-search zoom is a hard cut. Place order, the check,
- * the card grow, and both logo fades keep their pass-32 lengths.
+ * Pass 36: 14.0s. Frames 0–90 and everything from the cart cut (300) keep
+ * their pass-35 values. After the Perseus line lands, the camera eases out
+ * onto the qty row. The kit lines still start only after the saved-orders
+ * popup's Add to order click. Place order, the check, the card grow, and
+ * both logo fades keep their pass-32 lengths.
  */
 export const FPS = 30;
 
@@ -50,7 +49,7 @@ export const CAM_E = bezier(0.42, 0, 0.16, 1);
 export const FADE_E = MOVE_E;
 export const PUSH_E = MOVE_E;
 export const PTR_E = bezier(0.42, 0, 0.18, 1);
-/** Middle of the film only. Symmetric ease-in-out. Not used before frame 91 or from the cart cut. */
+/** Middle of the film only. Symmetric ease-in-out. Not used on the open, and not from the cart cut. */
 export const FLOW_E = bezier(0.65, 0, 0.35, 1);
 export const INOUT_E = MOVE_E;
 export const SETTLE = MOVE_E;
@@ -71,7 +70,7 @@ export const LEAD = 2;
  * the whole way. It travels to the field only after the push has settled.
  */
 export const OPEN_MOVE = [12, 30] as const;
-export const CLICK = { search: 50, result: 97, qty: 137, tpl: 175, tplAdd: 199, add: 255, pill: 296, place: 321 };
+export const CLICK = { search: 50, result: 97, qty: 151, tpl: 185, tplAdd: 207, add: 255, pill: 296, place: 321 };
 export const ENTER = CLICK.result;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 16] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -79,10 +78,10 @@ export const DROPDOWN_OPEN = CLICK.search + 8;
 export const DROP_F = 8;
 export const RESULT_HOVER = [CLICK.result - 2, CLICK.result] as const;
 /**
- * Hard cut from the search field onto the whole order, one frame after the
- * cursor arrives on the result. No zoom. The result stays under the cursor.
+ * After the line has landed and settled. 24 frames (800ms), ease-in-out.
+ * The cursor stays on the result the whole way. Not the post-search move.
  */
-export const CUT_ORDER = 91;
+export const ZOOM_OUT = [109, 133] as const;
 /** The Perseus line eases in over 12 frames. The dropdown leaves on the same ease. */
 export const INSERT = [ENTER, ENTER + 12] as const;
 /** Kept for API compat; no blue just-added tint. */
@@ -96,7 +95,7 @@ export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 6] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
 /** Hard cut onto Match kit. The card and the popup are the cause, and they have to be readable. */
-export const CUT_TPL = 159;
+export const CUT_TPL = 171;
 /**
  * Hard cut back to the order on the Add to order release. The three kit
  * lines start on this frame. They never appear before the popup click.
@@ -110,8 +109,8 @@ export const FILL = CUT_LINES;
 export const FILL_STAGGER = 2;
 export const FILL_F = 18;
 export const FILL_END = FILL + FILL_STAGGER * 2 + FILL_F;
-/** The button is "Add 4 lines" once it is wide enough, before the read hold. */
-export const ADD_GROW = [FILL, FILL + 14] as const;
+/** "Add 4 lines to cart" measured width. The button is this wide from the first frame. */
+export const ADD_W = 155;
 /**
  * Hard cut to the header cart on the Add to cart release. The cursor keeps its
  * screen pixel, below the pill. The amount, the width, and the count circle
@@ -200,11 +199,12 @@ export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [CUT_ORDER, CUT_TPL, CUT_LINES, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [CUT_TPL, CUT_LINES, PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results dropdown", DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F],
   ["row insert", INSERT[0], INSERT[1]],
+  ["zoom out to the line", ZOOM_OUT[0], ZOOM_OUT[1]],
   ["qty digit roll", CLICK.qty, CLICK.qty + ROLL_F],
   ["template popover", POP_IN[0], POP_IN[1]],
   ["order fills", FILL, FILL_END],
@@ -264,6 +264,13 @@ export const SHOT_BOTH: Cam = { cx: 766, cy: 378, s: 1.32 };
  * sidebar (220) just outside the left edge.
  */
 export const SHOT_ORDER: Cam = { cx: 768, cy: 378, s: 1.35 };
+/**
+ * Qty chips, the unit price, and the line total, close enough to read at a
+ * 400px card. s=3 puts a 12px chip near 10px and a 14px price near 12px at
+ * that width. The frame holds the resting cursor, the price, the chips, and
+ * the line total. The product name was already read in the search close-up.
+ */
+export const SHOT_QTY: Cam = { cx: 782, cy: 360, s: 3 };
 /** Kept so a report can name the old tight shots. Not a camera target. */
 export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
@@ -299,7 +306,7 @@ export const CART_CAM = SHOT_SUM;
 export const CONF_CAM = SHOT_D;
 export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: rest, then search", ease: CAM_E },
-  { a: CUT_ORDER, b: CUT_ORDER, to: SHOT_ORDER, label: "cut: the order" },
+  { a: ZOOM_OUT[0], b: ZOOM_OUT[1], to: SHOT_QTY, label: "zoom out: the line", ease: FLOW_E },
   { a: CUT_TPL, b: CUT_TPL, to: SHOT_B2, label: "cut: saved orders" },
   { a: CUT_LINES, b: CUT_LINES, to: SHOT_ORDER, label: "cut: lines land" },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_HEADER, label: "cut: header cart" },

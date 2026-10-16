@@ -93,13 +93,29 @@ caps = sorted({(c, ) for c in re.findall(r"\b[A-Z]{5,}\b", sweep)} - {("JOOLA",)
 subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", film, "-vf",
     "drawtext=text='%{n}':fontsize=40:x=12:y=12:fontcolor=red:box=1:boxcolor=white@0.7,select=not(mod(n\\,6)),scale=640:-1,tile=4x4:padding=4:color=gray",
     "-vsync", "0", f"{out}/contact-640-%02d.png"], check=True)
+# Hover and press must contain the painted cursor tip on every frame.
+audit_compile = subprocess.run(["npx", "tsc", "-p", "scripts/audit.tsconfig.json"], capture_output=True, text=True)
+hover = {"ok": False, "count": -1, "sample": [], "error": ""}
+if audit_compile.returncode != 0:
+    hover["error"] = (audit_compile.stdout + audit_compile.stderr)[-2000:]
+else:
+    audit_run = subprocess.run(["node", "/tmp/joola-audit/scripts/hover-audit.js"], capture_output=True, text=True)
+    if audit_run.returncode != 0:
+        hover["error"] = (audit_run.stdout + audit_run.stderr)[-2000:]
+    else:
+        hover = json.loads(audit_run.stdout)["hover"]
+unexpected = [c for c in cuts if not any(abs(c["frame"] - a) <= 1 for a in ALLOWED_CUTS)]
 res = {"frames": n, "seconds": round(n / FPS, 2), "median_step": round(med, 4), "max_step": round(max(d), 2),
-       "max_step_frame": int(np.argmax(d)) + 1, "frozen_runs_over_0.4s": runs, "hard_cuts": cuts, "allowed_cuts": ALLOWED_CUTS, "unexpected_cuts": [c for c in cuts if not any(abs(c["frame"] - a) <= 1 for a in ALLOWED_CUTS)], "very_fast_frames_over_8": fast,
+       "max_step_frame": int(np.argmax(d)) + 1, "frozen_runs_over_0.4s": runs, "hard_cuts": cuts, "allowed_cuts": ALLOWED_CUTS, "unexpected_cuts": unexpected, "very_fast_frames_over_8": fast,
        "loop_seam_diff": round(seam, 3), "loop_seam_vs_median_step": round(seam / max(med, 1e-6), 2),
        "ledger": L, "ocr_checks": ocr_res, "ocr_forbidden_hits": forbidden, "ocr_allcaps_words": [c[0] for c in caps],
-       "pass": {"no_freeze": not runs, "no_cuts": not [c for c in cuts if not any(abs(c["frame"] - a) <= 1 for a in ALLOWED_CUTS)], "seam_ok": seam < max(3 * med, 0.6),
-                "numbers_ok": all(not r["missing"] for r in ocr_res), "no_forbidden": not any(forbidden.values())}}
+       "hover": hover,
+       "pass": {"no_freeze": not runs, "no_cuts": not unexpected, "seam_ok": seam < max(3 * med, 0.6),
+                "numbers_ok": all(not r["missing"] for r in ocr_res), "no_forbidden": not any(forbidden.values()),
+                "hover_ok": bool(hover.get("ok"))}}
 json.dump(res, open(f"{out}/checks.json", "w"), indent=1)
-print(json.dumps({k: res[k] for k in ["frames", "median_step", "max_step", "max_step_frame", "frozen_runs_over_0.4s", "hard_cuts", "unexpected_cuts", "loop_seam_diff", "pass", "ocr_allcaps_words"]}, indent=0))
+print(json.dumps({k: res[k] for k in ["frames", "median_step", "max_step", "max_step_frame", "frozen_runs_over_0.4s", "hard_cuts", "unexpected_cuts", "loop_seam_diff", "pass", "ocr_allcaps_words", "hover"]}, indent=0))
 print([r for r in ocr_res if r["missing"]])
 print({k: v for k, v in forbidden.items() if v})
+if not hover.get("ok"):
+    sys.exit(1)
