@@ -149,7 +149,7 @@ export default function OnboardingFlow() {
       </header>
 
       {!isFinish && (
-        <div className="ob-progress-wrap">
+        <div className="ob-column ob-progress-wrap">
           <ol
             className="ob-progress"
             aria-label={copy.chrome.progressLabel}
@@ -172,7 +172,7 @@ export default function OnboardingFlow() {
         </div>
       )}
 
-      <main className="ob-main">
+      <main className="ob-column ob-main">
         <div
           key={`${step}-${direction}`}
           className="ob-step"
@@ -224,48 +224,50 @@ export default function OnboardingFlow() {
       </main>
 
       <footer className="ob-footer">
-        {step > 0 && !isFinish ? (
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => go(step - 1)}
-          >
-            {copy.chrome.back}
-          </button>
-        ) : (
-          <span />
-        )}
-        <div className="ob-footer-actions">
-          {isFinish ? (
+        <div className="ob-column ob-footer-inner">
+          {step > 0 && !isFinish ? (
             <button
               type="button"
-              className="btn-primary btn-success"
-              style={{ backgroundColor: "#12824a" }}
-              onClick={handleFinish}
+              className="btn-ghost"
+              onClick={() => go(step - 1)}
             >
-              {copy.finish.cta}
-            </button>
-          ) : step === 1 ? (
-            <button type="button" className="btn-primary" onClick={handleContinue}>
-              {copy.chrome.saveDefaults}
-            </button>
-          ) : step === 0 ? (
-            <button type="button" className="btn-primary" onClick={handleContinue}>
-              {copy.welcome.cta}
-            </button>
-          ) : step === 3 ? (
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() => go(TOTAL_STEPS)}
-            >
-              {copy.chrome.finish}
+              {copy.chrome.back}
             </button>
           ) : (
-            <button type="button" className="btn-primary" onClick={handleContinue}>
-              {copy.chrome.continue}
-            </button>
+            <span />
           )}
+          <div className="ob-footer-actions">
+            {isFinish ? (
+              <button
+                type="button"
+                className="btn-primary btn-success"
+                style={{ backgroundColor: "#12824a" }}
+                onClick={handleFinish}
+              >
+                {copy.finish.cta}
+              </button>
+            ) : step === 1 ? (
+              <button type="button" className="btn-primary" onClick={handleContinue}>
+                {copy.chrome.saveDefaults}
+              </button>
+            ) : step === 0 ? (
+              <button type="button" className="btn-primary" onClick={handleContinue}>
+                {copy.welcome.cta}
+              </button>
+            ) : step === 3 ? (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => go(TOTAL_STEPS)}
+              >
+                {copy.chrome.finish}
+              </button>
+            ) : (
+              <button type="button" className="btn-primary" onClick={handleContinue}>
+                {copy.chrome.continue}
+              </button>
+            )}
+          </div>
         </div>
       </footer>
     </div>
@@ -384,39 +386,42 @@ function DefaultsStep({
           <p className="field-helper" id={shipHelpId}>
             {copy.defaults.shipTo.helper}
           </p>
-          <button
-            type="button"
-            className={`ship-card${shipMenuOpen ? " is-open" : ""}`}
-            aria-labelledby={`${shipHelpId}-label`}
-            aria-describedby={
-              shipToError ? `${shipHelpId} ${shipErrorId}` : shipHelpId
-            }
-            aria-expanded={shipMenuOpen}
-            aria-controls={shipMenuId}
-            onClick={() => setShipMenuOpen(!shipMenuOpen)}
-          >
-            <div className="ship-card-body">
-              {selectedShip ? (
-                <>
-                  <div className="ship-name">
-                    {selectedShip.name}
-                    <span className="ship-tag">{selectedShip.site}</span>
-                  </div>
-                  <div className="ship-addr">{selectedShip.detail}</div>
-                </>
-              ) : (
-                <>
-                  <div className="ship-name">
-                    {copy.defaults.shipTo.emptyPrompt}
-                  </div>
-                  <div className="ship-addr">
-                    {copy.defaults.shipTo.emptyHint}
-                  </div>
-                </>
-              )}
-            </div>
-            <span className="ship-change">{copy.defaults.shipTo.change}</span>
-          </button>
+          {selectedShip ? (
+            <button
+              type="button"
+              className={`ship-card${shipMenuOpen ? " is-open" : ""}`}
+              aria-labelledby={`${shipHelpId}-label`}
+              aria-describedby={
+                shipToError ? `${shipHelpId} ${shipErrorId}` : shipHelpId
+              }
+              aria-expanded={shipMenuOpen}
+              aria-controls={shipMenuId}
+              onClick={() => setShipMenuOpen(!shipMenuOpen)}
+            >
+              <div className="ship-card-body">
+                <div className="ship-name">
+                  {selectedShip.name}
+                  <span className="ship-tag">{selectedShip.site}</span>
+                </div>
+                <div className="ship-addr">{selectedShip.detail}</div>
+              </div>
+              <span className="ship-change">{copy.defaults.shipTo.change}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`ship-choose${shipMenuOpen ? " is-open" : ""}`}
+              aria-labelledby={`${shipHelpId}-label`}
+              aria-describedby={
+                shipToError ? `${shipHelpId} ${shipErrorId}` : shipHelpId
+              }
+              aria-expanded={shipMenuOpen}
+              aria-controls={shipMenuId}
+              onClick={() => setShipMenuOpen(!shipMenuOpen)}
+            >
+              {copy.defaults.shipTo.choose}
+            </button>
+          )}
           {shipMenuOpen && (
             <div
               className="ship-menu"

@@ -58,7 +58,8 @@
   --radius-panel: 12px;
   --radius-status: 4px;
   --control-h: 40px;
-  --content-max: 640px;
+  /* Shared column: progress, body, and footer actions share this width */
+  --content-max: 560px;
   --content-pad-x: 28px;
   --step-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -168,11 +169,26 @@
   outline-offset: 2px;
 }
 
-.joola-b2b .ob-progress-wrap {
-  padding: 16px var(--content-pad-x) 0;
-  max-width: calc(var(--content-max) + var(--content-pad-x) * 2);
+/* Progress, main, and footer actions share one centered 560px column */
+.joola-b2b .ob-column {
   width: 100%;
-  margin: 0 auto;
+  max-width: var(--content-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--content-pad-x);
+  padding-right: var(--content-pad-x);
+  box-sizing: border-box;
+}
+
+@media (min-width: 616px) {
+  .joola-b2b .ob-column {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.joola-b2b .ob-progress-wrap {
+  padding-top: 16px;
 }
 
 .joola-b2b .ob-progress {
@@ -214,10 +230,8 @@
 
 .joola-b2b .ob-main {
   flex: 1 1 auto;
-  width: 100%;
-  max-width: calc(var(--content-max) + var(--content-pad-x) * 2);
-  margin: 0 auto;
-  padding: 28px var(--content-pad-x) 120px;
+  padding-top: 28px;
+  padding-bottom: 120px;
 }
 
 .joola-b2b .ob-step {
@@ -277,14 +291,18 @@
   position: sticky;
   bottom: 0;
   z-index: 10;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.joola-b2b .ob-footer-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px var(--content-pad-x);
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
 }
 
 .joola-b2b .ob-footer-actions {
@@ -547,7 +565,8 @@
 }
 
 .joola-b2b .field.is-invalid input,
-.joola-b2b .field.is-invalid .ship-card {
+.joola-b2b .field.is-invalid .ship-card,
+.joola-b2b .field.is-invalid .ship-choose {
   border-color: var(--failed);
 }
 
@@ -559,7 +578,40 @@
   line-height: 1.4;
 }
 
-/* Ship-to card */
+/* Ship-to: empty = one clear choose button; filled = card + Change */
+.joola-b2b .ship-choose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: center;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.joola-b2b .ship-choose:hover {
+  background: var(--band);
+}
+
+.joola-b2b .ship-choose:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .ship-choose.is-open {
+  border-color: var(--blue);
+}
+
+/* Ship-to card (selected address) */
 .joola-b2b .ship-card {
   display: flex;
   align-items: flex-start;
@@ -999,7 +1051,7 @@
     font-size: 22px;
   }
 
-  .joola-b2b .ob-footer {
+  .joola-b2b .ob-footer-inner {
     flex-wrap: wrap;
   }
 

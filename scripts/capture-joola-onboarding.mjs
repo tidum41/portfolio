@@ -57,8 +57,8 @@ async function goThrough(page, width, height, prefix) {
   await hideOverlays(page);
   await shot(page, `${prefix}-02c-shipto-error.png`);
 
-  // Pick ship-to and continue
-  await page.locator(".joola-b2b .ship-card").evaluate((el) => el.click());
+  // Pick ship-to and continue (empty state uses .ship-choose)
+  await page.locator(".joola-b2b .ship-choose").evaluate((el) => el.click());
   await page
     .locator(".joola-b2b .ship-option")
     .first()

@@ -5,12 +5,13 @@ For the customer-facing wholesale buyer portal (team and club buyers ordering JO
 ## Voice
 
 - **Plain, specific, and calm.** Say the thing. Prefer short sentences over clever ones.
-- **Human, not cute.** Warm enough to feel like a person; never jokey, never “delight” for its own sake.
+- **Human, not cute.** Warm enough to feel like a person; never jokey, never “delight” for its own sake. Prefer contractions (“doesn't”, “you're”, “that's”).
 - **Say what happens next.** After every action, the reader should know the next state (who confirms, where to track it, what “pending” means).
-- **Use the reader’s words.** Buyers say PO, ship-to, ship date, cart, saved order — not SKU entity, submission, fulfillment workflow, or NetSuite jargon.
+- **Use the reader’s words.** Glossary: Saved order, Order history, PO number, line, and the sales rep by name (Collin Johns). Not SKU entity, submission, or NetSuite jargon.
 - **Verbs on buttons.** “Continue”, “Save defaults”, “Go to Quick Order” — not “Next”, “Submit”, “OK”.
 - **Sentence case.** Never all caps for UI chrome. Never tracked uppercase eyebrows.
 - **Numbers and dates exact.** `$25,693.50`, `Fri, Oct 17`, `Net 30` — not “about $26k” or “soon”.
+- **No em dashes.** Use commas, periods, or “and” instead.
 - **Errors that help.** Name what happened and how to fix it. No blame, no “invalid input”.
 - **No fake marketing.** No “revolutionize your ordering”, no “unlock”, no “seamless experience”.
 
