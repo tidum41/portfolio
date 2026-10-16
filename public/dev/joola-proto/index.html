@@ -2933,7 +2933,7 @@ img { display: block; max-width: 100%; }
     { id: "qo-desktop", label: "Quick order", icon: "order" },
     { id: "catalog", label: "Catalog", icon: "catalog" },
     { id: "templates", label: "Saved orders", icon: "templates" },
-    { id: "orders", label: "Orders", icon: "orders" },
+    { id: "orders", label: "Order history", icon: "orders" },
     { id: "invoices", label: "Invoices", icon: "invoices" },
     { id: "messages", label: "Messages", icon: "messages" },
   ];
@@ -3228,7 +3228,7 @@ img { display: block; max-width: 100%; }
     return (
       '<div class="order-table" data-order-table>' +
       '<div class="order-head" data-order-head>' +
-      "<div></div><div>Product</div><div class=\"end\">Price</div><div class=\"qty-h end\">Quantity</div><div class=\"end\">Line total</div><div></div>" +
+      "<div></div><div>Product</div><div class=\"end\">Unit<br>price</div><div class=\"qty-h end\">Quantity</div><div class=\"end\">Line total</div><div></div>" +
       "</div>" +
       rows +
       "</div>"
@@ -3248,7 +3248,7 @@ img { display: block; max-width: 100%; }
     });
     L.templates.forEach(function (t) {
       items.push({
-        id: "Saved",
+        id: "Saved order",
         tplId: t.id,
         name: t.name,
         left: t.detail,
@@ -3258,7 +3258,7 @@ img { display: block; max-width: 100%; }
     var body = items
       .map(function (it) {
         return (
-          '<button type="button" class="rail-item" data-rail-add' + (it.tplId ? ' data-template="' + it.tplId + '" aria-haspopup="menu"' : "") + ">" +
+          '<button type="button" class="rail-item" data-rail-add aria-label="Add ' + it.name + ' to order"' + (it.tplId ? ' data-template="' + it.tplId + '" aria-haspopup="menu"' : "") + ">" +
           '<span class="rail-copy">' +
           (it.id ? '<span class="rail-id">' + it.id + "</span>" : "") +
           '<span class="name">' +
@@ -3350,7 +3350,7 @@ img { display: block; max-width: 100%; }
             '</div><div class="meta"><span>SKU ' +
             p.sku +
             ' </span><span class="meta-price">' +
-            money(p.buyerPrice) +
+            (money(p.buyerPrice) === "$134.98" ? "from $134.98 ea" : money(p.buyerPrice)) +
             "</span></div></div></div>"
           );
         })
@@ -3815,7 +3815,7 @@ img { display: block; max-width: 100%; }
       '<section class="screen" data-screen="orders">' +
       shellOpen("orders", filledCart()) +
       '<div class="page">' +
-      "<h1>Orders</h1>" +
+      "<h1>Order history</h1>" +
       '<p class="lede">Orders for ' + L.retailer.name + ".</p>" +
       '<div class="orders-table">' +
       '<div class="orders-head"><div>Order</div><div>Date</div><div>Status</div><div class="num">Total</div></div>' +

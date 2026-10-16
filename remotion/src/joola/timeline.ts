@@ -2,9 +2,8 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 38: 15.0s. Frames 0–242 match pass 37 (camera and cursor path).
- * After the saved-order popup closes, one zoom replaces the lines cut.
- * The cart pill click stays at 326, so the pass-37 tail is the same frames.
+ * Pass 40: 16.2s. Every beat through the logo fade-in is pass 38.
+ * The extra 1.2s is hold on the settled logo (opacity 1, scale 1).
  */
 export const FPS = 30;
 
@@ -196,7 +195,8 @@ export const CONF_HOLD = [412, 422] as const;
 /** UI fades to the solid ground, then the logo fades and scales 0.96→1 over 9 frames (300ms). */
 export const UI_OUT = [422, 430] as const;
 export const LOGO_IN = [430, 439] as const;
-export const END_FADE = [UI_OUT[0], 449] as const;
+/** Logo is settled at frame 439. Pass 40 holds it through 485 (16.2s, 486 frames). */
+export const END_FADE = [UI_OUT[0], 485] as const;
 export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
@@ -235,13 +235,13 @@ export const PAN_E = MOVE_E;
  */
 /**
  * Logo in the sidebar. Frame stops at the search field so Upload CSV
- * and the Price header are not sliced letters.
+ * and the Unit price header are not sliced letters.
  */
 /** Wide enough that the search field's right radius is whole, and Upload CSV stays out. */
 export const SHOT_OPEN: Cam = { cx: 328, cy: 210, s: 2.24 };
 /**
- * Search field. Frame stops at the field (page x ~648) so the Price header
- * is not a sliced "Pri", and Quick order stays whole on the left.
+ * Search field. Frame stops at the field (page x ~648) so the Unit price
+ * header is not sliced, and Quick order stays whole on the left.
  */
 export const SHOT_A: Cam = { cx: 440, cy: 148.4, s: 3.45 };
 /** Qty row, below the search field so that field is not a sliced pill. */
