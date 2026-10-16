@@ -9,7 +9,7 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  ADD_W, camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, DURATION, FILL, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_REST, PILL_SHOT, PILL_W1,
+  ADD_W, camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, DURATION, FILL, FILL_END, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_REST, PILL_SHOT, PILL_W1,
   OPEN_MOVE, PTR_E, SHOT_HEADER, SHOT_ORDER, pillBox, prog, type Cam,
 } from "./timeline";
 
@@ -69,10 +69,10 @@ export const KEYS: Key[] = [
   // Rest through the template click and the popup opening.
   [229, P.tpl],
   [233, P.tplAdd],
-  // Rest through the Add to order click, the cut back, and the stagger.
-  // Same point, so the cut keeps the cursor on the button that caused the lines.
-  [265, P.tplAdd],
-  [269, P.add],
+  // Rest through the Add to order click, the zoom out, and the stagger.
+  // Same point, so the camera carries the cursor and the lines arrive under it.
+  [FILL_END, P.tplAdd],
+  [FILL_END + 4, P.add],
   // Last pressed frame. The release is the cut, so this key cannot share that frame.
   [CLICK.add + 2, P.add],
   [PILL_SHOT, headerLand],
@@ -112,11 +112,12 @@ export const pointerAt = (f: number): Pt => {
   return sp(KEYS[KEYS.length - 1]);
 };
 /**
- * 15% larger than pass 35's 1.25×1.6, and constant. The arrow is painted
- * outside the camera, so this is the on-screen size at every zoom. Press is
- * a colour change on the control. The cursor does not dip.
+ * 25% larger than pass 37's 1.25×1.6×1.15, and constant. The arrow is painted
+ * outside the camera, so this is the on-screen size at every zoom. The tip
+ * offset scales with the arrow, so the hotspot stays the painted tip. Press
+ * is a colour change on the control. The cursor does not dip.
  */
-export const CURSOR_SCALE = 1.25 * 1.6 * 1.15;
+export const CURSOR_SCALE = 1.25 * 1.6 * 1.15 * 1.25;
 export const cursorScale = (_f: number) => CURSOR_SCALE;
 
 /** Stage px → whole film px. Matches the cursor component. */

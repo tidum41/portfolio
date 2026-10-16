@@ -514,19 +514,22 @@ function pill(root: HTMLElement, f: number) {
     return;
   }
   const box = pillBox(f);
-  const { t, amt: amtW, w: wpx } = box;
+  const { t, amt: amtW } = box;
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   const from = money(0);
   const to = money(ORDER_TOTAL);
   amt.style.position = "relative";
-  amt.style.setProperty("width", `${amtW.toFixed(3)}px`, "important");
-  amt.style.setProperty("min-width", `${amtW.toFixed(3)}px`, "important");
   amt.style.setProperty("flex-shrink", "0", "important");
-  // The window grows with the same t as the digits. Right edge of the strip
-  // stays put, so a narrow frame hides the unread columns, not the $.
-  paintSlideRoll(amt, from, to, t);
+  // Column strip of "$0.00" against "$4,908.66". The eased window is narrower
+  // than that strip while the ease-out is still showing the new glyphs, which
+  // clips the $. The window is the wider of the two on every roll frame.
+  const strip = paintSlideRoll(amt, from, to, t);
+  const amtUsed = Math.max(amtW, strip);
+  amt.style.setProperty("width", `${amtUsed.toFixed(3)}px`, "important");
+  amt.style.setProperty("min-width", `${amtUsed.toFixed(3)}px`, "important");
+  const wpx = 48 + amtUsed + (t <= 0 ? 0 : 28 * t);
   // 12px pad each side, 1px border, for both the empty and the filled total.
   pl.style.setProperty("box-sizing", "border-box", "important");
   pl.style.setProperty("padding", "0 12px", "important");
