@@ -162,6 +162,8 @@ const CSS =
   display:block;line-height:1;text-box:none;
   transform:translateY(0.33px);
 }
+/* Pass 40: 6px above the 36px pill, 6px below it inside the 48px topbar. */
+.film-layer .topbar{padding-top:6px!important}
 .film-layer .cart-pill .cart-amount-display{flex-shrink:0!important}
 .film-layer .film-face,.film-layer .order-face{
   position:absolute!important;inset:0!important;margin:0!important;z-index:1!important;
@@ -530,7 +532,8 @@ function pill(root: HTMLElement, f: number) {
   amt.style.setProperty("width", `${amtUsed.toFixed(3)}px`, "important");
   amt.style.setProperty("min-width", `${amtUsed.toFixed(3)}px`, "important");
   const wpx = 48 + amtUsed + (t <= 0 ? 0 : 28 * t);
-  // 12px pad each side, 1px border, for both the empty and the filled total.
+  // Insets measured on the settled frame: left ink was 4 film px wider than
+  // the right, so the pad shifts 0.268px toward the icon. Sum stays 24.
   pl.style.setProperty("box-sizing", "border-box", "important");
   pl.style.setProperty("padding", "0 12px", "important");
   pl.style.setProperty("gap", "8px", "important");
@@ -540,7 +543,14 @@ function pill(root: HTMLElement, f: number) {
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
   const icon = q<SVGElement>(pl, ".cart-icon");
-  if (icon) icon.style.setProperty("margin-right", "-2px", "important");
+  // Fractional padding is lost under the camera scale. A translate moves the
+  // ink: 2 film px left so the insets match, and the price a further 6.5 film
+  // px right so the two ink gaps match. 7.5 film px = 1 page px on this shot.
+  if (icon) {
+    icon.style.setProperty("margin-right", "-2px", "important");
+    icon.style.setProperty("transform", "translate(-0.267px, -0.5px)", "important");
+  }
+  amt.style.setProperty("transform", "translateX(0.600px)", "important");
   let fig = chip.querySelector(".count-fig");
   if (!fig) {
     chip.textContent = "";
@@ -549,9 +559,8 @@ function pill(root: HTMLElement, f: number) {
     chip.appendChild(fig);
   }
   fig.textContent = "4";
-  // A 20×20 circle scaled by t, origin on the right, so it stays round and
-  // grows left with the pill. The negative margin is the layout width 20*t
-  // plus the gap cancel. At t=0 there is no hole beside $0.00.
+  // A 20×20 circle scaled by t. The negative margin is the layout width 20*t
+  // plus the gap cancel, then the optical 0.87px. At t=0 there is no hole beside $0.00.
   const showBadge = t > 0;
   chip.hidden = !showBadge;
   chip.style.setProperty("display", showBadge ? "flex" : "none", "important");
@@ -569,11 +578,13 @@ function pill(root: HTMLElement, f: number) {
   chip.style.setProperty("text-box", "none", "important");
   chip.style.setProperty("overflow", "hidden", "important");
   chip.style.setProperty("border-radius", "10px", "important");
-  chip.style.setProperty("transform-origin", "right center", "important");
+  chip.style.setProperty("transform-origin", "center center", "important");
   if (showBadge) {
     chip.style.visibility = "";
     chip.style.opacity = t.toFixed(4);
-    chip.style.transform = `scale(${t.toFixed(4)})`;
+    // Circle was 5.5 film px below the digit cap midline, and the group sits
+    // 2 film px right of the matched insets. The 4 rides inside the circle.
+    chip.style.transform = `translate(-0.267px, -0.736px) scale(${t.toFixed(4)})`;
   } else {
     chip.style.visibility = "hidden";
     chip.style.opacity = "0";

@@ -36,7 +36,9 @@ export const P = {
   // Hyperion row, on the thumbnail side of the name, so the new line is what the cursor is on.
   rowIn: [286, 358] as Pt,
   // Final cart icon (pill grows left). Not on the amount.
-  pillIcon: [PILL_RIGHT - PILL_W1 + 20, PILL_CY] as Pt,
+  // Pass 40: the pill drops 1px so it centres in the 48px topbar, and the
+  // left pad shrinks 0.268px so the ink insets match. The tip follows.
+  pillIcon: [PILL_RIGHT - PILL_W1 + 20 - 0.268, PILL_CY + 1] as Pt,
   // Right of the Place order label, well inside the button — not on the top edge.
   place: [ctr("cart.place")[0] + 48, ctr("cart.place")[1]] as Pt,
   // Below the summary button, off the "Placing order" label.

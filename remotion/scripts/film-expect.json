@@ -1,9 +1,9 @@
 {
   "_allowed_cuts": [223, 243, 285, 330, 387],
-  "69": ["Perseus Pro V", "$134.98"],
+  "69": ["Perseus Pro V", "from $134.98 ea"],
   "165": ["$149.98", "$1,799.76", "12"],
-  "230": ["Replace order", "Match kit", "Saved"],
-  "270": ["Tour Elite Bag", "HC-40", "Add 4 lines to cart", "$4,908.66"],
+  "230": ["Replace order", "Match kit", "Saved order", "3 lines"],
+  "270": ["Tour Elite Bag", "HC-40", "Add 4 lines to cart", "$4,908.66", "Ships in 2 days"],
   "300": ["$4,908.66"],
   "338": ["$40,091.34 left of $50,000", "Calculated when it ships", "$4,908.66"],
   "416": ["Order placed", "Ship date pending", "Order history", "SO-48213", "Your PO", "$4,908.66", "Net 30", "Collin Johns"]

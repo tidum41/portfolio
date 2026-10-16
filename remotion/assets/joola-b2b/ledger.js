@@ -185,7 +185,7 @@
     perseus: { warehouse: "CA", availability: "In stock" },
     hyperion: { warehouse: "CA", availability: "In stock" },
     scorpeus: { warehouse: "TX", availability: "In stock" },
-    hc40: { warehouse: "CA", availability: "2-day ship" },
+    hc40: { warehouse: "CA", availability: "Ships in 2 days" },
     bag: { warehouse: "TX", availability: "In stock" },
   };
 
@@ -358,7 +358,7 @@
       updated: "Aug 14",
       lines: tplMatchLines,
       total: tplTotal(tplMatchLines),
-      detail: "3 products, " + money(tplTotal(tplMatchLines)),
+      detail: "3 lines, " + money(tplTotal(tplMatchLines)),
     },
   ];
 
