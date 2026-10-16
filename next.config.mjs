@@ -54,6 +54,8 @@ const nextConfig = {
       { protocol: "https", hostname: "cdn.sanity.io" },
     ],
     formats: ["image/avif", "image/webp"],
+    // About bento images request 90/92; default allowlist is only [75].
+    qualities: [75, 90, 92],
   },
   serverExternalPackages: ["sanity", "next-sanity", "@sanity/client", "@sanity/ui"],
   experimental: {
