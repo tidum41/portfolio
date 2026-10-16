@@ -547,10 +547,11 @@ function pill(root: HTMLElement, f: number) {
   // px right so the two ink gaps match. 7.5 film px = 1 page px on this shot.
   if (icon) {
     icon.style.setProperty("margin-right", "-2px", "important");
-    // Basket middle (wheels and handle excluded) on the figure cap midline.
-    icon.style.setProperty("transform", "translate(-0.468px, -0.098px)", "important");
+    // Pass 42: vertical position is pass 40's -0.5px. Horizontal stays pass 41.
+    icon.style.setProperty("transform", "translate(-0.468px, -0.5px)", "important");
   }
-  amt.style.setProperty("transform", "translateX(0.332px)", "important");
+  // Pass 42: one film pixel down, onto the restored icon and the badge circle.
+  amt.style.setProperty("transform", "translate(0.332px, 0.134px)", "important");
   let fig = chip.querySelector(".count-fig");
   if (!fig) {
     chip.textContent = "";
