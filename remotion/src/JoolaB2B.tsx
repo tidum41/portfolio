@@ -9,12 +9,12 @@ import { AbsoluteFill, continueRender, delayRender, interpolate, staticFile, use
 import { PROTO_CSS, PROTO_SCREENS } from "./joola/proto.generated";
 import {
   OW, OH, camAt, CLICK, DROPDOWN_OPEN, DROP_F, DURATION, ENTER, FADE_E, FPS, MORPH, POP_IN, FLOW_E,
-  INSERT, FILL, FILL_STAGGER, FILL_F, FILL_END, ADD_W, PILL_AMT1, PILL_ROLL, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
+  INSERT, FILL, FILL_STAGGER, FILL_F, FILL_END, ADD_W, PILL_W0, prog, TYPE_SEARCH, UI_E, EASE_OUT, type Cam, CONF_CUT, pillBox,
   UI_W, UI_H, CART_CUT, PILL_SHOT, lerp, MOVE_E, CHECK_DRAW, PLACE_COLOR, CONF_FADE, CONF_GROW, PROC_XFADE,
   LOGO_OUT, UI_IN, UI_OUT, LOGO_IN, ROLL_F, clamp01,
 } from "./joola/timeline";
 import { pointerAt, cursorScale, hoverState, cursorKind, type HoverKind } from "./joola/pointer";
-import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll } from "./joola/digit-roll";
+import { clearDigitCache, measureBox, measureLine, measureText, paintCanvasRoll, paintLockedRoll, paintSlideRoll } from "./joola/digit-roll";
 
 export const JOOLA_FPS = FPS;
 export const JOOLA_DURATION = DURATION;
@@ -514,45 +514,25 @@ function pill(root: HTMLElement, f: number) {
     return;
   }
   const box = pillBox(f);
-  const { t, amt: amtW, badge, pull, w: wpx } = box;
+  const { t, amt: amtW, w: wpx } = box;
   amt.hidden = false;
   amt.style.visibility = "";
   amt.style.whiteSpace = "nowrap";
   const from = money(0);
   const to = money(ORDER_TOTAL);
-  const line = measureLine(amt, to);
-  // Whole pixels. Height and baseline stay the line box for the whole shot,
-  // so the digits do not step when the roll starts or ends.
-  const fontPx = parseFloat(getComputedStyle(amt).fontSize) || 13;
-  const h = Math.max(Math.round(line.h), Math.ceil(fontPx * 1.45));
   amt.style.position = "relative";
-  amt.style.setProperty("display", "block", "important");
-  amt.style.setProperty("width", `${amtW}px`, "important");
-  amt.style.setProperty("min-width", `${amtW}px`, "important");
-  amt.style.setProperty("height", `${h}px`, "important");
-  amt.style.setProperty("min-height", `${h}px`, "important");
-  amt.style.setProperty("overflow", "hidden", "important");
-  amt.style.setProperty("transform", "none", "important");
+  amt.style.setProperty("width", `${amtW.toFixed(3)}px`, "important");
+  amt.style.setProperty("min-width", `${amtW.toFixed(3)}px`, "important");
   amt.style.setProperty("flex-shrink", "0", "important");
-  amt.style.setProperty("text-box", "none", "important");
-  amt.style.setProperty("line-height", `${h}px`, "important");
-  // The canvas is always the settled tabular width and sits on the right of
-  // the growing box, so a narrow frame clips the unread left columns, not the $.
-  paintCanvasRoll(amt, from, f >= PILL_ROLL ? to : from, t, {
-    w: PILL_AMT1,
-    h,
-    scale: Math.ceil(camAt(f).s * (1920 / OW)),
-    baseline: line.base,
-    lineH: line.h,
-  });
-  const canvas = amt.querySelector("canvas");
-  if (canvas) canvas.style.marginLeft = `${amtW - PILL_AMT1}px`;
+  // The window grows with the same t as the digits. Right edge of the strip
+  // stays put, so a narrow frame hides the unread columns, not the $.
+  paintSlideRoll(amt, from, to, t);
   // 12px pad each side, 1px border, for both the empty and the filled total.
   pl.style.setProperty("box-sizing", "border-box", "important");
   pl.style.setProperty("padding", "0 12px", "important");
   pl.style.setProperty("gap", "8px", "important");
   pl.style.setProperty("border-width", "1px", "important");
-  pl.style.setProperty("--film-pill-w", `${wpx}px`);
+  pl.style.setProperty("--film-pill-w", `${wpx.toFixed(3)}px`);
   pl.style.minWidth = "0";
   pl.style.overflow = "hidden";
   pl.style.justifyContent = "flex-start";
@@ -566,35 +546,35 @@ function pill(root: HTMLElement, f: number) {
     chip.appendChild(fig);
   }
   fig.textContent = "4";
-  const showBadge = badge > 0;
+  // A 20×20 circle scaled by t, origin on the right, so it stays round and
+  // grows left with the pill. The negative margin is the layout width 20*t
+  // plus the gap cancel. At t=0 there is no hole beside $0.00.
+  const showBadge = t > 0;
   chip.hidden = !showBadge;
-  // The prototype's [hidden] rule is display:none !important. An inline flex
-  // would beat it and leave a 20px hole beside $0.00, so hide with inline too.
   chip.style.setProperty("display", showBadge ? "flex" : "none", "important");
-  chip.style.setProperty("width", `${badge}px`, "important");
+  chip.style.setProperty("width", "20px", "important");
   chip.style.setProperty("height", "20px", "important");
-  chip.style.setProperty("min-width", `${badge}px`, "important");
-  chip.style.setProperty("max-width", `${badge}px`, "important");
-  chip.style.setProperty("flex", `0 0 ${badge}px`, "important");
+  chip.style.setProperty("min-width", "20px", "important");
+  chip.style.setProperty("max-width", "20px", "important");
+  chip.style.setProperty("flex", "0 0 20px", "important");
   chip.style.setProperty("margin", "0", "important");
-  chip.style.setProperty("margin-left", `${pull}px`, "important");
+  chip.style.setProperty("margin-left", `${(-28 * (1 - t)).toFixed(3)}px`, "important");
   chip.style.setProperty("padding", "0", "important");
   chip.style.setProperty("align-items", "center", "important");
   chip.style.setProperty("justify-content", "center", "important");
   chip.style.setProperty("line-height", "1", "important");
   chip.style.setProperty("text-box", "none", "important");
   chip.style.setProperty("overflow", "hidden", "important");
-  chip.style.setProperty("transform-origin", "center center", "important");
+  chip.style.setProperty("border-radius", "10px", "important");
+  chip.style.setProperty("transform-origin", "right center", "important");
   if (showBadge) {
-    const sc = t >= 1 ? 1 : lerp(0.6, 1, t);
     chip.style.visibility = "";
-    chip.style.opacity = `${t}`;
-    // Settled frame has no transform, so the circle cannot sit a subpixel off its slot.
-    chip.style.transform = sc === 1 ? "none" : `scale(${sc.toFixed(3)})`;
+    chip.style.opacity = t.toFixed(4);
+    chip.style.transform = `scale(${t.toFixed(4)})`;
   } else {
     chip.style.visibility = "hidden";
     chip.style.opacity = "0";
-    chip.style.transform = "scale(0.6)";
+    chip.style.transform = "scale(0)";
   }
 }
 

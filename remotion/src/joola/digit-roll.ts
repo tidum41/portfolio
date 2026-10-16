@@ -290,6 +290,129 @@ export function paintLockedRoll(
 }
 
 /**
+ * Cart pill roll. Digits slide on a sub-pixel translateY, one column per glyph,
+ * right-aligned. The same two-high stack is painted at the start, the middle,
+ * and the settle, so the ends do not swap to a different drawing. Blur is 0.
+ * clip-path on the slot and the host is the mask: overflow alone does not clip
+ * a transformed child once the stage is scaled.
+ */
+export function paintSlideRoll(el: HTMLElement, from: string, to: string, t: number): number {
+  const tt = t <= 0 ? 0 : t >= 1 ? 1 : t;
+  let digitW = 0;
+  for (const d of "0123456789") digitW = Math.max(digitW, metrics(el, d).w);
+  const widthOf = (ch: string) => {
+    if (ch === " ") return 0;
+    if (ch >= "0" && ch <= "9") return digitW;
+    return metrics(el, ch).w;
+  };
+  const n = Math.max(from.length, to.length);
+  const a = from.padStart(n, " ");
+  const b = to.padStart(n, " ");
+  // Each column is only as tall as the ink it swaps, so the next glyph sits
+  // against this one. A shared window as tall as the $ left a gap big enough
+  // to read both totals at once.
+  const pad = 0.4;
+  const line = measureLine(el, "8");
+  const inkOf = (ch: string) => {
+    if (ch === " ") return { asc: 0, desc: 0, base: 0 };
+    const m = metrics(el, ch);
+    if (m.asc >= 1) return m;
+    return { ...m, asc: line.h * 0.72, desc: line.h * 0.18 };
+  };
+  type Col = { a: string; b: string; w: number; asc: number; desc: number; h: number };
+  const cols: Col[] = [];
+  let maxAsc = 0;
+  let maxDesc = 0;
+  for (let i = 0; i < n; i++) {
+    const A = inkOf(a[i]);
+    const B = inkOf(b[i]);
+    const asc = Math.max(A.asc, B.asc);
+    const desc = Math.max(A.desc, B.desc);
+    const h = asc + desc + pad * 2;
+    maxAsc = Math.max(maxAsc, asc);
+    maxDesc = Math.max(maxDesc, desc);
+    cols.push({ a: a[i], b: b[i], w: Math.max(widthOf(a[i]), widthOf(b[i])), asc, desc, h });
+  }
+  const hostH = maxAsc + maxDesc + pad * 2;
+  const sum = cols.reduce((s, c) => s + c.w, 0);
+  const px = (n: number) => `${n.toFixed(3)}px`;
+  el.classList.add("j-roll");
+  el.style.setProperty("text-box", "none", "important");
+  el.style.setProperty("display", "flex", "important");
+  el.style.setProperty("flex-wrap", "nowrap", "important");
+  el.style.setProperty("justify-content", "flex-end", "important");
+  el.style.setProperty("align-items", "flex-start", "important");
+  // overflow:hidden does not clip a transformed child once the stage is
+  // scaled. The slot carries the mask. This box stays untransformed so it
+  // cannot paint through the pill.
+  el.style.setProperty("overflow", "clip", "important");
+  el.style.setProperty("clip-path", "inset(0)", "important");
+  el.style.setProperty("border-radius", "0.01px", "important");
+  el.style.setProperty("transform", "none", "important");
+  el.style.setProperty("height", `${hostH.toFixed(3)}px`, "important");
+  el.style.setProperty("min-height", `${hostH.toFixed(3)}px`, "important");
+  el.style.whiteSpace = "nowrap";
+  el.style.fontVariantNumeric = "tabular-nums";
+  el.style.fontFeatureSettings = '"tnum" 1';
+  el.style.lineHeight = "normal";
+  el.replaceChildren();
+  const place = (ch: string, into: HTMLElement, asc: number) => {
+    if (ch === " ") return;
+    const m = metrics(el, ch);
+    const tx = document.createElement("span");
+    tx.className = "j-roll-glyph";
+    tx.textContent = ch;
+    tx.style.position = "absolute";
+    tx.style.left = "0";
+    tx.style.width = "100%";
+    tx.style.top = `${(asc + pad - m.base).toFixed(3)}px`;
+    tx.style.textAlign = "center";
+    tx.style.lineHeight = "normal";
+    tx.style.whiteSpace = "pre";
+    tx.style.fontVariantNumeric = "tabular-nums";
+    tx.style.fontFeatureSettings = '"tnum" 1';
+    tx.style.setProperty("text-box", "none", "important");
+    into.appendChild(tx);
+  };
+  for (const c of cols) {
+    if (c.w <= 0) continue;
+    const slot = document.createElement("span");
+    slot.className = "j-roll-slot";
+    slot.style.position = "relative";
+    slot.style.display = "block";
+    slot.style.flex = "0 0 auto";
+    slot.style.setProperty("overflow", "clip", "important");
+    slot.style.setProperty("clip-path", "inset(0)", "important");
+    slot.style.setProperty("border-radius", "0.01px", "important");
+    slot.style.setProperty("transform", "translateZ(0)", "important");
+    slot.style.setProperty("width", px(c.w), "important");
+    slot.style.setProperty("height", px(c.h), "important");
+    slot.style.setProperty("max-height", px(c.h), "important");
+    slot.style.marginTop = px(maxAsc - c.asc);
+    const col = document.createElement("span");
+    col.className = "j-roll-col";
+    col.style.position = "absolute";
+    col.style.left = "0";
+    col.style.top = "0";
+    col.style.width = "100%";
+    col.style.transform = `translateY(${(-tt * c.h).toFixed(3)}px)`;
+    col.style.filter = "none";
+    for (const ch of [c.a, c.b]) {
+      const cell = document.createElement("span");
+      cell.style.display = "block";
+      cell.style.position = "relative";
+      cell.style.height = px(c.h);
+      cell.style.setProperty("overflow", "hidden", "important");
+      place(ch, cell, c.asc);
+      col.appendChild(cell);
+    }
+    slot.appendChild(col);
+    el.appendChild(slot);
+  }
+  return sum;
+}
+
+/**
  * Pill roll drawn into a canvas the size of the amount. DOM overflow does not
  * clip a transformed or overflowing child once the stage is scaled, so the
  * next glyph was painting through the pill. A canvas clip cannot escape.

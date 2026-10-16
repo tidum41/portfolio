@@ -9,8 +9,8 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  ADD_W, camAt, CART_CUT, CLICK, CONF_FADE, CUT_TPL, DROPDOWN_OPEN, DURATION, FILL, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_ROLL, PILL_SHOT, PILL_W1, ROLL_PILL_F,
-  OPEN_MOVE, PTR_E, SHOT_B2, SHOT_HEADER, SHOT_ORDER, SHOT_QTY, pillBox, prog, type Cam,
+  ADD_W, camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, DURATION, FILL, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_REST, PILL_SHOT, PILL_W1,
+  OPEN_MOVE, PTR_E, SHOT_HEADER, SHOT_ORDER, pillBox, prog, type Cam,
 } from "./timeline";
 
 export type Pt = [number, number];
@@ -47,8 +47,6 @@ export type Key = [number, Pt];
 /** Gentle curve. Perpendicular bow, small enough that the path does not loop. */
 const BOW = 0.06;
 
-/** Screen-continuous landing in the Match kit close-up. The card is already under the tip. */
-const tplLand: Pt = toPage(SHOT_B2, ...toScreen(SHOT_QTY, P.qty[0], P.qty[1]));
 /** Add to cart's screen pixel, mapped into the header shot so the cut does not teleport. */
 const headerLand: Pt = toPage(SHOT_HEADER, ...toScreen(SHOT_ORDER, P.add[0], P.add[1]));
 
@@ -64,22 +62,23 @@ export const KEYS: Key[] = [
   // camera move carries the cursor instead of the cursor travelling.
   [133, P.result],
   [145, P.qty],
-  // Rest on 12 through the price and the read.
-  [CUT_TPL - 1, P.qty],
-  [CUT_TPL, tplLand],
-  [179, P.tpl],
+  // Rest on 12 through the price, the pull-back, and the Saved hold.
+  // Same point, so the camera carries the cursor.
+  [201, P.qty],
+  [217, P.tpl],
   // Rest through the template click and the popup opening.
-  [191, P.tpl],
-  [201, P.tplAdd],
-  // Rest through the Add to order click, the cut back, the stagger, and the read.
+  [229, P.tpl],
+  [233, P.tplAdd],
+  // Rest through the Add to order click, the cut back, and the stagger.
   // Same point, so the cut keeps the cursor on the button that caused the lines.
-  [241, P.tplAdd],
-  [249, P.add],
+  [265, P.tplAdd],
+  [269, P.add],
   // Last pressed frame. The release is the cut, so this key cannot share that frame.
   [CLICK.add + 2, P.add],
   [PILL_SHOT, headerLand],
-  // Same point through the roll, so the cursor does not travel across the amount.
-  [PILL_ROLL + ROLL_PILL_F, headerLand],
+  // Same point through the roll and the 400ms hold, so the cursor does not
+  // travel across the amount.
+  [PILL_REST, headerLand],
   [PILL_ARRIVE, P.pillIcon],
   [CLICK.pill + 2, P.pillIcon],
   // Hold on the icon through the frame before the cut. A shared point with
