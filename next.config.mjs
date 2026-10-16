@@ -34,6 +34,12 @@ const nextConfig = {
       "@phosphor-icons/react",
     ],
   },
+  async rewrites() {
+    return [
+      { source: "/dev/cart-pill-lab", destination: "/dev/cart-pill-lab/index.html" },
+      { source: "/dev/cart-pill-lab/", destination: "/dev/cart-pill-lab/index.html" },
+    ];
+  },
   async redirects() {
     return [
       {

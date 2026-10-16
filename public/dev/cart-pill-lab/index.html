@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cart pill</title>
+<style>
+@font-face {
+  font-family: FKGroteskNeue;
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("../joola-proto/fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: FKGroteskNeue;
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("../joola-proto/fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: FKGroteskNeue;
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("../joola-proto/fonts/FKGroteskNeue-700-normal.woff2") format("woff2");
+}
+
+:root {
+  --ink: #1a1a1a;
+  --muted: #5c5c66;
+  --line: #e6e8ef;
+  --blue: #2c3ee0;
+  --guide: #9a3412;
+  --bg: #f4f5f7;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font: inherit;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+button:hover { color: var(--ink); }
+button:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
+}
+button[aria-pressed="true"] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stage {
+  display: flex;
+  justify-content: safe center;
+  align-items: center;
+  min-height: 46vh;
+  padding: 48px 16px 8px;
+  overflow-x: auto;
+}
+
+.frame {
+  position: relative;
+  display: inline-block;
+  padding: 32px 64px 64px;
+}
+
+.pill-zoom { display: inline-block; zoom: 2; }
+
+.cart-pill {
+  position: relative;
+  box-sizing: border-box;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-family: FKGroteskNeue, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  white-space: nowrap;
+  user-select: none;
+}
+.cart-icon {
+  display: block;
+  flex-shrink: 0;
+  margin-right: -2px;
+  transform: translate(-0.375px, -0.25px);
+}
+.cart-amount-display {
+  display: inline-flex;
+  margin-left: 0.5625px;
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
+  transform: translate(-0.196px, 0.134px);
+}
+.count-chip {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin: 0 0 0 -0.5625px;
+  padding: 1px 0 0;
+  border-radius: 10px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-box: trim-both cap alphabetic;
+  transform: translate(-0.375px, 0.02px);
+}
+.count-fig {
+  display: block;
+  line-height: 1;
+  transform: translate(-0.36px, -0.46px);
+}
+
+#guides {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+#guides .hair {
+  stroke: var(--guide);
+  stroke-width: 1;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+#guides .on .hair { stroke: var(--ink); }
+#guides text {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  fill: var(--guide);
+  pointer-events: visiblePainted;
+}
+#guides .on text { fill: var(--ink); }
+#guides .hit {
+  stroke: transparent;
+  stroke-width: 10;
+  fill: none;
+  pointer-events: stroke;
+}
+
+.tools {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 12px 20px 64px;
+}
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.zoom { display: flex; gap: 14px; }
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 40px;
+  margin-top: 28px;
+}
+.why button {
+  display: grid;
+  grid-template-columns: 4.6em minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 4px 0;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.45;
+}
+.why button.on { color: var(--ink); }
+.why .name { color: inherit; }
+
+.pick { display: flex; gap: 14px; }
+.pad {
+  display: grid;
+  grid-template-columns: 32px 32px 32px;
+  grid-template-areas: ". u ." "l . r" ". d .";
+  width: 96px;
+  margin: 12px 0 4px;
+}
+.pad button { height: 28px; }
+.pad [data-y="-1"] { grid-area: u; }
+.pad [data-x="-1"] { grid-area: l; }
+.pad [data-x="1"] { grid-area: r; }
+.pad [data-y="1"] { grid-area: d; }
+.readout {
+  display: grid;
+  grid-template-columns: 3.4em minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 3px;
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+.readout span { white-space: nowrap; }
+.readout .h { color: var(--muted); }
+.readout .sel { color: var(--ink); }
+.actions { display: flex; gap: 16px; margin-top: 14px; }
+.hint { margin: 10px 0 0; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .stage { min-height: 0; padding-top: 28px; }
+  .frame { padding: 28px 36px 60px; }
+  .cols { grid-template-columns: 1fr; gap: 28px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="stage">
+    <div class="frame" id="frame">
+      <div class="pill-zoom" id="zoom">
+        <div class="cart-pill" id="pill">
+          <svg class="cart-icon" id="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          <span class="cart-amount-display" id="price">$4,908.66</span>
+          <span class="count-chip" id="badge"><span class="count-fig" id="four">4</span></span>
+        </div>
+      </div>
+      <svg id="guides" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  <div class="tools">
+    <div class="controls">
+      <button type="button" id="guides-btn" aria-pressed="true">Guides</button>
+      <div class="zoom" role="group" aria-label="Zoom">
+        <button type="button" data-zoom="1">1×</button>
+        <button type="button" data-zoom="2" aria-pressed="true">2×</button>
+        <button type="button" data-zoom="4">4×</button>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="why" id="why"></div>
+      <div class="nudge">
+        <div class="pick" role="group" aria-label="Element">
+          <button type="button" data-part="icon" aria-pressed="true">icon</button>
+          <button type="button" data-part="price">price</button>
+          <button type="button" data-part="badge">badge</button>
+          <button type="button" data-part="four">4</button>
+        </div>
+        <div class="pad">
+          <button type="button" data-x="0" data-y="-1" aria-label="Nudge up">↑</button>
+          <button type="button" data-x="-1" data-y="0" aria-label="Nudge left">←</button>
+          <button type="button" data-x="1" data-y="0" aria-label="Nudge right">→</button>
+          <button type="button" data-x="0" data-y="1" aria-label="Nudge down">↓</button>
+        </div>
+        <div class="readout" id="readout"></div>
+        <div class="actions">
+          <button type="button" id="reset">Reset</button>
+          <button type="button" id="copy">Copy values</button>
+        </div>
+        <p class="hint">arrows 0.25 · shift 1</p>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+(function () {
+  var BASE = {
+    icon: { x: -0.375, y: -0.25 },
+    price: { x: -0.196, y: 0.134 },
+    badge: { x: -0.375, y: 0.02 },
+    four: { x: -0.36, y: -0.46 }
+  };
+  var WHY = [
+    { id: "axis", name: "Axis", text: "Icon and circle set the line, and the price is brought down to them." },
+    { id: "figures", name: "Figures", text: "Price sits on the figure midline, so the comma and $ tails don’t count." },
+    { id: "basket", name: "Basket", text: "Basket centred on its body, not its wheels, because the eye reads the mass there." },
+    { id: "circle", name: "Circle", text: "The circle’s centre is the anchor, not the white left inside it." },
+    { id: "four", name: "4", text: "4 shifted 0.27px left because its diagonal and crossbar make the left side heavy." },
+    { id: "insets", name: "Insets", text: "Same ink-to-edge on both ends." },
+    { id: "gaps", name: "Gaps", text: "Cart-to-price matches price-to-circle." }
+  ];
+  var PRICE = "$4,908.66";
+  var PARTS = ["icon", "price", "badge", "four"];
+
+  var frame = document.getElementById("frame");
+  var zoomEl = document.getElementById("zoom");
+  var pill = document.getElementById("pill");
+  var icon = document.getElementById("icon");
+  var price = document.getElementById("price");
+  var badge = document.getElementById("badge");
+  var four = document.getElementById("four");
+  var svg = document.getElementById("guides");
+  var whyEl = document.getElementById("why");
+  var readout = document.getElementById("readout");
+  var els = { icon: icon, price: price, badge: badge, four: four };
+
+  var nudge = { icon: { x: 0, y: 0 }, price: { x: 0, y: 0 }, badge: { x: 0, y: 0 }, four: { x: 0, y: 0 } };
+  var part = "icon";
+  var guidesOn = true;
+  var active = null;
+  var glyphCache = new Map();
+  var iconShape = null;
+  var NS = "http://www.w3.org/2000/svg";
+
+  WHY.forEach(function (w) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.dataset.g = w.id;
+    b.innerHTML = '<span class="name">' + w.name + '</span><span>' + w.text + '</span>';
+    b.addEventListener("pointerenter", function () { setActive(w.id); });
+    b.addEventListener("pointerleave", function () { setActive(null); });
+    b.addEventListener("focus", function () { setActive(w.id); });
+    b.addEventListener("blur", function () { setActive(null); });
+    whyEl.appendChild(b);
+  });
+
+  function q(n) { return Math.round(n * 1000) / 1000; }
+  function signed(n, d) {
+    var v = Math.round(n * Math.pow(10, d)) / Math.pow(10, d);
+    return (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+  }
+  function zoom() {
+    if (zoomEl.currentCSSZoom) return zoomEl.currentCSSZoom;
+    var z = parseFloat(getComputedStyle(zoomEl).zoom);
+    return z || 1;
+  }
+  function live(k) {
+    return { x: q(BASE[k].x + nudge[k].x), y: q(BASE[k].y + nudge[k].y) };
+  }
+
+  function apply() {
+    PARTS.forEach(function (k) {
+      var v = live(k);
+      els[k].style.transform = "translate(" + v.x + "px, " + v.y + "px)";
+    });
+  }
+
+  function glyph(ch, fontPx) {
+    var key = ch + "@" + fontPx;
+    if (glyphCache.has(key)) return glyphCache.get(key);
+    var S = 8;
+    var px = fontPx * S;
+    var c = document.createElement("canvas");
+    c.width = Math.ceil(px * 4);
+    c.height = Math.ceil(px * 4);
+    var g = c.getContext("2d", { willReadFrequently: true });
+    g.font = '500 ' + px + 'px FKGroteskNeue';
+    g.fillStyle = "#000";
+    g.textBaseline = "alphabetic";
+    var ox = px, oy = px * 2;
+    g.fillText(ch, ox, oy);
+    var d = g.getImageData(0, 0, c.width, c.height).data;
+    var n = 0, sx = 0, sy = 0, minX = c.width, maxX = 0;
+    for (var y = 0; y < c.height; y++) {
+      for (var x = 0; x < c.width; x++) {
+        var a = d[(y * c.width + x) * 4 + 3];
+        if (a < 16) continue;
+        n += a; sx += (x + 0.5) * a; sy += (y + 0.5) * a;
+        if (a > 128) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+        }
+      }
+    }
+    var m = g.measureText(ch);
+    var out = n ? {
+      cx: (sx / n - ox) / S,
+      cy: (sy / n - oy) / S,
+      inkLeft: minX / S - ox / S,
+      inkRight: (maxX + 1) / S - ox / S,
+      ascent: m.actualBoundingBoxAscent / S,
+      advance: m.width / S
+    } : { cx: 0, cy: 0, inkLeft: 0, inkRight: 0, ascent: fontPx * 0.7, advance: fontPx * 0.6 };
+    glyphCache.set(key, out);
+    return out;
+  }
+
+  function rasterIcon() {
+    var S = 16, W = 24 * S;
+    var c = document.createElement("canvas");
+    c.width = W; c.height = W;
+    var g = c.getContext("2d", { willReadFrequently: true });
+    g.scale(S, S);
+    g.lineWidth = 2;
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.strokeStyle = "#000";
+    g.beginPath(); g.arc(8, 21, 1, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(19, 21, 1, 0, Math.PI * 2); g.stroke();
+    g.stroke(new Path2D("M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"));
+    var data = g.getImageData(0, 0, W, W).data;
+    var minX = W, minY = W, maxX = 0, maxY = 0;
+    var bn = 0, bsx = 0, bsy = 0;
+    var wheelR = 2.7 * S;
+    var rim = 6 * S;
+    for (var y = 0; y < W; y++) {
+      for (var x = 0; x < W; x++) {
+        var a = data[(y * W + x) * 4 + 3];
+        if (a < 16) continue;
+        if (a > 128) {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+        var dx1 = x + 0.5 - 8 * S, dy1 = y + 0.5 - 21 * S;
+        var dx2 = x + 0.5 - 19 * S, dy2 = y + 0.5 - 21 * S;
+        var wheel = dx1 * dx1 + dy1 * dy1 < wheelR * wheelR || dx2 * dx2 + dy2 * dy2 < wheelR * wheelR;
+        if (wheel || y < rim) continue;
+        bn += a; bsx += (x + 0.5) * a; bsy += (y + 0.5) * a;
+      }
+    }
+    return {
+      minX: minX / S, minY: minY / S,
+      maxX: (maxX + 1) / S, maxY: (maxY + 1) / S,
+      bx: bsx / bn / S, by: bsy / bn / S
+    };
+  }
+
+  var capCache = new Map();
+  function capHeight(fontPx) {
+    if (capCache.has(fontPx)) return capCache.get(fontPx);
+    var probe = document.createElement("span");
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText = "position:absolute;visibility:hidden;left:0;top:0;padding:0;margin:0;border:0;white-space:pre;display:inline-block";
+    probe.style.fontFamily = "FKGroteskNeue, sans-serif";
+    probe.style.fontWeight = "500";
+    probe.style.fontSize = fontPx + "px";
+    probe.style.lineHeight = fontPx + "px";
+    probe.style.fontVariantNumeric = "tabular-nums";
+    probe.style.textBox = "trim-both cap alphabetic";
+    probe.textContent = "0";
+    document.body.appendChild(probe);
+    var h = probe.getBoundingClientRect().height;
+    probe.remove();
+    capCache.set(fontPx, h);
+    return h;
+  }
+
+  // @font-face fixes ascent at 100% and descent at 28%, so the alphabetic
+  // baseline sits at a known place in a line box even when text-box trim
+  // does not shrink a flex item.
+  function baselineIn(el) {
+    var cs = getComputedStyle(el);
+    var fontPx = parseFloat(cs.fontSize);
+    var linePx = parseFloat(cs.lineHeight);
+    var ascent = fontPx;
+    var descent = fontPx * 0.28;
+    var half = (linePx - ascent - descent) / 2;
+    return { fontPx: fontPx, baseline: half + ascent, cap: capHeight(fontPx) };
+  }
+
+  function svgEl(name, attrs, parent) {
+    var n = document.createElementNS(NS, name);
+    Object.keys(attrs).forEach(function (k) { n.setAttribute(k, String(attrs[k])); });
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  function setActive(id) {
+    if (active === id) return;
+    active = id;
+    svg.querySelectorAll("[data-g]").forEach(function (g) {
+      g.setAttribute("class", g.getAttribute("data-g") === id ? "on" : "");
+    });
+    whyEl.querySelectorAll("button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.g === id);
+    });
+  }
+
+  function measure() {
+    if (!iconShape) return;
+    var z = zoom();
+    var fr = frame.getBoundingClientRect();
+    svg.setAttribute("viewBox", "0 0 " + fr.width + " " + fr.height);
+    svg.replaceChildren();
+    if (!guidesOn) return;
+
+    function L(x, y) { return [x - fr.left, y - fr.top]; }
+
+    var ir = icon.getBoundingClientRect();
+    var s = ir.width / 24;
+    var iconLeft = ir.left + iconShape.minX * s;
+    var iconRight = ir.left + iconShape.maxX * s;
+    var basket = L(ir.left + iconShape.bx * s, ir.top + iconShape.by * s);
+
+    var node = price.firstChild;
+    var pLeft = Infinity, pRight = -Infinity;
+    for (var i = 0; i < PRICE.length; i++) {
+      var range = document.createRange();
+      range.setStart(node, i);
+      range.setEnd(node, i + 1);
+      var rr = range.getBoundingClientRect();
+      var m = glyph(PRICE[i], 13);
+      var extra = rr.width / z - m.advance;
+      var left = rr.left + (m.inkLeft + extra / 2) * z;
+      var right = rr.left + (m.inkRight + extra / 2) * z;
+      if (left < pLeft) pLeft = left;
+      if (right > pRight) pRight = right;
+    }
+
+    var pr = price.getBoundingClientRect();
+    var priceLine = baselineIn(price);
+    var figureY = pr.top + (priceLine.baseline - priceLine.cap / 2) * z;
+    var figures = [L(pLeft, figureY), L(pRight, figureY)];
+
+    var cr = badge.getBoundingClientRect();
+    var circle = L((cr.left + cr.right) / 2, (cr.top + cr.bottom) / 2);
+
+    var frng = document.createRange();
+    frng.selectNodeContents(four);
+    var frr = frng.getBoundingClientRect();
+    var m4 = glyph("4", 12);
+    var fExtra = frr.width / z - m4.advance;
+    var fourX = frr.left + (m4.cx + fExtra / 2) * z;
+    var fourLine = baselineIn(four);
+    var fourY = four.getBoundingClientRect().top + (fourLine.baseline + m4.cy) * z;
+    var fourPt = L(fourX, fourY);
+    var dx = (fourX - (cr.left + cr.right) / 2) / z;
+    var dy = (fourY - (cr.top + cr.bottom) / 2) / z;
+
+    var pillR = pill.getBoundingClientRect();
+    var edge = document.createElement("div");
+    edge.style.cssText = "position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none";
+    pill.appendChild(edge);
+    var edgeR = edge.getBoundingClientRect();
+    edge.remove();
+    var innerL = edgeR.left;
+    var innerR = edgeR.right;
+    var leftInset = (iconLeft - innerL) / z;
+    var rightInset = (innerR - cr.right) / z;
+    var gapL = (pLeft - iconRight) / z;
+    var gapR = (cr.left - pRight) / z;
+
+    var yLine = pillR.bottom - fr.top + 32;
+    var iL = L(innerL, 0)[0];
+    var iR = L(innerR, 0)[0];
+    var inkL = L(iconLeft, 0)[0];
+    var inkR = L(iconRight, 0)[0];
+    var priceL = figures[0][0];
+    var priceR = figures[1][0];
+    var circL = L(cr.left, 0)[0];
+    var circR = L(cr.right, 0)[0];
+
+    function group(id) {
+      var g = svgEl("g", { "data-g": id }, svg);
+      if (active === id) g.setAttribute("class", "on");
+      return g;
+    }
+    function hair(parent, x1, y1, x2, y2) {
+      svgEl("line", { x1: x1, y1: y1, x2: x2, y2: y2, class: "hit" }, parent);
+      svgEl("line", { x1: x1, y1: y1, x2: x2, y2: y2, class: "hair" }, parent);
+    }
+    function plus(parent, x, y, r) {
+      hair(parent, x - r, y, x + r, y);
+      hair(parent, x, y - r, x, y + r);
+    }
+    function cross(parent, x, y, r) {
+      hair(parent, x - r, y - r, x + r, y + r);
+      hair(parent, x - r, y + r, x + r, y - r);
+    }
+    function text(parent, str, x, y, anchor) {
+      var t = svgEl("text", { x: x, y: y, "text-anchor": anchor || "middle" }, parent);
+      t.textContent = str;
+    }
+    function dim(parent, x0, x1, y) {
+      hair(parent, x0, y, x1, y);
+      hair(parent, x0, y - 4, x0, y + 4);
+      hair(parent, x1, y - 4, x1, y + 4);
+    }
+
+    var nameY = L(0, pillR.top)[1] - 10;
+
+    var axis = group("axis");
+    hair(axis, 8, circle[1], fr.width - 8, circle[1]);
+    text(axis, "axis", 8, circle[1] - 14, "start");
+
+    var fig = group("figures");
+    hair(fig, figures[0][0], figures[0][1], figures[1][0], figures[1][1]);
+    text(fig, "figures", (figures[0][0] + figures[1][0]) / 2, nameY, "middle");
+
+    var bsk = group("basket");
+    plus(bsk, basket[0], basket[1], 5);
+    text(bsk, "basket", basket[0], nameY, "middle");
+
+    var cir = group("circle");
+    plus(cir, circle[0], circle[1], 5);
+    text(cir, "circle", circle[0], nameY, "middle");
+
+    var fourG = group("four");
+    cross(fourG, fourPt[0], fourPt[1], 4);
+    if (Math.hypot(fourPt[0] - circle[0], fourPt[1] - circle[1]) > 1.5) {
+      hair(fourG, fourPt[0], fourPt[1], circle[0], circle[1]);
+    }
+    text(fourG, signed(dx, 2) + ", " + signed(dy, 2), circle[0], L(0, pillR.bottom)[1] + 14, "middle");
+
+    var insets = group("insets");
+    dim(insets, iL, inkL, yLine);
+    dim(insets, circR, iR, yLine);
+    text(insets, signed(leftInset, 2), iL - 6, yLine + 3, "end");
+    text(insets, signed(rightInset, 2), iR + 6, yLine + 3, "start");
+
+    var gaps = group("gaps");
+    var yGap = yLine + 16;
+    dim(gaps, inkR, priceL, yGap);
+    dim(gaps, priceR, circL, yGap);
+    text(gaps, signed(gapL, 2), (inkR + priceL) / 2, yGap - 8, "middle");
+    text(gaps, signed(gapR, 2), (priceR + circL) / 2, yGap - 8, "middle");
+
+    window.__pill = {
+      z: z, leftInset: leftInset, rightInset: rightInset, gapL: gapL, gapR: gapR,
+      dx: dx, dy: dy, cap: priceLine.cap, baseline: priceLine.baseline,
+      basket: { x: iconShape.bx, y: iconShape.by },
+      values: values()
+    };
+  }
+
+  function values() {
+    var o = {};
+    PARTS.forEach(function (k) { o[k] = live(k); });
+    return o;
+  }
+
+  function paintReadout() {
+    readout.replaceChildren();
+    var h0 = document.createElement("span");
+    var h1 = document.createElement("span");
+    h1.className = "h"; h1.textContent = "p42";
+    var h2 = document.createElement("span");
+    h2.className = "h"; h2.textContent = "now";
+    readout.append(h0, h1, h2);
+    PARTS.forEach(function (k) {
+      var name = document.createElement("span");
+      name.textContent = k === "four" ? "4" : k;
+      var a = document.createElement("span");
+      a.textContent = signed(BASE[k].x, 3) + ", " + signed(BASE[k].y, 3);
+      var b = document.createElement("span");
+      var v = live(k);
+      b.textContent = signed(v.x, 3) + ", " + signed(v.y, 3);
+      if (k === part) { name.className = a.className = b.className = "sel"; }
+      readout.append(name, a, b);
+    });
+  }
+
+  function selectPart(k) {
+    part = k;
+    document.querySelectorAll("[data-part]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.part === k ? "true" : "false");
+    });
+    paintReadout();
+  }
+
+  function stepOf(e) { return e.shiftKey ? 1 : 0.25; }
+
+  function move(x, y, step) {
+    nudge[part].x = q(nudge[part].x + x * step);
+    nudge[part].y = q(nudge[part].y + y * step);
+    apply();
+    paintReadout();
+    measure();
+  }
+
+  document.querySelectorAll("[data-part]").forEach(function (b) {
+    b.addEventListener("click", function () { selectPart(b.dataset.part); });
+  });
+  document.querySelectorAll(".pad button").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      move(Number(b.dataset.x), Number(b.dataset.y), stepOf(e));
+    });
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    PARTS.forEach(function (k) { nudge[k].x = 0; nudge[k].y = 0; });
+    apply();
+    paintReadout();
+    measure();
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = document.getElementById("copy");
+    var json = JSON.stringify(values());
+    var done = function () {
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = "Copy values"; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json).then(done, function () { fallback(json); done(); });
+    } else { fallback(json); done(); }
+    function fallback(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+  });
+  document.getElementById("guides-btn").addEventListener("click", function () {
+    guidesOn = !guidesOn;
+    this.setAttribute("aria-pressed", guidesOn ? "true" : "false");
+    measure();
+  });
+  document.querySelectorAll("[data-zoom]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      zoomEl.style.zoom = b.dataset.zoom;
+      document.querySelectorAll("[data-zoom]").forEach(function (o) {
+        o.setAttribute("aria-pressed", o === b ? "true" : "false");
+      });
+      requestAnimationFrame(measure);
+    });
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    var map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    var d = map[e.key];
+    if (!d) return;
+    e.preventDefault();
+    move(d[0], d[1], stepOf(e));
+  });
+
+  svg.addEventListener("pointerover", function (e) {
+    var g = e.target.closest && e.target.closest("[data-g]");
+    setActive(g ? g.getAttribute("data-g") : null);
+  });
+  svg.addEventListener("pointerout", function (e) {
+    var g = e.target.closest && e.target.closest("[data-g]");
+    if (!g) return;
+    if (e.relatedTarget && g.contains(e.relatedTarget)) return;
+    setActive(null);
+  });
+
+  paintReadout();
+  apply();
+  document.fonts.ready.then(function () {
+    return Promise.all([
+      document.fonts.load("500 13px FKGroteskNeue"),
+      document.fonts.load("500 12px FKGroteskNeue")
+    ]);
+  }).then(function () {
+    glyphCache.clear();
+    iconShape = rasterIcon();
+    measure();
+  });
+  window.addEventListener("resize", function () { measure(); });
+})();
+</script>
+</body>
+</html>
