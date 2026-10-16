@@ -2,11 +2,9 @@
  * Film timeline: pure numbers + camera maths, no Remotion imports, so
  * scripts/timeline-report.mjs can evaluate it in node (camera velocity vs content animation).
  *
- * Pass 36: 14.0s. Frames 0–90 and everything from the cart cut (300) keep
- * their pass-35 values. After the Perseus line lands, the camera eases out
- * onto the qty row. The kit lines still start only after the saved-orders
- * popup's Add to order click. Place order, the check, the card grow, and
- * both logo fades keep their pass-32 lengths.
+ * Pass 37: 15.0s. Frames 0–161 stay pass 36. The extra second is a pull-back
+ * onto Saved orders and a longer cart roll, both before the cart pill click.
+ * From that click to the last frame is the pass-36 tail, shifted 30 frames.
  */
 export const FPS = 30;
 
@@ -51,6 +49,8 @@ export const PUSH_E = MOVE_E;
 export const PTR_E = bezier(0.42, 0, 0.18, 1);
 /** Middle of the film only. Symmetric ease-in-out. Not used on the open, and not from the cart cut. */
 export const FLOW_E = bezier(0.65, 0, 0.35, 1);
+/** Pill width, the dollar roll, and the count circle. Not the cursor, not the camera. */
+export const PILL_E = bezier(0.22, 1, 0.36, 1);
 export const INOUT_E = MOVE_E;
 export const SETTLE = MOVE_E;
 export const EASE_OUT = bezier(0.2, 0, 0, 1);
@@ -59,7 +59,7 @@ export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const prog = (f: number, a: number, b: number, e: (t: number) => number = CAM_E) => e(clamp01((f - a) / (b - a)));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/* ---------- pass 35 beats (420 frames, cart cut at 300) ---------- */
+/* ---------- pass 37 beats (450 frames, cart click at 326) ---------- */
 /** Logo leaves first (quick), then the dashboard fades up off the solid ground. */
 export const LOGO_OUT = [0, 5] as const;
 export const UI_IN = [5, 11] as const;
@@ -70,7 +70,7 @@ export const LEAD = 2;
  * the whole way. It travels to the field only after the push has settled.
  */
 export const OPEN_MOVE = [12, 30] as const;
-export const CLICK = { search: 50, result: 97, qty: 151, tpl: 185, tplAdd: 207, add: 255, pill: 296, place: 321 };
+export const CLICK = { search: 50, result: 97, qty: 151, tpl: 223, tplAdd: 239, add: 275, pill: 326, place: 351 };
 export const ENTER = CLICK.result;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 16] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -94,8 +94,12 @@ export const TPL_HOVER = [CLICK.tpl - LEAD, CLICK.tplAdd] as const;
 /** Popup scale 0.98→1 over 6 frames. Opacity stays 1. Then the cursor rests. */
 export const POP_IN = [CLICK.tpl, CLICK.tpl + 6] as const;
 export const POP_HOVER = CLICK.tplAdd - LEAD;
-/** Hard cut onto Match kit. The card and the popup are the cause, and they have to be readable. */
-export const CUT_TPL = 171;
+/**
+ * After the qty price has been read. One pull-back, 24 frames (800ms),
+ * ease-in-out. The cursor stays on the 12 chip. The hold that follows is
+ * the Saved label with Match kit under it. No cut on this move.
+ */
+export const REVEAL = [168, 192] as const;
 /**
  * Hard cut back to the order on the Add to order release. The three kit
  * lines start on this frame. They never appear before the popup click.
@@ -130,82 +134,80 @@ export const PILL_W0 = 2 + 24 + 14 + 8 + PILL_AMT0;
 export const PILL_W1 = PILL_W0 + (PILL_AMT1 - PILL_AMT0) + 8 + 20;
 /** Amount width once "$4,908.66" has settled. The badge is not included. */
 export const PILL_NUM_W = PILL_AMT1;
-/** Cursor reaches the cart icon after the roll, and dwells before the click. */
-export const PILL_ARRIVE = 290;
 /**
  * Digit roll, pill width, and the count circle share one window: the release
- * frame, then 9 frames (300ms), one ease-out.
+ * frame, then 14 frames (~467ms), one curve. They arrive on the same frame.
  */
 export const PILL_ROLL = PILL_SHOT;
-export const ROLL_PILL_F = 9;
+export const ROLL_PILL_F = 14;
 export const PILL_FILL = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
 export const PILL_BADGE = [PILL_ROLL, PILL_ROLL + ROLL_PILL_F] as const;
+/** 400ms after the roll lands. The cursor stays under the pill until here. */
+export const PILL_REST = PILL_ROLL + ROLL_PILL_F + 12;
+/** Cursor reaches the cart icon after that hold, and dwells before the click. */
+export const PILL_ARRIVE = PILL_REST + 16;
 
 /** One eased t for the pill's width, the digits, and the count circle. */
 export const pillMotion = (f: number) =>
-  f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, EASE_OUT) : 0;
+  f >= PILL_ROLL ? prog(f, PILL_ROLL, PILL_ROLL + ROLL_PILL_F, PILL_E) : 0;
 
 /**
- * Whole-pixel box for this frame. The badge slot grows with the same t, and
- * a negative margin cancels the 8px flex gap until the circle has room, so
- * the 12px end padding does not jump.
+ * Sub-pixel box. Width, the amount window, and the badge share one t, so
+ * they land together. At the ends the box is the tabular 86 and 143.
+ * `pull` cancels the 8px flex gap until the circle has room.
  */
 export const pillBox = (f: number) => {
   const t = pillMotion(f);
-  // The box leads the digits, same start and inside the same 300ms, so the $
-  // is on screen before the roll's middle. The ends stay the tabular widths.
-  const wt = Math.min(1, t / 0.35);
-  const amt = Math.round(lerp(PILL_AMT0, PILL_AMT1, wt));
-  const badge = Math.round(20 * wt);
-  const pull = Math.round(-8 * (1 - wt));
-  const extra = badge === 0 ? 0 : 8 + pull + badge;
-  return { t, amt, badge, pull, w: 48 + amt + extra };
+  const amt = lerp(PILL_AMT0, PILL_AMT1, t);
+  const extra = t <= 0 ? 0 : 28 * t;
+  return { t, amt, badge: 20 * t, pull: -8 * (1 - t), w: 48 + amt + extra };
 };
 /**
  * Hard cut to the cart summary. Everything from here to the last frame is the
  * pass-32 Place order / Order placed / logo outro block, shifted so the film
  * ends at frame 419.
  */
-export const CART_CUT = 300;
+export const CART_CUT = 330;
 export const CART_FADE = [CART_CUT, CART_CUT] as const;
 export const PAN_CART = [CART_CUT, CART_CUT] as const;
 export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
 /** "Place order" crossfades to the processing face. Done as the hold becomes readable. */
-export const PROC_XFADE = [324, 328] as const;
+export const PROC_XFADE = [354, 358] as const;
 /** Press, then "Placing order" holds ~0.73s once the label is solid. */
-export const PROC = [324, 347] as const;
+export const PROC = [354, 377] as const;
 /** Whole-button colour, 5 frames ≈ 167ms, then the check stroke, 8 frames ≈ 267ms. */
-export const PLACE_COLOR = [334, 339] as const;
-export const CHECK_DRAW = [339, 347] as const;
+export const PLACE_COLOR = [364, 369] as const;
+export const CHECK_DRAW = [369, 377] as const;
 /** "Order placed" on the green button, ~0.4s. */
-export const SUCCESS_HOLD = [347, 353] as const;
+export const SUCCESS_HOLD = [377, 383] as const;
 /** Summary content fades. The card chrome stays. */
-export const CONF_FADE = [353, 357] as const;
-export const CONF_CUT = 357;
+export const CONF_FADE = [383, 387] as const;
+export const CONF_CUT = 387;
 /** Top-anchored height ease, ~300ms, MOVE_E. */
-export const CONF_GROW = [357, 366] as const;
+export const CONF_GROW = [387, 396] as const;
 /** Short recenter once the card has grown. */
-export const CONF_RECENTER = [372, 382] as const;
+export const CONF_RECENTER = [402, 412] as const;
 export const CONF_SETTLE = CONF_GROW;
 export const CONF_MORPH = CONF_GROW;
 export const CONF_XFADE = CONF_FADE;
 /** Hold Order placed, then fade the UI to the ground before the logo. */
-export const CONF_HOLD = [382, 392] as const;
+export const CONF_HOLD = [412, 422] as const;
 /** UI fades to the solid ground, then the logo fades and scales 0.96→1 over 9 frames (300ms). */
-export const UI_OUT = [392, 400] as const;
-export const LOGO_IN = [400, 409] as const;
-export const END_FADE = [UI_OUT[0], 419] as const;
+export const UI_OUT = [422, 430] as const;
+export const LOGO_IN = [430, 439] as const;
+export const END_FADE = [UI_OUT[0], 449] as const;
 export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];
 
-export const CUTS: number[] = [CUT_TPL, CUT_LINES, PILL_SHOT, CART_CUT, CONF_CUT];
+export const CUTS: number[] = [CUT_LINES, PILL_SHOT, CART_CUT, CONF_CUT];
 export const CONTENT_ANIMS: [string, number, number][] = [
   ["search click + typing", CLICK.search, TYPE_SEARCH[1]],
   ["results dropdown", DROPDOWN_OPEN, DROPDOWN_OPEN + DROP_F],
   ["row insert", INSERT[0], INSERT[1]],
   ["zoom out to the line", ZOOM_OUT[0], ZOOM_OUT[1]],
   ["qty digit roll", CLICK.qty, CLICK.qty + ROLL_F],
+  ["pull back to saved orders", REVEAL[0], REVEAL[1]],
   ["template popover", POP_IN[0], POP_IN[1]],
   ["order fills", FILL, FILL_END],
   ["pill width", PILL_FILL[0], PILL_FILL[1]],
@@ -247,8 +249,7 @@ export const SHOT_B: Cam = { cx: 803, cy: 332.4, s: 3.3 };
  * Add to order. Match kit is whole; the card above and the footer
  * Add button are outside the frame so nothing is sliced.
  */
-/** Add to order. Popover radius is whole; the line above Match kit and the footer rule stay out.
- *  cy +0.4 follows the Quick order title locking to a 28px line box. */
+/** Old Match kit macro. Not a camera target. */
 export const SHOT_B2: Cam = { cx: 1158, cy: 595.4, s: 6.4 };
 /**
  * Kit lines and Add 4 lines to cart in one hold. s=1.32 is the widest scale
@@ -271,6 +272,12 @@ export const SHOT_ORDER: Cam = { cx: 768, cy: 378, s: 1.35 };
  * the line total. The product name was already read in the search close-up.
  */
 export const SHOT_QTY: Cam = { cx: 782, cy: 360, s: 3 };
+/**
+ * Qty chip, the Saved label, Match kit, and the popup in one hold.
+ * s=2.55 is the largest scale that keeps the resting cursor and the popup
+ * inside together, so the pull-back does not need a second move.
+ */
+export const SHOT_SAVED: Cam = { cx: 1016, cy: 486, s: 2.55 };
 /** Kept so a report can name the old tight shots. Not a camera target. */
 export const SHOT_ADD: Cam = { cx: 1212.5, cy: 748.4, s: 4.4 };
 export const SHOT_ROWS: Cam = { cx: 640, cy: 370.4, s: 1.78 };
@@ -307,7 +314,7 @@ export const CONF_CAM = SHOT_D;
 export const MOVES: Move[] = [
   { a: OPEN_MOVE[0], b: OPEN_MOVE[1], to: SHOT_A, label: "open: rest, then search", ease: CAM_E },
   { a: ZOOM_OUT[0], b: ZOOM_OUT[1], to: SHOT_QTY, label: "zoom out: the line", ease: FLOW_E },
-  { a: CUT_TPL, b: CUT_TPL, to: SHOT_B2, label: "cut: saved orders" },
+  { a: REVEAL[0], b: REVEAL[1], to: SHOT_SAVED, label: "pull back: saved orders", ease: FLOW_E },
   { a: CUT_LINES, b: CUT_LINES, to: SHOT_ORDER, label: "cut: lines land" },
   { a: PILL_SHOT, b: PILL_SHOT, to: SHOT_HEADER, label: "cut: header cart" },
   { a: CART_CUT, b: CART_CUT, to: SHOT_SUM, label: "cut: order summary" },
