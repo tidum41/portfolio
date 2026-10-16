@@ -2868,6 +2868,29 @@ img { display: block; max-width: 100%; }
 @keyframes order-spin { to { transform: rotate(360deg); } }
 @keyframes check-draw { to { stroke-dashoffset: 0; } }
 
+/* ================= r41 (film pass 41) ================= */
+/* Basket middle, figure cap midline, and badge circle share one axis.
+   The 4 sits on its ink centroid. Ink gaps match. */
+.topbar { padding-top: 6px !important; }
+.cart-pill .cart-icon { transform: translate(-0.375px, 0.524px) !important; }
+.cart-pill:not(:has(.count-chip[hidden])) {
+  padding: 0 12px !important;
+}
+.cart-pill:not(:has(.count-chip[hidden])) .cart-amount-display {
+  margin-left: 0.5625px !important;
+  transform: translateX(-0.196px);
+}
+.cart-pill:not(:has(.count-chip[hidden])) .count-chip {
+  margin-left: -0.5625px !important;
+  transform: translate(-0.375px, 0.02px) !important;
+  padding-top: 1px !important;
+}
+.cart-pill .count-fig {
+  display: block;
+  line-height: 1;
+  transform: translate(-0.36px, -0.46px);
+}
+
 /* ================= r28 (film pass 28) ================= */
 /* Cart total: one glyph per column, tabular figures, slot = the font's line box.
    overflow on the slot (not a trimmed em) so a rolling digit is never sliced.
@@ -3045,7 +3068,7 @@ img { display: block; max-width: 100%; }
       '<svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>' +
       '<span class="cart-amount-display" data-cart-total>' + money(total) + "</span>" +
       '<span class="' + chipClass + '" data-cart-count' + (count === 0 ? " hidden" : "") + ">" +
-      (count === 0 ? "" : count) +
+      (count === 0 ? "" : '<span class="count-fig">' + count + "</span>") +
       "</span>" +
       "</button>" +
       "</div></header>"
@@ -3995,9 +4018,9 @@ img { display: block; max-width: 100%; }
       '<div class="state-row"><span class="state-label">Empty</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display" data-cart-total>$0.00</span><span class="count-chip" data-cart-count hidden></span></button></div>' +
       '<div class="state-row"><span class="state-label">Filled</span><button type="button" class="cart-pill"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display">' +
       money(L.orderTotal) +
-      '</span><span class="count-chip">' +
+      '</span><span class="count-chip"><span class="count-fig">' +
       L.cartCountAfterAdd +
-      "</span></button></div>" +
+      "</span></span></button></div>" +
       '<div class="state-row"><span class="state-label">Pills</span><span class="status Paid">Paid</span><span class="status Pending">Pending</span><span class="status Overdue">Overdue</span></div>' +
       "</div>" +
       '<div class="state-block"><h3>Toast</h3>' +
@@ -4021,7 +4044,7 @@ img { display: block; max-width: 100%; }
     return (
       '<section class="screen mobile-wrap" data-screen="qo-mobile">' +
       '<div class="mobile-nav"><span style="color:var(--blue);">Wholesale</span><span style="color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:2px;">Quick order</span>' +
-      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart" aria-label="Cart, ' + money(L.orderTotal) + '"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip">' + L.cartCountAfterAdd + "</span></button></div>" +
+      '<button type="button" class="cart-pill" data-cart-pill data-tab="cart" aria-label="Cart, ' + money(L.orderTotal) + '"><svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg><span class="cart-amount-display">' + money(L.orderTotal) + '</span><span class="count-chip"><span class="count-fig">' + L.cartCountAfterAdd + "</span></span></button></div>" +
       '<div class="page" style="padding:20px 16px 100px;">' +
       "<h1>Quick order</h1>" +
       '<p class="lede">Prices for ' + L.retailer.name + ".</p>" +

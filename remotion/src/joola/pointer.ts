@@ -9,7 +9,7 @@
  */
 import { R } from "./proto-rects.generated";
 import {
-  ADD_W, camAt, CART_CUT, CLICK, CONF_FADE, DROPDOWN_OPEN, DURATION, FILL, FILL_END, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_REST, PILL_SHOT, PILL_W1,
+  ADD_W, camAt, CART_CUT, CART_READ, CLICK, CONF_FADE, DROPDOWN_OPEN, DURATION, FILL, FILL_END, FILL_STAGGER, FLOW_E, FPS, INSERT, lerp, MORPH, OW, OH, PILL_ARRIVE, PILL_REST, PILL_SHOT, PILL_W1,
   OPEN_MOVE, PTR_E, SHOT_HEADER, SHOT_ORDER, pillBox, prog, type Cam,
 } from "./timeline";
 
@@ -86,9 +86,10 @@ export const KEYS: Key[] = [
   // Hold on the icon through the frame before the cut. A shared point with
   // the next key would slide the arrow off the pill during that hold.
   [CART_CUT - 1, [P.pillIcon[0], P.pillIcon[1]]],
-  // The cut is the click. Land just above Place order, then settle onto it.
+  // The cut is the click. Land just above Place order, read the summary, then settle.
   // A screen-space blend from the pill icon would drop the cursor on the credit line.
   [CART_CUT, [P.place[0], P.place[1] - 28]],
+  [CART_CUT + CART_READ, [P.place[0], P.place[1] - 28]],
   [CLICK.place - 9, P.place],
   [CLICK.place + 2, P.place],
   [CLICK.place + 10, P.away],
