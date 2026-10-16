@@ -1,0 +1,1011 @@
+/* JOOLA B2B prototype tokens — mirrored from public/dev/joola-proto (film p32). */
+
+@font-face {
+  font-family: "FKGroteskNeue";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("/dev/joola-b2b/fonts/FKGroteskNeue-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "FKGroteskNeue";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("/dev/joola-b2b/fonts/FKGroteskNeue-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "FKGroteskNeue";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  ascent-override: 100%;
+  descent-override: 28%;
+  line-gap-override: 0%;
+  src: url("/dev/joola-b2b/fonts/FKGroteskNeue-700-normal.woff2") format("woff2");
+}
+
+.joola-b2b {
+  --ink: #1a1a1a;
+  --muted: #5c5c66;
+  --faint: #8a8a96;
+  --line: #e6e8ef;
+  --line-soft: rgba(112, 115, 147, 0.12);
+  --band: #f4f5f7;
+  --sidebar-bg: #fbfcfd;
+  --wash: #eceef2;
+  --blue: #2c3ee0;
+  --blue-soft: rgba(44, 62, 224, 0.08);
+  --page: #ffffff;
+  --canvas: #ededec;
+  --success: #12824a;
+  --success-soft: rgba(18, 130, 74, 0.12);
+  --failed: #b0175f;
+  --failed-bg: rgba(176, 23, 95, 0.1);
+  --failed-border: rgba(208, 50, 117, 0.22);
+  --font-ui: "FKGroteskNeue", "FK Grotesk Neue", sans-serif;
+  --text-title: 24px;
+  --text-body: 14px;
+  --text-ui: 13px;
+  --text-meta: 12px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-status: 4px;
+  --control-h: 40px;
+  --content-max: 640px;
+  --content-pad-x: 28px;
+  --step-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+.joola-b2b *,
+.joola-b2b *::before,
+.joola-b2b *::after {
+  box-sizing: border-box;
+}
+
+.joola-b2b button,
+.joola-b2b input,
+.joola-b2b select {
+  font: inherit;
+  font-family: var(--font-ui);
+}
+
+.joola-b2b button {
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.joola-b2b img {
+  display: block;
+  max-width: 100%;
+}
+
+.joola-b2b .tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Shell */
+.joola-b2b .ob-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+}
+
+.joola-b2b .ob-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding: 0 var(--content-pad-x);
+  border-bottom: 1px solid var(--line);
+  background: var(--page);
+  flex-shrink: 0;
+}
+
+.joola-b2b .ob-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.joola-b2b .ob-brand img {
+  height: 22px;
+  width: auto;
+}
+
+.joola-b2b .ob-wholesale {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--wash);
+  color: var(--muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.joola-b2b .ob-skip {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--muted);
+  border-radius: var(--radius-control);
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.joola-b2b .ob-skip:hover {
+  color: var(--ink);
+  background: var(--band);
+}
+
+.joola-b2b .ob-skip:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .ob-progress-wrap {
+  padding: 16px var(--content-pad-x) 0;
+  max-width: calc(var(--content-max) + var(--content-pad-x) * 2);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.joola-b2b .ob-progress {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.joola-b2b .ob-progress li {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--wash);
+  overflow: hidden;
+}
+
+.joola-b2b .ob-progress li span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--blue);
+  border-radius: 2px;
+  transition: width 200ms var(--step-ease);
+}
+
+.joola-b2b .ob-progress li.is-done span,
+.joola-b2b .ob-progress li.is-current span {
+  width: 100%;
+}
+
+.joola-b2b .ob-progress-label {
+  margin: 10px 0 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--faint);
+}
+
+.joola-b2b .ob-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: calc(var(--content-max) + var(--content-pad-x) * 2);
+  margin: 0 auto;
+  padding: 28px var(--content-pad-x) 120px;
+}
+
+.joola-b2b .ob-step {
+  animation: obStepIn 200ms var(--step-ease) both;
+}
+
+@keyframes obStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .joola-b2b .ob-step {
+    animation: none;
+  }
+  .joola-b2b .ob-progress li span {
+    transition: none;
+  }
+  .joola-b2b .btn-primary,
+  .joola-b2b .btn-outline,
+  .joola-b2b .ship-card,
+  .joola-b2b .path-card {
+    transition: none !important;
+  }
+}
+
+.joola-b2b .ob-title {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* Step change moves focus for screen readers; keep the ring keyboard-only */
+.joola-b2b .ob-title:focus {
+  outline: none !important;
+}
+
+.joola-b2b .ob-lede {
+  margin: 10px 0 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.joola-b2b .ob-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px var(--content-pad-x);
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.joola-b2b .ob-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Buttons — match prototype */
+.joola-b2b .btn-primary {
+  min-height: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: var(--radius-control);
+  background: var(--blue);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease-out;
+}
+
+.joola-b2b .btn-primary:hover {
+  background: #2433c4;
+}
+
+.joola-b2b .btn-primary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.joola-b2b .btn-outline {
+  min-height: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: background-color 0.15s ease-out;
+}
+
+.joola-b2b .btn-outline:hover {
+  background: var(--band);
+}
+
+.joola-b2b .btn-outline:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .btn-outline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.joola-b2b a.btn-outline {
+  text-decoration: none;
+}
+
+.joola-b2b .btn-ghost {
+  min-height: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.joola-b2b .btn-ghost:hover {
+  color: var(--ink);
+  background: var(--band);
+}
+
+.joola-b2b .btn-ghost:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .btn-primary.btn-success,
+.joola-b2b .btn-primary.btn-success:hover,
+.joola-b2b .btn-primary.btn-success:focus,
+.joola-b2b .btn-primary.btn-success:focus-visible,
+.joola-b2b .btn-primary.btn-success:active {
+  background-color: #12824a !important;
+  background-image: none !important;
+}
+
+.joola-b2b .btn-primary.btn-success:hover {
+  background-color: #0f6e3e !important;
+}
+
+/* Welcome benefits */
+.joola-b2b .benefit-list {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.joola-b2b .benefit-list li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.joola-b2b .benefit-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.joola-b2b .benefit-title {
+  margin: 0;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.joola-b2b .benefit-body {
+  margin: 4px 0 0;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.joola-b2b .rep-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--sidebar-bg);
+  max-width: 420px;
+}
+
+.joola-b2b .rep-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--wash);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.joola-b2b .rep-name {
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.joola-b2b .rep-role {
+  margin-top: 2px;
+  font-size: var(--text-meta);
+  color: var(--faint);
+  line-height: 1.3;
+}
+
+/* Fields */
+.joola-b2b .field-stack {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.joola-b2b .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
+
+.joola-b2b .field-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.joola-b2b .field label,
+.joola-b2b .field .field-label {
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.joola-b2b .field-optional {
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.joola-b2b .field-helper {
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.joola-b2b .field input[type="text"],
+.joola-b2b .field input[type="date"] {
+  width: 100%;
+  height: var(--control-h);
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.joola-b2b .field input::placeholder {
+  color: var(--faint);
+}
+
+.joola-b2b .field input:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-color: var(--blue);
+}
+
+.joola-b2b .field.is-invalid input,
+.joola-b2b .field.is-invalid .ship-card {
+  border-color: var(--failed);
+}
+
+.joola-b2b .field-error {
+  margin: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--failed);
+  line-height: 1.4;
+}
+
+/* Ship-to card */
+.joola-b2b .ship-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  text-align: left;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.joola-b2b .ship-card:hover {
+  background: var(--band);
+}
+
+.joola-b2b .ship-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .ship-card.is-open {
+  border-color: var(--blue);
+}
+
+.joola-b2b .ship-card .ship-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.joola-b2b .ship-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--wash);
+  color: var(--muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.joola-b2b .ship-card .ship-addr {
+  margin-top: 4px;
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--faint);
+  line-height: 1.4;
+}
+
+.joola-b2b .ship-card .ship-change {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--blue);
+  padding: 2px 0 0;
+  line-height: 1.3;
+}
+
+.joola-b2b .ship-menu {
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  overflow: hidden;
+  max-width: 420px;
+}
+
+.joola-b2b .ship-option {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: #fff;
+  cursor: pointer;
+}
+
+.joola-b2b .ship-option:first-child {
+  border-top: 0;
+}
+
+.joola-b2b .ship-option:hover {
+  background: var(--band);
+}
+
+.joola-b2b .ship-option:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.joola-b2b .ship-option.is-selected {
+  background: var(--blue-soft);
+}
+
+.joola-b2b .ship-option .ship-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.joola-b2b .ship-option .ship-addr {
+  margin-top: 4px;
+  font-size: var(--text-meta);
+  color: var(--faint);
+}
+
+/* Terms */
+.joola-b2b .term-blocks {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.joola-b2b .term-block {
+  padding: 18px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: #fff;
+}
+
+.joola-b2b .term-kicker {
+  margin: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--faint);
+}
+
+.joola-b2b .term-title {
+  margin: 6px 0 0;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.joola-b2b .term-body {
+  margin: 8px 0 0;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.joola-b2b .credit-meter {
+  margin-top: 12px;
+}
+
+.joola-b2b .credit-meter-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.joola-b2b .credit-meter-label .avail {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.joola-b2b .credit-bar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--wash);
+  overflow: hidden;
+}
+
+.joola-b2b .credit-bar > span {
+  display: block;
+  height: 100%;
+  width: 48.6%; /* ~ (50000 - 25693.50) / 50000 used */
+  background: var(--blue);
+  border-radius: 3px;
+}
+
+.joola-b2b .pending-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin-top: 10px;
+  padding: 0 8px;
+  border-radius: var(--radius-status);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.joola-b2b .confirm-lede {
+  margin: 10px 0 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.joola-b2b .confirm-lede .inline-link {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.joola-b2b .confirm-lede .inline-link:hover {
+  color: var(--blue);
+}
+
+.joola-b2b .confirm-lede .inline-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* First order paths */
+.joola-b2b .path-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 720px) {
+  .joola-b2b .path-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.joola-b2b .path-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: #fff;
+  text-align: left;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+  width: 100%;
+}
+
+.joola-b2b .path-card:hover {
+  background: var(--band);
+}
+
+.joola-b2b .path-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .path-card.is-selected {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.joola-b2b .path-card .path-title {
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.joola-b2b .path-card .path-body {
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.joola-b2b .path-card .path-cta {
+  margin-top: 4px;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--blue);
+}
+
+.joola-b2b .empty-state {
+  margin-top: 20px;
+  padding: 20px 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--sidebar-bg);
+}
+
+.joola-b2b .empty-state h3 {
+  margin: 0;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.joola-b2b .empty-state p {
+  margin: 8px 0 0;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 48ch;
+}
+
+.joola-b2b .empty-state .example-cta {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  background: var(--wash);
+  color: var(--faint);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* Finish */
+.joola-b2b .finish-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.joola-b2b .finish-check svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Dashboard handoff */
+.joola-b2b .dash-shell {
+  min-height: 100vh;
+  background: var(--page);
+}
+
+.joola-b2b .dash-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding: 0 var(--content-pad-x);
+  border-bottom: 1px solid var(--line);
+}
+
+.joola-b2b .dash-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px var(--content-pad-x) 48px;
+}
+
+.joola-b2b .dash-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.joola-b2b .dash-search {
+  flex: 1 1 280px;
+  min-width: 0;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.joola-b2b .dash-search:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.joola-b2b .dash-credit {
+  margin-top: 16px;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.joola-b2b .dash-banner {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: var(--text-ui);
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .joola-b2b {
+    --content-pad-x: 16px;
+  }
+
+  .joola-b2b .ob-title {
+    font-size: 22px;
+  }
+
+  .joola-b2b .ob-footer {
+    flex-wrap: wrap;
+  }
+
+  .joola-b2b .ob-footer .btn-ghost {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
