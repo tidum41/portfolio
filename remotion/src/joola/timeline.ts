@@ -69,7 +69,16 @@ export const LEAD = 2;
  * the whole way. It travels to the field only after the push has settled.
  */
 export const OPEN_MOVE = [12, 30] as const;
-export const CLICK = { search: 50, result: 97, qty: 151, tpl: 223, tplAdd: 239, add: 282, pill: 326, place: 351 };
+/**
+ * Pass 41. Two calm reads, 9 frames (0.3s) each. The summary read sits on the
+ * cut, before the cursor travels. The confirmation read sits after the card
+ * has recentered, before the UI fade. Every move between them keeps its length.
+ */
+export const CART_READ = 9;
+export const CONF_READ = 9;
+const afterCart = (n: number) => n + CART_READ;
+const afterBoth = (n: number) => n + CART_READ + CONF_READ;
+export const CLICK = { search: 50, result: 97, qty: 151, tpl: 223, tplAdd: 239, add: 282, pill: 326, place: afterCart(351) };
 export const ENTER = CLICK.result;
 export const TYPE_SEARCH = [CLICK.search + 2, CLICK.search + 16] as const;
 export const DROPDOWN_OPEN = CLICK.search + 8;
@@ -172,31 +181,31 @@ export const CART_FADE = [CART_CUT, CART_CUT] as const;
 export const PAN_CART = [CART_CUT, CART_CUT] as const;
 export const CREDIT_ANIM = [CART_CUT, CART_CUT] as const;
 /** "Place order" crossfades to the processing face. Done as the hold becomes readable. */
-export const PROC_XFADE = [354, 358] as const;
+export const PROC_XFADE = [afterCart(354), afterCart(358)] as const;
 /** Press, then "Placing order" holds ~0.73s once the label is solid. */
-export const PROC = [354, 377] as const;
+export const PROC = [afterCart(354), afterCart(377)] as const;
 /** Whole-button colour, 5 frames ≈ 167ms, then the check stroke, 8 frames ≈ 267ms. */
-export const PLACE_COLOR = [364, 369] as const;
-export const CHECK_DRAW = [369, 377] as const;
+export const PLACE_COLOR = [afterCart(364), afterCart(369)] as const;
+export const CHECK_DRAW = [afterCart(369), afterCart(377)] as const;
 /** "Order placed" on the green button, ~0.4s. */
-export const SUCCESS_HOLD = [377, 383] as const;
+export const SUCCESS_HOLD = [afterCart(377), afterCart(383)] as const;
 /** Summary content fades. The card chrome stays. */
-export const CONF_FADE = [383, 387] as const;
-export const CONF_CUT = 387;
+export const CONF_FADE = [afterCart(383), afterCart(387)] as const;
+export const CONF_CUT = afterCart(387);
 /** Top-anchored height ease, ~300ms, MOVE_E. */
-export const CONF_GROW = [387, 396] as const;
+export const CONF_GROW = [afterCart(387), afterCart(396)] as const;
 /** Short recenter once the card has grown. */
-export const CONF_RECENTER = [402, 412] as const;
+export const CONF_RECENTER = [afterCart(402), afterCart(412)] as const;
 export const CONF_SETTLE = CONF_GROW;
 export const CONF_MORPH = CONF_GROW;
 export const CONF_XFADE = CONF_FADE;
-/** Hold Order placed, then fade the UI to the ground before the logo. */
-export const CONF_HOLD = [412, 422] as const;
+/** Hold Order placed, plus the 0.3s calm read, then fade the UI. */
+export const CONF_HOLD = [afterCart(412), afterBoth(422)] as const;
 /** UI fades to the solid ground, then the logo fades and scales 0.96→1 over 9 frames (300ms). */
-export const UI_OUT = [422, 430] as const;
-export const LOGO_IN = [430, 439] as const;
-/** Logo is settled at frame 439. Pass 40 holds it through 485 (16.2s, 486 frames). */
-export const END_FADE = [UI_OUT[0], 485] as const;
+export const UI_OUT = [afterBoth(422), afterBoth(430)] as const;
+export const LOGO_IN = [afterBoth(430), afterBoth(439)] as const;
+/** Logo settles, then holds. 504 frames is 16.8s. */
+export const END_FADE = [UI_OUT[0], afterBoth(485)] as const;
 export const DURATION = END_FADE[1] + 1;
 export const MORPH_OUT = END_FADE;
 export const POINTER_OFF = END_FADE[1];

@@ -146,9 +146,8 @@ const CSS =
 .film-layer .film-base{display:inline-block;width:0;height:0;vertical-align:baseline}
 .film-layer .film-paint{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;text-box:none!important}
 .film-layer .line-total,.film-layer [data-order-footer] [data-order-total]{text-align:right}
-/* Flex + line-height 1 centers the em box. The prototype's cap trim is off so
-   it cannot move the ink. The tabular 4 still paints 2.5 film px high at
-   s=5.6. A 0.33px translate on the figure is the optical correction. */
+/* The 4's ink centroid sits right of its box. The translate puts that
+   centroid on the circle centre. */
 .film-layer .cart-pill .count-chip{
   width:20px!important;height:20px!important;min-width:20px!important;max-width:20px!important;
   flex:0 0 20px!important;margin:0!important;padding:0!important;box-sizing:border-box!important;
@@ -160,7 +159,7 @@ const CSS =
 }
 .film-layer .cart-pill .count-chip .count-fig{
   display:block;line-height:1;text-box:none;
-  transform:translateY(0.33px);
+  transform:translate(-0.333px, 0.266px);
 }
 /* Pass 40: 6px above the 36px pill, 6px below it inside the 48px topbar. */
 .film-layer .topbar{padding-top:6px!important}
@@ -548,9 +547,10 @@ function pill(root: HTMLElement, f: number) {
   // px right so the two ink gaps match. 7.5 film px = 1 page px on this shot.
   if (icon) {
     icon.style.setProperty("margin-right", "-2px", "important");
-    icon.style.setProperty("transform", "translate(-0.267px, -0.5px)", "important");
+    // Basket middle (wheels and handle excluded) on the figure cap midline.
+    icon.style.setProperty("transform", "translate(-0.468px, -0.098px)", "important");
   }
-  amt.style.setProperty("transform", "translateX(0.600px)", "important");
+  amt.style.setProperty("transform", "translateX(0.332px)", "important");
   let fig = chip.querySelector(".count-fig");
   if (!fig) {
     chip.textContent = "";
@@ -582,9 +582,8 @@ function pill(root: HTMLElement, f: number) {
   if (showBadge) {
     chip.style.visibility = "";
     chip.style.opacity = t.toFixed(4);
-    // Circle was 5.5 film px below the digit cap midline, and the group sits
-    // 2 film px right of the matched insets. The 4 rides inside the circle.
-    chip.style.transform = `translate(-0.267px, -0.736px) scale(${t.toFixed(4)})`;
+    // Circle centre on the same cap midline as the basket and the figures.
+    chip.style.transform = `translate(-0.468px, -0.602px) scale(${t.toFixed(4)})`;
   } else {
     chip.style.visibility = "hidden";
     chip.style.opacity = "0";
