@@ -109,6 +109,8 @@ export interface SanityProject {
   _id: string;
   title: string;
   subtitle?: string;
+  /** Small quiet line above the card title (e.g. "Case study"). */
+  label?: string;
   /** Omit (or leave empty) for a non-clickable card — no link, no pointer. */
   href?: string;
   mediaType: "video" | "image";
@@ -126,6 +128,24 @@ const PROJECTS_QUERY = `*[_type == "project" && featured == true] | order(order 
   aspectRatio, order, featured, caseStudy
 }`;
 
+/** Homepage card copy, kept in code so a preview can ship without touching
+ *  the shared Sanity dataset. Keyed by Sanity _id.
+ *  Two lines only: `label` (quiet meta above) + `title` (main). No subtitle. */
+const PROJECT_CARD_COPY: Record<string, Pick<SanityProject, "title" | "label">> = {
+  "project-bruinlease": {
+    title: "Helping UCLA students find a sublease they can trust",
+    label: "Case study",
+  },
+  "project-todolist": {
+    title: "Designing a to-do list with AI organization",
+    label: "Exploration",
+  },
+  "project-sviz": {
+    title: "Growing a keyboard YouTube channel to 8K subscribers and 1M+ views",
+    label: "Community",
+  },
+};
+
 const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": "https://allinone-demo-amber.vercel.app/",
 };
@@ -133,8 +153,8 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
 /** Local first card — not yet in Sanity; no href until the case study ships. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
-  title: "B2B wholesale ordering for JOOLA, the world’s leading pickleball brand",
-  subtitle: "Product design",
+  title: "Designing B2B wholesale ordering for JOOLA, the world’s leading pickleball brand",
+  label: "Internship 2026",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
   // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
@@ -147,15 +167,21 @@ async function loadProjects(): Promise<SanityProject[]> {
   const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY);
   const mapped = projects
     .filter((p) => p._id !== JOOLA_B2B_PROJECT._id)
-    .map((p) => ({
-      ...p,
-      href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
-    }));
+    .map((p) => {
+      const copy = PROJECT_CARD_COPY[p._id];
+      return {
+        ...p,
+        ...copy,
+        // Drop Sanity subtitle so cards stay on the two-line meta/main hierarchy.
+        subtitle: undefined,
+        href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
+      };
+    });
   return [JOOLA_B2B_PROJECT, ...mapped];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v3-joola"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v5-card-copy"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
