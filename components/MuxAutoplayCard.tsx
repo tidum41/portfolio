@@ -19,13 +19,12 @@ const UNMOUNT_BASE_MS = 120;
 
 function CardLabel({
   title,
-  sub,
   label,
   labelFontSize,
   external,
 }: {
   title: string;
-  sub?: string;
+  /** Quiet meta line above the main title (PS3 XMB hierarchy). */
   label?: string;
   labelFontSize: number;
   external?: boolean;
@@ -53,22 +52,11 @@ function CardLabel({
         display: "flex",
         alignItems: "center",
         gap: 6,
+        textWrap: "balance",
       }}>
         {title}
         {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
       </p>
-      {sub && (
-        <p style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 400,
-          fontSize: 13,
-          lineHeight: 1.5,
-          color: "var(--color-text-tertiary)",
-          margin: "5px 0 0",
-          letterSpacing: "0.01em",
-          textWrap: "balance",
-        }}>{sub}</p>
-      )}
     </div>
   );
 }
@@ -78,7 +66,6 @@ interface Props {
   /** When omitted, the card is display-only (no link, no pointer). */
   href?: string;
   title: string;
-  sub?: string;
   /** Small quiet line above the title. */
   label?: string;
   aspectRatio: string;
@@ -94,7 +81,6 @@ export default function MuxAutoplayCard({
   playbackId,
   href,
   title,
-  sub,
   label,
   aspectRatio,
   active = true,
@@ -278,7 +264,7 @@ export default function MuxAutoplayCard({
   const body = (
     <ProjectCardLift style={{ gap: dk.cardGap }}>
       {video}
-      <CardLabel title={title} sub={sub} label={label} labelFontSize={dk.labelFontSize} external={external} />
+      <CardLabel title={title} label={label} labelFontSize={dk.labelFontSize} external={external} />
     </ProjectCardLift>
   );
 
