@@ -133,8 +133,8 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
 /** Local first card — not yet in Sanity; no href until the case study ships. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
-  title: "B2B wholesale ordering for JOOLA",
-  subtitle: "The world’s leading pickleball brand · Summer 2026",
+  title: "B2B wholesale ordering for JOOLA, the world’s leading pickleball brand",
+  subtitle: "Product design",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
   // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
@@ -155,7 +155,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v2-joola"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v3-joola"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
