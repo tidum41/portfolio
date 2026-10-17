@@ -414,6 +414,10 @@ nav a {
   isolation: isolate;
   cursor: pointer;
 }
+/* Display-only Mux cards (no case study link yet) — keep hover plate, drop pointer. */
+.project-card--inert {
+  cursor: default;
+}
 .project-card::before {
   content: "";
   position: absolute;
