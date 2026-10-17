@@ -3,9 +3,22 @@
 export const SITE_URL = "https://www.muditm.com";
 export const SITE_NAME = "mudit mahajan";
 
-/** Visible homepage hero — single source of truth for on-page + SEO copy. */
-export const HERO_HEADLINE =
-  "I'm Mudit, a product designer with a love for people, curiosity, and rabbit holes";
+/**
+ * Visible homepage hero — single source of truth for on-page + SEO copy.
+ *
+ * Copy pattern (from portfolios that scan well in one glance):
+ *   name + role + one craft verb + one concrete tell
+ * School and job already live in the subtitle — don't repeat them here.
+ * Keep the exact phrase "rabbit holes": RabbitHoleVideo wraps it as the
+ * homepage easter egg.
+ *
+ * Lead + tell are split so the tell can nowrap as a unit. Joined, they are
+ * the H1 / meta description string.
+ */
+export const HERO_HEADLINE_LEAD =
+  "I'm Mudit, a product designer who engineers interactions";
+export const HERO_HEADLINE_TELL = "and falls down rabbit holes";
+export const HERO_HEADLINE = `${HERO_HEADLINE_LEAD} ${HERO_HEADLINE_TELL}`;
 
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
@@ -17,7 +30,7 @@ export const SITE_DESCRIPTION =
 /** Default social / Open Graph image (1200×630). */
 export const OG_IMAGE_PATH = "/og-default.png";
 export const OG_IMAGE_ALT =
-  "mudit mahajan — product design, people, and rabbit holes";
+  "mudit mahajan — product designer who engineers interactions";
 
 /** Self-hosted resume (also reachable at /resume). */
 export const RESUME_PATH = "/resume.pdf";
