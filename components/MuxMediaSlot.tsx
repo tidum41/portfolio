@@ -126,28 +126,44 @@ export default function MuxMediaSlot({
   const playingRef = useRef(playing);
   playingRef.current = playing;
 
-  const revealIfOnPoster = useCallback(() => {
+  const revealIfPlaying = useCallback(() => {
     const video = videoRef.current;
     const root = rootRef.current;
     if (!video || !root) return;
     if (root.getAttribute("data-frame") === "shown") return;
-    // Stay on the still until the decoded frame is the one the poster shows.
+    // Never reveal a paused <video> — iOS Safari paints its native play
+    // overlay on a visible paused element even when controls are off.
+    // Stay on the Mux poster underneath until playback is actually running
+    // on (or past) the poster frame.
+    if (video.paused || video.ended) return;
     if (thumbnailTime > 0 && video.currentTime < thumbnailTime - 0.35) return;
     if (video.readyState < 2) return;
     root.setAttribute("data-frame", "shown");
   }, [thumbnailTime]);
+
+  const hideFrame = useCallback(() => {
+    rootRef.current?.removeAttribute("data-frame");
+  }, []);
 
   const kickPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video || !playingRef.current) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("muted", "");
+    video.controls = false;
     const attempt = video.play();
     if (attempt && typeof attempt.catch === "function") {
-      // Low Power Mode and other autoplay blocks: the poster stays up.
-      attempt.catch(() => {});
+      // Low Power Mode / strict autoplay: keep the poster up (no native
+      // play chrome). Gesture + visibility listeners below retry play().
+      attempt.catch(() => {
+        hideFrame();
+      });
     }
-  }, []);
+  }, [hideFrame]);
 
   const attachVideo = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -159,6 +175,12 @@ export default function MuxMediaSlot({
 
       let cancelled = false;
       video.muted = true;
+      video.controls = false;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.setAttribute("muted", "");
+      video.removeAttribute("controls");
 
       const start = async () => {
         // Phone cards open the exact 480p playlist the HTML already fetched,
@@ -241,10 +263,16 @@ export default function MuxMediaSlot({
   useEffect(() => {
     const video = videoRef.current;
     const stop = attachVideo(video);
-    const onFrame = () => revealIfOnPoster();
+    const onFrame = () => revealIfPlaying();
+    const onPause = () => {
+      // If autoplay was blocked after a seek-to-poster, drop back to the
+      // still so Safari never paints its start-playback overlay.
+      if (videoRef.current?.paused) hideFrame();
+    };
     video?.addEventListener("playing", onFrame);
     video?.addEventListener("timeupdate", onFrame);
     video?.addEventListener("seeked", onFrame);
+    video?.addEventListener("pause", onPause);
     const onEnded = () => {
       const el = videoRef.current;
       if (!el || thumbnailTime <= 0) return;
@@ -263,7 +291,20 @@ export default function MuxMediaSlot({
     };
     const onSoftStart = () => {
       try { videoRef.current?.pause(); } catch { /* ignore */ }
+      hideFrame();
     };
+    // Muted playback is always allowed after a real user gesture. Restore
+    // the recovery path that Low Power Mode / strict autoplay need — without
+    // revealing a paused video (that would flash the native play button).
+    const onGesture = () => {
+      const el = videoRef.current;
+      if (!el || !playingRef.current) return;
+      if (!el.paused) return;
+      kickPlay();
+    };
+    const gestureOpts: AddEventListenerOptions = { passive: true, capture: true };
+    const gestureEvents = ["pointerdown", "touchstart", "keydown", "click"] as const;
+    gestureEvents.forEach((e) => window.addEventListener(e, onGesture, gestureOpts));
     window.addEventListener("soft-nav-start", onSoftStart);
     window.addEventListener("soft-nav-settled", kickPlay);
     window.addEventListener("pageshow", onPageShow);
@@ -273,9 +314,11 @@ export default function MuxMediaSlot({
       video?.removeEventListener("playing", onFrame);
       video?.removeEventListener("timeupdate", onFrame);
       video?.removeEventListener("seeked", onFrame);
+      video?.removeEventListener("pause", onPause);
       video?.removeEventListener("ended", onEnded);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      gestureEvents.forEach((e) => window.removeEventListener(e, onGesture, gestureOpts));
       window.removeEventListener("soft-nav-start", onSoftStart);
       window.removeEventListener("soft-nav-settled", kickPlay);
       window.removeEventListener("pageshow", onPageShow);
@@ -283,7 +326,7 @@ export default function MuxMediaSlot({
       hlsRef.current?.destroy();
       hlsRef.current = null;
     };
-  }, [attachVideo, kickPlay, revealIfOnPoster, thumbnailTime]);
+  }, [attachVideo, kickPlay, hideFrame, revealIfPlaying, thumbnailTime]);
 
   useEffect(() => {
     if (playing) kickPlay();
@@ -324,9 +367,14 @@ export default function MuxMediaSlot({
         muted
         loop={thumbnailTime <= 0}
         playsInline
+        controls={false}
+        disablePictureInPicture
         preload="auto"
         onCanPlay={kickPlay}
-        onPlaying={kickPlay}
+        onPlaying={() => {
+          kickPlay();
+          revealIfPlaying();
+        }}
         onLoadedData={kickPlay}
       />
     </div>

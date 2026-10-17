@@ -1238,6 +1238,20 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-fit: cover;
   pointer-events: none;
 }
+/* iOS Safari paints a big play button on a visible paused <video> even
+   when controls are off. We keep the element opacity:0 until playing, but
+   also kill the WebKit overlay chrome so a race never surfaces it. */
+.mux-media-slot video.mux-cover::-webkit-media-controls-start-playback-button,
+.mux-media-slot video.mux-cover::-webkit-media-controls,
+.project-card--video video::-webkit-media-controls-start-playback-button,
+.project-card--video video::-webkit-media-controls {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
 html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.78) !important; }
