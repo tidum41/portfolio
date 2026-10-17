@@ -109,6 +109,8 @@ export interface SanityProject {
   _id: string;
   title: string;
   subtitle?: string;
+  /** Small quiet line above the card title (e.g. "Case study"). */
+  label?: string;
   /** Omit (or leave empty) for a non-clickable card — no link, no pointer. */
   href?: string;
   mediaType: "video" | "image";
@@ -126,6 +128,26 @@ const PROJECTS_QUERY = `*[_type == "project" && featured == true] | order(order 
   aspectRatio, order, featured, caseStudy
 }`;
 
+/** Homepage card copy, kept in code so a preview can ship without touching
+ *  the shared Sanity dataset. Keyed by Sanity _id. */
+const PROJECT_CARD_COPY: Record<string, Pick<SanityProject, "title" | "subtitle" | "label">> = {
+  "project-bruinlease": {
+    title: "BruinLease",
+    subtitle: "Helping UCLA students find a sublease they can trust",
+    label: "Case study",
+  },
+  "project-todolist": {
+    title: "All in One",
+    subtitle: "AI that organizes your tasks as you add them",
+    label: "Designed and built",
+  },
+  "project-sviz": {
+    title: "Custom keyboards",
+    subtitle: "Growing a YouTube channel to 8K subscribers and 1M+ views",
+    label: "Creator",
+  },
+};
+
 const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": "https://allinone-demo-amber.vercel.app/",
 };
@@ -133,8 +155,9 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
 /** Local first card — not yet in Sanity; no href until the case study ships. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
-  title: "B2B wholesale ordering for JOOLA, the world’s leading pickleball brand",
-  subtitle: "Product design",
+  title: "JOOLA",
+  subtitle: "Making bulk reorders effortless for pickleball clubs and retailers",
+  label: "Internship 2026",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
   // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
@@ -149,13 +172,14 @@ async function loadProjects(): Promise<SanityProject[]> {
     .filter((p) => p._id !== JOOLA_B2B_PROJECT._id)
     .map((p) => ({
       ...p,
+      ...PROJECT_CARD_COPY[p._id],
       href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
     }));
   return [JOOLA_B2B_PROJECT, ...mapped];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v3-joola"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v4-card-copy"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────

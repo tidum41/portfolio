@@ -20,16 +20,29 @@ const UNMOUNT_BASE_MS = 120;
 function CardLabel({
   title,
   sub,
+  label,
   labelFontSize,
   external,
 }: {
   title: string;
   sub?: string;
+  label?: string;
   labelFontSize: number;
   external?: boolean;
 }) {
   return (
-    <div style={{ padding: "3px 2px" }}>
+    <div style={{ padding: "3px 0 0" }}>
+      {label && (
+        <p className="card-label-tag" style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: "var(--fs-caption)",
+          lineHeight: 1.4,
+          color: "var(--color-text-muted)",
+          margin: "0 0 2px",
+          letterSpacing: "0.01em",
+        }}>{label}</p>
+      )}
       <p style={{
         fontFamily: "var(--font-sans-medium)",
         fontWeight: 500,
@@ -53,6 +66,7 @@ function CardLabel({
           color: "var(--color-text-tertiary)",
           margin: "5px 0 0",
           letterSpacing: "0.01em",
+          textWrap: "balance",
         }}>{sub}</p>
       )}
     </div>
@@ -65,6 +79,8 @@ interface Props {
   href?: string;
   title: string;
   sub?: string;
+  /** Small quiet line above the title. */
+  label?: string;
   aspectRatio: string;
   /** When false, tear down Mux/HLS after a deferred window (memory). */
   active?: boolean;
@@ -79,6 +95,7 @@ export default function MuxAutoplayCard({
   href,
   title,
   sub,
+  label,
   aspectRatio,
   active = true,
   playing = true,
@@ -261,7 +278,7 @@ export default function MuxAutoplayCard({
   const body = (
     <ProjectCardLift style={{ gap: dk.cardGap }}>
       {video}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
+      <CardLabel title={title} sub={sub} label={label} labelFontSize={dk.labelFontSize} external={external} />
     </ProjectCardLift>
   );
 
