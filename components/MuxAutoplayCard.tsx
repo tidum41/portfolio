@@ -61,7 +61,8 @@ function CardLabel({
 
 interface Props {
   playbackId: string;
-  href: string;
+  /** When omitted, the card is display-only (no link, no pointer). */
+  href?: string;
   title: string;
   sub?: string;
   aspectRatio: string;
@@ -95,11 +96,12 @@ export default function MuxAutoplayCard({
   // waiting on IntersectionObserver again.
   const [shouldLoad, setShouldLoad] = useState(false);
   const [mountReady, setMountReady] = useState(false);
+  const clickable = Boolean(href);
   const warmCaseStudy = () => {
-    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+    if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
   const commitCaseStudy = () => {
-    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   useEffect(() => {
@@ -254,7 +256,7 @@ export default function MuxAutoplayCard({
   const linkStyle = { textDecoration: "none", display: "block", color: "inherit", cursor: "pointer" } as const;
   // Blue northeast arrow only when the card leaves the site — derived from
   // href, not a hard-coded project id.
-  const external = /^(https?:|mailto:|tel:)/i.test(href);
+  const external = Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 
   const body = (
     <ProjectCardLift style={{ gap: dk.cardGap }}>
@@ -264,14 +266,19 @@ export default function MuxAutoplayCard({
   );
 
   return (
-    <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
-      {external ? (
+    <div
+      className={["project-card", "project-card--video", !clickable && "project-card--inert"].filter(Boolean).join(" ")}
+      style={{ gap: dk.cardGap, ...(!clickable ? { cursor: "default" } : null) }}
+    >
+      {!clickable ? (
+        body
+      ) : external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
           {body}
         </a>
       ) : (
         <Link
-          href={href}
+          href={href!}
           prefetch
           style={linkStyle}
           onMouseEnter={warmCaseStudy}

@@ -27,8 +27,8 @@ import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
-function isExternalHref(href: string) {
-  return /^(https?:|mailto:|tel:)/i.test(href);
+function isExternalHref(href?: string) {
+  return Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 }
 
 const CARD_LINK_STYLE = {
@@ -201,11 +201,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   projects: SanityProject[];
 }) {
   const router = useRouter();
-  const warmProjectNav = (href: string) => {
-    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  const warmProjectNav = (href?: string) => {
+    if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitProjectNav = (href: string) => {
-    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitProjectNav = (href?: string) => {
+    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
@@ -649,7 +649,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       />
                     )}
                   </EntranceItem>
-                ) : p.image?.asset?.url ? (
+                ) : p.image?.asset?.url && p.href ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
@@ -748,7 +748,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       />
                     )}
                   </EntranceItem>
-                ) : p.image?.asset?.url ? (
+                ) : p.image?.asset?.url && p.href ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link

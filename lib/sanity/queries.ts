@@ -109,7 +109,8 @@ export interface SanityProject {
   _id: string;
   title: string;
   subtitle?: string;
-  href: string;
+  /** Omit (or leave empty) for a non-clickable card — no link, no pointer. */
+  href?: string;
   mediaType: "video" | "image";
   muxPlaybackId?: string;
   image?: { asset: { url: string }; hotspot?: { x: number; y: number } };
@@ -129,16 +130,32 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": "https://allinone-demo-amber.vercel.app/",
 };
 
+/** Local first card — not yet in Sanity; no href until the case study ships. */
+const JOOLA_B2B_PROJECT: SanityProject = {
+  _id: "project-joola-b2b",
+  title: "B2B wholesale ordering for JOOLA",
+  subtitle: "The world’s leading pickleball brand · Summer 2026",
+  mediaType: "video",
+  muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
+  // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
+  aspectRatio: "4 / 3",
+  order: 0,
+  featured: true,
+};
+
 async function loadProjects(): Promise<SanityProject[]> {
   const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY);
-  return projects.map((p) => ({
-    ...p,
-    href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
-  }));
+  const mapped = projects
+    .filter((p) => p._id !== JOOLA_B2B_PROJECT._id)
+    .map((p) => ({
+      ...p,
+      href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
+    }));
+  return [JOOLA_B2B_PROJECT, ...mapped];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v2-joola"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
