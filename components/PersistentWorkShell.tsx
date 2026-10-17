@@ -121,18 +121,30 @@ function OpensInPopupIcon() {
 // ─── Card label ────────────────────────────────────────────────────────
 function CardLabel({
   title,
-  sub,
+  label,
   showPopupIcon,
   external,
 }: {
   title: string;
-  sub?: string;
+  /** Quiet meta line above the main title (PS3 XMB hierarchy). */
+  label?: string;
   showPopupIcon?: boolean;
   /** External project link — blue northeast arrow. */
   external?: boolean;
 }) {
   return (
-    <div style={{ padding: 0 }}>
+    <div style={{ padding: "3px 0 0" }}>
+      {label && (
+        <p className="card-label-tag" style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: "var(--fs-caption)",
+          lineHeight: 1.4,
+          color: "var(--color-text-muted)",
+          margin: "0 0 2px",
+          letterSpacing: "0.01em",
+        }}>{label}</p>
+      )}
       <p style={{
         fontFamily: "var(--font-sans-medium)",
         fontWeight: "var(--fw-card-title)" as React.CSSProperties["fontWeight"],
@@ -143,22 +155,12 @@ function CardLabel({
         display: "flex",
         alignItems: "center",
         gap: 6,
+        textWrap: "balance",
       }}>
         {title}
         {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
         {showPopupIcon && <OpensInPopupIcon />}
       </p>
-      {sub && (
-        <p style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 400,
-          fontSize: 13,
-          lineHeight: 1.5,
-          color: "var(--color-text-tertiary)",
-          margin: "4px 0 0",
-          letterSpacing: "0.01em",
-        }}>{sub}</p>
-      )}
     </div>
   );
 }
@@ -641,7 +643,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         playbackId={p.muxPlaybackId}
                         href={p.href}
                         title={p.title}
-                        sub={p.subtitle}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -673,7 +675,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -691,7 +693,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               data-grid-card="cd"
               role="button"
               tabIndex={0}
-              aria-label="Open Drag a CD in a larger view"
+              aria-label="Open Designing micro-interactions for a digital CD player"
               onClick={() => openPopupHandler("cd")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
               style={{ gap: 6, cursor: "pointer", order: projects.length }}
@@ -722,7 +724,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     </div>
                   </div>
                 </div>
-                <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
+                <CardLabel title="Designing micro-interactions for a digital CD player" label="Interaction" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
@@ -740,7 +742,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         playbackId={p.muxPlaybackId}
                         href={p.href}
                         title={p.title}
-                        sub={p.subtitle}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -772,7 +774,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -789,7 +791,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               data-grid-card="habit"
               role="button"
               tabIndex={0}
-              aria-label="Open Dumb Habit Tracker in a larger view"
+              aria-label="Open Habit tracker focused on offering less"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
@@ -811,7 +813,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     />
                   </div>
                 </div>
-                <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
+                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
