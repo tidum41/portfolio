@@ -147,14 +147,18 @@ const PROJECT_CARD_COPY: Record<string, Pick<SanityProject, "title" | "label">> 
 };
 
 const PROJECT_HREF_OVERRIDES: Record<string, string> = {
+  // Already the production Sanity href. Pinned here so the card stays on the
+  // existing case study even if that document's href changes.
+  "project-bruinlease": "/ucla-sublease",
   "project-todolist": "https://allinone-demo-amber.vercel.app/",
 };
 
-/** Local first card — not yet in Sanity; no href until the case study ships. */
+/** Local first card — not in Sanity. Page copy lives in lib/caseStudies/joola.ts. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
   title: "Designing B2B ordering for the #1 pickleball brand",
   label: "Internship 2026",
+  href: "/joola",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
   // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
@@ -181,7 +185,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v6-joola-short"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v7-case-links"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────

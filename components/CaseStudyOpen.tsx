@@ -3,7 +3,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import MuxHero from "@/components/MuxHero";
 
-type Meta = { _key?: string; label: string; values: string[] };
+type Meta = {
+  _key?: string;
+  label: string;
+  values: ReactNode[];
+  /** Span the full meta row on small screens (long collaborator lists). */
+  wide?: boolean;
+};
 
 /**
  * Case-study above-the-fold: media is instant (autoplay). Type is visible
@@ -18,15 +24,20 @@ export default function CaseStudyOpen({
   heroBg,
   posterWidth,
   posterHeight,
+  metaColumns,
+  subtitle,
   children,
 }: {
-  tagline: string;
+  tagline: ReactNode;
   title: string;
   metadata: Meta[];
   muxPlaybackId?: string;
   heroBg?: string;
   posterWidth?: number;
   posterHeight?: number;
+  /** Column tracks. Defaults to one per item. */
+  metaColumns?: number;
+  subtitle?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -56,12 +67,26 @@ export default function CaseStudyOpen({
             lineHeight: 1.1,
             letterSpacing: "var(--ls-hero)",
             color: "var(--color-text-primary)",
-            margin: "0 0 var(--space-4)",
+            margin: subtitle ? "0 0 12px" : "0 0 var(--space-4)",
           }}
         >
           {title}
         </h1>
       </div>
+      {subtitle && (
+        <p
+          className="cs-open-type"
+          style={{
+            fontSize: "var(--fs-body)",
+            lineHeight: "var(--lh-body)",
+            letterSpacing: "0.1px",
+            color: "var(--color-text-secondary)",
+            margin: "0 0 var(--space-4)",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
           <div style={{ background: heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
@@ -80,12 +105,12 @@ export default function CaseStudyOpen({
           className="cs-meta-grid cs-open-type cs-open-type-meta"
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${metadata.length}, 1fr)`,
+            gridTemplateColumns: `repeat(${metaColumns ?? metadata.length}, 1fr)`,
             marginTop: "var(--space-4)",
           }}
         >
-          {metadata.map(({ _key, label, values }) => (
-            <div key={_key ?? label} style={{ padding: "0 24px 0 0" }}>
+          {metadata.map(({ _key, label, values, wide }) => (
+            <div key={_key ?? label} className={wide ? "cs-meta-wide" : undefined} style={{ padding: "0 24px 0 0", minWidth: 0 }}>
               <p
                 style={{
                   fontFamily: "var(--font-sans-medium)",
@@ -98,9 +123,9 @@ export default function CaseStudyOpen({
               >
                 {label}
               </p>
-              {values.map((v) => (
+              {values.map((v, i) => (
                 <p
-                  key={v}
+                  key={i}
                   style={{
                     fontSize: 14,
                     fontWeight: 400,

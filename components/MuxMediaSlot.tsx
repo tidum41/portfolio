@@ -159,6 +159,9 @@ export default function MuxMediaSlot({
 
       let cancelled = false;
       video.muted = true;
+      video.controls = false;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
 
       const start = async () => {
         // Phone cards open the exact 480p playlist the HTML already fetched,
@@ -324,6 +327,8 @@ export default function MuxMediaSlot({
         muted
         loop={thumbnailTime <= 0}
         playsInline
+        disablePictureInPicture
+        controlsList="nodownload nofullscreen noremoteplayback"
         preload="auto"
         onCanPlay={kickPlay}
         onPlaying={kickPlay}
