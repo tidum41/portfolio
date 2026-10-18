@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import ProductCaseStudy from "@/components/ProductCaseStudy";
-import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
+import { JOOLA_SUBTITLE, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
 
-const description =
-  "Draft case study: a coded prototype of a JOOLA wholesale ordering portal for retailers and clubs.";
+const description = JOOLA_SUBTITLE;
 
 export const metadata: Metadata = {
   title: JOOLA_TITLE,

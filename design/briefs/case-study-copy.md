@@ -13,58 +13,26 @@ JOOLA below is split into what `/joola` renders and what is withheld. BruinLease
 Route: `/joola`
 Hero file: `public/images/joola/hero-ruth-2.png`
 Film: Mux `gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00` (same film as the homepage card). No caption.
+The body sections are off the page. After the film, a locked NDA block. The password does not open anything.
 
 ### Rendered
 
-Eyebrow: Product Design    Case Study    2026
+Eyebrow: Product Design    Internship    2026
 Title: B2B ordering for JOOLA
+Subtitle: Designing B2B ordering for the #1 pickleball brand. I owned the design end to end over 10 weeks on JOOLA's product team.
 
-Role: Product design intern
-Timeline: Summer 2026
+Role: Product Design Intern
+Timeline: 10 weeks / Summer 2026
+Collaborators:
+Vinay Bulusu, Product Manager
+Caroline Kajihara, Head of Digital
+Rich Bloom, Senior Global Creative Director
+Kannan Mrithunjai and Sachin Girish, Developers
 
-The Problem
-JOOLA is the world's #1 pickleball brand. During a 2026 internship I designed and prototyped a B2B wholesale ordering portal for retailers and clubs.
-
-Process
-The work included a content design and copy audit, and details aligned with NetSuite.
-
-Design Decision
-Quick order with tier pricing
-Quick order is the main surface. Unit price changes by quantity tier.
-
-Design Decision
-Saved orders
-An order can be saved and brought back instead of rebuilt line by line.
-
-Design Decision
-Net 30 credit
-The order can sit on Net 30 credit.
-
-Design Decision
-Ship date pending
-Place order, and the order shows "Ship date pending" until a rep confirms the ship date.
-
-Solution
-The result is a coded prototype of that portal: quick order, tier pricing, saved orders, Net 30 credit, and the pending ship date.
-
-### Withheld (not on the page)
-
-Team: [Team is not documented]
-Tools: [Tools are not documented]
-Collaborators: [Not documented]
-
-[How those retailers and clubs order today, and what is failing about it, is not documented in this draft.]
-
-[Who reviewed the work, and which options were rejected, is not documented here.]
-
-Outcome
-[No outcome is documented yet.]
-The deliverable in this draft is the coded prototype.
-[No adoption, orders placed, or time-saved numbers are documented.]
-
-What I'd do next
-[A next step, not a result.]
-[I would watch retailers and clubs place a quick order, and watch a rep confirm a ship date, before treating the pending state as finished. That test has not been run.]
+Lock:
+This case study is under NDA.
+Enter the password or email me for access.
+Email: Mudit14.mahajan@gmail.com
 
 ---
 
