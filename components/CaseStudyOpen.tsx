@@ -18,15 +18,18 @@ export default function CaseStudyOpen({
   heroBg,
   posterWidth,
   posterHeight,
+  metaColumns,
   children,
 }: {
-  tagline: string;
+  tagline: ReactNode;
   title: string;
   metadata: Meta[];
   muxPlaybackId?: string;
   heroBg?: string;
   posterWidth?: number;
   posterHeight?: number;
+  /** Column tracks. Defaults to one per item. JOOLA uses 4 so Role and Timeline share BruinLease's x. */
+  metaColumns?: number;
   children?: ReactNode;
 }) {
   return (
@@ -80,7 +83,7 @@ export default function CaseStudyOpen({
           className="cs-meta-grid cs-open-type cs-open-type-meta"
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${metadata.length}, 1fr)`,
+            gridTemplateColumns: `repeat(${metaColumns ?? metadata.length}, 1fr)`,
             marginTop: "var(--space-4)",
           }}
         >

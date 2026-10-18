@@ -2,7 +2,9 @@
 
 Mudit approves all copy. Anything in [brackets] is a gap, not a fact. Do not invent metrics, quotes, or team names to fill a bracket.
 
-JOOLA is new draft copy and is what `/joola` renders. BruinLease is not a new draft: `/ucla-sublease` already exists, and the text below is what that page renders today.
+Bracketed lines are review notes. They are not rendered. A section or field that is only a gap is omitted from the page.
+
+JOOLA below is split into what `/joola` renders and what is withheld. BruinLease is not a new draft: `/ucla-sublease` already exists, and that section is what that page renders today.
 
 ---
 
@@ -10,69 +12,58 @@ JOOLA is new draft copy and is what `/joola` renders. BruinLease is not a new dr
 
 Route: `/joola`
 Hero file: `public/images/joola/hero-ruth-2.png`
-Film: Mux `gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00` (same film as the homepage card)
+Film: Mux `gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00` (same film as the homepage card). No caption.
 
-### Summary
+### Rendered
 
-A coded prototype of a wholesale ordering portal for JOOLA retailers and clubs.
-
-### Meta
+Eyebrow: Product Design    Case Study    2026
+Title: B2B ordering for JOOLA
 
 Role: Product design intern
-Team: [Team is not documented]
 Timeline: Summer 2026
-Tools: [Tools are not documented]
 
-Role and timeline come from the about-page entry (Product Design Intern, Summer 2026) plus the stated 2026 internship. Team and tools were not in the brief or the repo.
-
-### Problem
-
-Wholesale ordering for retailers and clubs.
-
+The Problem
 JOOLA is the world's #1 pickleball brand. During a 2026 internship I designed and prototyped a B2B wholesale ordering portal for retailers and clubs.
 
-[How those retailers and clubs order today, and what is failing about it, is not documented in this draft.]
-
-### Process
-
-A few ordering decisions, then a coded prototype.
-
+Process
 The work included a content design and copy audit, and details aligned with NetSuite.
 
-[Who reviewed the work, and which options were rejected, is not documented here.]
-
+Design Decision
 Quick order with tier pricing
 Quick order is the main surface. Unit price changes by quantity tier.
 
+Design Decision
 Saved orders
 An order can be saved and brought back instead of rebuilt line by line.
 
+Design Decision
 Net 30 credit
 The order can sit on Net 30 credit.
 
+Design Decision
 Ship date pending
 Place order, and the order shows "Ship date pending" until a rep confirms the ship date.
 
-### Solution
-
-The prototype, playing.
-
+Solution
 The result is a coded prototype of that portal: quick order, tier pricing, saved orders, Net 30 credit, and the pending ship date.
 
-Caption under the film: Coded prototype.
+### Withheld (not on the page)
 
-### Outcome
+Team: [Team is not documented]
+Tools: [Tools are not documented]
+Collaborators: [Not documented]
 
+[How those retailers and clubs order today, and what is failing about it, is not documented in this draft.]
+
+[Who reviewed the work, and which options were rejected, is not documented here.]
+
+Outcome
 [No outcome is documented yet.]
-
 The deliverable in this draft is the coded prototype.
-
 [No adoption, orders placed, or time-saved numbers are documented.]
 
-### What I'd do next
-
+What I'd do next
 [A next step, not a result.]
-
 [I would watch retailers and clubs place a quick order, and watch a rep confirm a ship date, before treating the pending state as finished. That test has not been run.]
 
 ---

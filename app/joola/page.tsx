@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import ProductCaseStudy from "@/components/ProductCaseStudy";
-import { JOOLA_CASE_STUDY } from "@/lib/caseStudies/joola";
+import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
 
+const description =
+  "Draft case study: a coded prototype of a JOOLA wholesale ordering portal for retailers and clubs.";
+
 export const metadata: Metadata = {
-  title: JOOLA_CASE_STUDY.title,
-  description: JOOLA_CASE_STUDY.description,
+  title: JOOLA_TITLE,
+  description,
   alternates: { canonical: `${SITE_URL}/joola` },
   openGraph: {
-    title: `${JOOLA_CASE_STUDY.title} — mudit mahajan`,
-    description: JOOLA_CASE_STUDY.description,
+    title: `${JOOLA_TITLE} — mudit mahajan`,
+    description,
     url: `${SITE_URL}/joola`,
   },
 };
 
 export default function JoolaCaseStudyPage() {
-  return <ProductCaseStudy content={JOOLA_CASE_STUDY} />;
+  return <ProductCaseStudy />;
 }
