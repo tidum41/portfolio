@@ -239,10 +239,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // the tile's theme and dropped the live album state. Cleared on close.
   const [cdFrozen, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof document === "undefined") return "light";
-    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-  });
+  // Always start "light" on server + first client paint so SSR HTML matches
+  // hydration (reading data-theme in useState caused a Next.js Issues badge).
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("light");
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
