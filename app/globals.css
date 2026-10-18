@@ -1233,10 +1233,46 @@ html[data-theme="dark"] .ps-polaroid-cap {
   object-fit: cover;
 }
 .mux-media-slot.mux-media-slot--fill .mux-cover,
-.mux-media-slot.mux-media-slot--fill video.mux-cover {
+.mux-media-slot.mux-media-slot--fill video.mux-cover,
+.mux-media-slot.mux-media-slot--silent .mux-cover,
+.mux-media-slot.mux-media-slot--silent video.mux-cover {
   object-fit: cover;
   --media-object-fit: cover;
   pointer-events: none;
+}
+/* iOS paints a native play glyph on muted inline video unless the controls
+   chrome is suppressed. The player never exposes controls. */
+.mux-media-slot video::-webkit-media-controls,
+.mux-media-slot video::-webkit-media-controls-enclosure,
+.mux-media-slot video::-webkit-media-controls-start-playback-button,
+.mux-media-slot video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Essay case study — 720px media column, 680px body. */
+.cs-layout.cs-layout--essay {
+  grid-template-columns: 1fr minmax(0, 720px) 1fr;
+}
+.cs-essay {
+  max-width: 720px;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.cs-essay-prose {
+  max-width: 680px;
+}
+@media (max-width: 1100px) {
+  .cs-layout.cs-layout--essay {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .cs-layout.cs-layout--essay {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
