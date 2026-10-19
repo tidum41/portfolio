@@ -11,6 +11,9 @@ export const DIALOGUE_TITLE = "Answers you can pinpoint";
 export const DIALOGUE_HERO_SRC = "/dialogue/hero.png";
 
 export const DIALOGUE_IMAGES = {
+  altParagraphs: "/dialogue/alt-a.png",
+  altQuoteList: "/dialogue/alt-b.png",
+  altStructured: "/dialogue/alt-c.png",
   problemBefore: "/dialogue/section-1-before.png",
   problemAfter: "/dialogue/section-1-after.png",
   answerShapes: "/dialogue/section-2.png",

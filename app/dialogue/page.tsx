@@ -9,6 +9,7 @@ import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
+import DecisionBlock from "@/components/DecisionBlock";
 import {
   DIALOGUE_DRAFT,
   DIALOGUE_HERO_SRC,
@@ -230,6 +231,46 @@ export default function DialogueCaseStudyPage() {
                   alt="Study chat answer with a summary line, funnel chart, and linked interview moments."
                 />
               </PairRow>
+
+              <DecisionBlock
+                heading="Lead with the answer, back it with evidence"
+                subheading="Three ways the chat could answer the same question."
+                chosenId="structured"
+                options={[
+                  {
+                    id: "paragraphs",
+                    title: "Paragraphs",
+                    lossReason: "Lost because you can't see who said what, or how many.",
+                    imageSrc: DIALOGUE_IMAGES.altParagraphs,
+                    imageAlt: "Study chat answer as three paragraphs of prose with no structure.",
+                  },
+                  {
+                    id: "quote-list",
+                    title: "Quote list",
+                    lossReason: "Lost because there's no answer. You still do the counting.",
+                    imageSrc: DIALOGUE_IMAGES.altQuoteList,
+                    imageAlt: "Study chat answer as a list of interview quotes without a summary.",
+                  },
+                  {
+                    id: "structured",
+                    title: "Structured answer",
+                    reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
+                    imageSrc: DIALOGUE_IMAGES.altStructured,
+                    imageAlt: "Study chat answer with a summary line, chart, and linked clips.",
+                  },
+                ]}
+              />
+
+              <div style={{ marginTop: 24 }}>
+                <CaseStudyFigure
+                  src={DIALOGUE_IMAGES.proofSolution}
+                  alt="Selected checkout step with a clips list tied to that bar."
+                  caption="Selecting a bar filters the clips to the moments behind it"
+                  fill
+                  aspectRatio="16 / 10"
+                  sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                />
+              </div>
             </Section>
 
             <Section id="why-it-matters">
@@ -305,19 +346,12 @@ export default function DialogueCaseStudyPage() {
             <Section id="proof">
               <H2>A number with no proof</H2>
               <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
-              <PairRow>
-                <FrameColumn caption="Problem: chart bar with no linked clips">
-                  <CaseStudyPlaceholder>
-                    Export a crop of the selected bar before the clips block appears (matching the
-                    solution frame).
-                  </CaseStudyPlaceholder>
-                </FrameColumn>
-                <FrameColumn
-                  caption="Solution: selecting a bar filters the clips to that step"
-                  src={DIALOGUE_IMAGES.proofSolution}
-                  alt="Selected checkout step with a clips list tied to that bar."
-                />
-              </PairRow>
+              <FrameColumn caption="Problem: chart bar with no linked clips">
+                <CaseStudyPlaceholder>
+                  Export a crop of the selected bar before the clips block appears (matching the
+                  solution frame).
+                </CaseStudyPlaceholder>
+              </FrameColumn>
             </Section>
 
             <Section id="clips">
