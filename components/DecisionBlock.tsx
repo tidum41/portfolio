@@ -1,6 +1,7 @@
 "use client";
 
 import CaseStudyFigure from "@/components/CaseStudyFigure";
+import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
 
 export type DecisionBlockOption = {
   id: string;
@@ -26,10 +27,9 @@ function OptionCaption({ option }: { option: DecisionBlockOption }) {
       <p className="decision-block__caption-title">{option.title}</p>
       {option.lossReason ? <p className="decision-block__caption-line">{option.lossReason}</p> : null}
       {option.reasonLines?.map((line, i) => (
-        <p key={line} className="decision-block__caption-line">
-          <span className="decision-block__num">{i + 1}</span>
+        <CaseStudyNumberedMarker key={line} n={i + 1} className="decision-block__caption-line">
           {line}
-        </p>
+        </CaseStudyNumberedMarker>
       ))}
     </div>
   );
@@ -49,7 +49,9 @@ function OptionCard({
         isChosen ? "decision-block__option--chosen" : "decision-block__option--dimmed",
       ].join(" ")}
     >
-      {isChosen ? <span className="decision-block__chosen-tag">Chosen</span> : null}
+      <div className="decision-block__tag-row">
+        {isChosen ? <span className="decision-block__chosen-tag">Chosen</span> : null}
+      </div>
       <CaseStudyFigure
         src={option.imageSrc}
         alt={option.imageAlt}

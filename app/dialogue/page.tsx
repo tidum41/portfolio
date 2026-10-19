@@ -10,6 +10,7 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import DecisionBlock from "@/components/DecisionBlock";
+import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
 import {
   DIALOGUE_DRAFT,
   DIALOGUE_HERO_SRC,
@@ -309,19 +310,7 @@ export default function DialogueCaseStudyPage() {
                   }}
                 >
                   {ANATOMY_PARTS.map(({ n, label }) => (
-                    <p key={n} className="cs-figcaption" style={{ margin: 0 }}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-sans-medium)",
-                          fontWeight: 500,
-                          color: "var(--color-text-primary)",
-                        }}
-                      >
-                        {n}
-                      </span>
-                      {" "}
-                      {label}
-                    </p>
+                    <CaseStudyNumberedMarker key={n} n={n}>{label}</CaseStudyNumberedMarker>
                   ))}
                 </div>
               </figure>
