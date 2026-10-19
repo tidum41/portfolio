@@ -11,6 +11,12 @@ const THEME_INTRO_BOOT = `(function(){var t=localStorage.getItem("theme");if(t==
 // reduced-motion sessions leave it unloaded.
 const HLS_BOOT = `(function(){if(location.pathname!=="/")return;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(document.querySelector("script[data-hls-light]"))return;var s=document.createElement("script");s.src="${HLS_LIGHT_SRC}";s.async=true;s.setAttribute("data-hls-light","1");document.head.appendChild(s)})()`;
 
+// Remember where a fine pointer is from the first paint. The homepage card focus
+// controller mounts after hydration and the intro keeps the grid inert for ~2s;
+// a cursor that lands on a card in that window and then rests fires no further
+// pointer event, so the controller hit-tests this position instead.
+const CARD_POINTER_BOOT = `(function(){if(location.pathname!=="/")return;if(!window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;var p=window.__cardFocusPtr={x:NaN,y:NaN};function m(e){p.x=e.clientX;p.y=e.clientY}document.addEventListener("pointermove",m,{capture:true,passive:true});document.addEventListener("pointerover",m,{capture:true,passive:true})})()`;
+
 /**
  * Injects blocking boot + JSON-LD scripts into the SSR HTML stream outside
  * the React component tree. Raw <script> / next/script inside layout still
@@ -35,6 +41,10 @@ export default function BootScripts({
         <script
           id="theme-intro-boot"
           dangerouslySetInnerHTML={{ __html: THEME_INTRO_BOOT }}
+        />
+        <script
+          id="card-pointer-boot"
+          dangerouslySetInnerHTML={{ __html: CARD_POINTER_BOOT }}
         />
         <script
           id="hls-light-boot"

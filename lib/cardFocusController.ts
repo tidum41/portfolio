@@ -10,7 +10,7 @@ import {
   cardFocusPlay,
   collectCardVideos,
   enforceCardFocusOnVideo,
-  mountCardFocusVideoGuards,
+  installCardFocusVideoGuard,
   pausedByFocus,
   videoWantsPaused,
 } from "@/lib/cardFocusVideo";
@@ -28,7 +28,6 @@ export class CardFocusController {
   private grid: HTMLElement | null = null;
   private activeCard: CardEl | null = null;
   private mounted = false;
-  private unmountVideoGuards: (() => void) | null = null;
 
   private lastPtrX = Number.NaN;
   private lastPtrY = Number.NaN;
@@ -55,17 +54,21 @@ export class CardFocusController {
     this.mounted = true;
 
     document.addEventListener("pointermove", this.onPointerMove, { passive: true });
+    document.addEventListener("pointerover", this.onPointerMove, { passive: true, capture: true });
     window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
     window.addEventListener("wheel", this.onScrollLike, { passive: true });
     window.addEventListener("touchmove", this.onScrollLike, { passive: true });
     document.documentElement.addEventListener("pointerleave", this.onDocumentPointerLeave);
     window.addEventListener("blur", this.onWindowBlur);
     window.addEventListener("soft-nav-start", this.onSoftNavStart);
+    window.addEventListener("intro-done", this.onGridInteractive);
+    window.addEventListener("soft-nav-settled", this.onGridInteractive);
     document.addEventListener("visibilitychange", this.onVisibility);
 
-    this.unmountVideoGuards = mountCardFocusVideoGuards(grid);
+    installCardFocusVideoGuard();
     this.io = new IntersectionObserver(this.onIntersect);
     this.observeVideos();
+    this.seedPointer();
   }
 
   unmount() {
@@ -76,18 +79,19 @@ export class CardFocusController {
     this.setActive(null, { skipVideos: true });
     pausedByFocus.clear();
 
-    this.unmountVideoGuards?.();
-    this.unmountVideoGuards = null;
     this.io?.disconnect();
     this.io = null;
 
     document.removeEventListener("pointermove", this.onPointerMove);
+    document.removeEventListener("pointerover", this.onPointerMove, true);
     window.removeEventListener("scroll", this.onScrollLike, true);
     window.removeEventListener("wheel", this.onScrollLike);
     window.removeEventListener("touchmove", this.onScrollLike);
     document.documentElement.removeEventListener("pointerleave", this.onDocumentPointerLeave);
     window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("soft-nav-start", this.onSoftNavStart);
+    window.removeEventListener("intro-done", this.onGridInteractive);
+    window.removeEventListener("soft-nav-settled", this.onGridInteractive);
     document.removeEventListener("visibilitychange", this.onVisibility);
 
     this.grid = null;
@@ -136,6 +140,27 @@ export class CardFocusController {
     if (!this.enabled()) return;
     this.lastPtrX = e.clientX;
     this.lastPtrY = e.clientY;
+    this.scheduleHitTest("pointer");
+  };
+
+  /**
+   * The pointer may already be resting on a card when the controller mounts
+   * (the boot script recorded it from first paint), and no further pointer
+   * event will arrive to tell us. Hit-test that position once.
+   */
+  private seedPointer() {
+    const seed = (window as Window & { __cardFocusPtr?: { x: number; y: number } }).__cardFocusPtr;
+    if (seed && Number.isFinite(seed.x) && Number.isFinite(seed.y) && !Number.isFinite(this.lastPtrX)) {
+      this.lastPtrX = seed.x;
+      this.lastPtrY = seed.y;
+    }
+    this.onGridInteractive();
+  }
+
+  /** The grid just became hit-testable (intro done, route settled); a resting cursor counts. */
+  private onGridInteractive = () => {
+    if (!this.enabled()) return;
+    if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
     this.scheduleHitTest("pointer");
   };
 
