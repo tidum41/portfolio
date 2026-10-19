@@ -293,7 +293,11 @@ const FB = {
     { _key: "m1", label: "Role", values: ["Product Designer", "& Frontend"] },
     { _key: "m2", label: "Timeline", values: ["5 Weeks"] },
     { _key: "m3", label: "Team", values: ["1 PM", "1 PMM"] },
-    { _key: "m4", label: "Tools", values: ["Figma", "Google Stitch", "Claude Code", "Vercel"] },
+    {
+      _key: "m4",
+      label: "Scope",
+      values: ["User research", "Interaction design", "Prototyping", "Frontend development"],
+    },
   ],
   problemLabel: "The Problem",
   problemHeading: "UCLA students struggle with subleasing, using platforms that weren't built for it.",

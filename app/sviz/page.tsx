@@ -187,9 +187,9 @@ const METADATA = [
     values: ["SteelSeries", "DROP", "Glorious", "KBDfans"],
   },
   {
-    _key: "tools",
-    label: "Tools",
-    values: ["DaVinci Resolve", "Photoshop", "Fujifilm XS10", "Tamron 17-70 f/2.8"],
+    _key: "scope",
+    label: "Scope",
+    values: ["Video production", "Editing", "Community building"],
   },
 ];
 

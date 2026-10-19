@@ -184,9 +184,9 @@ export default function DialogueCaseStudyPage() {
                 ],
               },
               {
-                _key: "tools",
-                label: "Tools",
-                values: ["Cursor", "Paper", "Figma", "Granola"],
+                _key: "scope",
+                label: "Scope",
+                values: ["Interaction design", "Visual design", "Prototyping"],
               },
             ]}
           >
