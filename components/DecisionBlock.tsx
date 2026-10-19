@@ -10,6 +10,8 @@ export type DecisionBlockOption = {
   lossReason?: string;
   /** Short reason labels for the chosen option (rendered with numbered markers) */
   reasonLines?: string[];
+  /** Muted line under the title when this option is chosen */
+  selectionNote?: string;
   imageSrc: string;
   imageAlt: string;
 };
@@ -21,10 +23,13 @@ export type DecisionBlockProps = {
   chosenId: string;
 };
 
-function OptionCaption({ option }: { option: DecisionBlockOption }) {
+function OptionCaption({ option, isChosen }: { option: DecisionBlockOption; isChosen: boolean }) {
   return (
     <div className="decision-block__caption">
       <p className="decision-block__caption-title">{option.title}</p>
+      {isChosen && option.selectionNote ? (
+        <p className="decision-block__caption-line">{option.selectionNote}</p>
+      ) : null}
       {option.lossReason ? <p className="decision-block__caption-line">{option.lossReason}</p> : null}
       {option.reasonLines?.map((line, i) => (
         <CaseStudyNumberedMarker key={line} n={i + 1} className="decision-block__caption-line">
@@ -49,9 +54,6 @@ function OptionCard({
         isChosen ? "decision-block__option--chosen" : "decision-block__option--dimmed",
       ].join(" ")}
     >
-      <div className="decision-block__tag-row">
-        {isChosen ? <span className="decision-block__chosen-tag">Chosen</span> : null}
-      </div>
       <CaseStudyFigure
         src={option.imageSrc}
         alt={option.imageAlt}
@@ -60,7 +62,7 @@ function OptionCard({
         sizes="(max-width: 767px) calc(50vw - 30px), 240px"
         zoomable
       />
-      <OptionCaption option={option} />
+      <OptionCaption option={option} isChosen={isChosen} />
     </div>
   );
 }

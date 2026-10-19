@@ -1124,28 +1124,8 @@ html[data-theme="dark"] .project-image {
     transition: none;
   }
 }
-.decision-block__tag-row {
-  min-height: calc(12px * 1.4 + 4px);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-}
-.decision-block__option--chosen .cs-figure-media {
-  outline: 1.5px solid #b03a78;
-  outline-offset: 4px;
-}
 .decision-block__option .cs-figure-media--fill {
   aspect-ratio: 696 / 936;
-}
-.decision-block__chosen-tag {
-  display: inline-flex;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 1.4;
-  font-weight: 500;
-  color: #b03a78;
-  background: color-mix(in srgb, #b03a78 12%, transparent);
 }
 .decision-block__caption {
   margin-top: 8px;

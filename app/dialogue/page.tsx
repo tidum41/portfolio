@@ -255,6 +255,7 @@ export default function DialogueCaseStudyPage() {
                   {
                     id: "structured",
                     title: "Structured answer",
+                    selectionNote: "We went with this",
                     reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
                     imageSrc: DIALOGUE_IMAGES.altStructured,
                     imageAlt: "Study chat answer with a summary line, chart, and linked clips.",
