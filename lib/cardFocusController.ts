@@ -68,11 +68,13 @@ export class CardFocusController {
     document.documentElement.addEventListener("pointerleave", this.onDocumentPointerLeave);
     window.addEventListener("blur", this.onWindowBlur);
     window.addEventListener("soft-nav-start", this.onSoftNavStart);
+    window.addEventListener("intro-done", this.onGridInteractive);
     document.addEventListener("visibilitychange", this.onVisibility);
 
     this.unmountVideoGuards = mountCardFocusVideoGuards(grid);
     this.io = new IntersectionObserver(this.onIntersect);
     this.observeVideos();
+    this.seedPointer();
   }
 
   unmount() {
@@ -96,6 +98,7 @@ export class CardFocusController {
     document.documentElement.removeEventListener("pointerleave", this.onDocumentPointerLeave);
     window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("soft-nav-start", this.onSoftNavStart);
+    window.removeEventListener("intro-done", this.onGridInteractive);
     document.removeEventListener("visibilitychange", this.onVisibility);
 
     this.grid = null;
@@ -144,6 +147,26 @@ export class CardFocusController {
     if (!this.enabled()) return;
     this.lastPtrX = e.clientX;
     this.lastPtrY = e.clientY;
+    this.scheduleHitTest("pointer");
+  };
+
+  /**
+   * The pointer may already rest on a card when the controller mounts, with no
+   * further pointer event coming. Use the position the boot script recorded.
+   */
+  private seedPointer() {
+    const seed = (window as Window & { __cardFocusPtr?: { x: number; y: number } }).__cardFocusPtr;
+    if (seed && Number.isFinite(seed.x) && Number.isFinite(seed.y) && !Number.isFinite(this.lastPtrX)) {
+      this.lastPtrX = seed.x;
+      this.lastPtrY = seed.y;
+    }
+    this.onGridInteractive();
+  }
+
+  /** The intro just made the grid hit-testable; a resting cursor over a card counts. */
+  private onGridInteractive = () => {
+    if (!this.enabled()) return;
+    if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
     this.scheduleHitTest("pointer");
   };
 
