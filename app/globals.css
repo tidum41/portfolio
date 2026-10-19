@@ -1453,3 +1453,9 @@ html[data-theme="light"] {
   }
 }
 
+@media (max-width: 767px) {
+  .dialogue-pair {
+    grid-template-columns: 1fr !important;
+  }
+}
+

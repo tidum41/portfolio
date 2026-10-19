@@ -7,7 +7,7 @@ import { markSoftNav } from "@/lib/instantNav";
  * commits. Keep in sync with page fallbacks (heroMuxId / local hero image).
  */
 export const CASE_STUDY_LCP: Record<string, string> = {
-  "/dialogue": "/dialogue/section-6.png",
+  "/dialogue": "/dialogue/hero.png",
   "/ucla-sublease":
     "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=1&width=1280",
   // /sviz hero is a next/image with `priority`, which already emits the
