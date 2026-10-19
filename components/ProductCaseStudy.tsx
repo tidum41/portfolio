@@ -1,14 +1,9 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
-import CaseStudyLock from "@/components/CaseStudyLock";
-import MuxMediaSlot from "@/components/MuxMediaSlot";
-import {
-  JOOLA_EMAIL,
-  JOOLA_HERO_SRC,
-  JOOLA_MUX_PLAYBACK_ID,
-  JOOLA_TITLE,
-} from "@/lib/caseStudies/joola";
+import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 
 const TEAM = [
   { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
@@ -18,9 +13,11 @@ const TEAM = [
   { name: "Sachin Girish", role: "Developer", href: "https://www.linkedin.com/in/sachin-girish1677/" },
 ] as const;
 
+const REQUEST_HREF = "mailto:Mudit14.mahajan@gmail.com?subject=JOOLA%20case%20study%20access";
+
 /**
- * Bare JOOLA page. `body` is the slot for later case-study sections,
- * rendered between the film and the NDA lock.
+ * JOOLA uses the BruinLease case-study open: title, hero, then metadata.
+ * `body` is the slot for later sections, between that open and the NDA request.
  */
 export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
   return (
@@ -35,45 +32,27 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
 
-          <div className="cs-hero-title-wrap">
-            <h1
-              className="cs-hero-title"
-              style={{
-                fontFamily: "var(--font-doc-title)",
-                fontSize: "var(--fs-hero)",
-                fontWeight: "var(--fw-hero)",
-                lineHeight: 1.1,
-                letterSpacing: "var(--ls-hero)",
-                color: "var(--color-text-primary)",
-                margin: 0,
-              }}
-            >
-              {JOOLA_TITLE}
-            </h1>
-          </div>
-
-          <dl className="cs-facts">
-            <Fact label="Role" value="Product Design Intern" />
-            <Fact label="Timeline" value="10 weeks, Summer 2026" />
-            <div>
-              <dt className="cs-facts-label">Team</dt>
-              <dd className="cs-facts-value">
-                <ul className="cs-facts-team">
-                  {TEAM.map((person) => (
-                    <li key={person.href}>
-                      <a className="cs-person-link" href={person.href} target="_blank" rel="noopener noreferrer">
-                        {person.name}
-                      </a>
-                      {" "}
-                      <span className="cs-facts-role">{person.role}</span>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-
-          <div className="cs-hero-media-wrap" style={{ marginTop: "var(--space-4)" }}>
+          <CaseStudyOpen
+            title={JOOLA_TITLE}
+            metadata={[
+              { _key: "role", label: "Role", values: ["Product Design Intern"] },
+              { _key: "timeline", label: "Timeline", values: ["10 weeks, Summer 2026"] },
+              {
+                _key: "team",
+                label: "Team",
+                wide: true,
+                values: TEAM.map((person) => (
+                  <span key={person.href}>
+                    <a className="cs-person-link" href={person.href} target="_blank" rel="noopener noreferrer">
+                      {person.name}
+                    </a>
+                    {" "}
+                    <span style={{ color: "var(--color-text-muted)" }}>{person.role}</span>
+                  </span>
+                )),
+              },
+            ]}
+          >
             <div style={{ borderRadius: "var(--radius-card)", overflow: "hidden" }}>
               <Image
                 src={JOOLA_HERO_SRC}
@@ -86,35 +65,13 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
                 style={{ width: "100%", height: "auto", display: "block" }}
               />
             </div>
-          </div>
+          </CaseStudyOpen>
 
-          <div data-case-film={JOOLA_MUX_PLAYBACK_ID} style={{ margin: "8px 0 0" }}>
-            <MuxMediaSlot
-              playbackId={JOOLA_MUX_PLAYBACK_ID}
-              thumbnailTime={0}
-              posterWidth={1280}
-              posterHeight={960}
-              className="mux-media-slot--contain"
-              style={{ background: "#F4F4F4", borderRadius: "var(--radius-card)" }}
-            />
-          </div>
+          {body}
 
-          {body ? <div className="cs-study-body">{body}</div> : null}
-
-          <div style={{ marginTop: "var(--section-gap)" }}>
-            <CaseStudyLock email={JOOLA_EMAIL} />
-          </div>
+          <CaseStudyRequest href={REQUEST_HREF} />
         </div>
       </div>
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="cs-facts-label">{label}</dt>
-      <dd className="cs-facts-value">{value}</dd>
     </div>
   );
 }

@@ -12,13 +12,14 @@ JOOLA below is split into what `/joola` renders and what is withheld. BruinLease
 
 Route: `/joola`
 Hero file: `public/images/joola/hero-ruth-2.png`
-Film: Mux `gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00` (same film as the homepage card). No caption.
-The body sections are off the page. After the film, a locked NDA block. The password does not open anything.
+The Mux film stays on the homepage card only. It is not on this page.
+The body sections are off the page. After the metadata, an NDA request. There is no password.
 
 ### Rendered
 
 Back (same control as /ucla-sublease)
 Title: B2B ordering for JOOLA
+Hero, then the metadata row in the same place and styles as /ucla-sublease.
 
 Role: Product Design Intern
 Timeline: 10 weeks, Summer 2026
@@ -29,12 +30,12 @@ Rich Bloom Creative Director
 Kannan Mrithunjai Developer
 Sachin Girish Developer
 
-The eyebrow and the subtitle are off the page. Body sections are not rendered yet. The page leaves a slot between the film and the lock for them.
+The eyebrow and the subtitle are off the page. Later sections go between the metadata and the request.
 
-Lock:
-This case study is under NDA.
-Enter the password or email me for access.
-Email: Mudit14.mahajan@gmail.com
+Request:
+Under NDA
+Full case study available upon request.
+Request access → mailto:Mudit14.mahajan@gmail.com?subject=JOOLA%20case%20study%20access
 
 ---
 
