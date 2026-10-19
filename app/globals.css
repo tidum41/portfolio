@@ -501,8 +501,10 @@ html[data-theme="light"] {
   --work-focus-recede: 0.45;
 }
 
+/* Opacity on card *children* — EntranceItem owns inline opacity via
+   Framer motion values, so dimming the grid-card itself would lose. */
 .work-focus-recede,
-.portfolio-grid-card {
+.portfolio-grid-card > * {
   transition: opacity var(--work-focus-out) ease-out;
   transition-delay: 0ms;
 }
@@ -510,17 +512,17 @@ html[data-theme="light"] {
 @media (hover: hover) and (pointer: fine) {
   /* Grid hovered (any card or gutter) — or a card is keyboard-focused. */
   body:has(.portfolio-grid:hover) .work-focus-recede,
-  body:has(.portfolio-grid:hover) .portfolio-grid-card:not(:hover),
+  body:has(.portfolio-grid:hover) .portfolio-grid-card:not(:hover) > *,
   body:has(.project-card:focus-visible) .work-focus-recede,
-  body:has(.project-card:focus-visible) .portfolio-grid-card:not(:focus-within) {
+  body:has(.project-card:focus-visible) .portfolio-grid-card:not(:focus-within) > * {
     opacity: var(--work-focus-recede);
     transition: opacity var(--work-focus-in) ease-out;
     transition-delay: var(--work-focus-intent);
   }
 
   /* Standout card snaps to full strength with no intent delay. */
-  body:has(.portfolio-grid:hover) .portfolio-grid-card:hover,
-  body:has(.project-card:focus-visible) .portfolio-grid-card:focus-within {
+  body:has(.portfolio-grid:hover) .portfolio-grid-card:hover > *,
+  body:has(.project-card:focus-visible) .portfolio-grid-card:focus-within > * {
     opacity: 1;
     transition: opacity var(--work-focus-in) ease-out;
     transition-delay: 0ms;
@@ -529,7 +531,7 @@ html[data-theme="light"] {
 
 @media (prefers-reduced-motion: reduce) {
   .work-focus-recede,
-  .portfolio-grid-card {
+  .portfolio-grid-card > * {
     transition: none !important;
   }
 }
