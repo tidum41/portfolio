@@ -215,6 +215,7 @@ export class CardFocusController {
     if (card) {
       card.setAttribute("data-card-focus-active", "");
       document.documentElement.setAttribute("data-card-focus", "");
+      this.enforceOthers();
     } else {
       document.documentElement.removeAttribute("data-card-focus");
     }
@@ -222,6 +223,12 @@ export class CardFocusController {
     if (opts.skipVideos) return;
     const gen = this.generation;
     this.after(0, () => this.videoPass(gen));
+  }
+
+  /** Same task as the dim: if the CSS can apply, the pause applies too. */
+  private enforceOthers() {
+    if (!this.grid) return;
+    for (const v of collectCardVideos(this.grid)) enforceCardFocusOnVideo(v);
   }
 
   private isCurrent(gen: number) {
