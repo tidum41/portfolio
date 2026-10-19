@@ -53,9 +53,9 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
                 )),
               },
               {
-                _key: "tools",
-                label: "Tools",
-                values: [<span style={{ color: "var(--color-text-muted)" }}>To fill</span>],
+                _key: "scope",
+                label: "Scope",
+                values: ["Product design", "Interaction design", "Prototyping"],
               },
             ]}
           >

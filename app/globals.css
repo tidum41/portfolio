@@ -951,7 +951,7 @@ html[data-theme="dark"] .project-image {
   .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
-/* ─── Case study metadata grid (Role / Timeline / Team / Tools) ───── */
+/* ─── Case study metadata grid (Role / Timeline / Team / Scope) ───── */
 .cs-meta-grid {
   display: grid;
   margin-top: var(--space-4);
