@@ -1,16 +1,27 @@
 /**
  * Card-focus playback policy for homepage grid videos.
  *
- * - While a card is focused, every other grid video is paused and recorded in
- *   `pausedByFocus`. On neutral the controller resumes exactly that set.
- * - Late autoplay (hls.js attach, canplay, play() promises) cannot restart a
- *   video the policy forbids: play/playing are intercepted and re-paused.
+ * One rule, read from the same DOM state the dim CSS reads: when
+ * html[data-card-focus] is set, a video inside a .portfolio-grid-card that is
+ * not [data-card-focus-active] must not play. If the dim can apply, so does this.
+ *
+ * - Every video focus pauses (or blocks from starting) is recorded in
+ *   `pausedByFocus`; neutral resumes exactly that set.
+ * - The media-event guard lives on `document` (capture), installed by an inline
+ *   boot script before hydration and again at module evaluation (idempotent), so
+ *   late Mux attach, autoplay and canplay can never outrun it.
  */
 
-/** Videos the focus policy paused (or blocked from starting). Resumed on neutral. */
-export const pausedByFocus = new Set<HTMLVideoElement>();
+import { CARD_FOCUS_GUARD_EVENTS } from "@/lib/cardFocusGuardBoot";
 
-const boundVideos = new WeakSet<HTMLVideoElement>();
+type GuardGlobals = typeof globalThis & {
+  __cfPaused?: Set<HTMLVideoElement>;
+  __cfGuard?: number;
+};
+const guardGlobals = globalThis as GuardGlobals;
+
+/** Shared with the inline boot guard (window.__cfPaused). */
+export const pausedByFocus: Set<HTMLVideoElement> = (guardGlobals.__cfPaused ??= new Set());
 
 function pauseMuxHost(host: Element) {
   const el = host as HTMLElement & { pause?: () => void };
@@ -40,12 +51,16 @@ export function videoWantsPaused(video: HTMLVideoElement): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** When card focus is active, only the focused grid card may play. */
+/**
+ * True unless this video sits in a dimmed grid card. Videos outside the grid
+ * (hero, case studies) are never governed by card focus.
+ */
 export function cardFocusAllowsVideoPlay(video: HTMLVideoElement): boolean {
   if (typeof document === "undefined") return true;
   if (!document.documentElement.hasAttribute("data-card-focus")) return true;
   const card = video.closest(".portfolio-grid-card");
-  return Boolean(card?.hasAttribute("data-card-focus-active"));
+  if (!card) return true;
+  return card.hasAttribute("data-card-focus-active");
 }
 
 /** Pause immediately when focus forbids this video, and remember to resume it. */
@@ -61,44 +76,33 @@ export function enforceCardFocusOnVideo(video: HTMLVideoElement): void {
   if (mux) pauseMuxHost(mux);
 }
 
-const onGuardedPlay = (e: Event) => {
-  enforceCardFocusOnVideo(e.currentTarget as HTMLVideoElement);
+const onDocumentMedia = (e: Event) => {
+  const target = e.target;
+  if (target instanceof HTMLVideoElement && !target.paused) enforceCardFocusOnVideo(target);
 };
 
-/** Per-element play/playing listeners (survives late attach). */
-export function bindCardFocusVideoGuard(video: HTMLVideoElement): void {
-  if (boundVideos.has(video)) return;
-  boundVideos.add(video);
-  video.addEventListener("play", onGuardedPlay);
-  video.addEventListener("playing", onGuardedPlay);
-  enforceCardFocusOnVideo(video);
+/** Capture media events on document. No-op if the inline boot script already did. */
+export function installCardFocusDocumentGuard(): void {
+  if (typeof document === "undefined" || guardGlobals.__cfGuard) return;
+  guardGlobals.__cfGuard = 1;
+  for (const name of CARD_FOCUS_GUARD_EVENTS) document.addEventListener(name, onDocumentMedia, true);
 }
 
-function scanGridVideos(grid: HTMLElement): void {
-  for (const v of collectCardVideos(grid)) bindCardFocusVideoGuard(v);
-}
+installCardFocusDocumentGuard();
 
-/** Capture-phase grid listeners + MutationObserver for late-mounted videos. */
+/**
+ * Enforce focus on videos that mount while a card is already focused. They may
+ * not fire play/playing for a while, so don't wait for the event.
+ */
 export function mountCardFocusVideoGuards(grid: HTMLElement): () => void {
-  const onCapturePlay = (e: Event) => {
-    const target = e.target;
-    if (!(target instanceof HTMLVideoElement)) return;
-    if (!grid.contains(target)) return;
-    enforceCardFocusOnVideo(target);
+  installCardFocusDocumentGuard();
+  const enforceAll = () => {
+    for (const v of collectCardVideos(grid)) enforceCardFocusOnVideo(v);
   };
-
-  grid.addEventListener("play", onCapturePlay, true);
-  grid.addEventListener("playing", onCapturePlay, true);
-  scanGridVideos(grid);
-
-  const mo = new MutationObserver(() => scanGridVideos(grid));
+  enforceAll();
+  const mo = new MutationObserver(enforceAll);
   mo.observe(grid, { childList: true, subtree: true });
-
-  return () => {
-    grid.removeEventListener("play", onCapturePlay, true);
-    grid.removeEventListener("playing", onCapturePlay, true);
-    mo.disconnect();
-  };
+  return () => mo.disconnect();
 }
 
 function retryPlayOnce(video: HTMLVideoElement) {

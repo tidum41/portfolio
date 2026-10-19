@@ -20,6 +20,11 @@ const RESUME_STAGGER_CAP_MS = 160;
 const RESUME_VERIFY_MS = 220;
 const RESUME_VERIFY_PASSES = 3;
 const FINE_POINTER_MQ = "(hover: hover) and (pointer: fine)";
+/**
+ * While a card is focused, re-assert "dimmed means paused" this often. Events do the
+ * work in practice; this makes the invariant hold even if one never fires.
+ */
+const INVARIANT_INTERVAL_MS = 100;
 
 type CardEl = HTMLElement & { dataset: { gridCard?: string } };
 type HitTestMode = "pointer" | "scroll";
@@ -39,6 +44,8 @@ export class CardFocusController {
   /** Bumped on every focus change; video work from an older generation is dropped. */
   private generation = 0;
   private timers = new Set<number>();
+
+  private invariantTimer = 0;
 
   private io: IntersectionObserver | null = null;
   /** Unknown counts as in view, so a missing IO report never leaves a video paused. */
@@ -74,6 +81,7 @@ export class CardFocusController {
     this.rafId = 0;
     this.hitTestMode = null;
     this.setActive(null, { skipVideos: true });
+    this.stopInvariant();
     pausedByFocus.clear();
 
     this.unmountVideoGuards?.();
@@ -190,13 +198,39 @@ export class CardFocusController {
     if (card) {
       card.setAttribute("data-card-focus-active", "");
       document.documentElement.setAttribute("data-card-focus", "");
+      // Same task as the dim: if the CSS can apply, the pause applies too.
+      this.enforceAll();
+      this.startInvariant();
     } else {
       document.documentElement.removeAttribute("data-card-focus");
+      this.stopInvariant();
     }
 
     if (opts.skipVideos) return;
     const gen = this.generation;
     this.after(0, () => this.videoPass(gen));
+  }
+
+  private enforceAll() {
+    if (!this.grid) return;
+    for (const v of collectCardVideos(this.grid)) enforceCardFocusOnVideo(v);
+  }
+
+  private startInvariant() {
+    if (this.invariantTimer) return;
+    this.invariantTimer = window.setInterval(() => {
+      if (!this.activeCard || !this.grid) {
+        this.stopInvariant();
+        return;
+      }
+      this.enforceAll();
+    }, INVARIANT_INTERVAL_MS);
+  }
+
+  private stopInvariant() {
+    if (!this.invariantTimer) return;
+    window.clearInterval(this.invariantTimer);
+    this.invariantTimer = 0;
   }
 
   private isCurrent(gen: number) {
