@@ -9,6 +9,7 @@ import { constrainedNetwork, warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import { cardFocusPlay } from "@/lib/cardFocusVideo";
 
 /** Later cards start a beat after the two that are on screen at intro end. */
 const LATER_CARD_STAGGER_MS = 120;
@@ -198,10 +199,7 @@ export default function MuxAutoplayCard({
     };
     const playEl = () => {
       const el = root?.querySelector("video");
-      try {
-        const p = el?.play();
-        if (p && typeof p.catch === "function") p.catch(() => {});
-      } catch { /* ignore */ }
+      if (el instanceof HTMLVideoElement) cardFocusPlay(el);
     };
 
     // Sync with soft-nav click — don't wait for React playing=false effect.
