@@ -1,4 +1,5 @@
 import {
+  CONTACT_EMAIL,
   OG_IMAGE_PATH,
   SAME_AS,
   SITE_DESCRIPTION,
@@ -30,7 +31,7 @@ export function getSiteJsonLd(): string {
         name: "Mudit Mahajan",
         url: SITE_URL,
         description: SITE_DESCRIPTION,
-        email: "muditmahajan@ucla.edu",
+        email: CONTACT_EMAIL,
         jobTitle: "Product Design Intern",
         image: logoUrl,
         worksFor: {

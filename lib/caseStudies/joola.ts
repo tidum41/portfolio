@@ -9,5 +9,3 @@ export const JOOLA_MUX_PLAYBACK_ID =
   "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00";
 
 export const JOOLA_TITLE = "B2B ordering for JOOLA";
-
-export const JOOLA_EMAIL = "Mudit14.mahajan@gmail.com";

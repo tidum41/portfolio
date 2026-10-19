@@ -35,7 +35,7 @@ The eyebrow and the subtitle are off the page. Later sections go between the met
 Request:
 Under NDA
 Full case study available upon request.
-Request access → mailto:Mudit14.mahajan@gmail.com?subject=JOOLA%20case%20study%20access
+Request access → copies muditmahajan@ucla.edu to the clipboard
 
 ---
 

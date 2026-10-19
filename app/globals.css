@@ -980,6 +980,7 @@ html[data-theme="dark"] .project-image {
 .cs-request-action {
   display: inline-flex;
   align-items: center;
+  font: inherit;
   font-size: 14px;
   line-height: 1.4;
   color: var(--color-text-primary);

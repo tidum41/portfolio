@@ -13,8 +13,6 @@ const TEAM = [
   { name: "Sachin Girish", role: "Developer", href: "https://www.linkedin.com/in/sachin-girish1677/" },
 ] as const;
 
-const REQUEST_HREF = "mailto:Mudit14.mahajan@gmail.com?subject=JOOLA%20case%20study%20access";
-
 /**
  * JOOLA uses the BruinLease case-study open: title, hero, then metadata.
  * `body` is the slot for later sections, between that open and the NDA request.
@@ -69,7 +67,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
 
           {body}
 
-          <CaseStudyRequest href={REQUEST_HREF} />
+          <CaseStudyRequest />
         </div>
       </div>
     </div>
