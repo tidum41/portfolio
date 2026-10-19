@@ -12,8 +12,7 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
     if (!grid) return;
     if (!cardFocusController.enabled()) return;
 
-    const nav = document.querySelector(".site-nav") as HTMLElement | null;
-    cardFocusController.mount(grid, nav);
+    cardFocusController.mount(grid);
 
     const mo = new MutationObserver(() => {
       cardFocusController.observeNewVideos();
