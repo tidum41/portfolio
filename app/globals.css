@@ -493,11 +493,12 @@ html[data-theme="light"] {
   --work-focus-recede: 0.45;
 }
 
-.portfolio-grid-card > * {
-  transition: opacity var(--work-focus-out) ease-out;
-}
-
 @media (hover: hover) and (pointer: fine) {
+  .portfolio-grid-card > * {
+    will-change: opacity;
+    transition: opacity var(--work-focus-out) ease-out;
+  }
+
   html[data-card-focus] .portfolio-grid-card:not([data-card-focus-active]) > * {
     opacity: var(--work-focus-recede);
     transition: opacity var(--work-focus-in) ease-out;
