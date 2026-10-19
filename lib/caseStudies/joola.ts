@@ -10,7 +10,4 @@ export const JOOLA_MUX_PLAYBACK_ID =
 
 export const JOOLA_TITLE = "B2B ordering for JOOLA";
 
-export const JOOLA_SUBTITLE =
-  "Designing B2B ordering for the #1 pickleball brand. I owned the design end to end over 10 weeks on JOOLA's product team.";
-
 export const JOOLA_EMAIL = "Mudit14.mahajan@gmail.com";

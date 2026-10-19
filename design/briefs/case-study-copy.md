@@ -17,17 +17,19 @@ The body sections are off the page. After the film, a locked NDA block. The pass
 
 ### Rendered
 
-Eyebrow: Product Design    Internship    2026
+Back (same control as /ucla-sublease)
 Title: B2B ordering for JOOLA
-Subtitle: Designing B2B ordering for the #1 pickleball brand. I owned the design end to end over 10 weeks on JOOLA's product team.
 
 Role: Product Design Intern
-Timeline: 10 weeks / Summer 2026
-Collaborators:
-Vinay Bulusu, Product Manager
-Caroline Kajihara, Head of Digital
-Rich Bloom, Senior Global Creative Director
-Kannan Mrithunjai and Sachin Girish, Developers
+Timeline: 10 weeks, Summer 2026
+Team:
+Vinay Bulusu PM
+Caroline Kajihara Head of Digital
+Rich Bloom Creative Director
+Kannan Mrithunjai Developer
+Sachin Girish Developer
+
+The eyebrow and the subtitle are off the page. Body sections are not rendered yet. The page leaves a slot between the film and the lock for them.
 
 Lock:
 This case study is under NDA.

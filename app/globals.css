@@ -946,6 +946,56 @@ html[data-theme="dark"] .project-image {
   }
 }
 
+/* JOOLA facts: hairline, then three columns. Stacks on small screens. */
+.cs-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  column-gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.cs-facts-label,
+.cs-facts-value {
+  margin: 0;
+}
+.cs-facts-label {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+.cs-facts-value {
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+.cs-facts-team {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cs-facts-role {
+  color: var(--color-text-muted);
+}
+@media (max-width: 767px) {
+  .cs-facts {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-3);
+  }
+}
+
+/* Slot for case-study sections inserted between the film and the lock. */
+.cs-study-body {
+  margin-top: var(--section-gap);
+}
+
 .cs-person-link {
   color: inherit;
   text-decoration: none;
