@@ -453,11 +453,6 @@ export default function DialogueCaseStudyPage() {
                 The research assistant stays on the study page, in Dialogue&apos;s visual style.
                 Only the answer changed.
               </Body>
-              <Figure
-                src={DIALOGUE_IMAGES.inProduct}
-                alt="Full study page with the research assistant docked on the right."
-                caption="The research assistant on a study page"
-              />
             </Section>
 
             <Section id="solution">
@@ -468,6 +463,16 @@ export default function DialogueCaseStudyPage() {
                 that proves it. That is what visualizing qualitative data for UX researchers
                 looked like in this exploration.
               </Body>
+              <Figure
+                src={DIALOGUE_IMAGES.assistantEmpty}
+                alt="Empty research assistant panel on a study page, titled Research assistant before a question is asked."
+                caption="The panel opens with Research assistant as its default title before any question"
+              />
+              <Figure
+                src={DIALOGUE_IMAGES.inProduct}
+                alt="Full study page with the research assistant docked on the right."
+                caption="The research assistant on a study page"
+              />
               <Figure
                 src={DIALOGUE_IMAGES.fullAnswer}
                 alt="Full structured answer with a drawer listing every supporting clip."

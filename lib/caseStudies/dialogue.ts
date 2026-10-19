@@ -15,6 +15,7 @@ export const DIALOGUE_IMAGES = {
   anatomy: "/dialogue/section-3.png",
   chartToClips: "/dialogue/section-4.png",
   clipPlayer: "/dialogue/section-5.png",
+  assistantEmpty: "/dialogue/section-6a.png",
   inProduct: "/dialogue/section-6.png",
   fullAnswer: "/dialogue/section-7.png",
 } as const;
