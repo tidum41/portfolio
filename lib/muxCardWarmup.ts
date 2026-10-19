@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { getProjects } from "@/lib/sanity/queries";
 
@@ -216,14 +217,14 @@ async function loadWarm(ids: string[]): Promise<MuxCardWarm> {
  * Mux signs these URLs for about a year; a failed lookup just skips the
  * warmup and the player fetches the master itself.
  */
-export function getMuxCardWarmup(): Promise<MuxCardWarm> {
+export const getMuxCardWarmup = cache((): Promise<MuxCardWarm> => {
   return getProjects()
     .then((projects) => {
       const ids = orderedPlaybackIds(projects);
       if (!ids.length) return EMPTY;
-      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v4", ids.join(",")], {
+      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v5", ids.join(",")], {
         revalidate: 3600,
       })();
     })
     .catch(() => EMPTY);
-}
+});

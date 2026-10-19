@@ -228,14 +228,14 @@ export default function MuxMediaSlot({
             testBandwidth: false,
             abrEwmaDefaultEstimate: cardStartEstimate(),
             capLevelToPlayerSize: true,
-            maxBufferLength: fill ? 6 : 12,
-            maxMaxBufferLength: fill ? 12 : 24,
-            startFragPrefetch: true,
+            maxBufferLength: fill ? 2.5 : 8,
+            maxMaxBufferLength: fill ? 8 : 24,
+            startFragPrefetch: false,
             enableWorker: true,
           });
           hlsRef.current = hls;
-          hls.loadSource(stream);
           hls.attachMedia(video);
+          hls.loadSource(stream);
           hls.on(Hls.Events.MANIFEST_PARSED, kickPlay);
           hls.on(Hls.Events.FRAG_BUFFERED, () => {
             revealIfOnPoster();
