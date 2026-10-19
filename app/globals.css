@@ -482,6 +482,58 @@ html[data-theme="dark"] .project-card::before {
   }
 }
 
+/* ─── Card focus hover — desktop standout / recede ─────────────────
+   When a project card is hovered (or keyboard :focus-visible), it stays
+   at full strength while the rest of the homepage content recedes toward
+   the page background via opacity. Nav is intentionally excluded.
+
+   Container-level .portfolio-grid:hover keeps the recede state across
+   gutters so card-to-card moves never flash everything at full strength.
+   Enter: 60ms intent delay → 200ms ease-out. Leave: 300ms ease-out. */
+:root {
+  --work-focus-recede: 0.35;
+  --work-focus-in: 200ms;
+  --work-focus-out: 300ms;
+  --work-focus-intent: 60ms;
+}
+/* Light theme: slightly less dim so wash-out toward white stays clean. */
+html[data-theme="light"] {
+  --work-focus-recede: 0.45;
+}
+
+.work-focus-recede,
+.portfolio-grid-card {
+  transition: opacity var(--work-focus-out) ease-out;
+  transition-delay: 0ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Grid hovered (any card or gutter) — or a card is keyboard-focused. */
+  body:has(.portfolio-grid:hover) .work-focus-recede,
+  body:has(.portfolio-grid:hover) .portfolio-grid-card:not(:hover),
+  body:has(.project-card:focus-visible) .work-focus-recede,
+  body:has(.project-card:focus-visible) .portfolio-grid-card:not(:focus-within) {
+    opacity: var(--work-focus-recede);
+    transition: opacity var(--work-focus-in) ease-out;
+    transition-delay: var(--work-focus-intent);
+  }
+
+  /* Standout card snaps to full strength with no intent delay. */
+  body:has(.portfolio-grid:hover) .portfolio-grid-card:hover,
+  body:has(.project-card:focus-visible) .portfolio-grid-card:focus-within {
+    opacity: 1;
+    transition: opacity var(--work-focus-in) ease-out;
+    transition-delay: 0ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-focus-recede,
+  .portfolio-grid-card {
+    transition: none !important;
+  }
+}
+
 /* ─── Nav link hover — smooth color fade, no underline ────────────
    Hover is desktop-only. Mobile has no hover; sticky :hover from a tap
    must never restyle these links. */
