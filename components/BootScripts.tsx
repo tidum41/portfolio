@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useServerInsertedHTML } from "next/navigation";
 import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
+import { CARD_FOCUS_GUARD_BOOT } from "@/lib/cardFocusGuardBoot";
 
 const THEME_INTRO_BOOT = `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()`;
 
@@ -10,6 +11,12 @@ const THEME_INTRO_BOOT = `(function(){var t=localStorage.getItem("theme");if(t==
 // preloaded from the homepage; this only executes them. Other routes and
 // reduced-motion sessions leave it unloaded.
 const HLS_BOOT = `(function(){if(location.pathname!=="/")return;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(document.querySelector("script[data-hls-light]"))return;var s=document.createElement("script");s.src="${HLS_LIGHT_SRC}";s.async=true;s.setAttribute("data-hls-light","1");document.head.appendChild(s)})()`;
+
+// Remember where a fine pointer is from the first paint. The intro keeps the grid
+// inert for ~2s after hydration, so a cursor that lands on a card in that window
+// and then rests fires no further pointer event; the card focus controller
+// hit-tests this position when it mounts and when the intro ends.
+const CARD_POINTER_BOOT = `(function(){if(location.pathname!=="/")return;if(!window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;var p=window.__cardFocusPtr={x:NaN,y:NaN};document.addEventListener("pointermove",function(e){p.x=e.clientX;p.y=e.clientY},{capture:true,passive:true})})()`;
 
 /**
  * Injects blocking boot + JSON-LD scripts into the SSR HTML stream outside
@@ -32,6 +39,14 @@ export default function BootScripts({
     inserted.current = true;
     return (
       <>
+        <script
+          id="card-focus-guard-boot"
+          dangerouslySetInnerHTML={{ __html: CARD_FOCUS_GUARD_BOOT }}
+        />
+        <script
+          id="card-pointer-boot"
+          dangerouslySetInnerHTML={{ __html: CARD_POINTER_BOOT }}
+        />
         <script
           id="theme-intro-boot"
           dangerouslySetInnerHTML={{ __html: THEME_INTRO_BOOT }}
