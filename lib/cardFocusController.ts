@@ -3,10 +3,10 @@
  * Drives html[data-card-focus], dim CSS, and Mux video play/pause.
  */
 
-const FADE_MS = 200;
+/** Matches CSS --work-focus-in; pause non-focused videos after dim. */
+const FADE_MS = 120;
 /** Brief hold when crossing shared card edges (A → B); gaps clear fully. */
 const EDGE_DEBOUNCE_MS = 40;
-const INTENT_MS = 80;
 const RESUME_STAGGER_MS = 40;
 
 const FINE_POINTER_MQ = "(hover: hover) and (pointer: fine)";
@@ -34,23 +34,53 @@ export class CardFocusController {
   private grid: HTMLElement | null = null;
   private nav: HTMLElement | null = null;
   private activeCard: CardEl | null = null;
-  private intentTimer = 0;
   private leaveTimer = 0;
   private pauseTimer = 0;
   private resumeTimers: number[] = [];
   /** Per-video: apply play/pause when canplay fires. */
   private pendingVideoState = new WeakMap<HTMLVideoElement, "play" | "pause">();
-  private pointerMoveOk = true;
+  /** After scroll/wheel: ignore pointerenter until a real pointermove. */
+  private suppressEnterUntilMove = false;
+  private lastPtrX = -1;
+  private lastPtrY = -1;
+  private pendingEnterCard: CardEl | null = null;
   private mounted = false;
   private reducedMotion = false;
 
-  private onPointerMove = () => {
-    this.pointerMoveOk = true;
+  private onPointerMove = (e: PointerEvent) => {
+    if (!this.enabled()) return;
+    const moved =
+      e.movementX !== 0 ||
+      e.movementY !== 0 ||
+      this.lastPtrX < 0 ||
+      Math.abs(e.clientX - this.lastPtrX) > 0.5 ||
+      Math.abs(e.clientY - this.lastPtrY) > 0.5;
+    this.lastPtrX = e.clientX;
+    this.lastPtrY = e.clientY;
+    if (!this.suppressEnterUntilMove) return;
+    if (!moved) return;
+    this.suppressEnterUntilMove = false;
+    const card =
+      this.pendingEnterCard ??
+      this.cardAtPoint(e.clientX, e.clientY);
+    this.pendingEnterCard = null;
+    if (card?.dataset.gridCard) {
+      window.clearTimeout(this.leaveTimer);
+      this.applyFocus(card);
+    }
   };
 
-  private onScroll = () => {
-    this.pointerMoveOk = false;
+  private onScrollLike = () => {
+    if (!this.enabled()) return;
+    this.suppressEnterUntilMove = true;
+    this.pendingEnterCard = null;
+    this.clearFocus();
   };
+
+  private cardAtPoint(x: number, y: number): CardEl | null {
+    const el = document.elementFromPoint(x, y);
+    return (el?.closest?.(".portfolio-grid-card") as CardEl | null) ?? null;
+  }
 
   private onVisibility = () => {
     if (document.visibilityState === "hidden") {
@@ -90,18 +120,15 @@ export class CardFocusController {
 
   private onCardPointerEnter = (e: Event) => {
     if (!this.enabled()) return;
-    if (!this.pointerMoveOk) return;
     const card = (e.currentTarget as CardEl) ?? null;
     if (!card?.dataset.gridCard) return;
-    window.clearTimeout(this.leaveTimer);
-    window.clearTimeout(this.intentTimer);
-    const handoff = this.activeCard !== null && this.activeCard !== card;
-    if (handoff) {
-      this.applyFocus(card);
+    if (this.suppressEnterUntilMove) {
+      this.pendingEnterCard = card;
       return;
     }
+    window.clearTimeout(this.leaveTimer);
     if (this.activeCard === card) return;
-    this.intentTimer = window.setTimeout(() => this.applyFocus(card), INTENT_MS);
+    this.applyFocus(card);
   };
 
   private onFocusIn = (e: FocusEvent) => {
@@ -111,7 +138,6 @@ export class CardFocusController {
     const card = target.closest(".portfolio-grid-card") as CardEl | null;
     if (!card?.dataset.gridCard) return;
     window.clearTimeout(this.leaveTimer);
-    window.clearTimeout(this.intentTimer);
     this.applyFocus(card);
   };
 
@@ -153,7 +179,8 @@ export class CardFocusController {
     }
 
     window.addEventListener("pointermove", this.onPointerMove, { passive: true });
-    window.addEventListener("scroll", this.onScroll, { passive: true });
+    window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
+    window.addEventListener("wheel", this.onScrollLike, { passive: true });
     document.addEventListener("visibilitychange", this.onVisibility);
     window.addEventListener("blur", this.onWindowBlur);
     document.documentElement.addEventListener("mouseleave", this.onDocumentMouseLeave);
@@ -177,7 +204,8 @@ export class CardFocusController {
       }
     }
     window.removeEventListener("pointermove", this.onPointerMove);
-    window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("scroll", this.onScrollLike, true);
+    window.removeEventListener("wheel", this.onScrollLike);
     document.removeEventListener("visibilitychange", this.onVisibility);
     window.removeEventListener("blur", this.onWindowBlur);
     document.documentElement.removeEventListener("mouseleave", this.onDocumentMouseLeave);
@@ -209,7 +237,6 @@ export class CardFocusController {
   }
 
   private applyFocus(card: CardEl) {
-    window.clearTimeout(this.intentTimer);
     window.clearTimeout(this.pauseTimer);
 
     if (this.activeCard && this.activeCard !== card) {
@@ -245,7 +272,6 @@ export class CardFocusController {
   }
 
   private clearFocus({ pauseAll = false }: { pauseAll?: boolean } = {}) {
-    window.clearTimeout(this.intentTimer);
     window.clearTimeout(this.leaveTimer);
     window.clearTimeout(this.pauseTimer);
     for (const t of this.resumeTimers) window.clearTimeout(t);

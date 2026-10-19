@@ -486,8 +486,8 @@ html[data-theme="dark"] .project-card::before {
    Hero, nav, and footer never dim. Focus is pointer-over-card only. */
 :root {
   --work-focus-recede: 0.35;
-  --work-focus-in: 200ms;
-  --work-focus-out: 250ms;
+  --work-focus-in: 120ms;
+  --work-focus-out: 160ms;
 }
 html[data-theme="light"] {
   --work-focus-recede: 0.45;

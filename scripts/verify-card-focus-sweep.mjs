@@ -6,9 +6,9 @@ import { chromium } from "playwright";
 
 const RECEDE_DARK = "0.35";
 const RECEDE_LIGHT = "0.45";
-const INTENT_MS = 80;
 const EDGE_MS = 40;
-const FADE_MS = 200;
+const FADE_IN_MS = 120;
+const FADE_OUT_MS = 160;
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -39,13 +39,19 @@ async function readState(page) {
   });
 }
 
-function expectUndimmed(state, label) {
-  assert(state.heroOpacity === "1", `${label}: hero must stay at 1, got ${state.heroOpacity}`);
+function expectNeutralDom(state, label) {
   assert(!state.focused, `${label}: should not have data-card-focus`);
   assert(state.activeId === null, `${label}: no active card`);
   for (const c of state.cards) {
-    assert(nearOpacity(c.childOpacity, "1"), `${label}: card ${c.id} should be 1, got ${c.childOpacity}`);
     assert(!c.active, `${label}: card ${c.id} should not be active`);
+  }
+}
+
+function expectUndimmed(state, label) {
+  assert(state.heroOpacity === "1", `${label}: hero must stay at 1, got ${state.heroOpacity}`);
+  expectNeutralDom(state, label);
+  for (const c of state.cards) {
+    assert(nearOpacity(c.childOpacity, "1"), `${label}: card ${c.id} should be 1, got ${c.childOpacity}`);
   }
 }
 
@@ -82,16 +88,27 @@ async function main() {
   const id1 = await rightCard.getAttribute("data-grid-card");
   const gutterX = b0.x + b0.width + 4;
   const gutterY = b0.y + 80;
+  const cx0 = b0.x + b0.width / 2;
+  const cy0 = b0.y + 100;
 
   expectUndimmed(await readState(page), "initial");
 
-  await page.mouse.move(b0.x + b0.width / 2, b0.y + 100, { steps: 4 });
-  await page.waitForTimeout(INTENT_MS + FADE_MS + 30);
+  await page.mouse.move(cx0, cy0, { steps: 4 });
+  await page.waitForFunction(
+    (id) => document.querySelector(`[data-card-focus-active][data-grid-card="${id}"]`),
+    id0,
+    { timeout: 2000 },
+  );
+  assert(
+    (await readState(page)).focused,
+    "instant activation: data-card-focus should be set without intent delay",
+  );
+  await page.waitForTimeout(FADE_IN_MS + 80);
   expectFocused(await readState(page), id0, "on card 0");
 
   await page.mouse.move(gutterX, gutterY, { steps: 4 });
   await page.waitForFunction(() => !document.documentElement.hasAttribute("data-card-focus"), { timeout: 3000 });
-  await page.waitForTimeout(FADE_MS + 50);
+  await page.waitForTimeout(FADE_OUT_MS + 100);
   expectUndimmed(await readState(page), "in gutter");
 
   await page.mouse.move(b1.x + b1.width / 2, b1.y + 100, { steps: 4 });
@@ -100,7 +117,7 @@ async function main() {
     id1,
     { timeout: 3000 },
   );
-  await page.waitForTimeout(FADE_MS + 30);
+  await page.waitForTimeout(FADE_IN_MS + 80);
   expectFocused(await readState(page), id1, "on card 1 after gap");
 
   for (let i = 0; i < 8; i++) {
@@ -110,17 +127,40 @@ async function main() {
   }
   await page.mouse.move(gutterX, gutterY, { steps: 2 });
   await page.waitForFunction(() => !document.documentElement.hasAttribute("data-card-focus"), { timeout: 3000 });
-  await page.mouse.move(b0.x + b0.width / 2, b0.y + 100, { steps: 4 });
+  await page.mouse.move(cx0, cy0, { steps: 4 });
   await page.waitForFunction(
     (id) => document.querySelector(`[data-card-focus-active][data-grid-card="${id}"]`),
     id0,
     { timeout: 3000 },
   );
-  await page.waitForTimeout(FADE_MS + 30);
+  await page.waitForTimeout(FADE_IN_MS + 80);
   expectFocused(await readState(page), id0, "after rapid alternation settled on card 0");
 
+  // Scroll reset: focus then wheel — neutral immediately; no re-focus until pointermove.
+  await page.mouse.move(cx0, cy0);
+  await page.waitForFunction(
+    (id) => document.querySelector(`[data-card-focus-active][data-grid-card="${id}"]`),
+    id0,
+    { timeout: 2000 },
+  );
+  await page.mouse.wheel(0, 120);
+  await page.evaluate(() => window.scrollBy(0, 60));
+  expectNeutralDom(await readState(page), "after scroll with pointer still over card");
+
+  await page.mouse.move(10, 10, { steps: 2 });
+  const b0AfterScroll = await leftCard.boundingBox();
+  assert(b0AfterScroll, "left card box after scroll");
+  await page.mouse.move(b0AfterScroll.x + b0AfterScroll.width / 2, b0AfterScroll.y + 100, { steps: 8 });
+  await page.waitForFunction(
+    (id) => document.querySelector(`[data-card-focus-active][data-grid-card="${id}"]`),
+    id0,
+    { timeout: 2000 },
+  );
+  await page.waitForTimeout(FADE_IN_MS + 80);
+  expectFocused(await readState(page), id0, "after pointermove following scroll");
+
   await page.mouse.move(40, 40, { steps: 6 });
-  await page.waitForTimeout(EDGE_MS + FADE_MS + 80);
+  await page.waitForTimeout(EDGE_MS + FADE_OUT_MS + 80);
   expectUndimmed(await readState(page), "left grid");
 
   console.log("card-focus sweep: all assertions passed");
