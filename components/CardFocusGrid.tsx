@@ -13,6 +13,7 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
     if (!cardFocusController.enabled()) return;
 
     cardFocusController.mount(grid);
+    (window as Window & { __cardFocusReady?: boolean }).__cardFocusReady = true;
 
     const mo = new MutationObserver(() => {
       cardFocusController.observeNewVideos();
@@ -22,6 +23,7 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
     return () => {
       mo.disconnect();
       cardFocusController.unmount();
+      (window as Window & { __cardFocusReady?: boolean }).__cardFocusReady = false;
     };
   }, []);
 
