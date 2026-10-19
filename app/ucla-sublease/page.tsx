@@ -290,9 +290,9 @@ const FB = {
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
   metadata: [
-    { _key: "m1", label: "Role", values: ["Product Designer", "& Frontend"] },
-    { _key: "m2", label: "Timeline", values: ["5 Weeks"] },
-    { _key: "m3", label: "Team", values: ["1 PM", "1 PMM"] },
+    { _key: "m1", label: "Role", values: ["Product designer and frontend"] },
+    { _key: "m2", label: "Timeline", values: ["5 weeks"] },
+    { _key: "m3", label: "Team", wide: true, values: ["PM", "PMM"] },
     {
       _key: "m4",
       label: "Scope",
