@@ -1,64 +1,33 @@
 /**
  * Homepage card focus — pointermove drives focus; scroll only maintains or clears.
+ *
+ * Video policy lives in cardFocusVideo.ts. This file owns *when* videos pause and
+ * resume: every focus change bumps `generation`, cancels all pending video timers,
+ * and schedules exactly one pass. Stale work can never fire after a newer focus.
  */
 
 import {
   cardFocusPlay,
+  collectCardVideos,
   enforceCardFocusOnVideo,
   mountCardFocusVideoGuards,
+  pausedByFocus,
+  videoWantsPaused,
 } from "@/lib/cardFocusVideo";
 
-const FADE_MS = 120;
 const RESUME_STAGGER_MS = 40;
+const RESUME_STAGGER_CAP_MS = 160;
+const RESUME_VERIFY_MS = 220;
+const RESUME_VERIFY_PASSES = 3;
 const FINE_POINTER_MQ = "(hover: hover) and (pointer: fine)";
 
 type CardEl = HTMLElement & { dataset: { gridCard?: string } };
 type HitTestMode = "pointer" | "scroll";
 
-function deferVideoWork(fn: () => void) {
-  if (typeof requestIdleCallback === "function") {
-    requestIdleCallback(fn, { timeout: 120 });
-  } else {
-    setTimeout(fn, 0);
-  }
-}
-
-function pauseMuxHost(host: Element) {
-  const el = host as HTMLElement & { pause?: () => void };
-  if (typeof el.pause === "function") {
-    try {
-      el.pause();
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function videosInCard(card: Element): HTMLVideoElement[] {
-  const out: HTMLVideoElement[] = [];
-  for (const v of card.querySelectorAll<HTMLVideoElement>("video")) out.push(v);
-  for (const mux of card.querySelectorAll("mux-player")) {
-    pauseMuxHost(mux);
-    const sr = mux.shadowRoot;
-    const v = sr?.querySelector("video") ?? mux.querySelector("video");
-    if (v) out.push(v);
-  }
-  return out;
-}
-
-function allGridVideos(grid: HTMLElement): HTMLVideoElement[] {
-  const out: HTMLVideoElement[] = [];
-  for (const card of grid.querySelectorAll(".portfolio-grid-card")) {
-    out.push(...videosInCard(card));
-  }
-  return [...new Set(out)];
-}
-
 export class CardFocusController {
   private grid: HTMLElement | null = null;
   private activeCard: CardEl | null = null;
   private mounted = false;
-  private reducedMotion = false;
   private unmountVideoGuards: (() => void) | null = null;
 
   private lastPtrX = Number.NaN;
@@ -67,9 +36,13 @@ export class CardFocusController {
   private rafId = 0;
   private hitTestMode: HitTestMode | null = null;
 
-  private pauseTimer = 0;
-  private resumeTimers: number[] = [];
-  private pendingVideoState = new WeakMap<HTMLVideoElement, "play" | "pause">();
+  /** Bumped on every focus change; video work from an older generation is dropped. */
+  private generation = 0;
+  private timers = new Set<number>();
+
+  private io: IntersectionObserver | null = null;
+  /** Unknown counts as in view, so a missing IO report never leaves a video paused. */
+  private inView = new WeakMap<HTMLVideoElement, boolean>();
 
   enabled(): boolean {
     if (typeof window === "undefined") return false;
@@ -80,7 +53,6 @@ export class CardFocusController {
     if (this.mounted) this.unmount();
     this.grid = grid;
     this.mounted = true;
-    this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     document.addEventListener("pointermove", this.onPointerMove, { passive: true });
     window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
@@ -88,13 +60,12 @@ export class CardFocusController {
     window.addEventListener("touchmove", this.onScrollLike, { passive: true });
     document.documentElement.addEventListener("pointerleave", this.onDocumentPointerLeave);
     window.addEventListener("blur", this.onWindowBlur);
+    window.addEventListener("soft-nav-start", this.onSoftNavStart);
     document.addEventListener("visibilitychange", this.onVisibility);
 
     this.unmountVideoGuards = mountCardFocusVideoGuards(grid);
-
-    for (const video of allGridVideos(grid)) {
-      video.addEventListener("canplay", this.onVideoCanPlay);
-    }
+    this.io = new IntersectionObserver(this.onIntersect);
+    this.observeVideos();
   }
 
   unmount() {
@@ -103,15 +74,12 @@ export class CardFocusController {
     this.rafId = 0;
     this.hitTestMode = null;
     this.setActive(null, { skipVideos: true });
+    pausedByFocus.clear();
 
-    const grid = this.grid;
-    if (grid) {
-      for (const video of allGridVideos(grid)) {
-        video.removeEventListener("canplay", this.onVideoCanPlay);
-      }
-    }
     this.unmountVideoGuards?.();
     this.unmountVideoGuards = null;
+    this.io?.disconnect();
+    this.io = null;
 
     document.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("scroll", this.onScrollLike, true);
@@ -119,19 +87,34 @@ export class CardFocusController {
     window.removeEventListener("touchmove", this.onScrollLike);
     document.documentElement.removeEventListener("pointerleave", this.onDocumentPointerLeave);
     window.removeEventListener("blur", this.onWindowBlur);
+    window.removeEventListener("soft-nav-start", this.onSoftNavStart);
     document.removeEventListener("visibilitychange", this.onVisibility);
 
     this.grid = null;
     this.mounted = false;
   }
 
+  /** Called when grid DOM changes (late Mux attach, remount). */
   observeNewVideos() {
-    if (!this.grid) return;
-    for (const video of allGridVideos(this.grid)) {
-      video.removeEventListener("canplay", this.onVideoCanPlay);
-      video.addEventListener("canplay", this.onVideoCanPlay);
-      this.syncVideo(video);
-    }
+    this.observeVideos();
+  }
+
+  private observeVideos() {
+    if (!this.grid || !this.io) return;
+    for (const v of collectCardVideos(this.grid)) this.io.observe(v);
+  }
+
+  private after(ms: number, fn: () => void) {
+    const id = window.setTimeout(() => {
+      this.timers.delete(id);
+      fn();
+    }, ms);
+    this.timers.add(id);
+  }
+
+  private cancelVideoWork() {
+    for (const id of this.timers) window.clearTimeout(id);
+    this.timers.clear();
   }
 
   private scheduleHitTest(mode: HitTestMode) {
@@ -164,8 +147,7 @@ export class CardFocusController {
   private flushPointerHitTest() {
     if (!this.grid) return;
     if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
-    const card = this.cardAtPoint(this.lastPtrX, this.lastPtrY);
-    this.setActive(card);
+    this.setActive(this.cardAtPoint(this.lastPtrX, this.lastPtrY));
   }
 
   /** Scroll never picks a new card; it only keeps focus or drops to neutral. */
@@ -188,9 +170,16 @@ export class CardFocusController {
     return null;
   }
 
-  /** DOM / dim first (sync); video work is always deferred. */
+  /**
+   * DOM first and synchronous: on neutral, data-card-focus is removed before any
+   * video work runs, so the play guards can never re-pause a resuming video.
+   * Video work is deferred with setTimeout(0), never requestIdleCallback.
+   */
   private setActive(card: CardEl | null, opts: { skipVideos?: boolean } = {}) {
     if (card === this.activeCard) return;
+
+    this.generation++;
+    this.cancelVideoWork();
 
     if (this.activeCard) {
       this.activeCard.removeAttribute("data-card-focus-active");
@@ -205,127 +194,110 @@ export class CardFocusController {
       document.documentElement.removeAttribute("data-card-focus");
     }
 
-    if (!opts.skipVideos) {
-      if (card && this.grid) this.enforcePausedOutsideFocus(card);
-      deferVideoWork(() => this.scheduleVideos(card));
+    if (opts.skipVideos) return;
+    const gen = this.generation;
+    this.after(0, () => this.videoPass(gen));
+  }
+
+  private isCurrent(gen: number) {
+    return gen === this.generation && this.grid !== null;
+  }
+
+  private videoPass(gen: number) {
+    if (!this.isCurrent(gen) || !this.grid) return;
+
+    for (const v of [...pausedByFocus]) {
+      if (!v.isConnected) pausedByFocus.delete(v);
+    }
+
+    const focused = this.activeCard;
+    if (focused) {
+      for (const v of collectCardVideos(this.grid)) {
+        if (focused.contains(v)) {
+          pausedByFocus.delete(v);
+          if (v.paused) cardFocusPlay(v);
+        } else {
+          enforceCardFocusOnVideo(v);
+        }
+      }
+      return;
+    }
+
+    this.resumePausedByFocus(gen);
+  }
+
+  /** Single generation-counted resume of exactly the videos focus paused. */
+  private resumePausedByFocus(gen: number) {
+    const targets: HTMLVideoElement[] = [];
+    for (const v of [...pausedByFocus]) {
+      if (videoWantsPaused(v)) {
+        pausedByFocus.delete(v);
+        continue;
+      }
+      // Offscreen videos stay queued; onIntersect resumes them when they scroll in.
+      if (this.inView.get(v) === false) continue;
+      targets.push(v);
+    }
+
+    targets.forEach((v, i) => {
+      this.after(Math.min(i * RESUME_STAGGER_MS, RESUME_STAGGER_CAP_MS), () => {
+        if (!this.isCurrent(gen) || this.activeCard) return;
+        pausedByFocus.delete(v);
+        cardFocusPlay(v);
+      });
+    });
+
+    const settleMs = Math.min(targets.length * RESUME_STAGGER_MS, RESUME_STAGGER_CAP_MS);
+    this.after(settleMs + RESUME_VERIFY_MS, () => this.verifyResumed(targets, gen, 1));
+  }
+
+  /** play() can resolve yet leave the element paused; re-issue for stragglers. */
+  private verifyResumed(targets: HTMLVideoElement[], gen: number, pass: number) {
+    if (!this.isCurrent(gen) || this.activeCard) return;
+    const stalled = targets.filter(
+      (v) => v.isConnected && v.paused && !videoWantsPaused(v) && this.inView.get(v) !== false,
+    );
+    for (const v of stalled) {
+      pausedByFocus.delete(v);
+      cardFocusPlay(v);
+    }
+    if (stalled.length && pass < RESUME_VERIFY_PASSES) {
+      this.after(RESUME_VERIFY_MS, () => this.verifyResumed(stalled, gen, pass + 1));
     }
   }
 
-  private enforcePausedOutsideFocus(focused: CardEl) {
-    if (!this.grid) return;
-    for (const v of allGridVideos(this.grid)) {
-      if (!focused.contains(v)) enforceCardFocusOnVideo(v);
+  private onIntersect = (entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      const v = entry.target as HTMLVideoElement;
+      this.inView.set(v, entry.isIntersecting);
+      if (!entry.isIntersecting) continue;
+      if (this.activeCard) continue;
+      if (!pausedByFocus.has(v) || videoWantsPaused(v)) continue;
+      pausedByFocus.delete(v);
+      cardFocusPlay(v);
     }
-  }
+  };
 
   private onDocumentPointerLeave = (e: PointerEvent) => {
     if (e.relatedTarget == null) this.setActive(null);
   };
 
+  /** Blur only drops focus; the neutral pass resumes everything focus paused. */
   private onWindowBlur = () => {
     this.setActive(null);
-    deferVideoWork(() => {
-      if (!this.grid) return;
-      for (const v of allGridVideos(this.grid)) {
-        this.queueVideoState(v, "pause");
-        enforceCardFocusOnVideo(v);
-      }
-    });
   };
 
   private onVisibility = () => {
-    if (document.visibilityState === "hidden") {
-      this.setActive(null);
-      deferVideoWork(() => {
-        if (!this.grid) return;
-        for (const v of allGridVideos(this.grid)) {
-          this.queueVideoState(v, "pause");
-          enforceCardFocusOnVideo(v);
-        }
-      });
-      return;
-    }
-    if (!this.activeCard && this.grid) {
-      deferVideoWork(() => this.resumeAllVideos());
-    }
+    this.setActive(null);
   };
 
-  private onVideoCanPlay = (e: Event) => {
-    const video = e.currentTarget as HTMLVideoElement;
-    const want = this.pendingVideoState.get(video);
-    if (!want) return;
-    deferVideoWork(() => {
-      if (want === "play") this.applyPlay(video);
-      else this.applyPause(video);
-    });
+  /** Leaving the page: stop all focus work and let the soft-nav own playback. */
+  private onSoftNavStart = () => {
+    this.generation++;
+    this.cancelVideoWork();
+    this.setActive(null, { skipVideos: true });
+    pausedByFocus.clear();
   };
-
-  private applyPause(video: HTMLVideoElement) {
-    this.queueVideoState(video, "pause");
-    enforceCardFocusOnVideo(video);
-  }
-
-  private applyPlay(video: HTMLVideoElement) {
-    this.queueVideoState(video, "play");
-    if (!this.activeCard?.contains(video)) return;
-    cardFocusPlay(video);
-  }
-
-  private scheduleVideos(focused: CardEl | null) {
-    window.clearTimeout(this.pauseTimer);
-    for (const t of this.resumeTimers) window.clearTimeout(t);
-    this.resumeTimers = [];
-
-    if (!this.grid) return;
-    const videos = allGridVideos(this.grid);
-
-    if (!focused) {
-      this.resumeAllVideos();
-      return;
-    }
-
-    const delay = this.reducedMotion ? 0 : FADE_MS;
-    const toPause: HTMLVideoElement[] = [];
-
-    for (const v of videos) {
-      if (focused.contains(v)) {
-        this.applyPlay(v);
-      } else {
-        toPause.push(v);
-      }
-    }
-
-    const runPause = () => {
-      for (const v of toPause) this.applyPause(v);
-    };
-
-    if (toPause.length) {
-      if (delay === 0) runPause();
-      else this.pauseTimer = window.setTimeout(runPause, delay);
-    }
-  }
-
-  private resumeAllVideos() {
-    if (!this.grid) return;
-    const videos = allGridVideos(this.grid);
-    videos.forEach((video, i) => {
-      const t = window.setTimeout(() => {
-        this.applyPlay(video);
-      }, i * RESUME_STAGGER_MS);
-      this.resumeTimers.push(t);
-    });
-  }
-
-  private queueVideoState(video: HTMLVideoElement, state: "play" | "pause") {
-    this.pendingVideoState.set(video, state);
-  }
-
-  private syncVideo(video: HTMLVideoElement) {
-    if (!this.activeCard) return;
-    const inFocused = this.activeCard.contains(video);
-    if (inFocused) this.applyPlay(video);
-    else this.applyPause(video);
-  }
 }
 
 export const cardFocusController = new CardFocusController();

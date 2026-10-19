@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import type Hls from "hls.js";
 import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
-import { cardFocusAllowsVideoPlay, cardFocusPlay } from "@/lib/cardFocusVideo";
+import { cardFocusPlay } from "@/lib/cardFocusVideo";
 import { constrainedNetwork } from "@/lib/networkHint";
 
 type HlsStatic = typeof import("hls.js").default;
@@ -141,7 +141,6 @@ export default function MuxMediaSlot({
   const kickPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video || !playingRef.current) return;
-    if (!cardFocusAllowsVideoPlay(video)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     cardFocusPlay(video);
   }, []);
@@ -298,6 +297,7 @@ export default function MuxMediaSlot({
       className={["mux-media-slot", fill ? "mux-media-slot--fill" : "", className].filter(Boolean).join(" ")}
       style={style}
       data-hls="pending"
+      data-media-paused={playing ? undefined : ""}
     >
       {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio.
           Fill/grid cards already paint a poster underneath; skip a second 1280 fetch. */}
