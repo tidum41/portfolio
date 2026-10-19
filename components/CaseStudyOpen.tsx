@@ -112,31 +112,10 @@ export default function CaseStudyOpen({
           }}
         >
           {metadata.map(({ _key, label, values, wide }) => (
-            <div key={_key ?? label} className={wide ? "cs-meta-wide" : undefined} style={{ padding: "0 24px 0 0", minWidth: 0 }}>
-              <p
-                style={{
-                  fontFamily: "var(--font-sans-medium)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  letterSpacing: "normal",
-                  color: "var(--color-text-tertiary)",
-                  margin: "0 0 8px",
-                }}
-              >
-                {label}
-              </p>
+            <div key={_key ?? label} className={wide ? "cs-meta-item cs-meta-wide" : "cs-meta-item"}>
+              <p className="cs-meta-label">{label}</p>
               {values.map((v, i) => (
-                <p
-                  key={i}
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 400,
-                    color: "var(--color-text-primary)",
-                    margin: 0,
-                    lineHeight: 1.45,
-                    letterSpacing: "-0.1px",
-                  }}
-                >
+                <p key={i} className="cs-meta-value">
                   {v}
                 </p>
               ))}

@@ -951,14 +951,44 @@ html[data-theme="dark"] .project-image {
   .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
-/* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
+/* ─── Case study metadata grid ─────────────────────────────────────── */
+.cs-meta-item {
+  min-width: 0;
+  padding: 0 24px 0 0;
+}
+.cs-meta-label {
+  font-family: var(--font-sans-medium);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--color-text-tertiary);
+  margin: 0 0 8px;
+}
+.cs-meta-value {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+}
+.cs-meta-value + .cs-meta-value {
+  margin-top: 4px;
+}
+
 @media (max-width: 767px) {
   .cs-meta-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 20px 0 !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .cs-meta-item {
+    padding: 0;
   }
   .cs-meta-grid .cs-meta-wide {
-    grid-column: 1 / -1;
+    grid-column: auto;
+  }
+  .cs-meta-label {
+    margin-bottom: 4px;
   }
 }
 
