@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
+import CopyEmail from "@/components/CopyEmail";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
@@ -177,22 +178,41 @@ export default function AboutPageContent({
                 justifyContent: "center",
                 gap: 24,
               }}>
-                {SOCIALS.map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target={href.startsWith("mailto") ? undefined : "_blank"}
-                    rel="noopener noreferrer"
-                    className="nav-link"
-                    style={{
-                      fontSize: 14,
-                      color: "var(--color-text-secondary)",
-                      textDecoration: "underline",
-                      textUnderlineOffset: "3px",
-                      textDecorationThickness: "1px",
-                    }}
-                  >{label}</a>
-                ))}
+                {SOCIALS.map((item) =>
+                  "copyEmail" in item ? (
+                    <CopyEmail
+                      key={item.label}
+                      unstyled
+                      className="nav-link"
+                      style={{
+                        fontSize: 14,
+                        color: "var(--color-text-secondary)",
+                        textDecoration: "underline",
+                        textUnderlineOffset: "3px",
+                        textDecorationThickness: "1px",
+                      }}
+                    >
+                      {item.label}
+                    </CopyEmail>
+                  ) : (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="nav-link"
+                      style={{
+                        fontSize: 14,
+                        color: "var(--color-text-secondary)",
+                        textDecoration: "underline",
+                        textUnderlineOffset: "3px",
+                        textDecorationThickness: "1px",
+                      }}
+                    >
+                      {item.label}
+                    </a>
+                  ),
+                )}
               </nav>
             </div>
           </div>
