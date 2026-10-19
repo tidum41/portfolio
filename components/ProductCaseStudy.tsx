@@ -36,7 +36,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
             tagline="JOOLA, internship, 2026"
             title={JOOLA_TITLE}
             metadata={[
-              { _key: "role", label: "Role", values: ["Product Design Intern"] },
+              { _key: "role", label: "Role", values: ["Product design intern"] },
               { _key: "timeline", label: "Timeline", values: ["10 weeks, Summer 2026"] },
               {
                 _key: "team",

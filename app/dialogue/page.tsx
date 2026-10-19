@@ -166,7 +166,7 @@ export default function DialogueCaseStudyPage() {
             tagline="Dialogue, contract, 2026"
             title={DIALOGUE_TITLE}
             metadata={[
-              { _key: "role", label: "Role", values: ["Product Designer (contract)"] },
+              { _key: "role", label: "Role", values: ["Product designer (contract)"] },
               { _key: "timeline", label: "Timeline", values: ["Dec 2025 to March 2026"] },
               {
                 _key: "team",
