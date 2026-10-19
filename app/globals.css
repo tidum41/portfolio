@@ -482,6 +482,40 @@ html[data-theme="dark"] .project-card::before {
   }
 }
 
+/* ─── Card focus — grid cards only (JS: data-card-focus) ─────────────
+   Hero, nav, and footer never dim. Focus is pointer-over-card only. */
+:root {
+  --work-focus-recede: 0.35;
+  --work-focus-in: 120ms;
+  --work-focus-out: 160ms;
+}
+html[data-theme="light"] {
+  --work-focus-recede: 0.45;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .portfolio-grid-card > * {
+    will-change: opacity;
+    transition: opacity var(--work-focus-out) ease-out;
+  }
+
+  html[data-card-focus] .portfolio-grid-card:not([data-card-focus-active]) > * {
+    opacity: var(--work-focus-recede);
+    transition: opacity var(--work-focus-in) ease-out;
+  }
+
+  html[data-card-focus] .portfolio-grid-card[data-card-focus-active] > * {
+    opacity: 1;
+    transition: opacity var(--work-focus-in) ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-grid-card > * {
+    transition: none !important;
+  }
+}
+
 /* ─── Nav link hover — smooth color fade, no underline ────────────
    Hover is desktop-only. Mobile has no hover; sticky :hover from a tap
    must never restyle these links. */
