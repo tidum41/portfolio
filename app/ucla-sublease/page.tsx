@@ -292,7 +292,37 @@ const FB = {
   metadata: [
     { _key: "m1", label: "Role", values: ["Product designer and frontend"] },
     { _key: "m2", label: "Timeline", values: ["5 weeks"] },
-    { _key: "m3", label: "Team", wide: true, values: ["PM", "PMM"] },
+    {
+      _key: "m3",
+      label: "Team",
+      wide: true,
+      values: [
+        <>
+          <a
+            className="cs-person-link"
+            href="https://www.linkedin.com/in/krishivharanath/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Krishiv Haranath
+          </a>
+          {" "}
+          <span style={{ color: "var(--color-text-muted)" }}>PM</span>
+        </>,
+        <>
+          <a
+            className="cs-person-link"
+            href="https://www.linkedin.com/in/shreya-gorrepati/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Shreya Gorrepati
+          </a>
+          {" "}
+          <span style={{ color: "var(--color-text-muted)" }}>PMM</span>
+        </>,
+      ],
+    },
     {
       _key: "m4",
       label: "Scope",
