@@ -1124,8 +1124,22 @@ html[data-theme="dark"] .project-image {
     transition: none;
   }
 }
+.decision-block__option .cs-figure-media,
 .decision-block__option .cs-figure-media--fill {
   aspect-ratio: 696 / 936;
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+.decision-block__option .cs-figure-zoom-trigger {
+  outline: none;
+  box-shadow: none;
+}
+.decision-block__option .cs-figure-zoom-trigger:focus:not(:focus-visible) {
+  outline: none;
+}
+.decision-block__option .cs-figure-zoom-trigger:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
 }
 .decision-block__caption {
   margin-top: 8px;
@@ -1160,7 +1174,7 @@ html[data-theme="dark"] .project-image {
     gap: 12px;
     align-items: start;
   }
-  .decision-block__grid--mobile > .decision-block__option--chosen {
+  .decision-block__grid--mobile > .decision-block__option--leading {
     grid-column: 1 / -1;
   }
   .decision-block__also-explored {

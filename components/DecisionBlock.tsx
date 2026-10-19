@@ -51,7 +51,7 @@ function OptionCard({
     <div
       className={[
         "decision-block__option",
-        isChosen ? "decision-block__option--chosen" : "decision-block__option--dimmed",
+        isChosen ? "decision-block__option--leading" : "decision-block__option--dimmed",
       ].join(" ")}
     >
       <CaseStudyFigure
