@@ -1441,3 +1441,15 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
+/* Dialogue draft — anatomy caption row */
+@media (max-width: 600px) {
+  .dialogue-anatomy-captions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 390px) {
+  .dialogue-anatomy-captions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
