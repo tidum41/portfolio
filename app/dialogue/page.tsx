@@ -17,7 +17,7 @@ import { SITE_URL } from "@/lib/site";
 export const revalidate = 300;
 
 const description =
-  "Dialogue case study — visualizing qualitative interview data so UX researchers can trust study chat answers down to the second.";
+  "Dialogue case study on visualizing qualitative interview data so UX researchers can trust study chat answers down to the second.";
 
 export const metadata: Metadata = {
   title: "Dialogue",
