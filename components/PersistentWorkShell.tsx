@@ -25,6 +25,7 @@ import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { SanityProject } from "@/lib/sanity/queries";
+import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
 function isExternalHref(href?: string) {
@@ -618,18 +619,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
       <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
-        <section
-          aria-label="Portfolio"
-          className="project-grid portfolio-grid"
-          style={{
-            paddingTop: "var(--space-5)",
-            paddingBottom: "var(--space-8)",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
-            gap: "var(--grid-gutter)",
-            alignItems: "start",
-          }}
-        >
+        <CardFocusGrid>
           {/* ── Left column ── */}
           <div className="portfolio-grid-col">
             {projects
@@ -817,7 +807,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               </ProjectCardLift>
             </EntranceItem>
           </div>
-        </section>
+        </CardFocusGrid>
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
             so parent display:none cannot hide it; `visible` toggles the portal. */}
