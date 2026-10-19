@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import type Hls from "hls.js";
 import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
+import { cardFocusAllowsVideoPlay } from "@/lib/cardFocusVideo";
 import { constrainedNetwork } from "@/lib/networkHint";
 
 type HlsStatic = typeof import("hls.js").default;
@@ -140,6 +141,7 @@ export default function MuxMediaSlot({
   const kickPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video || !playingRef.current) return;
+    if (!cardFocusAllowsVideoPlay(video)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     video.muted = true;
     const attempt = video.play();

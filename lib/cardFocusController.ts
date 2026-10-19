@@ -1,5 +1,5 @@
 /**
- * Homepage card focus — document pointermove + scroll share one rAF hit-test.
+ * Homepage card focus — pointermove drives focus; scroll only maintains or clears.
  */
 
 const FADE_MS = 120;
@@ -7,6 +7,7 @@ const RESUME_STAGGER_MS = 40;
 const FINE_POINTER_MQ = "(hover: hover) and (pointer: fine)";
 
 type CardEl = HTMLElement & { dataset: { gridCard?: string } };
+type HitTestMode = "pointer" | "scroll";
 
 function safePlay(video: HTMLVideoElement) {
   const p = video.play();
@@ -29,8 +30,35 @@ function deferVideoWork(fn: () => void) {
   }
 }
 
+function pauseMuxHost(host: Element) {
+  const el = host as HTMLElement & { pause?: () => void };
+  if (typeof el.pause === "function") {
+    try {
+      el.pause();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function videosInCard(card: Element): HTMLVideoElement[] {
+  const out: HTMLVideoElement[] = [];
+  for (const v of card.querySelectorAll<HTMLVideoElement>("video")) out.push(v);
+  for (const mux of card.querySelectorAll("mux-player")) {
+    pauseMuxHost(mux);
+    const sr = mux.shadowRoot;
+    const v = sr?.querySelector("video") ?? mux.querySelector("video");
+    if (v) out.push(v);
+  }
+  return out;
+}
+
 function allGridVideos(grid: HTMLElement): HTMLVideoElement[] {
-  return [...grid.querySelectorAll<HTMLVideoElement>(".portfolio-grid-card video")];
+  const out: HTMLVideoElement[] = [];
+  for (const card of grid.querySelectorAll(".portfolio-grid-card")) {
+    out.push(...videosInCard(card));
+  }
+  return [...new Set(out)];
 }
 
 export class CardFocusController {
@@ -43,6 +71,7 @@ export class CardFocusController {
   private lastPtrY = Number.NaN;
 
   private rafId = 0;
+  private hitTestMode: HitTestMode | null = null;
 
   private pauseTimer = 0;
   private resumeTimers: number[] = [];
@@ -76,6 +105,7 @@ export class CardFocusController {
     if (!this.mounted) return;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = 0;
+    this.hitTestMode = null;
     this.setActive(null, { skipVideos: true });
 
     const grid = this.grid;
@@ -106,12 +136,18 @@ export class CardFocusController {
     }
   }
 
-  private scheduleHitTest() {
+  private scheduleHitTest(mode: HitTestMode) {
     if (!this.enabled()) return;
+    if (mode === "pointer") this.hitTestMode = "pointer";
+    else if (this.hitTestMode !== "pointer") this.hitTestMode = "scroll";
+
     if (this.rafId) return;
     this.rafId = requestAnimationFrame(() => {
       this.rafId = 0;
-      this.flushHitTest();
+      const runMode = this.hitTestMode ?? "pointer";
+      this.hitTestMode = null;
+      if (runMode === "pointer") this.flushPointerHitTest();
+      else this.flushScrollHitTest();
     });
   }
 
@@ -119,25 +155,37 @@ export class CardFocusController {
     if (!this.enabled()) return;
     this.lastPtrX = e.clientX;
     this.lastPtrY = e.clientY;
-    this.scheduleHitTest();
+    this.scheduleHitTest("pointer");
   };
 
   private onScrollLike = () => {
     if (!this.enabled()) return;
-    this.scheduleHitTest();
+    this.scheduleHitTest("scroll");
   };
 
-  private flushHitTest() {
+  private flushPointerHitTest() {
     if (!this.grid) return;
     if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
     const card = this.cardAtPoint(this.lastPtrX, this.lastPtrY);
     this.setActive(card);
   }
 
+  /** Scroll never picks a new card; it only keeps focus or drops to neutral. */
+  private flushScrollHitTest() {
+    if (!this.grid) return;
+    if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
+    if (!this.activeCard) return;
+
+    const card = this.cardAtPoint(this.lastPtrX, this.lastPtrY);
+    if (card === this.activeCard) return;
+    this.setActive(null);
+  }
+
   private cardAtPoint(x: number, y: number): CardEl | null {
     if (!this.grid) return null;
     const el = document.elementFromPoint(x, y);
-    const card = el?.closest?.(".portfolio-grid-card") as CardEl | null;
+    if (!el || !this.grid.contains(el)) return null;
+    const card = el.closest?.(".portfolio-grid-card") as CardEl | null;
     if (card?.dataset.gridCard && this.grid.contains(card)) return card;
     return null;
   }
@@ -201,10 +249,23 @@ export class CardFocusController {
     const want = this.pendingVideoState.get(video);
     if (!want) return;
     deferVideoWork(() => {
-      if (want === "play") safePlay(video);
-      else safePause(video);
+      if (want === "play") this.applyPlay(video);
+      else this.applyPause(video);
     });
   };
+
+  private applyPause(video: HTMLVideoElement) {
+    this.queueVideoState(video, "pause");
+    safePause(video);
+    const mux = video.closest("mux-player");
+    if (mux) pauseMuxHost(mux);
+  }
+
+  private applyPlay(video: HTMLVideoElement) {
+    this.queueVideoState(video, "play");
+    if (!this.activeCard?.contains(video)) return;
+    safePlay(video);
+  }
 
   private scheduleVideos(focused: CardEl | null) {
     window.clearTimeout(this.pauseTimer);
@@ -224,20 +285,19 @@ export class CardFocusController {
 
     for (const v of videos) {
       if (focused.contains(v)) {
-        this.queueVideoState(v, "play");
-        safePlay(v);
+        this.applyPlay(v);
       } else {
         toPause.push(v);
       }
     }
 
+    const runPause = () => {
+      for (const v of toPause) this.applyPause(v);
+    };
+
     if (toPause.length) {
-      this.pauseTimer = window.setTimeout(() => {
-        for (const v of toPause) {
-          this.queueVideoState(v, "pause");
-          safePause(v);
-        }
-      }, delay);
+      if (delay === 0) runPause();
+      else this.pauseTimer = window.setTimeout(runPause, delay);
     }
   }
 
@@ -246,8 +306,7 @@ export class CardFocusController {
     const videos = allGridVideos(this.grid);
     videos.forEach((video, i) => {
       const t = window.setTimeout(() => {
-        this.queueVideoState(video, "play");
-        safePlay(video);
+        this.applyPlay(video);
       }, i * RESUME_STAGGER_MS);
       this.resumeTimers.push(t);
     });
@@ -260,13 +319,8 @@ export class CardFocusController {
   private syncVideo(video: HTMLVideoElement) {
     if (!this.activeCard) return;
     const inFocused = this.activeCard.contains(video);
-    this.queueVideoState(video, inFocused ? "play" : "pause");
-    deferVideoWork(() => {
-      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        if (inFocused) safePlay(video);
-        else safePause(video);
-      }
-    });
+    if (inFocused) this.applyPlay(video);
+    else this.applyPause(video);
   }
 }
 

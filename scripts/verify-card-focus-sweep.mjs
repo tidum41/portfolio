@@ -38,10 +38,28 @@ async function readState(page) {
   });
 }
 
+async function readVideoPaused(page) {
+  return page.evaluate(() => {
+    const cards = [...document.querySelectorAll(".portfolio-grid-card")];
+    return cards.map((c) => ({
+      id: c.getAttribute("data-grid-card"),
+      active: c.hasAttribute("data-card-focus-active"),
+      videos: [...c.querySelectorAll("video")].map((v) => ({
+        paused: v.paused,
+        ready: v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+      })),
+    }));
+  });
+}
+
 function hitCardId(page, x, y) {
   return page.evaluate(
-    ([px, py]) =>
-      document.elementFromPoint(px, py)?.closest?.(".portfolio-grid-card")?.getAttribute("data-grid-card") ?? null,
+    ([px, py]) => {
+      const grid = document.querySelector(".portfolio-grid");
+      const el = document.elementFromPoint(px, py);
+      if (!grid || !el || !grid.contains(el)) return null;
+      return el.closest?.(".portfolio-grid-card")?.getAttribute("data-grid-card") ?? null;
+    },
     [x, y],
   );
 }
@@ -76,10 +94,26 @@ function expectFocused(state, activeId, label) {
   }
 }
 
+function expectVideoFocus(page, activeId, label) {
+  return readVideoPaused(page).then((rows) => {
+    const withVideo = rows.filter((r) => r.videos.length > 0);
+    assert(withVideo.length >= 2, `${label}: need multiple video cards`);
+    for (const row of withVideo) {
+      for (const v of row.videos) {
+        if (row.id === activeId) {
+          assert(!v.paused, `${label}: focused ${row.id} video should play`);
+        } else {
+          assert(v.paused, `${label}: ${row.id} video should be paused`);
+        }
+      }
+    }
+  });
+}
+
 async function scrollUntilHit(page, x, y, predicate, maxSteps = 30) {
   for (let i = 0; i < maxSteps; i++) {
     const hit = await hitCardId(page, x, y);
-    if (predicate(hit)) return;
+    if (predicate(hit)) return hit;
     await page.mouse.wheel(0, 100);
     await page.waitForTimeout(28);
   }
@@ -93,6 +127,11 @@ async function main() {
   await page.waitForSelector(".portfolio-grid-card");
   await page.waitForFunction(() => !document.documentElement.hasAttribute("data-intro"), { timeout: 15000 });
   await page.waitForTimeout(400);
+
+  await page.waitForFunction(
+    () => document.querySelectorAll(".portfolio-grid-card video").length >= 2,
+    { timeout: 20000 },
+  );
 
   const leftCard = page.locator(".portfolio-grid-col").first().locator(".portfolio-grid-card").first();
   const rightCard = page.locator(".portfolio-grid-col").nth(1).locator(".portfolio-grid-card").first();
@@ -125,12 +164,13 @@ async function main() {
   const frameBudget = await page.evaluate(() => window.__focusAt - window.__moveAt);
   assert(frameBudget >= 0 && frameBudget < 50, `focus within ~one frame, saw ${frameBudget}ms`);
 
-  await page.waitForTimeout(FADE_IN_MS + 60);
+  await page.waitForTimeout(FADE_IN_MS + 200);
   expectFocused(await readState(page), id0, "on card 0");
+  await expectVideoFocus(page, id0, "videos on card 0 focus");
 
   await page.mouse.move(gutterX, gutterY, { steps: 4 });
   await page.waitForFunction(() => !document.documentElement.hasAttribute("data-card-focus"), { timeout: 2000 });
-  await page.waitForTimeout(FADE_OUT_MS + 60);
+  await page.waitForTimeout(FADE_OUT_MS + 200);
   expectUndimmed(await readState(page), "gutter");
 
   await page.mouse.move(b1.x + b1.width / 2, b1.y + 100, { steps: 4 });
@@ -139,8 +179,9 @@ async function main() {
     id1,
     { timeout: 2000 },
   );
-  await page.waitForTimeout(FADE_IN_MS + 60);
+  await page.waitForTimeout(FADE_IN_MS + 200);
   expectFocused(await readState(page), id1, "card 1 after gap");
+  await expectVideoFocus(page, id1, "videos on card 1 focus");
 
   for (let i = 0; i < 10; i++) {
     const box = i % 2 === 0 ? b0 : b1;
@@ -188,12 +229,24 @@ async function main() {
     id0,
     { timeout: 2000 },
   );
-  await scrollUntilHit(page, cx0, switchY, (hit) => hit === id0b);
   await page.waitForTimeout(FADE_IN_MS + 60);
-  expectFocused(await readState(page), id0b, "scroll: switches to next card under cursor");
+
+  const hitAfterScroll = await scrollUntilHit(page, cx0, switchY, (hit) => hit === id0b);
+  assert(hitAfterScroll === id0b, "scrolled until second card under cursor");
+  expectNeutralDom(await readState(page), "scroll: new card under cursor stays neutral until move");
+
+  await page.mouse.move(cx0 + 1, switchY, { steps: 1 });
+  await page.waitForFunction(
+    (id) => document.querySelector(`[data-card-focus-active][data-grid-card="${id}"]`),
+    id0b,
+    { timeout: 2000 },
+  );
+  await page.waitForTimeout(FADE_IN_MS + 200);
+  expectFocused(await readState(page), id0b, "pointer move focuses card under cursor");
+  await expectVideoFocus(page, id0b, "videos after scroll + move");
 
   await page.mouse.move(20, 20, { steps: 4 });
-  await page.waitForTimeout(FADE_OUT_MS + 80);
+  await page.waitForTimeout(FADE_OUT_MS + 200);
   expectUndimmed(await readState(page), "left page");
 
   console.log("card-focus sweep: all assertions passed");
