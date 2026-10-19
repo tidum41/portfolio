@@ -15,7 +15,7 @@ const linkStyle = {
 
 function FooterShell({ children }: { children?: React.ReactNode }) {
   return (
-    <footer className="intro-hide work-focus-recede">
+    <footer className="intro-hide">
       <style>{`
         .footer-inner {
           display: flex;

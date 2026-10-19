@@ -4,7 +4,8 @@
  */
 
 const FADE_MS = 200;
-const LEAVE_GRACE_MS = 150;
+/** Brief hold when crossing shared card edges (A → B); gaps clear fully. */
+const EDGE_DEBOUNCE_MS = 40;
 const INTENT_MS = 80;
 const RESUME_STAGGER_MS = 40;
 
@@ -23,11 +24,6 @@ function safePause(video: HTMLVideoElement) {
   } catch {
     /* ignore */
   }
-}
-
-function videosInCard(card: CardEl | null): HTMLVideoElement[] {
-  if (!card) return [];
-  return [...card.querySelectorAll("video")];
 }
 
 function allGridVideos(grid: HTMLElement): HTMLVideoElement[] {
@@ -82,15 +78,14 @@ export class CardFocusController {
     this.clearFocus();
   };
 
-  private onGridPointerLeave = (e: PointerEvent) => {
-    const related = e.relatedTarget as Node | null;
-    if (related && this.grid?.contains(related)) return;
-    if (related && this.nav?.contains(related)) {
-      this.clearFocus();
+  private onCardPointerLeave = (e: Event) => {
+    if (!this.enabled()) return;
+    const related = (e as PointerEvent).relatedTarget as Node | null;
+    if (related && (related as HTMLElement).closest?.(".portfolio-grid-card")) {
       return;
     }
     window.clearTimeout(this.leaveTimer);
-    this.leaveTimer = window.setTimeout(() => this.clearFocus(), LEAVE_GRACE_MS);
+    this.leaveTimer = window.setTimeout(() => this.clearFocus(), EDGE_DEBOUNCE_MS);
   };
 
   private onCardPointerEnter = (e: Event) => {
@@ -99,7 +94,14 @@ export class CardFocusController {
     const card = (e.currentTarget as CardEl) ?? null;
     if (!card?.dataset.gridCard) return;
     window.clearTimeout(this.leaveTimer);
-    this.armFocus(card);
+    window.clearTimeout(this.intentTimer);
+    const handoff = this.activeCard !== null && this.activeCard !== card;
+    if (handoff) {
+      this.applyFocus(card);
+      return;
+    }
+    if (this.activeCard === card) return;
+    this.intentTimer = window.setTimeout(() => this.applyFocus(card), INTENT_MS);
   };
 
   private onFocusIn = (e: FocusEvent) => {
@@ -109,15 +111,16 @@ export class CardFocusController {
     const card = target.closest(".portfolio-grid-card") as CardEl | null;
     if (!card?.dataset.gridCard) return;
     window.clearTimeout(this.leaveTimer);
+    window.clearTimeout(this.intentTimer);
     this.applyFocus(card);
   };
 
   private onFocusOut = (e: FocusEvent) => {
     if (!this.enabled()) return;
     const related = e.relatedTarget as Node | null;
-    if (related && this.grid?.contains(related)) return;
+    if (related && (related as HTMLElement).closest?.(".portfolio-grid-card")) return;
     window.clearTimeout(this.leaveTimer);
-    this.leaveTimer = window.setTimeout(() => this.clearFocus(), LEAVE_GRACE_MS);
+    this.leaveTimer = window.setTimeout(() => this.clearFocus(), EDGE_DEBOUNCE_MS);
   };
 
   private onVideoCanPlay = (e: Event) => {
@@ -140,14 +143,10 @@ export class CardFocusController {
     this.mounted = true;
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    grid.addEventListener("pointerleave", this.onGridPointerLeave);
     grid.addEventListener("focusin", this.onFocusIn);
     grid.addEventListener("focusout", this.onFocusOut);
 
-    const cards = grid.querySelectorAll(".portfolio-grid-card");
-    for (const card of cards) {
-      card.addEventListener("pointerenter", this.onCardPointerEnter);
-    }
+    this.bindCards();
 
     for (const video of allGridVideos(grid)) {
       video.addEventListener("canplay", this.onVideoCanPlay);
@@ -166,12 +165,12 @@ export class CardFocusController {
     this.clearFocus({ pauseAll: false });
     const grid = this.grid;
     if (grid) {
-      grid.removeEventListener("pointerleave", this.onGridPointerLeave);
       grid.removeEventListener("focusin", this.onFocusIn);
       grid.removeEventListener("focusout", this.onFocusOut);
-      const cards = grid.querySelectorAll(".portfolio-grid-card");
-      for (const card of cards) {
+      for (const card of grid.querySelectorAll(".portfolio-grid-card[data-card-focus-bound]")) {
         card.removeEventListener("pointerenter", this.onCardPointerEnter);
+        card.removeEventListener("pointerleave", this.onCardPointerLeave);
+        card.removeAttribute("data-card-focus-bound");
       }
       for (const video of allGridVideos(grid)) {
         video.removeEventListener("canplay", this.onVideoCanPlay);
@@ -188,26 +187,25 @@ export class CardFocusController {
     this.mounted = false;
   }
 
-  /** Call when new videos mount under the grid (e.g. Mux attach). */
+  private bindCards() {
+    if (!this.grid) return;
+    for (const card of this.grid.querySelectorAll(".portfolio-grid-card")) {
+      if (card.hasAttribute("data-card-focus-bound")) continue;
+      card.setAttribute("data-card-focus-bound", "");
+      card.addEventListener("pointerenter", this.onCardPointerEnter);
+      card.addEventListener("pointerleave", this.onCardPointerLeave);
+    }
+  }
+
+  /** Call when new videos or cards mount under the grid. */
   observeNewVideos() {
     if (!this.grid) return;
+    this.bindCards();
     for (const video of allGridVideos(this.grid)) {
       video.removeEventListener("canplay", this.onVideoCanPlay);
       video.addEventListener("canplay", this.onVideoCanPlay);
       this.syncVideo(video);
     }
-  }
-
-  private armFocus(card: CardEl) {
-    window.clearTimeout(this.intentTimer);
-    const hadFocus = this.activeCard !== null;
-    if (hadFocus) {
-      this.applyFocus(card);
-      return;
-    }
-    this.intentTimer = window.setTimeout(() => {
-      this.applyFocus(card);
-    }, INTENT_MS);
   }
 
   private applyFocus(card: CardEl) {

@@ -592,7 +592,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       {/* ── Hero — more top/bottom breathing room; cards still peek ── */}
       <section
         aria-label="Introduction"
-        className="work-hero work-focus-recede"
+        className="work-hero"
         data-work-hero
         style={{
           position: "relative",

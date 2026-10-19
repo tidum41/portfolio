@@ -482,10 +482,8 @@ html[data-theme="dark"] .project-card::before {
   }
 }
 
-/* ─── Card focus — desktop standout / recede (JS: data-card-focus) ───
-   lib/cardFocusController sets html[data-card-focus] and marks the
-   active tile with data-card-focus-active. Gutters keep the last card;
-   only leaving the grid clears focus. Nav excluded. */
+/* ─── Card focus — grid cards only (JS: data-card-focus) ─────────────
+   Hero, nav, and footer never dim. Focus is pointer-over-card only. */
 :root {
   --work-focus-recede: 0.35;
   --work-focus-in: 200ms;
@@ -495,13 +493,11 @@ html[data-theme="light"] {
   --work-focus-recede: 0.45;
 }
 
-.work-focus-recede,
 .portfolio-grid-card > * {
   transition: opacity var(--work-focus-out) ease-out;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  html[data-card-focus] .work-focus-recede,
   html[data-card-focus] .portfolio-grid-card:not([data-card-focus-active]) > * {
     opacity: var(--work-focus-recede);
     transition: opacity var(--work-focus-in) ease-out;
@@ -514,7 +510,6 @@ html[data-theme="light"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .work-focus-recede,
   .portfolio-grid-card > * {
     transition: none !important;
   }
