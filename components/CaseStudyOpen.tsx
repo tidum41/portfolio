@@ -24,7 +24,6 @@ export default function CaseStudyOpen({
   heroBg,
   posterWidth,
   posterHeight,
-  metaColumns,
   subtitle,
   children,
 }: {
@@ -35,8 +34,6 @@ export default function CaseStudyOpen({
   heroBg?: string;
   posterWidth?: number;
   posterHeight?: number;
-  /** Column tracks. Defaults to one per item. */
-  metaColumns?: number;
   subtitle?: ReactNode;
   children?: ReactNode;
 }) {
@@ -91,7 +88,7 @@ export default function CaseStudyOpen({
       )}
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
-          <div style={{ background: heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+          <div className="cs-hero-media-frame" style={{ background: heroBg }}>
             <MuxHero
               playbackId={muxPlaybackId}
               posterWidth={posterWidth}
@@ -103,14 +100,7 @@ export default function CaseStudyOpen({
         )}
       </div>
       {metadata.length > 0 && (
-        <div
-          className="cs-meta-grid cs-open-type cs-open-type-meta"
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${metaColumns ?? metadata.length}, 1fr)`,
-            marginTop: "var(--space-4)",
-          }}
-        >
+        <div className="cs-meta-grid cs-open-type cs-open-type-meta">
           {metadata.map(({ _key, label, values, wide }) => (
             <div key={_key ?? label} className={wide ? "cs-meta-item cs-meta-wide" : "cs-meta-item"}>
               <p className="cs-meta-label">{label}</p>

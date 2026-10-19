@@ -4,7 +4,11 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { preload } from "react-dom";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyBody from "@/components/CaseStudyBody";
+import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
+import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import {
   DIALOGUE_DRAFT,
   DIALOGUE_HERO_SRC,
@@ -45,14 +49,6 @@ const TOC_ITEMS = [
   { id: "outcome", label: "Outcome" },
   { id: "reflection", label: "Reflection" },
 ];
-
-const CAPTION: React.CSSProperties = {
-  fontSize: 12,
-  lineHeight: 1.72,
-  color: "var(--color-text-muted)",
-  margin: "8px 0 0",
-  textAlign: "left",
-};
 
 const ANATOMY_PARTS = [
   { n: 1, label: "Sources" },
@@ -104,97 +100,31 @@ function H2({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Body({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      style={{
-        fontSize: "var(--fs-body)",
-        lineHeight: "var(--lh-body)",
-        letterSpacing: "0.1px",
-        color: "var(--color-text-secondary)",
-        margin: "0 0 16px",
-      }}
-    >
-      {children}
-    </p>
-  );
-}
-
-function Placeholder({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="dialogue-placeholder"
-      style={{
-        margin: "0",
-        padding: "16px 20px",
-        borderRadius: 8,
-        border: "1px dashed var(--color-text-muted)",
-        background: "var(--color-accent-subtle)",
-        fontSize: 14,
-        lineHeight: 1.55,
-        color: "var(--color-text-secondary)",
-        minHeight: 120,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
-      <p
-        style={{
-          fontFamily: "var(--font-sans-medium)",
-          fontSize: 13,
-          fontWeight: 500,
-          color: "var(--color-text-primary)",
-          margin: "0 0 8px",
-        }}
-      >
-        To fill
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function FrameImage({
+function FrameColumn({
+  caption,
   src,
   alt,
-  priority = false,
-  sizes = "(max-width: 767px) calc(50vw - 30px), 375px",
+  children,
 }: {
-  src: string;
-  alt: string;
-  priority?: boolean;
-  sizes?: string;
+  caption: string;
+  src?: string;
+  alt?: string;
+  children?: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        aspectRatio: "4 / 3",
-        borderRadius: "var(--radius-card)",
-        overflow: "hidden",
-        boxShadow: "inset 0 0 0 1px var(--color-border-subtle)",
-        background: "var(--color-bg-secondary)",
-      }}
-    >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        priority={priority}
-        sizes={sizes}
-        style={{ objectFit: "contain", objectPosition: "center" }}
-      />
-    </div>
-  );
-}
-
-function FrameColumn({ caption, children }: { caption: string; children: React.ReactNode }) {
-  return (
     <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-      {children}
-      <p style={CAPTION}>{caption}</p>
+      {src && alt ? (
+        <CaseStudyFigure
+          src={src}
+          alt={alt}
+          fill
+          aspectRatio="4 / 3"
+          sizes="(max-width: 767px) calc(50vw - 30px), 375px"
+        />
+      ) : (
+        children
+      )}
+      <p className="cs-figcaption">{caption}</p>
     </div>
   );
 }
@@ -216,25 +146,6 @@ function PairRow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SingleFrame({
-  src,
-  alt,
-  caption,
-  width = "100%",
-}: {
-  src: string;
-  alt: string;
-  caption: string;
-  width?: string;
-}) {
-  return (
-    <figure style={{ margin: "24px auto 0", width, maxWidth: "100%" }}>
-      <FrameImage src={src} alt={alt} sizes="(max-width: 767px) calc(100vw - 48px), 750px" />
-      <figcaption style={CAPTION}>{caption}</figcaption>
-    </figure>
-  );
-}
-
 export default function DialogueCaseStudyPage() {
   const lcp = CASE_STUDY_LCP["/dialogue"];
   if (lcp) preload(lcp, { as: "image" });
@@ -252,16 +163,11 @@ export default function DialogueCaseStudyPage() {
           </div>
 
           <CaseStudyOpen
+            tagline="Dialogue, contract, 2026"
             title={DIALOGUE_TITLE}
-            metaColumns={2}
             metadata={[
               { _key: "role", label: "Role", values: ["Product Designer (contract)"] },
               { _key: "timeline", label: "Timeline", values: ["Dec 2025 to March 2026"] },
-              {
-                _key: "tools",
-                label: "Tools",
-                values: ["Cursor", "Paper", "Figma", "Granola"],
-              },
               {
                 _key: "team",
                 label: "Team",
@@ -277,9 +183,14 @@ export default function DialogueCaseStudyPage() {
                   </>,
                 ],
               },
+              {
+                _key: "tools",
+                label: "Tools",
+                values: ["Cursor", "Paper", "Figma", "Granola"],
+              },
             ]}
           >
-            <div style={{ borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+            <div className="cs-hero-media-frame">
               <Image
                 src={DIALOGUE_HERO_SRC}
                 alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
@@ -296,53 +207,56 @@ export default function DialogueCaseStudyPage() {
           <article style={{ minWidth: 0 }}>
             <Section id="context" noReveal>
               <H2>AI-moderated interviews for UX teams</H2>
-              <Body>
+              <CaseStudyBody>
                 Dialogue runs AI-moderated interviews for enterprise UX teams and startups, and
                 its study chat answered in paragraphs.
-              </Body>
+              </CaseStudyBody>
             </Section>
 
             <Section id="problem">
               <H2>Answers came back as walls of text</H2>
-              <Body>
+              <CaseStudyBody>
                 Teams could not see which interview said what, so a long answer felt like a guess.
-              </Body>
+              </CaseStudyBody>
               <PairRow>
-                <FrameColumn caption="Before: three paragraphs, no sources">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.problemBefore}
-                    alt="Study chat answer as three dense paragraphs with no linked sources."
-                  />
-                </FrameColumn>
-                <FrameColumn caption="After: one claim, one chart, linked moments">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.problemAfter}
-                    alt="Study chat answer with a summary line, funnel chart, and linked interview moments."
-                  />
-                </FrameColumn>
+                <FrameColumn
+                  caption="Before: three paragraphs, no sources"
+                  src={DIALOGUE_IMAGES.problemBefore}
+                  alt="Study chat answer as three dense paragraphs with no linked sources."
+                />
+                <FrameColumn
+                  caption="After: one claim, one chart, linked moments"
+                  src={DIALOGUE_IMAGES.problemAfter}
+                  alt="Study chat answer with a summary line, funnel chart, and linked interview moments."
+                />
               </PairRow>
             </Section>
 
             <Section id="why-it-matters">
               <H2>Researchers only repeat a finding they can point to</H2>
-              <Body>
+              <CaseStudyBody>
                 I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
                 product team, and students in interview sessions (not Dialogue research customers).
-              </Body>
-              <Placeholder>
+              </CaseStudyBody>
+              <CaseStudyPlaceholder>
                 One concrete thing Benjamin, Justin, the product team, or a student said about study
                 chat or trusting an answer.
-              </Placeholder>
+              </CaseStudyPlaceholder>
             </Section>
 
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
-              <Body>Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.</Body>
+              <CaseStudyBody>
+                Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
+              </CaseStudyBody>
               <figure style={{ margin: "24px auto 0", width: "80%", maxWidth: "100%" }}>
-                <FrameImage
+                <CaseStudyFigure
                   src={DIALOGUE_IMAGES.anatomy}
                   alt="Study chat answer card with numbered callouts for sources through follow-ups."
+                  fill
+                  aspectRatio="4 / 3"
                   sizes="(max-width: 767px) calc(100vw - 48px), 600px"
+                  zoomable
                 />
                 <div
                   className="dialogue-anatomy-captions"
@@ -354,7 +268,7 @@ export default function DialogueCaseStudyPage() {
                   }}
                 >
                   {ANATOMY_PARTS.map(({ n, label }) => (
-                    <p key={n} style={{ ...CAPTION, margin: 0 }}>
+                    <p key={n} className="cs-figcaption" style={{ margin: 0 }}>
                       <span
                         style={{
                           fontFamily: "var(--font-sans-medium)",
@@ -374,109 +288,112 @@ export default function DialogueCaseStudyPage() {
 
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
-              <Body>
+              <CaseStudyBody>
                 I grouped real chat questions by type and gave each a chart shape that fits the
                 question.
-              </Body>
-              <SingleFrame
+              </CaseStudyBody>
+              <CaseStudyFigure
                 src={DIALOGUE_IMAGES.answerShapes}
                 alt="Four study chat questions each shown with a different chart and clip layout."
                 caption="Four question types, four chart shapes"
+                fill
+                aspectRatio="16 / 10"
+                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
               />
             </Section>
 
             <Section id="proof">
               <H2>A number with no proof</H2>
-              <Body>Selecting a bar filters the clips to the moments behind it.</Body>
+              <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
               <PairRow>
                 <FrameColumn caption="Problem: chart bar with no linked clips">
-                  <Placeholder>
+                  <CaseStudyPlaceholder>
                     Export a crop of the selected bar before the clips block appears (matching the
                     solution frame).
-                  </Placeholder>
+                  </CaseStudyPlaceholder>
                 </FrameColumn>
-                <FrameColumn caption="Solution: selecting a bar filters the clips to that step">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.proofSolution}
-                    alt="Selected checkout step with a clips list tied to that bar."
-                  />
-                </FrameColumn>
+                <FrameColumn
+                  caption="Solution: selecting a bar filters the clips to that step"
+                  src={DIALOGUE_IMAGES.proofSolution}
+                  alt="Selected checkout step with a clips list tied to that bar."
+                />
               </PairRow>
             </Section>
 
             <Section id="clips">
               <H2>A quote with no context</H2>
-              <Body>The clip opens at the exact second with the transcript in sync.</Body>
+              <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
               <PairRow>
                 <FrameColumn caption="Problem: quote without the moment behind it">
-                  <Placeholder>
+                  <CaseStudyPlaceholder>
                     Export a crop of the quote or transcript before the player opens at the timestamp
                     (matching the solution frame).
-                  </Placeholder>
+                  </CaseStudyPlaceholder>
                 </FrameColumn>
-                <FrameColumn caption="Solution: the clip opens at 01:38 with the speaker row highlighted">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.clipsSolution}
-                    alt="Interview player at 01:38 with Marcus W. highlighted in the synced transcript."
-                  />
-                </FrameColumn>
+                <FrameColumn
+                  caption="Solution: the clip opens at 01:38 with the speaker row highlighted"
+                  src={DIALOGUE_IMAGES.clipsSolution}
+                  alt="Interview player at 01:38 with Marcus W. highlighted in the synced transcript."
+                />
               </PairRow>
             </Section>
 
             <Section id="placement">
               <H2>Explored a docked sidebar, kept the floating bubble</H2>
-              <Body>
+              <CaseStudyBody>
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages.
-              </Body>
-              <Placeholder>
+              </CaseStudyBody>
+              <CaseStudyPlaceholder>
                 The real reason the bubble beat the sidebar for researchers on study pages.
-              </Placeholder>
+              </CaseStudyPlaceholder>
               <PairRow>
-                <FrameColumn caption="Explored: docked sidebar">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.dockedSidebar}
-                    alt="Study page with a docked research assistant sidebar on the right."
-                  />
-                </FrameColumn>
-                <FrameColumn caption="Kept: floating bubble">
-                  <FrameImage
-                    src={DIALOGUE_IMAGES.floatingBubble}
-                    alt="Study page with the research assistant as a floating pop-up chat."
-                  />
-                </FrameColumn>
+                <FrameColumn
+                  caption="Explored: docked sidebar"
+                  src={DIALOGUE_IMAGES.dockedSidebar}
+                  alt="Study page with a docked research assistant sidebar on the right."
+                />
+                <FrameColumn
+                  caption="Kept: floating bubble"
+                  src={DIALOGUE_IMAGES.floatingBubble}
+                  alt="Study page with the research assistant as a floating pop-up chat."
+                />
               </PairRow>
             </Section>
 
             <Section id="full-answer">
               <H2>The full answer</H2>
-              <Body>Question, chart, and every supporting clip in one drawer.</Body>
-              <SingleFrame
+              <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
+              <CaseStudyFigure
                 src={DIALOGUE_IMAGES.fullAnswer}
                 alt="Structured answer card beside a drawer listing every clip behind the answer."
                 caption="The full answer, with every supporting clip in one drawer"
+                fill
+                aspectRatio="16 / 10"
+                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
               />
             </Section>
 
             <Section id="outcome">
               <H2>Presented to the founders, guided what shipped</H2>
-              <Body>
+              <CaseStudyBody>
                 I walked Benjamin and Justin through this exploration. It did not ship as designed,
                 but it shaped the study chat that did.
-              </Body>
-              <Placeholder>
+              </CaseStudyBody>
+              <CaseStudyPlaceholder>
                 Which parts of this exploration influenced what shipped (structure, clips, charts,
                 follow-ups, or something else)?
-              </Placeholder>
+              </CaseStudyPlaceholder>
             </Section>
 
             <Section id="reflection">
               <H2>Reflection</H2>
-              <Placeholder>
+              <CaseStudyPlaceholder>
                 Two or three lessons from this project, each a one-line claim plus one sentence.
-              </Placeholder>
+              </CaseStudyPlaceholder>
             </Section>
           </article>
+          <CaseStudyPager href="/dialogue" />
         </div>
       </div>
     </div>

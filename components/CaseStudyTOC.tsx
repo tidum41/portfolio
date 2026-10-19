@@ -140,19 +140,21 @@ export default function CaseStudyTOC({
         onMouseEnter={() => { if (canHover()) setBackHovered(true); }}
         onMouseLeave={() => setBackHovered(false)}
         className="cs-back-mobile"
-        aria-label="Back"
+        aria-label="Back to work"
         style={{
           ...NO_TAP_HIGHLIGHT,
           display: "inline-flex", alignItems: "center", justifyContent: "flex-start",
+          gap: 2,
           minWidth: 44, minHeight: 44,
           margin: 0,
-          padding: 0,
+          padding: "0 8px 0 0",
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
         }}
       >
         {backArrow}
+        <span className="cs-back-mobile-label">Back</span>
       </a>
     );
   }

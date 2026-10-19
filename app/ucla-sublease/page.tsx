@@ -5,7 +5,10 @@ import dynamic from "next/dynamic";
 import { preload } from "react-dom";
 import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyBody from "@/components/CaseStudyBody";
+import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
@@ -97,16 +100,7 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Body({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <p style={{
-      fontSize: "var(--fs-body)",
-      lineHeight: "var(--lh-body)",
-      letterSpacing: "0.1px",
-      color: "var(--color-text-secondary)",
-      margin: "0 0 16px",
-      ...style,
-    }}>
-      {children}
-    </p>
+    <CaseStudyBody style={style}>{children}</CaseStudyBody>
   );
 }
 
@@ -122,7 +116,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   const meta = STAT_ICON_META[value];
   const Icon = meta?.Icon;
   return (
-    <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ background: "var(--color-accent-subtle)", borderRadius: "var(--radius-control)", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Icon && (
           <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
@@ -291,15 +285,15 @@ const FB = {
     { _key: "t8", id: "solution",   label: "Solution"          },
     { _key: "t9", id: "reflection", label: "Reflection"        },
   ] as TocItem[],
-  heroTagline:   "Product Design  ·  Case Study  ·  2026",
+  heroTagline:   "BruinLease, case study, 2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
   metadata: [
-    { _key: "m1", label: "Role",          values: ["Product Designer", "& Frontend"] },
-    { _key: "m2", label: "Timeline",      values: ["5 Weeks"] },
-    { _key: "m3", label: "Tools",         values: ["Figma", "Google Stitch", "Claude Code"] },
-    { _key: "m4", label: "Collaborators", values: ["1 PM", "1 PMM"] },
+    { _key: "m1", label: "Role", values: ["Product Designer", "& Frontend"] },
+    { _key: "m2", label: "Timeline", values: ["5 Weeks"] },
+    { _key: "m3", label: "Team", values: ["1 PM", "1 PMM"] },
+    { _key: "m4", label: "Tools", values: ["Figma", "Google Stitch", "Claude Code", "Vercel"] },
   ],
   problemLabel: "The Problem",
   problemHeading: "UCLA students struggle with subleasing, using platforms that weren't built for it.",
@@ -420,6 +414,7 @@ export default function BruinLeasePage() {
           <Suspense fallback={null}>
             <BruinLeaseContent />
           </Suspense>
+          <CaseStudyPager href="/ucla-sublease" />
         </div>
       </div>
     </div>
@@ -470,19 +465,27 @@ async function BruinLeaseContent() {
 
               {cs.problemImage
                 ? (
-                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }}>
-                    <Image
-                      src={cs.problemImage}
-                      alt="Fragmented subleasing platforms"
-                      fill
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
+                  <CaseStudyFigure
+                    src={cs.problemImage}
+                    alt="Fragmented subleasing platforms"
+                    caption={cs.problemImageCaption}
+                    fill
+                    aspectRatio="16/7"
+                    sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                  />
                 )
-                : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
-              }
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 28 }}>{cs.problemImageCaption}</p>
+                : (
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: "16/7",
+                      background: "var(--color-placeholder)",
+                      borderRadius: "var(--radius-control)",
+                      margin: "24px 0 8px",
+                      boxShadow: "inset 0 0 0 1px var(--color-border-subtle)",
+                    }}
+                  />
+                )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {painPoints.map((text, i) => <PainPoint key={i} text={text} />)}
@@ -514,13 +517,25 @@ async function BruinLeaseContent() {
 
               {cs.figmaComparison
                 ? (
-                  <div style={{ position: "relative", width: "100%", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)" }}>
-                    <img src={cs.figmaComparison} alt="Early layout exploration in Figma" loading="lazy" decoding="async" style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius-card)" }} />
-                  </div>
+                  <CaseStudyFigure
+                    src={cs.figmaComparison}
+                    alt="Early layout exploration in Figma"
+                    caption="Early layout exploration in Figma"
+                    width={1600}
+                    height={900}
+                  />
                 )
-                : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
-              }
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
+                : (
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: "16/9",
+                      background: "var(--color-placeholder)",
+                      borderRadius: "var(--radius-control)",
+                      margin: "24px 0 8px",
+                    }}
+                  />
+                )}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }} className="cs-process-tools">
                 {processTools.map(({ _key, tool, desc }) => (
