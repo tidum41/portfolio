@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import CopyEmail from "@/components/CopyEmail";
 import { FOOTER_LINKS } from "@/lib/site";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -86,17 +87,27 @@ export default function Footer() {
 
       <nav aria-label="Social links">
         <ul className="footer-links">
-          {FOOTER_LINKS.map(({ label, href }) => (
-            <li key={label}>
-              <a
-                href={href}
-                target={href.startsWith("mailto") ? undefined : "_blank"}
-                rel="noopener noreferrer"
-                className="footer-link"
-                style={{ ...linkStyle, color: "var(--color-text-primary)" }}
-              >
-                {label}
-              </a>
+          {FOOTER_LINKS.map((item) => (
+            <li key={item.label}>
+              {"copyEmail" in item ? (
+                <CopyEmail
+                  unstyled
+                  className="footer-link"
+                  style={{ ...linkStyle, color: "var(--color-text-primary)" }}
+                >
+                  {item.label}
+                </CopyEmail>
+              ) : (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="footer-link"
+                  style={{ ...linkStyle, color: "var(--color-text-primary)" }}
+                >
+                  {item.label}
+                </a>
+              )}
             </li>
           ))}
         </ul>

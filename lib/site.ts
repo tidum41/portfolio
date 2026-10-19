@@ -22,14 +22,22 @@ export const OG_IMAGE_ALT =
 /** Self-hosted resume (also reachable at /resume). */
 export const RESUME_PATH = "/resume.pdf";
 
-export const FOOTER_LINKS = [
+/** Site-wide contact address (copy-to-clipboard in the UI, not mailto). */
+export const CONTACT_EMAIL = "muditmahajan@ucla.edu";
+
+export type FooterLinkItem =
+  | { label: string; href: string }
+  | { label: string; copyEmail: true };
+
+export const FOOTER_LINKS: readonly FooterLinkItem[] = [
   { label: "linkedin", href: "https://www.linkedin.com/in/muditmahajan14/" },
   { label: "x", href: "https://x.com/muditm14" },
-  { label: "email", href: "mailto:muditmahajan@ucla.edu" },
+  { label: "email", copyEmail: true },
   { label: "resume", href: RESUME_PATH },
-] as const;
+];
 
-/** Public profile URLs for schema.org sameAs (excludes mailto / resume). */
+/** Public profile URLs for schema.org sameAs (excludes email / resume). */
 export const SAME_AS = FOOTER_LINKS.filter(
-  (l) => l.label === "linkedin" || l.label === "x",
+  (l): l is { label: string; href: string } =>
+    "href" in l && (l.label === "linkedin" || l.label === "x"),
 ).map((l) => l.href);
