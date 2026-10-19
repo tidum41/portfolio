@@ -510,11 +510,15 @@ html[data-theme="light"] {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  /* Grid hovered (any card or gutter) — or a card is keyboard-focused. */
+  /* Grid hovered (any card or gutter) — or keyboard :focus-visible on a
+     card / its link / role=button tile. Target focusables directly:
+     Lightning CSS drops nested :has(:focus-visible) selectors. */
   body:has(.portfolio-grid:hover) .work-focus-recede,
   body:has(.portfolio-grid:hover) .portfolio-grid-card:not(:hover) > *,
-  body:has(.project-card:focus-visible) .work-focus-recede,
-  body:has(.project-card:focus-visible) .portfolio-grid-card:not(:focus-within) > * {
+  body:has(.portfolio-grid-card:focus-visible) .work-focus-recede,
+  body:has(.portfolio-grid-card:focus-visible) .portfolio-grid-card:not(:focus-within) > *,
+  body:has(.portfolio-grid a:focus-visible) .work-focus-recede,
+  body:has(.portfolio-grid a:focus-visible) .portfolio-grid-card:not(:focus-within) > * {
     opacity: var(--work-focus-recede);
     transition: opacity var(--work-focus-in) ease-out;
     transition-delay: var(--work-focus-intent);
@@ -522,7 +526,8 @@ html[data-theme="light"] {
 
   /* Standout card snaps to full strength with no intent delay. */
   body:has(.portfolio-grid:hover) .portfolio-grid-card:hover > *,
-  body:has(.project-card:focus-visible) .portfolio-grid-card:focus-within > * {
+  body:has(.portfolio-grid-card:focus-visible) .portfolio-grid-card:focus-within > *,
+  body:has(.portfolio-grid a:focus-visible) .portfolio-grid-card:focus-within > * {
     opacity: 1;
     transition: opacity var(--work-focus-in) ease-out;
     transition-delay: 0ms;
