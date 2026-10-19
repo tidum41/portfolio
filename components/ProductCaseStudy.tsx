@@ -3,6 +3,8 @@ import Image from "next/image";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
+import CaseStudyPager from "@/components/CaseStudyPager";
+import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 
 const TEAM = [
@@ -31,9 +33,10 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
           </div>
 
           <CaseStudyOpen
+            tagline="JOOLA, internship, 2026"
             title={JOOLA_TITLE}
             metadata={[
-              { _key: "role", label: "Role", values: ["Product Design Intern"] },
+              { _key: "role", label: "Role", values: ["Product design intern"] },
               { _key: "timeline", label: "Timeline", values: ["10 weeks, Summer 2026"] },
               {
                 _key: "team",
@@ -49,9 +52,14 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
                   </span>
                 )),
               },
+              {
+                _key: "scope",
+                label: "Scope",
+                values: ["Product design", "Interaction design", "Prototyping"],
+              },
             ]}
           >
-            <div style={{ borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+            <div className="cs-hero-media-frame">
               <Image
                 src={JOOLA_HERO_SRC}
                 alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."
@@ -67,7 +75,16 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
 
           {body}
 
-          <CaseStudyRequest />
+          <CaseStudyRequest
+            teaser="Wholesale buyers for the #1 pickleball brand needed a faster path from catalog to confirmed order, without losing tier pricing, net terms, or the details reps track by hand."
+            outcome={
+              <CaseStudyPlaceholder>
+                One or two outcome metrics or quotes from the JOOLA team once they can be shared.
+              </CaseStudyPlaceholder>
+            }
+          />
+
+          <CaseStudyPager href="/joola" />
         </div>
       </div>
     </div>
