@@ -41,6 +41,7 @@ const TOC_ITEMS = [
   { id: "decision-evidence", label: "Evidence links" },
   { id: "decision-clips", label: "Timestamped clips" },
   { id: "decision-context", label: "In the product" },
+  { id: "decision-bubble", label: "Bubble over sidebar" },
   { id: "solution", label: "Solution" },
   { id: "shipped", label: "What shipped" },
   { id: "reflection", label: "Reflection" },
@@ -135,6 +136,28 @@ function Body({ children, style }: { children: React.ReactNode; style?: React.CS
     >
       {children}
     </p>
+  );
+}
+
+function DraftCopyTag() {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        fontFamily: "var(--font-sans-medium)",
+        fontSize: 11,
+        fontWeight: 500,
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        color: "var(--color-text-muted)",
+        border: "1px solid var(--color-border-subtle)",
+        borderRadius: 4,
+        padding: "3px 8px",
+        marginBottom: 12,
+      }}
+    >
+      Draft copy
+    </span>
   );
 }
 
@@ -455,6 +478,21 @@ export default function DialogueCaseStudyPage() {
               </Body>
             </Section>
 
+            <Section id="decision-bubble">
+              <SectionLabel>Design decision</SectionLabel>
+              <H2>Bubble over sidebar</H2>
+              <DraftCopyTag />
+              <Body>
+                I explored a docked sidebar, but kept the bubble. It stays one tap away on any page
+                and collapses out of the way when researchers are reading transcripts.
+              </Body>
+              <Figure
+                src={DIALOGUE_IMAGES.dockedSidebar}
+                alt="Study page with a docked research assistant sidebar along the right edge."
+                caption="Docked sidebar exploration"
+              />
+            </Section>
+
             <Section id="solution">
               <SectionLabel>Solution</SectionLabel>
               <H2>Easy to trust and easy to use</H2>
@@ -470,8 +508,8 @@ export default function DialogueCaseStudyPage() {
               />
               <Figure
                 src={DIALOGUE_IMAGES.inProduct}
-                alt="Full study page with the research assistant docked on the right."
-                caption="The research assistant on a study page"
+                alt="Pop-up research assistant chat over the study page, the pattern used in the product."
+                caption="Pop-up chat, the pattern in the product today"
               />
               <Figure
                 src={DIALOGUE_IMAGES.fullAnswer}
