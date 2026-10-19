@@ -54,7 +54,6 @@ export class CardFocusController {
     this.mounted = true;
 
     document.addEventListener("pointermove", this.onPointerMove, { passive: true });
-    document.addEventListener("pointerover", this.onPointerMove, { passive: true, capture: true });
     window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
     window.addEventListener("wheel", this.onScrollLike, { passive: true });
     window.addEventListener("touchmove", this.onScrollLike, { passive: true });
@@ -83,7 +82,6 @@ export class CardFocusController {
     this.io = null;
 
     document.removeEventListener("pointermove", this.onPointerMove);
-    document.removeEventListener("pointerover", this.onPointerMove, true);
     window.removeEventListener("scroll", this.onScrollLike, true);
     window.removeEventListener("wheel", this.onScrollLike);
     window.removeEventListener("touchmove", this.onScrollLike);

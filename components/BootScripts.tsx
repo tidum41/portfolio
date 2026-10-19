@@ -15,7 +15,7 @@ const HLS_BOOT = `(function(){if(location.pathname!=="/")return;if(window.matchM
 // controller mounts after hydration and the intro keeps the grid inert for ~2s;
 // a cursor that lands on a card in that window and then rests fires no further
 // pointer event, so the controller hit-tests this position instead.
-const CARD_POINTER_BOOT = `(function(){if(location.pathname!=="/")return;if(!window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;var p=window.__cardFocusPtr={x:NaN,y:NaN};function m(e){p.x=e.clientX;p.y=e.clientY}document.addEventListener("pointermove",m,{capture:true,passive:true});document.addEventListener("pointerover",m,{capture:true,passive:true})})()`;
+const CARD_POINTER_BOOT = `(function(){if(location.pathname!=="/")return;if(!window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;var p=window.__cardFocusPtr={x:NaN,y:NaN};function m(e){p.x=e.clientX;p.y=e.clientY}document.addEventListener("pointermove",m,{capture:true,passive:true})})()`;
 
 /**
  * Injects blocking boot + JSON-LD scripts into the SSR HTML stream outside

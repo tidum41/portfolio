@@ -16,7 +16,7 @@
  *
  * Run: node scripts/verify-card-focus-cold.mjs --base https://www.muditm.com \
  *        --runs 20 --out /tmp/cold-prod.json [--only t0-300,t1000,t3000,s0-300,s1000,s3000,sweep,rules]
- *        [--cpu 4] [--net 4g|3g|fast] [--bypass-intro 1] [--keep-snaps 1]
+ *        [--share <vercel share url>] [--cpu 4] [--net 4g|3g|fast] [--bypass-intro 1] [--keep-snaps 1]
  */
 import { chromium } from "playwright";
 import fs from "node:fs";
@@ -104,6 +104,9 @@ async function newRun(browser) {
     extraHTTPHeaders: EXTRA_HEADERS,
     serviceWorkers: "block",
   });
+  // Protected previews: a Vercel share link sets the auth cookie on the context
+  // without ever loading the site in the page, so the page load stays cold.
+  if (args.share) await context.request.get(args.share);
   const page = await context.newPage();
   await page.addInitScript(INIT);
   if (args["bypass-intro"]) {
