@@ -102,11 +102,17 @@ export function mountCardFocusVideoGuards(grid: HTMLElement): () => void {
 }
 
 function retryPlayOnce(video: HTMLVideoElement) {
-  if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-    window.setTimeout(() => cardFocusPlay(video, false), 30);
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    window.setTimeout(() => cardFocusPlay(video, false), 24);
     return;
   }
-  video.addEventListener("canplay", () => cardFocusPlay(video, false), { once: true });
+  const onReady = () => {
+    video.removeEventListener("loadeddata", onReady);
+    video.removeEventListener("canplay", onReady);
+    cardFocusPlay(video, false);
+  };
+  video.addEventListener("loadeddata", onReady, { once: true });
+  video.addEventListener("canplay", onReady, { once: true });
 }
 
 /**

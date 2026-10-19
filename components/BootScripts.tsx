@@ -17,13 +17,15 @@ const HLS_BOOT = `(function(){if(location.pathname!=="/")return;if(window.matchM
  * trip React 19's "Encountered a script tag while rendering" warning (and
  * can contribute to hydration recovery remounts that wipe client state).
  */
+import type { MuxWarmEntry } from "@/lib/muxCardWarmup";
+
 export default function BootScripts({
   jsonLd,
   playlists = {},
 }: {
   jsonLd: string;
-  /** playbackId → 480p playlist already preloaded on the homepage. */
-  playlists?: Record<string, string>;
+  /** playbackId → pre-resolved 480p/720p playlists on the homepage. */
+  playlists?: Record<string, string | MuxWarmEntry>;
 }) {
   const inserted = useRef(false);
 

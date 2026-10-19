@@ -67,8 +67,7 @@ export default async function Home() {
         href={HLS_LIGHT_SRC}
         media="(prefers-reduced-motion: no-preference)"
       />
-      {/* Phone cards only. Desktop already starts from the full ladder, and
-          a wide layout should not pay for the 480p startup segments. */}
+      {/* Preload initial segments for the above-the-fold cards (480p on phone, 720p on desktop). */}
       {warm.preload.map((item) => (
         <link
           key={item.href}
@@ -77,9 +76,10 @@ export default async function Home() {
           href={item.href}
           crossOrigin="anonymous"
           media={
-            item.aboveFold
+            item.media ??
+            (item.aboveFold
               ? "(max-width: 800px) and (prefers-reduced-motion: no-preference)"
-              : "(min-width: 768px) and (max-width: 800px) and (prefers-reduced-motion: no-preference)"
+              : "(min-width: 768px) and (max-width: 800px) and (prefers-reduced-motion: no-preference)")
           }
         />
       ))}

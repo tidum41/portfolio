@@ -36,15 +36,59 @@ function cardStartEstimate() {
 
 let hlsModulePromise: Promise<HlsStatic> | null = null;
 
-function warmPlaylist(playbackId: string): string | null {
+type WarmEntry = {
+  url480?: string;
+  url720?: string;
+  text480?: string;
+  text720?: string;
+};
+
+let warmCacheRaw: string | null = null;
+let warmCacheMap: Record<string, string | WarmEntry> | null = null;
+const warmBlobUrls = new Map<string, string>();
+
+function getWarmMap(): Record<string, string | WarmEntry> | null {
   const raw = document.getElementById("mux-card-warm")?.textContent;
   if (!raw) return null;
+  if (raw === warmCacheRaw && warmCacheMap) return warmCacheMap;
   try {
-    const map = JSON.parse(raw) as Record<string, string>;
-    return typeof map[playbackId] === "string" ? map[playbackId] : null;
+    warmCacheRaw = raw;
+    warmCacheMap = JSON.parse(raw) as Record<string, string | WarmEntry>;
+    return warmCacheMap;
   } catch {
     return null;
   }
+}
+
+function warmPlaylist(playbackId: string, narrow: boolean, allowBlob: boolean): string | null {
+  if (typeof window === "undefined") return null;
+  if ((window as Window & { __disableMuxWarm?: boolean }).__disableMuxWarm) return null;
+  if (
+    typeof MediaSource !== "undefined" &&
+    typeof MediaSource.isTypeSupported === "function" &&
+    !MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"')
+  ) {
+    return null;
+  }
+  const map = getWarmMap();
+  if (!map) return null;
+  const hit = map[playbackId];
+  if (!hit) return null;
+  if (typeof hit === "string") {
+    return narrow ? hit : null;
+  }
+  const cap = narrow ? "480" : "720";
+  const text = narrow ? (hit.text480 ?? hit.text720) : (hit.text720 ?? hit.text480);
+  if (allowBlob && text && typeof URL !== "undefined" && typeof URL.createObjectURL === "function") {
+    const key = `${playbackId}:${cap}`;
+    let blobUrl = warmBlobUrls.get(key);
+    if (!blobUrl) {
+      blobUrl = URL.createObjectURL(new Blob([text], { type: "application/vnd.apple.mpegurl" }));
+      warmBlobUrls.set(key, blobUrl);
+    }
+    return blobUrl;
+  }
+  return narrow ? (hit.url480 ?? hit.url720 ?? null) : (hit.url720 ?? hit.url480 ?? null);
 }
 
 /**
@@ -160,13 +204,6 @@ export default function MuxMediaSlot({
       video.setAttribute("webkit-playsinline", "");
 
       const start = async () => {
-        // Phone cards open the exact 480p playlist the HTML already fetched,
-        // so the first segment is a cache hit. Desktop keeps the full ladder.
-        const narrow =
-          window.innerWidth < 800 || constrainedNetwork();
-        const warmed = fill && narrow ? warmPlaylist(playbackId) : null;
-        const stream = warmed || (fill ? muxCardStreamUrl(playbackId) : muxHlsUrl(playbackId));
-
         let Hls: HlsStatic | null = null;
         try {
           Hls = await loadHlsCtor();
@@ -175,9 +212,15 @@ export default function MuxMediaSlot({
         }
         if (cancelled) return;
 
+        const narrow = window.innerWidth < 800 || constrainedNetwork();
+        const useHlsJs = Boolean(Hls?.isSupported());
+        const live = fill ? muxCardStreamUrl(playbackId) : muxHlsUrl(playbackId);
+        const warmed = fill ? warmPlaylist(playbackId, narrow, useHlsJs) : null;
+        const stream = warmed || live;
+
         // Prefer hls.js in Chrome; native HLS is Safari. canPlayType("maybe")
         // on Chromium is not enough to skip MSE.
-        if (Hls?.isSupported()) {
+        if (useHlsJs && Hls) {
           const hls = new Hls({
             // Begin on the poster frame instead of frame 0 (that mismatch is the pop).
             startPosition: thumbnailTime,
@@ -185,8 +228,8 @@ export default function MuxMediaSlot({
             testBandwidth: false,
             abrEwmaDefaultEstimate: cardStartEstimate(),
             capLevelToPlayerSize: true,
-            maxBufferLength: fill ? 2 : 8,
-            maxMaxBufferLength: fill ? 8 : 24,
+            maxBufferLength: fill ? 6 : 12,
+            maxMaxBufferLength: fill ? 12 : 24,
             startFragPrefetch: true,
             enableWorker: true,
           });
@@ -194,22 +237,30 @@ export default function MuxMediaSlot({
           hls.loadSource(stream);
           hls.attachMedia(video);
           hls.on(Hls.Events.MANIFEST_PARSED, kickPlay);
+          hls.on(Hls.Events.FRAG_BUFFERED, () => {
+            revealIfOnPoster();
+            kickPlay();
+          });
           let recovered = false;
           hls.on(Hls.Events.ERROR, (_evt, data) => {
-            if (!data?.fatal || cancelled) return;
-            // The preloaded playlist is a signed URL. If it fails, open the
-            // live master once instead of leaving the card on the still.
-            const live = fill ? muxCardStreamUrl(playbackId) : muxHlsUrl(playbackId);
-            if (!recovered && stream !== live) {
+            if (cancelled) return;
+            const isWarmFailure =
+              !recovered &&
+              stream !== live &&
+              (data?.fatal ||
+                data?.details === "fragLoadError" ||
+                data?.details === "manifestLoadError" ||
+                data?.details === "levelLoadError");
+            if (isWarmFailure) {
               recovered = true;
               hls.loadSource(live);
               hls.startLoad(thumbnailTime);
               return;
             }
+            if (!data?.fatal) return;
             rootRef.current?.setAttribute("data-hls", `error:${data.type}:${data.details}`);
           });
           rootRef.current?.setAttribute("data-hls", "hls.js");
-          kickPlay();
           return;
         }
 
@@ -234,16 +285,35 @@ export default function MuxMediaSlot({
         cancelled = true;
       };
     },
-    [playbackId, kickPlay, fill, thumbnailTime],
+    [playbackId, kickPlay, revealIfOnPoster, fill, thumbnailTime],
   );
 
   useEffect(() => {
     const video = videoRef.current;
     const stop = attachVideo(video);
     const onFrame = () => revealIfOnPoster();
+    video?.addEventListener("loadeddata", onFrame);
+    video?.addEventListener("canplay", onFrame);
+    video?.addEventListener("canplaythrough", onFrame);
     video?.addEventListener("playing", onFrame);
     video?.addEventListener("timeupdate", onFrame);
     video?.addEventListener("seeked", onFrame);
+
+    let rvfcId = 0;
+    const vWithRvfc = video as (HTMLVideoElement & {
+      requestVideoFrameCallback?: (cb: () => void) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
+    }) | null;
+    if (vWithRvfc && typeof vWithRvfc.requestVideoFrameCallback === "function") {
+      const stepFrame = () => {
+        revealIfOnPoster();
+        if (rootRef.current?.getAttribute("data-frame") !== "shown" && vWithRvfc.requestVideoFrameCallback) {
+          rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
+        }
+      };
+      rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
+    }
+
     const onEnded = () => {
       const el = videoRef.current;
       if (!el || thumbnailTime <= 0) return;
@@ -269,6 +339,12 @@ export default function MuxMediaSlot({
     document.addEventListener("visibilitychange", onVis);
     return () => {
       stop?.();
+      if (rvfcId && vWithRvfc && typeof vWithRvfc.cancelVideoFrameCallback === "function") {
+        vWithRvfc.cancelVideoFrameCallback(rvfcId);
+      }
+      video?.removeEventListener("loadeddata", onFrame);
+      video?.removeEventListener("canplay", onFrame);
+      video?.removeEventListener("canplaythrough", onFrame);
       video?.removeEventListener("playing", onFrame);
       video?.removeEventListener("timeupdate", onFrame);
       video?.removeEventListener("seeked", onFrame);

@@ -173,6 +173,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://stream.mux.com" crossOrigin="anonymous" />
+        {muxWarm.preconnect.map((origin) => (
+          <link key={origin} rel="preconnect" href={origin} crossOrigin="anonymous" />
+        ))}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
@@ -180,11 +183,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <script> in the component tree (raw script / next/script both warn). */}
         <BootScripts
           jsonLd={getSiteJsonLd()}
-          playlists={Object.fromEntries(
-            muxWarm.preload
-              .filter((item) => item.playbackId)
-              .map((item) => [item.playbackId as string, item.href]),
-          )}
+          playlists={muxWarm.playlists}
         />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
