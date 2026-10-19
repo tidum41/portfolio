@@ -13,15 +13,17 @@ export default function CaseStudyRequest({
   action?: string;
 }) {
   return (
-    <div className="cs-request" data-case-request>
-      <p className="cs-request-label">
-        <LockIcon />
-        {label}
-      </p>
-      <p className="cs-request-message">{message}</p>
-      <CopyEmail className="cs-request-action" ariaLabel={`${action} — copy email to clipboard`}>
-        {action}
-      </CopyEmail>
+    <div className="cs-request-block">
+      <div className="cs-request-card" data-case-request>
+        <p className="cs-request-label">
+          <LockIcon />
+          {label}
+        </p>
+        <p className="cs-request-message">{message}</p>
+        <CopyEmail className="cs-request-action cs-pill-btn" ariaLabel={`${action}, copy email to clipboard`}>
+          {action}
+        </CopyEmail>
+      </div>
     </div>
   );
 }

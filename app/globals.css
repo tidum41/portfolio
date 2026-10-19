@@ -951,15 +951,239 @@ html[data-theme="dark"] .project-image {
   .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
-/* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
-@media (max-width: 767px) {
+/* ─── Case study metadata grid (Role / Timeline / Team / Scope) ───── */
+.cs-meta-grid {
+  display: grid;
+  margin-top: var(--space-4);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.cs-meta-item {
+  min-width: 0;
+  padding: 0 24px 0 0;
+}
+.cs-meta-label {
+  font-family: var(--font-sans-medium);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--color-text-tertiary);
+  margin: 0 0 8px;
+}
+.cs-meta-value {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+}
+.cs-meta-value + .cs-meta-value {
+  margin-top: 4px;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
   .cs-meta-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 20px 0 !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 24px;
   }
   .cs-meta-grid .cs-meta-wide {
     grid-column: 1 / -1;
   }
+}
+
+@media (max-width: 767px) {
+  .cs-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .cs-meta-item {
+    padding: 0;
+  }
+  .cs-meta-grid .cs-meta-wide {
+    grid-column: auto;
+  }
+  .cs-meta-label {
+    margin-bottom: 4px;
+  }
+}
+
+/* ─── Case study prose measure ─────────────────────────────────────── */
+.cs-prose {
+  max-width: 40rem;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: 0.1px;
+  color: var(--color-text-secondary);
+  margin: 0 0 16px;
+}
+
+/* ─── Case study media (8px radius everywhere) ─────────────────────── */
+.cs-hero-media-frame,
+.cs-figure-media,
+.cs-figure-media--fill {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-bg-secondary);
+}
+.cs-figure-media--fill {
+  position: relative;
+  width: 100%;
+}
+.cs-figure {
+  margin: 24px 0 28px;
+  min-width: 0;
+}
+.cs-figure-zoom-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  text-align: left;
+  border-radius: var(--radius-control);
+}
+.cs-figure-zoom-trigger:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+.cs-figcaption {
+  font-size: 12px;
+  line-height: 1.72;
+  color: var(--color-text-muted);
+  margin: 8px 0 0;
+  text-align: left;
+}
+
+.cs-to-fill {
+  margin: 20px 0;
+  padding: 16px 20px;
+  border-radius: var(--radius-control);
+  border: 1px dashed var(--color-text-muted);
+  background: var(--color-accent-subtle);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  max-width: 40rem;
+}
+.cs-to-fill-label {
+  font-family: var(--font-sans-medium);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+.cs-to-fill-body {
+  margin: 0;
+}
+
+.cs-back-mobile-label {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cs-request-block {
+  margin-top: var(--space-5);
+}
+.cs-request-card {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-secondary);
+}
+.cs-pill-btn {
+  min-height: 44px;
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  font-weight: 500;
+}
+.cs-pill-btn:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+
+.cs-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: var(--space-7) 0 var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border-subtle);
+}
+.cs-pager-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  padding: 8px 0;
+  text-decoration: none;
+  color: inherit;
+}
+.cs-pager-link--next {
+  text-align: right;
+  align-items: flex-end;
+}
+.cs-pager-kicker {
+  font-size: 12px;
+  line-height: 1.72;
+  color: var(--color-text-muted);
+}
+.cs-pager-title {
+  font-family: var(--font-sans-medium);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+@media (max-width: 767px) {
+  .cs-pager {
+    grid-template-columns: 1fr;
+  }
+  .cs-pager-link--next {
+    text-align: left;
+    align-items: flex-start;
+  }
+}
+
+.cs-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+}
+.cs-lightbox-dialog {
+  position: relative;
+  max-width: min(1200px, 100%);
+  max-height: 100%;
+  overflow: auto;
+}
+.cs-lightbox-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.cs-lightbox-media {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--color-bg-primary);
 }
 
 /* No section nav: keep the 750px column centered instead of reserving a TOC rail. */
@@ -1005,15 +1229,17 @@ html[data-theme="dark"] .project-image {
   flex: 0 0 auto;
 }
 .cs-request-message {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   letter-spacing: 0.1px;
   color: var(--color-text-secondary);
+  max-width: 40rem;
 }
 .cs-request-action {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font: inherit;
   font-size: 14px;
   line-height: 1.4;
@@ -1021,12 +1247,6 @@ html[data-theme="dark"] .project-image {
   text-decoration: none;
   background: transparent;
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-card);
-  padding: 8px 14px;
-}
-.cs-request-action:focus-visible {
-  outline: 1px solid var(--color-text-tertiary);
-  outline-offset: 2px;
 }
 
 /* ─── Case study stats — single column on mobile ─────────────────── */
@@ -1440,4 +1660,3 @@ html[data-theme="light"] {
 [class*="styles-module__highlightsContainer___"] {
   z-index: 999999999 !important;
 }
-
