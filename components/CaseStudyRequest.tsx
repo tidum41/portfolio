@@ -1,27 +1,37 @@
+import type { ReactNode } from "react";
 import CopyEmail from "@/components/CopyEmail";
+import CaseStudyBody from "@/components/CaseStudyBody";
 
 /**
  * Quiet NDA notice for a case study that is not published in full.
  */
 export default function CaseStudyRequest({
+  teaser,
+  outcome,
   label = "Under NDA",
   message = "Full case study available upon request.",
   action = "Request access",
 }: {
+  teaser?: ReactNode;
+  outcome?: ReactNode;
   label?: string;
   message?: string;
   action?: string;
 }) {
   return (
-    <div className="cs-request" data-case-request>
-      <p className="cs-request-label">
-        <LockIcon />
-        {label}
-      </p>
-      <p className="cs-request-message">{message}</p>
-      <CopyEmail className="cs-request-action" ariaLabel={`${action} — copy email to clipboard`}>
-        {action}
-      </CopyEmail>
+    <div className="cs-request-block">
+      {teaser ? <CaseStudyBody as="div">{teaser}</CaseStudyBody> : null}
+      {outcome}
+      <div className="cs-request-card" data-case-request>
+        <p className="cs-request-label">
+          <LockIcon />
+          {label}
+        </p>
+        <p className="cs-request-message">{message}</p>
+        <CopyEmail className="cs-request-action cs-pill-btn" ariaLabel={`${action} — copy email to clipboard`}>
+          {action}
+        </CopyEmail>
+      </div>
     </div>
   );
 }
