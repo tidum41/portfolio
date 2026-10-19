@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
 import InViewLoopVideo from "@/components/InViewLoopVideo";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
@@ -89,17 +91,7 @@ function H2({ children }: { children: React.ReactNode }) {
 }
 
 function Body({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontSize: "var(--fs-body)",
-      lineHeight: "var(--lh-body)",
-      letterSpacing: "0.1px",
-      color: "var(--color-text-secondary)",
-      margin: "0 0 16px",
-    }}>
-      {children}
-    </p>
-  );
+  return <CaseStudyBody>{children}</CaseStudyBody>;
 }
 
 // Renders a Sanity/fallback body string as separate paragraphs, split on blank lines.
@@ -116,12 +108,13 @@ function Paragraphs({ text }: { text: string }) {
 // Media wrapper — same card treatment as the subleasing case study's embeds
 function MediaCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{
-      borderRadius: "var(--radius-card)",
-      overflow: "hidden",
-      boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset",
-      ...style,
-    }}>
+    <div
+      className="cs-hero-media-frame"
+      style={{
+        boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset",
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -185,17 +178,26 @@ function IconCamera() {
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 const METADATA = [
-  { label: "Role",          values: ["Self-ran"] },
-  { label: "Timeline",      values: ["2021"] },
-  { label: "Tools",         values: ["DaVinci Resolve", "Photoshop", "Fujifilm XS10", "Tamron 17-70 f/2.8"] },
-  { label: "Collaborators", values: ["SteelSeries", "DROP", "Glorious", "KBDfans"] },
+  { _key: "role", label: "Role", values: ["Self-ran"] },
+  { _key: "timeline", label: "Timeline", values: ["2021"] },
+  {
+    _key: "team",
+    label: "Team",
+    wide: true,
+    values: ["SteelSeries", "DROP", "Glorious", "KBDfans"],
+  },
+  {
+    _key: "scope",
+    label: "Scope",
+    values: ["Video production", "Editing", "Community building"],
+  },
 ];
 
 // ── Fallback content — real copy, source of truth until authored in Sanity Studio ──
 
 const FB = {
   tocItems: TOC_ITEMS,
-  heroTagline: "YouTube · Personal · 2021",
+  heroTagline: "YouTube, personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",
@@ -270,6 +272,7 @@ export default function SvizPage() {
           <Suspense fallback={null}>
             <SvizContent />
           </Suspense>
+          <CaseStudyPager href="/sviz" />
         </div>
       </div>
     </div>
