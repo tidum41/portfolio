@@ -1,9 +1,14 @@
+/**
+ * ABC Areal @font-face sources come from NEXT_PUBLIC_AREAL_URL (set on
+ * .dialogue-review-areal in layout.tsx). Until that env is configured,
+ * faces do not load and dialogue-canvas-v2.css falls back to Helvetica.
+ */
 @font-face {
   font-family: "ABC Areal Archive";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/ABCAreal-Regular.woff2") format("woff2");
+  src: var(--areal-regular-src) format("woff2");
 }
 
 @font-face {
@@ -11,5 +16,5 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/fonts/ABCAreal-Medium.woff2") format("woff2");
+  src: var(--areal-medium-src) format("woff2");
 }

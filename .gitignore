@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Copied from node_modules/hls.js on next config load. See next.config.mjs.
 /public/vendor/
+
+# Dinamo ABC Areal (hosted via NEXT_PUBLIC_AREAL_URL; never commit binaries)
+/fonts/ABCAreal*
+/public/fonts/ABCAreal*
