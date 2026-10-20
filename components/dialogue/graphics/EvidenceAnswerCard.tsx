@@ -1,4 +1,11 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import {
+  PLACEMENT_GRID_PAD_X,
+  PLACEMENT_ICON_SIZE,
+  PLACEMENT_RADIUS_LG,
+  PLACEMENT_SPACE_1,
+  placementType,
+} from "@/lib/caseStudies/dialoguePlacementTypography";
 import { cornerOptics } from "./cornerOptics";
 import { CheckoutFunnelChart } from "./CheckoutFunnelChart";
 import { ClipThumbnailRow } from "./ClipThumbnailRow";
@@ -6,11 +13,12 @@ import { CounterEvidenceSection } from "./CounterEvidenceSection";
 import { DerivedEvidenceLabel } from "./DerivedEvidenceLabel";
 import { ShareExportIcon } from "./DialogueIcons";
 
-const OUTER_RADIUS = 12;
-const PAD = 14;
+const OUTER_RADIUS = PLACEMENT_RADIUS_LG;
+const PAD = PLACEMENT_GRID_PAD_X - 4;
 
 export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
-  const inset = compact ? 10 : PAD;
+  const inset = compact ? PLACEMENT_GRID_PAD_X - 4 : PAD;
+  const copyIconInset = inset;
   return (
     <div
       style={{
@@ -26,21 +34,25 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
         title="Copy as card"
         style={{
           position: "absolute",
-          top: inset,
-          right: inset,
+          top: copyIconInset,
+          right: copyIconInset,
           zIndex: 1,
           opacity: 0.88,
           lineHeight: 0,
+          width: PLACEMENT_ICON_SIZE,
+          height: PLACEMENT_ICON_SIZE,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <ShareExportIcon size={compact ? 12 : 13} />
+        <ShareExportIcon size={PLACEMENT_ICON_SIZE} />
       </div>
-      <div style={{ padding: inset, paddingBottom: compact ? 8 : 12, paddingRight: inset + 16 }}>
+      <div style={{ padding: inset, paddingBottom: PLACEMENT_SPACE_1 + 4, paddingRight: inset + PLACEMENT_ICON_SIZE + 4 }}>
         <p
           style={{
-            margin: "0 0 10px",
-            fontSize: compact ? 11 : 12,
-            lineHeight: 1.45,
+            margin: `0 0 ${PLACEMENT_SPACE_1 + 2}px`,
+            ...placementType.body,
             color: DIALOGUE_GRAPHICS_COLORS.ink,
           }}
         >
@@ -49,15 +61,14 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
           drop in checkout.
         </p>
         <CheckoutFunnelChart compact={compact} />
-        <div style={{ marginTop: compact ? 8 : 10 }}>
+        <div style={{ marginTop: PLACEMENT_SPACE_1 + 2 }}>
           <button
             type="button"
             style={{
               border: "none",
               background: "none",
               padding: 0,
-              fontSize: compact ? 10 : 11,
-              fontWeight: 500,
+              ...placementType.label,
               color: DIALOGUE_GRAPHICS_COLORS.accent,
               cursor: "default",
               fontFamily: DIALOGUE_GRAPHICS_FONT,
@@ -66,36 +77,10 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
             View 9 clips
           </button>
         </div>
-        <div style={{ marginTop: compact ? 8 : 10 }}>
+        <div style={{ marginTop: PLACEMENT_SPACE_1 + 2 }}>
           <ClipThumbnailRow compact={compact} max={3} />
         </div>
         <CounterEvidenceSection compact={compact} />
-        {!compact ? (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              marginTop: 10,
-            }}
-          >
-            {["Show mobile only", "Compare to round 1"].map((label) => (
-              <span
-                key={label}
-                style={{
-                  fontSize: 10,
-                  padding: "5px 9px",
-                  borderRadius: 999,
-                  border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-                  color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
-                  background: DIALOGUE_GRAPHICS_COLORS.surface,
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </div>
       <DerivedEvidenceLabel>Based on 24 of 24 interviews</DerivedEvidenceLabel>
     </div>

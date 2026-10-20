@@ -1,6 +1,14 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import {
+  PLACEMENT_GRID_PAD_X,
+  PLACEMENT_GRID_PAD_Y,
+  PLACEMENT_SPACE_1,
+  placementType,
+} from "@/lib/caseStudies/dialoguePlacementTypography";
 import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterviewPlayer";
 import { DialogueStudyTranscript } from "@/components/dialogue/DialogueStudyTranscript";
+
+const TAB_HEIGHT = 24;
 
 /** Study-page chrome shared by docked and floating placement tiles. */
 export function DialogueStudyHostPage({
@@ -25,38 +33,35 @@ export function DialogueStudyHostPage({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 12,
-          padding: "12px 16px",
-          borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+          gap: PLACEMENT_SPACE_1,
+          padding: `${PLACEMENT_GRID_PAD_Y}px ${PLACEMENT_GRID_PAD_X}px`,
+          borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: DIALOGUE_GRAPHICS_COLORS.ink,
-              letterSpacing: "-0.02em",
-            }}
-          >
+          <div style={{ ...placementType.title, color: DIALOGUE_GRAPHICS_COLORS.ink }}>
             Checkout usability Q3
           </div>
-          <div style={{ marginTop: 2, fontSize: 11, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
+          <div style={{ marginTop: 2, ...placementType.meta, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
             Session 12, 24 interviews
           </div>
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
           {["Clips", "Transcript", "Notes"].map((tab, i) => (
             <span
               key={tab}
               style={{
-                fontSize: 10,
-                padding: "4px 8px",
+                ...placementType.label,
+                fontWeight: i === 1 ? 500 : 400,
+                height: TAB_HEIGHT,
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "0 10px",
                 borderRadius: 999,
                 background: i === 1 ? DIALOGUE_GRAPHICS_COLORS.bubble : "transparent",
                 color: i === 1 ? DIALOGUE_GRAPHICS_COLORS.ink : DIALOGUE_GRAPHICS_COLORS.inkSoft,
-                border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
-                fontWeight: 500,
+                border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+                boxSizing: "border-box",
               }}
             >
               {tab}
@@ -67,8 +72,8 @@ export function DialogueStudyHostPage({
 
       <div
         style={{
-          padding: "12px 16px 10px",
-          borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+          padding: `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px`,
+          borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         }}
       >
         <DialogueInterviewPlayer />

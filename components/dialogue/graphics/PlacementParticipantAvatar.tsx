@@ -1,18 +1,14 @@
-import {
-  DIALOGUE_PLACEMENT_AVATAR_JORDAN_SRC,
-  DIALOGUE_PLACEMENT_AVATAR_MODERATOR_SRC,
-} from "@/lib/caseStudies/dialoguePlacementAssets";
+import { DIALOGUE_PLACEMENT_AVATAR_JORDAN_SRC } from "@/lib/caseStudies/dialoguePlacementAssets";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
 export function PlacementParticipantAvatar({
-  variant,
+  variant: _variant = "jordan",
   size = 20,
 }: {
-  variant: "jordan" | "moderator";
+  variant?: "jordan";
   size?: number;
 }) {
-  const src =
-    variant === "moderator" ? DIALOGUE_PLACEMENT_AVATAR_MODERATOR_SRC : DIALOGUE_PLACEMENT_AVATAR_JORDAN_SRC;
+  const src = DIALOGUE_PLACEMENT_AVATAR_JORDAN_SRC;
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

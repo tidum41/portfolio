@@ -10,6 +10,7 @@ import {
   PLACEMENT_FLOATING_PANEL_WIDTH,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
+import "@/app/dev/dialogue-placement-export/placement-areal.css";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { DialogueChatLauncher } from "@/components/dialogue/graphics/DialogueChatLauncher";
 import { DialogueResearchAssistantPanel } from "@/components/dialogue/DialogueResearchAssistantPanel";

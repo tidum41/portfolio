@@ -1,6 +1,16 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import {
+  PLACEMENT_GRID_PAD_X,
+  PLACEMENT_ICON_SIZE,
+  PLACEMENT_RADIUS_LG,
+  PLACEMENT_RADIUS_MD,
+  PLACEMENT_SPACE_1,
+  placementType,
+} from "@/lib/caseStudies/dialoguePlacementTypography";
 import { EvidenceAnswerCard } from "@/components/dialogue/graphics/EvidenceAnswerCard";
 import { ChevronDownIcon, DialogueAssistantMark } from "@/components/dialogue/graphics/DialogueIcons";
+
+const CARD_PAD = PLACEMENT_GRID_PAD_X;
 
 export function DialogueResearchAssistantPanel({
   compact,
@@ -21,16 +31,20 @@ export function DialogueResearchAssistantPanel({
         color: DIALOGUE_GRAPHICS_COLORS.ink,
       }}
     >
-      <header style={{ padding: compact ? "11px 12px 8px" : "14px 14px 10px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <DialogueAssistantMark size={compact ? 22 : 24} />
+      <header
+        data-placement-crop="assistant-top"
+        style={{
+          padding: `${PLACEMENT_SPACE_1 + 4}px ${CARD_PAD}px ${PLACEMENT_SPACE_1}px`,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: PLACEMENT_SPACE_1 }}>
+          <DialogueAssistantMark size={22} />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: compact ? 12 : 14, fontWeight: 500, letterSpacing: "-0.02em" }}>
+            <div style={{ ...placementType.title, fontSize: compact ? 14 : 15, lineHeight: compact ? "18px" : "20px" }}>
               Research assistant
             </div>
-            <div
-              style={{ marginTop: 3, fontSize: compact ? 10 : 12, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}
-            >
+            <div style={{ marginTop: 2, ...placementType.meta, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
               Session 12, 24 interviews
             </div>
           </div>
@@ -41,20 +55,19 @@ export function DialogueResearchAssistantPanel({
         style={{
           flex: fillHeight ? 1 : undefined,
           minHeight: fillHeight ? 0 : undefined,
-          padding: compact ? "0 10px 10px" : "0 12px 12px",
+          padding: `0 ${CARD_PAD - 4}px ${CARD_PAD - 4}px`,
           display: "flex",
           flexDirection: "column",
-          gap: compact ? 8 : 10,
+          gap: PLACEMENT_SPACE_1,
           overflow: floating ? "visible" : fillHeight ? "auto" : "hidden",
         }}
       >
         <div
           style={{
             background: DIALOGUE_GRAPHICS_COLORS.bubble,
-            borderRadius: 12,
-            padding: compact ? "9px 11px" : "11px 13px",
-            fontSize: compact ? 11 : 12,
-            lineHeight: 1.45,
+            borderRadius: PLACEMENT_RADIUS_LG,
+            padding: `${PLACEMENT_SPACE_1 + 2}px ${PLACEMENT_GRID_PAD_X - 4}px`,
+            ...placementType.body,
             color: DIALOGUE_GRAPHICS_COLORS.ink,
             flexShrink: 0,
           }}
@@ -65,20 +78,20 @@ export function DialogueResearchAssistantPanel({
         <div
           style={{
             border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-            borderRadius: 10,
-            padding: compact ? "7px 9px" : "8px 10px",
-            fontSize: compact ? 10 : 11,
+            borderRadius: PLACEMENT_RADIUS_MD,
+            padding: `${PLACEMENT_SPACE_1 - 1}px ${PLACEMENT_SPACE_1 + 2}px`,
+            ...placementType.labelRegular,
             color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 8,
+            gap: PLACEMENT_SPACE_1,
             flexShrink: 0,
-            lineHeight: 1.35,
+            minHeight: 32,
           }}
         >
           <span>Searched 24 interviews, found 9 relevant moments</span>
-          <ChevronDownIcon />
+          <ChevronDownIcon size={PLACEMENT_ICON_SIZE} />
         </div>
 
         <div style={{ flexShrink: 0, minHeight: 0 }}>

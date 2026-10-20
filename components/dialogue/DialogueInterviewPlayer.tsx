@@ -1,5 +1,4 @@
 import {
-  PLACEMENT_PLAYER_CONTROL_HEIGHT,
   PLACEMENT_PLAYER_TOTAL_HEIGHT,
   PLACEMENT_PLAYER_VIDEO_HEIGHT,
   STUDY_PLAYER_PAD_X,
@@ -10,27 +9,28 @@ import {
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
 } from "@/lib/caseStudies/dialoguePlacementStill";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
-import { DialoguePlayerControlBar } from "@/components/dialogue/DialoguePlayerControlBar";
+import { PLACEMENT_RADIUS_MD } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 /** Match docked study column so cover crop is identical in floating + docked tiles. */
 const PLACEMENT_PLAYER_BODY_WIDTH = PLACEMENT_STUDY_WIDTH_DOCKED - STUDY_PLAYER_PAD_X * 2;
 
-/** Blurred interview still (raster) + live HTML control bar (approved section-5 pattern). */
+const PLAY_BUTTON_SIZE = 40;
+
+/** Blurred interview still + static play affordance (no control bar). */
 export function DialogueInterviewPlayer() {
   return (
     <div
+      data-placement-crop="player"
       style={{
         fontFamily: DIALOGUE_GRAPHICS_FONT,
-        borderRadius: 10,
+        borderRadius: PLACEMENT_RADIUS_MD,
         overflow: "hidden",
-        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         background: "#161412",
         position: "relative",
         width: PLACEMENT_PLAYER_BODY_WIDTH,
         maxWidth: "100%",
         height: PLACEMENT_PLAYER_TOTAL_HEIGHT,
-        display: "flex",
-        flexDirection: "column",
       }}
     >
       <div
@@ -38,7 +38,6 @@ export function DialogueInterviewPlayer() {
           height: PLACEMENT_PLAYER_VIDEO_HEIGHT,
           position: "relative",
           overflow: "hidden",
-          flexShrink: 0,
           background: DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
         }}
       >
@@ -59,8 +58,40 @@ export function DialogueInterviewPlayer() {
             display: "block",
           }}
         />
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              width: PLAY_BUTTON_SIZE,
+              height: PLAY_BUTTON_SIZE,
+              borderRadius: "50%",
+              background: "rgba(255, 255, 255, 0.22)",
+              border: "1px solid rgba(255, 255, 255, 0.38)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 12px rgba(0, 0, 0, 0.18)",
+            }}
+          >
+            <svg width={14} height={14} viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path
+                d="M5.2 3.8v6.4L10.4 7 5.2 3.8Z"
+                fill="white"
+                fillOpacity={0.95}
+              />
+            </svg>
+          </div>
+        </div>
       </div>
-      <DialoguePlayerControlBar height={PLACEMENT_PLAYER_CONTROL_HEIGHT} />
     </div>
   );
 }

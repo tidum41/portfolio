@@ -1,4 +1,5 @@
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_ICON_STROKE } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 /** Dialogue asterisk mark (assistant / brand), not a participant photo. */
 export function DialogueAssistantMark({ size = 22 }: { size?: number }) {
@@ -19,7 +20,7 @@ export function DialogueAssistantMark({ size = 22 }: { size?: number }) {
 }
 
 /** Waveform tile mark for Dialogue speaker rows in transcript. */
-export function DialogueSparkleIcon({ size = 14 }: { size?: number }) {
+export function DialogueSparkleIcon({ size = 16 }: { size?: number }) {
   const barW = Math.max(1.5, size * 0.14);
   const gap = size * 0.1;
   const heights = [0.45, 0.75, 1, 0.6, 0.85].map((h) => h * size);
@@ -44,13 +45,14 @@ export function DialogueSparkleIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-export function ShareExportIcon({ size = 14 }: { size?: number }) {
+export function ShareExportIcon({ size = 16 }: { size?: number }) {
+  const sw = PLACEMENT_ICON_STROKE;
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
       <path
         d="M8 2.5v7M8 2.5 5.5 5M8 2.5 10.5 5M3.5 9v4.5h9V9"
         stroke={DIALOGUE_GRAPHICS_COLORS.inkMuted}
-        strokeWidth="1.2"
+        strokeWidth={sw}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -58,13 +60,14 @@ export function ShareExportIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-export function ChevronDownIcon({ size = 12 }: { size?: number }) {
+export function ChevronDownIcon({ size = 16 }: { size?: number }) {
+  const sw = PLACEMENT_ICON_STROKE;
   return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="none" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
       <path
-        d="M3 4.5 6 7.5 9 4.5"
+        d="M4 6 8 10 12 6"
         stroke={DIALOGUE_GRAPHICS_COLORS.inkSoft}
-        strokeWidth="1.2"
+        strokeWidth={sw}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -72,19 +75,20 @@ export function ChevronDownIcon({ size = 12 }: { size?: number }) {
   );
 }
 
-export function CounterEvidenceIcon({ size = 14 }: { size?: number }) {
+export function CounterEvidenceIcon({ size = 16 }: { size?: number }) {
+  const sw = PLACEMENT_ICON_STROKE;
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
       <path
         d="M3.5 4h9v7.5H6.2L4 13.5V4Z"
         stroke={DIALOGUE_GRAPHICS_COLORS.inkMuted}
-        strokeWidth="1.1"
+        strokeWidth={sw}
         strokeLinejoin="round"
       />
       <path
         d="M5.5 7h5M5.5 9h3.2"
         stroke={DIALOGUE_GRAPHICS_COLORS.inkSoft}
-        strokeWidth="1.1"
+        strokeWidth={sw}
         strokeLinecap="round"
       />
     </svg>
