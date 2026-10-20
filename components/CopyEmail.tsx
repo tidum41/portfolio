@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type TransitionEvent,
+} from "react";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -31,7 +40,8 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies CONTACT_EMAIL on click. Crossfades calmly between resting and "Copied" states with fixed width so nothing shifts.
+ * Copies CONTACT_EMAIL on click. Crossfades calmly between resting and "Copied" states;
+ * track width animates between measured label widths so rest stays natural "Email" width.
  */
 export default function CopyEmail({
   children,
@@ -51,7 +61,26 @@ export default function CopyEmail({
 }) {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+  const [trackWidthPx, setTrackWidthPx] = useState<number | undefined>(undefined);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackRef = useRef<HTMLSpanElement>(null);
+  const idleRef = useRef<HTMLSpanElement>(null);
+  const copiedRef = useRef<HTMLSpanElement>(null);
+  const widthsRef = useRef({ idle: 0, copied: 0 });
+
+  const measureLayers = useCallback(() => {
+    const idle = idleRef.current;
+    const copied = copiedRef.current;
+    if (!idle || !copied) return;
+    widthsRef.current = {
+      idle: Math.ceil(idle.getBoundingClientRect().width),
+      copied: Math.ceil(copied.getBoundingClientRect().width),
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    measureLayers();
+  }, [measureLayers, children, copiedLabel]);
 
   useEffect(() => {
     return () => {
@@ -59,20 +88,57 @@ export default function CopyEmail({
     };
   }, []);
 
+  const onTrackTransitionEnd = useCallback(
+    (event: TransitionEvent<HTMLSpanElement>) => {
+      if (event.propertyName !== "width") return;
+      if (!copied) {
+        setTrackWidthPx(undefined);
+      }
+    },
+    [copied],
+  );
+
   const onClick = useCallback(async () => {
+    measureLayers();
+    const { idle, copied: copiedW } = widthsRef.current;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const ok = await copyToClipboard(CONTACT_EMAIL);
     setAnnouncement(
       ok
         ? `${CONTACT_EMAIL} copied to clipboard`
         : `Select and copy ${CONTACT_EMAIL}`,
     );
-    setCopied(true);
+
+    const currentIdle =
+      trackWidthPx ?? Math.ceil(trackRef.current?.getBoundingClientRect().width ?? idle);
+
+    if (reduced) {
+      setTrackWidthPx(copiedW);
+      setCopied(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        setCopied(false);
+        setAnnouncement("");
+        setTrackWidthPx(undefined);
+      }, 1200);
+      return;
+    }
+
+    setTrackWidthPx(currentIdle);
+    requestAnimationFrame(() => {
+      setCopied(true);
+      setTrackWidthPx(copiedW);
+    });
+
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setCopied(false);
-      setAnnouncement("");
+      setTrackWidthPx(idle);
     }, 1200);
-  }, []);
+  }, [measureLayers]);
 
   const baseStyle: CSSProperties = unstyled
     ? {
@@ -87,6 +153,8 @@ export default function CopyEmail({
       }
     : { cursor: "pointer" };
 
+  const mergedClass = [className, "copy-email-btn"].filter(Boolean).join(" ");
+
   return (
     <>
       <span className="sr-only" aria-live="polite" aria-atomic="true">
@@ -94,15 +162,26 @@ export default function CopyEmail({
       </span>
       <button
         type="button"
-        className={className}
+        className={mergedClass}
         style={{ ...baseStyle, ...style }}
         aria-label={ariaLabel ?? `Copy ${CONTACT_EMAIL} to clipboard`}
         data-copied={copied ? "true" : "false"}
         onClick={onClick}
       >
-        <span className="copy-email-track">
-          <span className="copy-email-layer copy-email-layer--idle">{children}</span>
-          <span className="copy-email-layer copy-email-layer--copied">
+        <span
+          ref={trackRef}
+          className="copy-email-track"
+          style={trackWidthPx !== undefined ? { width: trackWidthPx } : undefined}
+          onTransitionEnd={onTrackTransitionEnd}
+        >
+          <span ref={idleRef} className="copy-email-layer copy-email-layer--idle">
+            {children}
+          </span>
+          <span
+            ref={copiedRef}
+            className="copy-email-layer copy-email-layer--copied"
+            aria-hidden={!copied}
+          >
             <CheckIcon />
             {copiedLabel}
           </span>
