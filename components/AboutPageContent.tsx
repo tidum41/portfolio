@@ -1,10 +1,17 @@
 "use client";
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import CopyEmail from "@/components/CopyEmail";
-import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
+
+// Lazy so importing this module (Work idle warmup) does not register Geist
+// until the About CD embed actually mounts.
+const CDPlayer = dynamic(
+  () => import(/* webpackPrefetch: false, webpackPreload: false */ "@/components/CDPlayer"),
+  { ssr: false },
+);
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,

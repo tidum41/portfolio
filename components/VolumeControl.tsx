@@ -79,12 +79,10 @@ function MutedIcon() {
 }
 
 export default function VolumeControl({ dk }: { dk?: any }) {
-  const [ambientMuted, setAmbientMuted] = useState(() =>
-    typeof window !== "undefined" ? readStoredAmbientMuted() : DEFAULT_AMBIENT_MUTED,
-  );
-  const [volume, setVolume] = useState(() =>
-    typeof window !== "undefined" ? readStoredVolume() : DEFAULT_VOLUME,
-  );
+  // SSR-stable defaults — reading localStorage in useState caused React #418
+  // whenever persisted mute/volume differed from these defaults.
+  const [ambientMuted, setAmbientMuted] = useState(DEFAULT_AMBIENT_MUTED);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,9 +97,10 @@ export default function VolumeControl({ dk }: { dk?: any }) {
   }, []);
   const isCompact = isMobile || isNarrow;
   const audioRef = useRef<HTMLAudioElement>(null);
-  const preVolume = useRef(volume);
-  const ambientMutedRef = useRef(ambientMuted);
-  const volumeRef = useRef(volume);
+  const preVolume = useRef(DEFAULT_VOLUME);
+  const ambientMutedRef = useRef(DEFAULT_AMBIENT_MUTED);
+  const volumeRef = useRef(DEFAULT_VOLUME);
+  const ambientWarmedRef = useRef(false);
   const reduced = useReducedMotion();
 
   const applyAmbientState = useCallback((nextMuted: boolean, nextVolume: number) => {
@@ -116,13 +115,42 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     audio.volume = nextVolume;
   }, []);
 
+  // Hydrate mute/volume from storage after mount (no SSR mismatch).
+  useEffect(() => {
+    const storedMuted = readStoredAmbientMuted();
+    const storedVolume = readStoredVolume();
+    ambientMutedRef.current = storedMuted;
+    volumeRef.current = storedVolume;
+    if (storedVolume > 0) preVolume.current = storedVolume;
+    setAmbientMuted(storedMuted);
+    setVolume(storedVolume);
+    setUiSoundVolume(storedVolume);
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = storedMuted;
+      audio.volume = storedVolume;
+    }
+  }, []);
+
   useEffect(() => {
     setUiSoundVolume(volume);
   }, [volume]);
 
+  const warmAmbientAudio = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || ambientWarmedRef.current) return;
+    ambientWarmedRef.current = true;
+    try {
+      audio.load();
+    } catch {
+      // Ignore — play() path will retry.
+    }
+  }, []);
+
   const tryPlayAmbient = useCallback((audible = false) => {
     const audio = audioRef.current;
     if (!audio) return;
+    warmAmbientAudio();
     if (audible) {
       audio.muted = ambientMutedRef.current;
       audio.volume = volumeRef.current;
@@ -130,7 +158,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     audio.play().catch(() => {
       // Blocked or not ready yet.
     });
-  }, []);
+  }, [warmAmbientAudio]);
 
   const setAudioNode = useCallback((node: HTMLAudioElement | null) => {
     audioRef.current = node;
@@ -223,7 +251,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
         width: isCompact ? ICON_SIZE : ICON_SIZE + GAP + SLIDER_WIDTH,
       }}
     >
-      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="none" />
+      <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="metadata" />
       {!isCompact && (
         <motion.div
           initial={false}
@@ -238,6 +266,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             step={0.01}
             value={sliderValue}
             onChange={handleSliderChange}
+            onPointerDown={warmAmbientAudio}
             className="volume-slider"
             aria-label="Background music volume"
             style={{ width: 64 }}
@@ -246,6 +275,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
       )}
       <button
         onClick={handleMuteToggle}
+        onPointerDown={warmAmbientAudio}
         className="nav-link volume-toggle-btn"
         aria-label={ambientMuted ? "Unmute background music" : "Mute background music"}
         style={{

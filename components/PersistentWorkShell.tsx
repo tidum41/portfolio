@@ -58,8 +58,11 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
-import MuxAutoplayCard from "@/components/MuxAutoplayCard";
-
+// Mux/HLS only load once Work has been visited — keeps About/Archive cold
+// loads free of the video player chunk and hls-light script.
+const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"), {
+  ssr: false,
+});
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));

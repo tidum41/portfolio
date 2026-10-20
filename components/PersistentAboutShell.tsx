@@ -28,13 +28,16 @@ export default function PersistentAboutShell() {
 
   useEffect(() => {
     if (hasShown) return;
+    // Idle-mount from Work only so Archive cold loads don't pull the About
+    // CD embed (Geist). Opening About still sets hasShown via `visible` above.
+    if (pathname !== "/") return;
     return afterIntroIdle(() => {
       // Album covers are about a megabyte. On a slow or metered connection
       // they wait until About is actually opened.
       if (!allowIdlePrefetch()) return;
       setHasShown(true);
     }, 4000);
-  }, [hasShown]);
+  }, [hasShown, pathname]);
 
   return (
     <div

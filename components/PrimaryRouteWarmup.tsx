@@ -4,6 +4,10 @@
  * Prefetch About/Archive JS after the Work intro so first-load silk + Mux
  * posters aren't competing with About images / CDPlayer / archive LQIPs.
  * Work → About/Archive still hits a warm cache once idle completes.
+ *
+ * Archive cold loads skip About warmup — AboutPageContent's CD embed loads
+ * Geist, and Next can prefetch that dynamic chunk when the parent module is
+ * imported.
  */
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -24,9 +28,12 @@ export default function PrimaryRouteWarmup() {
     let heavyIdleId = 0;
     let heavyTimeoutId = 0;
 
-    const warmJs = () => {
+    const warmAbout = () => {
       void import("@/components/AboutPageContent");
       void import("@/components/BentoHero");
+    };
+
+    const warmArchive = () => {
       void import("@/app/archive/ArchivePageClient");
       void import("@/components/BentoGallery");
       void import("@/lib/archiveGalleryCache").then((m) => {
@@ -42,13 +49,21 @@ export default function PrimaryRouteWarmup() {
       }
     };
 
+    // CD player pulls Geist — only warm it on Work, where the grid embed lives.
     const warmHeavy = () => {
+      if (pathname !== "/") return;
       void import("@/components/CDPlayer");
     };
 
     const schedule = () => {
       if (!allowIdlePrefetch()) return;
-      warmJs();
+      if (pathname === "/") {
+        warmAbout();
+        warmArchive();
+      } else if (pathname === "/about") {
+        warmArchive();
+      }
+      // `/archive`: do not warm About (avoids Geist/CD on Archive).
       if (typeof window.requestIdleCallback === "function") {
         idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
         heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
