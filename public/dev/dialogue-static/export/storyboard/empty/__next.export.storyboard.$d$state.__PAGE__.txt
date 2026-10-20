@@ -1,0 +1,42 @@
+1:"$Sreact.fragment"
+2:I[57121,[],""]
+3:I[74581,[],""]
+e:"static/chunks/8437-37ec1f9e23a90618.js"
+f:"static/chunks/2348-8764f30e088f34a2.js"
+10:"static/chunks/6786-b731c46feb12503e.js"
+11:"static/chunks/1451-e4fe719b1320a9b8.js"
+12:"static/chunks/978-06b23184d6511729.js"
+13:"static/chunks/app/export/storyboard/%5Bstate%5D/page-6af875c3c213098e.js"
+14:I[51440,["8437","$e","2348","$f","6786","$10","1451","$11","978","$12","4499","$13"],"StudyChatShell"]
+15:I[98500,["8437","$e","2348","$f","6786","$10","1451","$11","978","$12","4499","$13"],""]
+16:I[90209,["8437","$e","2348","$f","6786","$10","1451","$11","978","$12","4499","$13"],"default"]
+1b:"ViewportBoundary"
+1c:I[90484,[],"$1b"]
+1d:"MetadataBoundary"
+1e:I[90484,[],"$1d"]
+1f:"$Sreact.suspense"
+20:I[86869,[],"IconMark"]
+:HL["../../../_next/static/css/fde99ba4c3e111ce.css","style"]
+5:X
+a:X
+a:C
+d:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","div",null,{"className":"","style":{"width":1280,"height":800,"boxSizing":"border-box","padding":72,"backgroundColor":"#F8F6F3","overflow":"visible","display":"flex","alignItems":"center","justifyContent":"center"},"data-export-canvas":true,"children":["$","div",null,{"className":"flex size-full items-center justify-center overflow-visible","children":["$","div",null,{"style":{"transform":"scale(0.92)","transformOrigin":"center center","overflow":"visible"},"children":["$","$L14",null,{"embedded":true,"embeddedWidth":520,"expandContent":true,"showMinimize":false,"variant":"empty","exportFrame":true,"children":[["$","div",null,{"className":"flex flex-col gap-4","children":[["$","p",null,{"className":"text-[14px] leading-[171%] text-stone-ink","children":"Ask questions across all participant interviews."}],["$","div",null,{"className":"flex flex-wrap gap-2","children":[["$","$L15","/chat/1",{"href":"/chat/1","className":"inline-flex h-9 max-w-full items-center gap-1.5 rounded-lg border border-stone-border px-3","children":[["$","$L16",null,{"icon":{"name":"plus","size":24,"node":[["path",{"d":"M5 12h14","key":"1ays0h"}],["path",{"d":"M12 5v14","key":"s699le"}]]},"className":"size-3.5 shrink-0 text-[#747474]","strokeWidth":2}],["$","span",null,{"className":"truncate text-[14px] font-medium leading-[143%] text-[#747474]","children":"Where did people drop off in checkout?"}]]}],["$","$L15","/chat/2",{"href":"/chat/2","className":"inline-flex h-9 max-w-full items-center gap-1.5 rounded-lg border border-stone-border px-3","children":[["$","$L16",null,{"icon":"$d:0:1:d:r:props:children:0:props:children:props:children:props:children:props:children:0:props:children:1:props:children:0:props:children:0:props:icon","className":"size-3.5 shrink-0 text-[#747474]","strokeWidth":2}],["$","span",null,{"className":"truncate text-[14px] font-medium leading-[143%] text-[#747474]","children":"Sentiment across prototype rounds"}]]}],["$","$L15","/chat/3",{"href":"/chat/3","className":"inline-flex h-9 max-w-full items-center gap-1.5 rounded-lg border border-stone-border px-3","children":[["$","$L16",null,{"icon":"$d:0:1:d:r:props:children:0:props:children:props:children:props:children:props:children:0:props:children:1:props:children:0:props:children:0:props:icon","className":"size-3.5 shrink-0 text-[#747474]","strokeWidth":2}],["$","span",null,{"className":"truncate text-[14px] font-medium leading-[143%] text-[#747474]","children":"Segments struggling with address entry"}]]}],"$L17"]}]]}],"$L18"]}]}]}]}],null,"$L19"]}],"p":"$@1a","v":null,"s":"$5"}}]]
+b:[["children",{"s":{"n":"state","t":"d","k":"empty","s":[]},"h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"p":"$@c","v":"$a","s":"$5"},"c":"$Qd"}]]
+8:[["children",{"s":"storyboard","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"p":"$@9","v":"$a","s":"$5"},"c":"$Qb"}]]
+6:[["children",{"s":"export","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","div",null,{"className":"m-0 min-h-0 font-sans text-stone-ink antialiased","style":{"backgroundColor":"#F8F6F3","overflow":"visible"},"children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]]}],"p":"$@7","v":null,"s":"$5"},"c":"$Q8"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"../../../_next/static/css/fde99ba4c3e111ce.css","precedence":"next"}]],["$","html",null,{"lang":"en","className":"h-full antialiased","style":{"--font-dm-sans":"\"DM Sans\", system-ui, sans-serif","--font-dm-mono":"\"DM Mono\", ui-monospace, monospace","--font-areal":"\"ABC Areal\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"},"children":["$","body",null,{"className":"min-h-full font-sans","children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}]}]]}],"p":"$@4","v":null,"s":"$5"},"c":"$Q6"},"h":{"r":["$","$1","h",{"children":[null,["$","$L1c",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1e",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$1f",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Dialogue AI — Insights summary"}],["$","meta","1",{"name":"description","content":"UI recreation of Dialogue AI insights dashboard for Mudit's design case study."}],["$","link","2",{"rel":"icon","href":"../../../favicon.ico?7161ee1d105bc9c7","type":"image/x-icon","sizes":"48x48"}],["$","$L20","3",{}]]}]}],null]}],null]}],"p":"$@21","v":null,"s":"$5"}},"a":"$@22","u":"$@23","b":"rTCldMsUCNmbbtZVW_121"}
+24:I[90484,[],"OutletBoundary"]
+17:["$","$L15","/chat/4",{"href":"/chat/4","className":"inline-flex h-9 max-w-full items-center gap-1.5 rounded-lg border border-stone-border px-3","children":[["$","$L16",null,{"icon":"$d:0:1:d:r:props:children:0:props:children:props:children:props:children:props:children:0:props:children:1:props:children:0:props:children:0:props:icon","className":"size-3.5 shrink-0 text-[#747474]","strokeWidth":2}],["$","span",null,{"className":"truncate text-[14px] font-medium leading-[143%] text-[#747474]","children":"Why hesitate at payment?"}]]}]
+18:["$","div",null,{"className":"flex shrink-0 flex-col gap-2 rounded-[14px] border bg-stone-surface p-3 border-brand-soft","children":[["$","div",null,{"className":"min-h-[60px] text-sm leading-5 text-stone-muted","children":"Ask about your study..."}],["$","div",null,{"className":"flex items-end justify-between gap-2","children":[["$","div",null,{"className":"min-w-0 flex-1"}],["$","button",null,{"type":"button","className":"flex size-9 shrink-0 items-center justify-center rounded-lg bg-stone-ink opacity-50","aria-label":"Send message","disabled":true,"children":["$","$L16",null,{"icon":{"name":"arrow-up","size":24,"node":[["path",{"d":"m5 12 7-7 7 7","key":"hav0vg"}],["path",{"d":"M12 19V5","key":"x0mq9r"}]]},"className":"size-4 text-stone-sidebar","strokeWidth":2}]}]]}]]}]
+19:["$","$L24",null,{"children":["$","$1f",null,{"name":"Next.MetadataOutlet","children":"$@25"}]}]
+5:300
+25:null
+23:true
+5:C
+22:0
+c:"$undefined"
+9:"$undefined"
+7:"$undefined"
+4:"$undefined"
+21:"$undefined"
+1a:"$undefined"

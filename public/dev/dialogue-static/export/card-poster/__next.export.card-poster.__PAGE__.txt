@@ -1,0 +1,38 @@
+1:"$Sreact.fragment"
+2:I[57121,[],""]
+3:I[74581,[],""]
+c:"static/chunks/8437-37ec1f9e23a90618.js"
+d:"static/chunks/2348-8764f30e088f34a2.js"
+e:"static/chunks/6786-b731c46feb12503e.js"
+f:"static/chunks/1451-e4fe719b1320a9b8.js"
+10:"static/chunks/978-06b23184d6511729.js"
+11:"static/chunks/app/export/card-poster/page-38aba2e940350486.js"
+12:I[51440,["8437","$c","2348","$d","6786","$e","1451","$f","978","$10","6850","$11"],"StudyChatShell"]
+13:"ChatThreadInteractive"
+14:I[20978,["8437","$c","2348","$d","6786","$e","1451","$f","978","$10","6850","$11"],"$13"]
+17:"ViewportBoundary"
+18:I[90484,[],"$17"]
+19:"MetadataBoundary"
+1a:I[90484,[],"$19"]
+1b:"$Sreact.suspense"
+1c:I[86869,[],"IconMark"]
+:HL["../../_next/static/css/fde99ba4c3e111ce.css","style"]
+5:X
+a:X
+a:C
+b:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","div",null,{"className":"","style":{"width":1280,"height":800,"boxSizing":"border-box","padding":72,"backgroundColor":"#F8F6F3","overflow":"visible","display":"flex","alignItems":"center","justifyContent":"center"},"data-export-canvas":true,"children":["$","div",null,{"className":"flex size-full items-center justify-center overflow-visible","children":["$","div",null,{"style":{"transform":"scale(0.92)","transformOrigin":"center center","overflow":"visible"},"children":["$","$L12",null,{"embedded":true,"embeddedWidth":520,"expandContent":true,"hideInput":true,"showMinimize":false,"variant":"empty","exportFrame":true,"children":["$","$L14",null,{"thread":{"id":"1","userMessage":"Where did people drop off in checkout?","assistantLead":"I pulled completion rates for each step across all moderated sessions.","followUp":"Address clips explain the autocomplete and international-format pain behind the funnel drop.","searchedCount":24,"foundCount":9,"sources":[{"participant":"Jordan M.","topic":"checkout","time":"14:03"},{"participant":"Marcus W.","topic":"payment","time":"21:08"},{"participant":"Priya K.","topic":"address","time":"15:47"},{"participant":"Hannah L.","topic":"payment","time":"22:41"}],"followUpChips":[{"label":"Show mobile only"},{"label":"Compare to round 1","href":"/chat/2"}],"viz":{"kind":"checkout-dropoff","summary":"Shipping address loses 38% of participants, the largest single-step drop in checkout.","summaryEmphasis":"loses 38% of participants","funnel":[{"shortLabel":"Cart","label":"Cart review","pctRemaining":100},{"shortLabel":"Address","label":"Shipping address","pctRemaining":62,"dropPct":38,"focal":true},{"shortLabel":"Delivery","label":"Delivery options","pctRemaining":54,"dropPct":8},{"shortLabel":"Payment","label":"Payment","pctRemaining":42,"dropPct":12},{"shortLabel":"Confirm","label":"Confirmation","pctRemaining":36,"dropPct":6}],"deviceBlock":{"title":"Why address failed, by device","subtitle":"Drop-off reasons at the address step, % of mentions","devices":[{"name":"Mobile","reasons":[{"label":"Autofill","pct":44},{"label":"Intl format","pct":31},{"label":"Reset","pct":25}]},{"name":"Desktop","reasons":[{"label":"Intl format","pct":38},{"label":"Validation","pct":34},{"label":"PO box","pct":28}]}]},"clipCount":9,"coverageNote":"18 of 24 participants mentioned address friction"}},"hideFollowUps":true,"hideEvidenceClips":true,"hideFollowUpText":true,"hideAssistantLead":true,"showChartTooltip":true,"showClipsLink":false,"showExportCursors":true,"showHeadlineCitations":true,"hideDeviceBlock":true}]}]}]}]}],null,"$L15"]}],"p":"$@16","v":null,"s":"$5"}}]]
+8:[["children",{"s":"card-poster","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"p":"$@9","v":"$a","s":"$5"},"c":"$Qb"}]]
+6:[["children",{"s":"export","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","div",null,{"className":"m-0 min-h-0 font-sans text-stone-ink antialiased","style":{"backgroundColor":"#F8F6F3","overflow":"visible"},"children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]]}],"p":"$@7","v":null,"s":"$5"},"c":"$Q8"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"../../_next/static/css/fde99ba4c3e111ce.css","precedence":"next"}]],["$","html",null,{"lang":"en","className":"h-full antialiased","style":{"--font-dm-sans":"\"DM Sans\", system-ui, sans-serif","--font-dm-mono":"\"DM Mono\", ui-monospace, monospace","--font-areal":"\"ABC Areal\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"},"children":["$","body",null,{"className":"min-h-full font-sans","children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}]}]]}],"p":"$@4","v":null,"s":"$5"},"c":"$Q6"},"h":{"r":["$","$1","h",{"children":[null,["$","$L18",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1a",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$1b",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Dialogue AI — Insights summary"}],["$","meta","1",{"name":"description","content":"UI recreation of Dialogue AI insights dashboard for Mudit's design case study."}],["$","link","2",{"rel":"icon","href":"../../favicon.ico?7161ee1d105bc9c7","type":"image/x-icon","sizes":"48x48"}],["$","$L1c","3",{}]]}]}],null]}],null]}],"p":"$@1d","v":null,"s":"$5"}},"a":"$@1e","u":"$@1f","b":"rTCldMsUCNmbbtZVW_121"}
+20:I[90484,[],"OutletBoundary"]
+15:["$","$L20",null,{"children":["$","$1b",null,{"name":"Next.MetadataOutlet","children":"$@21"}]}]
+5:300
+21:null
+1f:true
+5:C
+1e:0
+9:"$undefined"
+7:"$undefined"
+4:"$undefined"
+1d:"$undefined"
+16:"$undefined"

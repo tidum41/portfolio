@@ -1,0 +1,33 @@
+1:"$Sreact.fragment"
+2:I[57121,[],""]
+3:I[74581,[],""]
+12:"ViewportBoundary"
+13:I[90484,[],"$12"]
+14:"MetadataBoundary"
+15:I[90484,[],"$14"]
+16:"$Sreact.suspense"
+17:I[86869,[],"IconMark"]
+:HL["../../_next/static/css/fde99ba4c3e111ce.css","style"]
+5:X
+a:X
+a:C
+b:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","div",null,{"className":"flex flex-col bg-[#F8F6F3] text-stone-ink","style":{"width":1440,"height":900},"children":[["$","div",null,{"className":"flex shrink-0 items-baseline justify-between border-b border-stone-border px-10 py-6","children":[["$","span",null,{"className":"text-[13px] font-medium tracking-wide text-stone-muted uppercase","children":"Dialogue · case study"}],["$","span",null,{"className":"text-[13px] text-stone-muted","children":"Before / after"}]]}],["$","div",null,{"className":"flex min-h-0 flex-1 items-center justify-center p-10","children":["$","div",null,{"className":"grid w-full max-w-[1200px] grid-cols-2 gap-8","children":[["$","div",null,{"children":[["$","p",null,{"className":"mb-3 text-[13px] font-medium uppercase tracking-wide text-stone-muted","children":"Before"}],["$","div",null,{"className":"h-[520px] rounded-2xl border border-stone-border bg-stone-surface p-5","children":[["$","p",null,{"className":"mb-2 text-[13px] font-medium","children":"Study chat"}],["$","div",null,{"className":"space-y-2 text-[12px] leading-[180%] text-stone-muted","children":[["$","p",null,{"children":"Here is a long paragraph summarizing interviews without structure..."}],["$","p",null,{"children":"| Location | Count | % | |---|---|---| | LA | 14 | 93% |"}],["$","p",null,{"children":"Nearly all participants are based in Los Angeles..."}],["$","p",null,{"children":"Another block of markdown table text continues..."}],["$","p",null,{"className":"text-stone-border","children":"···"}]]}]]}]]}],["$","div",null,{"children":[["$","p",null,{"className":"mb-3 text-[13px] font-medium uppercase tracking-wide text-brand","children":"After"}],["$","div",null,{"className":"h-[520px] rounded-2xl border border-brand-soft bg-stone-surface p-5 shadow-[var(--shadow-chat)]","children":[["$","p",null,{"className":"mb-2 text-[13px] font-medium","children":"Study chat"}],["$","p",null,{"className":"mb-3 text-[12px] text-stone-muted","children":"Payment drives the sharpest hesitation spike."}],["$","div",null,{"className":"mb-3 rounded-[14px] border border-stone-border px-3 py-2 font-mono text-[10px]","children":"Searched 24 interviews, found 9 moments"}],"$Lc","$Ld","$Le"]}]]}]]}]}],"$Lf"]}],null,"$L10"]}],"p":"$@11","v":null,"s":"$5"}}]]
+8:[["children",{"s":"visual-5","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"p":"$@9","v":"$a","s":"$5"},"c":"$Qb"}]]
+6:[["children",{"s":"case-study-graphics","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","div",null,{"className":"min-h-screen bg-[#F8F6F3] font-sans text-stone-ink","children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]]}],"p":"$@7","v":null,"s":"$5"},"c":"$Q8"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"../../_next/static/css/fde99ba4c3e111ce.css","precedence":"next"}]],["$","html",null,{"lang":"en","className":"h-full antialiased","style":{"--font-dm-sans":"\"DM Sans\", system-ui, sans-serif","--font-dm-mono":"\"DM Mono\", ui-monospace, monospace","--font-areal":"\"ABC Areal\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"},"children":["$","body",null,{"className":"min-h-full font-sans","children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}]}]]}],"p":"$@4","v":null,"s":"$5"},"c":"$Q6"},"h":{"r":["$","$1","h",{"children":[null,["$","$L13",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L15",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$16",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Dialogue AI — Insights summary"}],["$","meta","1",{"name":"description","content":"UI recreation of Dialogue AI insights dashboard for Mudit's design case study."}],["$","meta","2",{"name":"robots","content":"noindex"}],["$","link","3",{"rel":"icon","href":"../../favicon.ico?7161ee1d105bc9c7","type":"image/x-icon","sizes":"48x48"}],["$","$L17","4",{}]]}]}],null]}],null]}],"p":"$@18","v":null,"s":"$5"}},"a":"$@19","u":"$@1a","b":"rTCldMsUCNmbbtZVW_121"}
+1b:I[90484,[],"OutletBoundary"]
+c:["$","div",null,{"className":"mb-3 h-24 rounded-[10px] border border-stone-border p-3","children":["$","div",null,{"className":"h-3 w-2/3 rounded-full bg-brand"}]}]
+d:["$","div",null,{"className":"rounded-[14px] border border-stone-border bg-stone-sidebar p-3 text-[11px]","children":"Clip · hesitated before retrying"}]
+e:["$","div",null,{"className":"mt-3 flex gap-2","children":["$","span",null,{"className":"rounded-lg border border-stone-border px-2 py-1 text-[10px]","children":"Show mobile only"}]}]
+f:["$","p",null,{"className":"shrink-0 border-t border-stone-border px-10 py-4 text-[14px] leading-[143%] text-stone-muted","children":"DRAFT: From a scrolling transcript wall to structured answers with charts, clips, and follow-ups."}]
+10:["$","$L1b",null,{"children":["$","$16",null,{"name":"Next.MetadataOutlet","children":"$@1c"}]}]
+5:300
+1c:null
+1a:true
+5:C
+19:0
+9:"$undefined"
+7:"$undefined"
+4:"$undefined"
+18:"$undefined"
+11:"$undefined"

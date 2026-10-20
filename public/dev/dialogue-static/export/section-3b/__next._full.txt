@@ -1,0 +1,31 @@
+1:"$Sreact.fragment"
+2:I[57121,[],""]
+3:I[74581,[],""]
+8:"static/chunks/8437-37ec1f9e23a90618.js"
+9:"static/chunks/2348-8764f30e088f34a2.js"
+a:"static/chunks/6786-b731c46feb12503e.js"
+b:"static/chunks/1451-e4fe719b1320a9b8.js"
+c:"static/chunks/978-06b23184d6511729.js"
+d:"static/chunks/6094-4e0c242236ede08a.js"
+e:"static/chunks/app/export/section-3b/page-10c7455de73464fc.js"
+f:"ExportSectionCanvas"
+10:I[15168,["8437","$8","2348","$9","6786","$a","1451","$b","978","$c","6094","$d","5777","$e"],"$f"]
+11:I[6094,["8437","$8","2348","$9","6786","$a","1451","$b","978","$c","6094","$d","5777","$e"],"ExportAnatomy"]
+12:I[90484,[],"OutletBoundary"]
+13:"$Sreact.suspense"
+15:"ViewportBoundary"
+16:I[90484,[],"$15"]
+18:"MetadataBoundary"
+19:I[90484,[],"$18"]
+1b:I[27123,[],"default",1]
+:HL["../../_next/static/css/fde99ba4c3e111ce.css","style"]
+6:X
+7:[["children",{"s":"__PAGE__","h":512,"d":{"r":["$","$1","c",{"children":[["$","$L10",null,{"groupScale":0.6111111111111112,"prerender":"$undefined","children":["$","$L11",null,{"markerVariant":"plain"}]}],null,["$","$L12",null,{"children":["$","$13",null,{"name":"Next.MetadataOutlet","children":"$@14"}]}]]}],"p":false,"v":null}}]]
+5:[["children",{"s":"section-3b","h":512,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],"p":false,"v":"$6"},"c":"$Q7"}]]
+4:[["children",{"s":"export","h":512,"d":{"r":["$","$1","c",{"children":[null,["$","div",null,{"className":"m-0 min-h-0 font-sans text-stone-ink antialiased","style":{"backgroundColor":"#F8F6F3","overflow":"visible"},"children":["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]}]]}],"p":false,"v":null},"c":"$Q5"}]]
+0:{"P":null,"c":["","export","section-3b"],"q":"","i":false,"t":{"t":{"s":"","h":528,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"../../_next/static/css/fde99ba4c3e111ce.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","className":"h-full antialiased","style":{"--font-dm-sans":"\"DM Sans\", system-ui, sans-serif","--font-dm-mono":"\"DM Mono\", ui-monospace, monospace","--font-areal":"\"ABC Areal\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"},"children":["$","body",null,{"className":"min-h-full font-sans","children":["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]]}],"p":false,"v":null},"c":"$Q4"},"h":{"r":["$","$1","h",{"children":[null,["$","$L16",null,{"children":"$L17"}],["$","$L19",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$13",null,{"name":"Next.Metadata","children":"$L1a"}]}],null]}],null]}],"p":false,"v":null}},"m":"$undefined","G":["$1b",[]],"S":true,"r":"$undefined","s":"$undefined","a":"$undefined","l":"$undefined","p":"$undefined","d":"$undefined","b":"rTCldMsUCNmbbtZVW_121"}
+6:C
+17:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+1c:I[86869,[],"IconMark"]
+14:null
+1a:[["$","title","0",{"children":"Dialogue AI — Insights summary"}],["$","meta","1",{"name":"description","content":"UI recreation of Dialogue AI insights dashboard for Mudit's design case study."}],["$","link","2",{"rel":"icon","href":"../../favicon.ico?7161ee1d105bc9c7","type":"image/x-icon","sizes":"48x48"}],["$","$L1c","3",{}]]

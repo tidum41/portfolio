@@ -1,0 +1,36 @@
+1:"$Sreact.fragment"
+2:I[57121,[],""]
+3:I[74581,[],""]
+c:"static/chunks/8437-37ec1f9e23a90618.js"
+d:"static/chunks/2348-8764f30e088f34a2.js"
+e:"static/chunks/6786-b731c46feb12503e.js"
+f:"static/chunks/1451-e4fe719b1320a9b8.js"
+10:"static/chunks/978-06b23184d6511729.js"
+11:"static/chunks/app/export/hero/page-007854edad5f720c.js"
+12:"ExportHeroLayout"
+13:I[2416,["8437","$c","2348","$d","6786","$e","1451","$f","978","$10","7194","$11"],"$12"]
+14:I[90484,[],"OutletBoundary"]
+15:"$Sreact.suspense"
+18:"ViewportBoundary"
+19:I[90484,[],"$18"]
+1a:"MetadataBoundary"
+1b:I[90484,[],"$1a"]
+1c:I[86869,[],"IconMark"]
+:HL["../../_next/static/css/fde99ba4c3e111ce.css","style"]
+5:X
+a:X
+a:C
+b:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","div",null,{"className":"","style":{"width":1920,"height":1080,"boxSizing":"border-box","padding":96,"backgroundColor":"#F8F6F3","overflow":"visible","display":"flex","alignItems":"center","justifyContent":"center"},"data-export-canvas":true,"children":["$","div",null,{"className":"flex size-full items-center justify-center overflow-visible","children":["$","$L13",null,{"clips":[{"id":"ship-1","participant":"Jordan M.","segment":"14:03–14:19","timestamp":"14:03","transcript":"The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.","highlight":"almost closed the tab"},{"id":"ship-2","participant":"Priya K.","segment":"15:47–16:04","timestamp":"15:47","transcript":"International format wasn't obvious; I typed the whole address twice before it stuck.","highlight":"typed the whole address twice"},{"id":"mobile-intl","participant":"Priya K.","segment":"16:02–16:18","timestamp":"16:02","transcript":"On my phone the country switch reset everything, so I had to start the address over.","highlight":"start the address over"}],"canvasWidth":1920,"canvasHeight":1080,"margin":96,"leftWidth":845,"rightWidth":653,"panelOverlap":24,"shadowBleed":32,"groupWidth":1474}]}]}],null,["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]]}],"p":"$@17","v":null,"s":"$5"}}]]
+8:[["children",{"s":"hero","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"p":"$@9","v":"$a","s":"$5"},"c":"$Qb"}]]
+6:[["children",{"s":"export","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","div",null,{"className":"m-0 min-h-0 font-sans text-stone-ink antialiased","style":{"backgroundColor":"#F8F6F3","overflow":"visible"},"children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]]}],"p":"$@7","v":null,"s":"$5"},"c":"$Q8"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"../../_next/static/css/fde99ba4c3e111ce.css","precedence":"next"}]],["$","html",null,{"lang":"en","className":"h-full antialiased","style":{"--font-dm-sans":"\"DM Sans\", system-ui, sans-serif","--font-dm-mono":"\"DM Mono\", ui-monospace, monospace","--font-areal":"\"ABC Areal\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"},"children":["$","body",null,{"className":"min-h-full font-sans","children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}]}]]}],"p":"$@4","v":null,"s":"$5"},"c":"$Q6"},"h":{"r":["$","$1","h",{"children":[null,["$","$L19",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1b",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$15",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Dialogue AI — Insights summary"}],["$","meta","1",{"name":"description","content":"UI recreation of Dialogue AI insights dashboard for Mudit's design case study."}],["$","link","2",{"rel":"icon","href":"../../favicon.ico?7161ee1d105bc9c7","type":"image/x-icon","sizes":"48x48"}],["$","$L1c","3",{}]]}]}],null]}],null]}],"p":"$@1d","v":null,"s":"$5"}},"a":"$@1e","u":"$@1f","b":"rTCldMsUCNmbbtZVW_121"}
+16:null
+5:300
+1f:true
+5:C
+1e:0
+9:"$undefined"
+7:"$undefined"
+4:"$undefined"
+1d:"$undefined"
+17:"$undefined"
