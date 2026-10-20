@@ -45,6 +45,7 @@ export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
         seededRef.current = true;
         return;
       }
+      if (Object.keys(imageMeta).length === 0) return;
       seedDialogueTldrawBoard(editor, sections, imageMeta, window.location.origin);
       editor.zoomToFit({ animation: { duration: 0 } });
       seededRef.current = true;
@@ -55,8 +56,13 @@ export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
   const onMount = useCallback(
     (editor: Editor) => {
       editorRef.current = editor;
-      tryInitialSeed(editor);
+      const scheduleSeed = () => tryInitialSeed(editor);
+      scheduleSeed();
+      queueMicrotask(scheduleSeed);
+      requestAnimationFrame(scheduleSeed);
+      const unlisten = editor.store.listen(scheduleSeed, { scope: "document" });
       return () => {
+        unlisten();
         editorRef.current = null;
       };
     },

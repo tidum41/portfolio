@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const dynamic = "force-dynamic";
+
 function evidenceLabSection(): DialogueCanvasSection | null {
   const dir = path.join(process.cwd(), "public/dialogue/evidence-lab");
   if (!existsSync(dir)) return null;
