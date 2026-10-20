@@ -51,9 +51,20 @@ export const PLACEMENT_FLOATING_LAUNCHER_SIZE = 50;
 /** Gap between floating panel bottom and launcher (also window bottom inset). */
 export const PLACEMENT_FLOATING_LAUNCHER_GAP = 16;
 export const PLACEMENT_FLOATING_EDGE = 16;
-/** Overlap the player on the right; panel + launcher stack below (sync with studyPlayerBlockTopY). */
-export const PLACEMENT_FLOATING_CHAT_TOP = 62 + 1 + 8;
+/** Clear space between study chrome (player right edge) and floating panel. */
+export const PLACEMENT_FLOATING_PLAYER_GAP = 16;
+/**
+ * Floating study chrome width (matches docked player: 16px pad + 555px body = 571).
+ * Panel sits at +16px gap, flush to layout right edge (400px wide).
+ */
+export const PLACEMENT_FLOATING_STUDY_MAX_WIDTH =
+  PLACEMENT_LAYOUT_WIDTH - PLACEMENT_FLOATING_PANEL_WIDTH - PLACEMENT_FLOATING_PLAYER_GAP;
+export const PLACEMENT_FLOATING_PANEL_LEFT =
+  PLACEMENT_FLOATING_STUDY_MAX_WIDTH + PLACEMENT_FLOATING_PLAYER_GAP;
+/** Full-height floating panel (launcher stack anchored to bottom inset). */
+export const PLACEMENT_FLOATING_CHAT_TOP = 0;
 
-/** Keep Transcript + Copy left of the floating assistant panel (study padding included). */
+/** Transcript column inside floating study chrome (horizontal padding included). */
+/** Inner transcript column (floating study uses left pad only). */
 export const PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING =
-  PLACEMENT_LAYOUT_WIDTH - PLACEMENT_FLOATING_PANEL_WIDTH - PLACEMENT_FLOATING_EDGE * 2 - 16;
+  PLACEMENT_FLOATING_STUDY_MAX_WIDTH - STUDY_PLAYER_PAD_X;

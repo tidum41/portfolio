@@ -76,7 +76,9 @@ export function DialogueStudyTranscript({
         flex: 1,
         minHeight: 0,
         overflow: "hidden",
-        padding: `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px ${PLACEMENT_GRID_PAD_X}px`,
+        padding: reserveRightForFloatingChat
+          ? `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px 0`
+          : `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px ${PLACEMENT_GRID_PAD_X}px`,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
@@ -109,8 +111,8 @@ export function DialogueStudyTranscript({
             Copy
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {LINES.map((line) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: reserveRightForFloatingChat ? 4 : 6 }}>
+          {(reserveRightForFloatingChat ? LINES.slice(0, 3) : LINES).map((line) => (
             <div
               key={`${line.speaker}-${line.time}`}
               style={{

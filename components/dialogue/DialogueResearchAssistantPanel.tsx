@@ -35,7 +35,9 @@ export function DialogueResearchAssistantPanel({
       <header
         data-placement-crop="assistant-top"
         style={{
-          padding: `${PLACEMENT_SPACE_1 + 4}px ${CARD_PAD}px ${PLACEMENT_SPACE_1}px`,
+          padding: floating
+            ? `${PLACEMENT_SPACE_1 + 2}px ${CARD_PAD}px ${PLACEMENT_SPACE_1 - 2}px`
+            : `${PLACEMENT_SPACE_1 + 4}px ${CARD_PAD}px ${PLACEMENT_SPACE_1}px`,
           flexShrink: 0,
         }}
       >
@@ -56,11 +58,11 @@ export function DialogueResearchAssistantPanel({
         style={{
           flex: fillColumn ? 1 : undefined,
           minHeight: fillColumn ? 0 : undefined,
-          padding: `0 ${CARD_PAD - 4}px ${floating ? 0 : CARD_PAD - 4}px`,
+          padding: `0 ${CARD_PAD - 4}px ${CARD_PAD - 4}px`,
           display: "flex",
           flexDirection: "column",
-          gap: PLACEMENT_SPACE_1,
-          overflow: floating ? "hidden" : fillColumn ? "auto" : "hidden",
+          gap: floating ? PLACEMENT_SPACE_1 - 2 : PLACEMENT_SPACE_1,
+          overflow: fillColumn ? "auto" : "hidden",
         }}
       >
         <div
@@ -95,8 +97,8 @@ export function DialogueResearchAssistantPanel({
           <ChevronDownIcon size={PLACEMENT_ICON_SIZE} />
         </div>
 
-        <div style={{ flex: floating ? 1 : undefined, flexShrink: floating ? undefined : 0, minHeight: floating ? 0 : undefined }}>
-          <EvidenceAnswerCard compact={compact} fillHeight={floating} />
+        <div style={{ flexShrink: 0 }}>
+          <EvidenceAnswerCard compact={compact} floating={floating} />
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   PLACEMENT_FLOATING_EDGE,
   PLACEMENT_FLOATING_LAUNCHER_SIZE,
   PLACEMENT_FLOATING_LAUNCHER_GAP,
+  PLACEMENT_FLOATING_PANEL_LEFT,
   PLACEMENT_FLOATING_PANEL_WIDTH,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
@@ -62,11 +63,11 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         background: DIALOGUE_GRAPHICS_COLORS.surface,
       }}
     >
-      <DialogueStudyHostPage reserveRightForFloatingChat />
+      <DialogueStudyHostPage reserveRightForFloatingChat={true} />
       <div
         style={{
           position: "absolute",
-          right: PLACEMENT_FLOATING_EDGE,
+          left: PLACEMENT_FLOATING_PANEL_LEFT,
           top: PLACEMENT_FLOATING_CHAT_TOP,
           bottom: PLACEMENT_FLOATING_EDGE,
           width: PLACEMENT_FLOATING_PANEL_WIDTH,
@@ -85,14 +86,25 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
             display: "flex",
             flexDirection: "column",
             borderRadius: 14,
-            border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-            background: DIALOGUE_GRAPHICS_COLORS.surface,
             boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
-            overflow: "hidden",
             pointerEvents: "auto",
           }}
         >
-          <DialogueResearchAssistantPanel compact floating />
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: 14,
+              border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+              background: DIALOGUE_GRAPHICS_COLORS.surface,
+              overflow: "hidden",
+            }}
+          >
+            <DialogueResearchAssistantPanel compact floating />
+          </div>
         </div>
         <div
           style={{

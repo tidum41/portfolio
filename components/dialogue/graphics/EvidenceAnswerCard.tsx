@@ -18,13 +18,14 @@ const PAD = PLACEMENT_GRID_PAD_X - 4;
 
 export function EvidenceAnswerCard({
   compact = false,
-  fillHeight = false,
+  floating = false,
 }: {
   compact?: boolean;
-  fillHeight?: boolean;
+  floating?: boolean;
 }) {
   const inset = compact ? PLACEMENT_GRID_PAD_X - 4 : PAD;
   const copyIconInset = inset;
+  const blockGap = floating ? PLACEMENT_SPACE_1 : PLACEMENT_SPACE_1 + 2;
   return (
     <div
       style={{
@@ -34,10 +35,6 @@ export function EvidenceAnswerCard({
         background: DIALOGUE_GRAPHICS_COLORS.surface,
         overflow: "hidden",
         fontFamily: DIALOGUE_GRAPHICS_FONT,
-        height: fillHeight ? "100%" : undefined,
-        display: fillHeight ? "flex" : undefined,
-        flexDirection: fillHeight ? "column" : undefined,
-        minHeight: fillHeight ? 0 : undefined,
       }}
     >
       <div
@@ -61,16 +58,13 @@ export function EvidenceAnswerCard({
       <div
         style={{
           padding: inset,
-          paddingBottom: PLACEMENT_SPACE_1 + 4,
+          paddingBottom: floating ? PLACEMENT_SPACE_1 + 2 : PLACEMENT_SPACE_1 + 4,
           paddingRight: inset + PLACEMENT_ICON_SIZE + 4,
-          flex: fillHeight ? 1 : undefined,
-          minHeight: fillHeight ? 0 : undefined,
-          overflow: fillHeight ? "hidden" : undefined,
         }}
       >
         <p
           style={{
-            margin: `0 0 ${PLACEMENT_SPACE_1 + 2}px`,
+            margin: `0 0 ${blockGap}px`,
             ...placementType.body,
             fontWeight: 400,
             color: DIALOGUE_GRAPHICS_COLORS.ink,
@@ -80,8 +74,8 @@ export function EvidenceAnswerCard({
           <span style={{ fontWeight: 500 }}>loses 38% of participants</span>, the largest single-step
           drop in checkout.
         </p>
-        <CheckoutFunnelChart compact={compact} />
-        <div style={{ marginTop: PLACEMENT_SPACE_1 + 2 }}>
+        <CheckoutFunnelChart compact={compact} tight={floating} />
+        <div style={{ marginTop: blockGap }}>
           <button
             type="button"
             style={{
@@ -97,10 +91,10 @@ export function EvidenceAnswerCard({
             View 9 clips
           </button>
         </div>
-        <div style={{ marginTop: PLACEMENT_SPACE_1 + 2 }}>
-          <ClipThumbnailRow compact={compact} max={3} />
+        <div style={{ marginTop: blockGap }}>
+          <ClipThumbnailRow compact={compact} max={floating ? 2 : 3} />
         </div>
-        <CounterEvidenceSection compact={compact} />
+        <CounterEvidenceSection compact={compact} tight={floating} />
       </div>
       <DerivedEvidenceLabel>Based on 24 of 24 interviews</DerivedEvidenceLabel>
     </div>

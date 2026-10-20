@@ -7,13 +7,20 @@ import {
 } from "@/lib/caseStudies/dialoguePlacementTypography";
 import { ChevronDownIcon, CounterEvidenceIcon } from "./DialogueIcons";
 
-export function CounterEvidenceSection({ compact = false }: { compact?: boolean }) {
+export function CounterEvidenceSection({
+  compact = false,
+  tight = false,
+}: {
+  compact?: boolean;
+  tight?: boolean;
+}) {
+  const edgeGap = tight ? PLACEMENT_SPACE_1 : PLACEMENT_SPACE_1 + 2;
   return (
     <div
       style={{
         borderTop: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-        paddingTop: PLACEMENT_SPACE_1 + 2,
-        marginTop: PLACEMENT_SPACE_1 + 2,
+        paddingTop: edgeGap,
+        marginTop: edgeGap,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >

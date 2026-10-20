@@ -19,10 +19,16 @@ const base =
 const TILE_W = 1600;
 const TILE_H = 1200;
 
-const shots = [
+const onlyArg = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length);
+const allShots = [
   { variant: "docked", out: "public/dialogue/section-6b.png" },
   { variant: "floating", out: "public/dialogue/section-6.png" },
 ];
+const shots = onlyArg ? allShots.filter((s) => s.variant === onlyArg) : allShots;
+if (shots.length === 0) {
+  console.error(`Unknown --only=${onlyArg} (use docked or floating)`);
+  process.exit(1);
+}
 
 const proofOutDir = path.join(root, ".playwright-screenshots", "dialogue-placement-proofs");
 fs.mkdirSync(proofOutDir, { recursive: true });
