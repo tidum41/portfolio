@@ -1,181 +1,118 @@
-import type { ReactNode } from "react";
 import {
-  PLACEMENT_SUBJECT_HEIGHT,
-  PLACEMENT_SUBJECT_WIDTH,
-  PLACEMENT_UI_SCALE,
+  PLACEMENT_LAYOUT_HEIGHT,
+  PLACEMENT_LAYOUT_WIDTH,
+  PLACEMENT_SIDEBAR_WIDTH,
+  PLACEMENT_STUDY_WIDTH_DOCKED,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
-import { DialogueAssistantFab, DialogueAssistantPanel } from "./DialogueAssistantPanel";
+import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { DialogueChatLauncher } from "@/components/dialogue/graphics/DialogueChatLauncher";
+import { DialogueResearchAssistantPanel } from "@/components/dialogue/DialogueResearchAssistantPanel";
+import { DialogueStudyHostPage } from "@/components/dialogue/DialogueStudyHostPage";
 
-const STUDY_W = 520;
-const STUDY_H = 360;
-const SIDEBAR_W = 300;
+function PlacementFrame({ variant }: { variant: PlacementVariant }) {
+  const docked = variant === "docked";
 
-function StudyPageChrome() {
+  if (docked) {
+    return (
+      <div
+        style={{
+          width: PLACEMENT_LAYOUT_WIDTH,
+          height: PLACEMENT_LAYOUT_HEIGHT,
+          display: "flex",
+          borderRadius: 14,
+          overflow: "hidden",
+          border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+          background: DIALOGUE_GRAPHICS_COLORS.surface,
+        }}
+      >
+        <div style={{ width: PLACEMENT_STUDY_WIDTH_DOCKED, flexShrink: 0, height: "100%" }}>
+          <DialogueStudyHostPage />
+        </div>
+        <div
+          style={{
+            width: PLACEMENT_SIDEBAR_WIDTH,
+            flexShrink: 0,
+            height: "100%",
+            borderLeft: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+            background: DIALOGUE_GRAPHICS_COLORS.studyChrome,
+          }}
+        >
+          <DialogueResearchAssistantPanel compact />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
-        flex: 1,
-        minWidth: 0,
-        padding: "28px 32px",
-        background: "#FFFFFF",
+        width: PLACEMENT_LAYOUT_WIDTH,
+        height: PLACEMENT_LAYOUT_HEIGHT,
+        position: "relative",
+        borderRadius: 14,
+        overflow: "hidden",
+        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+        background: DIALOGUE_GRAPHICS_COLORS.surface,
       }}
     >
-      <div
-        style={{
-          height: 10,
-          width: "42%",
-          borderRadius: 5,
-          background: "#E7E2DC",
-          marginBottom: 18,
-        }}
-      />
-      <div
-        style={{
-          height: 8,
-          width: "88%",
-          borderRadius: 4,
-          background: "#F0ECE7",
-          marginBottom: 10,
-        }}
-      />
-      <div
-        style={{
-          height: 8,
-          width: "76%",
-          borderRadius: 4,
-          background: "#F0ECE7",
-          marginBottom: 10,
-        }}
-      />
-      <div
-        style={{
-          height: 8,
-          width: "82%",
-          borderRadius: 4,
-          background: "#F0ECE7",
-          marginBottom: 24,
-        }}
-      />
-      <div
-        style={{
-          height: 120,
-          borderRadius: 12,
-          background: "#F5F2EF",
-          border: "1px solid #EDE9E4",
-        }}
-      />
-    </div>
-  );
-}
-
-function ScaledStage({
-  layoutWidth,
-  layoutHeight,
-  children,
-}: {
-  layoutWidth: number;
-  layoutHeight: number;
-  children: ReactNode;
-}) {
-  const w = Math.round(layoutWidth * PLACEMENT_UI_SCALE);
-  const h = Math.round(layoutHeight * PLACEMENT_UI_SCALE);
-  return (
-    <div style={{ width: w, height: h, position: "relative", flexShrink: 0 }}>
+      <DialogueStudyHostPage />
       <div
         style={{
           position: "absolute",
-          left: 0,
-          top: 0,
-          width: layoutWidth,
-          height: layoutHeight,
-          transform: `scale(${PLACEMENT_UI_SCALE})`,
-          transformOrigin: "top left",
+          right: 14,
+          bottom: 14,
+          width: 292,
+          maxHeight: "calc(100% - 28px)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 10,
         }}
       >
-        {children}
+        <div
+          style={{
+            width: "100%",
+            borderRadius: 14,
+            border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+            background: DIALOGUE_GRAPHICS_COLORS.surface,
+            boxShadow: "none",
+            overflow: "hidden",
+          }}
+        >
+          <DialogueResearchAssistantPanel compact />
+        </div>
+        <DialogueChatLauncher size={48} />
       </div>
     </div>
   );
 }
 
-export function DialoguePlacementScene({ variant }: { variant: PlacementVariant }) {
-  const docked = variant === "docked";
-
-  const studyShell = (
-    <div
-      style={{
-        display: "flex",
-        width: docked ? STUDY_W + SIDEBAR_W : STUDY_W,
-        height: STUDY_H,
-        borderRadius: 12,
-        overflow: "hidden",
-        border: "1px solid #E0DBD5",
-        background: "#FFFFFF",
-        boxShadow: "0 1px 0 rgba(28, 25, 23, 0.04)",
-      }}
-    >
-      <StudyPageChrome />
-      {docked ? (
-        <div
-          style={{
-            width: SIDEBAR_W,
-            borderLeft: "1px solid #E7E2DC",
-            background: "#FAFAF9",
-            display: "flex",
-            flexDirection: "column",
-            padding: "12px 10px",
-          }}
-        >
-          <DialogueAssistantPanel docked />
-        </div>
-      ) : null}
-    </div>
-  );
-
-  const dockedLayoutW = STUDY_W + SIDEBAR_W;
-  const dockedLayoutH = STUDY_H;
-  const floatingLayoutW = STUDY_W + 48;
-  const floatingLayoutH = STUDY_H + 200;
+export function DialoguePlacementScene({
+  variant,
+  scale,
+}: {
+  variant: PlacementVariant;
+  scale: number;
+}) {
+  const scaledW = Math.round(PLACEMENT_LAYOUT_WIDTH * scale);
+  const scaledH = Math.round(PLACEMENT_LAYOUT_HEIGHT * scale);
 
   return (
-    <div
-      style={{
-        width: PLACEMENT_SUBJECT_WIDTH,
-        height: PLACEMENT_SUBJECT_HEIGHT,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-      }}
-    >
-      {docked ? (
-        <ScaledStage layoutWidth={dockedLayoutW} layoutHeight={dockedLayoutH}>
-          {studyShell}
-        </ScaledStage>
-      ) : (
-        <ScaledStage layoutWidth={floatingLayoutW} layoutHeight={floatingLayoutH}>
-          <div style={{ position: "relative", width: floatingLayoutW, height: floatingLayoutH }}>
-            <div style={{ position: "absolute", left: 0, top: 0 }}>{studyShell}</div>
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 8,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: 10,
-              }}
-            >
-              <DialogueAssistantPanel docked={false} />
-              <div style={{ marginRight: 6 }}>
-                <DialogueAssistantFab />
-              </div>
-            </div>
-          </div>
-        </ScaledStage>
-      )}
+    <div style={{ width: scaledW, height: scaledH, position: "relative", flexShrink: 0 }}>
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: PLACEMENT_LAYOUT_WIDTH,
+          height: PLACEMENT_LAYOUT_HEIGHT,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <PlacementFrame variant={variant} />
+      </div>
     </div>
   );
 }

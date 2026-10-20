@@ -1,9 +1,12 @@
 import {
-  PLACEMENT_MARGIN_LR,
-  PLACEMENT_MARGIN_TB,
+  PLACEMENT_COMPOSITION_HEIGHT,
+  PLACEMENT_COMPOSITION_WIDTH,
   PLACEMENT_TILE_BG,
   PLACEMENT_TILE_HEIGHT,
+  PLACEMENT_TILE_MARGIN_LEFT,
+  PLACEMENT_TILE_MARGIN_TOP,
   PLACEMENT_TILE_WIDTH,
+  PLACEMENT_COMPOSITION_SCALE,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DialoguePlacementScene } from "@/components/dialogue/DialoguePlacementScene";
@@ -18,15 +21,11 @@ function parseVariant(raw: string): PlacementVariant | null {
   return null;
 }
 
-export default function DialoguePlacementExportPage({
+export default async function DialoguePlacementExportPage({
   params,
 }: {
   params: Promise<{ variant: string }>;
 }) {
-  return <PlacementExport params={params} />;
-}
-
-async function PlacementExport({ params }: { params: Promise<{ variant: string }> }) {
   const { variant: raw } = await params;
   const variant = parseVariant(raw);
   if (!variant) notFound();
@@ -36,22 +35,31 @@ async function PlacementExport({ params }: { params: Promise<{ variant: string }
       id="export-root"
       data-variant={variant}
       style={{
+        width: PLACEMENT_TILE_WIDTH,
+        height: PLACEMENT_TILE_HEIGHT,
+        minHeight: PLACEMENT_TILE_HEIGHT,
+        background: PLACEMENT_TILE_BG,
         position: "fixed",
         left: 0,
         top: 0,
-        width: PLACEMENT_TILE_WIDTH,
-        height: PLACEMENT_TILE_HEIGHT,
-        background: PLACEMENT_TILE_BG,
-        boxSizing: "border-box",
-        padding: `${PLACEMENT_MARGIN_TB}px ${PLACEMENT_MARGIN_LR}px`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         overflow: "hidden",
+        boxSizing: "border-box",
+        margin: 0,
+        padding: 0,
         zIndex: 2147483646,
       }}
     >
-      <DialoguePlacementScene variant={variant} />
+      <div
+        style={{
+          position: "absolute",
+          left: PLACEMENT_TILE_MARGIN_LEFT,
+          top: PLACEMENT_TILE_MARGIN_TOP,
+          width: PLACEMENT_COMPOSITION_WIDTH,
+          height: PLACEMENT_COMPOSITION_HEIGHT,
+        }}
+      >
+        <DialoguePlacementScene variant={variant} scale={PLACEMENT_COMPOSITION_SCALE} />
+      </div>
     </div>
   );
 }

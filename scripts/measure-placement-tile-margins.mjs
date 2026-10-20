@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const BG = { r: 246, g: 244, b: 241 };
-const TOLERANCE = 8;
+const TOLERANCE = 10;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function isBg(r, g, b) {
@@ -47,9 +47,20 @@ async function measure(file) {
   };
   const subjectW = maxX - minX + 1;
   const subjectH = maxY - minY + 1;
-  return { file, width, height, margins, subjectW, subjectH, widthPct: subjectW / width };
+  return {
+    file,
+    width,
+    height,
+    margins,
+    subjectW,
+    subjectH,
+    widthPct: Math.round((subjectW / width) * 1000) / 10,
+    heightPct: Math.round((subjectH / height) * 1000) / 10,
+  };
 }
 
+const results = [];
 for (const file of ["public/dialogue/section-6b.png", "public/dialogue/section-6.png"]) {
-  console.log(JSON.stringify(await measure(file), null, 2));
+  results.push(await measure(file));
 }
+console.log(JSON.stringify(results, null, 2));

@@ -9,27 +9,37 @@ export const PLACEMENT_TILE_HEIGHT = 1200;
 
 export const PLACEMENT_TILE_BG = "#F6F4F1";
 
-/** Equal top/bottom padding inside the tile (px at export resolution). */
-export const PLACEMENT_MARGIN_TB = 40;
-
-/**
- * Target subject width as a fraction of tile width (~75–85%).
- * Scene is centered horizontally; side margins are the remainder (larger than TB).
- */
+/** Composed subject (host + assistant) should fill this much of the full tile, centered. */
 export const PLACEMENT_SUBJECT_WIDTH_RATIO = 0.8;
+export const PLACEMENT_SUBJECT_HEIGHT_RATIO = 0.8;
 
-export const PLACEMENT_SUBJECT_WIDTH = Math.round(
+export const PLACEMENT_SUBJECT_BOX_WIDTH = Math.round(
   PLACEMENT_TILE_WIDTH * PLACEMENT_SUBJECT_WIDTH_RATIO,
 );
-
-export const PLACEMENT_MARGIN_LR = Math.round(
-  (PLACEMENT_TILE_WIDTH - PLACEMENT_SUBJECT_WIDTH) / 2,
+export const PLACEMENT_SUBJECT_BOX_HEIGHT = Math.round(
+  PLACEMENT_TILE_HEIGHT * PLACEMENT_SUBJECT_HEIGHT_RATIO,
 );
 
-export const PLACEMENT_SUBJECT_HEIGHT =
-  PLACEMENT_TILE_HEIGHT - PLACEMENT_MARGIN_TB * 2;
+/**
+ * Design-time layout (px) before scale-to-fit. Same bbox for docked + floating.
+ * Aspect matches the 80% subject box (1280×960) so scale fills width and height.
+ */
+export const PLACEMENT_LAYOUT_HEIGHT = 740;
+export const PLACEMENT_SIDEBAR_WIDTH = 300;
+export const PLACEMENT_LAYOUT_WIDTH = Math.round(
+  (PLACEMENT_SUBJECT_BOX_WIDTH / PLACEMENT_SUBJECT_BOX_HEIGHT) * PLACEMENT_LAYOUT_HEIGHT,
+);
+export const PLACEMENT_STUDY_WIDTH_DOCKED = PLACEMENT_LAYOUT_WIDTH - PLACEMENT_SIDEBAR_WIDTH;
 
-/** Render study + assistant UI at ~1.3–1.5× “native” component pixels. */
-export const PLACEMENT_UI_SCALE = 1.42;
+export const PLACEMENT_COMPOSITION_SCALE = Math.min(
+  PLACEMENT_SUBJECT_BOX_WIDTH / PLACEMENT_LAYOUT_WIDTH,
+  PLACEMENT_SUBJECT_BOX_HEIGHT / PLACEMENT_LAYOUT_HEIGHT,
+);
+
+export const PLACEMENT_COMPOSITION_WIDTH = PLACEMENT_LAYOUT_WIDTH * PLACEMENT_COMPOSITION_SCALE;
+export const PLACEMENT_COMPOSITION_HEIGHT = PLACEMENT_LAYOUT_HEIGHT * PLACEMENT_COMPOSITION_SCALE;
+
+export const PLACEMENT_TILE_MARGIN_LEFT = (PLACEMENT_TILE_WIDTH - PLACEMENT_COMPOSITION_WIDTH) / 2;
+export const PLACEMENT_TILE_MARGIN_TOP = (PLACEMENT_TILE_HEIGHT - PLACEMENT_COMPOSITION_HEIGHT) / 2;
 
 export type PlacementVariant = "docked" | "floating";
