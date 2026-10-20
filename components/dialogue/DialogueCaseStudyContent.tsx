@@ -12,14 +12,17 @@ import DecisionBlock from "@/components/DecisionBlock";
 import {
   DIALOGUE_HERO_SRC,
   DIALOGUE_IMAGES,
-  DIALOGUE_RASTER_HEIGHT,
-  DIALOGUE_RASTER_WIDTH,
   DIALOGUE_TITLE,
+  dialogueRasterSizeForPublicPath,
 } from "@/lib/caseStudies/dialogue";
 
-const DIALOGUE_RASTER = { width: DIALOGUE_RASTER_WIDTH, height: DIALOGUE_RASTER_HEIGHT };
 const DIALOGUE_SIZES_FULL = "(max-width: 767px) calc(100vw - 48px), 750px";
 const DIALOGUE_SIZES_PAIR = "(max-width: 767px) calc(50vw - 30px), 375px";
+
+function dialogueFigureProps(src: string, sizes: string) {
+  const { width, height } = dialogueRasterSizeForPublicPath(src);
+  return { src, width, height, sizes };
+}
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
@@ -99,13 +102,7 @@ function FrameColumn({
 }) {
   const media =
     src && alt ? (
-      <CaseStudyFigure
-        src={src}
-        alt={alt}
-        width={DIALOGUE_RASTER.width}
-        height={DIALOGUE_RASTER.height}
-        sizes={DIALOGUE_SIZES_PAIR}
-      />
+      <CaseStudyFigure alt={alt} {...dialogueFigureProps(src, DIALOGUE_SIZES_PAIR)} />
     ) : (
       children
     );
@@ -210,24 +207,18 @@ export function DialogueCaseStudyContent({
                   "D-01",
                   <div className="cs-hero-media-frame dialogue-hero-media">
                     <CaseStudyFigure
-                      src={DIALOGUE_HERO_SRC}
                       alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
                       priority
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_HERO_SRC, DIALOGUE_SIZES_FULL)}
                     />
                   </div>,
                 )
               : (
                   <div className="cs-hero-media-frame dialogue-hero-media">
                     <CaseStudyFigure
-                      src={DIALOGUE_HERO_SRC}
                       alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
                       priority
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_HERO_SRC, DIALOGUE_SIZES_FULL)}
                     />
                   </div>
                 )}
@@ -265,7 +256,6 @@ export function DialogueCaseStudyContent({
                 subheading="Three ways the chat could answer the same question."
                 chosenId="structured"
                 annotateRaster={wrap}
-                imageNaturalSize={DIALOGUE_RASTER}
                 options={[
                   {
                     id: "paragraphs",
@@ -274,6 +264,7 @@ export function DialogueCaseStudyContent({
                     imageSrc: DIALOGUE_IMAGES.altParagraphs,
                     imageAlt: "Study chat answer as three paragraphs of prose with no structure.",
                     rasterAssetId: "D-04",
+                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altParagraphs),
                   },
                   {
                     id: "quote-list",
@@ -282,6 +273,7 @@ export function DialogueCaseStudyContent({
                     imageSrc: DIALOGUE_IMAGES.altQuoteList,
                     imageAlt: "Study chat answer as a list of interview quotes without a summary.",
                     rasterAssetId: "D-05",
+                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altQuoteList),
                   },
                   {
                     id: "structured",
@@ -291,6 +283,7 @@ export function DialogueCaseStudyContent({
                     imageSrc: DIALOGUE_IMAGES.altStructured,
                     imageAlt: "Study chat answer with a summary line, chart, and linked clips.",
                     rasterAssetId: "D-06",
+                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altStructured),
                   },
                 ]}
               />
@@ -300,22 +293,16 @@ export function DialogueCaseStudyContent({
                   ? wrap(
                       "D-07",
                       <CaseStudyFigure
-                        src={DIALOGUE_IMAGES.proofSolution}
                         alt="Selected checkout step with a clips list tied to that bar."
                         caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        width={DIALOGUE_RASTER.width}
-                        height={DIALOGUE_RASTER.height}
-                        sizes={DIALOGUE_SIZES_FULL}
+                        {...dialogueFigureProps(DIALOGUE_IMAGES.proofSolution, DIALOGUE_SIZES_FULL)}
                       />,
                     )
                   : (
                       <CaseStudyFigure
-                        src={DIALOGUE_IMAGES.proofSolution}
                         alt="Selected checkout step with a clips list tied to that bar."
                         caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        width={DIALOGUE_RASTER.width}
-                        height={DIALOGUE_RASTER.height}
-                        sizes={DIALOGUE_SIZES_FULL}
+                        {...dialogueFigureProps(DIALOGUE_IMAGES.proofSolution, DIALOGUE_SIZES_FULL)}
                       />
                     )}
               </div>
@@ -343,20 +330,20 @@ export function DialogueCaseStudyContent({
                   ? wrap(
                       "D-08",
                       <CaseStudyFigure
-                        src={DIALOGUE_IMAGES.anatomy}
                         alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        width={DIALOGUE_RASTER.width}
-                        height={DIALOGUE_RASTER.height}
-                        sizes="(max-width: 767px) calc(100vw - 48px), 600px"
+                        {...dialogueFigureProps(
+                          DIALOGUE_IMAGES.anatomy,
+                          "(max-width: 767px) calc(100vw - 48px), 600px",
+                        )}
                       />,
                     )
                   : (
                       <CaseStudyFigure
-                        src={DIALOGUE_IMAGES.anatomy}
                         alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        width={DIALOGUE_RASTER.width}
-                        height={DIALOGUE_RASTER.height}
-                        sizes="(max-width: 767px) calc(100vw - 48px), 600px"
+                        {...dialogueFigureProps(
+                          DIALOGUE_IMAGES.anatomy,
+                          "(max-width: 767px) calc(100vw - 48px), 600px",
+                        )}
                       />
                     )}
               </div>
@@ -372,22 +359,16 @@ export function DialogueCaseStudyContent({
                 ? wrap(
                     "D-09",
                     <CaseStudyFigure
-                      src={DIALOGUE_IMAGES.answerShapes}
                       alt="Four study chat questions each shown with a different chart and clip layout."
                       caption="Four question types, four chart shapes"
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_IMAGES.answerShapes, DIALOGUE_SIZES_FULL)}
                     />,
                   )
                 : (
                     <CaseStudyFigure
-                      src={DIALOGUE_IMAGES.answerShapes}
                       alt="Four study chat questions each shown with a different chart and clip layout."
                       caption="Four question types, four chart shapes"
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_IMAGES.answerShapes, DIALOGUE_SIZES_FULL)}
                     />
                   )}
             </Section>
@@ -485,22 +466,16 @@ export function DialogueCaseStudyContent({
                 ? wrap(
                     "D-15",
                     <CaseStudyFigure
-                      src={DIALOGUE_IMAGES.fullAnswer}
                       alt="Structured answer card beside a drawer listing every clip behind the answer."
                       caption="The full answer, with every supporting clip in one drawer"
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_IMAGES.fullAnswer, DIALOGUE_SIZES_FULL)}
                     />,
                   )
                 : (
                     <CaseStudyFigure
-                      src={DIALOGUE_IMAGES.fullAnswer}
                       alt="Structured answer card beside a drawer listing every clip behind the answer."
                       caption="The full answer, with every supporting clip in one drawer"
-                      width={DIALOGUE_RASTER.width}
-                      height={DIALOGUE_RASTER.height}
-                      sizes={DIALOGUE_SIZES_FULL}
+                      {...dialogueFigureProps(DIALOGUE_IMAGES.fullAnswer, DIALOGUE_SIZES_FULL)}
                     />
                   )}
             </Section>

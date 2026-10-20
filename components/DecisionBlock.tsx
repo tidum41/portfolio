@@ -18,6 +18,7 @@ export type DecisionBlockOption = {
   imageSrc: string;
   imageAlt: string;
   rasterAssetId?: string;
+  imageNaturalSize?: { width: number; height: number };
 };
 
 export type DecisionBlockProps = {
@@ -58,12 +59,13 @@ function OptionCard({
   annotateRaster?: RasterAnnotator;
   imageNaturalSize?: { width: number; height: number };
 }) {
-  const figure = imageNaturalSize ? (
+  const size = option.imageNaturalSize ?? imageNaturalSize;
+  const figure = size ? (
     <CaseStudyFigure
       src={option.imageSrc}
       alt={option.imageAlt}
-      width={imageNaturalSize.width}
-      height={imageNaturalSize.height}
+      width={size.width}
+      height={size.height}
       sizes="(max-width: 767px) calc(50vw - 30px), 240px"
       zoomable
     />
