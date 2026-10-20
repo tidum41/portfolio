@@ -27,7 +27,7 @@ export function CounterEvidenceSection({ compact = false }: { compact?: boolean 
             color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
           }}
         >
-          Counter-evidence
+          Counter evidence
         </span>
       </div>
       <div

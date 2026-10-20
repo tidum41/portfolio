@@ -1,9 +1,10 @@
+import { DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS } from "@/lib/caseStudies/dialoguePlacementAssets";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
 const CLIPS = [
-  { name: "Jordan M.", time: "14:03" },
-  { name: "Priya K.", time: "15:47" },
-  { name: "Hanna L.", time: "16:02" },
+  { name: "Jordan M.", time: "14:03", thumb: DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS[0] },
+  { name: "Priya K.", time: "15:47", thumb: DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS[1] },
+  { name: "Hanna L.", time: "16:02", thumb: DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS[2] },
 ];
 
 export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boolean; max?: number }) {
@@ -34,7 +35,7 @@ export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boole
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/dialogue/placement-clip-thumb.webp"
+              src={clip.thumb}
               alt=""
               width={thumbW}
               height={thumbH}

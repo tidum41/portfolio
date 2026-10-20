@@ -66,11 +66,9 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
             View 9 clips
           </button>
         </div>
-        {!compact ? (
-          <div style={{ marginTop: 10 }}>
-            <ClipThumbnailRow compact={compact} max={3} />
-          </div>
-        ) : null}
+        <div style={{ marginTop: compact ? 8 : 10 }}>
+          <ClipThumbnailRow compact={compact} max={3} />
+        </div>
         <CounterEvidenceSection compact={compact} />
         {!compact ? (
           <div

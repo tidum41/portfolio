@@ -1,28 +1,16 @@
+import { DIALOGUE_PLACEMENT_MARK_SRC } from "@/lib/caseStudies/dialoguePlacementAssets";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
 export function DialogueSparkleIcon({ size = 14 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 1.2 9.1 5.2l4 .6-2.9 2.7.7 3.9L8 10.4 4.1 12.4l.7-3.9L2 5.8l4-.6L8 1.2Z"
-        fill={DIALOGUE_GRAPHICS_COLORS.accent}
-      />
-    </svg>
-  );
-}
-
-export function ParticipantAvatarIcon({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="11" fill="#ECE7E1" stroke="#E4DFD8" strokeWidth="1" />
-      <circle cx="12" cy="10" r="3.2" fill="#B8B0A6" />
-      <path
-        d="M6.2 18.2c.8-2.4 2.8-3.8 5.8-3.8s5 1.4 5.8 3.8"
-        stroke="#B8B0A6"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={DIALOGUE_PLACEMENT_MARK_SRC}
+      alt=""
+      width={size}
+      height={size}
+      style={{ width: size, height: size, display: "block", objectFit: "contain" }}
+    />
   );
 }
 

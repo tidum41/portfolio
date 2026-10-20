@@ -1,5 +1,6 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
-import { DialogueSparkleIcon, ParticipantAvatarIcon } from "@/components/dialogue/graphics/DialogueIcons";
+import { DialogueSparkleIcon } from "@/components/dialogue/graphics/DialogueIcons";
+import { PlacementParticipantAvatar } from "@/components/dialogue/graphics/PlacementParticipantAvatar";
 
 type Line = {
   speaker: string;
@@ -87,7 +88,10 @@ export function DialogueStudyTranscript({
               {line.kind === "dialogue" ? (
                 <DialogueSparkleIcon size={13} />
               ) : (
-                <ParticipantAvatarIcon size={20} />
+                <PlacementParticipantAvatar
+                  role={line.kind === "moderator" ? "moderator" : "participant"}
+                  size={20}
+                />
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
