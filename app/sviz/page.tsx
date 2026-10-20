@@ -11,7 +11,7 @@ import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
