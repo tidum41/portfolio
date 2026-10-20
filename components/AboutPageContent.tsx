@@ -6,11 +6,11 @@ import Image from "next/image";
 import CopyEmail from "@/components/CopyEmail";
 import BentoHero from "@/components/BentoHero";
 
-// Lazy so importing this module (Work idle warmup) does not register Geist
-// until the About CD embed actually mounts.
+// Code-split CD (Geist lives inside) so Archive never downloads it, but keep
+// SSR on About so album-cover background images are in the first HTML and can
+// be LCP without waiting on the client bundle (`ssr: false` regressed LCP).
 const CDPlayer = dynamic(
   () => import(/* webpackPrefetch: false, webpackPreload: false */ "@/components/CDPlayer"),
-  { ssr: false },
 );
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
