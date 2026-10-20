@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { CopySimple } from "@phosphor-icons/react";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -166,7 +167,7 @@ export default function CopyEmail({
             className="copy-email-layer copy-email-copied"
             aria-hidden={!copied}
           >
-            <CheckIcon />
+            <CopyIcon />
             {copiedLabel}
           </span>
         </span>
@@ -175,23 +176,13 @@ export default function CopyEmail({
   );
 }
 
-function CheckIcon() {
+function CopyIcon() {
   return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 14 14"
-      fill="none"
+    <CopySimple
+      size={14}
+      weight="regular"
       aria-hidden="true"
       style={{ flexShrink: 0, marginTop: "-0.5px" }}
-    >
-      <path
-        d="M2.75 7.25L5.5 10L11.25 4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    />
   );
 }
