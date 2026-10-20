@@ -72,7 +72,9 @@ export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
   const onReset = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
+    seededRef.current = false;
     reseedDialogueBoard(editor, sections, imageMeta, window.location.origin);
+    seededRef.current = true;
   }, [imageMeta, sections]);
 
   return (

@@ -58,7 +58,7 @@ export function seedDialogueTldrawBoard(
       }
 
       const display = scaledDisplaySize(natural);
-      const assetId = AssetRecordType.createId(`${section.id}-${i}`);
+      const assetId = AssetRecordType.createId();
       const imageUrl = resolveImageUrl(img.src, origin);
 
       assets.push({
