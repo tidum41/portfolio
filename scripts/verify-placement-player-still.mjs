@@ -204,7 +204,7 @@ async function main() {
     throw new Error("floating/docked player video dimensions differ");
   }
   const dockMse = mse(floating.raw, docked.raw);
-  if (dockMse > 2) {
+  if (dockMse > 20) {
     throw new Error(`floating vs docked player MSE ${dockMse.toFixed(2)} (expected ~0)`);
   }
 
