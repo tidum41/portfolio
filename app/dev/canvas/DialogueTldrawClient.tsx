@@ -20,6 +20,7 @@ type Props = {
 export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
   const editorRef = useRef<Editor | null>(null);
   const seededRef = useRef(false);
+  const resettingRef = useRef(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "light");
@@ -40,7 +41,7 @@ export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
 
   const tryInitialSeed = useCallback(
     (editor: Editor) => {
-      if (seededRef.current) return;
+      if (seededRef.current || resettingRef.current) return;
       if (editor.getCurrentPageShapeIds().size > 0) {
         seededRef.current = true;
         return;
@@ -72,9 +73,10 @@ export default function DialogueTldrawClient({ sections, imageMeta }: Props) {
   const onReset = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
-    seededRef.current = false;
-    reseedDialogueBoard(editor, sections, imageMeta, window.location.origin);
+    resettingRef.current = true;
     seededRef.current = true;
+    reseedDialogueBoard(editor, sections, imageMeta, window.location.origin);
+    resettingRef.current = false;
   }, [imageMeta, sections]);
 
   return (

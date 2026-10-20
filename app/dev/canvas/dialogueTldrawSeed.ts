@@ -131,7 +131,9 @@ export function reseedDialogueBoard(
   sizes: Record<string, DialogueImageSize>,
   origin: string,
 ) {
-  clearDialogueBoard(editor);
-  seedDialogueTldrawBoard(editor, sections, sizes, origin);
+  editor.run(() => {
+    clearDialogueBoard(editor);
+    seedDialogueTldrawBoard(editor, sections, sizes, origin);
+  });
   editor.zoomToFit({ animation: { duration: 0 } });
 }
