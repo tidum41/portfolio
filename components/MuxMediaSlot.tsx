@@ -279,7 +279,16 @@ export default function MuxMediaSlot({
               try { video.currentTime = thumbnailTime; } catch { /* metadata not ready */ }
             }
           };
+          let nativeRecovered = false;
+          const onNativeError = () => {
+            if (cancelled || nativeRecovered || stream === live) return;
+            nativeRecovered = true;
+            video.addEventListener("loadedmetadata", seekToPoster, { once: true });
+            video.src = live;
+            kickPlay();
+          };
           video.addEventListener("loadedmetadata", seekToPoster, { once: true });
+          video.addEventListener("error", onNativeError, { once: true });
           video.src = stream;
           rootRef.current?.setAttribute("data-hls", "native");
           kickPlay();

@@ -67,22 +67,6 @@ export default async function Home() {
         href={HLS_LIGHT_SRC}
         media="(prefers-reduced-motion: no-preference)"
       />
-      {/* Preload initial segments for the above-the-fold cards (480p on phone, 720p on desktop). */}
-      {warm.preload.map((item) => (
-        <link
-          key={item.href}
-          rel="preload"
-          as="fetch"
-          href={item.href}
-          crossOrigin="anonymous"
-          media={
-            item.media ??
-            (item.aboveFold
-              ? "(max-width: 800px) and (prefers-reduced-motion: no-preference)"
-              : "(min-width: 768px) and (max-width: 800px) and (prefers-reduced-motion: no-preference)")
-          }
-        />
-      ))}
     </>
   );
 }

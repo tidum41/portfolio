@@ -7,6 +7,8 @@ export type MuxWarmEntry = {
   url720?: string;
   text480?: string;
   text720?: string;
+  segs480?: string[];
+  segs720?: string[];
 };
 
 export type MuxCardWarm = {
@@ -181,6 +183,12 @@ async function loadWarm(ids: string[]): Promise<MuxCardWarm> {
       url720: r720?.playlist,
       text480: r480?.text,
       text720: r720?.text,
+      ...(index < 2
+        ? {
+            segs480: r480?.firstSegments,
+            segs720: r720?.firstSegments,
+          }
+        : {}),
     };
 
     if (r480) {
@@ -222,7 +230,7 @@ export const getMuxCardWarmup = cache((): Promise<MuxCardWarm> => {
     .then((projects) => {
       const ids = orderedPlaybackIds(projects);
       if (!ids.length) return EMPTY;
-      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v5", ids.join(",")], {
+      return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v6", ids.join(",")], {
         revalidate: 3600,
       })();
     })
