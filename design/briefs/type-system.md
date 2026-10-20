@@ -23,7 +23,7 @@ Approved scope: Oct 20 2026. Branch: `review/type-system`.
 | Serif | Georgia | Unchanged. |
 | Embeds | Geist | Habit tracker (and CD mono accents) stay on purpose. |
 
-Fallback after Areal: `Arial, Helvetica, sans-serif`. Site UI weights **400–500 only**.
+Fallback after Areal: generic `sans-serif` only (no Arial/Helvetica in the declared stack). Weights **400–500** site-wide.
 
 ### Scale tokens (`--fs-*` / `--lh-*` / `--ls-*`)
 
