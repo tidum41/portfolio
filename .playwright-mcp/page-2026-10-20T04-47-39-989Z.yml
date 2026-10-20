@@ -1,0 +1,60 @@
+- generic [active] [ref=f50e1]:
+  - link "Skip to content" [ref=f50e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f50e3]:
+    - navigation "Main navigation" [ref=f50e5]:
+      - generic [ref=f50e6]:
+        - slider "Background music volume" [ref=f50e7] [cursor=pointer]: "0"
+        - button "Unmute background music" [ref=f50e8] [cursor=pointer]
+      - button "Switch to light mode" [ref=f50e23] [cursor=pointer]
+      - link "work" [ref=f50e38] [cursor=pointer]:
+        - /url: /
+      - link "archive" [ref=f50e108] [cursor=pointer]:
+        - /url: /archive
+      - link "about" [ref=f50e199] [cursor=pointer]:
+        - /url: /about
+  - main [ref=f50e273]:
+    - generic [ref=f50e274]:
+      - generic [ref=f50e275]:
+        - strong [ref=f50e276]: Dialogue canvas
+        - generic [ref=f50e277]: Drag background to pan, wheel to zoom, click image to pin
+        - generic [ref=f50e278]:
+          - button "Zoom out" [ref=f50e279] [cursor=pointer]: −
+          - button "Zoom in" [ref=f50e280] [cursor=pointer]: +
+          - button "Reset view" [ref=f50e281] [cursor=pointer]
+          - button "Copy feedback (0)" [disabled] [ref=f50e282]
+      - generic [ref=f50e284]:
+        - generic [ref=f50e285]:
+          - paragraph [ref=f50e286]: Answers you can pinpoint
+          - paragraph [ref=f50e288]: Hero
+        - generic [ref=f50e290]:
+          - paragraph [ref=f50e291]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+          - paragraph [ref=f50e293]: "Problem: three paragraphs, no sources"
+          - paragraph [ref=f50e296]: "Solution: one claim, one chart, linked moments"
+          - paragraph [ref=f50e299]: "Paragraphs — Weak: you can't see who said what, or how many."
+          - paragraph [ref=f50e302]: "Quote list — Weak: there's no answer. You still do the counting."
+          - paragraph [ref=f50e305]: Structured answer — We went with this
+          - paragraph [ref=f50e308]: "Solution: selecting a bar filters the clips to the moments behind it"
+        - generic [ref=f50e310]:
+          - paragraph [ref=f50e311]: Every answer gets one fixed structure
+          - paragraph [ref=f50e313]: "Anatomy: Sources, Summary, Answer chart, Timestamped clips, Suggested next questions"
+        - generic [ref=f50e315]:
+          - paragraph [ref=f50e316]: The chart fits the question
+          - paragraph [ref=f50e318]: Four question types, four chart shapes
+        - generic [ref=f50e320]:
+          - paragraph [ref=f50e321]: A quote with no context
+          - paragraph [ref=f50e323]: "Solution: the clip opens at 01:38 with the speaker row highlighted"
+        - generic [ref=f50e325]:
+          - paragraph [ref=f50e326]: When the research doesn't settle it
+          - paragraph [ref=f50e328]: Counter-evidence shows who disagreed. Low coverage hides the chart and calls the answer a lead. With no match, the chat suggests a question the interviews did cover.
+        - generic [ref=f50e330]:
+          - paragraph [ref=f50e331]: A finding has to leave the chat
+          - paragraph [ref=f50e333]: One action copies a ready-to-paste card. A thin finding keeps its low-coverage note, so it can't pass as solid.
+        - generic [ref=f50e335]:
+          - paragraph [ref=f50e336]: Instead of a docked sidebar, I kept the floating chat
+          - paragraph [ref=f50e338]: "Explored: docked sidebar"
+          - paragraph [ref=f50e341]: "Kept: floating chat"
+        - generic [ref=f50e343]:
+          - paragraph [ref=f50e344]: One answer, start to finish
+          - paragraph [ref=f50e346]: "Solution: question, chart, and every supporting clip in one drawer"
+  - alert [ref=f50e348]
