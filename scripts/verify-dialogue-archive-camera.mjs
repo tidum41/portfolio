@@ -155,6 +155,7 @@ async function main() {
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForSelector("[data-archive-screen-label]", { state: "attached", timeout: 30_000 });
   await waitForCamera(page);
+  await page.evaluate(() => document.fonts.ready);
 
   for (const pct of ZOOM_LEVELS) {
     await setZoomPercent(page, pct);
@@ -173,11 +174,15 @@ async function main() {
   fs.copyFileSync(out25, "/opt/cursor/artifacts/dialogue-archive-chat-icon-25-1440.png");
 
   await setZoomPercent(page, 100);
-  await centerOnSelector(page, '[data-chat-icon-sha="68d8212"]');
-  await assertNoLabelOverlaps(page, "100% chat row");
-  const out100 = path.join(root, "public/dialogue/archive/chat-icon-history-100-1440.png");
+  await assertNoLabelOverlaps(page, "100%");
+  const out100 = path.join(root, "public/dialogue/archive/dialogue-archive-100-1440.png");
   await page.screenshot({ path: out100 });
-  fs.copyFileSync(out100, "/opt/cursor/artifacts/dialogue-archive-chat-icon-100-1440.png");
+  fs.copyFileSync(out100, "/opt/cursor/artifacts/dialogue-archive-100-1440.png");
+
+  await centerOnSelector(page, '[data-chat-icon-sha="68d8212"]');
+  const outChat100 = path.join(root, "public/dialogue/archive/chat-icon-history-100-1440.png");
+  await page.screenshot({ path: outChat100 });
+  fs.copyFileSync(outChat100, "/opt/cursor/artifacts/dialogue-archive-chat-icon-100-1440.png");
 
   console.log("verify ok", { zoomLevels: ZOOM_LEVELS });
   await browser.close();

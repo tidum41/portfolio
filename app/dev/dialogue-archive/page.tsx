@@ -34,7 +34,7 @@ export default function DialogueArchivePage() {
   const initialView = computeFitCamera({
     viewportW: DEFAULT_VIEWPORT_W,
     viewportH: DEFAULT_VIEWPORT_H - ARCHIVE_TOOLBAR_H,
-    bounds: layout.bounds,
+    bounds: layout.fitBounds,
     pad: ARCHIVE_LAYOUT.CONTENT_PAD,
   });
 

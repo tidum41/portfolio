@@ -31,9 +31,13 @@ export type ArchiveLayoutTile = {
   label?: string;
 };
 
+export type ArchiveBounds = { minX: number; minY: number; maxX: number; maxY: number };
+
 export type ArchiveLayout = {
   tiles: ArchiveLayoutTile[];
-  bounds: { minX: number; minY: number; maxX: number; maxY: number };
+  bounds: ArchiveBounds;
+  /** Tight horizontal extent for camera fit (excludes inflated label/live widths). */
+  fitBounds: ArchiveBounds;
   worldW: number;
   worldH: number;
 };
@@ -183,7 +187,8 @@ export function computeDialogueArchiveLayout(manifest: DialogueArchiveManifest):
     y += rowH + ROW_GAP;
   }
 
-  const liveW = Math.max(LIVE_W, maxRight - CONTENT_PAD + CONTENT_PAD);
+  const fitMaxRight = maxRight;
+  const liveW = Math.max(maxRight - CONTENT_PAD, LIVE_W);
   const liveLabelH = ROW_LABEL_H + 16;
   tiles.push({
     id: "label-live",
@@ -219,13 +224,20 @@ export function computeDialogueArchiveLayout(manifest: DialogueArchiveManifest):
     bounds.maxY = worldH;
   }
 
-  return { tiles, bounds, worldW, worldH };
+  const fitBounds: ArchiveBounds = {
+    minX: CONTENT_PAD,
+    minY: bounds.minY,
+    maxX: fitMaxRight + CONTENT_PAD,
+    maxY: bounds.maxY,
+  };
+
+  return { tiles, bounds, fitBounds, worldW, worldH };
 }
 
 export type FitCameraInput = {
   viewportW: number;
   viewportH: number;
-  bounds: ArchiveLayout["bounds"];
+  bounds: ArchiveBounds;
   pad: number;
 };
 

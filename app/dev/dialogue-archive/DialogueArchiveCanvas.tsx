@@ -9,9 +9,11 @@ import {
   rowLabelToTileScreenGap,
 } from "@/lib/caseStudies/computeDialogueArchiveLayout";
 import type { DialogueArchiveManifest } from "@/lib/caseStudies/dialogueArchiveTypes";
+import { DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { DialogueArchiveLivePreviews } from "./DialogueArchiveLivePreviews";
 
-const { CONTENT_PAD, CAPTION_GAP } = ARCHIVE_LAYOUT;
+const { CONTENT_PAD, CAPTION_GAP, CAPTION_BLOCK_H } = ARCHIVE_LAYOUT;
+const ARCHIVE_AREAL = `"ABC Areal Archive", ${DIALOGUE_GRAPHICS_FONT}`;
 const MIN_ZOOM = 0.02;
 const MAX_ZOOM = 2;
 const STORAGE_KEY = "dialogue-archive-camera-v2";
@@ -33,15 +35,29 @@ function zoomAtPoint(view: View, mx: number, my: number, nextZ: number): View {
   return { z, x: mx - (mx - view.x) * ratio, y: my - (my - view.y) * ratio };
 }
 
-function captionStyleForZoom(z: number): CSSProperties {
+function captionStyleForZoom(z: number, singleLine = false): CSSProperties {
   return {
     margin: 0,
     marginBottom: CAPTION_GAP / z,
-    fontFamily: "var(--font-sans, system-ui)",
+    fontFamily: ARCHIVE_AREAL,
     fontSize: 11,
     lineHeight: 1.4,
     color: "var(--color-text-secondary, #5c5650)",
+    ...(singleLine
+      ? {
+          height: CAPTION_BLOCK_H,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          flexShrink: 0,
+        }
+      : {}),
   };
+}
+
+function chatIconCaptionText(icon: NonNullable<DialogueArchiveManifest["chatIconHistory"]>[0]): string {
+  const agreed = icon.agreed ? " · agreed launcher (68d8212)" : "";
+  return `${icon.shaShort} · ${icon.datePt} PT${agreed}`;
 }
 
 function screenLabelStyle(z: number): CSSProperties {
@@ -49,7 +65,7 @@ function screenLabelStyle(z: number): CSSProperties {
   const hidden = rowLabelToTileScreenGap(z) < 8;
   return {
     margin: 0,
-    fontFamily: "var(--font-sans-medium, system-ui)",
+    fontFamily: ARCHIVE_AREAL,
     fontSize: hidden ? 0 : fontSize,
     fontWeight: 500,
     letterSpacing: "-0.02em",
@@ -110,7 +126,7 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
         const next = computeFitCamera({
           viewportW: rect.width,
           viewportH: rect.height,
-          bounds: layout.bounds,
+          bounds: layout.fitBounds,
           pad: CONTENT_PAD,
         });
         setViewSynced(next);
@@ -119,7 +135,7 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
       }
       setCameraReady(true);
     },
-    [layout.bounds, setViewSynced],
+    [layout.fitBounds, setViewSynced],
   );
 
   const fitView = useCallback(() => {
@@ -146,14 +162,15 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
     const el = viewportRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const bw = layout.bounds.maxX - layout.bounds.minX;
-    const bh = layout.bounds.maxY - layout.bounds.minY;
+    const b = layout.fitBounds;
+    const bw = b.maxX - b.minX;
+    const bh = b.maxY - b.minY;
     setViewSynced({
-      x: (rect.width - bw) / 2 - layout.bounds.minX,
-      y: (rect.height - bh) / 2 - layout.bounds.minY,
+      x: (rect.width - bw) / 2 - b.minX,
+      y: (rect.height - bh) / 2 - b.minY,
       z: 1,
     });
-  }, [layout.bounds, setViewSynced]);
+  }, [layout.fitBounds, setViewSynced]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -409,9 +426,16 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                     top: tile.y,
                     width: tile.w,
                     height: tile.h,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
                   }}
                 >
-                  <p data-archive-caption style={captionStyleForZoom(view.z)}>
+                  <p
+                    data-archive-caption
+                    title={chatIconCaptionText(icon)}
+                    style={captionStyleForZoom(view.z, true)}
+                  >
                     <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: 10 }}>{icon.shaShort}</span>
                     {" · "}
                     {icon.datePt} PT
@@ -424,7 +448,7 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                       </>
                     ) : null}
                   </p>
-                  <div data-archive-tile-media>
+                  <div data-archive-tile-media style={{ flexShrink: 0 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={icon.src}
