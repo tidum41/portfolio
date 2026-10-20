@@ -724,7 +724,7 @@ button.footer-link::before {
   white-space: nowrap;
   vertical-align: top;
   overflow: hidden;
-  transition: width 200ms ease-out;
+  transition: width 150ms ease-out;
 }
 
 .copy-email-layer {
@@ -733,11 +733,21 @@ button.footer-link::before {
   gap: 6px;
   line-height: inherit;
   font-weight: inherit;
-  transition: opacity 200ms ease-out;
+  transition: opacity 120ms ease-out;
 }
 
 .copy-email-layer--idle {
   opacity: 1;
+}
+
+.copy-email-layer svg {
+  display: block;
+  flex-shrink: 0;
+  /* Optical centering against lowercase-heavy label text */
+  transform: translateY(0.5px);
+}
+.cs-pill-btn .copy-email-layer svg {
+  transform: translateY(-0.8px);
 }
 
 .copy-email-layer--copied {

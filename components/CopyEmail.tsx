@@ -83,6 +83,8 @@ export default function CopyEmail({
   }, [measureLayers, children, copiedLabel]);
 
   useEffect(() => {
+    // Hand clicks over from the pre-hydration handler in app/layout.tsx.
+    (window as Window & { __copyEmailReady?: boolean }).__copyEmailReady = true;
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
@@ -105,11 +107,13 @@ export default function CopyEmail({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const ok = await copyToClipboard(CONTACT_EMAIL);
-    setAnnouncement(
-      ok
-        ? `${CONTACT_EMAIL} copied to clipboard`
-        : `Select and copy ${CONTACT_EMAIL}`,
+    // Start the visual change immediately; the clipboard write runs alongside it.
+    void copyToClipboard(CONTACT_EMAIL).then((ok) =>
+      setAnnouncement(
+        ok
+          ? `${CONTACT_EMAIL} copied to clipboard`
+          : `Select and copy ${CONTACT_EMAIL}`,
+      ),
     );
 
     const currentIdle =
@@ -123,7 +127,7 @@ export default function CopyEmail({
         setCopied(false);
         setAnnouncement("");
         setTrackWidthPx(undefined);
-      }, 1200);
+      }, 1100);
       return;
     }
 
@@ -137,7 +141,7 @@ export default function CopyEmail({
     timerRef.current = setTimeout(() => {
       setCopied(false);
       setTrackWidthPx(idle);
-    }, 1200);
+    }, 1100);
   }, [measureLayers]);
 
   const baseStyle: CSSProperties = unstyled
@@ -182,7 +186,7 @@ export default function CopyEmail({
             className="copy-email-layer copy-email-layer--copied"
             aria-hidden={!copied}
           >
-            <CheckIcon />
+            <ChainLinkIcon />
             {copiedLabel}
           </span>
         </span>
@@ -191,11 +195,11 @@ export default function CopyEmail({
   );
 }
 
-function CheckIcon() {
+function ChainLinkIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
-        d="M3.5 8.5 6.5 11.5 12.5 4.5"
+        d="M6.75 9.25a2.75 2.75 0 0 0 3.89 0l2.12-2.12a2.75 2.75 0 0 0-3.89-3.89l-.88.88M9.25 6.75a2.75 2.75 0 0 0-3.89 0L3.24 8.87a2.75 2.75 0 0 0 3.89 3.89l.88-.88"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
