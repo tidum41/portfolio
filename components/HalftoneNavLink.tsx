@@ -18,7 +18,6 @@ import {
   peekPendingPrimaryTab,
 } from "@/lib/instantNav";
 import { subscribeNavTouchClearHover } from "@/lib/navTouchHover";
-import { requestPrimaryShellPremount } from "@/lib/primaryShellWarm";
 
 function scheduleWarm(cb: () => void) {
   if (typeof window === "undefined") return;
@@ -58,13 +57,10 @@ function commitPrimary(href: string) {
 
 function warmPrimary(href: string) {
   if (href === "/archive") {
-    // Sync premount request so hover/press can mount the shell before click.
-    requestPrimaryShellPremount("archive");
     void import("@/lib/archiveGalleryCache").then((m) => m.warmArchiveGallery());
     void import("@/app/archive/ArchivePageClient");
     void import("@/components/BentoGallery");
   } else if (href === "/about") {
-    requestPrimaryShellPremount("about");
     void import("@/components/AboutPageContent");
   }
 }

@@ -7,16 +7,14 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import { subscribePrimaryShellPremount } from "@/lib/primaryShellWarm";
 
 const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
 
 /**
  * About keep-alive — same hide contract as Work/Archive (`display: none` +
  * inert). Not mounted on first Work paint (that pulled CDPlayer + BentoHero
- * + priority About images into `/`). Hover-intent / late-idle premount so
- * Work → About is a display flip without keeping CD/Geist alive on every
- * Work session by default.
+ * + priority About images into `/`). Chunk is idle-warmed via
+ * PrimaryRouteWarmup / nav hover; the React tree mounts on first About show.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
@@ -28,21 +26,15 @@ export default function PersistentAboutShell() {
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);
 
-  useEffect(() => subscribePrimaryShellPremount((shell) => {
-    if (shell === "about") setHasShown(true);
-  }), []);
-
   useEffect(() => {
     if (hasShown) return;
-    // Late idle only — early idle was mounting CD into Work and slowing
-    // every subsequent primary-tab flip. Chunk warmup stays in PrimaryRouteWarmup.
+    // Prefetch the chunk only — mounting early kept CD/Geist alive on Work
+    // and slowed every primary-tab flip in measurement.
     if (pathname !== "/") return;
     return afterIntroIdle(() => {
       if (!allowIdlePrefetch()) return;
-      void import("@/components/AboutPageContent").then(() => {
-        setHasShown(true);
-      });
-    }, 6000);
+      void import("@/components/AboutPageContent");
+    }, 2000);
   }, [hasShown, pathname]);
 
   return (

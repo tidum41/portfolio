@@ -30,9 +30,47 @@ async function authContext(browser) {
     viewport: { width: 1440, height: 900 },
   });
   if (SHARE) {
+    // Prefer curl JWT injection — Playwright following _vercel_share can land
+    // on vercel.com/login when the share handshake needs a hard cookie set.
+    const host = new URL(BASE).host;
+    try {
+      const { execSync } = await import("child_process");
+      const jar = `/tmp/vercel-jwt-${host.replace(/[^a-z0-9]/gi, "_")}.txt`;
+      execSync(`curl -sI -c "${jar}" -L ${JSON.stringify(SHARE)}`, {
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const jarText = fs.readFileSync(jar, "utf8");
+      const jwt = jarText
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith("#"))
+        .map((l) => l.split(/\t+/))
+        .find((cols) => cols[5] === "_vercel_jwt" || cols.includes("_vercel_jwt"));
+      const token = jwt ? jwt[jwt.length - 1] : null;
+      if (token) {
+        await context.addCookies([
+          {
+            name: "_vercel_jwt",
+            value: token,
+            domain: host,
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "Lax",
+          },
+        ]);
+      }
+    } catch {
+      /* fall through to share navigation */
+    }
     const page = await context.newPage();
     await page.goto(SHARE, { waitUntil: "domcontentloaded", timeout: 90000 });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(1200);
+    const title = await page.title();
+    if (/login/i.test(title) || /vercel\.com\/login/.test(page.url())) {
+      await page.close();
+      throw new Error("Vercel auth failed — share link landed on login (" + SHARE + ")");
+    }
     await page.close();
   }
   return context;
@@ -158,7 +196,54 @@ async function readTiming(page) {
   }));
 }
 
-async function clickNav(page, label) {
+const NAV_HREF = {
+  Work: "/",
+  Archive: "/archive",
+  About: "/about",
+};
+
+function navElScript() {
+  return `(lab) => {
+    const href = ({ Work: "/", Archive: "/archive", About: "/about" })[lab];
+    const links = [...document.querySelectorAll("nav.site-nav a.nav-link, nav a.nav-link, header a[href]")];
+    let el = href ? links.find((a) => a.getAttribute("href") === href) : null;
+    if (!el) {
+      el = links.find((a) => (a.textContent || "").toLowerCase().includes(String(lab).toLowerCase()));
+    }
+    if (!el) {
+      throw new Error(
+        "nav link missing: " +
+          lab +
+          " path=" +
+          location.pathname +
+          " hrefs=" +
+          links.map((a) => a.getAttribute("href")).join(","),
+      );
+    }
+    return el;
+  }`;
+}
+
+async function hoverNav(page, label) {
+  await page.evaluate((lab) => {
+    const href = ({ Work: "/", Archive: "/archive", About: "/about" })[lab];
+    const links = [...document.querySelectorAll("nav.site-nav a.nav-link, nav a.nav-link, header a[href]")];
+    let el = href ? links.find((a) => a.getAttribute("href") === href) : null;
+    if (!el) {
+      el = links.find((a) => (a.textContent || "").toLowerCase().includes(String(lab).toLowerCase()));
+    }
+    if (!el) throw new Error("nav link missing: " + lab);
+    el.dispatchEvent(
+      new MouseEvent("mouseenter", { bubbles: true, cancelable: true, view: window }),
+    );
+  }, label);
+}
+
+async function clickNav(page, label, { hoverFirst = true, hoverSettleMs = 280 } = {}) {
+  if (hoverFirst) {
+    await hoverNav(page, label);
+    await page.waitForTimeout(hoverSettleMs);
+  }
   // Stamp + dispatch in one evaluate so latency excludes Playwright click chrome.
   await page.evaluate((lab) => {
     window.__bench.clickMs = performance.now();
@@ -176,9 +261,22 @@ async function clickNav(page, label) {
     };
     requestAnimationFrame(tick);
 
-    const links = [...document.querySelectorAll("nav.site-nav a.nav-link")];
-    const el = links.find((a) => (a.textContent || "").toLowerCase().includes(lab.toLowerCase()));
-    if (!el) throw new Error("nav link missing: " + lab);
+    const href = ({ Work: "/", Archive: "/archive", About: "/about" })[lab];
+    const links = [...document.querySelectorAll("nav.site-nav a.nav-link, nav a.nav-link, header a[href]")];
+    let el = href ? links.find((a) => a.getAttribute("href") === href) : null;
+    if (!el) {
+      el = links.find((a) => (a.textContent || "").toLowerCase().includes(String(lab).toLowerCase()));
+    }
+    if (!el) {
+      throw new Error(
+        "nav link missing: " +
+          lab +
+          " path=" +
+          location.pathname +
+          " hrefs=" +
+          links.map((a) => a.getAttribute("href")).join(","),
+      );
+    }
     el.dispatchEvent(
       new MouseEvent("click", { bubbles: true, cancelable: true, view: window, button: 0 }),
     );
@@ -203,9 +301,33 @@ async function runNavSuite(page, { coldWaitMs }) {
   // Cold: first hop after controlled idle (or none).
   if (coldWaitMs > 0) await page.waitForTimeout(coldWaitMs);
 
+  // True cold first click — no hover premount.
+  {
+    const step = sequence[0];
+    await clickNav(page, step.label, { hoverFirst: false });
+    await waitShell(page, step.tab);
+    await waitPath(page, step.path);
+    const t = await readTiming(page);
+    hops.push({
+      i: "cold-no-hover",
+      to: step.path,
+      cold: true,
+      shellMs: t.shellMs,
+      pathMs: t.pathMs,
+      droppedFrames: t.droppedFrames,
+      maxRafGap: t.maxRafGap,
+      longtaskMax: t.longtasks.reduce((m, x) => Math.max(m, x.dur), 0),
+    });
+    await settle(page, 1200);
+    // Return to Work for the hover-intent sequence.
+    await clickNav(page, "Work", { hoverFirst: true, hoverSettleMs: 120 });
+    await waitPath(page, "/");
+    await settle(page, 700);
+  }
+
   for (let i = 0; i < sequence.length; i++) {
     const step = sequence[i];
-    await clickNav(page, step.label);
+    await clickNav(page, step.label, { hoverFirst: true });
     await waitShell(page, step.tab);
     await waitPath(page, step.path);
     const t = await readTiming(page);
@@ -213,6 +335,7 @@ async function runNavSuite(page, { coldWaitMs }) {
       i,
       to: step.path,
       cold: i === 0,
+      hoverIntent: true,
       shellMs: t.shellMs,
       pathMs: t.pathMs,
       droppedFrames: t.droppedFrames,

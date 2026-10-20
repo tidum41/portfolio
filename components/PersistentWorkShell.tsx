@@ -221,18 +221,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     href?: string,
   ) => {
     if (!href || !isCaseStudyHref(href)) return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-      commitCaseStudyNav(href, router);
-      return;
-    }
     const path = href.split("?")[0]?.split("#")[0] ?? href;
     if (peekPendingCaseStudy() === path) {
       e.preventDefault();
       return;
     }
-    e.preventDefault();
     commitCaseStudyNav(href, router);
-    router.push(href);
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);

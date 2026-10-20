@@ -111,20 +111,15 @@ export default function MuxAutoplayCard({
   };
   const commitCaseStudy = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!href || !isCaseStudyHref(href)) return;
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-      commitCaseStudyNav(href, router);
-      return;
-    }
-    // Mid-transition re-click of the same card — skip a second push that
-    // restarts route enter while the first soft-nav is still landing.
+    // Mid-transition re-click — skip a second navigation that restarts enter.
     const path = href.split("?")[0]?.split("#")[0] ?? href;
     if (peekPendingCaseStudy() === path) {
       e.preventDefault();
       return;
     }
-    e.preventDefault();
+    // First click: keep native Link navigation (faster than preventDefault +
+    // router.push in measurement); only mark soft-nav + warm LCP.
     commitCaseStudyNav(href, router);
-    router.push(href);
   };
 
   useEffect(() => {

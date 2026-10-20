@@ -12,7 +12,6 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import { subscribePrimaryShellPremount } from "@/lib/primaryShellWarm";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**
@@ -20,8 +19,8 @@ import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
  *
  * The heavy gallery tree must not re-render on Work/About clicks. `visible`
  * is the only prop that matters; a memoized inner skips About ↔ Work.
- * Hover-intent / late-idle premount so the first Archive click is a display
- * flip without packing BentoGallery into every Work session early.
+ * Gallery *data* is idle-warmed; the React tree mounts on first Archive show
+ * (early React premount regresses tab-flip latency).
  */
 export default function PersistentArchiveShell({
   items: serverItems = [],
@@ -40,22 +39,7 @@ export default function PersistentArchiveShell({
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);
 
-  useEffect(() => subscribePrimaryShellPremount((shell) => {
-    if (shell === "archive") setHasShown(true);
-  }), []);
-
-  // Warm gallery *data* early (cheap); mount the React tree on hover-intent
-  // or late idle so Work stays light.
-  useEffect(() => {
-    if (pathname === "/archive") return;
-    return afterIntroIdle(() => {
-      if (!allowIdlePrefetch()) return;
-      void warmArchiveGallery().then((data) => {
-        if (data.length) setItems(data);
-      });
-    }, pathname === "/" ? 2500 : 900);
-  }, [pathname]);
-
+  // Warm gallery data + JS chunks off the critical path; do not mount yet.
   useEffect(() => {
     if (hasShown) return;
     if (pathname === "/archive") return;
@@ -66,9 +50,8 @@ export default function PersistentArchiveShell({
         warmArchiveGallery(),
       ]).then(([, data]) => {
         if (data.length) setItems(data);
-        setHasShown(true);
       });
-    }, pathname === "/" ? 7000 : 4000);
+    }, pathname === "/" ? 2500 : 900);
   }, [hasShown, pathname]);
 
   useEffect(() => {
