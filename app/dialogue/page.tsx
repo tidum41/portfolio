@@ -46,8 +46,8 @@ const TOC_ITEMS = [
   { id: "fitted-charts", label: "Fitted charts" },
   { id: "proof", label: "Proof" },
   { id: "clips", label: "Clips" },
-  { id: "placement", label: "Placement" },
-  { id: "full-answer", label: "Full answer" },
+  { id: "placement", label: "Floating chat" },
+  { id: "full-answer", label: "One answer" },
   { id: "outcome", label: "Outcome" },
   { id: "reflection", label: "Reflection" },
 ];
@@ -207,27 +207,23 @@ export default function DialogueCaseStudyPage() {
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
-            <Section id="context" noReveal>
-              <H2>AI-moderated interviews for UX teams</H2>
-              <CaseStudyBody>
-                Dialogue runs AI-moderated interviews for enterprise UX teams and startups, and
-                its study chat answered in paragraphs.
-              </CaseStudyBody>
-            </Section>
-
             <Section id="problem">
-              <H2>Answers came back as walls of text</H2>
+              <H2>Dialogue&apos;s study chat could answer anything…</H2>
+              <CaseStudyBody>
+                AI-moderated interviews for enterprise UX teams and startups.
+              </CaseStudyBody>
+              <H2>…but you couldn&apos;t tell which interview said it.</H2>
               <CaseStudyBody>
                 Teams could not see which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
               <PairRow>
                 <FrameColumn
-                  caption="Before: three paragraphs, no sources"
+                  caption="Problem: three paragraphs, no sources"
                   src={DIALOGUE_IMAGES.problemBefore}
                   alt="Study chat answer as three dense paragraphs with no linked sources."
                 />
                 <FrameColumn
-                  caption="After: one claim, one chart, linked moments"
+                  caption="Solution: one claim, one chart, linked moments"
                   src={DIALOGUE_IMAGES.problemAfter}
                   alt="Study chat answer with a summary line, funnel chart, and linked interview moments."
                 />
@@ -267,7 +263,7 @@ export default function DialogueCaseStudyPage() {
                 <CaseStudyFigure
                   src={DIALOGUE_IMAGES.proofSolution}
                   alt="Selected checkout step with a clips list tied to that bar."
-                  caption="Selecting a bar filters the clips to the moments behind it"
+                  caption="Solution: selecting a bar filters the clips to the moments behind it"
                   fill
                   aspectRatio="16 / 10"
                   sizes="(max-width: 767px) calc(100vw - 48px), 750px"
@@ -276,7 +272,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="why-it-matters">
-              <H2>Researchers only repeat a finding they can point to</H2>
+              <H2>A finding only travels if you can point to the interview behind it.</H2>
               <CaseStudyBody>
                 I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
                 product team, and students in interview sessions (not Dialogue research customers).
@@ -336,7 +332,7 @@ export default function DialogueCaseStudyPage() {
             <Section id="proof">
               <H2>A number with no proof</H2>
               <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
-              <FrameColumn caption="Problem: chart bar with no linked clips">
+              <FrameColumn caption="Problem: a number with nothing behind it">
                 <CaseStudyPlaceholder>
                   Export a crop of the selected bar before the clips block appears (matching the
                   solution frame).
@@ -363,7 +359,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="placement">
-              <H2>Explored a docked sidebar, kept the floating bubble</H2>
+              <H2>Instead of a docked sidebar, I kept the floating chat.</H2>
               <CaseStudyBody>
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages.
@@ -386,7 +382,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="full-answer">
-              <H2>The full answer</H2>
+              <H2>One answer, start to finish.</H2>
               <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
               <CaseStudyFigure
                 src={DIALOGUE_IMAGES.fullAnswer}
@@ -399,7 +395,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="outcome">
-              <H2>Presented to the founders, guided what shipped</H2>
+              <H2>It didn&apos;t ship as drawn, but it shaped what did.</H2>
               <CaseStudyBody>
                 I walked Benjamin and Justin through this exploration. It did not ship as designed,
                 but it shaped the study chat that did.
