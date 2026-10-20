@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
-    "build": "next build",
+    "build": "node scripts/ensure-dialogue-areal-fonts.mjs 2>/dev/null || true && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -12,7 +12,11 @@
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
     "generate:dialogue-canvas-sizes": "node scripts/generate-dialogue-canvas-sizes.mjs",
-    "capture:dialogue-placement": "node scripts/capture-dialogue-placement.mjs"
+    "capture:dialogue-placement": "node scripts/capture-dialogue-placement.mjs",
+    "dialogue-archive:fonts": "node scripts/ensure-dialogue-areal-fonts.mjs",
+    "dialogue-archive:build": "node scripts/ensure-dialogue-areal-fonts.mjs && node scripts/build-dialogue-archive-manifest.mjs",
+    "dialogue-archive:capture-icons": "node scripts/capture-dialogue-chat-icon-history.mjs",
+    "dialogue-archive:verify-camera": "DIALOGUE_ARCHIVE_LAB=1 node scripts/verify-dialogue-archive-camera.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
