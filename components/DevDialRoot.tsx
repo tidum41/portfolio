@@ -22,6 +22,7 @@ export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
+  if (pathname.includes("/dev/dialogue-placement-export")) return null;
   // Comparison labs have their own controls. An open DialKit panel
   // would cover the thing being compared.
   const openDials =

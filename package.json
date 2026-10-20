@@ -11,7 +11,8 @@
     "studio": "sanity dev",
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
-    "generate:dialogue-canvas-sizes": "node scripts/generate-dialogue-canvas-sizes.mjs"
+    "generate:dialogue-canvas-sizes": "node scripts/generate-dialogue-canvas-sizes.mjs",
+    "capture:dialogue-placement": "node scripts/capture-dialogue-placement.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

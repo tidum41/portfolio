@@ -403,9 +403,6 @@ export default function DialogueCaseStudyPage() {
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages.
               </CaseStudyBody>
-              <CaseStudyPlaceholder>
-                The real reason the floating chat beat the docked sidebar on study pages.
-              </CaseStudyPlaceholder>
               <PairRow>
                 <FrameColumn
                   caption="Explored: docked sidebar"
