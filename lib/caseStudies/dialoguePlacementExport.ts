@@ -1,4 +1,4 @@
-import { studyTranscriptTopY } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
+import { studyPlayerBlockTopY } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
 
 /**
  * Dialogue placement moment tiles (section-6 / section-6b).
@@ -50,7 +50,7 @@ export type PlacementVariant = "docked" | "floating";
 export const PLACEMENT_FLOATING_LAUNCHER_SIZE = 50;
 export const PLACEMENT_FLOATING_LAUNCHER_GAP = 10;
 export const PLACEMENT_FLOATING_EDGE = 14;
-export const PLACEMENT_FLOATING_CHAT_TOP =
-  studyTranscriptTopY(PLACEMENT_LAYOUT_WIDTH) + 4;
+/** Overlap the player on the right; full answer card must fit below. */
+export const PLACEMENT_FLOATING_CHAT_TOP = studyPlayerBlockTopY();
 export const PLACEMENT_FLOATING_PANEL_BOTTOM =
   PLACEMENT_FLOATING_EDGE + PLACEMENT_FLOATING_LAUNCHER_SIZE + PLACEMENT_FLOATING_LAUNCHER_GAP;

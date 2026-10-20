@@ -2,14 +2,21 @@ import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStud
 import { EvidenceAnswerCard } from "@/components/dialogue/graphics/EvidenceAnswerCard";
 import { ChevronDownIcon } from "@/components/dialogue/graphics/DialogueIcons";
 
-export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }) {
+export function DialogueResearchAssistantPanel({
+  compact,
+  floating = false,
+}: {
+  compact: boolean;
+  floating?: boolean;
+}) {
+  const fillHeight = compact && !floating;
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
+        height: fillHeight ? "100%" : "auto",
+        minHeight: fillHeight ? 0 : undefined,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
         color: DIALOGUE_GRAPHICS_COLORS.ink,
       }}
@@ -25,14 +32,13 @@ export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }
 
       <div
         style={{
-          flex: 1,
-          minHeight: 0,
+          flex: fillHeight ? 1 : undefined,
+          minHeight: fillHeight ? 0 : undefined,
           padding: compact ? "0 10px 10px" : "0 12px 12px",
           display: "flex",
           flexDirection: "column",
           gap: compact ? 8 : 10,
-          overflowY: compact ? "auto" : "hidden",
-          overflowX: "hidden",
+          overflow: floating ? "visible" : fillHeight ? "auto" : "hidden",
         }}
       >
         <div

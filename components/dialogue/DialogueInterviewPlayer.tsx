@@ -1,10 +1,12 @@
 import {
-  PLACEMENT_PLAYER_ASSET_HEIGHT,
-  PLACEMENT_PLAYER_ASSET_WIDTH,
+  PLACEMENT_PLAYER_CONTROL_HEIGHT,
+  PLACEMENT_PLAYER_TOTAL_HEIGHT,
+  PLACEMENT_PLAYER_VIDEO_HEIGHT,
 } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { DialoguePlayerControlBar } from "@/components/dialogue/DialoguePlayerControlBar";
 
-/** Raster player chrome from approved section-5 (blurred still + real controls). */
+/** Blurred interview still (raster) + live HTML control bar (approved section-5 pattern). */
 export function DialogueInterviewPlayer() {
   return (
     <div
@@ -13,26 +15,38 @@ export function DialogueInterviewPlayer() {
         borderRadius: 10,
         overflow: "hidden",
         border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
-        background: DIALOGUE_GRAPHICS_COLORS.surface,
+        background: "#161412",
         position: "relative",
         width: "100%",
-        aspectRatio: `${PLACEMENT_PLAYER_ASSET_WIDTH} / ${PLACEMENT_PLAYER_ASSET_HEIGHT}`,
+        height: PLACEMENT_PLAYER_TOTAL_HEIGHT,
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/dialogue/placement-interview-player.webp"
-        alt=""
-        width={PLACEMENT_PLAYER_ASSET_WIDTH}
-        height={PLACEMENT_PLAYER_ASSET_HEIGHT}
+      <div
         style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "top center",
+          height: PLACEMENT_PLAYER_VIDEO_HEIGHT,
+          position: "relative",
+          overflow: "hidden",
+          flexShrink: 0,
         }}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/dialogue/placement-video-still.webp"
+          alt=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center center",
+            display: "block",
+          }}
+        />
+      </div>
+      <DialoguePlayerControlBar height={PLACEMENT_PLAYER_CONTROL_HEIGHT} />
     </div>
   );
 }
