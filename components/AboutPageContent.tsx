@@ -20,12 +20,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
       fontFamily: "var(--font-page-title)",
-      fontSize: 32,
+      fontSize: "var(--fs-h2)",
       fontWeight: 400,
-      lineHeight: 1.2,
+      lineHeight: "var(--lh-h2)",
       letterSpacing: "-0.8px",
       color: "var(--color-text-primary)",
-      margin: "0 0 12px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>{children}</h2>
   );
 }
@@ -107,19 +107,19 @@ export default function AboutPageContent({
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(0)}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
-                  fontSize: 32,
+                  fontSize: "var(--fs-h2)",
                   fontWeight: 400,
-                  lineHeight: 1.2,
+                  lineHeight: "var(--lh-h2)",
                   letterSpacing: "-0.8px",
                   color: "var(--color-text-primary)",
-                  margin: "0 0 4px",
+                  margin: "0 0 var(--space-2)",
                 }}>Hello, I&apos;m Mudit</h1>
               </Enter>
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
                 <p style={{
-                  fontSize: 14,
-                  lineHeight: 1.5,
+                  fontSize: "var(--fs-meta)",
+                  lineHeight: "var(--lh-meta)",
                   color: "var(--color-text-muted)",
                   margin: "0 0 24px",
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
@@ -127,9 +127,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(2)}>
                 <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  letterSpacing: "0.1px",
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: "0 0 32px",
                   textWrap: "pretty",
@@ -140,8 +140,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(3)}>
                 <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: "0 0 4px",
                 }}>You can find me</p>
@@ -149,8 +150,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(4)}>
                 <ul style={{
-                  fontSize: 15,
-                  lineHeight: 1.87,
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: 0,
                   paddingLeft: 20,
@@ -185,7 +187,7 @@ export default function AboutPageContent({
                       unstyled
                       className="nav-link"
                       style={{
-                        fontSize: 14,
+                        fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
                         textDecoration: "underline",
                         textUnderlineOffset: "3px",
@@ -202,7 +204,7 @@ export default function AboutPageContent({
                       rel="noopener noreferrer"
                       className="nav-link"
                       style={{
-                        fontSize: 14,
+                        fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
                         textDecoration: "underline",
                         textUnderlineOffset: "3px",
@@ -256,12 +258,12 @@ export default function AboutPageContent({
                       />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
-                      <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
-                      <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
+                      <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
+                      <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
+                      <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
                     </div>
                   </div>
-                  <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{dates}</p>
+                  <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{dates}</p>
                 </StaggerItem>
               );
             })}
@@ -278,8 +280,8 @@ export default function AboutPageContent({
                 justifyContent: "space-between",
                 padding: "16px 0",
               }}>
-                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
-                <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
+                <p style={{ fontSize: "var(--fs-body)", color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
+                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
               </StaggerItem>
             ))}
           </StaggerReveal>

@@ -74,7 +74,7 @@ export default function OutlineMorphWord({
     return (
       <span
         style={{
-          fontSize: 16,
+          fontSize: "var(--fs-body)",
           fontWeight: 400,
           lineHeight: "24px",
           color: (emphasized || active)

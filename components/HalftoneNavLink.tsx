@@ -212,7 +212,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       style={{
         position: "relative",
         textDecoration: "none",
-        fontSize: 16,
+        fontSize: "var(--fs-body)",
         fontWeight: 400,
         lineHeight: "24px",
         userSelect: "none",

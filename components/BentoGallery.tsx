@@ -1440,9 +1440,9 @@ export default function BentoGallery({
         background: "transparent",
         border: "none",
         color: zpBtnColor,
-        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontSize: 18,
-        fontWeight: 300,
+        fontWeight: 400,
         lineHeight: 1,
         cursor: "pointer",
         padding: 0,
@@ -1588,9 +1588,8 @@ export default function BentoGallery({
                                             color: isDark
                                                 ? "rgba(255,255,255,0.15)"
                                                 : "rgba(0,0,0,0.15)",
-                                            fontSize: 11,
-                                            fontFamily:
-                                                "Helvetica Neue, Helvetica, Arial, sans-serif",
+                                            fontSize: "var(--fs-caption)",
+                                            fontFamily: "var(--font-sans)",
                                             letterSpacing: "0.08em",
                                         }}
                                     >
@@ -1611,13 +1610,12 @@ export default function BentoGallery({
                                         display: "flex",
                                         alignItems: "flex-start",
                                         gap: 6,
-                                        fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
-                                        fontSize: 11,
+                                        fontFamily: "var(--font-sans)",
+                                        fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
                                         textTransform: "lowercase",
-                                        lineHeight: 1.3,
+                                        lineHeight: "var(--lh-caption)",
                                         // Hide truncated preview while focused overlay is up
                                         visibility: isActive ? "hidden" : "visible",
                                         // Linked tiles: blue on focus (and a
@@ -1700,13 +1698,12 @@ export default function BentoGallery({
                                         display: "flex",
                                         alignItems: "flex-start",
                                         gap: 6,
-                                        fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
-                                        fontSize: 11,
+                                        fontFamily: "var(--font-sans)",
+                                        fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
                                         textTransform: "lowercase",
-                                        lineHeight: 1.3,
+                                        lineHeight: "var(--lh-caption)",
                                         color: item.link
                                           ? "var(--color-link-blue)"
                                           : captionActive,
@@ -1806,8 +1803,8 @@ export default function BentoGallery({
             >
                 <PanIcon />
                 <span style={{
-                    fontFamily: "var(--font-sans, system-ui, sans-serif)",
-                    fontSize: 11,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "var(--fs-caption)",
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",
@@ -1820,8 +1817,8 @@ export default function BentoGallery({
                 }} />
                 <TapIcon />
                 <span style={{
-                    fontFamily: "var(--font-sans, system-ui, sans-serif)",
-                    fontSize: 11,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "var(--fs-caption)",
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",

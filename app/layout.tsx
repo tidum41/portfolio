@@ -27,11 +27,41 @@ import { Analytics } from '@vercel/analytics/next';
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
-// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-// preload: false — body copy is local HN/Söhne. Geist is only used inside
-// the CD player + habit embed, which mount after first paint.
+// Site sans is ABC Areal via Blob URL (NEXT_PUBLIC_AREAL_URL) — not next/font/local,
+// so the Dinamo files never enter the public git repo.
+// preload: false — Geist only mounts inside embeds after first paint.
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
+
+const AREAL_VAR_URL = process.env.NEXT_PUBLIC_AREAL_URL?.trim() || "";
+const AREAL_REG_URL = process.env.NEXT_PUBLIC_AREAL_URL_REGULAR?.trim() || "";
+const AREAL_MED_URL = process.env.NEXT_PUBLIC_AREAL_URL_MEDIUM?.trim() || "";
+
+/** @font-face CSS for ABC Areal. Prefers the variable file; falls back to 400+500 statics. */
+function arealFontFaceCss(): string {
+  if (AREAL_VAR_URL) {
+    return `@font-face{font-family:"ABC Areal";src:url("${AREAL_VAR_URL}") format("woff2");font-weight:400 500;font-style:normal;font-display:swap;}`;
+  }
+  const faces: string[] = [];
+  if (AREAL_REG_URL) {
+    faces.push(`@font-face{font-family:"ABC Areal";src:url("${AREAL_REG_URL}") format("woff2");font-weight:400;font-style:normal;font-display:swap;}`);
+  }
+  if (AREAL_MED_URL) {
+    faces.push(`@font-face{font-family:"ABC Areal";src:url("${AREAL_MED_URL}") format("woff2");font-weight:500;font-style:normal;font-display:swap;}`);
+  }
+  return faces.join("");
+}
+
+const arealCss = arealFontFaceCss();
+const arealPreloadHref = AREAL_VAR_URL || AREAL_REG_URL || "";
+const arealOrigin = (() => {
+  if (!arealPreloadHref) return "";
+  try {
+    return new URL(arealPreloadHref).origin;
+  } catch {
+    return "";
+  }
+})();
 
 const OG_IMAGES = [
   {
@@ -165,6 +195,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             globals.css keeps a copy as a fallback. */}
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
+        {arealCss ? <style dangerouslySetInnerHTML={{ __html: arealCss }} /> : null}
+        {arealPreloadHref ? (
+          <link rel="preload" href={arealPreloadHref} as="font" type="font/woff2" crossOrigin="anonymous" />
+        ) : null}
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here
             for crawlers that only read the first non-media icon link. */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -178,6 +212,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <link key={origin} rel="preconnect" href={origin} crossOrigin="anonymous" />
         ))}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
+        {arealOrigin ? (
+          <link rel="preconnect" href={arealOrigin} crossOrigin="anonymous" />
+        ) : null}
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
         {/* Injected via useServerInsertedHTML so React 19 never sees a
