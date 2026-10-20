@@ -226,9 +226,23 @@ async function runNavSuite(page, { coldWaitMs }) {
   await clickNav(page, "Archive");
   await waitPath(page, "/archive");
   await settle(page, 400);
-  await clickNav(page, "About");
-  await clickNav(page, "About");
-  await clickNav(page, "About");
+  // Stamp once, then hammer — measures first response under rapid re-entry.
+  await page.evaluate(() => {
+    window.__bench.clickMs = performance.now();
+    window.__bench.shellMs = null;
+    window.__bench.pathMs = null;
+    window.__bench.rafGaps = [];
+  });
+  await page.evaluate(() => {
+    const links = [...document.querySelectorAll("nav.site-nav a.nav-link")];
+    const el = links.find((a) => (a.textContent || "").toLowerCase().includes("about"));
+    if (!el) throw new Error("about missing");
+    for (let i = 0; i < 3; i++) {
+      el.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, view: window, button: 0 }),
+      );
+    }
+  });
   await waitShell(page, "about");
   await waitPath(page, "/about");
   const mid = await readTiming(page);
