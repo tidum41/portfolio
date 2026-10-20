@@ -1,30 +1,40 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { cssEase, EASE_OPACITY } from "@/lib/motion";
-
 type Props = {
   src: string;
   alt: string;
   open: boolean;
   onClose: () => void;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 };
 
-export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
+export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocusRef }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
+  const scrollYRef = useRef(0);
+
+  const finishClose = useCallback(() => {
+    onClose();
+    window.scrollTo(0, scrollYRef.current);
+    returnFocusRef?.current?.focus({ preventScroll: true });
+  }, [onClose, returnFocusRef]);
 
   useEffect(() => {
     if (!open) {
       setVisible(false);
       return;
     }
+    scrollYRef.current = window.scrollY;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setVisible(true);
+    if (reduced) {
+      setVisible(true);
+    } else {
+      requestAnimationFrame(() => setVisible(true));
+    }
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") finishClose();
     };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -33,21 +43,22 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open, finishClose]);
 
   const onBackdrop = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) onClose();
+      if (e.target === e.currentTarget) finishClose();
     },
-    [onClose],
+    [finishClose],
   );
 
   if (!open) return null;
 
-  const ease = cssEase(EASE_OPACITY);
   const reduced =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ease = "ease-out";
+  const duration = reduced ? "0ms" : "200ms";
 
   return (
     <div
@@ -56,7 +67,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
       onClick={onBackdrop}
       style={{
         opacity: visible ? 1 : 0,
-        transition: reduced ? "none" : `opacity 0.22s ${ease}`,
+        transition: reduced ? "none" : `opacity ${duration} ${ease}`,
       }}
     >
       <div
@@ -64,23 +75,25 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={alt}
+        onClick={onBackdrop}
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "scale(1)" : "scale(0.98)",
-          transition: reduced ? "none" : `opacity 0.26s ${ease}, transform 0.26s ${ease}`,
+          transition: reduced ? "none" : `opacity ${duration} ${ease}, transform ${duration} ${ease}`,
         }}
       >
         <button
           ref={closeRef}
           type="button"
           className="cs-lightbox-close"
-          onClick={onClose}
+          onClick={finishClose}
           aria-label="Close enlarged image"
         >
-          Close
+          <span aria-hidden="true">×</span>
         </button>
-        <div className="cs-lightbox-media">
-          <Image src={src} alt={alt} width={2400} height={1600} style={{ width: "100%", height: "auto" }} />
+        <div className="cs-lightbox-media" onClick={(e) => e.stopPropagation()}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt} className="cs-lightbox-img" />
         </div>
       </div>
     </div>

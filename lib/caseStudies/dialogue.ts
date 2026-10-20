@@ -11,6 +11,10 @@ export const DIALOGUE_TITLE = "Answers you can pinpoint";
 /** Hero uses fcc87a2 approved frame (section-6.png). */
 export const DIALOGUE_HERO_SRC = "/dialogue/section-6.png";
 
+/** Intrinsic pixel size of approved round-18 / fcc87a2 section PNGs (all 1600×1000). */
+export const DIALOGUE_RASTER_WIDTH = 1600;
+export const DIALOGUE_RASTER_HEIGHT = 1000;
+
 export const DIALOGUE_IMAGES = {
   /** DecisionBlock: closest approved stand-ins for post-cutoff alt frames */
   altParagraphs: "/dialogue/section-1.png",
