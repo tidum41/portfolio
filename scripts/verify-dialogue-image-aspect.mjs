@@ -13,21 +13,25 @@ const VIEWPORTS = [
 const TOLERANCE = 0.005;
 
 async function checkAspectRatios(page) {
-  const imgs = page.locator(".dialogue-case-study img[src*='/dialogue/']");
-  const count = await imgs.count();
   const failures = [];
-  for (let i = 0; i < count; i++) {
-    const img = imgs.nth(i);
-    const data = await img.evaluate((el) => {
-      const r = el.getBoundingClientRect();
-      return {
-        src: el.getAttribute("src") || "",
-        w: r.width,
-        h: r.height,
-        nw: el.naturalWidth,
-        nh: el.naturalHeight,
-      };
-    });
+  const dataList = await page.locator(".dialogue-case-study img").evaluateAll((elements) =>
+    elements
+      .map((el) => {
+        const src = el.currentSrc || el.getAttribute("src") || "";
+        if (!src.includes("dialogue")) return null;
+        const r = el.getBoundingClientRect();
+        return {
+          src,
+          w: r.width,
+          h: r.height,
+          nw: el.naturalWidth,
+          nh: el.naturalHeight,
+        };
+      })
+      .filter(Boolean),
+  );
+  const count = dataList.length;
+  for (const data of dataList) {
     if (!data.nw || !data.nh || !data.w || !data.h) continue;
     const rendered = data.w / data.h;
     const natural = data.nw / data.nh;
@@ -35,6 +39,9 @@ async function checkAspectRatios(page) {
     if (drift > TOLERANCE) {
       failures.push({ ...data, rendered, natural, drift });
     }
+  }
+  if (count < 5) {
+    throw new Error(`expected dialogue rasters on page, found ${count}`);
   }
   return { count, failures };
 }
