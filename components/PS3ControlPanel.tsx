@@ -1178,7 +1178,7 @@ export default function PS3ControlPanel({
                 marginTop: labelAutoOffset + dk.menuTextOffset,
               }}
             >
-              menu
+              Menu
             </span>
           </div>
         </div>
@@ -1207,7 +1207,7 @@ export default function PS3ControlPanel({
         {/* Pattern color */}
         <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
-            <span style={labelSt}>pattern color</span>
+            <span style={labelSt}>Pattern Color</span>
             <button
               className="ps3cp-custom-color-btn"
               onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
@@ -1263,12 +1263,15 @@ export default function PS3ControlPanel({
 
         {/* Pattern mode (Clean Text Label - Zero Icons) */}
         <div style={{ padding: "6px 16px 8px" }}>
-          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern mode</span>
+          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>Pattern Mode</span>
           <div style={{ display: "flex", gap: 4 }}>
-            {["wave", "halftone"].map((m, i) => (
-              <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
-                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.02em" }}>
-                {m}
+            {[
+              { id: 0, label: "Wave" },
+              { id: 1, label: "Halftone" },
+            ].map(({ id, label }) => (
+              <button key={id} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: id })} aria-pressed={mode === id}
+                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === id ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === id ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === id ? 500 : 400, letterSpacing: "0.02em" }}>
+                {label}
               </button>
             ))}
           </div>
@@ -1277,7 +1280,7 @@ export default function PS3ControlPanel({
         {/* Dot size */}
         <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
-            <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
+            <div style={rowH}><span style={labelSt}>Dot Size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
             <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
@@ -1285,7 +1288,7 @@ export default function PS3ControlPanel({
 
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
+          <div style={rowH}><span style={labelSt}>Intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
           <Slider min={0} max={1.0} step={0.01} value={intensity} isDark={isDark} label="Intensity"
             onChange={v => {
               if (activePreset >= 1) {
@@ -1297,21 +1300,21 @@ export default function PS3ControlPanel({
 
         {/* Speed */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
+          <div style={rowH}><span style={labelSt}>Speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
           <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
         {/* Y offset */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
+          <div style={rowH}><span style={labelSt}>Y Offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
           <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
         {/* Cursor reactivity */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>cursor reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
+          <div style={rowH}><span style={labelSt}>Cursor Reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
           <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark} label="Cursor reactivity"
             onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>

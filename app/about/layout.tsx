@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "about",
+  title: "About",
   description:
     "About Mudit Mahajan — UCLA product designer. Experience at JOOLA, Beacons AI, Dialogue AI, and more.",
   alternates: { canonical: `${SITE_URL}/about` },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "about — mudit mahajan",
+    title: "About — Mudit Mahajan",
     description:
       "About Mudit Mahajan — UCLA product designer. Experience, orgs, and links.",
     url: `${SITE_URL}/about`,

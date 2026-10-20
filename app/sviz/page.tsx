@@ -15,12 +15,12 @@ import { SITE_URL } from "@/lib/site";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "sviz",
+  title: "Sviz",
   description:
-    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+    "Sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
   alternates: { canonical: `${SITE_URL}/sviz` },
   openGraph: {
-    title: "sviz — mudit mahajan",
+    title: "Sviz — Mudit Mahajan",
     description:
       "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
     url: `${SITE_URL}/sviz`,
@@ -197,7 +197,7 @@ const METADATA = [
 
 const FB = {
   tocItems: TOC_ITEMS,
-  heroTagline: "YouTube, personal, 2021",
+  heroTagline: "YouTube, Personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",

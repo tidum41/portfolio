@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
   alternates: { canonical: `${SITE_URL}/ucla-sublease` },
   openGraph: {
-    title: "BruinLease — mudit mahajan",
+    title: "BruinLease — Mudit Mahajan",
     description:
       "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
     url: `${SITE_URL}/ucla-sublease`,
@@ -285,7 +285,7 @@ const FB = {
     { _key: "t8", id: "solution",   label: "Solution"          },
     { _key: "t9", id: "reflection", label: "Reflection"        },
   ] as TocItem[],
-  heroTagline:   "BruinLease, case study, 2026",
+  heroTagline:   "BruinLease, Case Study, 2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
@@ -662,7 +662,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3BeforePhonePos)}
                         style={{ border: "2px solid transparent" }}
                       />
-                      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>before</p>
+                      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>Before</p>
                     </div>
                   )}
                   {cs.decision1Video && (
@@ -674,7 +674,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3AfterPhonePos)}
                         style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
                       />
-                      <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>after</p>
+                      <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
                     </div>
                   )}
                 </div>

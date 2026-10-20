@@ -1811,7 +1811,7 @@ export default function BentoGallery({
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",
-                }}>drag · scroll</span>
+                }}>Drag · Scroll</span>
                 <div style={{
                     width: 1,
                     height: 10,
@@ -1825,7 +1825,7 @@ export default function BentoGallery({
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",
-                }}>tap to focus</span>
+                }}>Tap to focus</span>
             </div>
 
             {/* ── Zoom slider — where hint pill used to be ── */}

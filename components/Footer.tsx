@@ -29,7 +29,7 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
         .footer-links {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 20px;
           list-style: none;
           margin: 0;
           padding: 0;

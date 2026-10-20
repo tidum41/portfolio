@@ -128,7 +128,7 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        {"cognitive science "}
+        {"Cognitive Science "}
         <span className="hero-sub-end">
           {"at "}
           <a
@@ -137,7 +137,7 @@ export default function HeroText() {
             rel="noopener noreferrer"
             className="hero-ucla"
           >
-            ucla
+            UCLA
           </a>
         </span>
       </motion.p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { CopySimple } from "@phosphor-icons/react";
+import { LinkSimple } from "@phosphor-icons/react";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -178,11 +178,14 @@ export default function CopyEmail({
 
 function CopyIcon() {
   return (
-    <CopySimple
+    <LinkSimple
       size={14}
       weight="regular"
       aria-hidden="true"
-      style={{ flexShrink: 0, marginTop: "-0.5px" }}
+      style={{
+        flexShrink: 0,
+        transform: "translateY(-0.5px)",
+      }}
     />
   );
 }

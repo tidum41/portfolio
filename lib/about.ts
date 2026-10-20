@@ -8,7 +8,7 @@ export const EXPERIENCE = [
     company: "Cursor",
     role: "Campus Ambassador",
     dates: "2026",
-    description: "leading growth at ucla",
+    description: "Leading growth at UCLA",
     logo: "/images/about/logos/cursor.png",
   },
   {
@@ -16,7 +16,7 @@ export const EXPERIENCE = [
     company: "JOOLA",
     role: "Product Design Intern",
     dates: "Summer 2026",
-    description: "pioneers in pickleball & table tennis equipment",
+    description: "Pioneers in pickleball & table tennis equipment",
     logo: "/images/about/logos/joola.avif",
   },
   {
@@ -24,7 +24,7 @@ export const EXPERIENCE = [
     company: "Beacons AI",
     role: "Product Designer (contract)",
     dates: "2026",
-    description: "via Product Space",
+    description: "Via Product Space",
     logo: "/images/about/logos/beacons-ai.avif",
   },
   {
@@ -32,7 +32,7 @@ export const EXPERIENCE = [
     company: "Dialogue AI",
     role: "Product Designer (contract)",
     dates: "2026",
-    description: "via Product Space",
+    description: "Via Product Space",
     logo: "/images/about/logos/dialogue-ai.avif",
   },
   {
@@ -40,7 +40,7 @@ export const EXPERIENCE = [
     company: "Soka Records",
     role: "Creative Intern",
     dates: "2025",
-    description: "keshi, boywithuke, starfall, yel",
+    description: "Keshi, BoyWithUke, Starfall, Yel",
     logo: "/images/about/logos/soka-records.avif",
   },
   {
@@ -48,7 +48,7 @@ export const EXPERIENCE = [
     company: "The Mousepad Company",
     role: "Visual Designer",
     dates: "2020 – 2022",
-    description: "mousepads and social media",
+    description: "Mousepads and social media",
     logo: "/images/about/logos/mousepad-company.avif",
     hidden: true,
   },
@@ -60,11 +60,11 @@ export const ORGS = [
 ] as const;
 
 export const ABOUT_INTERESTS = [
-  "shooting concerts for iconic artists and venues 📸",
-  "building keyboards on youtube (1M+ views!) ⌨️",
-  "winning a national table tennis title 🏓",
+  "Shooting concerts for iconic artists and venues 📸",
+  "Building keyboards on YouTube (1M+ views!) ⌨️",
+  "Winning a national table tennis title 🏓",
   "3D printing functional art",
-  "running 🏃‍",
+  "Running 🏃‍",
 ] as const;
 
 export const ABOUT_BIO =

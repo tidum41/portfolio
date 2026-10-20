@@ -113,7 +113,7 @@ export default function AboutPageContent({
                   letterSpacing: "-0.8px",
                   color: "var(--color-text-primary)",
                   margin: "0 0 4px",
-                }}>hello hello, i&apos;m mudit</h1>
+                }}>Hello, I&apos;m Mudit</h1>
               </Enter>
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
@@ -220,13 +220,13 @@ export default function AboutPageContent({
 
         <ScrollReveal>
           <section style={{ marginBottom: "var(--space-7)" }}>
-            <SectionLabel>drag my favorite CDs!</SectionLabel>
+            <SectionLabel>Favorite Albums</SectionLabel>
             <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
           </section>
         </ScrollReveal>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
+          <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
             {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(({ slug, company, role, dates, description, logo }) => {
               const crop = logoDk[slug as keyof typeof logoDk];
@@ -269,7 +269,7 @@ export default function AboutPageContent({
         </section>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>i&apos;m part of</SectionLabel></ScrollReveal>
+          <ScrollReveal><SectionLabel>Organizations</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
             {ORGS.map(({ name, role }) => (
               <StaggerItem key={name} style={{
