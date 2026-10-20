@@ -1,0 +1,15 @@
+{
+  "description": "Intrinsic export canvas pixels from round-34 export-static (data-export-section-canvas). Hero uses section-6 compose frame.",
+  "routes": {
+    "hero": { "width": 629, "height": 368 },
+    "section-1": { "width": 693, "height": 481 },
+    "section-2": { "width": 787, "height": 441 },
+    "section-3": { "width": 781, "height": 495 },
+    "section-4": { "width": 287, "height": 497 },
+    "section-5": { "width": 420, "height": 448 },
+    "section-6": { "width": 629, "height": 368 },
+    "section-6a": { "width": 629, "height": 368 },
+    "section-6b": { "width": 629, "height": 368 },
+    "section-7": { "width": 580, "height": 450 }
+  }
+}
