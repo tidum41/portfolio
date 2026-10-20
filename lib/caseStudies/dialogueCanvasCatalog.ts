@@ -2,91 +2,138 @@ export type CanvasAssetStatus = "final" | "candidate";
 
 export type DialogueCanvasAsset = {
   id: string;
-  src: string;
+  sectionId: string;
   status: CanvasAssetStatus;
   visualNote: string;
+  pngSrc: string | null;
   exportRoute: string;
 };
 
-const ASSETS: DialogueCanvasAsset[] = [
+export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
   {
     id: "D-01",
-    src: "/dialogue/section-6.png",
+    sectionId: "hero",
     status: "final",
-    visualNote:
-      "Hero frame: study page with the assistant open and a structured answer in context.",
+    visualNote: "Hero: structured answer with summary and funnel chart.",
+    pngSrc: "/dialogue/section-6.png",
     exportRoute: "hero",
   },
   {
     id: "D-02",
-    src: "/dialogue/section-1.png",
+    sectionId: "problem",
     status: "final",
-    visualNote:
-      "Compares a dense text-only study chat answer with a structured answer for the same question.",
+    visualNote: "Problem frame: dense paragraphs without sources (section-1).",
+    pngSrc: "/dialogue/section-1.png",
     exportRoute: "section-1",
   },
   {
     id: "D-03",
-    src: "/dialogue/section-2.png",
+    sectionId: "problem",
     status: "final",
-    visualNote: "Four study chat questions, each with a different chart and clip layout.",
-    exportRoute: "section-2",
+    visualNote: "Solution frame: same approved section-1 asset (paired column).",
+    pngSrc: "/dialogue/section-1.png",
+    exportRoute: "section-1",
   },
   {
     id: "D-04",
-    src: "/dialogue/section-3.png",
-    status: "final",
-    visualNote: "Annotated answer: sources, summary, chart, clips, and follow-ups in order.",
-    exportRoute: "section-3",
+    sectionId: "problem",
+    status: "candidate",
+    visualNote: "DecisionBlock option: paragraphs format (section-1 stand-in).",
+    pngSrc: "/dialogue/section-1.png",
+    exportRoute: "section-1",
   },
   {
     id: "D-05",
-    src: "/dialogue/section-4.png",
-    status: "final",
-    visualNote: "Chart selection filtering the timestamped clip list below.",
-    exportRoute: "section-4",
+    sectionId: "problem",
+    status: "candidate",
+    visualNote: "DecisionBlock option: quote list (section-2 stand-in).",
+    pngSrc: "/dialogue/section-2.png",
+    exportRoute: "section-2",
   },
   {
     id: "D-06",
-    src: "/dialogue/section-5.png",
+    sectionId: "problem",
     status: "final",
-    visualNote: "Clip player with recording, synced transcript, and highlighted speaker row.",
-    exportRoute: "section-5",
+    visualNote: "DecisionBlock chosen: structured answer (section-4 stand-in).",
+    pngSrc: "/dialogue/section-4.png",
+    exportRoute: "section-4",
   },
   {
     id: "D-07",
-    src: "/dialogue/section-6b.png",
+    sectionId: "problem",
     status: "final",
-    visualNote: "Docked sidebar exploration along the right edge of the study page.",
-    exportRoute: "section-6b",
+    visualNote: "Bar selection filters clips (section-4).",
+    pngSrc: "/dialogue/section-4.png",
+    exportRoute: "section-4",
   },
   {
     id: "D-08",
-    src: "/dialogue/section-6a.png",
+    sectionId: "one-structure",
     status: "final",
-    visualNote: "Empty assistant panel titled Research assistant before any question.",
-    exportRoute: "section-6a",
+    visualNote: "Fixed answer anatomy (section-3).",
+    pngSrc: "/dialogue/section-3.png",
+    exportRoute: "section-3",
   },
   {
     id: "D-09",
-    src: "/dialogue/section-6.png",
+    sectionId: "fitted-charts",
     status: "final",
-    visualNote: "Pop-up research assistant over the study page (in-product pattern).",
-    exportRoute: "section-6",
+    visualNote: "Four question types, four chart shapes (section-2).",
+    pngSrc: "/dialogue/section-2.png",
+    exportRoute: "section-2",
   },
   {
     id: "D-10",
-    src: "/dialogue/section-7.png",
+    sectionId: "clips",
     status: "final",
-    visualNote: "Full structured answer with every supporting clip in one drawer.",
+    visualNote: "Clip opens at timestamp with highlighted speaker (section-5).",
+    pngSrc: "/dialogue/section-5.png",
+    exportRoute: "section-5",
+  },
+  {
+    id: "D-11",
+    sectionId: "imperfect-evidence",
+    status: "candidate",
+    visualNote: "Visual pending: counter-evidence, low coverage, zero match.",
+    pngSrc: null,
+    exportRoute: "section-imperfect",
+  },
+  {
+    id: "D-12",
+    sectionId: "share-finding",
+    status: "candidate",
+    visualNote: "Visual pending: copy as card export.",
+    pngSrc: null,
+    exportRoute: "section-share",
+  },
+  {
+    id: "D-13",
+    sectionId: "placement",
+    status: "final",
+    visualNote: "Docked sidebar exploration (section-6b).",
+    pngSrc: "/dialogue/section-6b.png",
+    exportRoute: "section-6b",
+  },
+  {
+    id: "D-14",
+    sectionId: "placement",
+    status: "final",
+    visualNote: "Floating bubble pattern (section-6).",
+    pngSrc: "/dialogue/section-6.png",
+    exportRoute: "section-6",
+  },
+  {
+    id: "D-15",
+    sectionId: "full-answer",
+    status: "final",
+    visualNote: "Full answer with clips drawer (section-7).",
+    pngSrc: "/dialogue/section-7.png",
     exportRoute: "section-7",
   },
 ];
 
-export const DIALOGUE_CANVAS_ASSETS = ASSETS;
-
 export const DIALOGUE_CANVAS_BY_ID: Record<string, DialogueCanvasAsset> = Object.fromEntries(
-  ASSETS.map((a) => [a.id, a]),
+  DIALOGUE_CANVAS_ASSETS.map((a) => [a.id, a]),
 );
 
 export const PRIVATE_EXPORT_REPO =

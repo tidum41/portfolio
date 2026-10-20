@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/dialogue` },
   robots: DIALOGUE_DRAFT ? { index: false, follow: false } : undefined,
   openGraph: {
-    title: `${DIALOGUE_TITLE} — mudit mahajan`,
+    title: `${DIALOGUE_TITLE} | mudit mahajan`,
     description,
     url: `${SITE_URL}/dialogue`,
   },
