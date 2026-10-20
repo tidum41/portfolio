@@ -1,0 +1,57 @@
+- generic [active] [ref=f43e1]:
+  - link "Skip to content" [ref=f43e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f43e3]:
+    - navigation "Main navigation" [ref=f43e5]:
+      - generic [ref=f43e6]:
+        - slider "Background music volume" [ref=f43e7] [cursor=pointer]: "0"
+        - button "Unmute background music" [ref=f43e8] [cursor=pointer]
+      - button "Switch to light mode" [ref=f43e23] [cursor=pointer]
+      - link "work" [ref=f43e38] [cursor=pointer]:
+        - /url: /
+      - link "archive" [ref=f43e108] [cursor=pointer]:
+        - /url: /archive
+      - link "about" [ref=f43e199] [cursor=pointer]:
+        - /url: /about
+  - main [ref=f43e273]:
+    - generic [ref=f43e277]:
+      - generic [ref=f43e278]:
+        - strong [ref=f43e279]: Dialogue canvas
+        - generic [ref=f43e280]: Drag background to pan, wheel to zoom, click image to pin
+        - button "Copy feedback (0)" [disabled] [ref=f43e281]
+      - generic [ref=f43e283]:
+        - generic [ref=f43e284]:
+          - paragraph [ref=f43e285]: Answers you can pinpoint
+          - paragraph [ref=f43e287]: Hero
+        - generic [ref=f43e289]:
+          - paragraph [ref=f43e290]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+          - paragraph [ref=f43e292]: "Problem: three paragraphs, no sources"
+          - paragraph [ref=f43e295]: "Solution: one claim, one chart, linked moments"
+          - paragraph [ref=f43e298]: "Paragraphs — Weak: you can't see who said what, or how many."
+          - paragraph [ref=f43e301]: "Quote list — Weak: there's no answer. You still do the counting."
+          - paragraph [ref=f43e304]: Structured answer — We went with this
+          - paragraph [ref=f43e307]: "Solution: selecting a bar filters the clips to the moments behind it"
+        - generic [ref=f43e309]:
+          - paragraph [ref=f43e310]: Every answer gets one fixed structure
+          - paragraph [ref=f43e312]: "Anatomy: Sources, Summary, Answer chart, Timestamped clips, Suggested next questions"
+        - generic [ref=f43e314]:
+          - paragraph [ref=f43e315]: The chart fits the question
+          - paragraph [ref=f43e317]: Four question types, four chart shapes
+        - generic [ref=f43e319]:
+          - paragraph [ref=f43e320]: A quote with no context
+          - paragraph [ref=f43e322]: "Solution: the clip opens at 01:38 with the speaker row highlighted"
+        - generic [ref=f43e324]:
+          - paragraph [ref=f43e325]: When the research doesn't settle it
+          - paragraph [ref=f43e327]: Counter-evidence shows who disagreed. Low coverage hides the chart and calls the answer a lead. With no match, the chat suggests a question the interviews did cover.
+        - generic [ref=f43e329]:
+          - paragraph [ref=f43e330]: A finding has to leave the chat
+          - paragraph [ref=f43e332]: One action copies a ready-to-paste card. A thin finding keeps its low-coverage note, so it can't pass as solid.
+        - generic [ref=f43e334]:
+          - paragraph [ref=f43e335]: Instead of a docked sidebar, I kept the floating chat
+          - paragraph [ref=f43e337]: "Explored: docked sidebar"
+          - paragraph [ref=f43e340]: "Kept: floating chat"
+        - generic [ref=f43e342]:
+          - paragraph [ref=f43e343]: One answer, start to finish
+          - paragraph [ref=f43e345]: "Solution: question, chart, and every supporting clip in one drawer"
+  - contentinfo [ref=f43e347]
+  - button "Open Next.js Dev Tools" [ref=f43e355] [cursor=pointer]

@@ -1,0 +1,153 @@
+- generic [active] [ref=f65e1]:
+  - link "Skip to content" [ref=f65e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f65e3]:
+    - navigation "Main navigation" [ref=f65e5]:
+      - generic [ref=f65e6]:
+        - slider "Background music volume" [ref=f65e7] [cursor=pointer]: "0"
+        - button "Unmute background music" [ref=f65e8] [cursor=pointer]
+      - button "Switch to light mode" [ref=f65e23] [cursor=pointer]
+      - link "work" [ref=f65e38] [cursor=pointer]:
+        - /url: /
+      - link "archive" [ref=f65e108] [cursor=pointer]:
+        - /url: /archive
+      - link "about" [ref=f65e199] [cursor=pointer]:
+        - /url: /about
+  - main [ref=f65e273]:
+    - generic [ref=f65e274]:
+      - button "Reset board" [ref=f65e275] [cursor=pointer]
+      - application "tldraw" [ref=f65e276]:
+        - generic [ref=f65e280]:
+          - 'img "Solution: the clip opens at 01:38 with the speaker row highlighted" [ref=f65e282]'
+          - img "Four question types, four chart shapes" [ref=f65e284]
+          - 'img "Solution: question, chart, and every supporting clip in one drawer" [ref=f65e286]'
+          - img "Hero" [ref=f65e288]
+          - img "Counter-evidence shows who disagreed. Low coverage hides the chart and calls the answer a lead. With no match, the chat suggests a question the interviews did cover." [ref=f65e290]
+          - 'img "Anatomy: Sources, Summary, Answer chart, Timestamped clips, Suggested next questions" [ref=f65e292]'
+          - 'img "Explored: docked sidebar" [ref=f65e294]'
+          - 'img "Kept: floating chat" [ref=f65e296]'
+          - 'img "Problem: three paragraphs, no sources" [ref=f65e298]'
+          - 'img "Solution: one claim, one chart, linked moments" [ref=f65e300]'
+          - 'img "Paragraphs — Weak: you can''t see who said what, or how many." [ref=f65e302]'
+          - 'img "Quote list — Weak: there''s no answer. You still do the counting." [ref=f65e304]'
+          - img "Structured answer — We went with this" [ref=f65e306]
+          - 'img "Solution: selecting a bar filters the clips to the moments behind it" [ref=f65e308]'
+          - img "One action copies a ready-to-paste card. A thin finding keeps its low-coverage note, so it can't pass as solid." [ref=f65e310]
+          - generic [ref=f65e313]:
+            - paragraph [ref=f65e314]: A quote with no context
+            - paragraph [ref=f65e315]: "Solution: the clip opens at 01:38 with the speaker row highlighted"
+          - generic [ref=f65e318]:
+            - paragraph [ref=f65e319]: The chart fits the question
+            - paragraph [ref=f65e320]: Four question types, four chart shapes
+          - generic [ref=f65e323]:
+            - paragraph [ref=f65e324]: One answer, start to finish
+            - paragraph [ref=f65e325]: "Solution: question, chart, and every supporting clip in one drawer"
+          - generic [ref=f65e328]:
+            - paragraph [ref=f65e329]: Answers you can pinpoint
+            - paragraph [ref=f65e330]: Hero
+          - generic [ref=f65e333]:
+            - paragraph [ref=f65e334]: When the research doesn't settle it
+            - paragraph [ref=f65e335]: Counter-evidence shows who disagreed. Low coverage hides the chart and calls the answer a lead. With no match, the chat suggests a question the interviews did cover.
+          - generic [ref=f65e338]:
+            - paragraph [ref=f65e339]: Every answer gets one fixed structure
+            - paragraph [ref=f65e340]: "Anatomy: Sources, Summary, Answer chart, Timestamped clips, Suggested next questions"
+          - generic [ref=f65e343]:
+            - paragraph [ref=f65e344]: Instead of a docked sidebar, I kept the floating chat
+            - paragraph [ref=f65e345]: "Explored: docked sidebar"
+          - generic [ref=f65e348]:
+            - paragraph [ref=f65e349]: Instead of a docked sidebar, I kept the floating chat
+            - paragraph [ref=f65e350]: "Kept: floating chat"
+          - generic [ref=f65e353]:
+            - paragraph [ref=f65e354]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e355]: "Problem: three paragraphs, no sources"
+          - generic [ref=f65e358]:
+            - paragraph [ref=f65e359]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e360]: "Solution: one claim, one chart, linked moments"
+          - generic [ref=f65e363]:
+            - paragraph [ref=f65e364]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e365]: "Paragraphs — Weak: you can't see who said what, or how many."
+          - generic [ref=f65e368]:
+            - paragraph [ref=f65e369]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e370]: "Quote list — Weak: there's no answer. You still do the counting."
+          - generic [ref=f65e373]:
+            - paragraph [ref=f65e374]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e375]: Structured answer — We went with this
+          - generic [ref=f65e378]:
+            - paragraph [ref=f65e379]: Dialogue's study chat could answer anything… / …but you couldn't tell which interview said it
+            - paragraph [ref=f65e380]: "Solution: selecting a bar filters the clips to the moments behind it"
+          - generic [ref=f65e383]:
+            - paragraph [ref=f65e384]: A finding has to leave the chat
+            - paragraph [ref=f65e385]: One action copies a ready-to-paste card. A thin finding keeps its low-coverage note, so it can't pass as solid.
+        - document:
+          - button "Move focus to canvas" [ref=f65e386] [cursor=pointer]
+          - generic:
+            - generic:
+              - navigation:
+                - generic:
+                  - button "Menu" [ref=f65e387] [cursor=pointer]
+                  - button "Page 1" [ref=f65e389] [cursor=pointer]
+                  - toolbar "Actions":
+                    - button "Undo — Ctrl + Z" [disabled] [ref=f65e392]
+                    - button "Redo — Ctrl + ⇧ + Z" [disabled] [ref=f65e394]
+                    - button "Delete — ⌫" [disabled] [ref=f65e396]
+                    - button "Duplicate — Ctrl + D" [disabled] [ref=f65e398]
+                    - button "Actions" [ref=f65e400] [cursor=pointer]
+            - generic [ref=f65e402]:
+              - generic [ref=f65e403]:
+                - toolbar "Color" [ref=f65e404]:
+                  - radiogroup [ref=f65e405]:
+                    - radio "Color — Black (selected)" [checked] [ref=f65e406] [cursor=pointer]
+                    - radio "Color — Grey" [ref=f65e408] [cursor=pointer]
+                    - radio "Color — Light violet" [ref=f65e410] [cursor=pointer]
+                    - radio "Color — Violet" [ref=f65e412] [cursor=pointer]
+                    - radio "Color — Blue" [ref=f65e414] [cursor=pointer]
+                    - radio "Color — Light blue" [ref=f65e416] [cursor=pointer]
+                    - radio "Color — Yellow" [ref=f65e418] [cursor=pointer]
+                    - radio "Color — Orange" [ref=f65e420] [cursor=pointer]
+                    - radio "Color — Green" [ref=f65e422] [cursor=pointer]
+                    - radio "Color — Light green" [ref=f65e424] [cursor=pointer]
+                    - radio "Color — Light red" [ref=f65e426] [cursor=pointer]
+                    - radio "Color — Red" [ref=f65e428] [cursor=pointer]
+                - generic [ref=f65e431]:
+                  - generic [ref=f65e432] [cursor=pointer]
+                  - slider "Opacity — 100%" [ref=f65e435]
+              - generic [ref=f65e436]:
+                - toolbar "Fill" [ref=f65e437]:
+                  - radiogroup [ref=f65e438]:
+                    - radio "Fill — None (selected)" [checked] [ref=f65e439] [cursor=pointer]
+                    - radio "Fill — Semi" [ref=f65e441] [cursor=pointer]
+                    - radio "Fill — Solid" [ref=f65e443] [cursor=pointer]
+                  - button "Fill" [ref=f65e446] [cursor=pointer]
+                - toolbar "Dash" [ref=f65e448]:
+                  - radiogroup [ref=f65e449]:
+                    - radio "Dash — Draw (selected)" [checked] [ref=f65e450] [cursor=pointer]
+                    - radio "Dash — Dashed" [ref=f65e452] [cursor=pointer]
+                    - radio "Dash — Dotted" [ref=f65e454] [cursor=pointer]
+                    - radio "Dash — Solid" [ref=f65e456] [cursor=pointer]
+                - toolbar "Size" [ref=f65e458]:
+                  - radiogroup [ref=f65e459]:
+                    - radio "Size — Small" [ref=f65e460] [cursor=pointer]
+                    - radio "Size — Medium (selected)" [checked] [ref=f65e462] [cursor=pointer]
+                    - radio "Size — Large" [ref=f65e464] [cursor=pointer]
+                    - radio "Size — Extra large" [ref=f65e466] [cursor=pointer]
+          - generic:
+            - generic:
+              - toolbar "Navigation" [ref=f65e469]:
+                - button "Zoom — 12%" [ref=f65e470] [cursor=pointer]:
+                  - generic [ref=f65e471]: 12%
+                - button "Toggle minimap" [ref=f65e472] [cursor=pointer]
+              - toolbar "Tools" [ref=f65e474]:
+                - generic [ref=f65e475]:
+                  - button "Select — V" [pressed] [ref=f65e476] [cursor=pointer]
+                  - button "Hand — H" [ref=f65e478] [cursor=pointer]
+                  - button "Draw — D" [ref=f65e480] [cursor=pointer]
+                  - button "Eraser — E" [ref=f65e482] [cursor=pointer]
+                  - button "Arrow — A" [ref=f65e484] [cursor=pointer]
+                  - button "Text — T" [ref=f65e486] [cursor=pointer]
+                  - button "Note — N" [ref=f65e488] [cursor=pointer]
+                  - button "Media — Ctrl + U" [ref=f65e490] [cursor=pointer]
+                  - button "Rectangle — R" [ref=f65e492] [cursor=pointer]
+                - button "More" [ref=f65e495] [cursor=pointer]
+          - region "Notifications (F8)":
+            - list
+  - alert [ref=f65e497]

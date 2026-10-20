@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import { CASE_STUDY_BLUR_DATA_URL } from "@/lib/caseStudyBlur";
@@ -41,6 +41,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   } = props;
 
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const blurProps =
     placeholder === "blur" ? { placeholder: "blur" as const, blurDataURL: CASE_STUDY_BLUR_DATA_URL } : {};
 
@@ -68,6 +69,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
 
   const inner = zoomable ? (
     <button
+      ref={triggerRef}
       type="button"
       className="cs-figure-zoom-trigger"
       onClick={() => setOpen(true)}
@@ -84,7 +86,13 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
       {inner}
       {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
       {zoomable && (
-        <CaseStudyLightbox src={src} alt={alt} open={open} onClose={() => setOpen(false)} />
+        <CaseStudyLightbox
+          src={src}
+          alt={alt}
+          open={open}
+          onClose={() => setOpen(false)}
+          returnFocusRef={triggerRef}
+        />
       )}
     </figure>
   );
