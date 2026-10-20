@@ -238,6 +238,7 @@ export default function DialogueSimpleViewer({ sections }: Props) {
     >
       <div
         ref={viewportRef}
+        data-canvas-viewport
         onPointerDown={onPointerDown}
         style={{
           flex: 1,
