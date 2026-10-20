@@ -20,7 +20,12 @@ import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
-import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
+import {
+  isCaseStudyHref,
+  warmCaseStudyNav,
+  commitCaseStudyNav,
+  peekPendingCaseStudy,
+} from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
@@ -58,8 +63,11 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
-import MuxAutoplayCard from "@/components/MuxAutoplayCard";
-
+// Mux/HLS only load once Work has been visited — keeps About/Archive cold
+// loads free of the video player chunk and hls-light script.
+const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"), {
+  ssr: false,
+});
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
@@ -208,8 +216,17 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   const warmProjectNav = (href?: string) => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitProjectNav = (href?: string) => {
-    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitProjectNav = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href?: string,
+  ) => {
+    if (!href || !isCaseStudyHref(href)) return;
+    const path = href.split("?")[0]?.split("#")[0] ?? href;
+    if (peekPendingCaseStudy() === path) {
+      e.preventDefault();
+      return;
+    }
+    commitCaseStudyNav(href, router);
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
@@ -641,7 +658,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(e, p.href)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
@@ -740,7 +757,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(e, p.href)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>

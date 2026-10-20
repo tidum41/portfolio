@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import {
   animate,
   motion,
@@ -51,13 +51,13 @@ export default function OutlineMorphWord({
   pinned?: number | null;
 }) {
   const reduced = useReducedMotion();
-  // Start at rest (or a lab pin). Hover mounts this after the server letter,
-  // and the effect below eases from that rest pose into the dots — same
-  // 0.32s curve as when the word lived in the first-load bundle.
+  // Start at rest (or a lab pin). Idle pre-arm mounts this before hover; the
+  // layout effect below starts the tween before paint so the first post-hover
+  // frame already shows motion (easeOut reads sooner than easeInOut).
   const progress = useMotionValue(pinned ?? 0);
   const word = WORDS.get(label) || WORDS.get(label.toLowerCase());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const target = pinned != null ? pinned : active ? 1 : 0;
     if (reduced) {
       progress.set(target);
@@ -65,7 +65,7 @@ export default function OutlineMorphWord({
     }
     const controls = animate(progress, target, {
       duration,
-      ease: "easeInOut",
+      ease: "easeOut",
     });
     return () => controls.stop();
   }, [active, pinned, duration, reduced, progress]);

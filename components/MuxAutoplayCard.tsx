@@ -8,7 +8,12 @@ import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMe
 import { warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
-import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import {
+  commitCaseStudyNav,
+  isCaseStudyHref,
+  peekPendingCaseStudy,
+  warmCaseStudyNav,
+} from "@/lib/caseStudyNav";
 import { cardFocusPlay } from "@/lib/cardFocusVideo";
 
 /** Later cards start a short beat after the two on screen during the intro. */
@@ -104,8 +109,17 @@ export default function MuxAutoplayCard({
   const warmCaseStudy = () => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitCaseStudy = () => {
-    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitCaseStudy = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!href || !isCaseStudyHref(href)) return;
+    // Mid-transition re-click — skip a second navigation that restarts enter.
+    const path = href.split("?")[0]?.split("#")[0] ?? href;
+    if (peekPendingCaseStudy() === path) {
+      e.preventDefault();
+      return;
+    }
+    // First click: keep native Link navigation (faster than preventDefault +
+    // router.push in measurement); only mark soft-nav + warm LCP.
+    commitCaseStudyNav(href, router);
   };
 
   useEffect(() => {

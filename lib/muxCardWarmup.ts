@@ -231,7 +231,7 @@ export const getMuxCardWarmup = cache((): Promise<MuxCardWarm> => {
       const ids = orderedPlaybackIds(projects);
       if (!ids.length) return EMPTY;
       return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v6", ids.join(",")], {
-        revalidate: 3600,
+        revalidate: 86400,
       })();
     })
     .catch(() => EMPTY);

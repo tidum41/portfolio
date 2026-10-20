@@ -415,6 +415,9 @@ export default function BentoGallery({
     const thumbRef = useRef<HTMLDivElement>(null);
     const selectorRef = useRef<HTMLDivElement>(null);
     const tx = useRef<Tx>({ x: 0, y: 0, s: 1 });
+    // Cached root rect for client→local mapping (wheel zoom / pinch) so hot
+    // paths don't force layout every event.
+    const rootRectRef = useRef<DOMRect | null>(null);
     const zMaxRef = useRef(zMax);
     zMaxRef.current = zMax;
     const zMinRef = useRef(ZOOM_MIN);
@@ -480,6 +483,7 @@ export default function BentoGallery({
                 w = window.innerWidth;
                 h = Math.max(1, window.innerHeight - 45);
             }
+            rootRectRef.current = root.getBoundingClientRect();
             const commit = () => {
                 setVw((prev) => (prev === w ? prev : w));
                 setVh((prev) => (prev === h ? prev : h));
@@ -619,10 +623,19 @@ export default function BentoGallery({
     );
 
     // Pointer/client coords → root-local space (matches translate/scale units).
-    const clientToLocal = useCallback((clientX: number, clientY: number) => {
+    const refreshRootRect = useCallback(() => {
         const root = rootRef.current;
-        if (!root) return { x: clientX, y: clientY };
-        const r = root.getBoundingClientRect();
+        if (root) rootRectRef.current = root.getBoundingClientRect();
+    }, []);
+    const clientToLocal = useCallback((clientX: number, clientY: number) => {
+        const r = rootRectRef.current;
+        if (!r) {
+            const root = rootRef.current;
+            if (!root) return { x: clientX, y: clientY };
+            const fresh = root.getBoundingClientRect();
+            rootRectRef.current = fresh;
+            return { x: clientX - fresh.left, y: clientY - fresh.top };
+        }
         return { x: clientX - r.left, y: clientY - r.top };
     }, []);
 
@@ -1216,32 +1229,55 @@ export default function BentoGallery({
         if (typeof window === "undefined") return;
         const el = rootRef.current;
         if (!el) return;
-        const onWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            const { x, y, s } = tx.current;
-            const zm = zMaxRef.current;
-            if (e.ctrlKey || e.metaKey) {
-                const factor = e.deltaY < 0 ? 1.07 : 0.93;
-                const ns = clamp(s * factor, zMinRef.current, zm);
-                const local = clientToLocal(e.clientX, e.clientY);
+        let pendingDx = 0;
+        let pendingDy = 0;
+        let pendingZoom: { clientX: number; clientY: number; factor: number } | null = null;
+        let wheelRaf = 0;
+        const flushWheel = () => {
+            wheelRaf = 0;
+            if (pendingZoom) {
+                const { x: _x, y: _y, s } = tx.current;
+                const zm = zMaxRef.current;
+                const ns = clamp(s * pendingZoom.factor, zMinRef.current, zm);
+                const local = clientToLocal(pendingZoom.clientX, pendingZoom.clientY);
+                pendingZoom = null;
                 zoomAround(local.x, local.y, ns, "none");
-            } else {
-                // Free scroll — elastic resistance past edges, settle on stop
-                cancelZoomAnim();
+            }
+            if (pendingDx !== 0 || pendingDy !== 0) {
+                const { x, y, s } = tx.current;
                 const b = getBounds(s);
                 applyTransform(
-                    elastic(x - e.deltaX, b.minX, b.maxX),
-                    elastic(y - e.deltaY, b.minY, b.maxY),
+                    elastic(x - pendingDx, b.minX, b.maxX),
+                    elastic(y - pendingDy, b.minY, b.maxY),
                     s,
                     "none"
                 );
+                pendingDx = 0;
+                pendingDy = 0;
                 clearTimeout(wheelTimer.current);
                 wheelTimer.current = setTimeout(() => snapToBounds("spring"), 150);
             }
         };
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            if (e.ctrlKey || e.metaKey) {
+                const factor = e.deltaY < 0 ? 1.07 : 0.93;
+                pendingZoom = {
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    factor: (pendingZoom?.factor ?? 1) * factor,
+                };
+            } else {
+                cancelZoomAnim();
+                pendingDx += e.deltaX;
+                pendingDy += e.deltaY;
+            }
+            if (!wheelRaf) wheelRaf = requestAnimationFrame(flushWheel);
+        };
         el.addEventListener("wheel", onWheel, { passive: false });
         return () => {
             el.removeEventListener("wheel", onWheel);
+            if (wheelRaf) cancelAnimationFrame(wheelRaf);
             clearTimeout(wheelTimer.current);
         };
     }, [applyTransform, getBounds, snapToBounds, clientToLocal, zoomAround, cancelZoomAnim]);
@@ -1266,6 +1302,7 @@ export default function BentoGallery({
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
             takeOverFromRenderedTransform();
+            refreshRootRect();
             if (canvasRef.current) canvasRef.current.style.willChange = "transform";
             cancelZoomAnim();
             ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1295,7 +1332,7 @@ export default function BentoGallery({
                 g.p2py = tx.current.y;
             }
         },
-        [cancelZoomAnim, clientToLocal, takeOverFromRenderedTransform]
+        [cancelZoomAnim, clientToLocal, refreshRootRect, takeOverFromRenderedTransform]
     );
 
     const onPointerMove = useCallback(

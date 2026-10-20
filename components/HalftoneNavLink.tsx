@@ -10,7 +10,23 @@ import {
   loadOutlineMorph,
   type OutlineMorphComponent,
 } from "./outlineMorphLoader";
-import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
+import {
+  markSoftNav,
+  markPrimaryShow,
+  hrefToPrimaryTab,
+  isAlreadyShowingPrimary,
+  peekPendingPrimaryTab,
+} from "@/lib/instantNav";
+import { subscribeNavTouchClearHover } from "@/lib/navTouchHover";
+
+function scheduleWarm(cb: () => void) {
+  if (typeof window === "undefined") return;
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(cb, { timeout: 400 });
+  } else {
+    window.setTimeout(cb, 0);
+  }
+}
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -54,8 +70,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
+  const [isFocusVisible, setIsFocusVisible] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pressRef = useRef<{
     pointerId: number;
     x: number;
@@ -72,40 +90,49 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   const ignoreHoverUntilRef = useRef(0);
 
   // Hover works on the current page's own link (work on `/`). Tap always
-  // works. After a nav commit to this link we clear both and briefly ignore
-  // hover so the solid active state can land once — see settle effect below.
-  // dk.keepEffectOn (DialKit) pins the effect while dragging dials.
-  // enabled: false leaves the solid letter. The shape itself is baked, so
-  // the melt sliders no longer restyle these three words.
+  // works. :focus-visible matches keyboard (and other non-pointer) focus so
+  // the morph isn't hover/tap-only. After a nav commit to this link we clear
+  // hover/tap and briefly ignore hover so the solid active state can land
+  // once — see settle effect below. dk.keepEffectOn (DialKit) pins the
+  // effect while dragging dials. enabled: false leaves the solid letter.
   const morphOn =
-    dk?.enabled !== false && Boolean(dk?.keepEffectOn || isHovered || isTapped);
+    dk?.enabled !== false &&
+    Boolean(dk?.keepEffectOn || isHovered || isTapped || isFocusVisible);
   const reduced = useReducedMotion();
   const morphMs = reduced ? 0 : OUTLINE_MORPH_S * 1000;
   const [Morph, setMorph] = useState<OutlineMorphComponent | null>(null);
   // Stay mounted after the first hover so the morph can ease back out.
   const [armed, setArmed] = useState(false);
 
+  // Idle: load + mount Morph at rest so first hover only flips `active`
+  // (no 90-path mount on the pointerenter frame). Tighten the idle deadline
+  // so early hovers still usually hit a warm module.
   useEffect(() => {
     let cancel = false;
     const start = () => {
       loadOutlineMorph().then((component) => {
-        if (!cancel) setMorph(() => component);
+        if (cancel) return;
+        setMorph(() => component);
+        setArmed(true);
       });
     };
+    // Prefer a short timeout so Morph is armed before first intentional hover
+    // (cold pointerenter must not pay the 90-path mount). Idle is a bonus.
     if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 2500 });
+      const id = window.requestIdleCallback(start, { timeout: 400 });
       return () => {
         cancel = true;
         window.cancelIdleCallback(id);
       };
     }
-    const id = window.setTimeout(start, 1200);
+    const id = window.setTimeout(start, 80);
     return () => {
       cancel = true;
       window.clearTimeout(id);
     };
   }, []);
 
+  // Fast path if the user hovers before idle finishes.
   useEffect(() => {
     if (!morphOn) return;
     let cancel = false;
@@ -170,6 +197,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     settleTimeoutRef.current = setTimeout(() => {
       setIsTapped(false);
       setIsHovered(false);
+      setIsFocusVisible(false);
       ignoreHoverUntilRef.current =
         performance.now() + POST_NAV_HOVER_IGNORE_MS;
     }, morphMs);
@@ -188,19 +216,22 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     disarmTap();
   };
 
-  // Global sticky-hover killer: any touch on the page clears isHovered.
+  // Shared sticky-hover killer (one window listener for all nav links).
   // Hybrid / "desktop site" mobile browsers can report hover:hover and leave
   // mouseenter stuck with no mouseleave — mobile itself has no hover.
-  useEffect(() => {
-    const onTouchStart = () => setIsHovered(false);
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    return () => window.removeEventListener("touchstart", onTouchStart);
-  }, []);
+  useEffect(() => subscribeNavTouchClearHover(() => setIsHovered(false)), []);
 
-  useEffect(() => () => {
-    clearTapTimer();
-    clearSettleTimer();
-  }, []);
+  useEffect(
+    () => () => {
+      clearTapTimer();
+      clearSettleTimer();
+      if (touchNavTimeoutRef.current) {
+        clearTimeout(touchNavTimeoutRef.current);
+        touchNavTimeoutRef.current = null;
+      }
+    },
+    [],
+  );
 
   return (
     <Link
@@ -226,11 +257,26 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       // cursor to leave), leaving isHovered stuck true forever.
       onMouseEnter={() => {
         if (performance.now() < ignoreHoverUntilRef.current) return;
+        // Hover state first — keep the morph frame free of prefetch / dynamic import.
         if (canHover()) setIsHovered(true);
-        warmPrimary(href);
-        if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        scheduleWarm(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
       }}
       onMouseLeave={onLinkMouseLeave}
+      onFocus={(e) => {
+        scheduleWarm(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
+        // Keyboard / assistive focus only — pointer clicks also focus, but
+        // :focus-visible is false for those so we don't double-fire morph.
+        if (e.currentTarget.matches(":focus-visible")) {
+          setIsFocusVisible(true);
+        }
+      }}
+      onBlur={() => setIsFocusVisible(false)}
       // A real tap fires pointerup (often <150ms after pointerdown) and then
       // click/navigation almost immediately after that — well before the
       // ~200ms "in" spring has become visible. Resetting isTapped on
@@ -245,8 +291,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       // archive isn't stuck waiting on Sanity; cmd/middle-click stay native.
       onPointerDown={(e) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
-        warmPrimary(href);
-        if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        // Defer warm off the press frame — morph + flushSync paint first.
+        scheduleWarm(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
 
         if (e.pointerType === "touch" || e.pointerType === "pen") {
           setIsHovered(false);
@@ -276,13 +325,17 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
           touchNavRef.current = true;
           // If the ghost click never arrives, don't leave the flag stuck
           // blocking the *next* real tap's click handler.
-          window.setTimeout(() => {
+          if (touchNavTimeoutRef.current) clearTimeout(touchNavTimeoutRef.current);
+          touchNavTimeoutRef.current = setTimeout(() => {
             touchNavRef.current = false;
+            touchNavTimeoutRef.current = null;
           }, 500);
 
           // Same-route tap: keep morph feedback, skip a useless push that
           // only races the work shell wake and can kill the animation.
           if (isAlreadyShowingPrimary(href, pathname)) return;
+          const tab = hrefToPrimaryTab(href);
+          if (tab && peekPendingPrimaryTab() === tab) return;
 
           markNavCommit();
           commitPrimary(href);
@@ -301,10 +354,21 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
           // Already navigated on pointerup — block the ghost click.
           e.preventDefault();
           touchNavRef.current = false;
+          if (touchNavTimeoutRef.current) {
+            clearTimeout(touchNavTimeoutRef.current);
+            touchNavTimeoutRef.current = null;
+          }
           return;
         }
         if (isAlreadyShowingPrimary(href, pathname)) {
           // Already here — don't soft-nav / re-push.
+          e.preventDefault();
+          return;
+        }
+        // Mid-transition re-click of the same pending tab — shell already
+        // flipped; skip a second router.push that restarts enter animations.
+        const tab = hrefToPrimaryTab(href);
+        if (tab && peekPendingPrimaryTab() === tab) {
           e.preventDefault();
           return;
         }

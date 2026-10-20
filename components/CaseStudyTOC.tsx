@@ -79,21 +79,28 @@ export default function CaseStudyTOC({
   // Skipped for the mobile-back-only instance (no section labels to track).
   useLayoutEffect(() => {
     if (mobileBackOnly) return;
-    let lastScrollY = -1;
+    if (activeSections.length === 0) return;
 
-    const tick = () => {
-      const y = window.scrollY;
-      if (y !== lastScrollY) {
-        lastScrollY = y;
-        updateActive();
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
+    // One layout pass before paint (avoids TOC highlight flash), then scroll-
+    // driven updates coalesced to a single rAF — not a forever rAF loop.
     updateActive();
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
-  }, [updateActive, mobileBackOnly]);
+
+    let scheduled = false;
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      rafRef.current = requestAnimationFrame(() => {
+        scheduled = false;
+        rafRef.current = null;
+        updateActive();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [updateActive, mobileBackOnly, activeSections.length]);
 
   useEffect(() => {
     if (mobileBackOnly) return;
@@ -119,11 +126,18 @@ export default function CaseStudyTOC({
   // `{ scroll: false }` is the documented escape hatch that tells Next to
   // leave scroll handling to the page entirely, so PersistentWorkShell's own
   // instant restore is the only thing touching scroll position.
+  const backPendingRef = useRef(false);
   const handleBack = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
+    // Rapid re-clicks mid-transition restart Work enter; coalesce to one push.
+    if (backPendingRef.current) return;
+    backPendingRef.current = true;
     markInstantBack();
     router.push(backHref, { scroll: false });
+    window.setTimeout(() => {
+      backPendingRef.current = false;
+    }, 600);
   }, [router, backHref]);
 
   const backArrow = (

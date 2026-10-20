@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { preconnect } from "react-dom";
-import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
-import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -14,6 +11,10 @@ import {
 // shell (see components/PersistentWorkShell.tsx) so it never unmounts across
 // navigation. This route intentionally renders nothing visible — do not
 // reintroduce project-grid / PhoneEmbed imports here.
+//
+// Mux preconnects + hls-light boot live in BootScripts (path-gated to `/`)
+// so router.prefetch("/") from About/Archive cannot spill those hints into
+// non-Work documents.
 //
 // Metadata lives here (not only in layout) so the homepage description is
 // explicit and canonical — same pattern Framer uses for site-level SEO.
@@ -53,20 +54,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home() {
-  const warm = await getMuxCardWarmup();
-  for (const origin of warm.preconnect) {
-    preconnect(origin, { crossOrigin: "anonymous" });
-  }
-  return (
-    <>
-      {/* Download the player with the HTML. Reduced motion never plays it. */}
-      <link
-        rel="preload"
-        as="script"
-        href={HLS_LIGHT_SRC}
-        media="(prefers-reduced-motion: no-preference)"
-      />
-    </>
-  );
+export default function Home() {
+  return null;
 }

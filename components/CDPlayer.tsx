@@ -1,10 +1,12 @@
 "use client";
 
 import CdPlayerApp from "@/components/embeds/cd-player/CdPlayerApp";
+import { geistMono } from "@/components/embeds/geistFonts";
 
 export default function CDPlayer({ style, active = true, variant = "work" }: { style?: React.CSSProperties; active?: boolean; variant?: "work" | "about" }) {
   return (
     <div
+      className={geistMono.variable}
       style={{
         // aspectRatio is only a fallback for callers with no height-defined
         // ancestor (e.g. the About page) — it's a no-op wherever a parent

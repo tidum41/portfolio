@@ -187,10 +187,8 @@ export default function PS3Silk({
     const isFirstLoad = !_hasMounted;
     if (isFirstLoad) _hasMounted = true;
 
-    // Reduced motion: keep the slow ambient wave loop (low-amplitude, not the
-    // kind of motion this preference is meant to suppress), but skip the
-    // entrance fade and the cursor-reactive ripple/warp below — those are the
-    // faster, more attention-grabbing pieces.
+    // Reduced motion: paint one static frame, never start the RAF loop.
+    // Also skip the entrance fade and the cursor-reactive ripple/warp.
     const reducedMotion = typeof window !== "undefined"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -319,13 +317,23 @@ export default function PS3Silk({
       function updateTarget() {
         // getBoundingClientRect() is viewport-relative, so the resize-only
         // cache above would go stale as soon as the page scrolls without the
-        // wrapper's own size changing. This runs on scroll (not every frame),
-        // keeping onMouseMove's cached rect current without 30fps layout reads.
+        // wrapper's own size changing. Coalesced to one rAF so trackpad scroll
+        // doesn't force layout every event.
         wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
         updateScrollTarget();
         if (activeRef.current && !isScrolledPastHero() && canvas.width >= 2 && canvas.height >= 2) {
           startLoop();
         }
+      }
+
+      let scrollScheduled = false;
+      function scheduledScrollUpdate() {
+        if (scrollScheduled) return;
+        scrollScheduled = true;
+        requestAnimationFrame(() => {
+          scrollScheduled = false;
+          updateTarget();
+        });
       }
 
       function onMouseMove(e: MouseEvent) {
@@ -382,8 +390,16 @@ export default function PS3Silk({
 
       window.addEventListener("resize", scheduledResize);
       window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("scroll", updateTarget, { passive: true });
+      window.addEventListener("scroll", scheduledScrollUpdate, { passive: true });
       window.addEventListener("popstate", onPopState);
+      const onVisibility = () => {
+        if (document.hidden) {
+          lifecycleRef.current?.pause();
+        } else if (activeRef.current) {
+          lifecycleRef.current?.wake();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibility);
       removeListeners = () => {
         ro.disconnect();
         lifecycleRef.current = null;
@@ -392,8 +408,9 @@ export default function PS3Silk({
         canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
         window.removeEventListener("resize", scheduledResize);
         window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("scroll", updateTarget);
+        window.removeEventListener("scroll", scheduledScrollUpdate);
         window.removeEventListener("popstate", onPopState);
+        document.removeEventListener("visibilitychange", onVisibility);
       };
 
       const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos,0.0,1.0); }`;
@@ -531,6 +548,7 @@ void main() {
       // the pattern keeps intensity / halftone / aspect after a round-trip.
       const wake = () => {
         if (glCtx.isContextLost()) return;
+        if (document.hidden) return;
         resize();
         updateTarget();
         // Snap opacity to the scroll-derived target — no leftover intro/
@@ -545,11 +563,17 @@ void main() {
           glCtx.enableVertexAttribArray(posLoc);
           glCtx.vertexAttribPointer(posLoc, 2, glCtx.FLOAT, false, 0, 0);
         }
+        // Reduced motion: one static paint, no RAF. Tab-hidden: stay paused.
+        if (reducedMotion) {
+          stopLoop();
+          if (buf && posLoc >= 0) draw(0);
+          return;
+        }
         startLoop();
       };
-      // Stop RAF while off-route, but keep the last framebuffer. Shrinking to
-      // 1×1 blanked the pattern until wake()+draw, which read as a split-
-      // second pop-in on About/Archive → Work. One silk canvas is cheap vs Mux.
+      // Stop RAF while off-route or tab-hidden, but keep the last framebuffer.
+      // Shrinking to 1×1 blanked the pattern until wake()+draw, which read as
+      // a split-second pop-in on About/Archive → Work.
       const pause = () => {
         stopLoop();
       };
@@ -559,9 +583,9 @@ void main() {
         if (!running) return;
         rafId = requestAnimationFrame(frame);
 
-        // Pause draws while the work shell is hidden (or still 0-sized), or
-        // when the hero is scrolled completely offscreen above the viewport.
-        if (!activeRef.current || isScrolledPastHero()) {
+        // Pause draws while the work shell is hidden (or still 0-sized), the
+        // tab is backgrounded, or the hero is scrolled completely offscreen.
+        if (!activeRef.current || document.hidden || isScrolledPastHero()) {
           stopLoop();
           return;
         }

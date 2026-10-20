@@ -13,28 +13,32 @@ const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
 /**
  * About keep-alive — same hide contract as Work/Archive (`display: none` +
  * inert). Not mounted on first Work paint (that pulled CDPlayer + BentoHero
- * + priority About images into `/`). Idle-mounts after intro so Work → About
- * is still a display flip once warmed.
+ * + priority About images into `/`). Chunk is idle-warmed via
+ * PrimaryRouteWarmup / nav hover; the React tree mounts on first About show.
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "about";
   const { snap, epoch } = useTabArrival(visible);
-  const playEnter = visible && !snap;
+  // epoch === 0 is the cold /about SSR paint — don't run `.ps3-enter` (opacity 0
+  // for ~1140ms) or LCP lands on late album covers instead of the hero.
+  // Soft-nav Work→About bumps epoch on the rising edge, so enter still plays.
+  const playEnter = visible && !snap && epoch > 0;
 
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);
 
   useEffect(() => {
     if (hasShown) return;
+    // Prefetch the chunk only — mounting early kept CD/Geist alive on Work
+    // and slowed every primary-tab flip in measurement.
+    if (pathname !== "/") return;
     return afterIntroIdle(() => {
-      // Album covers are about a megabyte. On a slow or metered connection
-      // they wait until About is actually opened.
       if (!allowIdlePrefetch()) return;
-      setHasShown(true);
-    }, 4000);
-  }, [hasShown]);
+      void import("@/components/AboutPageContent");
+    }, 2000);
+  }, [hasShown, pathname]);
 
   return (
     <div

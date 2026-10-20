@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type FocusEvent } from 'react';
 import { CaretLeft, CaretRight, Sun, Moon, Check } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { geistSans } from '@/components/embeds/geistFonts';
 import styles from './HabitTrackerApp.module.css';
 
 /** Deterministic PRNG seed from calendar year + month (0-indexed). */
@@ -338,7 +339,7 @@ export default function HabitTrackerApp({
 
   return (
     <div
-      className={styles.root}
+      className={`${styles.root} ${geistSans.variable}`}
       data-theme={resolvedTheme}
       aria-hidden={inert || undefined}
       {...(inert ? { inert: true as const } : {})}

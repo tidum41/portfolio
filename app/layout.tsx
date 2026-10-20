@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
@@ -26,12 +25,9 @@ import {
 import { Analytics } from '@vercel/analytics/next';
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
-// Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
 // Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-// preload: false — body copy is local HN/Söhne. Geist is only used inside
-// the CD player + habit embed, which mount after first paint.
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
+// Geist Sans/Mono load only inside CD player + habit embeds
+// (see components/embeds/geistFonts.ts) so About/Archive don't pay for them.
 
 const OG_IMAGES = [
   {
@@ -133,7 +129,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
       data-theme="dark"
       data-scroll-behavior="smooth"
       // Unconditionally "playing" in the static, server-rendered HTML — not
@@ -172,11 +167,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <link rel="icon" type="image/png" href="/favicon-32-light.png" sizes="32x32" media="(prefers-color-scheme: light)" />
         <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
-        <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://stream.mux.com" crossOrigin="anonymous" />
-        {muxWarm.preconnect.map((origin) => (
-          <link key={origin} rel="preconnect" href={origin} crossOrigin="anonymous" />
-        ))}
+        {/* Mux preconnects live on `/` only (app/page.tsx) so About/Archive
+            cold loads don't open video-CDN connections. */}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
@@ -185,6 +177,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <BootScripts
           jsonLd={getSiteJsonLd()}
           playlists={muxWarm.playlists}
+          preconnect={muxWarm.preconnect}
         />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />

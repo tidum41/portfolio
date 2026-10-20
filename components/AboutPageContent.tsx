@@ -1,10 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { preload } from "react-dom";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import CopyEmail from "@/components/CopyEmail";
-import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
+import { albums } from "@/components/embeds/cd-player/data/albums";
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
   ABOUT_BIO,
@@ -15,6 +17,19 @@ import {
 } from "@/lib/about";
 import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS } from "@/lib/motion";
+
+// Code-split CD (Geist lives inside) so Archive never downloads it, but keep
+// SSR on About so album-cover background images are in the first HTML and can
+// be LCP without waiting on the client bundle (`ssr: false` regressed LCP).
+const CDPlayer = dynamic(
+  () => import(/* webpackPrefetch: false, webpackPreload: false */ "@/components/CDPlayer"),
+);
+
+/** First-viewport covers — preload so LCP isn't waiting on discover-after-paint. */
+const ABOUT_LCP_COVERS = albums
+  .map((a) => a.artUrl)
+  .filter((url): url is string => Boolean(url))
+  .slice(0, 4);
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -97,6 +112,11 @@ export default function AboutPageContent({
     sokaRecords: { scale: [1.46, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
     mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
   });
+
+  // Warm the first covers without racing the hero (bento/title is cold LCP).
+  for (const src of ABOUT_LCP_COVERS.slice(0, 2)) {
+    preload(src, { as: "image" });
+  }
 
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
@@ -218,12 +238,15 @@ export default function AboutPageContent({
           </div>
         </div>
 
-        <ScrollReveal>
-          <section style={{ marginBottom: "var(--space-7)" }}>
+        {/* No ScrollReveal here — SPAWN_FROM_OPACITY 0 delayed album-cover LCP
+            until the whileInView fade finished (~450ms+). Covers must paint at
+            opacity 1 in the first HTML so LCP can land on them early. */}
+        <section style={{ marginBottom: "var(--space-7)" }}>
+          <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(4)}>
             <SectionLabel>Favorite Albums</SectionLabel>
-            <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
-          </section>
-        </ScrollReveal>
+          </Enter>
+          <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+        </section>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
