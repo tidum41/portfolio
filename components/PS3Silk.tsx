@@ -76,7 +76,7 @@ export default function PS3Silk({
     mouseStrength: [mouseStrength,  0,    0.5],
     yOffset:       [yOffset,        -50,  100],
     halftoneSize:  [3.0,            1,    20],
-    speed:         [1.0,            0,    4],
+    speed:         [1.2,            0,    4],
     endOpacity:    [0.15,           0,    0.5,  0.01],
   });
 
@@ -85,7 +85,7 @@ export default function PS3Silk({
   const yOffsetRef      = useRef(yOffset);
   const waveColorRef    = useRef<[number, number, number]>(hexToRgb(waveColor));
   const halftSizeRef    = useRef(3.0);
-  const speedRef        = useRef(1.0);
+  const speedRef        = useRef(1.2);
   const endOpacityRef   = useRef(0.15);
 
   // Sync DialKit live values into refs each frame

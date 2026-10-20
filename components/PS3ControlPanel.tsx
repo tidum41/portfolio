@@ -58,14 +58,14 @@ const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
-const DEFAULT_INTENSITY_HT = 0.18; // halftone mode default
+const DEFAULT_INTENSITY_HT = 0.19; // halftone mode default (+~6% from 0.18)
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
 const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
-const DEFAULT_SPEED        = 1.0;
+const DEFAULT_SPEED        = 1.2; // shared wave + halftone (+20% from 1.0)
 // First-pick intensity for any colored preset (index >= 1 in PRESETS below —
 // index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
 // above). Only applied the first time a given preset is picked in a given
