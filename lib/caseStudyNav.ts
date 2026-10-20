@@ -1,6 +1,5 @@
 import { preload } from "react-dom";
 import { markSoftNav } from "@/lib/instantNav";
-import { JOOLA_HERO_SRC } from "@/lib/caseStudies/joola";
 import { CASE_STUDY_PAGES } from "@/lib/caseStudyRegistry";
 
 /**
@@ -9,7 +8,9 @@ import { CASE_STUDY_PAGES } from "@/lib/caseStudyRegistry";
  * commits. Keep in sync with page fallbacks (heroMuxId / local hero image).
  */
 export const CASE_STUDY_LCP: Record<string, string> = {
-  "/joola": JOOLA_HERO_SRC,
+  // /joola hero is a 530KB 2400×1600 PNG via next/image `priority` — do not
+  // point CASE_STUDY_LCP at the source (same trap as /sviz). Card film poster
+  // is Mux; route prefetch alone is enough on hover.
   "/ucla-sublease":
     "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=1&width=1280",
   // /sviz hero is a next/image with `priority`, which already emits the
@@ -43,6 +44,8 @@ function pathOf(href: string): string | null {
 export function isCaseStudyHref(href: string): boolean {
   const path = pathOf(href);
   if (!path || PRIMARY_NAV.has(path)) return false;
+  // Live registry + known LCP map + any single-segment internal path.
+  if (CASE_STUDY_PAGES.some((p) => p.href === path)) return true;
   return path in CASE_STUDY_LCP || path.split("/").filter(Boolean).length === 1;
 }
 

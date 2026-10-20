@@ -17,17 +17,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import { clearPendingCaseStudy, warmAllCaseStudyNav } from "@/lib/caseStudyNav";
-import { JOOLA_MUX_PLAYBACK_ID } from "@/lib/caseStudies/joola";
 
 const CD_POSTERS = [
   "/images/cd-player-poster-light.webp",
   "/images/cd-player-poster-dark.webp",
-];
-
-/** Above-fold Mux card posters — idle decode so first hover isn't a decode stall. */
-const MUX_POSTER_WARM = [
-  `https://image.mux.com/${JOOLA_MUX_PLAYBACK_ID}/thumbnail.webp?time=0&width=640`,
-  "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=0&width=640",
 ];
 
 export default function PrimaryRouteWarmup() {
@@ -61,7 +54,7 @@ export default function PrimaryRouteWarmup() {
     };
 
     const warmAssets = () => {
-      for (const src of [...CD_POSTERS, ...MUX_POSTER_WARM]) {
+      for (const src of CD_POSTERS) {
         const img = new window.Image();
         img.decoding = "async";
         img.src = src;
