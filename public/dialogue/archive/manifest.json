@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T19:27:38.589Z",
+  "generatedAt": "2026-10-20T20:18:24.857Z",
   "itemCount": 63,
   "liveComponentCount": 16,
   "groups": [
@@ -851,24 +851,24 @@
   ],
   "chatIconHistory": [
     {
-      "sha": "68d8212bc68798afed39f175e19b9610b0bc1664",
-      "shaShort": "68d8212",
-      "date": "2026-10-20T06:46:40+00:00",
-      "datePt": "Oct 19, 2026, 11:46 PM",
-      "src": "/dialogue/archive/chat-icons/68d8212.png",
-      "width": 0,
-      "height": 0,
-      "agreed": true
-    },
-    {
       "sha": "d2da77a4da2e59d07bf184c9a32a6e616e3fb08b",
       "shaShort": "d2da77a",
       "date": "2026-10-20T06:46:40+00:00",
       "datePt": "Oct 19, 2026, 11:46 PM",
       "src": "/dialogue/archive/chat-icons/d2da77a.png",
-      "width": 0,
-      "height": 0,
+      "width": 208,
+      "height": 208,
       "agreed": false
+    },
+    {
+      "sha": "68d8212bc68798afed39f175e19b9610b0bc1664",
+      "shaShort": "68d8212",
+      "date": "2026-10-20T06:46:40+00:00",
+      "datePt": "Oct 19, 2026, 11:46 PM",
+      "src": "/dialogue/archive/chat-icons/68d8212.png",
+      "width": 208,
+      "height": 208,
+      "agreed": true
     },
     {
       "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
@@ -876,8 +876,8 @@
       "date": "2026-10-20T06:57:33+00:00",
       "datePt": "Oct 19, 2026, 11:57 PM",
       "src": "/dialogue/archive/chat-icons/d832408.png",
-      "width": 0,
-      "height": 0,
+      "width": 208,
+      "height": 208,
       "agreed": false
     },
     {
@@ -886,8 +886,8 @@
       "date": "2026-10-20T17:35:24+00:00",
       "datePt": "Oct 20, 2026, 10:35 AM",
       "src": "/dialogue/archive/chat-icons/920dab1.png",
-      "width": 0,
-      "height": 0,
+      "width": 208,
+      "height": 208,
       "agreed": false
     },
     {
@@ -896,8 +896,8 @@
       "date": "2026-10-20T17:42:06+00:00",
       "datePt": "Oct 20, 2026, 10:42 AM",
       "src": "/dialogue/archive/chat-icons/7139dba.png",
-      "width": 0,
-      "height": 0,
+      "width": 208,
+      "height": 208,
       "agreed": false
     },
     {
@@ -906,8 +906,8 @@
       "date": "2026-10-20T18:26:24+00:00",
       "datePt": "Oct 20, 2026, 11:26 AM",
       "src": "/dialogue/archive/chat-icons/2f05791.png",
-      "width": 0,
-      "height": 0,
+      "width": 208,
+      "height": 208,
       "agreed": false
     }
   ],

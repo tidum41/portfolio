@@ -145,9 +145,9 @@ async function main() {
         timeout: 120_000,
       },
     );
-    await page.waitForSelector("#chat-icon-capture-root", { timeout: 60_000 });
+    await page.waitForSelector('[data-capture="launcher"]', { timeout: 60_000 });
     await page.waitForTimeout(800);
-    const el = page.locator("#chat-icon-capture-root");
+    const el = page.locator('[data-capture="launcher"]');
     const fileName = `${entry.sha.slice(0, 7)}.png`;
     const dest = path.join(outDir, fileName);
     await el.screenshot({ path: dest, type: "png" });

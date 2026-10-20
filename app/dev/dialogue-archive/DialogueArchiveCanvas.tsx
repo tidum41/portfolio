@@ -5,15 +5,15 @@ import {
   ARCHIVE_LAYOUT,
   computeDialogueArchiveLayout,
   computeFitCamera,
+  rowLabelScreenPx,
+  rowLabelToTileScreenGap,
 } from "@/lib/caseStudies/computeDialogueArchiveLayout";
 import type { DialogueArchiveManifest } from "@/lib/caseStudies/dialogueArchiveTypes";
 import { DialogueArchiveLivePreviews } from "./DialogueArchiveLivePreviews";
 
-const { CONTENT_PAD, CAPTION_H } = ARCHIVE_LAYOUT;
+const { CONTENT_PAD, CAPTION_GAP } = ARCHIVE_LAYOUT;
 const MIN_ZOOM = 0.02;
 const MAX_ZOOM = 2;
-const ROW_LABEL_FONT_PX = 15;
-const MIN_LABEL_SCREEN_PX = 12;
 const STORAGE_KEY = "dialogue-archive-camera-v2";
 
 type View = { x: number; y: number; z: number };
@@ -33,28 +33,34 @@ function zoomAtPoint(view: View, mx: number, my: number, nextZ: number): View {
   return { z, x: mx - (mx - view.x) * ratio, y: my - (my - view.y) * ratio };
 }
 
-const captionStyle: CSSProperties = {
-  margin: 0,
-  fontFamily: "var(--font-sans, system-ui)",
-  fontSize: 11,
-  lineHeight: 1.4,
-  color: "var(--color-text-secondary, #5c5650)",
-};
+function captionStyleForZoom(z: number): CSSProperties {
+  return {
+    margin: 0,
+    marginBottom: CAPTION_GAP / z,
+    fontFamily: "var(--font-sans, system-ui)",
+    fontSize: 11,
+    lineHeight: 1.4,
+    color: "var(--color-text-secondary, #5c5650)",
+  };
+}
 
-const rowTitleStyle: CSSProperties = {
-  margin: 0,
-  fontFamily: "var(--font-sans-medium, system-ui)",
-  fontSize: ROW_LABEL_FONT_PX,
-  fontWeight: 500,
-  letterSpacing: "-0.02em",
-  color: "var(--color-text-primary, #1a1816)",
-  textTransform: "capitalize",
-};
-
-function labelScreenBoost(z: number) {
-  const screenPx = ROW_LABEL_FONT_PX * z;
-  if (screenPx >= MIN_LABEL_SCREEN_PX) return 1;
-  return Math.min(6, MIN_LABEL_SCREEN_PX / Math.max(screenPx, 0.001));
+function screenLabelStyle(z: number): CSSProperties {
+  const fontSize = rowLabelScreenPx(z);
+  const hidden = rowLabelToTileScreenGap(z) < 8;
+  return {
+    margin: 0,
+    fontFamily: "var(--font-sans-medium, system-ui)",
+    fontSize: hidden ? 0 : fontSize,
+    fontWeight: 500,
+    letterSpacing: "-0.02em",
+    color: "var(--color-text-primary, #1a1816)",
+    textTransform: "capitalize",
+    lineHeight: 1.15,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    opacity: hidden ? 0 : 1,
+    pointerEvents: "none",
+  };
 }
 
 export default function DialogueArchiveCanvas({ manifest, initialView }: Props) {
@@ -71,6 +77,19 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
     y0: number;
     captured: boolean;
   } | null>(null);
+
+  const screenLabels = useMemo(() => {
+    const labels: { id: string; x: number; y: number; text: string }[] = [];
+    for (const tile of layout.tiles) {
+      if (tile.kind === "row-label" && tile.label) {
+        labels.push({ id: tile.id, x: tile.x, y: tile.y, text: tile.label });
+      }
+      if (tile.kind === "routes") {
+        labels.push({ id: tile.id, x: tile.x, y: tile.y, text: "Dev export routes" });
+      }
+    }
+    return labels;
+  }, [layout.tiles]);
 
   const setViewSynced = useCallback((next: View) => {
     const clamped = { ...next, z: clampZoom(next.z) };
@@ -108,6 +127,21 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
     if (el) fitFromViewport(el);
   }, [fitFromViewport]);
 
+  const centerOnWorldPoint = useCallback(
+    (worldX: number, worldY: number, z: number) => {
+      const el = viewportRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const clampedZ = clampZoom(z);
+      setViewSynced({
+        z: clampedZ,
+        x: rect.width / 2 - worldX * clampedZ,
+        y: rect.height / 2 - worldY * clampedZ,
+      });
+    },
+    [setViewSynced],
+  );
+
   const reset100 = useCallback(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -136,6 +170,27 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
     ro.observe(el);
     return () => ro.disconnect();
   }, [fitFromViewport]);
+
+  useEffect(() => {
+    const api = {
+      setView: (partial: Partial<View>) => setViewSynced({ ...viewRef.current, ...partial }),
+      setZoom: (z: number) => {
+        const el = viewportRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        setViewSynced(
+          zoomAtPoint(viewRef.current, rect.width / 2, rect.height / 2, clampZoom(z)),
+        );
+      },
+      reset100,
+      centerOn: (worldX: number, worldY: number, z: number) => centerOnWorldPoint(worldX, worldY, z),
+      fit: fitView,
+    };
+    (window as unknown as { __dialogueArchiveCamera?: typeof api }).__dialogueArchiveCamera = api;
+    return () => {
+      delete (window as unknown as { __dialogueArchiveCamera?: typeof api }).__dialogueArchiveCamera;
+    };
+  }, [centerOnWorldPoint, fitView, reset100, setViewSynced]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "light");
@@ -256,17 +311,6 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
   );
 
   const zoomPct = Math.round(view.z * 100);
-  const labelBoost = labelScreenBoost(view.z);
-
-  const rowLabelProps = (tileId: string) => ({
-    "data-archive-bounds": tileId,
-    style: {
-      ...rowTitleStyle,
-      transform: labelBoost > 1 ? `scale(${labelBoost})` : undefined,
-      transformOrigin: "top left",
-      width: labelBoost > 1 ? `${100 / labelBoost}%` : undefined,
-    } as CSSProperties,
-  });
 
   return (
     <div
@@ -288,7 +332,7 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
         ref={viewportRef}
         onPointerDown={onPointerDown}
         data-archive-viewport
-        style={{ flex: 1, minHeight: 0, overflow: "hidden", cursor: "default", touchAction: "none" }}
+        style={{ flex: 1, minHeight: 0, overflow: "hidden", cursor: "default", touchAction: "none", position: "relative" }}
       >
         <div
           data-archive-world
@@ -297,7 +341,9 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
           data-bounds-max-x={layout.bounds.maxX}
           data-bounds-max-y={layout.bounds.maxY}
           style={{
-            position: "relative",
+            position: "absolute",
+            left: 0,
+            top: 0,
             transform: `translate(${view.x}px, ${view.y}px) scale(${view.z})`,
             transformOrigin: "0 0",
             width: layout.worldW,
@@ -312,8 +358,8 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                   data-archive-bounds={tile.id}
                   style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
                 >
-                  <p {...rowLabelProps(tile.id)}>Dev export routes</p>
-                  <ul style={{ ...captionStyle, margin: "8px 0 0", paddingLeft: 18 }}>
+                  <div style={{ height: ARCHIVE_LAYOUT.ROW_LABEL_H }} aria-hidden />
+                  <ul style={{ ...captionStyleForZoom(view.z), margin: "8px 0 0", paddingLeft: 18 }}>
                     {manifest.exportRoutes.map((r) => (
                       <li key={r.path}>
                         <code>{r.path}</code> — {r.note}
@@ -324,20 +370,14 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
               );
             }
             if (tile.kind === "row-label") {
-              const labelProps = rowLabelProps(tile.id);
               return (
-                <p
+                <div
                   key={tile.id}
                   data-archive-bounds={tile.id}
-                  style={{
-                    ...labelProps.style,
-                    position: "absolute",
-                    left: tile.x,
-                    top: tile.y,
-                  }}
-                >
-                  {tile.label}
-                </p>
+                  data-archive-row-label-slot
+                  aria-hidden
+                  style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
+                />
               );
             }
             if (tile.kind === "live") {
@@ -369,10 +409,9 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                     top: tile.y,
                     width: tile.w,
                     height: tile.h,
-                    overflow: "hidden",
                   }}
                 >
-                  <p style={captionStyle}>
+                  <p data-archive-caption style={captionStyleForZoom(view.z)}>
                     <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: 10 }}>{icon.shaShort}</span>
                     {" · "}
                     {icon.datePt} PT
@@ -385,21 +424,22 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                       </>
                     ) : null}
                   </p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={icon.src}
-                    alt={`Chat launcher at ${icon.shaShort}`}
-                    width={icon.width || undefined}
-                    height={icon.height || undefined}
-                    draggable={false}
-                    style={{
-                      display: "block",
-                      marginTop: 6,
-                      width: icon.width || "auto",
-                      height: icon.height || "auto",
-                      maxWidth: "none",
-                    }}
-                  />
+                  <div data-archive-tile-media>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={icon.src}
+                      alt={`Chat launcher at ${icon.shaShort}`}
+                      width={icon.width || undefined}
+                      height={icon.height || undefined}
+                      draggable={false}
+                      style={{
+                        display: "block",
+                        width: icon.width || "auto",
+                        height: icon.height || "auto",
+                        maxWidth: "none",
+                      }}
+                    />
+                  </div>
                 </div>
               );
             }
@@ -415,7 +455,6 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                   top: tile.y,
                   width: tile.w,
                   height: tile.h,
-                  overflow: "hidden",
                 }}
               >
                 <button
@@ -431,7 +470,7 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                     width: "100%",
                   }}
                 >
-                  <p style={captionStyle}>
+                  <p data-archive-caption style={captionStyleForZoom(view.z)}>
                     <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: 10 }}>{item.shaShort}</span>
                     {" · "}
                     {item.datePt} PT
@@ -439,25 +478,47 @@ export default function DialogueArchiveCanvas({ manifest, initialView }: Props) 
                     {item.file}
                   </p>
                 </button>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.src}
-                  alt={item.file}
-                  width={item.width || undefined}
-                  height={item.height || undefined}
-                  draggable={false}
-                  style={{
-                    display: "block",
-                    marginTop: 6,
-                    width: item.width || "auto",
-                    height: item.height || "auto",
-                    maxWidth: "none",
-                    objectFit: "contain",
-                  }}
-                />
+                <div data-archive-tile-media>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.src}
+                    alt={item.file}
+                    width={item.width || undefined}
+                    height={item.height || undefined}
+                    draggable={false}
+                    style={{
+                      display: "block",
+                      width: item.width || "auto",
+                      height: item.height || "auto",
+                      maxWidth: "none",
+                      objectFit: "contain",
+                    }}
+                  />
+                </div>
               </div>
             );
           })}
+        </div>
+
+        <div
+          data-archive-screen-labels
+          style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}
+        >
+          {screenLabels.map((label) => (
+            <p
+              key={label.id}
+              data-archive-screen-label
+              data-archive-label-for={label.id}
+              style={{
+                ...screenLabelStyle(view.z),
+                position: "absolute",
+                left: view.x + label.x * view.z,
+                top: view.y + label.y * view.z,
+              }}
+            >
+              {label.text}
+            </p>
+          ))}
         </div>
       </div>
 

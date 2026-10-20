@@ -1,4 +1,4 @@
-/** Overwritten by scripts/capture-dialogue-chat-icon-history.mjs during capture. */
+import { DialogueAssistantMark } from "@/components/dialogue/graphics/DialogueIcons";
 export function SecondaryIcon() {
-  return null;
+  return <DialogueAssistantMark size={22} />;
 }

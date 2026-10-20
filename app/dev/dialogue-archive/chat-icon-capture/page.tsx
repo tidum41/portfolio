@@ -1,26 +1,38 @@
 import { DialogueChatLauncher } from "@/components/dialogue/graphics/DialogueChatLauncher";
-import { SecondaryIcon } from "./ChatIconSecondary";
+
+const LAUNCHER_BASE = 52;
+const CAPTURE_SCALE = 4;
+const PAD = 32;
 
 /** Playwright target for scripts/capture-dialogue-chat-icon-history.mjs */
 export default function ChatIconCapturePage() {
-  const scale = 4;
-  const launcherSize = 52;
+  const size = LAUNCHER_BASE * CAPTURE_SCALE;
+  const box = size + PAD * 2;
   return (
     <div
       id="chat-icon-capture-root"
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 24,
-        padding: 16,
+        width: box,
+        height: box,
+        padding: PAD,
+        boxSizing: "border-box",
         background: "#f0efed",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <div data-capture="launcher" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-        <DialogueChatLauncher size={launcherSize} />
-      </div>
-      <div data-capture="mark" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-        <SecondaryIcon />
+      <div
+        data-capture="launcher"
+        style={{
+          width: size,
+          height: size,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <DialogueChatLauncher size={size} />
       </div>
     </div>
   );

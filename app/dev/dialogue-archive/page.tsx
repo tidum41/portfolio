@@ -23,7 +23,9 @@ export const dynamic = "force-dynamic";
 
 export default function DialogueArchivePage() {
   const allowLab =
-    process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview";
+    process.env.NODE_ENV === "development" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.DIALOGUE_ARCHIVE_LAB === "1";
 
   if (!allowLab) redirect("/");
 

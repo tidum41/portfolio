@@ -7,10 +7,12 @@ export const ARCHIVE_LAYOUT = {
   CONTENT_PAD: 64,
   TILE_GAP: 48,
   ROW_GAP: 120,
-  ROW_LABEL_H: 36,
-  LABEL_GAP: 12,
-  CAPTION_H: 48,
-  PLACEMENT_MAX_PER_ROW: 8,
+  ROW_LABEL_H: 48,
+  /** World gap between label slot and tile captions (with screen labels, keep ≥80 with ROW_LABEL_H for 25% zoom). */
+  LABEL_GAP: 32,
+  CAPTION_GAP: 8,
+  CAPTION_BLOCK_H: 40,
+  PLACEMENT_MAX_PER_ROW: 12,
   LIVE_W: 4200,
   LIVE_H: 2400,
 } as const;
@@ -56,7 +58,8 @@ export function computeDialogueArchiveLayout(manifest: DialogueArchiveManifest):
     ROW_GAP,
     ROW_LABEL_H,
     LABEL_GAP,
-    CAPTION_H,
+    CAPTION_GAP,
+    CAPTION_BLOCK_H,
     PLACEMENT_MAX_PER_ROW,
     LIVE_W,
     LIVE_H,
@@ -122,7 +125,7 @@ export function computeDialogueArchiveLayout(manifest: DialogueArchiveManifest):
       for (const item of rows[ri]) {
         const w = item.width || 400;
         const h = item.height || 300;
-        const tileH = CAPTION_H + h;
+        const tileH = CAPTION_BLOCK_H + CAPTION_GAP + h;
         tiles.push({
           id: item.id,
           kind: "image",
@@ -162,7 +165,7 @@ export function computeDialogueArchiveLayout(manifest: DialogueArchiveManifest):
     let rowH = 0;
     for (const icon of iconHistory) {
       const w = Math.max(icon.width || 320, 120);
-      const h = (icon.height || 120) + CAPTION_H;
+      const h = CAPTION_BLOCK_H + CAPTION_GAP + (icon.height || 120);
       tiles.push({
         id: `icon-${icon.sha}`,
         kind: "chat-icons",
@@ -240,4 +243,20 @@ export function computeFitCamera({ viewportW, viewportH, bounds, pad }: FitCamer
   const x = (viewportW - bw * clampedZ) / 2 - bounds.minX * clampedZ;
   const y = (viewportH - bh * clampedZ) / 2 - bounds.minY * clampedZ;
   return { x, y, z: clampedZ };
+}
+
+export const ROW_LABEL_WORLD_PX = 13;
+export const ROW_LABEL_MIN_SCREEN_PX = 12;
+
+/** Screen-space row label size (px): 13px at 100%, scales with zoom above that, 12px floor below counter threshold. */
+export function rowLabelScreenPx(z: number): number {
+  const scaled = ROW_LABEL_WORLD_PX * z;
+  if (scaled >= ROW_LABEL_MIN_SCREEN_PX) return scaled;
+  return ROW_LABEL_MIN_SCREEN_PX;
+}
+
+/** Min screen px between row label bottom and first tile caption in the row. */
+export function rowLabelToTileScreenGap(z: number): number {
+  const { ROW_LABEL_H, LABEL_GAP } = ARCHIVE_LAYOUT;
+  return z * (ROW_LABEL_H + LABEL_GAP) - rowLabelScreenPx(z);
 }
