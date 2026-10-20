@@ -14,7 +14,7 @@ import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/que
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
 export const revalidate = 86400;
 
 export const metadata: Metadata = {

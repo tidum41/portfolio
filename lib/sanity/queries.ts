@@ -75,10 +75,14 @@ async function loadDesignSystem(): Promise<Required<DesignSystemData>> {
   return { ...DS_DEFAULTS, ...sanitizeDesignSystem(raw) };
 }
 
-/** `@sanity/client` does not honor `{ next: { revalidate } }` — wrap like
- *  the playground gallery so layout TTFB is not a live Sanity round-trip. */
+/** `@sanity/client` does not honor `{ next: { tags } }` — wrap like
+ *  the playground gallery so layout TTFB is not a live Sanity round-trip.
+ *  Bust via Sanity webhook → `/api/revalidate` (`sanity`, `design-system`). */
 export const getDesignSystem = cache(
-  unstable_cache(loadDesignSystem, ["design-system"], { revalidate: 86400 }),
+  unstable_cache(loadDesignSystem, ["design-system"], {
+    revalidate: 86400,
+    tags: ["sanity", "design-system"],
+  }),
 );
 
 /** Convert a DesignSystemData to a CSS :root{} override block */
@@ -185,7 +189,10 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], { revalidate: 86400 }),
+  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+    revalidate: 86400,
+    tags: ["sanity", "projects"],
+  }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
@@ -356,12 +363,10 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 type RawImg  = { asset: { url: string } } | null;
 type RawFile = { asset: { url: string } } | null;
 
-/** Per-request dedupe when Suspense splits shell + body both need the doc. */
-export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
+async function loadCaseStudy(slug: string): Promise<CaseStudyData> {
   const raw = await sanityClient.fetch<Record<string, unknown> | null>(
     CASE_STUDY_QUERY,
     { slug },
-    { next: { revalidate: 86400 } }
   );
   if (!raw) return { slug };
 
@@ -384,6 +389,15 @@ export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> =
     decision1Video:        file("decision1Video"),
     solutionVideo:         file("solutionVideo"),
   } as CaseStudyData;
+}
+
+/** Per-request dedupe + tagged cross-request cache.
+ *  Bust via webhook tags `sanity` / `case-study:<slug>`. */
+export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
+  return unstable_cache(() => loadCaseStudy(slug), ["case-study", slug], {
+    revalidate: 86400,
+    tags: ["sanity", `case-study:${slug}`],
+  })();
 });
 
 // Legacy shim — keeps old imports working
@@ -549,8 +563,12 @@ async function loadPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
   return result;
 }
 
-/** Cross-request cache. `@sanity/client` does not honor `{ next: { revalidate } }`,
- *  so every archive nav used to hit Sanity live (~1s). Home layout warms this. */
+/** Cross-request cache. `@sanity/client` does not honor `{ next: { tags } }`,
+ *  so every archive nav used to hit Sanity live (~1s). Home layout warms this.
+ *  Bust via webhook tags `sanity` / `archive`. */
 export const getPlaygroundGallery = cache(
-  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 86400 }),
+  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], {
+    revalidate: 86400,
+    tags: ["sanity", "archive"],
+  }),
 );
