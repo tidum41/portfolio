@@ -17,7 +17,7 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
-      <div style={{ padding: PAD }}>
+      <div style={{ padding: PAD, paddingBottom: 12 }}>
         <p
           style={{
             margin: "0 0 12px",
@@ -30,8 +30,8 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
           <strong style={{ fontWeight: 600 }}>loses 38% of participants</strong> at one step.
         </p>
         <DropoffChart compact={compact} />
-        <DerivedEvidenceLabel>Based on 24 of 24 interviews</DerivedEvidenceLabel>
       </div>
+      <DerivedEvidenceLabel>Based on 24 of 24 interviews</DerivedEvidenceLabel>
     </div>
   );
 }

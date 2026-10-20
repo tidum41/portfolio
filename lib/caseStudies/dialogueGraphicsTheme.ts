@@ -9,6 +9,8 @@ export const DIALOGUE_GRAPHICS_COLORS = {
   inkSoft: "#8A847C",
   border: "#E4DFD8",
   borderSubtle: "#EDE9E4",
+  /** Derived-evidence footer hairline (section-imperfect) */
+  footerHairline: "#EEE9E2",
   surface: "#FFFFFF",
   surfaceMuted: "#F7F4F0",
   bubble: "#F3EDE4",

@@ -27,7 +27,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         }}
       >
         <div style={{ width: PLACEMENT_STUDY_WIDTH_DOCKED, flexShrink: 0, height: "100%" }}>
-          <DialogueStudyHostPage />
+          <DialogueStudyHostPage reserveRightForFloatingChat={false} />
         </div>
         <div
           style={{
@@ -56,7 +56,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         background: DIALOGUE_GRAPHICS_COLORS.surface,
       }}
     >
-      <DialogueStudyHostPage />
+      <DialogueStudyHostPage reserveRightForFloatingChat />
       <div
         style={{
           position: "absolute",

@@ -1,7 +1,12 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
 /** Study-page chrome shared by docked and floating placement tiles. */
-export function DialogueStudyHostPage() {
+export function DialogueStudyHostPage({
+  reserveRightForFloatingChat = false,
+}: {
+  reserveRightForFloatingChat?: boolean;
+}) {
+  const barMaxWidth = reserveRightForFloatingChat ? "52%" : undefined;
   return (
     <div
       style={{
@@ -36,7 +41,7 @@ export function DialogueStudyHostPage() {
             Checkout usability study
           </div>
           <div style={{ marginTop: 2, fontSize: 11, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
-            Session 12 · 24 interviews
+            Session 12, 24 interviews
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -96,7 +101,7 @@ export function DialogueStudyHostPage() {
               color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
             }}
           >
-            14:03 · Jordan M.
+            14:03, Jordan M.
           </div>
         </div>
       </div>
@@ -129,6 +134,7 @@ export function DialogueStudyHostPage() {
                 style={{
                   height: 8,
                   width: row.width,
+                  maxWidth: barMaxWidth,
                   borderRadius: 4,
                   background: DIALOGUE_GRAPHICS_COLORS.studyLine,
                 }}

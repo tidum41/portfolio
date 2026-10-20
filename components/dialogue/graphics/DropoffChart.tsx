@@ -1,12 +1,15 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
+/** Drop-off % at each step — bar length equals the value (0% = empty track). */
 const STEPS = [
-  { label: "Cart", pct: 0, width: 100, tone: "neutral" as const },
-  { label: "Address", pct: 38, width: 62, tone: "accent" as const },
-  { label: "Delivery", pct: 8, width: 54, tone: "muted" as const },
-  { label: "Payment", pct: 12, width: 42, tone: "muted" as const },
-  { label: "Confirm", pct: 6, width: 36, tone: "muted" as const },
+  { label: "Cart", pct: 0, tone: "neutral" as const },
+  { label: "Address", pct: 38, tone: "accent" as const },
+  { label: "Delivery", pct: 8, tone: "muted" as const },
+  { label: "Payment", pct: 12, tone: "muted" as const },
+  { label: "Confirm", pct: 6, tone: "muted" as const },
 ];
+
+const CHART_MAX_PCT = 40;
 
 export function DropoffChart({ compact = false }: { compact?: boolean }) {
   const labelW = compact ? 54 : 62;
@@ -47,19 +50,21 @@ export function DropoffChart({ compact = false }: { compact?: boolean }) {
                 overflow: "hidden",
               }}
             >
-              <div
-                style={{
-                  width: `${step.width}%`,
-                  height: "100%",
-                  borderRadius: 4,
-                  background:
-                    step.tone === "accent"
-                      ? DIALOGUE_GRAPHICS_COLORS.accent
-                      : step.tone === "neutral"
-                        ? DIALOGUE_GRAPHICS_COLORS.barNeutral
-                        : DIALOGUE_GRAPHICS_COLORS.barMuted,
-                }}
-              />
+              {step.pct > 0 ? (
+                <div
+                  style={{
+                    width: `${(step.pct / CHART_MAX_PCT) * 100}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    background:
+                      step.tone === "accent"
+                        ? DIALOGUE_GRAPHICS_COLORS.accent
+                        : step.tone === "neutral"
+                          ? DIALOGUE_GRAPHICS_COLORS.barNeutral
+                          : DIALOGUE_GRAPHICS_COLORS.barMuted,
+                  }}
+                />
+              ) : null}
             </div>
             <span
               style={{
