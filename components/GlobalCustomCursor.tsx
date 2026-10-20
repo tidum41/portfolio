@@ -601,11 +601,11 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         }
       } else if (pillVisible) {
         pillVisible = false; renderedLabel = ""; morphToRest();
-      } else {
+      } else if (wrap.style.opacity !== "0") {
         wrap.style.opacity = "0";
       }
     } else {
-      wrap.style.opacity = "0";
+      if (wrap.style.opacity !== "0") wrap.style.opacity = "0";
       if (pillVisible) { pillVisible = false; morphToRest(); }
     }
 
@@ -769,7 +769,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       }
     }
 
-    if (allSettled && !mouse.inside && idleFade <= 0) {
+    if (allSettled && idleFade <= 0 && !isPill && !pillVisible) {
       isIdle = true; setWillChange("auto"); return;
     }
     raf = requestAnimationFrame(tick);
@@ -777,13 +777,16 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
 
   raf = requestAnimationFrame(tick);
 
-  function checkPillHover(x: number, y: number) {
-    // No heavy throttle — elementFromPoint is a cheap hit-test. A minimal
-    // 8ms guard prevents redundant calls within a single animation frame.
+  function checkPillHover(x: number, y: number, target?: EventTarget | null) {
+    // Prefer the browser's already-resolved PointerEvent target; fall back to
+    // elementFromPoint only when no Element target is available.
     const now = performance.now();
     if (now - lastHoverCheck < 8) return;
     lastHoverCheck = now;
-    const el       = document.elementFromPoint(x, y);
+    const el =
+      target instanceof Element && target.isConnected && target !== document.documentElement && target !== document.body
+        ? target
+        : document.elementFromPoint(x, y);
     const labelEl  = el?.closest("[data-cursor-label]");
     const newLabel = labelEl?.getAttribute("data-cursor-label") ?? "";
     if (newLabel !== pillLabel) {
@@ -795,6 +798,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       if (newLabel && pillIsTimed) {
         timedPillTimeout = window.setTimeout(() => {
           isPill = false;
+          wakeUp();
         }, 1000) as unknown as number;
       }
     }
@@ -812,7 +816,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.inside = true; lastMove = performance.now();
     syncWrap();
-    checkPillHover(e.clientX, e.clientY);
+    checkPillHover(e.clientX, e.clientY, e.target);
     const now = performance.now();
     if (now - lastPosWrite > 500) {
       try { sessionStorage.setItem(CURSOR_POS_KEY, JSON.stringify({ x: e.clientX, y: e.clientY })); } catch {}

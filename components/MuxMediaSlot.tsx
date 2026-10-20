@@ -170,16 +170,25 @@ export default function MuxMediaSlot({
   const hlsRef = useRef<Hls | null>(null);
   const playingRef = useRef(playing);
   playingRef.current = playing;
+  const revealedRef = useRef(false);
+  const detachRevealListenersRef = useRef<(() => void) | null>(null);
 
   const revealIfOnPoster = useCallback(() => {
+    if (revealedRef.current) return;
     const video = videoRef.current;
     const root = rootRef.current;
     if (!video || !root) return;
-    if (root.getAttribute("data-frame") === "shown") return;
+    if (root.getAttribute("data-frame") === "shown") {
+      revealedRef.current = true;
+      detachRevealListenersRef.current?.();
+      return;
+    }
     // Stay on the still until the decoded frame is the one the poster shows.
     if (thumbnailTime > 0 && video.currentTime < thumbnailTime - 0.35) return;
     if (video.readyState < 2) return;
+    revealedRef.current = true;
     root.setAttribute("data-frame", "shown");
+    detachRevealListenersRef.current?.();
   }, [thumbnailTime]);
 
   const kickPlay = useCallback(() => {
@@ -289,29 +298,50 @@ export default function MuxMediaSlot({
   );
 
   useEffect(() => {
+    revealedRef.current = rootRef.current?.getAttribute("data-frame") === "shown";
     const video = videoRef.current;
     const stop = attachVideo(video);
     const onFrame = () => revealIfOnPoster();
-    video?.addEventListener("loadeddata", onFrame);
-    video?.addEventListener("canplay", onFrame);
-    video?.addEventListener("canplaythrough", onFrame);
-    video?.addEventListener("playing", onFrame);
-    video?.addEventListener("timeupdate", onFrame);
-    video?.addEventListener("seeked", onFrame);
 
     let rvfcId = 0;
     const vWithRvfc = video as (HTMLVideoElement & {
       requestVideoFrameCallback?: (cb: () => void) => number;
       cancelVideoFrameCallback?: (id: number) => void;
     }) | null;
-    if (vWithRvfc && typeof vWithRvfc.requestVideoFrameCallback === "function") {
-      const stepFrame = () => {
-        revealIfOnPoster();
-        if (rootRef.current?.getAttribute("data-frame") !== "shown" && vWithRvfc.requestVideoFrameCallback) {
-          rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
-        }
-      };
-      rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
+
+    const detachReveal = () => {
+      detachRevealListenersRef.current = null;
+      if (rvfcId && vWithRvfc && typeof vWithRvfc.cancelVideoFrameCallback === "function") {
+        vWithRvfc.cancelVideoFrameCallback(rvfcId);
+        rvfcId = 0;
+      }
+      video?.removeEventListener("loadeddata", onFrame);
+      video?.removeEventListener("canplay", onFrame);
+      video?.removeEventListener("canplaythrough", onFrame);
+      video?.removeEventListener("playing", onFrame);
+      video?.removeEventListener("timeupdate", onFrame);
+      video?.removeEventListener("seeked", onFrame);
+    };
+    detachRevealListenersRef.current = detachReveal;
+
+    if (!revealedRef.current) {
+      video?.addEventListener("loadeddata", onFrame);
+      video?.addEventListener("canplay", onFrame);
+      video?.addEventListener("canplaythrough", onFrame);
+      video?.addEventListener("playing", onFrame);
+      video?.addEventListener("timeupdate", onFrame);
+      video?.addEventListener("seeked", onFrame);
+
+      if (vWithRvfc && typeof vWithRvfc.requestVideoFrameCallback === "function") {
+        const stepFrame = () => {
+          rvfcId = 0;
+          revealIfOnPoster();
+          if (!revealedRef.current && vWithRvfc.requestVideoFrameCallback) {
+            rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
+          }
+        };
+        rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
+      }
     }
 
     const onEnded = () => {
@@ -339,15 +369,7 @@ export default function MuxMediaSlot({
     document.addEventListener("visibilitychange", onVis);
     return () => {
       stop?.();
-      if (rvfcId && vWithRvfc && typeof vWithRvfc.cancelVideoFrameCallback === "function") {
-        vWithRvfc.cancelVideoFrameCallback(rvfcId);
-      }
-      video?.removeEventListener("loadeddata", onFrame);
-      video?.removeEventListener("canplay", onFrame);
-      video?.removeEventListener("canplaythrough", onFrame);
-      video?.removeEventListener("playing", onFrame);
-      video?.removeEventListener("timeupdate", onFrame);
-      video?.removeEventListener("seeked", onFrame);
+      detachReveal();
       video?.removeEventListener("ended", onEnded);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
@@ -404,7 +426,6 @@ export default function MuxMediaSlot({
         controlsList="nodownload nofullscreen noremoteplayback"
         preload="auto"
         onCanPlay={kickPlay}
-        onPlaying={kickPlay}
         onLoadedData={kickPlay}
       />
     </div>

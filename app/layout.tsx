@@ -117,16 +117,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Archive gallery is NOT fetched here — serializing LQIP data-URIs +
   // 2000px Sanity URLs into every `/` HTML payload was first-load bloat.
   // PersistentArchiveShell + PrimaryRouteWarmup hydrate it after intro.
-  const [ds, projects] = await Promise.all([
-    getDesignSystem(),
-    getProjects(),
-  ]).catch(
-    () =>
-      [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
-  );
   // Already returns an empty warmup if Mux is unreachable, so a video-CDN
   // blip cannot take the rest of the layout down with it.
-  const muxWarm = await getMuxCardWarmup();
+  const [ds, projects, muxWarm] = await Promise.all([
+    getDesignSystem().catch(() => DS_DEFAULTS),
+    getProjects().catch(() => [] as SanityProject[]),
+    getMuxCardWarmup(),
+  ]);
   const dsStyle = designSystemToCss(ds);
 
   return (
