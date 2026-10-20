@@ -18,14 +18,17 @@ const PAD = PLACEMENT_GRID_PAD_X - 4;
 
 export function EvidenceAnswerCard({
   compact = false,
-  floating = false,
+  fillHeight = false,
+  fitFloating = false,
 }: {
   compact?: boolean;
-  floating?: boolean;
+  fillHeight?: boolean;
+  /** Tighter vertical rhythm so full card fits floating max height (no content removed). */
+  fitFloating?: boolean;
 }) {
   const inset = compact ? PLACEMENT_GRID_PAD_X - 4 : PAD;
   const copyIconInset = inset;
-  const blockGap = floating ? PLACEMENT_SPACE_1 : PLACEMENT_SPACE_1 + 2;
+  const blockGap = fitFloating ? PLACEMENT_SPACE_1 : PLACEMENT_SPACE_1 + 2;
   return (
     <div
       style={{
@@ -35,6 +38,10 @@ export function EvidenceAnswerCard({
         background: DIALOGUE_GRAPHICS_COLORS.surface,
         overflow: "hidden",
         fontFamily: DIALOGUE_GRAPHICS_FONT,
+        height: fillHeight ? "100%" : undefined,
+        display: fillHeight ? "flex" : undefined,
+        flexDirection: fillHeight ? "column" : undefined,
+        minHeight: fillHeight ? 0 : undefined,
       }}
     >
       <div
@@ -58,8 +65,10 @@ export function EvidenceAnswerCard({
       <div
         style={{
           padding: inset,
-          paddingBottom: floating ? PLACEMENT_SPACE_1 + 2 : PLACEMENT_SPACE_1 + 4,
+          paddingBottom: fitFloating ? PLACEMENT_SPACE_1 + 2 : PLACEMENT_SPACE_1 + 4,
           paddingRight: inset + PLACEMENT_ICON_SIZE + 4,
+          flex: fillHeight ? 1 : undefined,
+          minHeight: fillHeight ? 0 : undefined,
         }}
       >
         <p
@@ -74,7 +83,7 @@ export function EvidenceAnswerCard({
           <span style={{ fontWeight: 500 }}>loses 38% of participants</span>, the largest single-step
           drop in checkout.
         </p>
-        <CheckoutFunnelChart compact={compact} tight={floating} />
+        <CheckoutFunnelChart compact={compact} rowGap={fitFloating ? 5 : undefined} />
         <div style={{ marginTop: blockGap }}>
           <button
             type="button"
@@ -92,9 +101,9 @@ export function EvidenceAnswerCard({
           </button>
         </div>
         <div style={{ marginTop: blockGap }}>
-          <ClipThumbnailRow compact={compact} max={floating ? 2 : 3} />
+          <ClipThumbnailRow compact={compact} max={3} />
         </div>
-        <CounterEvidenceSection compact={compact} tight={floating} />
+        <CounterEvidenceSection compact={compact} edgeGap={fitFloating ? PLACEMENT_SPACE_1 : undefined} />
       </div>
       <DerivedEvidenceLabel>Based on 24 of 24 interviews</DerivedEvidenceLabel>
     </div>

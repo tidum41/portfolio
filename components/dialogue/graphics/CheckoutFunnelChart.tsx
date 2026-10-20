@@ -12,15 +12,14 @@ const STEPS = [
 
 export function CheckoutFunnelChart({
   compact = false,
-  tight = false,
+  rowGap: rowGapOverride,
 }: {
   compact?: boolean;
-  tight?: boolean;
+  rowGap?: number;
 }) {
   const labelW = compact ? 56 : 62;
   const barH = 8;
-  const rowGap = tight ? 4 : compact ? 6 : PLACEMENT_SPACE_1 - 1;
-  const captionMargin = tight ? PLACEMENT_SPACE_1 - 2 : PLACEMENT_SPACE_1;
+  const rowGap = rowGapOverride ?? (compact ? 6 : PLACEMENT_SPACE_1 - 1);
 
   return (
     <div data-placement-crop="funnel" style={{ fontFamily: DIALOGUE_GRAPHICS_FONT }}>
@@ -28,7 +27,7 @@ export function CheckoutFunnelChart({
         style={{
           ...placementType.labelRegular,
           color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
-          marginBottom: captionMargin,
+          marginBottom: PLACEMENT_SPACE_1,
           whiteSpace: "nowrap",
         }}
       >
@@ -85,18 +84,16 @@ export function CheckoutFunnelChart({
           </div>
         ))}
       </div>
-      {!tight && (
-        <div
-          style={{
-            marginTop: PLACEMENT_SPACE_1,
-            ...placementType.labelRegular,
-            color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Largest drop: Shipping address (-38%)
-        </div>
-      )}
+      <div
+        style={{
+          marginTop: PLACEMENT_SPACE_1,
+          ...placementType.labelRegular,
+          color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Largest drop: Shipping address (-38%)
+      </div>
     </div>
   );
 }

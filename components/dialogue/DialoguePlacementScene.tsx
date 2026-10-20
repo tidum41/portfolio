@@ -3,11 +3,10 @@ import {
   PLACEMENT_LAYOUT_WIDTH,
   PLACEMENT_SIDEBAR_WIDTH,
   PLACEMENT_STUDY_WIDTH_DOCKED,
-  PLACEMENT_FLOATING_CHAT_TOP,
   PLACEMENT_FLOATING_EDGE,
   PLACEMENT_FLOATING_LAUNCHER_SIZE,
-  PLACEMENT_FLOATING_LAUNCHER_GAP,
-  PLACEMENT_FLOATING_PANEL_LEFT,
+  PLACEMENT_FLOATING_PANEL_MAX_HEIGHT,
+  PLACEMENT_FLOATING_PANEL_TOP,
   PLACEMENT_FLOATING_PANEL_WIDTH,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
@@ -34,7 +33,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         }}
       >
         <div style={{ width: PLACEMENT_STUDY_WIDTH_DOCKED, flexShrink: 0, height: "100%" }}>
-          <DialogueStudyHostPage reserveRightForFloatingChat={false} />
+          <DialogueStudyHostPage />
         </div>
         <div
           style={{
@@ -63,59 +62,37 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         background: DIALOGUE_GRAPHICS_COLORS.surface,
       }}
     >
-      <DialogueStudyHostPage reserveRightForFloatingChat={true} />
+      <DialogueStudyHostPage />
       <div
         style={{
           position: "absolute",
-          left: PLACEMENT_FLOATING_PANEL_LEFT,
-          top: PLACEMENT_FLOATING_CHAT_TOP,
-          bottom: PLACEMENT_FLOATING_EDGE,
+          right: PLACEMENT_FLOATING_EDGE,
+          top: PLACEMENT_FLOATING_PANEL_TOP,
           width: PLACEMENT_FLOATING_PANEL_WIDTH,
-          pointerEvents: "none",
+          maxHeight: PLACEMENT_FLOATING_PANEL_MAX_HEIGHT,
           display: "flex",
           flexDirection: "column",
-          alignItems: "stretch",
-          gap: PLACEMENT_FLOATING_LAUNCHER_GAP,
+          borderRadius: 14,
+          border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+          background: DIALOGUE_GRAPHICS_COLORS.surface,
+          boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
+          overflow: "hidden",
+          zIndex: 3,
+          pointerEvents: "auto",
         }}
       >
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            borderRadius: 14,
-            boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
-            pointerEvents: "auto",
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: 14,
-              border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-              background: DIALOGUE_GRAPHICS_COLORS.surface,
-              overflow: "hidden",
-            }}
-          >
-            <DialogueResearchAssistantPanel compact floating />
-          </div>
-        </div>
-        <div
-          style={{
-            flexShrink: 0,
-            display: "flex",
-            justifyContent: "flex-end",
-            pointerEvents: "auto",
-          }}
-        >
-          <DialogueChatLauncher size={PLACEMENT_FLOATING_LAUNCHER_SIZE} />
-        </div>
+        <DialogueResearchAssistantPanel compact floating />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          right: PLACEMENT_FLOATING_EDGE,
+          bottom: PLACEMENT_FLOATING_EDGE,
+          zIndex: 4,
+          pointerEvents: "auto",
+        }}
+      >
+        <DialogueChatLauncher size={PLACEMENT_FLOATING_LAUNCHER_SIZE} />
       </div>
     </div>
   );

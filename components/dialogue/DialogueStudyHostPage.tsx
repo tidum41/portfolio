@@ -1,4 +1,3 @@
-import { PLACEMENT_FLOATING_STUDY_MAX_WIDTH } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import {
   PLACEMENT_GRID_PAD_X,
@@ -12,21 +11,12 @@ import { DialogueStudyTranscript } from "@/components/dialogue/DialogueStudyTran
 const TAB_HEIGHT = 24;
 
 /** Study-page chrome shared by docked and floating placement tiles. */
-export function DialogueStudyHostPage({
-  reserveRightForFloatingChat = false,
-}: {
-  reserveRightForFloatingChat?: boolean;
-}) {
-  const studyChromeWidth = reserveRightForFloatingChat ? PLACEMENT_FLOATING_STUDY_MAX_WIDTH : undefined;
-  const edgePadX = reserveRightForFloatingChat ? `${PLACEMENT_GRID_PAD_X}px 0` : `${PLACEMENT_GRID_PAD_X}px`;
-
+export function DialogueStudyHostPage() {
   return (
     <div
       style={{
-        flex: reserveRightForFloatingChat ? "0 0 auto" : 1,
+        flex: 1,
         minWidth: 0,
-        width: studyChromeWidth ?? "100%",
-        maxWidth: studyChromeWidth ?? undefined,
         height: "100%",
         display: "flex",
         flexDirection: "column",
@@ -40,7 +30,7 @@ export function DialogueStudyHostPage({
           alignItems: "center",
           justifyContent: "space-between",
           gap: PLACEMENT_SPACE_1,
-          padding: `${PLACEMENT_GRID_PAD_Y}px ${edgePadX}`,
+          padding: `${PLACEMENT_GRID_PAD_Y}px ${PLACEMENT_GRID_PAD_X}px`,
           borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         }}
       >
@@ -78,14 +68,14 @@ export function DialogueStudyHostPage({
 
       <div
         style={{
-          padding: `${PLACEMENT_SPACE_1}px ${edgePadX}`,
+          padding: `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px`,
           borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         }}
       >
         <DialogueInterviewPlayer />
       </div>
 
-      <DialogueStudyTranscript reserveRightForFloatingChat={reserveRightForFloatingChat} />
+      <DialogueStudyTranscript />
     </div>
   );
 }

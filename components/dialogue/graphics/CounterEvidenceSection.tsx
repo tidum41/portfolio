@@ -9,18 +9,18 @@ import { ChevronDownIcon, CounterEvidenceIcon } from "./DialogueIcons";
 
 export function CounterEvidenceSection({
   compact = false,
-  tight = false,
+  edgeGap,
 }: {
   compact?: boolean;
-  tight?: boolean;
+  edgeGap?: number;
 }) {
-  const edgeGap = tight ? PLACEMENT_SPACE_1 : PLACEMENT_SPACE_1 + 2;
+  const gap = edgeGap ?? PLACEMENT_SPACE_1 + 2;
   return (
     <div
       style={{
         borderTop: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-        paddingTop: edgeGap,
-        marginTop: edgeGap,
+        paddingTop: gap,
+        marginTop: gap,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >

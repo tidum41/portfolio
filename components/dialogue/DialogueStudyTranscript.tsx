@@ -1,4 +1,3 @@
-import { PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import {
   PLACEMENT_AVATAR_SIZE,
@@ -65,20 +64,14 @@ function SpeakerMeta({ speaker, time }: { speaker: string; time: string }) {
   );
 }
 
-export function DialogueStudyTranscript({
-  reserveRightForFloatingChat = false,
-}: {
-  reserveRightForFloatingChat?: boolean;
-}) {
+export function DialogueStudyTranscript() {
   return (
     <div
       style={{
         flex: 1,
         minHeight: 0,
         overflow: "hidden",
-        padding: reserveRightForFloatingChat
-          ? `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px 0`
-          : `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px ${PLACEMENT_GRID_PAD_X}px`,
+        padding: `${PLACEMENT_SPACE_1}px ${PLACEMENT_GRID_PAD_X}px ${PLACEMENT_GRID_PAD_X}px`,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
@@ -86,9 +79,8 @@ export function DialogueStudyTranscript({
         data-placement-crop="transcript"
         data-placement-proof-text="true"
         style={{
-          maxWidth: reserveRightForFloatingChat ? PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING : "100%",
           position: "relative",
-          zIndex: 2,
+          zIndex: 1,
         }}
       >
         <div
@@ -111,8 +103,8 @@ export function DialogueStudyTranscript({
             Copy
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: reserveRightForFloatingChat ? 4 : 6 }}>
-          {(reserveRightForFloatingChat ? LINES.slice(0, 3) : LINES).map((line) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {LINES.map((line) => (
             <div
               key={`${line.speaker}-${line.time}`}
               style={{

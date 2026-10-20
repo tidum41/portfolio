@@ -26,8 +26,8 @@ export function DialogueResearchAssistantPanel({
       style={{
         display: "flex",
         flexDirection: "column",
-        height: fillColumn ? "100%" : "auto",
-        minHeight: fillColumn ? 0 : undefined,
+        height: floating ? "auto" : fillColumn ? "100%" : "auto",
+        minHeight: floating ? undefined : fillColumn ? 0 : undefined,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
         color: DIALOGUE_GRAPHICS_COLORS.ink,
       }}
@@ -35,9 +35,7 @@ export function DialogueResearchAssistantPanel({
       <header
         data-placement-crop="assistant-top"
         style={{
-          padding: floating
-            ? `${PLACEMENT_SPACE_1 + 2}px ${CARD_PAD}px ${PLACEMENT_SPACE_1 - 2}px`
-            : `${PLACEMENT_SPACE_1 + 4}px ${CARD_PAD}px ${PLACEMENT_SPACE_1}px`,
+          padding: `${PLACEMENT_SPACE_1 + 4}px ${CARD_PAD}px ${PLACEMENT_SPACE_1}px`,
           flexShrink: 0,
         }}
       >
@@ -62,7 +60,7 @@ export function DialogueResearchAssistantPanel({
           display: "flex",
           flexDirection: "column",
           gap: floating ? PLACEMENT_SPACE_1 - 2 : PLACEMENT_SPACE_1,
-          overflow: fillColumn ? "auto" : "hidden",
+          overflow: floating ? "visible" : fillColumn ? "auto" : "hidden",
         }}
       >
         <div
@@ -98,7 +96,7 @@ export function DialogueResearchAssistantPanel({
         </div>
 
         <div style={{ flexShrink: 0 }}>
-          <EvidenceAnswerCard compact={compact} floating={floating} />
+          <EvidenceAnswerCard compact={compact} fitFloating={floating} />
         </div>
       </div>
     </div>
