@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
@@ -10,8 +9,17 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import DecisionBlock from "@/components/DecisionBlock";
-import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
-import { DIALOGUE_HERO_SRC, DIALOGUE_IMAGES, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import {
+  DIALOGUE_HERO_SRC,
+  DIALOGUE_IMAGES,
+  DIALOGUE_RASTER_HEIGHT,
+  DIALOGUE_RASTER_WIDTH,
+  DIALOGUE_TITLE,
+} from "@/lib/caseStudies/dialogue";
+
+const DIALOGUE_RASTER = { width: DIALOGUE_RASTER_WIDTH, height: DIALOGUE_RASTER_HEIGHT };
+const DIALOGUE_SIZES_FULL = "(max-width: 767px) calc(100vw - 48px), 750px";
+const DIALOGUE_SIZES_PAIR = "(max-width: 767px) calc(50vw - 30px), 375px";
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
@@ -30,14 +38,6 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "full-answer", label: "One answer" },
   { id: "outcome", label: "Outcome" },
   { id: "reflection", label: "Reflection" },
-];
-
-const ANATOMY_PARTS = [
-  { n: 1, label: "Sources" },
-  { n: 2, label: "Summary" },
-  { n: 3, label: "Query chart" },
-  { n: 4, label: "Timestamped clips" },
-  { n: 5, label: "Follow-ups" },
 ];
 
 function Section({
@@ -102,9 +102,9 @@ function FrameColumn({
       <CaseStudyFigure
         src={src}
         alt={alt}
-        fill
-        aspectRatio="4 / 3"
-        sizes="(max-width: 767px) calc(50vw - 30px), 375px"
+        width={DIALOGUE_RASTER.width}
+        height={DIALOGUE_RASTER.height}
+        sizes={DIALOGUE_SIZES_PAIR}
       />
     ) : (
       children
@@ -166,7 +166,7 @@ export function DialogueCaseStudyContent({
   const wrap = annotateRaster;
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="dialogue-case-study" style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
         <aside className="cs-aside">
           <CaseStudyTOC items={DIALOGUE_TOC_ITEMS} backHref={backHref} />
@@ -208,30 +208,26 @@ export function DialogueCaseStudyContent({
             {wrap
               ? wrap(
                   "D-01",
-                  <div className="cs-hero-media-frame">
-                    <Image
+                  <div className="cs-hero-media-frame dialogue-hero-media">
+                    <CaseStudyFigure
                       src={DIALOGUE_HERO_SRC}
                       alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      width={1500}
-                      height={1088}
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
                       priority
-                      fetchPriority="high"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
-                      style={{ width: "100%", height: "auto", display: "block" }}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />
                   </div>,
                 )
               : (
-                  <div className="cs-hero-media-frame">
-                    <Image
+                  <div className="cs-hero-media-frame dialogue-hero-media">
+                    <CaseStudyFigure
                       src={DIALOGUE_HERO_SRC}
                       alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      width={1500}
-                      height={1088}
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
                       priority
-                      fetchPriority="high"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
-                      style={{ width: "100%", height: "auto", display: "block" }}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />
                   </div>
                 )}
@@ -269,6 +265,7 @@ export function DialogueCaseStudyContent({
                 subheading="Three ways the chat could answer the same question."
                 chosenId="structured"
                 annotateRaster={wrap}
+                imageNaturalSize={DIALOGUE_RASTER}
                 options={[
                   {
                     id: "paragraphs",
@@ -306,9 +303,9 @@ export function DialogueCaseStudyContent({
                         src={DIALOGUE_IMAGES.proofSolution}
                         alt="Selected checkout step with a clips list tied to that bar."
                         caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        fill
-                        aspectRatio="16 / 10"
-                        sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                        width={DIALOGUE_RASTER.width}
+                        height={DIALOGUE_RASTER.height}
+                        sizes={DIALOGUE_SIZES_FULL}
                       />,
                     )
                   : (
@@ -316,9 +313,9 @@ export function DialogueCaseStudyContent({
                         src={DIALOGUE_IMAGES.proofSolution}
                         alt="Selected checkout step with a clips list tied to that bar."
                         caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        fill
-                        aspectRatio="16 / 10"
-                        sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                        width={DIALOGUE_RASTER.width}
+                        height={DIALOGUE_RASTER.height}
+                        sizes={DIALOGUE_SIZES_FULL}
                       />
                     )}
               </div>
@@ -341,43 +338,28 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
               </CaseStudyBody>
-              <figure style={{ margin: "24px auto 0", width: "80%", maxWidth: "100%" }}>
+              <div style={{ margin: "24px auto 0", width: "80%", maxWidth: "100%" }}>
                 {wrap
                   ? wrap(
                       "D-08",
                       <CaseStudyFigure
                         src={DIALOGUE_IMAGES.anatomy}
                         alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        fill
-                        aspectRatio="4 / 3"
+                        width={DIALOGUE_RASTER.width}
+                        height={DIALOGUE_RASTER.height}
                         sizes="(max-width: 767px) calc(100vw - 48px), 600px"
-                        zoomable
                       />,
                     )
                   : (
                       <CaseStudyFigure
                         src={DIALOGUE_IMAGES.anatomy}
                         alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        fill
-                        aspectRatio="4 / 3"
+                        width={DIALOGUE_RASTER.width}
+                        height={DIALOGUE_RASTER.height}
                         sizes="(max-width: 767px) calc(100vw - 48px), 600px"
-                        zoomable
                       />
                     )}
-                <div
-                  className="dialogue-anatomy-captions"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                    gap: "8px 12px",
-                    marginTop: 12,
-                  }}
-                >
-                  {ANATOMY_PARTS.map(({ n, label }) => (
-                    <CaseStudyNumberedMarker key={n} n={n}>{label}</CaseStudyNumberedMarker>
-                  ))}
-                </div>
-              </figure>
+              </div>
             </Section>
 
             <Section id="fitted-charts">
@@ -393,9 +375,9 @@ export function DialogueCaseStudyContent({
                       src={DIALOGUE_IMAGES.answerShapes}
                       alt="Four study chat questions each shown with a different chart and clip layout."
                       caption="Four question types, four chart shapes"
-                      fill
-                      aspectRatio="16 / 10"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />,
                   )
                 : (
@@ -403,9 +385,9 @@ export function DialogueCaseStudyContent({
                       src={DIALOGUE_IMAGES.answerShapes}
                       alt="Four study chat questions each shown with a different chart and clip layout."
                       caption="Four question types, four chart shapes"
-                      fill
-                      aspectRatio="16 / 10"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />
                   )}
             </Section>
@@ -506,9 +488,9 @@ export function DialogueCaseStudyContent({
                       src={DIALOGUE_IMAGES.fullAnswer}
                       alt="Structured answer card beside a drawer listing every clip behind the answer."
                       caption="The full answer, with every supporting clip in one drawer"
-                      fill
-                      aspectRatio="16 / 10"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />,
                   )
                 : (
@@ -516,9 +498,9 @@ export function DialogueCaseStudyContent({
                       src={DIALOGUE_IMAGES.fullAnswer}
                       alt="Structured answer card beside a drawer listing every clip behind the answer."
                       caption="The full answer, with every supporting clip in one drawer"
-                      fill
-                      aspectRatio="16 / 10"
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                      width={DIALOGUE_RASTER.width}
+                      height={DIALOGUE_RASTER.height}
+                      sizes={DIALOGUE_SIZES_FULL}
                     />
                   )}
             </Section>

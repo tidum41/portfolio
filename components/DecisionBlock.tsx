@@ -26,6 +26,8 @@ export type DecisionBlockProps = {
   options: DecisionBlockOption[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
+  /** When set, option images use intrinsic aspect ratio (no letterboxing). */
+  imageNaturalSize?: { width: number; height: number };
 };
 
 function OptionCaption({ option, isChosen }: { option: DecisionBlockOption; isChosen: boolean }) {
@@ -49,12 +51,23 @@ function OptionCard({
   option,
   isChosen,
   annotateRaster,
+  imageNaturalSize,
 }: {
   option: DecisionBlockOption;
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
+  imageNaturalSize?: { width: number; height: number };
 }) {
-  const figure = (
+  const figure = imageNaturalSize ? (
+    <CaseStudyFigure
+      src={option.imageSrc}
+      alt={option.imageAlt}
+      width={imageNaturalSize.width}
+      height={imageNaturalSize.height}
+      sizes="(max-width: 767px) calc(50vw - 30px), 240px"
+      zoomable
+    />
+  ) : (
     <CaseStudyFigure
       src={option.imageSrc}
       alt={option.imageAlt}
@@ -87,6 +100,7 @@ export default function DecisionBlock({
   options,
   chosenId,
   annotateRaster,
+  imageNaturalSize,
 }: DecisionBlockProps) {
   const chosen = options.find((o) => o.id === chosenId);
   const others = options.filter((o) => o.id !== chosenId);
@@ -103,13 +117,19 @@ export default function DecisionBlock({
             option={option}
             isChosen={option.id === chosenId}
             annotateRaster={annotateRaster}
+            imageNaturalSize={imageNaturalSize}
           />
         ))}
       </div>
 
       <div className="decision-block__grid decision-block__grid--mobile">
         {chosen ? (
-          <OptionCard option={chosen} isChosen annotateRaster={annotateRaster} />
+          <OptionCard
+            option={chosen}
+            isChosen
+            annotateRaster={annotateRaster}
+            imageNaturalSize={imageNaturalSize}
+          />
         ) : null}
         <p className="decision-block__also-explored">Also explored</p>
         {others.map((option) => (
@@ -118,6 +138,7 @@ export default function DecisionBlock({
             option={option}
             isChosen={false}
             annotateRaster={annotateRaster}
+            imageNaturalSize={imageNaturalSize}
           />
         ))}
       </div>
