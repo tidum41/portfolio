@@ -78,7 +78,7 @@ async function loadDesignSystem(): Promise<Required<DesignSystemData>> {
 /** `@sanity/client` does not honor `{ next: { revalidate } }` — wrap like
  *  the playground gallery so layout TTFB is not a live Sanity round-trip. */
 export const getDesignSystem = cache(
-  unstable_cache(loadDesignSystem, ["design-system"], { revalidate: 60 }),
+  unstable_cache(loadDesignSystem, ["design-system"], { revalidate: 86400 }),
 );
 
 /** Convert a DesignSystemData to a CSS :root{} override block */
@@ -185,7 +185,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v9-case-links"], { revalidate: 86400 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
@@ -361,7 +361,7 @@ export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> =
   const raw = await sanityClient.fetch<Record<string, unknown> | null>(
     CASE_STUDY_QUERY,
     { slug },
-    { next: { revalidate: 300 } }
+    { next: { revalidate: 86400 } }
   );
   if (!raw) return { slug };
 
@@ -552,5 +552,5 @@ async function loadPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
 /** Cross-request cache. `@sanity/client` does not honor `{ next: { revalidate } }`,
  *  so every archive nav used to hit Sanity live (~1s). Home layout warms this. */
 export const getPlaygroundGallery = cache(
-  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 60 }),
+  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 86400 }),
 );
