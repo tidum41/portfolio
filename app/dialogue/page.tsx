@@ -272,7 +272,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="why-it-matters">
-              <H2>A finding only travels if you can point to the interview behind it.</H2>
+              <H2>A finding only travels if you can point to the interview behind it</H2>
               <CaseStudyBody>
                 I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
                 product team, and students in interview sessions (not Dialogue research customers).
@@ -359,7 +359,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="placement">
-              <H2>Instead of a docked sidebar, I kept the floating chat.</H2>
+              <H2>Instead of a docked sidebar, I kept the floating chat</H2>
               <CaseStudyBody>
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages.
@@ -382,7 +382,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="full-answer">
-              <H2>One answer, start to finish.</H2>
+              <H2>One answer, start to finish</H2>
               <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
               <CaseStudyFigure
                 src={DIALOGUE_IMAGES.fullAnswer}
@@ -395,7 +395,7 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="outcome">
-              <H2>It didn&apos;t ship as drawn, but it shaped what did.</H2>
+              <H2>It didn&apos;t ship as drawn, but it shaped what did</H2>
               <CaseStudyBody>
                 I walked Benjamin and Justin through this exploration. It did not ship as designed,
                 but it shaped the study chat that did.
