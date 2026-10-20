@@ -177,11 +177,18 @@ export default function CopyEmail({
 
 function CheckIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+      style={{ flexShrink: 0, marginTop: "-0.5px" }}
+    >
       <path
-        d="M3.5 8.5 6.5 11.5 12.5 4.5"
+        d="M2.75 7.25L5.5 10L11.25 4"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
