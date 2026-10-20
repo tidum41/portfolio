@@ -49,7 +49,7 @@
   --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
-  --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   /* Colors */
   --color-bg:             #FBFBFB;
