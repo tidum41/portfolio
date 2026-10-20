@@ -23,7 +23,7 @@ import { SITE_URL } from "@/lib/site";
 export const revalidate = 300;
 
 const description =
-  "Dialogue case study on visualizing qualitative interview data so UX researchers can trust study chat answers down to the second.";
+  "Dialogue case study on visualizing qualitative interview data so researchers can tie each claim to a specific interview moment.";
 
 export const metadata: Metadata = {
   title: "Dialogue",
@@ -57,9 +57,9 @@ const TOC_ITEMS = [
 const ANATOMY_PARTS = [
   { n: 1, label: "Sources" },
   { n: 2, label: "Summary" },
-  { n: 3, label: "Query chart" },
+  { n: 3, label: "Answer chart" },
   { n: 4, label: "Timestamped clips" },
-  { n: 5, label: "Follow-ups" },
+  { n: 5, label: "Suggested next questions" },
 ];
 
 function Section({
@@ -214,9 +214,9 @@ export default function DialogueCaseStudyPage() {
               <CaseStudyBody>
                 AI-moderated interviews for enterprise UX teams and startups.
               </CaseStudyBody>
-              <H2>…but you couldn&apos;t tell which interview said it.</H2>
+              <H2>…but you couldn&apos;t tell which interview said it</H2>
               <CaseStudyBody>
-                Teams could not see which interview said what, so a long answer felt like a guess.
+                Without sources on each claim, a long reply read like a guess.
               </CaseStudyBody>
               <PairRow>
                 <FrameColumn
@@ -233,20 +233,20 @@ export default function DialogueCaseStudyPage() {
 
               <DecisionBlock
                 heading="Lead with the answer, back it with evidence"
-                subheading="Three ways the chat could answer the same question."
+                subheading="Three ways the chat could answer the same question"
                 chosenId="structured"
                 options={[
                   {
                     id: "paragraphs",
                     title: "Paragraphs",
-                    lossReason: "Lost because you can't see who said what, or how many.",
+                    lossReason: "Weak: you can't see who said what, or how many.",
                     imageSrc: DIALOGUE_IMAGES.altParagraphs,
                     imageAlt: "Study chat answer as three paragraphs of prose with no structure.",
                   },
                   {
                     id: "quote-list",
                     title: "Quote list",
-                    lossReason: "Lost because there's no answer. You still do the counting.",
+                    lossReason: "Weak: there's no answer. You still do the counting.",
                     imageSrc: DIALOGUE_IMAGES.altQuoteList,
                     imageAlt: "Study chat answer as a list of interview quotes without a summary.",
                   },
@@ -276,8 +276,8 @@ export default function DialogueCaseStudyPage() {
             <Section id="why-it-matters">
               <H2>A finding only travels if you can point to the interview behind it</H2>
               <CaseStudyBody>
-                I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
-                product team, and students in interview sessions (not Dialogue research customers).
+                I heard the same hesitation in calls with Benjamin and Justin, Dialogue&apos;s product
+                team, and in student interview sessions (not Dialogue research customers).
               </CaseStudyBody>
               <CaseStudyPlaceholder>
                 One concrete thing Benjamin, Justin, the product team, or a student said about study
@@ -288,12 +288,13 @@ export default function DialogueCaseStudyPage() {
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
-                Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
+                Only the chart changes. Sources, summary, chart, clips, and suggested next questions
+                stay in order.
               </CaseStudyBody>
               <figure style={{ margin: "24px auto 0", width: "80%", maxWidth: "100%" }}>
                 <CaseStudyFigure
                   src={DIALOGUE_IMAGES.anatomy}
-                  alt="Study chat answer card with numbered callouts for sources through follow-ups."
+                  alt="Study chat answer card with numbered callouts for sources through suggested next questions."
                   fill
                   aspectRatio="4 / 3"
                   sizes="(max-width: 767px) calc(100vw - 48px), 600px"
@@ -318,8 +319,8 @@ export default function DialogueCaseStudyPage() {
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
               <CaseStudyBody>
-                I grouped real chat questions by type and gave each a chart shape that fits the
-                question.
+                I grouped example study-chat questions by type and gave each a chart shape that fits
+                the question.
               </CaseStudyBody>
               <CaseStudyFigure
                 src={DIALOGUE_IMAGES.answerShapes}
@@ -332,8 +333,8 @@ export default function DialogueCaseStudyPage() {
             </Section>
 
             <Section id="proof">
-              <H2>A number with no proof</H2>
-              <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
+              <H2>A number with nothing behind it</H2>
+              <CaseStudyBody>Without linked clips, the chart read like a headline.</CaseStudyBody>
               <FrameColumn caption="Problem: a number with nothing behind it">
                 <CaseStudyPlaceholder>
                   Export a crop of the selected bar before the clips block appears (matching the
@@ -344,7 +345,9 @@ export default function DialogueCaseStudyPage() {
 
             <Section id="clips">
               <H2>A quote with no context</H2>
-              <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
+              <CaseStudyBody>
+                Open the clip at the timestamp with the transcript row in sync.
+              </CaseStudyBody>
               <PairRow>
                 <FrameColumn caption="Problem: quote without the moment behind it">
                   <CaseStudyPlaceholder>
@@ -401,7 +404,7 @@ export default function DialogueCaseStudyPage() {
                 study pages.
               </CaseStudyBody>
               <CaseStudyPlaceholder>
-                The real reason the bubble beat the sidebar for researchers on study pages.
+                The real reason the floating chat beat the docked sidebar on study pages.
               </CaseStudyPlaceholder>
               <PairRow>
                 <FrameColumn
@@ -410,7 +413,7 @@ export default function DialogueCaseStudyPage() {
                   alt="Study page with a docked research assistant sidebar on the right."
                 />
                 <FrameColumn
-                  caption="Kept: floating bubble"
+                  caption="Kept: floating chat"
                   src={DIALOGUE_IMAGES.floatingBubble}
                   alt="Study page with the research assistant as a floating pop-up chat."
                 />
@@ -423,7 +426,7 @@ export default function DialogueCaseStudyPage() {
               <CaseStudyFigure
                 src={DIALOGUE_IMAGES.fullAnswer}
                 alt="Structured answer card beside a drawer listing every clip behind the answer."
-                caption="The full answer, with every supporting clip in one drawer"
+                caption="Solution: question, chart, and every supporting clip in one drawer"
                 fill
                 aspectRatio="16 / 10"
                 sizes="(max-width: 767px) calc(100vw - 48px), 750px"
@@ -433,12 +436,12 @@ export default function DialogueCaseStudyPage() {
             <Section id="outcome">
               <H2>It didn&apos;t ship as drawn, but it shaped what did</H2>
               <CaseStudyBody>
-                I walked Benjamin and Justin through this exploration. It did not ship as designed,
-                but it shaped the study chat that did.
+                I walked Benjamin and Justin through this exploration. It did not ship as drawn, but it
+                shaped the study chat that did.
               </CaseStudyBody>
               <CaseStudyPlaceholder>
                 Which parts of this exploration influenced what shipped (structure, clips, charts,
-                follow-ups, or something else)?
+                suggested next questions, or something else)?
               </CaseStudyPlaceholder>
             </Section>
 
