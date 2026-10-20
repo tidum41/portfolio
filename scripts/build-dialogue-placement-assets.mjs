@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Raster assets for placement UI (blurred faces from interview-frame v2 only).
+ * Placement rasters: distinct crops from frame-alan, interview-frame, frame-philena.
+ * Light privacy blur — identity hidden, hair/skin/background remain visible.
  */
 import fs from "fs";
 import path from "path";
@@ -9,49 +10,66 @@ import sharp from "sharp";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "public/dialogue/placement");
-const source = path.join(root, "public/dialogue/source/interview-frame.png");
+const sourceDir = path.join(root, "public/dialogue/source");
+
+const FRAMES = {
+  alan: path.join(sourceDir, "frame-alan.png"),
+  jordan: path.join(sourceDir, "interview-frame.png"),
+  philena: path.join(sourceDir, "frame-philena.png"),
+};
+
 const dialogueMarkSrc = path.join(root, "public/images/about/logos/dialogue-ai.avif");
 
 fs.mkdirSync(outDir, { recursive: true });
 
-const EXTRA_BLUR = 6;
+/** Enough to obscure identity, not enough to gray out the frame. */
+const AVATAR_BLUR = 2.2;
+const CLIP_BLUR = 1.6;
 
-async function blurFace(buffer) {
-  return sharp(buffer).blur(EXTRA_BLUR).webp({ quality: 88 }).toBuffer();
+async function avatarFrom(src, region, outName) {
+  const buf = await sharp(src)
+    .extract(region)
+    .resize(96, 96, { fit: "cover" })
+    .blur(AVATAR_BLUR)
+    .webp({ quality: 90 })
+    .toBuffer();
+  await sharp(buf).toFile(path.join(outDir, outName));
+  console.log("wrote", outName);
 }
 
-async function writeWebp(name, buffer) {
-  const dest = path.join(outDir, name);
-  await sharp(buffer).webp({ quality: 88 }).toFile(dest);
-  console.log("wrote", path.relative(root, dest));
+async function clipFrom(src, region, outName) {
+  const buf = await sharp(src)
+    .extract(region)
+    .resize(320, 180, { fit: "cover" })
+    .blur(CLIP_BLUR)
+    .webp({ quality: 90 })
+    .toBuffer();
+  await sharp(buf).toFile(path.join(outDir, outName));
+  console.log("wrote", outName);
 }
-
-const WEBCAM_CROPS = {
-  participant: { left: 1510, top: 505, width: 300, height: 215 },
-  participantAlt: { left: 1495, top: 518, width: 280, height: 200 },
-  clip1: { left: 1520, top: 512, width: 270, height: 190 },
-  clip2: { left: 1505, top: 498, width: 290, height: 205 },
-  clip3: { left: 1535, top: 528, width: 260, height: 185 },
-};
 
 async function main() {
-  for (const [key, region] of Object.entries(WEBCAM_CROPS)) {
-    const raw = await sharp(source).extract(region).resize(160, 120, { fit: "cover" }).toBuffer();
-    const blurred = await blurFace(raw);
-    const file =
-      key === "participant"
-        ? "avatar-participant.webp"
-        : key === "participantAlt"
-          ? "avatar-moderator.webp"
-          : `clip-${key.replace("clip", "")}.webp`;
-    await writeWebp(file, blurred);
+  for (const p of Object.values(FRAMES)) {
+    if (!fs.existsSync(p)) throw new Error(`Missing source frame: ${p}`);
   }
+
+  // Jordan M. — Alan (frame 1) webcam feed
+  await avatarFrom(FRAMES.alan, { left: 1410, top: 830, width: 240, height: 175 }, "avatar-jordan.webp");
+  // Moderator — Philena (frame 3) webcam feed
+  await avatarFrom(FRAMES.philena, { left: 1390, top: 810, width: 250, height: 180 }, "avatar-moderator.webp");
+
+  // Clips: interview UI + PiP inset (one frame each)
+  await clipFrom(FRAMES.jordan, { left: 380, top: 120, width: 1480, height: 720 }, "clip-1.webp");
+  await clipFrom(FRAMES.alan, { left: 1080, top: 620, width: 780, height: 520 }, "clip-2.webp");
+  await clipFrom(FRAMES.philena, { left: 1020, top: 580, width: 860, height: 560 }, "clip-3.webp");
+
+  fs.copyFileSync(path.join(outDir, "avatar-jordan.webp"), path.join(outDir, "avatar-participant.webp"));
 
   await sharp(dialogueMarkSrc)
     .resize(64, 64, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
     .png()
     .toFile(path.join(outDir, "dialogue-mark.png"));
-  console.log("wrote public/dialogue/placement/dialogue-mark.png");
+  console.log("wrote dialogue-mark.png");
 }
 
 main().catch((e) => {

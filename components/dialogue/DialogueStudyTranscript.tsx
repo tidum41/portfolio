@@ -55,23 +55,28 @@ export function DialogueStudyTranscript({
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 500, color: DIALOGUE_GRAPHICS_COLORS.ink }}>Transcript</span>
-        <span style={{ fontSize: 10, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>Copy</span>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
           maxWidth: reserveRightForFloatingChat ? "54%" : "100%",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 8,
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 11, fontWeight: 500, color: DIALOGUE_GRAPHICS_COLORS.ink }}>Transcript</span>
+          <span style={{ fontSize: 10, color: DIALOGUE_GRAPHICS_COLORS.inkSoft, flexShrink: 0 }}>Copy</span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
         {LINES.map((line) => (
           <div
             key={`${line.speaker}-${line.time}`}
@@ -89,7 +94,7 @@ export function DialogueStudyTranscript({
                 <DialogueSparkleIcon size={13} />
               ) : (
                 <PlacementParticipantAvatar
-                  role={line.kind === "moderator" ? "moderator" : "participant"}
+                  variant={line.kind === "moderator" ? "moderator" : "jordan"}
                   size={20}
                 />
               )}
@@ -116,6 +121,7 @@ export function DialogueStudyTranscript({
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
