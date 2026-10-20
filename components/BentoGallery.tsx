@@ -1616,7 +1616,6 @@ export default function BentoGallery({
                                         fontSize: 11,
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
                                         lineHeight: 1.3,
                                         // Hide truncated preview while focused overlay is up
                                         visibility: isActive ? "hidden" : "visible",
@@ -1705,7 +1704,6 @@ export default function BentoGallery({
                                         fontSize: 11,
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
                                         lineHeight: 1.3,
                                         color: item.link
                                           ? "var(--color-link-blue)"
