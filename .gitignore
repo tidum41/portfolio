@@ -38,5 +38,8 @@ next-env.d.ts
 # local agent / playwright captures
 .playwright-screenshots/
 
+# Unblurred Dialogue interview frames (build-time only; never commit)
+/private/dialogue-placement-raw/
+
 # Copied from node_modules/hls.js on next config load. See next.config.mjs.
 /public/vendor/

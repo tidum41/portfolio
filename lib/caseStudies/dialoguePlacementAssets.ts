@@ -1,7 +1,5 @@
 /** Raster paths for placement / case-study Dialogue graphics (faces stay blurred). */
 
-export const DIALOGUE_PLACEMENT_MARK_SRC = "/dialogue/placement/dialogue-mark.png";
-
 export const DIALOGUE_PLACEMENT_AVATAR_JORDAN_SRC = "/dialogue/placement/avatar-jordan.webp";
 export const DIALOGUE_PLACEMENT_AVATAR_MODERATOR_SRC = "/dialogue/placement/avatar-moderator.webp";
 

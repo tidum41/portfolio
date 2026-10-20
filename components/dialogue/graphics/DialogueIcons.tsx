@@ -1,16 +1,46 @@
-import { DIALOGUE_PLACEMENT_MARK_SRC } from "@/lib/caseStudies/dialoguePlacementAssets";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
-export function DialogueSparkleIcon({ size = 14 }: { size?: number }) {
+/** Dialogue asterisk mark (assistant / brand), not a participant photo. */
+export function DialogueAssistantMark({ size = 22 }: { size?: number }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={DIALOGUE_PLACEMENT_MARK_SRC}
-      alt=""
-      width={size}
-      height={size}
-      style={{ width: size, height: size, display: "block", objectFit: "contain" }}
-    />
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
+      <path
+        d="M16 4.2 18.4 12.2 26.2 13.2 19.6 18.2 21.2 26 16 22.2 10.8 26 12.4 18.2 5.8 13.2 13.6 12.2 16 4.2Z"
+        fill={DIALOGUE_GRAPHICS_COLORS.accent}
+      />
+      <path
+        d="M4 16.5h9.5"
+        stroke={DIALOGUE_GRAPHICS_COLORS.accent}
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Waveform tile mark for Dialogue speaker rows in transcript. */
+export function DialogueSparkleIcon({ size = 14 }: { size?: number }) {
+  const barW = Math.max(1.5, size * 0.14);
+  const gap = size * 0.1;
+  const heights = [0.45, 0.75, 1, 0.6, 0.85].map((h) => h * size);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" aria-hidden>
+      {heights.map((h, i) => {
+        const x = i * (barW + gap) + gap;
+        const y = (size - h) / 2;
+        return (
+          <rect
+            key={i}
+            x={x}
+            y={y}
+            width={barW}
+            height={h}
+            rx={barW / 2}
+            fill={DIALOGUE_GRAPHICS_COLORS.accent}
+          />
+        );
+      })}
+    </svg>
   );
 }
 

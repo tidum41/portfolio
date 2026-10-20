@@ -1,3 +1,4 @@
+import { PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { DialogueSparkleIcon } from "@/components/dialogue/graphics/DialogueIcons";
 import { PlacementParticipantAvatar } from "@/components/dialogue/graphics/PlacementParticipantAvatar";
@@ -55,7 +56,9 @@ export function DialogueStudyTranscript({
     >
       <div
         style={{
-          maxWidth: reserveRightForFloatingChat ? "54%" : "100%",
+          maxWidth: reserveRightForFloatingChat ? PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING : "100%",
+          position: "relative",
+          zIndex: 2,
         }}
       >
         <div

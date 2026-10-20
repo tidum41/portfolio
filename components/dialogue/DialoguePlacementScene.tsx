@@ -7,6 +7,7 @@ import {
   PLACEMENT_FLOATING_EDGE,
   PLACEMENT_FLOATING_LAUNCHER_SIZE,
   PLACEMENT_FLOATING_PANEL_BOTTOM,
+  PLACEMENT_FLOATING_PANEL_WIDTH,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
@@ -67,7 +68,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
           right: PLACEMENT_FLOATING_EDGE,
           top: PLACEMENT_FLOATING_CHAT_TOP,
           bottom: PLACEMENT_FLOATING_PANEL_BOTTOM,
-          width: 292,
+          width: PLACEMENT_FLOATING_PANEL_WIDTH,
           pointerEvents: "none",
           display: "flex",
           flexDirection: "column",

@@ -1,6 +1,6 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { EvidenceAnswerCard } from "@/components/dialogue/graphics/EvidenceAnswerCard";
-import { ChevronDownIcon, DialogueSparkleIcon } from "@/components/dialogue/graphics/DialogueIcons";
+import { ChevronDownIcon, DialogueAssistantMark } from "@/components/dialogue/graphics/DialogueIcons";
 
 export function DialogueResearchAssistantPanel({
   compact,
@@ -23,7 +23,7 @@ export function DialogueResearchAssistantPanel({
     >
       <header style={{ padding: compact ? "11px 12px 8px" : "14px 14px 10px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <DialogueSparkleIcon size={compact ? 22 : 24} />
+          <DialogueAssistantMark size={compact ? 22 : 24} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: compact ? 12 : 14, fontWeight: 500, letterSpacing: "-0.02em" }}>
               Research assistant

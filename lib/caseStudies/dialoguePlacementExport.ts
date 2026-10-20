@@ -43,6 +43,7 @@ export const PLACEMENT_TILE_MARGIN_TOP = PLACEMENT_TILE_MARGIN_Y;
 export type PlacementVariant = "docked" | "floating";
 
 /** Floating chat stack: panel sits over transcript only; launcher stays bottom-right. */
+export const PLACEMENT_FLOATING_PANEL_WIDTH = 292;
 export const PLACEMENT_FLOATING_LAUNCHER_SIZE = 50;
 export const PLACEMENT_FLOATING_LAUNCHER_GAP = 10;
 export const PLACEMENT_FLOATING_EDGE = 14;
@@ -50,3 +51,7 @@ export const PLACEMENT_FLOATING_EDGE = 14;
 export const PLACEMENT_FLOATING_CHAT_TOP = studyPlayerBlockTopY();
 export const PLACEMENT_FLOATING_PANEL_BOTTOM =
   PLACEMENT_FLOATING_EDGE + PLACEMENT_FLOATING_LAUNCHER_SIZE + PLACEMENT_FLOATING_LAUNCHER_GAP;
+
+/** Keep Transcript + Copy left of the floating assistant panel (study padding included). */
+export const PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING =
+  PLACEMENT_LAYOUT_WIDTH - PLACEMENT_FLOATING_PANEL_WIDTH - PLACEMENT_FLOATING_EDGE - 32;
