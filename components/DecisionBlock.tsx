@@ -1,7 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
+
+export type RasterAnnotator = (assetId: string, children: ReactNode) => ReactNode;
 
 export type DecisionBlockOption = {
   id: string;
@@ -14,6 +17,7 @@ export type DecisionBlockOption = {
   selectionNote?: string;
   imageSrc: string;
   imageAlt: string;
+  rasterAssetId?: string;
 };
 
 export type DecisionBlockProps = {
@@ -21,6 +25,7 @@ export type DecisionBlockProps = {
   subheading: string;
   options: DecisionBlockOption[];
   chosenId: string;
+  annotateRaster?: RasterAnnotator;
 };
 
 function OptionCaption({ option, isChosen }: { option: DecisionBlockOption; isChosen: boolean }) {
@@ -43,31 +48,46 @@ function OptionCaption({ option, isChosen }: { option: DecisionBlockOption; isCh
 function OptionCard({
   option,
   isChosen,
+  annotateRaster,
 }: {
   option: DecisionBlockOption;
   isChosen: boolean;
+  annotateRaster?: RasterAnnotator;
 }) {
+  const figure = (
+    <CaseStudyFigure
+      src={option.imageSrc}
+      alt={option.imageAlt}
+      fill
+      aspectRatio="696 / 936"
+      sizes="(max-width: 767px) calc(50vw - 30px), 240px"
+      zoomable
+    />
+  );
+  const media =
+    option.rasterAssetId && annotateRaster
+      ? annotateRaster(option.rasterAssetId, figure)
+      : figure;
   return (
     <div
       className={[
         "decision-block__option",
-        isChosen ? "decision-block__option--leading" : "decision-block__option--dimmed",
+        isChosen ? "decision-block__option--chosen" : "decision-block__option--dimmed",
       ].join(" ")}
     >
-      <CaseStudyFigure
-        src={option.imageSrc}
-        alt={option.imageAlt}
-        fill
-        aspectRatio="696 / 936"
-        sizes="(max-width: 767px) calc(50vw - 30px), 240px"
-        zoomable
-      />
+      {media}
       <OptionCaption option={option} isChosen={isChosen} />
     </div>
   );
 }
 
-export default function DecisionBlock({ heading, subheading, options, chosenId }: DecisionBlockProps) {
+export default function DecisionBlock({
+  heading,
+  subheading,
+  options,
+  chosenId,
+  annotateRaster,
+}: DecisionBlockProps) {
   const chosen = options.find((o) => o.id === chosenId);
   const others = options.filter((o) => o.id !== chosenId);
 
@@ -78,15 +98,27 @@ export default function DecisionBlock({ heading, subheading, options, chosenId }
 
       <div className="decision-block__grid decision-block__grid--desktop">
         {options.map((option) => (
-          <OptionCard key={option.id} option={option} isChosen={option.id === chosenId} />
+          <OptionCard
+            key={option.id}
+            option={option}
+            isChosen={option.id === chosenId}
+            annotateRaster={annotateRaster}
+          />
         ))}
       </div>
 
       <div className="decision-block__grid decision-block__grid--mobile">
-        {chosen ? <OptionCard option={chosen} isChosen /> : null}
+        {chosen ? (
+          <OptionCard option={chosen} isChosen annotateRaster={annotateRaster} />
+        ) : null}
         <p className="decision-block__also-explored">Also explored</p>
         {others.map((option) => (
-          <OptionCard key={option.id} option={option} isChosen={false} />
+          <OptionCard
+            key={option.id}
+            option={option}
+            isChosen={false}
+            annotateRaster={annotateRaster}
+          />
         ))}
       </div>
     </div>
