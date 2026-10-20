@@ -40,3 +40,10 @@ next-env.d.ts
 
 # Copied from node_modules/hls.js on next config load. See next.config.mjs.
 /public/vendor/
+
+# ABC Areal variable woff2. Dinamo EULA §10 forbids putting the fonts in
+# public repositories. next/font/local still loads this path when the file
+# is present on disk (local dev / screenshots).
+/fonts/ABCArealVariable.woff2
+/fonts/ABCAreal*.woff2
+/fonts/ABCAreal*.ttf
