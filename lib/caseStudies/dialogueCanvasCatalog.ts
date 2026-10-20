@@ -1,3 +1,5 @@
+import { dialogueRasterSizeForPublicPath } from "@/lib/caseStudies/dialogue";
+
 export type CanvasAssetStatus = "final" | "candidate";
 
 export type DialogueCanvasAsset = {
@@ -7,14 +9,29 @@ export type DialogueCanvasAsset = {
   visualNote: string;
   pngSrc: string | null;
   exportRoute: string;
+  staticExportSrc: string | null;
+  rasterWidth: number | null;
+  rasterHeight: number | null;
 };
 
-export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
+function staticExportSrcForRoute(exportRoute: string): string | null {
+  if (exportRoute === "section-imperfect" || exportRoute === "section-share") return null;
+  const file = exportRoute === "hero" ? "hero.html" : `${exportRoute}.html`;
+  return `/dev/dialogue-static/export/${file}`;
+}
+
+function rasterDims(pngSrc: string | null): { rasterWidth: number | null; rasterHeight: number | null } {
+  if (!pngSrc) return { rasterWidth: null, rasterHeight: null };
+  const { width, height } = dialogueRasterSizeForPublicPath(pngSrc);
+  return { rasterWidth: width, rasterHeight: height };
+}
+
+const RAW_ASSETS: Omit<DialogueCanvasAsset, "staticExportSrc" | "rasterWidth" | "rasterHeight">[] = [
   {
     id: "D-01",
     sectionId: "hero",
     status: "final",
-    visualNote: "Hero: structured answer with summary and funnel chart.",
+    visualNote: "Hero: structured answer with summary and funnel chart (round-34 section-6).",
     pngSrc: "/dialogue/section-6.png",
     exportRoute: "hero",
   },
@@ -30,7 +47,7 @@ export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
     id: "D-03",
     sectionId: "problem",
     status: "final",
-    visualNote: "Solution frame: same approved section-1 asset (paired column).",
+    visualNote: "Solution frame: paired column (section-1).",
     pngSrc: "/dialogue/section-1.png",
     exportRoute: "section-1",
   },
@@ -38,7 +55,7 @@ export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
     id: "D-04",
     sectionId: "problem",
     status: "candidate",
-    visualNote: "DecisionBlock option: paragraphs format (section-1 stand-in).",
+    visualNote: "DecisionBlock option: paragraphs format (section-1).",
     pngSrc: "/dialogue/section-1.png",
     exportRoute: "section-1",
   },
@@ -46,7 +63,7 @@ export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
     id: "D-05",
     sectionId: "problem",
     status: "candidate",
-    visualNote: "DecisionBlock option: quote list (section-2 stand-in).",
+    visualNote: "DecisionBlock option: quote list (section-2).",
     pngSrc: "/dialogue/section-2.png",
     exportRoute: "section-2",
   },
@@ -54,7 +71,7 @@ export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
     id: "D-06",
     sectionId: "problem",
     status: "final",
-    visualNote: "DecisionBlock chosen: structured answer (section-4 stand-in).",
+    visualNote: "DecisionBlock chosen: structured answer (section-4).",
     pngSrc: "/dialogue/section-4.png",
     exportRoute: "section-4",
   },
@@ -132,10 +149,17 @@ export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = [
   },
 ];
 
+export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = RAW_ASSETS.map((asset) => {
+  const dims = rasterDims(asset.pngSrc);
+  return {
+    ...asset,
+    staticExportSrc: staticExportSrcForRoute(asset.exportRoute),
+    ...dims,
+  };
+});
+
 export const DIALOGUE_CANVAS_BY_ID: Record<string, DialogueCanvasAsset> = Object.fromEntries(
   DIALOGUE_CANVAS_ASSETS.map((a) => [a.id, a]),
 );
 
-export const PRIVATE_EXPORT_REPO =
-  "https://origin.cursor.com/git/muditm/tmp-2a0ae96295f1ba40.git";
-export const PRIVATE_EXPORT_COMMIT = "483274f";
+export const DIALOGUE_STATIC_EXPORT_ROOT = "/dev/dialogue-static";

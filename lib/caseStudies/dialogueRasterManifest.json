@@ -1,0 +1,59 @@
+{
+  "sections": {
+    "1": {
+      "path": "/workspace/artifacts/round34/section-1.png",
+      "width": 1388,
+      "height": 962,
+      "aspectRatio": 1.4428
+    },
+    "2": {
+      "path": "/workspace/artifacts/round34/section-2.png",
+      "width": 1576,
+      "height": 882,
+      "aspectRatio": 1.7868
+    },
+    "3": {
+      "path": "/workspace/artifacts/round34/section-3.png",
+      "width": 1564,
+      "height": 990,
+      "aspectRatio": 1.5798
+    },
+    "4": {
+      "path": "/workspace/artifacts/round34/section-4.png",
+      "width": 576,
+      "height": 994,
+      "aspectRatio": 0.5795
+    },
+    "5": {
+      "path": "/workspace/artifacts/round34/section-5.png",
+      "width": 840,
+      "height": 896,
+      "aspectRatio": 0.9375
+    },
+    "6": {
+      "path": "/workspace/artifacts/round34/section-6.png",
+      "width": 1260,
+      "height": 736,
+      "aspectRatio": 1.712
+    },
+    "7": {
+      "path": "/workspace/artifacts/round34/section-7.png",
+      "width": 1160,
+      "height": 900,
+      "aspectRatio": 1.2889,
+      "uiAreaFraction": 0.8008
+    },
+    "6a": {
+      "path": "/workspace/artifacts/round34/section-6a.png",
+      "width": 1260,
+      "height": 736,
+      "aspectRatio": 1.712
+    },
+    "6b": {
+      "path": "/workspace/artifacts/round34/section-6b.png",
+      "width": 1260,
+      "height": 736,
+      "aspectRatio": 1.712
+    }
+  }
+}
