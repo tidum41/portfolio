@@ -2,12 +2,13 @@ import { existsSync, readdirSync } from "fs";
 import path from "path";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import DialogueCanvasClient from "./DialogueCanvasClient";
+import DialogueTldrawLoader from "./DialogueTldrawLoader";
 import {
   DIALOGUE_CANVAS_SECTIONS,
   type DialogueCanvasImage,
   type DialogueCanvasSection,
 } from "@/lib/caseStudies/dialogueCanvas";
+import { getDialogueCanvasImageMeta } from "@/lib/caseStudies/dialogueCanvasImageMeta.server";
 
 export const metadata: Metadata = {
   title: "Dialogue canvas",
@@ -25,7 +26,7 @@ function evidenceLabSection(): DialogueCanvasSection | null {
   return { id: "evidence-lab", heading: "Evidence lab exports", images };
 }
 
-export default function DialogueCanvasPage() {
+export default async function DialogueCanvasPage() {
   const allowLab =
     process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview";
 
@@ -33,6 +34,8 @@ export default function DialogueCanvasPage() {
 
   const evidence = evidenceLabSection();
   const sections = evidence ? [...DIALOGUE_CANVAS_SECTIONS, evidence] : DIALOGUE_CANVAS_SECTIONS;
+  const srcs = sections.flatMap((s) => s.images.map((i) => i.src));
+  const imageMeta = await getDialogueCanvasImageMeta(srcs);
 
-  return <DialogueCanvasClient sections={sections} />;
+  return <DialogueTldrawLoader sections={sections} imageMeta={imageMeta} />;
 }

@@ -32,7 +32,9 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "sanity": "^6.3.0",
-    "styled-components": "^6.4.3"
+    "sharp": "^0.35.5",
+    "styled-components": "^6.4.3",
+    "tldraw": "^5.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",
