@@ -829,10 +829,10 @@ html[data-theme="dark"] .project-image {
 }
 @media (prefers-reduced-motion: no-preference) {
   .cs-open-type {
-    animation: cs-open-in 1140ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: cs-open-in 960ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
-  .cs-hero-title-wrap.cs-open-type { animation-delay: 140ms; }
-  .cs-open-type-meta { animation-delay: 280ms; }
+  .cs-hero-title-wrap.cs-open-type { animation-delay: 45ms; }
+  .cs-open-type-meta { animation-delay: 95ms; }
 }
 
 /* Primary-nav page enter (About copy, archive tiles). Opacity + translate

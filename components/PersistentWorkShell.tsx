@@ -640,7 +640,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
@@ -739,7 +739,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">

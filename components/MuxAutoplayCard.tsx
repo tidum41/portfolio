@@ -277,7 +277,7 @@ export default function MuxAutoplayCard({
           style={linkStyle}
           onMouseEnter={warmCaseStudy}
           onFocus={warmCaseStudy}
-          onPointerDown={commitCaseStudy}
+          onPointerDown={warmCaseStudy}
           onClick={commitCaseStudy}
         >
           {body}
