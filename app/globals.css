@@ -242,6 +242,51 @@ p, li       { text-wrap: pretty; }
 .hero-sub-end {
   white-space: nowrap;
 }
+
+/* UI components, hero headline/subtitle, interactive widgets, cards, and chrome
+   must not be text-highlightable or draggable, preventing glitchy selection blocks
+   while dragging or interacting with the silk background canvas. Editorial case-study
+   body copy remains fully selectable. */
+.work-hero,
+.work-hero *,
+.hero-heading,
+.hero-sub,
+#rh-trigger,
+.site-nav,
+.site-nav *,
+.nav-link,
+.project-card,
+.portfolio-grid-card,
+.portfolio-grid,
+.interactive-badge,
+.ps3cp,
+.ps3cp *,
+.cs-aside,
+.cs-aside *,
+.cs-back-desktop,
+.cs-mobile-back,
+.cs-pager,
+.popup-close-btn,
+.footer-inner,
+.footer-inner * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent ghost drag on UI chrome links, buttons, and media */
+.work-hero a,
+.work-hero img,
+.project-card a,
+.project-card img,
+.project-card video,
+.site-nav a,
+.site-nav button,
+.ps3cp a,
+.ps3cp button,
+.footer-link {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
 /* Native OS cursor (arrow / I-beam / resize). The custom dot tip is off;
