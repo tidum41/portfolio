@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-20T19:10:54.234Z",
-  "itemCount": 96,
+  "generatedAt": "2026-10-20T19:27:38.589Z",
+  "itemCount": 63,
   "liveComponentCount": 16,
   "groups": [
     {
@@ -46,22 +46,12 @@
     {
       "id": "placement",
       "label": "placement",
-      "count": 62
+      "count": 40
     },
     {
       "id": "player",
       "label": "player",
-      "count": 2
-    },
-    {
-      "id": "chat-icon",
-      "label": "chat icon",
-      "count": 1
-    },
-    {
-      "id": "legacy-sanity",
-      "label": "legacy sanity",
-      "count": 9
+      "count": 0
     },
     {
       "id": "other",
@@ -70,18 +60,6 @@
     }
   ],
   "items": [
-    {
-      "id": "5bfaa4bb--05V3QQ56AWCFV0VR3QBAGP9JSY.avif",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "05V3QQ56AWCFV0VR3QBAGP9JSY.avif",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--05V3QQ56AWCFV0VR3QBAGP9JSY.avif",
-      "width": 1000,
-      "height": 1000
-    },
     {
       "id": "5bfaa4bb--0D9GFNXEDRKC55BD370T0P0GYJ.svg",
       "group": "legacy-sanity",
@@ -93,90 +71,6 @@
       "src": "/dialogue/archive/blobs/5bfaa4bb--0D9GFNXEDRKC55BD370T0P0GYJ.svg",
       "width": 40,
       "height": 40
-    },
-    {
-      "id": "5bfaa4bb--1HV8DRRFDP4WW1J0J3PH2HWVZ0.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "1HV8DRRFDP4WW1J0J3PH2HWVZ0.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--1HV8DRRFDP4WW1J0J3PH2HWVZ0.jpg",
-      "width": 1000,
-      "height": 1000
-    },
-    {
-      "id": "5bfaa4bb--29JBQM0HCYDE6F3YHQ51PJDCSM.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "29JBQM0HCYDE6F3YHQ51PJDCSM.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--29JBQM0HCYDE6F3YHQ51PJDCSM.jpg",
-      "width": 1000,
-      "height": 1000
-    },
-    {
-      "id": "5bfaa4bb--2QBH6RMGWRZ4B6ZX258AXZ1MBE.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "2QBH6RMGWRZ4B6ZX258AXZ1MBE.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--2QBH6RMGWRZ4B6ZX258AXZ1MBE.jpg",
-      "width": 1000,
-      "height": 1000
-    },
-    {
-      "id": "5bfaa4bb--4HB8VJGX8E1E6CJMQFR26WCGW4.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "4HB8VJGX8E1E6CJMQFR26WCGW4.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--4HB8VJGX8E1E6CJMQFR26WCGW4.jpg",
-      "width": 1000,
-      "height": 1000
-    },
-    {
-      "id": "5bfaa4bb--4VX16Z5BXWR4B37R159AKN8YEE.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "4VX16Z5BXWR4B37R159AKN8YEE.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--4VX16Z5BXWR4B37R159AKN8YEE.jpg",
-      "width": 1000,
-      "height": 1000
-    },
-    {
-      "id": "5bfaa4bb--5PGNG3F8G1XK1YWQFR9XX9J90V.png",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "5PGNG3F8G1XK1YWQFR9XX9J90V.png",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--5PGNG3F8G1XK1YWQFR9XX9J90V.png",
-      "width": 783,
-      "height": 783
-    },
-    {
-      "id": "5bfaa4bb--6DQA1N0JB69ZE0BCKVS1GVW1XM.jpg",
-      "group": "legacy-sanity",
-      "sha": "5bfaa4bb1650923610d24e3f7eecc6d37bc9b72e",
-      "shaShort": "5bfaa4b",
-      "date": "2026-10-19T00:46:21+00:00",
-      "datePt": "Oct 18, 2026, 5:46 PM",
-      "file": "6DQA1N0JB69ZE0BCKVS1GVW1XM.jpg",
-      "src": "/dialogue/archive/blobs/5bfaa4bb--6DQA1N0JB69ZE0BCKVS1GVW1XM.jpg",
-      "width": 1000,
-      "height": 1000
     },
     {
       "id": "d8a2166e--section-1.png",
@@ -611,30 +505,6 @@
       "height": 1200
     },
     {
-      "id": "d8324086--placement-clip-thumb.webp",
-      "group": "placement",
-      "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
-      "shaShort": "d832408",
-      "date": "2026-10-20T06:57:33+00:00",
-      "datePt": "Oct 19, 2026, 11:57 PM",
-      "file": "placement-clip-thumb.webp",
-      "src": "/dialogue/archive/blobs/d8324086--placement-clip-thumb.webp",
-      "width": 160,
-      "height": 90
-    },
-    {
-      "id": "d8324086--placement-player-blur.webp",
-      "group": "placement",
-      "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
-      "shaShort": "d832408",
-      "date": "2026-10-20T06:57:33+00:00",
-      "datePt": "Oct 19, 2026, 11:57 PM",
-      "file": "placement-player-blur.webp",
-      "src": "/dialogue/archive/blobs/d8324086--placement-player-blur.webp",
-      "width": 960,
-      "height": 240
-    },
-    {
       "id": "d8324086--section-6.png",
       "group": "placement",
       "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
@@ -657,18 +527,6 @@
       "src": "/dialogue/archive/blobs/d8324086--section-6b.png",
       "width": 1600,
       "height": 1200
-    },
-    {
-      "id": "12fbf9e4--placement-interview-player.webp",
-      "group": "placement",
-      "sha": "12fbf9e490fdbbf20ddb28604a9c2cf6efd272eb",
-      "shaShort": "12fbf9e",
-      "date": "2026-10-20T07:02:54+00:00",
-      "datePt": "Oct 20, 2026, 12:02 AM",
-      "file": "placement-interview-player.webp",
-      "src": "/dialogue/archive/blobs/12fbf9e4--placement-interview-player.webp",
-      "width": 1336,
-      "height": 468
     },
     {
       "id": "12fbf9e4--section-6.png",
@@ -695,18 +553,6 @@
       "height": 1200
     },
     {
-      "id": "46914e00--placement-video-still.webp",
-      "group": "placement",
-      "sha": "46914e000eb160893f6bc296f38702ed7a681d94",
-      "shaShort": "46914e0",
-      "date": "2026-10-20T07:05:43+00:00",
-      "datePt": "Oct 20, 2026, 12:05 AM",
-      "file": "placement-video-still.webp",
-      "src": "/dialogue/archive/blobs/46914e00--placement-video-still.webp",
-      "width": 1080,
-      "height": 240
-    },
-    {
       "id": "46914e00--section-6.png",
       "group": "placement",
       "sha": "46914e000eb160893f6bc296f38702ed7a681d94",
@@ -729,18 +575,6 @@
       "src": "/dialogue/archive/blobs/46914e00--section-6b.png",
       "width": 1600,
       "height": 1200
-    },
-    {
-      "id": "e629b1a4--placement-video-still.webp",
-      "group": "placement",
-      "sha": "e629b1a484b24895eccf5e0086e9d4c1bb84bc36",
-      "shaShort": "e629b1a",
-      "date": "2026-10-20T07:09:57+00:00",
-      "datePt": "Oct 20, 2026, 12:09 AM",
-      "file": "placement-video-still.webp",
-      "src": "/dialogue/archive/blobs/e629b1a4--placement-video-still.webp",
-      "width": 1920,
-      "height": 820
     },
     {
       "id": "e629b1a4--section-6.png",
@@ -767,18 +601,6 @@
       "height": 1200
     },
     {
-      "id": "97a8b91c--placement-video-still.webp",
-      "group": "placement",
-      "sha": "97a8b91c224f671bb715155775303a4906fd0025",
-      "shaShort": "97a8b91",
-      "date": "2026-10-20T16:16:22+00:00",
-      "datePt": "Oct 20, 2026, 9:16 AM",
-      "file": "placement-video-still.webp",
-      "src": "/dialogue/archive/blobs/97a8b91c--placement-video-still.webp",
-      "width": 1920,
-      "height": 888
-    },
-    {
       "id": "97a8b91c--section-6.png",
       "group": "placement",
       "sha": "97a8b91c224f671bb715155775303a4906fd0025",
@@ -801,30 +623,6 @@
       "src": "/dialogue/archive/blobs/97a8b91c--section-6b.png",
       "width": 1600,
       "height": 1200
-    },
-    {
-      "id": "97a8b91c--source__interview-frame.png",
-      "group": "player",
-      "sha": "97a8b91c224f671bb715155775303a4906fd0025",
-      "shaShort": "97a8b91",
-      "date": "2026-10-20T16:16:22+00:00",
-      "datePt": "Oct 20, 2026, 9:16 AM",
-      "file": "source/interview-frame.png",
-      "src": "/dialogue/archive/blobs/97a8b91c--source__interview-frame.png",
-      "width": 1920,
-      "height": 888
-    },
-    {
-      "id": "774a9d41--placement-video-still.webp",
-      "group": "placement",
-      "sha": "774a9d414b48f495f47a52e6f2bc2ef63237df08",
-      "shaShort": "774a9d4",
-      "date": "2026-10-20T16:22:19+00:00",
-      "datePt": "Oct 20, 2026, 9:22 AM",
-      "file": "placement-video-still.webp",
-      "src": "/dialogue/archive/blobs/774a9d41--placement-video-still.webp",
-      "width": 1920,
-      "height": 888
     },
     {
       "id": "774a9d41--section-6.png",
@@ -851,30 +649,6 @@
       "height": 1200
     },
     {
-      "id": "774a9d41--source__interview-frame.png",
-      "group": "player",
-      "sha": "774a9d414b48f495f47a52e6f2bc2ef63237df08",
-      "shaShort": "774a9d4",
-      "date": "2026-10-20T16:22:19+00:00",
-      "datePt": "Oct 20, 2026, 9:22 AM",
-      "file": "source/interview-frame.png",
-      "src": "/dialogue/archive/blobs/774a9d41--source__interview-frame.png",
-      "width": 1920,
-      "height": 888
-    },
-    {
-      "id": "142ca973--placement-video-still.webp",
-      "group": "placement",
-      "sha": "142ca9731292f6dd0dd0eb15ebc2bc7d77385e9d",
-      "shaShort": "142ca97",
-      "date": "2026-10-20T16:28:58+00:00",
-      "datePt": "Oct 20, 2026, 9:28 AM",
-      "file": "placement-video-still.webp",
-      "src": "/dialogue/archive/blobs/142ca973--placement-video-still.webp",
-      "width": 1920,
-      "height": 888
-    },
-    {
       "id": "142ca973--section-6.png",
       "group": "placement",
       "sha": "142ca9731292f6dd0dd0eb15ebc2bc7d77385e9d",
@@ -897,78 +671,6 @@
       "src": "/dialogue/archive/blobs/142ca973--section-6b.png",
       "width": 1600,
       "height": 1200
-    },
-    {
-      "id": "920dab14--placement__avatar-moderator.webp",
-      "group": "placement",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/avatar-moderator.webp",
-      "src": "/dialogue/archive/blobs/920dab14--placement__avatar-moderator.webp",
-      "width": 160,
-      "height": 120
-    },
-    {
-      "id": "920dab14--placement__avatar-participant.webp",
-      "group": "placement",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/avatar-participant.webp",
-      "src": "/dialogue/archive/blobs/920dab14--placement__avatar-participant.webp",
-      "width": 160,
-      "height": 120
-    },
-    {
-      "id": "920dab14--placement__clip-1.webp",
-      "group": "placement",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/clip-1.webp",
-      "src": "/dialogue/archive/blobs/920dab14--placement__clip-1.webp",
-      "width": 160,
-      "height": 120
-    },
-    {
-      "id": "920dab14--placement__clip-2.webp",
-      "group": "placement",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/clip-2.webp",
-      "src": "/dialogue/archive/blobs/920dab14--placement__clip-2.webp",
-      "width": 160,
-      "height": 120
-    },
-    {
-      "id": "920dab14--placement__clip-3.webp",
-      "group": "placement",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/clip-3.webp",
-      "src": "/dialogue/archive/blobs/920dab14--placement__clip-3.webp",
-      "width": 160,
-      "height": 120
-    },
-    {
-      "id": "920dab14--placement__dialogue-mark.png",
-      "group": "chat-icon",
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "shaShort": "920dab1",
-      "date": "2026-10-20T17:35:24+00:00",
-      "datePt": "Oct 20, 2026, 10:35 AM",
-      "file": "placement/dialogue-mark.png",
-      "src": "/dialogue/archive/blobs/920dab14--placement__dialogue-mark.png",
-      "width": 64,
-      "height": 64
     },
     {
       "id": "920dab14--section-6.png",
@@ -995,78 +697,6 @@
       "height": 1200
     },
     {
-      "id": "0169194a--placement__avatar-jordan.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/avatar-jordan.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__avatar-jordan.webp",
-      "width": 96,
-      "height": 96
-    },
-    {
-      "id": "0169194a--placement__avatar-moderator.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/avatar-moderator.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__avatar-moderator.webp",
-      "width": 96,
-      "height": 96
-    },
-    {
-      "id": "0169194a--placement__avatar-participant.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/avatar-participant.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__avatar-participant.webp",
-      "width": 96,
-      "height": 96
-    },
-    {
-      "id": "0169194a--placement__clip-1.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/clip-1.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__clip-1.webp",
-      "width": 320,
-      "height": 180
-    },
-    {
-      "id": "0169194a--placement__clip-2.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/clip-2.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__clip-2.webp",
-      "width": 320,
-      "height": 180
-    },
-    {
-      "id": "0169194a--placement__clip-3.webp",
-      "group": "placement",
-      "sha": "0169194a016c533fb4e148931f01bea90207104b",
-      "shaShort": "0169194",
-      "date": "2026-10-20T17:39:14+00:00",
-      "datePt": "Oct 20, 2026, 10:39 AM",
-      "file": "placement/clip-3.webp",
-      "src": "/dialogue/archive/blobs/0169194a--placement__clip-3.webp",
-      "width": 320,
-      "height": 180
-    },
-    {
       "id": "0169194a--section-6.png",
       "group": "placement",
       "sha": "0169194a016c533fb4e148931f01bea90207104b",
@@ -1089,42 +719,6 @@
       "src": "/dialogue/archive/blobs/0169194a--section-6b.png",
       "width": 1600,
       "height": 1200
-    },
-    {
-      "id": "7139dba9--placement__clip-1.webp",
-      "group": "placement",
-      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
-      "shaShort": "7139dba",
-      "date": "2026-10-20T17:42:06+00:00",
-      "datePt": "Oct 20, 2026, 10:42 AM",
-      "file": "placement/clip-1.webp",
-      "src": "/dialogue/archive/blobs/7139dba9--placement__clip-1.webp",
-      "width": 320,
-      "height": 180
-    },
-    {
-      "id": "7139dba9--placement__clip-2.webp",
-      "group": "placement",
-      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
-      "shaShort": "7139dba",
-      "date": "2026-10-20T17:42:06+00:00",
-      "datePt": "Oct 20, 2026, 10:42 AM",
-      "file": "placement/clip-2.webp",
-      "src": "/dialogue/archive/blobs/7139dba9--placement__clip-2.webp",
-      "width": 320,
-      "height": 180
-    },
-    {
-      "id": "7139dba9--placement__clip-3.webp",
-      "group": "placement",
-      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
-      "shaShort": "7139dba",
-      "date": "2026-10-20T17:42:06+00:00",
-      "datePt": "Oct 20, 2026, 10:42 AM",
-      "file": "placement/clip-3.webp",
-      "src": "/dialogue/archive/blobs/7139dba9--placement__clip-3.webp",
-      "width": 320,
-      "height": 180
     },
     {
       "id": "7139dba9--section-6.png",
@@ -1225,19 +819,14 @@
   ],
   "chatIconCommits": [
     {
-      "sha": "2f057918075e15ba7418e4a29a7d00673ee64ffc",
-      "date": "2026-10-20T18:26:24+00:00",
-      "subject": "Polish Dialogue placement tiles: transcript, type, player, Areal capture"
+      "sha": "d2da77a4da2e59d07bf184c9a32a6e616e3fb08b",
+      "date": "2026-10-20T06:46:40+00:00",
+      "subject": "Fix Dialogue placement tiles: real graphics, 80% fill, clean capture"
     },
     {
-      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
-      "date": "2026-10-20T17:42:06+00:00",
-      "subject": "Privacy: remove raw frames from public, fix assistant mark and Copy"
-    },
-    {
-      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
-      "date": "2026-10-20T17:35:24+00:00",
-      "subject": "Dialogue placement: hi-fi assets, tighter crop, agreed chat icon"
+      "sha": "68d8212bc68798afed39f175e19b9610b0bc1664",
+      "date": "2026-10-20T06:46:40+00:00",
+      "subject": "Fix Dialogue placement tiles: real graphics, 80% fill, clean capture"
     },
     {
       "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
@@ -1245,9 +834,81 @@
       "subject": "Rebuild Dialogue placement tiles from approved UI components"
     },
     {
-      "sha": "d2da77a4da2e59d07bf184c9a32a6e616e3fb08b",
+      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
+      "date": "2026-10-20T17:35:24+00:00",
+      "subject": "Dialogue placement: hi-fi assets, tighter crop, agreed chat icon"
+    },
+    {
+      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
+      "date": "2026-10-20T17:42:06+00:00",
+      "subject": "Privacy: remove raw frames from public, fix assistant mark and Copy"
+    },
+    {
+      "sha": "2f057918075e15ba7418e4a29a7d00673ee64ffc",
+      "date": "2026-10-20T18:26:24+00:00",
+      "subject": "Polish Dialogue placement tiles: transcript, type, player, Areal capture"
+    }
+  ],
+  "chatIconHistory": [
+    {
+      "sha": "68d8212bc68798afed39f175e19b9610b0bc1664",
+      "shaShort": "68d8212",
       "date": "2026-10-20T06:46:40+00:00",
-      "subject": "Fix Dialogue placement tiles: real graphics, 80% fill, clean capture"
+      "datePt": "Oct 19, 2026, 11:46 PM",
+      "src": "/dialogue/archive/chat-icons/68d8212.png",
+      "width": 0,
+      "height": 0,
+      "agreed": true
+    },
+    {
+      "sha": "d2da77a4da2e59d07bf184c9a32a6e616e3fb08b",
+      "shaShort": "d2da77a",
+      "date": "2026-10-20T06:46:40+00:00",
+      "datePt": "Oct 19, 2026, 11:46 PM",
+      "src": "/dialogue/archive/chat-icons/d2da77a.png",
+      "width": 0,
+      "height": 0,
+      "agreed": false
+    },
+    {
+      "sha": "d8324086a5ca2373a60350ebd67a64d984676989",
+      "shaShort": "d832408",
+      "date": "2026-10-20T06:57:33+00:00",
+      "datePt": "Oct 19, 2026, 11:57 PM",
+      "src": "/dialogue/archive/chat-icons/d832408.png",
+      "width": 0,
+      "height": 0,
+      "agreed": false
+    },
+    {
+      "sha": "920dab14036db3497b1b2d57da63667e1a71ca1f",
+      "shaShort": "920dab1",
+      "date": "2026-10-20T17:35:24+00:00",
+      "datePt": "Oct 20, 2026, 10:35 AM",
+      "src": "/dialogue/archive/chat-icons/920dab1.png",
+      "width": 0,
+      "height": 0,
+      "agreed": false
+    },
+    {
+      "sha": "7139dba967125edf87a6bba009b961affed51d8e",
+      "shaShort": "7139dba",
+      "date": "2026-10-20T17:42:06+00:00",
+      "datePt": "Oct 20, 2026, 10:42 AM",
+      "src": "/dialogue/archive/chat-icons/7139dba.png",
+      "width": 0,
+      "height": 0,
+      "agreed": false
+    },
+    {
+      "sha": "2f057918075e15ba7418e4a29a7d00673ee64ffc",
+      "shaShort": "2f05791",
+      "date": "2026-10-20T18:26:24+00:00",
+      "datePt": "Oct 20, 2026, 11:26 AM",
+      "src": "/dialogue/archive/chat-icons/2f05791.png",
+      "width": 0,
+      "height": 0,
+      "agreed": false
     }
   ],
   "exportRoutes": [

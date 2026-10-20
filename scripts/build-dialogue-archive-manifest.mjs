@@ -24,6 +24,15 @@ const EXCLUDE = [
   /_preview-participant/i,
   /_face-\d/i,
   /\/archive\//,
+  /clip-/i,
+  /avatar-/i,
+  /interview-frame/i,
+  /video-still/i,
+  /interview-player/i,
+  /player-blur/i,
+  /clip-thumb/i,
+  /dialogue-mark\.png/i,
+  /^public\/dialogue\/[A-Z0-9]{20,}\.(jpg|jpeg|png|avif|webp)$/i,
 ];
 
 function isExcluded(rel) {
@@ -35,8 +44,7 @@ function isExcluded(rel) {
 function groupFor(rel) {
   const base = path.basename(rel);
   if (base === "hero.png") return "hero";
-  if (base.includes("dialogue-mark")) return "chat-icon";
-  if (/^section-6/.test(base) || base.includes("placement") || /^clip-/.test(base) || base.includes("avatar-"))
+  if (/^section-6/.test(base) || (base.includes("placement") && !/clip|avatar|video-still|interview|player-blur/i.test(base)))
     return "placement";
   if (base.includes("player") || base.includes("video-still") || base.includes("interview-frame"))
     return "player";
@@ -85,20 +93,77 @@ function collectEntries() {
   return entries;
 }
 
-function chatIconCommits() {
-  const marks = [];
+function launcherIconCommits() {
   const raw = git(
-    'git log --all --pretty=format:"%H %cI %s" -- public/dialogue/placement/dialogue-mark.png public/dialogue/**/dialogue-mark.png components/dialogue/graphics/DialogueIcons.tsx components/dialogue/graphics/DialogueChatLauncher.tsx',
+    'git log --all --pretty=format:"%H %cI %s" -- components/dialogue/graphics/DialogueIcons.tsx components/dialogue/graphics/DialogueChatLauncher.tsx',
   );
+  const bySha = new Map();
   for (const line of raw.split("\n").filter(Boolean)) {
     const sha = line.slice(0, 40);
     const rest = line.slice(41);
     const dateEnd = rest.indexOf(" ");
     const date = rest.slice(0, dateEnd);
     const subject = rest.slice(dateEnd + 1);
-    marks.push({ sha, date, subject });
+    bySha.set(sha, { sha, date, subject });
   }
-  return marks;
+  try {
+    const agreed = git("git rev-parse 68d8212^{commit}").trim();
+    if (!bySha.has(agreed)) {
+      const date = git(`git log -1 --format=%cI ${agreed}`).trim();
+      const subject = git(`git log -1 --format=%s ${agreed}`).trim();
+      bySha.set(agreed, { sha: agreed, date, subject });
+    }
+  } catch {
+    /* ignore */
+  }
+  return [...bySha.values()].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+}
+
+async function loadChatIconHistoryFromDisk() {
+  const iconsDir = path.join(root, "public/dialogue/archive/chat-icons");
+  if (!fs.existsSync(iconsDir)) return [];
+  let agreedFull = "";
+  try {
+    agreedFull = git("git rev-parse 68d8212^{commit}").trim();
+  } catch {
+    /* ignore */
+  }
+  const commits = launcherIconCommits();
+  const bySha = new Map(commits.map((c) => [c.sha, c]));
+  const files = fs
+    .readdirSync(iconsDir)
+    .filter((f) => f.endsWith(".png"))
+    .sort((a, b) => a.localeCompare(b));
+  const history = [];
+  for (const file of files) {
+    const shaShort = file.replace(/\.png$/, "");
+    const commit = [...bySha.values()].find((c) => c.sha.startsWith(shaShort));
+    if (!commit) continue;
+    const dest = path.join(iconsDir, file);
+    let width = 0;
+    let height = 0;
+    try {
+      const meta = await sharp(dest).metadata();
+      width = meta.width ?? 0;
+      height = meta.height ?? 0;
+    } catch {
+      /* ignore */
+    }
+    history.push({
+      sha: commit.sha,
+      shaShort: commit.sha.slice(0, 7),
+      date: commit.date,
+      datePt: toPacific(commit.date),
+      src: `/dialogue/archive/chat-icons/${file}`,
+      width,
+      height,
+      agreed: commit.sha === agreedFull || commit.sha.startsWith("68d8212"),
+    });
+  }
+  history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return history;
 }
 
 function exportRoutes() {
@@ -165,8 +230,6 @@ async function main() {
     "evidence-card",
     "placement",
     "player",
-    "chat-icon",
-    "legacy-sanity",
     "other",
   ];
 
@@ -180,7 +243,8 @@ async function main() {
       count: items.filter((i) => i.group === id).length,
     })),
     items,
-    chatIconCommits: chatIconCommits(),
+    chatIconCommits: launcherIconCommits(),
+    chatIconHistory: await loadChatIconHistoryFromDisk(),
     exportRoutes: exportRoutes(),
   };
 
