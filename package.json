@@ -15,7 +15,8 @@
     "capture:dialogue-placement": "node scripts/capture-dialogue-placement.mjs",
     "dialogue-archive:fonts": "node scripts/ensure-dialogue-areal-fonts.mjs",
     "dialogue-archive:build": "node scripts/ensure-dialogue-areal-fonts.mjs && node scripts/build-dialogue-archive-manifest.mjs",
-    "dialogue-archive:capture-icons": "node scripts/capture-dialogue-chat-icon-history.mjs"
+    "dialogue-archive:capture-icons": "node scripts/capture-dialogue-chat-icon-history.mjs",
+    "dialogue-archive:verify-camera": "node scripts/verify-dialogue-archive-camera.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

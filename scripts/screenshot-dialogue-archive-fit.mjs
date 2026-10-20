@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const BASE_URL = process.env.DIALOGUE_ARCHIVE_BASE_URL || "http://127.0.0.1:3001";
+const BASE_URL = process.env.DIALOGUE_ARCHIVE_BASE_URL || "http://127.0.0.1:3001/dev/dialogue-archive";
 const out = path.join(root, "public/dialogue/archive/fit-all-1440.png");
 
 async function main() {

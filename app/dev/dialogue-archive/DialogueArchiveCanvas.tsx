@@ -1,25 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  ARCHIVE_LAYOUT,
+  computeDialogueArchiveLayout,
+  computeFitCamera,
+} from "@/lib/caseStudies/computeDialogueArchiveLayout";
 import type { DialogueArchiveManifest } from "@/lib/caseStudies/dialogueArchiveTypes";
 import { DialogueArchiveLivePreviews } from "./DialogueArchiveLivePreviews";
 
-const CONTENT_PAD = 64;
-const TILE_GAP = 48;
-const ROW_GAP = 120;
-const ROW_LABEL_H = 36;
-const LABEL_GAP = 12;
-const CAPTION_H = 48;
-const PLACEMENT_MAX_PER_ROW = 8;
-const TARGET_ASPECT = 16 / 10;
-const MIN_ZOOM = 0.05;
+const { CONTENT_PAD, CAPTION_H } = ARCHIVE_LAYOUT;
+const MIN_ZOOM = 0.02;
 const MAX_ZOOM = 2;
-const STORAGE_KEY = "dialogue-archive-camera-v1";
+const ROW_LABEL_FONT_PX = 15;
+const MIN_LABEL_SCREEN_PX = 12;
+const STORAGE_KEY = "dialogue-archive-camera-v2";
 
 type View = { x: number; y: number; z: number };
 
 type Props = {
   manifest: DialogueArchiveManifest;
+  initialView: View;
 };
 
 function clampZoom(z: number) {
@@ -43,213 +44,98 @@ const captionStyle: CSSProperties = {
 const rowTitleStyle: CSSProperties = {
   margin: 0,
   fontFamily: "var(--font-sans-medium, system-ui)",
-  fontSize: 15,
+  fontSize: ROW_LABEL_FONT_PX,
   fontWeight: 500,
   letterSpacing: "-0.02em",
   color: "var(--color-text-primary, #1a1816)",
   textTransform: "capitalize",
 };
 
-export default function DialogueArchiveCanvas({ manifest }: Props) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<View>({ x: 48, y: 48, z: 0.35 });
-  const [view, setView] = useState<View>({ x: 48, y: 48, z: 0.35 });
+function labelScreenBoost(z: number) {
+  const screenPx = ROW_LABEL_FONT_PX * z;
+  if (screenPx >= MIN_LABEL_SCREEN_PX) return 1;
+  return Math.min(6, MIN_LABEL_SCREEN_PX / Math.max(screenPx, 0.001));
+}
+
+export default function DialogueArchiveCanvas({ manifest, initialView }: Props) {
+  const layout = useMemo(() => computeDialogueArchiveLayout(manifest), [manifest]);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const viewRef = useRef<View>(initialView);
+  const [view, setView] = useState<View>(initialView);
+  const [cameraReady, setCameraReady] = useState(true);
   const panRef = useRef<{
     pointerId: number;
     startX: number;
     startY: number;
     x0: number;
     y0: number;
-    space: boolean;
     captured: boolean;
   } | null>(null);
 
   const setViewSynced = useCallback((next: View) => {
-    viewRef.current = next;
-    setView(next);
+    const clamped = { ...next, z: clampZoom(next.z) };
+    viewRef.current = clamped;
+    setView(clamped);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clamped));
     } catch {
       /* ignore */
     }
   }, []);
 
-  const groupOrder = manifest.groups.filter((g) => g.count > 0);
-
-  const layout = useMemo(() => {
-    const tiles: {
-      kind: "image" | "routes" | "live" | "chat-icons";
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-      item?: DialogueArchiveManifest["items"][0];
-      icon?: DialogueArchiveManifest["chatIconHistory"][0];
-      label?: string;
-    }[] = [];
-
-    let y = CONTENT_PAD;
-    let maxRight = CONTENT_PAD;
-
-    const bumpRight = (x: number, w: number) => {
-      maxRight = Math.max(maxRight, x + w);
-    };
-
-    tiles.push({
-      kind: "routes",
-      x: CONTENT_PAD,
-      y,
-      w: 900,
-      h: 80 + manifest.exportRoutes.length * 18,
-      label: "Dev export routes",
-    });
-    bumpRight(CONTENT_PAD, 900);
-    y += 80 + manifest.exportRoutes.length * 18 + ROW_GAP;
-
-    const chunkRow = (items: DialogueArchiveManifest["items"], maxPerRow: number) => {
-      const rows: DialogueArchiveManifest["items"][] = [];
-      for (let i = 0; i < items.length; i += maxPerRow) {
-        rows.push(items.slice(i, i + maxPerRow));
-      }
-      return rows;
-    };
-
-    for (const group of groupOrder) {
-      const groupItems = manifest.items.filter((i) => i.group === group.id);
-      if (groupItems.length === 0) continue;
-
-      tiles.push({
-        kind: "image",
-        x: CONTENT_PAD,
-        y,
-        w: 400,
-        h: ROW_LABEL_H,
-        label: `${group.label} (${group.count})`,
-      });
-      y += ROW_LABEL_H + LABEL_GAP;
-
-      const maxPerRow = group.id === "placement" ? PLACEMENT_MAX_PER_ROW : groupItems.length;
-      const rows = chunkRow(groupItems, maxPerRow);
-
-      for (let ri = 0; ri < rows.length; ri++) {
-        let x = CONTENT_PAD;
-        let rowH = 0;
-        for (const item of rows[ri]) {
-          const w = item.width || 400;
-          const h = item.height || 300;
-          const tileH = CAPTION_H + h;
-          tiles.push({
-            kind: "image",
-            x,
-            y,
-            w,
-            h: tileH,
-            item,
-          });
-          rowH = Math.max(rowH, tileH);
-          bumpRight(x, w);
-          x += w + TILE_GAP;
-        }
-        y += rowH;
-        if (ri < rows.length - 1) y += ROW_GAP;
-      }
-      y += ROW_GAP;
-    }
-
-    const iconHistory = manifest.chatIconHistory ?? [];
-    if (iconHistory.length > 0) {
-      tiles.push({
-        kind: "chat-icons",
-        x: CONTENT_PAD,
-        y,
-        w: 400,
-        h: ROW_LABEL_H,
-        label: `Chat icon history (${iconHistory.length})`,
-      });
-      y += ROW_LABEL_H + LABEL_GAP;
-      let x = CONTENT_PAD;
-      let rowH = 0;
-      for (const icon of iconHistory) {
-        const w = icon.width || 320;
-        const h = (icon.height || 120) + CAPTION_H;
-        tiles.push({
-          kind: "chat-icons",
-          x,
-          y,
-          w,
-          h,
-          icon,
+  const fitFromViewport = useCallback(
+    (el: HTMLDivElement) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      try {
+        const next = computeFitCamera({
+          viewportW: rect.width,
+          viewportH: rect.height,
+          bounds: layout.bounds,
+          pad: CONTENT_PAD,
         });
-        rowH = Math.max(rowH, h);
-        bumpRight(x, w);
-        x += w + TILE_GAP;
+        setViewSynced(next);
+      } catch (err) {
+        console.error("dialogue-archive fitView failed", err);
       }
-      y += rowH + ROW_GAP;
-    }
-
-    const liveW = Math.min(4200, Math.max(2400, maxRight - CONTENT_PAD));
-    tiles.push({
-      kind: "live",
-      x: CONTENT_PAD,
-      y,
-      w: liveW,
-      h: 2400,
-      label: `Live components (${manifest.liveComponentCount})`,
-    });
-    bumpRight(CONTENT_PAD, liveW);
-    y += 2500;
-
-    let contentW = maxRight + CONTENT_PAD;
-    let contentH = y + CONTENT_PAD;
-    const ratio = contentW / contentH;
-    if (ratio > TARGET_ASPECT) {
-      contentH = contentW / TARGET_ASPECT;
-    } else {
-      contentW = contentH * TARGET_ASPECT;
-    }
-
-    return { tiles, contentW, contentH };
-  }, [groupOrder, manifest]);
+      setCameraReady(true);
+    },
+    [layout.bounds, setViewSynced],
+  );
 
   const fitView = useCallback(() => {
     const el = viewportRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const pad = CONTENT_PAD;
-    const scale = clampZoom(
-      Math.min((rect.width - pad * 2) / layout.contentW, (rect.height - pad * 2) / layout.contentH),
-    );
-    const x = (rect.width - layout.contentW * scale) / 2;
-    const y = (rect.height - layout.contentH * scale) / 2;
-    setViewSynced({ x, y, z: scale });
-  }, [layout.contentH, layout.contentW, setViewSynced]);
+    if (el) fitFromViewport(el);
+  }, [fitFromViewport]);
 
   const reset100 = useCallback(() => {
     const el = viewportRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
+    const bw = layout.bounds.maxX - layout.bounds.minX;
+    const bh = layout.bounds.maxY - layout.bounds.minY;
     setViewSynced({
-      x: (rect.width - layout.contentW) / 2,
-      y: (rect.height - layout.contentH) / 2,
+      x: (rect.width - bw) / 2 - layout.bounds.minX,
+      y: (rect.height - bh) / 2 - layout.bounds.minY,
       z: 1,
     });
-  }, [layout.contentH, layout.contentW, setViewSynced]);
+  }, [layout.bounds, setViewSynced]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as View;
-        if (Number.isFinite(parsed.x) && Number.isFinite(parsed.y) && Number.isFinite(parsed.z)) {
-          setViewSynced({ ...parsed, z: clampZoom(parsed.z) });
-          return;
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-    fitView();
-  }, [fitView, setViewSynced]);
+    const el = viewportRef.current;
+    if (!el) return;
+
+    const runFit = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 1 && rect.height > 1) fitFromViewport(el);
+    };
+
+    runFit();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => runFit());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fitFromViewport]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "light");
@@ -353,7 +239,6 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
       startY: e.clientY,
       x0: viewRef.current.x,
       y0: viewRef.current.y,
-      space: e.button === 1 || space,
       captured: false,
     };
   }, []);
@@ -371,6 +256,17 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
   );
 
   const zoomPct = Math.round(view.z * 100);
+  const labelBoost = labelScreenBoost(view.z);
+
+  const rowLabelProps = (tileId: string) => ({
+    "data-archive-bounds": tileId,
+    style: {
+      ...rowTitleStyle,
+      transform: labelBoost > 1 ? `scale(${labelBoost})` : undefined,
+      transformOrigin: "top left",
+      width: labelBoost > 1 ? `${100 / labelBoost}%` : undefined,
+    } as CSSProperties,
+  });
 
   return (
     <div
@@ -385,26 +281,38 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
         background: "#f0efed",
         zIndex: 200,
       }}
+      data-archive-ready={cameraReady ? "true" : "false"}
+      data-archive-zoom-pct={zoomPct}
     >
       <div
         ref={viewportRef}
         onPointerDown={onPointerDown}
+        data-archive-viewport
         style={{ flex: 1, minHeight: 0, overflow: "hidden", cursor: "default", touchAction: "none" }}
       >
         <div
+          data-archive-world
+          data-bounds-min-x={layout.bounds.minX}
+          data-bounds-min-y={layout.bounds.minY}
+          data-bounds-max-x={layout.bounds.maxX}
+          data-bounds-max-y={layout.bounds.maxY}
           style={{
             position: "relative",
             transform: `translate(${view.x}px, ${view.y}px) scale(${view.z})`,
             transformOrigin: "0 0",
-            width: layout.contentW,
-            height: layout.contentH,
+            width: layout.worldW,
+            height: layout.worldH,
           }}
         >
-          {layout.tiles.map((tile, idx) => {
+          {layout.tiles.map((tile) => {
             if (tile.kind === "routes") {
               return (
-                <div key={`routes-${idx}`} style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w }}>
-                  <p style={rowTitleStyle}>Dev export routes</p>
+                <div
+                  key={tile.id}
+                  data-archive-bounds={tile.id}
+                  style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
+                >
+                  <p {...rowLabelProps(tile.id)}>Dev export routes</p>
                   <ul style={{ ...captionStyle, margin: "8px 0 0", paddingLeft: 18 }}>
                     {manifest.exportRoutes.map((r) => (
                       <li key={r.path}>
@@ -415,10 +323,30 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
                 </div>
               );
             }
+            if (tile.kind === "row-label") {
+              const labelProps = rowLabelProps(tile.id);
+              return (
+                <p
+                  key={tile.id}
+                  data-archive-bounds={tile.id}
+                  style={{
+                    ...labelProps.style,
+                    position: "absolute",
+                    left: tile.x,
+                    top: tile.y,
+                  }}
+                >
+                  {tile.label}
+                </p>
+              );
+            }
             if (tile.kind === "live") {
               return (
-                <div key="live" style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w }}>
-                  <p style={{ ...rowTitleStyle, marginBottom: 16 }}>{tile.label}</p>
+                <div
+                  key={tile.id}
+                  data-archive-bounds={tile.id}
+                  style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
+                >
                   <DialogueArchiveLivePreviews />
                 </div>
               );
@@ -427,9 +355,22 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
               const icon = tile.icon;
               return (
                 <div
-                  key={`icon-${icon.sha}`}
+                  key={tile.id}
                   data-archive-tile
-                  style={{ position: "absolute", left: tile.x, top: tile.y, width: tile.w }}
+                  data-archive-bounds={tile.id}
+                  data-chat-icon-sha={icon.shaShort}
+                  data-world-x={tile.x}
+                  data-world-y={tile.y}
+                  data-world-w={tile.w}
+                  data-world-h={tile.h}
+                  style={{
+                    position: "absolute",
+                    left: tile.x,
+                    top: tile.y,
+                    width: tile.w,
+                    height: tile.h,
+                    overflow: "hidden",
+                  }}
                 >
                   <p style={captionStyle}>
                     <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: 10 }}>{icon.shaShort}</span>
@@ -448,25 +389,34 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
                   <img
                     src={icon.src}
                     alt={`Chat launcher at ${icon.shaShort}`}
+                    width={icon.width || undefined}
+                    height={icon.height || undefined}
                     draggable={false}
-                    style={{ display: "block", marginTop: 6, maxWidth: "none" }}
+                    style={{
+                      display: "block",
+                      marginTop: 6,
+                      width: icon.width || "auto",
+                      height: icon.height || "auto",
+                      maxWidth: "none",
+                    }}
                   />
                 </div>
-              );
-            }
-            if (tile.label && !tile.item) {
-              return (
-                <p key={`label-${idx}`} style={{ ...rowTitleStyle, position: "absolute", left: tile.x, top: tile.y }}>
-                  {tile.label}
-                </p>
               );
             }
             const item = tile.item!;
             return (
               <div
-                key={item.id}
+                key={tile.id}
                 data-archive-tile
-                style={{ position: "absolute", left: tile.x, top: tile.y, width: item.width || undefined }}
+                data-archive-bounds={tile.id}
+                style={{
+                  position: "absolute",
+                  left: tile.x,
+                  top: tile.y,
+                  width: tile.w,
+                  height: tile.h,
+                  overflow: "hidden",
+                }}
               >
                 <button
                   type="button"
@@ -502,6 +452,7 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
                     width: item.width || "auto",
                     height: item.height || "auto",
                     maxWidth: "none",
+                    objectFit: "contain",
                   }}
                 />
               </div>
@@ -511,6 +462,7 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
       </div>
 
       <div
+        data-archive-toolbar
         style={{
           flexShrink: 0,
           display: "flex",
@@ -542,7 +494,7 @@ export default function DialogueArchiveCanvas({ manifest }: Props) {
           aria-label="Zoom"
         />
         <button type="button" onClick={() => zoomStep(1.12)} style={toolBtn}>+</button>
-        <span style={{ minWidth: 44, textAlign: "center" }}>{zoomPct}%</span>
+        <span data-archive-zoom-label style={{ minWidth: 44, textAlign: "center" }}>{zoomPct}%</span>
         <button type="button" onClick={fitView} style={toolBtn}>Fit all</button>
         <button type="button" onClick={reset100} style={toolBtn}>100%</button>
         <button
