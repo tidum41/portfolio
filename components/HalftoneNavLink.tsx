@@ -338,10 +338,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       ) : (
         <span
           style={{
-            color: isActive
+            color: (isActive || morphOn)
               ? "var(--color-text-primary)"
               : "var(--color-text-muted)",
             display: "contents",
+            transition: "color 0.25s ease",
           }}
         >
           {resting}

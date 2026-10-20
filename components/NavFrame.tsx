@@ -6,9 +6,9 @@ export default function NavFrame() {
   return (
     <Nav
       words={{
-        Work: <span>Work</span>,
-        Archive: <span>Archive</span>,
-        About: <span>About</span>,
+        Work: <RestingOutlineWord label="Work" />,
+        Archive: <RestingOutlineWord label="Archive" />,
+        About: <RestingOutlineWord label="About" />,
       }}
     />
   );

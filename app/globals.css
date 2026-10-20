@@ -566,7 +566,7 @@ html[data-theme="light"] {
    must never restyle these links. */
 .nav-link { transition: color 0.25s ease, background-color 1s ease, border-color 1s ease; }
 @media (hover: hover) and (pointer: fine) {
-  .nav-link:hover { color: var(--color-text-muted) !important; }
+  .nav-link:hover { color: var(--color-text-primary) !important; }
 }
 
 /* ─── "ucla" hover accent — a real link ──────────────────────────── */

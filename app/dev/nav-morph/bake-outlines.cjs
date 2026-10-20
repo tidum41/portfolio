@@ -19,7 +19,7 @@ const polygonClipping = require("polygon-clipping");
 const FONT = path.join(__dirname, "../../../fonts/ABCArealVariable.woff2");
 const OUT = path.join(__dirname, "../../../components/outlineMorphData.ts");
 
-const WORDS = ["work", "archive", "about"];
+const WORDS = ["Work", "Archive", "About", "work", "archive", "about"];
 const FONT_SIZE = 16;
 const LINE_HEIGHT = 24;
 const PITCH = 2.25;
