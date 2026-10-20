@@ -21,7 +21,10 @@ export default function PersistentAboutShell() {
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "about";
   const { snap, epoch } = useTabArrival(visible);
-  const playEnter = visible && !snap;
+  // epoch === 0 is the cold /about SSR paint — don't run `.ps3-enter` (opacity 0
+  // for ~1140ms) or LCP lands on late album covers instead of the hero.
+  // Soft-nav Work→About bumps epoch on the rising edge, so enter still plays.
+  const playEnter = visible && !snap && epoch > 0;
 
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);

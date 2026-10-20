@@ -116,14 +116,16 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         setArmed(true);
       });
     };
+    // Prefer a short timeout so Morph is armed before first intentional hover
+    // (cold pointerenter must not pay the 90-path mount). Idle is a bonus.
     if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 800 });
+      const id = window.requestIdleCallback(start, { timeout: 400 });
       return () => {
         cancel = true;
         window.cancelIdleCallback(id);
       };
     }
-    const id = window.setTimeout(start, 200);
+    const id = window.setTimeout(start, 80);
     return () => {
       cancel = true;
       window.clearTimeout(id);
