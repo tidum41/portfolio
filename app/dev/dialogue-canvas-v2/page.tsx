@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import DialogueReviewCanvas from "./DialogueReviewCanvas";
 import {
@@ -14,11 +16,16 @@ export const dynamic = "force-dynamic";
 const VIEW_W = 1440;
 const VIEW_H = 900;
 
-export default function DialogueReviewCanvasPage() {
+export default async function DialogueReviewCanvasPage() {
+  // Read VERCEL_ENV at request time (preview builds must not bake in production).
+  await connection();
+  const host = (await headers()).get("host") ?? "";
+  const vercelEnv = process.env.VERCEL_ENV;
   const allowLab =
     process.env.NODE_ENV === "development" ||
-    process.env.VERCEL_ENV === "preview" ||
-    process.env.DIALOGUE_REVIEW_LAB === "1";
+    process.env.DIALOGUE_REVIEW_LAB === "1" ||
+    vercelEnv === "preview" ||
+    (vercelEnv !== "production" && host.endsWith(".vercel.app"));
 
   if (!allowLab) redirect("/");
 
