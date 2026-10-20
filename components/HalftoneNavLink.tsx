@@ -89,27 +89,33 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   // Stay mounted after the first hover so the morph can ease back out.
   const [armed, setArmed] = useState(false);
 
+  // Idle: load + mount Morph at rest so first hover only flips `active`
+  // (no 90-path mount on the pointerenter frame). Tighten the idle deadline
+  // so early hovers still usually hit a warm module.
   useEffect(() => {
     let cancel = false;
     const start = () => {
       loadOutlineMorph().then((component) => {
-        if (!cancel) setMorph(() => component);
+        if (cancel) return;
+        setMorph(() => component);
+        setArmed(true);
       });
     };
     if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 2500 });
+      const id = window.requestIdleCallback(start, { timeout: 800 });
       return () => {
         cancel = true;
         window.cancelIdleCallback(id);
       };
     }
-    const id = window.setTimeout(start, 1200);
+    const id = window.setTimeout(start, 200);
     return () => {
       cancel = true;
       window.clearTimeout(id);
     };
   }, []);
 
+  // Fast path if the user hovers before idle finishes.
   useEffect(() => {
     if (!morphOn) return;
     let cancel = false;
@@ -234,14 +240,28 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       // cursor to leave), leaving isHovered stuck true forever.
       onMouseEnter={() => {
         if (performance.now() < ignoreHoverUntilRef.current) return;
+        // Hover state first — keep the morph frame free of prefetch / dynamic import.
         if (canHover()) setIsHovered(true);
-        warmPrimary(href);
-        if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        const schedule =
+          typeof window.requestIdleCallback === "function"
+            ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 400 })
+            : (cb: () => void) => window.setTimeout(cb, 0);
+        schedule(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
       }}
       onMouseLeave={onLinkMouseLeave}
       onFocus={(e) => {
-        warmPrimary(href);
-        if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        // Focus can afford a tick of warm work; still avoid blocking key nav.
+        const schedule =
+          typeof window.requestIdleCallback === "function"
+            ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 400 })
+            : (cb: () => void) => window.setTimeout(cb, 0);
+        schedule(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
         // Keyboard / assistive focus only — pointer clicks also focus, but
         // :focus-visible is false for those so we don't double-fire morph.
         if (e.currentTarget.matches(":focus-visible")) {

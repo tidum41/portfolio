@@ -317,13 +317,23 @@ export default function PS3Silk({
       function updateTarget() {
         // getBoundingClientRect() is viewport-relative, so the resize-only
         // cache above would go stale as soon as the page scrolls without the
-        // wrapper's own size changing. This runs on scroll (not every frame),
-        // keeping onMouseMove's cached rect current without 30fps layout reads.
+        // wrapper's own size changing. Coalesced to one rAF so trackpad scroll
+        // doesn't force layout every event.
         wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
         updateScrollTarget();
         if (activeRef.current && !isScrolledPastHero() && canvas.width >= 2 && canvas.height >= 2) {
           startLoop();
         }
+      }
+
+      let scrollScheduled = false;
+      function scheduledScrollUpdate() {
+        if (scrollScheduled) return;
+        scrollScheduled = true;
+        requestAnimationFrame(() => {
+          scrollScheduled = false;
+          updateTarget();
+        });
       }
 
       function onMouseMove(e: MouseEvent) {
@@ -380,7 +390,7 @@ export default function PS3Silk({
 
       window.addEventListener("resize", scheduledResize);
       window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("scroll", updateTarget, { passive: true });
+      window.addEventListener("scroll", scheduledScrollUpdate, { passive: true });
       window.addEventListener("popstate", onPopState);
       const onVisibility = () => {
         if (document.hidden) {
@@ -398,7 +408,7 @@ export default function PS3Silk({
         canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
         window.removeEventListener("resize", scheduledResize);
         window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("scroll", updateTarget);
+        window.removeEventListener("scroll", scheduledScrollUpdate);
         window.removeEventListener("popstate", onPopState);
         document.removeEventListener("visibilitychange", onVisibility);
       };

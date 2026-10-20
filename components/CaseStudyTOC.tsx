@@ -79,21 +79,28 @@ export default function CaseStudyTOC({
   // Skipped for the mobile-back-only instance (no section labels to track).
   useLayoutEffect(() => {
     if (mobileBackOnly) return;
-    let lastScrollY = -1;
+    if (activeSections.length === 0) return;
 
-    const tick = () => {
-      const y = window.scrollY;
-      if (y !== lastScrollY) {
-        lastScrollY = y;
-        updateActive();
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
+    // One layout pass before paint (avoids TOC highlight flash), then scroll-
+    // driven updates coalesced to a single rAF — not a forever rAF loop.
     updateActive();
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
-  }, [updateActive, mobileBackOnly]);
+
+    let scheduled = false;
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      rafRef.current = requestAnimationFrame(() => {
+        scheduled = false;
+        rafRef.current = null;
+        updateActive();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [updateActive, mobileBackOnly, activeSections.length]);
 
   useEffect(() => {
     if (mobileBackOnly) return;
