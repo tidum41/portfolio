@@ -37,7 +37,7 @@ for (const { variant, out } of shots) {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForSelector("#export-root");
   await page.waitForFunction(() => {
-    const img = document.querySelector('img[src*="placement-video-still"]');
+    const img = document.querySelector('img[data-dialogue-placement-still="true"]');
     return img instanceof HTMLImageElement && img.complete && img.naturalWidth >= 1900;
   });
   await page.evaluate(() => {

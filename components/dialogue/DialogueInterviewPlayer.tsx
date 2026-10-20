@@ -5,6 +5,10 @@ import {
   STUDY_PLAYER_PAD_X,
 } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
 import { PLACEMENT_STUDY_WIDTH_DOCKED } from "@/lib/caseStudies/dialoguePlacementExport";
+import {
+  DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
+  DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
+} from "@/lib/caseStudies/dialoguePlacementStill";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { DialoguePlayerControlBar } from "@/components/dialogue/DialoguePlayerControlBar";
 
@@ -22,8 +26,8 @@ export function DialogueInterviewPlayer() {
         border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
         background: "#161412",
         position: "relative",
-        width: "100%",
-        maxWidth: PLACEMENT_PLAYER_BODY_WIDTH,
+        width: PLACEMENT_PLAYER_BODY_WIDTH,
+        maxWidth: "100%",
         height: PLACEMENT_PLAYER_TOTAL_HEIGHT,
         display: "flex",
         flexDirection: "column",
@@ -35,18 +39,22 @@ export function DialogueInterviewPlayer() {
           position: "relative",
           overflow: "hidden",
           flexShrink: 0,
+          background: DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/dialogue/placement-video-still.webp"
+          data-dialogue-placement-still="true"
+          src={DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
           alt=""
+          width={1920}
+          height={888}
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: "contain",
             objectPosition: "center center",
             display: "block",
           }}
