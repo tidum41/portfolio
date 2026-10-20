@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { LinkSimple } from "@phosphor-icons/react";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -32,8 +31,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies CONTACT_EMAIL on click. Smoothly adjusts width and crossfades
- * between resting and "Copied" states without abrupt layout jumping.
+ * Copies CONTACT_EMAIL on click. Crossfades calmly between resting and "Copied" states with fixed width so nothing shifts.
  */
 export default function CopyEmail({
   children,
@@ -53,17 +51,11 @@ export default function CopyEmail({
 }) {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
-
-  const trackRef = useRef<HTMLSpanElement>(null);
-  const idleRef = useRef<HTMLSpanElement>(null);
-  const copiedRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
     };
   }, []);
 
@@ -74,59 +66,13 @@ export default function CopyEmail({
         ? `${CONTACT_EMAIL} copied to clipboard`
         : `Select and copy ${CONTACT_EMAIL}`,
     );
-
-    const track = trackRef.current;
-    const idleEl = idleRef.current;
-    const copiedEl = copiedRef.current;
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!copied && track && idleEl && copiedEl && !prefersReducedMotion) {
-      const startW = idleEl.offsetWidth;
-      const endW = copiedEl.offsetWidth;
-
-      // Anchor starting width into browser layout before initiating the CSS transition
-      track.style.width = `${startW}px`;
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      track.offsetWidth;
-
-      setCopied(true);
-      track.style.width = `${endW}px`;
-
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
-      animTimerRef.current = setTimeout(() => {
-        if (track) track.style.width = "";
-      }, 240);
-    } else {
-      setCopied(true);
-    }
-
+    setCopied(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      if (track && idleEl && copiedEl && !prefersReducedMotion) {
-        const curW = copiedEl.offsetWidth;
-        const targetW = idleEl.offsetWidth;
-
-        track.style.width = `${curW}px`;
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        track.offsetWidth;
-
-        setCopied(false);
-        track.style.width = `${targetW}px`;
-
-        if (animTimerRef.current) clearTimeout(animTimerRef.current);
-        animTimerRef.current = setTimeout(() => {
-          if (track) track.style.width = "";
-          setAnnouncement("");
-        }, 240);
-      } else {
-        setCopied(false);
-        setAnnouncement("");
-      }
-    }, 1500);
-  }, [copied]);
+      setCopied(false);
+      setAnnouncement("");
+    }, 1200);
+  }, []);
 
   const baseStyle: CSSProperties = unstyled
     ? {
@@ -148,26 +94,16 @@ export default function CopyEmail({
       </span>
       <button
         type="button"
-        className={`copy-email-btn ${className ?? ""}`.trim()}
+        className={className}
         style={{ ...baseStyle, ...style }}
-        data-copied={copied}
         aria-label={ariaLabel ?? `Copy ${CONTACT_EMAIL} to clipboard`}
+        data-copied={copied ? "true" : "false"}
         onClick={onClick}
       >
-        <span ref={trackRef} className="copy-email-track">
-          <span
-            ref={idleRef}
-            className="copy-email-layer copy-email-idle"
-            aria-hidden={copied}
-          >
-            {children}
-          </span>
-          <span
-            ref={copiedRef}
-            className="copy-email-layer copy-email-copied"
-            aria-hidden={!copied}
-          >
-            <CopyIcon />
+        <span className="copy-email-track">
+          <span className="copy-email-layer copy-email-layer--idle">{children}</span>
+          <span className="copy-email-layer copy-email-layer--copied">
+            <CheckIcon />
             {copiedLabel}
           </span>
         </span>
@@ -176,16 +112,16 @@ export default function CopyEmail({
   );
 }
 
-function CopyIcon() {
+function CheckIcon() {
   return (
-    <LinkSimple
-      size={14}
-      weight="regular"
-      aria-hidden="true"
-      style={{
-        flexShrink: 0,
-        transform: "translateY(-0.5px)",
-      }}
-    />
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M3.5 8.5 6.5 11.5 12.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

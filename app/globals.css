@@ -1219,6 +1219,47 @@ html[data-theme="dark"] .project-image {
   outline-offset: 2px;
 }
 
+.copy-email-track {
+  display: inline-grid;
+  grid-template-areas: "copy-email-stack";
+  align-items: center;
+  justify-items: start;
+  white-space: nowrap;
+}
+.cs-pill-btn .copy-email-track {
+  justify-items: center;
+}
+.copy-email-layer {
+  grid-area: copy-email-stack;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: inherit;
+  font-weight: inherit;
+  transition: opacity 180ms ease-out;
+}
+.copy-email-layer--idle {
+  opacity: 1;
+  pointer-events: auto;
+}
+.copy-email-layer--copied {
+  opacity: 0;
+  pointer-events: none;
+}
+[data-copied="true"] .copy-email-layer--idle {
+  opacity: 0;
+  pointer-events: none;
+}
+[data-copied="true"] .copy-email-layer--copied {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .copy-email-layer {
+    transition: none;
+  }
+}
+
 .cs-pager {
   display: grid;
   grid-template-columns: 1fr 1fr;
