@@ -1,3 +1,5 @@
+import { studyTranscriptTopY } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
+
 /**
  * Dialogue placement moment tiles (section-6 / section-6b).
  * Keep export math in one place for capture scripts and layout audits.
@@ -43,3 +45,12 @@ export const PLACEMENT_TILE_MARGIN_LEFT = (PLACEMENT_TILE_WIDTH - PLACEMENT_COMP
 export const PLACEMENT_TILE_MARGIN_TOP = (PLACEMENT_TILE_HEIGHT - PLACEMENT_COMPOSITION_HEIGHT) / 2;
 
 export type PlacementVariant = "docked" | "floating";
+
+/** Floating chat stack: panel sits over transcript only; launcher stays bottom-right. */
+export const PLACEMENT_FLOATING_LAUNCHER_SIZE = 50;
+export const PLACEMENT_FLOATING_LAUNCHER_GAP = 10;
+export const PLACEMENT_FLOATING_EDGE = 14;
+export const PLACEMENT_FLOATING_CHAT_TOP =
+  studyTranscriptTopY(PLACEMENT_LAYOUT_WIDTH) + 4;
+export const PLACEMENT_FLOATING_PANEL_BOTTOM =
+  PLACEMENT_FLOATING_EDGE + PLACEMENT_FLOATING_LAUNCHER_SIZE + PLACEMENT_FLOATING_LAUNCHER_GAP;

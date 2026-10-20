@@ -4,14 +4,17 @@ import { CheckoutFunnelChart } from "./CheckoutFunnelChart";
 import { ClipThumbnailRow } from "./ClipThumbnailRow";
 import { CounterEvidenceSection } from "./CounterEvidenceSection";
 import { DerivedEvidenceLabel } from "./DerivedEvidenceLabel";
+import { ShareExportIcon } from "./DialogueIcons";
 
 const OUTER_RADIUS = 12;
 const PAD = 14;
 
 export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
+  const inset = compact ? 10 : PAD;
   return (
     <div
       style={{
+        position: "relative",
         border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         borderRadius: OUTER_RADIUS,
         background: DIALOGUE_GRAPHICS_COLORS.surface,
@@ -19,7 +22,20 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
-      <div style={{ padding: compact ? 10 : PAD, paddingBottom: compact ? 8 : 12 }}>
+      <div
+        title="Copy as card"
+        style={{
+          position: "absolute",
+          top: inset,
+          right: inset,
+          zIndex: 1,
+          opacity: 0.88,
+          lineHeight: 0,
+        }}
+      >
+        <ShareExportIcon size={compact ? 12 : 13} />
+      </div>
+      <div style={{ padding: inset, paddingBottom: compact ? 8 : 12, paddingRight: inset + 16 }}>
         <p
           style={{
             margin: "0 0 10px",

@@ -71,7 +71,7 @@ export function DialogueStudyHostPage({
           borderBottom: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
         }}
       >
-        <DialogueInterviewPlayer compact />
+        <DialogueInterviewPlayer />
       </div>
 
       <DialogueStudyTranscript reserveRightForFloatingChat={reserveRightForFloatingChat} />

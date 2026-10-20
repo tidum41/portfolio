@@ -1,6 +1,6 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { EvidenceAnswerCard } from "@/components/dialogue/graphics/EvidenceAnswerCard";
-import { ChevronDownIcon, ShareExportIcon } from "@/components/dialogue/graphics/DialogueIcons";
+import { ChevronDownIcon } from "@/components/dialogue/graphics/DialogueIcons";
 
 export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }) {
   return (
@@ -35,30 +35,18 @@ export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }
           overflowX: "hidden",
         }}
       >
-        <div style={{ position: "relative", flexShrink: 0 }}>
-          <div
-            style={{
-              background: DIALOGUE_GRAPHICS_COLORS.bubble,
-              borderRadius: 12,
-              padding: compact ? "9px 32px 9px 11px" : "11px 36px 11px 13px",
-              fontSize: compact ? 11 : 12,
-              lineHeight: 1.45,
-              color: DIALOGUE_GRAPHICS_COLORS.ink,
-            }}
-          >
-            Where did people drop off in checkout?
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              right: 10,
-              top: 10,
-              opacity: 0.85,
-            }}
-            title="Copy as card"
-          >
-            <ShareExportIcon size={compact ? 12 : 13} />
-          </div>
+        <div
+          style={{
+            background: DIALOGUE_GRAPHICS_COLORS.bubble,
+            borderRadius: 12,
+            padding: compact ? "9px 11px" : "11px 13px",
+            fontSize: compact ? 11 : 12,
+            lineHeight: 1.45,
+            color: DIALOGUE_GRAPHICS_COLORS.ink,
+            flexShrink: 0,
+          }}
+        >
+          Where did people drop off in checkout?
         </div>
 
         <div

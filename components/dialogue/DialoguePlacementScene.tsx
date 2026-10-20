@@ -3,6 +3,11 @@ import {
   PLACEMENT_LAYOUT_WIDTH,
   PLACEMENT_SIDEBAR_WIDTH,
   PLACEMENT_STUDY_WIDTH_DOCKED,
+  PLACEMENT_FLOATING_CHAT_TOP,
+  PLACEMENT_FLOATING_EDGE,
+  PLACEMENT_FLOATING_LAUNCHER_SIZE,
+  PLACEMENT_FLOATING_LAUNCHER_GAP,
+  PLACEMENT_FLOATING_PANEL_BOTTOM,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
@@ -60,29 +65,42 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
       <div
         style={{
           position: "absolute",
-          right: 14,
-          bottom: 14,
+          right: PLACEMENT_FLOATING_EDGE,
+          top: PLACEMENT_FLOATING_CHAT_TOP,
+          bottom: PLACEMENT_FLOATING_PANEL_BOTTOM,
           width: 292,
-          maxHeight: "calc(100% - 28px)",
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
-          gap: 10,
+          gap: PLACEMENT_FLOATING_LAUNCHER_GAP,
+          pointerEvents: "none",
         }}
       >
         <div
           style={{
             width: "100%",
+            flex: 1,
+            minHeight: 0,
             borderRadius: 14,
             border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
             background: DIALOGUE_GRAPHICS_COLORS.surface,
             boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
             overflow: "hidden",
+            pointerEvents: "auto",
           }}
         >
           <DialogueResearchAssistantPanel compact />
         </div>
-        <DialogueChatLauncher size={50} />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          right: PLACEMENT_FLOATING_EDGE,
+          bottom: PLACEMENT_FLOATING_EDGE,
+          pointerEvents: "auto",
+        }}
+      >
+        <DialogueChatLauncher size={PLACEMENT_FLOATING_LAUNCHER_SIZE} />
       </div>
     </div>
   );
