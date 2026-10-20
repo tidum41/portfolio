@@ -157,7 +157,7 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
   title: "Designing B2B ordering for the #1 pickleball brand",
-  label: "Internship 2026",
+  label: "Case study",
   href: "/joola",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
@@ -185,7 +185,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v7-case-links"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v8-case-links"], { revalidate: 60 }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
