@@ -11,7 +11,7 @@ const PRESS_OUT_MS = 140;
 // Pool size for the echo trail — always allocated in full so the Trail
 // "echoCount" dial can be tuned live without remounting the cursor; only the
 // first N (per dial) are ever animated/shown, the rest sit hidden.
-const MAX_ECHO = 24;
+const MAX_ECHO = 16;
 const CURSOR_COLOR_KEY = "ps3cp_cursor_color";
 const CURSOR_POS_KEY   = "ps3cp_cursor_pos";
 
@@ -113,7 +113,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
   } catch {}
 
   // Echo / stamp pool — classic mode uses these as a follow chain; XMB mode
-  // stamps short-lived axis-aligned squares that linger, then fade out.
+  // stamps short-lived flat disks that drift briefly, freeze, then dissolve.
   const echoEls: HTMLDivElement[] = [];
   for (let i = 0; i < MAX_ECHO; i++) {
     const el = document.createElement("div");
@@ -164,8 +164,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
       el.style.backgroundImage = "none";
       el.style.boxShadow = "none";
       el.style.mixBlendMode = "normal";
-      el.style.borderRadius = "0";
-      // Flat hard square — XMB dimness comes from stamp opacity, not glow/gradients.
+      // Flat hard disk — XMB dimness comes from stamp opacity, not glow/gradients.
       el.style.backgroundColor = currentColor;
     });
     lastTrailStyle = style;
@@ -613,20 +612,20 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     const style = tc.style === "classic" ? "classic" : "xmb";
     if (style !== lastTrailStyle) paintEchoAppearance(style);
 
-    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? 24)));
+    const count = Math.max(0, Math.min(MAX_ECHO, Math.round(tc.echoCount ?? 6)));
     const opacityBase = tc.opacity ?? (style === "xmb" ? 0.18 : 0.55);
-    const scaleBase   = tc.scale   ?? (style === "xmb" ? 1    : 0.78);
+    const scaleBase   = tc.scale   ?? (style === "xmb" ? 0.5  : 0.78);
 
     let allSettled = true;
 
     if (style === "xmb") {
-      // ── XMB: lingering squares — drop by distance, stay put, ease-out fade ──
-      const lifetime = tc.lifetime ?? 750;
-      const driftMs  = Math.max(0, tc.driftMs ?? 0);
-      const spawnGap = tc.spawnGap ?? 14;
-      const scatter  = tc.scatter  ?? 0;
-      const popAmt   = tc.pop      ?? 0;
-      const varAmt   = tc.variance ?? 0;
+      // ── XMB: short stamp chain — drop, brief path drift, freeze, dissolve ──
+      const lifetime = tc.lifetime ?? 360;
+      const driftMs  = Math.max(1, tc.driftMs ?? 40);
+      const spawnGap = tc.spawnGap ?? 42;
+      const scatter  = tc.scatter  ?? 1.15;
+      const popAmt   = tc.pop      ?? 0.65;
+      const varAmt   = tc.variance ?? 1;
 
       // Spawn stamps along travel — left behind at gaps, never chasing the tip.
       if (mouse.inside && count > 0 && vel > 0.4) {
@@ -636,7 +635,9 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         stampTravel += step;
         lastStampX = mouse.x;
         lastStampY = mouse.y;
-        if (stampTravel >= spawnGap && step > 0.01) {
+        // Spacing jitters per stamp so the chain isn't a metronome.
+        const gapMul = 0.68 + 0.64 * (((stampCursor * 53) % 11) / 10);
+        if (stampTravel >= spawnGap * gapMul && step > 0.01) {
           stampTravel = 0;
           const slot = stampCursor % count;
           const gen = stampCursor++;
@@ -653,13 +654,12 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
             ? 1 - varAmt * (0.38 * unit(gen * 41, 11))
             : 1;
           s.active = true;
-          s.frozen = driftMs <= 0;
+          s.frozen = false;
           s.born = now;
-          // Drop slightly behind the tip so the square reads as a trail, not a tip.
           s.x = mouse.x - dirX * 5;
           s.y = mouse.y - dirY * 5;
-          s.vx = driftMs > 0 ? dirX * Math.min(vel, 7) * 0.2 : 0;
-          s.vy = driftMs > 0 ? dirY * Math.min(vel, 7) * 0.2 : 0;
+          s.vx = dirX * Math.min(vel, 7) * 0.2;
+          s.vy = dirY * Math.min(vel, 7) * 0.2;
           s.dirX = dirX;
           s.dirY = dirY;
           s.variance = rhythm;
@@ -696,7 +696,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         }
 
         if (!s.frozen) {
-          if (driftMs > 0 && age < driftMs) {
+          if (age < driftMs) {
             s.x += s.vx;
             s.y += s.vy;
             s.vx *= 0.86;
@@ -707,7 +707,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
             s.frozen = true;
             s.vx = 0;
             s.vy = 0;
-            if (popAmt <= 0.01) s.pop = 1;
+            s.pop = 1;
             // Perpendicular scatter on freeze — off when scatter dial is 0.
             if (scatter > 0.01) {
               const sign = ((i * 13 + stampCursor) % 2) === 0 ? 1 : -1;
@@ -720,14 +720,16 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
         }
 
         const age01 = age / life;
-        // Ease-out dissolve in place — opacity primary, slight scale settle.
-        const dissolve = Math.pow(1 - age01, 2);
+        // Soft dissolve: hold presence, then ease off (PS3-ish, not linear).
+        const hold = 0.32;
+        const dissolve = age01 <= hold
+          ? 1
+          : 1 - Math.pow((age01 - hold) / (1 - hold), 1.55);
         const op = opacityBase * dissolve * idleFade * s.opVariance;
-        const sc = scaleBase * s.pop * s.variance * (1 - 0.12 * age01);
+        const sc = scaleBase * s.pop * s.variance * (1 - 0.28 * age01);
 
         const rx = Math.round(s.x * 2) / 2;
         const ry = Math.round(s.y * 2) / 2;
-        // Axis-aligned only — translate + uniform scale, no rotate.
         const tr = `translate3d(${rx - size / 2}px,${ry - size / 2}px,0) scale(${Math.max(0.08, sc)})`;
         if (tr !== lastTransform[i]) { el.style.transform = tr; lastTransform[i] = tr; }
         const opR = Math.round(op * 100) / 100;
@@ -952,15 +954,15 @@ export default function GlobalCustomCursor({
     trailStyle: { type: "select", options: ["classic", "xmb"], default: "xmb" },
 
     Trail: {
-      echoCount: [24,   1,   24,  1],
-      lifetime:  [750,  600, 900, 10],
-      driftMs:   [0,    0,   160, 5],
-      spawnGap:  [14,   12,  16,  1],
+      echoCount: [6,    1,   8,   1],
+      lifetime:  [360,  80,  500, 10],
+      driftMs:   [40,   0,   160, 5],
+      spawnGap:  [42,   6,   64,  1],
       opacity:   [0.18, 0.05, 1,  0.01],
-      scale:     [1,    0.2, 1.1, 0.01],
-      scatter:   [0,    0,   1.8, 0.05],
-      pop:       [0,    0,   1,   0.05],
-      variance:  [0,    0,   1,   0.05],
+      scale:     [0.5,  0.2, 1.1, 0.01],
+      scatter:   [1.15, 0,   1.8, 0.05],
+      pop:       [0.65, 0,   1,   0.05],
+      variance:  [1,    0,   1,   0.05],
     },
 
     Dot: {
