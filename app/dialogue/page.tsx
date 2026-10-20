@@ -46,6 +46,8 @@ const TOC_ITEMS = [
   { id: "fitted-charts", label: "Fitted charts" },
   { id: "proof", label: "Proof" },
   { id: "clips", label: "Clips" },
+  { id: "imperfect-evidence", label: "Messy research" },
+  { id: "share-finding", label: "Copy as card" },
   { id: "placement", label: "Floating chat" },
   { id: "full-answer", label: "One answer" },
   { id: "outcome", label: "Outcome" },
@@ -356,6 +358,40 @@ export default function DialogueCaseStudyPage() {
                   alt="Interview player at 01:38 with Marcus W. highlighted in the synced transcript."
                 />
               </PairRow>
+            </Section>
+
+            <Section id="imperfect-evidence">
+              <H2>When the research doesn&apos;t settle it</H2>
+              <CaseStudyBody>
+                Real studies are messy. Some answers rest on four interviews, some on none, and some
+                participants disagree. Stating every answer with the same confidence would mislead the
+                teams who plan from them, so each answer shows how strong its evidence is.
+              </CaseStudyBody>
+              <CaseStudyFigure
+                src={DIALOGUE_IMAGES.imperfectEvidence}
+                alt="Three study chat answers showing counter-evidence, a low-coverage lead, and a no-match suggestion."
+                caption="Counter-evidence shows who disagreed. Low coverage hides the chart and calls the answer a lead. With no match, the chat suggests a question the interviews did cover."
+                fill
+                aspectRatio="2200 / 1016"
+                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+              />
+            </Section>
+
+            <Section id="share-finding">
+              <H2>A finding has to leave the chat</H2>
+              <CaseStudyBody>
+                Findings usually end up in a slide or a Slack thread, retyped and stripped of their
+                proof. Copy as card exports the finding with its chart, two clips and its coverage, so
+                the evidence travels with it.
+              </CaseStudyBody>
+              <CaseStudyFigure
+                src={DIALOGUE_IMAGES.shareFinding}
+                alt="Study chat answer beside a copied share card with chart, two clip thumbnails, and interview coverage."
+                caption="One action copies a ready-to-paste card. A thin finding keeps its low-coverage note, so it can't pass as solid."
+                fill
+                aspectRatio="2200 / 768"
+                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+              />
             </Section>
 
             <Section id="placement">

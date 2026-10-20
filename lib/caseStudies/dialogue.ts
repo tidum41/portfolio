@@ -20,6 +20,8 @@ export const DIALOGUE_IMAGES = {
   anatomy: "/dialogue/section-3.png",
   proofSolution: "/dialogue/section-4.png",
   clipsSolution: "/dialogue/section-5.png",
+  imperfectEvidence: "/dialogue/section-imperfect.png",
+  shareFinding: "/dialogue/section-share.png",
   dockedSidebar: "/dialogue/section-6b.png",
   floatingBubble: "/dialogue/section-6.png",
   fullAnswer: "/dialogue/section-7.png",
