@@ -16,7 +16,13 @@ import { ShareExportIcon } from "./DialogueIcons";
 const OUTER_RADIUS = PLACEMENT_RADIUS_LG;
 const PAD = PLACEMENT_GRID_PAD_X - 4;
 
-export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
+export function EvidenceAnswerCard({
+  compact = false,
+  fillHeight = false,
+}: {
+  compact?: boolean;
+  fillHeight?: boolean;
+}) {
   const inset = compact ? PLACEMENT_GRID_PAD_X - 4 : PAD;
   const copyIconInset = inset;
   return (
@@ -28,6 +34,10 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
         background: DIALOGUE_GRAPHICS_COLORS.surface,
         overflow: "hidden",
         fontFamily: DIALOGUE_GRAPHICS_FONT,
+        height: fillHeight ? "100%" : undefined,
+        display: fillHeight ? "flex" : undefined,
+        flexDirection: fillHeight ? "column" : undefined,
+        minHeight: fillHeight ? 0 : undefined,
       }}
     >
       <div
@@ -48,11 +58,21 @@ export function EvidenceAnswerCard({ compact = false }: { compact?: boolean }) {
       >
         <ShareExportIcon size={PLACEMENT_ICON_SIZE} />
       </div>
-      <div style={{ padding: inset, paddingBottom: PLACEMENT_SPACE_1 + 4, paddingRight: inset + PLACEMENT_ICON_SIZE + 4 }}>
+      <div
+        style={{
+          padding: inset,
+          paddingBottom: PLACEMENT_SPACE_1 + 4,
+          paddingRight: inset + PLACEMENT_ICON_SIZE + 4,
+          flex: fillHeight ? 1 : undefined,
+          minHeight: fillHeight ? 0 : undefined,
+          overflow: fillHeight ? "hidden" : undefined,
+        }}
+      >
         <p
           style={{
             margin: `0 0 ${PLACEMENT_SPACE_1 + 2}px`,
             ...placementType.body,
+            fontWeight: 400,
             color: DIALOGUE_GRAPHICS_COLORS.ink,
           }}
         >

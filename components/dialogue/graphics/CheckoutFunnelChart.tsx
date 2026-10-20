@@ -1,4 +1,5 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_COPY_FUNNEL_CAPTION } from "@/lib/caseStudies/dialoguePlacementCopy";
 import { PLACEMENT_SPACE_1, placementType } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 const STEPS = [
@@ -21,9 +22,10 @@ export function CheckoutFunnelChart({ compact = false }: { compact?: boolean }) 
           ...placementType.labelRegular,
           color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
           marginBottom: PLACEMENT_SPACE_1,
+          whiteSpace: "nowrap",
         }}
       >
-        Checkout funnel, % of participants still in study
+        {PLACEMENT_COPY_FUNNEL_CAPTION}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: rowGap }}>
         {STEPS.map((step) => (
@@ -81,6 +83,7 @@ export function CheckoutFunnelChart({ compact = false }: { compact?: boolean }) 
           marginTop: PLACEMENT_SPACE_1,
           ...placementType.labelRegular,
           color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+          whiteSpace: "nowrap",
         }}
       >
         Largest drop: Shipping address (-38%)

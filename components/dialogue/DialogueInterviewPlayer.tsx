@@ -1,9 +1,8 @@
 import {
-  PLACEMENT_PLAYER_TOTAL_HEIGHT,
-  PLACEMENT_PLAYER_VIDEO_HEIGHT,
+  PLACEMENT_LAYOUT_WIDTH,
+  PLACEMENT_SIDEBAR_WIDTH,
   STUDY_PLAYER_PAD_X,
-} from "@/lib/caseStudies/dialogueStudyPlacementLayout";
-import { PLACEMENT_STUDY_WIDTH_DOCKED } from "@/lib/caseStudies/dialoguePlacementExport";
+} from "@/lib/caseStudies/dialoguePlacementExport";
 import {
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
@@ -11,13 +10,18 @@ import {
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { PLACEMENT_RADIUS_MD } from "@/lib/caseStudies/dialoguePlacementTypography";
 
-/** Match docked study column so cover crop is identical in floating + docked tiles. */
-const PLACEMENT_PLAYER_BODY_WIDTH = PLACEMENT_STUDY_WIDTH_DOCKED - STUDY_PLAYER_PAD_X * 2;
+const PLAY_BUTTON_SIZE = 56;
+const PLAY_GLYPH_SIZE = 18;
 
-const PLAY_BUTTON_SIZE = 40;
+function placementPlayerDimensions() {
+  const bodyWidth = PLACEMENT_LAYOUT_WIDTH - PLACEMENT_SIDEBAR_WIDTH - STUDY_PLAYER_PAD_X * 2;
+  const videoHeight = Math.round((bodyWidth * 9) / 16);
+  return { bodyWidth, videoHeight };
+}
 
 /** Blurred interview still + static play affordance (no control bar). */
 export function DialogueInterviewPlayer() {
+  const { bodyWidth, videoHeight } = placementPlayerDimensions();
   return (
     <div
       data-placement-crop="player"
@@ -28,14 +32,14 @@ export function DialogueInterviewPlayer() {
         border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         background: "#161412",
         position: "relative",
-        width: PLACEMENT_PLAYER_BODY_WIDTH,
+        width: bodyWidth,
         maxWidth: "100%",
-        height: PLACEMENT_PLAYER_TOTAL_HEIGHT,
+        height: videoHeight,
       }}
     >
       <div
         style={{
-          height: PLACEMENT_PLAYER_VIDEO_HEIGHT,
+          height: videoHeight,
           position: "relative",
           overflow: "hidden",
           background: DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
@@ -74,20 +78,22 @@ export function DialogueInterviewPlayer() {
               width: PLAY_BUTTON_SIZE,
               height: PLAY_BUTTON_SIZE,
               borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.22)",
-              border: "1px solid rgba(255, 255, 255, 0.38)",
+              background: "rgba(255, 255, 255, 0.9)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 2px 12px rgba(0, 0, 0, 0.18)",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.28)",
             }}
           >
-            <svg width={14} height={14} viewBox="0 0 14 14" fill="none" aria-hidden>
-              <path
-                d="M5.2 3.8v6.4L10.4 7 5.2 3.8Z"
-                fill="white"
-                fillOpacity={0.95}
-              />
+            <svg
+              width={PLAY_GLYPH_SIZE}
+              height={PLAY_GLYPH_SIZE}
+              viewBox="0 0 18 18"
+              fill="none"
+              aria-hidden
+              style={{ marginLeft: 2 }}
+            >
+              <path d="M6.2 4.2v9.6L14.2 9 6.2 4.2Z" fill="#1A1816" />
             </svg>
           </div>
         </div>

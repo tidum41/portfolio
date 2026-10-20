@@ -17,7 +17,7 @@ export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boole
     <div
       style={{
         display: "flex",
-        gap: PLACEMENT_SPACE_1 - 2,
+        gap: PLACEMENT_SPACE_1,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
@@ -40,20 +40,25 @@ export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boole
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           </div>
-          <div
-            style={{
-              marginTop: 4,
-              ...placementType.labelRegular,
-              fontSize: 11,
-              lineHeight: "14px",
-              color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              ...placementType.tabular,
-            }}
-          >
-            {clip.name}, {clip.time}
+          <div style={{ marginTop: 4 }}>
+            <div
+              style={{
+                ...placementType.labelRegular,
+                color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {clip.name}
+            </div>
+            <div
+              style={{
+                ...placementType.meta,
+                color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+                ...placementType.tabular,
+              }}
+            >
+              {clip.time}
+            </div>
           </div>
         </div>
       ))}

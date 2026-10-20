@@ -1,4 +1,5 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_COPY_SEARCH_STATUS } from "@/lib/caseStudies/dialoguePlacementCopy";
 import {
   PLACEMENT_GRID_PAD_X,
   PLACEMENT_ICON_SIZE,
@@ -19,14 +20,14 @@ export function DialogueResearchAssistantPanel({
   compact: boolean;
   floating?: boolean;
 }) {
-  const fillHeight = compact && !floating;
+  const fillColumn = compact;
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        height: fillHeight ? "100%" : "auto",
-        minHeight: fillHeight ? 0 : undefined,
+        height: fillColumn ? "100%" : "auto",
+        minHeight: fillColumn ? 0 : undefined,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
         color: DIALOGUE_GRAPHICS_COLORS.ink,
       }}
@@ -53,13 +54,13 @@ export function DialogueResearchAssistantPanel({
 
       <div
         style={{
-          flex: fillHeight ? 1 : undefined,
-          minHeight: fillHeight ? 0 : undefined,
-          padding: `0 ${CARD_PAD - 4}px ${CARD_PAD - 4}px`,
+          flex: fillColumn ? 1 : undefined,
+          minHeight: fillColumn ? 0 : undefined,
+          padding: `0 ${CARD_PAD - 4}px ${floating ? 0 : CARD_PAD - 4}px`,
           display: "flex",
           flexDirection: "column",
           gap: PLACEMENT_SPACE_1,
-          overflow: floating ? "visible" : fillHeight ? "auto" : "hidden",
+          overflow: floating ? "hidden" : fillColumn ? "auto" : "hidden",
         }}
       >
         <div
@@ -90,12 +91,12 @@ export function DialogueResearchAssistantPanel({
             minHeight: 32,
           }}
         >
-          <span>Searched 24 interviews, found 9 relevant moments</span>
+          <span style={{ whiteSpace: "nowrap" }}>{PLACEMENT_COPY_SEARCH_STATUS}</span>
           <ChevronDownIcon size={PLACEMENT_ICON_SIZE} />
         </div>
 
-        <div style={{ flexShrink: 0, minHeight: 0 }}>
-          <EvidenceAnswerCard compact={compact} />
+        <div style={{ flex: floating ? 1 : undefined, flexShrink: floating ? undefined : 0, minHeight: floating ? 0 : undefined }}>
+          <EvidenceAnswerCard compact={compact} fillHeight={floating} />
         </div>
       </div>
     </div>

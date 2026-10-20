@@ -126,20 +126,27 @@ for (const { variant, out } of shots) {
     const cropSpecs = [
       { name: "transcript", locator: page.getByText("Transcript", { exact: true }).locator("xpath=ancestor::div[3]") },
       { name: "assistant-top", locator: page.getByText("Research assistant", { exact: true }).locator("xpath=ancestor::header[1]") },
-      { name: "funnel", locator: page.getByText("Checkout funnel, % of participants still in study") },
+      { name: "funnel", locator: page.locator("[data-placement-crop='funnel']") },
       { name: "player", locator: page.locator('img[data-dialogue-placement-still="true"]').locator("xpath=ancestor::div[1]") },
     ];
     for (const { name, locator } of cropSpecs) {
       const cropPath = path.join(proofOutDir, `crop-${name}-2x.png`);
-      await locator.first().screenshot({ path: cropPath, type: "png", scale: "css" });
-      const meta = await sharp(cropPath).metadata();
-      const zoomed = `${cropPath}.zoom.png`;
-      await sharp(cropPath)
-        .resize((meta.width ?? 1) * 2, (meta.height ?? 1) * 2, { kernel: "lanczos3" })
-        .png()
-        .toFile(zoomed);
-      fs.renameSync(zoomed, cropPath);
-      console.log(`Wrote ${path.relative(root, cropPath)}`);
+      const target = locator.first();
+      try {
+        await target.waitFor({ state: "attached", timeout: 15000 });
+        await target.scrollIntoViewIfNeeded();
+        await target.screenshot({ path: cropPath, type: "png", scale: "css" });
+        const meta = await sharp(cropPath).metadata();
+        const zoomed = `${cropPath}.zoom.png`;
+        await sharp(cropPath)
+          .resize((meta.width ?? 1) * 2, (meta.height ?? 1) * 2, { kernel: "lanczos3" })
+          .png()
+          .toFile(zoomed);
+        fs.renameSync(zoomed, cropPath);
+        console.log(`Wrote ${path.relative(root, cropPath)}`);
+      } catch (err) {
+        console.warn(`Crop skipped (${name}):`, err.message || err);
+      }
     }
   }
 

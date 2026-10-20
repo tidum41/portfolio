@@ -13,6 +13,9 @@ import { DialoguePlacementScene } from "@/components/dialogue/DialoguePlacementS
 import { DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { notFound } from "next/navigation";
 
+/** Always render fresh so placement layout edits show up in capture without stale SSG. */
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return [{ variant: "docked" }, { variant: "floating" }];
 }

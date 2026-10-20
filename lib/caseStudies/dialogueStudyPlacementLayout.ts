@@ -1,8 +1,6 @@
-/** Pixel layout shared by study host + floating placement overlay (keep in sync with DialogueStudyHostPage). */
+import { PLACEMENT_PLAYER_TOTAL_HEIGHT } from "@/lib/caseStudies/dialoguePlacementExport";
 
-/** Video frame only (no control chrome in placement tiles). */
-export const PLACEMENT_PLAYER_VIDEO_HEIGHT = 168;
-export const PLACEMENT_PLAYER_TOTAL_HEIGHT = PLACEMENT_PLAYER_VIDEO_HEIGHT;
+/** Pixel layout shared by study host + floating placement overlay (keep in sync with DialogueStudyHostPage). */
 
 export const STUDY_HEADER_BLOCK_HEIGHT = 62;
 export const STUDY_PLAYER_PAD_TOP = 8;
@@ -16,7 +14,5 @@ export function studyPlayerBlockTopY(): number {
 
 /** Y offset where transcript begins. */
 export function studyTranscriptTopY(_columnWidth?: number): number {
-  return (
-    studyPlayerBlockTopY() + PLACEMENT_PLAYER_TOTAL_HEIGHT + STUDY_PLAYER_PAD_BOTTOM
-  );
+  return studyPlayerBlockTopY() + PLACEMENT_PLAYER_TOTAL_HEIGHT + STUDY_PLAYER_PAD_BOTTOM;
 }

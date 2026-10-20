@@ -30,7 +30,7 @@ const LINES: Line[] = [
     kind: "participant",
     speaker: "Jordan M.",
     time: "13:58",
-    text: "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
+    text: "The apartment field kept clearing on autocomplete, and I almost closed the tab.",
   },
   {
     kind: "dialogue",
@@ -109,7 +109,7 @@ export function DialogueStudyTranscript({
             Copy
           </span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: PLACEMENT_SPACE_1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {LINES.map((line) => (
             <div
               key={`${line.speaker}-${line.time}`}

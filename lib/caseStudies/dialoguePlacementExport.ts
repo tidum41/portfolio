@@ -1,5 +1,3 @@
-import { studyPlayerBlockTopY } from "@/lib/caseStudies/dialogueStudyPlacementLayout";
-
 /**
  * Dialogue placement moment tiles (section-6 / section-6b).
  * Keep export math in one place for capture scripts and layout audits.
@@ -23,11 +21,16 @@ export const PLACEMENT_SUBJECT_BOX_HEIGHT = PLACEMENT_TILE_HEIGHT - PLACEMENT_TI
  * Aspect matches the 80% subject box (1280×960) so scale fills width and height.
  */
 export const PLACEMENT_LAYOUT_HEIGHT = 740;
-export const PLACEMENT_SIDEBAR_WIDTH = 300;
+export const PLACEMENT_SIDEBAR_WIDTH = 400;
 export const PLACEMENT_LAYOUT_WIDTH = Math.round(
   (PLACEMENT_SUBJECT_BOX_WIDTH / PLACEMENT_SUBJECT_BOX_HEIGHT) * PLACEMENT_LAYOUT_HEIGHT,
 );
 export const PLACEMENT_STUDY_WIDTH_DOCKED = PLACEMENT_LAYOUT_WIDTH - PLACEMENT_SIDEBAR_WIDTH;
+
+export const STUDY_PLAYER_PAD_X = 16;
+export const PLACEMENT_PLAYER_BODY_WIDTH = PLACEMENT_STUDY_WIDTH_DOCKED - STUDY_PLAYER_PAD_X * 2;
+export const PLACEMENT_PLAYER_VIDEO_HEIGHT = Math.round((PLACEMENT_PLAYER_BODY_WIDTH * 9) / 16);
+export const PLACEMENT_PLAYER_TOTAL_HEIGHT = PLACEMENT_PLAYER_VIDEO_HEIGHT;
 
 export const PLACEMENT_COMPOSITION_SCALE = Math.min(
   PLACEMENT_SUBJECT_BOX_WIDTH / PLACEMENT_LAYOUT_WIDTH,
@@ -43,15 +46,14 @@ export const PLACEMENT_TILE_MARGIN_TOP = PLACEMENT_TILE_MARGIN_Y;
 export type PlacementVariant = "docked" | "floating";
 
 /** Floating chat stack: panel sits over transcript only; launcher stays bottom-right. */
-export const PLACEMENT_FLOATING_PANEL_WIDTH = 292;
+export const PLACEMENT_FLOATING_PANEL_WIDTH = 400;
 export const PLACEMENT_FLOATING_LAUNCHER_SIZE = 50;
-export const PLACEMENT_FLOATING_LAUNCHER_GAP = 10;
-export const PLACEMENT_FLOATING_EDGE = 14;
-/** Overlap the player on the right; full answer card must fit below. */
-export const PLACEMENT_FLOATING_CHAT_TOP = studyPlayerBlockTopY();
-export const PLACEMENT_FLOATING_PANEL_BOTTOM =
-  PLACEMENT_FLOATING_EDGE + PLACEMENT_FLOATING_LAUNCHER_SIZE + PLACEMENT_FLOATING_LAUNCHER_GAP;
+/** Gap between floating panel bottom and launcher (also window bottom inset). */
+export const PLACEMENT_FLOATING_LAUNCHER_GAP = 16;
+export const PLACEMENT_FLOATING_EDGE = 16;
+/** Overlap the player on the right; panel + launcher stack below (sync with studyPlayerBlockTopY). */
+export const PLACEMENT_FLOATING_CHAT_TOP = 62 + 1 + 8;
 
 /** Keep Transcript + Copy left of the floating assistant panel (study padding included). */
 export const PLACEMENT_TRANSCRIPT_MAX_WIDTH_FLOATING =
-  PLACEMENT_LAYOUT_WIDTH - PLACEMENT_FLOATING_PANEL_WIDTH - PLACEMENT_FLOATING_EDGE - 32;
+  PLACEMENT_LAYOUT_WIDTH - PLACEMENT_FLOATING_PANEL_WIDTH - PLACEMENT_FLOATING_EDGE * 2 - 16;
