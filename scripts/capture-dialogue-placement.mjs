@@ -25,13 +25,21 @@ const shots = [
 const browser = await chromium.launch();
 
 for (const { variant, out } of shots) {
-  const page = await browser.newPage({
+  const context = await browser.newContext({
     viewport: { width: TILE_W, height: TILE_H },
     deviceScaleFactor: 1,
   });
+  const page = await context.newPage();
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Network.enable");
+  await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
   const url = `${base}/dev/dialogue-placement-export/${variant}`;
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForSelector("#export-root");
+  await page.waitForFunction(() => {
+    const img = document.querySelector('img[src*="placement-video-still"]');
+    return img instanceof HTMLImageElement && img.complete && img.naturalWidth >= 1900;
+  });
   await page.evaluate(() => {
     const exportRoot = document.getElementById("export-root");
     if (!exportRoot) return;
@@ -85,7 +93,7 @@ for (const { variant, out } of shots) {
     fs.renameSync(tmp, dest);
   }
   console.log(`Wrote ${out}${trimRight ? ` (padded ${trimRight}px gutter)` : ""}`);
-  await page.close();
+  await context.close();
 }
 
 await browser.close();
