@@ -10,8 +10,23 @@ import {
   loadOutlineMorph,
   type OutlineMorphComponent,
 } from "./outlineMorphLoader";
-import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
+import {
+  markSoftNav,
+  markPrimaryShow,
+  hrefToPrimaryTab,
+  isAlreadyShowingPrimary,
+  peekPendingPrimaryTab,
+} from "@/lib/instantNav";
 import { subscribeNavTouchClearHover } from "@/lib/navTouchHover";
+
+function scheduleWarm(cb: () => void) {
+  if (typeof window === "undefined") return;
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(cb, { timeout: 400 });
+  } else {
+    window.setTimeout(cb, 0);
+  }
+}
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -242,23 +257,14 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         if (performance.now() < ignoreHoverUntilRef.current) return;
         // Hover state first — keep the morph frame free of prefetch / dynamic import.
         if (canHover()) setIsHovered(true);
-        const schedule =
-          typeof window.requestIdleCallback === "function"
-            ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 400 })
-            : (cb: () => void) => window.setTimeout(cb, 0);
-        schedule(() => {
+        scheduleWarm(() => {
           warmPrimary(href);
           if (PRIMARY_NAV.has(href)) router.prefetch(href);
         });
       }}
       onMouseLeave={onLinkMouseLeave}
       onFocus={(e) => {
-        // Focus can afford a tick of warm work; still avoid blocking key nav.
-        const schedule =
-          typeof window.requestIdleCallback === "function"
-            ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 400 })
-            : (cb: () => void) => window.setTimeout(cb, 0);
-        schedule(() => {
+        scheduleWarm(() => {
           warmPrimary(href);
           if (PRIMARY_NAV.has(href)) router.prefetch(href);
         });
@@ -283,8 +289,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       // archive isn't stuck waiting on Sanity; cmd/middle-click stay native.
       onPointerDown={(e) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
-        warmPrimary(href);
-        if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        // Defer warm off the press frame — morph + flushSync paint first.
+        scheduleWarm(() => {
+          warmPrimary(href);
+          if (PRIMARY_NAV.has(href)) router.prefetch(href);
+        });
 
         if (e.pointerType === "touch" || e.pointerType === "pen") {
           setIsHovered(false);
@@ -323,6 +332,8 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
           // Same-route tap: keep morph feedback, skip a useless push that
           // only races the work shell wake and can kill the animation.
           if (isAlreadyShowingPrimary(href, pathname)) return;
+          const tab = hrefToPrimaryTab(href);
+          if (tab && peekPendingPrimaryTab() === tab) return;
 
           markNavCommit();
           commitPrimary(href);
@@ -349,6 +360,13 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         }
         if (isAlreadyShowingPrimary(href, pathname)) {
           // Already here — don't soft-nav / re-push.
+          e.preventDefault();
+          return;
+        }
+        // Mid-transition re-click of the same pending tab — shell already
+        // flipped; skip a second router.push that restarts enter animations.
+        const tab = hrefToPrimaryTab(href);
+        if (tab && peekPendingPrimaryTab() === tab) {
           e.preventDefault();
           return;
         }

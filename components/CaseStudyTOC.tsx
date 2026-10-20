@@ -126,11 +126,18 @@ export default function CaseStudyTOC({
   // `{ scroll: false }` is the documented escape hatch that tells Next to
   // leave scroll handling to the page entirely, so PersistentWorkShell's own
   // instant restore is the only thing touching scroll position.
+  const backPendingRef = useRef(false);
   const handleBack = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
+    // Rapid re-clicks mid-transition restart Work enter; coalesce to one push.
+    if (backPendingRef.current) return;
+    backPendingRef.current = true;
     markInstantBack();
     router.push(backHref, { scroll: false });
+    window.setTimeout(() => {
+      backPendingRef.current = false;
+    }, 600);
   }, [router, backHref]);
 
   const backArrow = (

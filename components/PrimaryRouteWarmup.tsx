@@ -8,25 +8,44 @@
  * Archive cold loads skip About warmup — AboutPageContent's CD embed loads
  * Geist, and Next can prefetch that dynamic chunk when the parent module is
  * imported.
+ *
+ * From Work, also idle-prefetch case-study routes + LCP heroes so the first
+ * project-card click is usually a soft-nav into a warm cache.
  */
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
+import { clearPendingCaseStudy, warmAllCaseStudyNav } from "@/lib/caseStudyNav";
+import { JOOLA_MUX_PLAYBACK_ID } from "@/lib/caseStudies/joola";
 
 const CD_POSTERS = [
   "/images/cd-player-poster-light.webp",
   "/images/cd-player-poster-dark.webp",
 ];
 
+/** Above-fold Mux card posters — idle decode so first hover isn't a decode stall. */
+const MUX_POSTER_WARM = [
+  `https://image.mux.com/${JOOLA_MUX_PLAYBACK_ID}/thumbnail.webp?time=0&width=640`,
+  "https://image.mux.com/gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU/thumbnail.webp?time=0&width=640",
+];
+
 export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Drop in-flight case-study pending once the URL catches up (or user left).
+  useEffect(() => {
+    clearPendingCaseStudy();
+  }, [pathname]);
 
   useEffect(() => {
     let idleId = 0;
     let timeoutId = 0;
     let heavyIdleId = 0;
     let heavyTimeoutId = 0;
+    let caseIdleId = 0;
+    let caseTimeoutId = 0;
 
     const warmAbout = () => {
       void import("@/components/AboutPageContent");
@@ -42,7 +61,7 @@ export default function PrimaryRouteWarmup() {
     };
 
     const warmAssets = () => {
-      for (const src of CD_POSTERS) {
+      for (const src of [...CD_POSTERS, ...MUX_POSTER_WARM]) {
         const img = new window.Image();
         img.decoding = "async";
         img.src = src;
@@ -55,6 +74,11 @@ export default function PrimaryRouteWarmup() {
       void import("@/components/CDPlayer");
     };
 
+    const warmCaseStudies = () => {
+      if (pathname !== "/") return;
+      warmAllCaseStudyNav(router);
+    };
+
     const schedule = () => {
       if (!allowIdlePrefetch()) return;
       if (pathname === "/") {
@@ -62,14 +86,22 @@ export default function PrimaryRouteWarmup() {
         warmArchive();
       } else if (pathname === "/about") {
         warmArchive();
+        router.prefetch("/");
+      } else if (pathname === "/archive") {
+        router.prefetch("/");
+        router.prefetch("/about");
       }
-      // `/archive`: do not warm About (avoids Geist/CD on Archive).
+      // `/archive`: do not warm About chunk (avoids Geist/CD on Archive).
       if (typeof window.requestIdleCallback === "function") {
         idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
         heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
+        caseIdleId = window.requestIdleCallback(warmCaseStudies, {
+          timeout: 3500,
+        });
       } else {
         timeoutId = window.setTimeout(warmAssets, 400);
         heavyTimeoutId = window.setTimeout(warmHeavy, 1200);
+        caseTimeoutId = window.setTimeout(warmCaseStudies, 600);
       }
     };
 
@@ -83,10 +115,14 @@ export default function PrimaryRouteWarmup() {
       if (heavyIdleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(heavyIdleId);
       }
+      if (caseIdleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(caseIdleId);
+      }
       if (timeoutId) window.clearTimeout(timeoutId);
       if (heavyTimeoutId) window.clearTimeout(heavyTimeoutId);
+      if (caseTimeoutId) window.clearTimeout(caseTimeoutId);
     };
-  }, [pathname]);
+  }, [pathname, router]);
 
   return null;
 }

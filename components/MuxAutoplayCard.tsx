@@ -8,7 +8,12 @@ import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMe
 import { warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
-import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import {
+  commitCaseStudyNav,
+  isCaseStudyHref,
+  peekPendingCaseStudy,
+  warmCaseStudyNav,
+} from "@/lib/caseStudyNav";
 import { cardFocusPlay } from "@/lib/cardFocusVideo";
 
 /** Later cards start a short beat after the two on screen during the intro. */
@@ -104,8 +109,22 @@ export default function MuxAutoplayCard({
   const warmCaseStudy = () => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitCaseStudy = () => {
-    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitCaseStudy = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!href || !isCaseStudyHref(href)) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      commitCaseStudyNav(href, router);
+      return;
+    }
+    // Mid-transition re-click of the same card — skip a second push that
+    // restarts route enter while the first soft-nav is still landing.
+    const path = href.split("?")[0]?.split("#")[0] ?? href;
+    if (peekPendingCaseStudy() === path) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    commitCaseStudyNav(href, router);
+    router.push(href);
   };
 
   useEffect(() => {

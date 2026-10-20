@@ -10,14 +10,17 @@ import {
 } from "@/lib/archiveGalleryCache";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
+import { afterIntroIdle } from "@/lib/introReady";
+import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
 
 /**
  * Archive keep-alive — same hide contract as PersistentWorkShell (`display: none`).
  *
  * The heavy gallery tree must not re-render on Work/About clicks. `visible`
- * is the only prop that matters; a memoized inner skips About ↔ Work. The
- * gallery itself is not mounted until Archive is actually shown.
+ * is the only prop that matters; a memoized inner skips About ↔ Work.
+ * Idle-premounts (hidden) after intro so the first Archive click is a
+ * display flip — gallery data + BentoGallery pack happen off the click path.
  */
 export default function PersistentArchiveShell({
   items: serverItems = [],
@@ -35,6 +38,23 @@ export default function PersistentArchiveShell({
   );
   const [hasShown, setHasShown] = useState(visible);
   if (visible && !hasShown) setHasShown(true);
+
+  // Premount from Work/About after intro so cold Archive clicks aren't packing
+  // the gallery on the navigation frame.
+  useEffect(() => {
+    if (hasShown) return;
+    if (pathname === "/archive") return;
+    return afterIntroIdle(() => {
+      if (!allowIdlePrefetch()) return;
+      void Promise.all([
+        import("@/components/BentoGallery"),
+        warmArchiveGallery(),
+      ]).then(([, data]) => {
+        if (data.length) setItems(data);
+        setHasShown(true);
+      });
+    }, pathname === "/" ? 2500 : 900);
+  }, [hasShown, pathname]);
 
   useEffect(() => {
     if (!hasShown) return;
