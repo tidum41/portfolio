@@ -35,7 +35,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
             flexShrink: 0,
             height: "100%",
             borderLeft: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
-            background: DIALOGUE_GRAPHICS_COLORS.studyChrome,
+            background: DIALOGUE_GRAPHICS_COLORS.surface,
           }}
         >
           <DialogueResearchAssistantPanel compact />
@@ -76,13 +76,13 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
             borderRadius: 14,
             border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
             background: DIALOGUE_GRAPHICS_COLORS.surface,
-            boxShadow: "none",
+            boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
             overflow: "hidden",
           }}
         >
           <DialogueResearchAssistantPanel compact />
         </div>
-        <DialogueChatLauncher size={48} />
+        <DialogueChatLauncher size={50} />
       </div>
     </div>
   );

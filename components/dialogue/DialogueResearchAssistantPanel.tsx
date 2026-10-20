@@ -1,5 +1,6 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { EvidenceAnswerCard } from "@/components/dialogue/graphics/EvidenceAnswerCard";
+import { ChevronDownIcon, ShareExportIcon } from "@/components/dialogue/graphics/DialogueIcons";
 
 export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }) {
   return (
@@ -13,11 +14,11 @@ export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }
         color: DIALOGUE_GRAPHICS_COLORS.ink,
       }}
     >
-      <header style={{ padding: compact ? "12px 12px 10px" : "14px 14px 10px", flexShrink: 0 }}>
-        <div style={{ fontSize: compact ? 13 : 14, fontWeight: 600, letterSpacing: "-0.02em" }}>
+      <header style={{ padding: compact ? "11px 12px 8px" : "14px 14px 10px", flexShrink: 0 }}>
+        <div style={{ fontSize: compact ? 12 : 14, fontWeight: 500, letterSpacing: "-0.02em" }}>
           Research assistant
         </div>
-        <div style={{ marginTop: 3, fontSize: compact ? 11 : 12, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
+        <div style={{ marginTop: 3, fontSize: compact ? 10 : 12, color: DIALOGUE_GRAPHICS_COLORS.inkSoft }}>
           Checkout usability, 24 interviews
         </div>
       </header>
@@ -29,28 +30,42 @@ export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }
           padding: compact ? "0 10px 10px" : "0 12px 12px",
           display: "flex",
           flexDirection: "column",
-          gap: 10,
+          gap: compact ? 8 : 10,
+          overflowY: compact ? "auto" : "hidden",
+          overflowX: "hidden",
         }}
       >
-        <div
-          style={{
-            background: DIALOGUE_GRAPHICS_COLORS.bubble,
-            borderRadius: 12,
-            padding: compact ? "10px 12px" : "11px 13px",
-            fontSize: compact ? 11 : 12,
-            lineHeight: 1.45,
-            color: DIALOGUE_GRAPHICS_COLORS.ink,
-            flexShrink: 0,
-          }}
-        >
-          Where did people drop off in checkout?
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div
+            style={{
+              background: DIALOGUE_GRAPHICS_COLORS.bubble,
+              borderRadius: 12,
+              padding: compact ? "9px 32px 9px 11px" : "11px 36px 11px 13px",
+              fontSize: compact ? 11 : 12,
+              lineHeight: 1.45,
+              color: DIALOGUE_GRAPHICS_COLORS.ink,
+            }}
+          >
+            Where did people drop off in checkout?
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              right: 10,
+              top: 10,
+              opacity: 0.85,
+            }}
+            title="Copy as card"
+          >
+            <ShareExportIcon size={compact ? 12 : 13} />
+          </div>
         </div>
 
         <div
           style={{
             border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-            borderRadius: 12,
-            padding: "10px 12px",
+            borderRadius: 10,
+            padding: compact ? "7px 9px" : "8px 10px",
             fontSize: compact ? 10 : 11,
             color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
             display: "flex",
@@ -58,13 +73,14 @@ export function DialogueResearchAssistantPanel({ compact }: { compact: boolean }
             alignItems: "center",
             gap: 8,
             flexShrink: 0,
+            lineHeight: 1.35,
           }}
         >
           <span>Searched 24 interviews, found 9 relevant moments</span>
-          <span style={{ color: DIALOGUE_GRAPHICS_COLORS.inkSoft, fontSize: 9 }}>▼</span>
+          <ChevronDownIcon />
         </div>
 
-        <div style={{ flexShrink: 0 }}>
+        <div style={{ flexShrink: 0, minHeight: 0 }}>
           <EvidenceAnswerCard compact={compact} />
         </div>
       </div>

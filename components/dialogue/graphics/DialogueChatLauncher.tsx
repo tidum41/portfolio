@@ -1,8 +1,8 @@
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 
-/** Magenta launcher with sparkle chat mark (matches case-study graphics, not a bag icon). */
+/** Magenta launcher with Dialogue sparkle mark (matches approved placement graphics). */
 export function DialogueChatLauncher({ size = 52 }: { size?: number }) {
-  const icon = Math.round(size * 0.46);
+  const sparkle = Math.round(size * 0.34);
   return (
     <div
       aria-hidden
@@ -15,30 +15,18 @@ export function DialogueChatLauncher({ size = 52 }: { size?: number }) {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
+        boxShadow: "0 6px 18px rgba(217, 70, 143, 0.28)",
       }}
     >
-      <svg width={icon} height={icon} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <svg width={sparkle} height={sparkle} viewBox="0 0 24 24" fill="none" aria-hidden>
         <path
-          d="M5.5 10.5c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5v.5H5.5v-.5Z"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M4.5 11.2h15v5.8a2.2 2.2 0 0 1-2.2 2.2H9.4l-3.2 2.4v-2.4a2.2 2.2 0 0 1-1.7-2.1v-5.9Z"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M8.3 14.4h.01M11.1 14.4h.01M13.9 14.4h.01"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M17.6 4.4 18.4 6l1.8.3-1.3 1.2.4 1.8-1.6-.9-1.6.9.4-1.8-1.3-1.2 1.8-.3.8-1.6Z"
+          d="M12 2.5 14.2 9.5 21 10.8 15.5 15.2 16.8 22 12 18.4 7.2 22 8.5 15.2 3 10.8 9.8 9.5 12 2.5Z"
           fill="white"
+        />
+        <path
+          d="M17.8 4.2c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1Z"
+          fill="white"
+          opacity={0.95}
         />
       </svg>
     </div>
