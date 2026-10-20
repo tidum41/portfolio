@@ -1,44 +1,47 @@
 import {
-  PLACEMENT_PLAYER_CONTROL_HEIGHT,
-  PLACEMENT_PLAYER_TOTAL_HEIGHT,
-  PLACEMENT_PLAYER_VIDEO_HEIGHT,
+  PLACEMENT_LAYOUT_WIDTH,
+  PLACEMENT_SIDEBAR_WIDTH,
   STUDY_PLAYER_PAD_X,
-} from "@/lib/caseStudies/dialogueStudyPlacementLayout";
-import { PLACEMENT_STUDY_WIDTH_DOCKED } from "@/lib/caseStudies/dialoguePlacementExport";
+} from "@/lib/caseStudies/dialoguePlacementExport";
 import {
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
 } from "@/lib/caseStudies/dialoguePlacementStill";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
-import { DialoguePlayerControlBar } from "@/components/dialogue/DialoguePlayerControlBar";
+import { PLACEMENT_RADIUS_MD } from "@/lib/caseStudies/dialoguePlacementTypography";
 
-/** Match docked study column so cover crop is identical in floating + docked tiles. */
-const PLACEMENT_PLAYER_BODY_WIDTH = PLACEMENT_STUDY_WIDTH_DOCKED - STUDY_PLAYER_PAD_X * 2;
+const PLAY_BUTTON_SIZE = 56;
+const PLAY_GLYPH_SIZE = 18;
 
-/** Blurred interview still (raster) + live HTML control bar (approved section-5 pattern). */
+function placementPlayerDimensions() {
+  const bodyWidth = PLACEMENT_LAYOUT_WIDTH - PLACEMENT_SIDEBAR_WIDTH - STUDY_PLAYER_PAD_X * 2;
+  const videoHeight = Math.round((bodyWidth * 9) / 16);
+  return { bodyWidth, videoHeight };
+}
+
+/** Blurred interview still + static play affordance (no control bar). */
 export function DialogueInterviewPlayer() {
+  const { bodyWidth, videoHeight } = placementPlayerDimensions();
   return (
     <div
+      data-placement-crop="player"
       style={{
         fontFamily: DIALOGUE_GRAPHICS_FONT,
-        borderRadius: 10,
+        borderRadius: PLACEMENT_RADIUS_MD,
         overflow: "hidden",
-        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
         background: "#161412",
         position: "relative",
-        width: PLACEMENT_PLAYER_BODY_WIDTH,
+        width: bodyWidth,
         maxWidth: "100%",
-        height: PLACEMENT_PLAYER_TOTAL_HEIGHT,
-        display: "flex",
-        flexDirection: "column",
+        height: videoHeight,
       }}
     >
       <div
         style={{
-          height: PLACEMENT_PLAYER_VIDEO_HEIGHT,
+          height: videoHeight,
           position: "relative",
           overflow: "hidden",
-          flexShrink: 0,
           background: DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
         }}
       >
@@ -59,8 +62,42 @@ export function DialogueInterviewPlayer() {
             display: "block",
           }}
         />
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              width: PLAY_BUTTON_SIZE,
+              height: PLAY_BUTTON_SIZE,
+              borderRadius: "50%",
+              background: "rgba(255, 255, 255, 0.9)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.28)",
+            }}
+          >
+            <svg
+              width={PLAY_GLYPH_SIZE}
+              height={PLAY_GLYPH_SIZE}
+              viewBox="0 0 18 18"
+              fill="none"
+              aria-hidden
+              style={{ marginLeft: 2 }}
+            >
+              <path d="M6.2 4.2v9.6L14.2 9 6.2 4.2Z" fill="#1A1816" />
+            </svg>
+          </div>
+        </div>
       </div>
-      <DialoguePlayerControlBar height={PLACEMENT_PLAYER_CONTROL_HEIGHT} />
     </div>
   );
 }

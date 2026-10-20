@@ -41,5 +41,8 @@ next-env.d.ts
 # Unblurred Dialogue interview frames (build-time only; never commit)
 /private/dialogue-placement-raw/
 
+# ABC Areal (EULA — copy from agent store for local capture only)
+/fonts/
+
 # Copied from node_modules/hls.js on next config load. See next.config.mjs.
 /public/vendor/

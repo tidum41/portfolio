@@ -1,5 +1,6 @@
 import { DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS } from "@/lib/caseStudies/dialoguePlacementAssets";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_RADIUS_SM, PLACEMENT_SPACE_1, placementType } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 const CLIPS = [
   { name: "Jordan M.", time: "14:03", thumb: DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS[0] },
@@ -7,16 +8,16 @@ const CLIPS = [
   { name: "Hanna L.", time: "16:02", thumb: DIALOGUE_PLACEMENT_CLIP_THUMB_SRCS[2] },
 ];
 
+const THUMB_ASPECT = 16 / 10;
+
 export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boolean; max?: number }) {
   const shown = CLIPS.slice(0, max);
-  const thumbW = compact ? 72 : 80;
-  const thumbH = compact ? 44 : 48;
 
   return (
     <div
       style={{
         display: "flex",
-        gap: compact ? 6 : 8,
+        gap: PLACEMENT_SPACE_1,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
@@ -25,11 +26,10 @@ export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boole
           <div
             style={{
               width: "100%",
-              maxWidth: thumbW,
-              height: thumbH,
-              borderRadius: 6,
+              aspectRatio: `${THUMB_ASPECT}`,
+              borderRadius: PLACEMENT_RADIUS_SM - 2,
               overflow: "hidden",
-              border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.borderSubtle}`,
+              border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
               background: DIALOGUE_GRAPHICS_COLORS.surfaceMuted,
             }}
           >
@@ -37,23 +37,28 @@ export function ClipThumbnailRow({ compact = false, max = 3 }: { compact?: boole
             <img
               src={clip.thumb}
               alt=""
-              width={thumbW}
-              height={thumbH}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           </div>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: compact ? 9 : 10,
-              color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
-              lineHeight: 1.3,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {clip.name}, {clip.time}
+          <div style={{ marginTop: 4 }}>
+            <div
+              style={{
+                ...placementType.labelRegular,
+                color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {clip.name}
+            </div>
+            <div
+              style={{
+                ...placementType.meta,
+                color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
+                ...placementType.tabular,
+              }}
+            >
+              {clip.time}
+            </div>
           </div>
         </div>
       ))}

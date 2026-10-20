@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_GRID_PAD_X, PLACEMENT_SPACE_1, placementType } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 /** Plain derived footer with full-bleed hairline (matches section-imperfect cards). */
 export function DerivedEvidenceLabel({ children }: { children: ReactNode }) {
@@ -8,12 +9,10 @@ export function DerivedEvidenceLabel({ children }: { children: ReactNode }) {
       style={{
         borderTop: `1px solid ${DIALOGUE_GRAPHICS_COLORS.footerHairline}`,
         background: DIALOGUE_GRAPHICS_COLORS.surface,
-        padding: "10px 14px",
+        padding: `${PLACEMENT_SPACE_1 + 2}px ${PLACEMENT_GRID_PAD_X - 4}px`,
         fontFamily: DIALOGUE_GRAPHICS_FONT,
-        fontSize: 11,
-        lineHeight: 1.35,
+        ...placementType.meta,
         color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
-        letterSpacing: "0.01em",
       }}
     >
       {children}

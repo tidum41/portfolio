@@ -1,7 +1,7 @@
 /** Shared tokens for Dialogue case-study UI graphics (matches section-imperfect / section-share). */
 
 export const DIALOGUE_GRAPHICS_FONT =
-  'var(--font-sans), "Helvetica Neue", Helvetica, Arial, sans-serif';
+  '"ABC Areal Placement", var(--font-dialogue-areal, var(--font-sans)), "ABC Areal", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
 export const DIALOGUE_GRAPHICS_COLORS = {
   ink: "#1A1816",

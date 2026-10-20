@@ -1,4 +1,6 @@
 import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
+import { PLACEMENT_COPY_FUNNEL_CAPTION } from "@/lib/caseStudies/dialoguePlacementCopy";
+import { PLACEMENT_SPACE_1, placementType } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 const STEPS = [
   { label: "Cart", pct: 100, tone: "neutral" as const },
@@ -8,31 +10,37 @@ const STEPS = [
   { label: "Confirm", pct: 36, tone: "muted" as const },
 ];
 
-export function CheckoutFunnelChart({ compact = false }: { compact?: boolean }) {
-  const labelW = compact ? 54 : 62;
-  const barH = compact ? 7 : 8;
-  const fontSize = compact ? 10 : 11;
+export function CheckoutFunnelChart({
+  compact = false,
+  rowGap: rowGapOverride,
+}: {
+  compact?: boolean;
+  rowGap?: number;
+}) {
+  const labelW = compact ? 56 : 62;
+  const barH = 8;
+  const rowGap = rowGapOverride ?? (compact ? 6 : PLACEMENT_SPACE_1 - 1);
 
   return (
-    <div style={{ fontFamily: DIALOGUE_GRAPHICS_FONT }}>
+    <div data-placement-crop="funnel" style={{ fontFamily: DIALOGUE_GRAPHICS_FONT }}>
       <div
         style={{
-          fontSize: compact ? 10 : 11,
+          ...placementType.labelRegular,
           color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
-          marginBottom: 8,
-          lineHeight: 1.35,
+          marginBottom: PLACEMENT_SPACE_1,
+          whiteSpace: "nowrap",
         }}
       >
-        Checkout funnel, % of participants still in study
+        {PLACEMENT_COPY_FUNNEL_CAPTION}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: compact ? 5 : 7 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: rowGap }}>
         {STEPS.map((step) => (
-          <div key={step.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div key={step.label} style={{ display: "flex", alignItems: "center", gap: PLACEMENT_SPACE_1 }}>
             <span
               style={{
                 width: labelW,
                 flexShrink: 0,
-                fontSize,
+                ...placementType.labelRegular,
                 color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
               }}
             >
@@ -63,10 +71,11 @@ export function CheckoutFunnelChart({ compact = false }: { compact?: boolean }) 
             </div>
             <span
               style={{
-                width: 30,
+                width: 34,
                 flexShrink: 0,
                 textAlign: "right",
-                fontSize,
+                ...placementType.labelRegular,
+                ...placementType.tabular,
                 color: DIALOGUE_GRAPHICS_COLORS.inkMuted,
               }}
             >
@@ -77,10 +86,10 @@ export function CheckoutFunnelChart({ compact = false }: { compact?: boolean }) 
       </div>
       <div
         style={{
-          marginTop: 8,
-          fontSize: compact ? 10 : 11,
+          marginTop: PLACEMENT_SPACE_1,
+          ...placementType.labelRegular,
           color: DIALOGUE_GRAPHICS_COLORS.inkSoft,
-          lineHeight: 1.35,
+          whiteSpace: "nowrap",
         }}
       >
         Largest drop: Shipping address (-38%)

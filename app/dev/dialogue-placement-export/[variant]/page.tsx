@@ -10,7 +10,11 @@ import {
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
 import { DialoguePlacementScene } from "@/components/dialogue/DialoguePlacementScene";
+import { DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { notFound } from "next/navigation";
+
+/** Always render fresh so placement layout edits show up in capture without stale SSG. */
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return [{ variant: "docked" }, { variant: "floating" }];
@@ -47,6 +51,7 @@ export default async function DialoguePlacementExportPage({
         margin: 0,
         padding: 0,
         zIndex: 2147483646,
+        fontFamily: DIALOGUE_GRAPHICS_FONT,
       }}
     >
       <div

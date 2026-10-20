@@ -1,9 +1,5 @@
-import "@/app/globals.css";
+import "./placement-areal.css";
 
-export default function DialoguePlacementExportLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DialoguePlacementExportLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

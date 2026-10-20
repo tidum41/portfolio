@@ -3,13 +3,14 @@ import {
   PLACEMENT_LAYOUT_WIDTH,
   PLACEMENT_SIDEBAR_WIDTH,
   PLACEMENT_STUDY_WIDTH_DOCKED,
-  PLACEMENT_FLOATING_CHAT_TOP,
   PLACEMENT_FLOATING_EDGE,
   PLACEMENT_FLOATING_LAUNCHER_SIZE,
-  PLACEMENT_FLOATING_PANEL_BOTTOM,
+  PLACEMENT_FLOATING_PANEL_MAX_HEIGHT,
+  PLACEMENT_FLOATING_PANEL_TOP,
   PLACEMENT_FLOATING_PANEL_WIDTH,
   type PlacementVariant,
 } from "@/lib/caseStudies/dialoguePlacementExport";
+import "@/app/dev/dialogue-placement-export/placement-areal.css";
 import { DIALOGUE_GRAPHICS_COLORS } from "@/lib/caseStudies/dialogueGraphicsTheme";
 import { DialogueChatLauncher } from "@/components/dialogue/graphics/DialogueChatLauncher";
 import { DialogueResearchAssistantPanel } from "@/components/dialogue/DialogueResearchAssistantPanel";
@@ -32,7 +33,7 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         }}
       >
         <div style={{ width: PLACEMENT_STUDY_WIDTH_DOCKED, flexShrink: 0, height: "100%" }}>
-          <DialogueStudyHostPage reserveRightForFloatingChat={false} />
+          <DialogueStudyHostPage />
         </div>
         <div
           style={{
@@ -61,40 +62,33 @@ function PlacementFrame({ variant }: { variant: PlacementVariant }) {
         background: DIALOGUE_GRAPHICS_COLORS.surface,
       }}
     >
-      <DialogueStudyHostPage reserveRightForFloatingChat />
+      <DialogueStudyHostPage />
       <div
         style={{
           position: "absolute",
           right: PLACEMENT_FLOATING_EDGE,
-          top: PLACEMENT_FLOATING_CHAT_TOP,
-          bottom: PLACEMENT_FLOATING_PANEL_BOTTOM,
+          top: PLACEMENT_FLOATING_PANEL_TOP,
           width: PLACEMENT_FLOATING_PANEL_WIDTH,
-          pointerEvents: "none",
+          maxHeight: PLACEMENT_FLOATING_PANEL_MAX_HEIGHT,
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-end",
+          borderRadius: 14,
+          border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
+          background: DIALOGUE_GRAPHICS_COLORS.surface,
+          boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
+          overflow: "hidden",
+          zIndex: 3,
+          pointerEvents: "auto",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxHeight: "100%",
-            borderRadius: 14,
-            border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-            background: DIALOGUE_GRAPHICS_COLORS.surface,
-            boxShadow: "0 10px 28px rgba(26, 24, 22, 0.08)",
-            overflow: "visible",
-            pointerEvents: "auto",
-          }}
-        >
-          <DialogueResearchAssistantPanel compact floating />
-        </div>
+        <DialogueResearchAssistantPanel compact floating />
       </div>
       <div
         style={{
           position: "absolute",
           right: PLACEMENT_FLOATING_EDGE,
           bottom: PLACEMENT_FLOATING_EDGE,
+          zIndex: 4,
           pointerEvents: "auto",
         }}
       >
