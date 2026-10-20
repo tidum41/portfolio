@@ -71,13 +71,17 @@ export default function DialogueCanvasV2() {
                 {asset.id}
               </button>
               <div className="dcv2-artifacts__thumb">
-                <Image
-                  src={asset.src}
-                  alt=""
-                  width={120}
-                  height={75}
-                  style={{ objectFit: "cover", objectPosition: "center top" }}
-                />
+                {asset.pngSrc ? (
+                  <Image
+                    src={asset.pngSrc}
+                    alt=""
+                    width={120}
+                    height={75}
+                    style={{ objectFit: "cover", objectPosition: "center top" }}
+                  />
+                ) : (
+                  <span className="dcv2-artifacts__pending">Visual pending</span>
+                )}
               </div>
               <div className="dcv2-artifacts__links">
                 <p>
