@@ -8,6 +8,7 @@ import {
 } from "@/components/dialogue/DialogueCaseStudyContent";
 import { DIALOGUE_CANVAS_ASSETS, DIALOGUE_CANVAS_BY_ID } from "@/lib/caseStudies/dialogueCanvasCatalog";
 import RasterAnnotation from "./RasterAnnotation";
+import LiveExportIframe from "./LiveExportIframe";
 
 const LIVE_ASSETS = DIALOGUE_CANVAS_ASSETS.filter((a) => a.staticExportSrc);
 
@@ -52,20 +53,35 @@ export default function DialogueCanvasV2() {
               >
                 {asset.id}
               </button>
-              <div
-                className="dcv2-live__frame"
-                style={
-                  asset.rasterWidth && asset.rasterHeight
-                    ? { aspectRatio: `${asset.rasterWidth} / ${asset.rasterHeight}` }
-                    : undefined
-                }
-              >
-                <iframe
-                  src={asset.staticExportSrc!}
-                  title={`${asset.id} static export`}
-                  className="dcv2-live__iframe"
-                  loading="lazy"
-                />
+              <div className="dcv2-live__parity">
+                {asset.pngSrc && asset.rasterWidth && asset.rasterHeight ? (
+                  <div className="dcv2-live__parity-png">
+                    <Image
+                      src={asset.pngSrc}
+                      alt={`${asset.id} PNG reference`}
+                      width={asset.rasterWidth}
+                      height={asset.rasterHeight}
+                      style={{ width: "100%", height: "auto", display: "block" }}
+                    />
+                  </div>
+                ) : null}
+              <div className="dcv2-live__frame">
+                {asset.exportFrameWidth && asset.exportFrameHeight ? (
+                  <LiveExportIframe
+                    src={asset.staticExportSrc!}
+                    title={`${asset.id} static export`}
+                    frameWidth={asset.exportFrameWidth}
+                    frameHeight={asset.exportFrameHeight}
+                  />
+                ) : (
+                  <iframe
+                    src={asset.staticExportSrc!}
+                    title={`${asset.id} static export`}
+                    className="dcv2-live__iframe"
+                    loading="lazy"
+                  />
+                )}
+              </div>
               </div>
               <p className="dcv2-live__path">
                 <code>{asset.staticExportSrc}</code>

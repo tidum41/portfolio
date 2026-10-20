@@ -1,4 +1,5 @@
 import { dialogueRasterSizeForPublicPath } from "@/lib/caseStudies/dialogue";
+import exportFrames from "@/lib/caseStudies/dialogueExportFrameManifest.json";
 
 export type CanvasAssetStatus = "final" | "candidate";
 
@@ -12,7 +13,16 @@ export type DialogueCanvasAsset = {
   staticExportSrc: string | null;
   rasterWidth: number | null;
   rasterHeight: number | null;
+  exportFrameWidth: number | null;
+  exportFrameHeight: number | null;
 };
+
+function exportFrameDims(exportRoute: string): { exportFrameWidth: number | null; exportFrameHeight: number | null } {
+  const route = exportRoute as keyof typeof exportFrames.routes;
+  const frame = exportFrames.routes[route];
+  if (!frame) return { exportFrameWidth: null, exportFrameHeight: null };
+  return { exportFrameWidth: frame.width, exportFrameHeight: frame.height };
+}
 
 function staticExportSrcForRoute(exportRoute: string): string | null {
   if (exportRoute === "section-imperfect" || exportRoute === "section-share") return null;
@@ -26,7 +36,10 @@ function rasterDims(pngSrc: string | null): { rasterWidth: number | null; raster
   return { rasterWidth: width, rasterHeight: height };
 }
 
-const RAW_ASSETS: Omit<DialogueCanvasAsset, "staticExportSrc" | "rasterWidth" | "rasterHeight">[] = [
+const RAW_ASSETS: Omit<
+  DialogueCanvasAsset,
+  "staticExportSrc" | "rasterWidth" | "rasterHeight" | "exportFrameWidth" | "exportFrameHeight"
+>[] = [
   {
     id: "D-01",
     sectionId: "hero",
@@ -151,10 +164,12 @@ const RAW_ASSETS: Omit<DialogueCanvasAsset, "staticExportSrc" | "rasterWidth" | 
 
 export const DIALOGUE_CANVAS_ASSETS: DialogueCanvasAsset[] = RAW_ASSETS.map((asset) => {
   const dims = rasterDims(asset.pngSrc);
+  const frame = exportFrameDims(asset.exportRoute);
   return {
     ...asset,
     staticExportSrc: staticExportSrcForRoute(asset.exportRoute),
     ...dims,
+    ...frame,
   };
 });
 
