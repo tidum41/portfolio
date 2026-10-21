@@ -230,7 +230,9 @@ export default function AboutPageContent({
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(({ slug, company, role, dates, description, logo }) => {
+            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map((exp) => {
+              const { slug, company, role, dates, description, logo } = exp;
+              const href = "href" in exp ? exp.href : undefined;
               const crop = logoDk[slug as keyof typeof logoDk];
               return (
                 <StaggerItem key={company} style={{
@@ -258,7 +260,11 @@ export default function AboutPageContent({
                       />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
+                      <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
+                        {href ? (
+                          <a href={href} target="_blank" rel="noopener noreferrer" className="nav-link about-link" style={{ color: "inherit" }}>{company}</a>
+                        ) : company}
+                      </p>
                       <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
                       <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
                     </div>
@@ -283,17 +289,13 @@ export default function AboutPageContent({
                 minWidth: 0,
                 flex: 1,
               };
-              const linkStyle: CSSProperties = {
-                ...nameStyle,
-                textDecoration: "underline",
-                textUnderlineOffset: "3px",
-                textDecorationThickness: "1px",
-              };
+              const linkStyle: CSSProperties = { ...nameStyle };
               return (
               <StaggerItem key={name} style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "baseline",
                 justifyContent: "space-between",
+                gap: 16,
                 padding: "16px 0",
               }}>
                 {href ? (
@@ -301,7 +303,7 @@ export default function AboutPageContent({
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="nav-link"
+                    className="nav-link about-link"
                     style={linkStyle}
                   >
                     {name}
@@ -309,7 +311,7 @@ export default function AboutPageContent({
                 ) : (
                   <p style={nameStyle}>{name}</p>
                 )}
-                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
+                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, textAlign: "right" }}>{role}</p>
               </StaggerItem>
               );
             })}
