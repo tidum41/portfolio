@@ -8,14 +8,16 @@ const OPTIONS = [
   {
     id: "sidebar" as const,
     title: "Docked sidebar",
-    priorityLine: "The priority is persistence over focus.",
+    costLine:
+      "Always on screen, but it eats study canvas and stays in the way when you are watching a clip.",
     scenario: "placement-docked" as const,
     assetId: "D-13",
   },
   {
     id: "bubble" as const,
     title: "Floating bubble",
-    priorityLine: "The priority is focus over always-on chrome.",
+    costLine:
+      "Keeps the study page clear, but the chat is one tap away instead of always visible.",
     scenario: "placement-bubble" as const,
     assetId: "D-14",
   },
@@ -45,7 +47,7 @@ export default function DialoguePlacementCompare() {
               onClick={() => setActive(opt.id)}
             >
               <span className="dialogue-placement-compare__option-title">{opt.title}</span>
-              <span className="dialogue-placement-compare__option-line">{opt.priorityLine}</span>
+              <span className="dialogue-placement-compare__option-line">{opt.costLine}</span>
             </button>
           ))}
         </div>
@@ -68,11 +70,11 @@ export default function DialoguePlacementCompare() {
         </div>
       </div>
       <p className="dialogue-placement-compare__decision">
-        Decision: Instead of a docked sidebar, I kept the floating chat.
+        Floating chat wins when the study page is the focus. The launcher stays in the corner when
+        you minimize.
       </p>
       <p className="dialogue-placement-compare__tradeoff">
-        The tradeoff is the chat stays one tap away instead of always visible on the study canvas.
-        When minimized, it collapses to the magenta launcher in the corner.
+        The chat stays one tap away instead of always visible on the study canvas.
       </p>
     </div>
   );

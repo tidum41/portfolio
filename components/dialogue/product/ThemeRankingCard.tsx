@@ -2,9 +2,9 @@ import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 
 const THEMES = [
-  { rank: 1, label: "Address validation", value: 18 },
-  { rank: 2, label: "Unexpected fees", value: 15 },
-  { rank: 3, label: "Saved payment", value: 12 },
+  { rank: 1, label: "Address validation", value: 17 },
+  { rank: 2, label: "Unexpected fees", value: 13 },
+  { rank: 3, label: "Payment retry", value: 10 },
 ] as const;
 
 export default function ThemeRankingCard() {

@@ -3,10 +3,10 @@ import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import { formatChartCount } from "@/components/dialogue/product/chart/chartSpec";
 
 const ROWS = [
-  { label: "Address field", count: 14, focal: true },
-  { label: "Delivery fees", count: 11 },
-  { label: "Payment trust", count: 9 },
-  { label: "Autocomplete", count: 7 },
+  { label: "Address field", count: 16, focal: true },
+  { label: "Delivery fees", count: 10 },
+  { label: "Payment trust", count: 8 },
+  { label: "Country switch", count: 5 },
 ] as const;
 
 export default function QuoteFrequencyCard() {

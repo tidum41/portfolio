@@ -63,6 +63,63 @@ export const SENTIMENT_LINE = {
   question: "How did sentiment shift across the 3 prototype rounds?",
 };
 
+/** Segment comparison: same metric across participant groups (not a funnel). */
+export const SEGMENT_ADDRESS = {
+  question: "Which segment struggled with address validation?",
+  summary: "Mobile participants reported autocomplete resets about twice as often.",
+  title: "Autocomplete resets by segment",
+  caption: "Share of participants who hit a reset on address",
+  rows: [
+    { label: "Mobile", pct: 64, focal: true },
+    { label: "Desktop", pct: 31 },
+    { label: "Tablet", pct: 22 },
+  ],
+};
+
+/** Coverage callout: how many interviews support the finding. */
+export const COVERAGE_ADDRESS = {
+  question: "How widely did address friction show up?",
+  headline: "18 of 24 interviews mention address friction",
+  detail: "Most of the support sits on the shipping step",
+  title: "Interviews that support this finding",
+  rows: [
+    { label: "Mentioned it", count: 18, focal: true },
+    { label: "Did not", count: 6 },
+  ],
+};
+
+/** Full-answer section: follow-up filter, not the hero checkout funnel. */
+export const MOBILE_FOLLOWUP = {
+  question: "Show mobile only",
+  summary: "On mobile, the apartment field clearing was the sharpest address complaint.",
+  drawerSub: "6 moments from mobile sessions",
+  clips: [
+    {
+      id: "mob-1",
+      participant: "Jordan M.",
+      segment: "14:03–14:19",
+      transcript:
+        "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
+      highlight: "almost closed the tab",
+    },
+    {
+      id: "mob-2",
+      participant: "Priya K.",
+      segment: "16:02–16:18",
+      transcript:
+        "On my phone the country switch reset everything, so I had to start the address over.",
+      highlight: "start the address over",
+    },
+    {
+      id: "mob-3",
+      participant: "Sam R.",
+      segment: "11:22–11:40",
+      transcript: "I gave up on saved address and typed it again with my thumbs.",
+      highlight: "gave up on saved address",
+    },
+  ],
+};
+
 export const QUOTE_LIST = [
   { participant: "Jordan M.", quote: "I almost closed the tab when autocomplete cleared the apartment field." },
   { participant: "Priya K.", quote: "International format wasn't obvious on mobile." },

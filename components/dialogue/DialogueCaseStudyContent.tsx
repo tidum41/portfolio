@@ -13,7 +13,7 @@ import type { DialogueProductScenario } from "@/components/dialogue/product/Dial
 import "@/components/dialogue/product/dialogue-product.css";
 import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
-import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -126,6 +126,7 @@ export function DialogueCaseStudyContent({
           <CaseStudyOpen
             tagline="Dialogue, contract, 2026"
             title={DIALOGUE_TITLE}
+            subtitle={DIALOGUE_SUBTITLE}
             metadata={[
               { _key: "role", label: "Role", values: ["Product designer (contract)"] },
               { _key: "timeline", label: "Timeline", values: ["Dec 2025 to March 2026"] },
@@ -192,6 +193,22 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Problem: three paragraphs, no sources"
               />
+            </Section>
+
+            <Section id="why-it-matters">
+              <H2>A finding only travels if you can point to the interview behind it</H2>
+              <CaseStudyBody>
+                In sessions with Benjamin and Justin, and with students running mock interviews,
+                people asked who said that before they would trust a long answer. Those sessions
+                stood in for research customers. The gap was the same either way: without a path
+                back to the interview, the answer stayed a guess.
+              </CaseStudyBody>
+              <blockquote className="dialogue-evidence-pull">
+                <p className="dialogue-evidence-pull__quote">Who said that?</p>
+                <footer className="dialogue-evidence-pull__meta">
+                  Heard before anyone would act on a long answer
+                </footer>
+              </blockquote>
 
               <DialogueLeadAnswerCompare
                 heading="Lead with the answer, back it with evidence"
@@ -203,9 +220,8 @@ export function DialogueCaseStudyContent({
                     id: "paragraphs",
                     label: "Wall of text",
                     title: "Paragraphs",
-                    priorityLine: "The priority is prose over evidence.",
-                    howeverLine:
-                      "However, you still cannot see who said what, or how many interviews agree.",
+                    costLine:
+                      "Reads complete, but you still cannot name who said what before you act.",
                     productScenario: "decision-paragraphs",
                     rasterAssetId: "D-04",
                   },
@@ -213,8 +229,8 @@ export function DialogueCaseStudyContent({
                     id: "quote-list",
                     label: "Quotes only",
                     title: "Quote list",
-                    priorityLine: "The priority is fidelity over synthesis.",
-                    howeverLine: "However, there is no answer line. You still do the counting.",
+                    costLine:
+                      "Faithful to the footage, but you still count by hand. Nine quotes is not a finding.",
                     productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
@@ -222,10 +238,8 @@ export function DialogueCaseStudyContent({
                     id: "structured",
                     label: "Answer + evidence",
                     title: "Structured answer",
-                    priorityLine: "The priority is clarity over raw quotes.",
-                    howeverLine:
-                      "However, the chat still has to carry summary, evidence, and clips in one answer.",
-                    selectionNote: "We went with this",
+                    costLine:
+                      "Clearer in one glance, but the chat has to hold summary, chart, and clips without feeling crowded.",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
@@ -233,18 +247,11 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
-            <Section id="why-it-matters">
-              <H2>A finding only travels if you can point to the interview behind it</H2>
-              <CaseStudyBody>
-                I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
-                product team, and students in interview sessions (not Dialogue research customers).
-              </CaseStudyBody>
-            </Section>
-
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
-                Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
+                Parts stay in order: 1 Sources, 2 Summary, 3 Chart, 4 Clips, 5 Follow-ups. Only part
+                3 changes shape.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -257,21 +264,34 @@ export function DialogueCaseStudyContent({
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
               <CaseStudyBody>
-                I grouped real chat questions by type and gave each a chart shape that fits the
-                question.
+                Part 3 is the only slot that changes. I grouped real chat questions by type and
+                gave each a chart shape. A question-type classifier picks the chart. If nothing
+                fits, the answer stays text with sources and clips.
               </CaseStudyBody>
+              <p
+                style={{
+                  margin: "0 0 8px",
+                  fontSize: 13,
+                  lineHeight: 1.4,
+                  color: "var(--color-text-muted)",
+                }}
+              >
+                Study data in these figures is illustrative.
+              </p>
               {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
 
             <Section id="clips">
               <H2>A quote with no context</H2>
-              <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
+              <CaseStudyBody>
+                Part 4 opens the clip at the exact second, with the transcript in sync.
+              </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
                 title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 assetId="D-10"
                 wrapRaster={wrap}
-                frameLabel="Solution: the clip opens at 01:38 with the speaker row highlighted"
+                frameLabel="Solution: clip starts at 01:38 so the apartment-field quote can be checked in one click"
               />
             </Section>
 
@@ -279,7 +299,7 @@ export function DialogueCaseStudyContent({
               <H2>Instead of a docked sidebar, I kept the floating chat</H2>
               <CaseStudyBody>
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
-                study pages.
+                study pages. The answer structure inside the chat stays the same either way.
               </CaseStudyBody>
               <div style={{ marginTop: 24 }}>
                 {wrap ? wrap("D-13", <DialoguePlacementCompare />) : <DialoguePlacementCompare />}
@@ -288,13 +308,16 @@ export function DialogueCaseStudyContent({
 
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
-              <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
+              <CaseStudyBody>
+                After a part 5 follow-up, parts 1 through 4 still hold together for the new answer,
+                with every supporting clip in one drawer.
+              </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
-                title="Structured answer card beside a drawer listing every clip behind the answer"
+                title="Follow-up answer for mobile only, with every supporting clip in one drawer"
                 assetId="D-15"
                 wrapRaster={wrap}
-                frameLabel="Solution: the full answer, with every supporting clip in one drawer"
+                frameLabel="Solution: a mobile-only follow-up still keeps every supporting clip in one drawer"
               />
             </Section>
           </article>

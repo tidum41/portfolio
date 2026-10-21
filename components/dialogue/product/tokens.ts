@@ -174,7 +174,7 @@ export const dialogueProductTokens = {
     inputPad: "12px",
   },
   shadow: {
-    chat: "0 8px 24px -12px rgb(28 25 23 / 8%)",
+    chat: "0 1px 2px rgb(28 25 23 / 7%), 0 5px 14px -6px rgb(28 25 23 / 12%)",
     appShell: "0 1px 2px rgb(28 25 23 / 5%), 0 8px 24px rgb(28 25 23 / 5%)",
   },
   media: {

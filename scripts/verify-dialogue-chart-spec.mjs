@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * t385 chart-spec compliance probe for the 8 gallery cards.
+ * t385 chart-spec compliance probe for gallery cards on /dialogue.
  * Spec: design/briefs/dialogue-chart-spec.md
  */
 import { chromium } from "playwright";
@@ -12,14 +12,11 @@ const OUT = process.env.OUT || "/cursor/stores/self/parity";
 fs.mkdirSync(OUT, { recursive: true });
 fs.mkdirSync("/opt/cursor/artifacts", { recursive: true });
 
+/** Cards rendered on the case study (mapping table covers the rest). */
 const CARDS = [
-  { label: "Trend over rounds", id: "trend" },
   { label: "Drop-off by step", id: "funnel" },
   { label: "Segment comparison", id: "segment" },
-  { label: "Distribution", id: "distribution" },
-  { label: "Theme ranking", id: "theme" },
-  { label: "Quote frequency", id: "quote-freq" },
-  { label: "Timeline of moments", id: "timeline" },
+  { label: "Trend over rounds", id: "trend" },
   { label: "Coverage callout", id: "coverage" },
 ];
 

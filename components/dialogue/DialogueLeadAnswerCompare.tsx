@@ -1,6 +1,5 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
@@ -10,19 +9,22 @@ import DialogueRachelFrame, {
   type DialogueFrameTone,
 } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
+import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
 function panelSurfaceTone(optionId: string): DialogueFrameTone {
   return optionId === "structured" ? "solution" : "problem";
 }
 
-const DECISION_CROP_H = 468;
-/** Exact 1/2 keeps glyph rasterization clean (no fractional zoom). */
-const DESKTOP_MAX_SCALE = 0.5;
+/** Tall enough for the answer body once the shared question is shown above. */
+const ROW_CROP_H = 420;
 
 type Option = {
   id: string;
   title: string;
   label: string;
+  /** One real cost for this option. */
+  costLine?: string;
+  /** @deprecated use costLine */
   priorityLine?: string;
   howeverLine?: string;
   selectionNote?: string;
@@ -37,18 +39,18 @@ type Props = {
   options: Option[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
+  /** Shared question shown once above the three answer rows. */
+  question?: string;
 };
 
-function OptionPanel({
+function OptionRow({
   option,
   isChosen,
   annotateRaster,
-  stacked,
 }: {
   option: Option;
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
-  stacked: boolean;
 }) {
   const body =
     option.productScenario === "decision-paragraphs" ? (
@@ -59,11 +61,7 @@ function OptionPanel({
       <StructuredAnswerFigure compact showClips />
     );
   const figure = (
-    <ScaledChatViewport
-      cropHeight={DECISION_CROP_H}
-      maxScale={stacked ? undefined : DESKTOP_MAX_SCALE}
-      fade
-    >
+    <ScaledChatViewport cropHeight={ROW_CROP_H} fade>
       {body}
     </ScaledChatViewport>
   );
@@ -71,6 +69,8 @@ function OptionPanel({
     option.rasterAssetId && annotateRaster
       ? annotateRaster(option.rasterAssetId, figure)
       : figure;
+
+  const cost = option.costLine ?? option.priorityLine;
 
   return (
     <div
@@ -81,19 +81,16 @@ function OptionPanel({
         .filter(Boolean)
         .join(" ")}
     >
-      {/* One label per panel — format name above the figure. */}
-      <p className="dialogue-lead-answer__panel-label">{option.label}</p>
+      <div className="dialogue-lead-answer__panel-head">
+        <p className="dialogue-lead-answer__panel-label">{option.label}</p>
+        {isChosen ? <span className="dialogue-lead-answer__chosen">Chosen</span> : null}
+      </div>
       <DialogueRachelFrame tone={panelSurfaceTone(option.id)} className="dialogue-lead-answer__frame">
         <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
           {wrapped}
         </div>
       </DialogueRachelFrame>
-      {option.priorityLine ? (
-        <p className="dialogue-lead-answer__panel-line">{option.priorityLine}</p>
-      ) : null}
-      {option.howeverLine ? (
-        <p className="dialogue-lead-answer__panel-line">{option.howeverLine}</p>
-      ) : null}
+      {cost ? <p className="dialogue-lead-answer__panel-line">{cost}</p> : null}
     </div>
   );
 }
@@ -104,36 +101,23 @@ export default function DialogueLeadAnswerCompare({
   options,
   chosenId,
   annotateRaster,
+  question = CHECKOUT_QUESTION,
 }: Props) {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const [stacked, setStacked] = useState(false);
-
-  useLayoutEffect(() => {
-    const mq = window.matchMedia("(max-width: 599px)");
-    const on = () => setStacked(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-
   return (
     <div className="dialogue-lead-answer">
       <h3 className="dialogue-lead-answer__heading">{heading}</h3>
       <p className="dialogue-lead-answer__subheading">{subheading}</p>
-      <div
-        ref={rowRef}
-        className={[
-          "dialogue-lead-answer__row",
-          stacked ? "dialogue-lead-answer__row--stack" : "",
-        ].join(" ")}
-      >
+      <p className="dialogue-lead-answer__question">
+        <span className="dialogue-lead-answer__question-label">Question</span>
+        {question}
+      </p>
+      <div className="dialogue-lead-answer__row dialogue-lead-answer__row--stack">
         {options.map((option) => (
-          <OptionPanel
+          <OptionRow
             key={option.id}
             option={option}
             isChosen={option.id === chosenId}
             annotateRaster={annotateRaster}
-            stacked={stacked}
           />
         ))}
       </div>
