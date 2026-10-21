@@ -305,27 +305,18 @@
 }
 
 .dp-hero-compose {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  align-items: center;
+  justify-content: stretch;
+  gap: clamp(10px, 2vw, 16px);
   background: var(--dp-bg);
   width: 100%;
   min-width: 0;
   height: 100%;
-  padding: clamp(10px, 3vw, 20px) clamp(12px, 3.5vw, 24px);
+  padding: clamp(12px, 2.5vw, 20px) clamp(14px, 3vw, 24px);
   overflow: hidden;
   box-sizing: border-box;
-}
-
-@container (min-width: 520px) {
-  .dp-hero-compose {
-    display: grid;
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-    align-items: center;
-    gap: clamp(10px, 2vw, 16px);
-  }
 }
 
 .dp-hero-compose__main {
@@ -578,21 +569,23 @@
   display: grid;
   grid-template-columns: minmax(100px, 118px) minmax(0, 1fr);
   gap: 0;
-  align-items: stretch;
+  align-items: start;
   position: relative;
   min-width: 0;
   width: 100%;
+  container-type: inline-size;
+  container-name: dp-anatomy;
 }
 
 .dp-anatomy__rail {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 14px 8px 14px 0;
-  gap: 6px;
+  position: relative;
+  padding: 0 8px 0 0;
 }
 
 .dp-anatomy__callout {
+  position: absolute;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -600,6 +593,7 @@
   line-height: 1.25;
   color: var(--dp-muted);
   white-space: nowrap;
+  transform: translateY(-50%);
 }
 
 .dp-anatomy__num {
@@ -632,13 +626,58 @@
   vector-effect: non-scaling-stroke;
 }
 
-@container (max-width: 420px) {
+.dp-anatomy__tick {
+  fill: #c5c0b8;
+}
+
+.dp-anatomy-target {
+  position: relative;
+}
+
+.dp-anatomy-part-marker {
+  display: none;
+}
+
+@container dp-anatomy (max-width: 480px) {
   .dp-anatomy {
-    grid-template-columns: minmax(88px, 100px) minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
-  .dp-anatomy__callout {
-    font-size: 12px;
+  .dp-anatomy__rail,
+  .dp-anatomy__svg {
+    display: none;
+  }
+
+  .dp-anatomy-part-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translate(-100%, -50%);
+    width: 18px;
+    height: 18px;
+    margin-left: -6px;
+    border-radius: 999px;
+    background: #eef2f5;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dp-ink);
+  }
+
+  .dp-study-chat__head .dp-anatomy-part-marker {
+    top: 14px;
+    transform: translate(-100%, -50%);
+  }
+
+  .dp-study-chat__body {
+    padding-left: 22px !important;
+  }
+
+  .dp-funnel__row {
+    grid-template-columns: minmax(36px, 44px) minmax(0, 1fr) 1.85rem;
+    gap: 4px 6px;
   }
 }
 
@@ -738,34 +777,65 @@
   }
 }
 
-@container dp-hero (max-height: 320px) {
-  .dp-hero-compose {
-    zoom: 0.82;
-  }
-}
-
-@container dp-hero (max-height: 280px) {
-  .dp-hero-compose {
-    zoom: 0.7;
-    padding: 10px 12px;
-  }
-}
-
-@container dp-hero (max-height: 260px) {
+@container dp-hero (max-height: 300px) {
   .dp-hero-compose__clips {
     display: none;
   }
 
   .dp-hero-compose {
     grid-template-columns: 1fr;
-    justify-items: center;
+    align-items: flex-start;
+    justify-items: stretch;
+    padding: 8px 10px;
   }
-}
 
-@container dp-hero (max-height: 240px) {
-  .dp-hero-compose {
-    zoom: 0.48;
-    padding: 6px 8px;
+  .dp-hero-compose__main {
+    width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .dp-study-chat--hero .dp-study-chat__head {
+    padding: 6px 10px 4px;
+  }
+
+  .dp-study-chat--hero .dp-study-chat__sub {
+    display: none;
+  }
+
+  .dp-study-chat--hero .dp-study-chat__body {
+    gap: 6px;
+    padding: 6px 10px 6px;
+  }
+
+  .dp-study-chat--hero .dp-user-bubble {
+    padding: 5px 10px;
+  }
+
+  .dp-funnel--hero {
+    gap: 2px;
+  }
+
+  .dp-funnel--hero .dp-summary {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .dp-funnel--hero .dp-funnel__track {
+    height: 10px;
+  }
+
+  .dp-funnel--hero .dp-funnel__row {
+    gap: 1px 4px;
+    grid-template-columns: minmax(40px, 46px) minmax(0, 1fr) 1.85rem;
+  }
+
+  .dp-funnel--hero .dp-funnel__note {
+    display: none;
+  }
+
+  .dp-funnel--hero .dp-funnel__row:nth-last-child(-n + 2) {
+    display: none;
   }
 }
 

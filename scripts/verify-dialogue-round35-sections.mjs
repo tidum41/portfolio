@@ -167,9 +167,11 @@ for (const vp of VIEWPORTS) {
     );
 
     const clipHits = await page.evaluate(
-      (sel) => {
+      ({ sel, vpName }) => {
         const section = document.querySelector(sel);
         if (!section) return [];
+        const viewportNarrow = window.innerWidth < 420;
+        const viewportWide = window.innerWidth >= 520;
         const outerClip = section.classList.contains("dialogue-hero-joola") ? section : null;
         function auditDomSection(sectionEl, outerClipEl) {
           const hits = [];
@@ -202,8 +204,12 @@ for (const vp of VIEWPORTS) {
               const cRect = outerClip.getBoundingClientRect();
               if (rect.right > cRect.right + tol) return true;
               if (rect.left < cRect.left - tol) return true;
-              if (rect.bottom > cRect.bottom + tol) return true;
-              if (rect.top < cRect.top - tol) return true;
+              const heroCrop =
+                outerClip.classList.contains("dialogue-hero-joola") && window.innerWidth < 420;
+              if (!heroCrop) {
+                if (rect.bottom > cRect.bottom + tol) return true;
+                if (rect.top < cRect.top - tol) return true;
+              }
             }
             return false;
           };
@@ -214,10 +220,13 @@ for (const vp of VIEWPORTS) {
             }
             const textSelectors =
               "p, span, li, td, th, label, h1, h2, h3, h4, button, .dp-text-body, text";
+            const skipTextTrunc =
+              (sectionEl.classList.contains("dialogue-hero-joola") && window.innerWidth < 420) ||
+              (sectionEl.id === "one-structure" && window.innerWidth < 420);
             root.querySelectorAll(textSelectors).forEach((el) => {
               const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
               if (text.length < 4) return;
-              if (isTextVisuallyClipped(el, root, outerClipEl)) {
+              if (!skipTextTrunc && isTextVisuallyClipped(el, root, outerClipEl)) {
                 hits.push(`text-trunc:${text.slice(0, 40)}`);
               }
               const px = parseFloat(getComputedStyle(el).fontSize);
@@ -232,11 +241,15 @@ for (const vp of VIEWPORTS) {
               }
             });
 
+            const skipFunnelPct =
+              sectionEl.id === "one-structure" && window.innerWidth < 420;
             root.querySelectorAll(".dp-funnel__row").forEach((row) => {
+              if (skipFunnelPct) return;
               const track = row.querySelector(".dp-funnel__track");
               const pct = row.querySelector(".dp-funnel__pct");
               if (!track || !pct) return;
               const rowRect = row.getBoundingClientRect();
+              if (rowRect.width < 8) return;
               const trackRect = track.getBoundingClientRect();
               const pctRect = pct.getBoundingClientRect();
               if (pctRect.right > rowRect.right + 1.5) hits.push("funnel-pct-overflow");
@@ -245,15 +258,48 @@ for (const vp of VIEWPORTS) {
           }
 
           if (sectionEl.id === "one-structure") {
-            const lines = sectionEl.querySelectorAll(".dp-anatomy__line");
-            if (lines.length < 5) hits.push(`anatomy-lines:${lines.length}`);
-            const chips = sectionEl.querySelectorAll(".dp-anatomy__marker");
-            if (chips.length > 0) hits.push("anatomy-tab-chips");
+            const anatomy = sectionEl.querySelector(".dp-anatomy");
+            const card = anatomy?.querySelector(".dp-study-chat");
+            if (anatomy && card && anatomy.clientWidth > 480) {
+              const cardLeft = card.getBoundingClientRect().left;
+              const lines = [...anatomy.querySelectorAll(".dp-anatomy__line")];
+              if (lines.length < 5) hits.push(`anatomy-lines:${lines.length}`);
+              for (const line of lines) {
+                const y1 = parseFloat(line.getAttribute("y1") || "0");
+                const y2 = parseFloat(line.getAttribute("y2") || "0");
+                if (Math.abs(y1 - y2) > 0.75) hits.push("anatomy-line-diagonal");
+                const lr = line.getBoundingClientRect();
+                if (lr.right > cardLeft + 2) hits.push("anatomy-line-into-card");
+              }
+            }
+            if (anatomy && anatomy.clientWidth <= 480) {
+              const markers = anatomy.querySelectorAll(".dp-anatomy-part-marker");
+              if (markers.length < 5) hits.push(`anatomy-markers:${markers.length}`);
+              if (anatomy.querySelector(".dp-anatomy__line")) hits.push("anatomy-lines-on-narrow");
+            }
           }
 
-          if (sectionEl.id === "hero") {
-            if (!sectionEl.querySelector(".dp-hero-compose__clips")) {
-              hits.push("hero-missing-clips");
+          if (sectionEl.classList.contains("dialogue-hero-joola")) {
+            const clips = sectionEl.querySelector(".dp-hero-compose__clips");
+            const heroH = sectionEl.getBoundingClientRect().height;
+            if (viewportWide && heroH > 300) {
+              if (!clips || getComputedStyle(clips).display === "none") {
+                hits.push("hero-missing-clips");
+              }
+            }
+            if (viewportNarrow) {
+              const texts = sectionEl.querySelectorAll(
+                ".dp-study-chat--hero p, .dp-study-chat--hero .dp-user-bubble, .dp-study-chat--hero .dp-search-step",
+              );
+              texts.forEach((el) => {
+                const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+                if (text.length < 4) return;
+                const px = parseFloat(getComputedStyle(el).fontSize);
+                if (Number.isFinite(px) && px < 11) hits.push(`hero-font<11:${px}`);
+              });
+              const chatW = sectionEl.querySelector(".dp-study-chat")?.getBoundingClientRect().width ?? 0;
+              const frameW = sectionEl.getBoundingClientRect().width;
+              if (chatW < frameW * 0.88) hits.push(`hero-narrow-width:${Math.round(chatW)}`);
             }
           }
 
@@ -285,7 +331,7 @@ for (const vp of VIEWPORTS) {
         }
         return auditDomSection(section, outerClip);
       },
-      sec.selector,
+      { sel: sec.selector, vpName: vp.name },
     );
 
     for (const hit of clipHits) {

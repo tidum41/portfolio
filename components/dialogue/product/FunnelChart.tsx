@@ -15,15 +15,15 @@ export default function FunnelChart({
 }: Props) {
   const data = CHECKOUT_FUNNEL;
   const summary = (
-    <p className="dp-summary" {...(anatomy ? { "data-anatomy-part": "summary" } : {})}>
+    <p className="dp-summary">
       {data.summary.split(data.emphasis)[0]}
       <span className="dp-em">{data.emphasis}</span>
       {data.summary.split(data.emphasis)[1] ?? ""}
     </p>
   );
 
-  const chart = (
-    <div className="dp-funnel__chart" {...(anatomy ? { "data-anatomy-part": "chart" } : {})}>
+  const chartInner = (
+    <>
       <p className="dp-funnel__title">Checkout funnel, % of participants still in flow</p>
       {data.steps.map((step) => (
         <div key={step.label} className="dp-funnel__row">
@@ -37,7 +37,16 @@ export default function FunnelChart({
           <span className="dp-funnel__pct">{step.pct}%</span>
         </div>
       ))}
+    </>
+  );
+
+  const chart = anatomy ? (
+    <div className="dp-anatomy-target" data-anatomy-part="chart">
+      <span className="dp-anatomy-part-marker" aria-hidden>3</span>
+      <div className="dp-funnel__chart">{chartInner}</div>
     </div>
+  ) : (
+    <div className="dp-funnel__chart">{chartInner}</div>
   );
 
   return (

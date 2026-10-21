@@ -24,20 +24,23 @@ export default function StructuredAnswerFigure({
 
   if (anatomy) {
     return (
-      <StudyChatShell compact={shellCompact}>
+      <StudyChatShell compact={shellCompact} anatomy>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-        <QuerySearchStep searched={24} found={9} />
-        <div data-anatomy-part="sources">
-          <SourcesRow />
+        <div className="dp-anatomy-target" data-anatomy-part="summary">
+          <span className="dp-anatomy-part-marker" aria-hidden>2</span>
+          <QuerySearchStep searched={24} found={9} />
         </div>
         <FunnelChart compact={compact} hero={hero} showFootnote anatomy />
+        <SourcesRow />
         {showClips && (
-          <div data-anatomy-part="clips">
+          <div className="dp-anatomy-target" data-anatomy-part="clips">
+            <span className="dp-anatomy-part-marker" aria-hidden>4</span>
             <ClipCard clip={CLIPS[0]} />
           </div>
         )}
         {!compact && (
-          <div data-anatomy-part="followups">
+          <div className="dp-anatomy-target" data-anatomy-part="followups">
+            <span className="dp-anatomy-part-marker" aria-hidden>5</span>
             <FollowUpChips />
           </div>
         )}
