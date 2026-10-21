@@ -1226,14 +1226,17 @@ html[data-theme="dark"] .project-image {
   outline-offset: 2px;
 }
 
-/* Prev/next: space-only separation from case body (no rule). Flush to
-   .cs-content edges; equal 1fr hit areas; meta kicker + body-lg title. */
+/* Prev/next: space-only separation from case body (no rule). Constrained to
+   the prose measure (40rem) so Previous/Next text edges match body paragraphs.
+   Chevrons hang outside that measure; equal 1fr hit areas; meta + body-lg. */
 .cs-pager {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: var(--space-3);
   row-gap: var(--space-3);
   align-items: start;
+  max-width: 40rem; /* match .cs-prose */
+  width: 100%;
   margin: var(--space-8) 0 0; /* 96px desktop */
   padding: 0;
   border: 0;
@@ -1276,6 +1279,15 @@ html[data-theme="dark"] .project-image {
   /* Optical align to meta cap height (chevron sits a hair high in the em box). */
   transform: translateY(0.5px);
   transition: transform 150ms ease-out;
+}
+/* Hang chevrons outside the prose text edge (icon 13px + kicker gap 6px).
+   Negative margin cancels the icon from the flex size so kicker/title text
+   aligns with .cs-prose paragraphs. */
+.cs-pager-kicker-icon--prev {
+  margin-left: calc(-1 * (13px + 6px));
+}
+.cs-pager-kicker-icon--next {
+  margin-right: calc(-1 * (13px + 6px));
 }
 @media (hover: hover) and (pointer: fine) {
   .cs-pager-link:hover .cs-pager-kicker-icon--prev {
