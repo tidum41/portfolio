@@ -108,6 +108,11 @@ export const dialogueProductTokens = {
     /** Production study app shell (CSS px) */
     appShellWidth: "1280px",
     appShellHeight: "748px",
+    /** Paper export frame `section-6.html` inline style (parity ref) */
+    paperFrameWidth: "922px",
+    paperFrameHeight: "540px",
+    /** Paper sidebar in 922px frame (`section-6.html` `w-[188px]`) */
+    paperSidebarWidth: "188px",
   },
   shadow: {
     chat: "0 8px 24px -12px rgb(28 25 23 / 8%)",
@@ -180,6 +185,9 @@ export function dialogueProductCssVariables(): Record<string, string> {
     "dp-sidebar-width": t.space.sidebarWidth,
     "dp-app-shell-width": t.space.appShellWidth,
     "dp-app-shell-height": t.space.appShellHeight,
+    "dp-paper-frame-width": t.space.paperFrameWidth,
+    "dp-paper-frame-height": t.space.paperFrameHeight,
+    "dp-paper-sidebar-width": t.space.paperSidebarWidth,
     "text-body-size": t.font.bodySize,
     "text-body-leading": t.font.bodyLeading,
     "text-meta-size": t.font.metaSize,

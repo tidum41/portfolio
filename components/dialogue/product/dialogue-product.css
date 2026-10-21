@@ -758,8 +758,14 @@
 }
 
 
-.dp-placement-layer--bubble .dp-app-stat-grid {
-  display: none;
+/* Paper export frame (`section-6.html`: 922×540, sidebar w-[188px]) — DS parity only */
+.dp-app-shell--paper-frame {
+  width: var(--dp-paper-frame-width, 922px);
+  height: var(--dp-paper-frame-height, 540px);
+}
+
+.dp-app-shell--paper-frame .dp-app-sidebar {
+  width: var(--dp-paper-sidebar-width, 188px);
 }
 
 .dp-placement-layer {
@@ -768,78 +774,21 @@
   background: var(--dp-bg);
   border-radius: var(--dp-radius-sm);
   overflow: hidden;
-  container-type: inline-size;
+  container-type: size;
   container-name: dp-placement;
 }
 
-.dp-placement-study-wrap {
+.dp-placement-backdrop {
   position: absolute;
-  inset: 12px 50% 12px 12px;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
 }
 
-.dp-placement-layer--bubble .dp-placement-study-wrap {
-  inset: 12px;
-  width: min(40cqi, 10.5rem);
-  max-width: 42%;
-}
-
-.dp-app-shell--placement {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  box-shadow: none;
-  border-radius: var(--dp-radius-chip);
-  border: 1px solid var(--dp-border);
-}
-
-.dp-app-shell--placement .dp-app-sidebar--placement {
-  width: 44%;
-  max-width: 6.75rem;
-  padding: 8px 6px;
-  gap: 6px;
-}
-
-.dp-app-shell--placement .dp-app-sidebar__wordmark-img {
-  height: 14px;
-}
-
-.dp-app-shell--placement .dp-app-sidebar__nav-item {
-  font-size: 8px;
-  padding: 3px 3px;
-  line-height: 1.15;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dp-app-shell--placement .dp-app-main__head {
-  padding: 8px;
-}
-
-.dp-app-shell--placement .dp-app-main__title {
-  font-size: 11px;
-}
-
-.dp-app-shell--placement .dp-app-tab {
-  font-size: 9px;
-  padding: 1px 4px;
-}
-
-.dp-app-shell--placement .dp-app-insights-card--placement {
-  margin-top: 0;
-  max-width: none;
-  padding: 6px 8px;
-}
-
-.dp-app-shell--placement .dp-app-insights-card__title {
-  font-size: 10px;
-}
-
-.dp-app-shell--placement .dp-app-chip {
-  font-size: 9px;
+/* Full production shell (1280×748), scaled to cover the figure frame */
+.dp-placement-backdrop__scale {
+  transform-origin: top left;
 }
 
 .dp-study-main__insight {
@@ -851,8 +800,8 @@
 
 .dp-bubble-launcher-inset {
   position: absolute;
-  bottom: 14px;
-  left: 14px;
+  bottom: 12px;
+  right: 12px;
   width: 36px;
   height: 36px;
   border-radius: 999px;
@@ -900,9 +849,27 @@
   right: 12px;
   width: 62%;
   max-width: none;
-  max-height: min(68%, 340px);
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
   z-index: 2;
+}
+
+.dp-placement-layer--bubble .dp-floating-chat {
+  bottom: 52px;
+  max-height: calc(100% - 64px);
+  overflow: auto;
+}
+
+@media (min-width: 600px) {
+  .dp-placement-layer--bubble .dp-floating-chat {
+    width: 40%;
+  }
+}
+
+@media (max-width: 599px) {
+  .dp-placement-layer--bubble .dp-floating-chat {
+    width: 62%;
+  }
 }
 
 .dp-floating-chat .dp-funnel__label {
@@ -917,11 +884,6 @@
 
 .dp-floating-chat .dp-funnel__track {
   margin-right: 6px;
-}
-
-.dp-floating-chat__scale {
-  zoom: 0.68;
-  transform-origin: bottom right;
 }
 
 .dp-bubble-launcher {

@@ -2,46 +2,22 @@ import DialogueWordmark from "@/components/dialogue/product/DialogueWordmark";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
-  placement?: boolean;
+  /** Paper export frame (`section-6.html`: 922×540, 188px sidebar) for DS parity. */
+  paperFrame?: boolean;
 };
 
-export default function StudyPageChrome({ placement }: Props) {
+export default function StudyPageChrome({ paperFrame }: Props) {
   const nav = dialogueCopy.nav;
   const tabs = dialogueCopy.tabs;
-  const title = placement ? "Checkout" : dialogueCopy.studyPageTitle;
-
-  if (placement) {
-    return (
-      <div className="dp-app-shell dp-app-shell--placement" aria-hidden>
-        <aside className="dp-app-sidebar dp-app-sidebar--placement">
-          <div className="dp-app-sidebar__brand">
-            <DialogueWordmark className="dp-app-sidebar__wordmark-img" />
-          </div>
-          <nav className="dp-app-sidebar__nav">
-            <div className="dp-app-sidebar__nav-item dp-app-sidebar__nav-item--active">Insights</div>
-            <div className="dp-app-sidebar__nav-item">Plan</div>
-            <div className="dp-app-sidebar__nav-item">Sec.</div>
-            <div className="dp-app-sidebar__nav-item">People</div>
-          </nav>
-        </aside>
-        <div className="dp-app-main dp-app-main--placement">
-          <header className="dp-app-main__head">
-            <p className="dp-app-main__title">{title}</p>
-            <div className="dp-app-tabs">
-              <span className="dp-app-tab dp-app-tab--active">{tabs.insights}</span>
-              <span className="dp-app-tab">People</span>
-              <span className="dp-app-tab">Sec.</span>
-            </div>
-          </header>
-          <div className="dp-app-main__body" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="dp-study-page-wrap" aria-hidden>
-      <div className="dp-app-shell" data-export-app-shell="true">
+      <div
+        className={["dp-app-shell", paperFrame ? "dp-app-shell--paper-frame" : ""]
+          .filter(Boolean)
+          .join(" ")}
+        data-export-app-shell="true"
+      >
         <aside className="dp-app-sidebar">
           <div className="dp-app-sidebar__brand">
             <DialogueWordmark className="dp-app-sidebar__wordmark-img" />
@@ -58,7 +34,7 @@ export default function StudyPageChrome({ placement }: Props) {
         </aside>
         <div className="dp-app-main">
           <header className="dp-app-main__head">
-            <p className="dp-app-main__title">{title}</p>
+            <p className="dp-app-main__title">{dialogueCopy.studyPageTitle}</p>
             <div className="dp-app-tabs">
               <span className="dp-app-tab dp-app-tab--active">{tabs.insights}</span>
               <span className="dp-app-tab">{tabs.participants}</span>

@@ -1,12 +1,10 @@
-import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
+import PlacementStudyBackdrop from "@/components/dialogue/product/scenarios/PlacementStudyBackdrop";
 import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
 
 export default function PlacementDockedFigure() {
   return (
     <div className="dialogue-product-root dp-placement-layer">
-      <div className="dp-placement-study-wrap">
-        <StudyPageChrome placement />
-      </div>
+      <PlacementStudyBackdrop />
       <div className="dp-docked-chat">
         <PlacementChatPreview />
       </div>

@@ -93,7 +93,7 @@ export default function DialogueDsParityPage() {
       <section data-parity-id="study-chrome">
         <div data-parity-live className="dp-parity-study-chrome-capture">
           <div className="dialogue-product-root">
-            <StudyPageChrome />
+            <StudyPageChrome paperFrame />
           </div>
         </div>
       </section>

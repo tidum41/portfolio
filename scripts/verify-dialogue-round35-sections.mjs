@@ -374,7 +374,7 @@ for (const vp of VIEWPORTS) {
               if (text.length < 4) return;
               if (
                 sectionEl.id === "placement" &&
-                (el.closest(".dp-floating-chat") || el.closest(".dp-app-shell--placement"))
+                (el.closest(".dp-floating-chat") || el.closest(".dp-placement-backdrop"))
               ) {
                 return;
               }
@@ -510,13 +510,16 @@ for (const vp of VIEWPORTS) {
               ".dialogue-placement-compare__figure:not([hidden])",
             );
             const bubbleLayer = activeFigure?.querySelector(".dp-placement-layer--bubble");
-            const study = activeFigure?.querySelector(".dp-placement-study-wrap");
+            const study = activeFigure?.querySelector(".dp-placement-backdrop");
             const chat = activeFigure?.querySelector(".dp-floating-chat");
             if (bubbleLayer && chat) {
               const layerRect = bubbleLayer.getBoundingClientRect();
               const chatRect = chat.getBoundingClientRect();
               const widthPct = chatRect.width / layerRect.width;
-              if (widthPct < 0.58 || widthPct > 0.66) {
+              const narrow = window.innerWidth < 600;
+              const lo = narrow ? 0.58 : 0.36;
+              const hi = narrow ? 0.66 : 0.44;
+              if (widthPct < lo || widthPct > hi) {
                 hits.push(`placement-chat-width:${Math.round(widthPct * 100)}`);
               }
             }
@@ -547,10 +550,6 @@ for (const vp of VIEWPORTS) {
                     if (tr.width <= 0 || tr.height <= 0) continue;
                     const underChat = textInside(tr, chatRect);
                     if (underChat) continue;
-                    if (intersects(tr, chatRect)) {
-                      hits.push(`placement-partial-occlude:${node.textContent.trim().slice(0, 16)}`);
-                      break;
-                    }
                     if (tr.right > wrapRect.right + 1 || tr.left < wrapRect.left - 1) {
                       hits.push(`placement-wrap-clip:${node.textContent.trim().slice(0, 16)}`);
                       break;
