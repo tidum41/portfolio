@@ -27,7 +27,8 @@ export default function PlacementDockedScene() {
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
       const phone = window.innerWidth < 480;
-      const next = Math.min(1, phone ? w / CHAT_W : Math.max(0.94, w / CHAT_W));
+      const floor = phone ? Math.max(0.85, 11 / 12) : 0.94;
+      const next = Math.min(1, Math.max(floor, w / CHAT_W));
       const funnel = layer.querySelector(".dp-funnel");
       let y = 0;
       if (funnel instanceof HTMLElement) {

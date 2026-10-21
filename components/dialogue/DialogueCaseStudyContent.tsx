@@ -81,6 +81,9 @@ function H2({ children }: { children: React.ReactNode }) {
         letterSpacing: "var(--ls-h2)",
         color: "var(--color-text-primary)",
         margin: "0 0 24px",
+        maxWidth: 640,
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {children}

@@ -1,39 +1,26 @@
 @import "tailwindcss";
 
-/* ─── Helvetica Neue ("HN") — woff2 from layout; local() on Apple ─────────── */
+/* Helvetica Neue — local faces for Regular (400) and Medium (500) only.
+   Site UI weights cap at 500. Georgia remains the serif / page-title face. */
 @font-face {
-  font-family: "HN";
-  font-weight: 100;
+  font-family: "Helvetica Neue";
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: local("HelveticaNeue-UltraLight"), local("Helvetica Neue UltraLight");
+  src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
 }
 @font-face {
-  font-family: "HN";
-  font-weight: 200;
+  font-family: "Helvetica Neue";
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
-  src: local("HelveticaNeue-Thin"), local("Helvetica Neue Thin");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Bold"), local("Helvetica Neue Bold");
+  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
 }
 
 @theme {
-  /* Fonts — 400/500 woff2 paths are injected from app/layout.tsx */
-  --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* One sans token — Medium is the same family at font-weight: 500. */
+  --font-sans:        "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans-medium: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
   --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
 
@@ -1865,10 +1852,10 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
-/* Dialogue case study — HN stack, weights ≤ 500 */
+/* Dialogue case study — site sans, weights ≤ 500 */
 .dialogue-case-study-root,
 .dialogue-canvas-root {
-  font-family: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
 }
 .dialogue-case-study-root h1,
@@ -2018,16 +2005,17 @@ html[data-theme="light"] {
 }
 /* One caption, under the figure: 13px label, at most one sentence, 24px from the frame. */
 .dialogue-case-study .cs-hero-title,
-.dialogue-case-study .dialogue-cs-section > h2 {
+.dialogue-case-study .dialogue-cs-section h2 {
   max-width: 640px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .dialogue-caption {
   margin: 24px 0 0;
   max-width: 640px;
   font-size: 13px;
   line-height: 1.4;
-  /* Light figure surfaces; do not use theme secondary (too pale on #f5f5f4). */
-  color: #575757;
+  color: #8c8c8c;
 }
 .dialogue-caption__label {
   display: block;
@@ -2373,9 +2361,8 @@ html[data-theme="light"] {
     grid-row: auto;
     grid-template-rows: none;
   }
-  /* Match the tallest option card in the swipe row (quote list). */
   .dialogue-lead-answer__panel .dialogue-rachel-frame {
-    min-height: 456px;
+    min-height: 479px;
     height: auto !important;
   }
 }
@@ -2402,6 +2389,7 @@ html[data-theme="light"] {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0;
 }
 .dialogue-placement-compare__cell .dialogue-rachel-frame {
@@ -2414,6 +2402,7 @@ html[data-theme="light"] {
   display: flex;
   flex-direction: column;
   padding: 12px 12px 0;
+  overflow: hidden;
 }
 .dialogue-placement-compare__cell .dialogue-product-block,
 .dialogue-placement-compare__cell .dp-placement-layer {

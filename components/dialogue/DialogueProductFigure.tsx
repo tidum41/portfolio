@@ -19,11 +19,9 @@ const CHAT_W = 448;
 const ANATOMY_W = 618;
 /** Answer column + clip drawer cluster */
 const FULL_ANSWER_W = 798;
-/**
- * Floor above ~0.85 so 12px product labels still render at about 11px.
- * Narrower frames crop instead of shrinking past this.
- */
-const READABLE_MIN = 0.94;
+/** Below 480px: crop instead of shrinking past this (12px labels stay >= 11px). */
+const PHONE_MIN_SCALE = Math.max(0.85, 11 / 12);
+const DESKTOP_MIN_SCALE = 0.94;
 
 function useNarrow(query = "(max-width: 600px)") {
   const [narrow, setNarrow] = useState(false);
@@ -60,7 +58,7 @@ function scaleProps(
   maxOuterHeight?: number;
   fit?: "scale" | "reflow";
 } | null {
-  const minScale = phone ? undefined : READABLE_MIN;
+  const minScale = phone ? PHONE_MIN_SCALE : DESKTOP_MIN_SCALE;
   if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
   if (typeof scenario === "object" && "gallery" in scenario) {
     return { innerWidth: CHAT_W, fit: "reflow" };
@@ -68,16 +66,16 @@ function scaleProps(
   switch (scenario) {
     case "hero":
       return narrow
-        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 520 }
-        : { innerWidth: 782, minScale: READABLE_MIN, maxScale: 1 };
+        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: phone ? undefined : 520 }
+        : { innerWidth: 782, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "anatomy":
       return narrow
-        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }
-        : { innerWidth: ANATOMY_W, minScale: READABLE_MIN, maxScale: 1 };
+        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: phone ? undefined : 440 }
+        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "full-answer":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
-        : { innerWidth: FULL_ANSWER_W, minScale: READABLE_MIN, maxScale: 1 };
+        : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "clip-player":
     case "problem-paragraphs":
     case "decision-paragraphs":
