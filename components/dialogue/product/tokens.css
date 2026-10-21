@@ -1,0 +1,33 @@
+/* Generated from components/dialogue/product/tokens.ts — keep values in sync */
+.dialogue-product-root {
+  --dp-font-family: var(--font-dialogue-dm-sans, "DM Sans"), system-ui, -apple-system, sans-serif;
+  --dp-bg: #f8f6f3;
+  --dp-surface: #fcfbf9;
+  --dp-card: #ffffff;
+  --dp-ink: #1c1917;
+  --dp-muted: #57534d;
+  --dp-muted-light: #78716c;
+  --dp-border: #e7e5e4;
+  --dp-warm: #f0edea;
+  --dp-search-bg: #fcfbf9;
+  --dp-brand: #be185d;
+  --dp-brand-soft: #fce7f3;
+  --dp-funnel-track: #f1eeea;
+  --dp-funnel-bar: #a8a29e;
+  --dp-clip-card-bg: #fdfcfd;
+  --dp-nav-active-bg: #f5f5f4;
+  --dp-stat-tile-bg: #f8f6f3;
+  --dp-radius: 16px;
+  --dp-radius-sm: 12px;
+  --dp-radius-xs: 10px;
+  --text-body-size: 14px;
+  --text-body-leading: 20px;
+  --text-summary-size: 16px;
+  --text-summary-leading: 22px;
+  --text-meta-size: 12px;
+  --text-meta-leading: 16px;
+  --text-chart-size: 12px;
+  --text-chart-leading: 16px;
+  --shadow-chat: 0 1px 2px rgb(28 25 23 / 6%), 0 8px 24px rgb(28 25 23 / 6%);
+  --shadow-launcher: 0 4px 16px rgb(190 24 93 / 35%);
+}

@@ -1,4 +1,5 @@
 import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
+import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
   compact?: boolean;
@@ -24,7 +25,7 @@ export default function FunnelChart({
 
   const chartInner = (
     <>
-      <p className="dp-funnel__title">Checkout funnel, % of participants still in flow</p>
+      <p className="dp-funnel__title">{dialogueCopy.funnelTitle}</p>
       {data.steps.map((step) => (
         <div key={step.label} className="dp-funnel__row">
           <span className="dp-funnel__label">{step.label}</span>
@@ -54,10 +55,10 @@ export default function FunnelChart({
       {summary}
       {chart}
       {!compact && !hero && (
-        <p className="dp-text-meta dp-funnel__note">Largest drop: Shipping address (−38%)</p>
+        <p className="dp-text-meta dp-funnel__note">{dialogueCopy.funnelLargestDrop}</p>
       )}
       {showFootnote && (
-        <p className="dp-text-meta dp-funnel__note">Based on 24 of 24 interviews</p>
+        <p className="dp-text-meta dp-funnel__note">{dialogueCopy.funnelFootnote(24)}</p>
       )}
     </div>
   );

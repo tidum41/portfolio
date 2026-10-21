@@ -3,7 +3,7 @@ import PlacementChatPreview from "@/components/dialogue/product/scenarios/Placem
 
 export default function PlacementBubbleFigure() {
   return (
-    <div className="dialogue-product-root dp-placement-layer">
+    <div className="dialogue-product-root dp-placement-layer dp-placement-layer--bubble">
       <div className="dp-placement-study-wrap">
         <StudyPageChrome placement />
       </div>

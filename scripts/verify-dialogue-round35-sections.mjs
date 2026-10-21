@@ -486,16 +486,58 @@ for (const vp of VIEWPORTS) {
               '.dialogue-placement-compare__figure:not([hidden]) [data-dialogue-asset-id="D-14"]',
             );
             if (activeBubble && !launcher) hits.push("placement-missing-launcher-inset");
-            const study = sectionEl.querySelector(
-              ".dialogue-placement-compare__figure:not([hidden]) .dp-placement-study-wrap",
+            const activeFigure = sectionEl.querySelector(
+              ".dialogue-placement-compare__figure:not([hidden])",
             );
-            if (study) {
-              study.querySelectorAll("h4, p, .dp-study-nav__item, .dp-mini-stat").forEach((el) => {
-                if (el.scrollWidth > el.clientWidth + 2) {
-                  const t = el.textContent?.replace(/\s+/g, " ").trim().slice(0, 32) ?? "";
-                  hits.push(`placement-study-clip:${t}`);
-                }
-              });
+            const bubbleLayer = activeFigure?.querySelector(".dp-placement-layer--bubble");
+            const study = activeFigure?.querySelector(".dp-placement-study-wrap");
+            const chat = activeFigure?.querySelector(".dp-floating-chat");
+            if (bubbleLayer && chat) {
+              const layerRect = bubbleLayer.getBoundingClientRect();
+              const chatRect = chat.getBoundingClientRect();
+              const widthPct = chatRect.width / layerRect.width;
+              if (widthPct < 0.58 || widthPct > 0.66) {
+                hits.push(`placement-chat-width:${Math.round(widthPct * 100)}`);
+              }
+            }
+            if (study && chat) {
+              const chatRect = chat.getBoundingClientRect();
+              const wrapRect = study.getBoundingClientRect();
+              const textInside = (rect, box) =>
+                rect.left >= box.left - 0.5 &&
+                rect.right <= box.right + 0.5 &&
+                rect.top >= box.top - 0.5 &&
+                rect.bottom <= box.bottom + 0.5;
+              const intersects = (a, b) =>
+                a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+              study
+                .querySelectorAll("h4, p, .dp-study-nav__item, .dp-mini-stat, .dp-study-nav__logo")
+                .forEach((el) => {
+                  if (getComputedStyle(el).display === "none") return;
+                  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                  let node;
+                  while ((node = walker.nextNode())) {
+                    if (!node.textContent?.trim()) continue;
+                    const range = document.createRange();
+                    range.selectNodeContents(node);
+                    const tr = range.getBoundingClientRect();
+                    if (tr.width <= 0 || tr.height <= 0) continue;
+                    const underChat = textInside(tr, chatRect);
+                    if (underChat) continue;
+                    if (intersects(tr, chatRect)) {
+                      hits.push(`placement-partial-occlude:${node.textContent.trim().slice(0, 16)}`);
+                      break;
+                    }
+                    if (tr.right > wrapRect.right + 1 || tr.left < wrapRect.left - 1) {
+                      hits.push(`placement-wrap-clip:${node.textContent.trim().slice(0, 16)}`);
+                      break;
+                    }
+                    if (el.scrollWidth > el.clientWidth + 2) {
+                      hits.push(`placement-study-clip:${node.textContent.trim().slice(0, 16)}`);
+                      break;
+                    }
+                  }
+                });
             }
           }
           return [...new Set(hits)];
