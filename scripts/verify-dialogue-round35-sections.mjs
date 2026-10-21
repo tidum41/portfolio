@@ -561,17 +561,47 @@ for (const vp of VIEWPORTS) {
             }
             const frameEl = activeFigure?.querySelector(".dp-placement-viewport");
             if (activeChat && frameEl) {
-              const follow = scene?.querySelector(".dp-followups, .dp-followups-row");
-              const bottomEl = follow ?? activeChat;
-              const br = bottomEl.getBoundingClientRect();
               const fr = frameEl.getBoundingClientRect();
-              if (br.bottom > fr.bottom + 2) {
-                hits.push("placement-chat-cropped-bottom");
-              }
               const launcherEl = scene?.querySelector(".dp-placement-scene__launcher");
               if (launcherEl) {
                 const lr = launcherEl.getBoundingClientRect();
                 if (lr.bottom > fr.bottom + 2) hits.push("placement-launcher-cropped-bottom");
+              }
+              if (window.innerWidth < 600) {
+                const head = activeChat.querySelector(".dp-study-chat__head");
+                const funnel = activeChat.querySelector(".dp-funnel");
+                const vis = (el) => {
+                  if (!el) return false;
+                  const r = el.getBoundingClientRect();
+                  return (
+                    r.top >= fr.top - 2 &&
+                    r.bottom <= fr.bottom + 2 &&
+                    r.left >= fr.left - 2 &&
+                    r.right <= fr.right + 2
+                  );
+                };
+                if (!vis(head)) hits.push("placement-crop-missing-head");
+                if (!vis(funnel)) hits.push("placement-crop-missing-funnel");
+                const question = activeChat.querySelector(".dp-user-bubble p");
+                if (question) {
+                  const px = parseFloat(getComputedStyle(question).fontSize);
+                  if (Number.isFinite(px) && px < 9) {
+                    hits.push(`placement-mobile-type:${px}`);
+                  }
+                }
+                const cropW = activeFigure?.querySelector(".dp-placement-layer--bubble")?.getAttribute(
+                  "data-placement-crop-width",
+                );
+                if (cropW && Math.abs(parseInt(cropW, 10) - 420) > 8) {
+                  hits.push(`placement-crop-width:${cropW}`);
+                }
+              } else {
+                const follow = scene?.querySelector(".dp-followups, .dp-followups-row");
+                const bottomEl = follow ?? activeChat;
+                const br = bottomEl.getBoundingClientRect();
+                if (br.bottom > fr.bottom + 2) {
+                  hits.push("placement-chat-cropped-bottom");
+                }
               }
             }
             const layerCrop = activeFigure?.querySelector(
@@ -706,6 +736,20 @@ for (const vp of VIEWPORTS) {
             }
           }
           if (vp.name === "390") {
+            const chatLoc = page.locator(
+              ".dialogue-placement-compare__figure:not([hidden]) [data-placement-chat]",
+            );
+            const layerBox = await layerLoc.boundingBox();
+            const chatBox = await chatLoc.boundingBox();
+            if (layerBox && chatBox) {
+              const gap = layerBox.x + layerBox.width - chatBox.x - chatBox.width;
+              const gapRatio = gap / layerBox.width;
+              if (gapRatio > 0.14) {
+                report.issues.push(
+                  `placement-right-gutter@390:${Math.round(gapRatio * 1000) / 10}%`,
+                );
+              }
+            }
             let stray = 0;
             let straySamples = 0;
             const xMaxStray = Math.floor(w * 0.05);

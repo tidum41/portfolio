@@ -12,10 +12,17 @@ const INSET = parseInt(dialogueProductTokens.space.placementInset, 10);
 const LAUNCHER = dialogueProductTokens.space.placementLauncherSize;
 const LAUNCHER_GAP = dialogueProductTokens.space.placementLauncherGap;
 const CROP_VIEWPORT_MAX = 599;
-const CROP_PAD_TOP = 16;
-const CROP_PAD_LEFT = 0;
+const MOBILE_SCENE_CROP_W = 420;
+const CROP_PAD_TOP = 12;
+const BODY_PX = 16;
+const MIN_RENDER_BODY_PX = 9;
 
 type CropWindow = { minX: number; minY: number; width: number; height: number };
+
+function elementTopInScene(chatTop: number, el: HTMLElement | null) {
+  if (!el) return chatTop;
+  return chatTop + el.offsetTop;
+}
 
 /**
  * One real-size 1280×748 scene (study + floating chat + launcher), scaled as a unit.
@@ -51,22 +58,28 @@ export default function PlacementBubbleScene() {
       }
 
       const chatPanel = sceneRef.current?.querySelector(".dp-study-chat") as HTMLElement | null;
-      const chatH = chatPanel?.offsetHeight ?? 0;
       const chatBottomInset = INSET + LAUNCHER + LAUNCHER_GAP;
+      const chatH = chatPanel?.offsetHeight ?? 0;
       const chatHGuess = SCENE_H - chatBottomInset - 48;
       const effectiveChatH = chatH > 80 ? chatH : chatHGuess;
       const chatTop = SCENE_H - chatBottomInset - effectiveChatH;
 
-      const chatLeft = SCENE_W - INSET - CHAT_W;
-      const minX = Math.max(0, chatLeft - CROP_PAD_LEFT);
-      const maxX = SCENE_W;
-      const minY = Math.max(0, chatTop - CROP_PAD_TOP);
+      const minX = SCENE_W - MOBILE_SCENE_CROP_W;
+      const winW = MOBILE_SCENE_CROP_W;
+      let scaleW = w / winW;
+
+      const head = chatPanel?.querySelector(".dp-study-chat__head") as HTMLElement | null;
+      const minY = Math.max(0, elementTopInScene(chatTop, head) - CROP_PAD_TOP);
       const maxY = SCENE_H;
-      const winW = maxX - minX;
       const winH = maxY - minY;
 
+      const minScaleForType = MIN_RENDER_BODY_PX / BODY_PX;
+      if (scaleW < minScaleForType) {
+        scaleW = minScaleForType;
+      }
+
       setCropWindow({ minX, minY, width: winW, height: winH });
-      setScale(Math.min(w / winW, h / winH));
+      setScale(scaleW);
     };
 
     fit();
@@ -87,15 +100,21 @@ export default function PlacementBubbleScene() {
   }, []);
 
   const chatBottom = INSET + LAUNCHER + LAUNCHER_GAP;
-  const { minX, minY } = cropWindow;
+  const { minX, minY, width: winW, height: winH } = cropWindow;
   const sceneLeft = cropRight ? -minX * scale : 0;
   const sceneTop = cropRight ? -minY * scale : 0;
+  const layerStyle =
+    cropRight && winH > 0
+      ? ({ aspectRatio: `${winW} / ${winH}` } as const)
+      : undefined;
 
   return (
     <div
       ref={layerRef}
       className="dialogue-product-root dp-placement-layer dp-placement-layer--bubble"
       data-placement-crop={cropRight ? "right" : "full"}
+      data-placement-crop-width={cropRight ? MOBILE_SCENE_CROP_W : SCENE_W}
+      style={layerStyle}
     >
       <div className="dp-placement-viewport">
         <div
