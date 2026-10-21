@@ -187,7 +187,7 @@
 }
 
 .dp-summary__emph {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--dp-ink);
 }
 
@@ -387,6 +387,8 @@
   object-position: center;
   display: block;
   opacity: 1;
+  filter: blur(3px) saturate(1.05);
+  transform: scale(1.06);
 }
 
 .dp-clip-thumbs__time {
@@ -554,8 +556,8 @@
 }
 
 .dp-hero-compose__main {
-  flex: 0 1 auto;
-  width: min(420px, 48vw);
+  flex: 0 0 392px;
+  width: 392px;
   min-width: 0;
 }
 
@@ -1090,9 +1092,14 @@
   z-index: 1;
 }
 
+.dp-anatomy-scene {
+  width: 562px;
+  max-width: 100%;
+}
+
 .dp-anatomy {
   display: grid;
-  grid-template-columns: minmax(104px, 122px) minmax(44px, 56px) minmax(0, 1fr);
+  grid-template-columns: 122px 48px 392px;
   gap: 0;
   align-items: start;
   position: relative;
@@ -1129,9 +1136,18 @@
 }
 
 .dp-anatomy__num {
-  font-weight: 600;
-  color: var(--dp-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--dp-brand, #b43f7f);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 .dp-anatomy__name {
@@ -1423,6 +1439,156 @@
 .dialogue-product-block {
   width: 100%;
   min-width: 0;
+}
+
+.dialogue-product-block--static {
+  pointer-events: none;
+  user-select: none;
+}
+
+.dialogue-product-block--static * {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.dp-scaled-viewport {
+  width: 100%;
+  min-width: 0;
+}
+
+.dp-scaled-viewport__clip {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.dp-scaled-viewport__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(180deg, rgb(248 246 243 / 0%) 0%, var(--dp-bg) 88%);
+  pointer-events: none;
+}
+
+.dp-bubble-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--dp-brand, #b43f7f);
+  color: #fff;
+  box-shadow: var(--shadow-launcher);
+}
+
+.dp-bubble-launcher__icon {
+  width: 22px;
+  height: 22px;
+}
+
+.dp-source-pill--selected {
+  background: rgb(180 63 127 / 12%);
+  border-color: var(--dp-brand, #b43f7f);
+  color: var(--dp-ink);
+}
+
+.dp-synced-transcript {
+  margin-top: 10px;
+}
+
+.dp-synced-transcript__label {
+  margin: 0 0 6px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  color: var(--dp-muted);
+}
+
+.dp-synced-transcript__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dp-synced-transcript__row {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dp-muted);
+}
+
+.dp-synced-transcript__row--active {
+  background: rgb(180 63 127 / 10%);
+  border-radius: 6px;
+  color: var(--dp-ink);
+}
+
+.dp-synced-transcript__meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 2px;
+  font-size: var(--text-meta-size);
+}
+
+.dp-synced-transcript__speaker {
+  font-weight: 500;
+  color: var(--dp-ink);
+}
+
+.dp-synced-transcript__time {
+  color: var(--dp-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-theme-rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dp-theme-rank__row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+}
+
+.dp-theme-rank__num {
+  font-weight: 500;
+  color: var(--dp-brand, #b43f7f);
+}
+
+.dp-theme-rank__count {
+  color: var(--dp-muted);
+  white-space: nowrap;
+}
+
+.dp-coverage-callout {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgb(180 63 127 / 8%);
+  border: 1px solid rgb(180 63 127 / 18%);
+}
+
+.dp-coverage-callout__headline {
+  margin: 0;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  font-weight: 500;
+  color: var(--dp-ink);
+}
+
+.dp-coverage-callout__detail {
+  margin: 4px 0 0;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  color: var(--dp-muted);
 }
 
 .dp-chart-legend {

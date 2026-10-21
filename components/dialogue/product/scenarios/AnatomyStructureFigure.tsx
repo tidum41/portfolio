@@ -70,6 +70,7 @@ export default function AnatomyStructureFigure() {
   }, []);
 
   return (
+    <div className="dp-anatomy-scene">
     <div className="dp-anatomy dialogue-product-root" ref={rootRef}>
       <svg className="dp-anatomy__svg" aria-hidden>
         {lines.map((line, i) => (
@@ -100,6 +101,7 @@ export default function AnatomyStructureFigure() {
       <div className="dp-anatomy__diagram">
         <StructuredAnswerFigure anatomy />
       </div>
+    </div>
     </div>
   );
 }

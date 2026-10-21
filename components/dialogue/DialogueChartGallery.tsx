@@ -20,7 +20,7 @@ export default function DialogueChartGallery() {
     <div className="dialogue-chart-gallery">
       {CHART_EXPORTS.map((item) => (
         <div key={item.label} className="dialogue-chart-gallery__cell">
-          <DialogueRachelFrame label={item.label} tone="chart">
+          <DialogueRachelFrame label={item.label} tone="neutral">
             <DialogueProductFigure
               scenario={{ gallery: item.variant }}
               title={item.label}

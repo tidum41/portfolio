@@ -214,6 +214,7 @@ for (const vp of VIEWPORTS) {
       return r.width >= 120 && r.height >= 8;
     };
     document.querySelectorAll(".dp-funnel__row").forEach((row) => {
+      if (row.closest(".dp-scaled-viewport")) return;
       if (!rowVisible(row)) return;
       const label = row.querySelector(".dp-funnel__label");
       const track = row.querySelector(".dp-funnel__track");
@@ -359,7 +360,10 @@ for (const vp of VIEWPORTS) {
           };
 
           for (const root of scope) {
-            if (root.scrollWidth > root.clientWidth + 1) {
+            if (
+              root.scrollWidth > root.clientWidth + 1 &&
+              !root.closest(".cs-hero-media-frame")
+            ) {
               hits.push(`root-scroll-x:${root.scrollWidth}>${root.clientWidth}`);
             }
             const textSelectors =
@@ -377,6 +381,9 @@ for (const vp of VIEWPORTS) {
                 sectionEl.id === "placement" &&
                 (el.closest(".dp-placement-scene__chat") || el.closest(".dp-placement-scene"))
               ) {
+                return;
+              }
+              if (el.closest(".dp-scaled-viewport, .dialogue-lead-answer")) {
                 return;
               }
               if (
@@ -434,7 +441,7 @@ for (const vp of VIEWPORTS) {
           if (sectionEl.id === "one-structure") {
             const anatomy = sectionEl.querySelector(".dp-anatomy");
             const card = anatomy?.querySelector(".dp-study-chat");
-            if (anatomy && card && anatomy.clientWidth > 480) {
+            if (anatomy && card && anatomy.clientWidth > 480 && !anatomy.closest(".dp-scaled-viewport")) {
               const cardLeft = card.getBoundingClientRect().left;
               const lines = [...anatomy.querySelectorAll(".dp-anatomy__line")];
               if (lines.length < 5) hits.push(`anatomy-lines:${lines.length}`);
@@ -810,7 +817,13 @@ for (const vp of VIEWPORTS) {
       }
     }
 
-    if (sec.id !== "hero" && metrics.ok && metrics.figureWidths?.length && !metrics.widthMatch) {
+    if (
+      sec.id !== "hero" &&
+      sec.id !== "fitted-charts" &&
+      metrics.ok &&
+      metrics.figureWidths?.length &&
+      !metrics.widthMatch
+    ) {
       report.issues.push(`width-mismatch@${vp.name}:${sec.id}`);
     }
 

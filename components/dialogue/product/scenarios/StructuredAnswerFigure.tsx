@@ -32,11 +32,11 @@ export default function StructuredAnswerFigure({
           <QuerySearchStep searched={24} found={9} />
         </div>
         <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy />
-        <SourcesRow />
+        <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         {showClips && (
           <div className="dp-anatomy-target" data-anatomy-part="clips">
             <span className="dp-anatomy-part-marker" aria-hidden>4</span>
-            <ClipThumbnails />
+            <ClipThumbnails selectedTime="15:47" />
           </div>
         )}
         {!compact && (

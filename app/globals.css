@@ -1879,23 +1879,22 @@ html[data-theme="light"] {
 .dialogue-rachel-frame--solution {
   background: rgb(232, 220, 248);
 }
-.dialogue-rachel-frame--neutral {
-  background: rgb(244, 241, 236);
-}
+.dialogue-rachel-frame--neutral,
 .dialogue-rachel-frame--chart {
-  background: rgb(238, 242, 245);
+  background: rgb(244, 241, 236);
 }
 .dialogue-rachel-frame__label {
   display: block;
   padding: 12px 20px 0;
+  margin: 0 0 12px;
   font-family: var(--font-sans-medium);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
-  color: #1a1816 !important;
+  letter-spacing: 0.01em;
+  color: #57534d !important;
 }
 .dialogue-rachel-frame--problem .dialogue-rachel-frame__label,
-.dialogue-rachel-frame--chart .dialogue-rachel-frame__label,
 .dialogue-rachel-frame--solution .dialogue-rachel-frame__label {
   color: #1c1917 !important;
 }
@@ -1912,6 +1911,14 @@ html[data-theme="light"] {
   overflow: hidden;
   aspect-ratio: 3 / 2;
   background: #f8f6f3;
+}
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block,
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport {
+  height: 100%;
+  min-height: 100%;
+}
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport__clip {
+  height: 100%;
 }
 
 @media (max-width: 420px) {
@@ -2019,6 +2026,44 @@ html[data-theme="light"] {
 }
 .dialogue-live-block.cs-figure {
   margin: 24px 0 28px;
+}
+.dialogue-lead-answer__heading {
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-h3, 20px);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.dialogue-lead-answer__subheading {
+  margin: 0 0 20px;
+  color: var(--color-text-muted);
+}
+.dialogue-lead-answer__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.dialogue-lead-answer__row--stack {
+  grid-template-columns: 1fr;
+}
+.dialogue-lead-answer__panel-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #57534d;
+}
+.dialogue-lead-answer__panel-title {
+  margin: 10px 0 4px;
+  font-weight: 500;
+}
+.dialogue-lead-answer__panel-line {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+.dialogue-lead-answer__panel--dimmed {
+  opacity: 0.72;
 }
 .dialogue-chart-gallery {
   display: grid;

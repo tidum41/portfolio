@@ -6,7 +6,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import DecisionBlock from "@/components/DecisionBlock";
+import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
@@ -193,7 +193,7 @@ export function DialogueCaseStudyContent({
                 frameLabel="Problem: three paragraphs, no sources"
               />
 
-              <DecisionBlock
+              <DialogueLeadAnswerCompare
                 heading="Lead with the answer, back it with evidence"
                 subheading="Three ways the chat could answer the same question."
                 chosenId="structured"
@@ -201,6 +201,7 @@ export function DialogueCaseStudyContent({
                 options={[
                   {
                     id: "paragraphs",
+                    label: "Wall of text",
                     title: "Paragraphs",
                     priorityLine: "The priority is prose over evidence.",
                     howeverLine:
@@ -210,6 +211,7 @@ export function DialogueCaseStudyContent({
                   },
                   {
                     id: "quote-list",
+                    label: "Quotes only",
                     title: "Quote list",
                     priorityLine: "The priority is fidelity over synthesis.",
                     howeverLine: "However, there is no answer line. You still do the counting.",
@@ -218,10 +220,10 @@ export function DialogueCaseStudyContent({
                   },
                   {
                     id: "structured",
+                    label: "Answer + evidence",
                     title: "Structured answer",
                     priorityLine: "The priority is clarity over raw quotes.",
                     selectionNote: "We went with this",
-                    reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },

@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
+import DialogueLauncherButton from "@/components/dialogue/product/DialogueLauncherButton";
 import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
 import { dialogueProductTokens } from "@/components/dialogue/product/tokens";
 
@@ -141,11 +142,9 @@ export default function PlacementBubbleScene() {
           </div>
           <div
             className="dp-placement-scene__launcher dp-bubble-launcher-inset"
-            aria-hidden
-            title="Collapsed launcher"
-            style={{ width: LAUNCHER, height: LAUNCHER, right: INSET, bottom: INSET }}
+            style={{ right: INSET, bottom: INSET }}
           >
-            ◐
+            <DialogueLauncherButton size={LAUNCHER} />
           </div>
         </div>
       </div>

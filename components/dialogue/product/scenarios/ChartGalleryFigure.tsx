@@ -1,6 +1,8 @@
 import LineChart from "@/components/dialogue/product/LineChart";
 import FunnelChart from "@/components/dialogue/product/FunnelChart";
-import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
+import ThemeRankingCard from "@/components/dialogue/product/ThemeRankingCard";
+import QuoteFrequencyCard from "@/components/dialogue/product/QuoteFrequencyCard";
+import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
@@ -77,18 +79,17 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
         <StudyChatShell compact>
           <UserMessageBubble>Top themes in checkout frustration</UserMessageBubble>
           <QuerySearchStep searched={24} found={16} />
-          <div className="dp-quote-list">
-            {["Address validation", "Unexpected fees", "Saved payment"].map((t, i) => (
-              <div key={t} className="dp-quote-item">
-                <strong>{i + 1}. {t}</strong>
-                Mentioned in {18 - i * 3} interviews
-              </div>
-            ))}
-          </div>
+          <ThemeRankingCard />
         </StudyChatShell>
       );
     case "quote-freq":
-      return <StructuredAnswerFigure compact showClips={false} />;
+      return (
+        <StudyChatShell compact>
+          <UserMessageBubble>How often did address friction come up?</UserMessageBubble>
+          <QuerySearchStep searched={24} found={14} />
+          <QuoteFrequencyCard />
+        </StudyChatShell>
+      );
     case "timeline":
       return (
         <StudyChatShell compact>
@@ -108,11 +109,14 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "coverage":
       return (
-        <StudyChatShell>
+        <StudyChatShell compact>
           <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
           <QuerySearchStep searched={24} found={9} />
-          <p className="dp-text-meta">18 of 24 participants mentioned address friction</p>
-          <FunnelChart compact />
+          <CoverageCallout
+            headline="18 of 24 participants mentioned address friction"
+            detail="75% coverage on the shipping step in this study"
+          />
+          <FunnelChart compact vizCard={false} showLargestDrop={false} />
         </StudyChatShell>
       );
     default:
