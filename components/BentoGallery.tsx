@@ -1614,8 +1614,7 @@ export default function BentoGallery({
                                         fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
-                                        lineHeight: "var(--lh-caption)",
+                                        lineHeight: 1.3,
                                         // Hide truncated preview while focused overlay is up
                                         visibility: isActive ? "hidden" : "visible",
                                         // Linked tiles: blue on focus (and a
@@ -1702,8 +1701,7 @@ export default function BentoGallery({
                                         fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
-                                        lineHeight: "var(--lh-caption)",
+                                        lineHeight: 1.3,
                                         color: item.link
                                           ? "var(--color-link-blue)"
                                           : captionActive,
