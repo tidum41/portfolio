@@ -10,17 +10,22 @@ import { CHECKOUT_QUESTION, CLIPS } from "@/lib/dialogue/product/sampleData";
 type Props = {
   showClips?: boolean;
   compact?: boolean;
+  hero?: boolean;
 };
 
-export default function StructuredAnswerFigure({ showClips = true, compact }: Props) {
+export default function StructuredAnswerFigure({
+  showClips = true,
+  compact,
+  hero,
+}: Props) {
   return (
-    <StudyChatShell compact={compact}>
+    <StudyChatShell compact={compact || hero} hero={hero}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
-      <FunnelChart compact={compact} />
-      {showClips && <ClipCard clip={CLIPS[0]} />}
-      <SourcesRow />
-      {!compact && <FollowUpChips />}
+      <FunnelChart compact={compact} hero={hero} showFootnote />
+      {showClips && !hero && <ClipCard clip={CLIPS[0]} />}
+      {!hero && <SourcesRow />}
+      {!compact && !hero && <FollowUpChips />}
     </StudyChatShell>
   );
 }

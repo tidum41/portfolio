@@ -1909,7 +1909,9 @@ html[data-theme="light"] {
   background: #f8f6f3;
 }
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure,
-.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure__iframe {
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure__iframe,
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block,
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-figure--hero-fill {
   height: 100% !important;
   min-height: 100%;
 }

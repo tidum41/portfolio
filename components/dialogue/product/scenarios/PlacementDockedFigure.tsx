@@ -1,12 +1,14 @@
 import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
-import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
+import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
 
 export default function PlacementDockedFigure() {
   return (
     <div className="dialogue-product-root dp-placement-layer">
-      <StudyPageChrome />
+      <div className="dp-placement-study-wrap">
+        <StudyPageChrome />
+      </div>
       <div className="dp-docked-chat">
-        <StructuredAnswerFigure compact showClips={false} />
+        <PlacementChatPreview />
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import LineChart from "@/components/dialogue/product/LineChart";
 import { CHECKOUT_QUESTION, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 
 export default function QuoteListFigure() {
@@ -15,7 +14,6 @@ export default function QuoteListFigure() {
           </div>
         ))}
       </div>
-      <LineChart />
     </StudyChatShell>
   );
 }

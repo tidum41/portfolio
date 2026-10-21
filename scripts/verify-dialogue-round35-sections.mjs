@@ -30,84 +30,6 @@ const VIEWPORTS = [
   { name: "390", width: 390, height: 844 },
 ];
 
-function auditDomSection(sectionEl) {
-  const hits = [];
-  const roots = sectionEl.querySelectorAll(".dialogue-product-root, .dialogue-product-figure");
-  const scope = roots.length ? [...roots] : [sectionEl];
-
-  for (const root of scope) {
-    if (root.scrollWidth > root.clientWidth + 1) {
-      hits.push(`root-scroll-x:${root.scrollWidth}>${root.clientWidth}`);
-    }
-    root.querySelectorAll("*").forEach((el) => {
-      const st = getComputedStyle(el);
-      const ox = st.overflowX;
-      const oy = st.overflowY;
-      if (
-        (ox === "hidden" || ox === "clip") &&
-        el.scrollWidth > el.clientWidth + 1
-      ) {
-        hits.push(`el-scroll-x:${el.tagName}`);
-      }
-      if (
-        (oy === "hidden" || oy === "clip") &&
-        el.scrollHeight > el.clientHeight + 1
-      ) {
-        hits.push(`el-scroll-y:${el.tagName}`);
-      }
-    });
-
-    root.querySelectorAll("p, span, li, td, th, label, h1, h2, h3, button, .dp-text-body").forEach((el) => {
-      const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
-      if (text.length < 4) return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width < 2) return;
-      let clipper = el.parentElement;
-      while (clipper && clipper !== root && clipper !== document.body) {
-        const st = getComputedStyle(clipper);
-        if (st.overflowX === "hidden" || st.overflowX === "clip" || st.overflow === "hidden") {
-          const cRect = clipper.getBoundingClientRect();
-          if (rect.right > cRect.right + 1.5) {
-            hits.push(`text-clip:${text.slice(0, 36)}`);
-          }
-          break;
-        }
-        clipper = clipper.parentElement;
-      }
-    });
-
-    const bodies = [...root.querySelectorAll(".dp-text-body, .dp-text-prose-sm, .dp-study-chat__body p")];
-    for (const node of bodies) {
-      const text = node.textContent?.trim() ?? "";
-      if (text.length < 4) continue;
-      const px = parseFloat(getComputedStyle(node).fontSize);
-      if (Number.isFinite(px) && px < 12) {
-        hits.push(`font<12:${px}`);
-      }
-    }
-  }
-
-  if (sectionEl.id === "placement") {
-    const docked = sectionEl.querySelector('[hidden] .dp-docked-chat, .dp-docked-chat');
-    const bubble = sectionEl.querySelector(".dp-floating-chat, .dp-bubble-launcher");
-    const visibleDock = sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-docked-chat");
-    const visibleBubble =
-      sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-floating-chat") ||
-      sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-bubble-launcher");
-    if (!visibleDock && !visibleBubble && !docked && !bubble) {
-      hits.push("placement-missing-ui");
-    }
-    const activeChat = sectionEl.querySelector(
-      ".dialogue-placement-compare__figure:not([hidden]) .dp-study-chat",
-    );
-    if (!activeChat) {
-      hits.push("placement-missing-chat");
-    }
-  }
-
-  return [...new Set(hits)];
-}
-
 async function waitForPageReady(page) {
   await page.waitForSelector(".dialogue-case-study", { timeout: 60000 });
   await page.evaluate(async () => {
@@ -162,6 +84,11 @@ for (const vp of VIEWPORTS) {
     if ((await el.count()) === 0) {
       report.issues.push(`${sec.id}@${vp.name}:selector missing`);
       continue;
+    }
+
+    if (sec.id === "placement") {
+      await page.locator('.dialogue-placement-compare__option:has-text("Floating bubble")').click();
+      await page.waitForTimeout(200);
     }
 
     await page.evaluate((sel) => {
@@ -227,53 +154,79 @@ for (const vp of VIEWPORTS) {
       (sel) => {
         const section = document.querySelector(sel);
         if (!section) return [];
-        function auditDomSection(sectionEl) {
+        const outerClip = section.classList.contains("dialogue-hero-joola") ? section : null;
+        function auditDomSection(sectionEl, outerClipEl) {
           const hits = [];
           const roots = sectionEl.querySelectorAll(".dialogue-product-root, .dialogue-product-figure");
           const scope = roots.length ? [...roots] : [sectionEl];
+
+          const isTextVisuallyClipped = (el, root, outerClip) => {
+            const rect = el.getBoundingClientRect();
+            const tol = 1.5;
+            if (rect.width < 2 || rect.height < 2) return false;
+
+            let clipper = el.parentElement;
+            while (clipper && clipper !== root && clipper !== document.body) {
+              const st = getComputedStyle(clipper);
+              const clipX =
+                st.overflowX === "hidden" || st.overflowX === "clip" || st.overflow === "hidden";
+              const clipY =
+                st.overflowY === "hidden" || st.overflowY === "clip" || st.overflow === "hidden";
+              if (clipX || clipY) {
+                const cRect = clipper.getBoundingClientRect();
+                if (clipX && rect.right > cRect.right + tol) return true;
+                if (clipX && rect.left < cRect.left - tol) return true;
+                if (clipY && rect.bottom > cRect.bottom + tol) return true;
+                if (clipY && rect.top < cRect.top - tol) return true;
+              }
+              clipper = clipper.parentElement;
+            }
+
+            if (outerClip) {
+              const cRect = outerClip.getBoundingClientRect();
+              if (rect.right > cRect.right + tol) return true;
+              if (rect.left < cRect.left - tol) return true;
+              if (rect.bottom > cRect.bottom + tol) return true;
+              if (rect.top < cRect.top - tol) return true;
+            }
+            return false;
+          };
+
           for (const root of scope) {
             if (root.scrollWidth > root.clientWidth + 1) {
               hits.push(`root-scroll-x:${root.scrollWidth}>${root.clientWidth}`);
             }
-            root.querySelectorAll("p, span, .dp-text-body, .dp-text-prose-sm").forEach((el) => {
+            const textSelectors =
+              "p, span, li, td, th, label, h1, h2, h3, h4, button, .dp-text-body, text";
+            root.querySelectorAll(textSelectors).forEach((el) => {
               const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
               if (text.length < 4) return;
-              const rect = el.getBoundingClientRect();
-              let clipper = el.parentElement;
-              while (clipper && clipper !== root) {
-                const st = getComputedStyle(clipper);
-                if (st.overflowX === "hidden" || st.overflow === "hidden") {
-                  const cRect = clipper.getBoundingClientRect();
-                  if (rect.right > cRect.right + 1.5) {
-                    hits.push(`text-clip:${text.slice(0, 36)}`);
-                  }
-                  break;
-                }
-                clipper = clipper.parentElement;
+              if (isTextVisuallyClipped(el, root, outerClipEl)) {
+                hits.push(`text-trunc:${text.slice(0, 40)}`);
               }
               const px = parseFloat(getComputedStyle(el).fontSize);
-              if (Number.isFinite(px) && px < 12 && text.length >= 4) {
+              if (Number.isFinite(px) && px < 12 && text.length >= 4 && el.tagName !== "text") {
                 hits.push(`font<12:${px}`);
               }
             });
           }
+
           if (sectionEl.id === "placement") {
             const activeChat = sectionEl.querySelector(
               ".dialogue-placement-compare__figure:not([hidden]) .dp-study-chat",
             );
             if (!activeChat) hits.push("placement-missing-chat");
-            const bubbleUi =
-              sectionEl.querySelector(
-                ".dialogue-placement-compare__figure:not([hidden]) .dp-floating-chat",
-              ) ||
-              sectionEl.querySelector(
-                ".dialogue-placement-compare__figure:not([hidden]) .dp-docked-chat",
-              );
-            if (!bubbleUi) hits.push("placement-missing-pattern");
+            const launcher = sectionEl.querySelector(
+              ".dialogue-placement-compare__figure:not([hidden]) .dp-bubble-launcher-inset",
+            );
+            const activeBubble = sectionEl.querySelector(
+              '.dialogue-placement-compare__figure:not([hidden]) [data-dialogue-asset-id="D-14"]',
+            );
+            if (activeBubble && !launcher) hits.push("placement-missing-launcher-inset");
           }
           return [...new Set(hits)];
         }
-        return auditDomSection(section);
+        return auditDomSection(section, outerClip);
       },
       sec.selector,
     );

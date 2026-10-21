@@ -1,37 +1,20 @@
-"use client";
-
-import { useState } from "react";
 import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
-import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
+import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
 
-export default function PlacementBubbleFigure({ collapsed = false }: { collapsed?: boolean }) {
-  const [open, setOpen] = useState(!collapsed);
+export default function PlacementBubbleFigure() {
   return (
     <div className="dialogue-product-root dp-placement-layer">
-      <StudyPageChrome />
-      {open ? (
-        <div className="dp-floating-chat">
-          <StructuredAnswerFigure compact showClips={false} />
-          <button
-            type="button"
-            className="dp-chip"
-            style={{ marginTop: 6, width: "100%", cursor: "default" }}
-            onClick={() => setOpen(false)}
-            aria-label="Minimize chat"
-          >
-            Minimize
-          </button>
+      <div className="dp-placement-study-wrap">
+        <StudyPageChrome />
+      </div>
+      <div className="dp-floating-chat" aria-label="Open chat">
+        <div className="dp-floating-chat__scale">
+          <PlacementChatPreview />
         </div>
-      ) : (
-        <button
-          type="button"
-          className="dp-bubble-launcher"
-          aria-label="Open chat"
-          onClick={() => setOpen(true)}
-        >
-          ◐
-        </button>
-      )}
+      </div>
+      <div className="dp-bubble-launcher-inset" aria-hidden title="Collapsed launcher">
+        ◐
+      </div>
     </div>
   );
 }
