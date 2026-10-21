@@ -1,4 +1,4 @@
-import { DialogueAsteriskIcon } from "@/components/dialogue/product/icons";
+import DialogueWordmark from "@/components/dialogue/product/DialogueWordmark";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
@@ -17,8 +17,7 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
       <div className="dp-app-shell dp-app-shell--placement" aria-hidden>
         <aside className="dp-app-sidebar dp-app-sidebar--placement">
           <div className="dp-app-sidebar__brand">
-            <DialogueAsteriskIcon className="dp-app-sidebar__logo" />
-            <span className="dp-app-sidebar__wordmark">{dialogueCopy.wordmark}</span>
+            <DialogueWordmark className="dp-app-sidebar__wordmark-img" />
           </div>
           <nav className="dp-app-sidebar__nav">
             <div className="dp-app-sidebar__nav-item dp-app-sidebar__nav-item--active">Insights</div>
@@ -42,6 +41,20 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
     );
   }
 
+  const sidebarNav = paperScale
+    ? [
+        { label: "Insights", active: true },
+        { label: "Plan", active: false },
+        { label: nav.sections, active: false },
+        { label: "People", active: false },
+      ]
+    : [
+        { label: placement ? "Insights" : nav.insightsSummary, active: true },
+        { label: placement ? "Plan" : nav.researchPlan, active: false },
+        { label: nav.sections, active: false },
+        { label: placement ? "People" : nav.participants, active: false },
+      ];
+
   return (
     <div
       className={["dp-study-page-wrap", paperScale ? "dp-study-page-wrap--paper-scale" : ""]
@@ -49,24 +62,31 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
         .join(" ")}
       aria-hidden
     >
-      <div className="dp-app-shell" data-export-app-shell="true">
+      <div
+        className={["dp-app-shell", paperScale ? "dp-app-shell--parity-400" : ""]
+          .filter(Boolean)
+          .join(" ")}
+        data-export-app-shell="true"
+      >
         <aside className="dp-app-sidebar">
           <div className="dp-app-sidebar__brand">
-            <DialogueAsteriskIcon className="dp-app-sidebar__logo" />
-            <span className="dp-app-sidebar__wordmark">{dialogueCopy.wordmark}</span>
+            <DialogueWordmark className="dp-app-sidebar__wordmark-img" />
           </div>
           <div className="dp-app-sidebar__skeleton" />
           <nav className="dp-app-sidebar__nav">
-            <div className="dp-app-sidebar__nav-item dp-app-sidebar__nav-item--active">
-              {placement ? "Insights" : nav.insightsSummary}
-            </div>
-            <div className="dp-app-sidebar__nav-item">
-              {placement ? "Plan" : nav.researchPlan}
-            </div>
-            <div className="dp-app-sidebar__nav-item">{nav.sections}</div>
-            <div className="dp-app-sidebar__nav-item">
-              {placement ? "People" : nav.participants}
-            </div>
+            {sidebarNav.map((item) => (
+              <div
+                key={item.label}
+                className={[
+                  "dp-app-sidebar__nav-item",
+                  item.active ? "dp-app-sidebar__nav-item--active" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                {item.label}
+              </div>
+            ))}
           </nav>
         </aside>
         <div className="dp-app-main">

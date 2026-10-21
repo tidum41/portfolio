@@ -16,22 +16,32 @@ export const metadata: Metadata = {
   title: "Dialogue DS parity (internal)",
 };
 
-/** Paper chat panel width (`section-3.html` export). */
-const LIVE_W = 400;
+/** Native export layout widths (transforms stripped in parity capture). */
+const PARITY_W = {
+  "chat-shell": 400,
+  "answer-card": 400,
+  funnel: 343,
+  "clip-row": 343,
+  "follow-ups": 343,
+  "study-chrome": 400,
+} as const;
 
-function LiveFrame({ children }: { children: ReactNode }) {
+function LiveFrame({ id, children }: { id: keyof typeof PARITY_W; children: ReactNode }) {
+  const width = PARITY_W[id];
   return (
     <div
       data-parity-live
       style={{
-        width: LIVE_W,
+        width,
+        maxWidth: width,
         background: "var(--dp-bg)",
         padding: 0,
         borderRadius: 8,
         overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
-      <div className="dialogue-product-root">{children}</div>
+      <div className="dialogue-product-root dp-chat-panel-typography">{children}</div>
     </div>
   );
 }
@@ -49,7 +59,7 @@ export default function DialogueDsParityPage() {
       }}
     >
       <section data-parity-id="chat-shell">
-        <LiveFrame>
+        <LiveFrame id="chat-shell">
           <StudyChatShell>
             <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
             <QuerySearchStep searched={24} found={9} />
@@ -58,31 +68,31 @@ export default function DialogueDsParityPage() {
       </section>
 
       <section data-parity-id="answer-card">
-        <LiveFrame>
+        <LiveFrame id="answer-card">
           <StructuredAnswerFigure />
         </LiveFrame>
       </section>
 
       <section data-parity-id="funnel">
-        <LiveFrame>
+        <LiveFrame id="funnel">
           <FunnelChart vizCard />
         </LiveFrame>
       </section>
 
       <section data-parity-id="clip-row">
-        <LiveFrame>
+        <LiveFrame id="clip-row">
           <ClipThumbnails />
         </LiveFrame>
       </section>
 
       <section data-parity-id="follow-ups">
-        <LiveFrame>
+        <LiveFrame id="follow-ups">
           <FollowUpChips />
         </LiveFrame>
       </section>
 
       <section data-parity-id="study-chrome">
-        <LiveFrame>
+        <LiveFrame id="study-chrome">
           <StudyPageChrome paperScale />
         </LiveFrame>
       </section>

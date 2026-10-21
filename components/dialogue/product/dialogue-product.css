@@ -11,6 +11,25 @@
   overflow: hidden;
 }
 
+/* Paper chat panel typography (`section-3.html` sets 16/24 body, 14/20 meta on panel). */
+.dp-chat-panel-typography,
+.dp-study-chat,
+.dp-viz-card,
+.dp-clip-thumbs,
+.dp-followups {
+  --text-body-size: 16px;
+  --text-body-leading: 24px;
+  --text-meta-size: 14px;
+  --text-meta-leading: 20px;
+}
+
+.dp-study-chat--hero {
+  --text-body-size: 14px;
+  --text-body-leading: 20px;
+  --text-meta-size: 12px;
+  --text-meta-leading: 16px;
+}
+
 .dialogue-product-root *,
 .dialogue-product-root *::before,
 .dialogue-product-root *::after {
@@ -355,12 +374,19 @@
   box-shadow: inset 0 0 0 2px rgb(180 63 127 / 40%);
 }
 
+.dp-clip-thumbs__frame:not(.dp-clip-thumbs__frame--focal) {
+  box-shadow: none;
+}
+
 .dp-clip-thumbs__img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
+  opacity: 1;
 }
 
 .dp-clip-thumbs__time {
@@ -527,13 +553,7 @@
 
 .dp-study-page-wrap--paper-scale {
   width: 400px;
-  height: 234px;
-  overflow: hidden;
-}
-
-.dp-study-page-wrap--paper-scale .dp-app-shell {
-  transform: scale(0.4338);
-  transform-origin: top left;
+  min-height: 234px;
 }
 
 .dp-app-shell {
@@ -546,8 +566,60 @@
   overflow: hidden;
 }
 
+/* Parity / narrow capture: 400px-wide shell without CSS transform (avoids glyph spacing bugs). */
+.dp-app-shell--parity-400 {
+  width: 400px;
+  height: 234px;
+}
+
+.dp-app-shell--parity-400 .dp-app-sidebar {
+  width: 109px;
+  padding: 7px 6px;
+  gap: 5px;
+}
+
+.dp-app-shell--parity-400 .dp-app-sidebar__wordmark-img {
+  height: 18px;
+}
+
+.dp-app-shell--parity-400 .dp-app-sidebar__skeleton {
+  width: 42px;
+}
+
+.dp-app-shell--parity-400 .dp-app-sidebar__nav-item {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-app-shell--parity-400 .dp-app-main__title {
+  font-size: 12px;
+}
+
+.dp-app-shell--parity-400 .dp-app-tab {
+  font-size: 10px;
+}
+
+.dp-app-shell--parity-400 .dp-app-stat-grid,
+.dp-app-shell--parity-400 .dp-app-insights-card {
+  max-width: 130px;
+}
+
+.dp-app-shell--parity-400 .dp-app-stat-card__label {
+  font-size: 9px;
+}
+
+.dp-app-shell--parity-400 .dp-app-insights-card__title {
+  font-size: 10px;
+}
+
+.dp-app-shell--parity-400 .dp-app-chip {
+  font-size: 9px;
+}
+
 .dp-app-sidebar {
-  width: 188px;
+  width: var(--dp-sidebar-width, 252px);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -560,20 +632,14 @@
 .dp-app-sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--dp-brand-icon);
+  min-width: 0;
 }
 
-.dp-app-sidebar__logo {
-  width: 20px;
-  height: 20px;
-}
-
-.dp-app-sidebar__wordmark {
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: var(--dp-muted-light);
+.dp-app-sidebar__wordmark-img {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 100%;
 }
 
 .dp-app-sidebar__skeleton {
@@ -1048,11 +1114,14 @@
 }
 
 .dp-player {
-  background: #111;
-  border-radius: var(--dp-radius-sm);
-  aspect-ratio: 16 / 10;
+  background: var(--dp-media-surface-bg, rgb(0 0 0 / 25%));
+  border-radius: var(--dp-media-radius, 2rem);
+  border: 1px solid var(--dp-media-border, rgb(0 0 0 / 10%));
+  aspect-ratio: 16 / 9;
   position: relative;
   overflow: hidden;
+  font-size: var(--dp-media-font-size, 0.8125rem);
+  line-height: 1.5;
 }
 
 .dp-player__time {

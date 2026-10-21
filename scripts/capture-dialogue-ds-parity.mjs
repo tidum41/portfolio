@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * DS parity: reference = Paper static export DOM; live = /dialogue/ds-parity @ 400px (prod only).
+ * DS parity: reference = Paper static export DOM (1×, transforms stripped); live = /dialogue/ds-parity @ 400px.
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -14,41 +14,32 @@ const PORT = Number(process.env.ROUND35_PORT || 3020);
 const BASE = process.env.BASE_URL || `http://127.0.0.1:${PORT}`;
 const PANEL_W = 400;
 
-/** Reference crops from static export HTML (same logical width as live panel). */
+/** Reference crops from static export HTML at native CSS width (no upscaling). */
 const REF_SPECS = {
   "chat-shell": {
     html: "/dev/dialogue-static/export/section-3.html",
     selector: "[data-export-chat-panel]",
-    clip: async (buf) => sharp(buf).resize({ width: PANEL_W }).png().toBuffer(),
   },
   "answer-card": {
     html: "/dev/dialogue-static/export/section-3.html",
     selector: "[data-export-chat-panel]",
-    clip: async (buf) => sharp(buf).resize({ width: PANEL_W }).png().toBuffer(),
   },
   funnel: {
     html: "/dev/dialogue-static/export/section-3.html",
     selector: '[data-testid="viz-card"]',
-    clip: async (buf) => sharp(buf).resize({ width: PANEL_W }).png().toBuffer(),
   },
   "clip-row": {
     html: "/dev/dialogue-static/export/section-3.html",
     selector: '[data-anatomy-region="4"]',
-    clip: async (buf) => sharp(buf).resize({ width: PANEL_W }).png().toBuffer(),
   },
   "follow-ups": {
     html: "/dev/dialogue-static/export/section-3.html",
     selector: '[data-anatomy-region="5"]',
-    clip: async (buf) => sharp(buf).resize({ width: PANEL_W }).png().toBuffer(),
   },
   "study-chrome": {
     html: "/dev/dialogue-static/export/section-6.html",
     selector: "[data-export-app-shell]",
-    clip: async (buf) =>
-      sharp(buf)
-        .resize({ width: PANEL_W, fit: "inside" })
-        .png()
-        .toBuffer(),
+    downscaleRefTo: PANEL_W,
   },
 };
 
@@ -71,17 +62,57 @@ async function assertProd() {
   }
 }
 
-async function captureRef(browser, id, spec) {
-  const page = await browser.newPage({ viewport: { width: 1400, height: 1200 } });
-  await page.goto(`${BASE}${spec.html}`, { waitUntil: "load" });
+async function waitForDmSans(page) {
   await page.waitForFunction(() => document.fonts.ready);
-  await page.waitForTimeout(300);
+  await page.waitForFunction(
+    () =>
+      document.fonts.check('400 16px "DM Sans"') ||
+      document.fonts.check('16px "DM Sans"') ||
+      document.fonts.check('14px "DM Sans"'),
+    undefined,
+    { timeout: 15000 },
+  );
+}
+
+/** Reset ancestor transforms so element screenshots use layout CSS width (not export canvas scale). */
+async function prepareExportRoot(page, selector) {
+  await page.evaluate((sel) => {
+    const target = document.querySelector(sel);
+    if (!target) return;
+    document.body.style.margin = "0";
+    document.body.style.padding = "16px";
+    document.body.style.background = "#f8f6f3";
+    let p = target;
+    while (p) {
+      p.style.transform = "none";
+      p.style.filter = "none";
+      p = p.parentElement;
+    }
+  }, selector);
+}
+
+async function captureRef(browser, id, spec) {
+  const page = await browser.newPage({ viewport: { width: 1200, height: 1400 } });
+  await page.goto(`${BASE}${spec.html}`, { waitUntil: "load" });
+  await waitForDmSans(page);
+  await prepareExportRoot(page, spec.selector);
+  await page.waitForTimeout(200);
   const el = page.locator(spec.selector).first();
-  const raw = await el.screenshot();
+  await el.waitFor({ state: "visible", timeout: 15000 });
+  const raw = await el.screenshot({ animations: "disabled" });
   await page.close();
-  const clipped = spec.clip ? await spec.clip(raw) : raw;
+
+  let buf = raw;
+  const meta = await sharp(buf).metadata();
+  if (spec.downscaleRefTo && meta.width && meta.width > spec.downscaleRefTo) {
+    buf = await sharp(buf)
+      .resize({ width: spec.downscaleRefTo, withoutEnlargement: true })
+      .png()
+      .toBuffer();
+  }
+
   const refPath = path.join(OUT, `${id}-ref.png`);
-  await sharp(clipped).png().toFile(refPath);
+  await sharp(buf).png().toFile(refPath);
   return refPath;
 }
 
@@ -113,8 +144,27 @@ for (const [id, spec] of Object.entries(REF_SPECS)) {
 
 const page = await browser.newPage({ viewport: { width: 1280, height: 2400 } });
 await page.goto(`${BASE}/dialogue/ds-parity`, { waitUntil: "load" });
-await page.waitForFunction(() => document.fonts.ready);
-await page.waitForTimeout(400);
+await waitForDmSans(page);
+await page.waitForTimeout(300);
+
+const fontAudit = await page.evaluate(() => {
+  const bubble = document.querySelector('[data-parity-id="chat-shell"] .dp-user-bubble p');
+  const st = bubble ? getComputedStyle(bubble) : null;
+  return {
+    bubbleFontSize: st?.fontSize,
+    bubbleFontFamily: st?.fontFamily,
+    dmSansLoaded:
+      document.fonts.check('400 16px "DM Sans"') || document.fonts.check('16px "DM Sans"'),
+    fontsReady: document.fonts.status === "loaded",
+  };
+});
+
+if (!fontAudit.dmSansLoaded) {
+  throw new Error(`DM Sans not loaded before live capture: ${JSON.stringify(fontAudit)}`);
+}
+if (fontAudit.bubbleFontSize !== "16px") {
+  throw new Error(`Chat bubble not 16px before capture: ${JSON.stringify(fontAudit)}`);
+}
 
 for (const id of Object.keys(REF_SPECS)) {
   const live = page.locator(`[data-parity-id="${id}"] [data-parity-live]`);
@@ -122,17 +172,38 @@ for (const id of Object.keys(REF_SPECS)) {
   await live.screenshot({ path: livePath });
 
   const refMeta = await sharp(path.join(OUT, `${id}-ref.png`)).metadata();
-  const h = refMeta.height ?? 200;
   const refW = refMeta.width ?? PANEL_W;
+  const h = refMeta.height ?? 200;
+
+  const liveMeta = await sharp(livePath).metadata();
+  if (liveMeta.width !== refW) {
+    console.warn(
+      JSON.stringify({
+        warn: "width-mismatch",
+        id,
+        refW,
+        liveW: liveMeta.width,
+      }),
+    );
+  }
+
+  const compareW = refW;
+  const compareH = h;
 
   const liveBuf = await sharp(livePath)
-    .resize({ width: refW, height: h, fit: "contain", background: "#f8f6f3" })
+    .resize({ width: compareW, height: compareH, fit: "contain", background: "#f8f6f3" })
     .png()
     .toBuffer();
   const refBuf = await sharp(path.join(OUT, `${id}-ref.png`))
-    .resize({ width: refW, height: h, fit: "fill" })
+    .resize({ width: compareW, height: compareH, fit: "fill" })
     .png()
     .toBuffer();
+
+  if (liveMeta.width && Math.abs(liveMeta.width - compareW) > 2) {
+    console.warn(
+      JSON.stringify({ warn: "live-width-drift", id, expected: compareW, liveW: liveMeta.width }),
+    );
+  }
 
   await sharp({
     create: { width: refW * 2, height: h, channels: 3, background: "#111111" },
@@ -154,53 +225,27 @@ const report = `# Dialogue DS parity report
 
 Generated: ${new Date().toISOString()}
 Base: ${BASE}
-Panel width: ${PANEL_W}px (Paper \`section-3.html\` chat panel)
+Panel width: ${PANEL_W}px
 
-## Paper / static source of truth
+## Font gate (live capture)
 
-${[
-  "/cursor/stores/bot/dialogue-sources/paper/dialogue-paper-frames-oct18.txt",
-  "/cursor/stores/bot/dialogue-sources/paper/player-controls-paper-5SR-0.tsx.txt",
-  "/cursor/stores/bot/dialogue-sources/paper/player-dialog-paper-597-0.txt",
-  "public/dev/dialogue-static/_next/static/css/fde99ba4c3e111ce.css",
-  "public/dev/dialogue-static/export/section-3.html",
-  "public/dev/dialogue-static/export/section-6.html",
-]
-  .map((f) => `- \`${f}\``)
-  .join("\n")}
-
-## Reference captures (Playwright → static export selectors)
-
-${Object.entries(REF_SPECS)
-  .map(([id, s]) => `- **${id}**: \`${s.html}\` → \`${s.selector}\``)
-  .join("\n")}
-
-## Outputs
-
-${Object.keys(REF_SPECS)
-  .map(
-    (id) =>
-      `- \`${id}-compare.png\` (left = Paper export, right = live)\n- \`${id}-overlay.png\` (50% blend)`,
-  )
-  .join("\n")}
+\`\`\`json
+${JSON.stringify(fontAudit, null, 2)}
+\`\`\`
 
 ## Remaining mismatches (eyeball)
 
 | Area | Notes |
 |------|-------|
-| **answer-card height** | Reference \`chat-shell\` and \`answer-card\` both screenshot the full export panel; live answer-card adds sources row — taller than ref for that id. |
-| **chat-shell** | Header padding and scroll region should match \`p-7\` / \`gap-3\`; minor shadow blur delta vs rasterized export. |
-| **funnel** | Per-step bar hex matches export; focal % brand weight may differ ±1px. |
-| **clip-row** | Third thumb time in export reuses still-thumb-2; live uses still-thumb-1 for the third slot. |
-| **study-chrome** | Live uses scale wrapper to 400px; sidebar wordmark grey vs any PNG review is aligned to \`#78716C\`. |
-| **Sources row** | Not in parity ids; full structured answer on case study still shows source pills below clips. |
+| **answer-card height** | Live includes sources row below clips; ref panel crop is full export panel only. |
+| **study-chrome** | Ref downscaled from 922px export shell to ${PANEL_W}px; live uses native \`dp-app-shell--parity-400\` (no transform). |
+| **clip-row** | Third thumb matches export (\`still-thumb-2\` @ 16:02). |
 
 ## Token files
 
 - \`components/dialogue/product/tokens.ts\`
 - \`components/dialogue/product/tokens.css\`
-- \`design/briefs/dialogue-ds-tokens.md\`
 `;
 
 fs.writeFileSync(path.join(OUT, "parity-report.md"), report);
-console.log(JSON.stringify({ out: OUT, report: path.join(OUT, "parity-report.md") }, null, 2));
+console.log(JSON.stringify({ out: OUT, fontAudit, report: path.join(OUT, "parity-report.md") }, null, 2));
