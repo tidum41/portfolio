@@ -144,7 +144,7 @@ export interface SanityProject {
 }
 
 const PROJECTS_QUERY = `*[_type == "project" && featured == true] | order(order asc) {
-  _id, title, subtitle, href, mediaType, muxPlaybackId,
+  _id, title, subtitle, label, href, mediaType, muxPlaybackId,
   image { asset->{ url }, hotspot },
   aspectRatio, order, featured, caseStudy
 }`;
@@ -206,7 +206,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+  unstable_cache(loadProjects, ["projects-v10-card-label"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
