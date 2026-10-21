@@ -533,11 +533,30 @@ for (const vp of VIEWPORTS) {
                 }
               }
             }
+            const frameEl = activeFigure?.querySelector(".dp-placement-viewport__frame");
+            const titleEl = scene?.querySelector(".dp-app-main__title");
+            const insightsEl = scene?.querySelector(".dp-app-insights-card__title");
+            const visibleInFrame = (el) => {
+              if (!el || !frameEl) return false;
+              const box = frameEl.getBoundingClientRect();
+              const r = el.getBoundingClientRect();
+              if (r.width < 2 || r.height < 2) return false;
+              const overlapW = Math.min(r.right, box.right) - Math.max(r.left, box.left);
+              const overlapH = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
+              return overlapW > 8 && overlapH > 4;
+            };
+            if (window.innerWidth >= 600) {
+              if (!visibleInFrame(titleEl)) hits.push("placement-backdrop-title");
+              if (!visibleInFrame(insightsEl)) hits.push("placement-backdrop-insights");
+            } else if (!visibleInFrame(titleEl)) {
+              hits.push("placement-backdrop-title-mobile");
+            }
             const study = scene;
             const chatEl = chatWrap;
-            if (study && chatEl) {
+            const cropRight = scene?.getAttribute("data-placement-crop") === "right";
+            if (study && chatEl && frameEl) {
               const chatRect = chatEl.getBoundingClientRect();
-              const wrapRect = study.getBoundingClientRect();
+              const wrapRect = frameEl.getBoundingClientRect();
               const textInside = (rect, box) =>
                 rect.left >= box.left - 0.5 &&
                 rect.right <= box.right + 0.5 &&
@@ -562,7 +581,11 @@ for (const vp of VIEWPORTS) {
                     if (tr.width <= 0 || tr.height <= 0) continue;
                     const underChat = textInside(tr, chatRect);
                     if (underChat) continue;
-                    if (tr.right > wrapRect.right + 1 || tr.left < wrapRect.left - 1) {
+                    if (tr.right > wrapRect.right + 1) {
+                      hits.push(`placement-wrap-clip:${node.textContent.trim().slice(0, 16)}`);
+                      break;
+                    }
+                    if (!cropRight && tr.left < wrapRect.left - 1) {
                       hits.push(`placement-wrap-clip:${node.textContent.trim().slice(0, 16)}`);
                       break;
                     }

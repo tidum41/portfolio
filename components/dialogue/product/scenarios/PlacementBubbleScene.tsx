@@ -12,9 +12,11 @@ const INSET = parseInt(dialogueProductTokens.space.placementInset, 10);
 const LAUNCHER = dialogueProductTokens.space.placementLauncherSize;
 const LAUNCHER_GAP = dialogueProductTokens.space.placementLauncherGap;
 
+const CROP_VIEWPORT_MAX = 599;
+
 /**
  * One real-size 1280×748 scene (study + floating chat + launcher), scaled as a unit.
- * Narrow viewports crop to the right half (popup + page edge), no separate chat layout.
+ * Wide viewport: full scene. Narrow viewport (&lt;600): crop to right half of scene.
  */
 export default function PlacementBubbleScene() {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,7 @@ export default function PlacementBubbleScene() {
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
 
-      const cropRight = w < 600;
+      const cropRight = window.innerWidth <= CROP_VIEWPORT_MAX;
       const visibleSceneW = cropRight ? SCENE_W / 2 : SCENE_W;
       const scale = Math.min(w / visibleSceneW, h / SCENE_H);
       setLayout({
@@ -48,7 +50,11 @@ export default function PlacementBubbleScene() {
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(layer);
-    return () => ro.disconnect();
+    window.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+    };
   }, []);
 
   const { scale, cropRight, frameW, frameH } = layout;
@@ -59,14 +65,7 @@ export default function PlacementBubbleScene() {
       ref={layerRef}
       className="dialogue-product-root dp-placement-layer dp-placement-layer--bubble"
     >
-      <div
-        className={[
-          "dp-placement-viewport",
-          cropRight ? "dp-placement-viewport--crop-right" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
+      <div className="dp-placement-viewport">
         <div
           className="dp-placement-viewport__frame"
           style={{ width: frameW, height: frameH }}
@@ -74,14 +73,19 @@ export default function PlacementBubbleScene() {
           <div
             className="dp-placement-scene"
             data-placement-scene="true"
+            data-placement-crop={cropRight ? "right" : "full"}
             style={{
               width: SCENE_W,
               height: SCENE_H,
-              zoom: scale,
-              marginLeft: cropRight ? -(SCENE_W / 2) : 0,
+              transform: `scale(${scale})`,
+              transformOrigin: cropRight ? "top right" : "top left",
+              right: cropRight ? 0 : undefined,
+              left: cropRight ? undefined : 0,
             }}
           >
-            <StudyPageChrome />
+            <div className="dp-placement-scene__study">
+              <StudyPageChrome />
+            </div>
             <div
               className="dp-placement-scene__chat"
               data-placement-chat="true"
