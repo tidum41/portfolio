@@ -1062,6 +1062,7 @@
 .dp-placement-scene__chat {
   position: absolute;
   z-index: 2;
+  width: 448px;
   max-height: calc(100% - 96px);
   overflow: auto;
   box-shadow: var(--shadow-chat);
@@ -1705,12 +1706,12 @@
   }
 
   .dp-anatomy-scene {
-    width: 100%;
-    max-width: 100%;
+    width: 448px;
+    max-width: none;
   }
 
   .dp-anatomy {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 448px;
   }
 
   .dp-anatomy__rail,
@@ -1721,8 +1722,7 @@
 
   .dp-anatomy__diagram {
     grid-column: 1;
-    width: 100%;
-    min-width: 0;
+    width: 448px;
   }
 
   .dp-study-chat__body {
@@ -1730,9 +1730,23 @@
   }
 }
 
-/* Phone anatomy figure (D-08): summary through chart only, no composer. */
-@media (max-width: 479px) {
-  [data-dialogue-asset-id="D-08"] .dp-chat-composer,
+/* Phone anatomy figure (D-08): reflow width, summary through chart only, no composer. */
+@media (max-width: 480px) {
+  [data-dialogue-asset-id="D-08"] .dp-anatomy-scene {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  [data-dialogue-asset-id="D-08"] .dp-anatomy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-dialogue-asset-id="D-08"] .dp-anatomy__diagram {
+    width: 100%;
+    min-width: 0;
+  }
+
+  [data-dialogue-asset-id="D-08"] .dp-study-chat__composer,
   [data-dialogue-asset-id="D-08"] .dp-user-message,
   [data-dialogue-asset-id="D-08"] .dp-query-search,
   [data-dialogue-asset-id="D-08"] [data-anatomy-part="sources"],
@@ -1740,36 +1754,9 @@
   [data-dialogue-asset-id="D-08"] [data-anatomy-part="followups"] {
     display: none !important;
   }
-}
 
-/* Placement study chrome: fit sidebar + stats inside the left-anchored phone crop. */
-@media (max-width: 479px) {
-  .dp-placement-layer .dp-app-sidebar {
-    width: 104px;
-    padding: 8px 6px;
-  }
-  .dp-placement-layer .dp-app-sidebar__nav-item {
-    font-size: 12px;
-    padding: 4px 4px;
-    white-space: normal;
-  }
-  .dp-placement-layer .dp-app-main__head .dp-app-tabs {
-    display: none;
-  }
-  .dp-placement-layer .dp-app-main__title {
-    font-size: 12px;
-    line-height: 1.25;
-  }
-  .dp-placement-layer .dp-app-stat-grid {
-    grid-template-columns: 1fr;
-    max-width: 168px;
-  }
-  .dp-placement-layer .dp-app-stat-card__label,
-  .dp-placement-layer .dp-app-insights-card__title {
-    font-size: 12px;
-  }
-  .dp-placement-layer .dp-app-insights-card {
-    max-width: 168px;
+  .dp-placement-layer--scene .dp-study-page-wrap {
+    visibility: hidden;
   }
 }
 

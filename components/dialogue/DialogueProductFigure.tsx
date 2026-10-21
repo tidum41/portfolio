@@ -35,7 +35,7 @@ function useNarrow(query = "(max-width: 600px)") {
   return narrow;
 }
 
-function usePhone(query = "(max-width: 479px)") {
+function usePhone(query = "(max-width: 480px)") {
   const [phone, setPhone] = useState(false);
   useLayoutEffect(() => {
     const mq = window.matchMedia(query);
@@ -74,6 +74,8 @@ function scaleProps(
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
       case "full-answer":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 480, fade: true };
+      case "problem-paragraphs":
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 635, fade: true };
       default:
         return { innerWidth: CHAT_W, fit: "reflow" };
     }

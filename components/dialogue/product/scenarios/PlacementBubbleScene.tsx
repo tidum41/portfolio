@@ -5,6 +5,11 @@ import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
 import DialogueLauncherButton from "@/components/dialogue/product/DialogueLauncherButton";
 import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
 import { dialogueProductTokens } from "@/components/dialogue/product/tokens";
+import {
+  placementChatAnchorX,
+  placementFitChatWidth,
+  placementScaleForWidth,
+} from "@/components/dialogue/product/scenarios/placementPhoneFit";
 
 const SCENE_W = parseInt(dialogueProductTokens.space.appShellWidth, 10);
 const SCENE_H = parseInt(dialogueProductTokens.space.appShellHeight, 10);
@@ -27,17 +32,23 @@ export default function PlacementBubbleScene() {
     if (!layer) return;
 
     const fit = () => {
-      const w = layer.clientWidth;
-      const h = layer.clientHeight;
+      const viewport = layer.querySelector(".dp-placement-viewport");
+      const w = viewport?.clientWidth ?? layer.clientWidth;
+      const h = viewport?.clientHeight ?? layer.clientHeight;
       if (w < 1 || h < 1) return;
-      const phone = window.innerWidth < 480;
-      const floor = phone ? Math.max(0.85, 11 / 12) : 0.94;
-      const next = Math.min(1, Math.max(floor, w / CHAT_W));
+      const phone = window.matchMedia("(max-width: 480px)").matches;
+      const next = placementScaleForWidth(w, phone);
+      placementFitChatWidth(layer, w, phone, next);
+      const sceneW = SCENE_W * next;
       setScale(next);
-      setOffset({
-        x: 0,
-        y: Math.min(0, h - SCENE_H * next),
-      });
+      const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
+      let x = placementChatAnchorX(w, sceneW, phone, next, chatEl);
+      let y = Math.min(0, h - SCENE_H * next);
+      if (phone && chatEl) {
+        const chatBottom = chatEl.offsetTop + chatEl.offsetHeight;
+        y = Math.min(0, h - (chatBottom * next + 8));
+      }
+      setOffset({ x, y });
     };
 
     fit();
@@ -73,7 +84,7 @@ export default function PlacementBubbleScene() {
           <div
             className="dp-placement-scene__chat"
             data-placement-chat="true"
-            style={{ width: CHAT_W, right: INSET, bottom: chatBottom }}
+            style={{ right: INSET, bottom: chatBottom }}
           >
             <PlacementChatPreview />
           </div>

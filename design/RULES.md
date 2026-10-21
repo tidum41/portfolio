@@ -10,4 +10,5 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - On mobile, crop a figure to the region that matters instead of scaling it below about 0.85.
 - Mobile figures: crop on the right or bottom at a deliberate edge, never mid-word on the left.
 - Verify text size and clipping with a script that walks the DOM, not by eye.
+- Mobile fixes are scoped to the mobile breakpoint; diff desktop before and after.
 - Contents labels use the full section headings.
