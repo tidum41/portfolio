@@ -9,7 +9,7 @@ export default function HeroStructuredFigure() {
     <div className="dp-hero-compose dialogue-product-root">
       <div className="dp-hero-compose__cluster">
         <div className="dp-hero-compose__main">
-          <StructuredAnswerFigure hero showClips={false} />
+          <StructuredAnswerFigure hero showClips={false} compact />
         </div>
         <aside className="dp-hero-compose__clips" aria-label="Clips from this answer">
           <p className="dp-hero-compose__clips-title">Clips from this answer</p>

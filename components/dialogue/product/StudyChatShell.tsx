@@ -11,8 +11,14 @@ type Props = {
 export default function StudyChatShell({ children, compact, hero, anatomy }: Props) {
   return (
     <div
-      className={["dp-study-chat", hero ? "dp-study-chat--hero" : ""].filter(Boolean).join(" ")}
-      data-testid="viz-card"
+      className={[
+        "dp-study-chat",
+        hero ? "dp-study-chat--hero" : "",
+        compact ? "dp-study-chat--compact" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-export-chat-panel="true"
     >
       <div
         className={anatomy ? "dp-study-chat__head dp-anatomy-target" : "dp-study-chat__head"}
@@ -22,8 +28,8 @@ export default function StudyChatShell({ children, compact, hero, anatomy }: Pro
         <p className="dp-study-chat__title">{dialogueCopy.assistantTitle}</p>
         <p className="dp-study-chat__sub">{dialogueCopy.studySubtitle}</p>
       </div>
-      <div className="dp-study-chat__body" style={compact ? { padding: "10px 12px 12px" } : undefined}>
-        {children}
+      <div className="dp-study-chat__scroll">
+        <div className="dp-study-chat__body">{children}</div>
       </div>
     </div>
   );

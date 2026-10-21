@@ -4,21 +4,24 @@ import { dialogueCopy } from "@/components/dialogue/product/tokens";
 type Props = {
   compact?: boolean;
   hero?: boolean;
-  showFootnote?: boolean;
+  showLargestDrop?: boolean;
   anatomy?: boolean;
+  /** Wrap summary + chart in bordered viz-card (Paper section-3). */
+  vizCard?: boolean;
 };
 
 export default function FunnelChart({
   compact,
   hero,
-  showFootnote = true,
+  showLargestDrop = true,
   anatomy,
+  vizCard = true,
 }: Props) {
   const data = CHECKOUT_FUNNEL;
   const summary = (
-    <p className="dp-summary">
+    <p className="dp-summary dp-text-body">
       {data.summary.split(data.emphasis)[0]}
-      <span className="dp-em">{data.emphasis}</span>
+      <span className="dp-summary__emph">{data.emphasis}</span>
       {data.summary.split(data.emphasis)[1] ?? ""}
     </p>
   );
@@ -26,18 +29,35 @@ export default function FunnelChart({
   const chartInner = (
     <>
       <p className="dp-funnel__title">{dialogueCopy.funnelTitle}</p>
-      {data.steps.map((step) => (
-        <div key={step.label} className="dp-funnel__row">
-          <span className="dp-funnel__label">{step.label}</span>
-          <div className="dp-funnel__track">
-            <div
-              className={`dp-funnel__bar${step.focal ? " dp-funnel__bar--focal" : ""}`}
-              style={{ width: `${step.pct}%` }}
-            />
+      <div className="dp-funnel__rows">
+        {data.steps.map((step) => (
+          <div key={step.label} className="dp-funnel__row">
+            <span className="dp-funnel__label">{step.label}</span>
+            <div className="dp-funnel__track">
+              <div
+                className={`dp-funnel__bar${step.focal ? " dp-funnel__bar--focal" : ""}`}
+                style={{
+                  width: `${step.pct}%`,
+                  backgroundColor: step.barColor,
+                }}
+              />
+            </div>
+            <span
+              className={`dp-funnel__pct${step.focal ? " dp-funnel__pct--focal" : ""}`}
+            >
+              {step.pct}%
+            </span>
           </div>
-          <span className="dp-funnel__pct">{step.pct}%</span>
-        </div>
-      ))}
+        ))}
+      </div>
+      {showLargestDrop && !compact && (
+        <p className="dp-funnel__largest">
+          Largest drop:{" "}
+          <span className="dp-funnel__largest-strong">
+            {dialogueCopy.funnelLargestDrop} (−{dialogueCopy.funnelLargestDropPct}%)
+          </span>
+        </p>
+      )}
     </>
   );
 
@@ -50,16 +70,20 @@ export default function FunnelChart({
     <div className="dp-funnel__chart">{chartInner}</div>
   );
 
-  return (
-    <div className={`dp-funnel${hero ? " dp-funnel--hero" : ""}`}>
+  const inner = (
+    <>
       {summary}
       {chart}
-      {!compact && !hero && (
-        <p className="dp-text-meta dp-funnel__note">{dialogueCopy.funnelLargestDrop}</p>
-      )}
-      {showFootnote && (
-        <p className="dp-text-meta dp-funnel__note">{dialogueCopy.funnelFootnote(24)}</p>
-      )}
-    </div>
+    </>
   );
+
+  const body = vizCard ? (
+    <div className="dp-viz-card" data-testid="viz-card">
+      <div className="dp-viz-card__inner">{inner}</div>
+    </div>
+  ) : (
+    inner
+  );
+
+  return <div className={`dp-funnel${hero ? " dp-funnel--hero" : ""}`}>{body}</div>;
 }

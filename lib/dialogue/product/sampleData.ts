@@ -12,11 +12,11 @@ export const CHECKOUT_FUNNEL = {
   summary: "Shipping address loses 38% of participants, the largest single-step drop in checkout.",
   emphasis: "loses 38% of participants",
   steps: [
-    { label: "Cart", pct: 100 },
-    { label: "Address", pct: 62, focal: true, drop: 38 },
-    { label: "Delivery", pct: 54, drop: 8 },
-    { label: "Payment", pct: 42, drop: 12 },
-    { label: "Confirm", pct: 36, drop: 6 },
+    { label: "Cart", pct: 100, barColor: "#D6D3D1" },
+    { label: "Address", pct: 62, focal: true, drop: 38, barColor: "#B43F7F" },
+    { label: "Delivery", pct: 54, drop: 8, barColor: "#57534D" },
+    { label: "Payment", pct: 42, drop: 12, barColor: "#A8A29E" },
+    { label: "Confirm", pct: 36, drop: 6, barColor: "#D6D3D1" },
   ],
 };
 

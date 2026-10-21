@@ -10,7 +10,7 @@ export default function PlacementChatPreview() {
     <StudyChatShell compact>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
-      <FunnelChart hero showFootnote={false} />
+      <FunnelChart hero showLargestDrop={false} vizCard={false} />
     </StudyChatShell>
   );
 }

@@ -4,6 +4,7 @@ import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
 import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import SourcesRow from "@/components/dialogue/product/SourcesRow";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
+import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import ClipCard from "@/components/dialogue/product/ClipCard";
 import { CHECKOUT_QUESTION, CLIPS } from "@/lib/dialogue/product/sampleData";
 
@@ -30,12 +31,12 @@ export default function StructuredAnswerFigure({
           <span className="dp-anatomy-part-marker" aria-hidden>2</span>
           <QuerySearchStep searched={24} found={9} />
         </div>
-        <FunnelChart compact={compact} hero={hero} showFootnote anatomy />
+        <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy />
         <SourcesRow />
         {showClips && (
           <div className="dp-anatomy-target" data-anatomy-part="clips">
             <span className="dp-anatomy-part-marker" aria-hidden>4</span>
-            <ClipCard clip={CLIPS[0]} />
+            <ClipThumbnails />
           </div>
         )}
         {!compact && (
@@ -52,8 +53,9 @@ export default function StructuredAnswerFigure({
     <StudyChatShell compact={shellCompact} hero={hero}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
-      <FunnelChart compact={compact} hero={hero} showFootnote />
-      {showClips && !hero && <ClipCard clip={CLIPS[0]} />}
+      <FunnelChart compact={compact} hero={hero} vizCard={!hero} />
+      {showClips && !hero && <ClipThumbnails />}
+      {showClips && hero && <ClipCard clip={CLIPS[0]} />}
       {!hero && <SourcesRow />}
       {!compact && !hero && <FollowUpChips />}
     </StudyChatShell>

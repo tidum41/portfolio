@@ -1902,11 +1902,23 @@ html[data-theme="light"] {
 .dialogue-rachel-frame__pad {
   overflow: visible;
 }
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-funnel--hero .dp-viz-card__inner {
+  padding: 8px;
+  gap: 8px;
+}
+
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola {
   border-radius: var(--radius-control);
   overflow: hidden;
   aspect-ratio: 3 / 2;
   background: #f8f6f3;
+}
+
+@media (max-width: 420px) {
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-hero-compose__main {
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
 }
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure,
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure__iframe,

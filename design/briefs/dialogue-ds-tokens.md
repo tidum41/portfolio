@@ -1,58 +1,61 @@
-# Dialogue product design tokens (DS parity)
+# Dialogue product design tokens (Paper source of truth)
 
-Tokens live in `components/dialogue/product/tokens.ts` and `components/dialogue/product/tokens.css`.  
-**Typeface:** **DM Sans** (Google Fonts) — matches Dialogue static export (`public/dev/dialogue-static`) and Paper frames (`/cursor/stores/bot/dialogue-sources/paper/dialogue-paper-frames-oct18.txt`). Portfolio case-study shell remains Helvetica Neue; only in-figure product UI uses DM Sans.
+Tokens: `components/dialogue/product/tokens.ts` + `tokens.css`.  
+**Typeface:** **DM Sans** on in-figure product UI (`app/dialogue/layout.tsx`). Case-study shell stays Helvetica Neue.
 
-## Reference assets (source of truth)
+## Paper / static inventory (authoritative markup)
 
-| Asset | Role |
-|-------|------|
-| `public/dialogue/section-1.png` … `section-7.png` | Final case-study captures (fcc87a2) |
-| `public/dialogue/review/blobs/fcc87a2--*.png` | Manifest-linked blobs (same pixels) |
-| `public/dialogue/section-6a.png`, `section-6b.png` | Assistant empty / docked variants |
-| `/cursor/stores/bot/dialogue-sources/paper/dialogue-paper-frames-oct18.txt` | Paper type scale + study chrome colors |
-| `public/dev/dialogue-static/index.html` | Confirms `--font-dm-sans` in Dialogue export |
+| Path | Role |
+|------|------|
+| `/cursor/stores/bot/dialogue-sources/paper/dialogue-paper-frames-oct18.txt` | Paper frame notes (Oct 18) |
+| `/cursor/stores/bot/dialogue-sources/paper/player-controls-paper-5SR-0.tsx.txt` | Player controls export |
+| `/cursor/stores/bot/dialogue-sources/paper/player-dialog-paper-597-0.txt` | Player dialog export |
+| `public/dev/dialogue-static/_next/static/css/fde99ba4c3e111ce.css` | CSS variables (`--text-body-size: 14px`, `--brand: #b43f7f`, stone palette) |
+| `public/dev/dialogue-static/export/section-3.html` | Chat panel, viz-card, funnel, clip thumbs, follow-ups |
+| `public/dev/dialogue-static/export/section-6.html` | Study app shell (188px sidebar, tabs, stat skeletons, Key insights) |
+| `public/dev/dialogue-static/export/storyboard/answer.html` | Storyboard answer variant |
+| `public/dev/dialogue-static/export/visual-6.html` | Visual export companion |
+| `public/dev/dialogue-static/clip-photos/still-thumb-{1,2,3}.jpg` | Clip thumbnail stills |
 
-## Typography (measured)
+Case-study PNGs (`public/dialogue/section-*.png`) are **secondary** for QA crops only; parity harness screenshots the static HTML selectors above.
 
-| Token | Size / line | Weight | Source |
-|-------|-------------|--------|--------|
-| Chat title | 15px / 20px | 500 | `section-3.png` |
-| Chat subtitle | 14px / 20px | 400 | `section-3.png` |
-| Body / bubble | 14px / 20px | 400 | Paper + `section-3.png` |
-| Summary | 16px / 22px | 400 (500 emphasis) | `section-3.png` |
-| Meta / chart labels | 12px / 16px | 400–500 | Paper + `section-3.png` |
-| Study nav | 12px / 16px | 400 | `section-6.png` |
+## Typography (from static CSS / section-3)
 
-## Color
+| Role | Size / line | Weight |
+|------|-------------|--------|
+| Body (`text-body`) | 14px / 20px | 400 |
+| Meta (`text-meta`) | 12px / 16px | 400–500 |
+| Summary emphasis | 14px / 20px | **600** ink (not brand color) |
+| Sidebar nav | 10px | 400 |
+| Study title | 12px | 500 |
 
-| Token | Hex | Source |
-|-------|-----|--------|
-| `--dp-bg` | `#F8F6F3` | `section-3.png` canvas |
-| `--dp-surface` | `#FCFBF9` | Paper study panels |
-| `--dp-card` | `#FFFFFF` | Assistant shell |
-| `--dp-ink` | `#1C1917` | Paper text primary |
-| `--dp-muted` | `#57534D` | Paper secondary text |
-| `--dp-border` | `#E7E5E4` | Paper borders |
-| `--dp-warm` | `#F0EDEA` | User bubble `section-3.png` |
-| `--dp-brand` | `#BE185D` | Focal bar + logo `section-3.png` |
-| `--dp-funnel-track` | `#F1EEEA` | Funnel track `section-3.png` |
-| `--dp-funnel-bar` | `#A8A29E` | Non-focal bars |
+## Color (static export)
 
-## Radii & shadow
+| Token | Hex |
+|-------|-----|
+| `--dp-brand` | `#B43F7F` |
+| `--dp-brand-icon` | `#B03A78` |
+| `--dp-ink` | `#1C1917` |
+| `--dp-muted` | `#57534D` |
+| `--dp-muted-light` | `#78716C` |
+| `--dp-border` | `#E7E5E4` |
+| `--dp-surface` | `#FCFBF9` |
+| `--dp-warm` | `#F1EEEA` |
+| Funnel bars | `#D6D3D1`, `#B43F7F`, `#57534D`, `#A8A29E` |
 
-| Token | Value | Source |
-|-------|-------|--------|
-| `--dp-radius` | 16px | Assistant outer shell `section-3.png` |
-| `--dp-radius-sm` | 12px | Inner blocks, bubble |
-| `--dp-radius-xs` | 10px | Study stat tiles Paper |
-| `--shadow-chat` | soft dual shadow | `section-3.png` |
+## Components (React)
 
-## Copy (canonical)
-
-See `dialogueCopy` in `tokens.ts` — e.g. **Research assistant**, **Checkout usability, 24 interviews**, **Insights summary**, **Checkout usability study, Q3**, funnel footnotes.
+Icons: `components/dialogue/product/icons.tsx` (asterisk logo, chevron from export SVG paths).  
+Shell: `StudyChatShell` (`data-export-chat-panel`), `StudyPageChrome` (`data-export-app-shell`).  
+Answer: `FunnelChart` + `dp-viz-card`, `ClipThumbnails`, `FollowUpChips` (`h-9` rounded-lg buttons).
 
 ## Parity QA
 
-Run `npm run build && npm run start -- -p 3020`, then `node scripts/capture-dialogue-ds-parity.mjs`.  
-Outputs: `/cursor/stores/self/ds-parity/*-compare.png` and `parity-report.md`.
+```bash
+npm run build && npm run start -- -p 3020
+node scripts/capture-dialogue-ds-parity.mjs
+node scripts/verify-dialogue-round35-sections.mjs
+```
+
+Outputs: `/cursor/stores/self/ds-parity/*-{ref,live,compare,overlay}.png`, `parity-report.md`.  
+Live panel width: **400px** (Paper chat panel).

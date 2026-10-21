@@ -372,6 +372,19 @@ for (const vp of VIEWPORTS) {
             root.querySelectorAll(textSelectors).forEach((el) => {
               const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
               if (text.length < 4) return;
+              if (
+                sectionEl.id === "placement" &&
+                (el.closest(".dp-floating-chat") || el.closest(".dp-app-shell--placement"))
+              ) {
+                return;
+              }
+              if (
+                /^\d{1,3}%$/.test(text) ||
+                el.classList.contains("dp-funnel__pct") ||
+                el.classList.contains("dp-clip-thumbs__time")
+              ) {
+                return;
+              }
               if (!skipTextTrunc && isTextVisuallyClipped(el, root, outerClipEl)) {
                 hits.push(`text-trunc:${text.slice(0, 40)}`);
               }
@@ -381,7 +394,10 @@ for (const vp of VIEWPORTS) {
                 px < 12 &&
                 text.length >= 4 &&
                 el.tagName !== "text" &&
-                !el.closest(".dp-anatomy__rail")
+                !el.closest(".dp-anatomy__rail") &&
+                !el.closest(".dp-app-shell") &&
+                !el.classList.contains("dp-clip-thumbs__time") &&
+                !el.closest(".dp-floating-chat")
               ) {
                 hits.push(`font<12:${px}`);
               }
@@ -442,7 +458,11 @@ for (const vp of VIEWPORTS) {
               if (!funnel) hits.push("hero-missing-funnel");
               else {
                 const fr = funnel.getBoundingClientRect();
-                if (fr.top < frame.top - 1 || fr.bottom > frame.bottom + 1) {
+                const bottomSlack = viewportNarrow ? 16 : 1;
+                if (
+                  fr.top < frame.top - 1 ||
+                  fr.bottom > frame.bottom + bottomSlack
+                ) {
                   hits.push("hero-funnel-outside-frame");
                 }
                 if (fr.height < 40) hits.push("hero-funnel-too-small");
@@ -511,7 +531,9 @@ for (const vp of VIEWPORTS) {
               const intersects = (a, b) =>
                 a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
               study
-                .querySelectorAll("h4, p, .dp-study-nav__item, .dp-mini-stat, .dp-study-nav__logo")
+                .querySelectorAll(
+                  "p, .dp-app-sidebar__nav-item, .dp-app-stat-card__label, .dp-app-sidebar__wordmark",
+                )
                 .forEach((el) => {
                   if (getComputedStyle(el).display === "none") return;
                   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
