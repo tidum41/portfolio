@@ -34,18 +34,21 @@ export default function AnatomyStructureFigure() {
       }
 
       const cardLeft = card.getBoundingClientRect().left - rootRect.left;
-      const railRect = rail.getBoundingClientRect();
-      const x1 = railRect.right - rootRect.left;
-      const x2 = cardLeft;
+      const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout")];
 
       const nextCallouts: CalloutLayout[] = [];
       const nextLines: LeaderLine[] = [];
 
       PART_IDS.forEach((partId, i) => {
         const target = root.querySelector<HTMLElement>(`[data-anatomy-part="${partId}"]`);
-        if (!target) return;
+        const callout = calloutNodes[i];
+        if (!target || !callout) return;
         const t = target.getBoundingClientRect();
+        const c = callout.getBoundingClientRect();
         const y = t.top + t.height / 2 - rootRect.top;
+        const x2 = cardLeft - 1;
+        let x1 = c.right - rootRect.left + 6;
+        if (x2 - x1 < 40) x1 = x2 - 44;
         nextCallouts[i] = { top: y };
         nextLines.push({ y, x1, x2 });
       });
@@ -78,7 +81,7 @@ export default function AnatomyStructureFigure() {
               y2={line.y}
               className="dp-anatomy__line"
             />
-            <circle cx={line.x2} cy={line.y} r="2" className="dp-anatomy__tick" />
+            <circle cx={line.x2} cy={line.y} r="2.5" className="dp-anatomy__tick" />
           </g>
         ))}
       </svg>

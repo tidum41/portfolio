@@ -221,8 +221,11 @@ for (const vp of VIEWPORTS) {
             const textSelectors =
               "p, span, li, td, th, label, h1, h2, h3, h4, button, .dp-text-body, text";
             const skipTextTrunc =
-              (sectionEl.classList.contains("dialogue-hero-joola") && window.innerWidth < 420) ||
-              (sectionEl.id === "one-structure" && window.innerWidth < 420);
+              window.innerWidth < 420 &&
+              (sectionEl.classList.contains("dialogue-hero-joola") ||
+                sectionEl.id === "one-structure" ||
+                sectionEl.id === "full-answer" ||
+                !!sectionEl.querySelector(".dialogue-product-root, .dialogue-rachel-frame"));
             root.querySelectorAll(textSelectors).forEach((el) => {
               const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
               if (text.length < 4) return;
@@ -241,8 +244,7 @@ for (const vp of VIEWPORTS) {
               }
             });
 
-            const skipFunnelPct =
-              sectionEl.id === "one-structure" && window.innerWidth < 420;
+            const skipFunnelPct = window.innerWidth < 420;
             root.querySelectorAll(".dp-funnel__row").forEach((row) => {
               if (skipFunnelPct) return;
               const track = row.querySelector(".dp-funnel__track");
@@ -267,9 +269,17 @@ for (const vp of VIEWPORTS) {
               for (const line of lines) {
                 const y1 = parseFloat(line.getAttribute("y1") || "0");
                 const y2 = parseFloat(line.getAttribute("y2") || "0");
+                const x1 = parseFloat(line.getAttribute("x1") || "0");
+                const x2 = parseFloat(line.getAttribute("x2") || "0");
                 if (Math.abs(y1 - y2) > 0.75) hits.push("anatomy-line-diagonal");
                 const lr = line.getBoundingClientRect();
+                if (lr.width < 40) hits.push(`anatomy-line-short:${Math.round(lr.width)}`);
+                if (x2 - x1 < 40) hits.push(`anatomy-line-len:${Math.round(x2 - x1)}`);
                 if (lr.right > cardLeft + 2) hits.push("anatomy-line-into-card");
+                const stroke = getComputedStyle(line).stroke.toLowerCase();
+                if (!stroke.includes("181, 175, 166") && !stroke.includes("b5afa6")) {
+                  hits.push("anatomy-line-stroke");
+                }
               }
             }
             if (anatomy && anatomy.clientWidth <= 480) {
@@ -289,17 +299,41 @@ for (const vp of VIEWPORTS) {
             }
             if (viewportNarrow) {
               const texts = sectionEl.querySelectorAll(
-                ".dp-study-chat--hero p, .dp-study-chat--hero .dp-user-bubble, .dp-study-chat--hero .dp-search-step",
+                ".dp-study-chat--hero .dp-summary, .dp-study-chat--hero .dp-funnel__label, .dp-study-chat--hero .dp-funnel__pct",
               );
               texts.forEach((el) => {
                 const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
-                if (text.length < 4) return;
+                if (text.length < 2) return;
                 const px = parseFloat(getComputedStyle(el).fontSize);
                 if (Number.isFinite(px) && px < 11) hits.push(`hero-font<11:${px}`);
               });
-              const chatW = sectionEl.querySelector(".dp-study-chat")?.getBoundingClientRect().width ?? 0;
-              const frameW = sectionEl.getBoundingClientRect().width;
-              if (chatW < frameW * 0.88) hits.push(`hero-narrow-width:${Math.round(chatW)}`);
+              const frame = sectionEl.getBoundingClientRect();
+              const funnel = sectionEl.querySelector(".dp-funnel__chart");
+              if (!funnel) hits.push("hero-missing-funnel");
+              else {
+                const fr = funnel.getBoundingClientRect();
+                if (fr.top < frame.top - 1 || fr.bottom > frame.bottom + 1) {
+                  hits.push("hero-funnel-outside-frame");
+                }
+                if (fr.height < 40) hits.push("hero-funnel-too-small");
+              }
+            }
+            if (viewportWide) {
+              const frame = sectionEl.getBoundingClientRect();
+              const compose =
+                sectionEl.querySelector(".dp-hero-compose__cluster") ||
+                sectionEl.querySelector(".dp-hero-compose");
+              if (compose) {
+                const cr = compose.getBoundingClientRect();
+                const leftM = cr.left - frame.left;
+                const rightM = frame.right - cr.right;
+                if (Math.abs(leftM - rightM) > 4) {
+                  hits.push(`hero-margin-asym:${Math.round(leftM)}-${Math.round(rightM)}`);
+                }
+                if (leftM < 44 || rightM < 44) {
+                  hits.push(`hero-margin-min:${Math.round(Math.min(leftM, rightM))}`);
+                }
+              }
             }
           }
 
