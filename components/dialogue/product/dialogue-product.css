@@ -1089,8 +1089,11 @@
 }
 
 @media (max-width: 480px) {
-  .dp-placement-scene__chat .dp-study-chat__body {
-    padding-bottom: calc(var(--dp-chat-pad, 28px) + 16px);
+  .dp-placement-layer[data-placement-mode="bubble"] .dp-placement-scene__chat {
+    max-height: none;
+    overflow: visible;
+    box-sizing: border-box;
+    padding-bottom: 16px;
   }
 }
 
