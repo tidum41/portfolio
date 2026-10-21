@@ -245,7 +245,7 @@ function bootCursor(lightColor: string, darkColor: string, size: number, zIndex:
     opacity: "0",
     userSelect: "none",
     pointerEvents: "none",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
+    fontFamily: "var(--font-sans)",
   });
   cursorEl.appendChild(textSpan);
 

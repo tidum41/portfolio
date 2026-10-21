@@ -67,7 +67,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       fontWeight: 400,
       letterSpacing: "0.02em",
       color: "var(--color-text-tertiary)",
-      margin: "0 0 16px",
+      margin: "0 0 var(--cs-para-gap)",
     }}>
       {children}
     </p>
@@ -83,7 +83,7 @@ function H2({ children }: { children: React.ReactNode }) {
       lineHeight: "var(--lh-h2)",
       letterSpacing: "var(--ls-h2)",
       color: "var(--color-text-primary)",
-      margin: "0 0 24px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>
       {children}
     </h2>

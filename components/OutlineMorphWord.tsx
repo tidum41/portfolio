@@ -31,7 +31,7 @@ function DropletPath({
 }
 
 /**
- * Solid ABC Areal letter pieces that deform into the halftone dots.
+ * Solid sans letter pieces that deform into the halftone dots.
  * `active` drives the shape (and, unless `emphasized`, the color) from
  * the outline to the dots. Reduced motion jumps to the target.
  */
@@ -74,7 +74,7 @@ export default function OutlineMorphWord({
     return (
       <span
         style={{
-          fontSize: 16,
+          fontSize: "var(--fs-body)",
           fontWeight: 400,
           lineHeight: "24px",
           color: (emphasized || active)
