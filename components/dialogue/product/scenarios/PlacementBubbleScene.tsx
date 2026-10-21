@@ -31,10 +31,12 @@ export default function PlacementBubbleScene() {
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
 
-      const crop = window.innerWidth <= CROP_VIEWPORT_MAX;
+      const crop = window.matchMedia(`(max-width: ${CROP_VIEWPORT_MAX}px)`).matches;
       setCropRight(crop);
       const visibleW = crop ? SCENE_W / 2 : SCENE_W;
-      setScale(Math.min(w / visibleW, h / SCENE_H));
+      // Cropped: fill frame width with the right 640px of scene (height may clip).
+      // Full: fit entire scene in the 1280:748 aspect box.
+      setScale(crop ? w / visibleW : Math.min(w / SCENE_W, h / SCENE_H));
     };
 
     fit();
@@ -53,6 +55,7 @@ export default function PlacementBubbleScene() {
     <div
       ref={layerRef}
       className="dialogue-product-root dp-placement-layer dp-placement-layer--bubble"
+      data-placement-crop={cropRight ? "right" : "full"}
     >
       <div className="dp-placement-viewport">
         <div

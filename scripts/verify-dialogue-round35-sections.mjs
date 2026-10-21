@@ -535,9 +535,19 @@ for (const vp of VIEWPORTS) {
               }
             }
             const frameEl = activeFigure?.querySelector(".dp-placement-viewport");
-            if (window.innerWidth >= 600 && scene?.getAttribute("data-placement-crop") !== "full") {
+            const layerCrop = activeFigure?.querySelector(
+              ".dp-placement-layer--bubble",
+            )?.getAttribute("data-placement-crop");
+            if (window.innerWidth >= 600 && layerCrop !== "full") {
               hits.push("placement-crop-mode-wide");
             }
+            if (window.innerWidth < 600 && layerCrop !== "right") {
+              hits.push("placement-crop-mode-narrow");
+            }
+            sectionEl.querySelectorAll(".dialogue-placement-compare__option").forEach((btn) => {
+              const h = btn.getBoundingClientRect().height;
+              if (h > 88) hits.push(`placement-option-tall:${Math.round(h)}`);
+            });
             const titleEl = scene?.querySelector(".dp-app-main__title");
             const insightsEl = scene?.querySelector(".dp-app-insights-card__title");
             const visibleInFrame = (el) => {
@@ -555,8 +565,9 @@ for (const vp of VIEWPORTS) {
               if (!visibleInFrame(titleEl)) hits.push("placement-backdrop-title");
               if (!visibleInFrame(insightsEl)) hits.push("placement-backdrop-insights");
               if (!visibleInFrame(sidebarNav)) hits.push("placement-backdrop-sidebar");
-            } else if (!visibleInFrame(titleEl)) {
-              hits.push("placement-backdrop-title-mobile");
+            } else {
+              if (!visibleInFrame(titleEl)) hits.push("placement-backdrop-title-mobile");
+              if (visibleInFrame(sidebarNav)) hits.push("placement-crop-shows-sidebar");
             }
             const study = scene;
             const chatEl = chatWrap;
