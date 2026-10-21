@@ -41,8 +41,9 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies CONTACT_EMAIL on click. Crossfades the label to "Copied" in place
- * (grid-stacked layers) so width, height, and baseline never shift.
+ * Copies CONTACT_EMAIL on click. Crossfades to chain icon + "Copied" while the
+ * track width eases between the two natural label widths, so neighbors keep
+ * the same gap and smoothly make room.
  */
 export default function CopyEmail({
   children,
@@ -63,12 +64,35 @@ export default function CopyEmail({
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackRef = useRef<HTMLSpanElement | null>(null);
+  const idleRef = useRef<HTMLSpanElement | null>(null);
+  const copiedRef = useRef<HTMLSpanElement | null>(null);
+
+  /** Animate the track from its current width to `to`'s natural width. */
+  const animateWidth = useCallback((to: HTMLSpanElement | null, release: boolean) => {
+    const track = trackRef.current;
+    if (!track || !to) return;
+    if (clearRef.current) clearTimeout(clearRef.current);
+    const from = track.getBoundingClientRect().width;
+    const target = to.getBoundingClientRect().width;
+    track.style.width = `${from}px`;
+    void track.offsetWidth; // commit start width before transitioning
+    track.style.width = `${target}px`;
+    if (release) {
+      // Back at rest: drop the inline width so "Email" stays at natural width.
+      clearRef.current = setTimeout(() => {
+        track.style.width = "";
+      }, 300);
+    }
+  }, []);
 
   useEffect(() => {
     // Hand clicks over from the pre-hydration handler in BootScripts.
     (window as Window & { __copyEmailReady?: boolean }).__copyEmailReady = true;
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (clearRef.current) clearTimeout(clearRef.current);
     };
   }, []);
 
@@ -83,14 +107,16 @@ export default function CopyEmail({
       ),
     );
 
+    animateWidth(copiedRef.current, false);
     setCopied(true);
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
+      animateWidth(idleRef.current, true);
       setCopied(false);
       setAnnouncement("");
     }, HOLD_MS);
-  }, [copied]);
+  }, [copied, animateWidth]);
 
   const baseStyle: CSSProperties = unstyled
     ? {
@@ -120,18 +146,34 @@ export default function CopyEmail({
         data-copied={copied ? "true" : "false"}
         onClick={onClick}
       >
-        <span className="copy-email-track">
-          <span className="copy-email-layer copy-email-layer--idle" aria-hidden={copied}>
+        <span className="copy-email-track" ref={trackRef}>
+          <span ref={idleRef} className="copy-email-layer copy-email-layer--idle" aria-hidden={copied}>
             {children}
           </span>
           <span
+            ref={copiedRef}
             className="copy-email-layer copy-email-layer--copied"
             aria-hidden={!copied}
           >
+            <ChainLinkIcon />
             {copiedLabel}
           </span>
         </span>
       </button>
     </>
+  );
+}
+
+function ChainLinkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M6.75 9.25a2.75 2.75 0 0 0 3.89 0l2.12-2.12a2.75 2.75 0 0 0-3.89-3.89l-.88.88M9.25 6.75a2.75 2.75 0 0 0-3.89 0L3.24 8.87a2.75 2.75 0 0 0 3.89 3.89l.88-.88"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
