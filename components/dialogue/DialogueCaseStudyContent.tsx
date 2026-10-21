@@ -223,6 +223,8 @@ export function DialogueCaseStudyContent({
                     label: "Answer + evidence",
                     title: "Structured answer",
                     priorityLine: "The priority is clarity over raw quotes.",
+                    howeverLine:
+                      "However, the chat still has to carry summary, evidence, and clips in one answer.",
                     selectionNote: "We went with this",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",

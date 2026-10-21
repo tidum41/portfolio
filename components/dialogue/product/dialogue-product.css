@@ -222,12 +222,13 @@
 }
 
 .dp-funnel__label {
-  width: 72px;
+  width: 110px;
   flex-shrink: 0;
   text-align: right;
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
   color: var(--dp-muted);
 }
 

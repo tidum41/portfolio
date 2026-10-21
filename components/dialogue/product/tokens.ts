@@ -100,7 +100,7 @@ export const dialogueProductTokens = {
   space: {
     chatPad: "28px",
     vizPad: "12px",
-    funnelLabelW: "72px",
+    funnelLabelW: "110px",
     funnelPctW: "40px",
     funnelBarH: "8px",
     /** Live study sidebar (~252px in production study layout) */
