@@ -16,6 +16,7 @@ import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
 import PrimaryTabSync from "@/components/PrimaryTabSync";
 import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
+import { ABC_AREAL_WOFF2_PATH } from "@/lib/arealFont";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_NAME,
-    template: `%s — ${SITE_NAME}`,
+    template: "%s, Mudit Mahajan",
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -164,6 +165,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             globals.css keeps a copy as a fallback. */}
         <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `@font-face{font-family:"ABC Areal";src:url("${ABC_AREAL_WOFF2_PATH}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`,
+          }}
+        />
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here
             for crawlers that only read the first non-media icon link. */}
         <link rel="icon" href="/favicon.ico" sizes="any" />

@@ -1,53 +1,9 @@
 @import "tailwindcss";
 
-/* ─── Helvetica Neue — local system font, precise variant binding ─────────── */
-@font-face {
-  font-family: "HN";
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-UltraLight"), local("Helvetica Neue UltraLight");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Thin"), local("Helvetica Neue Thin");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Bold"), local("Helvetica Neue Bold");
-}
-
 @theme {
-  /* Fonts */
-  --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Fonts — ABC Areal woff2 is injected from layout (gitignored locally). */
+  --font-sans:        "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
+  --font-sans-medium: "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
   --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
 
@@ -1879,10 +1835,10 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
-/* Dialogue — Helvetica Neue stack (Areal shelved), weights ≤ 500 */
+/* Dialogue case study — ABC Areal stack, weights ≤ 500 */
 .dialogue-case-study-root,
 .dialogue-canvas-root {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
   font-weight: 400;
 }
 .dialogue-case-study-root h1,
@@ -2031,12 +1987,17 @@ html[data-theme="light"] {
   background: var(--dp-figure-surface-solution);
 }
 /* One caption, under the figure: 13px label, at most one sentence, 24px from the frame. */
+.dialogue-case-study .cs-hero-title,
+.dialogue-case-study .dialogue-cs-section > h2 {
+  max-width: 640px;
+}
 .dialogue-caption {
   margin: 24px 0 0;
   max-width: 640px;
   font-size: 13px;
   line-height: 1.4;
-  color: #57534d;
+  /* Light figure surfaces; do not use theme secondary (too pale on #f5f5f4). */
+  color: #575757;
 }
 .dialogue-caption__label {
   display: block;
@@ -2364,10 +2325,28 @@ html[data-theme="light"] {
     flex: 0 0 calc(100% - 40px);
     scroll-snap-align: start;
     grid-row: auto;
+    grid-template-rows: unset;
   }
   .dialogue-chart-gallery .dp-study-chat__body {
     padding-left: 8px !important;
     padding-right: 8px !important;
+  }
+}
+@media (max-width: 479px) {
+  .dialogue-lead-answer__row--trio {
+    align-items: stretch;
+  }
+  .dialogue-lead-answer__panel {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    grid-row: auto;
+    grid-template-rows: none;
+  }
+  /* Match the tallest option card in the swipe row (quote list). */
+  .dialogue-lead-answer__panel .dialogue-rachel-frame {
+    min-height: 456px;
+    height: auto !important;
   }
 }
 .dialogue-case-study .decision-block {
@@ -2377,8 +2356,7 @@ html[data-theme="light"] {
   transform: none;
 }
 .dialogue-chart-gallery__caption {
-  grid-column: 1 / -1;
-  margin: 0;
+  margin: 24px 0 0;
 }
 .dialogue-placement-compare {
   margin-top: 0;
@@ -2395,23 +2373,22 @@ html[data-theme="light"] {
   display: flex;
   flex-direction: column;
   gap: 0;
-  height: 100%;
 }
 .dialogue-placement-compare__cell .dialogue-rachel-frame {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
 .dialogue-placement-compare__cell .dialogue-rachel-frame__pad {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 12px 12px 0;
 }
 .dialogue-placement-compare__cell .dialogue-product-block,
 .dialogue-placement-compare__cell .dp-placement-layer {
   width: 100%;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 .dialogue-placement-compare__decision {
   margin: 24px 0 0;

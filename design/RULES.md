@@ -8,4 +8,4 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Running text and captions max out at 640px.
 - No text inside a figure under 11px at 1440 or 390.
 - On mobile, crop a figure to the region that matters instead of scaling it below about 0.85.
-- Contents labels match the section headings. Short forms are fine when they are obviously the same.
+- Contents labels use the full section headings.

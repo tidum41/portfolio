@@ -28,15 +28,21 @@ const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
 export type RasterAnnotator = (assetId: string, children: React.ReactNode) => React.ReactNode;
 
-/** Short forms of the section H2s for the left nav. */
+/** Contents labels match the section H2s. */
 export const DIALOGUE_TOC_ITEMS = [
-  { id: "problem", label: "The chat" },
-  { id: "why-it-matters", label: "Finding travels" },
-  { id: "one-structure", label: "Fixed structure" },
-  { id: "fitted-charts", label: "Chart fits" },
-  { id: "clips", label: "A quote" },
-  { id: "placement", label: "Floating chat" },
-  { id: "full-answer", label: "One answer" },
+  {
+    id: "problem",
+    label: "The chat could answer anything, but not say which interview said it",
+  },
+  {
+    id: "why-it-matters",
+    label: "A finding only travels if you can point to the interview behind it",
+  },
+  { id: "one-structure", label: "Every answer gets one fixed structure" },
+  { id: "fitted-charts", label: "The chart fits the question" },
+  { id: "clips", label: "A quote with no context" },
+  { id: "placement", label: "Floating chat, not a docked sidebar" },
+  { id: "full-answer", label: "One answer, start to finish" },
 ];
 
 function Section({
@@ -251,8 +257,8 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
-                This is the system everything else hangs on. Parts stay in order: 1 Summary, 2
-                Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only the chart changes shape.
+                Parts stay in order: 1 Summary, 2 Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only
+                the chart changes shape.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -357,9 +363,6 @@ export function DialogueCaseStudyContent({
               />
             </Section>
           </article>
-          <CaseStudyBody>
-            TODO: one thing I would test or change next. Mudit, replace this sentence.
-          </CaseStudyBody>
           <CaseStudyPager href="/dialogue" />
         </div>
       </div>

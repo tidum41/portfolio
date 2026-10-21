@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Archive — experiments, visuals, and personal work by Mudit Mahajan.",
   alternates: { canonical: `${SITE_URL}/archive` },
   openGraph: {
-    title: "archive — mudit mahajan",
+    title: "archive, Mudit Mahajan",
     description:
       "Archive — experiments, visuals, and personal work by Mudit Mahajan.",
     url: `${SITE_URL}/archive`,

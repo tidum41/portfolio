@@ -30,7 +30,8 @@ export default function PlacementBubbleScene() {
       const w = layer.clientWidth;
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
-      const next = Math.min(1, Math.max(0.94, w / CHAT_W));
+      const phone = window.innerWidth < 480;
+      const next = Math.min(1, phone ? w / CHAT_W : Math.max(0.94, w / CHAT_W));
       setScale(next);
       setOffset({
         x: Math.min(0, w - SCENE_W * next),

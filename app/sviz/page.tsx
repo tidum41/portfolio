@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
   alternates: { canonical: `${SITE_URL}/sviz` },
   openGraph: {
-    title: "sviz — mudit mahajan",
+    title: "sviz, Mudit Mahajan",
     description:
       "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
     url: `${SITE_URL}/sviz`,

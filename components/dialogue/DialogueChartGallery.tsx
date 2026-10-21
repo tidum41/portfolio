@@ -38,10 +38,6 @@ export default function DialogueChartGallery() {
           </div>
         ))}
       </div>
-      <p className="dialogue-caption">
-        <span className="dialogue-caption__label">Illustrative</span>
-        <span className="dialogue-caption__sentence">Study data in these figures is illustrative.</span>
-      </p>
       <div className="dialogue-chart-gallery">
         {GALLERY_CARDS.map((item) => (
           <div key={item.label} className="dialogue-chart-gallery__cell">
@@ -55,6 +51,10 @@ export default function DialogueChartGallery() {
           </div>
         ))}
       </div>
+      <p className="dialogue-caption dialogue-chart-gallery__caption">
+        <span className="dialogue-caption__label">Illustrative</span>
+        <span className="dialogue-caption__sentence">Study data in these figures is illustrative.</span>
+      </p>
     </div>
   );
 }
