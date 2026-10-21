@@ -269,7 +269,7 @@
 }
 
 .dp-search-step-wrap + .dp-summary {
-  margin: 8px 0 8px;
+  margin: 0 0 8px;
 }
 
 .dp-study-chat__body > .dp-summary {
@@ -1086,6 +1086,12 @@
 
 .dp-placement-scene__chat .dp-study-chat {
   width: 100%;
+}
+
+@media (max-width: 480px) {
+  .dp-placement-scene__chat .dp-study-chat__body {
+    padding-bottom: calc(var(--dp-chat-pad, 28px) + 16px);
+  }
 }
 
 .dp-placement-scene__launcher {

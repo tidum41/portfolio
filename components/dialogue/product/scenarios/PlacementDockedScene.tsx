@@ -38,22 +38,8 @@ export default function PlacementDockedScene() {
       placementFitChatWidth(layer, w, phone, next);
       const sceneW = SCENE_W * next;
       let y = 0;
-      if (phone) {
-        const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
-        if (fromFollowups !== null) y = fromFollowups;
-      } else {
-        const funnel = layer.querySelector(".dp-funnel");
-        if (funnel instanceof HTMLElement) {
-          let top = 0;
-          let node: HTMLElement | null = funnel;
-          while (node && node !== layer) {
-            top += node.offsetTop;
-            node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
-          }
-          const bottom = top + funnel.offsetHeight;
-          y = Math.min(0, h - (bottom * next + 16));
-        }
-      }
+      const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
+      if (fromFollowups !== null) y = fromFollowups;
       setScale(next);
       const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
       setOffset({ x: placementChatAnchorX(w, sceneW, phone, next, chatEl), y });

@@ -73,7 +73,7 @@ function scaleProps(
       case "clip-player":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
       case "full-answer":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 492, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 508, fade: true };
       case "problem-paragraphs":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 652, fade: true };
       default:
