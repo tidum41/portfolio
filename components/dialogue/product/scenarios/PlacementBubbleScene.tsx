@@ -35,7 +35,7 @@ export default function PlacementBubbleScene() {
       const next = Math.min(1, Math.max(floor, w / CHAT_W));
       setScale(next);
       setOffset({
-        x: Math.min(0, w - SCENE_W * next),
+        x: 0,
         y: Math.min(0, h - SCENE_H * next),
       });
     };

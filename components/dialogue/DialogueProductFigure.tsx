@@ -57,20 +57,35 @@ function scaleProps(
   minScale?: number;
   maxOuterHeight?: number;
   fit?: "scale" | "reflow";
+  fade?: boolean;
 } | null {
   const minScale = phone ? PHONE_MIN_SCALE : DESKTOP_MIN_SCALE;
   if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
   if (typeof scenario === "object" && "gallery" in scenario) {
     return { innerWidth: CHAT_W, fit: "reflow" };
   }
+  if (phone) {
+    switch (scenario) {
+      case "anatomy":
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 565, fade: true };
+      case "hero":
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 520, fade: true };
+      case "clip-player":
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
+      case "full-answer":
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 480, fade: true };
+      default:
+        return { innerWidth: CHAT_W, fit: "reflow" };
+    }
+  }
   switch (scenario) {
     case "hero":
       return narrow
-        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: phone ? undefined : 520 }
+        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 520 }
         : { innerWidth: 782, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "anatomy":
       return narrow
-        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: phone ? undefined : 440 }
+        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }
         : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "full-answer":
       return narrow
@@ -109,6 +124,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
           minScale={scale.minScale}
           maxOuterHeight={scale.maxOuterHeight}
           fit={scale.fit}
+          fade={scale.fade}
         >
           {inner}
         </ScaledChatViewport>

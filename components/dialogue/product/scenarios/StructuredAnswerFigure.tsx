@@ -28,7 +28,7 @@ export default function StructuredAnswerFigure({
 
   if (anatomy) {
     return (
-      <StudyChatShell compact={shellCompact}>
+      <StudyChatShell compact={shellCompact} hideComposer>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
         <QuerySearchStep searched={24} found={9} />
         <FunnelChart

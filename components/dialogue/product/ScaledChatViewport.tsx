@@ -67,9 +67,11 @@ export default function ScaledChatViewport({
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
   const [cropH, setCropH] = useState(cropHeight ?? 480);
+  const [clipW, setClipW] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [useZoom, setUseZoom] = useState(false);
   const [dpr, setDpr] = useState(1);
+  const [reflowH, setReflowH] = useState<number | undefined>(undefined);
 
   useLayoutEffect(() => {
     setUseZoom(supportsCssZoom());
@@ -102,6 +104,7 @@ export default function ScaledChatViewport({
       const scaledW = innerWidth * s;
       const cropping = scaledW > w + 0.5;
       const outerW = cropping ? w : Math.round(scaledW * dpr) / dpr;
+      setClipW(outerW);
       setOffsetX(cropping ? 0 : Math.max(0, Math.floor((w - outerW) / 2)));
 
       if (cropHeight !== undefined) {
@@ -123,26 +126,56 @@ export default function ScaledChatViewport({
     };
   }, [cropHeight, innerWidth, maxScale, minScale, useZoom, dpr]);
 
+  useLayoutEffect(() => {
+    if (fit !== "reflow") return;
+    const layer = layerRef.current;
+    const inner = innerRef.current;
+    if (!layer || !inner) return;
+
+    const measure = () => {
+      const measured = inner.offsetHeight;
+      if (measured < 1) return;
+      let h = measured;
+      if (maxOuterHeight !== undefined) h = Math.min(h, maxOuterHeight);
+      setReflowH(h);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [fit, maxOuterHeight, children]);
+
   if (fit === "reflow") {
+    const outerH = reflowH;
     return (
       <div
+        ref={layerRef}
         className={["dp-scaled-viewport", "dp-scaled-viewport--reflow", className]
           .filter(Boolean)
           .join(" ")}
         data-scale-mode="reflow"
         data-scale="1"
+        style={outerH !== undefined ? { height: outerH } : undefined}
       >
         <div
-          className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-          style={{ width: "100%" }}
+          className="dp-scaled-viewport__clip"
+          style={outerH !== undefined ? { height: outerH, overflow: "hidden" } : undefined}
         >
-          {children}
+          <div
+            ref={innerRef}
+            className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+            style={{ width: "100%" }}
+          >
+            {children}
+          </div>
+          {fade && outerH !== undefined ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
         </div>
       </div>
     );
   }
 
-  const outerW = Math.round(innerWidth * scale * dpr) / dpr;
+  const outerW = clipW > 0 ? clipW : Math.round(innerWidth * scale * dpr) / dpr;
   let outerH = Math.round(cropH * scale * dpr) / dpr;
   if (maxOuterHeight !== undefined) outerH = Math.min(outerH, maxOuterHeight);
 

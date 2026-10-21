@@ -42,7 +42,7 @@ export default function PlacementDockedScene() {
         y = Math.min(0, h - (bottom * next + 16));
       }
       setScale(next);
-      setOffset({ x: Math.min(0, w - SCENE_W * next), y });
+      setOffset({ x: 0, y });
     };
 
     fit();
