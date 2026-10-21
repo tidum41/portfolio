@@ -16,7 +16,7 @@ import PersistentSilkLayer from "@/components/PersistentSilkLayer";
 import PrimaryRouteWarmup from "@/components/PrimaryRouteWarmup";
 import PrimaryTabSync from "@/components/PrimaryTabSync";
 import { getDesignSystem, designSystemToCss, getProjects, DS_DEFAULTS, type DesignSystemData, type SanityProject } from "@/lib/sanity/queries";
-import { ABC_AREAL_WOFF2_PATH } from "@/lib/arealFont";
+import { HN_MEDIUM_WOFF2, HN_REGULAR_WOFF2 } from "@/lib/hnFont";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -167,7 +167,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         <style
           dangerouslySetInnerHTML={{
-            __html: `@font-face{font-family:"ABC Areal";src:url("${ABC_AREAL_WOFF2_PATH}") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}`,
+            __html: [
+              `@font-face{font-family:"HN";font-weight:400;font-style:normal;font-display:swap;src:url("${HN_REGULAR_WOFF2}") format("woff2"),local("HelveticaNeue"),local("HelveticaNeue-Regular"),local("Helvetica Neue")}`,
+              `@font-face{font-family:"HN";font-weight:500;font-style:normal;font-display:swap;src:url("${HN_MEDIUM_WOFF2}") format("woff2"),local("HelveticaNeue-Medium"),local("Helvetica Neue Medium")}`,
+            ].join(""),
           }}
         />
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here

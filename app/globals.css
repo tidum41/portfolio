@@ -1,9 +1,39 @@
 @import "tailwindcss";
 
+/* ─── Helvetica Neue ("HN") — woff2 from layout; local() on Apple ─────────── */
+@font-face {
+  font-family: "HN";
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue-UltraLight"), local("Helvetica Neue UltraLight");
+}
+@font-face {
+  font-family: "HN";
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue-Thin"), local("Helvetica Neue Thin");
+}
+@font-face {
+  font-family: "HN";
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light");
+}
+@font-face {
+  font-family: "HN";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue-Bold"), local("Helvetica Neue Bold");
+}
+
 @theme {
-  /* Fonts — ABC Areal woff2 is injected from layout (gitignored locally). */
-  --font-sans:        "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
-  --font-sans-medium: "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
+  /* Fonts — 400/500 woff2 paths are injected from app/layout.tsx */
+  --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
   --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
 
@@ -1835,10 +1865,10 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
-/* Dialogue case study — ABC Areal stack, weights ≤ 500 */
+/* Dialogue case study — HN stack, weights ≤ 500 */
 .dialogue-case-study-root,
 .dialogue-canvas-root {
-  font-family: "ABC Areal", "Helvetica Neue", system-ui, sans-serif;
+  font-family: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 400;
 }
 .dialogue-case-study-root h1,
