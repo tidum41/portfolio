@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
 const OPTIONS = [
@@ -53,10 +53,9 @@ export default function DialoguePlacementCompare() {
           ))}
         </div>
         <DialogueRachelFrame label={current.frameLabel} tone="neutral">
-          <DialogueLiveFigure
+          <DialogueReactFigure
             exportRoute={current.route}
             title={current.frameLabel}
-            tier="full"
             assetId={current.assetId}
           />
         </DialogueRachelFrame>

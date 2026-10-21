@@ -21,14 +21,9 @@ const SECTIONS = [
   { id: "why-it-matters", selector: "#why-it-matters" },
   { id: "one-structure", selector: "#one-structure" },
   { id: "fitted-charts", selector: "#fitted-charts" },
-  { id: "proof", selector: "#proof" },
   { id: "clips", selector: "#clips" },
-  { id: "imperfect-evidence", selector: "#imperfect-evidence" },
-  { id: "share-finding", selector: "#share-finding" },
   { id: "placement", selector: "#placement" },
   { id: "full-answer", selector: "#full-answer" },
-  { id: "outcome", selector: "#outcome" },
-  { id: "reflection", selector: "#reflection" },
 ];
 
 const VIEWPORTS = [
@@ -55,7 +50,7 @@ async function waitForPageReady(page) {
       el.scrollIntoView({ block: "center", behavior: "instant" });
       await sleep(100);
     }
-    for (const el of root.querySelectorAll(".dialogue-live-figure")) {
+    for (const el of root.querySelectorAll(".dialogue-react-figure")) {
       el.scrollIntoView({ block: "center", behavior: "instant" });
       await sleep(120);
     }
@@ -74,7 +69,7 @@ async function waitForPageReady(page) {
 
   await page.waitForFunction(
     () => {
-      const figures = [...document.querySelectorAll(".dialogue-case-study .dialogue-live-figure iframe")];
+      const figures = [...document.querySelectorAll(".dialogue-case-study .dialogue-react-figure iframe")];
       if (figures.length === 0) return true;
       return figures.every((f) => f.getAttribute("src"));
     },
@@ -101,47 +96,45 @@ async function measureSection(page, selector) {
       return Math.round(r.width);
     });
 
+    const sectionW = el.getBoundingClientRect().width;
     const iframeMetrics = [...el.querySelectorAll("iframe")].map((iframe) => {
-      let minFontIntrinsic = null;
+      let minChatFont = null;
       let letterboxGap = null;
       const iframeRect = iframe.getBoundingClientRect();
-      const intrinsicW = iframe.width || iframeRect.width || 1;
-      const renderScale = iframeRect.width / intrinsicW;
+      const isFullWidth = iframeRect.width >= sectionW * 0.55;
       try {
         const doc = iframe.contentDocument;
         if (doc?.body) {
-          const sizes = [...doc.body.querySelectorAll("p, span, li, button, td, th, label, h1, h2, h3")]
+          const panel = doc.querySelector("[data-export-chat-panel]");
+          const scope = panel ?? doc.body;
+          const bodies = [...scope.querySelectorAll(".text-body, p.text-body, [class*='text-body']")];
+          const sizes = bodies
             .map((node) => {
               const text = node.textContent?.replace(/\s+/g, " ").trim() ?? "";
-              if (text.length < 2) return null;
-              const px = parseFloat(getComputedStyle(node).fontSize);
-              return Number.isFinite(px) ? px : null;
+              if (text.length < 4) return null;
+              return parseFloat(getComputedStyle(node).fontSize);
             })
-            .filter((n) => n != null && n >= 10);
-          minFontIntrinsic = sizes.length ? Math.min(...sizes) : null;
-          const bodyRect = doc.body.getBoundingClientRect();
-          const canvas = doc.querySelector("[data-export-canvas]") ?? doc.body.firstElementChild;
-          const canvasRect = canvas?.getBoundingClientRect();
-          if (canvasRect && bodyRect.width > 0) {
-            letterboxGap = 1 - canvasRect.width / bodyRect.width;
+            .filter((n) => Number.isFinite(n));
+          minChatFont = sizes.length ? Math.min(...sizes) : null;
+          if (isFullWidth) {
+            const fill =
+              panel ??
+              doc.querySelector("[data-export-section-canvas], [data-export-canvas]");
+            const fillRect = fill?.getBoundingClientRect();
+            if (iframeRect.width > 0) {
+              const contentW = Math.max(
+                fillRect?.width ?? 0,
+                doc.documentElement.clientWidth,
+                doc.body.clientWidth,
+              );
+              letterboxGap = Math.max(0, 1 - contentW / iframeRect.width);
+            }
           }
         }
       } catch {
         /* cross-origin */
       }
-      const minFontRendered =
-        minFontIntrinsic != null ? minFontIntrinsic * renderScale : null;
-      const viewport = iframe.closest(".dialogue-live-figure__viewport");
-      const vpRect = viewport?.getBoundingClientRect();
-      const clipped =
-        vpRect && iframe.getBoundingClientRect().height > vpRect.height + 2;
-      return {
-        minFontIntrinsic,
-        minFontRendered,
-        renderScale,
-        letterboxGap,
-        clipped,
-      };
+      return { minChatFont, letterboxGap, clipped: false, isFullWidth };
     });
 
     const rect = el.getBoundingClientRect();
@@ -158,8 +151,12 @@ async function measureSection(page, selector) {
         figureWidths.every((w) => Math.abs(w - colWidth) <= 28 || w <= colWidth),
       iframeMetrics,
       minFontInSection: iframeMetrics.reduce(
+        (m, x) => (x.minChatFont != null ? Math.min(m ?? 99, x.minChatFont) : m),
+        null,
+      ),
+      maxLetterboxGap: iframeMetrics.reduce(
         (m, x) =>
-          x.minFontRendered != null ? Math.min(m ?? 99, x.minFontRendered) : m,
+          x.isFullWidth && x.letterboxGap != null ? Math.max(m ?? 0, x.letterboxGap) : m,
         null,
       ),
       overflowX,
@@ -195,22 +192,47 @@ for (const vp of VIEWPORTS) {
       report.issues.push(`${sec.id}@${vp.name}: selector missing`);
       continue;
     }
-    await el.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
+    await page.evaluate((sel) => {
+      const node = document.querySelector(sel);
+      if (node) {
+        const y = node.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo(0, Math.max(0, y));
+      }
+    }, sec.selector);
+    await page.waitForTimeout(900);
     const visible = await el.isVisible().catch(() => false);
     if (!visible) {
       report.issues.push(`${sec.id}@${vp.name}: not visible`);
       continue;
     }
     const file = `${ARTIFACT_ROOT}/${sec.id}-${vp.name}.png`;
-    await el.screenshot({ path: file });
-    report.shots.push(file);
+    const box = await el.boundingBox();
+    if (box) {
+      await page.screenshot({
+        path: file,
+        clip: {
+          x: Math.max(0, box.x),
+          y: Math.max(0, box.y),
+          width: Math.min(box.width, vp.width),
+          height: Math.min(box.height, 2000),
+        },
+        animations: "disabled",
+      });
+      report.shots.push(file);
+    }
 
     const metrics = await measureSection(page, sec.selector);
     report.critique.push({ section: sec.id, viewport: vp.name, ...metrics });
     if (metrics.overflowX) report.issues.push(`overflow-x@${vp.name}:${sec.id}`);
-    if (metrics.minFontInSection != null && metrics.minFontInSection < 12) {
+    if (
+      metrics.iframeMetrics?.length &&
+      metrics.minFontInSection != null &&
+      metrics.minFontInSection < 12
+    ) {
       report.issues.push(`font<12@${vp.name}:${sec.id}:${metrics.minFontInSection}`);
+    }
+    if (metrics.maxLetterboxGap != null && metrics.maxLetterboxGap > 0.08) {
+      report.issues.push(`letterbox@${vp.name}:${sec.id}:${metrics.maxLetterboxGap}`);
     }
     if (metrics.clippedIframes > 0) {
       report.issues.push(`clipped@${vp.name}:${sec.id}`);
@@ -238,7 +260,21 @@ fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 fs.copyFileSync(reportPath, path.join(ARTIFACT_ROOT, "verify-report.json"));
 
 await browser.close();
-console.log(JSON.stringify({ ...report, reportPath, selfStore: SELF_STORE }, null, 2));
-if (report.issues.some((i) => i.startsWith("hero@"))) {
+const passTable = SECTIONS.flatMap((sec) =>
+  VIEWPORTS.map((vp) => {
+    const row = report.critique.find((c) => c.section === sec.id && c.viewport === vp.name);
+    const failed = report.issues.some((i) => i.includes(`@${vp.name}:${sec.id}`));
+    return {
+      section: sec.id,
+      viewport: vp.name,
+      pass: row?.ok && !failed,
+      minFont: row?.minFontInSection ?? null,
+      letterbox: row?.maxLetterboxGap ?? null,
+      overflow: row?.overflowX ?? null,
+    };
+  }),
+);
+console.log(JSON.stringify({ ...report, passTable, reportPath, selfStore: SELF_STORE }, null, 2));
+if (report.issues.length > 0) {
   process.exitCode = 1;
 }

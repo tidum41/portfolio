@@ -3,9 +3,8 @@
 import type { ReactNode } from "react";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
-import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
-import { DIALOGUE_TRIO_CANONICAL_FRAME } from "@/lib/caseStudies/dialogueFigureTiers";
 
 export type RasterAnnotator = (assetId: string, children: ReactNode) => ReactNode;
 
@@ -78,11 +77,9 @@ function OptionCard({
   const size = option.imageNaturalSize ?? imageNaturalSize;
   const figure = option.liveExport ? (
     <DialogueRachelFrame tone="neutral">
-      <DialogueLiveFigure
+      <DialogueReactFigure
         exportRoute={option.liveExport.exportRoute}
         title={option.liveExport.title}
-        tier="trio"
-        canonicalFrame={DIALOGUE_TRIO_CANONICAL_FRAME}
         assetId={option.rasterAssetId}
       />
     </DialogueRachelFrame>

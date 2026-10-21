@@ -6,14 +6,12 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import DecisionBlock from "@/components/DecisionBlock";
 import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
-import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
 import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import type { DialogueFigureTier } from "@/lib/caseStudies/dialogueFigureTiers";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -30,14 +28,9 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "why-it-matters", label: "Why it matters" },
   { id: "one-structure", label: "One structure" },
   { id: "fitted-charts", label: "Fitted charts" },
-  { id: "proof", label: "Proof" },
   { id: "clips", label: "Clips" },
-  { id: "imperfect-evidence", label: "Messy research" },
-  { id: "share-finding", label: "Copy as card" },
   { id: "placement", label: "Floating chat" },
   { id: "full-answer", label: "One answer" },
-  { id: "outcome", label: "Outcome" },
-  { id: "reflection", label: "Reflection" },
 ];
 
 function Section({
@@ -82,10 +75,9 @@ function H2({ children }: { children: React.ReactNode }) {
   );
 }
 
-function LiveFigureBlock({
+function ReactFigureBlock({
   exportRoute,
   title,
-  tier,
   assetId,
   wrapRaster,
   frameLabel,
@@ -93,7 +85,6 @@ function LiveFigureBlock({
 }: {
   exportRoute: string;
   title: string;
-  tier: DialogueFigureTier;
   assetId?: string;
   wrapRaster?: RasterAnnotator;
   frameLabel?: string;
@@ -102,95 +93,11 @@ function LiveFigureBlock({
   const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "neutral");
   const media = (
     <DialogueRachelFrame label={frameLabel} tone={tone}>
-      <DialogueLiveFigure
-        exportRoute={exportRoute}
-        title={title}
-        tier={tier}
-        assetId={assetId}
-      />
+      <DialogueReactFigure exportRoute={exportRoute} title={title} assetId={assetId} />
     </DialogueRachelFrame>
   );
   const wrapped = assetId && wrapRaster ? wrapRaster(assetId, media) : media;
   return <figure className="cs-figure dialogue-live-block">{wrapped}</figure>;
-}
-
-function LivePairColumn({
-  frameLabel,
-  exportRoute,
-  title,
-  rasterId,
-  wrapRaster,
-}: {
-  frameLabel: string;
-  exportRoute: string;
-  title: string;
-  rasterId?: string;
-  wrapRaster?: RasterAnnotator;
-}) {
-  const media = (
-    <DialogueRachelFrame label={frameLabel} tone={frameToneFromLabel(frameLabel)}>
-      <DialogueLiveFigure exportRoute={exportRoute} title={title} tier="pair" assetId={rasterId} />
-    </DialogueRachelFrame>
-  );
-  return (
-    <div className="dialogue-pair-cell" style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-      {rasterId && wrapRaster ? wrapRaster(rasterId, media) : media}
-    </div>
-  );
-}
-
-function PlaceholderColumn({
-  caption,
-  children,
-}: {
-  caption: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-      {children}
-      <p className="cs-figcaption">{caption}</p>
-    </div>
-  );
-}
-
-function PairRow({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="dialogue-pair"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 12,
-        marginTop: 24,
-        alignItems: "stretch",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function VisualPending() {
-  return (
-    <div
-      className="dialogue-visual-pending"
-      style={{
-        marginTop: 24,
-        padding: "48px 24px",
-        borderRadius: "var(--radius-card)",
-        border: "1px dashed var(--color-border-subtle)",
-        background: "var(--color-accent-subtle)",
-        textAlign: "center",
-        fontSize: 13,
-        fontWeight: 500,
-        color: "var(--color-text-muted)",
-        letterSpacing: "0.02em",
-      }}
-    >
-      Visual pending
-    </div>
-  );
 }
 
 export function DialogueCaseStudyContent({
@@ -248,10 +155,9 @@ export function DialogueCaseStudyContent({
                   <div className="cs-hero-media-frame dialogue-hero-media">
                     <div className="dialogue-hero-breakout">
                       <DialogueRachelFrame tone="neutral">
-                        <DialogueLiveFigure
+                        <DialogueReactFigure
                           exportRoute="hero"
                           title="Study chat structured answer hero"
-                          tier="full"
                           assetId="D-01"
                         />
                       </DialogueRachelFrame>
@@ -262,10 +168,9 @@ export function DialogueCaseStudyContent({
                   <div className="cs-hero-media-frame dialogue-hero-media">
                     <div className="dialogue-hero-breakout">
                       <DialogueRachelFrame tone="neutral">
-                        <DialogueLiveFigure
+                        <DialogueReactFigure
                           exportRoute="hero"
                           title="Study chat structured answer hero"
-                          tier="full"
                           assetId="D-01"
                         />
                       </DialogueRachelFrame>
@@ -284,22 +189,13 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Teams could not see which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
-              <PairRow>
-                <LivePairColumn
-                  rasterId="D-02"
-                  wrapRaster={wrap}
-                  frameLabel="Problem: three paragraphs, no sources"
-                  exportRoute="section-1"
-                  title="Study chat answer as three dense paragraphs with no linked sources"
-                />
-                <LivePairColumn
-                  rasterId="D-03"
-                  wrapRaster={wrap}
-                  frameLabel="Solution: one claim, one chart, linked moments"
-                  exportRoute="section-4"
-                  title="Study chat answer with summary, chart, and linked moments"
-                />
-              </PairRow>
+              <ReactFigureBlock
+                exportRoute="section-1"
+                title="Study chat answer as three dense paragraphs with no linked sources"
+                assetId="D-02"
+                wrapRaster={wrap}
+                frameLabel="Problem: three paragraphs, no sources"
+              />
 
               <DecisionBlock
                 heading="Lead with the answer, back it with evidence"
@@ -344,17 +240,6 @@ export function DialogueCaseStudyContent({
                   },
                 ]}
               />
-
-              <div style={{ marginTop: 24 }}>
-                <LiveFigureBlock
-                  exportRoute="section-4"
-                  title="Selected checkout step with a clips list tied to that bar"
-                  tier="full"
-                  assetId="D-07"
-                  wrapRaster={wrap}
-                  frameLabel="Solution: selecting a bar filters the clips behind it"
-                />
-              </div>
             </Section>
 
             <Section id="why-it-matters">
@@ -363,10 +248,6 @@ export function DialogueCaseStudyContent({
                 I heard the same trust gap in conversations with Benjamin and Justin, Dialogue&apos;s
                 product team, and students in interview sessions (not Dialogue research customers).
               </CaseStudyBody>
-              <CaseStudyPlaceholder>
-                One concrete thing Benjamin, Justin, the product team, or a student said about study
-                chat or trusting an answer.
-              </CaseStudyPlaceholder>
             </Section>
 
             <Section id="one-structure">
@@ -374,15 +255,12 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
               </CaseStudyBody>
-              <div style={{ marginTop: 24 }}>
-                <LiveFigureBlock
-                  exportRoute="section-3"
-                  title="Study chat answer card with numbered callouts for sources through follow-ups"
-                  tier="full"
-                  assetId="D-08"
-                  wrapRaster={wrap}
-                />
-              </div>
+              <ReactFigureBlock
+                exportRoute="section-3"
+                title="Study chat answer card with numbered callouts for sources through follow-ups"
+                assetId="D-08"
+                wrapRaster={wrap}
+              />
             </Section>
 
             <Section id="fitted-charts">
@@ -394,63 +272,16 @@ export function DialogueCaseStudyContent({
               {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
 
-            <Section id="proof">
-              <H2>A number with no proof</H2>
-              <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
-              <PlaceholderColumn caption="Problem: a number with nothing behind it">
-                <CaseStudyPlaceholder>
-                  Export a crop of the selected bar before the clips block appears (matching the
-                  solution frame).
-                </CaseStudyPlaceholder>
-              </PlaceholderColumn>
-            </Section>
-
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
-              <PairRow>
-                <PlaceholderColumn caption="Problem: quote without the moment behind it">
-                  <CaseStudyPlaceholder>
-                    Export a crop of the quote or transcript before the player opens at the timestamp
-                    (matching the solution frame).
-                  </CaseStudyPlaceholder>
-                </PlaceholderColumn>
-                <LivePairColumn
-                  rasterId="D-10"
-                  wrapRaster={wrap}
-                  frameLabel="Solution: the clip opens at 01:38 with the speaker row highlighted"
-                  exportRoute="section-5"
-                  title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
-                />
-              </PairRow>
-            </Section>
-
-            <Section id="imperfect-evidence">
-              <H2>When the research doesn&apos;t settle it</H2>
-              <CaseStudyBody>
-                Real studies are messy. Some answers rest on four interviews, some on none, and some
-                participants disagree. Stating every answer with the same confidence would mislead the
-                teams who plan from them, so each answer shows how strong its evidence is.
-              </CaseStudyBody>
-              {wrap ? wrap("D-11", <VisualPending />) : <VisualPending />}
-              <p className="cs-figcaption" style={{ marginTop: 8 }}>
-                Counter-evidence shows who disagreed. Low coverage hides the chart and calls the
-                answer a lead. With no match, the chat suggests a question the interviews did cover.
-              </p>
-            </Section>
-
-            <Section id="share-finding">
-              <H2>A finding has to leave the chat</H2>
-              <CaseStudyBody>
-                Findings usually end up in a slide or a Slack thread, retyped and stripped of their
-                proof. Copy as card exports the finding with its chart, two clips and its coverage, so
-                the evidence travels with it.
-              </CaseStudyBody>
-              {wrap ? wrap("D-12", <VisualPending />) : <VisualPending />}
-              <p className="cs-figcaption" style={{ marginTop: 8 }}>
-                One action copies a ready-to-paste card. A thin finding keeps its low-coverage note,
-                so it can&apos;t pass as solid.
-              </p>
+              <ReactFigureBlock
+                exportRoute="section-5"
+                title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
+                assetId="D-10"
+                wrapRaster={wrap}
+                frameLabel="Solution: the clip opens at 01:38 with the speaker row highlighted"
+              />
             </Section>
 
             <Section id="placement">
@@ -467,33 +298,13 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
-              <LiveFigureBlock
+              <ReactFigureBlock
                 exportRoute="section-7"
                 title="Structured answer card beside a drawer listing every clip behind the answer"
-                tier="full"
                 assetId="D-15"
                 wrapRaster={wrap}
                 frameLabel="Solution: the full answer, with every supporting clip in one drawer"
               />
-            </Section>
-
-            <Section id="outcome">
-              <H2>It didn&apos;t ship as drawn, but it shaped what did</H2>
-              <CaseStudyBody>
-                I walked Benjamin and Justin through this exploration. It did not ship as designed,
-                but it shaped the study chat that did.
-              </CaseStudyBody>
-              <CaseStudyPlaceholder>
-                Which parts of this exploration influenced what shipped (structure, clips, charts,
-                follow-ups, or something else)?
-              </CaseStudyPlaceholder>
-            </Section>
-
-            <Section id="reflection">
-              <H2>Reflection</H2>
-              <CaseStudyPlaceholder>
-                Two or three lessons from this project, each a one-line claim plus one sentence.
-              </CaseStudyPlaceholder>
             </Section>
           </article>
           <CaseStudyPager href="/dialogue" />

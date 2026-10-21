@@ -1,6 +1,6 @@
 "use client";
 
-import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
 const CHART_EXPORTS: { route: string; title: string; label: string }[] = [
@@ -20,10 +20,9 @@ export default function DialogueChartGallery() {
       {CHART_EXPORTS.map((item, i) => (
         <div key={item.route} className="dialogue-chart-gallery__cell">
           <DialogueRachelFrame label={item.label} tone="chart">
-            <DialogueLiveFigure
+            <DialogueReactFigure
               exportRoute={item.route}
               title={item.title}
-              tier="full"
               assetId={i === 0 ? "D-09" : undefined}
             />
           </DialogueRachelFrame>

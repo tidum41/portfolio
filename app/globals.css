@@ -1904,9 +1904,28 @@ html[data-theme="light"] {
 .dialogue-pair-cell .dialogue-live-figure {
   height: 100%;
 }
+.dialogue-react-figure {
+  width: 100%;
+  min-width: 0;
+}
+.dialogue-react-figure__iframe {
+  background: transparent;
+}
+.dialogue-react-figure__skeleton {
+  min-height: 200px;
+  background: var(--color-bg-secondary);
+}
 .dialogue-case-study .decision-block__grid--desktop,
 .dialogue-case-study .decision-block__grid--mobile {
   align-items: stretch;
+}
+@media (max-width: 767px) {
+  .dialogue-case-study .decision-block__grid--desktop {
+    grid-template-columns: 1fr;
+  }
+  .dialogue-case-study .decision-block__grid--mobile {
+    display: none;
+  }
 }
 .dialogue-case-study .decision-block__option {
   height: 100%;
