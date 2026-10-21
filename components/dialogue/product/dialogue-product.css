@@ -509,7 +509,7 @@
 
 .dp-full-answer__cluster {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   gap: 42px;
   width: 100%;
@@ -519,21 +519,37 @@
 }
 
 .dp-full-answer__answer {
-  flex: 0 1 400px;
+  flex: 1 1 400px;
   width: min(400px, 100%);
+  max-width: 400px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dp-full-answer__answer .dp-study-chat {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 100%;
 }
 
 .dp-full-answer__drawer {
-  flex: 0 0 300px;
-  width: 300px;
-  max-width: 100%;
+  flex: 1 1 300px;
+  width: min(300px, 100%);
+  max-width: 300px;
   border-radius: var(--dp-radius);
   border: 1px solid var(--dp-border);
   background: var(--dp-surface);
   box-shadow: var(--shadow-chat);
   padding: 20px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.dp-full-answer__drawer-head {
+  flex-shrink: 0;
 }
 
 .dp-full-answer__drawer-title {
@@ -556,6 +572,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dp-full-answer .dp-clip-card__who,
@@ -578,6 +596,7 @@
   .dp-full-answer__answer,
   .dp-full-answer__drawer {
     width: 100%;
+    max-width: 100%;
     flex: 1 1 auto;
   }
 }
@@ -1305,19 +1324,32 @@
   filter: none;
 }
 
-/* Soft oval over the face only — room and torso stay sharp. */
+/*
+ * Face privacy: large ellipse over head/shoulders with a hard-blurred copy of
+ * the still (not backdrop-filter). Room stays sharp; person is unidentifiable
+ * at a glance. Never ship an unblurred face crop.
+ */
 .dp-player__face-privacy {
   position: absolute;
-  left: 36%;
-  top: 6%;
-  width: 28%;
-  height: 48%;
-  border-radius: 50%;
-  backdrop-filter: blur(16px) saturate(1.02);
-  -webkit-backdrop-filter: blur(16px) saturate(1.02);
-  background: rgb(255 255 255 / 4%);
-  pointer-events: none;
+  inset: 0;
   z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  /* Cover hairline through chin / upper shoulders */
+  clip-path: ellipse(30% 42% at 50% 24%);
+  background: rgb(252 251 249 / 22%);
+}
+
+.dp-player__face-privacy-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  filter: blur(44px) saturate(0.95) brightness(1.06);
+  transform: scale(1.35);
+  transform-origin: 50% 24%;
 }
 
 .dp-player__scrim {

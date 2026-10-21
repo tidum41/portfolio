@@ -2139,12 +2139,12 @@ html[data-theme="light"] {
   align-items: stretch;
 }
 .dialogue-lead-answer__row--trio {
+  /* Stay inside the content column so the sticky TOC never overlaps. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  /* Break out so each column can approach ~392px at 1440. */
-  width: min(1220px, calc(100vw - var(--page-px) * 2));
-  max-width: none;
-  margin-left: 50%;
-  transform: translateX(-50%);
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  transform: none;
 }
 .dialogue-lead-answer__row--stack {
   grid-template-columns: 1fr;
@@ -2200,14 +2200,11 @@ html[data-theme="light"] {
   color: var(--color-text-muted);
 }
 .dialogue-case-study .dialogue-lead-answer__viewport {
-  width: min(100%, var(--dialogue-option-w, 392px));
+  width: 100%;
   max-width: 100%;
 }
 @media (max-width: 900px) {
   .dialogue-lead-answer__row--trio {
-    width: 100%;
-    margin-left: 0;
-    transform: none;
     grid-template-columns: 1fr;
     gap: 24px;
   }
@@ -2337,17 +2334,12 @@ html[data-theme="light"] {
   margin-top: 8px;
 }
 .dialogue-placement-compare__pair {
+  /* Always stacked at full content width so the study page stays legible. */
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 28px;
   align-items: stretch;
   width: 100%;
-}
-@media (min-width: 720px) {
-  .dialogue-placement-compare__pair {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
 }
 .dialogue-placement-compare__cell {
   min-width: 0;

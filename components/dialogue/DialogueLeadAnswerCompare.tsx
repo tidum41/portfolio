@@ -15,9 +15,8 @@ function panelSurfaceTone(optionId: string): DialogueFrameTone {
   return optionId === "structured" ? "solution" : "problem";
 }
 
-/** Live chat width; scaled as a unit toward ~392px outer on desktop. */
+/** Live chat width; scaled as a unit to fill each trio column (no TOC breakout). */
 const CHAT_W = 448;
-const OPTION_OUTER_W = 392;
 /** Same crop for all three so charts are not cut mid-bar; soft fade at bottom. */
 const OPTION_CROP_H = 500;
 
@@ -46,12 +45,10 @@ function OptionPanel({
   option,
   isChosen,
   annotateRaster,
-  stacked,
 }: {
   option: Option;
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
-  stacked: boolean;
 }) {
   const body =
     option.productScenario === "decision-paragraphs" ? (
@@ -67,7 +64,6 @@ function OptionPanel({
       <ScaledChatViewport
         innerWidth={CHAT_W}
         cropHeight={OPTION_CROP_H}
-        maxScale={stacked ? undefined : OPTION_OUTER_W / CHAT_W}
         fade
       >
         {body}
@@ -122,10 +118,7 @@ export default function DialogueLeadAnswerCompare({
   }, []);
 
   return (
-    <div
-      className="dialogue-lead-answer"
-      style={{ ["--dialogue-option-w" as string]: `${OPTION_OUTER_W}px` }}
-    >
+    <div className="dialogue-lead-answer">
       <h3 className="dialogue-lead-answer__heading">{heading}</h3>
       <p className="dialogue-lead-answer__subheading">{subheading}</p>
       <div
@@ -140,7 +133,6 @@ export default function DialogueLeadAnswerCompare({
             option={option}
             isChosen={option.id === chosenId}
             annotateRaster={annotateRaster}
-            stacked={stacked}
           />
         ))}
       </div>
