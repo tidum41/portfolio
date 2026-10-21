@@ -72,7 +72,7 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 | **Trio** | **~242px** each (`(750 - 24) / 3`) | stack full width on small breakpoints | **4:5** only (portrait chat) | 242×**303** @ 1440; if 12px type cannot be held, **change layout** (e.g. stack or reduce to two-up), do not shrink type |
 | **Gallery** | Full column; cell = Full or Pair tier per cell | same | Inherit cell tier ratio | Grid obeys per-cell tier |
 
-**Authoring rule:** Build export HTML / live component at **placed CSS width** (750, 369, or 242 for desktop tier), with height from the ratio above. UI is composed to **fill the frame** (≥ 92% UI area, no letterboxing). **2× raster capture** is optional for PNG fallback only; the source of truth is **in-page** appearance at 1× placed width.
+**Authoring rule:** Build **live React** at **placed CSS width** (750, 369, or 242 for desktop tier), with height from the ratio above. UI is composed to **fill the frame** (≥ 92% UI area, no letterboxing). Optional **2× PNG** only for Agentation email review; the source of truth is **in-page** React at 1× placed width.
 
 **Scale rule:** Chat and UI typography in a figure must match Dialogue product sizes at that **placed** width. At **1440**, verify **≥ 12px** on primary chat copy in DevTools while scrolled to the figure on `/dialogue`. At **390**, re-check the same figure after responsive layout (pair/trio may stack).
 
@@ -80,8 +80,8 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 
 - Remove the anatomy **80%** wrapper; **D-08** uses **Full** tier like adjacent sections.
 - **Never** point two `D-*` IDs at the same PNG path (see asset map).
-- **Prefer live row on canvas:** iframe sized to **placed width × ratio height**, scaled only for canvas column parity, not for case-study readability (case study uses live embed or 1× width).
-- PNG fallback only for Agentation or email review when iframes are blocked.
+- **Canvas:** prefer the same `DialogueStudyFigure` as `/dialogue`; iframes are interim only.
+- PNG fallback only for Agentation or email review, not for normal `/dialogue` rendering.
 - **Verification:** Existing Playwright scripts plus **in-page** checks at 1440 and 390 on `/dialogue` (overflow, min font size, no letterboxing in figure box). Canvas-only screenshots are supplementary.
 
 ---
@@ -90,15 +90,15 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 
 | ID | Section | Round 35 action |
 |----|---------|-----------------|
-| **D-01** | Hero | **Replace.** JOOLA-style tight **study chat** UI in **Full / 16:10** at **750px** placed width; uiAreaFraction ≥ 0.92. Deprecate graph-only `section-6` as hero. |
-| **D-02** | Problem pair left | **New export** `problem-dense`: three paragraphs, **no sources**; **Pair** tier, same ratio as D-03 (**4:5** or **1:1**). |
-| **D-03** | Problem pair right | **New export** `problem-structured`: one claim, one chart, linked moments; **Pair** tier; **must not** share file with D-02. |
-| **D-04** | Decision: paragraphs | **Live chat UI** at **Trio / 4:5**, **242×303** placed @ 1440 (or layout adjusted so **≥ 12px** type holds); same question as D-05/D-06. |
-| **D-05** | Decision: quote list | **Live chat UI**, identical placed dimensions and type scale as D-04. |
-| **D-06** | Decision: structured | **Live chat UI**, identical placed dimensions; chosen state in caption only, **not** opacity dimming of media. |
-| **D-07** | Bar → clips | **New crop** from structured answer export (bar selected, clips visible); do not reuse whole `section-4` if it duplicates D-06 hero crop. |
-| **D-08** | Fixed structure | Tighten zoom; remove chrome caption list under image (per prior G1/G2); **Full** width tier. |
-| **D-09** | Chart fits question | **Expand** to **8–12** examples (see chart matrix below); grid or vertical stack in **Full** tier; each cell its own export route. |
+| **D-01** | Hero | **Replace.** `DialogueStudyFigure` **Full / 16:10**, JOOLA-tight study chat; scenario fixture; image fallback optional only. |
+| **D-02** | Problem pair left | React scenario `problem-dense`: three paragraphs, **no sources**; **Pair** tier, same ratio as D-03. |
+| **D-03** | Problem pair right | React scenario `problem-structured`: one claim, one chart, linked moments; **Pair** tier; distinct fixture from D-02. |
+| **D-04** | Decision: paragraphs | React **Trio / 4:5**; same question fixture base as D-05/D-06. |
+| **D-05** | Decision: quote list | React, identical tier/ratio/type scale as D-04. |
+| **D-06** | Decision: structured | React, identical tier/ratio; chosen state in caption only, **not** opacity dimming of media. |
+| **D-07** | Bar → clips | React structured answer, bar selected, clips visible; `mode: "demo"` if bar highlight is interactive. |
+| **D-08** | Fixed structure | React anatomy callouts; **Full** width tier; no extra caption chrome under frame. |
+| **D-09** | Chart fits question | **8–12** React scenarios in gallery grid; one chart type per scenario. |
 | **D-10** | Clips solution | Keep narrative; ensure pair/problem placeholders get matching exports when built. |
 | **D-11** | Messy research | Still candidate; **out of scope** for first build pass unless Mudit prioritizes. |
 | **D-12** | Copy as card | Still candidate; **out of scope** for first build pass unless Mudit prioritizes. |
@@ -107,7 +107,7 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 
 ### Chart / question matrix (D-09+)
 
-Each row = **one real user question** + **one chart type** in Dialogue UI (summary line + chart + clips slot). Implement in export app first, then case study grid.
+Each row = **one real user question** + **one chart type** in Dialogue UI (summary line + chart + clips slot). Add one **scenario fixture** per row, rendered via `DialogueStudyFigure`.
 
 | Question type | Chart / visual | Example question (placeholder ok until copy pass) |
 |---------------|----------------|--------------------------------------------------|
@@ -126,7 +126,7 @@ Use **only** Dialogue tokens, chart components, and spacing from the export desi
 
 - **Desktop:** Three **Trio / 4:5** columns at placed width **~242px**; **no** `opacity: 0.55` on unchosen **media** (optional subtle border on chosen only). If **12px** chat type fails at that width, adjust layout per tier table (stack or fewer columns), not export scale.
 - **Mobile:** Stack three frames; same order; each uses **Full** placed width (**342px**) with **4:5** height unless a single stacked ratio is defined in References.
-- **Implementation preference:** `DecisionBlock` accepts `liveExportSrc` per option **or** embedded React from the same `/export` routes used on canvas.
+- **Implementation preference:** `DecisionBlock` renders `DialogueStudyFigure` per option (shared product components + scenario ids).
 - **Remove** reuse of `section-1`, `section-2`, `section-4` paths across decision + problem sections.
 
 ### Placement section (D-13 / D-14), proposed treatment
@@ -147,9 +147,11 @@ Deprecate reusing `section-6` for bubble if it is also hero language unless hero
 | Area | Files |
 |------|--------|
 | Case study layout | `components/dialogue/DialogueCaseStudyContent.tsx`, `components/DecisionBlock.tsx` |
+| Live figures | `components/dialogue/DialogueStudyFigure.tsx`, `lib/caseStudies/dialogueScenarios/*` |
+| Product UI (vendored) | `components/dialogue/product/*` (sync from Dialogue app; mirrors `StudyChatShell` export bundle) |
 | Lightbox | `components/CaseStudyLightbox.tsx`, `app/globals.css` (`.cs-lightbox-*`) |
-| Asset map | `lib/caseStudies/dialogue.ts`, `dialogueCanvasCatalog.ts`, `dialogueRasterManifest.json` |
-| Live exports | `public/dev/dialogue-static/export/*.html`, export frame manifest |
+| Asset map | `lib/caseStudies/dialogue.ts`, `dialogueCanvasCatalog.ts` (`scenarioId` + optional `fallbackPng`) |
+| Static export (parity) | `public/dev/dialogue-static/export/*.html`, shared product import when rebuilt |
 | Canvas review | `app/dev/dialogue-canvas-v2/*` |
 
 ---
@@ -165,7 +167,7 @@ Run locally with `npm run dev` (not `next start`):
 | `node scripts/verify-dialogue-canvas-local.mjs` | Full-page canvas + `/dialogue` screenshots |
 | `node scripts/verify-dialogue-story-map-preview.mjs` | Story map preview readiness |
 
-**In-page (round 35 build):** At **1440** and **390** on `/dialogue`, per figure: no horizontal overflow, no letterboxing inside `.cs-figure-media`, chat copy **≥ 12px**, UI fill ≥ 92% of figure box. Capture screenshots **with surrounding section context**, not cropped standalone assets.
+**In-page (round 35 build):** At **1440** and **390** on `/dialogue`, per figure: no horizontal overflow, no letterboxing inside `.cs-figure-media`, chat copy **≥ 12px**, UI fill ≥ 92% of figure box, **no network** from figure subtrees (DevTools). Lazy figures mount when scrolled into view. Capture screenshots **with surrounding section context**, not cropped standalone assets.
 
 **Snapshot at brief time:** iframe audit **passed** (no horizontal overflow at 390; iframe fill metrics recorded under `/cursor/stores/bot/dialogue-canvas-verify/`). Live parity shots written for D-04, D-06, D-09. Re-run full suite after visual build.
 
