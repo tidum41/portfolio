@@ -1,7 +1,7 @@
 const THUMBS = [
-  { src: "/dev/dialogue-static/clip-photos/still-thumb-3.jpg", time: "14:03", focal: false },
-  { src: "/dev/dialogue-static/clip-photos/still-thumb-2.jpg", time: "15:47", focal: true },
-  { src: "/dev/dialogue-static/clip-photos/still-thumb-2.jpg", time: "16:02", focal: false },
+  { src: "/dev/dialogue-static/clip-photos/clip-01.jpg", time: "14:03", focal: false },
+  { src: "/dev/dialogue-static/clip-photos/clip-02.jpg", time: "15:47", focal: true },
+  { src: "/dev/dialogue-static/clip-photos/clip-05.jpg", time: "16:02", focal: false },
 ] as const;
 
 type Props = {

@@ -25,23 +25,29 @@ export default function StructuredAnswerFigure({
 
   if (anatomy) {
     return (
-      <StudyChatShell compact={shellCompact} anatomy>
+      <StudyChatShell compact={shellCompact}>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-        <div className="dp-anatomy-target" data-anatomy-part="summary">
-          <span className="dp-anatomy-part-marker" aria-hidden>2</span>
-          <QuerySearchStep searched={24} found={9} />
+        <QuerySearchStep searched={24} found={9} />
+        <div className="dp-anatomy-target" data-anatomy-part="sources">
+          <span className="dp-anatomy-part-marker" aria-hidden>
+            1
+          </span>
+          <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         </div>
         <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy />
-        <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         {showClips && (
           <div className="dp-anatomy-target" data-anatomy-part="clips">
-            <span className="dp-anatomy-part-marker" aria-hidden>4</span>
+            <span className="dp-anatomy-part-marker" aria-hidden>
+              4
+            </span>
             <ClipThumbnails selectedTime="15:47" />
           </div>
         )}
         {!compact && (
           <div className="dp-anatomy-target" data-anatomy-part="followups">
-            <span className="dp-anatomy-part-marker" aria-hidden>5</span>
+            <span className="dp-anatomy-part-marker" aria-hidden>
+              5
+            </span>
             <FollowUpChips />
           </div>
         )}
@@ -54,9 +60,9 @@ export default function StructuredAnswerFigure({
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <FunnelChart compact={compact} hero={hero} vizCard={!hero} />
-      {showClips && !hero && <ClipThumbnails />}
+      {showClips && !hero && <ClipThumbnails selectedTime="15:47" />}
       {showClips && hero && <ClipCard clip={CLIPS[0]} />}
-      {!hero && <SourcesRow />}
+      {!hero && <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />}
       {!compact && !hero && <FollowUpChips />}
     </StudyChatShell>
   );

@@ -6,12 +6,13 @@ type Props = { searched: number; found: number; expanded?: boolean };
 export default function QuerySearchStep({ searched, found }: Props) {
   return (
     <div className="dp-search-step-wrap" data-testid="query-search-step">
-      <button type="button" className="dp-search-step">
+      {/* Decorative in product figures — not a real control. */}
+      <div className="dp-search-step" role="text">
         <span className="dp-search-step__text">
           {dialogueCopy.searchStep(searched, found)}
         </span>
         <ChevronDownIcon className="dp-search-step__chevron" />
-      </button>
+      </div>
     </div>
   );
 }

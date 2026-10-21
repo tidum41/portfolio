@@ -7,7 +7,7 @@ export default function ClipPlayerFigure() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="dp-player__still"
-          src="/dev/dialogue-static/clip-photos/still-thumb-2.jpg"
+          src="/dev/dialogue-static/clip-photos/still-player.jpg"
           alt=""
           decoding="async"
         />

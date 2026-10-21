@@ -33,6 +33,7 @@ export default function ScaledChatViewport({
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.58);
   const [cropH, setCropH] = useState(cropHeight ?? 480);
+  const [offsetX, setOffsetX] = useState(0);
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -45,6 +46,8 @@ export default function ScaledChatViewport({
       let s = w / innerWidth;
       if (maxScale !== undefined) s = Math.min(s, maxScale);
       setScale(s);
+      // Center when the panel is narrower than the frame (maxScale cap).
+      setOffsetX(Math.max(0, (w - innerWidth * s) / 2));
 
       if (cropHeight !== undefined) {
         setCropH(cropHeight);
@@ -79,7 +82,7 @@ export default function ScaledChatViewport({
           className="dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography"
           style={{
             width: innerWidth,
-            transform: `scale(${scale})`,
+            transform: `translateX(${offsetX}px) scale(${scale})`,
             transformOrigin: "top left",
           }}
         >

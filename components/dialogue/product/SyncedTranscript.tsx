@@ -1,19 +1,28 @@
 type Row = {
   speaker: string;
-  time?: string;
+  time: string;
   text: string;
   active?: boolean;
 };
 
+/** Paper section-5 synced transcript — every row has speaker + timestamp. */
 const ROWS: Row[] = [
-  { speaker: "", text: "Earlier they mentioned delivery dates felt like hidden fees." },
+  {
+    speaker: "Dialogue",
+    time: "01:04",
+    text: "What made you hesitate before paying?",
+  },
   {
     speaker: "Jordan M.",
     time: "01:38",
     text: "The apartment field kept clearing when I picked autocomplete.",
     active: true,
   },
-  { speaker: "", text: "I almost closed the tab before payment." },
+  {
+    speaker: "Dialogue",
+    time: "01:42",
+    text: "Did the error tell you what to fix?",
+  },
 ];
 
 export default function SyncedTranscript() {
@@ -31,14 +40,10 @@ export default function SyncedTranscript() {
               .filter(Boolean)
               .join(" ")}
           >
-            {row.speaker ? (
-              <span className="dp-synced-transcript__meta">
-                <span className="dp-synced-transcript__speaker">{row.speaker}</span>
-                {row.time ? (
-                  <span className="dp-synced-transcript__time">{row.time}</span>
-                ) : null}
-              </span>
-            ) : null}
+            <span className="dp-synced-transcript__meta">
+              <span className="dp-synced-transcript__speaker">{row.speaker}</span>
+              <span className="dp-synced-transcript__time">{row.time}</span>
+            </span>
             <span className="dp-synced-transcript__text">{row.text}</span>
           </li>
         ))}

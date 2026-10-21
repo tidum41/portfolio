@@ -16,23 +16,24 @@ const FULL_ANSWER_W = 742;
 function scaleProps(scenario: Scenario): { innerWidth: number; maxScale?: number } | null {
   if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
   if (typeof scenario === "object" && "gallery" in scenario) {
-    return { innerWidth: CHAT_W };
+    // Never upscale chart cards — keeps 1:1 axis/label proportions.
+    return { innerWidth: CHAT_W, maxScale: 1 };
   }
   switch (scenario) {
     case "hero":
-      return { innerWidth: 822 };
+      return { innerWidth: 822, maxScale: 1 };
     case "anatomy":
-      return { innerWidth: ANATOMY_W };
+      return { innerWidth: ANATOMY_W, maxScale: 1 };
     case "full-answer":
-      return { innerWidth: FULL_ANSWER_W };
+      return { innerWidth: FULL_ANSWER_W, maxScale: 1 };
     case "clip-player":
     case "problem-paragraphs":
     case "decision-paragraphs":
     case "decision-quotes":
     case "decision-structured":
-      return { innerWidth: CHAT_W };
+      return { innerWidth: CHAT_W, maxScale: 1 };
     default:
-      return { innerWidth: CHAT_W };
+      return { innerWidth: CHAT_W, maxScale: 1 };
   }
 }
 
@@ -49,6 +50,8 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
       data-dialogue-asset-id={assetId}
       aria-label={title}
       aria-hidden
+      // Remove from tab order / hit-testing; figures are decorative in the case study.
+      inert
     >
       {scale ? (
         <ScaledChatViewport innerWidth={scale.innerWidth} maxScale={scale.maxScale}>

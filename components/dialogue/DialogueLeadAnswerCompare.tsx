@@ -42,10 +42,12 @@ function OptionPanel({
   option,
   isChosen,
   annotateRaster,
+  stacked,
 }: {
   option: Option;
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
+  stacked: boolean;
 }) {
   const body =
     option.productScenario === "decision-paragraphs" ? (
@@ -56,7 +58,11 @@ function OptionPanel({
       <StructuredAnswerFigure compact showClips />
     );
   const figure = (
-    <ScaledChatViewport cropHeight={DECISION_CROP_H} maxScale={DESKTOP_MAX_SCALE} fade>
+    <ScaledChatViewport
+      cropHeight={DECISION_CROP_H}
+      maxScale={stacked ? undefined : DESKTOP_MAX_SCALE}
+      fade
+    >
       {body}
     </ScaledChatViewport>
   );
@@ -74,7 +80,9 @@ function OptionPanel({
     >
       <p className="dialogue-lead-answer__panel-label">{option.label}</p>
       <DialogueRachelFrame tone={panelSurfaceTone(option.id)} className="dialogue-lead-answer__frame">
-        {wrapped}
+        <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
+          {wrapped}
+        </div>
       </DialogueRachelFrame>
       <p className="dialogue-lead-answer__panel-title">{option.title}</p>
       {isChosen && option.selectionNote ? (
@@ -125,6 +133,7 @@ export default function DialogueLeadAnswerCompare({
             option={option}
             isChosen={option.id === chosenId}
             annotateRaster={annotateRaster}
+            stacked={stacked}
           />
         ))}
       </div>

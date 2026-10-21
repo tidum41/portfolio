@@ -1889,18 +1889,24 @@ html[data-theme="light"] {
 }
 .dialogue-rachel-frame__label {
   display: block;
-  padding: 12px 20px 0;
-  margin: 0 0 12px;
+  padding: 14px 20px 0;
+  margin: 0;
   font-family: var(--font-sans-medium);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.35;
-  letter-spacing: 0.01em;
-  color: #57534d !important;
+  letter-spacing: 0.02em;
+  color: #78716c !important;
 }
 .dialogue-rachel-frame--problem .dialogue-rachel-frame__label,
 .dialogue-rachel-frame--solution .dialogue-rachel-frame__label {
-  color: #1c1917 !important;
+  color: #57534d !important;
+}
+/* Caption sits above the figure pad with a clear gap — not floating on the UI. */
+.dialogue-rachel-frame__label + .dialogue-rachel-frame__pad {
+  margin-top: 10px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(28 25 23 / 6%);
 }
 .dialogue-rachel-frame__pad {
   overflow: visible;
@@ -1916,13 +1922,19 @@ html[data-theme="light"] {
   aspect-ratio: 3 / 2;
   background: var(--dp-figure-surface-system);
 }
-.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block,
-.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport {
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block {
   height: 100%;
   min-height: 100%;
 }
+/* Let ScaledChatViewport own height from measured content × scale (not 100% collapse). */
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport {
+  height: auto;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+}
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport__clip {
-  height: 100%;
+  width: 100%;
 }
 
 @media (max-width: 420px) {
@@ -1944,9 +1956,6 @@ html[data-theme="light"] {
 }
 .dialogue-rachel-frame__pad {
   padding: 20px;
-}
-.dialogue-rachel-frame__label + .dialogue-rachel-frame__pad {
-  padding-top: 8px;
 }
 .dialogue-pair {
   align-items: stretch;

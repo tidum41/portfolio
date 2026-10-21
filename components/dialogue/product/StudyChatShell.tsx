@@ -5,10 +5,11 @@ type Props = {
   children: ReactNode;
   compact?: boolean;
   hero?: boolean;
+  /** @deprecated Anatomy targets live on answer parts, not the chat head. */
   anatomy?: boolean;
-};
+}
 
-export default function StudyChatShell({ children, compact, hero, anatomy }: Props) {
+export default function StudyChatShell({ children, compact, hero }: Props) {
   return (
     <div
       className={[
@@ -20,11 +21,7 @@ export default function StudyChatShell({ children, compact, hero, anatomy }: Pro
         .join(" ")}
       data-export-chat-panel="true"
     >
-      <div
-        className={anatomy ? "dp-study-chat__head dp-anatomy-target" : "dp-study-chat__head"}
-        {...(anatomy ? { "data-anatomy-part": "sources" } : {})}
-      >
-        {anatomy ? <span className="dp-anatomy-part-marker" aria-hidden>1</span> : null}
+      <div className="dp-study-chat__head">
         <p className="dp-study-chat__title">{dialogueCopy.assistantTitle}</p>
         <p className="dp-study-chat__sub">{dialogueCopy.studySubtitle}</p>
       </div>

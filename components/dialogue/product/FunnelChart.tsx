@@ -18,12 +18,22 @@ export default function FunnelChart({
   vizCard = true,
 }: Props) {
   const data = CHECKOUT_FUNNEL;
-  const summary = (
+  const summaryBody = (
     <p className="dp-summary dp-text-body">
       {data.summary.split(data.emphasis)[0]}
       <span className="dp-summary__emph">{data.emphasis}</span>
       {data.summary.split(data.emphasis)[1] ?? ""}
     </p>
+  );
+  const summary = anatomy ? (
+    <div className="dp-anatomy-target" data-anatomy-part="summary">
+      <span className="dp-anatomy-part-marker" aria-hidden>
+        2
+      </span>
+      {summaryBody}
+    </div>
+  ) : (
+    summaryBody
   );
 
   const chartInner = (
