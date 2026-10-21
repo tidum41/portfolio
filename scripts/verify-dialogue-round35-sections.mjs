@@ -532,10 +532,11 @@ for (const vp of VIEWPORTS) {
                 a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
               study
                 .querySelectorAll(
-                  "p, .dp-app-sidebar__nav-item, .dp-app-stat-card__label, .dp-app-sidebar__wordmark",
+                  "p, .dp-app-sidebar__nav-item, .dp-app-stat-card__label, .dp-app-sidebar__wordmark-img",
                 )
                 .forEach((el) => {
                   if (getComputedStyle(el).display === "none") return;
+                  if (el.tagName === "IMG") return;
                   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
                   let node;
                   while ((node = walker.nextNode())) {

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * DS parity: reference = Paper static export DOM (1×, transforms stripped); live = /dialogue/ds-parity @ 400px.
+ * DS parity: reference = Paper static export DOM (1×, transforms stripped); live = /dialogue/ds-parity.
+ * Study chrome: render at full app CSS size, compare via PNG downscale to 400px width.
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -13,6 +14,9 @@ const OUT = process.env.DS_PARITY_STORE || "/cursor/stores/self/ds-parity";
 const PORT = Number(process.env.ROUND35_PORT || 3020);
 const BASE = process.env.BASE_URL || `http://127.0.0.1:${PORT}`;
 const PANEL_W = 400;
+const STUDY_COMPARE_W = 400;
+const MIN_STAT_CARD_W = 120;
+const MAX_LABEL_LINES = 2;
 
 /** Reference crops from static export HTML at native CSS width (no upscaling). */
 const REF_SPECS = {
@@ -39,7 +43,7 @@ const REF_SPECS = {
   "study-chrome": {
     html: "/dev/dialogue-static/export/section-6.html",
     selector: "[data-export-app-shell]",
-    downscaleRefTo: PANEL_W,
+    downscaleRefTo: STUDY_COMPARE_W,
   },
 };
 
@@ -74,6 +78,48 @@ async function waitForDmSans(page) {
   );
 }
 
+async function assertStudyChromeLayout(page) {
+  const result = await page.evaluate(
+    ({ minCardW, maxLines }) => {
+      const shell = document.querySelector(
+        '[data-parity-id="study-chrome"] [data-export-app-shell]',
+      );
+      if (!shell) return { ok: false, hits: ["missing-study-shell"] };
+      const hits = [];
+      const shellRect = shell.getBoundingClientRect();
+      if (shellRect.width < 1200) {
+        hits.push(`shell-width:${Math.round(shellRect.width)}`);
+      }
+      shell.querySelectorAll(".dp-app-stat-card").forEach((card) => {
+        const w = card.getBoundingClientRect().width;
+        if (w < minCardW) hits.push(`stat-card-narrow:${Math.round(w)}`);
+      });
+      const checkLines = (el, max) => {
+        const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+        if (text.length < 2) return;
+        const st = getComputedStyle(el);
+        const lh = parseFloat(st.lineHeight);
+        if (!Number.isFinite(lh) || lh <= 0) return;
+        const lines = el.getBoundingClientRect().height / lh;
+        if (lines > max + 0.35) {
+          hits.push(`text-wrap:${text.slice(0, 24)}:${lines.toFixed(1)}lines`);
+        }
+      };
+      shell
+        .querySelectorAll(
+          ".dp-app-stat-card__label, .dp-app-sidebar__nav-item, .dp-app-main__title, .dp-app-tab",
+        )
+        .forEach((el) => checkLines(el, maxLines));
+      return { ok: hits.length === 0, hits, shellW: Math.round(shellRect.width) };
+    },
+    { minCardW: MIN_STAT_CARD_W, maxLines: MAX_LABEL_LINES },
+  );
+  if (!result.ok) {
+    throw new Error(`study-chrome layout: ${result.hits.join(", ")}`);
+  }
+  return result;
+}
+
 /** Reset ancestor transforms so element screenshots use layout CSS width (not export canvas scale). */
 async function prepareExportRoot(page, selector) {
   await page.evaluate((sel) => {
@@ -92,7 +138,7 @@ async function prepareExportRoot(page, selector) {
 }
 
 async function captureRef(browser, id, spec) {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 1400 } });
+  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
   await page.goto(`${BASE}${spec.html}`, { waitUntil: "load" });
   await waitForDmSans(page);
   await prepareExportRoot(page, spec.selector);
@@ -129,6 +175,14 @@ async function overlayDiff(refBuf, liveBuf, w, h) {
   return sharp(blended, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
 }
 
+async function downscaleToWidth(pngPath, width) {
+  const meta = await sharp(pngPath).metadata();
+  if (!meta.width || meta.width <= width) return pngPath;
+  const out = pngPath.replace(/\.png$/, "-scaled.png");
+  await sharp(pngPath).resize({ width, withoutEnlargement: true }).png().toFile(out);
+  return out;
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 
 if (!(await portOpen(PORT))) {
@@ -142,17 +196,26 @@ for (const [id, spec] of Object.entries(REF_SPECS)) {
   await captureRef(browser, id, spec);
 }
 
-const page = await browser.newPage({ viewport: { width: 1280, height: 2400 } });
+const page = await browser.newPage({ viewport: { width: 1500, height: 1200 } });
 await page.goto(`${BASE}/dialogue/ds-parity`, { waitUntil: "load" });
 await waitForDmSans(page);
 await page.waitForTimeout(300);
 
 const fontAudit = await page.evaluate(() => {
   const bubble = document.querySelector('[data-parity-id="chat-shell"] .dp-user-bubble p');
+  const panel = document.querySelector('[data-parity-id="chat-shell"] .dp-study-chat');
   const st = bubble ? getComputedStyle(bubble) : null;
+  const panelSt = panel ? getComputedStyle(panel) : null;
+  const head = document.querySelector('[data-parity-id="chat-shell"] .dp-study-chat__head');
+  const headSt = head ? getComputedStyle(head) : null;
   return {
     bubbleFontSize: st?.fontSize,
     bubbleFontFamily: st?.fontFamily,
+    headPaddingTop: headSt?.paddingTop,
+    bodyPadInline: panel
+      ? getComputedStyle(document.querySelector('[data-parity-id="chat-shell"] .dp-study-chat__body'))
+          ?.paddingLeft
+      : null,
     dmSansLoaded:
       document.fonts.check('400 16px "DM Sans"') || document.fonts.check('16px "DM Sans"'),
     fontsReady: document.fonts.status === "loaded",
@@ -165,57 +228,53 @@ if (!fontAudit.dmSansLoaded) {
 if (fontAudit.bubbleFontSize !== "16px") {
   throw new Error(`Chat bubble not 16px before capture: ${JSON.stringify(fontAudit)}`);
 }
+if (fontAudit.headPaddingTop !== "28px" || fontAudit.bodyPadInline !== "28px") {
+  throw new Error(`Chat panel padding expected 28px (p-7): ${JSON.stringify(fontAudit)}`);
+}
+
+const studyLayout = await assertStudyChromeLayout(page);
 
 for (const id of Object.keys(REF_SPECS)) {
-  const live = page.locator(`[data-parity-id="${id}"] [data-parity-live]`);
-  const livePath = path.join(OUT, `${id}-live.png`);
-  await live.screenshot({ path: livePath });
+  const live =
+    id === "study-chrome"
+      ? page.locator('[data-parity-id="study-chrome"] [data-export-app-shell]')
+      : page.locator(`[data-parity-id="${id}"] [data-parity-live]`);
 
-  const refMeta = await sharp(path.join(OUT, `${id}-ref.png`)).metadata();
-  const refW = refMeta.width ?? PANEL_W;
+  const livePath = path.join(OUT, `${id}-live.png`);
+  await live.screenshot({ path: livePath, animations: "disabled" });
+
+  let refPath = path.join(OUT, `${id}-ref.png`);
+  let liveComparePath = livePath;
+
+  if (id === "study-chrome") {
+    liveComparePath = await downscaleToWidth(livePath, STUDY_COMPARE_W);
+    refPath = path.join(OUT, `${id}-ref.png`);
+  }
+
+  const refMeta = await sharp(refPath).metadata();
+  const compareW = id === "study-chrome" ? STUDY_COMPARE_W : (refMeta.width ?? PANEL_W);
   const h = refMeta.height ?? 200;
 
-  const liveMeta = await sharp(livePath).metadata();
-  if (liveMeta.width !== refW) {
-    console.warn(
-      JSON.stringify({
-        warn: "width-mismatch",
-        id,
-        refW,
-        liveW: liveMeta.width,
-      }),
-    );
-  }
-
-  const compareW = refW;
-  const compareH = h;
-
-  const liveBuf = await sharp(livePath)
-    .resize({ width: compareW, height: compareH, fit: "contain", background: "#f8f6f3" })
+  const liveBuf = await sharp(liveComparePath)
+    .resize({ width: compareW, height: h, fit: "contain", background: "#f8f6f3" })
     .png()
     .toBuffer();
-  const refBuf = await sharp(path.join(OUT, `${id}-ref.png`))
-    .resize({ width: compareW, height: compareH, fit: "fill" })
+  const refBuf = await sharp(refPath)
+    .resize({ width: compareW, height: h, fit: "fill" })
     .png()
     .toBuffer();
-
-  if (liveMeta.width && Math.abs(liveMeta.width - compareW) > 2) {
-    console.warn(
-      JSON.stringify({ warn: "live-width-drift", id, expected: compareW, liveW: liveMeta.width }),
-    );
-  }
 
   await sharp({
-    create: { width: refW * 2, height: h, channels: 3, background: "#111111" },
+    create: { width: compareW * 2, height: h, channels: 3, background: "#111111" },
   })
     .composite([
       { input: refBuf, left: 0, top: 0 },
-      { input: liveBuf, left: refW, top: 0 },
+      { input: liveBuf, left: compareW, top: 0 },
     ])
     .png()
     .toFile(path.join(OUT, `${id}-compare.png`));
 
-  const overlay = await overlayDiff(refBuf, liveBuf, refW, h);
+  const overlay = await overlayDiff(refBuf, liveBuf, compareW, h);
   await sharp(overlay).toFile(path.join(OUT, `${id}-overlay.png`));
 }
 
@@ -225,21 +284,14 @@ const report = `# Dialogue DS parity report
 
 Generated: ${new Date().toISOString()}
 Base: ${BASE}
-Panel width: ${PANEL_W}px
 
-## Font gate (live capture)
+## Font / layout gates
 
 \`\`\`json
-${JSON.stringify(fontAudit, null, 2)}
+${JSON.stringify({ fontAudit, studyLayout }, null, 2)}
 \`\`\`
 
-## Remaining mismatches (eyeball)
-
-| Area | Notes |
-|------|-------|
-| **answer-card height** | Live includes sources row below clips; ref panel crop is full export panel only. |
-| **study-chrome** | Ref downscaled from 922px export shell to ${PANEL_W}px; live uses native \`dp-app-shell--parity-400\` (no transform). |
-| **clip-row** | Third thumb matches export (\`still-thumb-2\` @ 16:02). |
+Study chrome: full shell rendered at CSS size, compare PNGs downscaled to ${STUDY_COMPARE_W}px width.
 
 ## Token files
 
@@ -248,4 +300,6 @@ ${JSON.stringify(fontAudit, null, 2)}
 `;
 
 fs.writeFileSync(path.join(OUT, "parity-report.md"), report);
-console.log(JSON.stringify({ out: OUT, fontAudit, report: path.join(OUT, "parity-report.md") }, null, 2));
+console.log(
+  JSON.stringify({ out: OUT, fontAudit, studyLayout, report: path.join(OUT, "parity-report.md") }, null, 2),
+);

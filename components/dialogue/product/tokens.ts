@@ -103,8 +103,11 @@ export const dialogueProductTokens = {
     funnelLabelW: "72px",
     funnelPctW: "40px",
     funnelBarH: "8px",
-    /** Live study sidebar ~252px (screenshot); layout uses `16rem` in app */
+    /** Live study sidebar (~252px in production study layout) */
     sidebarWidth: "252px",
+    /** Production study app shell (CSS px) */
+    appShellWidth: "1280px",
+    appShellHeight: "748px",
   },
   shadow: {
     chat: "0 8px 24px -12px rgb(28 25 23 / 8%)",
@@ -175,6 +178,8 @@ export function dialogueProductCssVariables(): Record<string, string> {
     "dp-funnel-bar-dark": t.color.funnelBarDark,
     "dp-skeleton": t.color.skeleton,
     "dp-sidebar-width": t.space.sidebarWidth,
+    "dp-app-shell-width": t.space.appShellWidth,
+    "dp-app-shell-height": t.space.appShellHeight,
     "text-body-size": t.font.bodySize,
     "text-body-leading": t.font.bodyLeading,
     "text-meta-size": t.font.metaSize,

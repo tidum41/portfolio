@@ -3,16 +3,14 @@ import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
   placement?: boolean;
-  /** Scale Paper app shell (922×540) to fit narrow parity captures. */
-  paperScale?: boolean;
 };
 
-export default function StudyPageChrome({ placement, paperScale }: Props) {
+export default function StudyPageChrome({ placement }: Props) {
   const nav = dialogueCopy.nav;
   const tabs = dialogueCopy.tabs;
   const title = placement ? "Checkout" : dialogueCopy.studyPageTitle;
 
-  if (placement && !paperScale) {
+  if (placement) {
     return (
       <div className="dp-app-shell dp-app-shell--placement" aria-hidden>
         <aside className="dp-app-sidebar dp-app-sidebar--placement">
@@ -22,7 +20,7 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
           <nav className="dp-app-sidebar__nav">
             <div className="dp-app-sidebar__nav-item dp-app-sidebar__nav-item--active">Insights</div>
             <div className="dp-app-sidebar__nav-item">Plan</div>
-            <div className="dp-app-sidebar__nav-item">{nav.sections}</div>
+            <div className="dp-app-sidebar__nav-item">Sec.</div>
             <div className="dp-app-sidebar__nav-item">People</div>
           </nav>
         </aside>
@@ -41,52 +39,21 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
     );
   }
 
-  const sidebarNav = paperScale
-    ? [
-        { label: "Insights", active: true },
-        { label: "Plan", active: false },
-        { label: nav.sections, active: false },
-        { label: "People", active: false },
-      ]
-    : [
-        { label: placement ? "Insights" : nav.insightsSummary, active: true },
-        { label: placement ? "Plan" : nav.researchPlan, active: false },
-        { label: nav.sections, active: false },
-        { label: placement ? "People" : nav.participants, active: false },
-      ];
-
   return (
-    <div
-      className={["dp-study-page-wrap", paperScale ? "dp-study-page-wrap--paper-scale" : ""]
-        .filter(Boolean)
-        .join(" ")}
-      aria-hidden
-    >
-      <div
-        className={["dp-app-shell", paperScale ? "dp-app-shell--parity-400" : ""]
-          .filter(Boolean)
-          .join(" ")}
-        data-export-app-shell="true"
-      >
+    <div className="dp-study-page-wrap" aria-hidden>
+      <div className="dp-app-shell" data-export-app-shell="true">
         <aside className="dp-app-sidebar">
           <div className="dp-app-sidebar__brand">
             <DialogueWordmark className="dp-app-sidebar__wordmark-img" />
           </div>
           <div className="dp-app-sidebar__skeleton" />
           <nav className="dp-app-sidebar__nav">
-            {sidebarNav.map((item) => (
-              <div
-                key={item.label}
-                className={[
-                  "dp-app-sidebar__nav-item",
-                  item.active ? "dp-app-sidebar__nav-item--active" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {item.label}
-              </div>
-            ))}
+            <div className="dp-app-sidebar__nav-item dp-app-sidebar__nav-item--active">
+              {nav.insightsSummary}
+            </div>
+            <div className="dp-app-sidebar__nav-item">{nav.researchPlan}</div>
+            <div className="dp-app-sidebar__nav-item">{nav.sections}</div>
+            <div className="dp-app-sidebar__nav-item">{nav.participants}</div>
           </nav>
         </aside>
         <div className="dp-app-main">
@@ -101,9 +68,9 @@ export default function StudyPageChrome({ placement, paperScale }: Props) {
           <div className="dp-app-main__body">
             <div className="dp-app-stat-grid">
               {[
-                placement ? "Complete" : dialogueCopy.statTiles.completion,
-                placement ? "Address" : dialogueCopy.statTiles.address,
-                placement ? "Payment" : dialogueCopy.statTiles.payment,
+                dialogueCopy.statTiles.completion,
+                dialogueCopy.statTiles.address,
+                dialogueCopy.statTiles.payment,
               ].map((label) => (
                 <div key={label} className="dp-app-stat-card">
                   <p className="dp-app-stat-card__label">{label}</p>

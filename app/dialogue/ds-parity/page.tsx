@@ -23,7 +23,6 @@ const PARITY_W = {
   funnel: 343,
   "clip-row": 343,
   "follow-ups": 343,
-  "study-chrome": 400,
 } as const;
 
 function LiveFrame({ id, children }: { id: keyof typeof PARITY_W; children: ReactNode }) {
@@ -92,9 +91,11 @@ export default function DialogueDsParityPage() {
       </section>
 
       <section data-parity-id="study-chrome">
-        <LiveFrame id="study-chrome">
-          <StudyPageChrome paperScale />
-        </LiveFrame>
+        <div data-parity-live className="dp-parity-study-chrome-capture">
+          <div className="dialogue-product-root">
+            <StudyPageChrome />
+          </div>
+        </div>
       </section>
     </div>
   );
