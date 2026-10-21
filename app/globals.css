@@ -2136,7 +2136,8 @@ html[data-theme="light"] {
 .dialogue-lead-answer__row {
   display: grid;
   gap: 12px;
-  align-items: stretch;
+  /* Top-align so equal crop frames line captions up across the trio. */
+  align-items: start;
 }
 .dialogue-lead-answer__row--trio {
   /* Stay inside the content column so the sticky TOC never overlaps. */
@@ -2157,16 +2158,17 @@ html[data-theme="light"] {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100%;
+  height: auto;
 }
 .dialogue-lead-answer__panel .dialogue-lead-answer__frame {
-  flex: 1 1 auto;
+  /* Fixed to the shared crop — do not grow with caption wrap. */
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
 }
 .dialogue-lead-answer__panel .dialogue-rachel-frame__pad {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2177,6 +2179,8 @@ html[data-theme="light"] {
   align-items: baseline;
   gap: 10px;
   margin: 0 0 8px;
+  /* Reserve Chosen-line height so labels align across the trio. */
+  min-height: 1.35em;
 }
 .dialogue-lead-answer__panel-label {
   margin: 0;

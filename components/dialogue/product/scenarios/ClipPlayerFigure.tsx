@@ -1,6 +1,7 @@
 import SyncedTranscript from "@/components/dialogue/product/SyncedTranscript";
 
-const STILL_SRC = "/dev/dialogue-static/clip-photos/still-player.jpg";
+/** Neutral room-only still — no person, no face blur overlay. Keep play + 01:38. */
+const STILL_SRC = "/dev/dialogue-static/clip-photos/still-player-room.jpg";
 
 export default function ClipPlayerFigure() {
   return (
@@ -13,14 +14,6 @@ export default function ClipPlayerFigure() {
           alt=""
           decoding="async"
         />
-        {/*
-          Face-only privacy: clipped heavy blur of the same still.
-          Room stays sharp; person is not identifiable. Do not ship an unblurred face crop.
-        */}
-        <span className="dp-player__face-privacy" aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="dp-player__face-privacy-img" src={STILL_SRC} alt="" decoding="async" />
-        </span>
         <div className="dp-player__scrim" aria-hidden />
         <div className="dp-player__play" aria-hidden>
           <span className="dp-player__play-icon" />
