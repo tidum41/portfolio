@@ -18,8 +18,9 @@
 7. **Sidebar vs floating bubble:** Current side-by-side is "just ok." **Propose a better layout-alternatives treatment** using measured rules from **References** (you will supply; see below).
 8. **Keep:** **"One answer, start to finish"** drawer graphic (`D-15` / `section-7.png`).
 9. **Aspect ratios for the page, not the render:** Ratios are chosen for how figures sit on **`/dialogue`**, not for a standalone export artboard. Use a **small allowed set** tied to figure tier (below). **Author every visual at its final placed width** so UI reads at real scale (**chat body text ≥ 12px** when measured on the live case study at **1440** viewport). **No letterboxing, no dead space.** QA is **in place** on `/dialogue` at **1440** and **390**, not by inspecting an isolated PNG or iframe alone.
+10. **Live React by default:** Case-study figures use **live React** that **shares code with the real Dialogue study chat UI**, not PNGs. See **Live React figures** below.
 
-**General (all sections):** Prefer **live components** (static HTML export iframes or in-page React) over PNGs. **Areal**, weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**.
+**General (all sections):** **Areal**, weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**. Raster/video only where listed in Live React figures (clips, optional hero).
 
 ---
 
@@ -123,8 +124,8 @@ Use **only** Dialogue tokens, chart components, and spacing from the export desi
 
 ### Decision block UX (D-04–D-06)
 
-- **Desktop:** Three **Trio** columns, **no** `opacity: 0.55` on unchosen **media** (optional subtle border on chosen only).
-- **Mobile:** Stack three frames; same order; maintain **identical** frame dimensions per row.
+- **Desktop:** Three **Trio / 4:5** columns at placed width **~242px**; **no** `opacity: 0.55` on unchosen **media** (optional subtle border on chosen only). If **12px** chat type fails at that width, adjust layout per tier table (stack or fewer columns), not export scale.
+- **Mobile:** Stack three frames; same order; each uses **Full** placed width (**342px**) with **4:5** height unless a single stacked ratio is defined in References.
 - **Implementation preference:** `DecisionBlock` accepts `liveExportSrc` per option **or** embedded React from the same `/export` routes used on canvas.
 - **Remove** reuse of `section-1`, `section-2`, `section-4` paths across decision + problem sections.
 
