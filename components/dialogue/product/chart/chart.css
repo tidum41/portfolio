@@ -180,14 +180,14 @@
 .dp-chart-line__svg .dp-chart-line__label,
 .dp-chart-line__svg .dp-chart-line__tick {
   fill: var(--dp-chart-label-color);
-  font-family: var(--dp-font-family, "DM Sans", system-ui, sans-serif);
+  font-family: var(--dp-font-family, "DM Sans", "DM Sans Fallback", system-ui, sans-serif);
   font-size: 12px;
   font-weight: 400;
 }
 
 .dp-chart-line__svg .dp-chart-line__value {
   fill: var(--dp-chart-value-color);
-  font-family: var(--dp-font-family, "DM Sans", system-ui, sans-serif);
+  font-family: var(--dp-font-family, "DM Sans", "DM Sans Fallback", system-ui, sans-serif);
   font-size: 12px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;

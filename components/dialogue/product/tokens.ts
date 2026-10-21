@@ -24,13 +24,16 @@ export const PAPER_SOURCE_FILES = [
   "public/dev/dialogue-static/export/section-6.html",
 ] as const;
 
-/** Maps to live `--font-sans` / `--font-product` */
-export const dialogueFontFamily =
-  'var(--font-dialogue-dm-sans, var(--font-sans, "DM Sans")), system-ui, sans-serif';
+/**
+ * Literal DM Sans first so figures/clones paint the product face even when
+ * `--font-dialogue-dm-sans` is out of scope (outside layout variable host).
+ * next/font registers the @font-face globally from `fonts.ts` / layout.
+ */
+export const dialogueFontFamily = '"DM Sans", "DM Sans Fallback", system-ui, sans-serif';
 
 /** Maps to live `--font-brand` (Zilla Slab) — wordmark uses `/dialogue/logo.svg` asset */
 export const dialogueBrandFontFamily =
-  'var(--font-dialogue-zilla, var(--font-brand, "Zilla Slab")), Georgia, serif';
+  '"Zilla Slab", "Zilla Slab Fallback", Georgia, serif';
 
 /**
  * Text roles from t384 measurements (DM Sans, letter-spacing: normal).
@@ -185,8 +188,12 @@ export const dialogueProductTokens = {
 } as const;
 
 export const dialogueCopy = {
-  assistantTitle: "Research assistant",
+  /** Live study-chat header title (t384) */
+  assistantTitle: "Study chat",
+  betaLabel: "Beta",
+  /** Case-study study context (live product uses a generic answering subtitle) */
   studySubtitle: "Checkout usability, 24 interviews",
+  composerPlaceholder: "Ask about your study...",
   searchStep: (searched: number, found: number) =>
     `Searched ${searched} interviews, found ${found} relevant moments`,
   funnelTitle: "Checkout funnel, % of participants still in flow",

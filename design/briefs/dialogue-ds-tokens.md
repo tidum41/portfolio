@@ -31,9 +31,11 @@ These override earlier Paper/static-export token guesses (including the old
 |------|-------------------------|-------|-------|
 | Assistant body | 14 / 400 / 24 | `#1c1917` | No bubble; full width; `p` margin-bottom 16 |
 | User bubble | 14 / 400 / 24 | `#1c1917` | Pad 8×16, radius 16, bg `#f1eeea`, right-aligned |
-| Header title | 14 / 500 / 20 | `#1c1917` | Also in-response h2/h3 |
-| Header subtitle | 12 / 400 / 16 | `#57534d` | |
+| Header title (“Study chat”) | 14 / 500 / 20 | `#1c1917` | Also in-response h2/h3 |
+| Header subtitle | 12 / 400 / 16 | `#57534d` | Case-study may keep study name |
 | Beta badge | 12 / 500 / 16 | `#1c1917` | Pad 2×8, radius 8, bg `#f1eeea` |
+| Minimize | 36×36 hit | `#1c1917` | Hairline rule under header |
+| Composer | 14 / 400 / 20 placeholder | muted | Pad 12, r14, border `#e5e7eb`; send 36×36 |
 | Bold / `strong` | 14 / **600** / 24 | `#1c1917` | Product UI only; site chrome may still cap 500 |
 | Quote header | 14 / 400 / 20 | `#57534d` | |
 | Quote body | 14 / 400 / **22.75** | `#1c1917` | Card radius 14, bg `#f8f6f3` |

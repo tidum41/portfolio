@@ -1,7 +1,8 @@
 /* t384 live study-chat measurements — see tokens.ts + design/briefs/dialogue-ds-tokens.md */
 .dialogue-product-root {
-  --dp-font-family: var(--font-dialogue-dm-sans, var(--font-sans, "DM Sans")), system-ui, sans-serif;
-  --dp-font-brand: var(--font-dialogue-zilla, var(--font-brand, "Zilla Slab")), Georgia, serif;
+  /* Literal family names first — do not depend on layout CSS-variable host. */
+  --dp-font-family: "DM Sans", "DM Sans Fallback", system-ui, sans-serif;
+  --dp-font-brand: "Zilla Slab", "Zilla Slab Fallback", Georgia, serif;
   --dp-font-product-tracking: normal;
   --dp-bg: #f8f6f3; /* quote card / paper-50 */
   /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */

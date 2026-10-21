@@ -36,12 +36,26 @@ const EXPECT = {
     lineHeight: "20px",
     letterSpacing: "normal",
   },
+  beta: {
+    sel: ".dp-study-chat__beta",
+    fontSize: "12px",
+    fontWeight: "500",
+    lineHeight: "16px",
+    padding: "2px 8px",
+    borderRadius: "8px",
+    backgroundColor: "rgb(241, 238, 234)",
+  },
   subtitle: {
     sel: ".dp-study-chat__sub",
     fontSize: "12px",
     fontWeight: "400",
     lineHeight: "16px",
     color: "rgb(87, 83, 77)",
+  },
+  composer: {
+    sel: ".dp-study-chat__composer-box",
+    padding: "12px",
+    borderRadius: "14px",
   },
   userBubble: {
     sel: ".dp-user-bubble",
@@ -76,7 +90,7 @@ const EXPECT = {
     lineHeight: "20px",
   },
   chartLabel: {
-    sel: ".dp-funnel__label",
+    sel: ".dp-chart-label, .dp-chart-bars__label, .dp-funnel__label",
     fontSize: "12px",
     fontWeight: "400",
     lineHeight: "16px",

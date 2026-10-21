@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueProductTokens } from "@/components/dialogue/product/tokens";
 
 const DEFAULT_INNER_W = parseInt(dialogueProductTokens.space.placementChatWidth, 10);
@@ -132,7 +133,7 @@ export default function ScaledChatViewport({
         */}
         <div
           ref={innerRef}
-          className="dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography"
+          className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
           style={
             scale >= 0.999
               ? { width: innerWidth }
