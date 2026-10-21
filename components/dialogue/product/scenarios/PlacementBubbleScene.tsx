@@ -97,6 +97,12 @@ export default function PlacementBubbleScene() {
           </div>
         </div>
       </div>
+      <div
+        className="dp-placement-scene__launcher dp-placement-frame-launcher"
+        aria-hidden
+      >
+        <DialogueLauncherButton size={LAUNCHER} />
+      </div>
     </div>
   );
 }
