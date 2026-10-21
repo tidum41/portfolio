@@ -1892,10 +1892,10 @@ html[data-theme="light"] {
   padding: 14px 20px 0;
   margin: 0;
   font-family: var(--font-sans-medium);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.35;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: #78716c !important;
 }
 .dialogue-rachel-frame--problem .dialogue-rachel-frame__label,
@@ -2061,28 +2061,52 @@ html[data-theme="light"] {
 }
 .dialogue-lead-answer__panel-label {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-family: var(--font-sans-medium);
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
   color: #57534d;
 }
-.dialogue-lead-answer__panel-title {
-  margin: 10px 0 4px;
-  font-weight: 500;
-}
 .dialogue-lead-answer__panel-line {
-  margin: 0;
+  margin: 10px 0 0;
   font-size: 14px;
   line-height: 1.45;
   color: var(--color-text-muted);
 }
-.dialogue-lead-answer__panel--dimmed {
-  opacity: 0.72;
+.dialogue-lead-answer__panel-line + .dialogue-lead-answer__panel-line {
+  margin-top: 4px;
 }
 .dialogue-chart-gallery {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 24px;
+  align-items: stretch;
+}
+.dialogue-chart-gallery .dialogue-rachel-frame__label {
+  font-size: 14px;
+  color: #57534d !important;
+}
+@media (min-width: 1024px) {
+  .dialogue-chart-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .dialogue-chart-gallery__cell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .dialogue-chart-gallery__cell .dialogue-rachel-frame {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .dialogue-chart-gallery__cell .dialogue-rachel-frame__pad {
+    flex: 1 1 auto;
+  }
 }
 @media (max-width: 767px) {
   /* Match Rachel frame label inset (20px) so section titles align with chart cards. */

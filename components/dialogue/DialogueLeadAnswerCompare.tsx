@@ -16,7 +16,8 @@ function panelSurfaceTone(optionId: string): DialogueFrameTone {
 }
 
 const DECISION_CROP_H = 468;
-const DESKTOP_MAX_SCALE = 0.58;
+/** Exact 1/2 keeps glyph rasterization clean (no fractional zoom). */
+const DESKTOP_MAX_SCALE = 0.5;
 
 type Option = {
   id: string;
@@ -75,19 +76,18 @@ function OptionPanel({
     <div
       className={[
         "dialogue-lead-answer__panel",
-        isChosen ? "dialogue-lead-answer__panel--chosen" : "dialogue-lead-answer__panel--dimmed",
-      ].join(" ")}
+        isChosen ? "dialogue-lead-answer__panel--chosen" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
+      {/* One label per panel — format name above the figure. */}
       <p className="dialogue-lead-answer__panel-label">{option.label}</p>
       <DialogueRachelFrame tone={panelSurfaceTone(option.id)} className="dialogue-lead-answer__frame">
         <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
           {wrapped}
         </div>
       </DialogueRachelFrame>
-      <p className="dialogue-lead-answer__panel-title">{option.title}</p>
-      {isChosen && option.selectionNote ? (
-        <p className="dialogue-lead-answer__panel-line">{option.selectionNote}</p>
-      ) : null}
       {option.priorityLine ? (
         <p className="dialogue-lead-answer__panel-line">{option.priorityLine}</p>
       ) : null}

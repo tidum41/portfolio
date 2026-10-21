@@ -187,7 +187,10 @@
 }
 
 .dp-summary__emph {
+  /* Dialogue token weight — not synthetic bold. */
   font-weight: 500;
+  font-synthesis: none;
+  -webkit-text-stroke: 0;
   color: var(--dp-ink);
 }
 
@@ -371,11 +374,21 @@
 }
 
 .dp-clip-thumbs__frame--focal {
-  box-shadow: inset 0 0 0 2px rgb(180 63 127 / 40%);
+  box-shadow: none;
 }
 
-.dp-clip-thumbs__frame:not(.dp-clip-thumbs__frame--focal) {
-  box-shadow: none;
+.dp-clip-thumbs__frame--focal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--dp-brand, #b43f7f);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dp-clip-thumbs__frame:not(.dp-clip-thumbs__frame--focal)::after {
+  content: none;
 }
 
 .dp-clip-thumbs__img {
@@ -1459,6 +1472,21 @@
 
 .dp-scaled-viewport__inner {
   overflow: visible;
+  /* Native-size text, then zoom/scale the unit — avoids subpixel glyph gaps. */
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0;
+  --dp-font-product-tracking: 0;
+}
+
+.dp-scaled-viewport__inner,
+.dp-scaled-viewport__inner * {
+  letter-spacing: 0 !important;
+}
+
+.dp-scaled-viewport[data-scale-mode="transform"] .dp-scaled-viewport__inner {
+  /* Transform does not affect layout; clip owns the integer outer box. */
+  will-change: transform;
 }
 
 /* Percentage heights + size containers inside a content-sized scale layer collapse to 0. */
@@ -1483,11 +1511,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 56px;
+  height: 48px;
+  z-index: 2;
   background: linear-gradient(
     180deg,
-    rgb(255 255 255 / 0%) 0%,
-    var(--dp-figure-fade, var(--dp-figure-surface-problem, #efeeed)) 90%
+    color-mix(in srgb, var(--dp-figure-fade, #efeeed) 0%, transparent) 0%,
+    color-mix(in srgb, var(--dp-figure-fade, #efeeed) 55%, transparent) 45%,
+    var(--dp-figure-fade, var(--dp-figure-surface-problem, #efeeed)) 100%
   );
   pointer-events: none;
 }

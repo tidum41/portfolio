@@ -18,8 +18,29 @@ type Props = {
   className?: string;
 };
 
+function supportsCssZoom() {
+  if (typeof CSS === "undefined" || typeof CSS.supports !== "function") return false;
+  return CSS.supports("zoom", "0.5");
+}
+
+/** Snap scale so outer size lands on whole device pixels (fixes glyph gaps). */
+function snapScale(raw: number, innerWidth: number, dpr: number) {
+  if (raw >= 0.999) return 1;
+  const outerCss = raw * innerWidth;
+  const outerDevice = Math.max(1, Math.round(outerCss * dpr));
+  // Prefer neat 1/16 CSS zoom steps when close — cleaner than arbitrary fractions.
+  const neat = Math.round((outerDevice / (innerWidth * dpr)) * 16) / 16;
+  const neatDevice = Math.round(neat * innerWidth * dpr);
+  if (Math.abs(neatDevice - outerDevice) <= 1) {
+    return neatDevice / (innerWidth * dpr);
+  }
+  return outerDevice / (innerWidth * dpr);
+}
+
 /**
  * Renders children at real Dialogue chat width, then scales the whole panel as one unit.
+ * Prefers CSS `zoom` (avoids many transform text bugs). Snaps to device pixels and
+ * zeros letter-spacing under scale so glyphs don't open gaps at fractional scales.
  */
 export default function ScaledChatViewport({
   children,
@@ -31,9 +52,24 @@ export default function ScaledChatViewport({
 }: Props) {
   const layerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.58);
+  const [scale, setScale] = useState(0.5);
   const [cropH, setCropH] = useState(cropHeight ?? 480);
   const [offsetX, setOffsetX] = useState(0);
+  const [useZoom, setUseZoom] = useState(false);
+  const [dpr, setDpr] = useState(1);
+
+  useLayoutEffect(() => {
+    setUseZoom(supportsCssZoom());
+    setDpr(window.devicePixelRatio || 1);
+    const onChange = () => setDpr(window.devicePixelRatio || 1);
+    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    mq.addEventListener?.("change", onChange);
+    window.addEventListener("resize", onChange);
+    return () => {
+      mq.removeEventListener?.("change", onChange);
+      window.removeEventListener("resize", onChange);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -43,11 +79,14 @@ export default function ScaledChatViewport({
     const fit = () => {
       const w = layer.clientWidth;
       if (w < 1) return;
-      let s = w / innerWidth;
-      if (maxScale !== undefined) s = Math.min(s, maxScale);
+
+      let raw = w / innerWidth;
+      if (maxScale !== undefined) raw = Math.min(raw, maxScale);
+      const s = snapScale(raw, innerWidth, dpr);
       setScale(s);
-      // Center when the panel is narrower than the frame (maxScale cap).
-      setOffsetX(Math.max(0, (w - innerWidth * s) / 2));
+
+      const outerW = Math.round(innerWidth * s * dpr) / dpr;
+      setOffsetX(Math.max(0, Math.floor((w - outerW) / 2)));
 
       if (cropHeight !== undefined) {
         setCropH(cropHeight);
@@ -66,25 +105,48 @@ export default function ScaledChatViewport({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [cropHeight, innerWidth, maxScale]);
+  }, [cropHeight, innerWidth, maxScale, useZoom, dpr]);
 
-  const viewportH = cropH * scale;
+  const outerW = Math.round(innerWidth * scale * dpr) / dpr;
+  const outerH = Math.round(cropH * scale * dpr) / dpr;
 
   return (
     <div
       ref={layerRef}
       className={["dp-scaled-viewport", className].filter(Boolean).join(" ")}
-      style={{ height: viewportH }}
+      style={{ height: outerH }}
+      data-scale-mode={useZoom ? "zoom" : "transform"}
+      data-scale={String(scale)}
     >
-      <div className="dp-scaled-viewport__clip" style={{ height: viewportH }}>
+      <div
+        className="dp-scaled-viewport__clip"
+        style={{
+          height: outerH,
+          width: outerW,
+          marginLeft: offsetX,
+        }}
+      >
+        {/*
+          Scale wrapper is sized to the integer device-pixel outer box.
+          Inner paints at native 392px type metrics, then zoom/scale as one unit.
+        */}
         <div
           ref={innerRef}
           className="dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography"
-          style={{
-            width: innerWidth,
-            transform: `translateX(${offsetX}px) scale(${scale})`,
-            transformOrigin: "top left",
-          }}
+          style={
+            scale >= 0.999
+              ? { width: innerWidth }
+              : useZoom
+                ? {
+                    width: innerWidth,
+                    zoom: scale,
+                  }
+                : {
+                    width: innerWidth,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "top left",
+                  }
+          }
         >
           {children}
         </div>
