@@ -12,3 +12,5 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Verify text size and clipping with a script that walks the DOM, not by eye.
 - Mobile fixes are scoped to the mobile breakpoint; diff desktop before and after.
 - Contents labels use the full section headings.
+- Spacing uses Paper tokens; never stack paragraph margin with row gap.
+- Assistant content is left-aligned from the column edge; only user bubbles sit right.

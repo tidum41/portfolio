@@ -67,7 +67,7 @@ function scaleProps(
   if (phone) {
     switch (scenario) {
       case "anatomy":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 565, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 592, fade: true };
       case "hero":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 520, fade: true };
       case "clip-player":

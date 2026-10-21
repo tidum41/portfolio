@@ -1946,6 +1946,13 @@ html[data-theme="light"] {
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 480px) {
+  .dialogue-anatomy-list li[data-anatomy-list-part="sources"],
+  .dialogue-anatomy-list li[data-anatomy-list-part="clips"],
+  .dialogue-anatomy-list li[data-anatomy-list-part="followups"] {
+    display: none;
+  }
+}
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media {
   border-radius: 0;
   overflow: visible;

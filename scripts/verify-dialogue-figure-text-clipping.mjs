@@ -108,10 +108,33 @@ await page.waitForSelector(".dialogue-case-study");
 await page.evaluate(() => document.fonts.ready);
 
 const result = await auditPage(page);
+
+const leak = await page.evaluate(() => {
+  const primaryShells = document.querySelectorAll("[data-primary-shell]");
+  const bodyText = document.body?.innerText ?? "";
+  const stray = [];
+  if (bodyText.includes("I'm Mudit, a product designer")) {
+    stray.push("home-hero-headline");
+  }
+  if (bodyText.includes("drag my favorite CDs!")) {
+    stray.push("about-cd-heading");
+  }
+  return {
+    primaryShellCount: primaryShells.length,
+    stray,
+  };
+});
+
 await browser.close();
 
-console.log(JSON.stringify(result, null, 2));
+const report = { ...result, leak };
+console.log(JSON.stringify(report, null, 2));
 
-if (result.tooSmall.length > 0 || result.clipped.length > 0) {
+if (
+  result.tooSmall.length > 0 ||
+  result.clipped.length > 0 ||
+  leak.stray.length > 0 ||
+  leak.primaryShellCount > 0
+) {
   process.exit(1);
 }

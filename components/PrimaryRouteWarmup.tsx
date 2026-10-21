@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
+import { isCaseStudyHref } from "@/lib/caseStudyNav";
 
 const CD_POSTERS = [
   "/images/cd-player-poster-light.webp",
@@ -19,6 +20,7 @@ export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (isCaseStudyHref(pathname)) return;
     let idleId = 0;
     let timeoutId = 0;
     let heavyIdleId = 0;

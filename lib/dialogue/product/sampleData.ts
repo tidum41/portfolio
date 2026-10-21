@@ -133,3 +133,12 @@ export const ANATOMY_LABELS = [
   "Clips",
   "Follow-ups",
 ];
+
+/** Matches `data-anatomy-part` on anatomy figure targets (D-08 crop at ≤480px). */
+export const ANATOMY_PART_IDS = [
+  "summary",
+  "sources",
+  "chart",
+  "clips",
+  "followups",
+] as const;

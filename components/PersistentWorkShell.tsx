@@ -192,6 +192,7 @@ function CardLabel({
  */
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
+  if (isCaseStudyHref(pathname)) return null;
   const visible = useResolvedPrimaryTab(pathname) === "work";
   return <WorkKeepAlive visible={visible} projects={projects} />;
 }

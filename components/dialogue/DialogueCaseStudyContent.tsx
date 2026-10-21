@@ -16,7 +16,7 @@ import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialog
 import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import { ANATOMY_LABELS } from "@/lib/dialogue/product/sampleData";
+import { ANATOMY_LABELS, ANATOMY_PART_IDS } from "@/lib/dialogue/product/sampleData";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -271,7 +271,7 @@ export function DialogueCaseStudyContent({
               />
               <ol className="dialogue-anatomy-list">
                 {ANATOMY_LABELS.map((label, i) => (
-                  <li key={label}>
+                  <li key={label} data-anatomy-list-part={ANATOMY_PART_IDS[i]}>
                     <span>{i + 1}</span>
                     {label}
                   </li>
