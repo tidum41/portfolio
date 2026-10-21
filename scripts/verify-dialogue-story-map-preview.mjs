@@ -78,7 +78,8 @@ async function verifyViewport(page, { name, width, height }) {
     const title = document.querySelector(".dcv2__page-title");
     const titleFont = title ? getComputedStyle(title).fontFamily : "";
     const arealLoaded = [...document.fonts].some((f) => /areal/i.test(f.family));
-    return { iframeBodyBg, titleFont, arealLoaded };
+    const helveticaOk = /Helvetica Neue|Helvetica/i.test(titleFont);
+    return { iframeBodyBg, titleFont, arealLoaded, helveticaOk };
   });
 
   const caseStudy = await page.locator("#dcv2-case-study").count();

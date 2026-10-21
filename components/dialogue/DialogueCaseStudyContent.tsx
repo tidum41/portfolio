@@ -11,8 +11,15 @@ import DecisionBlock from "@/components/DecisionBlock";
 import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
 import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
 import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
+import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import type { DialogueFigureTier } from "@/lib/caseStudies/dialogueFigureTiers";
+
+function frameToneFromLabel(label: string): DialogueFrameTone {
+  if (label.startsWith("Problem:")) return "problem";
+  if (label.startsWith("Solution:")) return "solution";
+  return "neutral";
+}
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
@@ -81,56 +88,53 @@ function LiveFigureBlock({
   tier,
   assetId,
   wrapRaster,
-  caption,
+  frameLabel,
+  frameTone,
 }: {
   exportRoute: string;
   title: string;
   tier: DialogueFigureTier;
   assetId?: string;
   wrapRaster?: RasterAnnotator;
-  caption?: string;
+  frameLabel?: string;
+  frameTone?: DialogueFrameTone;
 }) {
+  const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "neutral");
   const media = (
-    <div className="cs-figure-media dialogue-live-figure-shell">
+    <DialogueRachelFrame label={frameLabel} tone={tone}>
       <DialogueLiveFigure
         exportRoute={exportRoute}
         title={title}
         tier={tier}
         assetId={assetId}
       />
-    </div>
+    </DialogueRachelFrame>
   );
   const wrapped = assetId && wrapRaster ? wrapRaster(assetId, media) : media;
-  return (
-    <figure className="cs-figure dialogue-live-block">
-      {wrapped}
-      {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
-    </figure>
-  );
+  return <figure className="cs-figure dialogue-live-block">{wrapped}</figure>;
 }
 
 function LivePairColumn({
-  caption,
+  frameLabel,
   exportRoute,
   title,
   rasterId,
   wrapRaster,
 }: {
-  caption: string;
+  frameLabel: string;
   exportRoute: string;
   title: string;
   rasterId?: string;
   wrapRaster?: RasterAnnotator;
 }) {
   const media = (
-    <div className="cs-figure-media dialogue-live-figure-shell">
+    <DialogueRachelFrame label={frameLabel} tone={frameToneFromLabel(frameLabel)}>
       <DialogueLiveFigure exportRoute={exportRoute} title={title} tier="pair" assetId={rasterId} />
-    </div>
+    </DialogueRachelFrame>
   );
   return (
-    <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+    <div className="dialogue-pair-cell" style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
       {rasterId && wrapRaster ? wrapRaster(rasterId, media) : media}
-      <p className="cs-figcaption">{caption}</p>
     </div>
   );
 }
@@ -241,27 +245,27 @@ export function DialogueCaseStudyContent({
             {wrap
               ? wrap(
                   "D-01",
-                  <div className="cs-hero-media-frame dialogue-hero-media">
-                    <div className="cs-figure-media dialogue-live-figure-shell">
+                  <div className="dialogue-hero-breakout">
+                    <DialogueRachelFrame tone="neutral">
                       <DialogueLiveFigure
                         exportRoute="hero"
                         title="Study chat structured answer hero"
                         tier="full"
                         assetId="D-01"
                       />
-                    </div>
+                    </DialogueRachelFrame>
                   </div>,
                 )
               : (
-                  <div className="cs-hero-media-frame dialogue-hero-media">
-                    <div className="cs-figure-media dialogue-live-figure-shell">
+                  <div className="dialogue-hero-breakout">
+                    <DialogueRachelFrame tone="neutral">
                       <DialogueLiveFigure
                         exportRoute="hero"
                         title="Study chat structured answer hero"
                         tier="full"
                         assetId="D-01"
                       />
-                    </div>
+                    </DialogueRachelFrame>
                   </div>
                 )}
           </CaseStudyOpen>
@@ -280,14 +284,14 @@ export function DialogueCaseStudyContent({
                 <LivePairColumn
                   rasterId="D-02"
                   wrapRaster={wrap}
-                  caption="Problem: three paragraphs, no sources"
+                  frameLabel="Problem: three paragraphs, no sources"
                   exportRoute="section-1"
                   title="Study chat answer as three dense paragraphs with no linked sources"
                 />
                 <LivePairColumn
                   rasterId="D-03"
                   wrapRaster={wrap}
-                  caption="Solution: one claim, one chart, linked moments"
+                  frameLabel="Solution: one claim, one chart, linked moments"
                   exportRoute="section-4"
                   title="Study chat answer with summary, chart, and linked moments"
                 />
@@ -302,7 +306,9 @@ export function DialogueCaseStudyContent({
                   {
                     id: "paragraphs",
                     title: "Paragraphs",
-                    lossReason: "Lost because you can't see who said what, or how many.",
+                    priorityLine: "The priority is prose over evidence.",
+                    howeverLine:
+                      "However, you still cannot see who said what, or how many interviews agree.",
                     liveExport: {
                       exportRoute: "section-1",
                       title: "Study chat answer as three paragraphs of prose with no structure",
@@ -312,7 +318,8 @@ export function DialogueCaseStudyContent({
                   {
                     id: "quote-list",
                     title: "Quote list",
-                    lossReason: "Lost because there's no answer. You still do the counting.",
+                    priorityLine: "The priority is fidelity over synthesis.",
+                    howeverLine: "However, there is no answer line. You still do the counting.",
                     liveExport: {
                       exportRoute: "section-2",
                       title: "Study chat answer as a list of interview quotes without a summary",
@@ -322,6 +329,7 @@ export function DialogueCaseStudyContent({
                   {
                     id: "structured",
                     title: "Structured answer",
+                    priorityLine: "The priority is clarity over raw quotes.",
                     selectionNote: "We went with this",
                     reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
                     liveExport: {
@@ -340,7 +348,7 @@ export function DialogueCaseStudyContent({
                   tier="full"
                   assetId="D-07"
                   wrapRaster={wrap}
-                  caption="Solution: selecting a bar filters the clips to the moments behind it"
+                  frameLabel="Solution: selecting a bar filters the clips behind it"
                 />
               </div>
             </Section>
@@ -406,7 +414,7 @@ export function DialogueCaseStudyContent({
                 <LivePairColumn
                   rasterId="D-10"
                   wrapRaster={wrap}
-                  caption="Solution: the clip opens at 01:38 with the speaker row highlighted"
+                  frameLabel="Solution: the clip opens at 01:38 with the speaker row highlighted"
                   exportRoute="section-5"
                   title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 />
@@ -461,7 +469,7 @@ export function DialogueCaseStudyContent({
                 tier="full"
                 assetId="D-15"
                 wrapRaster={wrap}
-                caption="The full answer, with every supporting clip in one drawer"
+                frameLabel="Solution: the full answer, with every supporting clip in one drawer"
               />
             </Section>
 

@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import DialogueCanvasV2 from "./DialogueCanvasV2";
 import "./dialogue-canvas-v2.css";
-import "./review-areal.css";
 
 export const dynamic = "force-dynamic";
 

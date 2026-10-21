@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
 import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_TRIO_CANONICAL_FRAME } from "@/lib/caseStudies/dialogueFigureTiers";
 
 export type RasterAnnotator = (assetId: string, children: ReactNode) => ReactNode;
@@ -13,6 +14,10 @@ export type DecisionBlockOption = {
   title: string;
   /** One-line loss reason for options that were not chosen */
   lossReason?: string;
+  /** Rachel-style priority line, e.g. "the priority is clarity over evidence" */
+  priorityLine?: string;
+  /** Rachel-style rejection, e.g. "However, the problem with this approach was…" */
+  howeverLine?: string;
   /** Short reason labels for the chosen option (rendered with numbered markers) */
   reasonLines?: string[];
   /** Muted line under the title when this option is chosen */
@@ -41,7 +46,15 @@ function OptionCaption({ option, isChosen }: { option: DecisionBlockOption; isCh
       {isChosen && option.selectionNote ? (
         <p className="decision-block__caption-line">{option.selectionNote}</p>
       ) : null}
-      {option.lossReason ? <p className="decision-block__caption-line">{option.lossReason}</p> : null}
+      {option.priorityLine ? (
+        <p className="decision-block__caption-line">{option.priorityLine}</p>
+      ) : null}
+      {option.howeverLine ? (
+        <p className="decision-block__caption-line">{option.howeverLine}</p>
+      ) : null}
+      {!option.howeverLine && option.lossReason ? (
+        <p className="decision-block__caption-line">{option.lossReason}</p>
+      ) : null}
       {option.reasonLines?.map((line, i) => (
         <CaseStudyNumberedMarker key={line} n={i + 1} className="decision-block__caption-line">
           {line}
@@ -64,7 +77,7 @@ function OptionCard({
 }) {
   const size = option.imageNaturalSize ?? imageNaturalSize;
   const figure = option.liveExport ? (
-    <div className="cs-figure-media dialogue-live-figure-shell">
+    <DialogueRachelFrame tone="neutral">
       <DialogueLiveFigure
         exportRoute={option.liveExport.exportRoute}
         title={option.liveExport.title}
@@ -72,7 +85,7 @@ function OptionCard({
         canonicalFrame={DIALOGUE_TRIO_CANONICAL_FRAME}
         assetId={option.rasterAssetId}
       />
-    </div>
+    </DialogueRachelFrame>
   ) : size && option.imageSrc && option.imageAlt ? (
     <CaseStudyFigure
       src={option.imageSrc}

@@ -1812,12 +1812,98 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
+/* Dialogue — Helvetica Neue stack (Areal shelved), weights ≤ 500 */
+.dialogue-case-study-root,
+.dialogue-canvas-root {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+}
+.dialogue-case-study-root h1,
+.dialogue-case-study-root h2,
+.dialogue-case-study-root h3,
+.dialogue-canvas-root h1,
+.dialogue-canvas-root h2,
+.dialogue-canvas-root h3 {
+  font-weight: 500;
+}
+
 /* Dialogue draft — intrinsic rasters (no letterboxing) */
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media .cs-figure {
   margin: 0;
 }
 .dialogue-case-study .cs-figure-media {
   background: transparent;
+}
+.dialogue-case-study .dialogue-rachel-frame .dialogue-live-figure-shell,
+.dialogue-case-study .dialogue-rachel-frame .dialogue-live-figure__viewport {
+  border-radius: 0;
+}
+.dialogue-case-study .cs-figure-media.dialogue-live-figure-shell,
+.dialogue-case-study .cs-hero-media-frame .dialogue-rachel-frame {
+  border-radius: 0;
+}
+.dialogue-hero-breakout {
+  width: min(134%, calc(100vw - var(--page-px) * 2));
+  max-width: none;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.dialogue-rachel-frame {
+  position: relative;
+  width: 100%;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+.dialogue-rachel-frame--problem {
+  background: rgb(245, 232, 160);
+}
+.dialogue-rachel-frame--solution {
+  background: rgb(232, 220, 248);
+}
+.dialogue-rachel-frame--neutral {
+  background: rgb(244, 241, 236);
+}
+.dialogue-rachel-frame--chart {
+  background: rgb(238, 242, 245);
+}
+.dialogue-rachel-frame__label {
+  display: block;
+  padding: 12px 20px 0;
+  font-family: var(--font-sans-medium);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+.dialogue-rachel-frame__pad {
+  padding: 20px;
+}
+.dialogue-rachel-frame__label + .dialogue-rachel-frame__pad {
+  padding-top: 8px;
+}
+.dialogue-pair {
+  align-items: stretch;
+}
+.dialogue-pair-cell .dialogue-rachel-frame,
+.dialogue-pair-cell .dialogue-live-figure {
+  height: 100%;
+}
+.dialogue-case-study .decision-block__grid--desktop,
+.dialogue-case-study .decision-block__grid--mobile {
+  align-items: stretch;
+}
+.dialogue-case-study .decision-block__option {
+  height: 100%;
+}
+.dialogue-case-study .decision-block__option .dialogue-rachel-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dialogue-case-study .decision-block__option .dialogue-rachel-frame__pad {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .dialogue-case-study .decision-block__option .cs-figure-media,
 .dialogue-case-study .decision-block__option .cs-figure-media--fill {
@@ -1827,7 +1913,7 @@ html[data-theme="light"] {
   opacity: 1;
 }
 .dialogue-case-study .decision-block__option--chosen .dialogue-live-figure-shell {
-  box-shadow: inset 0 0 0 2px var(--color-text-tertiary);
+  box-shadow: none;
 }
 
 .dialogue-live-figure {
@@ -1877,30 +1963,66 @@ html[data-theme="light"] {
 .dialogue-placement-compare {
   margin-top: 24px;
 }
-.dialogue-placement-compare__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+.dialogue-placement-compare__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 16px;
+  align-items: start;
 }
-.dialogue-placement-compare__tab {
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 999px;
+@media (max-width: 767px) {
+  .dialogue-placement-compare__layout {
+    grid-template-columns: 1fr;
+  }
+}
+.dialogue-placement-compare__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dialogue-placement-compare__option {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 0;
   border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
   cursor: pointer;
 }
-.dialogue-placement-compare__tab--active {
+.dialogue-placement-compare__option--active {
   border-color: var(--color-text-tertiary);
   color: var(--color-text-primary);
   background: var(--color-accent-subtle);
 }
-.dialogue-case-study-areal .dialogue-live-figure__iframe {
-  font-family: var(--font-areal, "ABC Areal", "Helvetica Neue", Helvetica, Arial, sans-serif);
+.dialogue-placement-compare__option-title {
+  display: block;
+  font-family: var(--font-sans-medium);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0 0 4px;
+}
+.dialogue-placement-compare__option-line {
+  display: block;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.dialogue-placement-compare__decision {
+  margin: 16px 0 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+}
+.dialogue-placement-compare__tradeoff {
+  margin: 8px 0 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-secondary);
+}
+.dialogue-chart-gallery__cell .dialogue-rachel-frame {
+  height: 100%;
 }
 
 /* Dialogue draft — anatomy caption row (legacy) */

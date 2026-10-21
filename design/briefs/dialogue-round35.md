@@ -1,6 +1,6 @@
 # Dialogue case study, round 35 brief
 
-**Status:** In build (round 35 execution). Scope: Mudit’s 8 notes + aspect-ratio tiers + live figures only. Rachel Chen rules apply when supplied.  
+**Status:** In build (round 35 execution). Scope: Mudit’s 8 notes + aspect-ratio tiers + live figures only. Rachel Chen cross-cutting rules applied (see References).  
 **Branch target:** `review/dialogue-canvas`  
 **Baseline:** Round 34 rasters and static export under `public/dev/dialogue-static/`; case study at `/dialogue`, review canvas at `/dev/dialogue-canvas-v2`.  
 **Prior feedback:** `design/briefs/dialogue-feedback-1020.md` (Oct 20, morning). This round incorporates **Mudit feedback Oct 20, 4:48pm** (verbatim intent below).
@@ -20,7 +20,7 @@
 9. **Aspect ratios for the page, not the render:** Ratios are chosen for how figures sit on **`/dialogue`**, not for a standalone export artboard. Use a **small allowed set** tied to figure tier (below). **Author every visual at its final placed width** so UI reads at real scale (**chat body text ≥ 12px** when measured on the live case study at **1440** viewport). **No letterboxing, no dead space.** QA is **in place** on `/dialogue` at **1440** and **390**, not by inspecting an isolated PNG or iframe alone.
 10. **Live React by default:** Case-study figures use **live React** that **shares code with the real Dialogue study chat UI**, not PNGs. See **Live React figures** below.
 
-**General (all sections):** **Areal**, weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**. Raster/video only where listed in Live React figures (clips, optional hero).
+**General (all sections):** **Helvetica Neue** (`"Helvetica Neue", Helvetica, Arial, sans-serif`), weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**. Raster/video only where listed in Live React figures (clips, optional hero).
 
 ---
 
@@ -54,7 +54,20 @@
 
 ## References
 
-<!-- Mudit: paste measured rules from external case studies here (e.g. Rachel Chen Notion, Ruth Zhao, Aditya Currents, others). Round 35 placement and layout-alternatives treatment should follow this section once filled. -->
+**Rachel Chen portfolio study** (source: `rachelchen.tech`, measured at 1440/390; full notes in bot store `dialogue/rachel/rules.md`). Cross-cutting rules summarized for Dialogue round 35:
+
+| Theme | Rule |
+|-------|------|
+| **Grid** | One text column; every in-body figure matches column width. Hero only breakout (~**1.34×** column). Square frame corners (0 radius). |
+| **Framing** | UI inside a **tinted surface** with **~20px padding**, tight crops (panel/modal, not whole window). Problem vs solution **color-coded** with label **inside** the frame top-left (`Problem: …` / `Solution: …`). |
+| **Comparisons** | Side-by-sides **always identical size**. Tab switcher or stacked options for 3–4 alternatives (~411px media + option list on desktop; stack at **390**). |
+| **Alternatives** | Rejected options get **same visual weight** as the winner. One-line **priority**: “the priority is A over B.” Rejection via **“However, …”** (or deferral), not dimmed thumbs. |
+| **Decisions** | **“Decision: Instead of X, I decided Y.”** (one sentence). Name **tradeoff** in its own sentence (“The tradeoff is that…”). |
+| **Copy** | Headlines are **claims** (often full sentences). Section intros **1–2 sentences**. Captions **short and rare**; prefer in-frame labels over figcaptions. |
+| **Motion** | Looping product UI at placed size; figures must be **legible without zoom** (Dialogue keeps a **capped lightbox** per Mudit note 4). |
+| **Charts** | Rachel has no data charts; Dialogue chart gallery uses the **same 688-style framed treatment** as other figures. |
+
+JOOLA hero language on this site remains the reference for Dialogue hero cropping (full-column product UI, no letterboxing), not Rachel’s video hero literally.
 
 ---
 
@@ -69,7 +82,7 @@ Case-study visuals are **in-page React** inside `.cs-figure-media`, using the **
 | **Data** | **Static fixtures only.** Each figure gets a typed scenario (question, answer shape, chart series, clips metadata). **No `fetch`, no WebSockets, no live API.** |
 | **Mount** | **Lazy** when the figure enters or nears the viewport (`dynamic()` + `IntersectionObserver`) so below-the-fold figures do not block first paint. |
 | **Interaction** | **`mode: "static"`** default: no navigation, no chat input, no side effects. Opt in per figure (`mode: "demo"`) only when the story needs it (e.g. D-07 bar selection). |
-| **Typography** | **Areal** via `NEXT_PUBLIC_AREAL_URL` and the existing review Areal CSS pattern. Weights **≤ 500**. |
+| **Typography** | **Helvetica Neue** stack on `/dialogue`, review canvas, and live figure shells. Weights **≤ 500**. (Areal shelved; `review-areal.css` removed.) |
 | **Size** | Wrapper applies **placed width** and **tier aspect ratio** (`width: 100%` of column; `aspect-ratio` from table below). Inner chat UI is **100% of wrapper width**, not `transform` scaled. |
 | **Media exceptions** | **Image or video** only for **face-blurred clips** and, if needed, the **hero** in an early pass. Everything else is React. |
 
@@ -232,7 +245,7 @@ Run locally with `npm run dev` (not `next start`):
 - Filling **CaseStudyPlaceholder** copy (quotes, outcome, reflection).
 - **D-11** / **D-12** first visuals.
 - Publishing Dialogue on the homepage or removing `noindex`.
-- Committing **ABC Areal** binaries (continue `NEXT_PUBLIC_AREAL_URL`).
+- Committing **ABC Areal** binaries (Helvetica Neue is the Dialogue case-study font).
 - Regenerating the round-18 baseline aesthetic without approval.
 - Vercel promotion beyond `review/dialogue-canvas` preview.
 

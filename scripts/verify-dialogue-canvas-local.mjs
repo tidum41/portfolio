@@ -76,25 +76,30 @@ async function waitForPageReady(page, path = "") {
   await page.waitForTimeout(1800);
 }
 
-async function checkAreal(page) {
-  const fontUrl = `${BASE}/fonts/ABCAreal-Regular.woff2`;
-  const fontStatus = await page.evaluate(async (url) => {
-    try {
-      const res = await fetch(url, { method: "HEAD" });
-      return res.status;
-    } catch {
-      return 0;
-    }
-  }, fontUrl);
-
-  const fonts = await page.evaluate(() => ({
-    titleFont: getComputedStyle(document.querySelector(".dcv2__page-title")).fontFamily,
-    canvasFont: getComputedStyle(document.querySelector(".dcv2")).fontFamily,
-    loadedFamilies: [...document.fonts].map((f) => f.family),
-    arealCheck: document.fonts.check('16px "ABC Areal Archive"'),
-  }));
-
-  return { fontStatus, ...fonts, fontUrl };
+async function checkDialogueTypography(page) {
+  const fonts = await page.evaluate(() => {
+    const stack = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    const title = document.querySelector(".dcv2__page-title");
+    const canvas = document.querySelector(".dcv2");
+    const titleFont = title ? getComputedStyle(title).fontFamily : "";
+    const canvasFont = canvas ? getComputedStyle(canvas).fontFamily : "";
+    const titleWeight = title ? getComputedStyle(title).fontWeight : "";
+    const usesHelvetica = (family) => /Helvetica Neue|Helvetica/i.test(family);
+    const arealLoaded = [...document.fonts].some((f) => /areal/i.test(f.family));
+    return {
+      titleFont,
+      canvasFont,
+      titleWeight,
+      helveticaOk: usesHelvetica(titleFont) && usesHelvetica(canvasFont),
+      weightOk: Number(titleWeight) <= 500,
+      arealLoaded,
+      stack,
+    };
+  });
+  if (!fonts.helveticaOk) throw new Error(`expected Helvetica stack, got ${JSON.stringify(fonts)}`);
+  if (!fonts.weightOk) throw new Error(`expected font-weight <= 500, got ${fonts.titleWeight}`);
+  if (fonts.arealLoaded) throw new Error("ABC Areal should not load on dialogue canvas");
+  return fonts;
 }
 
 async function checkIframes(page) {
@@ -133,7 +138,7 @@ page.on("console", (msg) => {
 });
 page.on("pageerror", (e) => consoleIssues.push(e.message));
 
-const report = { viewports: [], areal: null, iframes: null, shots: {} };
+const report = { viewports: [], typography: null, iframes: null, shots: {} };
 
 for (const vp of VIEWPORTS) {
   await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -152,7 +157,7 @@ await page.setViewportSize({ width: 1440, height: 900 });
 await page.goto(`${BASE}/dev/dialogue-canvas-v2`, { waitUntil: "load" });
 await page.waitForSelector(".dcv2-live__iframe", { timeout: 60000 });
 await waitForPageReady(page, "/dev/dialogue-canvas-v2");
-report.areal = await checkAreal(page);
+report.typography = await checkDialogueTypography(page);
 report.iframes = await checkIframes(page);
 
 if (consoleIssues.length) {

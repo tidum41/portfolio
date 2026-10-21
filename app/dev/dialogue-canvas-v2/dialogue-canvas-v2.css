@@ -3,7 +3,7 @@
   background: #f4f1ec;
   min-height: 100dvh;
   padding: clamp(16px, 3vw, 40px) clamp(16px, 4vw, 48px) 80px;
-  font-family: "ABC Areal Archive", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #1a1816;
 }
 

@@ -1,16 +1,17 @@
 "use client";
 
 import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
-const CHART_EXPORTS: { route: string; title: string }[] = [
-  { route: "section-2", title: "Funnel and multi-shape answers" },
-  { route: "visual-1", title: "Chart response variant 1" },
-  { route: "visual-2", title: "Chart response variant 2" },
-  { route: "visual-3", title: "Chart response variant 3" },
-  { route: "visual-4", title: "Chart response variant 4" },
-  { route: "visual-5", title: "Chart response variant 5" },
-  { route: "visual-6", title: "Chart response variant 6" },
-  { route: "section-4", title: "Structured answer with chart and clips" },
+const CHART_EXPORTS: { route: string; title: string; label: string }[] = [
+  { route: "section-2", title: "Funnel and multi-shape answers", label: "Funnel" },
+  { route: "visual-1", title: "Chart response variant 1", label: "Trend over rounds" },
+  { route: "visual-2", title: "Chart response variant 2", label: "Segment comparison" },
+  { route: "visual-3", title: "Chart response variant 3", label: "Distribution" },
+  { route: "visual-4", title: "Chart response variant 4", label: "Theme ranking" },
+  { route: "visual-5", title: "Chart response variant 5", label: "Quote frequency" },
+  { route: "visual-6", title: "Chart response variant 6", label: "Timeline of moments" },
+  { route: "section-4", title: "Structured answer with chart and clips", label: "Summary + chart + clips" },
 ];
 
 export default function DialogueChartGallery() {
@@ -18,19 +19,16 @@ export default function DialogueChartGallery() {
     <div className="dialogue-chart-gallery">
       {CHART_EXPORTS.map((item, i) => (
         <div key={item.route} className="dialogue-chart-gallery__cell">
-          <div className="cs-figure-media dialogue-live-figure-shell">
+          <DialogueRachelFrame label={item.label} tone="chart">
             <DialogueLiveFigure
               exportRoute={item.route}
               title={item.title}
               tier="pair"
               assetId={i === 0 ? "D-09" : undefined}
             />
-          </div>
+          </DialogueRachelFrame>
         </div>
       ))}
-      <p className="cs-figcaption dialogue-chart-gallery__caption">
-        Eight question types, eight chart shapes in study chat
-      </p>
     </div>
   );
 }
