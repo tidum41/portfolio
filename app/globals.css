@@ -1236,45 +1236,112 @@ html[data-theme="dark"] .project-image {
   outline-offset: 2px;
 }
 
+/* Prev/next: space-only separation from case body (no rule). Constrained to
+   the prose measure (40rem) so Previous/Next text edges match body paragraphs.
+   Chevrons hang outside that measure; equal 1fr hit areas; meta + body-lg. */
 .cs-pager {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-  margin: var(--space-7) 0 var(--space-4);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border-subtle);
+  column-gap: var(--space-3);
+  row-gap: var(--space-3);
+  align-items: start;
+  max-width: 40rem; /* match .cs-prose */
+  width: 100%;
+  margin: var(--space-8) 0 0; /* 96px desktop */
+  padding: 0;
+  border: 0;
+}
+.cs-pager-slot {
+  display: block;
+  min-height: 0;
 }
 .cs-pager-link {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
   min-height: 44px;
-  padding: 8px 0;
+  padding: 0;
   text-decoration: none;
   color: inherit;
+  /* Stretch to the grid cell so prev/next share equal hit width. */
+  width: 100%;
+  box-sizing: border-box;
 }
 .cs-pager-link--next {
   text-align: right;
   align-items: flex-end;
 }
 .cs-pager-kicker {
-  font-size: 12px;
-  line-height: 1.72;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  font-weight: 400;
   color: var(--color-text-muted);
+}
+.cs-pager-kicker-icon {
+  display: block;
+  flex-shrink: 0;
+  /* Optical align to meta cap height (chevron sits a hair high in the em box). */
+  transform: translateY(0.5px);
+  transition: transform 150ms ease-out;
+}
+/* Hang chevrons outside the prose text edge (icon 13px + kicker gap 6px).
+   Negative margin cancels the icon from the flex size so kicker/title text
+   aligns with .cs-prose paragraphs. */
+.cs-pager-kicker-icon--prev {
+  margin-left: calc(-1 * (13px + 6px));
+}
+.cs-pager-kicker-icon--next {
+  margin-right: calc(-1 * (13px + 6px));
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev {
+    transform: translate(-2px, 0.5px);
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translate(2px, 0.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-pager-kicker-icon {
+    transition: none;
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev,
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translateY(0.5px);
+  }
 }
 .cs-pager-title {
   font-family: var(--font-sans-medium);
-  font-size: 14px;
+  font-size: var(--fs-lg); /* body-lg */
+  line-height: var(--lh-lg);
+  letter-spacing: var(--ls-lg);
   font-weight: 500;
   color: var(--color-text-primary);
+  /* Prefer single-line titles; wrap only if the cell is too narrow. */
+  overflow-wrap: anywhere;
 }
-@media (max-width: 767px) {
+/* Phone: stack so long titles (e.g. JOOLA) stay one readable column.
+   Next keeps its right edge; previous stays left. */
+@media (max-width: 479px) {
   .cs-pager {
     grid-template-columns: 1fr;
+    margin-top: var(--space-6); /* 64px mobile */
   }
   .cs-pager-link--next {
-    text-align: left;
-    align-items: flex-start;
+    text-align: right;
+    align-items: flex-end;
+    justify-self: stretch;
+  }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .cs-pager {
+    margin-top: var(--space-6);
   }
 }
 
@@ -1893,14 +1960,6 @@ html[data-theme="light"] {
   color: var(--color-text-muted);
   line-height: 1.35;
 }
-.dialogue-case-study .dialogue-lead-answer__viewport {
-  width: min(100%, var(--dialogue-option-w, 392px));
-  max-width: 100%;
-}
-.dialogue-case-study .dialogue-lead-answer__frame .dialogue-rachel-frame__pad {
-  display: flex;
-  justify-content: flex-start;
-}
 .dialogue-rachel-frame--system {
   background: var(--dp-figure-surface-system);
 }
@@ -2071,33 +2130,47 @@ html[data-theme="light"] {
   margin: 0 0 8px;
 }
 .dialogue-lead-answer__subheading {
-  margin: 0 0 16px;
-  color: var(--color-text-muted);
-}
-.dialogue-lead-answer__question {
   margin: 0 0 20px;
-  padding: 12px 14px;
-  font-size: 15px;
-  line-height: 1.45;
-  color: var(--color-text-primary);
-  background: var(--dp-figure-surface-system, #f5f5f4);
-}
-.dialogue-lead-answer__question-label {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #78716c;
+  color: var(--color-text-muted);
 }
 .dialogue-lead-answer__row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-  align-items: start;
+  gap: 12px;
+  align-items: stretch;
+}
+.dialogue-lead-answer__row--trio {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Break out so each column can approach ~392px at 1440. */
+  width: min(1220px, calc(100vw - var(--page-px) * 2));
+  max-width: none;
+  margin-left: 50%;
+  transform: translateX(-50%);
 }
 .dialogue-lead-answer__row--stack {
   grid-template-columns: 1fr;
+  width: 100%;
+  margin-left: 0;
+  transform: none;
+  gap: 24px;
+}
+.dialogue-lead-answer__panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+.dialogue-lead-answer__panel .dialogue-lead-answer__frame {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.dialogue-lead-answer__panel .dialogue-rachel-frame__pad {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
 }
 .dialogue-lead-answer__panel-head {
   display: flex;
@@ -2126,9 +2199,18 @@ html[data-theme="light"] {
   line-height: 1.45;
   color: var(--color-text-muted);
 }
-/* Shared question sits above the rows; hide the repeated bubble in each answer. */
-.dialogue-lead-answer .dp-user-bubble {
-  display: none;
+.dialogue-case-study .dialogue-lead-answer__viewport {
+  width: min(100%, var(--dialogue-option-w, 392px));
+  max-width: 100%;
+}
+@media (max-width: 900px) {
+  .dialogue-lead-answer__row--trio {
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 }
 .dialogue-evidence-pull {
   margin: 0 0 28px;
@@ -2258,7 +2340,7 @@ html[data-theme="light"] {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
   width: 100%;
 }
 @media (min-width: 720px) {
@@ -2272,6 +2354,23 @@ html[data-theme="light"] {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 100%;
+}
+.dialogue-placement-compare__cell .dialogue-rachel-frame {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.dialogue-placement-compare__cell .dialogue-rachel-frame__pad {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+.dialogue-placement-compare__cell .dialogue-product-block,
+.dialogue-placement-compare__cell .dp-placement-layer {
+  width: 100%;
+  flex: 1 1 auto;
 }
 .dialogue-placement-compare__label {
   margin: 0;

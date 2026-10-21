@@ -8,7 +8,7 @@ import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 /** Placement popup at real panel width (448px): 14/24 body, ends on follow-ups. */
 export default function PlacementChatPreview() {
   return (
-    <StudyChatShell compact>
+    <StudyChatShell compact hideComposer>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <FunnelChart hero showLargestDrop={false} vizCard={false} />

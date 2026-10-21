@@ -4,7 +4,7 @@ import { CHECKOUT_QUESTION, PARAGRAPH_ANSWER } from "@/lib/dialogue/product/samp
 
 export default function ParagraphAnswerFigure() {
   return (
-    <StudyChatShell>
+    <StudyChatShell hideComposer>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <div className="dp-text-prose-sm" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {PARAGRAPH_ANSWER.map((p) => (

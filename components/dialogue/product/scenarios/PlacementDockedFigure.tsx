@@ -1,13 +1,5 @@
-import PlacementStudyBackdrop from "@/components/dialogue/product/scenarios/PlacementStudyBackdrop";
-import PlacementChatPreview from "@/components/dialogue/product/scenarios/PlacementChatPreview";
+import PlacementDockedScene from "@/components/dialogue/product/scenarios/PlacementDockedScene";
 
 export default function PlacementDockedFigure() {
-  return (
-    <div className="dialogue-product-root dp-placement-layer">
-      <PlacementStudyBackdrop />
-      <div className="dp-docked-chat">
-        <PlacementChatPreview />
-      </div>
-    </div>
-  );
+  return <PlacementDockedScene />;
 }

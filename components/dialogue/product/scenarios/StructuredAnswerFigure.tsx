@@ -23,6 +23,9 @@ export default function StructuredAnswerFigure({
 }: Props) {
   const shellCompact = compact || hero;
 
+  // Composer stays on hero + anatomy (part 5 context). Hidden on option thumbnails.
+  const hideComposer = !hero && !anatomy;
+
   if (anatomy) {
     return (
       <StudyChatShell compact={shellCompact}>
@@ -56,7 +59,7 @@ export default function StructuredAnswerFigure({
   }
 
   return (
-    <StudyChatShell compact={shellCompact} hero={hero}>
+    <StudyChatShell compact={shellCompact} hero={hero} hideComposer={hideComposer}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <FunnelChart compact={compact} hero={hero} vizCard={!hero} />

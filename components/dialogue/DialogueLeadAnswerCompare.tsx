@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useState } from "react";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
@@ -9,15 +10,16 @@ import DialogueRachelFrame, {
   type DialogueFrameTone,
 } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
-import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
 function panelSurfaceTone(optionId: string): DialogueFrameTone {
   return optionId === "structured" ? "solution" : "problem";
 }
 
-/** Live chat width; scaled as a unit to ~392px outer. */
+/** Live chat width; scaled as a unit toward ~392px outer on desktop. */
 const CHAT_W = 448;
 const OPTION_OUTER_W = 392;
+/** Same crop for all three so charts are not cut mid-bar; soft fade at bottom. */
+const OPTION_CROP_H = 500;
 
 type Option = {
   id: string;
@@ -38,17 +40,18 @@ type Props = {
   options: Option[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
-  question?: string;
 };
 
-function OptionRow({
+function OptionPanel({
   option,
   isChosen,
   annotateRaster,
+  stacked,
 }: {
   option: Option;
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
+  stacked: boolean;
 }) {
   const body =
     option.productScenario === "decision-paragraphs" ? (
@@ -58,10 +61,17 @@ function OptionRow({
     ) : (
       <StructuredAnswerFigure compact showClips />
     );
-  // No cropHeight / fade: full answer scales as a unit so charts are not cut mid-bar.
+
   const figure = (
     <div className="dialogue-lead-answer__viewport">
-      <ScaledChatViewport innerWidth={CHAT_W}>{body}</ScaledChatViewport>
+      <ScaledChatViewport
+        innerWidth={CHAT_W}
+        cropHeight={OPTION_CROP_H}
+        maxScale={stacked ? undefined : OPTION_OUTER_W / CHAT_W}
+        fade
+      >
+        {body}
+      </ScaledChatViewport>
     </div>
   );
   const wrapped =
@@ -100,23 +110,37 @@ export default function DialogueLeadAnswerCompare({
   options,
   chosenId,
   annotateRaster,
-  question = CHECKOUT_QUESTION,
 }: Props) {
+  const [stacked, setStacked] = useState(false);
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(max-width: 390px)");
+    const on = () => setStacked(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
   return (
-    <div className="dialogue-lead-answer" style={{ ["--dialogue-option-w" as string]: `${OPTION_OUTER_W}px` }}>
+    <div
+      className="dialogue-lead-answer"
+      style={{ ["--dialogue-option-w" as string]: `${OPTION_OUTER_W}px` }}
+    >
       <h3 className="dialogue-lead-answer__heading">{heading}</h3>
       <p className="dialogue-lead-answer__subheading">{subheading}</p>
-      <p className="dialogue-lead-answer__question">
-        <span className="dialogue-lead-answer__question-label">Question</span>
-        {question}
-      </p>
-      <div className="dialogue-lead-answer__row dialogue-lead-answer__row--stack">
+      <div
+        className={[
+          "dialogue-lead-answer__row",
+          stacked ? "dialogue-lead-answer__row--stack" : "dialogue-lead-answer__row--trio",
+        ].join(" ")}
+      >
         {options.map((option) => (
-          <OptionRow
+          <OptionPanel
             key={option.id}
             option={option}
             isChosen={option.id === chosenId}
             annotateRaster={annotateRaster}
+            stacked={stacked}
           />
         ))}
       </div>

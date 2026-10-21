@@ -208,7 +208,7 @@ export function DialogueCaseStudyContent({
               <blockquote className="dialogue-evidence-pull">
                 <p className="dialogue-evidence-pull__quote">Who said that?</p>
                 <footer className="dialogue-evidence-pull__meta">
-                  Heard before anyone would act on a long answer
+                  Asked in founder and student sessions
                 </footer>
               </blockquote>
 

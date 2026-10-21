@@ -978,13 +978,38 @@
   overflow: hidden;
 }
 
+.dp-placement-layer--scene,
 .dp-placement-layer--bubble {
   aspect-ratio: 1280 / 748;
   min-height: 0;
+  width: 100%;
 }
 
-.dp-placement-layer:not(.dp-placement-layer--bubble) {
+.dp-placement-layer:not(.dp-placement-layer--scene):not(.dp-placement-layer--bubble) {
   min-height: 400px;
+}
+
+/* Docked chat = full-height right panel on the study page (448 wide). */
+.dp-placement-scene__dock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  background: var(--dp-surface);
+  border-left: 1px solid var(--dp-border);
+  box-shadow: var(--shadow-chat);
+  overflow: hidden;
+}
+
+.dp-placement-scene__dock .dp-study-chat {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .dp-placement-viewport {

@@ -4,7 +4,7 @@ import { CHECKOUT_QUESTION, QUOTE_LIST } from "@/lib/dialogue/product/sampleData
 
 export default function QuoteListFigure() {
   return (
-    <StudyChatShell compact>
+    <StudyChatShell compact hideComposer>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <div className="dp-quote-list">
         {QUOTE_LIST.map((q) => (
