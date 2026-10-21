@@ -95,6 +95,44 @@ for (const vp of VIEWPORTS) {
   );
   if (overflowX) report.issues.push(`overflow-x@${vp.name}:page`);
 
+  const funnelAudit = await page.evaluate(() => {
+    const hits = [];
+    const rowVisible = (el) => {
+      let node = el;
+      while (node) {
+        const s = getComputedStyle(node);
+        if (s.display === "none" || s.visibility === "hidden") return false;
+        node = node.parentElement;
+      }
+      const r = el.getBoundingClientRect();
+      return r.width >= 120 && r.height >= 8;
+    };
+    document.querySelectorAll(".dp-funnel__row").forEach((row) => {
+      if (!rowVisible(row)) return;
+      const label = row.querySelector(".dp-funnel__label");
+      const track = row.querySelector(".dp-funnel__track");
+      const pct = row.querySelector(".dp-funnel__pct");
+      if (!label || !track || !pct) return;
+      const rowRect = row.getBoundingClientRect();
+      const trackRect = track.getBoundingClientRect();
+      if (trackRect.width < 24) return;
+      const style = getComputedStyle(label);
+      const linePx = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.25;
+      const labelH = label.getBoundingClientRect().height;
+      if (labelH > linePx * 1.2 || label.scrollHeight > label.clientHeight + 1) {
+        hits.push(`funnel-label-wrap:${label.textContent?.trim().slice(0, 12)}`);
+      }
+      const pctRect = pct.getBoundingClientRect();
+      const gap = pctRect.left - trackRect.right;
+      if (gap < 6) hits.push(`funnel-pct-gap:${Math.round(gap)}`);
+      if (pctRect.right > rowRect.right + 1.5) hits.push("funnel-pct-overflow");
+    });
+    return [...new Set(hits)];
+  });
+  for (const hit of funnelAudit) {
+    report.issues.push(`funnel-audit@${vp.name}:${hit}`);
+  }
+
   for (const sec of SECTIONS) {
     const el = page.locator(sec.selector).first();
     if ((await el.count()) === 0) {
@@ -244,19 +282,6 @@ for (const vp of VIEWPORTS) {
               }
             });
 
-            const skipFunnelPct = window.innerWidth < 420;
-            root.querySelectorAll(".dp-funnel__row").forEach((row) => {
-              if (skipFunnelPct) return;
-              const track = row.querySelector(".dp-funnel__track");
-              const pct = row.querySelector(".dp-funnel__pct");
-              if (!track || !pct) return;
-              const rowRect = row.getBoundingClientRect();
-              if (rowRect.width < 8) return;
-              const trackRect = track.getBoundingClientRect();
-              const pctRect = pct.getBoundingClientRect();
-              if (pctRect.right > rowRect.right + 1.5) hits.push("funnel-pct-overflow");
-              if (pctRect.left < trackRect.right - 2) hits.push("funnel-pct-overlap");
-            });
           }
 
           if (sectionEl.id === "one-structure") {
@@ -318,13 +343,12 @@ for (const vp of VIEWPORTS) {
                 if (fr.height < 40) hits.push("hero-funnel-too-small");
               }
             }
-            if (viewportWide) {
-              const frame = sectionEl.getBoundingClientRect();
-              const compose =
-                sectionEl.querySelector(".dp-hero-compose__cluster") ||
-                sectionEl.querySelector(".dp-hero-compose");
-              if (compose) {
-                const cr = compose.getBoundingClientRect();
+            if (viewportWide && heroH > 300) {
+              const composeEl = sectionEl.querySelector(".dp-hero-compose");
+              const cluster = sectionEl.querySelector(".dp-hero-compose__cluster");
+              if (composeEl && cluster) {
+                const frame = composeEl.getBoundingClientRect();
+                const cr = cluster.getBoundingClientRect();
                 const leftM = cr.left - frame.left;
                 const rightM = frame.right - cr.right;
                 if (Math.abs(leftM - rightM) > 4) {
@@ -332,6 +356,14 @@ for (const vp of VIEWPORTS) {
                 }
                 if (leftM < 44 || rightM < 44) {
                   hits.push(`hero-margin-min:${Math.round(Math.min(leftM, rightM))}`);
+                }
+                const topM = cr.top - frame.top;
+                const bottomM = frame.bottom - cr.bottom;
+                if (Math.abs(topM - bottomM) > 4) {
+                  hits.push(`hero-v-margin-asym:${Math.round(topM)}-${Math.round(bottomM)}`);
+                }
+                if (Math.min(topM, bottomM) < 40) {
+                  hits.push(`hero-v-margin-min:${Math.round(Math.min(topM, bottomM))}`);
                 }
               }
             }
