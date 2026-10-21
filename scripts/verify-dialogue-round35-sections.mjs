@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Round 35 verification: /dialogue in-page product figures (no iframes).
+ * Run against production: `npm run build && npm run start` then this script.
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -58,10 +59,13 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage();
 page.setDefaultTimeout(120000);
+const pageErrors = [];
+page.on("pageerror", (err) => pageErrors.push(String(err.message || err)));
 
 const report = { shots: [], critique: [], issues: [], viewports: [] };
 
 for (const vp of VIEWPORTS) {
+  pageErrors.length = 0;
   await page.setViewportSize({ width: vp.width, height: vp.height });
   const resp = await page.goto(`${BASE}/dialogue`, { waitUntil: "load", timeout: 120000 });
   if ((resp?.status() ?? 0) !== 200) {
@@ -69,6 +73,18 @@ for (const vp of VIEWPORTS) {
     continue;
   }
   await waitForPageReady(page);
+
+  const devOverlay = await page.evaluate(() => {
+    if (document.querySelector("[data-nextjs-dev-tools-button]")) return "dev-tools-button";
+    const buttons = [...document.querySelectorAll("button")];
+    if (buttons.some((b) => /\d+\s*issue/i.test(b.textContent || ""))) return "issue-pill";
+    return null;
+  });
+  if (devOverlay) report.issues.push(`dev-overlay@${vp.name}:${devOverlay}`);
+  for (const err of pageErrors) {
+    if (err.includes("hydrat")) report.issues.push(`pageerror@${vp.name}:hydration`);
+    else report.issues.push(`pageerror@${vp.name}:${err.slice(0, 80)}`);
+  }
 
   const fullFile = `${ARTIFACT_ROOT}/full-page-${vp.name}.png`;
   await page.screenshot({ path: fullFile, fullPage: true });
@@ -205,10 +221,40 @@ for (const vp of VIEWPORTS) {
                 hits.push(`text-trunc:${text.slice(0, 40)}`);
               }
               const px = parseFloat(getComputedStyle(el).fontSize);
-              if (Number.isFinite(px) && px < 12 && text.length >= 4 && el.tagName !== "text") {
+              if (
+                Number.isFinite(px) &&
+                px < 12 &&
+                text.length >= 4 &&
+                el.tagName !== "text" &&
+                !el.closest(".dp-anatomy__rail")
+              ) {
                 hits.push(`font<12:${px}`);
               }
             });
+
+            root.querySelectorAll(".dp-funnel__row").forEach((row) => {
+              const track = row.querySelector(".dp-funnel__track");
+              const pct = row.querySelector(".dp-funnel__pct");
+              if (!track || !pct) return;
+              const rowRect = row.getBoundingClientRect();
+              const trackRect = track.getBoundingClientRect();
+              const pctRect = pct.getBoundingClientRect();
+              if (pctRect.right > rowRect.right + 1.5) hits.push("funnel-pct-overflow");
+              if (pctRect.left < trackRect.right - 2) hits.push("funnel-pct-overlap");
+            });
+          }
+
+          if (sectionEl.id === "one-structure") {
+            const lines = sectionEl.querySelectorAll(".dp-anatomy__line");
+            if (lines.length < 5) hits.push(`anatomy-lines:${lines.length}`);
+            const chips = sectionEl.querySelectorAll(".dp-anatomy__marker");
+            if (chips.length > 0) hits.push("anatomy-tab-chips");
+          }
+
+          if (sectionEl.id === "hero") {
+            if (!sectionEl.querySelector(".dp-hero-compose__clips")) {
+              hits.push("hero-missing-clips");
+            }
           }
 
           if (sectionEl.id === "placement") {
@@ -223,6 +269,17 @@ for (const vp of VIEWPORTS) {
               '.dialogue-placement-compare__figure:not([hidden]) [data-dialogue-asset-id="D-14"]',
             );
             if (activeBubble && !launcher) hits.push("placement-missing-launcher-inset");
+            const study = sectionEl.querySelector(
+              ".dialogue-placement-compare__figure:not([hidden]) .dp-placement-study-wrap",
+            );
+            if (study) {
+              study.querySelectorAll("h4, p, .dp-study-nav__item, .dp-mini-stat").forEach((el) => {
+                if (el.scrollWidth > el.clientWidth + 2) {
+                  const t = el.textContent?.replace(/\s+/g, " ").trim().slice(0, 32) ?? "";
+                  hits.push(`placement-study-clip:${t}`);
+                }
+              });
+            }
           }
           return [...new Set(hits)];
         }

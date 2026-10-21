@@ -5,7 +5,7 @@ export default function PlacementDockedFigure() {
   return (
     <div className="dialogue-product-root dp-placement-layer">
       <div className="dp-placement-study-wrap">
-        <StudyPageChrome />
+        <StudyPageChrome placement />
       </div>
       <div className="dp-docked-chat">
         <PlacementChatPreview />

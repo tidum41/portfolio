@@ -64,17 +64,9 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
               <div key={row.label} className="dp-funnel__row">
                 <span className="dp-funnel__label">{row.label}</span>
                 <div className="dp-funnel__track">
-                  <div className="dp-funnel__bar-wrap">
-                    <div className="dp-funnel__bar-inner">
-                      <div
-                        className="dp-funnel__bar"
-                        style={{ width: `max(4px, calc(${row.pct}% - 2rem))` }}
-                      />
-                      <span className="dp-funnel__pct">{row.pct}%</span>
-                      <div className="dp-funnel__bar-rest" aria-hidden />
-                    </div>
-                  </div>
+                  <div className="dp-funnel__bar" style={{ width: `${row.pct}%` }} />
                 </div>
+                <span className="dp-funnel__pct">{row.pct}%</span>
               </div>
             ))}
           </div>

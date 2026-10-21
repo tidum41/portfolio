@@ -5,7 +5,7 @@ export default function PlacementBubbleFigure() {
   return (
     <div className="dialogue-product-root dp-placement-layer">
       <div className="dp-placement-study-wrap">
-        <StudyPageChrome />
+        <StudyPageChrome placement />
       </div>
       <div className="dp-floating-chat" aria-label="Open chat">
         <div className="dp-floating-chat__scale">
