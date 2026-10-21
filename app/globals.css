@@ -1260,12 +1260,39 @@ html[data-theme="dark"] .project-image {
   align-items: flex-end;
 }
 .cs-pager-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-sans);
   font-size: var(--fs-meta);
   line-height: var(--lh-meta);
   letter-spacing: var(--ls-meta);
   font-weight: 400;
   color: var(--color-text-muted);
+}
+.cs-pager-kicker-icon {
+  display: block;
+  flex-shrink: 0;
+  /* Optical align to meta cap height (chevron sits a hair high in the em box). */
+  transform: translateY(0.5px);
+  transition: transform 150ms ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev {
+    transform: translate(-2px, 0.5px);
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translate(2px, 0.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-pager-kicker-icon {
+    transition: none;
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev,
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translateY(0.5px);
+  }
 }
 .cs-pager-title {
   font-family: var(--font-sans-medium);
