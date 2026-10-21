@@ -17,6 +17,7 @@
 6. **"The chart fits the question":** Ship **many more chart response types**, each in **real Dialogue chat UI** and in the **case-study figure**. Cover funnel, trend over rounds, segment comparison, distribution, theme ranking, quote frequency, timeline of moments, using **only** the real Dialogue design system (no invented chart chrome).
 7. **Sidebar vs floating bubble:** Current side-by-side is "just ok." **Propose a better layout-alternatives treatment** using measured rules from **References** (you will supply; see below).
 8. **Keep:** **"One answer, start to finish"** drawer graphic (`D-15` / `section-7.png`).
+9. **Aspect ratios for the page, not the render:** Ratios are chosen for how figures sit on **`/dialogue`**, not for a standalone export artboard. Use a **small allowed set** tied to figure tier (below). **Author every visual at its final placed width** so UI reads at real scale (**chat body text ≥ 12px** when measured on the live case study at **1440** viewport). **No letterboxing, no dead space.** QA is **in place** on `/dialogue` at **1440** and **390**, not by inspecting an isolated PNG or iframe alone.
 
 **General (all sections):** Prefer **live components** (static HTML export iframes or in-page React) over PNGs. **Areal**, weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**.
 
@@ -38,7 +39,9 @@
 | Lightbox (today) | Image `max-width: 92vw`, `max-height: 88vh`; close is **×** glyph | `app/globals.css`, `CaseStudyLightbox.tsx` |
 | Lightbox (round 35 target) | Media `max-width: min(1100px, calc(100vw - 48px))`, `max-height: 80vh`; backdrop padding ≥ `24px`; **"Close"** text button top-right `16–24px` from edges; Esc + backdrop click | Mudit Oct 20 |
 | UI fill in export frames | Target **≥ 92%** of frame area for product UI (≤ 8% margin) | Carries G1 from `dialogue-feedback-1020.md` |
-| Hero intrinsic ratio (JOOLA ref) | **2400 × 1600 (3:2)** | `hero-ruth-2.png`, `/joola` |
+| Hero intrinsic ratio (JOOLA ref) | **2400 × 1600 (3:2)** on `/joola` only; Dialogue figures use **allowed ratios** below, not ad hoc artboards | `hero-ruth-2.png` |
+| In-page type floor (Dialogue UI in figures) | **≥ 12px** computed font size on chat copy at **1440** viewport, figure in final layout | Mudit, round 35 |
+| Figure QA viewports | **1440** and **390**, `/dialogue` with TOC layout, not standalone asset review | Mudit, round 35 |
 
 ### JOOLA B2B hero (Ruth Zhao-inspired language on this site)
 
@@ -57,21 +60,28 @@
 
 ## Proposed figure-width system (round 35 implementation)
 
-One system for **case study page**, **static export frames**, and **canvas iframes**:
+One system for **case study page**, **static export frames**, and **canvas iframes**. **Width tier picks the allowed aspect ratio**; do not pick a ratio in Figma or export first and scale it into the column later.
 
-| Tier | CSS width | Export frame width (logical) | Use |
-|------|-----------|------------------------------|-----|
-| **Full** | `100%` of column (`750px`) | **1500px** wide (2× for capture); height from content, prefer **3:2** for hero only | Hero, anatomy, chart gallery, drawer, single proof frames |
-| **Pair** | `calc((100% - 12px) / 2)` (~**369px** each at 750) | **750px** per side in a **1500×H** combined export, or **two exports** at **750×H** each | Problem vs solution, clip problem/solution, placement (if kept as two) |
-| **Trio** | `calc((100% - 24px) / 3)` (~**242px** min; at mobile stack) | Shared **chat column width 390px** inside each export, scaled down equally; fixed frame **390 × 680** (portrait chat) for all three decision options | Decision block only |
-| **Gallery grid** | Full column; inner grid 2×N | **1500px** wide artboard, cells **750px** or **375px** per cell as needed | Multi-chart section |
+### Allowed aspect ratios (by tier)
+
+| Tier | Placed width @ 1440 (column 750) | Placed width @ 390 (`sizes`) | **Allowed ratio** | Placed height (examples) |
+|------|----------------------------------|------------------------------|-------------------|---------------------------|
+| **Full** | **750px** | **342px** (`100vw - 48px`) | **16:10** only | 750×**469** / 342×**214** |
+| **Pair** | **~369px** each (`(750 - 12) / 2`) | **~165px** each (`calc(50vw - 30px)`) | **4:5** or **1:1** (pick per pair; both columns in a row share one ratio) | 4:5 → 369×**461**; 1:1 → 369×**369** |
+| **Trio** | **~242px** each (`(750 - 24) / 3`) | stack full width on small breakpoints | **4:5** only (portrait chat) | 242×**303** @ 1440; if 12px type cannot be held, **change layout** (e.g. stack or reduce to two-up), do not shrink type |
+| **Gallery** | Full column; cell = Full or Pair tier per cell | same | Inherit cell tier ratio | Grid obeys per-cell tier |
+
+**Authoring rule:** Build export HTML / live component at **placed CSS width** (750, 369, or 242 for desktop tier), with height from the ratio above. UI is composed to **fill the frame** (≥ 92% UI area, no letterboxing). **2× raster capture** is optional for PNG fallback only; the source of truth is **in-page** appearance at 1× placed width.
+
+**Scale rule:** Chat and UI typography in a figure must match Dialogue product sizes at that **placed** width. At **1440**, verify **≥ 12px** on primary chat copy in DevTools while scrolled to the figure on `/dialogue`. At **390**, re-check the same figure after responsive layout (pair/trio may stack).
 
 **Rules:**
 
 - Remove the anatomy **80%** wrapper; **D-08** uses **Full** tier like adjacent sections.
 - **Never** point two `D-*` IDs at the same PNG path (see asset map).
-- **Prefer live row on canvas:** iframe at export pixel size, scaled to column (existing `LiveExportIframe` pattern).
+- **Prefer live row on canvas:** iframe sized to **placed width × ratio height**, scaled only for canvas column parity, not for case-study readability (case study uses live embed or 1× width).
 - PNG fallback only for Agentation or email review when iframes are blocked.
+- **Verification:** Existing Playwright scripts plus **in-page** checks at 1440 and 390 on `/dialogue` (overflow, min font size, no letterboxing in figure box). Canvas-only screenshots are supplementary.
 
 ---
 
@@ -79,12 +89,12 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 
 | ID | Section | Round 35 action |
 |----|---------|-----------------|
-| **D-01** | Hero | **Replace.** New export `hero` (or new route `hero-ruth`): JOOLA-style tight **study chat** UI, 3:2 artboard, uiAreaFraction ≥ 0.92. Deprecate graph-only `section-6` as hero. |
-| **D-02** | Problem pair left | **New export** `problem-dense`: three paragraphs, **no sources**, unique raster path. |
-| **D-03** | Problem pair right | **New export** `problem-structured`: one claim, one chart, linked moments; **must not** share file with D-02. |
-| **D-04** | Decision: paragraphs | **Live chat UI** at trio frame **390×680**; same question string as D-05/D-06. |
-| **D-05** | Decision: quote list | **Live chat UI**, same frame and typography scale as D-04. |
-| **D-06** | Decision: structured | **Live chat UI**, same frame; chosen state styling only in caption, **not** opacity dimming of media. |
+| **D-01** | Hero | **Replace.** JOOLA-style tight **study chat** UI in **Full / 16:10** at **750px** placed width; uiAreaFraction ≥ 0.92. Deprecate graph-only `section-6` as hero. |
+| **D-02** | Problem pair left | **New export** `problem-dense`: three paragraphs, **no sources**; **Pair** tier, same ratio as D-03 (**4:5** or **1:1**). |
+| **D-03** | Problem pair right | **New export** `problem-structured`: one claim, one chart, linked moments; **Pair** tier; **must not** share file with D-02. |
+| **D-04** | Decision: paragraphs | **Live chat UI** at **Trio / 4:5**, **242×303** placed @ 1440 (or layout adjusted so **≥ 12px** type holds); same question as D-05/D-06. |
+| **D-05** | Decision: quote list | **Live chat UI**, identical placed dimensions and type scale as D-04. |
+| **D-06** | Decision: structured | **Live chat UI**, identical placed dimensions; chosen state in caption only, **not** opacity dimming of media. |
 | **D-07** | Bar → clips | **New crop** from structured answer export (bar selected, clips visible); do not reuse whole `section-4` if it duplicates D-06 hero crop. |
 | **D-08** | Fixed structure | Tighten zoom; remove chrome caption list under image (per prior G1/G2); **Full** width tier. |
 | **D-09** | Chart fits question | **Expand** to **8–12** examples (see chart matrix below); grid or vertical stack in **Full** tier; each cell its own export route. |
@@ -153,6 +163,8 @@ Run locally with `npm run dev` (not `next start`):
 | `node scripts/verify-dialogue-live-frame-parity.mjs` | PNG vs iframe samples |
 | `node scripts/verify-dialogue-canvas-local.mjs` | Full-page canvas + `/dialogue` screenshots |
 | `node scripts/verify-dialogue-story-map-preview.mjs` | Story map preview readiness |
+
+**In-page (round 35 build):** At **1440** and **390** on `/dialogue`, per figure: no horizontal overflow, no letterboxing inside `.cs-figure-media`, chat copy **≥ 12px**, UI fill ≥ 92% of figure box. Capture screenshots **with surrounding section context**, not cropped standalone assets.
 
 **Snapshot at brief time:** iframe audit **passed** (no horizontal overflow at 390; iframe fill metrics recorded under `/cursor/stores/bot/dialogue-canvas-verify/`). Live parity shots written for D-04, D-06, D-09. Re-run full suite after visual build.
 
