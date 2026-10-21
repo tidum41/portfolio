@@ -12,15 +12,25 @@ const INSET = parseInt(dialogueProductTokens.space.placementInset, 10);
 const LAUNCHER = dialogueProductTokens.space.placementLauncherSize;
 const LAUNCHER_GAP = dialogueProductTokens.space.placementLauncherGap;
 const CROP_VIEWPORT_MAX = 599;
+const CROP_PAD_TOP = 16;
+const CROP_PAD_LEFT = 0;
+
+type CropWindow = { minX: number; minY: number; width: number; height: number };
 
 /**
  * One real-size 1280×748 scene (study + floating chat + launcher), scaled as a unit.
- * Wide viewport: full scene. Narrow viewport: crop to right half of scene.
  */
 export default function PlacementBubbleScene() {
   const layerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
   const [cropRight, setCropRight] = useState(false);
+  const [cropWindow, setCropWindow] = useState<CropWindow>({
+    minX: SCENE_W / 2,
+    minY: 0,
+    width: SCENE_W / 2,
+    height: SCENE_H,
+  });
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -33,23 +43,53 @@ export default function PlacementBubbleScene() {
 
       const crop = window.matchMedia(`(max-width: ${CROP_VIEWPORT_MAX}px)`).matches;
       setCropRight(crop);
-      const visibleW = crop ? SCENE_W / 2 : SCENE_W;
-      // Cropped: fill frame width with the right 640px of scene (height may clip).
-      // Full: fit entire scene in the 1280:748 aspect box.
-      setScale(crop ? w / visibleW : Math.min(w / SCENE_W, h / SCENE_H));
+
+      if (!crop) {
+        setCropWindow({ minX: 0, minY: 0, width: SCENE_W, height: SCENE_H });
+        setScale(Math.min(w / SCENE_W, h / SCENE_H));
+        return;
+      }
+
+      const chatPanel = sceneRef.current?.querySelector(".dp-study-chat") as HTMLElement | null;
+      const chatH = chatPanel?.offsetHeight ?? 0;
+      const chatBottomInset = INSET + LAUNCHER + LAUNCHER_GAP;
+      const chatHGuess = SCENE_H - chatBottomInset - 48;
+      const effectiveChatH = chatH > 80 ? chatH : chatHGuess;
+      const chatTop = SCENE_H - chatBottomInset - effectiveChatH;
+
+      const chatLeft = SCENE_W - INSET - CHAT_W;
+      const minX = Math.max(0, chatLeft - CROP_PAD_LEFT);
+      const maxX = SCENE_W;
+      const minY = Math.max(0, chatTop - CROP_PAD_TOP);
+      const maxY = SCENE_H;
+      const winW = maxX - minX;
+      const winH = maxY - minY;
+
+      setCropWindow({ minX, minY, width: winW, height: winH });
+      setScale(Math.min(w / winW, h / winH));
     };
 
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(layer);
+    const scene = sceneRef.current;
+    if (scene) ro.observe(scene);
     window.addEventListener("resize", fit);
+    const raf = requestAnimationFrame(() => {
+      fit();
+      requestAnimationFrame(fit);
+    });
     return () => {
+      cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", fit);
     };
   }, []);
 
   const chatBottom = INSET + LAUNCHER + LAUNCHER_GAP;
+  const { minX, minY } = cropWindow;
+  const sceneLeft = cropRight ? -minX * scale : 0;
+  const sceneTop = cropRight ? -minY * scale : 0;
 
   return (
     <div
@@ -59,6 +99,7 @@ export default function PlacementBubbleScene() {
     >
       <div className="dp-placement-viewport">
         <div
+          ref={sceneRef}
           className="dp-placement-scene"
           data-placement-scene="true"
           data-placement-crop={cropRight ? "right" : "full"}
@@ -66,9 +107,9 @@ export default function PlacementBubbleScene() {
             width: SCENE_W,
             height: SCENE_H,
             transform: `scale(${scale})`,
-            transformOrigin: cropRight ? "top right" : "top left",
-            right: cropRight ? 0 : undefined,
-            left: cropRight ? undefined : 0,
+            transformOrigin: "top left",
+            left: sceneLeft,
+            top: sceneTop,
           }}
         >
           <StudyPageChrome />

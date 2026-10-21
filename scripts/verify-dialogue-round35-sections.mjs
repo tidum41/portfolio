@@ -406,6 +406,31 @@ for (const vp of VIEWPORTS) {
 
           }
 
+          if (sectionEl.id === "full-answer") {
+            if (sectionEl.querySelector(".dp-hero-compose")) {
+              hits.push("full-answer-reuses-hero-compose");
+            }
+            if (!sectionEl.querySelector("[data-export-full-answer-drawer]")) {
+              hits.push("full-answer-missing-drawer");
+            }
+            const answerText = sectionEl.querySelector(
+              ".dp-full-answer__answer .dp-funnel__insight, .dp-full-answer__answer .dp-user-bubble p",
+            );
+            const clipText = sectionEl.querySelector(".dp-full-answer .dp-clip-card__text");
+            if (answerText && clipText) {
+              const aPx = parseFloat(getComputedStyle(answerText).fontSize);
+              const cPx = parseFloat(getComputedStyle(clipText).fontSize);
+              if (Number.isFinite(aPx) && Number.isFinite(cPx) && Math.abs(aPx - cPx) > 0.5) {
+                hits.push(`full-answer-type-scale:${aPx}:${cPx}`);
+              }
+            }
+          }
+
+          if (sectionEl.id === "clips") {
+            const still = sectionEl.querySelector(".dp-player__still");
+            if (!still) hits.push("clips-missing-player-still");
+          }
+
           if (sectionEl.id === "one-structure") {
             const anatomy = sectionEl.querySelector(".dp-anatomy");
             const card = anatomy?.querySelector(".dp-study-chat");
@@ -535,6 +560,20 @@ for (const vp of VIEWPORTS) {
               }
             }
             const frameEl = activeFigure?.querySelector(".dp-placement-viewport");
+            if (activeChat && frameEl) {
+              const follow = scene?.querySelector(".dp-followups, .dp-followups-row");
+              const bottomEl = follow ?? activeChat;
+              const br = bottomEl.getBoundingClientRect();
+              const fr = frameEl.getBoundingClientRect();
+              if (br.bottom > fr.bottom + 2) {
+                hits.push("placement-chat-cropped-bottom");
+              }
+              const launcherEl = scene?.querySelector(".dp-placement-scene__launcher");
+              if (launcherEl) {
+                const lr = launcherEl.getBoundingClientRect();
+                if (lr.bottom > fr.bottom + 2) hits.push("placement-launcher-cropped-bottom");
+              }
+            }
             const layerCrop = activeFigure?.querySelector(
               ".dp-placement-layer--bubble",
             )?.getAttribute("data-placement-crop");
@@ -566,8 +605,11 @@ for (const vp of VIEWPORTS) {
               if (!visibleInFrame(insightsEl)) hits.push("placement-backdrop-insights");
               if (!visibleInFrame(sidebarNav)) hits.push("placement-backdrop-sidebar");
             } else {
-              if (!visibleInFrame(titleEl)) hits.push("placement-backdrop-title-mobile");
               if (visibleInFrame(sidebarNav)) hits.push("placement-crop-shows-sidebar");
+              const chatWrapEl = scene?.querySelector("[data-placement-chat]");
+              if (chatWrapEl && !visibleInFrame(chatWrapEl)) {
+                hits.push("placement-crop-missing-chat");
+              }
             }
             const study = scene;
             const chatEl = chatWrap;
@@ -633,37 +675,93 @@ for (const vp of VIEWPORTS) {
       if (await layerLoc.count()) {
         try {
           const shotBuf = await layerLoc.screenshot({ animations: "disabled", timeout: 15000 });
-          const meta = await sharp(shotBuf).metadata();
           const { data, info } = await sharp(shotBuf).ensureAlpha().raw().toBuffer({
             resolveWithObject: true,
           });
           const w = info.width;
           const h = info.height;
-          let nonBg = 0;
-          let samples = 0;
           const bgR = 248;
           const bgG = 246;
           const bgB = 243;
-          const xMax = Math.floor(w * 0.62);
-          const yMax = Math.floor(h * 0.78);
-          for (let y = Math.floor(h * 0.08); y < yMax; y += 2) {
-            for (let x = Math.floor(w * 0.02); x < xMax; x += 2) {
-              const i = (y * w + x) * info.channels;
-              const dr = Math.abs(data[i] - bgR);
-              const dg = Math.abs(data[i + 1] - bgG);
-              const db = Math.abs(data[i + 2] - bgB);
-              if (dr + dg + db > 36) nonBg++;
-              samples++;
+          if (vp.name !== "390") {
+            let nonBg = 0;
+            let samples = 0;
+            const xMax = Math.floor(w * 0.62);
+            const yMax = Math.floor(h * 0.78);
+            for (let y = Math.floor(h * 0.08); y < yMax; y += 2) {
+              for (let x = Math.floor(w * 0.02); x < xMax; x += 2) {
+                const i = (y * w + x) * info.channels;
+                const dr = Math.abs(data[i] - bgR);
+                const dg = Math.abs(data[i + 1] - bgG);
+                const db = Math.abs(data[i + 2] - bgB);
+                if (dr + dg + db > 36) nonBg++;
+                samples++;
+              }
+            }
+            const ratio = samples ? nonBg / samples : 0;
+            if (ratio < 0.02) {
+              report.issues.push(
+                `placement-backdrop-pixels@${vp.name}:${Math.round(ratio * 1000) / 10}%`,
+              );
             }
           }
-          const ratio = samples ? nonBg / samples : 0;
-          if (ratio < 0.02) {
-            report.issues.push(
-              `placement-backdrop-pixels@${vp.name}:${Math.round(ratio * 1000) / 10}%`,
-            );
+          if (vp.name === "390") {
+            let stray = 0;
+            let straySamples = 0;
+            const xMaxStray = Math.floor(w * 0.05);
+            for (let y = Math.floor(h * 0.12); y < Math.floor(h * 0.88); y += 3) {
+              for (let x = 0; x < xMaxStray; x += 3) {
+                const i = (y * w + x) * info.channels;
+                const dr = Math.abs(data[i] - bgR);
+                const dg = Math.abs(data[i + 1] - bgG);
+                const db = Math.abs(data[i + 2] - bgB);
+                if (dr + dg + db > 48) stray++;
+                straySamples++;
+              }
+            }
+            const strayRatio = straySamples ? stray / straySamples : 0;
+            if (strayRatio > 0.2) {
+              report.issues.push(
+                `placement-left-stray@${vp.name}:${Math.round(strayRatio * 1000) / 10}%`,
+              );
+            }
           }
         } catch {
           report.issues.push(`placement-backdrop-pixels@${vp.name}:capture-failed`);
+        }
+      }
+    }
+
+    if (sec.id === "clips" && vp.name === "1440") {
+      const playerLoc = page.locator("#clips .dp-player");
+      if (await playerLoc.count()) {
+        try {
+          const shotBuf = await playerLoc.screenshot({ animations: "disabled", timeout: 15000 });
+          const { data, info } = await sharp(shotBuf).ensureAlpha().raw().toBuffer({
+            resolveWithObject: true,
+          });
+          const w = info.width;
+          const h = info.height;
+          let variance = 0;
+          let samples = 0;
+          const cx0 = Math.floor(w * 0.25);
+          const cx1 = Math.floor(w * 0.75);
+          const cy0 = Math.floor(h * 0.2);
+          const cy1 = Math.floor(h * 0.8);
+          for (let y = cy0; y < cy1; y += 4) {
+            for (let x = cx0; x < cx1; x += 4) {
+              const i = (y * w + x) * info.channels;
+              const lum = data[i] + data[i + 1] + data[i + 2];
+              if (lum < 720) variance++;
+              samples++;
+            }
+          }
+          const ratio = samples ? variance / samples : 0;
+          if (ratio < 0.15) {
+            report.issues.push(`clips-player-empty@${vp.name}:${Math.round(ratio * 1000) / 10}%`);
+          }
+        } catch {
+          report.issues.push(`clips-player-empty@${vp.name}:capture-failed`);
         }
       }
     }
