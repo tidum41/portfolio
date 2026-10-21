@@ -425,7 +425,8 @@ html.theme-switching *::after {
   padding-top: calc(24px + env(safe-area-inset-top));
   padding-bottom: 24px;
 }
-nav a {
+nav a,
+nav button.footer-link {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -716,65 +717,60 @@ button.footer-link::before {
   inset: -6px;
 }
 
-/* ─── Copy Email smooth animating track ─────────────────────────── */
+/* ─── Copy email: grid-stacked crossfade (no width/height/baseline shift) ─── */
 .copy-email-btn {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  vertical-align: middle;
+  /* Match footer <a> baseline so the hosting <li> line box stays 21px. */
+  vertical-align: baseline;
+  max-width: 100%;
 }
 
+/* Both labels share one grid cell → track sizes to the larger label always. */
 .copy-email-track {
-  position: relative;
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   align-items: center;
-  overflow: hidden;
+  justify-items: start;
   white-space: nowrap;
-  transition: width 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  line-height: inherit;
 }
 
 .copy-email-layer {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  grid-area: 1 / 1;
+  display: block;
   line-height: inherit;
-  transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  font-weight: inherit;
+  /* Default = fade back to idle (200ms). Entering copied overrides to 160ms. */
+  transition: opacity 200ms ease-out;
 }
 
-.copy-email-layer.copy-email-idle {
-  position: relative;
+.copy-email-layer--idle {
   opacity: 1;
-  transform: translateY(0);
 }
 
-.copy-email-btn[data-copied="true"] .copy-email-layer.copy-email-idle {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(calc(-50% - 2px));
+.copy-email-layer--copied {
+  opacity: 0;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer {
+  transition-duration: 160ms;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer--idle {
   opacity: 0;
   pointer-events: none;
 }
 
-.copy-email-layer.copy-email-copied {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(calc(-50% + 2px));
-  opacity: 0;
-  pointer-events: none;
-}
-
-.copy-email-btn[data-copied="true"] .copy-email-layer.copy-email-copied {
-  position: relative;
-  top: 0;
-  transform: translateY(0);
+.copy-email-btn[data-copied="true"] .copy-email-layer--copied {
   opacity: 1;
   pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .copy-email-track,
   .copy-email-layer {
     transition: none !important;
   }

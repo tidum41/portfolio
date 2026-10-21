@@ -1,8 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { LinkSimple } from "@phosphor-icons/react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { CONTACT_EMAIL } from "@/lib/site";
+
+/** Visible "Copied" hold before fading back. Fade durations live in CSS. */
+const HOLD_MS = 1600;
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
@@ -32,8 +41,8 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies CONTACT_EMAIL on click. Smoothly adjusts width and crossfades
- * between resting and "Copied" states without abrupt layout jumping.
+ * Copies CONTACT_EMAIL on click. Crossfades the label to "Copied" in place
+ * (grid-stacked layers) so width, height, and baseline never shift.
  */
 export default function CopyEmail({
   children,
@@ -53,79 +62,34 @@ export default function CopyEmail({
 }) {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
-
-  const trackRef = useRef<HTMLSpanElement>(null);
-  const idleRef = useRef<HTMLSpanElement>(null);
-  const copiedRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Hand clicks over from the pre-hydration handler in BootScripts.
+    (window as Window & { __copyEmailReady?: boolean }).__copyEmailReady = true;
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
     };
   }, []);
 
   const onClick = useCallback(async () => {
-    const ok = await copyToClipboard(CONTACT_EMAIL);
-    setAnnouncement(
-      ok
-        ? `${CONTACT_EMAIL} copied to clipboard`
-        : `Select and copy ${CONTACT_EMAIL}`,
+    if (copied) return;
+
+    void copyToClipboard(CONTACT_EMAIL).then((ok) =>
+      setAnnouncement(
+        ok
+          ? `${CONTACT_EMAIL} copied to clipboard`
+          : `Select and copy ${CONTACT_EMAIL}`,
+      ),
     );
 
-    const track = trackRef.current;
-    const idleEl = idleRef.current;
-    const copiedEl = copiedRef.current;
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!copied && track && idleEl && copiedEl && !prefersReducedMotion) {
-      const startW = idleEl.offsetWidth;
-      const endW = copiedEl.offsetWidth;
-
-      // Anchor starting width into browser layout before initiating the CSS transition
-      track.style.width = `${startW}px`;
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      track.offsetWidth;
-
-      setCopied(true);
-      track.style.width = `${endW}px`;
-
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
-      animTimerRef.current = setTimeout(() => {
-        if (track) track.style.width = "";
-      }, 240);
-    } else {
-      setCopied(true);
-    }
+    setCopied(true);
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      if (track && idleEl && copiedEl && !prefersReducedMotion) {
-        const curW = copiedEl.offsetWidth;
-        const targetW = idleEl.offsetWidth;
-
-        track.style.width = `${curW}px`;
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        track.offsetWidth;
-
-        setCopied(false);
-        track.style.width = `${targetW}px`;
-
-        if (animTimerRef.current) clearTimeout(animTimerRef.current);
-        animTimerRef.current = setTimeout(() => {
-          if (track) track.style.width = "";
-          setAnnouncement("");
-        }, 240);
-      } else {
-        setCopied(false);
-        setAnnouncement("");
-      }
-    }, 1500);
+      setCopied(false);
+      setAnnouncement("");
+    }, HOLD_MS);
   }, [copied]);
 
   const baseStyle: CSSProperties = unstyled
@@ -141,6 +105,8 @@ export default function CopyEmail({
       }
     : { cursor: "pointer" };
 
+  const mergedClass = [className, "copy-email-btn"].filter(Boolean).join(" ");
+
   return (
     <>
       <span className="sr-only" aria-live="polite" aria-atomic="true">
@@ -148,44 +114,24 @@ export default function CopyEmail({
       </span>
       <button
         type="button"
-        className={`copy-email-btn ${className ?? ""}`.trim()}
+        className={mergedClass}
         style={{ ...baseStyle, ...style }}
-        data-copied={copied}
         aria-label={ariaLabel ?? `Copy ${CONTACT_EMAIL} to clipboard`}
+        data-copied={copied ? "true" : "false"}
         onClick={onClick}
       >
-        <span ref={trackRef} className="copy-email-track">
-          <span
-            ref={idleRef}
-            className="copy-email-layer copy-email-idle"
-            aria-hidden={copied}
-          >
+        <span className="copy-email-track">
+          <span className="copy-email-layer copy-email-layer--idle" aria-hidden={copied}>
             {children}
           </span>
           <span
-            ref={copiedRef}
-            className="copy-email-layer copy-email-copied"
+            className="copy-email-layer copy-email-layer--copied"
             aria-hidden={!copied}
           >
-            <CopyIcon />
             {copiedLabel}
           </span>
         </span>
       </button>
     </>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <LinkSimple
-      size={14}
-      weight="regular"
-      aria-hidden="true"
-      style={{
-        flexShrink: 0,
-        transform: "translateY(-0.5px)",
-      }}
-    />
   );
 }
