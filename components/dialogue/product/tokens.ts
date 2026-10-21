@@ -143,7 +143,7 @@ export const dialogueProductTokens = {
   space: {
     chatPad: "28px",
     /** Inner flex gap on chat content column */
-    chatGap: "16px",
+    chatGap: "12px",
     /** Message list gap (user/assistant turns) */
     messageGap: "12px",
     vizPad: "12px",

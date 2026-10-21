@@ -21,6 +21,30 @@ export function placementChatAnchorX(
 }
 
 /** Narrow the docked/floating chat panel in scene px so scaled width matches the frame (phone only). */
+function offsetBottomInAncestor(el: HTMLElement, ancestor: HTMLElement) {
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== ancestor) {
+    top += node.offsetTop;
+    node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
+  }
+  return top + el.offsetHeight;
+}
+
+/** Crop placement scene so follow-ups (+ air) sit inside the viewport (phone). */
+export function placementYOffsetFromFollowups(
+  layer: HTMLElement,
+  viewportHeight: number,
+  scale: number,
+  airPx = 16,
+): number | null {
+  const scene = layer.querySelector<HTMLElement>('[data-placement-scene="true"]');
+  const followups = layer.querySelector<HTMLElement>(".dp-followups");
+  if (!scene || !followups) return null;
+  const bottomInScene = offsetBottomInAncestor(followups, scene) + airPx;
+  return Math.min(0, viewportHeight - bottomInScene * scale);
+}
+
 export function placementFitChatWidth(layer: HTMLElement, w: number, phone: boolean, next: number) {
   const chat = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
   if (!chat) return;

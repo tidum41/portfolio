@@ -2353,8 +2353,8 @@ html[data-theme="light"] {
     grid-template-rows: unset;
   }
   .dialogue-chart-gallery .dp-study-chat__body {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
 }
 @media (max-width: 479px) {

@@ -62,8 +62,8 @@
 .dp-chart-viz-card__inner {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px;
+  gap: 16px;
+  padding: 16px;
 }
 
 .dp-chart-title {
@@ -109,7 +109,7 @@
 .dp-chart-bars__label {
   width: var(--dp-chart-label-width);
   flex-shrink: 0;
-  text-align: right;
+  text-align: left;
   font-size: var(--dp-chart-label-size);
   line-height: var(--dp-chart-label-leading);
   font-weight: var(--dp-chart-label-weight);

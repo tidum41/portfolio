@@ -9,6 +9,7 @@ import {
   placementChatAnchorX,
   placementFitChatWidth,
   placementScaleForWidth,
+  placementYOffsetFromFollowups,
 } from "@/components/dialogue/product/scenarios/placementPhoneFit";
 
 const SCENE_W = parseInt(dialogueProductTokens.space.appShellWidth, 10);
@@ -44,9 +45,9 @@ export default function PlacementBubbleScene() {
       const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
       let x = placementChatAnchorX(w, sceneW, phone, next, chatEl);
       let y = Math.min(0, h - SCENE_H * next);
-      if (phone && chatEl) {
-        const chatBottom = chatEl.offsetTop + chatEl.offsetHeight;
-        y = Math.min(0, h - (chatBottom * next + 8));
+      if (phone) {
+        const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
+        if (fromFollowups !== null) y = fromFollowups;
       }
       setOffset({ x, y });
     };

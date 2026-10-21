@@ -8,6 +8,7 @@ import {
   placementChatAnchorX,
   placementFitChatWidth,
   placementScaleForWidth,
+  placementYOffsetFromFollowups,
 } from "@/components/dialogue/product/scenarios/placementPhoneFit";
 
 const SCENE_W = parseInt(dialogueProductTokens.space.appShellWidth, 10);
@@ -36,17 +37,22 @@ export default function PlacementDockedScene() {
       const next = placementScaleForWidth(w, phone);
       placementFitChatWidth(layer, w, phone, next);
       const sceneW = SCENE_W * next;
-      const funnel = layer.querySelector(".dp-funnel");
       let y = 0;
-      if (funnel instanceof HTMLElement) {
-        let top = 0;
-        let node: HTMLElement | null = funnel;
-        while (node && node !== layer) {
-          top += node.offsetTop;
-          node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
+      if (phone) {
+        const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
+        if (fromFollowups !== null) y = fromFollowups;
+      } else {
+        const funnel = layer.querySelector(".dp-funnel");
+        if (funnel instanceof HTMLElement) {
+          let top = 0;
+          let node: HTMLElement | null = funnel;
+          while (node && node !== layer) {
+            top += node.offsetTop;
+            node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
+          }
+          const bottom = top + funnel.offsetHeight;
+          y = Math.min(0, h - (bottom * next + 16));
         }
-        const bottom = top + funnel.offsetHeight;
-        y = Math.min(0, h - (bottom * next + 16));
       }
       setScale(next);
       const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');

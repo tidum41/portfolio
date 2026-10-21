@@ -5,7 +5,8 @@ import { chromium } from "playwright";
 
 const PORT = Number(process.env.PORT || 3020);
 const BASE = `http://127.0.0.1:${PORT}`;
-const EXPECT = { pageScrollHeight: 10494, d08ViewportHeight: 993 };
+/** Post fixes 1–5 spacing (12px gap, 16/16 viz padding, chart label align). Was 10494 / 993 @ 49234fd. */
+const EXPECT = { pageScrollHeight: 10483, d08ViewportHeight: 981 };
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
