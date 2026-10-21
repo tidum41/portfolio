@@ -19,7 +19,8 @@ const LAUNCHER_GAP = dialogueProductTokens.space.placementLauncherGap;
  */
 export default function PlacementBubbleScene() {
   const layerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -29,7 +30,12 @@ export default function PlacementBubbleScene() {
       const w = layer.clientWidth;
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
-      setScale(Math.min(w / SCENE_W, h / SCENE_H));
+      const next = Math.min(1, Math.max(0.94, w / CHAT_W));
+      setScale(next);
+      setOffset({
+        x: Math.min(0, w - SCENE_W * next),
+        y: Math.min(0, h - SCENE_H * next),
+      });
     };
 
     fit();
@@ -57,7 +63,7 @@ export default function PlacementBubbleScene() {
           style={{
             width: SCENE_W,
             height: SCENE_H,
-            transform: `scale(${scale})`,
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "top left",
           }}
         >

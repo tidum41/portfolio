@@ -15,7 +15,8 @@ const CHAT_W = parseInt(dialogueProductTokens.space.placementChatWidth, 10);
  */
 export default function PlacementDockedScene() {
   const layerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -25,7 +26,21 @@ export default function PlacementDockedScene() {
       const w = layer.clientWidth;
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
-      setScale(Math.min(w / SCENE_W, h / SCENE_H));
+      const next = Math.min(1, Math.max(0.94, w / CHAT_W));
+      const funnel = layer.querySelector(".dp-funnel");
+      let y = 0;
+      if (funnel instanceof HTMLElement) {
+        let top = 0;
+        let node: HTMLElement | null = funnel;
+        while (node && node !== layer) {
+          top += node.offsetTop;
+          node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
+        }
+        const bottom = top + funnel.offsetHeight;
+        y = Math.min(0, h - (bottom * next + 16));
+      }
+      setScale(next);
+      setOffset({ x: Math.min(0, w - SCENE_W * next), y });
     };
 
     fit();
@@ -51,7 +66,7 @@ export default function PlacementDockedScene() {
           style={{
             width: SCENE_W,
             height: SCENE_H,
-            transform: `scale(${scale})`,
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transformOrigin: "top left",
           }}
         >

@@ -31,13 +31,21 @@ export default function StructuredAnswerFigure({
       <StudyChatShell compact={shellCompact}>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
         <QuerySearchStep searched={24} found={9} />
+        <FunnelChart
+          compact={compact}
+          hero={hero}
+          showLargestDrop={false}
+          vizCard={false}
+          anatomy
+          showChart={false}
+        />
         <div className="dp-anatomy-target" data-anatomy-part="sources">
           <span className="dp-anatomy-part-marker" aria-hidden>
-            1
+            2
           </span>
           <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         </div>
-        <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy />
+        <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy showSummary={false} />
         {showClips && (
           <div className="dp-anatomy-target" data-anatomy-part="clips">
             <span className="dp-anatomy-part-marker" aria-hidden>

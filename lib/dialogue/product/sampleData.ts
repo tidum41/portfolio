@@ -127,8 +127,8 @@ export const QUOTE_LIST = [
 ];
 
 export const ANATOMY_LABELS = [
-  "Sources",
   "Summary",
+  "Sources",
   "Chart",
   "Clips",
   "Follow-ups",

@@ -1,7 +1,11 @@
+"use client";
+
+import { useLayoutEffect, useState } from "react";
 import DialogueProductScenario, {
   type DialogueProductScenario as Scenario,
 } from "@/components/dialogue/product/DialogueProductScenario";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
+
 type Props = {
   scenario: Scenario;
   title: string;
@@ -15,39 +19,67 @@ const CHAT_W = 448;
 const ANATOMY_W = 618;
 /** Answer column + clip drawer cluster */
 const FULL_ANSWER_W = 798;
+/**
+ * Floor above ~0.85 so 12px product labels still render at about 11px.
+ * Narrower frames crop instead of shrinking past this.
+ */
+const READABLE_MIN = 0.94;
 
-function scaleProps(scenario: Scenario): { innerWidth: number; maxScale?: number } | null {
+function useNarrow(query = "(max-width: 600px)") {
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [query]);
+  return narrow;
+}
+
+function scaleProps(
+  scenario: Scenario,
+  narrow: boolean,
+): {
+  innerWidth: number;
+  maxScale?: number;
+  minScale?: number;
+  maxOuterHeight?: number;
+  fit?: "scale" | "reflow";
+} | null {
   if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
   if (typeof scenario === "object" && "gallery" in scenario) {
-    // Never upscale chart cards — keeps 1:1 axis/label proportions.
-    return { innerWidth: CHAT_W, maxScale: 1 };
+    return { innerWidth: CHAT_W, fit: "reflow" };
   }
   switch (scenario) {
     case "hero":
-      // 448 chat + 14 gap + ~320 clips; allow scale-up so UI fills the 3:2 frame
-      return { innerWidth: 782 };
+      return narrow
+        ? { innerWidth: CHAT_W, minScale: READABLE_MIN, maxScale: 1, maxOuterHeight: 520 }
+        : { innerWidth: 782, minScale: READABLE_MIN, maxScale: 1 };
     case "anatomy":
-      // Centerpiece: fill the content width
-      return { innerWidth: ANATOMY_W };
+      return narrow
+        ? { innerWidth: CHAT_W, minScale: READABLE_MIN, maxScale: 1, maxOuterHeight: 440 }
+        : { innerWidth: ANATOMY_W, minScale: READABLE_MIN, maxScale: 1 };
     case "full-answer":
-      return { innerWidth: FULL_ANSWER_W, maxScale: 1 };
+      return narrow
+        ? { innerWidth: CHAT_W, minScale: READABLE_MIN, maxScale: 1 }
+        : { innerWidth: FULL_ANSWER_W, minScale: READABLE_MIN, maxScale: 1 };
     case "clip-player":
     case "problem-paragraphs":
     case "decision-paragraphs":
     case "decision-quotes":
     case "decision-structured":
-      return { innerWidth: CHAT_W, maxScale: 1 };
+      return { innerWidth: CHAT_W, minScale: READABLE_MIN, maxScale: 1 };
     default:
-      return { innerWidth: CHAT_W, maxScale: 1 };
+      return { innerWidth: CHAT_W, minScale: READABLE_MIN, maxScale: 1 };
   }
 }
 
 /** In-page Dialogue product UI (no iframe). */
 export default function DialogueProductFigure({ scenario, title, assetId, className }: Props) {
-  const scale = scaleProps(scenario);
-  const inner = (
-    <DialogueProductScenario scenario={scenario} className={className} />
-  );
+  const narrow = useNarrow();
+  const scale = scaleProps(scenario, narrow);
+  const inner = <DialogueProductScenario scenario={scenario} className={className} />;
 
   return (
     <div
@@ -55,11 +87,16 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
       data-dialogue-asset-id={assetId}
       aria-label={title}
       aria-hidden
-      // Remove from tab order / hit-testing; figures are decorative in the case study.
       inert
     >
       {scale ? (
-        <ScaledChatViewport innerWidth={scale.innerWidth} maxScale={scale.maxScale}>
+        <ScaledChatViewport
+          innerWidth={scale.innerWidth}
+          maxScale={scale.maxScale}
+          minScale={scale.minScale}
+          maxOuterHeight={scale.maxOuterHeight}
+          fit={scale.fit}
+        >
           {inner}
         </ScaledChatViewport>
       ) : (

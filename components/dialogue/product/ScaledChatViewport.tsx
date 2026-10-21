@@ -14,6 +14,15 @@ type Props = {
   cropHeight?: number;
   /** Cap scale (e.g. decision row desktop ~0.58). */
   maxScale?: number;
+  /**
+   * Floor. Below this, the panel stays at this scale and the frame crops,
+   * instead of shrinking type further.
+   */
+  minScale?: number;
+  /** Cap the visible crop height in outer px. */
+  maxOuterHeight?: number;
+  /** `reflow` paints children at the frame width with no zoom. */
+  fit?: "scale" | "reflow";
   /** Bottom fade for equal-height compare crops. */
   fade?: boolean;
   className?: string;
@@ -48,6 +57,9 @@ export default function ScaledChatViewport({
   innerWidth = DEFAULT_INNER_W,
   cropHeight,
   maxScale,
+  minScale,
+  maxOuterHeight,
+  fit = "scale",
   fade = false,
   className,
 }: Props) {
@@ -83,11 +95,14 @@ export default function ScaledChatViewport({
 
       let raw = w / innerWidth;
       if (maxScale !== undefined) raw = Math.min(raw, maxScale);
+      if (minScale !== undefined) raw = Math.max(raw, minScale);
       const s = snapScale(raw, innerWidth, dpr);
       setScale(s);
 
-      const outerW = Math.round(innerWidth * s * dpr) / dpr;
-      setOffsetX(Math.max(0, Math.floor((w - outerW) / 2)));
+      const scaledW = innerWidth * s;
+      const cropping = scaledW > w + 0.5;
+      const outerW = cropping ? w : Math.round(scaledW * dpr) / dpr;
+      setOffsetX(cropping ? 0 : Math.max(0, Math.floor((w - outerW) / 2)));
 
       if (cropHeight !== undefined) {
         setCropH(cropHeight);
@@ -106,10 +121,30 @@ export default function ScaledChatViewport({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [cropHeight, innerWidth, maxScale, useZoom, dpr]);
+  }, [cropHeight, innerWidth, maxScale, minScale, useZoom, dpr]);
+
+  if (fit === "reflow") {
+    return (
+      <div
+        className={["dp-scaled-viewport", "dp-scaled-viewport--reflow", className]
+          .filter(Boolean)
+          .join(" ")}
+        data-scale-mode="reflow"
+        data-scale="1"
+      >
+        <div
+          className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+          style={{ width: "100%" }}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   const outerW = Math.round(innerWidth * scale * dpr) / dpr;
-  const outerH = Math.round(cropH * scale * dpr) / dpr;
+  let outerH = Math.round(cropH * scale * dpr) / dpr;
+  if (maxOuterHeight !== undefined) outerH = Math.min(outerH, maxOuterHeight);
 
   return (
     <div

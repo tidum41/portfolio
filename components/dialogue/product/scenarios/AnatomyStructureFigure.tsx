@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
 import { ANATOMY_LABELS } from "@/lib/dialogue/product/sampleData";
 
-const PART_IDS = ["sources", "summary", "chart", "clips", "followups"] as const;
+const PART_IDS = ["summary", "sources", "chart", "clips", "followups"] as const;
 
 type CalloutLayout = { top: number };
 type LeaderLine = { y: number; x1: number; x2: number };

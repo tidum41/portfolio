@@ -1912,6 +1912,67 @@ html[data-theme="light"] {
 .dialogue-case-study .cs-content {
   overflow-x: visible;
 }
+.dialogue-case-study .cs-prose,
+.dialogue-case-study .dialogue-placement-compare__decision {
+  max-width: 640px;
+}
+.dialogue-case-study .cs-prose {
+  margin: 0 0 24px;
+}
+.dialogue-case-study .cs-hero-title,
+.dialogue-case-study .cs-back-desktop,
+.dialogue-case-study .cs-back-mobile {
+  transform: none !important;
+}
+.dialogue-case-study .cs-pager-kicker-icon--prev {
+  margin-left: 0;
+}
+.dialogue-case-study .cs-pager-kicker-icon--next {
+  margin-right: 0;
+}
+.dialogue-anatomy-list {
+  display: none;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  max-width: 640px;
+}
+.dialogue-anatomy-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+.dialogue-anatomy-list li span {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  min-width: 1.2em;
+}
+.dialogue-answer-states {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.dialogue-answer-states__ui {
+  padding: 12px;
+  background: var(--dp-figure-surface-system, #f5f5f4);
+}
+.dialogue-answer-states__ui .dp-coverage-callout,
+.dialogue-answer-states__ui .dp-sources {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .dialogue-anatomy-list {
+    display: block;
+  }
+  .dialogue-answer-states {
+    grid-template-columns: 1fr;
+  }
+}
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media {
   border-radius: 0;
   overflow: visible;
@@ -1969,26 +2030,31 @@ html[data-theme="light"] {
 .dialogue-rachel-frame--solution {
   background: var(--dp-figure-surface-solution);
 }
-.dialogue-rachel-frame__label {
-  display: block;
-  padding: 14px 20px 0;
-  margin: 0;
-  font-family: var(--font-sans-medium);
+/* One caption, under the figure: 13px label, at most one sentence, 24px from the frame. */
+.dialogue-caption {
+  margin: 24px 0 0;
+  max-width: 640px;
   font-size: 13px;
+  line-height: 1.4;
+  color: #57534d;
+}
+.dialogue-caption__label {
+  display: block;
+  font-family: var(--font-sans-medium);
   font-weight: 500;
-  line-height: 1.35;
   letter-spacing: 0.01em;
-  color: #78716c !important;
 }
-.dialogue-rachel-frame--problem .dialogue-rachel-frame__label,
-.dialogue-rachel-frame--solution .dialogue-rachel-frame__label {
-  color: #57534d !important;
+.dialogue-caption__sentence {
+  display: block;
+  margin-top: 8px;
+  font-weight: 400;
 }
-/* Caption sits above the figure pad with a clear gap — not floating on the UI. */
-.dialogue-rachel-frame__label + .dialogue-rachel-frame__pad {
-  margin-top: 10px;
-  padding-top: 4px;
-  border-top: 1px solid rgb(28 25 23 / 6%);
+.dialogue-caption--block {
+  margin: 24px 0;
+}
+.dialogue-framed {
+  width: 100%;
+  min-width: 0;
 }
 .dialogue-rachel-frame__pad {
   overflow: visible;
@@ -2020,10 +2086,18 @@ html[data-theme="light"] {
   width: 100%;
 }
 
-@media (max-width: 420px) {
-  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-hero-compose__main {
-    transform: scale(0.9);
-    transform-origin: top center;
+@media (max-width: 600px) {
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola {
+    aspect-ratio: auto;
+    height: auto;
+  }
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block,
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-figure--hero-fill,
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport,
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure,
+  .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure__iframe {
+    height: auto !important;
+    min-height: 0 !important;
   }
 }
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure,
@@ -2121,124 +2195,77 @@ html[data-theme="light"] {
   background: var(--color-bg-secondary);
 }
 .dialogue-live-block.cs-figure {
-  margin: 24px 0 28px;
-}
-.dialogue-lead-answer__heading {
-  font-family: var(--font-sans-medium);
-  font-size: var(--fs-h3, 20px);
-  font-weight: 500;
-  margin: 0 0 8px;
-}
-.dialogue-lead-answer__subheading {
-  margin: 0 0 20px;
-  color: var(--color-text-muted);
+  margin: 24px 0 0;
 }
 .dialogue-lead-answer__row {
   display: grid;
-  gap: 12px;
-  /* Top-align so equal crop frames line captions up across the trio. */
-  align-items: start;
-}
-.dialogue-lead-answer__row--trio {
-  /* Stay inside the content column so the sticky TOC never overlaps. */
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
   width: 100%;
   max-width: 100%;
-  margin-left: 0;
-  transform: none;
+  margin: 0;
 }
-.dialogue-lead-answer__row--stack {
-  grid-template-columns: 1fr;
-  width: 100%;
-  margin-left: 0;
-  transform: none;
-  gap: 24px;
+.dialogue-lead-answer__row--trio {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  column-gap: 24px;
+  row-gap: 0;
+  align-items: stretch;
 }
 .dialogue-lead-answer__panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
   min-width: 0;
-  height: auto;
 }
-.dialogue-lead-answer__panel .dialogue-lead-answer__frame {
-  /* Fixed to the shared crop — do not grow with caption wrap. */
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  height: auto;
+.dialogue-lead-answer__panel .dialogue-framed {
+  min-width: 0;
+}
+.dialogue-lead-answer__panel .dialogue-lead-answer__frame,
+.dialogue-lead-answer__panel .dialogue-rachel-frame {
+  height: 100%;
 }
 .dialogue-lead-answer__panel .dialogue-rachel-frame__pad {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 12px;
 }
-.dialogue-lead-answer__panel-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
-  /* Reserve Chosen-line height so labels align across the trio. */
-  min-height: 1.35em;
+.dialogue-lead-answer__answer .dp-study-chat {
+  background: var(--dp-surface, #fcfbf9);
 }
-.dialogue-lead-answer__panel-label {
+.dialogue-lead-answer__answer .dp-quote-item {
+  padding: 12px;
   margin: 0;
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: 0.01em;
-  color: #57534d;
-}
-.dialogue-lead-answer__chosen {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #78716c;
-}
-.dialogue-lead-answer__panel-line {
-  margin: 10px 0 0;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--color-text-muted);
 }
 .dialogue-case-study .dialogue-lead-answer__viewport {
   width: 100%;
   max-width: 100%;
 }
-@media (max-width: 900px) {
-  .dialogue-lead-answer__row--trio {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-}
 .dialogue-evidence-pull {
-  margin: 0 0 28px;
-  padding: 0 0 0 14px;
-  border-left: 2px solid rgb(28 25 23 / 14%);
+  margin: 24px 0;
+  padding: 0 0 0 8px;
+  border-left: 2px solid rgb(28 25 23 / 18%);
+  max-width: 640px;
 }
 .dialogue-evidence-pull__quote {
   margin: 0;
   font-family: var(--font-sans-medium);
-  font-size: 18px;
+  font-size: var(--fs-body);
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--color-text-primary);
 }
 .dialogue-evidence-pull__meta {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   font-size: 13px;
   line-height: 1.4;
   color: var(--color-text-muted);
 }
 .dialogue-chart-gallery-wrap {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 .dialogue-chart-map {
   display: grid;
   gap: 0;
-  margin: 0 0 20px;
+  margin: 0;
+  max-width: 640px;
   font-size: 13px;
   line-height: 1.4;
   color: var(--color-text-secondary);
@@ -2253,9 +2280,9 @@ html[data-theme="light"] {
   border-bottom: 1px solid rgb(28 25 23 / 8%);
 }
 .dialogue-chart-map__head {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   color: #78716c;
 }
 .dialogue-chart-gallery {
@@ -2305,23 +2332,42 @@ html[data-theme="light"] {
 .dialogue-chart-gallery__cell .dp-study-chat {
   min-height: 100%;
 }
-.dialogue-chart-gallery .dialogue-rachel-frame__label {
-  font-size: 14px;
-  color: #57534d !important;
-  flex-shrink: 0;
+.dialogue-chart-gallery .dialogue-product-block {
+  max-width: 448px;
 }
-@media (min-width: 1024px) {
+.dialogue-chart-gallery .dialogue-rachel-frame__pad {
+  padding: 12px;
+}
+.dialogue-chart-gallery .dp-chart-line__svg {
+  width: 320px;
+  max-width: none;
+}
+.dialogue-chart-gallery .dp-chart-line {
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .dialogue-lead-answer__row--trio,
   .dialogue-chart-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+    display: flex;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    max-width: 100%;
+    padding-bottom: 4px;
   }
-}
-@media (max-width: 767px) {
-  /* Match Rachel frame label inset (20px) so section titles align with chart cards. */
-  .dialogue-case-study article section[id] h2,
-  .dialogue-case-study article section[id] .cs-prose {
-    padding-inline: 20px;
-    box-sizing: border-box;
+  .dialogue-lead-answer__panel,
+  .dialogue-chart-gallery__cell {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 calc(100% - 40px);
+    scroll-snap-align: start;
+    grid-row: auto;
+  }
+  .dialogue-chart-gallery .dp-study-chat__body {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 }
 .dialogue-case-study .decision-block {
@@ -2335,13 +2381,12 @@ html[data-theme="light"] {
   margin: 0;
 }
 .dialogue-placement-compare {
-  margin-top: 8px;
+  margin-top: 0;
 }
 .dialogue-placement-compare__pair {
-  /* Always stacked at full content width so the study page stays legible. */
   display: grid;
   grid-template-columns: 1fr;
-  gap: 28px;
+  gap: 24px;
   align-items: stretch;
   width: 100%;
 }
@@ -2349,7 +2394,7 @@ html[data-theme="light"] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   height: 100%;
 }
 .dialogue-placement-compare__cell .dialogue-rachel-frame {
@@ -2368,31 +2413,12 @@ html[data-theme="light"] {
   width: 100%;
   flex: 1 1 auto;
 }
-.dialogue-placement-compare__label {
-  margin: 0;
-  font-family: var(--font-sans-medium);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-  color: #57534d;
-}
-.dialogue-placement-compare__cost {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--color-text-muted);
-}
 .dialogue-placement-compare__decision {
-  margin: 16px 0 0;
+  margin: 24px 0 0;
+  max-width: 640px;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--color-text-primary);
-}
-.dialogue-placement-compare__tradeoff {
-  margin: 8px 0 0;
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  color: var(--color-text-secondary);
 }
 /* Dialogue draft — anatomy caption row (legacy) */
 @media (max-width: 600px) {

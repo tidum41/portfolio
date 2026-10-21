@@ -36,7 +36,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
   switch (variant) {
     case "trend":
       return (
-        <StudyChatShell hideComposer>
+        <StudyChatShell hideComposer hideHeader>
           <UserMessageBubble>{SENTIMENT_LINE.question}</UserMessageBubble>
           <QuerySearchStep searched={24} found={18} />
           <LineChart
@@ -49,7 +49,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "funnel":
       return (
-        <StudyChatShell hideComposer>
+        <StudyChatShell hideComposer hideHeader>
           <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
           <QuerySearchStep searched={24} found={9} />
           <FunnelChart />
@@ -57,7 +57,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "segment":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>{SEGMENT_ADDRESS.question}</UserMessageBubble>
           <QuerySearchStep searched={24} found={11} />
           <p className="dp-summary">{SEGMENT_ADDRESS.summary}</p>
@@ -77,7 +77,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "distribution":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>How often did payment trust come up?</UserMessageBubble>
           <QuerySearchStep searched={24} found={14} />
           <ChartVizCard title="Payment-trust mentions per interview">
@@ -96,7 +96,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "theme":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>Top themes in checkout frustration</UserMessageBubble>
           <QuerySearchStep searched={24} found={16} />
           <ThemeRankingCard />
@@ -104,7 +104,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "quote-freq":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>How often did address friction come up?</UserMessageBubble>
           <QuerySearchStep searched={24} found={14} />
           <QuoteFrequencyCard />
@@ -112,7 +112,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "timeline":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>When did participants mention delivery fees?</UserMessageBubble>
           <QuerySearchStep searched={24} found={12} />
           <LineChart
@@ -130,7 +130,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       );
     case "coverage":
       return (
-        <StudyChatShell compact hideComposer>
+        <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>{COVERAGE_ADDRESS.question}</UserMessageBubble>
           <QuerySearchStep searched={24} found={18} />
           <p className="dp-summary">{COVERAGE_ADDRESS.headline}.</p>

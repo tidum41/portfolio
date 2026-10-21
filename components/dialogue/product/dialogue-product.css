@@ -453,7 +453,7 @@
 .dp-clip-thumbs__time {
   display: block;
   margin-top: 4px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   color: var(--dp-muted);
 }
@@ -755,7 +755,7 @@
 .dp-app-sidebar__nav-item {
   padding: 6px 8px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.25;
   color: var(--dp-muted-light);
 }
@@ -801,7 +801,7 @@
   padding: 2px 8px;
   border: none;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.25;
   color: var(--dp-muted-light);
   background: transparent;
@@ -841,7 +841,7 @@
 
 .dp-app-stat-card__label {
   margin: 0;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--dp-muted-light);
 }
 
@@ -874,7 +874,7 @@
 
 .dp-app-insights-card__title {
   margin: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--dp-muted);
 }
@@ -908,7 +908,7 @@
   border: none;
   border-radius: 999px;
   background: var(--dp-nav-active-bg);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.25;
   color: var(--dp-muted-light);
   appearance: none;
@@ -999,7 +999,8 @@
 
 .dp-placement-layer--scene,
 .dp-placement-layer--bubble {
-  aspect-ratio: 1280 / 748;
+  aspect-ratio: auto;
+  height: 400px;
   min-height: 0;
   width: 100%;
 }
@@ -1220,7 +1221,7 @@
   border-radius: 999px;
   background: var(--dp-brand, #b43f7f);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -1286,8 +1287,8 @@
     margin-left: -6px;
     border-radius: 999px;
     background: #eef2f5;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--dp-ink);
   }
 
@@ -1599,6 +1600,11 @@
   height: 22px;
 }
 
+.dp-source-pill--disagree {
+  border-color: #b43f7f;
+  color: var(--dp-ink);
+}
+
 .dp-source-pill--selected {
   background: rgb(180 63 127 / 12%);
   border-color: var(--dp-brand, #b43f7f);
@@ -1686,9 +1692,44 @@
 }
 
 .dp-coverage-callout__detail {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
   color: var(--dp-muted);
+}
+
+/* Mobile: chat-only crops. The numbered anatomy list lives under the figure. */
+@media (max-width: 600px) {
+  .dp-hero-compose__clips {
+    display: none !important;
+  }
+
+  .dp-anatomy-scene {
+    width: 448px;
+    max-width: none;
+  }
+
+  .dp-anatomy {
+    grid-template-columns: 448px;
+  }
+
+  .dp-anatomy__rail,
+  .dp-anatomy__svg,
+  .dp-anatomy-part-marker {
+    display: none !important;
+  }
+
+  .dp-anatomy__diagram {
+    grid-column: 1;
+    width: 448px;
+  }
+
+  .dp-study-chat__body {
+    padding-left: var(--dp-chat-pad, 28px) !important;
+  }
+}
+
+.dp-scaled-viewport {
+  overflow: hidden;
 }
 

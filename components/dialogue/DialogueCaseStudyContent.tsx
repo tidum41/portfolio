@@ -13,7 +13,10 @@ import type { DialogueProductScenario } from "@/components/dialogue/product/Dial
 import "@/components/dialogue/product/dialogue-product.css";
 import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
+import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import { ANATOMY_LABELS } from "@/lib/dialogue/product/sampleData";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -27,11 +30,11 @@ export type RasterAnnotator = (assetId: string, children: React.ReactNode) => Re
 
 /** Short forms of the section H2s for the left nav. */
 export const DIALOGUE_TOC_ITEMS = [
-  { id: "problem", label: "Problem" },
+  { id: "problem", label: "The chat" },
   { id: "why-it-matters", label: "Finding travels" },
   { id: "one-structure", label: "Fixed structure" },
   { id: "fitted-charts", label: "Chart fits" },
-  { id: "clips", label: "Quote context" },
+  { id: "clips", label: "A quote" },
   { id: "placement", label: "Floating chat" },
   { id: "full-answer", label: "One answer" },
 ];
@@ -180,13 +183,10 @@ export function DialogueCaseStudyContent({
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem">
-              <H2>Dialogue&apos;s study chat could answer anything…</H2>
+              <H2>The chat could answer anything, but not say which interview said it</H2>
               <CaseStudyBody>
-                AI-moderated interviews for enterprise UX teams and startups.
-              </CaseStudyBody>
-              <H2>…but you couldn&apos;t tell which interview said it.</H2>
-              <CaseStudyBody>
-                Teams could not see which interview said what, so a long answer felt like a guess.
+                AI-moderated interviews for enterprise UX teams and startups. Teams could not see
+                which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="problem-paragraphs"
@@ -213,7 +213,7 @@ export function DialogueCaseStudyContent({
               </blockquote>
 
               <DialogueLeadAnswerCompare
-                heading="Lead with the answer, back it with evidence"
+                heading="Lead with the answer"
                 subheading="Three ways the chat could answer the same question."
                 chosenId="structured"
                 annotateRaster={wrap}
@@ -231,8 +231,7 @@ export function DialogueCaseStudyContent({
                     id: "quote-list",
                     label: "Quotes only",
                     title: "Quote list",
-                    costLine:
-                      "Faithful to the footage, but you still count by hand. Nine quotes is not a finding.",
+                    costLine: "Faithful to the footage, but you still count by hand.",
                     productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
@@ -252,41 +251,76 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
-                This is the system everything else hangs on. Parts stay in order: 1 Sources, 2
-                Summary, 3 Chart, 4 Clips, 5 Follow-ups. Only part 3 changes shape.
+                This is the system everything else hangs on. Parts stay in order: 1 Summary, 2
+                Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only the chart changes shape.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
-                title="Study chat answer card with numbered callouts for sources through follow-ups"
+                title="Study chat answer card with numbered callouts for summary through follow-ups"
                 assetId="D-08"
                 wrapRaster={wrap}
               />
+              <ol className="dialogue-anatomy-list">
+                {ANATOMY_LABELS.map((label, i) => (
+                  <li key={label}>
+                    <span>{i + 1}</span>
+                    {label}
+                  </li>
+                ))}
+              </ol>
+              <div className="dialogue-answer-states">
+                <div className="dialogue-answer-states__item">
+                  <div
+                    className={`dialogue-answer-states__ui dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+                    aria-hidden
+                    inert
+                  >
+                    <div className="dp-sources">
+                      <span className="dp-source-pill">Priya K. · 15:47</span>
+                      <span className="dp-source-pill dp-source-pill--disagree">Sam R. · 11:22</span>
+                    </div>
+                  </div>
+                  <p className="dialogue-caption">
+                    <span className="dialogue-caption__label">Counter-evidence</span>
+                    <span className="dialogue-caption__sentence">
+                      A source that disagrees stays in the row with the ones that support the answer.
+                    </span>
+                  </p>
+                </div>
+                <div className="dialogue-answer-states__item">
+                  <div
+                    className={`dialogue-answer-states__ui dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+                    aria-hidden
+                    inert
+                  >
+                    <CoverageCallout
+                      headline="2 of 24 interviews"
+                      detail="Only a few interviews match."
+                    />
+                  </div>
+                  <p className="dialogue-caption">
+                    <span className="dialogue-caption__label">Low coverage</span>
+                    <span className="dialogue-caption__sentence">
+                      A thin-data note when only a few interviews match.
+                    </span>
+                  </p>
+                </div>
+              </div>
             </Section>
 
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
               <CaseStudyBody>
-                Supporting part 3: I grouped real chat questions by type and gave each a chart
-                shape. A question-type classifier picks the chart. If nothing fits, the answer stays
-                text with sources and clips.
+                Chart: I grouped real chat questions by type and gave each a chart shape. If nothing
+                fits, the answer stays text with sources and clips.
               </CaseStudyBody>
-              <p
-                style={{
-                  margin: "0 0 8px",
-                  fontSize: 13,
-                  lineHeight: 1.4,
-                  color: "var(--color-text-muted)",
-                }}
-              >
-                Study data in these figures is illustrative.
-              </p>
               {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
 
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>
-                Supporting part 4: the clip opens at the exact second, with the transcript in sync.
+                Clips: the clip opens at the exact second, with the transcript in sync.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -298,7 +332,7 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="placement">
-              <H2>Instead of a docked sidebar, I kept the floating chat</H2>
+              <H2>Floating chat, not a docked sidebar</H2>
               <CaseStudyBody>
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages. The answer structure inside the chat stays the same either way.
@@ -311,8 +345,8 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                Back to the same structure: after a part 5 follow-up, parts 1 through 4 still hold
-                together for the new answer, with every supporting clip in one drawer.
+                Back to the same structure: after a follow-up, the summary, sources, chart, and clips
+                still hold together for the new answer, with every supporting clip in one drawer.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
@@ -323,6 +357,9 @@ export function DialogueCaseStudyContent({
               />
             </Section>
           </article>
+          <CaseStudyBody>
+            TODO: one thing I would test or change next. Mudit, replace this sentence.
+          </CaseStudyBody>
           <CaseStudyPager href="/dialogue" />
         </div>
       </div>

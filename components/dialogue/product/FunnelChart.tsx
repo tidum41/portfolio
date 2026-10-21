@@ -11,6 +11,8 @@ type Props = {
   anatomy?: boolean;
   /** Wrap summary + chart in bordered viz-card. */
   vizCard?: boolean;
+  showSummary?: boolean;
+  showChart?: boolean;
 };
 
 export default function FunnelChart({
@@ -19,6 +21,8 @@ export default function FunnelChart({
   showLargestDrop = true,
   anatomy,
   vizCard = true,
+  showSummary = true,
+  showChart = true,
 }: Props) {
   const data = CHECKOUT_FUNNEL;
   const rows = data.steps.map((step) => ({
@@ -38,7 +42,7 @@ export default function FunnelChart({
   const summary = anatomy ? (
     <div className="dp-anatomy-target" data-anatomy-part="summary">
       <span className="dp-anatomy-part-marker" aria-hidden>
-        2
+        1
       </span>
       {summaryBody}
     </div>
@@ -82,8 +86,8 @@ export default function FunnelChart({
 
   return (
     <div className={`dp-funnel${hero ? " dp-funnel--hero" : ""}`}>
-      {summary}
-      {chart}
+      {showSummary ? summary : null}
+      {showChart ? chart : null}
     </div>
   );
 }
