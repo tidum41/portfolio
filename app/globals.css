@@ -1,15 +1,26 @@
 @import "tailwindcss";
 
-/* ABC Areal @font-face is injected from app/layout.tsx using
-   NEXT_PUBLIC_AREAL_URL (Vercel Blob). Dinamo EULA — font files stay out of git.
-   Axes used: wght 400–500 only. Georgia remains the serif / page-title face. */
+/* Helvetica Neue — local faces for Regular (400) and Medium (500) only.
+   Site UI weights cap at 500. Georgia remains the serif / page-title face. */
+@font-face {
+  font-family: "Helvetica Neue";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
+}
+@font-face {
+  font-family: "Helvetica Neue";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
+}
 
 @theme {
-  /* Fonts — medium is the same family; callers set font-weight: 500. */
-  /* No Arial/Helvetica in the declared stack — Areal is required; generic
-     sans-serif is the only fallback so computed font-family stays clean. */
-  --font-sans:        "ABC Areal", sans-serif;
-  --font-sans-medium: "ABC Areal", sans-serif;
+  /* One sans token — Medium is the same family at font-weight: 500. */
+  --font-sans:        "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans-medium: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
   /* Prefer Geist Mono inside embeds; otherwise system ui-monospace stack
      (main dropped Söhne / TestSohne). */
@@ -47,7 +58,7 @@
 
   /* Typography scale — ~8 roles + hero clamp + stat (see design/briefs/type-system.md) */
   --font-display:     Georgia, 'Times New Roman', serif;
-  /* Title roles — Georgia for who/brand (home, about); Areal medium for docs (CS) */
+  /* Title roles — Georgia for who/brand (home, about); HN Medium for docs (CS) */
   --font-page-title:  var(--font-display);
   --font-doc-title:   var(--font-sans-medium);
 
@@ -65,19 +76,20 @@
 
   --fs-body:          15px;
   --lh-body:          1.72;
-  --ls-body:          0.1px;
+  /* Helvetica Neue body — neutral tracking. */
+  --ls-body:          0px;
 
   --fs-lg:            18px;
   --lh-lg:            1.35;
-  --ls-lg:           -0.2px;
+  --ls-lg:           -0.15px;
 
   --fs-xl:            24px;
   --lh-xl:            1.25;
-  --ls-xl:           -0.3px;
+  --ls-xl:           -0.25px;
 
   --fs-h2:            30px;
-  --lh-h2:            1.1;
-  --ls-h2:           -0.3px;
+  --lh-h2:            1.15;
+  --ls-h2:           -0.25px;
 
   --fs-display:       48px;
   /* clamp() so .cs-hero-title scales on narrow viewports; caps at 48px. */

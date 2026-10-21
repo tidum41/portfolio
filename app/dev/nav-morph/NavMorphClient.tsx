@@ -245,7 +245,7 @@ export default function NavMorphClient() {
             ))}
           </div>
           <p style={noteStyle}>
-            Shape morph. Each droplet starts as a piece of the ABC Areal
+            Shape morph. Each droplet starts as a piece of the sans
             outline and the path deforms into the dot. This is the live nav.
             {reduced ? " Reduced motion is on, so this side jumps." : ""}
           </p>

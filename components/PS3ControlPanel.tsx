@@ -396,7 +396,7 @@ function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
 }
 
 // ── Chevron/label optical alignment ─────────────────────────────────────────
-// "menu" renders in --font-sans (ABC Areal, with a generic sans-serif fallback).
+// "menu" renders in --font-sans (Helvetica Neue stack).
 // Ascent/descent differ across the fallback chain, so a marginTop tuned by
 // eye against one font's glyph metrics reads as misaligned against another's.
 // Measure the *actual* rendered ink of both the chevron and the label — via

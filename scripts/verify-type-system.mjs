@@ -1,123 +1,76 @@
-import { chromium } from 'playwright';
-import { mkdirSync } from 'fs';
-import { join } from 'path';
+/**
+ * Font/weight audit + capture helper for the type-system branch.
+ * Expects Helvetica Neue (no Areal), weights ≤500.
+ */
+import { chromium } from "playwright";
 
-const OUT = '/opt/cursor/artifacts/screenshots';
-const TMP = '/tmp/type-system-shots';
-mkdirSync(OUT, { recursive: true });
-mkdirSync(TMP, { recursive: true });
+const LOCAL = process.env.BASE_URL || "http://localhost:3000";
 
-const LOCAL = 'http://localhost:3000';
-const PROD = 'https://www.muditm.com';
-
-async function waitFonts(page) {
-  await page.waitForLoadState('networkidle').catch(() => {});
+async function waitReady(page, { home = false } = {}) {
+  await page.waitForLoadState("domcontentloaded");
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
-  // skip intro if present
-  await page.evaluate(() => {
-    document.documentElement.setAttribute('data-intro', 'done');
-  });
-  await page.waitForTimeout(400);
+  if (home) {
+    await page.waitForFunction(() => {
+      const intro = document.documentElement.getAttribute("data-intro");
+      const sub = document.querySelector("[data-hero-sub], .hero-sub");
+      const subOk = sub && parseFloat(getComputedStyle(sub).opacity) > 0.9;
+      return intro !== "playing" && subOk;
+    }, { timeout: 20000 });
+  } else {
+    await page.evaluate(() => {
+      const html = document.documentElement;
+      if (html.getAttribute("data-intro") === "playing") {
+        html.setAttribute("data-intro", "done");
+        window.dispatchEvent(new CustomEvent("intro-done"));
+      }
+    });
+    await page.waitForTimeout(600);
+  }
 }
 
-async function fontReport(page) {
-  return page.evaluate(async () => {
-    await document.fonts.ready;
-    const fonts = [...document.fonts].map(f => ({
-      family: f.family,
-      weight: f.weight,
-      status: f.status,
-    }));
-    const areal = fonts.filter(f => /areal/i.test(f.family));
-    const pick = (sel) => {
-      const el = document.querySelector(sel);
-      if (!el) return null;
-      const cs = getComputedStyle(el);
-      return { sel, family: cs.fontFamily, size: cs.fontSize, weight: cs.fontWeight, lh: cs.lineHeight, ls: cs.letterSpacing };
-    };
-    return {
-      arealLoaded: areal.some(f => f.status === 'loaded'),
-      areal,
-      body: pick('body'),
-      nav: pick('nav') || pick('header') || pick('[data-nav]') || pick('a.nav-link'),
-      toc: pick('.cs-aside button') || pick('.cs-aside a') || pick('.cs-back-mobile-label'),
-      card: pick('.portfolio-grid-card') || pick('.project-card'),
-      h1: pick('h1'),
-      h2: pick('h2'),
-    };
-  });
-}
-
-async function shot(page, url, name, width) {
-  await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await waitFonts(page);
-  const path = join(TMP, `${name}-${width}.png`);
-  await page.screenshot({ path, fullPage: false });
-  return path;
-}
-
-async function measureCardGaps(page) {
+async function audit(page, route) {
+  await page.goto(LOCAL + route, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await waitReady(page, { home: route === "/" });
   return page.evaluate(() => {
-    const cards = [...document.querySelectorAll('.portfolio-grid-card')].filter(el => el.getClientRects().length);
-    const gaps = [];
-    for (let i = 1; i < cards.length; i++) {
-      const a = cards[i - 1].getBoundingClientRect();
-      const b = cards[i].getBoundingClientRect();
-      gaps.push(Math.round((b.top - a.bottom) * 10) / 10);
+    const body = getComputedStyle(document.body);
+    let badWeight = 0;
+    let arealRefs = 0;
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
+    let n;
+    while ((n = walk.nextNode())) {
+      if (!(n instanceof HTMLElement) || !n.getClientRects().length) continue;
+      const cs = getComputedStyle(n);
+      if (/areal/i.test(cs.fontFamily)) arealRefs++;
+      const w = parseInt(cs.fontWeight, 10);
+      if (Number.isFinite(w) && w > 500) badWeight++;
     }
-    return gaps;
+    const first = (body.fontFamily || "").split(",")[0].replace(/["']/g, "").trim();
+    return {
+      bodyFamily: body.fontFamily,
+      firstFamily: first,
+      bodyWeight: body.fontWeight,
+      bodyLh: body.lineHeight,
+      bodyLs: body.letterSpacing,
+      arealRefs,
+      badWeight,
+      styleHasAreal: [...document.querySelectorAll("style")].some((s) =>
+        /ABC Areal|AREAL/i.test(s.textContent || ""),
+      ),
+    };
   });
 }
 
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage();
-
-// Local font checks
-const routes = ['/', '/about', '/ucla-sublease', '/archive'];
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const reports = {};
-for (const r of routes) {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(LOCAL + r, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await waitFonts(page);
-  reports[r] = await fontReport(page);
+for (const r of ["/", "/about", "/ucla-sublease", "/archive"]) {
+  reports[r] = await audit(page, r);
 }
-
-await page.setViewportSize({ width: 390, height: 844 });
-await page.goto(LOCAL + '/', { waitUntil: 'domcontentloaded' });
-await waitFonts(page);
-const gaps390 = await measureCardGaps(page);
-
-// Screenshots: after (local) + before (prod)
-const targets = [
-  { route: '/', tag: 'home' },
-  { route: '/about', tag: 'about' },
-  { route: '/ucla-sublease', tag: 'cs-top' },
-];
-
-for (const t of targets) {
-  for (const w of [1440, 390]) {
-    await shot(page, PROD + t.route, `before-${t.tag}`, w);
-    await shot(page, LOCAL + t.route, `after-${t.tag}`, w);
-  }
-}
-
-// CS mid-section: scroll to research
-for (const [label, base] of [['before', PROD], ['after', LOCAL]]) {
-  for (const w of [1440, 390]) {
-    await page.setViewportSize({ width: w, height: w === 390 ? 844 : 900 });
-    await page.goto(base + '/ucla-sublease', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await waitFonts(page);
-    await page.evaluate(() => {
-      const el = document.querySelector('#research') || document.querySelector('#process');
-      el?.scrollIntoView({ block: 'start' });
-    });
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: join(TMP, `${label}-cs-mid-${w}.png`), fullPage: false });
-  }
-}
-
-console.log(JSON.stringify({ reports, gaps390 }, null, 2));
+console.log(JSON.stringify(reports, null, 2));
+const fail = Object.values(reports).some(
+  (r) => r.arealRefs > 0 || r.badWeight > 0 || r.styleHasAreal || r.firstFamily !== "Helvetica Neue",
+);
 await browser.close();
+process.exit(fail ? 1 : 0);

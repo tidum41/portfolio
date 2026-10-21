@@ -202,7 +202,7 @@ export default function CaseStudyTOC({
                     background: "none", border: "none", padding: 0,
                     cursor: "pointer", textAlign: "left",
                     fontFamily: "var(--font-sans)",
-                    fontSize: "var(--fs-meta)", letterSpacing: "var(--ls-body)", lineHeight: 1.5,
+                    fontSize: "var(--fs-meta)", letterSpacing: "var(--ls-meta)", lineHeight: 1.5,
                     color: (isActive || isHovered) ? COLOR_ACTIVE : COLOR_INACTIVE,
                     fontWeight: isActive ? 500 : 400,
                     transition: "color 0.15s ease, font-weight 0.15s ease",

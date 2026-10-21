@@ -28,7 +28,7 @@ export interface DesignSystemData {
 export const DS_DEFAULTS: Required<DesignSystemData> = {
   fsDisplay: 48, fsHero: 48, fsH2: 30, fwHero: 50, fwH2: 50, fwCardTitle: 50, fsSectionLabel: 15,
   fsH3: 24, fsBody: 15, fsLabel: 15, fsMeta: 14, fsCaption: 12, fsStat: 44, fsCardTitle: 18,
-  lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
+  lhBody: 1.72, lhH2: 1.15, lsHero: -0.5, lsH2: -0.25,
   // One section separation (was pb 64 + mb 80). pb folded into gap.
   sectionGap: 144, sectionPb: 0, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
@@ -111,7 +111,7 @@ export function designSystemToCss(ds: Required<DesignSystemData>): string {
     --fs-stat:${ds.fsStat}px;--fs-card-title:${ds.fsCardTitle}px;
     --lh-body:${ds.lhBody};--lh-h2:${ds.lhH2};
     --lh-caption:1.4;--lh-sm:1.55;--lh-meta:1.45;--lh-lg:1.35;--lh-xl:1.25;
-    --ls-body:0.1px;--ls-caption:0px;--ls-sm:0px;--ls-meta:-0.1px;--ls-lg:-0.2px;--ls-xl:-0.3px;
+    --ls-body:0px;--ls-caption:0px;--ls-sm:0px;--ls-meta:-0.1px;--ls-lg:-0.15px;--ls-xl:-0.25px;
     --ls-hero:${ds.lsHero}px;--ls-h2:${ds.lsH2}px;
     --cs-section-gap:${ds.sectionGap}px;--cs-h2-mt:48px;--cs-h2-mb:24px;--cs-para-gap:16px;
     --section-gap:var(--cs-section-gap);--section-pb:${ds.sectionPb}px;
