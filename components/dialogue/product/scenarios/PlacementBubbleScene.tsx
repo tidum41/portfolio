@@ -11,21 +11,16 @@ const CHAT_W = parseInt(dialogueProductTokens.space.placementChatWidth, 10);
 const INSET = parseInt(dialogueProductTokens.space.placementInset, 10);
 const LAUNCHER = dialogueProductTokens.space.placementLauncherSize;
 const LAUNCHER_GAP = dialogueProductTokens.space.placementLauncherGap;
-
 const CROP_VIEWPORT_MAX = 599;
 
 /**
  * One real-size 1280×748 scene (study + floating chat + launcher), scaled as a unit.
- * Wide viewport: full scene. Narrow viewport (&lt;600): crop to right half of scene.
+ * Wide viewport: full scene. Narrow viewport: crop to right half of scene.
  */
 export default function PlacementBubbleScene() {
   const layerRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState({
-    scale: 0.35,
-    cropRight: false,
-    frameW: SCENE_W * 0.35,
-    frameH: SCENE_H * 0.35,
-  });
+  const [scale, setScale] = useState(0.5);
+  const [cropRight, setCropRight] = useState(false);
 
   useLayoutEffect(() => {
     const layer = layerRef.current;
@@ -36,15 +31,10 @@ export default function PlacementBubbleScene() {
       const h = layer.clientHeight;
       if (w < 1 || h < 1) return;
 
-      const cropRight = window.innerWidth <= CROP_VIEWPORT_MAX;
-      const visibleSceneW = cropRight ? SCENE_W / 2 : SCENE_W;
-      const scale = Math.min(w / visibleSceneW, h / SCENE_H);
-      setLayout({
-        scale,
-        cropRight,
-        frameW: visibleSceneW * scale,
-        frameH: SCENE_H * scale,
-      });
+      const crop = window.innerWidth <= CROP_VIEWPORT_MAX;
+      setCropRight(crop);
+      const visibleW = crop ? SCENE_W / 2 : SCENE_W;
+      setScale(Math.min(w / visibleW, h / SCENE_H));
     };
 
     fit();
@@ -57,7 +47,6 @@ export default function PlacementBubbleScene() {
     };
   }, []);
 
-  const { scale, cropRight, frameW, frameH } = layout;
   const chatBottom = INSET + LAUNCHER + LAUNCHER_GAP;
 
   return (
@@ -67,40 +56,33 @@ export default function PlacementBubbleScene() {
     >
       <div className="dp-placement-viewport">
         <div
-          className="dp-placement-viewport__frame"
-          style={{ width: frameW, height: frameH }}
+          className="dp-placement-scene"
+          data-placement-scene="true"
+          data-placement-crop={cropRight ? "right" : "full"}
+          style={{
+            width: SCENE_W,
+            height: SCENE_H,
+            transform: `scale(${scale})`,
+            transformOrigin: cropRight ? "top right" : "top left",
+            right: cropRight ? 0 : undefined,
+            left: cropRight ? undefined : 0,
+          }}
         >
+          <StudyPageChrome />
           <div
-            className="dp-placement-scene"
-            data-placement-scene="true"
-            data-placement-crop={cropRight ? "right" : "full"}
-            style={{
-              width: SCENE_W,
-              height: SCENE_H,
-              transform: `scale(${scale})`,
-              transformOrigin: cropRight ? "top right" : "top left",
-              right: cropRight ? 0 : undefined,
-              left: cropRight ? undefined : 0,
-            }}
+            className="dp-placement-scene__chat"
+            data-placement-chat="true"
+            style={{ width: CHAT_W, right: INSET, bottom: chatBottom }}
           >
-            <div className="dp-placement-scene__study">
-              <StudyPageChrome />
-            </div>
-            <div
-              className="dp-placement-scene__chat"
-              data-placement-chat="true"
-              style={{ width: CHAT_W, right: INSET, bottom: chatBottom }}
-            >
-              <PlacementChatPreview />
-            </div>
-            <div
-              className="dp-placement-scene__launcher dp-bubble-launcher-inset"
-              aria-hidden
-              title="Collapsed launcher"
-              style={{ width: LAUNCHER, height: LAUNCHER, right: INSET, bottom: INSET }}
-            >
-              ◐
-            </div>
+            <PlacementChatPreview />
+          </div>
+          <div
+            className="dp-placement-scene__launcher dp-bubble-launcher-inset"
+            aria-hidden
+            title="Collapsed launcher"
+            style={{ width: LAUNCHER, height: LAUNCHER, right: INSET, bottom: INSET }}
+          >
+            ◐
           </div>
         </div>
       </div>

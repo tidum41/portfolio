@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import { createConnection } from "node:net";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url)) + "/..";
@@ -533,7 +534,10 @@ for (const vp of VIEWPORTS) {
                 }
               }
             }
-            const frameEl = activeFigure?.querySelector(".dp-placement-viewport__frame");
+            const frameEl = activeFigure?.querySelector(".dp-placement-viewport");
+            if (window.innerWidth >= 600 && scene?.getAttribute("data-placement-crop") !== "full") {
+              hits.push("placement-crop-mode-wide");
+            }
             const titleEl = scene?.querySelector(".dp-app-main__title");
             const insightsEl = scene?.querySelector(".dp-app-insights-card__title");
             const visibleInFrame = (el) => {
@@ -545,9 +549,12 @@ for (const vp of VIEWPORTS) {
               const overlapH = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
               return overlapW > 8 && overlapH > 4;
             };
+            const sidebarNav = scene?.querySelector(".dp-app-sidebar__nav-item");
+            const statLabel = scene?.querySelector(".dp-app-stat-card__label");
             if (window.innerWidth >= 600) {
               if (!visibleInFrame(titleEl)) hits.push("placement-backdrop-title");
               if (!visibleInFrame(insightsEl)) hits.push("placement-backdrop-insights");
+              if (!visibleInFrame(sidebarNav)) hits.push("placement-backdrop-sidebar");
             } else if (!visibleInFrame(titleEl)) {
               hits.push("placement-backdrop-title-mobile");
             }
@@ -607,6 +614,49 @@ for (const vp of VIEWPORTS) {
     for (const hit of clipHits) {
       report.issues.push(`dom-audit@${vp.name}:${sec.id}:${hit}`);
     }
+
+    if (sec.id === "placement") {
+      const layerLoc = page.locator(
+        ".dialogue-placement-compare__figure:not([hidden]) .dp-placement-layer--bubble",
+      );
+      if (await layerLoc.count()) {
+        try {
+          const shotBuf = await layerLoc.screenshot({ animations: "disabled", timeout: 15000 });
+          const meta = await sharp(shotBuf).metadata();
+          const { data, info } = await sharp(shotBuf).ensureAlpha().raw().toBuffer({
+            resolveWithObject: true,
+          });
+          const w = info.width;
+          const h = info.height;
+          let nonBg = 0;
+          let samples = 0;
+          const bgR = 248;
+          const bgG = 246;
+          const bgB = 243;
+          const xMax = Math.floor(w * 0.62);
+          const yMax = Math.floor(h * 0.78);
+          for (let y = Math.floor(h * 0.08); y < yMax; y += 2) {
+            for (let x = Math.floor(w * 0.02); x < xMax; x += 2) {
+              const i = (y * w + x) * info.channels;
+              const dr = Math.abs(data[i] - bgR);
+              const dg = Math.abs(data[i + 1] - bgG);
+              const db = Math.abs(data[i + 2] - bgB);
+              if (dr + dg + db > 36) nonBg++;
+              samples++;
+            }
+          }
+          const ratio = samples ? nonBg / samples : 0;
+          if (ratio < 0.02) {
+            report.issues.push(
+              `placement-backdrop-pixels@${vp.name}:${Math.round(ratio * 1000) / 10}%`,
+            );
+          }
+        } catch {
+          report.issues.push(`placement-backdrop-pixels@${vp.name}:capture-failed`);
+        }
+      }
+    }
+
     if (sec.id !== "hero" && metrics.ok && metrics.figureWidths?.length && !metrics.widthMatch) {
       report.issues.push(`width-mismatch@${vp.name}:${sec.id}`);
     }

@@ -2048,20 +2048,29 @@ html[data-theme="light"] {
   margin-top: 24px;
 }
 .dialogue-placement-compare__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 16px;
-  align-items: start;
-}
-@media (max-width: 767px) {
-  .dialogue-placement-compare__layout {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+  max-width: 688px;
 }
 .dialogue-placement-compare__options {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
+}
+@media (max-width: 767px) {
+  .dialogue-placement-compare__options {
+    flex-direction: column;
+  }
+}
+.dialogue-placement-compare__option {
+  flex: 1 1 200px;
+}
+.dialogue-placement-compare__figures {
+  width: 100%;
 }
 .dialogue-placement-compare__option {
   width: 100%;

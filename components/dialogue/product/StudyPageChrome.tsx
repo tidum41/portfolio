@@ -35,10 +35,12 @@ export default function StudyPageChrome({ paperFrame }: Props) {
         <div className="dp-app-main">
           <header className="dp-app-main__head">
             <p className="dp-app-main__title">{dialogueCopy.studyPageTitle}</p>
-            <div className="dp-app-tabs">
-              <span className="dp-app-tab dp-app-tab--active">{tabs.insights}</span>
-              <span className="dp-app-tab">{tabs.participants}</span>
-              <span className="dp-app-tab">{tabs.sections}</span>
+            <div className="dp-app-tabs" role="tablist" aria-hidden>
+              <div className="dp-app-tab dp-app-tab--active" role="presentation">
+                {tabs.insights}
+              </div>
+              <div className="dp-app-tab" role="presentation">{tabs.participants}</div>
+              <div className="dp-app-tab" role="presentation">{tabs.sections}</div>
             </div>
           </header>
           <div className="dp-app-main__body">
@@ -64,7 +66,7 @@ export default function StudyPageChrome({ paperFrame }: Props) {
                 <span />
                 <span />
               </div>
-              <span className="dp-app-chip">{dialogueCopy.mixedSentiment}</span>
+              <div className="dp-app-chip" role="presentation">{dialogueCopy.mixedSentiment}</div>
             </div>
           </div>
         </div>
