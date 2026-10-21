@@ -15,14 +15,14 @@
 4. **Lightbox:** Zoomed images fill the viewport and look soft. **Cap** zoomed media at about **80vh** and **1100px** wide with **visible margin**. Replace invisible close control with a **labeled "Close"** button (Esc), **top-right inside safe margin**, strong contrast.
 5. **"Every answer gets one fixed structure":** Concept is right; **80% width** fights the next full-width figure. Adopt **one figure-width system** for the whole page.
 6. **"The chart fits the question":** Ship **many more chart response types**, each in **real Dialogue chat UI** and in the **case-study figure**. Cover funnel, trend over rounds, segment comparison, distribution, theme ranking, quote frequency, timeline of moments, using **only** the real Dialogue design system (no invented chart chrome).
-7. **Sidebar vs floating bubble:** Current side-by-side is "just ok." **Research** Rachel Chen (Notion agents), Ruth Zhao, Aditya Das (Currents), plus 2–3 strong product case studies; **propose a better layout-alternatives treatment**.
+7. **Sidebar vs floating bubble:** Current side-by-side is "just ok." **Propose a better layout-alternatives treatment** using measured rules from **References** (you will supply; see below).
 8. **Keep:** **"One answer, start to finish"** drawer graphic (`D-15` / `section-7.png`).
 
 **General (all sections):** Prefer **live components** (static HTML export iframes or in-page React) over PNGs. **Areal**, weight **≤ 500**, **sentence case**, **no em dashes**, **no invented icons**, **face/clip blur only for privacy**.
 
 ---
 
-## Measured rules (references + this site)
+## Measured rules (this site)
 
 ### This portfolio (`muditm.com` case-study shell)
 
@@ -46,34 +46,14 @@
 - **What it is not:** Abstract charts, floating diagrams, or wide empty margins.
 - **Dialogue hero direction:** Same treatment: **one flagship study-chat answer** (structured answer with summary + chart + clips), cropped tight like wholesale UI on JOOLA, **not** a standalone funnel graphic as the hero subject.
 
-### Rachel Chen, [Notion Custom Agents](https://rachelchen.tech/projects/notion)
+---
 
-- **Exploration blocks:** Three **equal-weight** option cards in one row (desktop), each with **title + short line + large media** (video or UI), not thumbnails.
-- **Problem → solution:** Full-width media per beat; autoplay loops with clear captions.
-- **Decisions:** After explorations, **text-forward "key interaction decisions"** with numbered principles, not another duplicate screenshot.
-- **Takeaway for Dialogue:** Decision block and placement explorations should use **equal full-bleed frames** within the 750px column, then prose decisions below.
+## References
 
-### Aditya Das, [Currents](https://adityad.as/currents)
-
-- **Rhythm:** Alternating **full-column** UI captures and short headings; media carries the story.
-- **Modal:** Enlarged media is **not** edge-to-edge on the viewport; UI chrome stays visible around the asset.
-- **Takeaway for Dialogue:** Lightbox behavior aligns with **modal-style caps** (80vh / 1100px), not immersive fullscreen bitmap.
-
-### Ruth Zhao, [Ramp delegation](https://www.ruth-zhao.com/ramp)
-
-- **Prototype strip:** Named variants in a **horizontal row** (calendar, toggle, banner) at **readable** scale before final screens.
-- **Final screens:** Full-width solution frames per sub-problem.
-- **Takeaway for Dialogue:** Placement section can use a **labeled variant strip** plus **one** full study-page frame for the chosen pattern.
-
-### Additional references (layout alternatives)
-
-| Reference | Pattern | Relevant measure / habit |
-|-----------|---------|---------------------------|
-| [Linear](https://linear.app/now/how-we-redesigned-the-linear-ui) (product stories) | Before/after or **toggle** on **one** canvas | Single viewport, state change, avoids two mismatched crops |
-| [Stripe Sessions / design posts](https://stripe.com/blog) | **Annotated** screenshots, consistent artboard width | One artboard width per story, captions outside image |
-| [Notion (Rachel)](https://rachelchen.tech/projects/notion) | **3-up** exploration grid | Equal columns, equal media height |
+<!-- Mudit: paste measured rules from external case studies here (e.g. Rachel Chen Notion, Ruth Zhao, Aditya Currents, others). Round 35 placement and layout-alternatives treatment should follow this section once filled. -->
 
 ---
+
 
 ## Proposed figure-width system (round 35 implementation)
 
@@ -142,10 +122,10 @@ Use **only** Dialogue tokens, chart components, and spacing from the export desi
 
 **Problem with today:** Side-by-side static PNGs at **Pair** tier read as "two small screenshots," not a design argument.
 
-**Recommended direction (pick one in build after Mudit ok):**
+**Direction (finalize after References are filled; pick one in build after Mudit ok):**
 
-1. **Primary: Single study canvas + toggle** (Linear-style): One **Full**-tier live frame of the study page; UI control switches **sidebar vs bubble** (state in export HTML or lightweight React). One caption line for the decision. **Optional** Ruth-style **strip** of two small labeled stills above, not below fold as the only content.
-2. **Alternate: Rachel-style 2-up + decision prose:** Two **equal Full-half** mockups only if each is **unique** HTML export at **750px** width with identical scale; followed by a short "why bubble" bullet block (copy TBD).
+1. **Option A:** One **Full**-tier live frame of the study page with in-frame control to switch **sidebar vs bubble** (export HTML or lightweight React). One caption for the decision. Optional labeled variant strip above the main frame if References call for it.
+2. **Option B:** Two **equal** half-column live exports at **750px** logical width each, identical scale, plus short decision prose (why bubble). Only if References support side-by-side exploration at readable size.
 
 Deprecate reusing `section-6` for bubble if it is also hero language unless hero moves off `section-6`.
 
