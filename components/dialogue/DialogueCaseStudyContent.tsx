@@ -152,29 +152,23 @@ export function DialogueCaseStudyContent({
             {wrap
               ? wrap(
                   "D-01",
-                  <div className="cs-hero-media-frame dialogue-hero-media">
-                    <div className="dialogue-hero-breakout">
-                      <DialogueRachelFrame tone="neutral">
-                        <DialogueReactFigure
-                          exportRoute="hero"
-                          title="Study chat structured answer hero"
-                          assetId="D-01"
-                        />
-                      </DialogueRachelFrame>
-                    </div>
+                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
+                    <DialogueReactFigure
+                      exportRoute="hero"
+                      title="Study chat structured answer hero"
+                      assetId="D-01"
+                      reflowMode="hero-fill"
+                    />
                   </div>,
                 )
               : (
-                  <div className="cs-hero-media-frame dialogue-hero-media">
-                    <div className="dialogue-hero-breakout">
-                      <DialogueRachelFrame tone="neutral">
-                        <DialogueReactFigure
-                          exportRoute="hero"
-                          title="Study chat structured answer hero"
-                          assetId="D-01"
-                        />
-                      </DialogueRachelFrame>
-                    </div>
+                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
+                    <DialogueReactFigure
+                      exportRoute="hero"
+                      title="Study chat structured answer hero"
+                      assetId="D-01"
+                      reflowMode="hero-fill"
+                    />
                   </div>
                 )}
           </CaseStudyOpen>

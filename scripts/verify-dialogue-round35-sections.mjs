@@ -16,7 +16,7 @@ fs.mkdirSync(ARTIFACT_ROOT, { recursive: true });
 fs.mkdirSync(SELF_STORE, { recursive: true });
 
 const SECTIONS = [
-  { id: "hero", selector: ".dialogue-hero-breakout" },
+  { id: "hero", selector: ".dialogue-hero-joola" },
   { id: "problem", selector: "#problem" },
   { id: "why-it-matters", selector: "#why-it-matters" },
   { id: "one-structure", selector: "#one-structure" },
@@ -77,11 +77,69 @@ async function waitForPageReady(page) {
   );
 
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(1200);
+  await page
+    .waitForFunction(
+      () => {
+        const iframes = [...document.querySelectorAll(".dialogue-case-study .dialogue-react-figure iframe")];
+        return iframes.length > 0 && iframes.every((f) => f.dataset.reflowed === "1");
+      },
+      { timeout: 90000 },
+    )
+    .catch(() => {});
+  await page.waitForTimeout(800);
 }
 
 async function measureSection(page, selector) {
   return page.evaluate((sel) => {
+    function auditExportDocument(doc, frameW) {
+      const hits = [];
+      const de = doc.documentElement;
+      const limitW = frameW ?? de.clientWidth;
+      const bodyOverflow = getComputedStyle(doc.body).overflowX;
+      if (
+        de.scrollWidth > limitW + 1 &&
+        !(bodyOverflow === "hidden" && de.clientWidth <= limitW + 2)
+      ) {
+        hits.push(`doc-scroll:${de.scrollWidth}>${limitW}`);
+      }
+      doc.querySelectorAll("*").forEach((el) => {
+        const st = getComputedStyle(el);
+        const ox = st.overflowX;
+        const oy = st.overflowY;
+        if (
+          (ox === "hidden" || ox === "clip" || ox === "auto" || ox === "scroll") &&
+          el.scrollWidth > el.clientWidth + 1
+        ) {
+          hits.push(`el-scroll-x:${el.tagName}.${String(el.className).slice(0, 30)}`);
+        }
+        if (
+          (oy === "hidden" || oy === "clip" || oy === "auto" || oy === "scroll") &&
+          el.scrollHeight > el.clientHeight + 1 &&
+          el.tagName !== "IMG"
+        ) {
+          hits.push(`el-scroll-y:${el.tagName}.${String(el.className).slice(0, 30)}`);
+        }
+      });
+      doc.querySelectorAll("p, span, li, td, th, label, h1, h2, h3, button").forEach((el) => {
+        const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+        if (text.length < 4) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 2) return;
+        let clipper = el.parentElement;
+        while (clipper && clipper !== doc.body) {
+          const st = getComputedStyle(clipper);
+          if (st.overflowX === "hidden" || st.overflowX === "clip" || st.overflow === "hidden") {
+            const cRect = clipper.getBoundingClientRect();
+            if (rect.right > cRect.right + 1.5) {
+              hits.push(`text-clip:${text.slice(0, 40)}`);
+            }
+            break;
+          }
+          clipper = clipper.parentElement;
+        }
+      });
+      return hits;
+    }
     const root = document.querySelector(".dialogue-case-study");
     const el = document.querySelector(sel);
     if (!root || !el) return { ok: false, reason: "missing" };
@@ -97,14 +155,43 @@ async function measureSection(page, selector) {
     });
 
     const sectionW = el.getBoundingClientRect().width;
-    const iframeMetrics = [...el.querySelectorAll("iframe")].map((iframe) => {
+    const clipHits = [];
+    let placementReady = !sel.includes("placement");
+    const iframeMetrics = [...el.querySelectorAll("iframe")]
+      .filter((iframe) => {
+        const st = getComputedStyle(iframe);
+        if (st.display === "none" || st.visibility === "hidden") return false;
+        const hidden = iframe.closest("[hidden]");
+        return !hidden;
+      })
+      .map((iframe) => {
       let minChatFont = null;
       let letterboxGap = null;
+      let fontFamily = null;
+      let audit = [];
       const iframeRect = iframe.getBoundingClientRect();
       const isFullWidth = iframeRect.width >= sectionW * 0.55;
       try {
         const doc = iframe.contentDocument;
         if (doc?.body) {
+          audit = auditExportDocument(doc, iframe.clientWidth);
+          clipHits.push(...audit);
+          const bodyFont = getComputedStyle(doc.body).fontFamily;
+          fontFamily = bodyFont;
+          if (!/Helvetica|TeX Gyre|Nimbus/i.test(bodyFont)) {
+            clipHits.push(`font-stack:${bodyFont.slice(0, 60)}`);
+          }
+          if (sel.includes("placement") || sel === "#placement") {
+            const popup = doc.querySelector("[data-export-popup-chat]");
+            const docked = doc.querySelector("[data-export-docked-chat]");
+            const active = popup?.offsetParent !== null ? popup : docked;
+            const chatText = active?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+            const chatH = active?.getBoundingClientRect().height ?? 0;
+            placementReady =
+              chatText.length >= 24 &&
+              chatH >= 72 &&
+              !/skeleton|loading/i.test(chatText);
+          }
           const panel = doc.querySelector("[data-export-chat-panel]");
           const scope = panel ?? doc.body;
           const bodies = [...scope.querySelectorAll(".text-body, p.text-body, [class*='text-body']")];
@@ -134,7 +221,7 @@ async function measureSection(page, selector) {
       } catch {
         /* cross-origin */
       }
-      return { minChatFont, letterboxGap, clipped: false, isFullWidth };
+      return { minChatFont, letterboxGap, clipped: false, isFullWidth, audit, fontFamily };
     });
 
     const rect = el.getBoundingClientRect();
@@ -161,11 +248,16 @@ async function measureSection(page, selector) {
       ),
       overflowX,
       clippedIframes: iframeMetrics.filter((x) => x.clipped).length,
+      clipHits,
+      placementReady,
     };
   }, selector);
 }
 
-const browser = await chromium.launch();
+const fontConfig = process.env.FONTCONFIG_FILE || "/tmp/dialogue-fonts/fonts.conf";
+const browser = await chromium.launch({
+  env: { ...process.env, FONTCONFIG_FILE: fontConfig },
+});
 const page = await browser.newPage();
 page.setDefaultTimeout(120000);
 
@@ -193,32 +285,55 @@ for (const vp of VIEWPORTS) {
       continue;
     }
     await page.evaluate((sel) => {
+      if (sel.includes("hero")) {
+        window.scrollTo(0, 0);
+        return;
+      }
       const node = document.querySelector(sel);
       if (node) {
         const y = node.getBoundingClientRect().top + window.scrollY - 80;
         window.scrollTo(0, Math.max(0, y));
       }
     }, sec.selector);
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(400);
     const visible = await el.isVisible().catch(() => false);
     if (!visible) {
       report.issues.push(`${sec.id}@${vp.name}: not visible`);
       continue;
     }
     const file = `${ARTIFACT_ROOT}/${sec.id}-${vp.name}.png`;
-    const box = await el.boundingBox();
-    if (box) {
-      await page.screenshot({
-        path: file,
-        clip: {
-          x: Math.max(0, box.x),
-          y: Math.max(0, box.y),
-          width: Math.min(box.width, vp.width),
-          height: Math.min(box.height, 2000),
-        },
-        animations: "disabled",
-      });
-      report.shots.push(file);
+    let contentBox = await page.locator(".dialogue-case-study .cs-content").boundingBox();
+    let sectionBox = await el.boundingBox();
+    if (!sectionBox || sectionBox.y < 0 || sectionBox.y > vp.height - 48) {
+      await page.evaluate((sel) => {
+        const node = document.querySelector(sel);
+        if (!node) return;
+        const y = node.getBoundingClientRect().top + window.scrollY - 96;
+        window.scrollTo(0, Math.max(0, y));
+      }, sec.selector);
+      await page.waitForTimeout(450);
+      contentBox = await page.locator(".dialogue-case-study .cs-content").boundingBox();
+      sectionBox = await el.boundingBox();
+    }
+    if (contentBox && sectionBox && sectionBox.height > 8) {
+      try {
+        await page.screenshot({
+          path: file,
+          clip: {
+            x: contentBox.x,
+            y: sectionBox.y,
+            width: contentBox.width,
+            height: Math.min(sectionBox.height, 2000),
+          },
+          animations: "disabled",
+          timeout: 15000,
+        });
+        report.shots.push(file);
+      } catch (err) {
+        report.issues.push(`screenshot@${vp.name}:${sec.id}:${err.message?.slice(0, 80)}`);
+      }
+    } else {
+      report.issues.push(`clip-bounds@${vp.name}:${sec.id}`);
     }
 
     const metrics = await measureSection(page, sec.selector);
@@ -236,6 +351,15 @@ for (const vp of VIEWPORTS) {
     }
     if (metrics.clippedIframes > 0) {
       report.issues.push(`clipped@${vp.name}:${sec.id}`);
+    }
+    if (metrics.clipHits?.length) {
+      const unique = [...new Set(metrics.clipHits)];
+      for (const hit of unique) {
+        report.issues.push(`export-audit@${vp.name}:${sec.id}:${hit}`);
+      }
+    }
+    if (sec.id === "placement" && metrics.placementReady === false) {
+      report.issues.push(`placement-chat@${vp.name}:${sec.id}`);
     }
     if (
       sec.id !== "hero" &&

@@ -11,6 +11,7 @@ const OPTIONS = [
     priorityLine: "The priority is persistence over focus.",
     frameLabel: "Explored: docked sidebar",
     route: "section-6b",
+    reflowMode: "placement" as const,
     assetId: "D-13",
   },
   {
@@ -19,14 +20,13 @@ const OPTIONS = [
     priorityLine: "The priority is focus over always-on chrome.",
     frameLabel: "Kept: floating bubble",
     route: "section-6",
+    reflowMode: "placement" as const,
     assetId: "D-14",
   },
 ];
 
 export default function DialoguePlacementCompare() {
   const [active, setActive] = useState<"sidebar" | "bubble">("bubble");
-  const current = OPTIONS.find((o) => o.id === active) ?? OPTIONS[1];
-
   return (
     <div className="dialogue-placement-compare">
       <div className="dialogue-placement-compare__layout">
@@ -52,13 +52,24 @@ export default function DialoguePlacementCompare() {
             </button>
           ))}
         </div>
-        <DialogueRachelFrame label={current.frameLabel} tone="neutral">
-          <DialogueReactFigure
-            exportRoute={current.route}
-            title={current.frameLabel}
-            assetId={current.assetId}
-          />
-        </DialogueRachelFrame>
+        <div className="dialogue-placement-compare__figures">
+          {OPTIONS.map((opt) => (
+            <div
+              key={opt.id}
+              className="dialogue-placement-compare__figure"
+              hidden={active !== opt.id}
+            >
+              <DialogueRachelFrame label={opt.frameLabel} tone="neutral">
+                <DialogueReactFigure
+                  exportRoute={opt.route}
+                  title={opt.frameLabel}
+                  assetId={opt.assetId}
+                  reflowMode={opt.reflowMode}
+                />
+              </DialogueRachelFrame>
+            </div>
+          ))}
+        </div>
       </div>
       <p className="dialogue-placement-compare__decision">
         Decision: Instead of a docked sidebar, I kept the floating chat.

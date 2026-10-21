@@ -1843,7 +1843,7 @@ html[data-theme="light"] {
   border-radius: 0;
 }
 .dialogue-case-study .cs-content {
-  overflow-x: clip;
+  overflow-x: visible;
 }
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media {
   border-radius: 0;
@@ -1870,6 +1870,9 @@ html[data-theme="light"] {
   border-radius: 0;
   box-sizing: border-box;
 }
+.dialogue-rachel-frame {
+  overflow: visible;
+}
 .dialogue-rachel-frame--problem {
   background: rgb(245, 232, 160);
 }
@@ -1889,7 +1892,30 @@ html[data-theme="light"] {
   font-size: 13px;
   font-weight: 500;
   line-height: 1.35;
-  color: var(--color-text-primary);
+  color: #1a1816 !important;
+}
+.dialogue-rachel-frame--problem .dialogue-rachel-frame__label,
+.dialogue-rachel-frame--chart .dialogue-rachel-frame__label,
+.dialogue-rachel-frame--solution .dialogue-rachel-frame__label {
+  color: #1c1917 !important;
+}
+.dialogue-rachel-frame__pad {
+  overflow: visible;
+}
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  background: #f8f6f3;
+}
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure,
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-react-figure__iframe {
+  height: 100% !important;
+  min-height: 100%;
+}
+.dialogue-case-study .decision-block__option .dialogue-rachel-frame,
+.dialogue-case-study .decision-block__option .dialogue-react-figure {
+  overflow: visible;
 }
 .dialogue-rachel-frame__pad {
   padding: 20px;
@@ -1987,17 +2013,10 @@ html[data-theme="light"] {
   margin-top: 24px;
 }
 .dialogue-case-study .decision-block {
-  width: min(134%, calc(100vw - var(--page-px) * 2));
-  max-width: none;
-  margin-left: 50%;
-  transform: translateX(-50%);
-}
-@media (max-width: 767px) {
-  .dialogue-case-study .decision-block {
-    width: 100%;
-    margin-left: 0;
-    transform: none;
-  }
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  transform: none;
 }
 .dialogue-chart-gallery__caption {
   grid-column: 1 / -1;

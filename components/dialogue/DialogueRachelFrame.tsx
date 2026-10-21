@@ -25,7 +25,11 @@ export default function DialogueRachelFrame({
         .filter(Boolean)
         .join(" ")}
     >
-      {label ? <span className="dialogue-rachel-frame__label">{label}</span> : null}
+      {label ? (
+        <span className="dialogue-rachel-frame__label" style={{ color: "#1a1816" }}>
+          {label}
+        </span>
+      ) : null}
       <div className="dialogue-rachel-frame__pad">{children}</div>
     </div>
   );
