@@ -1,13 +1,84 @@
 #!/usr/bin/env node
 /**
  * Round 35 verification: /dialogue in-page product figures (no iframes).
- * Run against production: `npm run build && npm run start` then this script.
+ * Defaults to a dedicated production port (3020) so a stale `next dev` on 3000
+ * cannot poison captures. Override with BASE_URL only when it serves `next start`.
  */
 import { chromium } from "playwright";
+import { spawn } from "node:child_process";
+import { createConnection } from "node:net";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "node:url";
 
-const BASE = process.env.BASE_URL || "http://localhost:3000";
+const ROOT = path.dirname(fileURLToPath(import.meta.url)) + "/..";
+const ROUND35_PORT = Number(process.env.ROUND35_PORT || 3020);
+
+async function portOpen(port) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ port, host: "127.0.0.1" }, () => {
+      socket.end();
+      resolve(true);
+    });
+    socket.on("error", () => resolve(false));
+  });
+}
+
+async function fetchDialogue(base) {
+  const res = await fetch(`${base}/dialogue`, { redirect: "follow" });
+  const text = await res.text();
+  return { status: res.status, text };
+}
+
+function devMarkerFromHtml(html) {
+  if (html.includes("<nextjs-portal")) return "nextjs-portal";
+  if (html.includes("browser_dev_hmr") || html.includes("[turbopack]_browser_dev_hmr")) {
+    return "turbopack-hmr";
+  }
+  return null;
+}
+
+async function ensureProductionBase() {
+  if (process.env.BASE_URL) {
+    const { status, text } = await fetchDialogue(process.env.BASE_URL);
+    if (status !== 200) {
+      throw new Error(`BASE_URL ${process.env.BASE_URL}/dialogue returned HTTP ${status}`);
+    }
+    const dev = devMarkerFromHtml(text);
+    if (dev) throw new Error(`BASE_URL is Next dev (${dev}); use next start`);
+    return process.env.BASE_URL.replace(/\/$/, "");
+  }
+
+  const base = `http://127.0.0.1:${ROUND35_PORT}`;
+  if (await portOpen(ROUND35_PORT)) {
+    const { status, text } = await fetchDialogue(base);
+    if (status === 200 && !devMarkerFromHtml(text)) return base;
+  }
+
+  if (process.env.ROUND35_SKIP_SERVER === "1") {
+    throw new Error(
+      `No production server on port ${ROUND35_PORT}. Run: npm run build && npm run start -- -p ${ROUND35_PORT}`,
+    );
+  }
+
+  const child = spawn("npm", ["run", "start", "--", "-p", String(ROUND35_PORT)], {
+    cwd: ROOT,
+    stdio: "ignore",
+    detached: true,
+    env: { ...process.env, NODE_ENV: "production" },
+  });
+  child.unref();
+
+  for (let i = 0; i < 90; i++) {
+    await new Promise((r) => setTimeout(r, 1000));
+    if (!(await portOpen(ROUND35_PORT))) continue;
+    const { status, text } = await fetchDialogue(base);
+    if (status === 200 && !devMarkerFromHtml(text)) return base;
+  }
+  throw new Error(`Production server did not become ready on port ${ROUND35_PORT}`);
+}
+
+const BASE = await ensureProductionBase();
 const ARTIFACT_ROOT = process.env.ROUND35_STORE || "/opt/cursor/artifacts/dialogue-round35-sections";
 const SELF_STORE = "/cursor/stores/self/round35";
 const fontConfig = process.env.FONTCONFIG_FILE || "/tmp/dialogue-fonts/fonts.conf";
@@ -76,11 +147,45 @@ for (const vp of VIEWPORTS) {
 
   const devOverlay = await page.evaluate(() => {
     if (document.querySelector("[data-nextjs-dev-tools-button]")) return "dev-tools-button";
+    if (document.querySelector("[data-nextjs-toast]")) return "data-nextjs-toast";
+    if (document.querySelector("nextjs-portal")) return "nextjs-portal";
+    for (const script of document.scripts) {
+      const src = script.src || "";
+      if (src.includes("browser_dev_hmr") || src.includes("hmr-client_ts")) return "hmr-script";
+    }
     const buttons = [...document.querySelectorAll("button")];
     if (buttons.some((b) => /\d+\s*issue/i.test(b.textContent || ""))) return "issue-pill";
     return null;
   });
   if (devOverlay) report.issues.push(`dev-overlay@${vp.name}:${devOverlay}`);
+
+  if (vp.width <= 420) {
+    const gutterHits = await page.evaluate(() => {
+      const hits = [];
+      const minX = 16;
+      document.querySelectorAll(".dialogue-case-study article section[id]").forEach((sec) => {
+        sec.querySelectorAll("h2, .cs-prose").forEach((el) => {
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          let node;
+          while ((node = walker.nextNode())) {
+            if (!node.textContent?.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            const rect = range.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) continue;
+            if (rect.left < minX) {
+              hits.push(`${sec.id}:${el.tagName}:${Math.round(rect.left)}`);
+              break;
+            }
+          }
+        });
+      });
+      return [...new Set(hits)];
+    });
+    for (const hit of gutterHits) {
+      report.issues.push(`section-gutter@${vp.name}:${hit}`);
+    }
+  }
   for (const err of pageErrors) {
     if (err.includes("hydrat")) report.issues.push(`pageerror@${vp.name}:hydration`);
     else report.issues.push(`pageerror@${vp.name}:${err.slice(0, 80)}`);
@@ -423,7 +528,13 @@ await browser.close();
 
 console.log(
   JSON.stringify(
-    { issues: report.issues, count: report.issues.length, reportPath, selfStore: SELF_STORE },
+    {
+      baseUrl: BASE,
+      issues: report.issues,
+      count: report.issues.length,
+      reportPath,
+      selfStore: SELF_STORE,
+    },
     null,
     2,
   ),

@@ -2014,6 +2014,14 @@ html[data-theme="light"] {
   gap: 16px;
   margin-top: 24px;
 }
+@media (max-width: 767px) {
+  /* Match Rachel frame label inset (20px) so section titles align with chart cards. */
+  .dialogue-case-study article section[id] h2,
+  .dialogue-case-study article section[id] .cs-prose {
+    padding-inline: 20px;
+    box-sizing: border-box;
+  }
+}
 .dialogue-case-study .decision-block {
   width: 100%;
   max-width: 100%;
