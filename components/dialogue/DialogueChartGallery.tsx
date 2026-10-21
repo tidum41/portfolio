@@ -1,29 +1,30 @@
 "use client";
 
-import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
+import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
+import type { GalleryVariant } from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
 
-const CHART_EXPORTS: { route: string; title: string; label: string }[] = [
-  { route: "visual-1", title: "Trend line chart answer", label: "Trend over rounds" },
-  { route: "visual-4", title: "Funnel chart answer", label: "Drop-off by step" },
-  { route: "visual-2", title: "Chart response variant 2", label: "Segment comparison" },
-  { route: "visual-3", title: "Chart response variant 3", label: "Distribution" },
-  { route: "visual-4", title: "Chart response variant 4", label: "Theme ranking" },
-  { route: "visual-5", title: "Chart response variant 5", label: "Quote frequency" },
-  { route: "visual-6", title: "Chart response variant 6", label: "Timeline of moments" },
-  { route: "section-3a", title: "Chart-led answer variant", label: "Coverage callout" },
+const CHART_EXPORTS: { variant: GalleryVariant; label: string; assetId?: string }[] = [
+  { variant: "trend", label: "Trend over rounds", assetId: "D-09" },
+  { variant: "funnel", label: "Drop-off by step" },
+  { variant: "segment", label: "Segment comparison" },
+  { variant: "distribution", label: "Distribution" },
+  { variant: "theme", label: "Theme ranking" },
+  { variant: "quote-freq", label: "Quote frequency" },
+  { variant: "timeline", label: "Timeline of moments" },
+  { variant: "coverage", label: "Coverage callout" },
 ];
 
 export default function DialogueChartGallery() {
   return (
     <div className="dialogue-chart-gallery">
-      {CHART_EXPORTS.map((item, i) => (
-        <div key={item.route} className="dialogue-chart-gallery__cell">
+      {CHART_EXPORTS.map((item) => (
+        <div key={item.label} className="dialogue-chart-gallery__cell">
           <DialogueRachelFrame label={item.label} tone="chart">
-            <DialogueReactFigure
-              exportRoute={item.route}
-              title={item.title}
-              assetId={i === 0 ? "D-09" : undefined}
+            <DialogueProductFigure
+              scenario={{ gallery: item.variant }}
+              title={item.label}
+              assetId={item.assetId}
             />
           </DialogueRachelFrame>
         </div>

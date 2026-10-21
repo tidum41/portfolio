@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
+import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
 const OPTIONS = [
@@ -10,23 +10,22 @@ const OPTIONS = [
     title: "Docked sidebar",
     priorityLine: "The priority is persistence over focus.",
     frameLabel: "Explored: docked sidebar",
-    route: "section-6b",
-    reflowMode: "placement" as const,
+    scenario: "placement-docked" as const,
     assetId: "D-13",
   },
   {
     id: "bubble" as const,
     title: "Floating bubble",
     priorityLine: "The priority is focus over always-on chrome.",
-    frameLabel: "Kept: floating bubble",
-    route: "section-6",
-    reflowMode: "placement" as const,
+    frameLabel: "Kept: floating bubble (open)",
+    scenario: "placement-bubble" as const,
     assetId: "D-14",
   },
 ];
 
 export default function DialoguePlacementCompare() {
   const [active, setActive] = useState<"sidebar" | "bubble">("bubble");
+
   return (
     <div className="dialogue-placement-compare">
       <div className="dialogue-placement-compare__layout">
@@ -60,11 +59,10 @@ export default function DialoguePlacementCompare() {
               hidden={active !== opt.id}
             >
               <DialogueRachelFrame label={opt.frameLabel} tone="neutral">
-                <DialogueReactFigure
-                  exportRoute={opt.route}
+                <DialogueProductFigure
+                  scenario={opt.scenario}
                   title={opt.frameLabel}
                   assetId={opt.assetId}
-                  reflowMode={opt.reflowMode}
                 />
               </DialogueRachelFrame>
             </div>
@@ -77,6 +75,11 @@ export default function DialoguePlacementCompare() {
       <p className="dialogue-placement-compare__tradeoff">
         The tradeoff is the chat stays one tap away instead of always visible on the study canvas.
       </p>
+      {active === "bubble" ? (
+        <p className="dialogue-placement-compare__tradeoff" style={{ marginTop: 4 }}>
+          Collapsed state: magenta launcher bubble in the corner until opened.
+        </p>
+      ) : null}
     </div>
   );
 }

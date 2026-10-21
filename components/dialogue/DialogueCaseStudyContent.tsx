@@ -8,7 +8,9 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DecisionBlock from "@/components/DecisionBlock";
 import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
-import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
+import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
+import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
+import "@/components/dialogue/product/dialogue-product.css";
 import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
@@ -75,15 +77,15 @@ function H2({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ReactFigureBlock({
-  exportRoute,
+function ProductFigureBlock({
+  scenario,
   title,
   assetId,
   wrapRaster,
   frameLabel,
   frameTone,
 }: {
-  exportRoute: string;
+  scenario: DialogueProductScenario;
   title: string;
   assetId?: string;
   wrapRaster?: RasterAnnotator;
@@ -93,7 +95,7 @@ function ReactFigureBlock({
   const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "neutral");
   const media = (
     <DialogueRachelFrame label={frameLabel} tone={tone}>
-      <DialogueReactFigure exportRoute={exportRoute} title={title} assetId={assetId} />
+      <DialogueProductFigure scenario={scenario} title={title} assetId={assetId} />
     </DialogueRachelFrame>
   );
   const wrapped = assetId && wrapRaster ? wrapRaster(assetId, media) : media;
@@ -153,21 +155,21 @@ export function DialogueCaseStudyContent({
               ? wrap(
                   "D-01",
                   <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueReactFigure
-                      exportRoute="hero"
+                    <DialogueProductFigure
+                      scenario="hero"
                       title="Study chat structured answer hero"
                       assetId="D-01"
-                      reflowMode="hero-fill"
+                      className="dialogue-product-figure--hero-fill"
                     />
                   </div>,
                 )
               : (
                   <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueReactFigure
-                      exportRoute="hero"
+                    <DialogueProductFigure
+                      scenario="hero"
                       title="Study chat structured answer hero"
                       assetId="D-01"
-                      reflowMode="hero-fill"
+                      className="dialogue-product-figure--hero-fill"
                     />
                   </div>
                 )}
@@ -183,8 +185,8 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Teams could not see which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
-              <ReactFigureBlock
-                exportRoute="section-1"
+              <ProductFigureBlock
+                scenario="problem-paragraphs"
                 title="Study chat answer as three dense paragraphs with no linked sources"
                 assetId="D-02"
                 wrapRaster={wrap}
@@ -203,10 +205,7 @@ export function DialogueCaseStudyContent({
                     priorityLine: "The priority is prose over evidence.",
                     howeverLine:
                       "However, you still cannot see who said what, or how many interviews agree.",
-                    liveExport: {
-                      exportRoute: "section-1",
-                      title: "Study chat answer as three paragraphs of prose with no structure",
-                    },
+                    productScenario: "decision-paragraphs",
                     rasterAssetId: "D-04",
                   },
                   {
@@ -214,10 +213,7 @@ export function DialogueCaseStudyContent({
                     title: "Quote list",
                     priorityLine: "The priority is fidelity over synthesis.",
                     howeverLine: "However, there is no answer line. You still do the counting.",
-                    liveExport: {
-                      exportRoute: "section-2",
-                      title: "Study chat answer as a list of interview quotes without a summary",
-                    },
+                    productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
                   {
@@ -226,10 +222,7 @@ export function DialogueCaseStudyContent({
                     priorityLine: "The priority is clarity over raw quotes.",
                     selectionNote: "We went with this",
                     reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
-                    liveExport: {
-                      exportRoute: "section-4",
-                      title: "Study chat answer with a summary line, chart, and linked clips",
-                    },
+                    productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
                 ]}
@@ -249,8 +242,8 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
               </CaseStudyBody>
-              <ReactFigureBlock
-                exportRoute="section-3"
+              <ProductFigureBlock
+                scenario="anatomy"
                 title="Study chat answer card with numbered callouts for sources through follow-ups"
                 assetId="D-08"
                 wrapRaster={wrap}
@@ -269,8 +262,8 @@ export function DialogueCaseStudyContent({
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
-              <ReactFigureBlock
-                exportRoute="section-5"
+              <ProductFigureBlock
+                scenario="clip-player"
                 title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 assetId="D-10"
                 wrapRaster={wrap}
@@ -292,8 +285,8 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
-              <ReactFigureBlock
-                exportRoute="section-7"
+              <ProductFigureBlock
+                scenario="full-answer"
                 title="Structured answer card beside a drawer listing every clip behind the answer"
                 assetId="D-15"
                 wrapRaster={wrap}

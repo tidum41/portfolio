@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
-import DialogueReactFigure from "@/components/dialogue/DialogueReactFigure";
+import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
+import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
 export type RasterAnnotator = (assetId: string, children: ReactNode) => ReactNode;
@@ -24,6 +25,7 @@ export type DecisionBlockOption = {
   imageSrc?: string;
   imageAlt?: string;
   liveExport?: { exportRoute: string; title: string };
+  productScenario?: DialogueProductScenario;
   rasterAssetId?: string;
   imageNaturalSize?: { width: number; height: number };
 };
@@ -75,10 +77,18 @@ function OptionCard({
   imageNaturalSize?: { width: number; height: number };
 }) {
   const size = option.imageNaturalSize ?? imageNaturalSize;
-  const figure = option.liveExport ? (
+  const figure = option.productScenario ? (
     <DialogueRachelFrame tone="neutral">
-      <DialogueReactFigure
-        exportRoute={option.liveExport.exportRoute}
+      <DialogueProductFigure
+        scenario={option.productScenario}
+        title={option.title}
+        assetId={option.rasterAssetId}
+      />
+    </DialogueRachelFrame>
+  ) : option.liveExport ? (
+    <DialogueRachelFrame tone="neutral">
+      <DialogueProductFigure
+        scenario="decision-paragraphs"
         title={option.liveExport.title}
         assetId={option.rasterAssetId}
       />

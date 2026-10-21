@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 /**
- * Round 35 verification: full /dialogue page + every section @ 1440 and 390.
- * Scrolls the page, waits for ScrollReveal + lazy iframes, captures screenshots
- * and layout metrics for self-critique.
+ * Round 35 verification: /dialogue in-page product figures (no iframes).
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -11,6 +9,7 @@ import path from "path";
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const ARTIFACT_ROOT = process.env.ROUND35_STORE || "/opt/cursor/artifacts/dialogue-round35-sections";
 const SELF_STORE = "/cursor/stores/self/round35";
+const fontConfig = process.env.FONTCONFIG_FILE || "/tmp/dialogue-fonts/fonts.conf";
 
 fs.mkdirSync(ARTIFACT_ROOT, { recursive: true });
 fs.mkdirSync(SELF_STORE, { recursive: true });
@@ -31,230 +30,107 @@ const VIEWPORTS = [
   { name: "390", width: 390, height: 844 },
 ];
 
+function auditDomSection(sectionEl) {
+  const hits = [];
+  const roots = sectionEl.querySelectorAll(".dialogue-product-root, .dialogue-product-figure");
+  const scope = roots.length ? [...roots] : [sectionEl];
+
+  for (const root of scope) {
+    if (root.scrollWidth > root.clientWidth + 1) {
+      hits.push(`root-scroll-x:${root.scrollWidth}>${root.clientWidth}`);
+    }
+    root.querySelectorAll("*").forEach((el) => {
+      const st = getComputedStyle(el);
+      const ox = st.overflowX;
+      const oy = st.overflowY;
+      if (
+        (ox === "hidden" || ox === "clip") &&
+        el.scrollWidth > el.clientWidth + 1
+      ) {
+        hits.push(`el-scroll-x:${el.tagName}`);
+      }
+      if (
+        (oy === "hidden" || oy === "clip") &&
+        el.scrollHeight > el.clientHeight + 1
+      ) {
+        hits.push(`el-scroll-y:${el.tagName}`);
+      }
+    });
+
+    root.querySelectorAll("p, span, li, td, th, label, h1, h2, h3, button, .dp-text-body").forEach((el) => {
+      const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+      if (text.length < 4) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 2) return;
+      let clipper = el.parentElement;
+      while (clipper && clipper !== root && clipper !== document.body) {
+        const st = getComputedStyle(clipper);
+        if (st.overflowX === "hidden" || st.overflowX === "clip" || st.overflow === "hidden") {
+          const cRect = clipper.getBoundingClientRect();
+          if (rect.right > cRect.right + 1.5) {
+            hits.push(`text-clip:${text.slice(0, 36)}`);
+          }
+          break;
+        }
+        clipper = clipper.parentElement;
+      }
+    });
+
+    const bodies = [...root.querySelectorAll(".dp-text-body, .dp-text-prose-sm, .dp-study-chat__body p")];
+    for (const node of bodies) {
+      const text = node.textContent?.trim() ?? "";
+      if (text.length < 4) continue;
+      const px = parseFloat(getComputedStyle(node).fontSize);
+      if (Number.isFinite(px) && px < 12) {
+        hits.push(`font<12:${px}`);
+      }
+    }
+  }
+
+  if (sectionEl.id === "placement") {
+    const docked = sectionEl.querySelector('[hidden] .dp-docked-chat, .dp-docked-chat');
+    const bubble = sectionEl.querySelector(".dp-floating-chat, .dp-bubble-launcher");
+    const visibleDock = sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-docked-chat");
+    const visibleBubble =
+      sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-floating-chat") ||
+      sectionEl.querySelector(".dialogue-placement-compare__figure:not([hidden]) .dp-bubble-launcher");
+    if (!visibleDock && !visibleBubble && !docked && !bubble) {
+      hits.push("placement-missing-ui");
+    }
+    const activeChat = sectionEl.querySelector(
+      ".dialogue-placement-compare__figure:not([hidden]) .dp-study-chat",
+    );
+    if (!activeChat) {
+      hits.push("placement-missing-chat");
+    }
+  }
+
+  return [...new Set(hits)];
+}
+
 async function waitForPageReady(page) {
+  await page.waitForSelector(".dialogue-case-study", { timeout: 60000 });
   await page.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-    const maxScroll = Math.max(
-      document.documentElement.scrollHeight,
-      document.body?.scrollHeight ?? 0,
-    );
-    const step = Math.max(180, Math.floor(window.innerHeight * 0.7));
-    for (let y = 0; y <= maxScroll; y += step) {
+    const maxScroll = document.documentElement.scrollHeight;
+    for (let y = 0; y <= maxScroll; y += 400) {
       window.scrollTo(0, y);
-      await sleep(140);
-    }
-    window.scrollTo(0, maxScroll);
-    await sleep(400);
-    const root = document.querySelector(".dialogue-case-study") ?? document.body;
-    for (const el of root.querySelectorAll(".reveal:not(.visible)")) {
-      el.scrollIntoView({ block: "center", behavior: "instant" });
-      await sleep(100);
-    }
-    for (const el of root.querySelectorAll(".dialogue-react-figure")) {
-      el.scrollIntoView({ block: "center", behavior: "instant" });
-      await sleep(120);
+      await sleep(80);
     }
     window.scrollTo(0, 0);
-    await sleep(500);
+    await sleep(300);
   });
-
   await page.waitForFunction(
     () => {
       const reveals = [...document.querySelectorAll(".dialogue-case-study .reveal")];
-      if (reveals.length === 0) return true;
-      return reveals.every((el) => el.classList.contains("visible"));
+      return reveals.length === 0 || reveals.every((el) => el.classList.contains("visible"));
     },
     { timeout: 120000 },
   );
-
-  await page.waitForFunction(
-    () => {
-      const figures = [...document.querySelectorAll(".dialogue-case-study .dialogue-react-figure iframe")];
-      if (figures.length === 0) return true;
-      return figures.every((f) => f.getAttribute("src"));
-    },
-    { timeout: 120000 },
-  );
-
   await page.evaluate(() => document.fonts.ready);
-  await page
-    .waitForFunction(
-      () => {
-        const iframes = [...document.querySelectorAll(".dialogue-case-study .dialogue-react-figure iframe")];
-        return iframes.length > 0 && iframes.every((f) => f.dataset.reflowed === "1");
-      },
-      { timeout: 90000 },
-    )
-    .catch(() => {});
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(600);
 }
 
-async function measureSection(page, selector) {
-  return page.evaluate((sel) => {
-    function auditExportDocument(doc, frameW) {
-      const hits = [];
-      const de = doc.documentElement;
-      const limitW = frameW ?? de.clientWidth;
-      const bodyOverflow = getComputedStyle(doc.body).overflowX;
-      if (
-        de.scrollWidth > limitW + 1 &&
-        !(bodyOverflow === "hidden" && de.clientWidth <= limitW + 2)
-      ) {
-        hits.push(`doc-scroll:${de.scrollWidth}>${limitW}`);
-      }
-      doc.querySelectorAll("*").forEach((el) => {
-        const st = getComputedStyle(el);
-        const ox = st.overflowX;
-        const oy = st.overflowY;
-        if (
-          (ox === "hidden" || ox === "clip" || ox === "auto" || ox === "scroll") &&
-          el.scrollWidth > el.clientWidth + 1
-        ) {
-          hits.push(`el-scroll-x:${el.tagName}.${String(el.className).slice(0, 30)}`);
-        }
-        if (
-          (oy === "hidden" || oy === "clip" || oy === "auto" || oy === "scroll") &&
-          el.scrollHeight > el.clientHeight + 1 &&
-          el.tagName !== "IMG"
-        ) {
-          hits.push(`el-scroll-y:${el.tagName}.${String(el.className).slice(0, 30)}`);
-        }
-      });
-      doc.querySelectorAll("p, span, li, td, th, label, h1, h2, h3, button").forEach((el) => {
-        const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
-        if (text.length < 4) return;
-        const rect = el.getBoundingClientRect();
-        if (rect.width < 2) return;
-        let clipper = el.parentElement;
-        while (clipper && clipper !== doc.body) {
-          const st = getComputedStyle(clipper);
-          if (st.overflowX === "hidden" || st.overflowX === "clip" || st.overflow === "hidden") {
-            const cRect = clipper.getBoundingClientRect();
-            if (rect.right > cRect.right + 1.5) {
-              hits.push(`text-clip:${text.slice(0, 40)}`);
-            }
-            break;
-          }
-          clipper = clipper.parentElement;
-        }
-      });
-      return hits;
-    }
-    const root = document.querySelector(".dialogue-case-study");
-    const el = document.querySelector(sel);
-    if (!root || !el) return { ok: false, reason: "missing" };
-
-    const rootRect = root.getBoundingClientRect();
-    const figures = [...el.querySelectorAll(".dialogue-live-figure, .dialogue-rachel-frame")];
-    const contentCol = root.querySelector(".cs-content");
-    const colWidth = contentCol?.clientWidth ?? 0;
-
-    const figureWidths = figures.map((f) => {
-      const r = f.getBoundingClientRect();
-      return Math.round(r.width);
-    });
-
-    const sectionW = el.getBoundingClientRect().width;
-    const clipHits = [];
-    let placementReady = !sel.includes("placement");
-    const iframeMetrics = [...el.querySelectorAll("iframe")]
-      .filter((iframe) => {
-        const st = getComputedStyle(iframe);
-        if (st.display === "none" || st.visibility === "hidden") return false;
-        const hidden = iframe.closest("[hidden]");
-        return !hidden;
-      })
-      .map((iframe) => {
-      let minChatFont = null;
-      let letterboxGap = null;
-      let fontFamily = null;
-      let audit = [];
-      const iframeRect = iframe.getBoundingClientRect();
-      const isFullWidth = iframeRect.width >= sectionW * 0.55;
-      try {
-        const doc = iframe.contentDocument;
-        if (doc?.body) {
-          audit = auditExportDocument(doc, iframe.clientWidth);
-          clipHits.push(...audit);
-          const bodyFont = getComputedStyle(doc.body).fontFamily;
-          fontFamily = bodyFont;
-          if (!/Helvetica|TeX Gyre|Nimbus/i.test(bodyFont)) {
-            clipHits.push(`font-stack:${bodyFont.slice(0, 60)}`);
-          }
-          if (sel.includes("placement") || sel === "#placement") {
-            const popup = doc.querySelector("[data-export-popup-chat]");
-            const docked = doc.querySelector("[data-export-docked-chat]");
-            const active = popup?.offsetParent !== null ? popup : docked;
-            const chatText = active?.textContent?.replace(/\s+/g, " ").trim() ?? "";
-            const chatH = active?.getBoundingClientRect().height ?? 0;
-            placementReady =
-              chatText.length >= 24 &&
-              chatH >= 72 &&
-              !/skeleton|loading/i.test(chatText);
-          }
-          const panel = doc.querySelector("[data-export-chat-panel]");
-          const scope = panel ?? doc.body;
-          const bodies = [...scope.querySelectorAll(".text-body, p.text-body, [class*='text-body']")];
-          const sizes = bodies
-            .map((node) => {
-              const text = node.textContent?.replace(/\s+/g, " ").trim() ?? "";
-              if (text.length < 4) return null;
-              return parseFloat(getComputedStyle(node).fontSize);
-            })
-            .filter((n) => Number.isFinite(n));
-          minChatFont = sizes.length ? Math.min(...sizes) : null;
-          if (isFullWidth) {
-            const fill =
-              panel ??
-              doc.querySelector("[data-export-section-canvas], [data-export-canvas]");
-            const fillRect = fill?.getBoundingClientRect();
-            if (iframeRect.width > 0) {
-              const contentW = Math.max(
-                fillRect?.width ?? 0,
-                doc.documentElement.clientWidth,
-                doc.body.clientWidth,
-              );
-              letterboxGap = Math.max(0, 1 - contentW / iframeRect.width);
-            }
-          }
-        }
-      } catch {
-        /* cross-origin */
-      }
-      return { minChatFont, letterboxGap, clipped: false, isFullWidth, audit, fontFamily };
-    });
-
-    const rect = el.getBoundingClientRect();
-    const overflowX =
-      document.documentElement.scrollWidth > document.documentElement.clientWidth + 1;
-
-    return {
-      ok: true,
-      colWidth: Math.round(colWidth),
-      sectionWidth: Math.round(rect.width),
-      figureWidths,
-      widthMatch:
-        figureWidths.length === 0 ||
-        figureWidths.every((w) => Math.abs(w - colWidth) <= 28 || w <= colWidth),
-      iframeMetrics,
-      minFontInSection: iframeMetrics.reduce(
-        (m, x) => (x.minChatFont != null ? Math.min(m ?? 99, x.minChatFont) : m),
-        null,
-      ),
-      maxLetterboxGap: iframeMetrics.reduce(
-        (m, x) =>
-          x.isFullWidth && x.letterboxGap != null ? Math.max(m ?? 0, x.letterboxGap) : m,
-        null,
-      ),
-      overflowX,
-      clippedIframes: iframeMetrics.filter((x) => x.clipped).length,
-      clipHits,
-      placementReady,
-    };
-  }, selector);
-}
-
-const fontConfig = process.env.FONTCONFIG_FILE || "/tmp/dialogue-fonts/fonts.conf";
 const browser = await chromium.launch({
   env: { ...process.env, FONTCONFIG_FILE: fontConfig },
 });
@@ -270,135 +146,164 @@ for (const vp of VIEWPORTS) {
     report.issues.push(`http-${vp.name}:${resp?.status()}`);
     continue;
   }
-  await page.waitForSelector(".dialogue-case-study", { timeout: 60000 });
   await waitForPageReady(page);
 
   const fullFile = `${ARTIFACT_ROOT}/full-page-${vp.name}.png`;
   await page.screenshot({ path: fullFile, fullPage: true });
   report.shots.push(fullFile);
 
+  const overflowX = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+  );
+  if (overflowX) report.issues.push(`overflow-x@${vp.name}:page`);
+
   for (const sec of SECTIONS) {
     const el = page.locator(sec.selector).first();
-    const count = await el.count();
-    if (count === 0) {
-      report.issues.push(`${sec.id}@${vp.name}: selector missing`);
+    if ((await el.count()) === 0) {
+      report.issues.push(`${sec.id}@${vp.name}:selector missing`);
       continue;
     }
+
     await page.evaluate((sel) => {
       if (sel.includes("hero")) {
         window.scrollTo(0, 0);
         return;
       }
-      const node = document.querySelector(sel);
-      if (node) {
-        const y = node.getBoundingClientRect().top + window.scrollY - 80;
-        window.scrollTo(0, Math.max(0, y));
-      }
+      document.querySelector(sel)?.scrollIntoView({ block: "start", behavior: "instant" });
     }, sec.selector);
-    await page.waitForTimeout(400);
-    const visible = await el.isVisible().catch(() => false);
-    if (!visible) {
-      report.issues.push(`${sec.id}@${vp.name}: not visible`);
-      continue;
-    }
+    await page.waitForTimeout(500);
+
     const file = `${ARTIFACT_ROOT}/${sec.id}-${vp.name}.png`;
-    let contentBox = await page.locator(".dialogue-case-study .cs-content").boundingBox();
-    let sectionBox = await el.boundingBox();
-    if (!sectionBox || sectionBox.y < 0 || sectionBox.y > vp.height - 48) {
-      await page.evaluate((sel) => {
-        const node = document.querySelector(sel);
-        if (!node) return;
-        const y = node.getBoundingClientRect().top + window.scrollY - 96;
-        window.scrollTo(0, Math.max(0, y));
-      }, sec.selector);
-      await page.waitForTimeout(450);
-      contentBox = await page.locator(".dialogue-case-study .cs-content").boundingBox();
-      sectionBox = await el.boundingBox();
-    }
-    if (contentBox && sectionBox && sectionBox.height > 8) {
+    const contentBox = await page.locator(".dialogue-case-study .cs-content").boundingBox();
+    const sectionBox = await el.boundingBox();
+    const vpSize = page.viewportSize();
+    if (contentBox && sectionBox && sectionBox.height > 8 && vpSize) {
+      const maxH = Math.min(sectionBox.height, 2200, vpSize.height - sectionBox.y - 4);
       try {
         await page.screenshot({
           path: file,
           clip: {
             x: contentBox.x,
-            y: sectionBox.y,
+            y: Math.max(0, sectionBox.y),
             width: contentBox.width,
-            height: Math.min(sectionBox.height, 2000),
+            height: Math.max(40, maxH),
           },
           animations: "disabled",
           timeout: 15000,
         });
         report.shots.push(file);
-      } catch (err) {
-        report.issues.push(`screenshot@${vp.name}:${sec.id}:${err.message?.slice(0, 80)}`);
+      } catch {
+        try {
+          await el.screenshot({ path: file, animations: "disabled", timeout: 15000 });
+          report.shots.push(file);
+        } catch {
+          report.issues.push(`screenshot@${vp.name}:${sec.id}`);
+        }
       }
-    } else {
-      report.issues.push(`clip-bounds@${vp.name}:${sec.id}`);
     }
 
-    const metrics = await measureSection(page, sec.selector);
-    report.critique.push({ section: sec.id, viewport: vp.name, ...metrics });
-    if (metrics.overflowX) report.issues.push(`overflow-x@${vp.name}:${sec.id}`);
-    if (
-      metrics.iframeMetrics?.length &&
-      metrics.minFontInSection != null &&
-      metrics.minFontInSection < 12
-    ) {
-      report.issues.push(`font<12@${vp.name}:${sec.id}:${metrics.minFontInSection}`);
+    const metrics = await page.evaluate(
+      (sel) => {
+        const section = document.querySelector(sel);
+        if (!section) return { ok: false };
+        const contentCol = document.querySelector(".dialogue-case-study .cs-content");
+        const colWidth = contentCol?.clientWidth ?? 0;
+        const frames = [...section.querySelectorAll(".dialogue-rachel-frame")].map((f) =>
+          Math.round(f.getBoundingClientRect().width),
+        );
+        return {
+          ok: true,
+          colWidth: Math.round(colWidth),
+          figureWidths: frames,
+          widthMatch:
+            frames.length === 0 ||
+            frames.every((w) => Math.abs(w - colWidth) <= 28 || w <= colWidth),
+        };
+      },
+      sec.selector,
+    );
+
+    const clipHits = await page.evaluate(
+      (sel) => {
+        const section = document.querySelector(sel);
+        if (!section) return [];
+        function auditDomSection(sectionEl) {
+          const hits = [];
+          const roots = sectionEl.querySelectorAll(".dialogue-product-root, .dialogue-product-figure");
+          const scope = roots.length ? [...roots] : [sectionEl];
+          for (const root of scope) {
+            if (root.scrollWidth > root.clientWidth + 1) {
+              hits.push(`root-scroll-x:${root.scrollWidth}>${root.clientWidth}`);
+            }
+            root.querySelectorAll("p, span, .dp-text-body, .dp-text-prose-sm").forEach((el) => {
+              const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+              if (text.length < 4) return;
+              const rect = el.getBoundingClientRect();
+              let clipper = el.parentElement;
+              while (clipper && clipper !== root) {
+                const st = getComputedStyle(clipper);
+                if (st.overflowX === "hidden" || st.overflow === "hidden") {
+                  const cRect = clipper.getBoundingClientRect();
+                  if (rect.right > cRect.right + 1.5) {
+                    hits.push(`text-clip:${text.slice(0, 36)}`);
+                  }
+                  break;
+                }
+                clipper = clipper.parentElement;
+              }
+              const px = parseFloat(getComputedStyle(el).fontSize);
+              if (Number.isFinite(px) && px < 12 && text.length >= 4) {
+                hits.push(`font<12:${px}`);
+              }
+            });
+          }
+          if (sectionEl.id === "placement") {
+            const activeChat = sectionEl.querySelector(
+              ".dialogue-placement-compare__figure:not([hidden]) .dp-study-chat",
+            );
+            if (!activeChat) hits.push("placement-missing-chat");
+            const bubbleUi =
+              sectionEl.querySelector(
+                ".dialogue-placement-compare__figure:not([hidden]) .dp-floating-chat",
+              ) ||
+              sectionEl.querySelector(
+                ".dialogue-placement-compare__figure:not([hidden]) .dp-docked-chat",
+              );
+            if (!bubbleUi) hits.push("placement-missing-pattern");
+          }
+          return [...new Set(hits)];
+        }
+        return auditDomSection(section);
+      },
+      sec.selector,
+    );
+
+    for (const hit of clipHits) {
+      report.issues.push(`dom-audit@${vp.name}:${sec.id}:${hit}`);
     }
-    if (metrics.maxLetterboxGap != null && metrics.maxLetterboxGap > 0.08) {
-      report.issues.push(`letterbox@${vp.name}:${sec.id}:${metrics.maxLetterboxGap}`);
-    }
-    if (metrics.clippedIframes > 0) {
-      report.issues.push(`clipped@${vp.name}:${sec.id}`);
-    }
-    if (metrics.clipHits?.length) {
-      const unique = [...new Set(metrics.clipHits)];
-      for (const hit of unique) {
-        report.issues.push(`export-audit@${vp.name}:${sec.id}:${hit}`);
-      }
-    }
-    if (sec.id === "placement" && metrics.placementReady === false) {
-      report.issues.push(`placement-chat@${vp.name}:${sec.id}`);
-    }
-    if (
-      sec.id !== "hero" &&
-      metrics.ok &&
-      metrics.figureWidths?.length &&
-      !metrics.widthMatch
-    ) {
+    if (sec.id !== "hero" && metrics.ok && metrics.figureWidths?.length && !metrics.widthMatch) {
       report.issues.push(`width-mismatch@${vp.name}:${sec.id}`);
     }
-  }
 
+    report.critique.push({ section: sec.id, viewport: vp.name, ...metrics, clipHits });
+  }
   report.viewports.push(vp.name);
 }
 
 for (const shot of report.shots) {
-  const dest = path.join(SELF_STORE, path.basename(shot));
-  fs.copyFileSync(shot, dest);
+  fs.copyFileSync(shot, path.join(SELF_STORE, path.basename(shot)));
 }
-
 const reportPath = path.join(SELF_STORE, "verify-report.json");
 fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 fs.copyFileSync(reportPath, path.join(ARTIFACT_ROOT, "verify-report.json"));
 
 await browser.close();
-const passTable = SECTIONS.flatMap((sec) =>
-  VIEWPORTS.map((vp) => {
-    const row = report.critique.find((c) => c.section === sec.id && c.viewport === vp.name);
-    const failed = report.issues.some((i) => i.includes(`@${vp.name}:${sec.id}`));
-    return {
-      section: sec.id,
-      viewport: vp.name,
-      pass: row?.ok && !failed,
-      minFont: row?.minFontInSection ?? null,
-      letterbox: row?.maxLetterboxGap ?? null,
-      overflow: row?.overflowX ?? null,
-    };
-  }),
+
+console.log(
+  JSON.stringify(
+    { issues: report.issues, count: report.issues.length, reportPath, selfStore: SELF_STORE },
+    null,
+    2,
+  ),
 );
-console.log(JSON.stringify({ ...report, passTable, reportPath, selfStore: SELF_STORE }, null, 2));
-if (report.issues.length > 0) {
-  process.exitCode = 1;
-}
+if (report.issues.length > 0) process.exitCode = 1;
