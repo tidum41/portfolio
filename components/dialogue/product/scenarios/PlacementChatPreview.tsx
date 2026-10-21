@@ -5,7 +5,7 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
-/** Placement popup at real panel width (~392px): 16px body, ends on follow-ups. */
+/** Placement popup at real panel width (448px): 14/24 body, ends on follow-ups. */
 export default function PlacementChatPreview() {
   return (
     <StudyChatShell compact>

@@ -7,7 +7,7 @@ const DEFAULT_INNER_W = parseInt(dialogueProductTokens.space.placementChatWidth,
 
 type Props = {
   children: ReactNode;
-  /** Unscaled layout width (default 392px chat panel). */
+  /** Unscaled layout width (default 448px chat panel — t384 live width). */
   innerWidth?: number;
   /** Lock crop height in inner px; when unset, uses measured content height. */
   cropHeight?: number;
@@ -128,7 +128,7 @@ export default function ScaledChatViewport({
       >
         {/*
           Scale wrapper is sized to the integer device-pixel outer box.
-          Inner paints at native 392px type metrics, then zoom/scale as one unit.
+          Inner paints at native 448px type metrics, then zoom/scale as one unit.
         */}
         <div
           ref={innerRef}

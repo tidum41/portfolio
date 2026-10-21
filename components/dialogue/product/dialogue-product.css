@@ -4,6 +4,7 @@
 .dialogue-product-root {
   font-family: var(--dp-font-family);
   font-weight: 400;
+  letter-spacing: normal;
   color: var(--dp-ink);
   box-sizing: border-box;
   width: 100%;
@@ -11,23 +12,30 @@
   overflow: hidden;
 }
 
-/* Paper chat panel typography (`section-3.html` sets 16/24 body, 14/20 meta on panel). */
+/*
+ * t384 role scale — assistant body / user bubble 14/400/24; header 14/500/20;
+ * small (subtitle, chart labels) 12/400/16; meta/pill/quote-header 14/400/20.
+ * Same roles everywhere; figures scale the 448px panel, they do not retune type.
+ */
 .dp-chat-panel-typography,
 .dp-study-chat,
 .dp-viz-card,
 .dp-clip-thumbs,
 .dp-followups {
-  --text-body-size: 16px;
+  --text-body-size: 14px;
   --text-body-leading: 24px;
+  --text-header-size: 14px;
+  --text-header-leading: 20px;
+  --text-small-size: 12px;
+  --text-small-leading: 16px;
   --text-meta-size: 14px;
   --text-meta-leading: 20px;
-}
-
-.dp-study-chat--hero {
-  --text-body-size: 14px;
-  --text-body-leading: 20px;
-  --text-meta-size: 12px;
-  --text-meta-leading: 16px;
+  --text-quote-leading: 22.75px;
+  --text-chart-size: 12px;
+  --text-chart-leading: 16px;
+  --dp-weight-bold: 600;
+  --dp-weight-medium: 500;
+  letter-spacing: normal;
 }
 
 .dialogue-product-root *,
@@ -56,8 +64,8 @@
 }
 
 .dp-text-prose-sm {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
   color: var(--dp-muted);
 }
 
@@ -72,6 +80,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  letter-spacing: normal;
 }
 
 .dp-study-chat__head {
@@ -86,36 +95,38 @@
 }
 
 .dp-study-chat__title {
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  font-weight: 500;
+  font-size: var(--text-header-size);
+  line-height: var(--text-header-leading);
+  font-weight: var(--dp-weight-medium);
   margin: 0;
+  color: var(--dp-ink);
 }
 
 .dp-study-chat__sub {
   margin: 0;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: 400;
   color: var(--dp-muted);
 }
 
 .dp-study-chat__body {
-  padding: 0 28px 28px;
+  padding: 0 var(--dp-chat-pad) var(--dp-chat-pad);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--dp-chat-gap);
   min-width: 0;
 }
 
 .dp-study-chat:not(.dp-study-chat--hero) .dp-study-chat__head {
-  padding: 28px 28px 0;
+  padding: var(--dp-chat-pad) var(--dp-chat-pad) 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .dp-study-chat:not(.dp-study-chat--hero) .dp-study-chat__body {
-  padding-top: 16px;
+  padding-top: var(--dp-chat-gap);
 }
 
 .dp-user-bubble {
@@ -127,6 +138,8 @@
   font-size: var(--text-body-size);
   line-height: var(--text-body-leading);
   font-weight: 400;
+  color: var(--dp-ink);
+  letter-spacing: normal;
 }
 
 .dp-search-step-wrap {
@@ -139,9 +152,9 @@
   min-width: 0;
   align-items: flex-start;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border: 1px solid var(--dp-border);
-  border-radius: var(--dp-radius-sm);
+  border-radius: var(--dp-radius-control);
   background: var(--dp-search-bg);
   font: inherit;
   text-align: left;
@@ -151,8 +164,10 @@
 .dp-search-step__text {
   flex: 1;
   min-width: 0;
+  font-family: ui-monospace, "DM Mono", "SFMono-Regular", Menlo, monospace;
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
+  font-weight: 400;
   color: var(--dp-muted);
 }
 
@@ -165,9 +180,9 @@
 }
 
 .dp-viz-card {
-  border-radius: var(--dp-radius-xs);
+  border-radius: var(--dp-radius-control);
   border: 1px solid var(--dp-border);
-  background: var(--dp-surface);
+  background: var(--dp-bg);
   overflow: hidden;
 }
 
@@ -179,16 +194,21 @@
 }
 
 .dp-summary {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: var(--text-body-size);
   line-height: var(--text-body-leading);
   font-weight: 400;
   color: var(--dp-ink);
+  letter-spacing: normal;
+}
+
+.dp-summary:last-child {
+  margin-bottom: 0;
 }
 
 .dp-summary__emph {
-  /* Dialogue token weight — not synthetic bold. */
-  font-weight: 500;
+  /* Product UI bold = 600 (site chrome may still use 500). */
+  font-weight: var(--dp-weight-bold);
   font-synthesis: none;
   -webkit-text-stroke: 0;
   color: var(--dp-ink);
@@ -203,7 +223,10 @@
 
 .dp-funnel__title {
   margin: 0 0 4px;
-  font-size: var(--text-meta-size);
+  /* Chart label role (12/400/16 muted) — chart type not in t384 dump */
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
+  font-weight: 400;
   color: var(--dp-muted);
 }
 
@@ -225,8 +248,9 @@
   width: 110px;
   flex-shrink: 0;
   text-align: right;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
+  font-weight: 400;
   white-space: normal;
   overflow-wrap: break-word;
   color: var(--dp-muted);
@@ -281,8 +305,9 @@
   flex-shrink: 0;
   overflow: visible;
   white-space: nowrap;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
+  font-weight: 400;
   color: var(--dp-muted);
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -290,18 +315,18 @@
 
 .dp-funnel__pct--focal {
   color: var(--dp-brand);
-  font-weight: 500;
+  font-weight: var(--dp-weight-bold);
 }
 
 .dp-funnel__largest {
   margin: 8px 0 0;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
   color: var(--dp-muted);
 }
 
 .dp-funnel__largest-strong {
-  font-weight: 500;
+  font-weight: var(--dp-weight-bold);
   color: var(--dp-ink);
 }
 
@@ -312,10 +337,14 @@
 }
 
 .dp-source-pill {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #f3f1ed;
+  /* Status-pill role: 14/400/20, pad 8×16, radius 14 */
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  padding: 8px 16px;
+  border-radius: var(--dp-radius-control);
+  border: 1px solid var(--dp-border);
+  background: transparent;
   color: var(--dp-muted);
   max-width: 100%;
   overflow: hidden;
@@ -333,15 +362,14 @@
 .dp-followup-btn {
   display: inline-flex;
   align-items: center;
-  height: 36px;
-  padding: 0 12px;
+  padding: 8px 12px;
   border-radius: var(--dp-radius-chip);
   border: 1px solid var(--dp-border);
-  background: var(--dp-surface);
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
-  font-weight: 500;
-  color: var(--dp-muted);
+  background: transparent;
+  font-size: var(--text-header-size);
+  line-height: var(--text-header-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-suggestion);
 }
 
 .dp-chip {
@@ -424,16 +452,17 @@
 
 .dp-clip-card__who {
   font-size: var(--text-meta-size);
-  font-weight: 500;
-  color: var(--dp-brand);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--dp-muted);
   margin: 0;
 }
 
 .dp-clip-card__text {
   margin: 4px 0 0;
   font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  color: var(--dp-muted);
+  line-height: var(--text-quote-leading);
+  color: var(--dp-ink);
   overflow-wrap: anywhere;
 }
 
@@ -442,8 +471,8 @@
 }
 
 .dp-line-chart__summary {
-  font-size: var(--text-summary-size);
-  line-height: var(--text-summary-leading);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
 }
 
 .dp-line-chart svg {
@@ -454,22 +483,26 @@
 
 .dp-line-chart__svg .dp-chart-svg-label,
 .dp-line-chart__svg .dp-chart-svg-value {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--dp-font-family);
   font-size: var(--text-chart-size);
   fill: var(--dp-muted);
 }
 
 .dp-line-chart__svg .dp-chart-svg-value {
   fill: var(--dp-ink);
-  font-weight: 500;
+  font-weight: var(--dp-weight-bold);
 }
 
-/* Section 7 drawer: one shared panel type scale (answer + clip list). */
+/* Section 7 drawer: same t384 role scale as every other chat figure. */
 .dp-full-answer .dp-study-chat {
   --text-body-size: 14px;
-  --text-body-leading: 20px;
+  --text-body-leading: 24px;
+  --text-header-size: 14px;
+  --text-header-leading: 20px;
   --text-meta-size: 14px;
   --text-meta-leading: 20px;
+  --text-chart-size: 12px;
+  --text-chart-leading: 16px;
 }
 
 .dp-full-answer__cluster {
@@ -571,8 +604,8 @@
 }
 
 .dp-hero-compose__main {
-  flex: 0 0 392px;
-  width: 392px;
+  flex: 0 0 448px;
+  width: 448px;
   min-width: 0;
 }
 
@@ -614,36 +647,18 @@
   min-width: 0;
 }
 
+/* Hero uses the same t384 roles; composition is scaled via ScaledChatViewport. */
 .dp-study-chat--hero .dp-study-chat__head {
-  padding: 10px 14px 0;
-}
-
-.dp-study-chat--hero .dp-study-chat__title {
-  font-size: var(--text-body-size);
-}
-
-.dp-study-chat--hero .dp-study-chat__sub {
-  font-size: var(--text-meta-size);
+  padding: var(--dp-chat-pad) var(--dp-chat-pad) 0;
 }
 
 .dp-study-chat--hero .dp-study-chat__body {
-  padding: 8px 12px 10px;
-  gap: 8px;
+  padding: var(--dp-chat-gap) var(--dp-chat-pad) var(--dp-chat-pad);
+  gap: var(--dp-chat-gap);
 }
 
 .dp-study-chat--compact.dp-study-chat--hero .dp-study-chat__body {
-  padding: 8px 12px 10px;
-}
-
-.dp-study-chat--hero .dp-user-bubble {
-  padding: 6px 12px;
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-}
-
-.dp-study-chat--hero .dp-search-step {
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: var(--dp-chat-gap) var(--dp-chat-pad) var(--dp-chat-pad);
 }
 
 .dp-study-page-wrap {
@@ -1077,13 +1092,15 @@
 }
 
 .dp-floating-chat .dp-funnel__label {
-  width: 58px;
-  font-size: 11px;
+  width: 72px;
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
 }
 
 .dp-floating-chat .dp-funnel__pct {
-  width: 34px;
-  font-size: 11px;
+  width: 36px;
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
 }
 
 .dp-floating-chat .dp-funnel__track {
@@ -1108,13 +1125,13 @@
 }
 
 .dp-anatomy-scene {
-  width: 562px;
+  width: 618px; /* 122 + 48 + 448 */
   max-width: 100%;
 }
 
 .dp-anatomy {
   display: grid;
-  grid-template-columns: 122px 48px 392px;
+  grid-template-columns: 122px 48px 448px;
   gap: 0;
   align-items: start;
   position: relative;
@@ -1328,18 +1345,27 @@
 }
 
 .dp-quote-item {
-  padding: 8px 10px;
-  border-left: 2px solid var(--dp-border);
-  font-size: 13px;
-  line-height: 1.45;
+  padding: 24px;
+  border-radius: var(--dp-radius-control);
+  background: var(--dp-bg);
+  font-size: var(--text-body-size);
+  line-height: var(--text-quote-leading);
+  font-weight: 400;
+  color: var(--dp-ink);
+  margin: 0 0 16px;
+}
+
+.dp-quote-item:last-child {
+  margin-bottom: 0;
 }
 
 .dp-quote-item strong {
   display: block;
-  font-size: 12px;
-  color: var(--dp-brand);
-  margin-bottom: 4px;
-  font-weight: 500;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  color: var(--dp-muted);
+  margin-bottom: 8px;
+  font-weight: 400;
 }
 
 .dp-gallery-pair {
@@ -1383,8 +1409,8 @@
   }
 
   .dp-funnel--hero .dp-summary {
-    font-size: 14px;
-    line-height: 1.3;
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-leading);
   }
 }
 
@@ -1476,13 +1502,13 @@
   /* Native-size text, then zoom/scale the unit — avoids subpixel glyph gaps. */
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
-  letter-spacing: 0;
-  --dp-font-product-tracking: 0;
+  letter-spacing: normal;
+  --dp-font-product-tracking: normal;
 }
 
 .dp-scaled-viewport__inner,
 .dp-scaled-viewport__inner * {
-  letter-spacing: 0 !important;
+  letter-spacing: normal !important;
 }
 
 .dp-scaled-viewport[data-scale-mode="transform"] .dp-scaled-viewport__inner {
@@ -1583,8 +1609,8 @@
   width: 100%;
   margin: 0;
   padding: 8px 10px;
-  font-size: 14px;
-  line-height: 1.43;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
   color: var(--dp-muted);
   border-radius: 6px;
 }
@@ -1599,12 +1625,12 @@
   align-items: baseline;
   gap: 8px;
   margin: 0 0 4px;
-  font-size: 14px;
-  line-height: 1.43;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
 }
 
 .dp-synced-transcript__speaker {
-  font-weight: 500;
+  font-weight: var(--dp-weight-medium);
   color: var(--dp-ink);
 }
 
@@ -1634,12 +1660,14 @@
   grid-template-columns: 20px 1fr auto;
   gap: 8px;
   align-items: baseline;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
+  font-weight: 400;
+  color: var(--dp-muted);
 }
 
 .dp-theme-rank__num {
-  font-weight: 500;
+  font-weight: var(--dp-weight-bold);
   color: var(--dp-brand, #b43f7f);
 }
 
@@ -1657,9 +1685,9 @@
 
 .dp-coverage-callout__headline {
   margin: 0;
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  font-weight: 500;
+  font-size: var(--text-header-size);
+  line-height: var(--text-header-leading);
+  font-weight: var(--dp-weight-medium);
   color: var(--dp-ink);
 }
 
@@ -1671,7 +1699,9 @@
 }
 
 .dp-chart-legend {
-  font-size: 12px;
+  font-size: var(--text-chart-size);
+  line-height: var(--text-chart-leading);
+  font-weight: 400;
   color: var(--dp-muted);
   margin: 4px 0 0;
 }

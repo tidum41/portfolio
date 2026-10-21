@@ -9,9 +9,12 @@ type Props = {
   className?: string;
 };
 
-const CHAT_W = 392;
-const ANATOMY_W = 562;
-const FULL_ANSWER_W = 742;
+/** Live study-chat panel width (t384: ~447.78px → 448). */
+const CHAT_W = 448;
+/** Callout rail 122 + gutter 48 + chat 448 */
+const ANATOMY_W = 618;
+/** Answer column + clip drawer cluster */
+const FULL_ANSWER_W = 798;
 
 function scaleProps(scenario: Scenario): { innerWidth: number; maxScale?: number } | null {
   if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
@@ -21,7 +24,8 @@ function scaleProps(scenario: Scenario): { innerWidth: number; maxScale?: number
   }
   switch (scenario) {
     case "hero":
-      return { innerWidth: 822, maxScale: 1 };
+      // 448 chat + 14 gap + ~320 clips column
+      return { innerWidth: 782, maxScale: 1 };
     case "anatomy":
       return { innerWidth: ANATOMY_W, maxScale: 1 };
     case "full-answer":

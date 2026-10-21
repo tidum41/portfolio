@@ -45,7 +45,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
         <StudyChatShell compact>
           <UserMessageBubble>Which segment struggled with address validation?</UserMessageBubble>
           <QuerySearchStep searched={24} found={11} />
-          <p className="dp-summary" style={{ fontSize: "var(--text-summary-size)" }}>
+          <p className="dp-summary">
             Mobile participants reported autocomplete resets 2× more often.
           </p>
           <FunnelChart compact />

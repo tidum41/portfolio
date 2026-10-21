@@ -1,26 +1,27 @@
-/* Values from live Dialogue CSS (`1w9mr5dy3h8y1.css` / `290yvv_x3nxom.css`) — see tokens.ts */
+/* t384 live study-chat measurements — see tokens.ts + design/briefs/dialogue-ds-tokens.md */
 .dialogue-product-root {
   --dp-font-family: var(--font-dialogue-dm-sans, var(--font-sans, "DM Sans")), system-ui, sans-serif;
   --dp-font-brand: var(--font-dialogue-zilla, var(--font-brand, "Zilla Slab")), Georgia, serif;
-  --dp-font-product-tracking: -0.01em;
-  --dp-bg: #f8f6f3; /* --background → --paper-50 */
+  --dp-font-product-tracking: normal;
+  --dp-bg: #f8f6f3; /* quote card / paper-50 */
   /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */
   --dp-figure-surface-system: #f5f5f4;
   --dp-figure-surface-problem: #efeeed;
   --dp-figure-surface-solution: #f8f7f6;
-  --dp-surface: #fcfbf9; /* --card → --paper-10 */
-  --dp-app-bg: #fafaf9; /* --color-stone-50 */
-  --dp-sidebar-bg: #f8f6f3; /* --sidebar → --paper-50 */
+  --dp-surface: #fcfbf9; /* chat panel bg */
+  --dp-app-bg: #fafaf9;
+  --dp-sidebar-bg: #f8f6f3;
   --dp-card: #ffffff;
-  --dp-ink: #1c1917; /* --color-stone-900 */
-  --dp-muted: #57534d; /* --color-stone-600 */
-  --dp-muted-light: #79716b; /* --color-stone-500 */
-  --dp-border: #e7e5e4; /* --border → --color-stone-200 */
-  --dp-warm: #f1eeea; /* --paper-100 */
+  --dp-ink: #1c1917;
+  --dp-muted: #57534d;
+  --dp-muted-light: #79716b;
+  --dp-border: #e7e5e4;
+  --dp-input-border: #e5e7eb;
+  --dp-warm: #f1eeea; /* user bubble / beta badge */
   --dp-search-bg: #fcfbf9;
-  --dp-brand: #b43f7f; /* --color-cherry → --cherry-800 */
-  --dp-brand-icon: #de4f9d; /* --cherry-700 */
-  --dp-brand-soft: #ffd8ee; /* --cherry-50 */
+  --dp-brand: #b43f7f;
+  --dp-brand-icon: #de4f9d;
+  --dp-brand-soft: #ffd8ee;
   --dp-funnel-track: #f1eeea;
   --dp-funnel-bar: #a8a29e;
   --dp-funnel-bar-cart: #d6d3d1;
@@ -30,27 +31,44 @@
   --dp-nav-active-bg: #e7e5e4;
   --dp-stat-tile-bg: #ffffff;
   --dp-skeleton: #d6d3d1;
+  --dp-suggestion: rgb(116, 116, 116);
   --dp-sidebar-width: 252px;
   --dp-app-shell-width: 1280px;
   --dp-app-shell-height: 748px;
   --dp-paper-frame-width: 922px;
   --dp-paper-frame-height: 540px;
   --dp-paper-sidebar-width: 188px;
-  --dp-placement-chat-width: 392px;
+  --dp-placement-chat-width: 448px;
+  --dp-placement-chat-height: 658px;
   --dp-placement-inset: 24px;
-  --dp-radius: 1.5rem; /* --radius-3xl */
-  --dp-radius-bubble: 1rem; /* --radius-2xl */
+  --dp-chat-pad: 28px;
+  --dp-chat-gap: 16px;
+  --dp-radius: 24px;
+  --dp-radius-bubble: 16px;
+  --dp-radius-control: 14px;
   --dp-radius-sm: 14px;
-  --dp-radius-xs: 10px;
+  --dp-radius-xs: 14px;
   --dp-radius-thumb: 8px;
-  --dp-radius-chip: 0.625rem; /* --radius */
+  --dp-radius-chip: 8px;
   --dp-radius-app: 0.75rem;
-  --text-body-size: 1rem; /* --text-base */
-  --text-body-leading: 1.5;
-  --text-meta-size: 0.875rem; /* --text-sm */
-  --text-meta-leading: 1.25;
-  --text-chart-size: 0.875rem;
-  --text-chart-leading: 1.25;
+  /* Role scale (assistant body / user bubble) */
+  --text-body-size: 14px;
+  --text-body-leading: 24px;
+  /* Header title / in-response headings */
+  --text-header-size: 14px;
+  --text-header-leading: 20px;
+  /* Subtitle, chart labels, badge size */
+  --text-small-size: 12px;
+  --text-small-leading: 16px;
+  /* Quote header, pill, meta */
+  --text-meta-size: 14px;
+  --text-meta-leading: 20px;
+  --text-quote-leading: 22.75px;
+  /* Chart labels = small role (not measurable in t384; documented) */
+  --text-chart-size: 12px;
+  --text-chart-leading: 16px;
+  --dp-weight-bold: 600;
+  --dp-weight-medium: 500;
   --shadow-chat: 0 8px 24px -12px rgb(28 25 23 / 8%);
   --shadow-app: 0 1px 2px rgb(28 25 23 / 5%), 0 8px 24px rgb(28 25 23 / 5%);
   --shadow-launcher: 0 4px 16px rgb(180 63 127 / 35%);

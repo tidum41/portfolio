@@ -1,10 +1,11 @@
 /**
- * Dialogue product tokens — values from live production CSS (highest precedence).
- * Source archive (agent store only): `/cursor/stores/self/dialogue-live-css/`
- *   - `1w9mr5dy3h8y1.css` — Tailwind `:root` `--color-*`, `--paper-*`, `--cherry-*`, `--font-*`, `--radius-*`
- *   - `0foqked6n1lzo.css` — `@font-face` (not copied into repo)
- *   - `290yvv_x3nxom.css` — `.media-default-skin` player tokens
- * Fallback references: Paper static export + `public/dev/dialogue-static/…`
+ * Dialogue product tokens — t384 live study-chat measurements are source of truth.
+ *
+ * Cite: `design/briefs/dialogue-ds-tokens.md` ← measurements from
+ * `/home/ubuntu/.cursor/projects/workspace/uploads/measurements_6731.md`
+ * (getComputedStyle dumps of research.dialogueai.com Insights summary chat).
+ *
+ * Do NOT commit private screenshots / raw JSON (privacy/EULA) — keep in uploads only.
  */
 
 export const LIVE_CSS_SOURCE = {
@@ -12,6 +13,9 @@ export const LIVE_CSS_SOURCE = {
   fonts: "/cursor/stores/self/dialogue-live-css/0foqked6n1lzo.css",
   mediaSkin: "/cursor/stores/self/dialogue-live-css/290yvv_x3nxom.css",
   rootVars: "/cursor/stores/self/dialogue-live-css/root-vars.txt",
+  /** t384 computed-style table (agent uploads; not committed) */
+  measurementsMd:
+    "/home/ubuntu/.cursor/projects/workspace/uploads/measurements_6731.md",
 } as const;
 
 export const PAPER_SOURCE_FILES = [
@@ -20,7 +24,7 @@ export const PAPER_SOURCE_FILES = [
   "public/dev/dialogue-static/export/section-6.html",
 ] as const;
 
-/** Maps to live `--font-product` / `--font-sans` */
+/** Maps to live `--font-sans` / `--font-product` */
 export const dialogueFontFamily =
   'var(--font-dialogue-dm-sans, var(--font-sans, "DM Sans")), system-ui, sans-serif';
 
@@ -28,103 +32,149 @@ export const dialogueFontFamily =
 export const dialogueBrandFontFamily =
   'var(--font-dialogue-zilla, var(--font-brand, "Zilla Slab")), Georgia, serif';
 
+/**
+ * Text roles from t384 measurements (DM Sans, letter-spacing: normal).
+ * Chart labels were not in the measured response — use Dialogue’s small role (12/400/16 muted).
+ */
+export const dialogueTextRoles = {
+  /** Assistant body + user bubble text */
+  assistantBody: { size: "14px", weight: "400", leading: "24px", color: "#1c1917" },
+  userBubble: { size: "14px", weight: "400", leading: "24px", color: "#1c1917" },
+  /** Header title ("Study chat") + in-response h2/h3 */
+  header: { size: "14px", weight: "500", leading: "20px", color: "#1c1917" },
+  /** Header subtitle */
+  subtitle: { size: "12px", weight: "400", leading: "16px", color: "#57534d" },
+  /** Beta badge type */
+  badge: { size: "12px", weight: "500", leading: "16px", color: "#1c1917" },
+  /** Quote card header (muted) */
+  quoteHeader: { size: "14px", weight: "400", leading: "20px", color: "#57534d" },
+  /** Quote card body */
+  quote: { size: "14px", weight: "400", leading: "22.75px", color: "#1c1917" },
+  /** Status / query pill label (monospace in product) */
+  pill: { size: "14px", weight: "400", leading: "20px", color: "#57534d", mono: true },
+  /** Empty-state suggestion chips */
+  suggestion: { size: "14px", weight: "500", leading: "20px", color: "rgb(116,116,116)" },
+  /**
+   * Chart axis/bar labels — not measurable in t384 response (no chart).
+   * Uses Dialogue small role: 12/400/16 muted.
+   */
+  chartLabel: { size: "12px", weight: "400", leading: "16px", color: "#57534d" },
+  /** `strong` / bold emphasis inside Dialogue UI */
+  bold: { weight: "600" },
+} as const;
+
 export const dialogueProductTokens = {
   font: {
-    /** `--font-sans` / `--font-product` */
     family: dialogueFontFamily,
-    /** `--font-brand` */
     brandFamily: dialogueBrandFontFamily,
-    /** `--font-product-letter-spacing` */
-    productLetterSpacing: "-0.01em",
-    /** `--text-base` */
-    bodySize: "1rem",
-    /** `--text-base--line-height` → 1.5 */
-    bodyLeading: "1.5",
-    /** `--text-sm` */
-    metaSize: "0.875rem",
-    /** `--text-sm--line-height` */
-    metaLeading: "1.25",
-    /** Chat panel (export + live): 16px / 24px body, 14px / 20px meta */
-    panelBodySize: "16px",
+    /** Measured: `normal` everywhere (overrides prior -0.01em guess) */
+    productLetterSpacing: "normal",
+    /** Assistant body / user bubble — 14/400/24 */
+    bodySize: "14px",
+    bodyLeading: "24px",
+    bodyWeight: "400",
+    /** Header title / headings — 14/500/20 */
+    headerSize: "14px",
+    headerLeading: "20px",
+    headerWeight: "500",
+    /** Subtitle / chart labels / badge size — 12/400/16 */
+    smallSize: "12px",
+    smallLeading: "16px",
+    smallWeight: "400",
+    /** Quote header, pill, textarea — 14/400/20 */
+    metaSize: "14px",
+    metaLeading: "20px",
+    metaWeight: "400",
+    /** Quote body leading-relaxed */
+    quoteLeading: "22.75px",
+    /** Product UI bold (`strong`) — real Dialogue weight; site chrome may still cap 500 */
+    boldWeight: "600",
+    mediumWeight: "500",
+    badgeWeight: "500",
+    suggestionWeight: "500",
+    clipTimeSize: "11px",
+    /** @deprecated aliases kept for callers; same as body/meta */
+    panelBodySize: "14px",
     panelBodyLeading: "24px",
     panelMetaSize: "14px",
     panelMetaLeading: "20px",
-    clipTimeSize: "11px",
   },
   color: {
-    /** `--color-stone-900` / `--foreground` */
     ink: "#1c1917",
-    /** `--color-stone-600` / `--muted-foreground` */
     muted: "#57534d",
-    /** `--color-stone-500` */
     mutedLight: "#79716b",
-    /** `--border` → `--color-stone-200` */
     border: "#e7e5e4",
-    /** `--card` → `--paper-10` */
+    /** Input border (gray-200) */
+    inputBorder: "#e5e7eb",
     surface: "#fcfbf9",
-    /** `--secondary` / `--paper-100` */
+    /** User bubble / beta badge fill */
     warm: "#f1eeea",
-    /** `--background` → `--paper-50` */
+    /** Quote card / paper-50 */
     bg: "#f8f6f3",
-    /** `--color-stone-50` */
     appBg: "#fafaf9",
-    /** `--sidebar` → `--paper-50` (live study sidebar surface) */
     sidebarBg: "#f8f6f3",
-    /** `--color-cherry` → `--cherry-800` */
     brand: "#b43f7f",
-    /** `--color-cherry-700` */
     brandIcon: "#de4f9d",
-    /** `--color-stone-300` */
     funnelBarCart: "#d6d3d1",
     funnelBarFocal: "#b43f7f",
-    /** `--color-stone-600` */
     funnelBarDark: "#57534d",
-    /** `--color-stone-400` */
     funnelBarMid: "#a8a29e",
     skeleton: "#d6d3d1",
+    suggestion: "rgb(116, 116, 116)",
   },
   radius: {
-    /** `--radius-3xl` */
-    chatShell: "1.5rem",
-    /** `--radius-2xl` */
-    bubble: "1rem",
+    /** Chat panel `rounded-3xl` */
+    chatShell: "24px",
+    /** User bubble */
+    bubble: "16px",
+    /** Quote card, status pill, input, search step */
+    control: "14px",
     searchStep: "14px",
-    /** `--radius` (0.625rem) used on viz cards; export uses 10px rounded */
-    vizCard: "10px",
+    vizCard: "14px",
     thumb: "8px",
-    /** `--radius-lg` → `--radius` */
-    chip: "0.625rem",
+    /** Suggestion chips / beta badge */
+    chip: "8px",
     appShell: "0.75rem",
     statCard: "0.5rem",
   },
   space: {
     chatPad: "28px",
+    /** Inner flex gap on chat content column */
+    chatGap: "16px",
+    /** Message list gap (user/assistant turns) */
+    messageGap: "12px",
     vizPad: "12px",
     funnelLabelW: "110px",
     funnelPctW: "40px",
     funnelBarH: "8px",
-    /** Live study sidebar (~252px in production study layout) */
     sidebarWidth: "252px",
-    /** Production study app shell (CSS px) */
     appShellWidth: "1280px",
     appShellHeight: "748px",
-    /** Paper export frame `section-6.html` inline style (parity ref) */
     paperFrameWidth: "922px",
     paperFrameHeight: "540px",
-    /** Paper sidebar in 922px frame (`section-6.html` `w-[188px]`) */
     paperSidebarWidth: "188px",
-    /** Live floating chat panel width (production / Paper placement) */
-    placementChatWidth: "392px",
+    /**
+     * Live floating chat panel width (t384: 447.78px incl. border → 448).
+     * All ScaledChatViewport chat figures render at this inner width then scale.
+     */
+    placementChatWidth: "448px",
+    placementChatHeight: "658px",
     placementInset: "24px",
     placementLauncherSize: 48,
     placementLauncherGap: 12,
+    userBubblePadY: "8px",
+    userBubblePadX: "16px",
+    statusPillPadY: "8px",
+    statusPillPadX: "16px",
+    suggestionPadY: "8px",
+    suggestionPadX: "12px",
+    inputPad: "12px",
   },
   shadow: {
     chat: "0 8px 24px -12px rgb(28 25 23 / 8%)",
     appShell: "0 1px 2px rgb(28 25 23 / 5%), 0 8px 24px rgb(28 25 23 / 5%)",
   },
   media: {
-    /** `290yvv_x3nxom.css` `.media-default-skin` */
     borderRadius: "2rem",
     iconSize: "18px",
     fontSize: "0.8125rem",
@@ -178,6 +228,7 @@ export function dialogueProductCssVariables(): Record<string, string> {
     "dp-muted": t.color.muted,
     "dp-muted-light": t.color.mutedLight,
     "dp-border": t.color.border,
+    "dp-input-border": t.color.inputBorder,
     "dp-warm": t.color.warm,
     "dp-brand": t.color.brand,
     "dp-brand-icon": t.color.brandIcon,
@@ -187,16 +238,34 @@ export function dialogueProductCssVariables(): Record<string, string> {
     "dp-funnel-bar-focal": t.color.funnelBarFocal,
     "dp-funnel-bar-dark": t.color.funnelBarDark,
     "dp-skeleton": t.color.skeleton,
+    "dp-suggestion": t.color.suggestion,
     "dp-sidebar-width": t.space.sidebarWidth,
     "dp-app-shell-width": t.space.appShellWidth,
     "dp-app-shell-height": t.space.appShellHeight,
     "dp-paper-frame-width": t.space.paperFrameWidth,
     "dp-paper-frame-height": t.space.paperFrameHeight,
     "dp-paper-sidebar-width": t.space.paperSidebarWidth,
+    "dp-placement-chat-width": t.space.placementChatWidth,
+    "dp-placement-chat-height": t.space.placementChatHeight,
+    "dp-chat-pad": t.space.chatPad,
+    "dp-chat-gap": t.space.chatGap,
+    "dp-radius": t.radius.chatShell,
+    "dp-radius-bubble": t.radius.bubble,
+    "dp-radius-control": t.radius.control,
+    "dp-radius-chip": t.radius.chip,
     "text-body-size": t.font.bodySize,
     "text-body-leading": t.font.bodyLeading,
+    "text-header-size": t.font.headerSize,
+    "text-header-leading": t.font.headerLeading,
+    "text-small-size": t.font.smallSize,
+    "text-small-leading": t.font.smallLeading,
     "text-meta-size": t.font.metaSize,
     "text-meta-leading": t.font.metaLeading,
+    "text-quote-leading": t.font.quoteLeading,
+    "text-chart-size": t.font.smallSize,
+    "text-chart-leading": t.font.smallLeading,
+    "dp-weight-bold": t.font.boldWeight,
+    "dp-weight-medium": t.font.mediumWeight,
     "shadow-chat": t.shadow.chat,
     "shadow-app": t.shadow.appShell,
     "dp-media-radius": t.media.borderRadius,
