@@ -163,10 +163,12 @@
   color: var(--dp-muted);
 }
 
+/* t384: ink hairline inset to the 28px content column (not full-bleed). */
 .dp-study-chat__rule {
   height: 1px;
-  margin: 16px calc(-1 * var(--dp-chat-pad)) 0;
-  background: var(--dp-border);
+  margin: 28px 0 0;
+  background: var(--dp-ink);
+  opacity: 1;
 }
 
 .dp-study-chat__body {
@@ -186,15 +188,21 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 88px;
+  align-items: stretch;
+  /* t384 input wrapper ~130×389; idle (no focus ring) */
+  height: 128px;
+  min-height: 128px;
   padding: 12px;
   border: 1px solid var(--dp-input-border);
   border-radius: var(--dp-radius-control);
   background: var(--dp-surface);
+  box-shadow: none;
+  outline: none;
 }
 
 .dp-study-chat__composer-placeholder {
   margin: 0;
+  align-self: flex-start;
   font-size: var(--text-body-size);
   line-height: var(--text-meta-leading);
   font-weight: 400;
@@ -202,6 +210,7 @@
   letter-spacing: normal;
 }
 
+/* Idle / empty send — muted stone, not active ink */
 .dp-study-chat__composer-send {
   position: absolute;
   right: 12px;
@@ -212,20 +221,23 @@
   width: 36px;
   height: 36px;
   border-radius: var(--dp-radius-chip);
-  background: var(--dp-ink);
+  background: var(--dp-composer-send-idle, #8b8987);
   color: var(--dp-bg);
 }
 
 .dp-study-chat:not(.dp-study-chat--hero) .dp-study-chat__head {
-  padding: var(--dp-chat-pad) var(--dp-chat-pad) 0;
+  /* Match t384 title baseline (~45px from panel top in 448 crop). */
+  padding: 43px var(--dp-chat-pad) 0;
 }
 
+/* ~48px from hairline to first message content */
 .dp-study-chat:not(.dp-study-chat--hero) .dp-study-chat__body {
-  padding-top: var(--dp-chat-gap);
+  padding-top: 48px;
 }
 
 .dp-study-chat--compact .dp-study-chat__composer-box {
-  min-height: 64px;
+  height: 96px;
+  min-height: 96px;
 }
 
 .dp-study-chat--hero .dp-study-chat__composer {

@@ -18,6 +18,8 @@
   --dp-muted-light: #79716b;
   --dp-border: #e7e5e4;
   --dp-input-border: #e5e7eb;
+  /* Idle send control (empty composer) — measured ~rgb(139,137,135) */
+  --dp-composer-send-idle: #8b8987;
   --dp-warm: #f1eeea; /* user bubble / beta badge */
   --dp-search-bg: #fcfbf9;
   --dp-brand: #b43f7f;
