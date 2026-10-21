@@ -230,8 +230,11 @@ export const getMuxCardWarmup = cache((): Promise<MuxCardWarm> => {
     .then((projects) => {
       const ids = orderedPlaybackIds(projects);
       if (!ids.length) return EMPTY;
+      // No time TTL — bust with projects via webhook (`sanity` / `projects`).
+      // Mux signed URLs last ~1y; playback IDs only change when Sanity projects do.
       return unstable_cache(() => loadWarm(ids), ["mux-card-warm-v6", ids.join(",")], {
-        revalidate: 3600,
+        revalidate: 86400,
+        tags: ["sanity", "projects", "mux-card-warm"],
       })();
     })
     .catch(() => EMPTY);

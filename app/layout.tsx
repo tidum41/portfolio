@@ -27,9 +27,8 @@ import { Analytics } from '@vercel/analytics/next';
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
-// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-// preload: false — body copy is local HN/Söhne. Geist is only used inside
-// the CD player + habit embed, which mount after first paint.
+// Site sans is Helvetica Neue via --font-sans in globals.css.
+// preload: false — Geist only mounts inside embeds after first paint.
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
 

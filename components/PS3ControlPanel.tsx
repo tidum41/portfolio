@@ -396,17 +396,12 @@ function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
 }
 
 // ── Chevron/label optical alignment ─────────────────────────────────────────
-// "menu" renders in --font-sans, which is "HN" (a local() alias for the
-// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
-// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
-// (Android, Windows, Linux) the stack lands on a substitute with different
-// ascent/descent proportions, so a marginTop tuned by eye against one font's
-// glyph metrics reads as misaligned against another's. Rather than guess a
-// static px value that only holds for whichever font the tuner happened to
-// have installed, measure the *actual* rendered ink of both the chevron and
-// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
-// for the stroke — and compute the delta needed to center them on each
-// other, whatever font actually won the fallback chain on this device.
+// "menu" renders in --font-sans (Helvetica Neue stack).
+// Ascent/descent differ across the fallback chain, so a marginTop tuned by
+// eye against one font's glyph metrics reads as misaligned against another's.
+// Measure the *actual* rendered ink of both the chevron and the label — via
+// CanvasTextMetrics for the glyph, getBoundingClientRect for the stroke —
+// and compute the delta needed to center them on each other.
 function useLabelOpticalOffset(
   chevronRef: React.RefObject<SVGPolylineElement | null>,
   labelRef: React.RefObject<HTMLSpanElement | null>,

@@ -99,10 +99,10 @@ export default function HeroText() {
           className="hero-heading"
           style={{
             fontFamily: "var(--font-page-title)",
-            fontSize: "clamp(26px, 2.8vw, 36px)",
+            fontSize: "var(--fs-home-hero)",
             fontWeight: 400,
             lineHeight: 1.2,
-            letterSpacing: "-0.5px",
+            letterSpacing: "var(--ls-hero)",
             color: "var(--color-text-primary)",
             margin: 0,
           }}
@@ -122,7 +122,7 @@ export default function HeroText() {
           position: "relative",
           zIndex: 1,
           fontFamily: "var(--font-sans)",
-          fontSize: 17,
+          fontSize: "var(--fs-lg)",
           lineHeight: 1.5,
           color: "var(--color-text-secondary)",
           margin: 0,

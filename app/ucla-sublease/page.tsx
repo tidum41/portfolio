@@ -14,8 +14,8 @@ import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/que
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
-export const revalidate = 300;
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "BruinLease",
@@ -75,7 +75,7 @@ function SectionLabel({ children, as: Tag = "p" }: { children: React.ReactNode; 
       fontWeight: 400,
       letterSpacing: "0.02em",
       color: "var(--color-text-tertiary)",
-      margin: "0 0 16px",
+      margin: "0 0 var(--cs-para-gap)",
     }}>
       {children}
     </Tag>
@@ -91,7 +91,7 @@ function H2({ children }: { children: React.ReactNode }) {
       lineHeight: "var(--lh-h2)",
       letterSpacing: "var(--ls-h2)",
       color: "var(--color-text-primary)",
-      margin: "0 0 24px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>
       {children}
     </h2>
@@ -176,7 +176,7 @@ function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
       <XIcon />
-      <p style={{ fontSize: 15, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
+      <p style={{ fontSize: "var(--fs-body)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
   );
 }
@@ -195,7 +195,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
         }
       </div>
-      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>{label}</p>
+      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>{label}</p>
     </div>
   );
 }
@@ -206,7 +206,7 @@ function CompRow({ type, text }: { type: string; text: string }) {
       {type === "right"   && <CheckIcon />}
       {type === "wrong"   && <XIcon />}
       {type === "neutral" && <NeutralIcon />}
-      <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--color-text-secondary)", margin: 0 }}>{text}</p>
+      <p style={{ fontSize: "var(--fs-sm)", lineHeight: "var(--lh-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{text}</p>
     </div>
   );
 }
@@ -264,9 +264,9 @@ function ToolCard({ tool, desc }: { tool: string; desc: string }) {
     <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         {logo && <span style={{ display: "flex", flexShrink: 0, lineHeight: 0 }}>{logo}</span>}
-        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{tool}</p>
+        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: "var(--fs-sm)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{tool}</p>
       </div>
-      <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--color-text-secondary)", margin: 0 }}>{desc}</p>
+      <p style={{ fontSize: "var(--fs-sm)", lineHeight: "var(--lh-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{desc}</p>
     </div>
   );
 }
@@ -602,14 +602,14 @@ async function BruinLeaseContent() {
                 ))}
               </div>
 
-              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-tertiary)", margin: "0 0 12px", fontFamily: "var(--font-sans-medium)", letterSpacing: "-0.1px" }}>
+              <p style={{ fontSize: "var(--fs-sm)", fontWeight: 500, color: "var(--color-text-tertiary)", margin: "0 0 12px", fontFamily: "var(--font-sans-medium)", letterSpacing: "-0.1px" }}>
                 research insights drove key changes
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {d1Insights.map((point, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", width: "90%" }}>
-                    <span style={{ color: "var(--color-text-secondary)", fontSize: 19, lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
-                    <p style={{ fontSize: 14, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0 }}>{point}</p>
+                    <span style={{ color: "var(--color-text-secondary)", fontSize: "var(--fs-lg)", lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
+                    <p style={{ fontSize: "var(--fs-meta)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0 }}>{point}</p>
                   </div>
                 ))}
               </div>
@@ -641,7 +641,7 @@ async function BruinLeaseContent() {
               <Body>{cs.d3Body}</Body>
 
               <div className="cs-quarter-picker" style={{ marginTop: 24 }}><QuarterPicker /></div>
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
+              <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
                 Selecting a quarter autofills exact move-in and move-out dates.
               </p>
             </Section>
@@ -662,7 +662,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3BeforePhonePos)}
                         style={{ border: "2px solid transparent" }}
                       />
-                      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>Before</p>
+                      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>Before</p>
                     </div>
                   )}
                   {cs.decision1Video && (
@@ -674,7 +674,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3AfterPhonePos)}
                         style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
                       />
-                      <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
+                      <p style={{ fontSize: "var(--fs-caption)", color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
                     </div>
                   )}
                 </div>
@@ -710,7 +710,7 @@ async function BruinLeaseContent() {
                   <div key={_key}>
                     <h3 style={{
                       fontFamily: "var(--font-sans-medium)",
-                      fontSize: 18,
+                      fontSize: "var(--fs-lg)",
                       fontWeight: 500,
                       color: "var(--color-text-primary)",
                       margin: "0 0 8px",
@@ -719,7 +719,7 @@ async function BruinLeaseContent() {
                     }}>
                       {heading}
                     </h3>
-                    <p style={{ fontSize: 14, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0 }}>
+                    <p style={{ fontSize: "var(--fs-meta)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0 }}>
                       {body}
                     </p>
                   </div>

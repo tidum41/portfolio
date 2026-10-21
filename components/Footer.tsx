@@ -9,8 +9,9 @@ const isDev = process.env.NODE_ENV === "development";
 
 const linkStyle = {
   fontFamily: "var(--font-sans)",
-  fontSize: 16,
-  lineHeight: "21px",
+  fontSize: "var(--fs-body)",
+  lineHeight: "var(--lh-body)",
+  letterSpacing: "var(--ls-body)",
   textDecoration: "none" as const,
 };
 
@@ -33,10 +34,10 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           list-style: none;
           margin: 0;
           padding: 0;
-          line-height: 21px;
+          line-height: var(--lh-body);
         }
         .footer-links li {
-          line-height: 21px;
+          line-height: var(--lh-body);
         }
         /* Phone only. At 480px and up the row stays name-left, links-right. */
         @media (max-width: 479px) {

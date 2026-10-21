@@ -56,7 +56,7 @@ export function VinylPlayer({
         left: 62,
         fontFamily: 'var(--font-geist-mono), "Courier New", monospace',
         fontSize: 38,
-        fontWeight: 700,
+        fontWeight: 500,
         letterSpacing: '-0.03em',
         color: 'rgba(0,0,0,0.28)',
         userSelect: 'none',
