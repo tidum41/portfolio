@@ -3,9 +3,12 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import ThemeRankingCard from "@/components/dialogue/product/ThemeRankingCard";
 import QuoteFrequencyCard from "@/components/dialogue/product/QuoteFrequencyCard";
 import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
+import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { CHECKOUT_QUESTION, SENTIMENT_LINE } from "@/lib/dialogue/product/sampleData";
 
 export type GalleryVariant =
@@ -18,6 +21,13 @@ export type GalleryVariant =
   | "timeline"
   | "coverage";
 
+const DISTRIBUTION = [
+  { label: "Never", pct: 18 },
+  { label: "Once", pct: 42, focal: true },
+  { label: "2–3×", pct: 28 },
+  { label: "4+×", pct: 12 },
+] as const;
+
 export default function ChartGalleryFigure({ variant }: { variant: GalleryVariant }) {
   switch (variant) {
     case "trend":
@@ -29,6 +39,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
             title={SENTIMENT_LINE.title}
             points={SENTIMENT_LINE.points}
             legend="Average sentiment score by prototype round"
+            yMode="trend"
           />
         </StudyChatShell>
       );
@@ -56,22 +67,18 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
         <StudyChatShell compact>
           <UserMessageBubble>How often did payment trust come up?</UserMessageBubble>
           <QuerySearchStep searched={24} found={14} />
-          <div className="dp-funnel">
-            {[
-              { label: "Never", pct: 18 },
-              { label: "Once", pct: 42 },
-              { label: "2–3×", pct: 28 },
-              { label: "4+×", pct: 12 },
-            ].map((row) => (
-              <div key={row.label} className="dp-funnel__row">
-                <span className="dp-funnel__label">{row.label}</span>
-                <div className="dp-funnel__track">
-                  <div className="dp-funnel__bar" style={{ width: `${row.pct}%` }} />
-                </div>
-                <span className="dp-funnel__pct">{row.pct}%</span>
-              </div>
-            ))}
-          </div>
+          <ChartVizCard title="Payment-trust mentions per interview">
+            <ChartBarList
+              rows={DISTRIBUTION.map((row) => ({
+                label: row.label,
+                value: row.pct,
+                display: formatChartPercent(row.pct),
+                focal: "focal" in row && row.focal,
+              }))}
+              max={100}
+              fillMode="index"
+            />
+          </ChartVizCard>
         </StudyChatShell>
       );
     case "theme":
@@ -104,6 +111,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
               { label: "Min 31", value: 6 },
             ]}
             legend="Mentions of delivery fees across interview timeline"
+            yMode="count"
           />
         </StudyChatShell>
       );

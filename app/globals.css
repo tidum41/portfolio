@@ -1911,6 +1911,7 @@ html[data-theme="light"] {
 .dialogue-rachel-frame__pad {
   overflow: visible;
 }
+.dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-funnel--hero .dp-chart-viz-card__inner,
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-funnel--hero .dp-viz-card__inner {
   padding: 8px;
   gap: 8px;

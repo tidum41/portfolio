@@ -1,0 +1,264 @@
+/* Dialogue chart primitives — tokens from chart/chartSpec.ts (t385 / Carbon-grounded) */
+
+.dp-chart-root {
+  --dp-chart-label-size: 12px;
+  --dp-chart-label-leading: 16px;
+  --dp-chart-label-weight: 400;
+  --dp-chart-label-color: #57534d;
+  --dp-chart-value-size: 12px;
+  --dp-chart-value-leading: 16px;
+  --dp-chart-value-weight: 400;
+  --dp-chart-value-color: #1c1917;
+  --dp-chart-value-focal-weight: 600;
+  --dp-chart-focal: #b43f7f;
+  --dp-chart-track: #f1eeea;
+  --dp-chart-gridline: rgb(231 229 228 / 60%);
+  --dp-chart-baseline: #e7e5e4;
+  --dp-chart-line: #57534d;
+  --dp-chart-bar-thickness: 8px;
+  --dp-chart-bar-gap: 10px;
+  --dp-chart-label-width: 110px;
+  --dp-chart-value-width: 40px;
+  --dp-chart-gutter: 8px;
+  --dp-chart-min-width: 240px;
+  --dp-chart-line-stroke: 1.5px;
+  --dp-chart-plot-width: 320px;
+  min-width: min(100%, var(--dp-chart-min-width));
+  max-width: 100%;
+  letter-spacing: normal;
+}
+
+.dp-chart-label {
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: var(--dp-chart-label-weight);
+  color: var(--dp-chart-label-color);
+  letter-spacing: normal;
+}
+
+.dp-chart-value {
+  font-size: var(--dp-chart-value-size);
+  line-height: var(--dp-chart-value-leading);
+  font-weight: var(--dp-chart-value-weight);
+  color: var(--dp-chart-value-color);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: normal;
+}
+
+.dp-chart-value--focal {
+  font-weight: var(--dp-chart-value-focal-weight);
+  color: var(--dp-chart-focal);
+}
+
+.dp-chart-viz-card {
+  border-radius: var(--dp-radius-control, 14px);
+  border: 1px solid var(--dp-border, #e7e5e4);
+  background: var(--dp-bg, #f8f6f3);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.dp-chart-viz-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.dp-chart-title {
+  margin: 0;
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: var(--dp-chart-label-weight);
+  color: var(--dp-chart-label-color);
+}
+
+.dp-chart-caption {
+  margin: 8px 0 0;
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: var(--dp-chart-label-weight);
+  color: var(--dp-chart-label-color);
+}
+
+.dp-chart-footnote {
+  margin: 4px 0 0;
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: var(--dp-chart-label-weight);
+  color: var(--dp-chart-label-color);
+}
+
+/* —— Horizontal bar list —— */
+.dp-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dp-chart-bar-gap);
+  min-width: 0;
+  width: 100%;
+}
+
+.dp-chart-bars__row {
+  display: flex;
+  align-items: center;
+  gap: var(--dp-chart-gutter);
+  min-width: 0;
+}
+
+.dp-chart-bars__label {
+  width: var(--dp-chart-label-width);
+  flex-shrink: 0;
+  text-align: right;
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: var(--dp-chart-label-weight);
+  color: var(--dp-chart-label-color);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.dp-chart-bars__track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--dp-chart-bar-thickness);
+  background: var(--dp-chart-track);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dp-chart-bars__bar {
+  height: 100%;
+  max-width: 100%;
+  border-radius: 2px;
+}
+
+.dp-chart-bars__value {
+  width: var(--dp-chart-value-width);
+  flex-shrink: 0;
+  font-size: var(--dp-chart-value-size);
+  line-height: var(--dp-chart-value-leading);
+  font-weight: var(--dp-chart-value-weight);
+  color: var(--dp-chart-value-color);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dp-chart-bars__value--focal {
+  font-weight: var(--dp-chart-value-focal-weight);
+  color: var(--dp-chart-focal);
+}
+
+.dp-chart-bars__note {
+  margin: 8px 0 0;
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  color: var(--dp-chart-label-color);
+}
+
+.dp-chart-bars__note strong {
+  font-weight: var(--dp-chart-value-focal-weight);
+  color: var(--dp-chart-value-color);
+}
+
+/* —— Line plot —— */
+.dp-chart-line {
+  min-width: 0;
+  width: 100%;
+}
+
+.dp-chart-line__svg {
+  display: block;
+  width: var(--dp-chart-plot-width);
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.dp-chart-line__svg .dp-chart-line__label,
+.dp-chart-line__svg .dp-chart-line__tick {
+  fill: var(--dp-chart-label-color);
+  font-family: var(--dp-font-family, "DM Sans", system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.dp-chart-line__svg .dp-chart-line__value {
+  fill: var(--dp-chart-value-color);
+  font-family: var(--dp-font-family, "DM Sans", system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-chart-line__svg .dp-chart-line__value--focal {
+  fill: var(--dp-chart-focal);
+  font-weight: 600;
+}
+
+.dp-chart-line__grid {
+  stroke: var(--dp-chart-gridline);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.dp-chart-line__baseline {
+  stroke: var(--dp-chart-baseline);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.dp-chart-line__path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* —— Rank list —— */
+.dp-chart-rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dp-chart-rank__row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.dp-chart-rank__num {
+  font-size: var(--dp-chart-value-size);
+  line-height: var(--dp-chart-value-leading);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: var(--dp-chart-label-color);
+}
+
+.dp-chart-rank__num--focal {
+  font-weight: 600;
+  color: var(--dp-chart-focal);
+}
+
+.dp-chart-rank__label {
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  font-weight: 400;
+  color: var(--dp-chart-label-color);
+}
+
+.dp-chart-rank__value {
+  font-size: var(--dp-chart-value-size);
+  line-height: var(--dp-chart-value-leading);
+  font-weight: 400;
+  color: var(--dp-chart-value-color);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
