@@ -4,25 +4,15 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
-import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import CaseStudyPlaceholder from "@/components/CaseStudyPlaceholder";
 import DecisionBlock from "@/components/DecisionBlock";
-import {
-  DIALOGUE_HERO_SRC,
-  DIALOGUE_IMAGES,
-  DIALOGUE_TITLE,
-  dialogueRasterSizeForPublicPath,
-} from "@/lib/caseStudies/dialogue";
-
-const DIALOGUE_SIZES_FULL = "(max-width: 767px) calc(100vw - 48px), 750px";
-const DIALOGUE_SIZES_PAIR = "(max-width: 767px) calc(50vw - 30px), 375px";
-
-function dialogueFigureProps(src: string, sizes: string) {
-  const { width, height } = dialogueRasterSizeForPublicPath(src);
-  return { src, width, height, sizes };
-}
+import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
+import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
+import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import type { DialogueFigureTier } from "@/lib/caseStudies/dialogueFigureTiers";
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
@@ -85,30 +75,76 @@ function H2({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FrameColumn({
+function LiveFigureBlock({
+  exportRoute,
+  title,
+  tier,
+  assetId,
+  wrapRaster,
   caption,
-  src,
-  alt,
-  children,
+}: {
+  exportRoute: string;
+  title: string;
+  tier: DialogueFigureTier;
+  assetId?: string;
+  wrapRaster?: RasterAnnotator;
+  caption?: string;
+}) {
+  const media = (
+    <div className="cs-figure-media dialogue-live-figure-shell">
+      <DialogueLiveFigure
+        exportRoute={exportRoute}
+        title={title}
+        tier={tier}
+        assetId={assetId}
+      />
+    </div>
+  );
+  const wrapped = assetId && wrapRaster ? wrapRaster(assetId, media) : media;
+  return (
+    <figure className="cs-figure dialogue-live-block">
+      {wrapped}
+      {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
+    </figure>
+  );
+}
+
+function LivePairColumn({
+  caption,
+  exportRoute,
+  title,
   rasterId,
   wrapRaster,
 }: {
   caption: string;
-  src?: string;
-  alt?: string;
-  children?: React.ReactNode;
+  exportRoute: string;
+  title: string;
   rasterId?: string;
   wrapRaster?: RasterAnnotator;
 }) {
-  const media =
-    src && alt ? (
-      <CaseStudyFigure alt={alt} {...dialogueFigureProps(src, DIALOGUE_SIZES_PAIR)} />
-    ) : (
-      children
-    );
+  const media = (
+    <div className="cs-figure-media dialogue-live-figure-shell">
+      <DialogueLiveFigure exportRoute={exportRoute} title={title} tier="pair" assetId={rasterId} />
+    </div>
+  );
   return (
     <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-      {src && alt ? (rasterId && wrapRaster ? wrapRaster(rasterId, media) : media) : children}
+      {rasterId && wrapRaster ? wrapRaster(rasterId, media) : media}
+      <p className="cs-figcaption">{caption}</p>
+    </div>
+  );
+}
+
+function PlaceholderColumn({
+  caption,
+  children,
+}: {
+  caption: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+      {children}
       <p className="cs-figcaption">{caption}</p>
     </div>
   );
@@ -206,20 +242,26 @@ export function DialogueCaseStudyContent({
               ? wrap(
                   "D-01",
                   <div className="cs-hero-media-frame dialogue-hero-media">
-                    <CaseStudyFigure
-                      alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      priority
-                      {...dialogueFigureProps(DIALOGUE_HERO_SRC, DIALOGUE_SIZES_FULL)}
-                    />
+                    <div className="cs-figure-media dialogue-live-figure-shell">
+                      <DialogueLiveFigure
+                        exportRoute="hero"
+                        title="Study chat structured answer hero"
+                        tier="full"
+                        assetId="D-01"
+                      />
+                    </div>
                   </div>,
                 )
               : (
                   <div className="cs-hero-media-frame dialogue-hero-media">
-                    <CaseStudyFigure
-                      alt="Structured study chat answer with a summary line and checkout funnel chart showing a 38 percent drop at shipping address."
-                      priority
-                      {...dialogueFigureProps(DIALOGUE_HERO_SRC, DIALOGUE_SIZES_FULL)}
-                    />
+                    <div className="cs-figure-media dialogue-live-figure-shell">
+                      <DialogueLiveFigure
+                        exportRoute="hero"
+                        title="Study chat structured answer hero"
+                        tier="full"
+                        assetId="D-01"
+                      />
+                    </div>
                   </div>
                 )}
           </CaseStudyOpen>
@@ -235,19 +277,19 @@ export function DialogueCaseStudyContent({
                 Teams could not see which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
               <PairRow>
-                <FrameColumn
+                <LivePairColumn
                   rasterId="D-02"
                   wrapRaster={wrap}
                   caption="Problem: three paragraphs, no sources"
-                  src={DIALOGUE_IMAGES.problemBefore}
-                  alt="Study chat answer as three dense paragraphs with no linked sources."
+                  exportRoute="section-1"
+                  title="Study chat answer as three dense paragraphs with no linked sources"
                 />
-                <FrameColumn
+                <LivePairColumn
                   rasterId="D-03"
                   wrapRaster={wrap}
                   caption="Solution: one claim, one chart, linked moments"
-                  src={DIALOGUE_IMAGES.problemAfter}
-                  alt="Study chat answer with a summary line, funnel chart, and linked interview moments."
+                  exportRoute="section-4"
+                  title="Study chat answer with summary, chart, and linked moments"
                 />
               </PairRow>
 
@@ -261,50 +303,45 @@ export function DialogueCaseStudyContent({
                     id: "paragraphs",
                     title: "Paragraphs",
                     lossReason: "Lost because you can't see who said what, or how many.",
-                    imageSrc: DIALOGUE_IMAGES.altParagraphs,
-                    imageAlt: "Study chat answer as three paragraphs of prose with no structure.",
+                    liveExport: {
+                      exportRoute: "section-1",
+                      title: "Study chat answer as three paragraphs of prose with no structure",
+                    },
                     rasterAssetId: "D-04",
-                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altParagraphs),
                   },
                   {
                     id: "quote-list",
                     title: "Quote list",
                     lossReason: "Lost because there's no answer. You still do the counting.",
-                    imageSrc: DIALOGUE_IMAGES.altQuoteList,
-                    imageAlt: "Study chat answer as a list of interview quotes without a summary.",
+                    liveExport: {
+                      exportRoute: "section-2",
+                      title: "Study chat answer as a list of interview quotes without a summary",
+                    },
                     rasterAssetId: "D-05",
-                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altQuoteList),
                   },
                   {
                     id: "structured",
                     title: "Structured answer",
                     selectionNote: "We went with this",
                     reasonLines: ["Finding first", "The number behind it", "Clips one tap away"],
-                    imageSrc: DIALOGUE_IMAGES.altStructured,
-                    imageAlt: "Study chat answer with a summary line, chart, and linked clips.",
+                    liveExport: {
+                      exportRoute: "section-4",
+                      title: "Study chat answer with a summary line, chart, and linked clips",
+                    },
                     rasterAssetId: "D-06",
-                    imageNaturalSize: dialogueRasterSizeForPublicPath(DIALOGUE_IMAGES.altStructured),
                   },
                 ]}
               />
 
               <div style={{ marginTop: 24 }}>
-                {wrap
-                  ? wrap(
-                      "D-07",
-                      <CaseStudyFigure
-                        alt="Selected checkout step with a clips list tied to that bar."
-                        caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        {...dialogueFigureProps(DIALOGUE_IMAGES.proofSolution, DIALOGUE_SIZES_FULL)}
-                      />,
-                    )
-                  : (
-                      <CaseStudyFigure
-                        alt="Selected checkout step with a clips list tied to that bar."
-                        caption="Solution: selecting a bar filters the clips to the moments behind it"
-                        {...dialogueFigureProps(DIALOGUE_IMAGES.proofSolution, DIALOGUE_SIZES_FULL)}
-                      />
-                    )}
+                <LiveFigureBlock
+                  exportRoute="section-4"
+                  title="Selected checkout step with a clips list tied to that bar"
+                  tier="full"
+                  assetId="D-07"
+                  wrapRaster={wrap}
+                  caption="Solution: selecting a bar filters the clips to the moments behind it"
+                />
               </div>
             </Section>
 
@@ -325,27 +362,14 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Only the chart changes. Sources, summary, chart, clips, and follow-ups stay in order.
               </CaseStudyBody>
-              <div style={{ margin: "24px auto 0", width: "80%", maxWidth: "100%" }}>
-                {wrap
-                  ? wrap(
-                      "D-08",
-                      <CaseStudyFigure
-                        alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        {...dialogueFigureProps(
-                          DIALOGUE_IMAGES.anatomy,
-                          "(max-width: 767px) calc(100vw - 48px), 600px",
-                        )}
-                      />,
-                    )
-                  : (
-                      <CaseStudyFigure
-                        alt="Study chat answer card with numbered callouts for sources through follow-ups."
-                        {...dialogueFigureProps(
-                          DIALOGUE_IMAGES.anatomy,
-                          "(max-width: 767px) calc(100vw - 48px), 600px",
-                        )}
-                      />
-                    )}
+              <div style={{ marginTop: 24 }}>
+                <LiveFigureBlock
+                  exportRoute="section-3"
+                  title="Study chat answer card with numbered callouts for sources through follow-ups"
+                  tier="full"
+                  assetId="D-08"
+                  wrapRaster={wrap}
+                />
               </div>
             </Section>
 
@@ -355,51 +379,36 @@ export function DialogueCaseStudyContent({
                 I grouped real chat questions by type and gave each a chart shape that fits the
                 question.
               </CaseStudyBody>
-              {wrap
-                ? wrap(
-                    "D-09",
-                    <CaseStudyFigure
-                      alt="Four study chat questions each shown with a different chart and clip layout."
-                      caption="Four question types, four chart shapes"
-                      {...dialogueFigureProps(DIALOGUE_IMAGES.answerShapes, DIALOGUE_SIZES_FULL)}
-                    />,
-                  )
-                : (
-                    <CaseStudyFigure
-                      alt="Four study chat questions each shown with a different chart and clip layout."
-                      caption="Four question types, four chart shapes"
-                      {...dialogueFigureProps(DIALOGUE_IMAGES.answerShapes, DIALOGUE_SIZES_FULL)}
-                    />
-                  )}
+              {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
 
             <Section id="proof">
               <H2>A number with no proof</H2>
               <CaseStudyBody>Selecting a bar filters the clips to the moments behind it.</CaseStudyBody>
-              <FrameColumn caption="Problem: a number with nothing behind it">
+              <PlaceholderColumn caption="Problem: a number with nothing behind it">
                 <CaseStudyPlaceholder>
                   Export a crop of the selected bar before the clips block appears (matching the
                   solution frame).
                 </CaseStudyPlaceholder>
-              </FrameColumn>
+              </PlaceholderColumn>
             </Section>
 
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>The clip opens at the exact second with the transcript in sync.</CaseStudyBody>
               <PairRow>
-                <FrameColumn caption="Problem: quote without the moment behind it">
+                <PlaceholderColumn caption="Problem: quote without the moment behind it">
                   <CaseStudyPlaceholder>
                     Export a crop of the quote or transcript before the player opens at the timestamp
                     (matching the solution frame).
                   </CaseStudyPlaceholder>
-                </FrameColumn>
-                <FrameColumn
+                </PlaceholderColumn>
+                <LivePairColumn
                   rasterId="D-10"
                   wrapRaster={wrap}
                   caption="Solution: the clip opens at 01:38 with the speaker row highlighted"
-                  src={DIALOGUE_IMAGES.clipsSolution}
-                  alt="Interview player at 01:38 with Marcus W. highlighted in the synced transcript."
+                  exportRoute="section-5"
+                  title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 />
               </PairRow>
             </Section>
@@ -438,46 +447,22 @@ export function DialogueCaseStudyContent({
                 I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
                 study pages.
               </CaseStudyBody>
-              <CaseStudyPlaceholder>
-                The real reason the bubble beat the sidebar for researchers on study pages.
-              </CaseStudyPlaceholder>
-              <PairRow>
-                <FrameColumn
-                  rasterId="D-13"
-                  wrapRaster={wrap}
-                  caption="Explored: docked sidebar"
-                  src={DIALOGUE_IMAGES.dockedSidebar}
-                  alt="Study page with a docked research assistant sidebar on the right."
-                />
-                <FrameColumn
-                  rasterId="D-14"
-                  wrapRaster={wrap}
-                  caption="Kept: floating bubble"
-                  src={DIALOGUE_IMAGES.floatingBubble}
-                  alt="Study page with the research assistant as a floating pop-up chat."
-                />
-              </PairRow>
+              <div style={{ marginTop: 24 }}>
+                {wrap ? wrap("D-13", <DialoguePlacementCompare />) : <DialoguePlacementCompare />}
+              </div>
             </Section>
 
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>Question, chart, and every supporting clip in one drawer.</CaseStudyBody>
-              {wrap
-                ? wrap(
-                    "D-15",
-                    <CaseStudyFigure
-                      alt="Structured answer card beside a drawer listing every clip behind the answer."
-                      caption="The full answer, with every supporting clip in one drawer"
-                      {...dialogueFigureProps(DIALOGUE_IMAGES.fullAnswer, DIALOGUE_SIZES_FULL)}
-                    />,
-                  )
-                : (
-                    <CaseStudyFigure
-                      alt="Structured answer card beside a drawer listing every clip behind the answer."
-                      caption="The full answer, with every supporting clip in one drawer"
-                      {...dialogueFigureProps(DIALOGUE_IMAGES.fullAnswer, DIALOGUE_SIZES_FULL)}
-                    />
-                  )}
+              <LiveFigureBlock
+                exportRoute="section-7"
+                title="Structured answer card beside a drawer listing every clip behind the answer"
+                tier="full"
+                assetId="D-15"
+                wrapRaster={wrap}
+                caption="The full answer, with every supporting clip in one drawer"
+              />
             </Section>
 
             <Section id="outcome">

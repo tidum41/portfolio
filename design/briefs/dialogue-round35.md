@@ -1,6 +1,6 @@
 # Dialogue case study, round 35 brief
 
-**Status:** Brief only. No visual implementation until Mudit confirms this doc.  
+**Status:** In build (round 35 execution). Scope: Mudit’s 8 notes + aspect-ratio tiers + live figures only. Rachel Chen rules apply when supplied.  
 **Branch target:** `review/dialogue-canvas`  
 **Baseline:** Round 34 rasters and static export under `public/dev/dialogue-static/`; case study at `/dialogue`, review canvas at `/dev/dialogue-canvas-v2`.  
 **Prior feedback:** `design/briefs/dialogue-feedback-1020.md` (Oct 20, morning). This round incorporates **Mudit feedback Oct 20, 4:48pm** (verbatim intent below).
@@ -58,6 +58,59 @@
 
 ---
 
+## Live React figures (default)
+
+Case-study visuals are **in-page React** inside `.cs-figure-media`, using the **same components** as Dialogue production (`StudyChatShell`, structured answer blocks, charts, clip rows, and so on). Today those components only ship inside the prebuilt static export (`public/dev/dialogue-static/`, e.g. `StudyChatShell` in export chunks). Round 35 **vendors the Dialogue UI source into this repo** so `/dialogue` imports it directly; static export remains for **review canvas parity** and optional regeneration, not as the primary case-study renderer.
+
+### Runtime rules
+
+| Rule | Requirement |
+|------|----------------|
+| **Data** | **Static fixtures only.** Each figure gets a typed scenario (question, answer shape, chart series, clips metadata). **No `fetch`, no WebSockets, no live API.** |
+| **Mount** | **Lazy** when the figure enters or nears the viewport (`dynamic()` + `IntersectionObserver`) so below-the-fold figures do not block first paint. |
+| **Interaction** | **`mode: "static"`** default: no navigation, no chat input, no side effects. Opt in per figure (`mode: "demo"`) only when the story needs it (e.g. D-07 bar selection). |
+| **Typography** | **Areal** via `NEXT_PUBLIC_AREAL_URL` and the existing review Areal CSS pattern. Weights **≤ 500**. |
+| **Size** | Wrapper applies **placed width** and **tier aspect ratio** (`width: 100%` of column; `aspect-ratio` from table below). Inner chat UI is **100% of wrapper width**, not `transform` scaled. |
+| **Media exceptions** | **Image or video** only for **face-blurred clips** and, if needed, the **hero** in an early pass. Everything else is React. |
+
+### How figures import product UI (implementation plan)
+
+```
+lib/caseStudies/dialogueScenarios/          # static fixtures keyed by D-01 … D-15
+components/dialogue/product/                # synced from Dialogue app (source of truth)
+components/dialogue/DialogueStudyFigure.tsx # tier + ratio + lazy + scenario → product tree
+components/dialogue/DialogueCaseStudyContent.tsx  # replaces CaseStudyFigure + PNG paths
+```
+
+1. **Vendor product components**  
+   Bring Dialogue TSX + CSS into `components/dialogue/product/`. Match the API the `/export/section-*` pages use with `StudyChatShell`. Sync from the Dialogue repo (copy or submodule); **do not** reimplement chat UI in the portfolio.
+
+2. **Scenarios, not pages**  
+   `lib/caseStudies/dialogueScenarios/index.ts` exports `DialogueScenario` records (`id`, `tier`, `ratio`, `mode`, `payload`). Each `D-*` id maps to one scenario; payload mirrors production answer types.
+
+3. **`DialogueStudyFigure` wrapper**  
+   Props: `scenarioId`, optional canvas `annotateRaster` hook. Resolves tier → CSS width and `aspect-ratio`. Lazy-loads the product chunk. Renders product shell with `data={fixture}` and `width="100%"`. Lightbox (when used) targets raster exceptions only; live figures stay in DOM.
+
+4. **Case study wiring**  
+   `DialogueCaseStudyContent` uses `<DialogueStudyFigure scenarioId="D-02" />` instead of `CaseStudyFigure` + `DIALOGUE_IMAGES`. `DecisionBlock` uses three scenario ids with identical tier/ratio. Catalog entries use `scenarioId` plus optional `fallbackPng` for Agentation.
+
+5. **Review canvas**  
+   Prefer the same `DialogueStudyFigure` as `/dialogue`. Keep `LiveExportIframe` only until product source is vendored.
+
+6. **Static export pipeline**  
+   Export routes import the same `components/dialogue/product` + scenarios so rebuilt `public/dev/dialogue-static/` cannot diverge from `/dialogue`.
+
+### Per-section delivery (React vs raster)
+
+| IDs | Default renderer |
+|-----|------------------|
+| D-01 | Live React; PNG only if first pass requires it |
+| D-02–D-10, D-13–D-15 | Live React + scenario fixture |
+| D-07, D-15 | React; D-07 may use `mode: "demo"` for bar filter |
+| Clips with faces | React chrome + blurred `<video>` or `<img>` inside product clip UI |
+| D-11, D-12 | React when built; placeholders until then |
+
+---
 
 ## Proposed figure-width system (round 35 implementation)
 
@@ -99,11 +152,11 @@ One system for **case study page**, **static export frames**, and **canvas ifram
 | **D-07** | Bar → clips | React structured answer, bar selected, clips visible; `mode: "demo"` if bar highlight is interactive. |
 | **D-08** | Fixed structure | React anatomy callouts; **Full** width tier; no extra caption chrome under frame. |
 | **D-09** | Chart fits question | **8–12** React scenarios in gallery grid; one chart type per scenario. |
-| **D-10** | Clips solution | Keep narrative; ensure pair/problem placeholders get matching exports when built. |
+| **D-10** | Clips solution | React clip player at timestamp; blurred media for faces; pair problem frame when built. |
 | **D-11** | Messy research | Still candidate; **out of scope** for first build pass unless Mudit prioritizes. |
 | **D-12** | Copy as card | Still candidate; **out of scope** for first build pass unless Mudit prioritizes. |
 | **D-13 / D-14** | Placement | **Redesign treatment** (see below); likely **one** interactive or toggle frame + optional strip, not two static equal PNGs only. |
-| **D-15** | One answer drawer | **Keep**; minor polish (fill, margin) only. |
+| **D-15** | One answer drawer | **Keep** narrative; React drawer + answer; minor polish (fill, margin) only. |
 
 ### Chart / question matrix (D-09+)
 
@@ -135,8 +188,8 @@ Use **only** Dialogue tokens, chart components, and spacing from the export desi
 
 **Direction (finalize after References are filled; pick one in build after Mudit ok):**
 
-1. **Option A:** One **Full**-tier live frame of the study page with in-frame control to switch **sidebar vs bubble** (export HTML or lightweight React). One caption for the decision. Optional labeled variant strip above the main frame if References call for it.
-2. **Option B:** Two **equal** half-column live exports at **750px** logical width each, identical scale, plus short decision prose (why bubble). Only if References support side-by-side exploration at readable size.
+1. **Option A:** One **Full**-tier `DialogueStudyFigure` of the study page with in-frame control to switch **sidebar vs bubble**. One caption for the decision. Optional labeled variant strip above the main frame if References call for it.
+2. **Option B:** Two **Pair**-tier React figures at **~369px** placed width each, identical scale, plus short decision prose (why bubble). Only if References support side-by-side exploration at readable size.
 
 Deprecate reusing `section-6` for bubble if it is also hero language unless hero moves off `section-6`.
 
@@ -187,4 +240,4 @@ Run locally with `npm run dev` (not `next start`):
 
 ## Confirmation gate
 
-Mudit: reply **go** (or edits to this brief) before any visual/code implementation on round 35.
+Superseded: build started per Mudit (Oct 21) without waiting on brief confirmation. Rachel Chen **References** still apply when the rules file arrives.

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { preload } from "react-dom";
 import { DialogueCaseStudyContent } from "@/components/dialogue/DialogueCaseStudyContent";
 import { DIALOGUE_DRAFT, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 300;
@@ -23,8 +21,5 @@ export const metadata: Metadata = {
 };
 
 export default function DialogueCaseStudyPage() {
-  const lcp = CASE_STUDY_LCP["/dialogue"];
-  if (lcp) preload(lcp, { as: "image" });
-
   return <DialogueCaseStudyContent />;
 }

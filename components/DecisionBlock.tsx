@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyNumberedMarker from "@/components/CaseStudyNumberedMarker";
+import DialogueLiveFigure from "@/components/dialogue/DialogueLiveFigure";
+import { DIALOGUE_TRIO_CANONICAL_FRAME } from "@/lib/caseStudies/dialogueFigureTiers";
 
 export type RasterAnnotator = (assetId: string, children: ReactNode) => ReactNode;
 
@@ -15,8 +17,9 @@ export type DecisionBlockOption = {
   reasonLines?: string[];
   /** Muted line under the title when this option is chosen */
   selectionNote?: string;
-  imageSrc: string;
-  imageAlt: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  liveExport?: { exportRoute: string; title: string };
   rasterAssetId?: string;
   imageNaturalSize?: { width: number; height: number };
 };
@@ -60,7 +63,17 @@ function OptionCard({
   imageNaturalSize?: { width: number; height: number };
 }) {
   const size = option.imageNaturalSize ?? imageNaturalSize;
-  const figure = size ? (
+  const figure = option.liveExport ? (
+    <div className="cs-figure-media dialogue-live-figure-shell">
+      <DialogueLiveFigure
+        exportRoute={option.liveExport.exportRoute}
+        title={option.liveExport.title}
+        tier="trio"
+        canonicalFrame={DIALOGUE_TRIO_CANONICAL_FRAME}
+        assetId={option.rasterAssetId}
+      />
+    </div>
+  ) : size && option.imageSrc && option.imageAlt ? (
     <CaseStudyFigure
       src={option.imageSrc}
       alt={option.imageAlt}
@@ -69,7 +82,7 @@ function OptionCard({
       sizes="(max-width: 767px) calc(50vw - 30px), 240px"
       zoomable
     />
-  ) : (
+  ) : option.imageSrc && option.imageAlt ? (
     <CaseStudyFigure
       src={option.imageSrc}
       alt={option.imageAlt}
@@ -78,7 +91,7 @@ function OptionCard({
       sizes="(max-width: 767px) calc(50vw - 30px), 240px"
       zoomable
     />
-  );
+  ) : null;
   const media =
     option.rasterAssetId && annotateRaster
       ? annotateRaster(option.rasterAssetId, figure)

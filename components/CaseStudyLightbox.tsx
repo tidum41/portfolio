@@ -87,9 +87,9 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
           type="button"
           className="cs-lightbox-close"
           onClick={finishClose}
-          aria-label="Close enlarged image"
+          aria-label="Close enlarged image (Escape)"
         >
-          <span aria-hidden="true">×</span>
+          Close
         </button>
         <div className="cs-lightbox-media" onClick={(e) => e.stopPropagation()}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

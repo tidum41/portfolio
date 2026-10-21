@@ -10,6 +10,13 @@
     "section-6": { "width": 629, "height": 368 },
     "section-6a": { "width": 629, "height": 368 },
     "section-6b": { "width": 629, "height": 368 },
-    "section-7": { "width": 580, "height": 450 }
+    "section-7": { "width": 580, "height": 450 },
+    "visual-1": { "width": 787, "height": 441 },
+    "visual-2": { "width": 787, "height": 441 },
+    "visual-3": { "width": 287, "height": 497 },
+    "visual-4": { "width": 787, "height": 441 },
+    "visual-5": { "width": 787, "height": 441 },
+    "visual-6": { "width": 629, "height": 368 },
+    "casestudy-full": { "width": 1200, "height": 750 }
   }
 }
