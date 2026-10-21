@@ -14,7 +14,7 @@ const HLS_BOOT = `(function(){if(location.pathname!=="/")return;if(window.matchM
 
 // Copy-email works before hydration: a capture-phase listener handles clicks
 // until CopyEmail mounts and sets window.__copyEmailReady.
-const COPY_EMAIL_BOOT = `(function(){document.addEventListener("click",function(e){if(window.__copyEmailReady)return;var b=e.target&&e.target.closest&&e.target.closest(".copy-email-btn");if(!b||b.getAttribute("data-copied")==="true")return;try{navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(CONTACT_EMAIL)})}catch(x){}var t=b.querySelector(".copy-email-track"),i=b.querySelector(".copy-email-layer--idle"),c=b.querySelector(".copy-email-layer--copied");if(t&&i&&c&&!matchMedia("(prefers-reduced-motion: reduce)").matches){t.style.width=i.getBoundingClientRect().width+"px";t.offsetWidth;t.style.width=Math.ceil(c.getBoundingClientRect().width)+"px"}b.setAttribute("data-copied","true");setTimeout(function(){b.setAttribute("data-copied","false");if(t){t.style.width=Math.ceil(i.getBoundingClientRect().width)+"px";setTimeout(function(){t.style.width=""},200)}},1100)},true)})()`;
+const COPY_EMAIL_BOOT = `(function(){document.addEventListener("click",function(e){if(window.__copyEmailReady)return;var b=e.target&&e.target.closest&&e.target.closest(".copy-email-btn");if(!b||b.getAttribute("data-copied")==="true")return;try{navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(CONTACT_EMAIL)})}catch(x){}b.setAttribute("data-copied","true");setTimeout(function(){b.setAttribute("data-copied","false")},1600)},true)})()`;
 
 /**
  * Injects blocking boot + JSON-LD scripts into the SSR HTML stream outside

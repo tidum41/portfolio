@@ -49,7 +49,8 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           .footer-links {
             gap: 20px;
           }
-          .footer-links a {
+          .footer-links a,
+          .footer-links button.footer-link {
             min-height: 0;
           }
         }

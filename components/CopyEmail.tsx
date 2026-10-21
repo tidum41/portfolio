@@ -3,14 +3,15 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type ReactNode,
-  type TransitionEvent,
 } from "react";
 import { CONTACT_EMAIL } from "@/lib/site";
+
+/** Visible "Copied" hold before fading back. Fade durations live in CSS. */
+const HOLD_MS = 1600;
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
@@ -40,8 +41,8 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies CONTACT_EMAIL on click. Crossfades calmly between resting and "Copied" states;
- * track width animates between measured label widths so rest stays natural "Email" width.
+ * Copies CONTACT_EMAIL on click. Crossfades the label to "Copied" in place
+ * (grid-stacked layers) so width, height, and baseline never shift.
  */
 export default function CopyEmail({
   children,
@@ -61,53 +62,19 @@ export default function CopyEmail({
 }) {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
-  const [trackWidthPx, setTrackWidthPx] = useState<number | undefined>(undefined);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const trackRef = useRef<HTMLSpanElement>(null);
-  const idleRef = useRef<HTMLSpanElement>(null);
-  const copiedRef = useRef<HTMLSpanElement>(null);
-  const widthsRef = useRef({ idle: 0, copied: 0 });
-
-  const measureLayers = useCallback(() => {
-    const idle = idleRef.current;
-    const copied = copiedRef.current;
-    if (!idle || !copied) return;
-    widthsRef.current = {
-      idle: Math.ceil(idle.getBoundingClientRect().width),
-      copied: Math.ceil(copied.getBoundingClientRect().width),
-    };
-  }, []);
-
-  useLayoutEffect(() => {
-    measureLayers();
-  }, [measureLayers, children, copiedLabel]);
 
   useEffect(() => {
-    // Hand clicks over from the pre-hydration handler in app/layout.tsx.
+    // Hand clicks over from the pre-hydration handler in BootScripts.
     (window as Window & { __copyEmailReady?: boolean }).__copyEmailReady = true;
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
-  const onTrackTransitionEnd = useCallback(
-    (event: TransitionEvent<HTMLSpanElement>) => {
-      if (event.propertyName !== "width") return;
-      if (!copied) {
-        setTrackWidthPx(undefined);
-      }
-    },
-    [copied],
-  );
-
   const onClick = useCallback(async () => {
-    measureLayers();
-    const { idle, copied: copiedW } = widthsRef.current;
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (copied) return;
 
-    // Start the visual change immediately; the clipboard write runs alongside it.
     void copyToClipboard(CONTACT_EMAIL).then((ok) =>
       setAnnouncement(
         ok
@@ -116,33 +83,14 @@ export default function CopyEmail({
       ),
     );
 
-    const currentIdle =
-      trackWidthPx ?? Math.ceil(trackRef.current?.getBoundingClientRect().width ?? idle);
-
-    if (reduced) {
-      setTrackWidthPx(copiedW);
-      setCopied(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        setCopied(false);
-        setAnnouncement("");
-        setTrackWidthPx(undefined);
-      }, 1100);
-      return;
-    }
-
-    setTrackWidthPx(currentIdle);
-    requestAnimationFrame(() => {
-      setCopied(true);
-      setTrackWidthPx(copiedW);
-    });
+    setCopied(true);
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setCopied(false);
-      setTrackWidthPx(idle);
-    }, 1100);
-  }, [measureLayers]);
+      setAnnouncement("");
+    }, HOLD_MS);
+  }, [copied]);
 
   const baseStyle: CSSProperties = unstyled
     ? {
@@ -172,39 +120,18 @@ export default function CopyEmail({
         data-copied={copied ? "true" : "false"}
         onClick={onClick}
       >
-        <span
-          ref={trackRef}
-          className="copy-email-track"
-          style={trackWidthPx !== undefined ? { width: trackWidthPx } : undefined}
-          onTransitionEnd={onTrackTransitionEnd}
-        >
-          <span ref={idleRef} className="copy-email-layer copy-email-layer--idle">
+        <span className="copy-email-track">
+          <span className="copy-email-layer copy-email-layer--idle" aria-hidden={copied}>
             {children}
           </span>
           <span
-            ref={copiedRef}
             className="copy-email-layer copy-email-layer--copied"
             aria-hidden={!copied}
           >
-            <ChainLinkIcon />
             {copiedLabel}
           </span>
         </span>
       </button>
     </>
-  );
-}
-
-function ChainLinkIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path
-        d="M6.75 9.25a2.75 2.75 0 0 0 3.89 0l2.12-2.12a2.75 2.75 0 0 0-3.89-3.89l-.88.88M9.25 6.75a2.75 2.75 0 0 0-3.89 0L3.24 8.87a2.75 2.75 0 0 0 3.89 3.89l.88-.88"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

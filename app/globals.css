@@ -419,7 +419,8 @@ html.theme-switching *::after {
   padding-top: calc(24px + env(safe-area-inset-top));
   padding-bottom: 24px;
 }
-nav a {
+nav a,
+nav button.footer-link {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -710,52 +711,47 @@ button.footer-link::before {
   inset: -6px;
 }
 
-/* ─── Copy email: natural rest width, animated expand to Copied ─── */
+/* ─── Copy email: grid-stacked crossfade (no width/height/baseline shift) ─── */
 .copy-email-btn {
   display: inline-flex;
   align-items: center;
-  vertical-align: middle;
+  /* Match footer <a> baseline so the hosting <li> line box stays 21px. */
+  vertical-align: baseline;
   max-width: 100%;
 }
 
+/* Both labels share one grid cell → track sizes to the larger label always. */
 .copy-email-track {
-  position: relative;
-  display: inline-block;
+  display: inline-grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: start;
   white-space: nowrap;
-  vertical-align: top;
-  overflow: hidden;
-  transition: width 150ms ease-out;
+  line-height: inherit;
 }
 
 .copy-email-layer {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  grid-area: 1 / 1;
+  display: block;
   line-height: inherit;
   font-weight: inherit;
-  transition: opacity 120ms ease-out;
+  /* Default = fade back to idle (200ms). Entering copied overrides to 160ms. */
+  transition: opacity 200ms ease-out;
 }
 
 .copy-email-layer--idle {
   opacity: 1;
 }
 
-.copy-email-layer svg {
-  display: block;
-  flex-shrink: 0;
-  /* Optical centering against lowercase-heavy label text */
-  transform: translateY(0.5px);
-}
-.cs-pill-btn .copy-email-layer svg {
-  transform: translateY(-0.8px);
-}
-
 .copy-email-layer--copied {
-  position: absolute;
-  left: 0;
-  top: 0;
   opacity: 0;
   pointer-events: none;
+  font-weight: 500;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer {
+  transition-duration: 160ms;
 }
 
 .copy-email-btn[data-copied="true"] .copy-email-layer--idle {
@@ -769,7 +765,6 @@ button.footer-link::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .copy-email-track,
   .copy-email-layer {
     transition: none !important;
   }
