@@ -24,10 +24,11 @@ function scaleProps(scenario: Scenario): { innerWidth: number; maxScale?: number
   }
   switch (scenario) {
     case "hero":
-      // 448 chat + 14 gap + ~320 clips column
-      return { innerWidth: 782, maxScale: 1 };
+      // 448 chat + 14 gap + ~320 clips; allow scale-up so UI fills the 3:2 frame
+      return { innerWidth: 782 };
     case "anatomy":
-      return { innerWidth: ANATOMY_W, maxScale: 1 };
+      // Centerpiece: fill the content width
+      return { innerWidth: ANATOMY_W };
     case "full-answer":
       return { innerWidth: FULL_ANSWER_W, maxScale: 1 };
     case "clip-player":

@@ -25,12 +25,13 @@ const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
 export type RasterAnnotator = (assetId: string, children: React.ReactNode) => React.ReactNode;
 
+/** Short forms of the section H2s for the left nav. */
 export const DIALOGUE_TOC_ITEMS = [
   { id: "problem", label: "Problem" },
-  { id: "why-it-matters", label: "Why it matters" },
-  { id: "one-structure", label: "One structure" },
-  { id: "fitted-charts", label: "Fitted charts" },
-  { id: "clips", label: "Clips" },
+  { id: "why-it-matters", label: "Finding travels" },
+  { id: "one-structure", label: "Fixed structure" },
+  { id: "fitted-charts", label: "Chart fits" },
+  { id: "clips", label: "Quote context" },
   { id: "placement", label: "Floating chat" },
   { id: "full-answer", label: "One answer" },
 ];
@@ -48,10 +49,11 @@ function Section({
   return (
     <section
       id={id}
+      className="dialogue-cs-section"
       style={{
-        scrollMarginTop: 120,
-        paddingBottom: "var(--section-pb)",
-        marginBottom: "var(--section-gap)",
+        scrollMarginTop: 96,
+        paddingBottom: 0,
+        marginBottom: "var(--dialogue-section-gap)",
       }}
     >
       {inner}
@@ -136,12 +138,12 @@ export function DialogueCaseStudyContent({
                 wide: true,
                 values: [
                   <>
-                    Benjamin Lo{" "}
-                    <span style={{ color: "var(--color-text-muted)" }}>Co-founder, CEO</span>
+                    <span className="cs-meta-name">Benjamin Lo</span>
+                    <span className="cs-meta-role">Co-founder, CEO</span>
                   </>,
                   <>
-                    Justin Hoang{" "}
-                    <span style={{ color: "var(--color-text-muted)" }}>Co-founder, CPO</span>
+                    <span className="cs-meta-name">Justin Hoang</span>
+                    <span className="cs-meta-role">Co-founder, CPO</span>
                   </>,
                 ],
               },
@@ -250,8 +252,8 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
-                Parts stay in order: 1 Sources, 2 Summary, 3 Chart, 4 Clips, 5 Follow-ups. Only part
-                3 changes shape.
+                This is the system everything else hangs on. Parts stay in order: 1 Sources, 2
+                Summary, 3 Chart, 4 Clips, 5 Follow-ups. Only part 3 changes shape.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -264,9 +266,9 @@ export function DialogueCaseStudyContent({
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
               <CaseStudyBody>
-                Part 3 is the only slot that changes. I grouped real chat questions by type and
-                gave each a chart shape. A question-type classifier picks the chart. If nothing
-                fits, the answer stays text with sources and clips.
+                Supporting part 3: I grouped real chat questions by type and gave each a chart
+                shape. A question-type classifier picks the chart. If nothing fits, the answer stays
+                text with sources and clips.
               </CaseStudyBody>
               <p
                 style={{
@@ -284,7 +286,7 @@ export function DialogueCaseStudyContent({
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>
-                Part 4 opens the clip at the exact second, with the transcript in sync.
+                Supporting part 4: the clip opens at the exact second, with the transcript in sync.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -309,8 +311,8 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                After a part 5 follow-up, parts 1 through 4 still hold together for the new answer,
-                with every supporting clip in one drawer.
+                Back to the same structure: after a part 5 follow-up, parts 1 through 4 still hold
+                together for the new answer, with every supporting clip in one drawer.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"

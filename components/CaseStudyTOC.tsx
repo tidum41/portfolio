@@ -54,21 +54,34 @@ export default function CaseStudyTOC({
   const activeSections = useMemo(() => items.filter((s) => s.label.trim()), [items]);
 
   const updateActive = useCallback(() => {
-    const target = window.innerHeight * 0.5;
-    const nearBottom =
-      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+    if (activeSections.length === 0) return;
 
-    if (nearBottom && activeSections.length > 0) {
+    const target = window.innerHeight * 0.35;
+    const scrollY = window.scrollY;
+    const docH = document.documentElement.scrollHeight;
+    // Only treat as "bottom" after the page has real height and the user has scrolled.
+    // Early paint (short scrollHeight) used to force the last TOC item at the top.
+    const nearBottom =
+      scrollY > 120 &&
+      docH > window.innerHeight + 160 &&
+      window.innerHeight + scrollY >= docH - 80;
+
+    if (nearBottom) {
       setActiveSection(activeSections[activeSections.length - 1].label);
       return;
     }
 
-    let current = "";
+    if (scrollY < 24) {
+      setActiveSection(activeSections[0].label);
+      return;
+    }
+
+    let current = activeSections[0].label;
     activeSections.forEach(({ id, label }) => {
       const el = document.getElementById(id);
       if (el && el.getBoundingClientRect().top <= target) current = label;
     });
-    if (current) setActiveSection(current);
+    setActiveSection(current);
   }, [activeSections]);
 
   // Layout effect (not a regular effect) so the initial `updateActive()` call

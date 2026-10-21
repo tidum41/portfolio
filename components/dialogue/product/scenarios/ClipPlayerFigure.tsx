@@ -11,6 +11,8 @@ export default function ClipPlayerFigure() {
           alt=""
           decoding="async"
         />
+        {/* Face-only privacy blur; scene stays readable. */}
+        <span className="dp-player__face-privacy" aria-hidden />
         <div className="dp-player__scrim" aria-hidden />
         <div className="dp-player__play" aria-hidden>
           <span className="dp-player__play-icon" />

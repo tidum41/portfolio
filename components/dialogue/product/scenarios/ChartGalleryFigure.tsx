@@ -140,9 +140,8 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
                 label: row.label,
                 value: row.count,
                 display: formatChartCount(row.count),
-                focal: "focal" in row && row.focal,
               }))}
-              fillMode="index"
+              fillMode="magnitude"
             />
           </ChartVizCard>
         </StudyChatShell>

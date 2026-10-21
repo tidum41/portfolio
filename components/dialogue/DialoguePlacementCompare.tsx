@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 
@@ -23,51 +20,24 @@ const OPTIONS = [
   },
 ];
 
+/** Two equal static frames. No tabs, no selected chrome. */
 export default function DialoguePlacementCompare() {
-  const [active, setActive] = useState<"sidebar" | "bubble">("bubble");
-
   return (
     <div className="dialogue-placement-compare">
-      <div className="dialogue-placement-compare__layout">
-        <div
-          className="dialogue-placement-compare__options"
-          role="tablist"
-          aria-label="Placement options"
-        >
-          {OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              role="tab"
-              aria-selected={active === opt.id}
-              className={[
-                "dialogue-placement-compare__option",
-                active === opt.id ? "dialogue-placement-compare__option--active" : "",
-              ].join(" ")}
-              onClick={() => setActive(opt.id)}
-            >
-              <span className="dialogue-placement-compare__option-title">{opt.title}</span>
-              <span className="dialogue-placement-compare__option-line">{opt.costLine}</span>
-            </button>
-          ))}
-        </div>
-        <div className="dialogue-placement-compare__figures">
-          {OPTIONS.map((opt) => (
-            <div
-              key={opt.id}
-              className="dialogue-placement-compare__figure"
-              hidden={active !== opt.id}
-            >
-              <DialogueRachelFrame tone={opt.id === "bubble" ? "solution" : "problem"}>
-                <DialogueProductFigure
-                  scenario={opt.scenario}
-                  title={opt.title}
-                  assetId={opt.assetId}
-                />
-              </DialogueRachelFrame>
-            </div>
-          ))}
-        </div>
+      <div className="dialogue-placement-compare__pair">
+        {OPTIONS.map((opt) => (
+          <div key={opt.id} className="dialogue-placement-compare__cell">
+            <p className="dialogue-placement-compare__label">{opt.title}</p>
+            <DialogueRachelFrame tone="system">
+              <DialogueProductFigure
+                scenario={opt.scenario}
+                title={opt.title}
+                assetId={opt.assetId}
+              />
+            </DialogueRachelFrame>
+            <p className="dialogue-placement-compare__cost">{opt.costLine}</p>
+          </div>
+        ))}
       </div>
       <p className="dialogue-placement-compare__decision">
         Floating chat wins when the study page is the focus. The launcher stays in the corner when

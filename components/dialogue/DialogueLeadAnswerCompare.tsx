@@ -15,16 +15,15 @@ function panelSurfaceTone(optionId: string): DialogueFrameTone {
   return optionId === "structured" ? "solution" : "problem";
 }
 
-/** Tall enough for the answer body once the shared question is shown above. */
-const ROW_CROP_H = 420;
+/** Live chat width; scaled as a unit to ~392px outer. */
+const CHAT_W = 448;
+const OPTION_OUTER_W = 392;
 
 type Option = {
   id: string;
   title: string;
   label: string;
-  /** One real cost for this option. */
   costLine?: string;
-  /** @deprecated use costLine */
   priorityLine?: string;
   howeverLine?: string;
   selectionNote?: string;
@@ -39,7 +38,6 @@ type Props = {
   options: Option[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
-  /** Shared question shown once above the three answer rows. */
   question?: string;
 };
 
@@ -60,10 +58,11 @@ function OptionRow({
     ) : (
       <StructuredAnswerFigure compact showClips />
     );
+  // No cropHeight / fade: full answer scales as a unit so charts are not cut mid-bar.
   const figure = (
-    <ScaledChatViewport cropHeight={ROW_CROP_H} fade>
-      {body}
-    </ScaledChatViewport>
+    <div className="dialogue-lead-answer__viewport">
+      <ScaledChatViewport innerWidth={CHAT_W}>{body}</ScaledChatViewport>
+    </div>
   );
   const wrapped =
     option.rasterAssetId && annotateRaster
@@ -104,7 +103,7 @@ export default function DialogueLeadAnswerCompare({
   question = CHECKOUT_QUESTION,
 }: Props) {
   return (
-    <div className="dialogue-lead-answer">
+    <div className="dialogue-lead-answer" style={{ ["--dialogue-option-w" as string]: `${OPTION_OUTER_W}px` }}>
       <h3 className="dialogue-lead-answer__heading">{heading}</h3>
       <p className="dialogue-lead-answer__subheading">{subheading}</p>
       <p className="dialogue-lead-answer__question">
