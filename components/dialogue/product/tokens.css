@@ -32,6 +32,8 @@
   --dp-paper-frame-width: 922px;
   --dp-paper-frame-height: 540px;
   --dp-paper-sidebar-width: 188px;
+  --dp-placement-chat-width: 392px;
+  --dp-placement-inset: 24px;
   --dp-radius: 1.5rem; /* --radius-3xl */
   --dp-radius-bubble: 1rem; /* --radius-2xl */
   --dp-radius-sm: 14px;

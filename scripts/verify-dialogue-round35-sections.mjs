@@ -374,7 +374,7 @@ for (const vp of VIEWPORTS) {
               if (text.length < 4) return;
               if (
                 sectionEl.id === "placement" &&
-                (el.closest(".dp-floating-chat") || el.closest(".dp-placement-backdrop"))
+                (el.closest(".dp-placement-scene__chat") || el.closest(".dp-placement-scene"))
               ) {
                 return;
               }
@@ -496,11 +496,11 @@ for (const vp of VIEWPORTS) {
 
           if (sectionEl.id === "placement") {
             const activeChat = sectionEl.querySelector(
-              ".dialogue-placement-compare__figure:not([hidden]) .dp-study-chat",
+              ".dialogue-placement-compare__figure:not([hidden]) [data-placement-chat] .dp-study-chat",
             );
             if (!activeChat) hits.push("placement-missing-chat");
             const launcher = sectionEl.querySelector(
-              ".dialogue-placement-compare__figure:not([hidden]) .dp-bubble-launcher-inset",
+              ".dialogue-placement-compare__figure:not([hidden]) .dp-placement-scene__launcher",
             );
             const activeBubble = sectionEl.querySelector(
               '.dialogue-placement-compare__figure:not([hidden]) [data-dialogue-asset-id="D-14"]',
@@ -509,22 +509,34 @@ for (const vp of VIEWPORTS) {
             const activeFigure = sectionEl.querySelector(
               ".dialogue-placement-compare__figure:not([hidden])",
             );
-            const bubbleLayer = activeFigure?.querySelector(".dp-placement-layer--bubble");
-            const study = activeFigure?.querySelector(".dp-placement-backdrop");
-            const chat = activeFigure?.querySelector(".dp-floating-chat");
-            if (bubbleLayer && chat) {
-              const layerRect = bubbleLayer.getBoundingClientRect();
-              const chatRect = chat.getBoundingClientRect();
-              const widthPct = chatRect.width / layerRect.width;
-              const narrow = window.innerWidth < 600;
-              const lo = narrow ? 0.58 : 0.36;
-              const hi = narrow ? 0.66 : 0.44;
-              if (widthPct < lo || widthPct > hi) {
-                hits.push(`placement-chat-width:${Math.round(widthPct * 100)}`);
+            const scene = activeFigure?.querySelector("[data-placement-scene]");
+            const shell = scene?.querySelector("[data-export-app-shell]");
+            const chatWrap = scene?.querySelector("[data-placement-chat]");
+            const chat = chatWrap?.querySelector(".dp-study-chat");
+            const question = scene?.querySelector(".dp-user-bubble p");
+            if (scene && shell && chatWrap) {
+              const shellScale = shell.getBoundingClientRect().width / 1280;
+              const chatScale = chatWrap.getBoundingClientRect().width / 392;
+              if (Math.abs(shellScale - chatScale) > 0.04) {
+                hits.push(
+                  `placement-scale-mismatch:${shellScale.toFixed(3)}:${chatScale.toFixed(3)}`,
+                );
               }
             }
-            if (study && chat) {
-              const chatRect = chat.getBoundingClientRect();
+            if (question) {
+              const st = getComputedStyle(question);
+              const lh = parseFloat(st.lineHeight);
+              if (Number.isFinite(lh) && lh > 0) {
+                const lines = question.getBoundingClientRect().height / lh;
+                if (lines > 2.15) {
+                  hits.push(`placement-question-lines:${lines.toFixed(1)}`);
+                }
+              }
+            }
+            const study = scene;
+            const chatEl = chatWrap;
+            if (study && chatEl) {
+              const chatRect = chatEl.getBoundingClientRect();
               const wrapRect = study.getBoundingClientRect();
               const textInside = (rect, box) =>
                 rect.left >= box.left - 0.5 &&

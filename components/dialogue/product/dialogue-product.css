@@ -766,6 +766,37 @@
 
 .dp-app-shell--paper-frame .dp-app-sidebar {
   width: var(--dp-paper-sidebar-width, 188px);
+  padding: 16px 14px;
+  gap: 12px;
+}
+
+.dp-app-shell--paper-frame .dp-app-sidebar__wordmark-img {
+  height: 18px;
+}
+
+.dp-app-shell--paper-frame .dp-app-main__head {
+  padding: 12px 16px;
+}
+
+.dp-app-shell--paper-frame .dp-app-tabs {
+  margin-top: 8px;
+  gap: 6px;
+}
+
+.dp-app-shell--paper-frame .dp-app-main__body {
+  padding: 12px 16px;
+}
+
+.dp-app-shell--paper-frame .dp-app-stat-grid {
+  max-width: 300px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.dp-app-shell--paper-frame .dp-app-insights-card {
+  margin-top: 16px;
+  max-width: 300px;
+  padding: 10px 12px;
 }
 
 .dp-placement-layer {
@@ -774,21 +805,58 @@
   background: var(--dp-bg);
   border-radius: var(--dp-radius-sm);
   overflow: hidden;
-  container-type: size;
-  container-name: dp-placement;
 }
 
-.dp-placement-backdrop {
+.dp-placement-viewport {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
   overflow: hidden;
   pointer-events: none;
-  z-index: 0;
 }
 
-/* Full production shell (1280×748), scaled to cover the figure frame */
-.dp-placement-backdrop__scale {
+.dp-placement-viewport--crop-right {
+  justify-content: flex-end;
+}
+
+.dp-placement-viewport__frame {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.dp-placement-scene {
+  position: relative;
+  flex-shrink: 0;
   transform-origin: top left;
+  text-rendering: geometricprecision;
+}
+
+.dp-placement-scene__chat {
+  position: absolute;
+  z-index: 2;
+  max-height: calc(100% - 96px);
+  overflow: auto;
+  box-shadow: var(--shadow-chat);
+  border-radius: var(--dp-radius);
+}
+
+.dp-placement-scene__chat .dp-study-chat {
+  width: 100%;
+}
+
+.dp-placement-scene__launcher {
+  position: absolute;
+  z-index: 3;
+  border-radius: 999px;
+  background: var(--dp-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--shadow-launcher);
 }
 
 .dp-study-main__insight {
@@ -798,7 +866,7 @@
   color: var(--dp-muted);
 }
 
-.dp-bubble-launcher-inset {
+.dp-bubble-launcher-inset:not(.dp-placement-scene__launcher) {
   position: absolute;
   bottom: 12px;
   right: 12px;
@@ -852,24 +920,6 @@
   max-height: none;
   overflow: visible;
   z-index: 2;
-}
-
-.dp-placement-layer--bubble .dp-floating-chat {
-  bottom: 52px;
-  max-height: calc(100% - 64px);
-  overflow: auto;
-}
-
-@media (min-width: 600px) {
-  .dp-placement-layer--bubble .dp-floating-chat {
-    width: 40%;
-  }
-}
-
-@media (max-width: 599px) {
-  .dp-placement-layer--bubble .dp-floating-chat {
-    width: 62%;
-  }
 }
 
 .dp-floating-chat .dp-funnel__label {

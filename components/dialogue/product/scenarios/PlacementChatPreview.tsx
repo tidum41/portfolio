@@ -5,10 +5,10 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
-/** Placement popup: complete through follow-ups (no bottom crop). */
+/** Placement popup at real panel width (~392px): 16px body, ends on follow-ups. */
 export default function PlacementChatPreview() {
   return (
-    <StudyChatShell compact hero>
+    <StudyChatShell compact>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <FunnelChart hero showLargestDrop={false} vizCard={false} />

@@ -113,6 +113,11 @@ export const dialogueProductTokens = {
     paperFrameHeight: "540px",
     /** Paper sidebar in 922px frame (`section-6.html` `w-[188px]`) */
     paperSidebarWidth: "188px",
+    /** Live floating chat panel width (production / Paper placement) */
+    placementChatWidth: "392px",
+    placementInset: "24px",
+    placementLauncherSize: 48,
+    placementLauncherGap: 12,
   },
   shadow: {
     chat: "0 8px 24px -12px rgb(28 25 23 / 8%)",
