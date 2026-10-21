@@ -56,7 +56,7 @@ export default function DialoguePlacementCompare() {
               className="dialogue-placement-compare__figure"
               hidden={active !== opt.id}
             >
-              <DialogueRachelFrame tone="neutral">
+              <DialogueRachelFrame tone={opt.id === "bubble" ? "solution" : "problem"}>
                 <DialogueProductFigure
                   scenario={opt.scenario}
                   title={opt.title}

@@ -6,7 +6,14 @@ import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/Parag
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
 import type { DialogueProductScenario as Scenario } from "@/components/dialogue/product/DialogueProductScenario";
+import DialogueRachelFrame, {
+  type DialogueFrameTone,
+} from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
+
+function panelSurfaceTone(optionId: string): DialogueFrameTone {
+  return optionId === "structured" ? "solution" : "problem";
+}
 
 const DECISION_CROP_H = 468;
 const DESKTOP_MAX_SCALE = 0.58;
@@ -66,7 +73,9 @@ function OptionPanel({
       ].join(" ")}
     >
       <p className="dialogue-lead-answer__panel-label">{option.label}</p>
-      {wrapped}
+      <DialogueRachelFrame tone={panelSurfaceTone(option.id)} className="dialogue-lead-answer__frame">
+        {wrapped}
+      </DialogueRachelFrame>
       <p className="dialogue-lead-answer__panel-title">{option.title}</p>
       {isChosen && option.selectionNote ? (
         <p className="dialogue-lead-answer__panel-line">{option.selectionNote}</p>

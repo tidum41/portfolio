@@ -78,7 +78,7 @@ function OptionCard({
 }) {
   const size = option.imageNaturalSize ?? imageNaturalSize;
   const figure = option.productScenario ? (
-    <DialogueRachelFrame tone="neutral">
+    <DialogueRachelFrame tone="system">
       <DialogueProductFigure
         scenario={option.productScenario}
         title={option.title}
@@ -86,7 +86,7 @@ function OptionCard({
       />
     </DialogueRachelFrame>
   ) : option.liveExport ? (
-    <DialogueRachelFrame tone="neutral">
+    <DialogueRachelFrame tone="system">
       <DialogueProductFigure
         scenario="decision-paragraphs"
         title={option.liveExport.title}

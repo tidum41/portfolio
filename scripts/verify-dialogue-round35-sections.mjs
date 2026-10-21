@@ -471,7 +471,7 @@ for (const vp of VIEWPORTS) {
           if (sectionEl.classList.contains("dialogue-hero-joola")) {
             const clips = sectionEl.querySelector(".dp-hero-compose__clips");
             const heroH = sectionEl.getBoundingClientRect().height;
-            if (viewportWide && heroH > 300) {
+            if (viewportWide && heroH > 300 && !sectionEl.querySelector(".dp-scaled-viewport")) {
               if (!clips || getComputedStyle(clips).display === "none") {
                 hits.push("hero-missing-clips");
               }

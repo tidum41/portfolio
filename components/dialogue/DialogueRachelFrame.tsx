@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-export type DialogueFrameTone = "problem" | "solution" | "neutral" | "chart";
+/** Figure well tone — maps to near-neutral surface tokens (not lilac/beige/chart grey). */
+export type DialogueFrameTone = "problem" | "solution" | "system";
 
 type Props = {
   label?: string;
@@ -11,7 +12,7 @@ type Props = {
 
 export default function DialogueRachelFrame({
   label,
-  tone = "neutral",
+  tone = "system",
   children,
   className,
 }: Props) {

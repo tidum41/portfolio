@@ -4,6 +4,10 @@
   --dp-font-brand: var(--font-dialogue-zilla, var(--font-brand, "Zilla Slab")), Georgia, serif;
   --dp-font-product-tracking: -0.01em;
   --dp-bg: #f8f6f3; /* --background → --paper-50 */
+  /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */
+  --dp-figure-surface-system: #f5f5f4;
+  --dp-figure-surface-problem: #efeeed;
+  --dp-figure-surface-solution: #f8f7f6;
   --dp-surface: #fcfbf9; /* --card → --paper-10 */
   --dp-app-bg: #fafaf9; /* --color-stone-50 */
   --dp-sidebar-bg: #f8f6f3; /* --sidebar → --paper-50 */

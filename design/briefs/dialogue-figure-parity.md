@@ -21,7 +21,7 @@
 | ID | Drift | Fix |
 |----|-------|-----|
 | G-1 | Figures interactive (hover/focus) in case study | `dialogue-product-block--static`: `pointer-events: none`, `user-select: none`, `aria-hidden` |
-| G-2 | Rachel frames used unrelated lilac/blue/beige per section | Neutral `rgb(244,241,236)` for all figures; **problem/solution** tones kept only for labeled problem/solution pairs |
+| G-2 | Rachel frames used lilac/blue-grey/beige outliers | **Three near-neutral stone surfaces** (~2–4% lightness steps), chunked by figure role (see below) |
 | G-3 | Section labels inconsistent (13px, mixed color) | `12px/500` muted caption, `12px` spacing below label |
 | G-4 | Chat panels stretched to ~900px content column | `ScaledChatViewport` at **392px** inner width, uniform `transform: scale()` |
 
@@ -58,7 +58,7 @@
 | C-2 | Theme ranking ad-hoc `dp-quote-list` | `ThemeRankingCard` in `dp-viz-card` |
 | C-3 | Quote frequency reused full answer figure | `QuoteFrequencyCard` (funnel row geometry) |
 | C-4 | Coverage plain meta line | `CoverageCallout` + compact funnel |
-| C-5 | Gallery cells on blue-grey chart tone | `DialogueRachelFrame` **neutral** surface |
+| C-5 | Gallery cells on blue-grey chart tone | `DialogueRachelFrame` **system** surface |
 
 ### D-10 Clip player
 
@@ -84,6 +84,36 @@
 | ID | Drift | Fix |
 |----|-------|-----|
 | T-1 | `38%` emphasis at `font-weight: 600` | `dp-summary__emph` → **500** (Dialogue token) |
+
+---
+
+## Figure surface system (item 7 — Rachel Chen reference)
+
+**Reference:** [Rachel Chen — 1Password](https://www.rachelchen.tech/projects/1password) chunks figure wells with `bg-surface-muted` (~**4%** `color-mix` of `#32404f` on white, ≈ **10%** apparent fill). Dialogue uses the same idea on **warm stone**: three tokens, no hue outliers.
+
+| Token | Hex | Role (~L vs white) |
+|-------|-----|---------------------|
+| `--dp-figure-surface-system` | `#f5f5f4` | Structure, charts, anatomy, hero well, gallery |
+| `--dp-figure-surface-problem` | `#efeeed` | Problem framing, rejected alternatives |
+| `--dp-figure-surface-solution` | `#f8f7f6` | Solution framing, chosen pattern |
+
+**Per-figure map (case study)**
+
+| Asset / block | Surface |
+|---------------|---------|
+| D-01 Hero (`cs-hero-media-frame`) | system |
+| D-02 Problem paragraphs | problem |
+| D-04 Wall of text (decision) | problem |
+| D-05 Quotes only (decision) | problem |
+| D-06 Answer + evidence (decision, chosen) | solution |
+| D-08 Anatomy (1–5) | system |
+| D-09 Gallery (all variants) | system |
+| D-10 Clip player (`Solution:` label) | solution |
+| D-13 Placement docked sidebar | problem |
+| D-14 Placement floating bubble | solution |
+| D-15 Full answer drawer (`Solution:` label) | solution |
+
+CSS: `dialogue-rachel-frame--{system|problem|solution}` in `app/globals.css`; tokens duplicated in `components/dialogue/product/tokens.css` for product roots.
 
 ---
 

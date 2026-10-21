@@ -1873,15 +1873,19 @@ html[data-theme="light"] {
 .dialogue-rachel-frame {
   overflow: visible;
 }
+.dialogue-case-study {
+  --dp-figure-surface-system: #f5f5f4;
+  --dp-figure-surface-problem: #efeeed;
+  --dp-figure-surface-solution: #f8f7f6;
+}
+.dialogue-rachel-frame--system {
+  background: var(--dp-figure-surface-system);
+}
 .dialogue-rachel-frame--problem {
-  background: rgb(245, 232, 160);
+  background: var(--dp-figure-surface-problem);
 }
 .dialogue-rachel-frame--solution {
-  background: rgb(232, 220, 248);
-}
-.dialogue-rachel-frame--neutral,
-.dialogue-rachel-frame--chart {
-  background: rgb(244, 241, 236);
+  background: var(--dp-figure-surface-solution);
 }
 .dialogue-rachel-frame__label {
   display: block;
@@ -1910,7 +1914,7 @@ html[data-theme="light"] {
   border-radius: var(--radius-control);
   overflow: hidden;
   aspect-ratio: 3 / 2;
-  background: #f8f6f3;
+  background: var(--dp-figure-surface-system);
 }
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dialogue-product-block,
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-joola .dp-scaled-viewport {

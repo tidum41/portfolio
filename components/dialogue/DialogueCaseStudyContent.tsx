@@ -18,7 +18,7 @@ import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
   if (label.startsWith("Solution:")) return "solution";
-  return "neutral";
+  return "system";
 }
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
@@ -92,7 +92,7 @@ function ProductFigureBlock({
   frameLabel?: string;
   frameTone?: DialogueFrameTone;
 }) {
-  const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "neutral");
+  const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "system");
   const media = (
     <DialogueRachelFrame label={frameLabel} tone={tone}>
       <DialogueProductFigure scenario={scenario} title={title} assetId={assetId} />
