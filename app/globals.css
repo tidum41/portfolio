@@ -1668,6 +1668,10 @@ html[data-theme="dark"] .ps-polaroid-cap {
   bottom: 40px;
   height: 36px;
 }
+.bento-minimap {
+  right: var(--page-px, 24px);
+  bottom: 40px;
+}
 .bento-zoom-track {
   touch-action: none;
 }
@@ -1677,6 +1681,7 @@ html[data-theme="dark"] .ps-polaroid-cap {
 @media (max-width: 767px) {
   .bento-hint-pill { top: 88px; }
   .bento-zoom-panel { bottom: 56px; height: 44px; min-height: 44px; box-sizing: border-box; }
+  .bento-minimap { display: none !important; }
   .bento-zoom-track {
     min-height: 44px;
     display: flex;
