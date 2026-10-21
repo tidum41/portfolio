@@ -273,17 +273,46 @@ export default function AboutPageContent({
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Organizations</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {ORGS.map(({ name, role }) => (
+            {ORGS.map((org) => {
+              const { name, role } = org;
+              const href = "href" in org ? org.href : undefined;
+              const nameStyle: CSSProperties = {
+                fontSize: "var(--fs-body)",
+                color: "var(--color-text-primary)",
+                margin: 0,
+                minWidth: 0,
+                flex: 1,
+              };
+              const linkStyle: CSSProperties = {
+                ...nameStyle,
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                textDecorationThickness: "1px",
+              };
+              return (
               <StaggerItem key={name} style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 0",
               }}>
-                <p style={{ fontSize: "var(--fs-body)", color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
+                {href ? (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="nav-link"
+                    style={linkStyle}
+                  >
+                    {name}
+                  </a>
+                ) : (
+                  <p style={nameStyle}>{name}</p>
+                )}
                 <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
               </StaggerItem>
-            ))}
+              );
+            })}
           </StaggerReveal>
         </section>
       </div>

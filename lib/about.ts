@@ -55,8 +55,17 @@ export const EXPERIENCE = [
 ] as const;
 
 export const ORGS = [
-  { name: "UCLA Product Space", role: "Product Designer" },
+  {
+    name: "UCLA Product Space",
+    role: "Product Designer",
+    href: "https://www.instagram.com/productspaceatucla/",
+  },
   { name: "Campus Events Commission", role: "Director of Media Production" },
+  {
+    name: "Design Meetup",
+    role: "Member, early career cohort",
+    href: "https://designmeetup.info/",
+  },
 ] as const;
 
 export const ABOUT_INTERESTS = [
