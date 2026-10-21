@@ -11,7 +11,7 @@ const CHART_EXPORTS: { route: string; title: string; label: string }[] = [
   { route: "visual-4", title: "Chart response variant 4", label: "Theme ranking" },
   { route: "visual-5", title: "Chart response variant 5", label: "Quote frequency" },
   { route: "visual-6", title: "Chart response variant 6", label: "Timeline of moments" },
-  { route: "section-4", title: "Structured answer with chart and clips", label: "Summary + chart + clips" },
+  { route: "section-3a", title: "Chart-led answer variant", label: "Coverage callout" },
 ];
 
 export default function DialogueChartGallery() {
@@ -23,7 +23,7 @@ export default function DialogueChartGallery() {
             <DialogueLiveFigure
               exportRoute={item.route}
               title={item.title}
-              tier="pair"
+              tier="full"
               assetId={i === 0 ? "D-09" : undefined}
             />
           </DialogueRachelFrame>

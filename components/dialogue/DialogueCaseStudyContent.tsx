@@ -245,27 +245,31 @@ export function DialogueCaseStudyContent({
             {wrap
               ? wrap(
                   "D-01",
-                  <div className="dialogue-hero-breakout">
-                    <DialogueRachelFrame tone="neutral">
-                      <DialogueLiveFigure
-                        exportRoute="hero"
-                        title="Study chat structured answer hero"
-                        tier="full"
-                        assetId="D-01"
-                      />
-                    </DialogueRachelFrame>
+                  <div className="cs-hero-media-frame dialogue-hero-media">
+                    <div className="dialogue-hero-breakout">
+                      <DialogueRachelFrame tone="neutral">
+                        <DialogueLiveFigure
+                          exportRoute="hero"
+                          title="Study chat structured answer hero"
+                          tier="full"
+                          assetId="D-01"
+                        />
+                      </DialogueRachelFrame>
+                    </div>
                   </div>,
                 )
               : (
-                  <div className="dialogue-hero-breakout">
-                    <DialogueRachelFrame tone="neutral">
-                      <DialogueLiveFigure
-                        exportRoute="hero"
-                        title="Study chat structured answer hero"
-                        tier="full"
-                        assetId="D-01"
-                      />
-                    </DialogueRachelFrame>
+                  <div className="cs-hero-media-frame dialogue-hero-media">
+                    <div className="dialogue-hero-breakout">
+                      <DialogueRachelFrame tone="neutral">
+                        <DialogueLiveFigure
+                          exportRoute="hero"
+                          title="Study chat structured answer hero"
+                          tier="full"
+                          assetId="D-01"
+                        />
+                      </DialogueRachelFrame>
+                    </div>
                   </div>
                 )}
           </CaseStudyOpen>
