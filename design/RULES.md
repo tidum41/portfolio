@@ -37,6 +37,10 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - The Oct 19-20 components (`5bfaa4b` through `f6a5192`, and `657337d`) are the visual baseline. No round may regress them; restore from those commits, do not reinterpret.
 - Dialogue components use DS tokens strictly. Colors, type sizes, weights, radii and strokes come from role tokens in `styles/dialogue-tokens.css`. Deviations live only in that file's documented case-study extension block, each with its reason. Components never reference the raw `--ds-*` layer. `npm run check:dialogue-tokens` enforces it.
 
+## Preview account
+
+- Previews and share links come only from the Vercel account `archive14photo-4965`, from its deployments of `review/dialogue-figure-parity-b9b1`. The old account `mudits-projects-d560e6b3` is disabled (402 Payment required). Never create, open or report links from it, including older entries in the iteration log. If the new account is not reachable from the Vercel tools, say so; do not substitute an old-account URL.
+
 ## Agentation annotate ids (STD-09)
 
 Preview and local builds mount `<Agentation />` (never production). Annotatable case-study graphics and home cards must be real DOM targets: no blocking overlays, no `pointer-events: none` on the selectable part itself (decorative layers such as phone chrome or posters may stay non-interactive).
