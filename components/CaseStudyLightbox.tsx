@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { isEditableTarget } from "@/lib/isEditableTarget";
 type Props = {
   src?: string;
   children?: ReactNode;
@@ -40,6 +41,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
     }
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
+      if (isEditableTarget(e)) return;
       if (e.key === "Escape") finishClose();
     };
     document.addEventListener("keydown", onKey);

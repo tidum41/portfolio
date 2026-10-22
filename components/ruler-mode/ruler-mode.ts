@@ -1,3 +1,4 @@
+import { isEditableTarget } from "../../lib/isEditableTarget";
 /**
  * ruler-mode — lightweight, Figma-style rulers & draggable guides for any web app.
  *
@@ -112,13 +113,6 @@ function releaseStyles() {
 		styleEl?.remove();
 		styleEl = null;
 	}
-}
-
-function isTypingTarget(t: EventTarget | null): boolean {
-	if (!(t instanceof HTMLElement)) return false;
-	if (t.isContentEditable) return true;
-	const tag = t.tagName;
-	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 const clamp = (n: number, min: number, max: number) =>
@@ -403,6 +397,7 @@ export class RulerMode {
 	}
 
 	private onKeyDown = (e: KeyboardEvent) => {
+		if (isEditableTarget(e)) return;
 		// e.code is keyboard-layout independent; e.key covers virtual keyboards
 		// and remaps that only report the character.
 		const isR = e.code === "KeyR" || e.key.toLowerCase() === "r";
@@ -411,7 +406,6 @@ export class RulerMode {
 			this.setHidden(!this._hidden);
 			return;
 		}
-		if (isTypingTarget(e.target)) return;
 		// Figma's rulers shortcut — modifier-free, so no browser, OS remap, or
 		// extension can claim it before the page sees it.
 		if (isR && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {

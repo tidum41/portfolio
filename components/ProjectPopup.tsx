@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+import { isEditableTarget } from "@/lib/isEditableTarget";
 
 interface Props {
   open: boolean;
@@ -64,6 +65,7 @@ export default function ProjectPopup({
     panelRef.current?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isEditableTarget(e)) return;
       if (e.key === "Escape") {
         onClose();
         return;

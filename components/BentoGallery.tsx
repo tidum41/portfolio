@@ -13,6 +13,7 @@ import {
 import { useDialKit } from "dialkit";
 import { cssEase, EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
 import BentoMinimap from "./BentoMinimap";
+import { isEditableTarget } from "@/lib/isEditableTarget";
 
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
@@ -1219,6 +1220,7 @@ export default function BentoGallery({
     useEffect(() => {
         if (typeof window === "undefined" || !visible) return;
         const onKey = (e: KeyboardEvent) => {
+            if (isEditableTarget(e)) return;
             const fi = focusedRef.current;
             if (e.key === "Escape") {
                 goOverview();

@@ -191,6 +191,40 @@ for (const [path, sel, name] of [
   await page.close();
 }
 
+// Comment box typing: no site shortcut may swallow a key typed into the toolbar.
+// A hostile document keydown handler that preventDefaults letters stands in for
+// the Vercel preview toolbar, which binds single letters such as "c".
+const TYPED = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 !@#$%^&*()-_=+[]{};:'\",.<>/?\\|`~";
+for (const [path, point] of [
+  ["/dialogue", null],
+  ["/", { x: 720, y: 450 }],
+]) {
+  const { page } = await load(path);
+  await page.evaluate(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key.length === 1 && /[a-z]/i.test(e.key)) e.preventDefault();
+    }, true);
+  });
+  await toggle(page).click();
+  await page.waitForTimeout(300);
+  const pt = point ?? (await centerOf(page, '[data-annotate="dialogue-hero/source-pill-priya-k"]'));
+  await page.mouse.click(pt.x, pt.y);
+  await page.waitForTimeout(500);
+  const box = page.locator("agentation-toolbar textarea:visible").first();
+  const present = (await box.count()) > 0;
+  log(present, `comment box opens on ${path}`);
+  if (present) {
+    await box.fill("");
+    await box.focus();
+    const urlBefore = page.url();
+    await page.keyboard.type(TYPED, { delay: 5 });
+    const value = await box.inputValue();
+    log(value === TYPED, `comment box keeps every typed key on ${path} (got ${JSON.stringify(value)})`);
+    log(page.url() === urlBefore, `typing did not navigate ${path}`);
+  }
+  await page.close();
+}
+
 await browser.close();
 if (failures.length) {
   console.log(`\n${failures.length} FAILED`);
