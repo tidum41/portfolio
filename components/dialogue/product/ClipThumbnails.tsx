@@ -10,11 +10,11 @@ type Props = {
 
 export default function ClipThumbnails({ selectedTime = "15:47" }: Props) {
   return (
-    <div className="dp-clip-thumbs" aria-hidden>
+    <div className="dp-clip-thumbs" aria-hidden data-annotate-part="clip-thumbs">
       {THUMBS.map((thumb) => {
         const selected = thumb.time === selectedTime;
         return (
-        <div key={`${thumb.time}-${thumb.src}`} className="dp-clip-thumbs__item">
+        <div key={`${thumb.time}-${thumb.src}`} className="dp-clip-thumbs__item" data-annotate-part={`clip-thumb-${thumb.time.replace(":", "-")}`}>
           <div
             className={[
               "dp-clip-thumbs__frame",

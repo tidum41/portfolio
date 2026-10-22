@@ -13,6 +13,8 @@ type Base = {
   sizes?: string;
   zoomable?: boolean;
   placeholder?: "blur" | "empty";
+  /** Figure name for data-annotate, e.g. "bruinlease-problem". */
+  annotate?: string;
 };
 
 type Fixed = Base & {
@@ -38,6 +40,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
     sizes = "(max-width: 767px) calc(100vw - 48px), 750px",
     zoomable = true,
     placeholder = "blur",
+    annotate = "figure",
   } = props;
 
   const [open, setOpen] = useState(false);
@@ -57,12 +60,13 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   const media = props.fill ? (
     <div
       className="cs-figure-media cs-figure-media--fill"
+      data-annotate={`${annotate}/media`}
       style={{ aspectRatio: props.aspectRatio ?? "16 / 10" }}
     >
       <Image src={src} alt={alt} fill priority={priority} sizes={sizes} style={{ objectFit: "contain" }} {...blurProps} />
     </div>
   ) : (
-    <div className="cs-figure-media">
+    <div className="cs-figure-media" data-annotate={`${annotate}/media`}>
       <Image
         src={src}
         alt={alt}
@@ -81,6 +85,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
       ref={triggerRef}
       type="button"
       className="cs-figure-zoom-trigger"
+      data-annotate={`${annotate}/zoom-trigger`}
       onClick={() => setOpen(true)}
       aria-label={`Enlarge: ${alt}`}
     >
@@ -91,9 +96,9 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   );
 
   return (
-    <figure className="cs-figure">
+    <figure className="cs-figure" data-annotate={annotate}>
       {inner}
-      {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
+      {caption ? <figcaption className="cs-figcaption" data-annotate={`${annotate}/caption`}>{caption}</figcaption> : null}
       {canZoom && (
         <CaseStudyLightbox
           src={src}
@@ -101,6 +106,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
           open={open}
           onClose={() => setOpen(false)}
           returnFocusRef={triggerRef}
+          annotate={`${annotate}-lightbox`}
         />
       )}
     </figure>

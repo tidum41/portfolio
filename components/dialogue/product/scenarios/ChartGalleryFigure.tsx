@@ -60,7 +60,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
         <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>{SEGMENT_ADDRESS.question}</UserMessageBubble>
           <QuerySearchStep searched={24} found={11} />
-          <p className="dp-summary">{SEGMENT_ADDRESS.summary}</p>
+          <p className="dp-summary" data-annotate-part="summary">{SEGMENT_ADDRESS.summary}</p>
           <ChartVizCard title={SEGMENT_ADDRESS.title} caption={SEGMENT_ADDRESS.caption}>
             <ChartBarList
               rows={SEGMENT_ADDRESS.rows.map((row) => ({
@@ -133,7 +133,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
         <StudyChatShell compact hideComposer hideHeader>
           <UserMessageBubble>{COVERAGE_ADDRESS.question}</UserMessageBubble>
           <QuerySearchStep searched={24} found={18} />
-          <p className="dp-summary">{COVERAGE_ADDRESS.headline}.</p>
+          <p className="dp-summary" data-annotate-part="summary">{COVERAGE_ADDRESS.headline}.</p>
           <ChartVizCard title={COVERAGE_ADDRESS.title} caption={COVERAGE_ADDRESS.detail}>
             <ChartBarList
               rows={COVERAGE_ADDRESS.rows.map((row) => ({

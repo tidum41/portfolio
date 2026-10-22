@@ -31,6 +31,25 @@ function withAuth(path) {
   return u.toString();
 }
 
+// Preview builds mount the agentation toolbar; the gates measure the site, not the toolbar.
+function ignoreToolbar(browser) {
+  const make = browser.newContext.bind(browser);
+  browser.newContext = async (opts) => {
+    const ctx = await make(opts);
+    await ctx.addInitScript(() => {
+      const hide = () => {
+        const s = document.createElement("style");
+        s.textContent = "agentation-toolbar{display:none!important}";
+        (document.head || document.documentElement).appendChild(s);
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", hide);
+      else hide();
+    });
+    return ctx;
+  };
+  return browser;
+}
+
 const failures = [];
 const log = (ok, msg) => {
   console.log(`${ok ? "PASS" : "FAIL"} ${msg}`);
@@ -328,7 +347,7 @@ async function heroOverlapChecks(browser) {
   }
 }
 
-const browser = await chromium.launch();
+const browser = ignoreToolbar(await chromium.launch());
 console.log(`check-dialogue-preview ${origin}`);
 await closeTests(browser);
 await sweeps(browser);

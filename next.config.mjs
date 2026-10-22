@@ -22,6 +22,13 @@ const dialkitAlias =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Resolved at build time so the annotation toolbar guard never depends on
+  // the "expose system env vars" project setting. Only a Vercel production
+  // deployment reports "production"; local builds report "development".
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV:
+      process.env.VERCEL_ENV ?? process.env.NEXT_PUBLIC_VERCEL_ENV ?? "development",
+  },
   // Pin the Turbopack/project root to this package so a parent-directory
   // package-lock.json (e.g. ~/package-lock.json) can't make Next resolve
   // modules relative to the wrong folder — that was surfacing as

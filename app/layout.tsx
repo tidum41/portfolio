@@ -24,6 +24,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+import AgentationSlot from "@/components/AgentationSlot";
 import MobileViewportPlayback from "@/components/MobileViewportPlayback";
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
@@ -208,6 +209,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <DevToolbarSlot />
         <Analytics />
         <MobileViewportPlayback />
+        {process.env.NEXT_PUBLIC_VERCEL_ENV !== "production" && <AgentationSlot />}
       </body>
     </html>
   );

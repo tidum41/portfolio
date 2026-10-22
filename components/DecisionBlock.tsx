@@ -83,6 +83,7 @@ function OptionCard({
         scenario={option.productScenario}
         title={option.title}
         assetId={option.rasterAssetId}
+        annotate={`decision-${option.id}`}
       />
     </DialogueRachelFrame>
   ) : option.liveExport ? (
@@ -91,6 +92,7 @@ function OptionCard({
         scenario="decision-paragraphs"
         title={option.liveExport.title}
         assetId={option.rasterAssetId}
+        annotate={`decision-${option.id}`}
       />
     </DialogueRachelFrame>
   ) : size && option.imageSrc && option.imageAlt ? (
@@ -101,6 +103,7 @@ function OptionCard({
       height={size.height}
       sizes="(max-width: 767px) calc(50vw - 30px), 240px"
       zoomable
+      annotate={`decision-${option.id}`}
     />
   ) : option.imageSrc && option.imageAlt ? (
     <CaseStudyFigure
@@ -110,6 +113,7 @@ function OptionCard({
       aspectRatio="696 / 936"
       sizes="(max-width: 767px) calc(50vw - 30px), 240px"
       zoomable
+      annotate={`decision-${option.id}`}
     />
   ) : null;
   const media =

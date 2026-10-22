@@ -23,6 +23,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | STD-06 | Beacons is not a current project; do not present it as current | Oct 21 | open | |
 | STD-07 | Lock horizontal panning at mobile widths so cut-off patterns or elements never read as a bug: Mudit, "on mobile breakpoint prevent people from moving the webpage left and right so it doesn't look like a bug when the pattern or elements get cut off, intentionally lock you in to that scroll" | Oct 22 | in progress | Mudit, Oct 22 |
 | STD-08 | Mobile autoplay: Mudit, "my autoplay logic is broken on mobile, it stops playing everything after smth is clicked near - can you just make no autoplay logic on mobile, or maybe pause logic based on where you're scrolling to?" Amended: several muted loops may play at once; play at 50% visible or more, pause only below 20% after a 300ms debounce, resume from currentTime, a tap affects only its own element | Oct 22 | in progress | Mudit, Oct 22 |
+| STD-09 | Annotation toolbar on previews, and exact selection of case study graphics: Mudit, "agentation ... works on localhost but i wanna use it for our work too so i can tell you whats off, and it should also work on case study component graphics to select the element in exact precision". Toolbar mounts only when NEXT_PUBLIC_VERCEL_ENV is not production. Dialogue, JOOLA and BruinLease figures are real DOM parts with data-annotate="<figure>/<part>" | Oct 22 | in progress | Mudit, Oct 22 |
 
 ## Footer (FTR)
 

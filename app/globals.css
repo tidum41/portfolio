@@ -1583,6 +1583,9 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   cursor: zoom-in;
   border-radius: inherit;
 }
+html:has(#agentation-cursor) .dp-zoom__trigger {
+  pointer-events: none;
+}
 .dp-zoom__trigger:focus-visible {
   outline: 2px solid var(--color-link-blue);
   outline-offset: 2px;
@@ -2045,6 +2048,12 @@ html[data-theme="light"] {
 }
 
 /* ─── Agentation above modals ─────────────────────────────────────── */
+/* agentation 3.1+ renders inside a shadow root under <agentation-toolbar>, whose
+   own z-index (100000) ties with the site header and lightbox. Lift the host. */
+agentation-toolbar {
+  z-index: 2147483000 !important;
+}
+
 /* The work-grid popups (ProjectPopup) render at z-index 999998 — just
    under GlobalCustomCursor's 999999 — but Agentation's own overlay/toolbar/
    popup layers top out around z-index 100000-100002, so its UI was rendering

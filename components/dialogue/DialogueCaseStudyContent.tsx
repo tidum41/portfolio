@@ -12,6 +12,7 @@ import DialogueCoverageCompare from "@/components/dialogue/DialogueCoverageCompa
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
+import StaticFigure from "@/components/dialogue/StaticFigure";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
@@ -264,16 +265,15 @@ export function DialogueCaseStudyContent({
               </ol>
               <div className="dialogue-answer-states">
                 <div className="dialogue-answer-states__item">
-                  <div
+                  <StaticFigure
+                    figure="counter-evidence"
                     className={`dialogue-answer-states__ui dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-                    aria-hidden
-                    inert
                   >
-                    <div className="dp-sources">
-                      <span className="dp-source-pill">Priya K., 15:47</span>
-                      <span className="dp-source-pill dp-source-pill--disagree">Sam R., 11:22</span>
+                    <div className="dp-sources" data-annotate-part="sources-row">
+                      <span className="dp-source-pill" data-annotate-part="source-pill-priya-k">Priya K., 15:47</span>
+                      <span className="dp-source-pill dp-source-pill--disagree" data-annotate-part="source-pill-sam-r-disagree">Sam R., 11:22</span>
                     </div>
-                  </div>
+                  </StaticFigure>
                   <p className="dialogue-caption">
                     <span className="dialogue-caption__label">Counter-evidence</span>
                     <span className="dialogue-caption__sentence">

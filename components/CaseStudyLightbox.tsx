@@ -9,9 +9,11 @@ type Props = {
   open: boolean;
   onClose: () => void;
   returnFocusRef?: React.RefObject<HTMLElement | null>;
+  /** Figure name for data-annotate attributes on the lightbox parts. */
+  annotate?: string;
 };
 
-export default function CaseStudyLightbox({ src, children, alt, open, onClose, returnFocusRef }: Props) {
+export default function CaseStudyLightbox({ src, children, alt, open, onClose, returnFocusRef, annotate = "lightbox" }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -68,6 +70,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
   return createPortal(
     <div
       className="cs-lightbox-backdrop"
+      data-annotate={`${annotate}/backdrop`}
       role="presentation"
       onClick={onBackdrop}
       style={{
@@ -77,6 +80,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
     >
       <div
         className="cs-lightbox-dialog"
+        data-annotate={`${annotate}/dialog`}
         role="dialog"
         aria-modal="true"
         aria-label={alt}
@@ -91,17 +95,18 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
           ref={closeRef}
           type="button"
           className="cs-lightbox-close"
+          data-annotate={`${annotate}/close`}
           onClick={finishClose}
           aria-label="Close enlarged image (Escape)"
         >
           Close
         </button>
-        <div className="cs-lightbox-media" onClick={(e) => e.stopPropagation()}>
+        <div className="cs-lightbox-media" data-annotate={`${annotate}/media`} onClick={(e) => e.stopPropagation()}>
           {children ? (
             <div className="cs-lightbox-live">{children}</div>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={alt} className="cs-lightbox-img" />
+            <img src={src} alt={alt} className="cs-lightbox-img" data-annotate={`${annotate}/image`} />
           )}
         </div>
       </div>

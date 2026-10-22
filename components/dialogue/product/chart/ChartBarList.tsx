@@ -5,6 +5,7 @@ import {
   type ChartBarDatum,
   dialogueChartSpec,
 } from "@/components/dialogue/product/chart/chartSpec";
+import { annotateSlug } from "@/components/dialogue/annotate";
 
 type Props = {
   rows: ChartBarDatum[];
@@ -35,18 +36,21 @@ export default function ChartBarList({
             ? chartBarFillByMagnitude(row.value, max, row.focal)
             : chartBarFill(i, row.focal);
         return (
-          <div key={row.label} className="dp-chart-bars__row">
-            <span className="dp-chart-bars__label">{row.label}</span>
+          <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
+            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
             <div
               className="dp-chart-bars__track"
+              data-annotate-part={`bar-track-${annotateSlug(row.label)}`}
               style={{ height: dialogueChartSpec.bar.thickness }}
             >
               <div
                 className="dp-chart-bars__bar"
+                data-annotate-part={`bar-${annotateSlug(row.label)}`}
                 style={{ width: `${widthPct}%`, backgroundColor: fill }}
               />
             </div>
             <span
+              data-annotate-part={`bar-value-${annotateSlug(row.label)}`}
               className={[
                 "dp-chart-bars__value",
                 row.focal ? "dp-chart-bars__value--focal" : "",
@@ -59,7 +63,7 @@ export default function ChartBarList({
           </div>
         );
       })}
-      {note ? <p className="dp-chart-bars__note">{note}</p> : null}
+      {note ? <p className="dp-chart-bars__note" data-annotate-part="bars-note">{note}</p> : null}
     </div>
   );
 }
