@@ -91,7 +91,7 @@ function scaleProps(
     case "hero":
       return narrow
         ? { innerWidth: CHAT_W, fit: "reflow" }
-        : { innerWidth: 750, minScale: 0.8, maxScale: 1 };
+        : { innerWidth: 774, minScale: 0.8, maxScale: 1 };
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }

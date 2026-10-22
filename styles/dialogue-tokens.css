@@ -219,8 +219,8 @@
   --dp-media-surface-bg: color-mix(in srgb, var(--ds-black) 25%, transparent);
   --dp-media-border: color-mix(in srgb, var(--ds-black) 10%, transparent);
 
-  /* 8. Letterbox behind the interview still, sampled from the still. */
-  --dp-still-letterbox: #dfdfda;
+  /* 8. Letterbox behind the interview still: black, so the player is black edge to edge. */
+  --dp-still-letterbox: var(--ds-black);
 
   /* 9. Anatomy callout numbering, lines and markers. An annotation layer, not
    *    product UI. Stone tokens only. */

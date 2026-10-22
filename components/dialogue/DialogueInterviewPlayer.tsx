@@ -19,7 +19,7 @@ export function DialogueInterviewPlayer() {
         borderRadius: "var(--dp-radius-card)",
         overflow: "hidden",
         border: "1px solid var(--dp-border)",
-        background: "var(--dp-ink)",
+        background: "var(--dp-black)",
         position: "relative",
         width: "100%",
         aspectRatio: "16 / 9",

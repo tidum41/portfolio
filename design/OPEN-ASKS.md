@@ -112,6 +112,9 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-67 | r17: DS conformance. styles/dialogue-tokens.css in three layers (DS raw, role tokens, documented extension block); dialogue-product.css and chart.css migrated to role tokens; search step 8x16 mono 14; funnel bar stone-400; app radius 10; chip 8x12 suggestion role; clip time 11; chart line stroke 2; off-DS colors mapped to tokens; old tokens.css and the parallel tokens.ts color tables removed | Oct 22 | in progress | Mudit, r17 ds-conformance |
 | DLG-68 | r17: npm run check:dialogue-tokens fails on hard-coded colors, font sizes, radii, weights outside 400/500, raw --ds tokens in components and 1.5 strokes in components/dialogue CSS and TSX | Oct 22 | in progress | Mudit, r17 ds-conformance |
 | DLG-69 | r17: RULES.md lines: chart titles, compared specimens, pill format, trust signals survive restyles, Oct 19-20 components as visual baseline, strict DS tokens | Oct 22 | in progress | Mudit, r17 plan.md |
+| DLG-70 | r18: 390 anatomy shows all five parts (Sources, Clips, Follow-ups no longer hidden); dead selectors removed | Oct 22 | in progress | Mudit, r18 audit |
+| DLG-71 | r18: hero search step at most 2 lines: hero chat column widened 24px (302 to 326) at desktop, found-clause dropped at phone width | Oct 22 | in progress | Mudit, r18 audit |
+| DLG-72 | r18: hero "-38% drop" tooltip restored (d38dd14); transcript player black edge to edge; amber warning wraps balanced, no orphan | Oct 22 | in progress | Mudit, r18 audit |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

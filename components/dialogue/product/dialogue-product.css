@@ -2377,7 +2377,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static * {
   }
 }
 
-/* Phone anatomy figure (D-08): reflow width, summary through chart only, no composer. */
+/* Phone anatomy figure (D-08): reflow width, all five parts, no composer. */
 @media (max-width: 480px) {
   [data-dialogue-asset-id="D-08"] .dp-anatomy-scene {
     width: 100%;
@@ -2393,12 +2393,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static * {
     min-width: 0;
   }
 
-  [data-dialogue-asset-id="D-08"] .dp-study-chat__composer,
-  [data-dialogue-asset-id="D-08"] .dp-user-message,
-  [data-dialogue-asset-id="D-08"] .dp-query-search,
-  [data-dialogue-asset-id="D-08"] [data-anatomy-part="sources"],
-  [data-dialogue-asset-id="D-08"] [data-anatomy-part="clips"],
-  [data-dialogue-asset-id="D-08"] [data-anatomy-part="followups"] {
+  [data-dialogue-asset-id="D-08"] .dp-study-chat__composer {
     display: none !important;
   }
 
@@ -2489,11 +2484,11 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static * {
 }
 
 .dp-hero-v2__desktop {
-  width: 750px;
+  width: 774px;
   box-sizing: border-box;
   padding: 24px;
   display: grid;
-  grid-template-columns: 302px 376px;
+  grid-template-columns: 326px 376px;
   column-gap: 24px;
   align-items: start;
 }
@@ -2977,4 +2972,35 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static * {
   font-size: var(--text-small-size);
   line-height: var(--text-small-leading);
   margin-top: 4px;
+}
+
+/* Hero chart hover tooltip (d38dd14): shows the largest drop. */
+.dp-hero-v2__chart {
+  position: relative;
+}
+
+.dp-hero-tooltip {
+  position: absolute;
+  left: 46%;
+  top: 14px;
+  padding: 4px 8px;
+  border-radius: var(--dp-radius-chip);
+  border: 1px solid var(--dp-border);
+  background: var(--dp-surface);
+  box-shadow: var(--shadow-chat);
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: var(--dp-weight-normal);
+  color: var(--dp-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.dp-low-signal__text {
+  text-wrap: balance;
+}
+
+/* Hero at phone width: the search step stays within two lines. */
+.dp-hero-v2__mobile .dp-search-step__found {
+  display: none;
 }

@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r18, Oct 22 2026 (polish)
+- Changed: 390 anatomy shows all five parts, hero search step within two lines (chat column +24px, shorter copy at phone width), hero "-38% drop" tooltip back, transcript player black edge to edge, balanced wrap in the amber warning.
+- Why: r18 audit of 3585bb6. DLG-70 to DLG-72.
+- Preview: PREVIEW_URL (deployment of COMMIT_SHA)
+
 ## r17, Oct 22 2026 (restore plus DS conformance)
 - Changed: restored trust signals (amber low-signal warning, evidence footer, "Ask this next study"), counter-evidence expander, Paper section-5 transcript and the anatomy search line, inline clip link and footer; hero aside is now quote rows plus the evidence footer; pill format, send button, focus border, chart-title gap and lead comparison type scale per plan.md; styles/dialogue-tokens.css (DS raw, role tokens, extension block) with the product CSS migrated; check:dialogue-tokens.
 - Why: Mudit approved the r17 restore plan and the DS conformance audit. DLG-58 to DLG-69.
