@@ -103,10 +103,25 @@ function auditPage(page) {
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setViewportSize({ width: 390, height: 844 });
-await page.goto(`${BASE}/dialogue`, { waitUntil: "networkidle", timeout: 120000 });
-await page.waitForSelector(".dialogue-case-study");
-await page.evaluate(() => document.fonts.ready);
-
+await page.goto(`${BASE}/dialogue`, { waitUntil: "load", timeout: 180000 });
+await page.waitForFunction(
+  () =>
+    document.querySelector(".dialogue-case-study") &&
+    document.querySelectorAll(".dialogue-case-study .dialogue-rachel-frame__pad").length > 0,
+  { timeout: 120000 },
+);
+await page.evaluate(async () => {
+  await document.fonts.ready;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const step = Math.max(280, Math.floor(window.innerHeight * 0.45));
+  const max = document.documentElement.scrollHeight;
+  for (let y = 0; y <= max; y += step) {
+    window.scrollTo({ top: y, behavior: "instant" });
+    await sleep(120);
+  }
+  window.scrollTo({ top: 0, behavior: "instant" });
+  await sleep(200);
+});
 const result = await auditPage(page);
 
 const leak = await page.evaluate(() => {

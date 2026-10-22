@@ -20,4 +20,4 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Dot separators (·) are not a default. Use them only where two short metadata values truly sit inline in product UI; otherwise use layout, weight, or a line break. Remove them from case study captions and labels (for example "Answer + evidence, Chosen" not "Answer + evidence · Chosen").
 - Case study figure containers use the same corner radius as JOOLA and BruinLease media frames (`var(--radius-control)`, 8px). Read the token from `app/globals.css`, do not guess.
 - Figures in a comparison row share one height (stretch the frame, not the caption).
-- Figure wells use 2–3 near-neutral surfaces with slight per-section alternation only; UI cards inside stay on Paper `--dp-surface`.
+- Figure wells use one calm neutral surface (`#f2f1f0`, token `--dp-figure-surface-system`) for every Rachel frame. Do not change frame background to signal emphasis; use outline or a small in-frame tag instead. UI cards inside stay on Paper `--dp-surface`.

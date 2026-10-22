@@ -58,7 +58,9 @@ export default function SyncedTranscript() {
               >
                 {row.role === "dialogue" ? (
                   <DialogueAsteriskIcon className="dp-synced-transcript__avatar-icon" />
-                ) : null}
+                ) : (
+                  <span className="dp-synced-transcript__initials">JM</span>
+                )}
               </span>
               <span className="dp-synced-transcript__speaker">{row.speaker}</span>
               <span className="dp-synced-transcript__time">{row.time}</span>

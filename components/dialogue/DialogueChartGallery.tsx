@@ -1,7 +1,8 @@
 "use client";
 
-import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
+import ChartOnlyFigure from "@/components/dialogue/product/scenarios/ChartOnlyFigure";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { GalleryVariant } from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
 
 type MapRow = {
@@ -23,21 +24,22 @@ export default function DialogueChartGallery() {
     <div className="dialogue-chart-gallery-wrap">
       <div className="dialogue-chart-mapping">
         {MAP_ROWS.map((row) => (
-          <div key={row.variant} className="dialogue-chart-mapping__row">
+          <article key={row.variant} className="dialogue-chart-mapping__cell">
             <div className="dialogue-chart-mapping__copy">
               <p className="dialogue-chart-mapping__question">{row.question}</p>
               <p className="dialogue-chart-mapping__chart">{row.chart}</p>
             </div>
             <div className="dialogue-chart-mapping__thumb">
               <DialogueRachelFrame tone="system" className="dialogue-chart-mapping__frame">
-                <DialogueProductFigure
-                  scenario={{ gallery: row.variant }}
-                  title={row.chart}
-                  assetId={row.assetId}
-                />
+                <div
+                  className={`dialogue-chart-mapping__chart-only dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+                  data-dialogue-asset-id={row.assetId}
+                >
+                  <ChartOnlyFigure variant={row.variant} />
+                </div>
               </DialogueRachelFrame>
             </div>
-          </div>
+          </article>
         ))}
       </div>
       <p className="dialogue-caption dialogue-chart-gallery__caption">

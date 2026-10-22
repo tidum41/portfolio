@@ -7,8 +7,7 @@ import {
 } from "@/lib/dialogue/product/sampleData";
 
 export default function ParagraphAnswerFigure({ focus }: { focus?: "answer" }) {
-  const paragraphs =
-    focus === "answer" ? PARAGRAPH_ANSWER.slice(0, 1) : PARAGRAPH_ANSWER_BRIEF;
+  const paragraphs = focus === "answer" ? PARAGRAPH_ANSWER_BRIEF : PARAGRAPH_ANSWER_BRIEF;
   const prose = (
     <div
       className={focus === "answer" ? "dp-text-prose-sm" : "dp-text-prose-sm dp-text-prose-light"}

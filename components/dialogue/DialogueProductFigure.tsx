@@ -18,7 +18,7 @@ const CHAT_W = 448;
 /** Callout rail 122 + gutter 48 + chat 448 */
 const ANATOMY_W = 618;
 /** Answer column + clip drawer cluster */
-const FULL_ANSWER_W = 798;
+const FULL_ANSWER_W = 688;
 /** Below 480px: crop instead of shrinking past this (12px labels stay >= 11px). */
 const PHONE_MIN_SCALE = Math.max(0.85, 11 / 12);
 const DESKTOP_MIN_SCALE = 0.94;
@@ -73,7 +73,7 @@ function scaleProps(
       case "clip-player":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
       case "full-answer":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 508, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 600, fade: true };
       case "problem-paragraphs":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 652, fade: true };
       default:

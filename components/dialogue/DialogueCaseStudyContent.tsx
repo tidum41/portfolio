@@ -216,13 +216,6 @@ export function DialogueCaseStudyContent({
                 stood in for research customers. The gap was the same either way: without a path
                 back to the interview, the answer stayed a guess.
               </CaseStudyBody>
-              <blockquote className="dialogue-evidence-pull">
-                <p className="dialogue-evidence-pull__quote">Who said that?</p>
-                <footer className="dialogue-evidence-pull__meta">
-                  Asked in founder and student sessions
-                </footer>
-              </blockquote>
-
               <DialogueLeadAnswerCompare
                 heading="Lead with the answer"
                 subheading="Three ways the chat could answer the same question."
@@ -378,10 +371,12 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
               />
-              <CaseStudyBody>
-                Outcome: researchers could share one link that still showed the number, the
-                interviews behind it, and the footage to verify the quote.
-              </CaseStudyBody>
+              <div className="dialogue-full-answer-outcome">
+                <CaseStudyBody>
+                  Outcome: researchers could share one link that still showed the number, the
+                  interviews behind it, and the footage to verify the quote.
+                </CaseStudyBody>
+              </div>
             </Section>
           </article>
           <CaseStudyPager href="/dialogue" />

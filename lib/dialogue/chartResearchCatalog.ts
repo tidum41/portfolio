@@ -1,12 +1,15 @@
 /** UX research viz habits + Dialogue chart library (round 3). */
 
+import type { GalleryVariant } from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
+
 export type ChartResearchItem = {
   id: string;
   question: string;
   chart: string;
   status: "chosen" | "ruled-out" | "research";
   reason?: string;
-  variant?: "funnel" | "segment" | "trend" | "coverage";
+  variant?: GalleryVariant;
+  iteration?: string;
 };
 
 export const RESEARCH_INSIGHT =
@@ -20,6 +23,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     status: "chosen",
     variant: "funnel",
     reason: "Checkout studies always asked for step loss.",
+    iteration: "Started as a plain table, then step bars with the largest drop called out.",
   },
   {
     id: "segment",
@@ -28,6 +32,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     status: "chosen",
     variant: "segment",
     reason: "Mobile vs desktop was the repeat question.",
+    iteration: "Tried a radar chart first, then paired bars so gaps read in chat.",
   },
   {
     id: "trend",
@@ -36,6 +41,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     status: "chosen",
     variant: "trend",
     reason: "Prototype rounds needed a simple line read.",
+    iteration: "Heatmap felt busy; one line with round labels won in review.",
   },
   {
     id: "coverage",
@@ -44,12 +50,14 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     status: "chosen",
     variant: "coverage",
     reason: "Thin evidence had to be visible, not buried.",
+    iteration: "Percent-only felt vague until interview counts sat beside the bar.",
   },
   {
     id: "theme",
     question: "What themes come up most?",
     chart: "Theme ranking",
     status: "ruled-out",
+    variant: "theme",
     reason: "Tag clouds felt pretty but not actionable in chat.",
   },
   {
@@ -57,6 +65,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     question: "How often was X mentioned?",
     chart: "Quote frequency",
     status: "ruled-out",
+    variant: "quote-freq",
     reason: "Researchers wanted clips, not mention counts alone.",
   },
   {
@@ -64,13 +73,15 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     question: "When in the session?",
     chart: "Timeline of moments",
     status: "ruled-out",
+    variant: "timeline",
     reason: "Useful for one study, too niche for default library.",
   },
   {
     id: "distribution",
     question: "How is the spread?",
     chart: "Distribution",
-    status: "research",
+    status: "ruled-out",
+    variant: "distribution",
     reason: "Kept as a backup when segments overlap.",
   },
 ];

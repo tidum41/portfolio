@@ -2,18 +2,11 @@
 
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
-import FunnelChart from "@/components/dialogue/product/FunnelChart";
+import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario as Scenario } from "@/components/dialogue/product/DialogueProductScenario";
-import DialogueRachelFrame, {
-  DialogueCaption,
-  type DialogueFrameTone,
-} from "@/components/dialogue/DialogueRachelFrame";
+import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
-
-function panelSurfaceTone(optionId: string): DialogueFrameTone {
-  return optionId === "structured" ? "solution" : "problem";
-}
 
 type Option = {
   id: string;
@@ -37,9 +30,20 @@ type Props = {
 };
 
 function AnswerFocus({ scenario }: { scenario: Scenario }) {
-  if (scenario === "decision-paragraphs") return <ParagraphAnswerFigure focus="answer" />;
-  if (scenario === "decision-quotes") return <QuoteListFigure focus="answer" />;
-  return <FunnelChart showChart={false} showLargestDrop={false} vizCard={false} />;
+  if (scenario === "decision-paragraphs") {
+    return (
+      <div className="dialogue-lead-answer__prose dp-text-prose-sm">
+        <ParagraphAnswerFigure focus="answer" />
+      </div>
+    );
+  }
+  if (scenario === "decision-quotes") {
+    return <QuoteListFigure focus="answer" />;
+  }
+  if (scenario === "decision-structured") {
+    return <StructuredAnswerFigure compact showClips />;
+  }
+  return null;
 }
 
 function OptionPanel({
@@ -51,11 +55,18 @@ function OptionPanel({
   isChosen: boolean;
   annotateRaster?: RasterAnnotator;
 }) {
-  const figure = (
+  const structured = option.productScenario === "decision-structured";
+  const figure = structured ? (
+    <div
+      className={`dialogue-lead-answer__answer dialogue-lead-answer__answer--structured dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+    >
+      <AnswerFocus scenario={option.productScenario} />
+    </div>
+  ) : (
     <div
       className={`dialogue-lead-answer__answer dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
-      <div className="dp-study-chat dp-study-chat--compact">
+      <div className="dp-study-chat dp-study-chat--compact dialogue-lead-answer__chat">
         <div className="dp-study-chat__scroll">
           <div className="dp-study-chat__body">
             <AnswerFocus scenario={option.productScenario} />
@@ -80,14 +91,12 @@ function OptionPanel({
         .filter(Boolean)
         .join(" ")}
     >
-      <DialogueRachelFrame tone={panelSurfaceTone(option.id)} className="dialogue-lead-answer__frame">
+      <DialogueRachelFrame tone="system" className="dialogue-lead-answer__frame">
+        {isChosen ? <span className="dialogue-lead-answer__chosen-badge">Chosen</span> : null}
         <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
           {wrapped}
         </div>
       </DialogueRachelFrame>
-      {isChosen ? (
-        <span className="dialogue-lead-answer__chosen-badge">Chosen</span>
-      ) : null}
       <DialogueCaption label={option.label} sentence={cost} />
     </div>
   );
