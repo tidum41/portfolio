@@ -146,6 +146,8 @@ export default function ScaledChatViewport({
     return () => ro.disconnect();
   }, [fit, maxOuterHeight, children]);
 
+  const shadowSafe = maxOuterHeight === undefined && !fade;
+
   if (fit === "reflow") {
     const outerH = reflowH;
     return (
@@ -155,6 +157,7 @@ export default function ScaledChatViewport({
           .filter(Boolean)
           .join(" ")}
         data-scale-mode="reflow"
+        data-shadow-safe={shadowSafe ? "" : undefined}
         data-scale="1"
         style={outerH !== undefined ? { height: outerH } : undefined}
       >
@@ -185,6 +188,7 @@ export default function ScaledChatViewport({
       className={["dp-scaled-viewport", className].filter(Boolean).join(" ")}
       style={{ height: outerH }}
       data-scale-mode={useZoom ? "zoom" : "transform"}
+      data-shadow-safe={shadowSafe ? "" : undefined}
       data-scale={String(scale)}
     >
       <div

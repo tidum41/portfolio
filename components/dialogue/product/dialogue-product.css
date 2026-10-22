@@ -2268,11 +2268,51 @@
   }
 }
 
-/* Chart slot when the chart is held back: one plain sentence, muted. */
-.dp-chart-held-note {
+/* Chart slot when the chart is held back: an empty placeholder at the hero chart's height (123px). */
+.dp-chart-slot {
+  box-sizing: border-box;
+  min-height: 123px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 1px dashed color-mix(in srgb, var(--dp-ink, #1c1917) 10%, transparent);
+  border-radius: 8px;
+}
+
+.dp-chart-slot__note {
   margin: 0;
+  max-width: 28ch;
+  text-align: center;
   font-size: var(--text-body-size);
   line-height: var(--text-body-leading);
   font-weight: 400;
-  color: var(--dp-chart-label-color, #6b6560);
+  color: var(--dp-muted, #6b6560);
+}
+
+.dp-sources--tight .dp-source-pill {
+  padding-inline: 12px;
+}
+
+@media (max-width: 600px) {
+  .dp-thin-data .dp-study-chat__body {
+    padding-inline: 12px;
+  }
+  .dp-sources--tight .dp-source-pill {
+    padding-inline: 10px;
+  }
+}
+
+/* Chat cards keep their full shadow: bottom room inside the measured box, side room by clip margin. */
+.dp-scaled-viewport[data-shadow-safe] {
+  overflow: visible;
+}
+
+.dp-scaled-viewport[data-shadow-safe] .dp-scaled-viewport__clip {
+  overflow: clip !important;
+  overflow-clip-margin: 16px;
+}
+
+.dp-scaled-viewport[data-shadow-safe] .dp-scaled-viewport__inner {
+  padding-bottom: 16px;
 }
