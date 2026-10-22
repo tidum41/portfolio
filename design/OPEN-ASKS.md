@@ -21,6 +21,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | STD-04 | Site weight cap 500 (Dialogue UI keeps its real 600) | Oct 20 | in progress | RULES.md; dialogue-feedback-1020 G4 |
 | STD-05 | Areal abandoned; Helvetica Neue fallback is intended, not a bug | Oct 20 | verified | type-system.md "shelve ABC Areal" |
 | STD-06 | Beacons is not a current project; do not present it as current | Oct 21 | open | |
+| STD-07 | Lock horizontal panning at mobile widths so cut-off patterns or elements never read as a bug: Mudit, "on mobile breakpoint prevent people from moving the webpage left and right so it doesn't look like a bug when the pattern or elements get cut off, intentionally lock you in to that scroll" | Oct 22 | in progress | Mudit, Oct 22 |
 
 ## Footer (FTR)
 
