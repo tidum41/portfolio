@@ -20,3 +20,5 @@ Mudit's checklist of open requests. Status is open or verified. Mark verified on
 | Hero line: pick pending | Oct 21 | open |
 | Archive minimap contrast | Oct 21 | verified (merged to main, build passes) |
 | About page without org icons | Oct 21 | verified (merged to main, build passes) |
+| Mobile: lock horizontal panning so cut-off patterns never read as a bug (Mudit: "on mobile breakpoint prevent people from moving the webpage left and right so it doesn't look like a bug when the pattern or elements get cut off, intentionally lock you in to that scroll") | Oct 22 | open |
+| Mobile autoplay: videos follow scroll at 600px and below, a tap affects only its own element (Mudit: "my autoplay logic is broken on mobile, it stops playing everything after smth is clicked near - can you just make no autoplay logic on mobile, or maybe pause logic based on where you're scrolling to?"). Several muted loops may play at once; play at 50% visible or more, pause below 20% after 300ms, resume from currentTime | Oct 22 | open |
