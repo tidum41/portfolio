@@ -28,6 +28,15 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Figure wells use `--figure-well` with `--figure-well-border` in both themes (light #eeedeb, dark #1b1e21), on every case study frame.
 - Preview gate: a round is not done until `npm run check:dialogue-preview -- <archive-team preview url of the tip>` passes (real-click Close at scrollY 0 in both themes, whole-page contrast sweep in both themes, open-lightbox contrast sweep, no zoom triggers at 600 and 390) and its output is pasted in the report. Figure captions use `--caption-ink`.
 
+## 2026-10-22 (r17)
+
+- Chart titles: every chart has one, at 12/16, weight 500, muted, with a fixed 12px gap above the plot. No chart without a title, no per-figure overrides.
+- Compared specimens (cards in one comparison) use equal columns, the same padding and radius, one type scale and weights 400 and 500 only. Scale, crop or extra weight is never used to flatter the winner.
+- Source pill format: name at weight 500, time at weight 400 in muted color with tabular-nums, a 6px gap, no comma or dot.
+- A restyle never removes trust signals. Every answer card keeps its evidence footer ("Based on N of 24 interviews"), and a low-signal answer keeps the amber warning on its lead.
+- The Oct 19-20 components (`5bfaa4b` through `f6a5192`, and `657337d`) are the visual baseline. No round may regress them; restore from those commits, do not reinterpret.
+- Dialogue components use DS tokens strictly. Colors, type sizes, weights, radii and strokes come from role tokens in `styles/dialogue-tokens.css`. Deviations live only in that file's documented case-study extension block, each with its reason. Components never reference the raw `--ds-*` layer. `npm run check:dialogue-tokens` enforces it.
+
 ## Agentation annotate ids (STD-09)
 
 Preview and local builds mount `<Agentation />` (never production). Annotatable case-study graphics and home cards must be real DOM targets: no blocking overlays, no `pointer-events: none` on the selectable part itself (decorative layers such as phone chrome or posters may stay non-interactive).

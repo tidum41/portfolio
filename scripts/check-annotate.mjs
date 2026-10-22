@@ -125,17 +125,17 @@ if (expectProd) {
   await annotate(
     page,
     "pill",
-    '[data-annotate="dialogue-hero/source-pill-priya-k"]',
-    "dialogue-hero/source-pill-priya-k",
-    "Selected pill needs more contrast",
+    '[data-annotate="dialogue-hero/clip-quote-priya-k"]',
+    "dialogue-hero/clip-quote-priya-k",
+    "Selected quote row needs more contrast",
   );
 
   await annotate(
     page,
     "thin-data placeholder",
-    '[data-annotate="dialogue-thin-data/chart-slot-note"]',
-    "dialogue-thin-data/chart-slot-note",
-    "Empty slot should be as tall as the hero chart",
+    '[data-annotate="dialogue-thin-data/low-signal-note"]',
+    "dialogue-thin-data/low-signal-note",
+    "Warning should be darker on the amber fill",
   );
 
   await toggle(page).click();
@@ -157,9 +157,9 @@ if (expectProd) {
   await annotate(
     page,
     "lightbox pill",
-    '.cs-lightbox-backdrop [data-annotate="dialogue-hero-lightbox/source-pill-priya-k"]',
-    "dialogue-hero-lightbox/source-pill-priya-k",
-    "Pill in the enlarged view is clipped",
+    '.cs-lightbox-backdrop [data-annotate="dialogue-hero-lightbox/clip-quote-priya-k"]',
+    "dialogue-hero-lightbox/clip-quote-priya-k",
+    "Quote row in the enlarged view is clipped",
   );
 
   const tb = await page.getByRole("button", { name: "Copy feedback" }).boundingBox();
@@ -174,9 +174,9 @@ if (expectProd) {
   const md = await page.evaluate(() => navigator.clipboard.readText());
   console.log("\n----- copied markdown -----\n" + md + "\n---------------------------\n");
   log(/chart-groups-chosen\/bar-/.test(md), "markdown names the chart bar by data-annotate");
-  log(/hero\/source-pill-priya-k/.test(md), "markdown names the pill by data-annotate");
-  log(/dialogue-thin-data\/chart-slot/.test(md), "markdown names the thin-data placeholder by data-annotate");
-  log(/dialogue-hero-lightbox\/source-pill-priya-k/.test(md), "markdown names the lightbox element by data-annotate");
+  log(/hero\/clip-quote-priya-k/.test(md), "markdown names the quote row by data-annotate");
+  log(/dialogue-thin-data\/low-signal/.test(md), "markdown names the thin-data warning by data-annotate");
+  log(/dialogue-hero-lightbox\/clip-quote-priya-k/.test(md), "markdown names the lightbox element by data-annotate");
   await page.close();
 }
 
@@ -207,7 +207,7 @@ for (const [path, point] of [
   });
   await toggle(page).click();
   await page.waitForTimeout(300);
-  const pt = point ?? (await centerOf(page, '[data-annotate="dialogue-hero/source-pill-priya-k"]'));
+  const pt = point ?? (await centerOf(page, '[data-annotate="dialogue-hero/clip-quote-priya-k"]'));
   await page.mouse.click(pt.x, pt.y);
   await page.waitForTimeout(500);
   const box = page.locator("agentation-toolbar textarea:visible").first();

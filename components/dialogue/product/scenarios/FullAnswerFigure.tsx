@@ -21,7 +21,7 @@ export default function FullAnswerFigure() {
     <div className="dp-full-answer dialogue-product-root dp-chat-panel-typography">
       <div className="dp-full-answer__cluster" data-export-full-answer-drawer="true">
         <div className="dp-full-answer__answer" data-annotate-part="answer">
-          <StudyChatShell compact hideComposer>
+          <StudyChatShell evidence={24} compact hideComposer>
             <UserMessageBubble>{MOBILE_FOLLOWUP.question}</UserMessageBubble>
             <QuerySearchStep searched={24} found={6} />
             <p className="dp-summary" data-annotate-part="summary">{MOBILE_FOLLOWUP.summary}</p>

@@ -5,6 +5,7 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import SourcesRow from "@/components/dialogue/product/SourcesRow";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
+import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
 import ClipCard from "@/components/dialogue/product/ClipCard";
 import { CHECKOUT_QUESTION, CLIPS } from "@/lib/dialogue/product/sampleData";
 
@@ -28,7 +29,7 @@ export default function StructuredAnswerFigure({
 
   if (anatomy) {
     return (
-      <StudyChatShell compact={shellCompact}>
+      <StudyChatShell compact={shellCompact} evidence={24}>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
         <QuerySearchStep searched={24} found={9} />
         <FunnelChart
@@ -54,6 +55,7 @@ export default function StructuredAnswerFigure({
             <ClipThumbnails selectedTime="15:47" />
           </div>
         )}
+        <CounterEvidence />
         {!compact && (
           <div className="dp-anatomy-target" data-anatomy-part="followups" data-annotate-part="anatomy-followups">
             <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-5">

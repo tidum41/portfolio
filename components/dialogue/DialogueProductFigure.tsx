@@ -74,7 +74,7 @@ function scaleProps(
   if (phone) {
     switch (scenario) {
       case "anatomy":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 592, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 1100, fade: true };
       case "hero":
         return { innerWidth: CHAT_W, fit: "reflow" };
       case "clip-player":
@@ -101,7 +101,9 @@ function scaleProps(
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
         : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "clip-player":
-      return { innerWidth: 312, minScale, maxScale: 1 };
+      return narrow
+        ? { innerWidth: 656, fit: "reflow" }
+        : { innerWidth: 656, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "problem-paragraphs":
     case "decision-paragraphs":
     case "decision-quotes":

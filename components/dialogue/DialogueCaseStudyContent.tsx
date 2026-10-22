@@ -11,9 +11,7 @@ import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
-import StaticFigure from "@/components/dialogue/StaticFigure";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
-import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import { ANATOMY_LABELS, ANATOMY_PART_IDS } from "@/lib/dialogue/product/sampleData";
 
@@ -246,7 +244,7 @@ export function DialogueCaseStudyContent({
               <H2>Every answer gets one fixed structure</H2>
               <CaseStudyBody>
                 Parts stay in order: 1 Summary, 2 Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only
-                the chart changes shape.
+                the chart changes shape. A source that disagrees stays in the card, under Counter-evidence.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -262,25 +260,6 @@ export function DialogueCaseStudyContent({
                   </li>
                 ))}
               </ol>
-              <div className="dialogue-answer-states">
-                <div className="dialogue-answer-states__item">
-                  <StaticFigure
-                    figure="counter-evidence"
-                    className={`dialogue-answer-states__ui dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-                  >
-                    <div className="dp-sources" data-annotate-part="sources-row">
-                      <span className="dp-source-pill" data-annotate-part="source-pill-priya-k">Priya K., 15:47</span>
-                      <span className="dp-source-pill dp-source-pill--disagree" data-annotate-part="source-pill-sam-r-disagree">Sam R., 11:22</span>
-                    </div>
-                  </StaticFigure>
-                  <p className="dialogue-caption">
-                    <span className="dialogue-caption__label">Counter-evidence</span>
-                    <span className="dialogue-caption__sentence">
-                      A source that disagrees stays in the row with the ones that support the answer.
-                    </span>
-                  </p>
-                </div>
-              </div>
             </Section>
 
             <Section id="clips">
@@ -294,7 +273,7 @@ export function DialogueCaseStudyContent({
                 title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 assetId="D-10"
                 wrapRaster={wrap}
-                frameLabel="Solution: clip starts at 01:38 so the apartment-field quote can be checked in one click"
+                frameLabel="Solution: clip starts at 01:38 so the card-failed quote can be checked in one click"
               />
             </Section>
 
@@ -309,7 +288,7 @@ export function DialogueCaseStudyContent({
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
-                A chart of two interviews looks like a trend. The count makes the evidence size the
+                A chart of four interviews looks like a trend. The warning makes the evidence size the
                 first thing you see.
               </CaseStudyBody>
               <ProductFigureBlock
@@ -317,7 +296,7 @@ export function DialogueCaseStudyContent({
                 title="Study chat answer that leads with the interview count and holds the chart back"
                 assetId="D-13"
                 wrapRaster={wrap}
-                frameLabel="Thin data: a finding from two interviews must not reach a roadmap as a trend."
+                frameLabel="Thin data: a finding from four interviews must not reach a roadmap as a trend."
               />
             </Section>
 

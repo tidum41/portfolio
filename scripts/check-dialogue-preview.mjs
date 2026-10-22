@@ -273,7 +273,7 @@ async function ownerChecks(browser) {
     }
     const pairs = await page.evaluate(() => {
       const out = [];
-      const re = /([A-Z][a-z]+ [A-Z]\.),\s+(\d\d:\d\d)(?!\d|\u2013)/g;
+      const re = /([A-Z][a-z]+ [A-Z]\.),?\s*(\d\d:\d\d)(?!\d|\u2013|:)/g;
       for (const el of document.querySelectorAll(".dp-source-pill, .dp-sources span, [class*=source]")) {
         const t = el.textContent || "";
         let m;

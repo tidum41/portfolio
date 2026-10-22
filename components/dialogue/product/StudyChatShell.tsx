@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import EvidenceFooter from "@/components/dialogue/product/EvidenceFooter";
 import ChatComposer from "@/components/dialogue/product/ChatComposer";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
@@ -11,6 +12,8 @@ type Props = {
   hideComposer?: boolean;
   /** Drop the repeated study-chat title row when the chart is the point. */
   hideHeader?: boolean;
+  /** Interviews behind the answer; omit for a card that is not an answer. */
+  evidence?: number;
   /** @deprecated Anatomy targets live on answer parts, not the chat head. */
   anatomy?: boolean;
 };
@@ -21,6 +24,7 @@ export default function StudyChatShell({
   hero,
   hideComposer,
   hideHeader,
+  evidence,
 }: Props) {
   return (
     <div
@@ -50,7 +54,7 @@ export default function StudyChatShell({
                 <path
                   d="M3.5 8H12.5"
                   stroke="currentColor"
-                  strokeWidth="1.5"
+                  strokeWidth="2"
                   strokeLinecap="round"
                 />
               </svg>
@@ -61,6 +65,7 @@ export default function StudyChatShell({
       <div className="dp-study-chat__scroll">
         <div className="dp-study-chat__body" data-annotate-part="chat-body">{children}</div>
       </div>
+      {evidence !== undefined ? <EvidenceFooter count={evidence} /> : null}
       {!hideComposer ? <ChatComposer /> : null}
     </div>
   );

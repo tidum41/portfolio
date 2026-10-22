@@ -1,27 +1,20 @@
 /* Dialogue chart primitives — tokens from chart/chartSpec.ts (t385 / Carbon-grounded) */
 
 .dp-chart-root {
-  --dp-chart-label-size: 12px;
-  --dp-chart-label-leading: 16px;
-  --dp-chart-label-weight: 400;
-  --dp-chart-label-color: #57534d;
-  --dp-chart-value-size: 12px;
-  --dp-chart-value-leading: 16px;
-  --dp-chart-value-weight: 400;
-  --dp-chart-value-color: #1c1917;
-  --dp-chart-value-focal-weight: 600;
-  --dp-chart-focal: #b43f7f;
-  --dp-chart-track: #f1eeea;
-  --dp-chart-gridline: rgb(231 229 228 / 60%);
-  --dp-chart-baseline: #e7e5e4;
-  --dp-chart-line: #57534d;
+  --dp-chart-label-size: var(--text-chart-size);
+  --dp-chart-label-leading: var(--text-chart-leading);
+  --dp-chart-label-weight: var(--dp-weight-normal);
+  --dp-chart-value-size: var(--text-chart-size);
+  --dp-chart-value-leading: var(--text-chart-leading);
+  --dp-chart-value-weight: var(--dp-weight-normal);
+  --dp-chart-value-focal-weight: var(--dp-weight-medium);
   --dp-chart-bar-thickness: 8px;
   --dp-chart-bar-gap: 10px;
   --dp-chart-label-width: 110px;
   --dp-chart-value-width: 40px;
   --dp-chart-gutter: 8px;
   --dp-chart-min-width: 240px;
-  --dp-chart-line-stroke: 1.5px;
+  --dp-chart-line-stroke: var(--dp-icon-stroke);
   --dp-chart-plot-width: 320px;
   min-width: min(100%, var(--dp-chart-min-width));
   max-width: 100%;
@@ -52,9 +45,9 @@
 }
 
 .dp-chart-viz-card {
-  border-radius: var(--dp-radius-control, 14px);
-  border: 1px solid var(--dp-border, #e7e5e4);
-  background: var(--dp-bg, #f8f6f3);
+  border-radius: var(--dp-radius-control);
+  border: 1px solid var(--dp-border);
+  background: var(--dp-bg);
   overflow: hidden;
   min-width: 0;
 }
@@ -62,20 +55,21 @@
 .dp-chart-viz-card__inner {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   padding: 16px;
 }
 
+/* Chart title rule: 12/16, 500, muted, a fixed 12px above the plot. */
 .dp-chart-title {
-  margin: 0;
-  font-size: var(--dp-chart-label-size);
-  line-height: var(--dp-chart-label-leading);
-  font-weight: var(--dp-chart-label-weight);
+  margin: 0 0 12px;
+  font-size: var(--text-small-size);
+  line-height: 16px;
+  font-weight: 500;
   color: var(--dp-chart-label-color);
 }
 
 .dp-chart-caption {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   font-size: var(--dp-chart-label-size);
   line-height: var(--dp-chart-label-leading);
   font-weight: var(--dp-chart-label-weight);
@@ -124,14 +118,14 @@
   min-width: 60px;
   height: var(--dp-chart-bar-thickness);
   background: var(--dp-chart-track);
-  border-radius: 2px;
+  border-radius: var(--dp-radius-bar);
   overflow: hidden;
 }
 
 .dp-chart-bars__bar {
   height: 100%;
   max-width: 100%;
-  border-radius: 2px;
+  border-radius: var(--dp-radius-bar);
 }
 
 .dp-chart-bars__value {
@@ -181,21 +175,21 @@
 .dp-chart-line__svg .dp-chart-line__tick {
   fill: var(--dp-chart-label-color);
   font-family: var(--dp-font-family, "DM Sans", "DM Sans Fallback", system-ui, sans-serif);
-  font-size: 12px;
+  font-size: var(--text-small-size);
   font-weight: 400;
 }
 
 .dp-chart-line__svg .dp-chart-line__value {
   fill: var(--dp-chart-value-color);
   font-family: var(--dp-font-family, "DM Sans", "DM Sans Fallback", system-ui, sans-serif);
-  font-size: 12px;
+  font-size: var(--text-small-size);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 
 .dp-chart-line__svg .dp-chart-line__value--focal {
   fill: var(--dp-chart-focal);
-  font-weight: 600;
+  font-weight: var(--dp-weight-medium);
 }
 
 .dp-chart-line__grid {
@@ -243,7 +237,7 @@
 }
 
 .dp-chart-rank__num--focal {
-  font-weight: 600;
+  font-weight: var(--dp-weight-medium);
   color: var(--dp-chart-focal);
 }
 

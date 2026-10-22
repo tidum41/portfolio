@@ -45,6 +45,10 @@ export default function FunnelChart({
         1
       </span>
       {summaryBody}
+      <p className="dp-source-line" data-annotate-part="source-line">
+        From 9 checkout moments, including{" "}
+        <span className="dp-source-line__link">Jordan M. at 14:03–14:19</span>
+      </p>
     </div>
   ) : (
     summaryBody

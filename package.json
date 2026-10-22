@@ -15,7 +15,8 @@
     "check:asks": "node scripts/check-asks.mjs",
     "check:dialogue-preview": "node scripts/check-dialogue-preview.mjs",
     "check:site-mobile": "node scripts/check-site-mobile.mjs",
-    "check:annotate": "node scripts/check-annotate.mjs"
+    "check:annotate": "node scripts/check-annotate.mjs",
+    "check:dialogue-tokens": "node scripts/check-dialogue-tokens.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

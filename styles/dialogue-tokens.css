@@ -1,0 +1,229 @@
+/*
+ * Dialogue design tokens. Three layers, in this order:
+ *
+ *   1. DS raw values (--ds-*). Captured from the live Dialogue app
+ *      (:root and measured computed styles) and the Paper exports.
+ *      Never reference these from components.
+ *   2. Role tokens (--dp-*, --text-*). The only tokens components use.
+ *      Each one points at a DS raw value.
+ *   3. Case-study extension block. Deviations from the DS that are kept on
+ *      purpose. Every entry names the reason. Nothing else may deviate.
+ *
+ * scripts/check-dialogue-tokens.mjs fails on hard-coded colors, font sizes
+ * and radii in Dialogue CSS and TSX, and on 1.5 strokes. Raw hex values are
+ * allowed only in this file.
+ */
+
+.dialogue-product-root {
+  /* ---------------------------------------------------------------
+   * Layer 1. DS raw values
+   * ------------------------------------------------------------- */
+  --ds-font-sans: "DM Sans", "DM Sans Fallback", system-ui, sans-serif;
+  --ds-font-mono: "DM Mono", "DM Mono Fallback", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --ds-font-brand: "Zilla Slab", "Zilla Slab Fallback", Georgia, serif;
+
+  --ds-white: #fff;
+  --ds-black: #000;
+  --ds-stone-900: #1c1917;
+  --ds-stone-600: #57534d;
+  --ds-stone-500: #79716b;
+  --ds-stone-400: #a6a09b;
+  --ds-stone-300: #d6d3d1;
+  --ds-stone-200: #e7e5e4;
+  --ds-stone-50: #fafaf9;
+  --ds-gray-200: #e5e7eb;
+  --ds-paper-10: #fcfbf9;
+  --ds-paper-50: #f8f6f3;
+  --ds-paper-100: #f1eeea;
+  --ds-cherry-50: #ffd8ee;
+  --ds-cherry-300: #fe93ce;
+  --ds-cherry-700: #de4f9d;
+  --ds-cherry-800: #b43f7f;
+  --ds-amber-100: #fef3c6;
+  --ds-amber-200: #fee685;
+  --ds-amber-700: #b75000;
+  --ds-blue-200: #bedbff;
+  --ds-orange-300: #ffb96d;
+  --ds-lime-200: #d8f999;
+  --ds-suggestion: rgb(116 116 116);
+
+  --ds-radius: 0.625rem;
+  --ds-radius-xs: 0.125rem;
+  --ds-radius-md: calc(var(--ds-radius) - 2px);
+  --ds-radius-2xl: 1rem;
+  --ds-radius-3xl: 1.5rem;
+  --ds-radius-control: 14px;
+  --ds-radius-pill: 999px;
+
+  --ds-text-xs: 12px;
+  --ds-text-xs-leading: 16px;
+  --ds-text-sm: 14px;
+  --ds-text-sm-leading: 20px;
+  --ds-text-body-leading: 24px;
+  --ds-text-quote-leading: 22.75px;
+  --ds-text-clip-time: 11px;
+  --ds-weight-normal: 400;
+  --ds-weight-medium: 500;
+  --ds-weight-semibold: 600;
+
+  --ds-icon-size: 16px;
+  --ds-icon-stroke: 2;
+
+  /* ---------------------------------------------------------------
+   * Layer 2. Role tokens
+   * ------------------------------------------------------------- */
+  --dp-font-family: var(--ds-font-sans);
+  --dp-font-mono: var(--ds-font-mono);
+  --dp-font-brand: var(--ds-font-brand);
+  --dp-font-product-tracking: normal;
+
+  --dp-ink: var(--ds-stone-900);
+  --dp-muted: var(--ds-stone-600);
+  --dp-muted-light: var(--ds-stone-500);
+  --dp-faint: var(--ds-stone-400);
+  --dp-border: var(--ds-stone-200);
+  --dp-border-strong: var(--ds-stone-300);
+  --dp-input-border: var(--ds-gray-200);
+  --dp-surface: var(--ds-paper-10);
+  --dp-bg: var(--ds-paper-50);
+  --dp-warm: var(--ds-paper-100);
+  --dp-card: var(--ds-white);
+  --dp-black: var(--ds-black);
+  --dp-on-strong: var(--ds-white);
+  --dp-app-bg: var(--ds-stone-50);
+  --dp-sidebar-bg: var(--ds-paper-50);
+  --dp-search-bg: var(--ds-paper-10);
+  --dp-nav-active-bg: var(--ds-stone-200);
+  --dp-skeleton: var(--ds-stone-300);
+  --dp-clip-card-bg: var(--ds-paper-10);
+  --dp-stat-tile-bg: var(--ds-white);
+  --dp-suggestion: var(--ds-suggestion);
+  --dp-brand: var(--ds-cherry-800);
+  --dp-brand-icon: var(--ds-cherry-700);
+  --dp-brand-soft: var(--ds-cherry-50);
+  --dp-warn-bg: var(--ds-amber-100);
+  --dp-warn-fg: var(--ds-amber-700);
+
+  --dp-funnel-track: var(--ds-paper-100);
+  --dp-funnel-bar: var(--ds-stone-400);
+  --dp-funnel-bar-cart: var(--ds-stone-300);
+  --dp-funnel-bar-focal: var(--dp-brand);
+  --dp-funnel-bar-dark: var(--ds-stone-600);
+
+  --dp-anatomy-line: var(--ds-stone-300);
+
+  --text-body-size: var(--ds-text-sm);
+  --text-body-leading: var(--ds-text-body-leading);
+  --text-header-size: var(--ds-text-sm);
+  --text-header-leading: var(--ds-text-sm-leading);
+  --text-small-size: var(--ds-text-xs);
+  --text-small-leading: var(--ds-text-xs-leading);
+  --text-meta-size: var(--ds-text-sm);
+  --text-meta-leading: var(--ds-text-sm-leading);
+  --text-quote-leading: var(--ds-text-quote-leading);
+  --text-chart-size: var(--ds-text-xs);
+  --text-chart-leading: var(--ds-text-xs-leading);
+  --text-clip-time-size: var(--ds-text-clip-time);
+  --text-icon-lg-size: 20px;
+  --dp-weight-normal: var(--ds-weight-normal);
+  --dp-weight-medium: var(--ds-weight-medium);
+  --dp-weight-bold: var(--ds-weight-semibold);
+
+  --dp-radius: var(--ds-radius-3xl);
+  --dp-radius-bubble: var(--ds-radius-2xl);
+  --dp-radius-control: var(--ds-radius-control);
+  --dp-radius-sm: var(--ds-radius-control);
+  --dp-radius-xs: var(--ds-radius-control);
+  --dp-radius-thumb: var(--ds-radius-md);
+  --dp-radius-chip: var(--ds-radius-md);
+  --dp-radius-card: var(--ds-radius);
+  --dp-radius-app: var(--ds-radius);
+  --dp-radius-bar: var(--ds-radius-xs);
+  --dp-radius-pill: var(--ds-radius-pill);
+  --dp-radius-round: 50%;
+
+  --dp-send-size: 36px;
+  --dp-send-idle-opacity: 0.5;
+  --dp-avatar-transcript: 48px;
+  --dp-icon-size: var(--ds-icon-size);
+  --dp-icon-stroke: var(--ds-icon-stroke);
+
+  --dp-chat-pad: 28px;
+  --dp-chat-gap: 12px;
+  --dp-sidebar-width: 252px;
+  --dp-app-shell-width: 1280px;
+  --dp-app-shell-height: 748px;
+  --dp-paper-frame-width: 922px;
+  --dp-paper-frame-height: 540px;
+  --dp-paper-sidebar-width: 188px;
+  --dp-placement-chat-width: 448px;
+  --dp-placement-chat-height: 658px;
+  --dp-placement-inset: 24px;
+
+  /* ---------------------------------------------------------------
+   * Layer 3. Case-study extension block
+   * Deviations from the DS, each kept on purpose.
+   * ------------------------------------------------------------- */
+
+  /* 1. Figures stay light in dark mode, inside a dark well. They read as
+   *    product screenshots. The fallback applies when --figure-well is unset. */
+  --dp-well-fallback: #eeedeb;
+  --dp-figure-surface-system: var(--figure-well, var(--dp-well-fallback));
+  --dp-figure-surface-problem: var(--figure-well, var(--dp-well-fallback));
+  --dp-figure-surface-solution: var(--figure-well, var(--dp-well-fallback));
+
+  /* 2. Chart palette: one brand focal mark on a stone ramp, one finding per
+   *    chart (design/briefs/dialogue-chart-spec.md). The DS chart-1..5 set is
+   *    kept for reference only. */
+  --dp-chart-focal: var(--dp-brand);
+  --dp-chart-track: var(--ds-paper-100);
+  --dp-chart-gridline: color-mix(in srgb, var(--ds-stone-200) 60%, transparent);
+  --dp-chart-baseline: var(--ds-stone-200);
+  --dp-chart-line: var(--ds-stone-600);
+  --dp-chart-ramp-1: var(--ds-stone-200);
+  --dp-chart-ramp-2: var(--ds-stone-300);
+  --dp-chart-ramp-3: var(--ds-stone-400);
+  --dp-chart-ramp-4: var(--ds-stone-500);
+  --dp-chart-ramp-5: var(--ds-stone-600);
+  --dp-chart-label-color: var(--ds-stone-600);
+  --dp-chart-value-color: var(--ds-stone-900);
+  --dp-chart-ds-1: var(--ds-cherry-300);
+  --dp-chart-ds-2: var(--ds-blue-200);
+  --dp-chart-ds-3: var(--ds-orange-300);
+  --dp-chart-ds-4: var(--ds-amber-200);
+  --dp-chart-ds-5: var(--ds-lime-200);
+
+  /* 3. Citation pill states. The DS shows no citation pills. */
+  --dp-pill-selected-bg: color-mix(in srgb, var(--dp-brand) 12%, transparent);
+  --dp-pill-selected-border: var(--dp-brand);
+  --dp-pill-disagree-border: var(--dp-brand);
+
+  /* 4. Clip focal border ties a selected pill to its clip. */
+  --dp-clip-focal-border: var(--dp-brand);
+  --dp-clip-focal-width: 2px;
+
+  /* 5. Hero composer collapses to a 56px row. The send button keeps the DS
+   *    layout. */
+  --dp-hero-composer-height: 56px;
+
+  /* 6. Floating panels get a shadow so they lift off the figure well. */
+  --shadow-chat: 0 1px 2px color-mix(in srgb, var(--ds-stone-900) 10%, transparent),
+    0 6px 16px -6px color-mix(in srgb, var(--ds-stone-900) 20%, transparent);
+  --shadow-app: 0 1px 2px color-mix(in srgb, var(--ds-stone-900) 5%, transparent),
+    0 8px 24px color-mix(in srgb, var(--ds-stone-900) 5%, transparent);
+  --shadow-launcher: 0 4px 16px color-mix(in srgb, var(--ds-cherry-800) 35%, transparent);
+
+  /* 7. Blurred faces on clip stills (privacy), plus media chrome. */
+  --dp-media-radius: 2rem;
+  --dp-media-font-size: 0.8125rem;
+  --dp-media-surface-bg: color-mix(in srgb, var(--ds-black) 25%, transparent);
+  --dp-media-border: color-mix(in srgb, var(--ds-black) 10%, transparent);
+
+  /* 8. Letterbox behind the interview still, sampled from the still. */
+  --dp-still-letterbox: #dfdfda;
+
+  /* 9. Anatomy callout numbering, lines and markers. An annotation layer, not
+   *    product UI. Stone tokens only. */
+  --dp-anatomy-marker-bg: var(--ds-paper-100);
+  --dp-anatomy-marker-fg: var(--ds-white);
+}

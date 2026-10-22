@@ -3,6 +3,7 @@ import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpe
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
+import SourcePill from "@/components/dialogue/product/SourcePill";
 
 const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
 
@@ -12,16 +13,6 @@ const MINI_SOURCES = [
 ] as const;
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
-
-function formatPill(participant: string, time: string) {
-  return (
-    <>
-      {participant}
-      <span className="dp-source-pill__sep">, </span>
-      {time}
-    </>
-  );
-}
 
 type Props = {
   variant: LeadCompareVariant;
@@ -68,7 +59,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       {summary}
       <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <p className="dp-lead-answer-card__funnel-title">Checkout funnel, % still in flow</p>
+        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
         <ChartBarList
           className="dp-lead-answer-card__bars"
           rows={MINI_FUNNEL.map((step) => ({
@@ -83,18 +74,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
       </div>
       <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
         {MINI_SOURCES.map((s) => (
-          <span
-            key={s.participant}
-            data-annotate-part={`source-pill-${annotateSlug(s.participant)}`}
-            className={[
-              "dp-source-pill",
-              s.participant === "Priya K." ? "dp-source-pill--selected" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {formatPill(s.participant, s.time)}
-          </span>
+          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={s.participant === "Priya K."} />
         ))}
       </div>
       <ClipThumbnails selectedTime="15:47" />

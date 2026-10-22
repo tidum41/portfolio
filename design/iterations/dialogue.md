@@ -2,6 +2,13 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r17, Oct 22 2026 (restore plus DS conformance)
+- Changed: restored trust signals (amber low-signal warning, evidence footer, "Ask this next study"), counter-evidence expander, Paper section-5 transcript and the anatomy search line, inline clip link and footer; hero aside is now quote rows plus the evidence footer; pill format, send button, focus border, chart-title gap and lead comparison type scale per plan.md; styles/dialogue-tokens.css (DS raw, role tokens, extension block) with the product CSS migrated; check:dialogue-tokens.
+- Why: Mudit approved the r17 restore plan and the DS conformance audit. DLG-58 to DLG-69.
+- Not restored: study view and hero layout (Mudit's follow-up). Lead comparison card keeps no footer.
+- Preview: PREVIEW_URL (deployment of COMMIT_SHA)
+- Image: ![r17](img/r17-anatomy.webp) early left, now right.
+
 ## DLG-57, Oct 22 2026 (Agentation comment box typing)
 - Changed: every window or document key listener (ruler mode, lightbox, project popup, quarter picker, bento gallery, motion lab) returns early for editable targets through lib/isEditableTarget, which reads composedPath. The toolbar stops typed characters in the capture phase so other tools' single-letter shortcuts cannot swallow them. check:annotate types the full alphabet, digits and punctuation into the comment box on /dialogue and /.
 - Why: Mudit could not type some letters ("c") in the comment box. No site listener reproduces it; the Vercel preview toolbar binds "c" and is the likely source, so the guard is aimed at it. Unverified without a logged-in toolbar session.

@@ -1,43 +1,28 @@
 import {
-  PLACEMENT_LAYOUT_WIDTH,
-  PLACEMENT_SIDEBAR_WIDTH,
-  STUDY_PLAYER_PAD_X,
-} from "@/lib/caseStudies/dialoguePlacementExport";
-import {
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT,
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH,
 } from "@/lib/caseStudies/dialoguePlacementStill";
-import { DIALOGUE_GRAPHICS_COLORS, DIALOGUE_GRAPHICS_FONT } from "@/lib/caseStudies/dialogueGraphicsTheme";
-import { PLACEMENT_RADIUS_MD } from "@/lib/caseStudies/dialoguePlacementTypography";
 
 const PLAY_BUTTON_SIZE = 56;
 const PLAY_GLYPH_SIZE = 18;
 
-function placementPlayerDimensions() {
-  const bodyWidth = PLACEMENT_LAYOUT_WIDTH - PLACEMENT_SIDEBAR_WIDTH - STUDY_PLAYER_PAD_X * 2;
-  const videoHeight = Math.round((bodyWidth * DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT) / DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH);
-  return { bodyWidth, videoHeight };
-}
 
 /** Blurred interview still + static play affordance (no control bar). */
 export function DialogueInterviewPlayer() {
-  const { bodyWidth } = placementPlayerDimensions();
   return (
     <div
       data-placement-crop="player"
       data-annotate-part="player"
       style={{
-        fontFamily: DIALOGUE_GRAPHICS_FONT,
-        borderRadius: PLACEMENT_RADIUS_MD,
+        fontFamily: "var(--dp-font-family)",
+        borderRadius: "var(--dp-radius-card)",
         overflow: "hidden",
-        border: `1px solid ${DIALOGUE_GRAPHICS_COLORS.border}`,
-        background: "#161412",
+        border: "1px solid var(--dp-border)",
+        background: "var(--dp-ink)",
         position: "relative",
-        width: bodyWidth,
-        maxWidth: "100%",
-        aspectRatio: `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}`,
+        width: "100%",
+        aspectRatio: "16 / 9",
       }}
     >
       <div
@@ -45,9 +30,19 @@ export function DialogueInterviewPlayer() {
           height: "100%",
           position: "relative",
           overflow: "hidden",
-          background: DIALOGUE_PLACEMENT_INTERVIEW_STILL_LETTERBOX,
+          background: "var(--dp-still-letterbox)",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: "50%",
+            transform: "translateY(-50%)",
+            aspectRatio: `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}`,
+          }}
+        >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           data-dialogue-placement-still="true"
@@ -80,6 +75,7 @@ export function DialogueInterviewPlayer() {
             WebkitBackdropFilter: "blur(22px)",
           }}
         />
+        </div>
         <div
           aria-hidden
           data-annotate-part="player-play-layer"
@@ -97,12 +93,12 @@ export function DialogueInterviewPlayer() {
             style={{
               width: PLAY_BUTTON_SIZE,
               height: PLAY_BUTTON_SIZE,
-              borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "var(--dp-radius-round)",
+              background: "color-mix(in srgb, var(--dp-card) 90%, transparent)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.28)",
+              boxShadow: "0 4px 20px color-mix(in srgb, var(--dp-black) 28%, transparent)",
             }}
           >
             <svg
@@ -113,7 +109,7 @@ export function DialogueInterviewPlayer() {
               aria-hidden
               style={{ marginLeft: 2 }}
             >
-              <path d="M6.2 4.2v9.6L14.2 9 6.2 4.2Z" fill="#1A1816" />
+              <path d="M6.2 4.2v9.6L14.2 9 6.2 4.2Z" fill="var(--dp-ink)" />
             </svg>
           </div>
         </div>

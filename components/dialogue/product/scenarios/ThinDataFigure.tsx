@@ -1,27 +1,22 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
+import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 
-/** Timestamp owners follow the DLG-48 map: Marcus W. owns 21:08, Hannah L. owns 22:41. */
+/** f6a5192 low-signal answer: amber lead warning, clip link, next-study action, evidence footer. */
 export default function ThinDataFigure() {
   return (
-    <div className="dp-thin-data">
-    <StudyChatShell compact hideHeader hideComposer>
-      <UserMessageBubble>Why do people hesitate at payment?</UserMessageBubble>
-      <CoverageCallout headline="2 of 24 interviews" detail="Only a few interviews match." />
+    <StudyChatShell compact hideHeader hideComposer evidence={4}>
+      <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
-        Two interviews mention payment retry. Treat it as a lead, not a trend.
+        On mobile, several participants bailed when Autofill skipped the apartment field and
+        validation fired late.
       </p>
-      <div className="dp-sources dp-sources--tight" aria-hidden data-annotate-part="sources-row">
-        <span className="dp-source-pill" data-annotate-part="source-pill-marcus-w">Marcus W., 21:08</span>
-        <span className="dp-source-pill" data-annotate-part="source-pill-hannah-l">Hannah L., 22:41</span>
+      <div className="dp-low-signal" data-annotate-part="low-signal-note">
+        <InfoCircleIcon className="dp-low-signal__icon" />
+        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this. Treat it as a lead.</p>
       </div>
-      <div className="dp-chart-slot" data-annotate-part="chart-slot">
-        <p className="dp-chart-slot__note" data-annotate-part="chart-slot-note">
-          When few interviews match, the answer leads with the count and holds the chart back.
-        </p>
-      </div>
+      <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
+      <div className="dp-next-study" data-annotate-part="next-study-button">Ask this next study</div>
     </StudyChatShell>
-    </div>
   );
 }

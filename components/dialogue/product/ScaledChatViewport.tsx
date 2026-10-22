@@ -2,9 +2,9 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import { dialogueProductTokens } from "@/components/dialogue/product/tokens";
+import { PLACEMENT_CHAT_WIDTH } from "@/components/dialogue/product/tokens";
 
-const DEFAULT_INNER_W = parseInt(dialogueProductTokens.space.placementChatWidth, 10);
+const DEFAULT_INNER_W = PLACEMENT_CHAT_WIDTH;
 
 type Props = {
   children: ReactNode;
