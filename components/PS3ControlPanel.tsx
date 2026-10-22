@@ -33,7 +33,9 @@ const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const REVEAL_EASE = cssCubic(EASE_OPACITY);
 const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
-// load is mounted only after introReleased; about/archive return replays settle.
+// load mounts with the work shell, before the intro gate lifts, and its
+// reveal is armed on "intro-done" like the rest of the intro (HeroText,
+// grid); about/archive return replays settle.
 const PICKER_MAX_H = 125;
 // Content-tight body (not a fixed 620). First-frame estimate only —
 // ResizeObserver replaces it with the inner's visible offsetHeight.
@@ -891,6 +893,23 @@ export default function PS3ControlPanel({
       setShown(true);
       setPositionSettled(true);
     };
+    // Stage the reveal in two commits. First commit arms the reveal
+    // transition while the pill is still at opacity 0 (morphT is "none"
+    // until positionSettled, so settling must land here, not with `shown`);
+    // only after two frames (a painted frame with the transition armed)
+    // flip `shown`. Flipping settled + shown in one commit gave the pill a
+    // before-change style with no transition, so the fade was skipped and
+    // it popped in at full opacity whenever React batched those updates.
+    const stageReveal = () => {
+      startTransition(() => {
+        setShowTransition(true);
+        setPositionSettled(true);
+      });
+      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
+        setShown(true);
+      })));
+      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+    };
     if (instantReturn) {
       revealKindRef.current = "instant";
       revealImmediately();
@@ -903,11 +922,7 @@ export default function PS3ControlPanel({
         revealImmediately();
         return;
       }
-      startTransition(() => setShowTransition(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-        setShown(true); setPositionSettled(true);
-      })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+      stageReveal();
       return;
     }
     revealKindRef.current = "first";
@@ -915,18 +930,15 @@ export default function PS3ControlPanel({
       if (reduced) {
         revealImmediately();
       } else {
-        startTransition(() => setShowTransition(true));
-        requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-          setShown(true); setPositionSettled(true);
-        })));
-        setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+        stageReveal();
       }
       _ps3cpHasLoaded = true;
     }
-    // Parent already waits for introReleased before mounting this panel, so
-    // `data-intro` is often already "done" (attribute still present) when we
-    // run. Waiting for `intro-done` here misses the event and leaves the pill
-    // at opacity 0. onIntroDone treats anything but "playing" as released.
+    // The panel mounts with the work shell, while data-intro is still
+    // "playing", so onIntroDone registers a real "intro-done" listener
+    // here, the same sequence HeroText and the grid follow. Its immediate
+    // path (anything but "playing") covers arrivals with no gate at all:
+    // a first visit that lands off-home, then soft-navs to "/".
     return onIntroDone(reveal);
   }, [instantReturn, posReady, reduced, visible]);
 
@@ -1126,6 +1138,10 @@ export default function PS3ControlPanel({
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
       opacity: shown && posReady ? 1 : 0,
+      // Hidden until revealed. Same contract as the intro's `.intro-hide`
+      // (opacity 0 + pointer-events none while the gate is playing), so the
+      // now-early-mounted pill can't intercept hero clicks before its fade.
+      pointerEvents: shown && posReady ? "auto" : "none",
       // First load: the subtitle owns the Y settle. Sliding the pill
       // too made the pair look like a position jump. Soft-nav return still
       // uses the shared 8px fade-up.
