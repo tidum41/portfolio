@@ -5,6 +5,7 @@ import { FOOTER_LINKS } from "@/lib/site";
 export const EXPERIENCE = [
   {
     slug: "cursor",
+    href: "https://cursor.com",
     company: "Cursor",
     role: "Campus Ambassador",
     dates: "2026",
@@ -13,6 +14,7 @@ export const EXPERIENCE = [
   },
   {
     slug: "joola",
+    href: "https://joola.com",
     company: "JOOLA",
     role: "Product Design Intern",
     dates: "Summer 2026",
@@ -21,6 +23,7 @@ export const EXPERIENCE = [
   },
   {
     slug: "beaconsAi",
+    href: "https://beacons.ai",
     company: "Beacons AI",
     role: "Product Designer (contract)",
     dates: "2026",
@@ -29,6 +32,7 @@ export const EXPERIENCE = [
   },
   {
     slug: "dialogueAi",
+    href: "https://www.dialogueai.com",
     company: "Dialogue AI",
     role: "Product Designer (contract)",
     dates: "2026",
@@ -37,6 +41,7 @@ export const EXPERIENCE = [
   },
   {
     slug: "sokaRecords",
+    href: "https://sokatalentgroup.com",
     company: "Soka Records",
     role: "Creative Intern",
     dates: "2025",
@@ -55,8 +60,21 @@ export const EXPERIENCE = [
 ] as const;
 
 export const ORGS = [
-  { name: "UCLA Product Space", role: "Product Designer" },
-  { name: "Campus Events Commission", role: "Director of Media Production" },
+  {
+    name: "UCLA Product Space",
+    role: "Product Designer",
+    href: "https://www.instagram.com/productspaceatucla/",
+  },
+  {
+    name: "Campus Events Commission",
+    role: "Director of Media Production",
+    href: "https://www.instagram.com/uclacec/",
+  },
+  {
+    name: "Design Meetup",
+    role: "Member",
+    href: "https://designmeetup.info/",
+  },
 ] as const;
 
 export const ABOUT_INTERESTS = [

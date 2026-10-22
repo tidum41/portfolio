@@ -1,7 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import Image from "next/image";
 import CopyEmail from "@/components/CopyEmail";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -13,7 +12,6 @@ import {
   ORGS,
   SOCIALS,
 } from "@/lib/about";
-import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -89,15 +87,6 @@ export default function AboutPageContent({
   playEnter?: boolean;
   enterEpoch?: number;
 }) {
-  const logoDk = useDialKit("About Logos", {
-    cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    joola:       { scale: [1.34, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    beaconsAi:   { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    dialogueAi:  { scale: [1.35, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    sokaRecords: { scale: [1.46, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-  });
-
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
@@ -230,40 +219,21 @@ export default function AboutPageContent({
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(({ slug, company, role, dates, description, logo }) => {
-              const crop = logoDk[slug as keyof typeof logoDk];
+            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map((exp) => {
+              const { company, role, dates, description } = exp;
+              const href = "href" in exp ? exp.href : undefined;
               return (
-                <StaggerItem key={company} style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  padding: "20px 0",
-                }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16, minWidth: 0, flex: 1 }}>
-                    <div style={{
-                      position: "relative",
-                      width: 40,
-                      height: 40,
-                      borderRadius: 24,
-                      overflow: "hidden",
-                      background: "var(--color-placeholder)",
-                      flexShrink: 0,
-                    }}>
-                      <Image
-                        src={logo}
-                        alt={`${company} logo`}
-                        fill
-                        sizes="40px"
-                        style={{ objectFit: "contain", padding: 5, transform: `scale(${crop.scale}) translate(${crop.offsetX}px, ${crop.offsetY}px)` }}
-                      />
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
-                      <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
-                      <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
-                    </div>
+                <StaggerItem key={company} style={{ padding: "20px 0" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
+                    <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0, minWidth: 0 }}>
+                      {href ? (
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="nav-link about-link" style={{ color: "inherit" }}>{company}</a>
+                      ) : company}
+                    </p>
+                    <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{dates}</p>
                   </div>
-                  <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{dates}</p>
+                  <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "2px 0 0" }}>{role}</p>
+                  <p style={{ fontSize: "var(--fs-meta)", lineHeight: 1.5, color: "var(--color-text-secondary)", margin: "8px 0 0", maxWidth: "52ch", textAlign: "left" }}>{description}</p>
                 </StaggerItem>
               );
             })}
@@ -273,17 +243,42 @@ export default function AboutPageContent({
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Organizations</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {ORGS.map(({ name, role }) => (
+            {ORGS.map((org) => {
+              const { name, role } = org;
+              const href = "href" in org ? org.href : undefined;
+              const nameStyle: CSSProperties = {
+                fontSize: "var(--fs-body)",
+                color: "var(--color-text-primary)",
+                margin: 0,
+                minWidth: 0,
+                flex: 1,
+              };
+              const linkStyle: CSSProperties = { ...nameStyle };
+              return (
               <StaggerItem key={name} style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "baseline",
                 justifyContent: "space-between",
+                gap: 16,
                 padding: "16px 0",
               }}>
-                <p style={{ fontSize: "var(--fs-body)", color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
-                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
+                {href ? (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="nav-link about-link"
+                    style={linkStyle}
+                  >
+                    {name}
+                  </a>
+                ) : (
+                  <p style={nameStyle}>{name}</p>
+                )}
+                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, textAlign: "right" }}>{role}</p>
               </StaggerItem>
-            ))}
+              );
+            })}
           </StaggerReveal>
         </section>
       </div>

@@ -1883,3 +1883,15 @@ html[data-theme="light"] {
 [class*="styles-module__highlightsContainer___"] {
   z-index: 999999999 !important;
 }
+
+/* ─── About org/company links: plain at rest, subtle underline on hover/focus ─── */
+a.about-link {
+  text-decoration-line: none;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+a.about-link:focus-visible { text-decoration-line: underline; }
+@media (hover: hover) and (pointer: fine) {
+  a.about-link:hover { text-decoration-line: underline; }
+}
