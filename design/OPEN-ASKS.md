@@ -20,3 +20,4 @@ Mudit's checklist of open requests. Status is open or verified. Mark verified on
 | Hero line: pick pending | Oct 21 | open |
 | Archive minimap contrast | Oct 21 | verified (merged to main, build passes) |
 | About page without org icons | Oct 21 | verified (merged to main, build passes) |
+| Mobile: lock horizontal panning so cut-off patterns never read as a bug (Mudit: "on mobile breakpoint prevent people from moving the webpage left and right so it doesn't look like a bug when the pattern or elements get cut off, intentionally lock you in to that scroll") | Oct 22 | open |
