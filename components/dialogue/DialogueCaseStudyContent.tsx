@@ -7,14 +7,12 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
-import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
-import DialogueChartResearch from "@/components/dialogue/DialogueChartResearch";
+import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
+import DialogueCoverageCompare from "@/components/dialogue/DialogueCoverageCompare";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
-import DialoguePlacementCompare from "@/components/dialogue/DialoguePlacementCompare";
 import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
-import CoverageCallout from "@/components/dialogue/product/CoverageCallout";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import { ANATOMY_LABELS, ANATOMY_PART_IDS } from "@/lib/dialogue/product/sampleData";
@@ -40,10 +38,9 @@ export const DIALOGUE_TOC_ITEMS = [
     label: "A finding only travels if you can point to the interview behind it",
   },
   { id: "one-structure", label: "Every answer gets one fixed structure" },
-  { id: "chart-research", label: "Charts teams already use in synthesis" },
-  { id: "fitted-charts", label: "The chart fits the question" },
   { id: "clips", label: "A quote with no context" },
-  { id: "placement", label: "Floating chat, not a docked sidebar" },
+  { id: "chart-library", label: "A chart only when the data asks for one" },
+  { id: "thin-data", label: "Say when the data is thin" },
   { id: "full-answer", label: "One answer, start to finish" },
 ];
 
@@ -291,51 +288,14 @@ export function DialogueCaseStudyContent({
                     </span>
                   </p>
                 </div>
-                <div className="dialogue-answer-states__item">
-                  <div
-                    className={`dialogue-answer-states__ui dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-                    aria-hidden
-                    inert
-                  >
-                    <CoverageCallout
-                      headline="2 of 24 interviews"
-                      detail="Only a few interviews match."
-                    />
-                  </div>
-                  <p className="dialogue-caption">
-                    <span className="dialogue-caption__label">Low coverage</span>
-                    <span className="dialogue-caption__sentence">
-                      A thin-data note when only a few interviews match.
-                    </span>
-                  </p>
-                </div>
               </div>
-            </Section>
-
-            <Section id="chart-research">
-              <H2>Charts teams already use in synthesis</H2>
-              <CaseStudyBody>
-                I audited how UX research teams summarize interviews today, then built a small chart
-                library that maps question types to shapes we could ship in chat.
-              </CaseStudyBody>
-              <DialogueChartResearch />
-            </Section>
-
-            <Section id="fitted-charts">
-              <H2>The chart fits the question</H2>
-              <CaseStudyBody>
-                Each question type gets a default chart in the answer. If nothing fits, the reply
-                stays text with sources and clips.
-              </CaseStudyBody>
-              {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
 
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>
                 A quote without a timestamp forces you to hunt the recording. The player opens at
-                the exact second, with Dialogue and the participant on screen and the transcript in
-                sync.
+                the exact second, with the transcript in sync.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -346,15 +306,22 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
-            <Section id="placement">
-              <H2>Floating chat, not a docked sidebar</H2>
+            <Section id="chart-library">
+              <H2>A chart only when the data asks for one</H2>
               <CaseStudyBody>
-                I compared a persistent sidebar with the pop-up chat pattern Dialogue already used on
-                study pages. The answer structure inside the chat stays the same either way.
+                I audited how research teams summarize interviews, then put the common choice next to
+                the one I shipped, on the same data.
               </CaseStudyBody>
-              <div style={{ marginTop: 24 }}>
-                {wrap ? wrap("D-13", <DialoguePlacementCompare />) : <DialoguePlacementCompare />}
-              </div>
+              <DialogueChartLibrary />
+            </Section>
+
+            <Section id="thin-data">
+              <H2>Say when the data is thin</H2>
+              <CaseStudyBody>
+                A finding from two interviews must not reach a roadmap as a trend. When few
+                interviews match, the answer leads with the count and holds the chart back.
+              </CaseStudyBody>
+              {wrap ? wrap("D-13", <DialogueCoverageCompare />) : <DialogueCoverageCompare />}
             </Section>
 
             <Section id="full-answer">

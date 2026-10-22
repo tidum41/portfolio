@@ -3,11 +3,11 @@ import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { CHECKOUT_FUNNEL, CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
-/** Compact study chat for the hero collage (no clips drawer). */
-export default function HeroChatCard() {
+/** Hero chat answer: question, one-line search status, summary sentence. */
+export default function HeroChatCard({ composer = true }: { composer?: boolean }) {
   const [before, after] = CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis);
   return (
-    <StudyChatShell compact hideComposer hero>
+    <StudyChatShell compact hideComposer={!composer}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <p className="dp-summary dp-text-body">

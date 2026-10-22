@@ -4,9 +4,7 @@ import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/Stru
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import HeroStructuredFigure from "@/components/dialogue/product/scenarios/HeroStructuredFigure";
 import AnatomyStructureFigure from "@/components/dialogue/product/scenarios/AnatomyStructureFigure";
-import ClipPlayerFigure from "@/components/dialogue/product/scenarios/ClipPlayerFigure";
-import PlacementDockedFigure from "@/components/dialogue/product/scenarios/PlacementDockedFigure";
-import PlacementBubbleFigure from "@/components/dialogue/product/scenarios/PlacementBubbleFigure";
+import QuoteFrameFigure from "@/components/dialogue/product/scenarios/QuoteFrameFigure";
 import FullAnswerFigure from "@/components/dialogue/product/scenarios/FullAnswerFigure";
 import ChartGalleryFigure, {
   type GalleryVariant,
@@ -20,8 +18,6 @@ export type DialogueProductScenario =
   | "decision-structured"
   | "anatomy"
   | "clip-player"
-  | "placement-docked"
-  | "placement-bubble"
   | "full-answer"
   | { gallery: GalleryVariant };
 
@@ -47,11 +43,7 @@ function renderScenario(scenario: DialogueProductScenario): ReactNode {
     case "anatomy":
       return <AnatomyStructureFigure />;
     case "clip-player":
-      return <ClipPlayerFigure />;
-    case "placement-docked":
-      return <PlacementDockedFigure />;
-    case "placement-bubble":
-      return <PlacementBubbleFigure />;
+      return <QuoteFrameFigure />;
     case "full-answer":
       return <FullAnswerFigure />;
     default:

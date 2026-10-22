@@ -60,7 +60,6 @@ function scaleProps(
   fade?: boolean;
 } | null {
   const minScale = phone ? PHONE_MIN_SCALE : DESKTOP_MIN_SCALE;
-  if (scenario === "placement-docked" || scenario === "placement-bubble") return null;
   if (typeof scenario === "object" && "gallery" in scenario) {
     return { innerWidth: CHAT_W, fit: "reflow" };
   }
@@ -71,7 +70,7 @@ function scaleProps(
       case "hero":
         return { innerWidth: CHAT_W, fit: "reflow" };
       case "clip-player":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow" };
       case "full-answer":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 600, fade: true };
       case "problem-paragraphs":
@@ -94,6 +93,7 @@ function scaleProps(
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
         : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
     case "clip-player":
+      return { innerWidth: 312, minScale, maxScale: 1 };
     case "problem-paragraphs":
     case "decision-paragraphs":
     case "decision-quotes":

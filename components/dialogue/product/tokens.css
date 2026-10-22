@@ -6,9 +6,9 @@
   --dp-font-product-tracking: normal;
   --dp-bg: #f8f6f3; /* quote card / paper-50 */
   /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */
-  --dp-figure-surface-system: #f2f1f0;
-  --dp-figure-surface-problem: #f2f1f0;
-  --dp-figure-surface-solution: #f2f1f0;
+  --dp-figure-surface-system: #eeedeb;
+  --dp-figure-surface-problem: #eeedeb;
+  --dp-figure-surface-solution: #eeedeb;
   --dp-surface: #fcfbf9; /* chat panel bg */
   --dp-app-bg: #fafaf9;
   --dp-sidebar-bg: #f8f6f3;
@@ -73,7 +73,7 @@
   --dp-weight-bold: 600;
   --dp-weight-medium: 500;
   /* Figure frames / chat cards: tighter edge, slightly more contrast (not larger). */
-  --shadow-chat: 0 1px 2px rgb(28 25 23 / 7%), 0 5px 14px -6px rgb(28 25 23 / 12%);
+  --shadow-chat: 0 1px 2px rgb(28 25 23 / 10%), 0 6px 16px -6px rgb(28 25 23 / 20%);
   --shadow-app: 0 1px 2px rgb(28 25 23 / 5%), 0 8px 24px rgb(28 25 23 / 5%);
   --shadow-launcher: 0 4px 16px rgb(180 63 127 / 35%);
   --dp-media-radius: 2rem;
