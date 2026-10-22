@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## e7cd42c, Oct 22 2026 (Agentation on Dialogue)
+- Changed: merged origin/review/agentation (PR #107, 8aa312e), taking its STD-09 over the earlier revert. Every Dialogue figure part (hero, anatomy, library pairs, counter-evidence, thin-data figure, quote player, lightbox) carries data-annotate="dialogue-<figure>/<part>". Kept our CaseStudyLightbox (live children), CaseStudyFigure narrow handling and the BruinLease caption stopgap, with their annotate attributes added.
+- Why: Mudit wants Agentation on the Dialogue preview.
+- Preview: PREVIEW_URL
+- Image: none this round.
+
 ## 40e417f, Oct 22 2026 (DLG-56 critique fixes)
 - Changed: chat cards keep their full radius and shadow (16px room under uncropped cards in the shared scale viewport, clip margin at the sides), the empty chart slot is a 123px dashed placeholder at the hero chart height with the line centered in muted ink, the two source chips stay on one row at 390 (10px chip padding, 12px body padding at 600px and below) and wrap only at 360, caption confirmed visible at 390 and 360.
 - Why: Mudit's DLG-56 critique of the screenshots. Cropped figures at 390 (hero, anatomy, full answer) still clip by design.
