@@ -8,7 +8,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 2. Every brief in `design/briefs/` has an `Asks covered:` line listing the IDs it addresses. `npm run check:asks` fails without it.
 3. Audits mark each ID pass or fail with a screenshot path and the commit sha checked.
 4. Only Mudit's approval or preview-verified evidence (screenshot + sha) moves an ask to verified. "Build passes" alone is not evidence.
-5. New ask: add a row with the next ID in its component, quoted as close to verbatim as possible, with the date.
+5. Quote Mudit verbatim (short, keep his spelling); paraphrase only when no source message exists. New ask: add a row with the next ID in its component, quoted as close to verbatim as possible, with the date.
 6. Status: open, in progress, verified, superseded (name the ID that supersedes it).
 
 ## Standing (all pages)
@@ -47,19 +47,38 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-05 | Natural chart mapping | Oct 21 | open | |
 | DLG-06 | Fixed caption | Oct 21 | open | |
 | DLG-07 | Real interview frame, heavy face blur, Dialogue icon and viewer avatar | Oct 21 | open | |
-| DLG-08 | Refined floating vs docked comparison | Oct 21 | superseded | by DLG-20 |
+| DLG-08 | "comparing sidebar vs floating bubble is just ok" | Oct 20 | superseded | by DLG-20 |
 | DLG-09 | Clear closing | Oct 21 | open | |
 | DLG-10 | Data-viz library section | Oct 21 | superseded | by DLG-18 |
-| DLG-11 | Ruth Zhao-style collage hero | Oct 21 | superseded | by DLG-15 |
+| DLG-11 | "styled like ruth zhao reference we made for joola b2b" | Oct 20 | superseded | by DLG-15 |
 | DLG-12 | UI fills the frame (~6-8% margin), no letterboxing | Oct 20 | open | dialogue-feedback-1020 G1/G2 |
 | DLG-13 | Lightbox on click, Esc/click-off closes, ~200ms, reduced motion | Oct 20 | open | dialogue-feedback-1020 G3 |
-| DLG-14 | No dot separators in captions ("Answer + evidence, Chosen") | Oct 22 | open | |
-| DLG-15 | Methodical, non-quirky, grid-aligned hero; "no crooked collage" | Oct 22 | open | dialogue-v2.md |
-| DLG-16 | 390 hero is noteworthy on its own | Oct 22 | open | dialogue-v2.md |
-| DLG-17 | Restore the quote frame 1:1 to 657337d (match live UI) | Oct 22 | open | Misses M3 |
-| DLG-18 | Carbon-style skimmable chart library: bad vs good pairs, plain verdict + one technical line | Oct 22 | open | dialogue-v2.md |
-| DLG-19 | Offset figure background tone from the page | Oct 22 | open | |
-| DLG-20 | Replace floating vs sidebar section with a small UX-care detail | Oct 22 | in progress | dialogue-v2.md 1d82113 |
+| DLG-14 | No dot separators in captions ("Answer + evidence, Chosen") | Oct 21 | open | |
+| DLG-15 | "No crooked quirky shit be methodical" (grid-aligned hero) | Oct 21 | open | dialogue-v2.md |
+| DLG-16 | "Even hero at 390 needs to be something noteworthy" | Oct 21 | open | dialogue-v2.md |
+| DLG-17 | "Interview quote frame isn't like live version"; restore 1:1 (657337d) | Oct 21 | open | Misses M3 |
+| DLG-18 | "a library displayed in the page ... similar to how ibm carbon is laid out"; "I can't skim"; "dumb simple to understand the bad and good while still being technical for designer and pm" | Oct 21 | open | dialogue-v2.md |
+| DLG-19 | "background for ui elements also have a slightly offset tone for more separation" | Oct 21 | open | |
+| DLG-20 | "Floating chat vs sidebar comparison section kinda sucks"; find a detail that "conveys experience matters in little considerations" | Oct 21 | in progress | dialogue-v2.md 1d82113 |
+| DLG-21 | "the live component versions are also so much more higher quality and crisp" (use them) | Oct 20 | in progress | live frames on canvas |
+| DLG-22 | Problem/solution: "these are legit the same image. you just need one image" | Oct 20 | open | |
+| DLG-23 | "case study visuals should never fill the viewport overly like that" | Oct 20 | open | |
+| DLG-24 | Fixed-structure graphic "is good but its awkward with the width of the image ... that comes after" | Oct 20 | open | |
+| DLG-25 | "show even more chart responses being rendered" in the UI and the case study | Oct 20 | open | |
+| DLG-26 | "make drop shadow slightly slightly harsher" | Oct 21 | in progress | briefed on dialogue branch |
+| DLG-27 | "i dont like the shipped vs no shipped" (remove that line) | Oct 21 | in progress | briefed on dialogue branch |
+| DLG-28 | "why are things not 1:1 with fonts spacing design system languyage" | Oct 21 | open | |
+| DLG-29 | "make sure spacing follows dialogue's design system that we had orignally added from paper" | Oct 21 | in progress | RULES 10-21 Paper tokens |
+| DLG-30 | "why is that bar graph right aligned instead of left" (assistant returns left) | Oct 21 | verified | 139a511 audit PASS (prod build 1440/390) |
+## JOOLA film and card (JOO)
+
+| ID | Ask | Date | Status | Evidence |
+| --- | --- | --- | --- | --- |
+| JOO-01 | "add to order or replace also does some slight laoyut shifting" | Sep 23 | open | fix promised; needs check |
+| JOO-02 | "Stretch it out timing wise a little more you can be slower on some screens" | Oct 13 | open | |
+| JOO-03 | "dont like row or buttons being highlighted like in the blue when clicked" | Oct 13 | open | |
+| JOO-04 | "the scaling isnt good enough for the project card" | Oct 13 | open | |
+| JOO-05 | "stay on order confirmation screen and show Joola logo slightly longer" | Oct 13 | open | |
 
 ## Other
 
@@ -67,7 +86,19 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | --- | --- | --- | --- | --- |
 | HRO-01 | Homepage hero line: pick pending | Oct 21 | open | |
 | ARC-01 | Archive minimap contrast | Oct 21 | in progress | merged, build passes; needs preview screenshot |
+| ABT-02 | Intro copy: "what makes me unique needs to be expressed"; "cognitive science background helps and communities are also true"; not "too charactery" | Oct 21 | open | |
 | ABT-01 | About page without org icons | Oct 21 | in progress | merged, build passes; needs preview screenshot |
+
+## Needs Mudit
+
+Status can't be determined from the repo or commits.
+
+1. JOO-01 to JOO-05: did the JOOLA film pass that shipped fix these (layout shift, slower timing, no blue highlight, card scaling, longer logo hold)?
+2. DLG-01 to DLG-09: still wanted, or replaced by the v2 brief (DLG-15 to DLG-20)?
+3. ABT-02: is the intro "niche" line still open, or is the current About copy approved?
+4. STD-06 Beacons: remove it, or label it as past work?
+5. ARC-01 and ABT-01: approve the minimap and About previews as verified?
+6. DLG-27: is the shipped vs not shipped line gone to your satisfaction?
 
 ## Misses
 
