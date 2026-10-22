@@ -280,8 +280,8 @@ export function DialogueCaseStudyContent({
                     inert
                   >
                     <div className="dp-sources">
-                      <span className="dp-source-pill">Priya K. · 15:47</span>
-                      <span className="dp-source-pill dp-source-pill--disagree">Sam R. · 11:22</span>
+                      <span className="dp-source-pill">Priya K., 15:47</span>
+                      <span className="dp-source-pill dp-source-pill--disagree">Sam R., 11:22</span>
                     </div>
                   </div>
                   <p className="dialogue-caption">

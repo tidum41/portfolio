@@ -20,7 +20,7 @@ export default function SourcesRow({ selectedParticipant, selectedTime }: Props)
               .filter(Boolean)
               .join(" ")}
           >
-            {s.participant} · {s.time}
+            {s.participant}, {s.time}
           </span>
         );
       })}

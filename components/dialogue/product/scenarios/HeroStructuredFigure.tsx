@@ -13,13 +13,13 @@ export default function HeroStructuredFigure() {
         </div>
         <div className="dp-hero-collage__charts" aria-hidden>
           <div className={`${miniClass} dp-hero-collage__chart--funnel`}>
-            <ChartOnlyFigure variant="funnel" />
+            <ChartOnlyFigure variant="funnel" collage />
           </div>
           <div className={`${miniClass} dp-hero-collage__chart--segment`}>
-            <ChartOnlyFigure variant="segment" />
+            <ChartOnlyFigure variant="segment" collage />
           </div>
           <div className={`${miniClass} dp-hero-collage__chart--trend`}>
-            <ChartOnlyFigure variant="trend" />
+            <ChartOnlyFigure variant="trend" collage />
           </div>
         </div>
       </div>

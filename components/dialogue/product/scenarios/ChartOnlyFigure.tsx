@@ -16,7 +16,14 @@ const DISTRIBUTION = [
 ] as const;
 
 /** Chart block only (no chat shell) for research thumbs, mapping, and hero collage. */
-export default function ChartOnlyFigure({ variant }: { variant: GalleryVariant }) {
+export default function ChartOnlyFigure({
+  variant,
+  collage,
+}: {
+  variant: GalleryVariant;
+  /** Hero collage: chart-only tiles, no duplicate funnel summary. */
+  collage?: boolean;
+}) {
   switch (variant) {
     case "trend":
       return (
@@ -28,7 +35,14 @@ export default function ChartOnlyFigure({ variant }: { variant: GalleryVariant }
         />
       );
     case "funnel":
-      return <FunnelChart compact showLargestDrop={false} vizCard />;
+      return (
+        <FunnelChart
+          compact
+          showLargestDrop={false}
+          vizCard
+          showSummary={!collage}
+        />
+      );
     case "segment":
       return (
         <ChartVizCard title={SEGMENT_ADDRESS.title} caption={SEGMENT_ADDRESS.caption}>

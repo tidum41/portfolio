@@ -67,12 +67,18 @@ function OptionPanel({
         .filter(Boolean)
         .join(" ")}
     >
-      <DialogueRachelFrame tone="system" className="dialogue-lead-answer__frame">
-        {isChosen ? <span className="dialogue-lead-answer__chosen-badge">Chosen</span> : null}
+      {isChosen ? (
+        <p className="dialogue-lead-answer__chosen-row">
+          <span className="dialogue-lead-answer__chosen-badge">Chosen</span>
+        </p>
+      ) : (
+        <p className="dialogue-lead-answer__chosen-row dialogue-lead-answer__chosen-row--spacer" aria-hidden />
+      )}
+      <div className="dialogue-lead-answer__option-card">
         <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
           {wrapped}
         </div>
-      </DialogueRachelFrame>
+      </div>
       <DialogueCaption label={option.label} sentence={cost} />
     </div>
   );
@@ -91,16 +97,18 @@ export default function DialogueLeadAnswerCompare({
         <span className="dialogue-caption__label">{heading}</span>
         <span className="dialogue-caption__sentence">{subheading}</span>
       </p>
-      <div className="dialogue-lead-answer__row dialogue-lead-answer__row--trio">
-        {options.map((option) => (
-          <OptionPanel
-            key={option.id}
-            option={option}
-            isChosen={option.id === chosenId}
-            annotateRaster={annotateRaster}
-          />
-        ))}
-      </div>
+      <DialogueRachelFrame tone="system" className="dialogue-lead-answer__well">
+        <div className="dialogue-lead-answer__row dialogue-lead-answer__row--trio">
+          {options.map((option) => (
+            <OptionPanel
+              key={option.id}
+              option={option}
+              isChosen={option.id === chosenId}
+              annotateRaster={annotateRaster}
+            />
+          ))}
+        </div>
+      </DialogueRachelFrame>
     </div>
   );
 }

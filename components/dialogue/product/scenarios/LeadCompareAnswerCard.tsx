@@ -1,7 +1,7 @@
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
-import { CHECKOUT_FUNNEL, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
+import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 
 const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
 
@@ -12,12 +12,49 @@ const MINI_SOURCES = [
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
+function formatPill(participant: string, time: string) {
+  return (
+    <>
+      {participant}
+      <span className="dp-source-pill__sep">, </span>
+      {time}
+    </>
+  );
+}
+
 type Props = {
   variant: LeadCompareVariant;
 };
 
-/** Same answer-only layout for all three lead options (no study chat chrome). */
+/** Lead option content only (layout differs per variant). */
 export default function LeadCompareAnswerCard({ variant }: Props) {
+  if (variant === "paragraphs") {
+    return (
+      <div className="dp-lead-answer-card dp-lead-answer-card--paragraphs">
+        <div className="dp-lead-answer-card__prose dp-text-prose-sm">
+          {PARAGRAPH_ANSWER_BRIEF.map((p) => (
+            <p key={p.slice(0, 20)}>{p}</p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "quotes") {
+    return (
+      <div className="dp-lead-answer-card dp-lead-answer-card--quotes">
+        <div className="dp-lead-answer-card__quotes">
+          {QUOTE_LIST.map((q) => (
+            <div key={q.participant} className="dp-lead-answer-card__quote">
+              <strong>{q.participant}</strong>
+              {q.quote}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const summary = (
     <p className="dp-lead-answer-card__summary dp-text-body">
       {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
@@ -27,30 +64,13 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   );
 
   return (
-    <div className="dp-lead-answer-card">
-      {variant === "paragraphs" ? (
-        <div className="dp-lead-answer-card__prose dp-text-prose-sm">
-          <p>Most participants hesitated at shipping address, delivery, and payment.</p>
-          <p>Nothing in the thread linked quotes back to footage or funnel steps.</p>
-        </div>
-      ) : null}
-      {variant === "quotes" ? (
-        <div className="dp-lead-answer-card__quotes">
-          {QUOTE_LIST.map((q) => (
-            <div key={q.participant} className="dp-lead-answer-card__quote">
-              <strong>{q.participant}</strong>
-              {q.quote}
-            </div>
-          ))}
-        </div>
-      ) : null}
-      {variant === "structured" ? summary : null}
-
+    <div className="dp-lead-answer-card dp-lead-answer-card--structured">
+      {summary}
       <div className="dp-lead-answer-card__funnel">
         <p className="dp-lead-answer-card__funnel-title">Checkout funnel, % still in flow</p>
         <ChartBarList
           className="dp-lead-answer-card__bars"
-          rows={MINI_FUNNEL.map((step, i) => ({
+          rows={MINI_FUNNEL.map((step) => ({
             label: step.label,
             value: step.pct,
             display: formatChartPercent(step.pct),
@@ -60,7 +80,6 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
           fillMode="index"
         />
       </div>
-
       <div className="dp-sources dp-lead-answer-card__sources">
         {MINI_SOURCES.map((s) => (
           <span
@@ -72,11 +91,10 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
               .filter(Boolean)
               .join(" ")}
           >
-            {s.participant} · {s.time}
+            {formatPill(s.participant, s.time)}
           </span>
         ))}
       </div>
-
       <ClipThumbnails selectedTime="15:47" />
     </div>
   );

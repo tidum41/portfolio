@@ -1,5 +1,6 @@
 "use client";
 
+import ChartIterationAltFigure from "@/components/dialogue/product/scenarios/ChartIterationAltFigure";
 import ChartOnlyFigure from "@/components/dialogue/product/scenarios/ChartOnlyFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import {
@@ -37,12 +38,13 @@ export default function DialogueChartResearch() {
           <article key={item.id} className="dialogue-chart-research__card dialogue-chart-research__card--ruled">
             <div className={`${thumbClass} dialogue-chart-research__thumb--ruled`}>
               {item.variant ? <ChartOnlyFigure variant={item.variant} /> : null}
+              <span className="dialogue-chart-research__ruled-overlay-label">Ruled out</span>
             </div>
             <div className="dialogue-chart-research__copy">
-              <div className="dialogue-chart-research__copy-head">
+              <p className="dialogue-chart-research__question">
                 <span className="dialogue-chart-research__ruled-tag">Ruled out</span>
-                <p className="dialogue-chart-research__question">{item.question}</p>
-              </div>
+                <span className="dialogue-chart-research__question-text">{item.question}</span>
+              </p>
               <p className="dialogue-chart-research__chart">{item.chart}</p>
               {item.reason ? (
                 <p className="dialogue-chart-research__reason">{item.reason}</p>
@@ -60,10 +62,12 @@ export default function DialogueChartResearch() {
                 <p className="dialogue-chart-research__iteration-label">{item.chart}</p>
                 <div className="dialogue-chart-research__iteration-thumbs">
                   <div className={`${thumbClass} dialogue-chart-research__iteration-mini`}>
-                    <ChartOnlyFigure variant={item.iterationBefore} />
+                    <ChartIterationAltFigure alt={item.iterationBefore} />
                     <span className="dialogue-chart-research__iteration-cap">Before</span>
                   </div>
-                  <div className={`${thumbClass} dialogue-chart-research__iteration-mini dialogue-chart-research__iteration-mini--after`}>
+                  <div
+                    className={`${thumbClass} dialogue-chart-research__iteration-mini dialogue-chart-research__iteration-mini--after`}
+                  >
                     <ChartOnlyFigure variant={item.iterationAfter} />
                     <span className="dialogue-chart-research__iteration-cap">After</span>
                   </div>

@@ -84,7 +84,12 @@ function scaleProps(
     case "hero":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 520 }
-        : { innerWidth: 560, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
+        : {
+            innerWidth: 640,
+            minScale: DESKTOP_MIN_SCALE,
+            maxScale: 1,
+            maxOuterHeight: 500,
+          };
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }

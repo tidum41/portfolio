@@ -1,6 +1,7 @@
 /** UX research viz habits + Dialogue chart library (round 3). */
 
 import type { GalleryVariant } from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
+import type { IterationAlt } from "@/components/dialogue/product/scenarios/ChartIterationAltFigure";
 
 export type ChartResearchItem = {
   id: string;
@@ -10,7 +11,7 @@ export type ChartResearchItem = {
   reason?: string;
   variant?: GalleryVariant;
   iteration?: string;
-  iterationBefore?: GalleryVariant;
+  iterationBefore?: IterationAlt;
   iterationAfter?: GalleryVariant;
 };
 
@@ -26,7 +27,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     variant: "funnel",
     reason: "Checkout studies always asked for step loss.",
     iteration: "Started as a plain table, then step bars with the largest drop called out.",
-    iterationBefore: "quote-freq",
+    iterationBefore: "plain-table",
     iterationAfter: "funnel",
   },
   {
@@ -37,7 +38,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     variant: "segment",
     reason: "Mobile vs desktop was the repeat question.",
     iteration: "Tried a radar chart first, then paired bars so gaps read in chat.",
-    iterationBefore: "theme",
+    iterationBefore: "radar",
     iterationAfter: "segment",
   },
   {
@@ -48,7 +49,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     variant: "trend",
     reason: "Prototype rounds needed a simple line read.",
     iteration: "Heatmap felt busy; one line with round labels won in review.",
-    iterationBefore: "timeline",
+    iterationBefore: "heatmap",
     iterationAfter: "trend",
   },
   {
@@ -59,7 +60,7 @@ export const CHART_RESEARCH_GRID: ChartResearchItem[] = [
     variant: "coverage",
     reason: "Thin evidence had to be visible, not buried.",
     iteration: "Percent-only felt vague until interview counts sat beside the bar.",
-    iterationBefore: "distribution",
+    iterationBefore: "percent-row",
     iterationAfter: "coverage",
   },
   {
