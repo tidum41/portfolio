@@ -174,13 +174,10 @@ export default function AboutPageContent({
                     <CopyEmail
                       key={item.label}
                       unstyled
-                      className="nav-link"
+                      className="nav-link about-social"
                       style={{
                         fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px",
-                        textDecorationThickness: "1px",
                       }}
                     >
                       {item.label}
@@ -191,13 +188,10 @@ export default function AboutPageContent({
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="nav-link"
+                      className="nav-link about-social"
                       style={{
                         fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px",
-                        textDecorationThickness: "1px",
                       }}
                     >
                       {item.label}
