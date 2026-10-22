@@ -141,8 +141,11 @@ export default function BentoMinimap({
                 userSelect: "none",
                 touchAction: "none",
                 opacity: focusedIdx !== null ? 0.4 : 1,
-                transition: "opacity 0.4s ease",
+                transition: "opacity 0.4s ease, border-color 0.2s ease, box-shadow 0.2s ease",
                 ...panelBase,
+                background: "var(--minimap-bg)",
+                border: "1px solid var(--minimap-border)",
+                boxShadow: "var(--minimap-shadow)",
                 borderRadius: "var(--radius-mosaic, 6px)",
             }}
         >
@@ -180,9 +183,9 @@ export default function BentoMinimap({
                             fill={
                                 isFocused
                                     ? "var(--color-accent)"
-                                    : "var(--color-placeholder)"
+                                    : "var(--color-text-primary)"
                             }
-                            fillOpacity={isFocused ? 0.5 : 1}
+                            fillOpacity={isFocused ? 0.85 : 0.2}
                         />
                     );
                 })}
@@ -196,8 +199,8 @@ export default function BentoMinimap({
                     height={initialViewport.height}
                     rx={1}
                     fill="var(--color-accent-subtle)"
-                    stroke="var(--color-accent)"
-                    strokeWidth={1}
+                    stroke="var(--color-text-primary)"
+                    strokeWidth={1.5}
                     vectorEffect="non-scaling-stroke"
                     style={{
                         pointerEvents: "none",
