@@ -3008,6 +3008,8 @@ html[data-theme="dark"] .dialogue-answer-states__ui .dp-source-pill:not(.dp-sour
 .dialogue-answer-states__ui .dp-source-pill--disagree {
   color: var(--figure-ink);
   border-color: #b43f7f;
+}
+
 /* ─── Text links: one underline rule site-wide ───────────────────
    Plain at rest; 1px currentColor underline at 0.18em (~2.7px at 15px), skip-ink, on
    hover (fine pointers) or keyboard focus. The underline is always laid
