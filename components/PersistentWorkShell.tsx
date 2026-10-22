@@ -32,6 +32,13 @@ function isExternalHref(href?: string) {
   return Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 }
 
+/** Stable Agentation figure id for a home grid card. */
+function homeCardAnnotate(href?: string, fallback = "untitled") {
+  if (!href) return `home-card/${fallback}`;
+  const slug = href.replace(/^\//, "").replace(/[^a-zA-Z0-9_-]+/g, "-") || fallback;
+  return `home-card/${slug}`;
+}
+
 const CARD_LINK_STYLE = {
   textDecoration: "none",
   color: "inherit",
@@ -618,7 +625,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/slot`} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -629,11 +636,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
+                        annotate={homeCardAnnotate(p.href, p._id)}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url && p.href ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -644,8 +652,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                        <div className="project-media" data-annotate={`${homeCardAnnotate(p.href, p._id)}/media-wrap`}>
+                          <div className="project-img-wrap" data-annotate={`${homeCardAnnotate(p.href, p._id)}/media`} style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
                               alt={p.title}
@@ -672,6 +680,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               delay={rankDelay(projects.length)}
               className="project-card portfolio-grid-card"
               data-grid-card="cd"
+              data-annotate="home-card/cd/root"
               role="button"
               tabIndex={0}
               aria-label="Open Designing micro-interactions for a digital CD player"
@@ -680,8 +689,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               style={{ gap: 6, cursor: "pointer", order: projects.length }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
+                <div className="project-media" data-annotate="home-card/cd/media-wrap">
+                  <div className="project-image project-img-wrap" data-annotate="home-card/cd/media" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
                     <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
                     {cdFrozen && openPopup === "cd" && (
                       <div
@@ -717,7 +726,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .map((p, k) => {
                 const rank = k * 2 + 1;
                 return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/slot`} style={{ order: rank }}>
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
@@ -728,11 +737,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
+                        annotate={homeCardAnnotate(p.href, p._id)}
                       />
                     )}
                   </EntranceItem>
                 ) : p.image?.asset?.url && p.href ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
@@ -743,8 +753,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                        <div className="project-media" data-annotate={`${homeCardAnnotate(p.href, p._id)}/media-wrap`}>
+                          <div className="project-img-wrap" data-annotate={`${homeCardAnnotate(p.href, p._id)}/media`} style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
                               alt={p.title}
@@ -770,6 +780,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               delay={rankDelay(projects.length + 1)}
               className="project-card portfolio-grid-card"
               data-grid-card="habit"
+              data-annotate="home-card/habit/root"
               role="button"
               tabIndex={0}
               aria-label="Open Habit tracker focused on offering less"
@@ -778,8 +789,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                <div className="project-media" data-annotate="home-card/habit/media-wrap">
+                  <div className="project-img-wrap" data-annotate="home-card/habit/media" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
                     <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                       <InteractiveBadge />
                     </div>

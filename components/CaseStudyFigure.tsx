@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import { CASE_STUDY_BLUR_DATA_URL } from "@/lib/caseStudyBlur";
@@ -13,6 +13,11 @@ type Base = {
   sizes?: string;
   zoomable?: boolean;
   placeholder?: "blur" | "empty";
+  /**
+   * Stable Agentation figure id. Parts get data-annotate="<annotate>/<part>"
+   * (media, caption, zoom). Defaults to "cs-figure".
+   */
+  annotate?: string;
 };
 
 type Fixed = Base & {
@@ -38,31 +43,23 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
     sizes = "(max-width: 767px) calc(100vw - 48px), 750px",
     zoomable = true,
     placeholder = "blur",
+    annotate = "cs-figure",
   } = props;
 
   const [open, setOpen] = useState(false);
-  const [narrow, setNarrow] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 600px)");
-    const on = () => setNarrow(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  const canZoom = zoomable && !narrow;
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const blurProps =
     placeholder === "blur" ? { placeholder: "blur" as const, blurDataURL: CASE_STUDY_BLUR_DATA_URL } : {};
 
   const media = props.fill ? (
     <div
       className="cs-figure-media cs-figure-media--fill"
+      data-annotate={`${annotate}/media`}
       style={{ aspectRatio: props.aspectRatio ?? "16 / 10" }}
     >
       <Image src={src} alt={alt} fill priority={priority} sizes={sizes} style={{ objectFit: "contain" }} {...blurProps} />
     </div>
   ) : (
-    <div className="cs-figure-media">
+    <div className="cs-figure-media" data-annotate={`${annotate}/media`}>
       <Image
         src={src}
         alt={alt}
@@ -76,11 +73,11 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
     </div>
   );
 
-  const inner = canZoom ? (
+  const inner = zoomable ? (
     <button
-      ref={triggerRef}
       type="button"
       className="cs-figure-zoom-trigger"
+      data-annotate={`${annotate}/zoom`}
       onClick={() => setOpen(true)}
       aria-label={`Enlarge: ${alt}`}
     >
@@ -91,16 +88,20 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   );
 
   return (
-    <figure className="cs-figure">
+    <figure className="cs-figure" data-annotate={`${annotate}/root`}>
       {inner}
-      {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
-      {canZoom && (
+      {caption ? (
+        <figcaption className="cs-figcaption" data-annotate={`${annotate}/caption`}>
+          {caption}
+        </figcaption>
+      ) : null}
+      {zoomable && (
         <CaseStudyLightbox
           src={src}
           alt={alt}
           open={open}
           onClose={() => setOpen(false)}
-          returnFocusRef={triggerRef}
+          annotate={annotate}
         />
       )}
     </figure>

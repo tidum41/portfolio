@@ -174,6 +174,7 @@ export default function PhoneMockup({
     <div
       ref={containerRef}
       className={className}
+      data-annotate={`phone-${instanceKey}/root`}
       style={{
         position: "relative",
         width: "100%",
@@ -195,8 +196,10 @@ export default function PhoneMockup({
           transformOrigin: "center center",
         }}
       >
-        {/* Screen window — sits behind the frame PNG */}
+        {/* Screen window — sits behind the frame PNG. Frame PNG is
+            pointer-events:none so Agentation hits this screen/video node. */}
         <div
+          data-annotate={`phone-${instanceKey}/screen`}
           style={{
             position: "absolute",
             zIndex: 1,
@@ -297,16 +300,19 @@ export default function PhoneMockup({
 
   if (showFrame) {
     return (
-      <div style={{
-        position: "relative",
-        background: "var(--color-placeholder)",
-        borderRadius: 8,
-        padding: "12px 16px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        ...style,
-      }}>
+      <div
+        data-annotate={`phone-${instanceKey}/frame`}
+        style={{
+          position: "relative",
+          background: "var(--color-placeholder)",
+          borderRadius: 8,
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          ...style,
+        }}
+      >
         {phoneContent}
         {playPauseButton}
       </div>

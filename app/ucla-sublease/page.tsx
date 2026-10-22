@@ -20,10 +20,10 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "BruinLease",
   description:
-    "BruinLease case study: simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
+    "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
   alternates: { canonical: `${SITE_URL}/ucla-sublease` },
   openGraph: {
-    title: "BruinLease, Mudit Mahajan",
+    title: "BruinLease — Mudit Mahajan",
     description:
       "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
     url: `${SITE_URL}/ucla-sublease`,
@@ -187,15 +187,16 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
     : position === "right"
     ? "0 var(--radius-card) var(--radius-card) 0"
     : "0";
+  const annotate = `d1-card-${label.replace(/[^a-zA-Z0-9_-]+/g, "-") || "card"}`;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-annotate={`${annotate}/root`}>
+      <div className="cs-d1-card-img" data-annotate={`${annotate}/media`} style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
           ? <img src={src} alt={alt} loading="lazy" decoding="async" style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
         }
       </div>
-      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>{label}</p>
+      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }} data-annotate={`${annotate}/caption`}>{label}</p>
     </div>
   );
 }
@@ -332,7 +333,7 @@ const FB = {
   problemLabel: "The Problem",
   problemHeading: "UCLA students struggle with subleasing, using platforms that weren't built for it.",
   problemBody: "Entering my third year, I needed summer housing for my first time outside a dorm. 2 weeks of Reddit threads, Facebook groups, and texting friends-of-friends, I found something. I got lucky and I knew it. I asked friends if they found a place, and kept hearing the same story with different details.",
-  problemImageCaption: "left to right: Facebook, ULoop, Reddit",
+  problemImageCaption: "left to right — Facebook, ULoop, Reddit",
   painPoints: [
     "No standardized apartment info. Posts are inconsistent in pricing, dates, room details, forcing constant back-and-forth just to get basics.",
     "Platform switching is common. Students juggle Facebook groups, Reddit threads, Instagram stories, and word of mouth with little reliability.",
@@ -502,7 +503,8 @@ async function BruinLeaseContent() {
                   <CaseStudyFigure
                     src={cs.problemImage}
                     alt="Fragmented subleasing platforms"
-                    caption={cs.problemImageCaption?.replace(/\s+—\s+/g, ": ")}
+                    caption={cs.problemImageCaption}
+                    annotate="bruinlease-problem"
                     fill
                     aspectRatio="16/7"
                     sizes="(max-width: 767px) calc(100vw - 48px), 750px"
@@ -555,6 +557,7 @@ async function BruinLeaseContent() {
                     src={cs.figmaComparison}
                     alt="Early layout exploration in Figma"
                     caption="Early layout exploration in Figma"
+                    annotate="bruinlease-figma"
                     width={1600}
                     height={900}
                   />

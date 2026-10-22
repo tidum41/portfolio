@@ -1,7 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { Agentation } from "agentation";
 import { useDialKit } from "dialkit";
 import LayoutDials from "./LayoutDials";
 import IntroDials from "./IntroDials";
@@ -41,7 +40,6 @@ export default function DevToolbar() {
   return (
     <>
       <RulerDials />
-      <Agentation />
       <LayoutDials />
       {isWork && <IntroDials />}
       {isCaseStudy && <CaseStudyAlignDials />}

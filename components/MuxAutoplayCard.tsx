@@ -62,6 +62,12 @@ function CardLabel({
   );
 }
 
+function homeCardAnnotate(href?: string) {
+  if (!href) return "home-card/untitled";
+  const slug = href.replace(/^\//, "").replace(/[^a-zA-Z0-9_-]+/g, "-") || "untitled";
+  return `home-card/${slug}`;
+}
+
 interface Props {
   playbackId: string;
   /** When omitted, the card is display-only (no link, no pointer). */
@@ -76,6 +82,8 @@ interface Props {
   playing?: boolean;
   /** Grid order for staggered remount (0 first). */
   mountOrder?: number;
+  /** Stable Agentation id; parts use data-annotate="<annotate>/<part>". */
+  annotate?: string;
 }
 
 export default function MuxAutoplayCard({
@@ -87,6 +95,7 @@ export default function MuxAutoplayCard({
   active = true,
   playing = true,
   mountOrder = 0,
+  annotate,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -206,12 +215,14 @@ export default function MuxAutoplayCard({
   // the card. Player only exists while scheduled (see mountReady).
   const posterUrl = muxPosterUrl(playbackId, 640);
   const showPlayer = shouldLoad && mountReady;
+  const annotateId = annotate ?? homeCardAnnotate(href);
 
   const video = (
-    <div className="project-media">
+    <div className="project-media" data-annotate={`${annotateId}/media-wrap`}>
       <div
         ref={containerRef}
         className="project-image project-img-wrap"
+        data-annotate={`${annotateId}/media`}
         style={{
           borderRadius: "var(--radius-card)",
           overflow: "hidden",
@@ -233,6 +244,7 @@ export default function MuxAutoplayCard({
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            // Poster is decorative; clicks reach the card/link for Agentation.
             pointerEvents: "none",
           }}
         />
@@ -262,6 +274,7 @@ export default function MuxAutoplayCard({
   return (
     <div
       className={["project-card", "project-card--video", !clickable && "project-card--inert"].filter(Boolean).join(" ")}
+      data-annotate={`${annotateId}/root`}
       style={{ gap: dk.cardGap, ...(!clickable ? { cursor: "default" } : null) }}
     >
       {!clickable ? (

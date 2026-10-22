@@ -27,3 +27,21 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Restores: a restore is a git checkout of the pinned sha plus a diff in the report. Never rewrite a pinned file from memory (Misses M5).
 - Figure wells use `--figure-well` with `--figure-well-border` in both themes (light #eeedeb, dark #1b1e21), on every case study frame.
 - Preview gate: a round is not done until `npm run check:dialogue-preview -- <archive-team preview url of the tip>` passes (real-click Close at scrollY 0 in both themes, whole-page contrast sweep in both themes, open-lightbox contrast sweep, no zoom triggers at 600 and 390) and its output is pasted in the report. Figure captions use `--caption-ink`.
+
+## Agentation annotate ids (STD-09)
+
+Preview and local builds mount `<Agentation />` (never production). Annotatable case-study graphics and home cards must be real DOM targets: no blocking overlays, no `pointer-events: none` on the selectable part itself (decorative layers such as phone chrome or posters may stay non-interactive).
+
+Use stable `data-annotate="<figure>/<part>"` on every figure part so copied markdown still resolves after minification:
+
+| Surface | Figure id examples | Parts |
+| --- | --- | --- |
+| Home work cards | `home-card/joola`, `home-card/cd` | `root`, `media`, `media-wrap`, `slot` |
+| Case study image figures | `bruinlease-problem`, `cs-figure` | `root`, `media`, `caption`, `zoom`, `lightbox-*` |
+| Case study heroes | `cs-hero`, `joola-hero` | `wrap`, `media` |
+| Phone mockups | `phone-<instanceKey>` | `root`, `frame`, `screen` |
+| Decision card columns | `d1-card-<label>` | `root`, `media`, `caption` |
+
+For image or video figures, tag the **container** (`…/media`), not only the inner `<img>` / `<video>`. Pass `annotate` into `CaseStudyFigure` when the default `cs-figure` is too generic. Dialogue live figures must adopt the same `figure/part` shape when that branch rebases.
+
+Agentation is configured with `identifyingAttributes` including `data-annotate` so the attribute appears in copied output.
