@@ -70,7 +70,7 @@ UCLA students struggle with subleasing, using platforms that weren't built for i
 
 Entering my third year, I needed summer housing for my first time outside a dorm. 2 weeks of Reddit threads, Facebook groups, and texting friends-of-friends, I found something. I got lucky and I knew it. I asked friends if they found a place, and kept hearing the same story with different details.
 
-Image caption: left to right — Facebook, ULoop, Reddit
+Image caption: left to right: Facebook, ULoop, Reddit
 
 - No standardized apartment info. Posts are inconsistent in pricing, dates, room details, forcing constant back-and-forth just to get basics.
 - Platform switching is common. Students juggle Facebook groups, Reddit threads, Instagram stories, and word of mouth with little reliability.

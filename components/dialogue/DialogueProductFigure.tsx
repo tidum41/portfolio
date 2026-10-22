@@ -145,6 +145,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
   return (
     <div className="dp-zoom">
       {render(false)}
+      {phone ? null : (
       <button
         ref={triggerRef}
         type="button"
@@ -152,9 +153,10 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
         aria-label={`Enlarge figure: ${title}`}
         onClick={() => setOpen(true)}
       />
+      )}
       <CaseStudyLightbox
         alt={title}
-        open={open}
+        open={open && !phone}
         onClose={() => setOpen(false)}
         returnFocusRef={triggerRef}
       >

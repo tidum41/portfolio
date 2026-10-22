@@ -502,7 +502,7 @@ async function BruinLeaseContent() {
                   <CaseStudyFigure
                     src={cs.problemImage}
                     alt="Fragmented subleasing platforms"
-                    caption={cs.problemImageCaption}
+                    caption={cs.problemImageCaption?.replace(/\s+—\s+/g, ": ")}
                     fill
                     aspectRatio="16/7"
                     sizes="(max-width: 767px) calc(100vw - 48px), 750px"
