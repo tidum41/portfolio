@@ -58,7 +58,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
               },
             ]}
           >
-            <div className="cs-hero-media-frame">
+            <div className="cs-hero-media-frame" data-annotate="joola-hero/media">
               <Image
                 src={JOOLA_HERO_SRC}
                 alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."

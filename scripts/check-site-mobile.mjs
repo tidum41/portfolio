@@ -74,12 +74,20 @@ for (const width of [390, 360]) {
           document.body.appendChild(d);
         });
       }
-      const m = await page.evaluate(() => ({
-        cw: document.documentElement.clientWidth,
-        sw: document.documentElement.scrollWidth,
-        bw: document.body.scrollWidth,
-        bcw: document.body.clientWidth,
-      }));
+      // Hide Agentation (preview/dev toolbar) so a fixed overlay never inflates
+      // scrollWidth or fails the horizontal pan lock.
+      const m = await page.evaluate(() => {
+        document.querySelectorAll("[data-agentation-root]").forEach((el) => {
+          el.setAttribute("data-check-site-mobile-hidden", "");
+          el.style.setProperty("display", "none", "important");
+        });
+        return {
+          cw: document.documentElement.clientWidth,
+          sw: document.documentElement.scrollWidth,
+          bw: document.body.scrollWidth,
+          bcw: document.body.clientWidth,
+        };
+      });
       await page.evaluate(() => window.scrollTo(300, 0));
       await page.mouse.wheel(300, 0);
       await page.waitForTimeout(200);

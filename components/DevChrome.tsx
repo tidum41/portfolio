@@ -3,9 +3,10 @@
 import type { ComponentType } from "react";
 
 /**
- * Dev-only chrome. The require() sits inside a production-dead branch so
- * DialKit's panel, Agentation, and the dev toolbar are absent from the
- * production client bundle. `next dev` still mounts them.
+ * Dev-only chrome (DialKit + ruler dials). The require() sits inside a
+ * production-dead NODE_ENV branch so DialKit and the dial toolbar are absent
+ * from production and preview client bundles. Agentation lives in
+ * AgentationSlot (preview + local via NEXT_PUBLIC_VERCEL_ENV).
  */
 const Empty: ComponentType = () => null;
 
