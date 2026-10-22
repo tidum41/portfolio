@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## 56f4d73, Oct 22 (r11)
+- Changed: lightbox above the site header, theme-aware ink on figure wells, hero sources card with trimmed chat gaps, caption contrast, 600px lightbox cutoff, audit screenshots removed.
+- Why: r11 audit, DLG-31 to DLG-38.
+- Preview: PREVIEW
+- Image: ![r11](img/r11-hero.webp) hero before (r10) left, after right.
+
 ## 183a03d, Oct 22 (r10)
 - Changed: transcript on a light card in the quote frame, lightbox safe area, opaque backdrop and hidden contents list, lightbox off at phone width, hero funnel at natural row spacing, BruinLease caption em dash normalised in code.
 - Why: r10 audit (dark transcript 1.04:1, lightbox overlap, stretched funnel rows); DLG-07, DLG-15, STD-02.
