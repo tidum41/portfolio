@@ -1,5 +1,7 @@
 # Type system
 
+Asks covered: STD-05
+
 Approved scope: Oct 20 2026. Branch: `review/type-system`.
 Update (same day): shelve ABC Areal — Mudit prefers Helvetica Neue.
 
