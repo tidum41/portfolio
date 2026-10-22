@@ -1,5 +1,7 @@
 # Dialogue case study v2 brief
 
+Asks covered: DLG-14, DLG-15, DLG-16, DLG-17, DLG-18, DLG-19, DLG-20, STD-03
+
 Brief only. No UI code in this change. Supersedes the 2026-10-22 hero collage rule in `design/RULES.md` (scattered, rotated charts) once approved.
 
 ## 1. Goal and story beats

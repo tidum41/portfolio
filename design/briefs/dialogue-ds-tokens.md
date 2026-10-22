@@ -1,5 +1,7 @@
 # Dialogue product tokens (t384)
 
+Asks covered: STD-04, DLG-04
+
 **Source of truth:** live study-chat `getComputedStyle` measurements on
 `research.dialogueai.com` (Insights summary → Study chat open with a response).
 

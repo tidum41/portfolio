@@ -1,5 +1,7 @@
 # Case study copy
 
+Asks covered: STD-01, STD-02, STD-03
+
 Mudit approves all copy. Anything in [brackets] is a gap, not a fact. Do not invent metrics, quotes, or team names to fill a bracket.
 
 Bracketed lines are review notes. They are not rendered. A section or field that is only a gap is omitted from the page.

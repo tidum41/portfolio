@@ -1,5 +1,7 @@
 # Dialogue case study figure parity (t380 audit)
 
+Asks covered: DLG-04, DLG-12, DLG-19
+
 **Rule:** `/dialogue` figures must **compose** approved product UI from `components/dialogue/product/` (and Paper/static export references), scaled responsively—never re-layout at arbitrary column widths.
 
 **Reference anchors in git**

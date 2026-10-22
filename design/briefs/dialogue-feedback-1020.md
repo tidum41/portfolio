@@ -1,5 +1,7 @@
 # Dialogue case study, Mudit feedback, Oct 20 2026
 
+Asks covered: DLG-11, DLG-12, DLG-13, STD-04
+
 Baseline: graphics = render repo commit 483274f (round 18). Never regenerate UI design on your own; change only what is listed.
 
 ## Global

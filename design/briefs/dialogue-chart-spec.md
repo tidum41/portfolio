@@ -1,5 +1,7 @@
 # Dialogue chart system (t385)
 
+Asks covered: DLG-05, DLG-18
+
 Charts are a Dialogue product feature. They must follow a **credible, documented data-viz system**, not ad-hoc styling.
 
 **Primary source:** [IBM Carbon — Data visualization](https://carbondesignsystem.com/data-visualization/axes-and-labels/)  

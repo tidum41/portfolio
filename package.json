@@ -11,7 +11,8 @@
     "studio": "sanity dev",
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
-    "dialogue-review:verify-camera": "DIALOGUE_REVIEW_LAB=1 node scripts/verify-dialogue-review-camera.mjs"
+    "dialogue-review:verify-camera": "DIALOGUE_REVIEW_LAB=1 node scripts/verify-dialogue-review-camera.mjs",
+    "check:asks": "node scripts/check-asks.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
