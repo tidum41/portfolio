@@ -939,7 +939,22 @@ export default function PS3ControlPanel({
       return cancelStaged;
     }
     revealKindRef.current = "first";
+    // First-load only: intro-done is the normal signal. If it never arrives
+    // (HOM-01), a fail-safe still runs the same fade after 3000ms from load
+    // (or from this mount if load already fired). `revealed` keeps either
+    // path from running twice; tests may set window.__PS3CP_DISABLE_FAILSAFE.
+    let revealed = false;
+    let failsafeTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearFailsafe = () => {
+      if (failsafeTimer !== undefined) {
+        clearTimeout(failsafeTimer);
+        failsafeTimer = undefined;
+      }
+    };
     function reveal() {
+      if (revealed) return;
+      revealed = true;
+      clearFailsafe();
       if (reduced) {
         revealImmediately();
       } else {
@@ -953,9 +968,31 @@ export default function PS3ControlPanel({
     // path (anything but "playing") covers arrivals with no gate at all:
     // a first visit that lands off-home, then soft-navs to "/".
     const cancelIntro = onIntroDone(reveal);
+
+    const FAILSAFE_MS = 3000;
+    const onLoadForFailsafe = () => {
+      failsafeTimer = setTimeout(reveal, FAILSAFE_MS);
+    };
+    let loadListenerAttached = false;
+    const disableFailsafe =
+      typeof window !== "undefined" &&
+      (window as Window & { __PS3CP_DISABLE_FAILSAFE?: boolean }).__PS3CP_DISABLE_FAILSAFE;
+    if (!disableFailsafe) {
+      if (document.readyState === "complete") {
+        onLoadForFailsafe();
+      } else {
+        loadListenerAttached = true;
+        window.addEventListener("load", onLoadForFailsafe, { once: true });
+      }
+    }
+
     return () => {
       cancelIntro();
       cancelStaged();
+      clearFailsafe();
+      if (loadListenerAttached) {
+        window.removeEventListener("load", onLoadForFailsafe);
+      }
     };
   }, [instantReturn, posReady, reduced, visible]);
 
