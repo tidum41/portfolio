@@ -2,10 +2,10 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
-## STDSHA, Oct 22 2026 (STD-09, after r15)
+## 1bf4f61, Oct 22 2026 (STD-09, after r15)
 - Changed: agentation toolbar mounts on previews and development only (dynamic import behind NEXT_PUBLIC_VERCEL_ENV, which next.config.mjs resolves from VERCEL_ENV), and the Dialogue, JOOLA and BruinLease figures carry data-annotate="<figure>/<part>" on real DOM parts. Dropped `inert` on figures and made parts hit-testable while the toolbar is active. The toolbar host is lifted above the header and lightbox. New gate: `npm run check:annotate`.
 - Why: Mudit wants to annotate work on previews and select case study graphics exactly (STD-09).
-- Preview: STDURL
+- Preview: https://portfolio-2a99f5dmt-mudits-projects-d560e6b3.vercel.app
 - Image: none this round.
 
 ## 6bb5f1b, Oct 22 2026 (r15)
