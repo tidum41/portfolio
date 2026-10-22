@@ -5,7 +5,7 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 ## 56f4d73, Oct 22 (r11)
 - Changed: lightbox above the site header, theme-aware ink on figure wells, hero sources card with trimmed chat gaps, caption contrast, 600px lightbox cutoff, audit screenshots removed.
 - Why: r11 audit, DLG-31 to DLG-38.
-- Preview: PREVIEW
+- Preview: https://portfolio-ehe50danl-mudits-projects-d560e6b3.vercel.app (deployment of ea29e31, the tip that carried 56f4d73; code identical to later log-only commits)
 - Image: ![r11](img/r11-hero.webp) hero before (r10) left, after right.
 
 ## 183a03d, Oct 22 (r10)
