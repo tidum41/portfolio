@@ -247,7 +247,8 @@ export default function AboutPageContent({
                 minWidth: 0,
                 flex: 1,
               };
-              const linkStyle: CSSProperties = { ...nameStyle };
+              // Size the anchor to its text so focus/hit box and underline hug the glyphs.
+              const linkStyle: CSSProperties = { ...nameStyle, flex: "0 1 auto", width: "fit-content" };
               return (
               <StaggerItem key={name} style={{
                 display: "flex",

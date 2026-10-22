@@ -1883,7 +1883,7 @@ html[data-theme="light"] {
 }
 
 /* ─── Text links: one underline rule site-wide ───────────────────
-   Plain at rest; 1px currentColor underline, 3px offset, skip-ink, on
+   Plain at rest; 1px currentColor underline at 0.18em (~2.7px at 15px), skip-ink, on
    hover (fine pointers) or keyboard focus. The underline is always laid
    out but transparent at rest, so it fades in over 150ms with no shift. */
 a.about-link,
@@ -1891,7 +1891,7 @@ a.about-link,
 .cs-person-link {
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  text-underline-offset: 0.18em;
   text-decoration-skip-ink: auto;
   text-decoration-color: transparent;
   transition: color 0.25s ease, text-decoration-color 150ms ease, background-color 1s ease, border-color 1s ease;
