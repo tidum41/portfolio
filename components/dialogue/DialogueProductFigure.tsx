@@ -5,6 +5,7 @@ import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import DialogueProductScenario, {
   type DialogueProductScenario as Scenario,
 } from "@/components/dialogue/product/DialogueProductScenario";
+import StaticFigure from "@/components/dialogue/StaticFigure";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
 
 type Props = {
@@ -12,7 +13,13 @@ type Props = {
   title: string;
   assetId?: string;
   className?: string;
+  /** Overrides the figure name used in data-annotate="<figure>/<part>". */
+  annotate?: string;
 };
+
+function figureName(scenario: Scenario): string {
+  return typeof scenario === "object" ? `chart-${scenario.gallery}` : scenario;
+}
 
 /** Live study-chat panel width (t384: ~447.78px → 448). */
 const CHAT_W = 448;
@@ -106,7 +113,8 @@ function scaleProps(
 }
 
 /** In-page Dialogue product UI (no iframe). Click opens a bounded lightbox. */
-export default function DialogueProductFigure({ scenario, title, assetId, className }: Props) {
+export default function DialogueProductFigure({ scenario, title, assetId, className, annotate }: Props) {
+  const name = annotate ?? figureName(scenario);
   const narrow = useNarrow();
   const phone = usePhone();
   const [open, setOpen] = useState(false);
@@ -116,12 +124,11 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
   const render = (zoomed: boolean) => {
     const inner = <DialogueProductScenario scenario={scenario} className={className} />;
     const block = (
-      <div
+      <StaticFigure
+        figure={zoomed ? `${name}-lightbox` : name}
         className="dialogue-product-block dialogue-product-block--static"
         data-dialogue-asset-id={zoomed ? undefined : assetId}
         aria-label={title}
-        aria-hidden
-        inert
       >
         {scale ? (
           <ScaledChatViewport
@@ -137,7 +144,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
         ) : (
           inner
         )}
-      </div>
+      </StaticFigure>
     );
     return block;
   };
@@ -151,11 +158,13 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
         type="button"
         className="dp-zoom__trigger"
         aria-label={`Enlarge figure: ${title}`}
+        data-annotate={`dialogue-${name}/zoom`}
         onClick={() => setOpen(true)}
       />
       )}
       <CaseStudyLightbox
         alt={title}
+        annotate={`dialogue-${name}`}
         open={open && !narrow}
         onClose={() => setOpen(false)}
         returnFocusRef={triggerRef}

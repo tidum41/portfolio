@@ -20,10 +20,10 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "BruinLease",
   description:
-    "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
+    "BruinLease case study: simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
   alternates: { canonical: `${SITE_URL}/ucla-sublease` },
   openGraph: {
-    title: "BruinLease — Mudit Mahajan",
+    title: "BruinLease, Mudit Mahajan",
     description:
       "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
     url: `${SITE_URL}/ucla-sublease`,
@@ -333,7 +333,7 @@ const FB = {
   problemLabel: "The Problem",
   problemHeading: "UCLA students struggle with subleasing, using platforms that weren't built for it.",
   problemBody: "Entering my third year, I needed summer housing for my first time outside a dorm. 2 weeks of Reddit threads, Facebook groups, and texting friends-of-friends, I found something. I got lucky and I knew it. I asked friends if they found a place, and kept hearing the same story with different details.",
-  problemImageCaption: "left to right — Facebook, ULoop, Reddit",
+  problemImageCaption: "left to right: Facebook, ULoop, Reddit",
   painPoints: [
     "No standardized apartment info. Posts are inconsistent in pricing, dates, room details, forcing constant back-and-forth just to get basics.",
     "Platform switching is common. Students juggle Facebook groups, Reddit threads, Instagram stories, and word of mouth with little reliability.",
@@ -503,7 +503,7 @@ async function BruinLeaseContent() {
                   <CaseStudyFigure
                     src={cs.problemImage}
                     alt="Fragmented subleasing platforms"
-                    caption={cs.problemImageCaption}
+                    caption={cs.problemImageCaption?.replace(/\s+—\s+/g, ": ")}
                     annotate="bruinlease-problem"
                     fill
                     aspectRatio="16/7"

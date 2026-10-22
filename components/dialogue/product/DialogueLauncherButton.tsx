@@ -12,6 +12,7 @@ export default function DialogueLauncherButton({ className, size = 48 }: Props) 
       className={["dp-bubble-launcher", className].filter(Boolean).join(" ")}
       style={{ width: size, height: size }}
       aria-hidden
+      data-annotate-part="launcher"
     >
       <DialogueAsteriskIcon className="dp-bubble-launcher__icon" />
     </div>

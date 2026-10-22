@@ -3,7 +3,7 @@ import { dialogueCopy } from "@/components/dialogue/product/tokens";
 /** Decorative study-chat composer (t384 measurements). Not interactive in figures. */
 export default function ChatComposer() {
   return (
-    <div className="dp-study-chat__composer" data-export-chat-composer="true">
+    <div className="dp-study-chat__composer" data-export-chat-composer="true" data-annotate-part="composer">
       <div className="dp-study-chat__composer-box">
         <p className="dp-study-chat__composer-placeholder">
           {dialogueCopy.composerPlaceholder}

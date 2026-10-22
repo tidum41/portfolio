@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import { CASE_STUDY_BLUR_DATA_URL } from "@/lib/caseStudyBlur";
@@ -13,10 +13,6 @@ type Base = {
   sizes?: string;
   zoomable?: boolean;
   placeholder?: "blur" | "empty";
-  /**
-   * Stable Agentation figure id. Parts get data-annotate="<annotate>/<part>"
-   * (media, caption, zoom). Defaults to "cs-figure".
-   */
   annotate?: string;
 };
 
@@ -47,6 +43,16 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   } = props;
 
   const [open, setOpen] = useState(false);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 600px)");
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const canZoom = zoomable && !narrow;
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const blurProps =
     placeholder === "blur" ? { placeholder: "blur" as const, blurDataURL: CASE_STUDY_BLUR_DATA_URL } : {};
 
@@ -73,8 +79,9 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
     </div>
   );
 
-  const inner = zoomable ? (
+  const inner = canZoom ? (
     <button
+      ref={triggerRef}
       type="button"
       className="cs-figure-zoom-trigger"
       data-annotate={`${annotate}/zoom`}
@@ -90,17 +97,14 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   return (
     <figure className="cs-figure" data-annotate={`${annotate}/root`}>
       {inner}
-      {caption ? (
-        <figcaption className="cs-figcaption" data-annotate={`${annotate}/caption`}>
-          {caption}
-        </figcaption>
-      ) : null}
-      {zoomable && (
+      {caption ? <figcaption className="cs-figcaption" data-annotate={`${annotate}/caption`}>{caption}</figcaption> : null}
+      {canZoom && (
         <CaseStudyLightbox
           src={src}
           alt={alt}
           open={open}
           onClose={() => setOpen(false)}
+          returnFocusRef={triggerRef}
           annotate={annotate}
         />
       )}

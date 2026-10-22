@@ -5,6 +5,7 @@ import LeadCompareAnswerCard, {
 } from "@/components/dialogue/product/scenarios/LeadCompareAnswerCard";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario as Scenario } from "@/components/dialogue/product/DialogueProductScenario";
+import StaticFigure from "@/components/dialogue/StaticFigure";
 import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
 
@@ -75,9 +76,12 @@ function OptionPanel({
         <p className="dialogue-lead-answer__chosen-row dialogue-lead-answer__chosen-row--spacer" aria-hidden />
       )}
       <div className="dialogue-lead-answer__option-card">
-        <div className="dialogue-product-block dialogue-product-block--static" aria-hidden inert>
+        <StaticFigure
+          figure={`lead-answer-${option.id}`}
+          className="dialogue-product-block dialogue-product-block--static"
+        >
           {wrapped}
-        </div>
+        </StaticFigure>
       </div>
       <DialogueCaption label={option.label} sentence={cost} />
     </div>

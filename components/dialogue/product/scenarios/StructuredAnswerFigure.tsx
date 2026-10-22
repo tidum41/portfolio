@@ -39,24 +39,24 @@ export default function StructuredAnswerFigure({
           anatomy
           showChart={false}
         />
-        <div className="dp-anatomy-target" data-anatomy-part="sources">
-          <span className="dp-anatomy-part-marker" aria-hidden>
+        <div className="dp-anatomy-target" data-anatomy-part="sources" data-annotate-part="anatomy-sources">
+          <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-2">
             2
           </span>
           <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         </div>
         <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy showSummary={false} />
         {showClips && (
-          <div className="dp-anatomy-target" data-anatomy-part="clips">
-            <span className="dp-anatomy-part-marker" aria-hidden>
+          <div className="dp-anatomy-target" data-anatomy-part="clips" data-annotate-part="anatomy-clips">
+            <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-4">
               4
             </span>
             <ClipThumbnails selectedTime="15:47" />
           </div>
         )}
         {!compact && (
-          <div className="dp-anatomy-target" data-anatomy-part="followups">
-            <span className="dp-anatomy-part-marker" aria-hidden>
+          <div className="dp-anatomy-target" data-anatomy-part="followups" data-annotate-part="anatomy-followups">
+            <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-5">
               5
             </span>
             <FollowUpChips />

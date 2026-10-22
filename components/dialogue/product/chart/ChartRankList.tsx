@@ -1,4 +1,5 @@
 import { formatChartCount } from "@/components/dialogue/product/chart/chartSpec";
+import { annotateSlug } from "@/components/dialogue/annotate";
 
 export type ChartRankRow = {
   rank: number;
@@ -18,7 +19,7 @@ export default function ChartRankList({ rows, className }: Props) {
       {rows.map((row) => {
         const focal = row.rank === 1;
         return (
-          <li key={row.label} className="dp-chart-rank__row">
+          <li key={row.label} className="dp-chart-rank__row" data-annotate-part={`rank-${annotateSlug(row.label)}`}>
             <span
               className={[
                 "dp-chart-rank__num",
@@ -29,7 +30,7 @@ export default function ChartRankList({ rows, className }: Props) {
             >
               {row.rank}
             </span>
-            <span className="dp-chart-rank__label">{row.label}</span>
+            <span className="dp-chart-rank__label" data-annotate-part={`rank-label-${annotateSlug(row.label)}`}>{row.label}</span>
             <span className="dp-chart-rank__value">{formatChartCount(row.value)}</span>
           </li>
         );

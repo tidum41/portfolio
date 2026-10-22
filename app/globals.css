@@ -1583,6 +1583,9 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   cursor: zoom-in;
   border-radius: inherit;
 }
+html:has(#agentation-cursor) .dp-zoom__trigger {
+  pointer-events: none;
+}
 .dp-zoom__trigger:focus-visible {
   outline: 2px solid var(--color-link-blue);
   outline-offset: 2px;

@@ -9,15 +9,15 @@ export default function ThinDataFigure() {
     <StudyChatShell compact hideHeader hideComposer>
       <UserMessageBubble>Why do people hesitate at payment?</UserMessageBubble>
       <CoverageCallout headline="2 of 24 interviews" detail="Only a few interviews match." />
-      <p className="dp-summary dp-text-body">
+      <p className="dp-summary dp-text-body" data-annotate-part="summary">
         Two interviews mention payment retry. Treat it as a lead, not a trend.
       </p>
-      <div className="dp-sources dp-sources--tight" aria-hidden>
-        <span className="dp-source-pill">Marcus W., 21:08</span>
-        <span className="dp-source-pill">Hannah L., 22:41</span>
+      <div className="dp-sources dp-sources--tight" aria-hidden data-annotate-part="sources-row">
+        <span className="dp-source-pill" data-annotate-part="source-pill-marcus-w">Marcus W., 21:08</span>
+        <span className="dp-source-pill" data-annotate-part="source-pill-hannah-l">Hannah L., 22:41</span>
       </div>
-      <div className="dp-chart-slot">
-        <p className="dp-chart-slot__note">
+      <div className="dp-chart-slot" data-annotate-part="chart-slot">
+        <p className="dp-chart-slot__note" data-annotate-part="chart-slot-note">
           When few interviews match, the answer leads with the count and holds the chart back.
         </p>
       </div>
