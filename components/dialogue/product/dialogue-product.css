@@ -2316,3 +2316,7 @@
 .dp-scaled-viewport[data-shadow-safe] .dp-scaled-viewport__inner {
   padding-bottom: 16px;
 }
+
+.dp-scaled-viewport[data-shadow-safe] .dialogue-product-figure {
+  overflow: visible;
+}
