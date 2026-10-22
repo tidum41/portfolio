@@ -75,6 +75,7 @@ async function closeTests(browser) {
         await trigger.click({ position: { x: box.width / 2, y: Math.max(1, y - box.y) } });
         await page.waitForSelector(".cs-lightbox-backdrop", { timeout: 3000 });
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+        await page.waitForTimeout(400);
         const urlBefore = page.url();
         const close = page.locator(".cs-lightbox-close");
         const cb = await close.boundingBox();
