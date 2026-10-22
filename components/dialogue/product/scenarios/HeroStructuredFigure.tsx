@@ -93,8 +93,10 @@ export default function HeroStructuredFigure() {
           </ChartVizCard>
         </Tile>
         <div className="dp-hero-collage__tile dp-hero-collage__tile--clip" aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/dev/dialogue-static/clip-photos/clip-02.jpg" alt="" decoding="async" />
+          <div className="dp-hero-collage__clip-frame">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dev/dialogue-static/clip-photos/clip-02.jpg" alt="" decoding="async" />
+          </div>
           <span>15:47</span>
         </div>
         <div className="dp-hero-collage__chat">
