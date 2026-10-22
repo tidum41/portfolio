@@ -5,7 +5,7 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 ## e7cd42c, Oct 22 2026 (Agentation on Dialogue)
 - Changed: merged origin/review/agentation (PR #107, 8aa312e), taking its STD-09 over the earlier revert. Every Dialogue figure part (hero, anatomy, library pairs, counter-evidence, thin-data figure, quote player, lightbox) carries data-annotate="dialogue-<figure>/<part>". Kept our CaseStudyLightbox (live children), CaseStudyFigure narrow handling and the BruinLease caption stopgap, with their annotate attributes added.
 - Why: Mudit wants Agentation on the Dialogue preview.
-- Preview: PREVIEW_URL
+- Preview: https://portfolio-mb2mxeofa-mudits-projects-d560e6b3.vercel.app (deployment of 5ebac65, code identical to later script-only commits)
 - Image: none this round.
 
 ## 40e417f, Oct 22 2026 (DLG-56 critique fixes)
