@@ -17,7 +17,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | --- | --- | --- | --- | --- |
 | STD-01 | Sentence case everywhere | Oct 20 | in progress | RULES.md standing rule |
 | STD-02 | No em dashes | Oct 20 | in progress | RULES.md standing rule |
-| STD-03 | No dot separators (·) as a default | Oct 22 | in progress | RULES.md 2026-10-22 |
+| STD-03 | No dot separators (·) as a default | Oct 22 | in progress | RULES.md 2026-10-22; 826bc80: 0 "·" and 0 em dashes in /dialogue body text at 1440 and 390 (local prod build, dialogue-r8/d-lib.png). Not preview-verified. |
 | STD-04 | Site weight cap 500 (Dialogue UI keeps its real 600) | Oct 20 | in progress | RULES.md; dialogue-feedback-1020 G4 |
 | STD-05 | Areal abandoned; Helvetica Neue fallback is intended, not a bug | Oct 20 | verified | type-system.md "shelve ABC Areal" |
 | STD-06 | Beacons is not a current project; do not present it as current | Oct 21 | open | |
@@ -53,19 +53,19 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-11 | "styled like ruth zhao reference we made for joola b2b" | Oct 20 | superseded | by DLG-15 |
 | DLG-12 | UI fills the frame (~6-8% margin), no letterboxing | Oct 20 | open | dialogue-feedback-1020 G1/G2 |
 | DLG-13 | Lightbox on click, Esc/click-off closes, ~200ms, reduced motion | Oct 20 | open | dialogue-feedback-1020 G3 |
-| DLG-14 | No dot separators in captions ("Answer + evidence, Chosen") | Oct 21 | open | |
-| DLG-15 | "No crooked quirky shit be methodical" (grid-aligned hero) | Oct 21 | open | dialogue-v2.md |
-| DLG-16 | "Even hero at 390 needs to be something noteworthy" | Oct 21 | open | dialogue-v2.md |
-| DLG-17 | "Interview quote frame isn't like live version"; restore 1:1 (657337d) | Oct 21 | open | Misses M3 |
-| DLG-18 | "a library displayed in the page ... similar to how ibm carbon is laid out"; "I can't skim"; "dumb simple to understand the bad and good while still being technical for designer and pm" | Oct 21 | open | dialogue-v2.md |
-| DLG-19 | "background for ui elements also have a slightly offset tone for more separation" | Oct 21 | open | |
-| DLG-20 | "Floating chat vs sidebar comparison section kinda sucks"; find a detail that "conveys experience matters in little considerations" | Oct 21 | in progress | dialogue-v2.md 1d82113 |
+| DLG-14 | No dot separators in captions ("Answer + evidence, Chosen") | Oct 21 | in progress | 826bc80: captions are plain "Data shape / Encoding / Tradeoff" lines, 0 dot separators (dialogue-r8/d-lib.png). Local build only. |
+| DLG-15 | "No crooked quirky shit be methodical" (grid-aligned hero) | Oct 21 | in progress | dialogue-v2.md; 826bc80: hero is a straight 2-col grid, no rotation (dialogue-r8/d-top.png). Frame is 750px, not the brief's 1120px. |
+| DLG-16 | "Even hero at 390 needs to be something noteworthy" | Oct 21 | in progress | dialogue-v2.md; 826bc80: separate 390 hero, chat card with overlapping drop-off card (dialogue-r8/m-top.png). Judged by builder only, needs Mudit. |
+| DLG-17 | "Interview quote frame isn't like live version"; restore 1:1 (657337d) | Oct 21 | in progress | Misses M3; 826bc80: DialogueInterviewPlayer restored from 657337d (16:9, 56px play, no control bar) plus 22px webcam blur (dialogue-r8/d-quote-top.png, m-quote.png). Not diffed pixel-wise against the live site. |
+| DLG-18 | "a library displayed in the page ... similar to how ibm carbon is laid out"; "I can't skim"; "dumb simple to understand the bad and good while still being technical for designer and pm" | Oct 21 | in progress | dialogue-v2.md; 826bc80: DialogueChartLibrary, equal-size bad/good pairs, 15px verdict + 13px technical line (dialogue-r8/d-lib.png, m-lib.png). One pair per row, not 2-up, because column is 750px. |
+| DLG-19 | "background for ui elements also have a slightly offset tone for more separation" | Oct 21 | in progress | 826bc80: figure wells #EEEDEB on #FBFBFB page, 1px 4% border (dialogue-r8/d-lib.png). JOOLA/BruinLease frames only checked via shared token. |
+| DLG-20 | "Floating chat vs sidebar comparison section kinda sucks"; find a detail that "conveys experience matters in little considerations" | Oct 21 | in progress | dialogue-v2.md 1d82113; 826bc80: floating vs sidebar section replaced by low-coverage compare; good version leads with "2 of 24 interviews", no chart (dialogue-r8/d-cov.png, m-cov.png). |
 | DLG-21 | "the live component versions are also so much more higher quality and crisp" (use them) | Oct 20 | in progress | live frames on canvas |
 | DLG-22 | Problem/solution: "these are legit the same image. you just need one image" | Oct 20 | open | |
 | DLG-23 | "case study visuals should never fill the viewport overly like that" | Oct 20 | open | |
 | DLG-24 | Fixed-structure graphic "is good but its awkward with the width of the image ... that comes after" | Oct 20 | open | |
 | DLG-25 | "show even more chart responses being rendered" in the UI and the case study | Oct 20 | open | |
-| DLG-26 | "make drop shadow slightly slightly harsher" | Oct 21 | in progress | briefed on dialogue branch |
+| DLG-26 | "make drop shadow slightly slightly harsher" | Oct 21 | in progress | briefed on dialogue branch; 826bc80: --shadow-chat made harsher. Not measured against a reference; needs Mudit. |
 | DLG-27 | "i dont like the shipped vs no shipped" (remove that line) | Oct 21 | in progress | briefed on dialogue branch |
 | DLG-28 | "why are things not 1:1 with fonts spacing design system languyage" | Oct 21 | open | |
 | DLG-29 | "make sure spacing follows dialogue's design system that we had orignally added from paper" | Oct 21 | in progress | RULES 10-21 Paper tokens |
