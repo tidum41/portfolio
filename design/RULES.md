@@ -37,6 +37,14 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - The Oct 19-20 components (`5bfaa4b` through `f6a5192`, and `657337d`) are the visual baseline. No round may regress them; restore from those commits, do not reinterpret.
 - Dialogue components use DS tokens strictly. Colors, type sizes, weights, radii and strokes come from role tokens in `styles/dialogue-tokens.css`. Deviations live only in that file's documented case-study extension block, each with its reason. Components never reference the raw `--ds-*` layer. `npm run check:dialogue-tokens` enforces it.
 
+## Review workflow (local first)
+
+- Mudit watches locally. His dev server on his Mac fast-forwards from `origin/review/dialogue-figure-parity-b9b1` every 15s and hot-reloads. Push small, frequent commits to that branch so he sees progress live. Never merge to main.
+- Vercel builds are off by default. `vercel.json` `ignoreCommand` builds `main` always, builds `review/*` only when the commit message contains `[preview]`, and skips every other branch. Commit messages without `[preview]` never trigger a build.
+- Put `[preview]` in a commit message only when Mudit explicitly asks for a phone preview. Do not add it otherwise.
+- Checks (`check:dialogue-preview`, `check:annotate`, `check:site-mobile`, `check:dialogue-tokens`) run against a local `next build && next start` on the VM (`rm -rf .next` first, then `git checkout lib/caseStudies/dialogueReviewManifest.json`). Do not wait for or require a Vercel preview to finish a round. Paste the local output in the report.
+- When a `[preview]` build is requested, the account rule below applies.
+
 ## Preview account
 
 - Previews and share links come only from the Vercel account `archive14photo-4965`, from its deployments of `review/dialogue-figure-parity-b9b1`. The old account `mudits-projects-d560e6b3` is disabled (402 Payment required). Never create, open or report links from it, including older entries in the iteration log. If the new account is not reachable from the Vercel tools, say so; do not substitute an old-account URL.
