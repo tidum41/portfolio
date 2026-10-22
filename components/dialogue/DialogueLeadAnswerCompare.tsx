@@ -75,7 +75,7 @@ function OptionPanel({
     <div
       className={[
         "dialogue-lead-answer__panel",
-        isChosen ? "dialogue-lead-answer__panel--chosen" : "",
+        isChosen ? "dialogue-lead-answer__panel--chosen dialogue-lead-answer__panel--selected" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -85,10 +85,10 @@ function OptionPanel({
           {wrapped}
         </div>
       </DialogueRachelFrame>
-      <DialogueCaption
-        label={isChosen ? `${option.label} · Chosen` : option.label}
-        sentence={cost}
-      />
+      {isChosen ? (
+        <span className="dialogue-lead-answer__chosen-badge">Chosen</span>
+      ) : null}
+      <DialogueCaption label={option.label} sentence={cost} />
     </div>
   );
 }

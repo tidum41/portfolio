@@ -34,12 +34,20 @@ export default function PlacementDockedScene() {
       const h = viewport?.clientHeight ?? layer.clientHeight;
       if (w < 1 || h < 1) return;
       const phone = window.matchMedia("(max-width: 480px)").matches;
-      const next = placementScaleForWidth(w, phone);
+      const inCompare = Boolean(layer.closest(".dialogue-placement-compare"));
+      let next = placementScaleForWidth(w, phone);
+      if (inCompare && !phone) {
+        next = Math.min(w / SCENE_W, h / SCENE_H, 1);
+      }
       placementFitChatWidth(layer, w, phone, next);
       const sceneW = SCENE_W * next;
       let y = 0;
-      const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
-      if (fromFollowups !== null) y = fromFollowups;
+      if (phone) {
+        const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);
+        if (fromFollowups !== null) y = fromFollowups;
+      } else {
+        y = Math.min(0, h - SCENE_H * next);
+      }
       setScale(next);
       const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
       setOffset({ x: placementChatAnchorX(w, sceneW, phone, next, chatEl), y });

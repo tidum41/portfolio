@@ -55,7 +55,6 @@ export default function StudyChatShell({
               </svg>
             </span>
           </div>
-          <div className="dp-study-chat__rule" aria-hidden />
         </div>
       )}
       <div className="dp-study-chat__scroll">

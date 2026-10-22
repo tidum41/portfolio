@@ -38,12 +38,16 @@ export default function PlacementBubbleScene() {
       const h = viewport?.clientHeight ?? layer.clientHeight;
       if (w < 1 || h < 1) return;
       const phone = window.matchMedia("(max-width: 480px)").matches;
-      const next = placementScaleForWidth(w, phone);
+      const inCompare = Boolean(layer.closest(".dialogue-placement-compare"));
+      let next = placementScaleForWidth(w, phone);
+      if (inCompare && !phone) {
+        next = Math.min(w / SCENE_W, h / SCENE_H, 1);
+      }
       placementFitChatWidth(layer, w, phone, next);
       const sceneW = SCENE_W * next;
       setScale(next);
       const chatEl = layer.querySelector<HTMLElement>('[data-placement-chat="true"]');
-      let x = placementChatAnchorX(w, sceneW, phone, next, chatEl);
+      let x = inCompare && !phone ? Math.min(0, w - sceneW) : placementChatAnchorX(w, sceneW, phone, next, chatEl);
       let y = Math.min(0, h - SCENE_H * next);
       if (phone) {
         const fromFollowups = placementYOffsetFromFollowups(layer, h, next, 16);

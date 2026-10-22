@@ -13,6 +13,7 @@ const OPTIONS = [
   {
     id: "bubble" as const,
     title: "Floating bubble",
+    sentence: "Study canvas stays full size; chat floats over it until you minimize.",
     scenario: "placement-bubble" as const,
     assetId: "D-14",
   },

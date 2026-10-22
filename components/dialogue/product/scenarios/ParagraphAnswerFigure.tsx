@@ -1,11 +1,20 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import { CHECKOUT_QUESTION, PARAGRAPH_ANSWER } from "@/lib/dialogue/product/sampleData";
+import {
+  CHECKOUT_QUESTION,
+  PARAGRAPH_ANSWER,
+  PARAGRAPH_ANSWER_BRIEF,
+} from "@/lib/dialogue/product/sampleData";
 
 export default function ParagraphAnswerFigure({ focus }: { focus?: "answer" }) {
+  const paragraphs =
+    focus === "answer" ? PARAGRAPH_ANSWER.slice(0, 1) : PARAGRAPH_ANSWER_BRIEF;
   const prose = (
-    <div className="dp-text-prose-sm" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {(focus === "answer" ? PARAGRAPH_ANSWER.slice(0, 1) : PARAGRAPH_ANSWER).map((p) => (
+    <div
+      className={focus === "answer" ? "dp-text-prose-sm" : "dp-text-prose-sm dp-text-prose-light"}
+      style={{ display: "flex", flexDirection: "column", gap: 8 }}
+    >
+      {paragraphs.map((p) => (
         <p key={p.slice(0, 24)} style={{ margin: 0 }}>{p}</p>
       ))}
     </div>

@@ -8,6 +8,7 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueChartGallery from "@/components/dialogue/DialogueChartGallery";
+import DialogueChartResearch from "@/components/dialogue/DialogueChartResearch";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
@@ -39,6 +40,7 @@ export const DIALOGUE_TOC_ITEMS = [
     label: "A finding only travels if you can point to the interview behind it",
   },
   { id: "one-structure", label: "Every answer gets one fixed structure" },
+  { id: "chart-research", label: "Charts teams already use in synthesis" },
   { id: "fitted-charts", label: "The chart fits the question" },
   { id: "clips", label: "A quote with no context" },
   { id: "placement", label: "Floating chat, not a docked sidebar" },
@@ -317,11 +319,20 @@ export function DialogueCaseStudyContent({
               </div>
             </Section>
 
+            <Section id="chart-research">
+              <H2>Charts teams already use in synthesis</H2>
+              <CaseStudyBody>
+                I audited how UX research teams summarize interviews today, then built a small chart
+                library that maps question types to shapes we could ship in chat.
+              </CaseStudyBody>
+              <DialogueChartResearch />
+            </Section>
+
             <Section id="fitted-charts">
               <H2>The chart fits the question</H2>
               <CaseStudyBody>
-                Chart: I grouped real chat questions by type and gave each a chart shape. If nothing
-                fits, the answer stays text with sources and clips.
+                Each question type gets a default chart in the answer. If nothing fits, the reply
+                stays text with sources and clips.
               </CaseStudyBody>
               {wrap ? wrap("D-09", <DialogueChartGallery />) : <DialogueChartGallery />}
             </Section>
@@ -329,7 +340,9 @@ export function DialogueCaseStudyContent({
             <Section id="clips">
               <H2>A quote with no context</H2>
               <CaseStudyBody>
-                Clips: the clip opens at the exact second, with the transcript in sync.
+                A quote without a timestamp forces you to hunt the recording. The player opens at
+                the exact second, with Dialogue and the participant on screen and the transcript in
+                sync.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -354,16 +367,21 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                Back to the same structure: after a follow-up, the summary, sources, chart, and clips
-                still hold together for the new answer, with every supporting clip in one drawer.
+                You ask a follow-up, get a filtered answer, tap a source, and every supporting clip
+                for that answer sits in one drawer. The structure does not reset when the question
+                narrows.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
                 title="Follow-up answer for mobile only, with every supporting clip in one drawer"
                 assetId="D-15"
                 wrapRaster={wrap}
-                frameLabel="Solution: a mobile-only follow-up still keeps every supporting clip in one drawer"
+                frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
               />
+              <CaseStudyBody>
+                Outcome: researchers could share one link that still showed the number, the
+                interviews behind it, and the footage to verify the quote.
+              </CaseStudyBody>
             </Section>
           </article>
           <CaseStudyPager href="/dialogue" />

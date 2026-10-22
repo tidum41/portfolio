@@ -2,6 +2,13 @@ export const CHECKOUT_QUESTION = "Where did people drop off in checkout?";
 
 export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";
 
+/** Problem figure: short wall of text (2 sentences). */
+export const PARAGRAPH_ANSWER_BRIEF = [
+  "Most participants hesitated at shipping address, delivery, and payment.",
+  "Nothing in the thread linked quotes back to footage or funnel steps.",
+];
+
+/** Lead option: full paragraph wall for comparison. */
 export const PARAGRAPH_ANSWER = [
   "Across the 24 interviews in this Northline checkout study, participants most often hesitated at shipping address, delivery options, and payment confirmation. Several described re-reading fields, backing out to check the cart, or pausing when error copy felt vague. Mobile sessions amplified autocomplete issues and international format confusion.",
   "Desktop participants cited unexpected fees and delivery dates that read like extra charges. A few mentioned trust on payment retry, saved wallets buried below the fold, and confirmation screens that felt abrupt. Quotes live in separate docs; charts are rebuilt in slides.",

@@ -6,9 +6,9 @@
   --dp-font-product-tracking: normal;
   --dp-bg: #f8f6f3; /* quote card / paper-50 */
   /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */
-  --dp-figure-surface-system: #f5f5f4;
-  --dp-figure-surface-problem: #efeeed;
-  --dp-figure-surface-solution: #f8f7f6;
+  --dp-figure-surface-system: #f2f1f0;
+  --dp-figure-surface-problem: #ebeae9;
+  --dp-figure-surface-solution: #f6f5f4;
   --dp-surface: #fcfbf9; /* chat panel bg */
   --dp-app-bg: #fafaf9;
   --dp-sidebar-bg: #f8f6f3;
