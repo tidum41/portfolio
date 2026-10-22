@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r13SHA, Oct 22 (r13)
+- Changed: lightbox Close with fixed light-on-dark styling, quieter neutral pill outline in dark, hero sources grid filling its card, section spacing above the closing Outcome line, preview check extended (open-lightbox sweep, dark Close clicks, no-trigger assert, SELFTEST).
+- Why: r13 audit, DLG-44 to DLG-47 and M10.
+- Preview: PREVIEW
+- Image: ![r13](img/r13-close.webp) light-theme Close, before left (recreated by overriding the old colours on the same build, since the audit shot was not on disk) and after right.
+
 ## 226dd8d, Oct 22 (r12)
 - Changed: lightbox portaled to document.body with Close anchored to the dialog corner (same 600px cutoff for BruinLease), theme-aware counter-evidence pills, hero sources as a 2x2, one caption token, 390 fixed-structure figure fits, preview check script.
 - Why: r12 audit, DLG-31 and DLG-39 to DLG-43.

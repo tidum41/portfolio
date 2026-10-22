@@ -1349,9 +1349,9 @@ html[data-theme="dark"] .project-image {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ededec;
   font-family: var(--font-sans-medium);
   font-size: 14px;
   font-weight: 500;
@@ -1361,7 +1361,7 @@ html[data-theme="dark"] .project-image {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 12px rgba(10, 10, 12, 0.12);
+  box-shadow: none;
 }
 .cs-lightbox-media {
   border-radius: var(--radius-control);
@@ -2507,7 +2507,7 @@ html[data-theme="light"] {
   }
 }
 .dialogue-full-answer-outcome {
-  margin-top: 24px !important;
+  margin-top: var(--dialogue-section-gap) !important;
 }
 @media (max-width: 600px) {
   .dialogue-chart-mapping {
@@ -2803,6 +2803,9 @@ html[data-theme="dark"] {
 }
 .dialogue-answer-states__ui .dp-source-pill {
   color: var(--figure-ink-muted);
+}
+html[data-theme="dark"] .dialogue-answer-states__ui .dp-source-pill:not(.dp-source-pill--disagree) {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 .dialogue-answer-states__ui .dp-source-pill--disagree {
   color: var(--figure-ink);

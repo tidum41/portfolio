@@ -6,6 +6,7 @@
  * (its _vercel_share query is kept and the cookie it sets is reused).
  *
  * (a) Real-click Close test at scrollY 0, 1440 / 1024 / 601, /dialogue and /ucla-sublease.
+ * (c) Open-lightbox sweep, dark close clicks, no-trigger assert at 600 and 390.
  * (b) Whole-page WCAG AA text sweep of /dialogue, light and dark, 1440 and 390.
  */
 import { chromium } from "playwright";
@@ -55,11 +56,11 @@ async function open(browser, path, width, height, theme) {
 }
 
 async function closeTests(browser) {
-  for (const path of ["/dialogue", "/ucla-sublease"]) {
+  for (const theme of ["light", "dark"]) for (const path of ["/dialogue", "/ucla-sublease"]) {
     for (const width of [1440, 1024, 601]) {
-      const label = `close click ${path} @${width}`;
+      const label = `close click ${path} @${width} ${theme}`;
       try {
-        const { ctx, page } = await open(browser, path, width, 900);
+        const { ctx, page } = await open(browser, path, width, 900, theme);
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
         const trigger = page
           .locator(path === "/dialogue" ? ".dp-zoom__trigger" : ".cs-figure-zoom-trigger")
@@ -90,7 +91,7 @@ async function closeTests(browser) {
   }
 }
 
-function sweepInPage() {
+function sweepInPage(rootSel) {
   const parse = (c) => {
     const m = c.match(/[\d.]+/g).map(Number);
     return { r: m[0], g: m[1], b: m[2], a: m.length > 3 ? m[3] : 1 };
@@ -121,7 +122,8 @@ function sweepInPage() {
   };
   const out = [];
   out.inspected = 0;
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const root = (rootSel && document.querySelector(rootSel)) || document.body;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const seen = new Set();
   let n;
   while ((n = walker.nextNode())) {
@@ -169,7 +171,7 @@ async function sweeps(browser) {
     for (const width of [1440, 390]) {
       const label = `contrast sweep /dialogue ${theme} @${width}`;
       try {
-        const { ctx, page } = await open(browser, process.env.SELFTEST ? "/dialogue?__selftest=1" : "/dialogue", width, 900, theme);
+        const { ctx, page } = await open(browser, process.env.SELFTEST === "page" ? "/dialogue?__selftest=1" : "/dialogue", width, 900, theme);
         const H = await page.evaluate(() => document.documentElement.scrollHeight);
         for (let y = 0; y < H; y += 400) {
           await page.evaluate((y) => window.scrollTo(0, y), y);
@@ -198,10 +200,69 @@ async function sweeps(browser) {
   }
 }
 
+
+const TRIGGER = (path) => (path === "/dialogue" ? ".dp-zoom__trigger" : ".cs-figure-zoom-trigger");
+
+async function lightboxSweeps(browser) {
+  for (const theme of ["light", "dark"]) for (const path of ["/dialogue", "/ucla-sublease"]) {
+    for (const width of [1440, 601]) {
+      const label = `open-lightbox sweep ${path} @${width} ${theme}`;
+      try {
+        const { ctx, page } = await open(browser, path, width, 900, theme);
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+        await page.locator(TRIGGER(path)).first().click({ force: true });
+        await page.waitForSelector(".cs-lightbox-backdrop", { timeout: 3000 });
+        await page.waitForTimeout(500);
+        if (process.env.SELFTEST === "lightbox") {
+          await page.evaluate(() => {
+            const b = document.createElement("button");
+            b.textContent = "selftest";
+            b.style.cssText = "color:#2e2e2e;background:transparent;position:absolute;top:60px;left:8px";
+            document.querySelector(".cs-lightbox-dialog").appendChild(b);
+          });
+        }
+        const bad = await page.evaluate(`(${sweepInPage.toString()})(".cs-lightbox-backdrop")`);
+        const n = await page.evaluate(`(${sweepInPage.toString()})(".cs-lightbox-backdrop").inspected`);
+        const closeSeen = await page.evaluate(
+          () => !!document.querySelector(".cs-lightbox-close") && document.querySelector(".cs-lightbox-close").textContent.trim().length > 0,
+        );
+        log(bad.length === 0 && closeSeen, `${label} (${closeSeen ? "Close present" : "no Close"}, ${n} text nodes inspected, ${bad.length} below AA)`);
+        for (const b of bad.slice(0, 10)) console.log(`     ${b.ratio}:1 < ${b.need}  "${b.text}"  .${b.cls}`);
+        await ctx.close();
+      } catch (e) {
+        log(false, `${label}: ${e.message}`);
+      }
+    }
+  }
+}
+
+async function noTriggerChecks(browser) {
+  for (const path of ["/dialogue", "/ucla-sublease"]) {
+    for (const width of [600, 390]) {
+      const label = `no zoom trigger ${path} @${width}`;
+      try {
+        const { ctx, page } = await open(browser, path, width, 900);
+        const H = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0; y < H; y += 500) {
+          await page.evaluate((y) => window.scrollTo(0, y), y);
+          await page.waitForTimeout(40);
+        }
+        const total = await page.locator(".dp-zoom__trigger, .cs-figure-zoom-trigger").count();
+        log(total === 0, `${label} (${total} triggers)`);
+        await ctx.close();
+      } catch (e) {
+        log(false, `${label}: ${e.message}`);
+      }
+    }
+  }
+}
+
 const browser = await chromium.launch();
 console.log(`check-dialogue-preview ${origin}`);
 await closeTests(browser);
 await sweeps(browser);
+await lightboxSweeps(browser);
+await noTriggerChecks(browser);
 await browser.close();
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nALL PASSED");
 process.exit(failures.length ? 1 : 0);
