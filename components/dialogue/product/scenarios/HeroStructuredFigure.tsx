@@ -39,6 +39,15 @@ export default function HeroStructuredFigure() {
         <HeroChatCard />
         <div className="dp-hero-v2__aside">
           <FunnelCard />
+          <div
+            className={`dp-hero-v2__card dp-hero-v2__sources dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+          >
+            <div className="dp-sources">
+              <span className="dp-source-pill">Jordan M., 14:03</span>
+              <span className="dp-source-pill">Marcus W., 21:08</span>
+              <span className="dp-source-pill dp-source-pill--selected">Priya K., 15:47</span>
+            </div>
+          </div>
           <div className="dp-hero-v2__clips">
             <ClipThumbnails selectedTime="15:47" />
           </div>

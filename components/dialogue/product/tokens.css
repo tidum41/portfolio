@@ -6,9 +6,9 @@
   --dp-font-product-tracking: normal;
   --dp-bg: #f8f6f3; /* quote card / paper-50 */
   /* Case-study figure wells (stone-neutral, ~2–4% L steps — see dialogue-figure-parity.md) */
-  --dp-figure-surface-system: #eeedeb;
-  --dp-figure-surface-problem: #eeedeb;
-  --dp-figure-surface-solution: #eeedeb;
+  --dp-figure-surface-system: var(--figure-well, #eeedeb);
+  --dp-figure-surface-problem: var(--figure-well, #eeedeb);
+  --dp-figure-surface-solution: var(--figure-well, #eeedeb);
   --dp-surface: #fcfbf9; /* chat panel bg */
   --dp-app-bg: #fafaf9;
   --dp-sidebar-bg: #f8f6f3;

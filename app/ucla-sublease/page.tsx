@@ -20,7 +20,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "BruinLease",
   description:
-    "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
+    "BruinLease case study: simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
   alternates: { canonical: `${SITE_URL}/ucla-sublease` },
   openGraph: {
     title: "BruinLease, Mudit Mahajan",

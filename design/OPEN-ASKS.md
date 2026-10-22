@@ -70,6 +70,14 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-28 | "why are things not 1:1 with fonts spacing design system languyage" | Oct 21 | open | |
 | DLG-29 | "make sure spacing follows dialogue's design system that we had orignally added from paper" | Oct 21 | in progress | RULES 10-21 Paper tokens |
 | DLG-30 | "why is that bar graph right aligned instead of left" (assistant returns left) | Oct 21 | verified | 139a511 audit PASS (prod build 1440/390) |
+| DLG-31 | Blocker: lightbox Close sits under the site header (z-index 40); a real click goes to /about. Also JOOLA and BruinLease | Oct 22 | in progress | overnight audit r11 |
+| DLG-32 | Blocker, dark: fixed-structure labels 1.04:1 (dark ink on dark well) | Oct 22 | in progress | overnight audit r11 |
+| DLG-33 | Dark: hero clip timestamps 2.19:1, use about #A8A29E | Oct 22 | in progress | overnight audit r11 |
+| DLG-34 | Dead space under the hero right column; add sources-pill card, trim chat top gap to 24px and composer to 56px, no stretching | Oct 22 | in progress | overnight audit r11 |
+| DLG-35 | Counter-evidence figure is a light box in dark mode with 0 radius; use well token, 8px radius | Oct 22 | in progress | overnight audit r11 |
+| DLG-36 | Light captions 3.25:1 on page, 2.87:1 in wells; use #6B6B6B | Oct 22 | in progress | overnight audit r11 |
+| DLG-37 | Lightbox zoom cut-off from 480 to 600px to match the hero breakpoint | Oct 22 | in progress | overnight audit r11 |
+| DLG-38 | Remove committed audit screenshots (r8, r9, r10) and em dashes in ucla-sublease and joola meta descriptions in code; leave Sanity | Oct 22 | in progress | overnight audit r11 |
 ## JOOLA film and card (JOO)
 
 | ID | Ask | Date | Status | Evidence |
@@ -109,6 +117,8 @@ Status can't be determined from the repo or commits.
 | M3 | Quote frame drifted from the 657337d version | No pinned reference sha for an approved figure | DLG-17 pins 657337d; evidence must cite sha |
 | M4 | Dialogue v2 brief written without the ledger | Briefs had no link to ask IDs | `Asks covered:` line, enforced by `npm run check:asks` |
 | M5 | Quote player rewritten instead of restored a second time | Restore was done by hand, not from the pinned sha | Restores must be a git checkout of the pinned sha plus a diff |
+| M6 | Audits checked only hand-picked elements for contrast | No whole-page sweep | Every audit runs a whole-page WCAG contrast sweep in both themes |
+| M7 | Lightbox Close never tested with a real click at the top of the page | Header sat above it | Every audit clicks Close for real while scrolled to the top |
 
 Shared cause in M1, M3, M4: work started without reading this ledger. Promoted: `check:asks` script plus "builders read first" rule.
 

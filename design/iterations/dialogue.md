@@ -1,10 +1,10 @@
 # Dialogue iterations
 
-Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. A push builds only its tip commit, so a round's URL is the deployment of the tip of the push that carried it.
+Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
 ## 183a03d, Oct 22 (r10)
 - Changed: transcript on a light card in the quote frame, lightbox safe area, opaque backdrop and hidden contents list, lightbox off at phone width, hero funnel at natural row spacing, BruinLease caption em dash normalised in code.
-- Why: r10 audit (dark transcript 1.04:1, lightbox overlap, stretched funnel rows); DLG-13, DLG-23.
+- Why: r10 audit (dark transcript 1.04:1, lightbox overlap, stretched funnel rows); DLG-07, DLG-15, STD-02.
 - Preview: https://portfolio-fj7d2xfn2-mudits-projects-d560e6b3.vercel.app
 - Image: ![r10](img/r10-dark-quote.webp) before (r9) left, after right.
 

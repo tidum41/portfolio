@@ -145,7 +145,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
   return (
     <div className="dp-zoom">
       {render(false)}
-      {phone ? null : (
+      {narrow ? null : (
       <button
         ref={triggerRef}
         type="button"
@@ -156,7 +156,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
       )}
       <CaseStudyLightbox
         alt={title}
-        open={open && !phone}
+        open={open && !narrow}
         onClose={() => setOpen(false)}
         returnFocusRef={triggerRef}
       >
