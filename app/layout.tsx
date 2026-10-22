@@ -24,6 +24,7 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+import MobileViewportPlayback from "@/components/MobileViewportPlayback";
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
@@ -206,6 +207,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Footer />
         <DevToolbarSlot />
         <Analytics />
+        <MobileViewportPlayback />
       </body>
     </html>
   );

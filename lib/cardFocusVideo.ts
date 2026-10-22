@@ -150,6 +150,8 @@ export function cardFocusPlay(video: HTMLVideoElement, retry = true): void {
     return;
   }
   if (videoWantsPaused(video)) return;
+  // Mobile scroll playback (MobileViewportPlayback) owns videos that left the viewport.
+  if (video.dataset.vpOut === "1") return;
   video.muted = true;
   let attempt: Promise<void> | undefined;
   try {
