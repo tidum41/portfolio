@@ -2,8 +2,14 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## 226dd8d, Oct 22 (r12)
+- Changed: lightbox portaled to document.body with Close anchored to the dialog corner (same 600px cutoff for BruinLease), theme-aware counter-evidence pills, hero sources as a 2x2, one caption token, 390 fixed-structure figure fits, preview check script.
+- Why: r12 audit, DLG-31 and DLG-39 to DLG-43.
+- Preview: https://portfolio-392868ixu-mudits-projects-d560e6b3.vercel.app (deployment of 226dd8d, protected; `npm run check:dialogue-preview` passed against it)
+- Image: ![r12](img/r12-counter-dark.webp) dark counter-evidence after the fix; no before image because the audit preview of 695eaa3 could not be reopened.
+
 ## 56f4d73, Oct 22 (r11)
-- Changed: lightbox above the site header, theme-aware ink on figure wells, hero sources card with trimmed chat gaps, caption contrast, 600px lightbox cutoff, audit screenshots removed.
+- Changed: theme-aware ink on figure wells, hero sources card with trimmed chat gaps, caption contrast, 600px lightbox cutoff, audit screenshots removed; the lightbox-above-header fix did not take on the preview (Close still hit the nav, fixed in r12).
 - Why: r11 audit, DLG-31 to DLG-38.
 - Preview: https://portfolio-ehe50danl-mudits-projects-d560e6b3.vercel.app (deployment of ea29e31, the tip that carried 56f4d73; code identical to later log-only commits)
 - Image: ![r11](img/r11-hero.webp) hero before (r10) left, after right.
