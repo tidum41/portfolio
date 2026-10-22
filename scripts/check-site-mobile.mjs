@@ -74,13 +74,15 @@ for (const width of [390, 360]) {
           document.body.appendChild(d);
         });
       }
-      // Hide Agentation (preview/dev toolbar) so a fixed overlay never inflates
-      // scrollWidth or fails the horizontal pan lock.
+      // Hide Agentation (preview/dev toolbar; shadow host in 3.x) so a fixed
+      // overlay never inflates scrollWidth or fails the horizontal pan lock.
       const m = await page.evaluate(() => {
-        document.querySelectorAll("[data-agentation-root]").forEach((el) => {
-          el.setAttribute("data-check-site-mobile-hidden", "");
-          el.style.setProperty("display", "none", "important");
-        });
+        document
+          .querySelectorAll("[data-agentation-root], [data-agentation-portal], agentation-toolbar")
+          .forEach((el) => {
+            el.setAttribute("data-check-site-mobile-hidden", "");
+            el.style.setProperty("display", "none", "important");
+          });
         return {
           cw: document.documentElement.clientWidth,
           sw: document.documentElement.scrollWidth,
