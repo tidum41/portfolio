@@ -6,7 +6,7 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 - Changed: restored trust signals (amber low-signal warning, evidence footer, "Ask this next study"), counter-evidence expander, Paper section-5 transcript and the anatomy search line, inline clip link and footer; hero aside is now quote rows plus the evidence footer; pill format, send button, focus border, chart-title gap and lead comparison type scale per plan.md; styles/dialogue-tokens.css (DS raw, role tokens, extension block) with the product CSS migrated; check:dialogue-tokens.
 - Why: Mudit approved the r17 restore plan and the DS conformance audit. DLG-58 to DLG-69.
 - Not restored: study view and hero layout (Mudit's follow-up). Lead comparison card keeps no footer.
-- Preview: PREVIEW_URL (deployment of COMMIT_SHA)
+- Preview: https://portfolio-q4ati66yx-mudits-projects-d560e6b3.vercel.app (deployment of 3585bb6, protected; check:dialogue-preview, check:annotate and check:site-mobile passed against it)
 - Image: ![r17](img/r17-anatomy.webp) early left, now right.
 
 ## DLG-57, Oct 22 2026 (Agentation comment box typing)
