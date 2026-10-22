@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## 80b31f8, Oct 22 2026 (r14)
+- Changed: one owner per timestamp in every figure, one outlined pink Chosen tag, full-width counter-evidence, equal 32px lightbox well padding, 16px overlap on the 390 hero card, library intro trimmed to "Each pair puts the common choice next to mine, on the same data.", problem section figure removed, preview check extended (DLG-48 owners, DLG-52 hero overlap).
+- Why: r13 audit and outside review, DLG-48 to DLG-54 and M11.
+- Preview: https://portfolio-ow64oer70-mudits-projects-d560e6b3.vercel.app/dialogue (mudits-projects team preview, READY; `npm run check:dialogue-preview` passed against it)
+- Image: none this round. The r13 entry's before and after image was removed because its "before" did not show the pre-r13 state.
+
 ## a3f5f0a, Oct 22 (r13)
 - Changed: lightbox Close with fixed light-on-dark styling, quieter neutral pill outline in dark, hero sources grid filling its card, section spacing above the closing Outcome line, preview check extended (open-lightbox sweep, dark Close clicks, no-trigger assert, SELFTEST).
 - Why: r13 audit, DLG-44 to DLG-47 and M10.
