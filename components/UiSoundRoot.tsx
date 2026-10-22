@@ -19,14 +19,14 @@ export default function UiSoundRoot() {
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Decode ahead of the first gesture when idle so the first tick only
-    // needs AudioContext.resume + BufferSource.start.
+    // Fetch audio files ahead of the first gesture when idle without instantiating
+    // AudioContext, so the first gesture unlocks and plays with zero console warnings.
     let idleHandle: number | null = null;
     let idleTimeout: ReturnType<typeof setTimeout> | null = null;
     if ("requestIdleCallback" in window) {
-      idleHandle = window.requestIdleCallback(() => warmUiSounds(), { timeout: 1500 });
+      idleHandle = window.requestIdleCallback(() => warmUiSounds({ allowContext: false }), { timeout: 1500 });
     } else {
-      idleTimeout = setTimeout(() => warmUiSounds(), 400);
+      idleTimeout = setTimeout(() => warmUiSounds({ allowContext: false }), 400);
     }
 
     // After a pointerdown play, skip the synthetic click for the same gesture
@@ -37,7 +37,7 @@ export default function UiSoundRoot() {
       if (e.button !== 0) return;
 
       if (!reducedMotion) unlockUiSounds();
-      warmUiSounds();
+      warmUiSounds({ allowContext: true });
 
       if (reducedMotion) return;
       const id = resolveUiSoundFromEventTarget(e.target);

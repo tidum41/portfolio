@@ -78,8 +78,28 @@ function scanGridVideos(grid: HTMLElement): void {
   for (const v of collectCardVideos(grid)) bindCardFocusVideoGuard(v);
 }
 
+function mutationHasVideo(records: MutationRecord[]): boolean {
+  for (const r of records) {
+    for (const node of r.addedNodes) {
+      if (node.nodeType !== 1) continue;
+      const el = node as Element;
+      if (
+        el.tagName === "VIDEO" ||
+        el.tagName === "MUX-PLAYER" ||
+        el.querySelector?.("video, mux-player")
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /** Capture-phase grid listeners + MutationObserver for late-mounted videos. */
-export function mountCardFocusVideoGuards(grid: HTMLElement): () => void {
+export function mountCardFocusVideoGuards(
+  grid: HTMLElement,
+  onVideosAdded?: () => void,
+): () => void {
   const onCapturePlay = (e: Event) => {
     const target = e.target;
     if (!(target instanceof HTMLVideoElement)) return;
@@ -91,7 +111,11 @@ export function mountCardFocusVideoGuards(grid: HTMLElement): () => void {
   grid.addEventListener("playing", onCapturePlay, true);
   scanGridVideos(grid);
 
-  const mo = new MutationObserver(() => scanGridVideos(grid));
+  const mo = new MutationObserver((records) => {
+    if (!mutationHasVideo(records)) return;
+    scanGridVideos(grid);
+    onVideosAdded?.();
+  });
   mo.observe(grid, { childList: true, subtree: true });
 
   return () => {
@@ -102,11 +126,17 @@ export function mountCardFocusVideoGuards(grid: HTMLElement): () => void {
 }
 
 function retryPlayOnce(video: HTMLVideoElement) {
-  if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-    window.setTimeout(() => cardFocusPlay(video, false), 30);
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    window.setTimeout(() => cardFocusPlay(video, false), 24);
     return;
   }
-  video.addEventListener("canplay", () => cardFocusPlay(video, false), { once: true });
+  const onReady = () => {
+    video.removeEventListener("loadeddata", onReady);
+    video.removeEventListener("canplay", onReady);
+    cardFocusPlay(video, false);
+  };
+  video.addEventListener("loadeddata", onReady, { once: true });
+  video.addEventListener("canplay", onReady, { once: true });
 }
 
 /**

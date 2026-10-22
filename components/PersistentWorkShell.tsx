@@ -58,9 +58,10 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
+import MuxAutoplayCard from "@/components/MuxAutoplayCard";
+
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
-const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
 type PopupId = "cd" | "habit";
@@ -241,12 +242,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // the tile's theme and dropped the live album state. Cleared on close.
   const [cdFrozen, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<"light" | "dark">("light");
-  useLayoutEffect(() => {
-    setHabitWidgetTheme(
-      document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light",
-    );
-  }, []);
+  // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
+  // never mismatches; the effect below syncs if BootScripts flipped to "light".
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -313,28 +311,18 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     };
   }, [visible]);
 
-  // Resume Mux after Work paints — double-rAF + short delay so silk/shell
-  // show first without decode competing on the arrival frame.
+  // Resume Mux on the frame after Work paints so shell shows first without
+  // adding an artificial timer delay.
   const [mediaPlaying, setMediaPlaying] = useState(visible);
   useEffect(() => {
     if (!visible) {
       setMediaPlaying(false);
       return;
     }
-    let cancelled = false;
-    let timeoutId = 0;
-    const raf1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        timeoutId = window.setTimeout(() => {
-          if (!cancelled) setMediaPlaying(true);
-        }, 80);
-      });
+    const raf = requestAnimationFrame(() => {
+      setMediaPlaying(true);
     });
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf1);
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [visible]);
 
   // Leaving "/" — close popups. Live CD stays in the hidden work shell until
@@ -653,7 +641,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
@@ -752,7 +740,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">

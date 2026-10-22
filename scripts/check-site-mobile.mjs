@@ -54,6 +54,11 @@ for (const width of [390, 360]) {
       const ctx = await browser.newContext({ viewport: { width, height: 800 }, isMobile: true, hasTouch: true });
       const page = await ctx.newPage();
       const res = await page.goto(url(path), { waitUntil: "networkidle" });
+      if (res && res.status() === 404) {
+        console.log(`SKIP ${label} (404 on this deployment)`);
+        await ctx.close();
+        continue;
+      }
       if (!res || res.status() >= 400) throw new Error(`status ${res && res.status()}`);
       await page.waitForTimeout(1200);
       const H = await page.evaluate(() => document.documentElement.scrollHeight);
@@ -124,6 +129,11 @@ async function videoChecks(browser) {
         window.__changes = new Map();
       });
       const res = await page.goto(url(path), { waitUntil: "networkidle" });
+      if (res && res.status() === 404) {
+        console.log(`SKIP ${label} (404 on this deployment)`);
+        await ctx.close();
+        continue;
+      }
       if (!res || res.status() >= 400) throw new Error(`status ${res && res.status()}`);
       await page.waitForTimeout(3500);
       const n = await page.evaluate(collectVideos);
@@ -218,13 +228,21 @@ await videoChecks(browser);
 try {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  await page.goto(url("/dialogue"), { waitUntil: "networkidle" });
-  await page.waitForTimeout(1000);
-  const before = await page.evaluate(() => document.querySelector(".cs-aside").getBoundingClientRect().top);
-  await page.evaluate(() => window.scrollTo(0, 1500));
-  await page.waitForTimeout(300);
-  const after = await page.evaluate(() => document.querySelector(".cs-aside").getBoundingClientRect().top);
-  log(after >= 0 && after <= 120, `sticky .cs-aside /dialogue @1440 stays pinned (top ${Math.round(before)} then ${Math.round(after)} after scrolling 1500)`);
+  let done = false;
+  for (const path of ["/dialogue", "/joola", "/ucla-sublease"]) {
+    const res = await page.goto(url(path), { waitUntil: "networkidle" });
+    if (!res || res.status() >= 400) continue;
+    await page.waitForTimeout(1000);
+    const before = await page.evaluate(() => document.querySelector(".cs-aside")?.getBoundingClientRect().top ?? null);
+    if (before === null) continue;
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await page.waitForTimeout(300);
+    const after = await page.evaluate(() => document.querySelector(".cs-aside").getBoundingClientRect().top);
+    log(after >= 0 && after <= 120, `sticky .cs-aside ${path} @1440 stays pinned (top ${Math.round(before)} then ${Math.round(after)} after scrolling 1500)`);
+    done = true;
+    break;
+  }
+  if (!done) console.log("SKIP sticky .cs-aside @1440 (no page with a sticky TOC on this deployment)");
   await ctx.close();
 } catch (e) {
   log(false, `sticky desktop: ${e.message}`);

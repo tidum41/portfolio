@@ -30,6 +30,8 @@ type Master = {
 
 let master: Master = { volume: 0.4, enabled: false };
 let ctx: AudioContext | null = null;
+const rawBuffers = new Map<UiSoundId, ArrayBuffer>();
+const rawInflight = new Map<UiSoundId, Promise<ArrayBuffer | null>>();
 const buffers = new Map<UiSoundId, AudioBuffer>();
 const inflight = new Map<UiSoundId, Promise<AudioBuffer | null>>();
 let unlocked = false;
@@ -58,19 +60,40 @@ async function resumeCtx(): Promise<AudioContext | null> {
   return audioCtx;
 }
 
+async function fetchRawBuffer(id: UiSoundId): Promise<ArrayBuffer | null> {
+  if (rawBuffers.has(id)) return rawBuffers.get(id)!;
+  const existing = rawInflight.get(id);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(SOURCES[id], { cache: "force-cache" });
+      if (!res.ok) return null;
+      const raw = await res.arrayBuffer();
+      rawBuffers.set(id, raw);
+      return raw;
+    } catch {
+      return null;
+    } finally {
+      rawInflight.delete(id);
+    }
+  })();
+
+  rawInflight.set(id, promise);
+  return promise;
+}
+
 async function loadBuffer(id: UiSoundId): Promise<AudioBuffer | null> {
   if (buffers.has(id)) return buffers.get(id)!;
   const existing = inflight.get(id);
   if (existing) return existing;
 
   const promise = (async () => {
-    // Decode works on a suspended context — don't wait for unlock/resume.
     const audioCtx = getCtx();
     if (!audioCtx) return null;
     try {
-      const res = await fetch(SOURCES[id], { cache: "force-cache" });
-      if (!res.ok) return null;
-      const raw = await res.arrayBuffer();
+      const raw = rawBuffers.get(id) || (await fetchRawBuffer(id));
+      if (!raw) return null;
       const buf = await audioCtx.decodeAudioData(raw.slice(0));
       buffers.set(id, buf);
       return buf;
@@ -114,19 +137,28 @@ export function getUiSoundMaster(): Master {
 
 /** First visitor gesture — unlock Web Audio + enable UI ticks. */
 export function unlockUiSounds() {
-  if (master.enabled) return;
-  master = { ...master, enabled: true };
-  void resumeCtx();
+  if (!master.enabled) {
+    master = { ...master, enabled: true };
+  }
+  warmUiSounds({ allowContext: true });
 }
 
 /**
- * Prefetch + decode both clips. Safe before unlock — decode works while the
- * context is still suspended, so the first press only needs resume + start.
+ * Prefetch UI sound assets into memory.
+ * When allowContext is false (default for idle prewarm), fetches raw ArrayBuffers
+ * without instantiating AudioContext, avoiding Chrome autoplay warnings.
+ * When allowContext is true (called on first gesture), instantiates and decodes immediately.
  */
-export function warmUiSounds() {
-  void loadBuffer("option");
-  void loadBuffer("push");
-  void resumeCtx();
+export function warmUiSounds(options?: { allowContext?: boolean }) {
+  const allowContext = options?.allowContext ?? false;
+  if (allowContext) {
+    void loadBuffer("option");
+    void loadBuffer("push");
+    void resumeCtx();
+  } else {
+    void fetchRawBuffer("option");
+    void fetchRawBuffer("push");
+  }
 }
 
 /**

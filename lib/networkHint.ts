@@ -7,6 +7,8 @@
 type NetInfo = {
   saveData?: boolean;
   effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
 };
 
 function connection(): NetInfo | null {
@@ -23,7 +25,10 @@ export function constrainedNetwork(): boolean {
   if (!info) return false;
   if (info.saveData) return true;
   const kind = info.effectiveType;
-  return kind === "slow-2g" || kind === "2g" || kind === "3g";
+  if (kind === "slow-2g" || kind === "2g" || kind === "3g") return true;
+  if (typeof info.downlink === "number" && info.downlink > 0 && info.downlink < 2) return true;
+  if (typeof info.rtt === "number" && info.rtt >= 250) return true;
+  return false;
 }
 
 /** Background work (About album art, archive) after the intro. */

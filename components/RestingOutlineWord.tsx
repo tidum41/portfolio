@@ -7,7 +7,9 @@ import { OUTLINE_WORDS } from "./outlineMorphData";
  * Color is inherited so the client link can mark the current page.
  */
 export default function RestingOutlineWord({ label }: { label: string }) {
-  const word = OUTLINE_WORDS.find((entry) => entry.label === label);
+  const word =
+    OUTLINE_WORDS.find((entry) => entry.label === label) ||
+    OUTLINE_WORDS.find((entry) => entry.label.toLowerCase() === label.toLowerCase());
   if (!word) {
     return <span>{label}</span>;
   }

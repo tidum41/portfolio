@@ -1,7 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import Image from "next/image";
 import CopyEmail from "@/components/CopyEmail";
 import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
@@ -13,19 +12,18 @@ import {
   ORGS,
   SOCIALS,
 } from "@/lib/about";
-import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
       fontFamily: "var(--font-page-title)",
-      fontSize: 32,
+      fontSize: "var(--fs-h2)",
       fontWeight: 400,
-      lineHeight: 1.2,
+      lineHeight: "var(--lh-h2)",
       letterSpacing: "-0.8px",
       color: "var(--color-text-primary)",
-      margin: "0 0 12px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>{children}</h2>
   );
 }
@@ -89,15 +87,6 @@ export default function AboutPageContent({
   playEnter?: boolean;
   enterEpoch?: number;
 }) {
-  const logoDk = useDialKit("About Logos", {
-    cursor:      { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    joola:       { scale: [1.34, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    beaconsAi:   { scale: [1.38, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    dialogueAi:  { scale: [1.35, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    sokaRecords: { scale: [1.46, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-    mousepad:    { scale: [1.6919374999999999, 0.5, 3, 0.01], offsetX: [0, -20, 20, 1], offsetY: [0, -20, 20, 1] },
-  });
-
   return (
     <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
       <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
@@ -107,19 +96,19 @@ export default function AboutPageContent({
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(0)}>
                 <h1 style={{
                   fontFamily: "var(--font-page-title)",
-                  fontSize: 32,
+                  fontSize: "var(--fs-h2)",
                   fontWeight: 400,
-                  lineHeight: 1.2,
+                  lineHeight: "var(--lh-h2)",
                   letterSpacing: "-0.8px",
                   color: "var(--color-text-primary)",
-                  margin: "0 0 4px",
-                }}>hello hello, i&apos;m mudit</h1>
+                  margin: "0 0 var(--space-2)",
+                }}>Hello, I&apos;m Mudit</h1>
               </Enter>
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
                 <p style={{
-                  fontSize: 14,
-                  lineHeight: 1.5,
+                  fontSize: "var(--fs-meta)",
+                  lineHeight: "var(--lh-meta)",
                   color: "var(--color-text-muted)",
                   margin: "0 0 24px",
                 }}>B.S. Cognitive Science | UCLA &apos;27</p>
@@ -127,9 +116,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(2)}>
                 <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  letterSpacing: "0.1px",
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: "0 0 32px",
                   textWrap: "pretty",
@@ -140,8 +129,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(3)}>
                 <p style={{
-                  fontSize: 15,
-                  lineHeight: 1.6,
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: "0 0 4px",
                 }}>You can find me</p>
@@ -149,8 +139,9 @@ export default function AboutPageContent({
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(4)}>
                 <ul style={{
-                  fontSize: 15,
-                  lineHeight: 1.87,
+                  fontSize: "var(--fs-body)",
+                  lineHeight: "var(--lh-body)",
+                  letterSpacing: "var(--ls-body)",
                   color: "var(--color-text-secondary)",
                   margin: 0,
                   paddingLeft: 20,
@@ -183,13 +174,10 @@ export default function AboutPageContent({
                     <CopyEmail
                       key={item.label}
                       unstyled
-                      className="nav-link"
+                      className="nav-link about-social"
                       style={{
-                        fontSize: 14,
+                        fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px",
-                        textDecorationThickness: "1px",
                       }}
                     >
                       {item.label}
@@ -200,13 +188,10 @@ export default function AboutPageContent({
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="nav-link"
+                      className="nav-link about-social"
                       style={{
-                        fontSize: 14,
+                        fontSize: "var(--fs-meta)",
                         color: "var(--color-text-secondary)",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px",
-                        textDecorationThickness: "1px",
                       }}
                     >
                       {item.label}
@@ -220,48 +205,29 @@ export default function AboutPageContent({
 
         <ScrollReveal>
           <section style={{ marginBottom: "var(--space-7)" }}>
-            <SectionLabel>drag my favorite CDs!</SectionLabel>
+            <SectionLabel>Favorite Albums</SectionLabel>
             <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
           </section>
         </ScrollReveal>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>experience</SectionLabel></ScrollReveal>
+          <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(({ slug, company, role, dates, description, logo }) => {
-              const crop = logoDk[slug as keyof typeof logoDk];
+            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map((exp) => {
+              const { company, role, dates, description } = exp;
+              const href = "href" in exp ? exp.href : undefined;
               return (
-                <StaggerItem key={company} style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  padding: "20px 0",
-                }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16, minWidth: 0, flex: 1 }}>
-                    <div style={{
-                      position: "relative",
-                      width: 40,
-                      height: 40,
-                      borderRadius: 24,
-                      overflow: "hidden",
-                      background: "var(--color-placeholder)",
-                      flexShrink: 0,
-                    }}>
-                      <Image
-                        src={logo}
-                        alt={`${company} logo`}
-                        fill
-                        sizes="40px"
-                        style={{ objectFit: "contain", padding: 5, transform: `scale(${crop.scale}) translate(${crop.offsetX}px, ${crop.offsetY}px)` }}
-                      />
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{company}</p>
-                      <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>{role}</p>
-                      <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: "4px 0 0" }}>{description}</p>
-                    </div>
+                <StaggerItem key={company} style={{ padding: "20px 0" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
+                    <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0, minWidth: 0 }}>
+                      {href ? (
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="nav-link about-link" style={{ color: "inherit" }}>{company}</a>
+                      ) : company}
+                    </p>
+                    <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{dates}</p>
                   </div>
-                  <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0, flexShrink: 0 }}>{dates}</p>
+                  <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "2px 0 0" }}>{role}</p>
+                  <p style={{ fontSize: "var(--fs-meta)", lineHeight: 1.5, color: "var(--color-text-secondary)", margin: "8px 0 0", maxWidth: "52ch", textAlign: "left" }}>{description}</p>
                 </StaggerItem>
               );
             })}
@@ -269,19 +235,45 @@ export default function AboutPageContent({
         </section>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>i&apos;m part of</SectionLabel></ScrollReveal>
+          <ScrollReveal><SectionLabel>Organizations</SectionLabel></ScrollReveal>
           <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {ORGS.map(({ name, role }) => (
+            {ORGS.map((org) => {
+              const { name, role } = org;
+              const href = "href" in org ? org.href : undefined;
+              const nameStyle: CSSProperties = {
+                fontSize: "var(--fs-body)",
+                color: "var(--color-text-primary)",
+                margin: 0,
+                minWidth: 0,
+                flex: 1,
+              };
+              // Size the anchor to its text so focus/hit box and underline hug the glyphs.
+              const linkStyle: CSSProperties = { ...nameStyle, flex: "0 1 auto", width: "fit-content" };
+              return (
               <StaggerItem key={name} style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "baseline",
                 justifyContent: "space-between",
+                gap: 16,
                 padding: "16px 0",
               }}>
-                <p style={{ fontSize: 15, color: "var(--color-text-primary)", margin: 0, minWidth: 0, flex: 1 }}>{name}</p>
-                <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0 }}>{role}</p>
+                {href ? (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="nav-link about-link"
+                    style={linkStyle}
+                  >
+                    {name}
+                  </a>
+                ) : (
+                  <p style={nameStyle}>{name}</p>
+                )}
+                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, textAlign: "right" }}>{role}</p>
               </StaggerItem>
-            ))}
+              );
+            })}
           </StaggerReveal>
         </section>
       </div>

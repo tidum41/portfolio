@@ -22,7 +22,9 @@
   --font-sans:        "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-sans-medium: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
-  --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
+  /* Prefer Geist Mono inside embeds; otherwise system ui-monospace stack
+     (main dropped Söhne / TestSohne). */
+  --font-mono:    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   /* Colors */
   --color-bg:             #FBFBFB;
@@ -54,40 +56,64 @@
   --color-modal-bg:       #E8E8E8;
   --color-hero-tint:      #dde6ef;
 
-  /* Typography scale */
+  /* Typography scale — ~8 roles + hero clamp + stat (see design/briefs/type-system.md) */
   --font-display:     Georgia, 'Times New Roman', serif;
   /* Title roles — Georgia for who/brand (home, about); HN Medium for docs (CS) */
   --font-page-title:  var(--font-display);
   --font-doc-title:   var(--font-sans-medium);
-  /* clamp() so .cs-hero-title (both case-study pages) scales down on narrow
-     viewports instead of holding a flat 48px with no mobile override — the
-     home hero already does the equivalent (see HeroText.tsx's inline
-     clamp(26px, 2.8vw, 36px)). Caps at exactly 48px from ~800px width up,
-     matching the previous flat value there unchanged. */
-  --fs-hero:          clamp(32px, 6vw, 48px);
+
+  --fs-caption:       12px;
+  --lh-caption:       1.4;
+  --ls-caption:       0px;
+
+  --fs-sm:            13px;
+  --lh-sm:            1.55;
+  --ls-sm:            0px;
+
+  --fs-meta:          14px;
+  --lh-meta:          1.45;
+  --ls-meta:         -0.1px;
+
+  --fs-body:          15px;
+  --lh-body:          1.72;
+  /* Helvetica Neue body — neutral tracking. */
+  --ls-body:          0px;
+
+  --fs-lg:            18px;
+  --lh-lg:            1.35;
+  --ls-lg:           -0.15px;
+
+  --fs-xl:            24px;
+  --lh-xl:            1.25;
+  --ls-xl:           -0.25px;
+
   --fs-h2:            30px;
-  /* Slider 10–50 × 10 = CSS font-weight 100–500. Max 50 = CSS 500 (Medium). */
+  --lh-h2:            1.15;
+  --ls-h2:           -0.25px;
+
+  --fs-display:       48px;
+  /* clamp() so .cs-hero-title scales on narrow viewports; caps at 48px. */
+  --fs-hero:          clamp(32px, 6vw, 48px);
+  --fs-home-hero:     clamp(26px, 2.8vw, 36px);
+  --fs-stat:          44px;
+
+  /* Aliases onto the scale */
+  --fs-section-label: var(--fs-body);
+  --fs-card-title:    var(--fs-lg);
+  --fs-label:         var(--fs-body);
+  --fs-h3:            var(--fs-xl);
+
+  /* Site UI weights cap at 500 (Medium). */
   --fw-hero:          500;
   --fw-h2:            500;
   --fw-card-title:    500;
-  --fs-section-label: 15px;
-  --fs-h3:            20px;
-  --fs-body:          15px;
-  --fs-label:         16px;
-  --fs-meta:          14px;
-  --fs-caption:       12px;
-  --fs-card-title:    18px;
-  --fs-stat:          44px;
-  --lh-h2:            1.1;
-  --lh-body:          1.72;
 
-  /* Letter-spacing */
+  /* Letter-spacing (shared + role) */
   --ls-tight:   -0.5px;
   --ls-snug:    -0.25px;
   --ls-normal:   0px;
   --ls-wide:     0.04em;
   --ls-wider:    0.08em;
-  --ls-h2:      -0.3px;
   --ls-hero:    -0.5px;
   --ls-label:    0.06em;
 
@@ -105,12 +131,18 @@
   --space-7:  80px;
   --space-8:  96px;
   --space-9:  120px;
+  --space-10: 144px;
 
   /* Spacing landmarks (aliases onto the ladder) */
   --page-px:         24px; /* = --space-3 */
   --content-max-w:   750px;
-  --section-gap:     var(--space-7);
-  --section-pb:      var(--space-6);
+  /* One case-study section separation (was pb 64 + mb 80). */
+  --cs-section-gap:  var(--space-10);
+  --cs-h2-mt:        var(--space-5); /* 48 */
+  --cs-h2-mb:        var(--space-3); /* 24 */
+  --cs-para-gap:     var(--space-2); /* 16 */
+  --section-gap:     var(--cs-section-gap);
+  --section-pb:      0px;
   --nav-h:           72px; /* 24+24 pad + ~24 line */
 
   /* Easing curves — exact from MotionWrappers.tsx */
@@ -167,9 +199,10 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: var(--fs-body);
   font-weight: 400;
-  line-height: 1.72;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   overflow-wrap: break-word;
   /* Sticky-footer pattern: on short pages (e.g. the 404) content alone
      doesn't reach the viewport bottom, which left the footer floating
@@ -225,6 +258,51 @@ p, li       { text-wrap: pretty; }
    row when the 390px wrap boundary sits between the words. */
 .hero-sub-end {
   white-space: nowrap;
+}
+
+/* UI components, hero headline/subtitle, interactive widgets, cards, and chrome
+   must not be text-highlightable or draggable, preventing glitchy selection blocks
+   while dragging or interacting with the silk background canvas. Editorial case-study
+   body copy remains fully selectable. */
+.work-hero,
+.work-hero *,
+.hero-heading,
+.hero-sub,
+#rh-trigger,
+.site-nav,
+.site-nav *,
+.nav-link,
+.project-card,
+.portfolio-grid-card,
+.portfolio-grid,
+.interactive-badge,
+.ps3cp,
+.ps3cp *,
+.cs-aside,
+.cs-aside *,
+.cs-back-desktop,
+.cs-mobile-back,
+.cs-pager,
+.popup-close-btn,
+.footer-inner,
+.footer-inner * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent ghost drag on UI chrome links, buttons, and media */
+.work-hero a,
+.work-hero img,
+.project-card a,
+.project-card img,
+.project-card video,
+.site-nav a,
+.site-nav button,
+.ps3cp a,
+.ps3cp button,
+.footer-link {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
@@ -358,7 +436,8 @@ html.theme-switching *::after {
   padding-top: calc(24px + env(safe-area-inset-top));
   padding-bottom: 24px;
 }
-nav a {
+nav a,
+nav button.footer-link {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -505,7 +584,7 @@ html[data-theme="light"] {
    must never restyle these links. */
 .nav-link { transition: color 0.25s ease, background-color 1s ease, border-color 1s ease; }
 @media (hover: hover) and (pointer: fine) {
-  .nav-link:hover { color: var(--color-text-muted) !important; }
+  .nav-link:hover { color: var(--color-text-primary) !important; }
 }
 
 /* ─── "ucla" hover accent — a real link ──────────────────────────── */
@@ -621,12 +700,14 @@ html[data-theme="dark"] .interactive-badge {
    does not change gap, alignment, or line height. */
 nav a,
 a.nav-link,
-a.footer-link {
+a.footer-link,
+button.footer-link {
   position: relative;
 }
 nav a::before,
 a.nav-link::before,
-a.footer-link::before {
+a.footer-link::before,
+button.footer-link::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -635,7 +716,8 @@ a.footer-link::before {
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
-.theme-toggle-btn::before {
+.theme-toggle-btn::before,
+.volume-toggle-btn::before {
   content: "";
   position: absolute;
   inset: -20px;
@@ -644,6 +726,92 @@ a.footer-link::before {
   content: "";
   position: absolute;
   inset: -6px;
+}
+
+/* ─── Copy email: natural-width track that eases between labels ─── */
+.copy-email-btn {
+  display: inline-flex;
+  align-items: center;
+  /* Match footer <a> baseline so the hosting <li> line box stays 21px. */
+  vertical-align: baseline;
+  max-width: 100%;
+}
+
+/* Track sizes to the visible label; JS animates width between the two
+   natural widths so neighbors keep an identical gap in both states. */
+.copy-email-track {
+  display: inline-grid;
+  grid-template-columns: max-content;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: start;
+  white-space: nowrap;
+  line-height: inherit;
+  position: relative;
+  overflow-x: clip;
+  overflow-y: visible;
+  transition: width 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-email-layer {
+  grid-area: 1 / 1;
+  display: block;
+  line-height: inherit;
+  font-weight: inherit;
+  transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-email-layer--idle {
+  opacity: 1;
+}
+
+.copy-email-layer--copied {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+/* At rest only the idle label defines the width. */
+.copy-email-btn[data-copied="false"] .copy-email-layer--copied {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1), visibility 0s 200ms;
+}
+
+.copy-email-layer svg {
+  display: block;
+  flex-shrink: 0;
+  /* Optical centering against lowercase-heavy label text */
+  transform: translateY(0.5px);
+}
+.cs-pill-btn .copy-email-layer svg {
+  transform: translateY(-0.8px);
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer {
+  transition-duration: 160ms;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer--idle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer--copied {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-email-track,
+  .copy-email-layer {
+    transition: none !important;
+  }
 }
 
 /* ─── Scroll-reveal — used by useScrollReveal hook ───────────────── */
@@ -746,8 +914,9 @@ html[data-theme="dark"] .project-image {
     grid-template-columns: 1fr;
     padding-top: var(--space-2);
     /* Compress section rhythm on narrow viewports (ladder steps down). */
-    --section-gap: var(--space-5);
-    --section-pb: var(--space-4);
+    --cs-section-gap: var(--space-7);
+    --section-gap: var(--cs-section-gap);
+    --section-pb: 0px;
   }
   .cs-layout > * {
     min-width: 0;
@@ -813,10 +982,10 @@ html[data-theme="dark"] .project-image {
 }
 @media (prefers-reduced-motion: no-preference) {
   .cs-open-type {
-    animation: cs-open-in 1140ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: cs-open-in 960ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
-  .cs-hero-title-wrap.cs-open-type { animation-delay: 140ms; }
-  .cs-open-type-meta { animation-delay: 280ms; }
+  .cs-hero-title-wrap.cs-open-type { animation-delay: 45ms; }
+  .cs-open-type-meta { animation-delay: 95ms; }
 }
 
 /* Primary-nav page enter (About copy, archive tiles). Opacity + translate
@@ -948,19 +1117,19 @@ html[data-theme="dark"] .project-image {
 }
 .cs-meta-label {
   font-family: var(--font-sans-medium);
-  font-size: 14px;
+  font-size: var(--fs-meta);
   font-weight: 500;
   letter-spacing: normal;
   color: var(--color-text-tertiary);
   margin: 0 0 8px;
 }
 .cs-meta-value {
-  font-size: 14px;
+  font-size: var(--fs-meta);
   font-weight: 400;
   color: var(--color-text-primary);
   margin: 0;
-  line-height: 1.45;
-  letter-spacing: -0.1px;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
 }
 .cs-meta-value + .cs-meta-value {
   margin-top: 4px;
@@ -997,9 +1166,9 @@ html[data-theme="dark"] .project-image {
   max-width: 40rem;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  letter-spacing: 0.1px;
+  letter-spacing: var(--ls-body);
   color: var(--color-text-secondary);
-  margin: 0 0 16px;
+  margin: 0 0 var(--cs-para-gap);
 }
 
 /* ─── Case study media (8px radius everywhere) ─────────────────────── */
@@ -1194,8 +1363,8 @@ html[data-theme="dark"] .project-image {
 }
 
 .cs-back-mobile-label {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
   line-height: 1.5;
 }
 
@@ -1220,8 +1389,8 @@ html[data-theme="dark"] .project-image {
   outline-offset: 2px;
 }
 
-/* Prev/next: space-only separation from case body (no rule). Constrained to
-   the prose measure (40rem) so Previous/Next text edges match body paragraphs.
+/* Prev/next: space-only separation from case body (no rule). Spans the
+   content column: Previous flush left, Next flush right.
    Chevrons hang outside that measure; equal 1fr hit areas; meta + body-lg. */
 .cs-pager {
   display: grid;
@@ -1229,8 +1398,11 @@ html[data-theme="dark"] .project-image {
   column-gap: var(--space-3);
   row-gap: var(--space-3);
   align-items: start;
-  max-width: 40rem; /* match .cs-prose */
+  /* Span the full content column (meta grid / NDA box) so Next's text edge
+     is flush with the column's right edge at every width. */
+  max-width: none;
   width: 100%;
+  justify-self: stretch;
   margin: var(--space-8) 0 0; /* 96px desktop */
   padding: 0;
   border: 0;
@@ -1443,13 +1615,6 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
 
 .cs-person-link {
   color: inherit;
-  text-decoration: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .cs-person-link:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
 }
 
 .cs-request-label {
@@ -1469,7 +1634,7 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   margin: 0 0 var(--space-3);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  letter-spacing: 0.1px;
+  letter-spacing: var(--ls-body);
   color: var(--color-text-secondary);
   max-width: 40rem;
 }
@@ -1478,7 +1643,7 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   align-items: center;
   justify-content: center;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--fs-meta);
   line-height: 1.4;
   color: var(--color-text-primary);
   text-decoration: none;
@@ -1572,11 +1737,22 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   min-width: 0;
 }
 
+/* Empty video shells (pre-activation) must not create phantom rows —
+   that was the uneven 71–77 vs 2–8px alternating gap at 390. */
+.portfolio-grid-card:empty {
+  display: none;
+}
+
 /* ─── Portfolio grid — stays 2-col through tablet; only collapses to
        1-col at the mobile breakpoint (matches the .cs-layout mobile
        cutoff and CaseStudyTOC's isMobile check) ── */
 @media (max-width: 767px) {
-  .portfolio-grid { grid-template-columns: 1fr !important; }
+  .portfolio-grid {
+    grid-template-columns: 1fr !important;
+    /* One row-gap after columns flatten (display:contents drops flex gap). */
+    row-gap: var(--card-gap) !important;
+    column-gap: var(--grid-gutter) !important;
+  }
   /* Flatten the two DOM columns so cards can be reordered as one stack
      without changing the desktop 2-column structure. `order` is set in
      JSX from Sanity index (plus CD/habit trailing slots). */
@@ -1712,6 +1888,10 @@ html[data-theme="dark"] .ps-polaroid-cap {
   bottom: 40px;
   height: 36px;
 }
+.bento-minimap {
+  right: var(--page-px, 24px);
+  bottom: 40px;
+}
 .bento-zoom-track {
   touch-action: none;
 }
@@ -1721,6 +1901,7 @@ html[data-theme="dark"] .ps-polaroid-cap {
 @media (max-width: 767px) {
   .bento-hint-pill { top: 88px; }
   .bento-zoom-panel { bottom: 56px; height: 44px; min-height: 44px; box-sizing: border-box; }
+  .bento-minimap { display: none !important; }
   .bento-zoom-track {
     min-height: 44px;
     display: flex;
@@ -2827,4 +3008,50 @@ html[data-theme="dark"] .dialogue-answer-states__ui .dp-source-pill:not(.dp-sour
 .dialogue-answer-states__ui .dp-source-pill--disagree {
   color: var(--figure-ink);
   border-color: #b43f7f;
+/* ─── Text links: one underline rule site-wide ───────────────────
+   Plain at rest; 1px currentColor underline at 0.18em (~2.7px at 15px), skip-ink, on
+   hover (fine pointers) or keyboard focus. The underline is always laid
+   out but transparent at rest, so it fades in over 150ms with no shift. */
+a.about-link,
+.about-social,
+.cs-person-link {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  text-decoration-color: transparent;
+  transition: color 0.25s ease, text-decoration-color 150ms ease, background-color 1s ease, border-color 1s ease;
+}
+a.about-link:focus-visible,
+.about-social:focus-visible,
+.cs-person-link:focus-visible { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  a.about-link:hover,
+  .about-social:hover,
+  .cs-person-link:hover { text-decoration-color: currentColor; }
+}
+@media (prefers-reduced-motion: reduce) {
+  a.about-link, .about-social, .cs-person-link { transition: none; }
+}
+
+/* Archive bento minimap: elevated card that reads at a glance */
+:root {
+  --minimap-bg: #FFFFFF;
+  --minimap-border: rgba(0, 0, 0, 0.16);
+  --minimap-border-hover: rgba(0, 0, 0, 0.32);
+  --minimap-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.12);
+  --minimap-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 8px 26px rgba(0, 0, 0, 0.18);
+}
+html[data-theme="dark"] {
+  --minimap-bg: #1C1F23;
+  --minimap-border: rgba(255, 255, 255, 0.16);
+  --minimap-border-hover: rgba(255, 255, 255, 0.32);
+  --minimap-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.55);
+  --minimap-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 26px rgba(0, 0, 0, 0.7);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bento-minimap:hover {
+    border-color: var(--minimap-border-hover) !important;
+    box-shadow: var(--minimap-shadow-hover) !important;
+  }
 }
