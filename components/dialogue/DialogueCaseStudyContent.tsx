@@ -8,7 +8,6 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
-import DialogueCoverageCompare from "@/components/dialogue/DialogueCoverageCompare";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
@@ -310,10 +309,16 @@ export function DialogueCaseStudyContent({
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
-                A finding from two interviews must not reach a roadmap as a trend. When few
-                interviews match, the answer leads with the count and holds the chart back.
+                A chart of two interviews looks like a trend. The count makes the evidence size the
+                first thing you see.
               </CaseStudyBody>
-              {wrap ? wrap("D-13", <DialogueCoverageCompare />) : <DialogueCoverageCompare />}
+              <ProductFigureBlock
+                scenario="thin-data"
+                title="Study chat answer that leads with the interview count and holds the chart back"
+                assetId="D-13"
+                wrapRaster={wrap}
+                frameLabel="Thin data: a finding from two interviews must not reach a roadmap as a trend."
+              />
             </Section>
 
             <Section id="full-answer">
@@ -322,6 +327,10 @@ export function DialogueCaseStudyContent({
                 You ask a follow-up, get a filtered answer, tap a source, and every supporting clip
                 for that answer sits in one drawer. The structure does not reset when the question
                 narrows.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                A second answer is already on this page: the payment question above, where the
+                count leads and the chart is held back.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"

@@ -97,6 +97,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-53 | Chart library intro makes unevidenced claims ("I audited..." and "the one I shipped"); cut both, no new claims (relates to DLG-27) | Oct 22 | in progress | overnight audit r13 / outside review r14 |
 | DLG-54 | The same checkout answer and its 38% sentence repeat in too many figures; per DLG-22 ("you just need one image") remove the problem section's duplicate figure | Oct 22 | in progress | overnight audit r13 / outside review r14 |
 | DLG-55 | Closing line becomes "Limit: the chat has to hold summary, chart, and clips without feeling crowded." Mudit Oct 22: "yes base fixes on your decisions"; section spacing from DLG-47 kept | Oct 22 | in progress | outside review r14, Needs Mudit 7 |
+| DLG-56 | Mudit Oct 22 approved replacing the thin-data pair (old floating vs sidebar slot, DLG-20) with one full-width figure on the standard well: one chat card with the question, "2 of 24 interviews" count panel, summary, two source chips, and the line "When few interviews match, the answer leads with the count and holds the chart back." No chart, clips, or follow-ups. Caption "Thin data. A finding from two interviews must not reach a roadmap as a trend." Section lead and a pointer under "One answer, start to finish". Chips use the DLG-48 owners (Marcus W., 21:08 and Hannah L., 22:41) because the requested Jordan M., 21:08 and Marcus W., 22:41 clash with the map | Oct 22 | in progress | Mudit, Oct 22 |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

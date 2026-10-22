@@ -6,6 +6,7 @@ import HeroStructuredFigure from "@/components/dialogue/product/scenarios/HeroSt
 import AnatomyStructureFigure from "@/components/dialogue/product/scenarios/AnatomyStructureFigure";
 import QuoteFrameFigure from "@/components/dialogue/product/scenarios/QuoteFrameFigure";
 import FullAnswerFigure from "@/components/dialogue/product/scenarios/FullAnswerFigure";
+import ThinDataFigure from "@/components/dialogue/product/scenarios/ThinDataFigure";
 import ChartGalleryFigure, {
   type GalleryVariant,
 } from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
@@ -19,6 +20,7 @@ export type DialogueProductScenario =
   | "anatomy"
   | "clip-player"
   | "full-answer"
+  | "thin-data"
   | { gallery: GalleryVariant };
 
 type Props = {
@@ -46,6 +48,8 @@ function renderScenario(scenario: DialogueProductScenario): ReactNode {
       return <QuoteFrameFigure />;
     case "full-answer":
       return <FullAnswerFigure />;
+    case "thin-data":
+      return <ThinDataFigure />;
     default:
       return null;
   }
