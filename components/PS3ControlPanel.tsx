@@ -33,7 +33,9 @@ const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const REVEAL_EASE = cssCubic(EASE_OPACITY);
 const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
-// load is mounted only after introReleased; about/archive return replays settle.
+// load mounts with the work shell, before the intro gate lifts, and its
+// reveal is armed on "intro-done" like the rest of the intro (HeroText,
+// grid); about/archive return replays settle.
 const PICKER_MAX_H = 125;
 // Content-tight body (not a fixed 620). First-frame estimate only —
 // ResizeObserver replaces it with the inner's visible offsetHeight.
@@ -891,6 +893,36 @@ export default function PS3ControlPanel({
       setShown(true);
       setPositionSettled(true);
     };
+    // Stage the reveal in two commits. First commit arms the reveal
+    // transition while the pill is still at opacity 0 (morphT is "none"
+    // until positionSettled, so settling must land here, not with `shown`);
+    // only after two frames (a painted frame with the transition armed)
+    // flip `shown`. Flipping settled + shown in one commit gave the pill a
+    // before-change style with no transition, so the fade was skipped and
+    // it popped in at full opacity whenever React batched those updates.
+    // Handles for everything stageReveal schedules, so the effect cleanup
+    // (unmount, or a dep change mid-stage) can cancel all of it instead of
+    // firing setState after the panel is gone.
+    let rafOuter = 0;
+    let rafInner = 0;
+    let clearTimer: ReturnType<typeof setTimeout> | undefined;
+    const cancelStaged = () => {
+      cancelAnimationFrame(rafOuter);
+      cancelAnimationFrame(rafInner);
+      if (clearTimer) clearTimeout(clearTimer);
+    };
+    const stageReveal = () => {
+      startTransition(() => {
+        setShowTransition(true);
+        setPositionSettled(true);
+      });
+      rafOuter = requestAnimationFrame(() => {
+        rafInner = requestAnimationFrame(() => startTransition(() => {
+          setShown(true);
+        }));
+      });
+      clearTimer = setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+    };
     if (instantReturn) {
       revealKindRef.current = "instant";
       revealImmediately();
@@ -903,31 +935,65 @@ export default function PS3ControlPanel({
         revealImmediately();
         return;
       }
-      startTransition(() => setShowTransition(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-        setShown(true); setPositionSettled(true);
-      })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
-      return;
+      stageReveal();
+      return cancelStaged;
     }
     revealKindRef.current = "first";
+    // First-load only: intro-done is the normal signal. If it never arrives
+    // (HOM-01), a fail-safe still runs the same fade after 3000ms from load
+    // (or from this mount if load already fired). `revealed` keeps either
+    // path from running twice; tests may set window.__PS3CP_DISABLE_FAILSAFE.
+    let revealed = false;
+    let failsafeTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearFailsafe = () => {
+      if (failsafeTimer !== undefined) {
+        clearTimeout(failsafeTimer);
+        failsafeTimer = undefined;
+      }
+    };
     function reveal() {
+      if (revealed) return;
+      revealed = true;
+      clearFailsafe();
       if (reduced) {
         revealImmediately();
       } else {
-        startTransition(() => setShowTransition(true));
-        requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-          setShown(true); setPositionSettled(true);
-        })));
-        setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+        stageReveal();
       }
       _ps3cpHasLoaded = true;
     }
-    // Parent already waits for introReleased before mounting this panel, so
-    // `data-intro` is often already "done" (attribute still present) when we
-    // run. Waiting for `intro-done` here misses the event and leaves the pill
-    // at opacity 0. onIntroDone treats anything but "playing" as released.
-    return onIntroDone(reveal);
+    // The panel mounts with the work shell, while data-intro is still
+    // "playing", so onIntroDone registers a real "intro-done" listener
+    // here, the same sequence HeroText and the grid follow. Its immediate
+    // path (anything but "playing") covers arrivals with no gate at all:
+    // a first visit that lands off-home, then soft-navs to "/".
+    const cancelIntro = onIntroDone(reveal);
+
+    const FAILSAFE_MS = 3000;
+    const onLoadForFailsafe = () => {
+      failsafeTimer = setTimeout(reveal, FAILSAFE_MS);
+    };
+    let loadListenerAttached = false;
+    const disableFailsafe =
+      typeof window !== "undefined" &&
+      (window as Window & { __PS3CP_DISABLE_FAILSAFE?: boolean }).__PS3CP_DISABLE_FAILSAFE;
+    if (!disableFailsafe) {
+      if (document.readyState === "complete") {
+        onLoadForFailsafe();
+      } else {
+        loadListenerAttached = true;
+        window.addEventListener("load", onLoadForFailsafe, { once: true });
+      }
+    }
+
+    return () => {
+      cancelIntro();
+      cancelStaged();
+      clearFailsafe();
+      if (loadListenerAttached) {
+        window.removeEventListener("load", onLoadForFailsafe);
+      }
+    };
   }, [instantReturn, posReady, reduced, visible]);
 
   // Sync dark mode from html[data-theme]
@@ -1112,8 +1178,16 @@ export default function PS3ControlPanel({
 
   const isColorLight = (waveColor[0]*0.299 + waveColor[1]*0.587 + waveColor[2]*0.114) > 0.5;
 
+  // Not shown yet (e.g. mounted during the intro gate, ~2s before its
+  // fade): the root is inert + aria-hidden so none of its controls (toggle,
+  // Reset, Minimize, color picker, presets, sliders) can be Tab-focused or
+  // read out while invisible, matching main, where it is not mounted then.
+  // Both come off in the same commit that flips `shown`, i.e. when the
+  // reveal actually starts.
+  const panelHidden = !(shown && posReady);
+
   const panelMarkup = (
-    <div ref={panelRef} className="ps3cp" style={{
+    <div ref={panelRef} className="ps3cp" inert={panelHidden} aria-hidden={panelHidden ? true : undefined} style={{
       position: "absolute", left: geo.left, top: geo.top,
       width: geo.w, height: geo.maxH, maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
@@ -1125,7 +1199,11 @@ export default function PS3ControlPanel({
       boxShadow: pillShadow,
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
-      opacity: shown && posReady ? 1 : 0,
+      opacity: panelHidden ? 0 : 1,
+      // Hidden until revealed. Same contract as the intro's `.intro-hide`
+      // (opacity 0 + pointer-events none while the gate is playing), so the
+      // now-early-mounted pill can't intercept hero clicks before its fade.
+      pointerEvents: panelHidden ? "none" : "auto",
       // First load: the subtitle owns the Y settle. Sliding the pill
       // too made the pair look like a position jump. Soft-nav return still
       // uses the shared 8px fade-up.
