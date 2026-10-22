@@ -22,6 +22,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | STD-05 | Areal abandoned; Helvetica Neue fallback is intended, not a bug | Oct 20 | verified | type-system.md "shelve ABC Areal" |
 | STD-06 | Beacons is not a current project; do not present it as current | Oct 21 | open | |
 | STD-07 | Lock horizontal panning at mobile widths so cut-off patterns or elements never read as a bug: Mudit, "on mobile breakpoint prevent people from moving the webpage left and right so it doesn't look like a bug when the pattern or elements get cut off, intentionally lock you in to that scroll" | Oct 22 | in progress | Mudit, Oct 22 |
+| STD-08 | Mobile autoplay: Mudit, "my autoplay logic is broken on mobile, it stops playing everything after smth is clicked near - can you just make no autoplay logic on mobile, or maybe pause logic based on where you're scrolling to?" Amended: several muted loops may play at once; play at 50% visible or more, pause only below 20% after a 300ms debounce, resume from currentTime, a tap affects only its own element | Oct 22 | in progress | Mudit, Oct 22 |
 
 ## Footer (FTR)
 
