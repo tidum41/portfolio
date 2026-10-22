@@ -1026,7 +1026,7 @@ html[data-theme="dark"] .project-image {
 .cs-figcaption {
   font-size: 12px;
   line-height: 1.72;
-  color: #6b6b6b;
+  color: var(--caption-ink);
   margin: 8px 0 0;
   text-align: left;
 }
@@ -1338,14 +1338,14 @@ html[data-theme="dark"] .project-image {
   max-width: min(1100px, calc(100vw - 48px));
   max-height: 80vh;
   margin: auto;
-  padding: 24px;
+  padding: 60px 24px 24px;
   box-sizing: border-box;
 }
 .cs-lightbox-close {
-  position: fixed;
-  top: max(16px, env(safe-area-inset-top, 0px));
-  right: max(16px, env(safe-area-inset-right, 0px));
-  z-index: 100001;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
@@ -1981,13 +1981,6 @@ html[data-theme="light"] {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 480px) {
-  .dialogue-anatomy-list li[data-anatomy-list-part="sources"],
-  .dialogue-anatomy-list li[data-anatomy-list-part="clips"],
-  .dialogue-anatomy-list li[data-anatomy-list-part="followups"] {
-    display: none;
-  }
-}
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media {
   border-radius: 0;
   overflow: visible;
@@ -2056,7 +2049,7 @@ html[data-theme="light"] {
   max-width: 640px;
   font-size: 13px;
   line-height: 1.4;
-  color: #6b6b6b;
+  color: var(--caption-ink);
 }
 .dialogue-caption__label {
   display: block;
@@ -2802,7 +2795,16 @@ html[data-theme="dark"] {
   --figure-ink: #eeedeb;
   --figure-ink-muted: #a8a29e;
 }
-html[data-theme="dark"] .dialogue-caption,
-html[data-theme="dark"] .cs-figcaption {
-  color: #8c8c8c;
+:root {
+  --caption-ink: #6b6b6b;
+}
+html[data-theme="dark"] {
+  --caption-ink: #8c8c8c;
+}
+.dialogue-answer-states__ui .dp-source-pill {
+  color: var(--figure-ink-muted);
+}
+.dialogue-answer-states__ui .dp-source-pill--disagree {
+  color: var(--figure-ink);
+  border-color: #b43f7f;
 }

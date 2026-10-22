@@ -47,3 +47,6 @@ next-env.d.ts
 # Dinamo ABC Areal (hosted via NEXT_PUBLIC_AREAL_URL; never commit binaries)
 /fonts/ABCAreal*
 /public/fonts/ABCAreal*
+
+# Playwright MCP scratch output
+.playwright-mcp/

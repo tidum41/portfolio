@@ -2248,5 +2248,21 @@
 }
 
 .dp-hero-v2__sources .dp-sources {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin: 0;
+}
+
+.dp-hero-v2__sources .dp-source-pill {
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .dp-anatomy .dp-chart-root {
+    --dp-chart-min-width: 0px;
+    --dp-chart-label-width: 64px;
+    min-width: 0;
+  }
 }

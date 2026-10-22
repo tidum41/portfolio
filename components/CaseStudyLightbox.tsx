@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 type Props = {
   src?: string;
   children?: ReactNode;
@@ -13,7 +14,10 @@ type Props = {
 export default function CaseStudyLightbox({ src, children, alt, open, onClose, returnFocusRef }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const scrollYRef = useRef(0);
+
+  useEffect(() => setMounted(true), []);
 
   const finishClose = useCallback(() => {
     onClose();
@@ -53,7 +57,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
     [finishClose],
   );
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const reduced =
     typeof window !== "undefined" &&
@@ -61,7 +65,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
   const ease = "ease-out";
   const duration = reduced ? "0ms" : "200ms";
 
-  return (
+  return createPortal(
     <div
       className="cs-lightbox-backdrop"
       role="presentation"
@@ -101,6 +105,7 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
