@@ -1418,13 +1418,6 @@ html[data-theme="dark"] .project-image {
 
 .cs-person-link {
   color: inherit;
-  text-decoration: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .cs-person-link:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
 }
 
 .cs-request-label {
@@ -1889,16 +1882,30 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
-/* ─── About org/company links: plain at rest, subtle underline on hover/focus ─── */
-a.about-link {
-  text-decoration-line: none;
-  text-underline-offset: 3px;
+/* ─── Text links: one underline rule site-wide ───────────────────
+   Plain at rest; 1px currentColor underline at 0.18em (~2.7px at 15px), skip-ink, on
+   hover (fine pointers) or keyboard focus. The underline is always laid
+   out but transparent at rest, so it fades in over 150ms with no shift. */
+a.about-link,
+.about-social,
+.cs-person-link {
+  text-decoration-line: underline;
   text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  text-decoration-color: transparent;
+  transition: color 0.25s ease, text-decoration-color 150ms ease, background-color 1s ease, border-color 1s ease;
 }
-a.about-link:focus-visible { text-decoration-line: underline; }
+a.about-link:focus-visible,
+.about-social:focus-visible,
+.cs-person-link:focus-visible { text-decoration-color: currentColor; }
 @media (hover: hover) and (pointer: fine) {
-  a.about-link:hover { text-decoration-line: underline; }
+  a.about-link:hover,
+  .about-social:hover,
+  .cs-person-link:hover { text-decoration-color: currentColor; }
+}
+@media (prefers-reduced-motion: reduce) {
+  a.about-link, .about-social, .cs-person-link { transition: none; }
 }
 
 /* Archive bento minimap: elevated card that reads at a glance */
