@@ -5,7 +5,7 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 ## DLG-57, Oct 22 2026 (Agentation comment box typing)
 - Changed: every window or document key listener (ruler mode, lightbox, project popup, quarter picker, bento gallery, motion lab) returns early for editable targets through lib/isEditableTarget, which reads composedPath. The toolbar stops typed characters in the capture phase so other tools' single-letter shortcuts cannot swallow them. check:annotate types the full alphabet, digits and punctuation into the comment box on /dialogue and /.
 - Why: Mudit could not type some letters ("c") in the comment box. No site listener reproduces it; the Vercel preview toolbar binds "c" and is the likely source, so the guard is aimed at it. Unverified without a logged-in toolbar session.
-- Preview: PREVIEW_URL
+- Preview: https://portfolio-dxba7y8op-mudits-projects-d560e6b3.vercel.app (deployment of 99022e7)
 - Image: none this round.
 
 ## e7cd42c, Oct 22 2026 (Agentation on Dialogue)
