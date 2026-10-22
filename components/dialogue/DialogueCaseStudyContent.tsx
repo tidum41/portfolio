@@ -332,8 +332,7 @@ export function DialogueCaseStudyContent({
               />
               <div className="dialogue-full-answer-outcome">
                 <CaseStudyBody>
-                  Outcome: researchers could share one link that still showed the number, the
-                  interviews behind it, and the footage to verify the quote.
+                  Limit: the chat has to hold summary, chart, and clips without feeling crowded.
                 </CaseStudyBody>
               </div>
             </Section>

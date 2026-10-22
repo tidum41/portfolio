@@ -1,3 +1,5 @@
+Asks covered: ARC-01
+
 ### Spec: `BentoMinimap` (simplest version)
 - **Placement:** bottom-right, `right: var(--page-px)` (24px), with the same bottom as `.bento-zoom-panel` (40px) so it aligns with the zoom slider. Rendered inside BentoGallery's root, `position:absolute; z-index:60`.
 - **Size:** 132px wide; height = 132 × canvasH/canvasW, capped at 120px (if the canvas is taller, cap the height and let the width shrink). That makes it about 60% of Carolyn's 220px, which fits the restraint of the rest of the site.

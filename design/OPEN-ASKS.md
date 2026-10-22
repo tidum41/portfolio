@@ -96,6 +96,13 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-52 | 390 hero: drop-off card must not cover or cut off any clip pill or the chat text; keep the DLG-16 composition | Oct 22 | in progress | overnight audit r13 / outside review r14 |
 | DLG-53 | Chart library intro makes unevidenced claims ("I audited..." and "the one I shipped"); cut both, no new claims (relates to DLG-27) | Oct 22 | in progress | overnight audit r13 / outside review r14 |
 | DLG-54 | The same checkout answer and its 38% sentence repeat in too many figures; per DLG-22 ("you just need one image") remove the problem section's duplicate figure | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-55 | Closing line becomes "Limit: the chat has to hold summary, chart, and clips without feeling crowded." Mudit Oct 22: "yes base fixes on your decisions"; section spacing from DLG-47 kept | Oct 22 | in progress | outside review r14, Needs Mudit 7 |
+## BruinLease (BRL)
+
+| ID | Ask | Date | Status | Evidence |
+| --- | --- | --- | --- | --- |
+| BRL-01 | Em dash in the Sanity doc case-study-ucla-sublease, field problemImageCaption ("left to right — Facebook, ULoop, Reddit"): fix the source. Mudit Oct 22: "yes u can fix the em dash" | Oct 22 | in progress | no Sanity write token in the repo environment, so the source edit did not happen; the render-time replace in app/ucla-sublease/page.tsx stays until it does |
+
 ## JOOLA film and card (JOO)
 
 | ID | Ask | Date | Status | Evidence |
@@ -125,9 +132,9 @@ Status can't be determined from the repo or commits.
 4. STD-06 Beacons: remove it, or label it as past work?
 5. ARC-01 and ABT-01: approve the minimap and About previews as verified?
 6. DLG-27: is the shipped vs not shipped line gone to your satisfaction?
-7. Outside review suggests replacing the closing "Outcome: researchers could share one link." with "Limit: the chat has to hold summary, chart, and clips without feeling crowded." (words already on the page). Held because DLG-47 kept the wording. Also: should the Outcome line get more emphasis than body text?
-8. Outside review suggests one answer screen as the hero at both widths instead of the current grid preview. Held: changes the approved hero direction (DLG-15, DLG-16).
-9. Outside review suggests cutting the "How much was covered" library pair because it restates "Say when the data is thin". Held: conflicts with DLG-25 (show more chart responses).
+7. RESOLVED, approved by Mudit Oct 22 ("yes base fixes on your decisions"): closing line replaced with "Limit: the chat has to hold summary, chart, and clips without feeling crowded." Logged as DLG-55. Original note: Outside review suggests replacing the closing "Outcome: researchers could share one link." with "Limit: the chat has to hold summary, chart, and clips without feeling crowded." (words already on the page). Held because DLG-47 kept the wording. Also: should the Outcome line get more emphasis than body text?
+8. RESOLVED, declined by Mudit Oct 22 ("yes base fixes on your decisions"): the hero keeps the current grid preview (DLG-15, DLG-16). Original note: Outside review suggests one answer screen as the hero at both widths instead of the current grid preview. Held: changes the approved hero direction (DLG-15, DLG-16).
+9. RESOLVED, declined by Mudit Oct 22 ("yes base fixes on your decisions"): the "How much was covered" pair stays (DLG-25). Original note: Outside review suggests cutting the "How much was covered" library pair because it restates "Say when the data is thin". Held: conflicts with DLG-25 (show more chart responses).
 
 ## Misses
 
