@@ -61,62 +61,49 @@ function Bubbles() {
   );
 }
 
-function Donut() {
-  const total = GROUPS.reduce((sum, g) => sum + g.pct, 0);
-  const r = 40;
-  const circ = 2 * Math.PI * r;
-  let acc = 0;
-  const tones = ["#b33a7a", "#a8a29e", "#d6d3d1"];
+function Distribution() {
+  const buckets = Array.from({ length: 10 }, (_, i) => ({
+    lo: i * 10,
+    count: GROUPS.filter((g) => g.pct >= i * 10 && g.pct < i * 10 + 10).length,
+  }));
   return (
-    <ChartVizCard title={SEGMENT_ADDRESS.title}>
-      <svg viewBox="0 0 280 128" className="dialogue-lib__donut" role="img" aria-label="Donut chart">
-        {GROUPS.map((g, i) => {
-          const frac = g.pct / total;
-          const dash = frac * circ;
-          const mid = (acc + frac / 2) * 2 * Math.PI - Math.PI / 2;
-          const el = (
-            <g key={g.label}>
-              <circle
-                cx={140}
-                cy={64}
-                r={r}
-                fill="none"
-                stroke={tones[i]}
-                strokeWidth={22}
-                strokeDasharray={`${dash} ${circ - dash}`}
-                strokeDashoffset={-acc * circ}
-                transform="rotate(-90 140 64)"
-              />
-              <text
-                x={140 + Math.cos(mid) * 62 + (Math.cos(mid) >= 0 ? 8 : -8)}
-                y={64 + Math.sin(mid) * 62 + 4}
-                textAnchor={Math.cos(mid) >= 0 ? "start" : "end"}
-                className="dialogue-lib__svg-label"
-              >
-                {g.label} {formatChartPercent(g.pct)}
+    <ChartVizCard title="Address resets, all interviews">
+      <svg viewBox="0 0 280 110" className="dialogue-lib__dist" role="img" aria-label="Pooled distribution">
+        <line x1="8" y1="84" x2="272" y2="84" className="dialogue-lib__axis" />
+        {buckets.map((b, i) => (
+          <g key={b.lo}>
+            {b.count > 0 ? (
+              <rect x={12 + i * 26} y={84 - b.count * 36} width={20} height={b.count * 36} rx={3} className="dialogue-lib__dist-bar" />
+            ) : null}
+            {i % 2 === 0 ? (
+              <text x={22 + i * 26} y={102} textAnchor="middle" className="dialogue-lib__svg-label">
+                {b.lo}%
               </text>
-            </g>
-          );
-          acc += frac;
-          return el;
-        })}
+            ) : null}
+          </g>
+        ))}
       </svg>
     </ChartVizCard>
   );
 }
 
-function Dots() {
+function Timeline() {
   return (
-    <ChartVizCard title={SENTIMENT_LINE.title.replace(" after autocomplete ships in round two.", " by round")}>
-      <div className="dialogue-lib__dots">
-        {ROUNDS.map((p) => (
-          <div key={p.label} className="dialogue-lib__dot-cell">
-            <span className="dialogue-lib__dot-value">{formatChartDecimal(p.value)}</span>
-            <span className="dialogue-lib__dot" />
-            <span className="dialogue-lib__bubble-label">{p.label}</span>
-          </div>
-        ))}
-      </div>
+    <ChartVizCard title="Sentiment timeline">
+      <svg viewBox="0 0 280 110" className="dialogue-lib__dist" role="img" aria-label="Timeline of rounds">
+        <line x1="20" y1="50" x2="260" y2="50" className="dialogue-lib__axis" />
+        {ROUNDS.map((p, i) => {
+          const x = 20 + (i * 240) / Math.max(ROUNDS.length - 1, 1);
+          return (
+            <g key={p.label}>
+              <circle cx={x} cy={50} r={6} className="dialogue-lib__timeline-dot" />
+              <text x={x} y={78} textAnchor="middle" className="dialogue-lib__svg-label">
+                {p.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </ChartVizCard>
   );
 }
@@ -126,7 +113,7 @@ function MentionTotal() {
     <ChartVizCard title="Address friction">
       <div className="dialogue-lib__total">
         <span className="dialogue-lib__total-bar" />
-        <span className="dialogue-lib__total-value">31 mentions</span>
+        <span className="dialogue-lib__total-value">31 quotes</span>
       </div>
     </ChartVizCard>
   );
@@ -161,13 +148,13 @@ const ENTRIES = [
   {
     id: "groups",
     name: "How groups differ",
-    verdict: "Bars line up so the gap is obvious. A donut hides it.",
+    verdict: "Bars line up so the gap is obvious. A pooled spread hides it.",
     tech: [
       ["Data shape", "one rate per group."],
-      ["Encoding", "aligned bar length beats angle for close values."],
-      ["Tradeoff", "no part-to-whole reading."],
+      ["Encoding", "one aligned bar per group; a pooled spread drops the group names."],
+      ["Tradeoff", "no view of spread inside a group."],
     ],
-    bad: <Donut />,
+    bad: <Distribution />,
     good: (
       <ChartVizCard title={SEGMENT_ADDRESS.title}>
         <ChartBarList
@@ -186,13 +173,13 @@ const ENTRIES = [
   {
     id: "trend",
     name: "Change over sessions",
-    verdict: "A line shows the climb. Loose dots hide the direction.",
+    verdict: "A line shows the climb. A bare timeline hides the size.",
     tech: [
       ["Data shape", "one score per round, in order."],
       ["Encoding", "slope shows direction; height on a shared axis shows size."],
       ["Tradeoff", "needs three or more rounds."],
     ],
-    bad: <Dots />,
+    bad: <Timeline />,
     good: (
       <ChartVizCard title="Sentiment by round">
         <ChartLinePlot
@@ -207,7 +194,7 @@ const ENTRIES = [
   {
     id: "coverage",
     name: "How much was covered",
-    verdict: "Interview counts show how thin the proof is. Mention totals hide it.",
+    verdict: "Interview counts show how thin the proof is. Quote counts hide it.",
     tech: [
       ["Data shape", "interviews that mention it, out of 24."],
       ["Encoding", "counts against the full set show coverage."],

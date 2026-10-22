@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import DialogueProductScenario, {
   type DialogueProductScenario as Scenario,
 } from "@/components/dialogue/product/DialogueProductScenario";
@@ -104,35 +105,61 @@ function scaleProps(
   }
 }
 
-/** In-page Dialogue product UI (no iframe). */
+/** In-page Dialogue product UI (no iframe). Click opens a bounded lightbox. */
 export default function DialogueProductFigure({ scenario, title, assetId, className }: Props) {
   const narrow = useNarrow();
   const phone = usePhone();
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const scale = scaleProps(scenario, narrow, phone);
-  const inner = <DialogueProductScenario scenario={scenario} className={className} />;
+
+  const render = (zoomed: boolean) => {
+    const inner = <DialogueProductScenario scenario={scenario} className={className} />;
+    const block = (
+      <div
+        className="dialogue-product-block dialogue-product-block--static"
+        data-dialogue-asset-id={zoomed ? undefined : assetId}
+        aria-label={title}
+        aria-hidden
+        inert
+      >
+        {scale ? (
+          <ScaledChatViewport
+            innerWidth={scale.innerWidth}
+            maxScale={zoomed && scale.fit !== "reflow" ? Math.max(scale.maxScale ?? 1, 1.2) : scale.maxScale}
+            minScale={scale.minScale}
+            maxOuterHeight={zoomed ? undefined : scale.maxOuterHeight}
+            fit={scale.fit}
+            fade={zoomed ? false : scale.fade}
+          >
+            {inner}
+          </ScaledChatViewport>
+        ) : (
+          inner
+        )}
+      </div>
+    );
+    return block;
+  };
 
   return (
-    <div
-      className="dialogue-product-block dialogue-product-block--static"
-      data-dialogue-asset-id={assetId}
-      aria-label={title}
-      aria-hidden
-      inert
-    >
-      {scale ? (
-        <ScaledChatViewport
-          innerWidth={scale.innerWidth}
-          maxScale={scale.maxScale}
-          minScale={scale.minScale}
-          maxOuterHeight={scale.maxOuterHeight}
-          fit={scale.fit}
-          fade={scale.fade}
-        >
-          {inner}
-        </ScaledChatViewport>
-      ) : (
-        inner
-      )}
+    <div className="dp-zoom">
+      {render(false)}
+      <button
+        ref={triggerRef}
+        type="button"
+        className="dp-zoom__trigger"
+        aria-label={`Enlarge figure: ${title}`}
+        onClick={() => setOpen(true)}
+      />
+      <CaseStudyLightbox
+        alt={title}
+        open={open}
+        onClose={() => setOpen(false)}
+        returnFocusRef={triggerRef}
+      >
+        {open ? render(true) : null}
+      </CaseStudyLightbox>
     </div>
   );
 }

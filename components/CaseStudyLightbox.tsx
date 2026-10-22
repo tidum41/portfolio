@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 type Props = {
-  src: string;
+  src?: string;
+  children?: ReactNode;
   alt: string;
   open: boolean;
   onClose: () => void;
   returnFocusRef?: React.RefObject<HTMLElement | null>;
 };
 
-export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocusRef }: Props) {
+export default function CaseStudyLightbox({ src, children, alt, open, onClose, returnFocusRef }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
   const scrollYRef = useRef(0);
@@ -78,7 +79,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
         onClick={onBackdrop}
         style={{
           opacity: visible ? 1 : 0,
-          transform: visible ? "scale(1)" : "scale(0.98)",
+          transform: visible ? "none" : "scale(0.98)",
           transition: reduced ? "none" : `opacity ${duration} ${ease}, transform ${duration} ${ease}`,
         }}
       >
@@ -92,8 +93,12 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
           Close
         </button>
         <div className="cs-lightbox-media" onClick={(e) => e.stopPropagation()}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="cs-lightbox-img" />
+          {children ? (
+            <div className="cs-lightbox-live">{children}</div>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={src} alt={alt} className="cs-lightbox-img" />
+          )}
         </div>
       </div>
     </div>

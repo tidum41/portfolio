@@ -65,11 +65,6 @@ export default function DialogueCoverageCompare() {
           </Card>
         </figure>
       </div>
-      <div className="dialogue-lib__tech">
-        <p>
-          <span>Why it matters:</span> a finding from 2 interviews must not reach a roadmap as a trend.
-        </p>
-      </div>
     </div>
   );
 }

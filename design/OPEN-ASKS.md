@@ -52,7 +52,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-10 | Data-viz library section | Oct 21 | superseded | by DLG-18 |
 | DLG-11 | "styled like ruth zhao reference we made for joola b2b" | Oct 20 | superseded | by DLG-15 |
 | DLG-12 | UI fills the frame (~6-8% margin), no letterboxing | Oct 20 | open | dialogue-feedback-1020 G1/G2 |
-| DLG-13 | Lightbox on click, Esc/click-off closes, ~200ms, reduced motion | Oct 20 | open | dialogue-feedback-1020 G3 |
+| DLG-13 | Lightbox on click, Esc/click-off closes, ~200ms, reduced motion | Oct 20 | in progress | dialogue-feedback-1020 G3 |
 | DLG-14 | No dot separators in captions ("Answer + evidence, Chosen") | Oct 21 | in progress | 826bc80: captions are plain "Data shape / Encoding / Tradeoff" lines, 0 dot separators (dialogue-r8/d-lib.png). Local build only. |
 | DLG-15 | "No crooked quirky shit be methodical" (grid-aligned hero) | Oct 21 | in progress | dialogue-v2.md; 826bc80: hero is a straight 2-col grid, no rotation (dialogue-r8/d-top.png). Frame is 750px, not the brief's 1120px. |
 | DLG-16 | "Even hero at 390 needs to be something noteworthy" | Oct 21 | in progress | dialogue-v2.md; 826bc80: separate 390 hero, chat card with overlapping drop-off card (dialogue-r8/m-top.png). Judged by builder only, needs Mudit. |
@@ -108,6 +108,7 @@ Status can't be determined from the repo or commits.
 | M2 | Areal flagged as a missing-font bug | Auditor did not know Areal was shelved | STD-05 recorded as intended |
 | M3 | Quote frame drifted from the 657337d version | No pinned reference sha for an approved figure | DLG-17 pins 657337d; evidence must cite sha |
 | M4 | Dialogue v2 brief written without the ledger | Briefs had no link to ask IDs | `Asks covered:` line, enforced by `npm run check:asks` |
+| M5 | Quote player rewritten instead of restored a second time | Restore was done by hand, not from the pinned sha | Restores must be a git checkout of the pinned sha plus a diff |
 
 Shared cause in M1, M3, M4: work started without reading this ledger. Promoted: `check:asks` script plus "builders read first" rule.
 

@@ -2099,11 +2099,11 @@
 .dp-hero-v2__desktop {
   width: 750px;
   box-sizing: border-box;
-  padding: 32px;
+  padding: 24px;
   display: grid;
-  grid-template-columns: 400px 262px;
+  grid-template-columns: 302px 376px;
   column-gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .dp-hero-v2__mobile {
@@ -2149,12 +2149,33 @@
   white-space: nowrap;
 }
 
+.dp-hero-v2__aside > .dp-hero-v2__card,
+.dp-hero-v2__aside > .dp-hero-v2__card .dp-chart-viz-card,
+.dp-hero-v2__aside > .dp-hero-v2__card .dp-chart-viz-card__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dp-hero-v2__aside > .dp-hero-v2__card .dp-chart-bars {
+  flex: 1;
+  justify-content: space-evenly;
+}
+
 .dp-hero-v2__clips .dp-clip-thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 120px);
   gap: 8px;
 }
 
+.dp-hero-v2__clips .dp-clip-thumbs__item {
+  width: 120px;
+  min-width: 0;
+}
+
 .dp-hero-v2__clips .dp-clip-thumbs__frame {
-  height: 64px;
+  width: 120px;
+  height: 120px;
 }
 
 @media (max-width: 600px) {
