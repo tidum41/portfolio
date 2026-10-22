@@ -2,10 +2,10 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
-## R15SHA, Oct 22 2026 (r15)
+## 6bb5f1b, Oct 22 2026 (r15)
 - Changed: merged origin/main (includes the mobile fixes from PR #106), closing line now reads "Limit: the chat has to hold summary, chart, and clips without feeling crowded." with the DLG-47 spacing kept, and the ledger records Needs Mudit 7 as done and 8 and 9 as declined. The BruinLease caption source is not edited yet.
 - Why: Mudit approved my calls Oct 22, DLG-55 and BRL-01. The Sanity edit needs a write token this environment does not have.
-- Preview: R15URL
+- Preview: https://portfolio-1f4bxn31y-mudits-projects-d560e6b3.vercel.app
 - Image: none this round.
 
 ## 80b31f8, Oct 22 2026 (r14)
