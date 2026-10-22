@@ -13,7 +13,7 @@ Feedback: methodical, no crooked collage. Every visual tells part of the story. 
 | 3 | Lead with the answer | Answer first, evidence second | Lead answer compare (paragraph vs structured) |
 | 4 | Evidence you can watch | Quotes link to the moment they were said | Quote frame, restored 1:1 |
 | 5 | Charts as answers | A chart only when the shape of the data asks for one | Chart library (section 5) |
-| 6 | Placement | Bubble vs docked sidebar | Placement compare |
+| 6 | Little considerations | Honest about thin data | Low coverage note (section 7) |
 | 7 | Outcome | What shipped and what we learned | Full answer figure |
 
 ## 2. Visualization inventory
@@ -37,7 +37,8 @@ Each viz gets exactly one job. Nothing appears twice at full size.
 | Distribution (ruled out) | 5 | Library, bad side | |
 | Chart gallery (D-09) | 5 | Cut | Replaced by the library |
 | Chart iteration alt | 5 | Cut | Fold into library tradeoff lines |
-| Placement bubble / docked | 6 | Key feature | |
+| Placement bubble / docked | 6 | Cut | Weak; replaced by section 7 detail |
+| Coverage callout as answer state | 6 | Key feature | Bad vs good pair |
 | Full answer | 7 | Key feature | |
 
 ## 3. Hero
@@ -97,6 +98,25 @@ Problem: figure wells read flat against the page.
 - New: well #EEEDEB (L* ~93.8, delta ~4.7 L*, warm neutral); UI cards inside stay `--dp-surface` #FCFBF9 so cards lift off the well. Add a 1px inset border rgba(28,25,23,0.04).
 - Update JOOLA/BruinLease frames to the same effective value (rgba(46,46,46,0.06), about #EFEFEF) so every case study matches. One token, all frames.
 
-## 7. Out of scope
+## 7. Small detail that shows care (replaces bubble vs sidebar)
+
+Sourced only from shipped work: `CoverageCallout` ("2 of 24 interviews", "Only a few interviews match."), canvas item D-11 "counter-evidence, low coverage, zero match", `SourcesRow`, and D-10 clip at timestamp.
+
+**Pick 1: low coverage note.** Same question, same 2 matching interviews, 1 x 2 pair at 1440 (each 448px), stacked at 390.
+- Bad: confident answer with a chart; nothing says it rests on 2 of 24 interviews.
+- Good: same answer led by the coverage note, chart withheld, text with sources.
+- Verdict: "Two people said it. The good one tells you that."
+- Why for UX teams: a finding from 2 interviews must not reach a roadmap as a trend. Trust in the tool depends on it saying when it doesn't know.
+
+**Pick 2: source chip that opens at the moment.** Same quote, same size pair.
+- Bad: quote with participant name only; you scrub a 45 minute recording.
+- Good: `SourcesRow` chip with interview and timestamp; player opens at that second with the transcript in sync (D-10).
+- Verdict: "One click to hear it said, not 10 minutes of scrubbing."
+- Why: stakeholders believe a clip more than a summary; researchers check context before quoting.
+- Overlaps beat 4, so if both are kept, beat 4 shows the player and this pair shows only the chip.
+
+Ruled out: searching status (generic to any chat), face blur (a privacy safeguard for the case study, not a product feature).
+
+## 8. Out of scope
 
 Copy rewrites outside the library and captions, new chart types, interaction or motion, dark mode tuning, nav and pager changes.
