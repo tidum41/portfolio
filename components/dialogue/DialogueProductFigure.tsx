@@ -69,7 +69,7 @@ function scaleProps(
       case "anatomy":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 592, fade: true };
       case "hero":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 520, fade: true };
+        return { innerWidth: CHAT_W, fit: "reflow" };
       case "clip-player":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 440, fade: true };
       case "full-answer":
@@ -83,13 +83,8 @@ function scaleProps(
   switch (scenario) {
     case "hero":
       return narrow
-        ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 520 }
-        : {
-            innerWidth: 640,
-            minScale: DESKTOP_MIN_SCALE,
-            maxScale: 1,
-            maxOuterHeight: 500,
-          };
+        ? { innerWidth: CHAT_W, fit: "reflow" }
+        : { innerWidth: 750, minScale: 0.8, maxScale: 1 };
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }

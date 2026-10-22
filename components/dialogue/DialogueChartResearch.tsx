@@ -38,7 +38,6 @@ export default function DialogueChartResearch() {
           <article key={item.id} className="dialogue-chart-research__card dialogue-chart-research__card--ruled">
             <div className={`${thumbClass} dialogue-chart-research__thumb--ruled`}>
               {item.variant ? <ChartOnlyFigure variant={item.variant} /> : null}
-              <span className="dialogue-chart-research__ruled-overlay-label">Ruled out</span>
             </div>
             <div className="dialogue-chart-research__copy">
               <p className="dialogue-chart-research__question">

@@ -1445,6 +1445,10 @@
   display: none;
 }
 
+.dp-player--casestudy .dp-player__still {
+  filter: brightness(0.94) contrast(1.06);
+}
+
 .dp-player__webcam-tile {
   position: absolute;
   right: 3.5%;
@@ -1997,8 +2001,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
-  flex: 1 1 auto;
   justify-content: flex-start;
   text-align: left;
 }
@@ -2059,7 +2061,7 @@
 }
 
 .dp-lead-answer-card .dp-clip-thumbs {
-  margin-top: auto;
+  margin-top: 0;
   gap: 6px;
   width: 100%;
   max-width: 100%;
@@ -2082,85 +2084,149 @@
   object-fit: cover;
 }
 
-/* Hero collage: chat plus three offset library charts. */
+/* Hero collage: chat plus six library charts, scattered and overlapping. */
 .dp-hero-collage {
   width: 100%;
-  min-height: 100%;
   box-sizing: border-box;
 }
 
-.dp-hero-collage__surface {
+.dp-hero-collage__stage {
   position: relative;
-  min-height: 300px;
-  padding: 40px 48px 56px 40px;
+  width: 750px;
+  height: 500px;
   background: var(--dp-figure-surface-system, #f2f1f0);
-  border-radius: var(--radius-control);
-  overflow: visible;
-  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .dp-hero-collage__chat {
-  position: relative;
-  z-index: 2;
-  width: min(100%, 248px);
-  max-width: 248px;
+  position: absolute;
+  left: 32px;
+  top: 72px;
+  width: 252px;
+  z-index: 5;
+  transform: rotate(-1.5deg);
 }
 
 .dp-hero-collage__chat .dp-study-chat {
-  box-shadow: 0 16px 40px rgb(28 25 23 / 10%);
+  box-shadow: 0 18px 44px rgb(28 25 23 / 14%);
 }
 
-.dp-hero-collage__charts {
+.dp-hero-collage__tile {
   position: absolute;
-  inset: 40px 24px 48px 42%;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.dp-hero-collage__chart {
-  position: absolute;
-  width: 220px;
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--dp-radius-control);
   background: var(--dp-surface, #fcfbf9);
-  box-shadow: 0 14px 36px rgb(28 25 23 / 12%);
+  box-shadow: 0 12px 32px rgb(28 25 23 / 12%);
   box-sizing: border-box;
 }
 
-.dp-hero-collage__chart .dp-chart-viz-card,
-.dp-hero-collage__chart .dp-funnel,
-.dp-hero-collage__chart .dp-line-chart {
+.dp-hero-collage__tile .dp-chart-viz-card,
+.dp-hero-collage__tile .dp-chart-viz-card__inner {
   width: 100%;
   min-width: 0;
 }
 
-.dp-hero-collage__chart .dp-chart-viz-card__title,
-.dp-hero-collage__chart .dp-chart-title,
-.dp-hero-collage__chart .dp-line-chart__title {
-  font-size: 11px;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+.dp-hero-collage__tile .dp-chart-viz-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.dp-hero-collage__chart--funnel {
-  right: 2%;
-  top: 6%;
-  transform: rotate(3deg);
+.dp-hero-collage__tile .dp-chart-viz-card__inner {
+  padding: 2px;
+  gap: 6px;
 }
 
-.dp-hero-collage__chart--segment {
-  right: 8%;
-  bottom: 18%;
+.dp-hero-collage__tile .dp-chart-root {
+  --dp-chart-label-width: 58px;
+  --dp-chart-value-width: 36px;
+  --dp-chart-min-width: 0px;
+  min-width: 0;
+}
+
+.dp-hero-collage__tile .dp-chart-bars__track {
+  min-width: 24px;
+}
+
+.dp-hero-collage__tile .dp-chart-title {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.dp-hero-collage__tile svg {
+  overflow: visible;
+}
+
+.dp-hero-collage__tile--trend .dp-chart-viz-card__inner {
+  padding-right: 18px;
+}
+
+.dp-hero-collage__tile--funnel {
+  left: 270px;
+  top: 28px;
+  width: 250px;
+  padding-left: 26px;
+  z-index: 2;
+  transform: rotate(-3deg);
+}
+
+.dp-hero-collage__tile--segment {
+  left: 548px;
+  top: 30px;
+  width: 172px;
+  z-index: 3;
+  transform: rotate(3.5deg);
+}
+
+.dp-hero-collage__tile--trend {
+  left: 466px;
+  top: 176px;
+  width: 262px;
+  z-index: 4;
+  transform: rotate(-2deg);
+}
+
+.dp-hero-collage__tile--coverage {
+  left: 298px;
+  top: 250px;
+  width: 156px;
+  z-index: 3;
+  transform: rotate(2.5deg);
+}
+
+.dp-hero-collage__tile--themes {
+  left: 490px;
+  top: 372px;
+  width: 210px;
+  z-index: 3;
+  transform: rotate(2deg);
+}
+
+.dp-hero-collage__tile--clip {
+  left: 250px;
+  top: 392px;
+  width: 170px;
+  padding: 6px;
+  z-index: 4;
   transform: rotate(-4deg);
 }
 
-.dp-hero-collage__chart--trend {
-  right: 0;
-  top: 34%;
-  transform: rotate(2deg);
+.dp-hero-collage__tile--clip img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.dp-hero-collage__tile--clip span {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--dp-muted);
 }
 
 .dp-alt-table {
@@ -2184,14 +2250,21 @@
 
 .dp-alt-radar {
   display: flex;
+  justify-content: center;
   gap: 8px;
   align-items: center;
 }
 
 .dp-alt-radar__svg {
-  width: 72px;
-  height: 60px;
+  width: 220px;
+  height: 150px;
+  max-width: 100%;
   flex-shrink: 0;
+}
+
+.dp-alt-radar__label {
+  font-size: 11px;
+  fill: var(--dp-muted);
 }
 
 .dp-alt-radar__labels {
@@ -2233,35 +2306,49 @@
 }
 
 @media (max-width: 600px) {
-  .dp-hero-collage__surface {
-    padding: 40px 24px 48px;
-    min-height: 420px;
+  .dp-hero-collage__stage {
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px 12px;
+    padding: 24px 20px 28px;
+    box-sizing: border-box;
   }
 
   .dp-hero-collage__chat {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .dp-hero-collage__charts {
-    position: static;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 20px;
-    justify-content: flex-end;
-  }
-
-  .dp-hero-collage__chart {
     position: relative;
-    width: min(46%, 168px);
-    right: auto;
+    left: auto;
     top: auto;
-    bottom: auto;
+    width: 100%;
     transform: none;
+    flex: 0 0 100%;
   }
 
-  .dp-hero-collage__chart--trend {
+  .dp-hero-collage__tile {
+    position: relative;
+    left: auto;
+    top: auto;
+  }
+
+  .dp-hero-collage__tile--funnel {
+    flex: 0 0 68%;
+    width: 68%;
+    transform: rotate(-2.5deg);
+  }
+
+  .dp-hero-collage__tile--coverage {
+    flex: 0 0 62%;
+    width: 62%;
+    margin: -10px 0 0 auto;
+    transform: rotate(2.5deg);
+  }
+
+  .dp-hero-collage__tile--segment,
+  .dp-hero-collage__tile--trend,
+  .dp-hero-collage__tile--themes,
+  .dp-hero-collage__tile--clip {
     display: none;
   }
 }

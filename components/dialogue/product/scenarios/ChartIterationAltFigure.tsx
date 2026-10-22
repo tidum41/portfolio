@@ -27,23 +27,32 @@ export default function ChartIterationAltFigure({ alt }: { alt: IterationAlt }) 
       return (
         <ChartVizCard title="Segment radar">
           <div className="dp-alt-radar" aria-hidden>
-            <svg viewBox="0 0 120 100" className="dp-alt-radar__svg">
+            <svg viewBox="0 0 220 150" className="dp-alt-radar__svg">
               <polygon
-                points="60,12 95,38 78,88 42,88 25,38"
-                fill="rgb(28 25 23 / 6%)"
+                points="110,22 168,112 52,112"
+                fill="rgb(28 25 23 / 5%)"
                 stroke="rgb(28 25 23 / 18%)"
               />
               <polygon
-                points="60,22 88,42 74,78 46,78 32,42"
-                fill="rgb(214 70 140 / 22%)"
-                stroke="rgb(214 70 140 / 55%)"
+                points="110,52 140,100 76,100"
+                fill="none"
+                stroke="rgb(28 25 23 / 12%)"
               />
+              <polygon
+                points="110,30 154,104 84,96"
+                fill="rgb(214 70 140 / 22%)"
+                stroke="rgb(214 70 140 / 60%)"
+              />
+              <text x="110" y="14" textAnchor="middle" className="dp-alt-radar__label">
+                {SEGMENT_ADDRESS.rows[0]?.label}
+              </text>
+              <text x="168" y="132" textAnchor="middle" className="dp-alt-radar__label">
+                {SEGMENT_ADDRESS.rows[1]?.label}
+              </text>
+              <text x="52" y="132" textAnchor="middle" className="dp-alt-radar__label">
+                {SEGMENT_ADDRESS.rows[2]?.label}
+              </text>
             </svg>
-            <ul className="dp-alt-radar__labels">
-              {SEGMENT_ADDRESS.rows.map((row) => (
-                <li key={row.label}>{row.label}</li>
-              ))}
-            </ul>
           </div>
         </ChartVizCard>
       );

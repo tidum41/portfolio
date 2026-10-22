@@ -21,3 +21,5 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Case study figure containers use the same corner radius as JOOLA and BruinLease media frames (`var(--radius-control)`, 8px). Read the token from `app/globals.css`, do not guess.
 - Figures in a comparison row share one height (stretch the frame, not the caption).
 - Figure wells use one calm neutral surface (`#f2f1f0`, token `--dp-figure-surface-system`) for every Rachel frame. Do not change frame background to signal emphasis; use outline or a small in-frame tag instead. UI cards inside stay on Paper `--dp-surface`.
+- Comparison rows (solutions, chart mapping) top-align cards at their natural height; do not stretch cards or pad them to match. Stacked cards at 390 hug their content. This supersedes the equal-height rule for those rows.
+- Hero is a scattered collage of library charts (160-280px, rotations within 4deg) overlapping the chat card, all fully inside the frame with one-line titles. At 390 show chat plus two complete charts.
