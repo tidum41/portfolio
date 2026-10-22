@@ -10,6 +10,7 @@ import {
 export default function DialogueChartResearch() {
   const chosen = CHART_RESEARCH_GRID.filter((i) => i.status === "chosen");
   const ruledOut = CHART_RESEARCH_GRID.filter((i) => i.status === "ruled-out");
+  const thumbClass = `dialogue-chart-research__thumb dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`;
 
   return (
     <div className="dialogue-chart-research">
@@ -20,9 +21,7 @@ export default function DialogueChartResearch() {
       <div className="dialogue-chart-research__grid">
         {chosen.map((item) => (
           <article key={item.id} className="dialogue-chart-research__card">
-            <div
-              className={`dialogue-chart-research__thumb dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-            >
+            <div className={thumbClass}>
               {item.variant ? <ChartOnlyFigure variant={item.variant} /> : null}
             </div>
             <div className="dialogue-chart-research__copy">
@@ -35,18 +34,15 @@ export default function DialogueChartResearch() {
           </article>
         ))}
         {ruledOut.map((item) => (
-          <article
-            key={item.id}
-            className="dialogue-chart-research__card dialogue-chart-research__card--ruled"
-          >
-            <div
-              className={`dialogue-chart-research__thumb dialogue-chart-research__thumb--muted dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-            >
+          <article key={item.id} className="dialogue-chart-research__card dialogue-chart-research__card--ruled">
+            <div className={`${thumbClass} dialogue-chart-research__thumb--ruled`}>
               {item.variant ? <ChartOnlyFigure variant={item.variant} /> : null}
-              <span className="dialogue-chart-research__ruled-tag">Ruled out</span>
             </div>
             <div className="dialogue-chart-research__copy">
-              <p className="dialogue-chart-research__question">{item.question}</p>
+              <div className="dialogue-chart-research__copy-head">
+                <span className="dialogue-chart-research__ruled-tag">Ruled out</span>
+                <p className="dialogue-chart-research__question">{item.question}</p>
+              </div>
               <p className="dialogue-chart-research__chart">{item.chart}</p>
               {item.reason ? (
                 <p className="dialogue-chart-research__reason">{item.reason}</p>
@@ -57,13 +53,27 @@ export default function DialogueChartResearch() {
       </div>
       <div className="dialogue-chart-research__iterations">
         <p className="dialogue-chart-research__iterations-title">Alternatives we tried</p>
-        <ul className="dialogue-chart-research__iterations-list">
-          {chosen.map((item) => (
-            <li key={item.id}>
-              <span className="dialogue-chart-research__iterations-chart">{item.chart}</span>
-              <span className="dialogue-chart-research__iterations-note">{item.iteration}</span>
-            </li>
-          ))}
+        <ul className="dialogue-chart-research__iteration-pairs">
+          {chosen.map((item) =>
+            item.iterationBefore && item.iterationAfter ? (
+              <li key={item.id} className="dialogue-chart-research__iteration-pair">
+                <p className="dialogue-chart-research__iteration-label">{item.chart}</p>
+                <div className="dialogue-chart-research__iteration-thumbs">
+                  <div className={`${thumbClass} dialogue-chart-research__iteration-mini`}>
+                    <ChartOnlyFigure variant={item.iterationBefore} />
+                    <span className="dialogue-chart-research__iteration-cap">Before</span>
+                  </div>
+                  <div className={`${thumbClass} dialogue-chart-research__iteration-mini dialogue-chart-research__iteration-mini--after`}>
+                    <ChartOnlyFigure variant={item.iterationAfter} />
+                    <span className="dialogue-chart-research__iteration-cap">After</span>
+                  </div>
+                </div>
+                {item.iteration ? (
+                  <p className="dialogue-chart-research__iteration-note">{item.iteration}</p>
+                ) : null}
+              </li>
+            ) : null,
+          )}
         </ul>
       </div>
     </div>

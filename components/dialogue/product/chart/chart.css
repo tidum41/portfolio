@@ -121,7 +121,7 @@
 .dp-chart-bars__track {
   position: relative;
   flex: 1;
-  min-width: 0;
+  min-width: 60px;
   height: var(--dp-chart-bar-thickness);
   background: var(--dp-chart-track);
   border-radius: 2px;

@@ -1,7 +1,8 @@
 import SyncedTranscript from "@/components/dialogue/product/SyncedTranscript";
+import { DialogueAsteriskIcon } from "@/components/dialogue/product/icons";
 
-/** Raw interview still; light frame blur with a heavier mask on the face. */
-const STILL_SRC = "/dev/dialogue-static/clip-photos/still-player-room.jpg";
+/** Participant crop from the real Dialogue call frame. */
+const STILL_SRC = "/dev/dialogue-static/clip-photos/call-frame-player.jpg";
 
 export default function ClipPlayerFigure() {
   return (
@@ -16,6 +17,15 @@ export default function ClipPlayerFigure() {
         <div className="dp-player__scrim" aria-hidden />
         <div className="dp-player__play" aria-hidden>
           <span className="dp-player__play-icon" />
+        </div>
+        <span className="dp-player__time">01:38</span>
+        <div className="dp-player__chrome" aria-hidden>
+          <span className="dp-player__brand">
+            <DialogueAsteriskIcon className="dp-player__brand-icon" />
+          </span>
+          <span className="dp-player__viewer" aria-hidden>
+            <span className="dp-player__viewer-icon" />
+          </span>
         </div>
       </div>
       <SyncedTranscript />

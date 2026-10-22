@@ -144,7 +144,7 @@ async function runViewport(page, width, tag) {
   });
 
   await capture(page, `full-${tag}.png`);
-  await capture(page, `hero-${tag}.png`, ".dialogue-hero-media, .cs-hero-media-frame");
+  await capture(page, `hero-${tag}.png`, ".dialogue-hero-joola, .cs-hero-media-frame.dialogue-hero-joola");
   await capture(page, `s02-${tag}.png`, "#why-it-matters");
   await capture(page, `s04-${tag}.png`, "#chart-research");
   await capture(page, `s05-${tag}.png`, "#fitted-charts");

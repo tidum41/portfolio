@@ -59,7 +59,7 @@ export default function SyncedTranscript() {
                 {row.role === "dialogue" ? (
                   <DialogueAsteriskIcon className="dp-synced-transcript__avatar-icon" />
                 ) : (
-                  <span className="dp-synced-transcript__initials">JM</span>
+                  <span className="dp-synced-transcript__person-icon" aria-hidden />
                 )}
               </span>
               <span className="dp-synced-transcript__speaker">{row.speaker}</span>
