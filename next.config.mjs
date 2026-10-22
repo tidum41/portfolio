@@ -22,6 +22,11 @@ const dialkitAlias =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Vercel only exposes NEXT_PUBLIC_VERCEL_ENV when system env exposure is on;
+  // VERCEL_ENV is always set at build, so fall back to it. Gates Agentation.
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV ?? "",
+  },
   // Pin the Turbopack/project root to this package so a parent-directory
   // package-lock.json (e.g. ~/package-lock.json) can't make Next resolve
   // modules relative to the wrong folder — that was surfacing as
