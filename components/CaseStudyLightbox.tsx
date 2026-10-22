@@ -9,9 +9,17 @@ type Props = {
   alt: string;
   open: boolean;
   onClose: () => void;
+  /** Matches the parent figure's annotate id for data-annotate="…/lightbox-*". */
+  annotate?: string;
 };
 
-export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
+export default function CaseStudyLightbox({
+  src,
+  alt,
+  open,
+  onClose,
+  annotate = "cs-figure",
+}: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -52,6 +60,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
   return (
     <div
       className="cs-lightbox-backdrop"
+      data-annotate={`${annotate}/lightbox-backdrop`}
       role="presentation"
       onClick={onBackdrop}
       style={{
@@ -61,6 +70,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
     >
       <div
         className="cs-lightbox-dialog"
+        data-annotate={`${annotate}/lightbox-dialog`}
         role="dialog"
         aria-modal="true"
         aria-label={alt}
@@ -74,12 +84,13 @@ export default function CaseStudyLightbox({ src, alt, open, onClose }: Props) {
           ref={closeRef}
           type="button"
           className="cs-lightbox-close"
+          data-annotate={`${annotate}/lightbox-close`}
           onClick={onClose}
           aria-label="Close enlarged image"
         >
           Close
         </button>
-        <div className="cs-lightbox-media">
+        <div className="cs-lightbox-media" data-annotate={`${annotate}/lightbox-media`}>
           <Image src={src} alt={alt} width={2400} height={1600} style={{ width: "100%", height: "auto" }} />
         </div>
       </div>

@@ -86,9 +86,13 @@ export default function CaseStudyOpen({
           {subtitle}
         </p>
       )}
-      <div className="cs-hero-media-wrap">
+      <div className="cs-hero-media-wrap" data-annotate="cs-hero/wrap">
         {muxPlaybackId ? (
-          <div className="cs-hero-media-frame" style={{ background: heroBg }}>
+          <div
+            className="cs-hero-media-frame"
+            data-annotate="cs-hero/media"
+            style={{ background: heroBg }}
+          >
             <MuxHero
               playbackId={muxPlaybackId}
               posterWidth={posterWidth}

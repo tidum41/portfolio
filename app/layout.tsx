@@ -9,6 +9,7 @@ import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import { DevDialSlot, DevToolbarSlot } from "@/components/DevChrome";
+import AgentationSlot from "@/components/AgentationSlot";
 import { PersistentWorkShell } from "@/components/PersistentWorkShell";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentAboutShell from "@/components/PersistentAboutShell";
@@ -206,6 +207,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </main>
         <Footer />
         <DevToolbarSlot />
+        <AgentationSlot />
         <Analytics />
         <MobileViewportPlayback />
       </body>

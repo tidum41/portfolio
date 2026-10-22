@@ -1858,17 +1858,17 @@ html[data-theme="light"] {
   color-scheme: light;
 }
 
-/* ─── Agentation above modals ─────────────────────────────────────── */
-/* The work-grid popups (ProjectPopup) render at z-index 999998 — just
-   under GlobalCustomCursor's 999999 — but Agentation's own overlay/toolbar/
-   popup layers top out around z-index 100000-100002, so its UI was rendering
-   invisibly *behind* any open modal. Agentation has no z-index prop, so this
-   targets its known root-layer classes by their stable CSS-module name slug
-   (ignoring the hash suffix, e.g. "styles-module__popup___IhzrD"), which
-   survives version bumps as long as those slugs and the css-loader
-   `[name]___[hash]` convention don't change. If this breaks after an
-   `agentation` upgrade, re-grep node_modules/agentation/dist/index.mjs for
-   `z-index:` to find the current root-layer class slugs. */
+/* ─── Agentation above header + lightbox ───────────────────────────── */
+/* Agentation 3.x mounts a shadow host (`agentation-toolbar`). Light-DOM
+   CSS-module overrides no longer reach its inner layers; raise the host
+   (and portal) above nav (z≈40) and `.cs-lightbox-backdrop` (z=10000).
+   Inner toolbar layers default around 100000 and already clear those. */
+agentation-toolbar,
+[data-agentation-portal] {
+  z-index: 999999999 !important;
+}
+
+/* Legacy light-DOM class slugs (pre-shadow builds / non-shadow surfaces). */
 [class*="styles-module__popup___"],
 [class*="styles-module__overlay___"],
 [class*="styles-module__blankCanvas___"],
