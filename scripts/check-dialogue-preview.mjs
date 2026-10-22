@@ -257,12 +257,85 @@ async function noTriggerChecks(browser) {
   }
 }
 
+
+async function ownerChecks(browser) {
+  const label = "DLG-48 timestamp owners /dialogue";
+  try {
+    const { ctx, page } = await open(browser, "/dialogue", 1440, 900);
+    if (process.env.SELFTEST === "owners") {
+      await page.evaluate(() => {
+        const s = document.createElement("span");
+        s.className = "dp-source-pill";
+        s.textContent = "Jordan M., 21:08";
+        document.querySelector(".dialogue-case-study, main, body").appendChild(s);
+      });
+    }
+    const pairs = await page.evaluate(() => {
+      const out = [];
+      const re = /([A-Z][a-z]+ [A-Z]\.),\s+(\d\d:\d\d)(?!\d|\u2013)/g;
+      for (const el of document.querySelectorAll(".dp-source-pill, .dp-sources span, [class*=source]")) {
+        const t = el.textContent || "";
+        let m;
+        while ((m = re.exec(t))) out.push([m[1], m[2]]);
+      }
+      return out;
+    });
+    const byTime = new Map();
+    const byName = new Map();
+    for (const [n, t] of pairs) {
+      byTime.set(t, new Set([...(byTime.get(t) || []), n]));
+      byName.set(n, new Set([...(byName.get(n) || []), t]));
+    }
+    const bad = [
+      ...[...byTime].filter(([, v]) => v.size > 1).map(([t, v]) => `${t} owned by ${[...v].join(" and ")}`),
+      ...[...byName].filter(([, v]) => v.size > 1).map(([n, v]) => `${n} has ${[...v].join(" and ")}`),
+    ];
+    log(pairs.length >= 8 && bad.length === 0, `${label} (${pairs.length} pills, ${byTime.size} distinct times, ${bad.length} conflicts)`);
+    for (const b of bad) console.log(`     ${b}`);
+    await ctx.close();
+  } catch (e) {
+    log(false, `${label}: ${e.message}`);
+  }
+}
+
+async function heroOverlapChecks(browser) {
+  for (const width of [390, 360]) {
+    const label = `DLG-52 hero card overlap /dialogue @${width}`;
+    try {
+      const { ctx, page } = await open(browser, "/dialogue", width, 900);
+      const r = await page.evaluate(() => {
+        const m = document.querySelector(".dp-hero-v2__mobile");
+        const card = m.querySelector(".dp-hero-v2__card").getBoundingClientRect();
+        let hits = 0, nodes = 0;
+        const w = document.createTreeWalker(m, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = w.nextNode())) {
+          if (!n.textContent.trim() || n.parentElement.closest(".dp-hero-v2__card")) continue;
+          const rg = document.createRange();
+          rg.selectNodeContents(n);
+          const q = rg.getBoundingClientRect();
+          if (q.width === 0 || q.height === 0) continue;
+          nodes++;
+          if (q.bottom > card.top && q.top < card.bottom && q.right > card.left && q.left < card.right) hits++;
+        }
+        return { hits, nodes };
+      });
+      log(r.hits === 0 && r.nodes > 0, `${label} (${r.nodes} text nodes, ${r.hits} covered)`);
+      await ctx.close();
+    } catch (e) {
+      log(false, `${label}: ${e.message}`);
+    }
+  }
+}
+
 const browser = await chromium.launch();
 console.log(`check-dialogue-preview ${origin}`);
 await closeTests(browser);
 await sweeps(browser);
 await lightboxSweeps(browser);
 await noTriggerChecks(browser);
+await ownerChecks(browser);
+await heroOverlapChecks(browser);
 await browser.close();
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nALL PASSED");
 process.exit(failures.length ? 1 : 0);

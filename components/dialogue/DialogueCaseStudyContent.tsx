@@ -196,13 +196,6 @@ export function DialogueCaseStudyContent({
                 AI-moderated interviews for enterprise UX teams and startups. Teams could not see
                 which interview said what, so a long answer felt like a guess.
               </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="problem-paragraphs"
-                title="Study chat answer as three dense paragraphs with no linked sources"
-                assetId="D-02"
-                wrapRaster={wrap}
-                frameLabel="Problem: three paragraphs, no sources"
-              />
             </Section>
 
             <Section id="why-it-matters">
@@ -309,8 +302,7 @@ export function DialogueCaseStudyContent({
             <Section id="chart-library">
               <H2>A chart only when the data asks for one</H2>
               <CaseStudyBody>
-                I audited how research teams summarize interviews, then put the common choice next to
-                the one I shipped, on the same data.
+                Each pair puts the common choice next to mine, on the same data.
               </CaseStudyBody>
               <DialogueChartLibrary />
             </Section>

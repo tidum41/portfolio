@@ -23,8 +23,8 @@ function Card({ children }: { children: React.ReactNode }) {
 function Sources() {
   return (
     <div className="dp-sources">
-      <span className="dp-source-pill">Jordan M., 21:08</span>
-      <span className="dp-source-pill">Marcus W., 22:41</span>
+      <span className="dp-source-pill">Marcus W., 21:08</span>
+      <span className="dp-source-pill">Hannah L., 22:41</span>
     </div>
   );
 }

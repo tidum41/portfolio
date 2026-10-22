@@ -83,10 +83,17 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-41 | Remove committed .playwright-mcp screenshots and ignore the folder | Oct 22 | verified | overnight audit r12; r13 preview audit 6a6881b |
 | DLG-42 | One `--caption-ink` token instead of two hard-coded caption colours | Oct 22 | verified | overnight audit r12; r13 preview audit 6a6881b |
 | DLG-43 | 390 fixed-structure figure: funnel value column cut mid-glyph; show all 5 legend labels or none | Oct 22 | verified | overnight audit r12; r13 preview audit 6a6881b |
-| DLG-44 | Light theme lightbox Close label 1.17:1 on the dark backdrop; fixed light-on-dark styling | Oct 22 | in progress | overnight audit r13 |
-| DLG-45 | Dark counter-evidence: neutral pill outline louder than the pink disagree outline | Oct 22 | in progress | overnight audit r13 |
-| DLG-46 | Hero sources grid should fill its card, equal insets | Oct 22 | in progress | overnight audit r13 |
-| DLG-47 | Closing Outcome line needs section spacing and its own block, no wording change | Oct 22 | in progress | overnight audit r13 |
+| DLG-44 | Light theme lightbox Close label 1.17:1 on the dark backdrop; fixed light-on-dark styling | Oct 22 | verified | overnight audit r13; r14 preview audit d59f98e |
+| DLG-45 | Dark counter-evidence: neutral pill outline louder than the pink disagree outline | Oct 22 | verified | overnight audit r13; r14 preview audit d59f98e |
+| DLG-46 | Hero sources grid should fill its card, equal insets | Oct 22 | verified | overnight audit r13; r14 preview audit d59f98e |
+| DLG-47 | Closing Outcome line needs section spacing and its own block, no wording change | Oct 22 | verified | overnight audit r13; r14 preview audit d59f98e |
+| DLG-48 | Timestamps must keep one owner across figures: low-coverage figure shows Jordan M., 21:08 and Marcus W., 22:41 while hero, anatomy and closing show Marcus W., 21:08 and Hannah L., 22:41 | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-49 | One "Chosen" style: comparison row uses a filled 12px badge on the card edge, library pairs an outlined pink 11px tag in the well | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-50 | Counter-evidence well is 363px in a 750px column; run it full column width like every other figure | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-51 | Lightbox: problem figure's chat card touches the well's top and bottom edges; give it equal well padding at lightbox scale | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-52 | 390 hero: drop-off card must not cover or cut off any clip pill or the chat text; keep the DLG-16 composition | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-53 | Chart library intro makes unevidenced claims ("I audited..." and "the one I shipped"); cut both, no new claims (relates to DLG-27) | Oct 22 | in progress | overnight audit r13 / outside review r14 |
+| DLG-54 | The same checkout answer and its 38% sentence repeat in too many figures; per DLG-22 ("you just need one image") remove the problem section's duplicate figure | Oct 22 | in progress | overnight audit r13 / outside review r14 |
 ## JOOLA film and card (JOO)
 
 | ID | Ask | Date | Status | Evidence |
@@ -116,6 +123,9 @@ Status can't be determined from the repo or commits.
 4. STD-06 Beacons: remove it, or label it as past work?
 5. ARC-01 and ABT-01: approve the minimap and About previews as verified?
 6. DLG-27: is the shipped vs not shipped line gone to your satisfaction?
+7. Outside review suggests replacing the closing "Outcome: researchers could share one link." with "Limit: the chat has to hold summary, chart, and clips without feeling crowded." (words already on the page). Held because DLG-47 kept the wording. Also: should the Outcome line get more emphasis than body text?
+8. Outside review suggests one answer screen as the hero at both widths instead of the current grid preview. Held: changes the approved hero direction (DLG-15, DLG-16).
+9. Outside review suggests cutting the "How much was covered" library pair because it restates "Say when the data is thin". Held: conflicts with DLG-25 (show more chart responses).
 
 ## Misses
 
@@ -131,6 +141,7 @@ Status can't be determined from the repo or commits.
 | M8 | DLG-31 reported fixed after a z-index change checked only on a local build; second Close-click miss | Stacking context above the header was never inspected | `scripts/check-dialogue-preview.mjs` real-click Close test, run against the preview of the tip |
 | M9 | DLG-35 changed a container background without re-sweeping its children; second partial-contrast miss | Checked the container, not the text inside it | `scripts/check-dialogue-preview.mjs` whole-page WCAG text sweep, light and dark, 1440 and 390 |
 | M10 | DLG-13 visible labeled Close was never contrast-checked with the lightbox open; third partial-contrast miss after M6 and M9 | Both sweeps ran with the lightbox closed, and before r12 the button was under the nav | `scripts/check-dialogue-preview.mjs` open-lightbox sweep in both themes, dark Close clicks, no-trigger assert at 600 and 390, and a SELFTEST |
+| M11 | Four r13 audit craft notes stayed as candidates instead of ledger IDs for a full cycle | Audit notes were deferred to a later step instead of logged | Every audit craft note becomes a DLG ID or a Needs Mudit row in the same cycle it is found |
 
 Shared cause in M1, M3, M4: work started without reading this ledger. Promoted: `check:asks` script plus "builders read first" rule.
 
