@@ -33,15 +33,15 @@ export default function FunnelChart({
   }));
 
   const summaryBody = (
-    <p className="dp-summary dp-text-body" data-annotate-part="summary">
+    <p className="dp-summary dp-text-body">
       {data.summary.split(data.emphasis)[0]}
-      <span className="dp-summary__emph" data-annotate-part="summary-emphasis">{data.emphasis}</span>
+      <span className="dp-summary__emph">{data.emphasis}</span>
       {data.summary.split(data.emphasis)[1] ?? ""}
     </p>
   );
   const summary = anatomy ? (
-    <div className="dp-anatomy-target" data-anatomy-part="summary" data-annotate-part="anatomy-summary">
-      <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-1">
+    <div className="dp-anatomy-target" data-anatomy-part="summary">
+      <span className="dp-anatomy-part-marker" aria-hidden>
         1
       </span>
       {summaryBody}
@@ -74,8 +74,8 @@ export default function FunnelChart({
   );
 
   const chart = anatomy ? (
-    <div className="dp-anatomy-target" data-anatomy-part="chart" data-annotate-part="anatomy-chart">
-      <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-3">
+    <div className="dp-anatomy-target" data-anatomy-part="chart">
+      <span className="dp-anatomy-part-marker" aria-hidden>
         3
       </span>
       {plot}

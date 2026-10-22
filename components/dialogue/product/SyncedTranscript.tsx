@@ -33,13 +33,12 @@ const ROWS: Row[] = [
 
 export default function SyncedTranscript() {
   return (
-    <div className="dp-synced-transcript" aria-hidden data-annotate-part="transcript">
+    <div className="dp-synced-transcript" aria-hidden>
       <p className="dp-synced-transcript__label">Synced transcript</p>
       <ul className="dp-synced-transcript__list">
         {ROWS.map((row, i) => (
           <li
             key={i}
-            data-annotate-part={`transcript-row-${i + 1}`}
             className={[
               "dp-synced-transcript__row",
               row.active ? "dp-synced-transcript__row--active" : "",

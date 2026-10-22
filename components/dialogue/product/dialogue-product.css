@@ -1720,15 +1720,12 @@
   min-width: 0;
 }
 
-/* Figures are pictures of product UI, so they ignore the pointer in normal use.
-   While the annotation toolbar is active (it adds #agentation-cursor) every part
-   becomes hit-testable so a pill, bar, or label can be selected exactly. */
-html:not(:has(#agentation-cursor)) .dialogue-product-block--static {
+.dialogue-product-block--static {
   pointer-events: none;
   user-select: none;
 }
 
-html:not(:has(#agentation-cursor)) .dialogue-product-block--static * {
+.dialogue-product-block--static * {
   pointer-events: none !important;
   user-select: none !important;
 }

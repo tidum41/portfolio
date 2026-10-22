@@ -91,7 +91,6 @@ export default function AnatomyStructureFigure() {
           <div
             key={label}
             className="dp-anatomy__callout"
-            data-annotate-part={`callout-${i + 1}`}
             style={callouts[i] ? { top: callouts[i].top } : undefined}
           >
             <span className="dp-anatomy__num">{i + 1}</span>
@@ -99,7 +98,7 @@ export default function AnatomyStructureFigure() {
           </div>
         ))}
       </div>
-      <div className="dp-anatomy__diagram" data-annotate-part="diagram">
+      <div className="dp-anatomy__diagram">
         <StructuredAnswerFigure anatomy />
       </div>
     </div>

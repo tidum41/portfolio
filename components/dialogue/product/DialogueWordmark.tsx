@@ -6,7 +6,6 @@ export default function DialogueWordmark({ className }: { className?: string }) 
       src="/dialogue/logo.svg"
       alt="dialogue"
       className={className}
-      data-annotate-part="wordmark"
       width={1000}
       height={230}
       decoding="sync"

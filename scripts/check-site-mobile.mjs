@@ -29,25 +29,6 @@ const url = (path) => {
   }
   return u.toString();
 };
-// Preview builds mount the agentation toolbar; the gates measure the site, not the toolbar.
-function ignoreToolbar(browser) {
-  const make = browser.newContext.bind(browser);
-  browser.newContext = async (opts) => {
-    const ctx = await make(opts);
-    await ctx.addInitScript(() => {
-      const hide = () => {
-        const s = document.createElement("style");
-        s.textContent = "agentation-toolbar{display:none!important}";
-        (document.head || document.documentElement).appendChild(s);
-      };
-      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", hide);
-      else hide();
-    });
-    return ctx;
-  };
-  return browser;
-}
-
 const failures = [];
 const log = (ok, msg) => {
   console.log(`${ok ? "PASS" : "FAIL"} ${msg}`);
@@ -64,7 +45,7 @@ const stickyProbe = () => {
   });
 };
 
-const browser = ignoreToolbar(await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] }));
+const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
 const pages = ["/", "/dialogue", "/joola", "/ucla-sublease", "/about"];
 for (const width of [390, 360]) {
   for (const path of pages) {

@@ -37,19 +37,19 @@ export default function HeroStructuredFigure() {
     <div className="dp-hero-v2 dialogue-product-root">
       <div className="dp-hero-v2__desktop">
         <HeroChatCard />
-        <div className="dp-hero-v2__aside" data-annotate-part="aside">
+        <div className="dp-hero-v2__aside">
           <FunnelCard />
           <div
             className={`dp-hero-v2__card dp-hero-v2__sources dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
           >
-            <div className="dp-sources" data-annotate-part="sources-row">
-              <span className="dp-source-pill" data-annotate-part="source-pill-jordan-m">Jordan M., 14:03</span>
-              <span className="dp-source-pill" data-annotate-part="source-pill-marcus-w">Marcus W., 21:08</span>
-              <span className="dp-source-pill dp-source-pill--selected" data-annotate-part="source-pill-priya-k">Priya K., 15:47</span>
-              <span className="dp-source-pill" data-annotate-part="source-pill-hannah-l">Hannah L., 22:41</span>
+            <div className="dp-sources">
+              <span className="dp-source-pill">Jordan M., 14:03</span>
+              <span className="dp-source-pill">Marcus W., 21:08</span>
+              <span className="dp-source-pill dp-source-pill--selected">Priya K., 15:47</span>
+              <span className="dp-source-pill">Hannah L., 22:41</span>
             </div>
           </div>
-          <div className="dp-hero-v2__clips" data-annotate-part="clips">
+          <div className="dp-hero-v2__clips">
             <ClipThumbnails selectedTime="15:47" />
           </div>
         </div>

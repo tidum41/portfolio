@@ -20,11 +20,11 @@ export default function FullAnswerFigure() {
   return (
     <div className="dp-full-answer dialogue-product-root dp-chat-panel-typography">
       <div className="dp-full-answer__cluster" data-export-full-answer-drawer="true">
-        <div className="dp-full-answer__answer" data-annotate-part="answer">
+        <div className="dp-full-answer__answer">
           <StudyChatShell compact hideComposer>
             <UserMessageBubble>{MOBILE_FOLLOWUP.question}</UserMessageBubble>
             <QuerySearchStep searched={24} found={6} />
-            <p className="dp-summary" data-annotate-part="summary">{MOBILE_FOLLOWUP.summary}</p>
+            <p className="dp-summary">{MOBILE_FOLLOWUP.summary}</p>
             <ChartVizCard title="Mobile checkout, % still in flow">
               <ChartBarList
                 rows={MOBILE_STEPS.map((row) => ({
@@ -42,12 +42,11 @@ export default function FullAnswerFigure() {
         </div>
         <aside
           className="dp-full-answer__drawer"
-          data-annotate-part="clips-drawer"
           aria-label="Clips from this answer"
           data-export-hero-clips-panel="true"
         >
           <div className="dp-full-answer__drawer-head">
-            <p className="dp-full-answer__drawer-title" data-annotate-part="clips-drawer-title">Clips from this answer</p>
+            <p className="dp-full-answer__drawer-title">Clips from this answer</p>
             <p className="dp-full-answer__drawer-sub">{MOBILE_FOLLOWUP.drawerSub}</p>
           </div>
           <div className="dp-full-answer__drawer-list">

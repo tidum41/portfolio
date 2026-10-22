@@ -33,10 +33,9 @@ export default function StudyChatShell({
         .filter(Boolean)
         .join(" ")}
       data-export-chat-panel="true"
-      data-annotate-part="chat"
     >
       {hideHeader ? null : (
-        <div className="dp-study-chat__head" data-annotate-part="chat-header">
+        <div className="dp-study-chat__head">
           <div className="dp-study-chat__head-top">
             <div className="dp-study-chat__head-text">
               <div className="dp-study-chat__title-row">
@@ -59,7 +58,7 @@ export default function StudyChatShell({
         </div>
       )}
       <div className="dp-study-chat__scroll">
-        <div className="dp-study-chat__body" data-annotate-part="chat-body">{children}</div>
+        <div className="dp-study-chat__body">{children}</div>
       </div>
       {!hideComposer ? <ChatComposer /> : null}
     </div>

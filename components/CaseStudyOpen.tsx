@@ -26,7 +26,6 @@ export default function CaseStudyOpen({
   posterHeight,
   subtitle,
   children,
-  annotate = "case-study-hero",
 }: {
   tagline?: ReactNode;
   title: string;
@@ -37,7 +36,6 @@ export default function CaseStudyOpen({
   posterHeight?: number;
   subtitle?: ReactNode;
   children?: ReactNode;
-  annotate?: string;
 }) {
   return (
     <header className="cs-hero-header">
@@ -90,7 +88,7 @@ export default function CaseStudyOpen({
       )}
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
-          <div className="cs-hero-media-frame" data-annotate={`${annotate}/media`} style={{ background: heroBg }}>
+          <div className="cs-hero-media-frame" style={{ background: heroBg }}>
             <MuxHero
               playbackId={muxPlaybackId}
               posterWidth={posterWidth}

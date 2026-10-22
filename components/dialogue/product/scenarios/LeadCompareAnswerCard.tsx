@@ -2,7 +2,6 @@ import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
-import { annotateSlug } from "@/components/dialogue/annotate";
 
 const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
 
@@ -32,7 +31,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   if (variant === "paragraphs") {
     return (
       <div className="dp-lead-answer-card dp-lead-answer-card--paragraphs">
-        <div className="dp-lead-answer-card__prose dp-text-prose-sm" data-annotate-part="prose">
+        <div className="dp-lead-answer-card__prose dp-text-prose-sm">
           {PARAGRAPH_ANSWER_BRIEF.map((p) => (
             <p key={p.slice(0, 20)}>{p}</p>
           ))}
@@ -46,7 +45,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
       <div className="dp-lead-answer-card dp-lead-answer-card--quotes">
         <div className="dp-lead-answer-card__quotes">
           {QUOTE_LIST.map((q) => (
-            <div key={q.participant} className="dp-lead-answer-card__quote" data-annotate-part={`quote-${annotateSlug(q.participant)}`}>
+            <div key={q.participant} className="dp-lead-answer-card__quote">
               <strong>{q.participant}</strong>
               {q.quote}
             </div>
@@ -57,7 +56,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   }
 
   const summary = (
-    <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
+    <p className="dp-lead-answer-card__summary dp-text-body">
       {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
       <span className="dp-summary__emph">{CHECKOUT_FUNNEL.emphasis}</span>
       {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
@@ -67,7 +66,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       {summary}
-      <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
+      <div className="dp-lead-answer-card__funnel">
         <p className="dp-lead-answer-card__funnel-title">Checkout funnel, % still in flow</p>
         <ChartBarList
           className="dp-lead-answer-card__bars"
@@ -81,11 +80,10 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
           fillMode="index"
         />
       </div>
-      <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
+      <div className="dp-sources dp-lead-answer-card__sources">
         {MINI_SOURCES.map((s) => (
           <span
             key={s.participant}
-            data-annotate-part={`source-pill-${annotateSlug(s.participant)}`}
             className={[
               "dp-source-pill",
               s.participant === "Priya K." ? "dp-source-pill--selected" : "",

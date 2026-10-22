@@ -2,7 +2,6 @@ import {
   dialogueChartSpec,
   formatChartDecimal,
 } from "@/components/dialogue/product/chart/chartSpec";
-import { annotateSlug } from "@/components/dialogue/annotate";
 
 export type ChartLinePoint = { label: string; value: number };
 
@@ -82,7 +81,6 @@ export default function ChartLinePlot({
         role="img"
         aria-label="Line chart"
         className="dp-chart-line__svg"
-        data-annotate-part="line-plot"
       >
         {ticks.map((tick) => (
           <line
@@ -114,7 +112,6 @@ export default function ChartLinePlot({
         ))}
         <polyline
           className="dp-chart-line__path"
-          data-annotate-part="line"
           stroke={stroke}
           strokeWidth={dialogueChartSpec.line.strokeWidth}
           points={coords.map((c) => `${c.x},${c.y}`).join(" ")}
@@ -128,8 +125,8 @@ export default function ChartLinePlot({
             ? dialogueChartSpec.color.focal
             : dialogueChartSpec.color.line;
           return (
-            <g key={c.label} data-annotate-part={`point-${annotateSlug(c.label)}`}>
-              <circle cx={c.x} cy={c.y} r={r} fill={fill} data-annotate-part={`point-dot-${annotateSlug(c.label)}`} />
+            <g key={c.label}>
+              <circle cx={c.x} cy={c.y} r={r} fill={fill} />
               <text
                 x={c.x}
                 y={c.y - 8}

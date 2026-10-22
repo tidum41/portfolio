@@ -172,9 +172,9 @@ function NeutralIcon() {
   );
 }
 
-function PainPoint({ text, index }: { text: string; index: number }) {
+function PainPoint({ text }: { text: string }) {
   return (
-    <div data-annotate={`bruinlease-problem/pain-point-${index + 1}`} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
       <XIcon />
       <p style={{ fontSize: "var(--fs-body)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
@@ -182,15 +182,14 @@ function PainPoint({ text, index }: { text: string; index: number }) {
 }
 
 function CardBox({ src, alt, label, position }: { src?: string; alt: string; label: string; position?: "left" | "middle" | "right" }) {
-  const part = position ?? "middle";
   const radius = position === "left"
     ? "var(--radius-card) 0 0 var(--radius-card)"
     : position === "right"
     ? "0 var(--radius-card) var(--radius-card) 0"
     : "0";
   return (
-    <div data-annotate={`bruinlease-decision-1/card-${part}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div className="cs-d1-card-img" data-annotate={`bruinlease-decision-1/card-${part}-image`} style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="cs-d1-card-img" style={{ background: "var(--color-placeholder)", borderRadius: radius, overflow: "hidden", minHeight: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {src
           ? <img src={src} alt={alt} loading="lazy" decoding="async" style={{ width: "100%", display: "block", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
@@ -201,9 +200,9 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
   );
 }
 
-function CompRow({ type, text, annotate }: { type: string; text: string; annotate?: string }) {
+function CompRow({ type, text }: { type: string; text: string }) {
   return (
-    <div data-annotate={annotate} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+    <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
       {type === "right"   && <CheckIcon />}
       {type === "wrong"   && <XIcon />}
       {type === "neutral" && <NeutralIcon />}
@@ -442,7 +441,6 @@ export default function BruinLeasePage() {
             title={FB.heroTitle}
             metadata={FB.metadata}
             muxPlaybackId={FB.heroMuxId}
-            annotate="bruinlease-hero"
             heroBg={FB.heroBg}
             posterWidth={1280}
             posterHeight={1067}
@@ -504,7 +502,6 @@ async function BruinLeaseContent() {
                   <CaseStudyFigure
                     src={cs.problemImage}
                     alt="Fragmented subleasing platforms"
-                    annotate="bruinlease-problem"
                     caption={cs.problemImageCaption?.replace(/\s+—\s+/g, ": ")}
                     fill
                     aspectRatio="16/7"
@@ -525,7 +522,7 @@ async function BruinLeaseContent() {
                 )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {painPoints.map((text, i) => <PainPoint key={i} text={text} index={i} />)}
+                {painPoints.map((text, i) => <PainPoint key={i} text={text} />)}
               </div>
             </Section>
 
@@ -557,7 +554,6 @@ async function BruinLeaseContent() {
                   <CaseStudyFigure
                     src={cs.figmaComparison}
                     alt="Early layout exploration in Figma"
-                    annotate="bruinlease-process"
                     caption="Early layout exploration in Figma"
                     width={1600}
                     height={900}
@@ -600,7 +596,7 @@ async function BruinLeaseContent() {
                   <div key={label} className="cs-d1-column" style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
                     <CardBox src={src} alt={alt} label={label} position={position} />
                     <div className="cs-d1-comp-col" style={{ display: "flex", flexDirection: "column", gap: 8, paddingRight: 12 }}>
-                      {col.map((row, ri) => <CompRow key={row._key} type={row.type} text={row.text} annotate={`bruinlease-decision-1/${position}-point-${ri + 1}`} />)}
+                      {col.map((row) => <CompRow key={row._key} type={row.type} text={row.text} />)}
                     </div>
                   </div>
                 ))}
@@ -691,7 +687,7 @@ async function BruinLeaseContent() {
               <H2>{cs.solutionHeading}</H2>
               {cs.solutionBody && <Body>{cs.solutionBody}</Body>}
               <div style={{ display: "flex", justifyContent: "center", margin: "32px 0" }}>
-                <div className="pm-solution-wrap" data-annotate="bruinlease-solution/phone-video">
+                <div className="pm-solution-wrap">
                   <PhoneMockup
                     videoSrc="/solution.mp4"
                     showFrame

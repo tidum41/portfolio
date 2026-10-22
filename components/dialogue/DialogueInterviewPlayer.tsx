@@ -27,7 +27,6 @@ export function DialogueInterviewPlayer() {
   return (
     <div
       data-placement-crop="player"
-      data-annotate-part="player"
       style={{
         fontFamily: DIALOGUE_GRAPHICS_FONT,
         borderRadius: PLACEMENT_RADIUS_MD,
@@ -51,7 +50,6 @@ export function DialogueInterviewPlayer() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           data-dialogue-placement-still="true"
-          data-annotate-part="player-still"
           src={DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
           alt=""
           width={1920}
@@ -69,7 +67,6 @@ export function DialogueInterviewPlayer() {
         <div
           aria-hidden
           data-face-blur="true"
-          data-annotate-part="player-face-blur"
           style={{
             position: "absolute",
             left: "73.8%",
@@ -82,7 +79,6 @@ export function DialogueInterviewPlayer() {
         />
         <div
           aria-hidden
-          data-annotate-part="player-play-layer"
           style={{
             position: "absolute",
             inset: 0,
@@ -93,7 +89,6 @@ export function DialogueInterviewPlayer() {
           }}
         >
           <div
-            data-annotate-part="player-play-button"
             style={{
               width: PLAY_BUTTON_SIZE,
               height: PLAY_BUTTON_SIZE,

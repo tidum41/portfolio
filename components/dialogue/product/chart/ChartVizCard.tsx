@@ -20,13 +20,12 @@ export default function ChartVizCard({
     <div
       className={["dp-chart-root dp-chart-viz-card", className].filter(Boolean).join(" ")}
       data-testid="viz-card"
-      data-annotate-part="chart-card"
     >
       <div className="dp-chart-viz-card__inner">
-        {title ? <p className="dp-chart-title" data-annotate-part="chart-title">{title}</p> : null}
+        {title ? <p className="dp-chart-title">{title}</p> : null}
         {children}
-        {caption ? <p className="dp-chart-caption" data-annotate-part="chart-caption">{caption}</p> : null}
-        {footnote ? <p className="dp-chart-footnote" data-annotate-part="chart-footnote">{footnote}</p> : null}
+        {caption ? <p className="dp-chart-caption">{caption}</p> : null}
+        {footnote ? <p className="dp-chart-footnote">{footnote}</p> : null}
       </div>
     </div>
   );

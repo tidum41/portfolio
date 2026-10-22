@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import StaticFigure from "@/components/dialogue/StaticFigure";
-import { annotateSlug } from "@/components/dialogue/annotate";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartLinePlot from "@/components/dialogue/product/chart/ChartLinePlot";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
@@ -24,23 +22,21 @@ const GROUPS = SEGMENT_ADDRESS.rows;
 const ROUNDS = SENTIMENT_LINE.points;
 
 function Specimen({
-  entryId,
   status,
   children,
 }: {
-  entryId: string;
   status: "ruled-out" | "chosen";
   children: ReactNode;
 }) {
   return (
     <figure className="dialogue-lib__specimen" data-status={status}>
       <span className="dialogue-lib__tag">{status === "chosen" ? "Chosen" : "Ruled out"}</span>
-      <StaticFigure
-        figure={`chart-${entryId}-${status}`}
+      <div
         className={`dialogue-lib__chart dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+        aria-hidden
       >
         {children}
-      </StaticFigure>
+      </div>
     </figure>
   );
 }
@@ -50,7 +46,7 @@ function Bubbles() {
     <ChartVizCard title="Drop-off by step">
       <div className="dialogue-lib__bubbles">
         {STEPS.map((s) => (
-          <div key={s.label} className="dialogue-lib__bubble-cell" data-annotate-part={`bubble-${annotateSlug(s.label)}`}>
+          <div key={s.label} className="dialogue-lib__bubble-cell">
             <span
               className="dialogue-lib__bubble"
               style={{ width: 24 + s.pct * 0.56, height: 24 + s.pct * 0.56 }}
@@ -77,7 +73,7 @@ function Distribution() {
         {buckets.map((b, i) => (
           <g key={b.lo}>
             {b.count > 0 ? (
-              <rect data-annotate-part={`dist-bar-${b.lo}`} x={12 + i * 26} y={84 - b.count * 36} width={20} height={b.count * 36} rx={3} className="dialogue-lib__dist-bar" />
+              <rect x={12 + i * 26} y={84 - b.count * 36} width={20} height={b.count * 36} rx={3} className="dialogue-lib__dist-bar" />
             ) : null}
             {i % 2 === 0 ? (
               <text x={22 + i * 26} y={102} textAnchor="middle" className="dialogue-lib__svg-label">
@@ -100,7 +96,7 @@ function Timeline() {
           const x = 20 + (i * 240) / Math.max(ROUNDS.length - 1, 1);
           return (
             <g key={p.label}>
-              <circle data-annotate-part={`timeline-dot-${annotateSlug(p.label)}`} cx={x} cy={50} r={6} className="dialogue-lib__timeline-dot" />
+              <circle cx={x} cy={50} r={6} className="dialogue-lib__timeline-dot" />
               <text x={x} y={78} textAnchor="middle" className="dialogue-lib__svg-label">
                 {p.label}
               </text>
@@ -116,8 +112,8 @@ function MentionTotal() {
   return (
     <ChartVizCard title="Address friction">
       <div className="dialogue-lib__total">
-        <span className="dialogue-lib__total-bar" data-annotate-part="total-bar" />
-        <span className="dialogue-lib__total-value" data-annotate-part="total-value">31 quotes</span>
+        <span className="dialogue-lib__total-bar" />
+        <span className="dialogue-lib__total-value">31 quotes</span>
       </div>
     </ChartVizCard>
   );
@@ -229,8 +225,8 @@ export default function DialogueChartLibrary() {
           <h3 className="dialogue-lib__name">{entry.name}</h3>
           <p className="dialogue-lib__verdict">{entry.verdict}</p>
           <div className="dialogue-lib__pair">
-            <Specimen entryId={entry.id} status="ruled-out">{entry.bad}</Specimen>
-            <Specimen entryId={entry.id} status="chosen">{entry.good}</Specimen>
+            <Specimen status="ruled-out">{entry.bad}</Specimen>
+            <Specimen status="chosen">{entry.good}</Specimen>
           </div>
           <div className="dialogue-lib__tech">
             {entry.tech.map(([label, text]) => (
