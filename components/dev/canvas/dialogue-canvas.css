@@ -1,0 +1,145 @@
+/* Dialogue component canvas. Plain viewport, subtle preview boundaries,
+   minimal fixed controls. Colors come from the site theme tokens so the
+   canvas controls and the Dialogue previews share one theme. */
+
+.dc-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+.dc-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: default;
+  touch-action: none;
+  overscroll-behavior-x: none;
+}
+
+.dc-viewport:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -2px;
+}
+
+.dc-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  transform-origin: 0 0;
+}
+
+.dc-item {
+  position: absolute;
+}
+
+.dc-item-head {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dc-handle {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.dc-label {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dc-handle:focus-visible,
+.dc-label:focus-visible,
+.dc-controls button:focus-visible,
+.dc-controls select:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.dc-copied {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.dc-preview {
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  border-radius: var(--radius-control, 8px);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.dc-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--color-bg);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 16%, transparent);
+  border-radius: var(--radius-control, 8px);
+}
+
+.dc-controls button,
+.dc-controls select {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: inherit;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.dc-zoom-pct {
+  min-width: 44px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.dc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
