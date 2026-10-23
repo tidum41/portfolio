@@ -65,15 +65,15 @@ export default function ThinDataFigure() {
           className="dp-next-study"
           data-interactive
           data-annotate-part="next-study-button"
-          title="Copies a prompt for the next study to your clipboard"
-          aria-label="Add to my plan. Copies a prompt for the next study to your clipboard."
+          title="Copies a prompt to paste into Ask about your study."
+          aria-label="Add to my plan. Copies a prompt to paste into Ask about your study."
           onClick={onCopy}
         >
           {copied ? <CheckIcon className="dp-next-study__icon" /> : <CopyIcon className="dp-next-study__icon" />}
           Add to my plan
         </button>
         <p className="dp-next-study__hint" role="status" data-annotate-part="next-study-hint">
-          {copied ? "Copied. Paste it into your notes." : "Copies a prompt for the next study."}
+          {copied ? "Copied. Paste it into Ask about your study." : "Copies a prompt to paste into Ask about your study."}
         </p>
       </div>
     </StudyChatShell>
