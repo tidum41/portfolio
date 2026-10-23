@@ -204,7 +204,9 @@ export function DialogueCaseStudyContent({
                 Dialogue runs AI-moderated interviews for UX teams, and I designed its study chat.
                 A researcher could ask a question about a study and get a long, confident answer,
                 and the answer never said which interview it came from. The question I kept coming
-                back to was who said that, and the chat could not answer it.
+                back to was who said that, and the chat could not answer it. The answers were on
+                their way into slides and reports, where a claim nobody can trace has to be
+                checked by hand or left out.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="problem-paragraphs"
@@ -264,7 +266,9 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets the same five parts, in the same order</H2>
               <CaseStudyBody>
-                Summary, sources, chart, clips, follow-ups. I kept the order fixed so a reader
+                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart
+                because the chart is the finding drawn as a shape, and the reader should meet the
+                interviews behind it before the shape. I kept the order fixed so a reader
                 learns the shape once and then only reads what changes. I study cognitive science,
                 so I think about order as a memory problem: attention should go to the answer, not
                 to relearning the layout. The cost of a fixed order is that a simple answer
@@ -311,9 +315,10 @@ export function DialogueCaseStudyContent({
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
                 A chart makes four interviews look like a trend. When the evidence is thin, the
-                answer leads with the count and holds the chart back. The cost is a weaker-looking
-                answer, and I would rather the answer look weak than borrow confidence it
-                has not earned.
+                answer leads with the count and holds the chart back. A count cannot look like
+                more than it is: 4 of 24 reads as thin at a glance, and a chart would not. The
+                cost is a weaker-looking answer, and I would rather the answer look weak than
+                borrow confidence it has not earned.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
@@ -332,11 +337,11 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                Ask a follow-up and the question narrows, and the structure does not reset. The
-                filtered answer keeps its sources, its chart, and every supporting clip in one
-                drawer, so the reader never has to rebuild the evidence for a smaller question.
-                The cost is that the drawer has to hold everything the full answer holds, in less
-                room.
+                Ask a follow-up and the question narrows, and the structure does not reset. A
+                follow-up could have started over with a fresh answer, and the reader would have
+                had to check that answer from zero. Instead the filtered answer keeps the first
+                answer's sources, its chart, and every supporting clip in one drawer. The cost
+                is that the drawer has to hold everything the full answer holds, in less room.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"

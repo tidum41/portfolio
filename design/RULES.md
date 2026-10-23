@@ -28,6 +28,12 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - A filtered answer shows its own count in the evidence footer, never the full study count.
 - Hyphenate compound modifiers in prose (AI-moderated, follow-up, counter-evidence, mid-thought) and match the UI label spelling exactly.
 
+## 2026-10-23 (story depth)
+
+- An annotation row that names a spec (data shape, encoding) is not a reason; rows under a comparison carry the first reach, why it failed, and the cost.
+- If the page fixes an order, it argues the sequence, not only the fixedness; each position in the structure earns its place in one sentence.
+- A choice reads as a choice when the rejected default is named first; an unnamed alternative makes the design look inevitable.
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.

@@ -98,8 +98,8 @@ const ENTRIES = [
     verdict:
       "Bars show where people quit, and the address step is marked because its drop is the largest. Bubbles make you guess at sizes, which costs the reader the one comparison that matters.",
     tech: [
-      ["Data shape", "ordered steps, counts."],
-      ["Encoding", "length on a zero baseline is read precisely; area is not."],
+      ["First reach", "bubbles, because the steps felt like sizes, and bubbles show size."],
+      ["Why it failed", "area cannot be compared at a glance, so the largest drop hides until you read every number."],
       ["Tradeoff", "bars rank the steps and nothing more; why people quit still has to come from the clips."],
     ],
     bad: <Bubbles />,
