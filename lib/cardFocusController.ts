@@ -32,21 +32,28 @@ export class CardFocusController {
 
   private lastPtrX = Number.NaN;
   private lastPtrY = Number.NaN;
+  private lastPtrTarget: Element | null = null;
+  private lastPtrCaptured = false;
 
   private rafId = 0;
   private hitTestMode: HitTestMode | null = null;
+  private finePointerMq: MediaQueryList | null = null;
 
   /** Bumped on every focus change; video work from an older generation is dropped. */
   private generation = 0;
   private timers = new Set<number>();
 
   private io: IntersectionObserver | null = null;
+  private observedVideos = new WeakSet<HTMLVideoElement>();
   /** Unknown counts as in view, so a missing IO report never leaves a video paused. */
   private inView = new WeakMap<HTMLVideoElement, boolean>();
 
   enabled(): boolean {
     if (typeof window === "undefined") return false;
-    return window.matchMedia(FINE_POINTER_MQ).matches;
+    if (!this.finePointerMq) {
+      this.finePointerMq = window.matchMedia(FINE_POINTER_MQ);
+    }
+    return this.finePointerMq.matches;
   }
 
   mount(grid: HTMLElement) {
@@ -63,8 +70,9 @@ export class CardFocusController {
     window.addEventListener("soft-nav-start", this.onSoftNavStart);
     document.addEventListener("visibilitychange", this.onVisibility);
 
-    this.unmountVideoGuards = mountCardFocusVideoGuards(grid);
     this.io = new IntersectionObserver(this.onIntersect);
+    this.observedVideos = new WeakSet<HTMLVideoElement>();
+    this.unmountVideoGuards = mountCardFocusVideoGuards(grid, () => this.observeVideos());
     this.observeVideos();
   }
 
@@ -73,6 +81,8 @@ export class CardFocusController {
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = 0;
     this.hitTestMode = null;
+    this.lastPtrTarget = null;
+    this.lastPtrCaptured = false;
     this.setActive(null, { skipVideos: true });
     pausedByFocus.clear();
 
@@ -80,6 +90,7 @@ export class CardFocusController {
     this.unmountVideoGuards = null;
     this.io?.disconnect();
     this.io = null;
+    this.observedVideos = new WeakSet<HTMLVideoElement>();
 
     document.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("scroll", this.onScrollLike, true);
@@ -101,7 +112,11 @@ export class CardFocusController {
 
   private observeVideos() {
     if (!this.grid || !this.io) return;
-    for (const v of collectCardVideos(this.grid)) this.io.observe(v);
+    for (const v of collectCardVideos(this.grid)) {
+      if (this.observedVideos.has(v)) continue;
+      this.observedVideos.add(v);
+      this.io.observe(v);
+    }
   }
 
   private after(ms: number, fn: () => void) {
@@ -118,7 +133,6 @@ export class CardFocusController {
   }
 
   private scheduleHitTest(mode: HitTestMode) {
-    if (!this.enabled()) return;
     if (mode === "pointer") this.hitTestMode = "pointer";
     else if (this.hitTestMode !== "pointer") this.hitTestMode = "scroll";
 
@@ -136,16 +150,35 @@ export class CardFocusController {
     if (!this.enabled()) return;
     this.lastPtrX = e.clientX;
     this.lastPtrY = e.clientY;
+    const t = e.target instanceof Element ? e.target : null;
+    this.lastPtrTarget = t;
+    this.lastPtrCaptured = Boolean(t && typeof t.hasPointerCapture === "function" && t.hasPointerCapture(e.pointerId));
     this.scheduleHitTest("pointer");
   };
 
   private onScrollLike = () => {
-    if (!this.enabled()) return;
+    if (!this.activeCard || !this.enabled()) return;
     this.scheduleHitTest("scroll");
   };
 
   private flushPointerHitTest() {
     if (!this.grid) return;
+    const t = this.lastPtrTarget;
+    if (
+      t &&
+      t.isConnected &&
+      t !== document.documentElement &&
+      t !== document.body &&
+      !this.lastPtrCaptured
+    ) {
+      if (!this.grid.contains(t)) {
+        this.setActive(null);
+        return;
+      }
+      const card = t.closest?.(".portfolio-grid-card") as CardEl | null;
+      this.setActive(card?.dataset.gridCard && this.grid.contains(card) ? card : null);
+      return;
+    }
     if (!Number.isFinite(this.lastPtrX) || !Number.isFinite(this.lastPtrY)) return;
     this.setActive(this.cardAtPoint(this.lastPtrX, this.lastPtrY));
   }

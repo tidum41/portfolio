@@ -8,6 +8,7 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 import "@/components/dialogue/product/dialogue-product.css";
 
@@ -18,11 +19,11 @@ export const metadata: Metadata = {
 
 /** Native export layout widths (transforms stripped in parity capture). */
 const PARITY_W = {
-  "chat-shell": 400,
-  "answer-card": 400,
-  funnel: 343,
-  "clip-row": 343,
-  "follow-ups": 343,
+  "chat-shell": 448,
+  "answer-card": 448,
+  funnel: 392,
+  "clip-row": 392,
+  "follow-ups": 392,
 } as const;
 
 function LiveFrame({ id, children }: { id: keyof typeof PARITY_W; children: ReactNode }) {
@@ -40,7 +41,11 @@ function LiveFrame({ id, children }: { id: keyof typeof PARITY_W; children: Reac
         boxSizing: "border-box",
       }}
     >
-      <div className="dialogue-product-root dp-chat-panel-typography">{children}</div>
+      <div
+        className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

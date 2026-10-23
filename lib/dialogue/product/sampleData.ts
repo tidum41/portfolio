@@ -2,6 +2,13 @@ export const CHECKOUT_QUESTION = "Where did people drop off in checkout?";
 
 export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";
 
+/** Problem figure: short wall of text (2 sentences). */
+export const PARAGRAPH_ANSWER_BRIEF = [
+  "Most participants hesitated at shipping address, delivery, and payment.",
+  "Nothing in the thread linked quotes back to footage or funnel steps.",
+];
+
+/** Lead option: full paragraph wall for comparison. */
 export const PARAGRAPH_ANSWER = [
   "Across the 24 interviews in this Northline checkout study, participants most often hesitated at shipping address, delivery options, and payment confirmation. Several described re-reading fields, backing out to check the cart, or pausing when error copy felt vague. Mobile sessions amplified autocomplete issues and international format confusion.",
   "Desktop participants cited unexpected fees and delivery dates that read like extra charges. A few mentioned trust on payment retry, saved wallets buried below the fold, and confirmation screens that felt abrupt. Quotes live in separate docs; charts are rebuilt in slides.",
@@ -12,11 +19,11 @@ export const CHECKOUT_FUNNEL = {
   summary: "Shipping address loses 38% of participants, the largest single-step drop in checkout.",
   emphasis: "loses 38% of participants",
   steps: [
-    { label: "Cart", pct: 100, barColor: "#D6D3D1" },
-    { label: "Address", pct: 62, focal: true, drop: 38, barColor: "#B43F7F" },
-    { label: "Delivery", pct: 54, drop: 8, barColor: "#57534D" },
-    { label: "Payment", pct: 42, drop: 12, barColor: "#A8A29E" },
-    { label: "Confirm", pct: 36, drop: 6, barColor: "#D6D3D1" },
+    { label: "Cart", pct: 100 },
+    { label: "Address", pct: 62, focal: true, drop: 38 },
+    { label: "Delivery", pct: 54, drop: 8 },
+    { label: "Payment", pct: 42, drop: 12 },
+    { label: "Confirm", pct: 36, drop: 6 },
   ],
 };
 
@@ -63,6 +70,63 @@ export const SENTIMENT_LINE = {
   question: "How did sentiment shift across the 3 prototype rounds?",
 };
 
+/** Segment comparison: same metric across participant groups (not a funnel). */
+export const SEGMENT_ADDRESS = {
+  question: "Which segment struggled with address validation?",
+  summary: "Mobile participants reported autocomplete resets about twice as often.",
+  title: "Autocomplete resets by segment",
+  caption: "Share of participants who hit a reset on address",
+  rows: [
+    { label: "Mobile", pct: 64, focal: true },
+    { label: "Desktop", pct: 31 },
+    { label: "Tablet", pct: 22 },
+  ],
+};
+
+/** Coverage callout: how many interviews support the finding. */
+export const COVERAGE_ADDRESS = {
+  question: "How widely did address friction show up?",
+  headline: "18 of 24 interviews mention address friction",
+  detail: "Most of the support sits on the shipping step",
+  title: "Interviews that support this finding",
+  rows: [
+    { label: "Mentioned it", count: 18, focal: true },
+    { label: "Did not", count: 6 },
+  ],
+};
+
+/** Full-answer section: follow-up filter, not the hero checkout funnel. */
+export const MOBILE_FOLLOWUP = {
+  question: "Show mobile only",
+  summary: "On mobile, the apartment field clearing was the sharpest address complaint.",
+  drawerSub: "6 moments from mobile sessions",
+  clips: [
+    {
+      id: "mob-1",
+      participant: "Jordan M.",
+      segment: "14:03–14:19",
+      transcript:
+        "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
+      highlight: "almost closed the tab",
+    },
+    {
+      id: "mob-2",
+      participant: "Priya K.",
+      segment: "16:02–16:18",
+      transcript:
+        "On my phone the country switch reset everything, so I had to start the address over.",
+      highlight: "start the address over",
+    },
+    {
+      id: "mob-3",
+      participant: "Sam R.",
+      segment: "11:22–11:40",
+      transcript: "I gave up on saved address and typed it again with my thumbs.",
+      highlight: "gave up on saved address",
+    },
+  ],
+};
+
 export const QUOTE_LIST = [
   { participant: "Jordan M.", quote: "I almost closed the tab when autocomplete cleared the apartment field." },
   { participant: "Priya K.", quote: "International format wasn't obvious on mobile." },
@@ -70,9 +134,18 @@ export const QUOTE_LIST = [
 ];
 
 export const ANATOMY_LABELS = [
-  "Sources",
   "Summary",
+  "Sources",
   "Chart",
   "Clips",
   "Follow-ups",
 ];
+
+/** Matches `data-anatomy-part` on anatomy figure targets (D-08 crop at ≤480px). */
+export const ANATOMY_PART_IDS = [
+  "summary",
+  "sources",
+  "chart",
+  "clips",
+  "followups",
+] as const;

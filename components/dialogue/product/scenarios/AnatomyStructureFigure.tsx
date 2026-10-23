@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import StructuredAnswerFigure from "@/components/dialogue/product/scenarios/StructuredAnswerFigure";
 import { ANATOMY_LABELS } from "@/lib/dialogue/product/sampleData";
 
-const PART_IDS = ["sources", "summary", "chart", "clips", "followups"] as const;
+const PART_IDS = ["summary", "sources", "chart", "clips", "followups"] as const;
 
 type CalloutLayout = { top: number };
 type LeaderLine = { y: number; x1: number; x2: number };
@@ -91,6 +91,7 @@ export default function AnatomyStructureFigure() {
           <div
             key={label}
             className="dp-anatomy__callout"
+            data-annotate-part={`callout-${i + 1}`}
             style={callouts[i] ? { top: callouts[i].top } : undefined}
           >
             <span className="dp-anatomy__num">{i + 1}</span>
@@ -98,7 +99,7 @@ export default function AnatomyStructureFigure() {
           </div>
         ))}
       </div>
-      <div className="dp-anatomy__diagram">
+      <div className="dp-anatomy__diagram" data-annotate-part="diagram">
         <StructuredAnswerFigure anatomy />
       </div>
     </div>

@@ -1,5 +1,7 @@
 # Dialogue round 35 — copy proposals for Mudit
 
+Asks covered: DLG-01, DLG-06, STD-01, STD-02
+
 Draft lines added for Rachel-style placement/decision pattern. Edit or replace in `DialoguePlacementCompare.tsx` and section H2 if needed.
 
 ## Placement (sidebar vs bubble)

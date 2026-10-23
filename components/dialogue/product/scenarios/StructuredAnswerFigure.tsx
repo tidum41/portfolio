@@ -5,6 +5,7 @@ import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import SourcesRow from "@/components/dialogue/product/SourcesRow";
 import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
+import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
 import ClipCard from "@/components/dialogue/product/ClipCard";
 import { CHECKOUT_QUESTION, CLIPS } from "@/lib/dialogue/product/sampleData";
 
@@ -23,29 +24,41 @@ export default function StructuredAnswerFigure({
 }: Props) {
   const shellCompact = compact || hero;
 
+  // Composer stays on hero + anatomy (part 5 context). Hidden on option thumbnails.
+  const hideComposer = !hero && !anatomy;
+
   if (anatomy) {
     return (
-      <StudyChatShell compact={shellCompact}>
+      <StudyChatShell compact={shellCompact} evidence={24}>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
         <QuerySearchStep searched={24} found={9} />
-        <div className="dp-anatomy-target" data-anatomy-part="sources">
-          <span className="dp-anatomy-part-marker" aria-hidden>
-            1
+        <FunnelChart
+          compact={compact}
+          hero={hero}
+          showLargestDrop={false}
+          vizCard={false}
+          anatomy
+          showChart={false}
+        />
+        <div className="dp-anatomy-target" data-anatomy-part="sources" data-annotate-part="anatomy-sources">
+          <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-2">
+            2
           </span>
           <SourcesRow selectedParticipant="Priya K." selectedTime="15:47" />
         </div>
-        <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy />
+        <FunnelChart compact={compact} hero={hero} showLargestDrop vizCard={!hero} anatomy showSummary={false} />
         {showClips && (
-          <div className="dp-anatomy-target" data-anatomy-part="clips">
-            <span className="dp-anatomy-part-marker" aria-hidden>
+          <div className="dp-anatomy-target" data-anatomy-part="clips" data-annotate-part="anatomy-clips">
+            <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-4">
               4
             </span>
             <ClipThumbnails selectedTime="15:47" />
           </div>
         )}
+        <CounterEvidence />
         {!compact && (
-          <div className="dp-anatomy-target" data-anatomy-part="followups">
-            <span className="dp-anatomy-part-marker" aria-hidden>
+          <div className="dp-anatomy-target" data-anatomy-part="followups" data-annotate-part="anatomy-followups">
+            <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-5">
               5
             </span>
             <FollowUpChips />
@@ -56,7 +69,7 @@ export default function StructuredAnswerFigure({
   }
 
   return (
-    <StudyChatShell compact={shellCompact} hero={hero}>
+    <StudyChatShell compact={shellCompact} hero={hero} hideComposer={hideComposer}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       <QuerySearchStep searched={24} found={9} />
       <FunnelChart compact={compact} hero={hero} vizCard={!hero} />

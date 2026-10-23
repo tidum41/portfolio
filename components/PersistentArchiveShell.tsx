@@ -11,6 +11,7 @@ import {
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import type { PlaygroundGalleryItem } from "@/lib/sanity/queries";
+import { isCaseStudyHref } from "@/lib/caseStudyNav";
 
 /**
  * Archive keep-alive — same hide contract as PersistentWorkShell (`display: none`).
@@ -25,6 +26,7 @@ export default function PersistentArchiveShell({
   items?: PlaygroundGalleryItem[];
 }) {
   const pathname = usePathname();
+  if (isCaseStudyHref(pathname)) return null;
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "archive";
 

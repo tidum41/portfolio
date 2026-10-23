@@ -246,7 +246,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
       )}
       <button
         onClick={handleMuteToggle}
-        className="nav-link theme-toggle-btn"
+        className="nav-link volume-toggle-btn"
         aria-label={ambientMuted ? "Unmute background music" : "Mute background music"}
         style={{
           background: "none",

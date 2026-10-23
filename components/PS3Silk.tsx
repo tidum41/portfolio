@@ -76,7 +76,7 @@ export default function PS3Silk({
     mouseStrength: [mouseStrength,  0,    0.5],
     yOffset:       [yOffset,        -50,  100],
     halftoneSize:  [3.0,            1,    20],
-    speed:         [1.0,            0,    4],
+    speed:         [1.2,            0,    4],
     endOpacity:    [0.15,           0,    0.5,  0.01],
   });
 
@@ -85,7 +85,7 @@ export default function PS3Silk({
   const yOffsetRef      = useRef(yOffset);
   const waveColorRef    = useRef<[number, number, number]>(hexToRgb(waveColor));
   const halftSizeRef    = useRef(3.0);
-  const speedRef        = useRef(1.0);
+  const speedRef        = useRef(1.2);
   const endOpacityRef   = useRef(0.15);
 
   // Sync DialKit live values into refs each frame
@@ -250,6 +250,15 @@ export default function PS3Silk({
       // trackpad/high-poll mouse, exactly while a visitor is interacting
       // with the hero.
       let wrapperRect: DOMRect | null = null;
+      let lastWrittenOpacity = -1;
+
+      function writeWrapperOpacity(val: number) {
+        if (!wrapper) return;
+        const clamped = Math.max(0, Math.min(1, val));
+        if (Math.abs(clamped - lastWrittenOpacity) < 0.0005) return;
+        lastWrittenOpacity = clamped;
+        wrapper.style.opacity = String(clamped);
+      }
 
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
@@ -293,20 +302,30 @@ export default function PS3Silk({
         });
       }
 
-      function updateTarget() {
-        // getBoundingClientRect() is viewport-relative, so the resize-only
-        // cache above would go stale as soon as the page scrolls without the
-        // wrapper's own size changing. This already runs once per scroll
-        // event (far less often than raw mousemove), so refreshing it here
-        // keeps onMouseMove's cached rect correct without reintroducing a
-        // per-mousemove layout read.
-        wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
+      function updateScrollTarget() {
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
         const endOp      = endOpacityRef.current;
         targetOpacity = START_OPACITY + (endOp - START_OPACITY) *
           ease3(clamp((scrollY - fadeStart) / (fadeEnd - fadeStart), 0, 1));
+      }
+
+      function isScrolledPastHero() {
+        const h = canvas.height || wrapperRect?.height || 0;
+        return h >= 2 && (window.scrollY || 0) > h + 64;
+      }
+
+      function updateTarget() {
+        // getBoundingClientRect() is viewport-relative, so the resize-only
+        // cache above would go stale as soon as the page scrolls without the
+        // wrapper's own size changing. This runs on scroll (not every frame),
+        // keeping onMouseMove's cached rect current without 30fps layout reads.
+        wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
+        updateScrollTarget();
+        if (activeRef.current && !isScrolledPastHero() && canvas.width >= 2 && canvas.height >= 2) {
+          startLoop();
+        }
       }
 
       function onMouseMove(e: MouseEvent) {
@@ -319,7 +338,7 @@ export default function PS3Silk({
 
       function onPopState() {
         targetOpacity = currentOpacity = START_OPACITY;
-        if (wrapper) wrapper.style.opacity = String(START_OPACITY);
+        writeWrapperOpacity(START_OPACITY);
       }
 
       // Declared early so wake/start helpers (assigned after GL setup) can close
@@ -518,7 +537,7 @@ void main() {
         // hidden-state value that would wash the pattern out.
         if (!(isFirstLoad && !reducedMotion && performance.now() < introPhaseEnd)) {
           currentOpacity = targetOpacity;
-          if (wrapper) wrapper.style.opacity = String(Math.max(0, Math.min(1, currentOpacity)));
+          writeWrapperOpacity(currentOpacity);
         }
         if (glProg && buf) {
           glCtx.useProgram(glProg);
@@ -540,10 +559,9 @@ void main() {
         if (!running) return;
         rafId = requestAnimationFrame(frame);
 
-        // Pause draws while the work shell is hidden (or still 0-sized). Keep
-        // the RAF chain alive only while active so wake() doesn't need to
-        // fight a skipped loop; when inactive, stopLoop() clears it entirely.
-        if (!activeRef.current) {
+        // Pause draws while the work shell is hidden (or still 0-sized), or
+        // when the hero is scrolled completely offscreen above the viewport.
+        if (!activeRef.current || isScrolledPastHero()) {
           stopLoop();
           return;
         }
@@ -558,7 +576,7 @@ void main() {
         mouse.x += (mouse.tx - mouse.x) * 0.042;
         mouse.y += (mouse.ty - mouse.y) * 0.042;
 
-        updateTarget();
+        updateScrollTarget();
         const isIntro = ms < introPhaseEnd;
         if (isIntro && INTRO_DURATION > 0) {
           // Time-based ease-in-out: reaches exactly START_OPACITY at introPhaseEnd
@@ -570,7 +588,7 @@ void main() {
           const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.035; // dim fast, recover medium
           currentOpacity += (targetOpacity - currentOpacity) * lerpSpeed;
         }
-        if (wrapper) wrapper.style.opacity = String(Math.max(0, Math.min(1, currentOpacity)));
+        writeWrapperOpacity(currentOpacity);
 
         draw(ms);
       }

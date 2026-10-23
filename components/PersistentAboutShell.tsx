@@ -7,6 +7,7 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
+import { isCaseStudyHref } from "@/lib/caseStudyNav";
 
 const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
 
@@ -18,6 +19,7 @@ const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
  */
 export default function PersistentAboutShell() {
   const pathname = usePathname();
+  if (isCaseStudyHref(pathname)) return null;
   const tab = useResolvedPrimaryTab(pathname);
   const visible = tab === "about";
   const { snap, epoch } = useTabArrival(visible);

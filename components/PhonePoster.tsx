@@ -53,7 +53,7 @@ const FRAME_IMG: React.CSSProperties = {
 export default function PhonePoster({
   opacity = 1,
   fade = true,
-  theme = "light",
+  theme = "dark",
   showScreen = false,
 }: {
   opacity?: number;

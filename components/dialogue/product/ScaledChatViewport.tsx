@@ -1,18 +1,28 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { dialogueProductTokens } from "@/components/dialogue/product/tokens";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
+import { PLACEMENT_CHAT_WIDTH } from "@/components/dialogue/product/tokens";
 
-const DEFAULT_INNER_W = parseInt(dialogueProductTokens.space.placementChatWidth, 10);
+const DEFAULT_INNER_W = PLACEMENT_CHAT_WIDTH;
 
 type Props = {
   children: ReactNode;
-  /** Unscaled layout width (default 392px chat panel). */
+  /** Unscaled layout width (default 448px chat panel — t384 live width). */
   innerWidth?: number;
   /** Lock crop height in inner px; when unset, uses measured content height. */
   cropHeight?: number;
   /** Cap scale (e.g. decision row desktop ~0.58). */
   maxScale?: number;
+  /**
+   * Floor. Below this, the panel stays at this scale and the frame crops,
+   * instead of shrinking type further.
+   */
+  minScale?: number;
+  /** Cap the visible crop height in outer px. */
+  maxOuterHeight?: number;
+  /** `reflow` paints children at the frame width with no zoom. */
+  fit?: "scale" | "reflow";
   /** Bottom fade for equal-height compare crops. */
   fade?: boolean;
   className?: string;
@@ -47,6 +57,9 @@ export default function ScaledChatViewport({
   innerWidth = DEFAULT_INNER_W,
   cropHeight,
   maxScale,
+  minScale,
+  maxOuterHeight,
+  fit = "scale",
   fade = false,
   className,
 }: Props) {
@@ -54,9 +67,11 @@ export default function ScaledChatViewport({
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
   const [cropH, setCropH] = useState(cropHeight ?? 480);
+  const [clipW, setClipW] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [useZoom, setUseZoom] = useState(false);
   const [dpr, setDpr] = useState(1);
+  const [reflowH, setReflowH] = useState<number | undefined>(undefined);
 
   useLayoutEffect(() => {
     setUseZoom(supportsCssZoom());
@@ -82,11 +97,15 @@ export default function ScaledChatViewport({
 
       let raw = w / innerWidth;
       if (maxScale !== undefined) raw = Math.min(raw, maxScale);
+      if (minScale !== undefined) raw = Math.max(raw, minScale);
       const s = snapScale(raw, innerWidth, dpr);
       setScale(s);
 
-      const outerW = Math.round(innerWidth * s * dpr) / dpr;
-      setOffsetX(Math.max(0, Math.floor((w - outerW) / 2)));
+      const scaledW = innerWidth * s;
+      const cropping = scaledW > w + 0.5;
+      const outerW = cropping ? w : Math.round(scaledW * dpr) / dpr;
+      setClipW(outerW);
+      setOffsetX(cropping ? 0 : Math.max(0, Math.floor((w - outerW) / 2)));
 
       if (cropHeight !== undefined) {
         setCropH(cropHeight);
@@ -105,10 +124,63 @@ export default function ScaledChatViewport({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [cropHeight, innerWidth, maxScale, useZoom, dpr]);
+  }, [cropHeight, innerWidth, maxScale, minScale, useZoom, dpr]);
 
-  const outerW = Math.round(innerWidth * scale * dpr) / dpr;
-  const outerH = Math.round(cropH * scale * dpr) / dpr;
+  useLayoutEffect(() => {
+    if (fit !== "reflow") return;
+    const layer = layerRef.current;
+    const inner = innerRef.current;
+    if (!layer || !inner) return;
+
+    const measure = () => {
+      const measured = inner.offsetHeight;
+      if (measured < 1) return;
+      let h = measured;
+      if (maxOuterHeight !== undefined) h = Math.min(h, maxOuterHeight);
+      setReflowH(h);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [fit, maxOuterHeight, children]);
+
+  const shadowSafe = maxOuterHeight === undefined && !fade;
+
+  if (fit === "reflow") {
+    const outerH = reflowH;
+    return (
+      <div
+        ref={layerRef}
+        className={["dp-scaled-viewport", "dp-scaled-viewport--reflow", className]
+          .filter(Boolean)
+          .join(" ")}
+        data-scale-mode="reflow"
+        data-shadow-safe={shadowSafe ? "" : undefined}
+        data-scale="1"
+        style={outerH !== undefined ? { height: outerH } : undefined}
+      >
+        <div
+          className="dp-scaled-viewport__clip"
+          style={outerH !== undefined ? { height: outerH, overflow: "hidden" } : undefined}
+        >
+          <div
+            ref={innerRef}
+            className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+            style={{ width: "100%" }}
+          >
+            {children}
+          </div>
+          {fade && outerH !== undefined ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
+        </div>
+      </div>
+    );
+  }
+
+  const outerW = clipW > 0 ? clipW : Math.round(innerWidth * scale * dpr) / dpr;
+  let outerH = Math.round(cropH * scale * dpr) / dpr;
+  if (maxOuterHeight !== undefined) outerH = Math.min(outerH, maxOuterHeight);
 
   return (
     <div
@@ -116,6 +188,7 @@ export default function ScaledChatViewport({
       className={["dp-scaled-viewport", className].filter(Boolean).join(" ")}
       style={{ height: outerH }}
       data-scale-mode={useZoom ? "zoom" : "transform"}
+      data-shadow-safe={shadowSafe ? "" : undefined}
       data-scale={String(scale)}
     >
       <div
@@ -128,11 +201,11 @@ export default function ScaledChatViewport({
       >
         {/*
           Scale wrapper is sized to the integer device-pixel outer box.
-          Inner paints at native 392px type metrics, then zoom/scale as one unit.
+          Inner paints at native 448px type metrics, then zoom/scale as one unit.
         */}
         <div
           ref={innerRef}
-          className="dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography"
+          className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
           style={
             scale >= 0.999
               ? { width: innerWidth }

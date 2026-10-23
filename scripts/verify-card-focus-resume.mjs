@@ -44,6 +44,9 @@ function ensureFixture() {
 }
 
 async function routeFixture(context) {
+  await context.addInitScript(() => {
+    window.__disableMuxWarm = true;
+  });
   await context.route("https://stream.mux.com/**", async (route) => {
     const url = new URL(route.request().url());
     const name = url.pathname.endsWith(".m3u8") ? "index.m3u8" : url.pathname.split("/").pop();

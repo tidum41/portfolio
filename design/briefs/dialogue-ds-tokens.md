@@ -1,45 +1,65 @@
-# Dialogue product tokens
+# Dialogue product tokens (t384)
 
-**Precedence:** live app CSS (`research.dialogueai.com`) → Paper code → static export → screenshots.
+Asks covered: STD-04, DLG-04
 
-Live CSS archive (agent store only — **not** in git): `/cursor/stores/self/dialogue-live-css/`
+**Source of truth:** live study-chat `getComputedStyle` measurements on
+`research.dialogueai.com` (Insights summary → Study chat open with a response).
+
+Measurement dump (agent uploads only — **do not commit** screenshots/JSON):
+
+- `/home/ubuntu/.cursor/projects/workspace/uploads/measurements_6731.md`
+- Raw JSON siblings in the same uploads folder
+- Reference grabs: `chat-01-top.png`, `devtools-assistant-body-computed.png`
+  (intended path `dialogue-tokens/chat/`; keep out of git)
+
+These override earlier Paper/static-export token guesses (including the old
+16/24 panel body and 392px width).
+
+## Panel chrome
+
+| Token | Value |
+|-------|-------|
+| Width × height | ~**448** × **658** CSS px (measured 447.78 × 658) |
+| Border | 1px solid `#e7e5e4` |
+| Radius | **24px** |
+| Background | `rgb(252,251,249)` / `#fcfbf9` |
+| Padding | **28px** |
+| Inner gap | **16px** |
+| Font | DM Sans; `letter-spacing: normal` |
+
+## Text roles
+
+| Role | size / weight / leading | color | Notes |
+|------|-------------------------|-------|-------|
+| Assistant body | 14 / 400 / 24 | `#1c1917` | No bubble; full width; `p` margin-bottom 16 |
+| User bubble | 14 / 400 / 24 | `#1c1917` | Pad 8×16, radius 16, bg `#f1eeea`, right-aligned |
+| Header title (“Study chat”) | 14 / 500 / 20 | `#1c1917` | Also in-response h2/h3 |
+| Header subtitle | 12 / 400 / 16 | `#57534d` | Case-study may keep study name |
+| Beta badge | 12 / 500 / 16 | `#1c1917` | Pad 2×8, radius 8, bg `#f1eeea` |
+| Minimize | 36×36 hit | `#1c1917` | Hairline rule under header |
+| Composer | 14 / 400 / 20 placeholder | muted | Pad 12, r14, border `#e5e7eb`; send 36×36 |
+| Bold / `strong` | 14 / **600** / 24 | `#1c1917` | Product UI only; site chrome may still cap 500 |
+| Quote header | 14 / 400 / 20 | `#57534d` | |
+| Quote body | 14 / 400 / **22.75** | `#1c1917` | Card radius 14, bg `#f8f6f3` |
+| Status pill | 14 / 400 / 20 mono | `#57534d` | Pad 8×16, radius 14, 1px border |
+| Suggestion | 14 / 500 / 20 | `rgb(116,116,116)` | Pad 8×12, radius 8, gap 8 |
+| Chart label | 12 / 400 / 16 | `#57534d` | **Not measurable** in t384 (no chart in response). Uses Dialogue’s small role. |
+
+## Code map
 
 | File | Role |
 |------|------|
-| `1w9mr5dy3h8y1.css` | Tailwind `:root` — `--color-*`, `--paper-*`, `--cherry-*`, `--font-*`, `--radius-*`, `--sidebar-*` |
-| `0foqked6n1lzo.css` | `@font-face` (DM Sans, DM Mono, Zilla Slab, …) |
-| `290yvv_x3nxom.css` | `.media-default-skin` clip/player chrome |
-| `root-vars.txt` | Extracted `:root` blocks |
-
-Code maps live names in `components/dialogue/product/tokens.ts` + `tokens.css`.  
-Wordmark: live `/images/logo.svg` → `public/dialogue/logo.svg` (asset only).
-
-## Key live variables → portfolio `dp-*`
-
-| Live | Value | `dp-*` / usage |
-|------|-------|----------------|
-| `--paper-50` | `#f8f6f3` | `--dp-bg`, `--background` |
-| `--paper-10` | `#fcfbf9` | `--dp-surface`, `--card` |
-| `--paper-100` | `#f1eeea` | `--dp-warm` |
-| `--color-stone-900` | `#1c1917` | `--dp-ink` |
-| `--color-stone-600` | `#57534d` | `--dp-muted` |
-| `--color-stone-200` | `#e7e5e4` | `--dp-border` |
-| `--color-cherry` / `--cherry-800` | `#b43f7f` | `--dp-brand` |
-| `--font-sans` / `--font-product` | DM Sans | product UI |
-| `--font-brand` | Zilla Slab | brand type (logo uses SVG) |
-| `--radius-3xl` | `1.5rem` | chat shell |
-| `--text-base` | `1rem` | default body |
-| `--text-sm` | `0.875rem` | meta / chart labels |
-| Chat panel override | `16px` / `24px` body, `14px` / `20px` meta | `.dp-chat-panel-typography` |
-| Study sidebar | ~`252px` | `--dp-sidebar-width` |
-| `--media-border-radius` | `2rem` | `.dp-player` |
+| `components/dialogue/product/tokens.ts` | Typed tokens + `dialogueTextRoles` |
+| `components/dialogue/product/tokens.css` | CSS variables on `.dialogue-product-root` |
+| `components/dialogue/product/dialogue-product.css` | Component role wiring |
+| `ScaledChatViewport` / `DialogueProductFigure` | Inner width **448**; scale as one unit |
 
 ## Parity QA
 
 ```bash
 npm run build && npm run start -- -p 3020
-node scripts/capture-dialogue-ds-parity.mjs
-ROUND35_PORT=3020 node scripts/verify-dialogue-round35-sections.mjs
+# Side-by-side + computed-style diff (0 mismatches on size/lh/weight/pad/radius):
+node scripts/verify-dialogue-t384-tokens.mjs
 ```
 
-Outputs: `/cursor/stores/self/ds-parity/`
+Outputs: `/cursor/stores/self/parity/t384-*`

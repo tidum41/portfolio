@@ -1,3 +1,6 @@
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
@@ -6,8 +9,10 @@ type Props = {
   hero?: boolean;
   showLargestDrop?: boolean;
   anatomy?: boolean;
-  /** Wrap summary + chart in bordered viz-card (Paper section-3). */
+  /** Wrap summary + chart in bordered viz-card. */
   vizCard?: boolean;
+  showSummary?: boolean;
+  showChart?: boolean;
 };
 
 export default function FunnelChart({
@@ -16,84 +21,77 @@ export default function FunnelChart({
   showLargestDrop = true,
   anatomy,
   vizCard = true,
+  showSummary = true,
+  showChart = true,
 }: Props) {
   const data = CHECKOUT_FUNNEL;
+  const rows = data.steps.map((step) => ({
+    label: step.label,
+    value: step.pct,
+    display: formatChartPercent(step.pct),
+    focal: Boolean(step.focal),
+  }));
+
   const summaryBody = (
-    <p className="dp-summary dp-text-body">
+    <p className="dp-summary dp-text-body" data-annotate-part="summary">
       {data.summary.split(data.emphasis)[0]}
-      <span className="dp-summary__emph">{data.emphasis}</span>
+      <span className="dp-summary__emph" data-annotate-part="summary-emphasis">{data.emphasis}</span>
       {data.summary.split(data.emphasis)[1] ?? ""}
     </p>
   );
   const summary = anatomy ? (
-    <div className="dp-anatomy-target" data-anatomy-part="summary">
-      <span className="dp-anatomy-part-marker" aria-hidden>
-        2
+    <div className="dp-anatomy-target" data-anatomy-part="summary" data-annotate-part="anatomy-summary">
+      <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-1">
+        1
       </span>
       {summaryBody}
+      <p className="dp-source-line" data-annotate-part="source-line">
+        From 9 checkout moments, including{" "}
+        <span className="dp-source-line__link">Jordan M. at 14:03–14:19</span>
+      </p>
     </div>
   ) : (
     summaryBody
   );
 
-  const chartInner = (
-    <>
-      <p className="dp-funnel__title">{dialogueCopy.funnelTitle}</p>
-      <div className="dp-funnel__rows">
-        {data.steps.map((step) => (
-          <div key={step.label} className="dp-funnel__row">
-            <span className="dp-funnel__label">{step.label}</span>
-            <div className="dp-funnel__track">
-              <div
-                className={`dp-funnel__bar${step.focal ? " dp-funnel__bar--focal" : ""}`}
-                style={{
-                  width: `${step.pct}%`,
-                  backgroundColor: step.barColor,
-                }}
-              />
-            </div>
-            <span
-              className={`dp-funnel__pct${step.focal ? " dp-funnel__pct--focal" : ""}`}
-            >
-              {step.pct}%
-            </span>
-          </div>
-        ))}
-      </div>
-      {showLargestDrop && !compact && (
-        <p className="dp-funnel__largest">
-          Largest drop:{" "}
-          <span className="dp-funnel__largest-strong">
-            {dialogueCopy.funnelLargestDrop} (−{dialogueCopy.funnelLargestDropPct}%)
-          </span>
-        </p>
-      )}
-    </>
+  const note =
+    showLargestDrop && !compact ? (
+      <>
+        Largest drop:{" "}
+        <strong>
+          {dialogueCopy.funnelLargestDrop} (−{dialogueCopy.funnelLargestDropPct}%)
+        </strong>
+      </>
+    ) : undefined;
+
+  const bars = (
+    <ChartBarList rows={rows} max={100} fillMode="index" note={note} />
+  );
+
+  const plot = vizCard ? (
+    <ChartVizCard title={dialogueCopy.funnelTitle}>{bars}</ChartVizCard>
+  ) : (
+    <div className="dp-chart-root">
+      <p className="dp-chart-title">{dialogueCopy.funnelTitle}</p>
+      {bars}
+    </div>
   );
 
   const chart = anatomy ? (
-    <div className="dp-anatomy-target" data-anatomy-part="chart">
-      <span className="dp-anatomy-part-marker" aria-hidden>3</span>
-      <div className="dp-funnel__chart">{chartInner}</div>
+    <div className="dp-anatomy-target" data-anatomy-part="chart" data-annotate-part="anatomy-chart">
+      <span className="dp-anatomy-part-marker" aria-hidden data-annotate-part="anatomy-marker-3">
+        3
+      </span>
+      {plot}
     </div>
   ) : (
-    <div className="dp-funnel__chart">{chartInner}</div>
+    plot
   );
 
-  const inner = (
-    <>
-      {summary}
-      {chart}
-    </>
-  );
-
-  const body = vizCard ? (
-    <div className="dp-viz-card" data-testid="viz-card">
-      <div className="dp-viz-card__inner">{inner}</div>
+  return (
+    <div className={`dp-funnel${hero ? " dp-funnel--hero" : ""}`}>
+      {showSummary ? summary : null}
+      {showChart ? chart : null}
     </div>
-  ) : (
-    inner
   );
-
-  return <div className={`dp-funnel${hero ? " dp-funnel--hero" : ""}`}>{body}</div>;
 }

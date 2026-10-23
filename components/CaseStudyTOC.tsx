@@ -54,21 +54,34 @@ export default function CaseStudyTOC({
   const activeSections = useMemo(() => items.filter((s) => s.label.trim()), [items]);
 
   const updateActive = useCallback(() => {
-    const target = window.innerHeight * 0.5;
-    const nearBottom =
-      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+    if (activeSections.length === 0) return;
 
-    if (nearBottom && activeSections.length > 0) {
+    const target = window.innerHeight * 0.35;
+    const scrollY = window.scrollY;
+    const docH = document.documentElement.scrollHeight;
+    // Only treat as "bottom" after the page has real height and the user has scrolled.
+    // Early paint (short scrollHeight) used to force the last TOC item at the top.
+    const nearBottom =
+      scrollY > 120 &&
+      docH > window.innerHeight + 160 &&
+      window.innerHeight + scrollY >= docH - 80;
+
+    if (nearBottom) {
       setActiveSection(activeSections[activeSections.length - 1].label);
       return;
     }
 
-    let current = "";
+    if (scrollY < 24) {
+      setActiveSection(activeSections[0].label);
+      return;
+    }
+
+    let current = activeSections[0].label;
     activeSections.forEach(({ id, label }) => {
       const el = document.getElementById(id);
       if (el && el.getBoundingClientRect().top <= target) current = label;
     });
-    if (current) setActiveSection(current);
+    setActiveSection(current);
   }, [activeSections]);
 
   // Layout effect (not a regular effect) so the initial `updateActive()` call
@@ -182,7 +195,7 @@ export default function CaseStudyTOC({
         }}
       >
         {backArrow}
-        <span style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 14, lineHeight: 1.5 }}>Back</span>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-meta)", lineHeight: 1.5 }}>Back</span>
       </a>
 
       {activeSections.length > 0 && (
@@ -201,8 +214,8 @@ export default function CaseStudyTOC({
                     ...NO_TAP_HIGHLIGHT,
                     background: "none", border: "none", padding: 0,
                     cursor: "pointer", textAlign: "left",
-                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    fontSize: 14, letterSpacing: "0.1px", lineHeight: 1.5,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "var(--fs-meta)", letterSpacing: "var(--ls-meta)", lineHeight: 1.5,
                     color: (isActive || isHovered) ? COLOR_ACTIVE : COLOR_INACTIVE,
                     fontWeight: isActive ? 500 : 400,
                     transition: "color 0.15s ease, font-weight 0.15s ease",

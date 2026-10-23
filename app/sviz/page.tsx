@@ -11,16 +11,16 @@ import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
-export const revalidate = 300;
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "sviz",
+  title: "Sviz",
   description:
-    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+    "Sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
   alternates: { canonical: `${SITE_URL}/sviz` },
   openGraph: {
-    title: "sviz — mudit mahajan",
+    title: "sviz, Mudit Mahajan",
     description:
       "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
     url: `${SITE_URL}/sviz`,
@@ -67,7 +67,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       fontWeight: 400,
       letterSpacing: "0.02em",
       color: "var(--color-text-tertiary)",
-      margin: "0 0 16px",
+      margin: "0 0 var(--cs-para-gap)",
     }}>
       {children}
     </p>
@@ -83,7 +83,7 @@ function H2({ children }: { children: React.ReactNode }) {
       lineHeight: "var(--lh-h2)",
       letterSpacing: "var(--ls-h2)",
       color: "var(--color-text-primary)",
-      margin: "0 0 24px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>
       {children}
     </h2>
@@ -197,7 +197,7 @@ const METADATA = [
 
 const FB = {
   tocItems: TOC_ITEMS,
-  heroTagline: "YouTube, personal, 2021",
+  heroTagline: "YouTube, Personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",

@@ -1,4 +1,5 @@
 import { SOURCES } from "@/lib/dialogue/product/sampleData";
+import SourcePill from "@/components/dialogue/product/SourcePill";
 
 type Props = {
   selectedParticipant?: string;
@@ -7,21 +8,15 @@ type Props = {
 
 export default function SourcesRow({ selectedParticipant, selectedTime }: Props) {
   return (
-    <div className="dp-sources" aria-hidden>
+    <div className="dp-sources" aria-hidden data-annotate-part="sources-row">
       {SOURCES.map((s) => {
-        const selected =
+        const selected = Boolean(
           selectedParticipant &&
-          s.participant === selectedParticipant &&
-          (!selectedTime || s.time === selectedTime);
+            s.participant === selectedParticipant &&
+            (!selectedTime || s.time === selectedTime),
+        );
         return (
-          <span
-            key={`${s.participant}-${s.time}`}
-            className={["dp-source-pill", selected ? "dp-source-pill--selected" : ""]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {s.participant} · {s.time}
-          </span>
+          <SourcePill key={`${s.participant}-${s.time}`} name={s.participant} time={s.time} selected={selected} />
         );
       })}
     </div>

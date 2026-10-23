@@ -15,13 +15,7 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
     cardFocusController.mount(grid);
     (window as Window & { __cardFocusReady?: boolean }).__cardFocusReady = true;
 
-    const mo = new MutationObserver(() => {
-      cardFocusController.observeNewVideos();
-    });
-    mo.observe(grid, { childList: true, subtree: true });
-
     return () => {
-      mo.disconnect();
       cardFocusController.unmount();
       (window as Window & { __cardFocusReady?: boolean }).__cardFocusReady = false;
     };

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useDialKit, useDialKitController } from "dialkit";
 import { isVariantId, VARIANTS, VariantStage, type Copy, type VariantId } from "./stages";
+import { isEditableTarget } from "@/lib/isEditableTarget";
 
 const LAB_Z = 50;
 
@@ -102,10 +103,7 @@ export default function MotionLabClient() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
-        return;
-      }
+      if (isEditableTarget(e)) return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         cycle(1);

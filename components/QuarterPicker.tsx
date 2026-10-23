@@ -10,6 +10,7 @@ import {
     KeyboardEvent,
 } from "react";
 import InteractiveBadge from "@/components/InteractiveBadge";
+import { isEditableTarget } from "@/lib/isEditableTarget"
 
 // ── Design tokens ─────────────────────────────────────────────────────────
 const C = {
@@ -21,7 +22,7 @@ const C = {
     border: "#E2E8F0",
     background: "#efefef",
     white: "#ffffff",
-    font: "Helvetica Neue, Arial, sans-serif",
+    font: "var(--font-sans)",
 }
 
 const QUARTERS = [
@@ -598,6 +599,7 @@ export default function QuarterPicker({
         if (!openField) return
 
         function onKey(e: globalThis.KeyboardEvent) {
+            if (isEditableTarget(e)) return
             if (e.key === "Escape") {
                 e.preventDefault()
                 const field = openField

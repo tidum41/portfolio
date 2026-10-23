@@ -12,3 +12,4 @@ Non-obvious caveats:
 - **`/studio`** (embedded Sanity Studio) logs a harmless React 19 SSR `TypeError: Cannot read properties of null (reading 'useSyncExternalStore')` during server render but still returns 200 and renders client-side.
 - **`start-dev.sh`** is a machine-specific helper with hardcoded local paths and port 3005; ignore it and use `npm run dev`.
 - Mux videos, PostHog analytics, and external iframe demos are optional external services; the site works without them.
+- **Previews use only the Vercel account `archive14photo-4965`** (deployments of `review/dialogue-figure-parity-b9b1`). The old `mudits-projects-d560e6b3` account is disabled (402 Payment required); never report links from it. If the Vercel tools cannot reach the new account (403 on `archive14photo-4965`), report that instead of falling back.

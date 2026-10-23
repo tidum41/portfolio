@@ -26,10 +26,11 @@ export interface DesignSystemData {
 }
 
 export const DS_DEFAULTS: Required<DesignSystemData> = {
-  fsDisplay: 56, fsHero: 48, fsH2: 30, fwHero: 50, fwH2: 50, fwCardTitle: 50, fsSectionLabel: 15,
-  fsH3: 20, fsBody: 15, fsLabel: 16, fsMeta: 14, fsCaption: 12, fsStat: 44, fsCardTitle: 18,
-  lhBody: 1.72, lhH2: 1.1, lsHero: -0.5, lsH2: -0.3,
-  sectionGap: 80, sectionPb: 64, pagePx: 24, contentMaxW: 750, cardRadius: 4,
+  fsDisplay: 48, fsHero: 48, fsH2: 30, fwHero: 50, fwH2: 50, fwCardTitle: 50, fsSectionLabel: 15,
+  fsH3: 24, fsBody: 15, fsLabel: 15, fsMeta: 14, fsCaption: 12, fsStat: 44, fsCardTitle: 18,
+  lhBody: 1.72, lhH2: 1.15, lsHero: -0.5, lsH2: -0.25,
+  // One section separation (was pb 64 + mb 80). pb folded into gap.
+  sectionGap: 144, sectionPb: 0, pagePx: 24, contentMaxW: 750, cardRadius: 4,
   colorBg: "#FBFBFB", colorTextPrimary: "#2E2E2E", colorTextSecondary: "#575757",
   // Kept in sync with app/globals.css's @theme block — these are a second,
   // independent fallback used to inline-override the CSS when Sanity has no
@@ -67,6 +68,14 @@ function sanitizeDesignSystem(raw: DesignSystemData | null): DesignSystemData {
       (clean[key] as number) = value;
     }
   }
+  // Migrate the pre–type-system section rhythm (pb 64 + mb 80) to one gap.
+  if (clean.sectionGap === 80 && (clean.sectionPb === 64 || clean.sectionPb === undefined)) {
+    clean.sectionGap = 144;
+    clean.sectionPb = 0;
+  }
+  if (clean.fsLabel === 16) clean.fsLabel = 15;
+  if (clean.fsH3 === 20) clean.fsH3 = 24;
+  if (clean.fsDisplay === 56) clean.fsDisplay = 48;
   return clean;
 }
 
@@ -75,25 +84,37 @@ async function loadDesignSystem(): Promise<Required<DesignSystemData>> {
   return { ...DS_DEFAULTS, ...sanitizeDesignSystem(raw) };
 }
 
-/** `@sanity/client` does not honor `{ next: { revalidate } }` — wrap like
- *  the playground gallery so layout TTFB is not a live Sanity round-trip. */
+/** `@sanity/client` does not honor `{ next: { tags } }` — wrap like
+ *  the playground gallery so layout TTFB is not a live Sanity round-trip.
+ *  Bust via Sanity webhook → `/api/revalidate` (`sanity`, `design-system`). */
 export const getDesignSystem = cache(
-  unstable_cache(loadDesignSystem, ["design-system"], { revalidate: 60 }),
+  unstable_cache(loadDesignSystem, ["design-system"], {
+    revalidate: 86400,
+    tags: ["sanity", "design-system"],
+  }),
 );
 
 /** Convert a DesignSystemData to a CSS :root{} override block */
 export function designSystemToCss(ds: Required<DesignSystemData>): string {
   const accentRgb = ds.colorAccent; // e.g. "#C9622F"
   return `:root{
-    --fs-display:${ds.fsDisplay}px;--fs-hero:${ds.fsHero}px;--fs-h2:${ds.fsH2}px;
+    --fs-display:${ds.fsDisplay}px;
+    --fs-hero:clamp(32px, 6vw, ${ds.fsHero}px);
+    --fs-home-hero:clamp(26px, 2.8vw, 36px);
+    --fs-h2:${ds.fsH2}px;
     --fw-hero:${ds.fwHero * 10};--fw-h2:${ds.fwH2 * 10};--fw-card-title:${ds.fwCardTitle * 10};
     --fs-section-label:${ds.fsSectionLabel}px;
-    --fs-h3:${ds.fsH3}px;--fs-body:${ds.fsBody}px;--fs-label:${ds.fsLabel}px;
+    --fs-h3:${ds.fsH3}px;--fs-xl:${ds.fsH3}px;
+    --fs-body:${ds.fsBody}px;--fs-label:${ds.fsLabel}px;
     --fs-meta:${ds.fsMeta}px;--fs-caption:${ds.fsCaption}px;
+    --fs-sm:13px;--fs-lg:${ds.fsCardTitle}px;
     --fs-stat:${ds.fsStat}px;--fs-card-title:${ds.fsCardTitle}px;
     --lh-body:${ds.lhBody};--lh-h2:${ds.lhH2};
+    --lh-caption:1.4;--lh-sm:1.55;--lh-meta:1.45;--lh-lg:1.35;--lh-xl:1.25;
+    --ls-body:0px;--ls-caption:0px;--ls-sm:0px;--ls-meta:-0.1px;--ls-lg:-0.15px;--ls-xl:-0.25px;
     --ls-hero:${ds.lsHero}px;--ls-h2:${ds.lsH2}px;
-    --section-gap:${ds.sectionGap}px;--section-pb:${ds.sectionPb}px;
+    --cs-section-gap:${ds.sectionGap}px;--cs-h2-mt:48px;--cs-h2-mb:24px;--cs-para-gap:16px;
+    --section-gap:var(--cs-section-gap);--section-pb:${ds.sectionPb}px;
     --page-px:${ds.pagePx}px;--content-max-w:${ds.contentMaxW}px;--radius-card:${ds.cardRadius}px;
     --color-bg:${ds.colorBg};--color-text-primary:${ds.colorTextPrimary};
     --color-text-secondary:${ds.colorTextSecondary};--color-text-tertiary:${ds.colorTextTertiary};
@@ -157,7 +178,7 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
   title: "Designing B2B ordering for the #1 pickleball brand",
-  label: "Internship 2026",
+  label: "Case study, Internship 2026",
   href: "/joola",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
@@ -185,7 +206,10 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v7-case-links"], { revalidate: 60 }),
+  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+    revalidate: 86400,
+    tags: ["sanity", "projects"],
+  }),
 );
 
 // ── Case Study ────────────────────────────────────────────────────────────────
@@ -356,12 +380,10 @@ const CASE_STUDY_QUERY = `*[_type == "caseStudy" && slug == $slug][0] {
 type RawImg  = { asset: { url: string } } | null;
 type RawFile = { asset: { url: string } } | null;
 
-/** Per-request dedupe when Suspense splits shell + body both need the doc. */
-export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
+async function loadCaseStudy(slug: string): Promise<CaseStudyData> {
   const raw = await sanityClient.fetch<Record<string, unknown> | null>(
     CASE_STUDY_QUERY,
     { slug },
-    { next: { revalidate: 300 } }
   );
   if (!raw) return { slug };
 
@@ -384,6 +406,15 @@ export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> =
     decision1Video:        file("decision1Video"),
     solutionVideo:         file("solutionVideo"),
   } as CaseStudyData;
+}
+
+/** Per-request dedupe + tagged cross-request cache.
+ *  Bust via webhook tags `sanity` / `case-study:<slug>`. */
+export const getCaseStudy = cache(async (slug: string): Promise<CaseStudyData> => {
+  return unstable_cache(() => loadCaseStudy(slug), ["case-study", slug], {
+    revalidate: 86400,
+    tags: ["sanity", `case-study:${slug}`],
+  })();
 });
 
 // Legacy shim — keeps old imports working
@@ -549,8 +580,12 @@ async function loadPlaygroundGallery(): Promise<PlaygroundGalleryItem[]> {
   return result;
 }
 
-/** Cross-request cache. `@sanity/client` does not honor `{ next: { revalidate } }`,
- *  so every archive nav used to hit Sanity live (~1s). Home layout warms this. */
+/** Cross-request cache. `@sanity/client` does not honor `{ next: { tags } }`,
+ *  so every archive nav used to hit Sanity live (~1s). Home layout warms this.
+ *  Bust via webhook tags `sanity` / `archive`. */
 export const getPlaygroundGallery = cache(
-  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], { revalidate: 60 }),
+  unstable_cache(loadPlaygroundGallery, ["playground-gallery"], {
+    revalidate: 86400,
+    tags: ["sanity", "archive"],
+  }),
 );

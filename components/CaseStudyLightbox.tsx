@@ -1,18 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { isEditableTarget } from "@/lib/isEditableTarget";
 type Props = {
-  src: string;
+  src?: string;
+  children?: ReactNode;
   alt: string;
   open: boolean;
   onClose: () => void;
   returnFocusRef?: React.RefObject<HTMLElement | null>;
+  annotate?: string;
 };
 
-export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocusRef }: Props) {
+export default function CaseStudyLightbox({ src, children, alt, open, onClose, returnFocusRef, annotate = "cs-figure" }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const scrollYRef = useRef(0);
+
+  useEffect(() => setMounted(true), []);
 
   const finishClose = useCallback(() => {
     onClose();
@@ -34,6 +41,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
     }
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
+      if (isEditableTarget(e)) return;
       if (e.key === "Escape") finishClose();
     };
     document.addEventListener("keydown", onKey);
@@ -52,7 +60,7 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
     [finishClose],
   );
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const reduced =
     typeof window !== "undefined" &&
@@ -60,9 +68,10 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
   const ease = "ease-out";
   const duration = reduced ? "0ms" : "200ms";
 
-  return (
+  return createPortal(
     <div
       className="cs-lightbox-backdrop"
+      data-annotate={`${annotate}/lightbox-backdrop`}
       role="presentation"
       onClick={onBackdrop}
       style={{
@@ -72,13 +81,14 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
     >
       <div
         className="cs-lightbox-dialog"
+        data-annotate={`${annotate}/lightbox-dialog`}
         role="dialog"
         aria-modal="true"
         aria-label={alt}
         onClick={onBackdrop}
         style={{
           opacity: visible ? 1 : 0,
-          transform: visible ? "scale(1)" : "scale(0.98)",
+          transform: visible ? "none" : "scale(0.98)",
           transition: reduced ? "none" : `opacity ${duration} ${ease}, transform ${duration} ${ease}`,
         }}
       >
@@ -86,16 +96,22 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, returnFocus
           ref={closeRef}
           type="button"
           className="cs-lightbox-close"
+          data-annotate={`${annotate}/lightbox-close`}
           onClick={finishClose}
           aria-label="Close enlarged image (Escape)"
         >
           Close
         </button>
-        <div className="cs-lightbox-media" onClick={(e) => e.stopPropagation()}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="cs-lightbox-img" />
+        <div className="cs-lightbox-media" data-annotate={`${annotate}/lightbox-media`} onClick={(e) => e.stopPropagation()}>
+          {children ? (
+            <div className="cs-lightbox-live">{children}</div>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={src} alt={alt} className="cs-lightbox-img" />
+          )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

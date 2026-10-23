@@ -1,5 +1,7 @@
 # Dialogue case study, round 35 brief
 
+Asks covered: DLG-01, DLG-02, DLG-03, DLG-05, DLG-07, DLG-09
+
 **Status:** In build (round 35 execution). Scope: Mudit’s 8 notes + aspect-ratio tiers + live figures only. Rachel Chen cross-cutting rules applied (see References).  
 **Branch target:** `review/dialogue-canvas`  
 **Baseline:** Round 34 rasters and static export under `public/dev/dialogue-static/`; case study at `/dialogue`, review canvas at `/dev/dialogue-canvas-v2`.  
