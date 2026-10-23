@@ -16,7 +16,7 @@ export default function FullAnswerFigure() {
         <div className="dp-full-answer__answer" data-annotate-part="answer">
           <StudyChatShell evidence={18} compact hideComposer>
             <UserMessageBubble>{ADDRESS_FOLLOWUP.question}</UserMessageBubble>
-            <QuerySearchStep searched={24} found={18} />
+            <QuerySearchStep searched={24} found={18} foundLabel="address moments" />
             <p className="dp-summary" data-annotate-part="summary">{ADDRESS_FOLLOWUP.summary}</p>
             <ChartVizCard title="Checkout, % still in flow">
               <ChartBarList

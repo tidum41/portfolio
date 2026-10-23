@@ -8,7 +8,7 @@ export default function ThinDataFigure() {
     <StudyChatShell compact hideHeader hideComposer evidence={4}>
       <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
-        On mobile, several participants bailed when Autofill skipped the apartment field and
+        On mobile, several participants bailed when autofill skipped the apartment field and
         validation fired late.
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
