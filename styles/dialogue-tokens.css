@@ -236,4 +236,31 @@
    *    product UI. Stone tokens only. */
   --dp-anatomy-marker-bg: var(--ds-paper-100);
   --dp-anatomy-marker-fg: var(--ds-white);
+
+  /* 11. Video player chrome, from the Paper export (node 597-0). The DS has no
+   *    media controls. Glass fill, rings, shadows and the bottom gradient are
+   *    the Paper values expressed as black or white at the same opacity. The
+   *    time and skip-label sizes are Paper's 13px and 8px. */
+  --dp-player-glass: color-mix(in srgb, var(--ds-white) 10%, transparent);
+  --dp-player-ring-bar: color-mix(in srgb, var(--ds-white) 5%, transparent);
+  --dp-player-ring-frame: color-mix(in srgb, var(--ds-white) 15%, transparent);
+  --dp-player-bar-outline: color-mix(in srgb, var(--ds-black) 10%, transparent);
+  --dp-player-bar-shadow: color-mix(in srgb, var(--ds-black) 15%, transparent);
+  --dp-player-text-shadow: color-mix(in srgb, var(--ds-black) 15%, transparent);
+  --dp-player-track: color-mix(in srgb, var(--ds-white) 20%, transparent);
+  --dp-player-track-ring: color-mix(in srgb, var(--ds-black) 5%, transparent);
+  --dp-player-gradient: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ds-black) 30%, transparent) 50%,
+    color-mix(in srgb, var(--ds-black) 50%, transparent) 100%
+  );
+  --dp-player-time-size: 13px;
+  --dp-player-skip-label-size: 8px;
+
+  /* 12. Transcript header is 16/24 at weight 500 in Paper; the DS body is 14. */
+  --dp-transcript-title-size: 16px;
+  --dp-transcript-title-leading: 24px;
+  --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
+    0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
 }

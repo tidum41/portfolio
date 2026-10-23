@@ -21,6 +21,8 @@ export default function AnatomyStructureFigure() {
 
     const measure = () => {
       const rootRect = root.getBoundingClientRect();
+      const k = root.offsetWidth > 0 ? rootRect.width / root.offsetWidth : 1;
+      const rel = (n: number) => n / k;
       const card = root.querySelector<HTMLElement>(".dp-study-chat");
       const diagram = root.querySelector<HTMLElement>(".dp-anatomy__diagram");
       const rail = root.querySelector<HTMLElement>(".dp-anatomy__rail");
@@ -33,7 +35,7 @@ export default function AnatomyStructureFigure() {
         return;
       }
 
-      const cardLeft = card.getBoundingClientRect().left - rootRect.left;
+      const cardLeft = rel(card.getBoundingClientRect().left - rootRect.left);
       const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout")];
 
       const nextCallouts: CalloutLayout[] = [];
@@ -45,9 +47,9 @@ export default function AnatomyStructureFigure() {
         if (!target || !callout) return;
         const t = target.getBoundingClientRect();
         const c = callout.getBoundingClientRect();
-        const y = t.top + t.height / 2 - rootRect.top;
+        const y = rel(t.top + t.height / 2 - rootRect.top);
         const x2 = cardLeft - 1;
-        let x1 = c.right - rootRect.left + 6;
+        let x1 = rel(c.right - rootRect.left) + 6;
         if (x2 - x1 < 40) x1 = x2 - 44;
         nextCallouts[i] = { top: y };
         nextLines.push({ y, x1, x2 });
@@ -62,6 +64,8 @@ export default function AnatomyStructureFigure() {
     requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
     ro.observe(root);
+    const clip = root.closest(".dp-scaled-viewport__clip");
+    if (clip) ro.observe(clip);
     window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();

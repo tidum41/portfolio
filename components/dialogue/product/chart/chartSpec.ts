@@ -85,6 +85,8 @@ export type ChartBarDatum = {
   /** Display string; defaults to formatted value */
   display?: string;
   focal?: boolean;
+  /** Quiet secondary figure shown after the value (for example the drop at a step). */
+  detail?: string;
 };
 
 /** Stone ramp by index; focal always cherry. */

@@ -1,5 +1,5 @@
 import ClipCard from "@/components/dialogue/product/ClipCard";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
@@ -26,7 +26,7 @@ export default function FullAnswerFigure() {
             <QuerySearchStep searched={24} found={6} />
             <p className="dp-summary" data-annotate-part="summary">{MOBILE_FOLLOWUP.summary}</p>
             <ChartVizCard title="Mobile checkout, % still in flow">
-              <ChartBarList
+              <ChartDotPlot
                 rows={MOBILE_STEPS.map((row) => ({
                   label: row.label,
                   value: row.pct,
@@ -34,7 +34,6 @@ export default function FullAnswerFigure() {
                   focal: "focal" in row && row.focal,
                 }))}
                 max={100}
-                fillMode="index"
               />
             </ChartVizCard>
             <SourcesRow selectedParticipant="Jordan M." selectedTime="14:03" />

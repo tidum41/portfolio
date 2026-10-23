@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r20, Oct 23 2026 (Agentation notes on 160151d)
+- Changed: anatomy callouts scale with the UI and the composer is DS height, interview player rebuilt from the Paper export with a mirrored skip back, chart library pairs now richer first draft versus simplified chosen, dot plot and stacked bar primitives for variety, DS button for Add to my plan.
+- Why: Mudit's r20 notes, ledger DLG-86 to DLG-90.
+- Preview: none, local build only (no [preview] tag)
+
 ## r19, Oct 22 2026 (Agentation notes)
 - Changed: lead compare no longer clips and gets a calmer surface (two extension tokens), figures capped at 640px by scaling, chart titles on their own row, chart library near-miss specimens with numbered markers, thin-data "Add to my plan" copies a prompt, ClipCard accent bar removed, hero footer expand icon dropped.
 - Why: Mudit's r19 notes, ledger DLG-79 to DLG-85 (his DLG-70 to 78).

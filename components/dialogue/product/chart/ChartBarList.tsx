@@ -15,10 +15,8 @@ type Props = {
   fillMode?: "index" | "magnitude";
   note?: ReactNode;
   className?: string;
-  /** Library near-miss only: drop the direct labels (a legend names the bars instead). */
-  hideLabels?: boolean;
-  /** Library near-miss only: bars start here instead of zero (truncated baseline). */
-  baseline?: number;
+  /** Quarter gridlines over the tracks (the analyst's first draft). */
+  gridlines?: boolean;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -28,24 +26,25 @@ export default function ChartBarList({
   fillMode = "index",
   note,
   className,
-  hideLabels = false,
-  baseline = 0,
+  gridlines = false,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
+  const hasDetail = rows.some((r) => r.detail);
 
   return (
-    <div className={["dp-chart-root dp-chart-bars", className].filter(Boolean).join(" ")}>
+    <div
+      className={["dp-chart-root dp-chart-bars", hasDetail ? "dp-chart-bars--detail" : "", className].filter(Boolean).join(" ")}
+    >
+      {gridlines ? <span className="dp-chart-bars__grid" aria-hidden data-annotate-part="gridlines" /> : null}
       {rows.map((row, i) => {
-        const widthPct = Math.max(0, Math.min(100, ((row.value - baseline) / (max - baseline)) * 100));
+        const widthPct = Math.max(0, Math.min(100, (row.value / max) * 100));
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
             : chartBarFill(i, row.focal);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
-            {hideLabels ? null : (
-              <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
-            )}
+            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
             <div
               className="dp-chart-bars__track"
               data-annotate-part={`bar-track-${annotateSlug(row.label)}`}
@@ -68,6 +67,11 @@ export default function ChartBarList({
             >
               {row.display ?? String(row.value)}
             </span>
+            {hasDetail ? (
+              <span className="dp-chart-bars__detail" data-annotate-part={`bar-detail-${annotateSlug(row.label)}`}>
+                {row.detail ?? ""}
+              </span>
+            ) : null}
           </div>
         );
       })}

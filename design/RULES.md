@@ -76,3 +76,12 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - No left accent bars on cards. Separate with the DS surface and a border.
 - Figures with real controls mark them `data-interactive`; StaticFigure keeps them clickable and the zoom trigger steps aside.
 - Hero and study chat footers match: "Based on N of 24 interviews", no icon.
+
+## Dialogue r20 rules
+
+- Anything that measures rects inside a scaled figure divides by the scale (rect width over offsetWidth). Callouts and leader lines must track the UI at every scale.
+- The quote player is the Paper export (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0), static. Skip back is skip forward mirrored (scaleX(-1)), with its 10 label mirrored. The Paper source file is never committed.
+- Chart library pairs: ruled out is the richer first-draft chart from the same data (gridlines, per-row detail, area, legend, shares); chosen is that chart simplified, keeping one or two details quietly. The caption says in plain words what was removed, what was kept and why. No strawmen, no invented numbers (derived differences only).
+- Chart variety: use a dot plot, line or stacked proportion bar where the data fits. Plain bars stay at about 40% of the charts on the page or less (currently 5 of 12).
+- Buttons in figures follow the DS default: 36px tall, 8px 16px padding, 8px radius, 14/20 at 500, 16px icon, 8px gap. Spacing around them is the DS stack gap.
+- The composer box hugs its content. No fixed 96 or 128px heights.
