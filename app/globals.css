@@ -2617,6 +2617,10 @@ agentation-toolbar,
     overflow: visible;
     scroll-snap-type: none;
   }
+  /* On phones the comparison leads with the answer, like the answers it argues for. */
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+    order: -1;
+  }
   .dialogue-lead-answer__panel,
   .dialogue-chart-gallery__cell {
     display: flex;
