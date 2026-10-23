@@ -188,6 +188,8 @@
   --dp-chart-line: var(--dp-chart-muted);
   --dp-chart-muted: var(--ds-stone-500);
   --dp-chart-muted-alt: var(--ds-stone-600);
+  /* Second series in a dense chart: stone-300 fill with a 1px stone-500 outline (3:1 by outline). */
+  --dp-chart-series-alt-fill: var(--ds-stone-300);
   --dp-chart-seg-label: var(--ds-white);
   --dp-chart-label-color: var(--ds-stone-600);
   --dp-chart-value-color: var(--ds-stone-900);

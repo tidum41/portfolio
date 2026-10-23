@@ -581,7 +581,8 @@
 
 .dp-chart-grouped__swatch[data-series="segment"],
 .dp-chart-grouped__bar[data-series="segment"] {
-  background: var(--dp-chart-muted-alt);
+  background: var(--dp-chart-series-alt-fill);
+  box-shadow: inset 0 0 0 1px var(--dp-chart-muted);
 }
 
 .dp-chart-grouped__head,

@@ -111,4 +111,4 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Lightbox figures scale to fit the viewport (width and height), never scroll.
 - Transcript Dialogue rows use the original Paper avatar (the Dialogue mark in a 48px circle, public/dialogue/dialogue-avatar.svg).
 - Plain bars stay at about 40 to 45% of charts; 6 of 13 is accepted where Mudit asks for bars (lead compare).
-
+- Exception to the r23 fill rule: in a dense two-series chart the second series is a stone-300 fill with a 1px stone-500 outline, so adjacent series separate by outline.
