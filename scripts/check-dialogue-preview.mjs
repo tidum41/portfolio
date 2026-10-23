@@ -226,7 +226,7 @@ async function lightboxSweeps(browser) {
         const n = await page.evaluate(`(${sweepInPage.toString()})(".cs-lightbox-backdrop").inspected`);
         const closeSeen = await page.evaluate(
           () => {
-          const x = document.querySelector('[role="dialog"][aria-modal="true"] .cs-lightbox-close');
+          const x = document.querySelector('.cs-lightbox-backdrop > .cs-lightbox-close');
           return !!x && (x.getAttribute("aria-label") || x.textContent || "").trim().length > 0;
         },
         );

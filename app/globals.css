@@ -1531,12 +1531,11 @@ html[data-theme="dark"] .project-image {
    button's dark-theme token values (rest --color-text-tertiary
    #8A8A8A, hover --color-text-primary #EDEDEC); the light-theme
    values (#6C6C6C to #2E2E2E) would be unreadable on it.
-   Fixed inside the dialog (inside the aria-modal tree; the dialog uses
-   opacity only, so no containing block), so it sits in the top-right
+   Positioned against the fixed backdrop, so it sits in the top-right
    corner of the viewport, above the site header (header z-index 40,
    backdrop z-index 100000), fully inside the viewport at 390px. */
 .cs-lightbox-close {
-  position: fixed;
+  position: absolute;
   top: calc(16px + env(safe-area-inset-top));
   right: calc(16px + env(safe-area-inset-right));
   z-index: 2;

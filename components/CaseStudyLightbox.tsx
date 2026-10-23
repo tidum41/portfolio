@@ -105,6 +105,19 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
       onClick={onBackdrop}
       style={fadeStyle}
     >
+      <button
+        ref={closeRef}
+        type="button"
+        className="cs-lightbox-close"
+        data-annotate={`${annotate}/lightbox-close`}
+        onClick={requestClose}
+        aria-label="Close"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
       <div
         className="cs-lightbox-dialog"
         data-annotate={`${annotate}/lightbox-dialog`}
@@ -114,19 +127,6 @@ export default function CaseStudyLightbox({ src, children, alt, open, onClose, r
         onClick={onBackdrop}
         style={fadeStyle}
       >
-        <button
-          ref={closeRef}
-          type="button"
-          className="cs-lightbox-close"
-          data-annotate={`${annotate}/lightbox-close`}
-          onClick={requestClose}
-          aria-label="Close"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
         <div className="cs-lightbox-media" data-annotate={`${annotate}/lightbox-media`} onClick={(e) => e.stopPropagation()}>
           {children ? (
             <div className="cs-lightbox-live">{children}</div>
