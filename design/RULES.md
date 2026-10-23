@@ -1,3 +1,5 @@
+Every build and review reads STORY-PRINCIPLES.md and AI-TELLS.md with this file.
+
 # Dialogue case study rules
 
 Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI keeps its real 600). Figures stay the approved components with no hover state. Clicking a figure opens a lightbox (see below). Do not commit fonts, Dialogue screenshots, or unblurred frames.
