@@ -13,6 +13,15 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - Every figure gets the same caption treatment, a label plus at most one sentence, the hero included; a fact stated in a figure is not restated as a list under it.
 - The figures are recreations of the redesign, never describe them as built from the product's own components.
 
+## 2026-10-23 (cold critique)
+
+- A claim sits next to the figure that proves it; if the section's own figure does not show it, the claim moves or goes.
+- The problem section shows the problem state as a figure, it does not only describe it in prose.
+- A closing sentence is read aloud before it ships; the last paragraph is the one a tired reader remembers.
+- Body text and the caption under the next figure never carry the same claim twice; the number lives in one place.
+- On phones a comparison leads with its chosen option, the same way the answers it argues for lead with the answer.
+- Insider shorthand from the work (ticket names, clipped compounds) is spelled out or cut; a cold reader cannot decode it.
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.

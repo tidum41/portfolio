@@ -205,6 +205,11 @@ export function DialogueCaseStudyContent({
                 and the answer never said which interview it came from. The question I kept coming
                 back to was who said that, and the chat could not answer it.
               </CaseStudyBody>
+              <ProductFigureBlock
+                scenario="problem-paragraphs"
+                title="Study chat answer as paragraphs, with no source named for any claim"
+                frameLabel="Problem: a long answer with no source named, so nothing in it can be checked."
+              />
             </Section>
 
             <Section id="why-it-matters">
@@ -214,7 +219,9 @@ export function DialogueCaseStudyContent({
                 not have Dialogue customers to test with, and I will not pretend those sessions
                 were that. What I had was the same reaction in both rooms: people asked who said
                 that before they would trust a long answer, and without a path back to the
-                interview, the answer stayed a guess.
+                interview, the answer stayed a guess. The structured answer below also keeps a
+                source that disagrees inside the card, under counter evidence, because a split in
+                the interviews is a finding too.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
                 heading="Lead with the answer"
@@ -258,9 +265,8 @@ export function DialogueCaseStudyContent({
                 Summary, sources, chart, clips, follow ups. I kept the order fixed so a reader
                 learns the shape once and then only reads what changes. I study cognitive science,
                 so I think about order as a memory problem: attention should go to the answer, not
-                to relearning the layout. A source that disagrees stays in the answer, under
-                counter evidence, because a split in the interviews is a finding too. The cost of
-                a fixed order is that a simple answer carries the same furniture as a hard one.
+                to relearning the layout. The cost of a fixed order is that a simple answer
+                carries the same furniture as a hard one.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -285,7 +291,7 @@ export function DialogueCaseStudyContent({
                 title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 assetId="D-10"
                 wrapRaster={wrap}
-                frameLabel="Solution: clip starts at 01:38 so the card-failed quote can be checked in one click"
+                frameLabel="Solution: clip starts at 01:38, on the line about the card that failed, so the quote can be checked in one click"
               />
             </Section>
 
@@ -294,9 +300,7 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 This pair puts the chart I first reached for next to the one I kept, on the same
                 data. The reader should find the step that matters without reading a legend, and a
-                chart that cannot do that does not belong in the answer. Coverage, the count of
-                interviews behind a finding, sits with the thin data answer below, where the
-                count itself is the point.
+                chart that cannot do that does not belong in the answer.
               </CaseStudyBody>
               <DialogueChartLibrary />
             </Section>
@@ -304,10 +308,10 @@ export function DialogueCaseStudyContent({
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
-                A chart of four interviews looks like a trend, and a trend is what a finding from
-                four interviews cannot claim. When the evidence is thin, the answer leads with the
-                count and holds the chart back. The cost is a weaker looking answer, and I would
-                rather the answer look weak than borrow confidence it has not earned.
+                A chart makes four interviews look like a trend. When the evidence is thin, the
+                answer leads with the count and holds the chart back. The cost is a weaker
+                looking answer, and I would rather the answer look weak than borrow confidence it
+                has not earned.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
@@ -317,9 +321,8 @@ export function DialogueCaseStudyContent({
                 frameLabel="Thin data: a finding from four interviews must not reach a roadmap as a trend."
               />
               <CaseStudyBody>
-                Coverage is the other side of the same rule. When most of the study mentions a
-                finding, the count can carry a chart, because the chart is then showing the size
-                of the evidence and not dressing up a guess.
+                Coverage is the other side of the same rule: when the count behind a finding is
+                large, the chart is allowed back in.
               </CaseStudyBody>
               <DialogueCoverageFigure />
             </Section>
@@ -351,9 +354,8 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Room. One answer has to hold a summary, a chart, and clips, and those parts still
                 compete, so when something has to give, I cut a chart before I cut a source. The
-                harder test is still ahead: this page shows answers citing their sources, and it
-                has not been researchers asking about their own studies, where they already know
-                when an answer is wrong.
+                harder test is still ahead: researchers asking about their own studies, where
+                they already know when an answer is wrong.
               </CaseStudyBody>
             </Section>
           </article>

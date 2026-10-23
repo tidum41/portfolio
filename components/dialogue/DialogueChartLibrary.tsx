@@ -100,7 +100,7 @@ const ENTRIES = [
     tech: [
       ["Data shape", "ordered steps, counts."],
       ["Encoding", "length on a zero baseline is read precisely; area is not."],
-      ["Tradeoff", "loses theme overlap."],
+      ["Tradeoff", "bars rank the steps and nothing more; why people quit still has to come from the clips."],
     ],
     bad: <Bubbles />,
     good: (
