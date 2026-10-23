@@ -38,6 +38,17 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 
 - One unit per figure: a filtered answer restates its own subset count in the same unit across the search line, the evidence footer, and the clips line, and that count matches the coverage figure for the same finding.
 
+## 2026-10-23 (round G)
+
+- The page opens by splitting what Dialogue is, the problem, why it was hard, and the role into separate claim headings, and a lead line after the hero points at the final answer before the first section.
+- Counts the writer has not supplied stay visible as [PLACEHOLDER: count], and reasoning the writer has not supplied stays visible as [PLACEHOLDER: why ...]. Never invent a number or a reason to fill one.
+- Counter-evidence gets its own section, not a sentence inside another section.
+- A comparison is told in the order the options were tried, and each option's caption line says what it prioritised.
+- Clips and follow-ups each carry a short ruled-out unit naming the option that was not taken.
+- Thin data is the climax: the 4-of-24 rule, the 18-of-24 case as a full query-and-answer figure, where the cutoff sits, and what would move it.
+- Query-and-answer moments reuse the real answer components and the study's own sample data only; their evidence trail steps are marked with the BruinLease Phosphor icons in stone-500, cherry on the chart step.
+- Chart specimens in one pair share a height, and the inner chart card radius is concentric with its frame (frame radius minus the frame padding). Secondary chart colors are the exact DS values (stone-500 #79716b, cherry #b43f7f, cherry-300 #fe93ce in dark).
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.

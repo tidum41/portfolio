@@ -2542,7 +2542,7 @@ agentation-toolbar,
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: #78716c;
+  color: #79716b;
 }
 .dialogue-chart-gallery {
   display: grid;
@@ -2763,6 +2763,8 @@ agentation-toolbar,
   background: var(--dp-figure-surface-system);
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 .dialogue-lib__tag {
   position: absolute;
@@ -2778,11 +2780,14 @@ agentation-toolbar,
 }
 .dialogue-lib__specimen[data-status="chosen"] .dialogue-lib__tag {
   background: transparent;
-  color: #b33a7a;
-  box-shadow: inset 0 0 0 1px #b33a7a;
+  color: #b43f7f;
+  box-shadow: inset 0 0 0 1px #b43f7f;
 }
 .dialogue-lib__chart {
   min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .dialogue-lib__chart .dp-chart-root {
   --dp-chart-min-width: 0px;
@@ -2791,6 +2796,9 @@ agentation-toolbar,
 .dialogue-lib__chart .dp-chart-viz-card {
   background: var(--dp-surface, #fcfbf9);
   border-color: transparent;
+  flex: 1;
+  /* Concentric with the specimen frame: control radius minus the 12px specimen padding. */
+  border-radius: calc(var(--dp-radius-control) - 12px);
 }
 .dialogue-lib__tech {
   margin-top: 12px;
@@ -2834,12 +2842,12 @@ agentation-toolbar,
   color: var(--dp-ink, #1c1917);
 }
 .dialogue-lib__bubble-cell:nth-child(2) .dialogue-lib__bubble {
-  background: #e7c2d6;
+  background: #fe93ce;
 }
 .dialogue-lib__bubble-label {
   font-size: 11px;
   line-height: 1.2;
-  color: var(--dp-muted, #78716c);
+  color: var(--dp-muted, #79716b);
 }
 .dialogue-lib__donut {
   display: block;
@@ -2849,7 +2857,7 @@ agentation-toolbar,
 }
 .dialogue-lib__svg-label {
   font-size: 11px;
-  fill: #57534e;
+  fill: #57534d;
 }
 .dialogue-lib__axis {
   stroke: #a8a29e;
@@ -2862,10 +2870,10 @@ agentation-toolbar,
   max-height: 128px;
 }
 .dialogue-lib__dist-bar {
-  fill: #78716c;
+  fill: #79716b;
 }
 .dialogue-lib__timeline-dot {
-  fill: #78716c;
+  fill: #79716b;
 }
 html[data-theme="dark"] .dialogue-lib__tag {
   background: rgba(255, 255, 255, 0.1);
@@ -2873,8 +2881,8 @@ html[data-theme="dark"] .dialogue-lib__tag {
 }
 html[data-theme="dark"] .dialogue-lib__specimen[data-status="chosen"] .dialogue-lib__tag {
   background: transparent;
-  color: #f19cc4;
-  box-shadow: inset 0 0 0 1px #f19cc4;
+  color: #fe93ce;
+  box-shadow: inset 0 0 0 1px #fe93ce;
 }
 .dialogue-lib__dots {
   display: flex;
@@ -2886,7 +2894,7 @@ html[data-theme="dark"] .dialogue-lib__specimen[data-status="chosen"] .dialogue-
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #78716c;
+  background: #79716b;
 }
 .dialogue-lib__dot-value {
   font-size: 11px;
@@ -2904,7 +2912,7 @@ html[data-theme="dark"] .dialogue-lib__specimen[data-status="chosen"] .dialogue-
   height: 8px;
   width: 100%;
   border-radius: 2px;
-  background: #78716c;
+  background: #79716b;
 }
 .dialogue-lib__total-value {
   font-size: 11px;
@@ -2926,15 +2934,44 @@ html[data-theme="dark"] .dialogue-lib__specimen[data-status="chosen"] .dialogue-
   padding: 2px 8px;
   border-radius: var(--radius-chip, 8px);
   background: transparent;
-  color: #b33a7a;
-  box-shadow: inset 0 0 0 1px #b33a7a;
+  color: #b43f7f;
+  box-shadow: inset 0 0 0 1px #b43f7f;
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
 }
 html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
-  color: #f19cc4;
-  box-shadow: inset 0 0 0 1px #f19cc4;
+  color: #fe93ce;
+  box-shadow: inset 0 0 0 1px #fe93ce;
+}
+
+/* Query-answer moments (round G): evidence trail steps inside the answer card.
+   Icons are the BruinLease Phosphor set, stone-500 with cherry on the chart step. */
+.dialogue-moment__step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: start;
+  min-width: 0;
+}
+.dialogue-moment__icon {
+  display: flex;
+  padding-top: 2px;
+  color: #79716b;
+}
+.dialogue-moment__icon svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.dialogue-moment__step--chart .dialogue-moment__icon {
+  color: #b43f7f;
+}
+html[data-theme="dark"] .dialogue-moment__icon {
+  color: #a6a09b;
+}
+html[data-theme="dark"] .dialogue-moment__step--chart .dialogue-moment__icon {
+  color: #fe93ce;
 }
 
 /* Figure wells: offset from the page by about 6% lightness in both themes. */
