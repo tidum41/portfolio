@@ -128,6 +128,9 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-89 | r20 D: chart variety: new dot plot and stacked proportion primitives; groups and the full-answer funnel use dot plots, coverage a stacked bar, trend a line; plain bars are 5 of 12 charts on the page (42%) | Oct 23 | in progress | Mudit, r20 notes on 160151d |
 | DLG-90 | r20 E: Add to my plan rebuilt to the DS default button (36px, 8px 16px padding, 8px radius, 14/20 at 500, 16px icon, 8px gap), body to button spacing is the DS stack gap (12px); hint before click: Copies a prompt to paste into Ask about your study.; after click: Copied. Paste it into Ask about your study. (live placeholder name) | Oct 23 | in progress | Mudit, r20 notes on 160151d |
 | DLG-91 | r21: lead compare funnel is a dot plot (plain bars now 5 of 13), skip labels are SVG text inside the icon, Add to my plan sits 16px under the clip link, .dp-chart-title carries its own 12px bottom padding | Oct 23 | in progress | Mudit, r21 audit |
+| DLG-92 | r22: skip 10 labels centred in their arrow circles (circle centre 7,7 of the 14px icon), back and forward symmetric | Oct 23 | in progress | Mudit, r22 notes |
+| DLG-93 | r22: chart library drops the Chosen and Ruled out chips; identical frames, a plain name under each, pro and con lists (brand check square, quiet outline minus square), then one medium-weight verdict sentence and a tertiary reason line (Caleb Wu RevisionDojo pattern) | Oct 23 | in progress | Mudit, r22 notes |
+| DLG-94 | r22: full answer hierarchy: lead paragraph 16/24 at 500, supporting rows 14 and 12, clip names and times 12/16, quotes 14/20, drawer spacing 16; new --dp-lead-size and --dp-lead-leading tokens (extension 14) | Oct 23 | in progress | Mudit, r22 notes |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

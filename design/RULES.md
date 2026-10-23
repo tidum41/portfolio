@@ -86,3 +86,10 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Buttons in figures follow the DS default: 36px tall, 8px 16px padding, 8px radius, 14/20 at 500, 16px icon, 8px gap. Spacing around them is the DS stack gap.
 - The composer box hugs its content. No fixed 96 or 128px heights.
 - Icon-internal glyph labels copied from the source UI may go below 11px.
+
+## Dialogue r22 rules
+
+- Library pairs have no status chips. Both specimens share one frame; a plain sentence-case name sits under each, then pros (brand check square) and cons (quiet outline minus square), icons 1.05em, 8px gap, 4px between rows. Under the pair: one medium-weight verdict sentence and one tertiary reason line.
+- Skip "10" labels are centred on the arrow circle (7,7 in the 14px icon). Back and forward are mirrors.
+- Full answer hierarchy comes from size, weight and spacing steps, not color: lead paragraph 16/24 at 500, supporting 14 and 12, quotes 14/20.
+- Chart colors are frozen unless a round says otherwise.

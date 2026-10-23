@@ -970,27 +970,38 @@
 
 .dp-full-answer__drawer-sub {
   margin: 2px 0 0;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
   color: var(--dp-muted);
 }
 
 .dp-full-answer__drawer-list {
-  margin-top: 12px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   flex: 1 1 auto;
   min-height: 0;
 }
 
-.dp-full-answer .dp-clip-card__who,
-.dp-full-answer .dp-clip-card__text {
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
+/* Hierarchy: the answer's lead paragraph is the hero (16/24 at 500), the
+   supporting rows step down to 14 and 12, and quotes sit one step below the lead. */
+.dp-full-answer__answer .dp-summary {
+  font-size: var(--dp-lead-size);
+  line-height: var(--dp-lead-leading);
+  font-weight: var(--dp-weight-medium);
+  margin-bottom: 4px;
+}
+
+.dp-full-answer .dp-clip-card__who {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
 }
 
 .dp-full-answer .dp-clip-card__text {
+  margin-top: 8px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
   color: var(--dp-muted);
 }
 

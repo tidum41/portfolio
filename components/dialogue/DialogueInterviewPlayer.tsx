@@ -23,7 +23,7 @@ function SkipIcon({ back = false }: { back?: boolean }) {
         <path d="M9 1a7.98 7.98 0 0 1 6.132 2.867l1.441-1.44a.25.25 0 0 1 .427.177V6.75a.25.25 0 0 1-.25.25h-4.146a.25.25 0 0 1-.177-.427L13.71 5.29A5.99 5.99 0 0 0 9 3a6 6 0 0 0-4.242 10.242l-1.415 1.415A8 8 0 0 1 9 1" />
       </svg>
       <svg className="dp-qplayer__skip-label" viewBox="0 0 14 14" aria-hidden>
-        <text x={back ? -1 : 15} y="11.5" textAnchor={back ? "start" : "end"}>10</text>
+        <text x="7" y="9.9" textAnchor="middle">10</text>
       </svg>
     </span>
   );

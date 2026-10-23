@@ -23,25 +23,51 @@ const STEPS = CHECKOUT_FUNNEL.steps.slice(0, 4);
 const GROUPS = SEGMENT_ADDRESS.rows;
 const ROUNDS = SENTIMENT_LINE.points;
 
+type Points = { pros: readonly string[]; cons: readonly string[] };
+
+function Mark({ kind }: { kind: "pro" | "con" }) {
+  return (
+    <span className="dialogue-lib__mark" data-kind={kind} aria-hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {kind === "pro" ? <path d="M20 6 9 17l-5-5" /> : <path d="M5 12h14" />}
+      </svg>
+    </span>
+  );
+}
+
 function Specimen({
   entryId,
   status,
+  name,
+  points,
   children,
 }: {
   entryId: string;
   status: "ruled-out" | "chosen";
+  name: string;
+  points: Points;
   children: ReactNode;
 }) {
   return (
-    <figure className="dialogue-lib__specimen" data-status={status}>
-      <span className="dialogue-lib__tag">{status === "chosen" ? "Chosen" : "Ruled out"}</span>
-      <StaticFigure
-        figure={`chart-${entryId}-${status}`}
-        className={`dialogue-lib__chart dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-      >
-        {children}
-      </StaticFigure>
-    </figure>
+    <div className="dialogue-lib__col" data-status={status}>
+      <figure className="dialogue-lib__specimen" data-status={status}>
+        <StaticFigure
+          figure={`chart-${entryId}-${status}`}
+          className={`dialogue-lib__chart dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+        >
+          {children}
+        </StaticFigure>
+      </figure>
+      <p className="dialogue-lib__spec-name" data-annotate-part={`name-${entryId}-${status}`}>{name}</p>
+      <ul className="dialogue-lib__points" data-annotate-part={`points-${entryId}-${status}`}>
+        {points.pros.map((t) => (
+          <li key={t}><Mark kind="pro" />{t}</li>
+        ))}
+        {points.cons.map((t) => (
+          <li key={t}><Mark kind="con" />{t}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -64,6 +90,10 @@ const TOTAL = COVERAGE_ADDRESS.rows.reduce((n, r) => n + r.count, 0);
 const ENTRIES = [
   {
     id: "dropoff",
+    badName: "Full detail",
+    badPoints: {"pros": ["Shows every step's drop"], "cons": ["Gridlines and a drop on every row compete for attention"]},
+    goodName: "Simplified",
+    goodPoints: {"pros": ["The drop on Address is found first", "One cherry bar marks the step that matters"], "cons": ["The other drops are not labeled"]},
     name: "Drop-off between steps",
     verdict: "Bars show where people quit, so the one big drop has to stand out.",
     tech: [
@@ -103,6 +133,10 @@ const ENTRIES = [
   },
   {
     id: "groups",
+    badName: "Full detail",
+    badPoints: {"pros": ["A gridline every 20% reads exact values", "Gap to Mobile on every row"], "cons": ["Dense for three groups"]},
+    goodName: "Simplified",
+    goodPoints: {"pros": ["Axis ends keep the zero baseline", "One line says Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
     name: "How groups differ",
     verdict: "A dot plot puts each group on one shared axis, so the gap reads as distance.",
     tech: [
@@ -146,6 +180,10 @@ const ENTRIES = [
   },
   {
     id: "trend",
+    badName: "Full detail",
+    badPoints: {"pros": ["Change between rounds is printed"], "cons": ["The shaded area and extra axis steps add noise"]},
+    goodName: "Simplified",
+    goodPoints: {"pros": ["Both ends are labeled", "A marker shows where autocomplete ships"], "cons": ["The middle value is not shown"]},
     name: "Change over sessions",
     verdict: "A line shows the climb, and one marker says why it climbed.",
     tech: [
@@ -184,6 +222,10 @@ const ENTRIES = [
   },
   {
     id: "coverage",
+    badName: "Full detail",
+    badPoints: {"pros": ["The count axis and shares give the exact split"], "cons": ["The legend pulls the eye away from the bar"]},
+    goodName: "Simplified",
+    goodPoints: {"pros": ["Counts sit directly under their segments", "18 of 24 reads at a glance"], "cons": ["No percent is printed"]},
     name: "How much was covered",
     verdict: "One bar for all 24 interviews shows how much of the set backs the finding.",
     tech: [
@@ -232,12 +274,16 @@ export default function DialogueChartLibrary() {
       {ENTRIES.map((entry) => (
         <article key={entry.id} className="dialogue-lib__entry">
           <h3 className="dialogue-lib__name">{entry.name}</h3>
-          <p className="dialogue-lib__verdict">{entry.verdict}</p>
           <div className="dialogue-lib__pair">
-            <Specimen entryId={entry.id} status="ruled-out">{entry.bad}</Specimen>
-            <Specimen entryId={entry.id} status="chosen">{entry.good}</Specimen>
+            <Specimen entryId={entry.id} status="ruled-out" name={entry.badName} points={entry.badPoints}>
+              {entry.bad}
+            </Specimen>
+            <Specimen entryId={entry.id} status="chosen" name={entry.goodName} points={entry.goodPoints}>
+              {entry.good}
+            </Specimen>
           </div>
-          <p className="dialogue-lib__caption" data-annotate-part={`caption-${entry.id}`}>{entry.caption}</p>
+          <p className="dialogue-lib__verdict" data-annotate-part={`verdict-${entry.id}`}>{entry.verdict}</p>
+          <p className="dialogue-lib__reason" data-annotate-part={`reason-${entry.id}`}>{entry.caption}</p>
           <div className="dialogue-lib__tech">
             {entry.tech.map(([label, text]) => (
               <p key={label}>

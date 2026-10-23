@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r22, Oct 23 2026 (Agentation notes)
+- Changed: skip labels centred in their circles, chart library judged by pro and con lists instead of status chips, full answer gets a lead, supporting and quote hierarchy. No chart colors changed.
+- Why: Mudit's r22 notes, ledger DLG-92 to DLG-94.
+- Preview: none, local build only (no [preview] tag)
+
 ## r20, Oct 23 2026 (Agentation notes on 160151d)
 - Changed: anatomy callouts scale with the UI and the composer is DS height, interview player rebuilt from the Paper export with a mirrored skip back, chart library pairs now richer first draft versus simplified chosen, dot plot and stacked bar primitives for variety, DS button for Add to my plan.
 - Why: Mudit's r20 notes, ledger DLG-86 to DLG-90.
