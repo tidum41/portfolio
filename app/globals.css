@@ -2392,6 +2392,11 @@ agentation-toolbar,
 .dialogue-live-block.cs-figure {
   margin: 24px 0 0;
 }
+.dialogue-lead-answer__question {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 16px;
+}
 .dialogue-lead-answer__row {
   display: grid;
   gap: 24px;
