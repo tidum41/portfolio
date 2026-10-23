@@ -1524,27 +1524,44 @@ html[data-theme="dark"] .project-image {
   padding: 60px 24px 24px;
   box-sizing: border-box;
 }
+/* Icon-only close, matching the case study back button (CaseStudyTOC):
+   20px icon, strokeWidth 2, round caps/joins, stroke currentColor,
+   colour 0.2s ease, 44px hit area, global :focus-visible ring.
+   The backdrop is always near-black, so the colours are the back
+   button's dark-theme token values (rest --color-text-tertiary
+   #8A8A8A, hover --color-text-primary #EDEDEC); the light-theme
+   values (#6C6C6C to #2E2E2E) would be unreadable on it.
+   Positioned against the fixed backdrop, so it sits in the top-right
+   corner of the viewport, above the site header (header z-index 40,
+   backdrop z-index 100000), fully inside the viewport at 390px. */
 .cs-lightbox-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   min-height: 44px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ededec;
-  font-family: var(--font-sans-medium);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card);
+  background: none;
+  color: #8a8a8a;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: none;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-lightbox-close:hover { color: #ededec; }
+}
+.cs-lightbox-close:focus-visible {
+  outline: 2px solid #ededec;
+  outline-offset: 3px;
 }
 .cs-lightbox-media {
   border-radius: var(--radius-control);
