@@ -261,6 +261,9 @@
   /* 12. Transcript header is 16/24 at weight 500 in Paper; the DS body is 14. */
   --dp-transcript-title-size: 16px;
   --dp-transcript-title-leading: 24px;
+  /* 13. Action rows (the Add to my plan button) sit one 16px stack step below body copy. */
+  --dp-action-gap: 16px;
+
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
 }

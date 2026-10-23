@@ -2697,6 +2697,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 .dp-next-study-wrap {
+  margin-top: calc(var(--dp-action-gap) - var(--dp-chat-gap));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -3178,21 +3179,19 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 .dp-qplayer__skip-label {
   position: absolute;
-  right: -1px;
-  bottom: -3px;
-  display: flex;
-  justify-content: center;
-  font-size: var(--dp-player-skip-label-size);
-  line-height: 150%;
-  font-weight: var(--dp-weight-medium);
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 0 var(--dp-player-text-shadow);
-  color: var(--dp-card);
+  inset: 0;
+  width: 14px;
+  height: 14px;
+  overflow: visible;
+  filter: drop-shadow(0 1px 0 var(--dp-player-text-shadow));
 }
 
-.dp-qplayer__skip[data-back] .dp-qplayer__skip-label {
-  right: auto;
-  left: -1px;
+.dp-qplayer__skip-label text {
+  fill: var(--dp-card);
+  font-family: var(--dp-font-family);
+  font-size: var(--dp-player-skip-label-size);
+  font-weight: var(--dp-weight-medium);
+  font-variant-numeric: tabular-nums;
 }
 
 .dp-qplayer__time-controls {

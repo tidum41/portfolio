@@ -85,3 +85,4 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Chart variety: use a dot plot, line or stacked proportion bar where the data fits. Plain bars stay at about 40% of the charts on the page or less (currently 5 of 12).
 - Buttons in figures follow the DS default: 36px tall, 8px 16px padding, 8px radius, 14/20 at 500, 16px icon, 8px gap. Spacing around them is the DS stack gap.
 - The composer box hugs its content. No fixed 96 or 128px heights.
+- Icon-internal glyph labels copied from the source UI may go below 11px.

@@ -127,6 +127,7 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-88 | r20 C: chart library pairs rebuilt: ruled out is the richer first-draft chart (gridlines and per-row drops, gap column, shaded area with deltas, counts axis with legend and shares); chosen is the same chart simplified; caption says what was removed and kept | Oct 23 | in progress | Mudit, r20 notes on 160151d |
 | DLG-89 | r20 D: chart variety: new dot plot and stacked proportion primitives; groups and the full-answer funnel use dot plots, coverage a stacked bar, trend a line; plain bars are 5 of 12 charts on the page (42%) | Oct 23 | in progress | Mudit, r20 notes on 160151d |
 | DLG-90 | r20 E: Add to my plan rebuilt to the DS default button (36px, 8px 16px padding, 8px radius, 14/20 at 500, 16px icon, 8px gap), body to button spacing is the DS stack gap (12px); hint before click: Copies a prompt to paste into Ask about your study.; after click: Copied. Paste it into Ask about your study. (live placeholder name) | Oct 23 | in progress | Mudit, r20 notes on 160151d |
+| DLG-91 | r21: lead compare funnel is a dot plot (plain bars now 5 of 13), skip labels are SVG text inside the icon, Add to my plan sits 16px under the clip link, .dp-chart-title carries its own 12px bottom padding | Oct 23 | in progress | Mudit, r21 audit |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

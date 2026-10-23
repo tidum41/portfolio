@@ -1,4 +1,4 @@
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
@@ -60,7 +60,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
       {summary}
       <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
         <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
-        <ChartBarList
+        <ChartDotPlot
           className="dp-lead-answer-card__bars"
           rows={MINI_FUNNEL.map((step) => ({
             label: step.label,
@@ -69,7 +69,6 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
             focal: "focal" in step && step.focal,
           }))}
           max={100}
-          fillMode="index"
         />
       </div>
       <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
