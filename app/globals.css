@@ -2684,9 +2684,6 @@ agentation-toolbar,
     grid-template-columns: 1fr;
   }
 }
-.dialogue-full-answer-outcome {
-  margin-top: var(--dialogue-section-gap) !important;
-}
 @media (max-width: 600px) {
   .dialogue-chart-mapping {
     grid-template-columns: 1fr;

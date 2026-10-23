@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Story build, Oct 23 2026 (story and copy first, then craft fixes)
+- Changed: full story and copy rewrite in first person (claim headings in sentence case, a why and its cost per decision, the missing customers admitted in the body, cognitive science used once, in the structure section). Eyebrow now matches the metadata dates and the subtitle says what the work is. Chart library cut to the drop off pair only; groups and change over sessions pairs removed, coverage moved into thin data as its own captioned figure. The repeated anatomy list is cut, the anatomy figure and the hero now carry the standard caption, and the Limit line is replaced by a text only Reflection section, "What I did not solve". The dead outcome margin rule is removed so the section gap keeps one owner. STORY-PRINCIPLES.md and AI-TELLS.md gained the missing tests: cost in the same breath as the win, admit what was not had, count steps and options instead of metrics, "not X but Y" at most once per page.
+- Why: Mudit approved the round 1 and round 2 review fixes on Oct 23. Verified in a local production build with Playwright at 1440 and 390, light and dark: every section gap measures exactly 48px, figure left edges sit on the text column at both widths, the pair stacks at 390 with its notes below both charts, and no horizontal overflow. On this base the hero already used the dark well token and the trio line already sat above its figure, so those two fixes needed no code.
+- Preview: PREVIEW_URL (deployment of the story build commit on review/dialogue-story-b, merged into review/dialogue-canvas)
+
 ## r18, Oct 22 2026 (polish)
 - Changed: 390 anatomy shows all five parts, hero search step within two lines (chat column +24px, shorter copy at phone width), hero "-38% drop" tooltip back, transcript player black edge to edge, balanced wrap in the amber warning.
 - Why: r18 audit of 3585bb6. DLG-70 to DLG-72.

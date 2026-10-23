@@ -18,6 +18,8 @@ A checklist for spotting unedited, generated sounding writing and design. Each l
 - [ ] Template symmetry across sections: every section has the same shape, heading, three bullets, summary line, at the same length, with no section allowed to be one line long. Test: compare section outlines; human drafts vary because the material varies.
 - [ ] Placeholder facts: specifics that would fit any product ("teams of all sizes", "users love how easy it is") stand where a name, a date, or a measured number belongs. Test: swap in a competitor's name; if the sentence still works, it says nothing. Example: RedHub calls these placeholders where facts belong.
 
+- [ ] The "not X but Y" budget: the construction appears at most once on the whole page. Test: count it. One deliberate use is a choice; two or more is a rhythm the writer did not notice, and it fails. Example: the arXiv detector guide lists "it's not about ___, it's about ___" as a stock AI frame, which is why a second use reads as generated even when the sentence is true.
+
 ## Sources
 
 - Kobak and others, Tübingen and Northwestern, 2024, word frequency study of 14 million PubMed abstracts, summarised at rwrt.app/blog/ai-keeps-using-delve
