@@ -1,4 +1,4 @@
-import TextChart from "@/components/dialogue/product/chart/TextChart";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
@@ -59,15 +59,17 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       {summary}
       <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <TextChart
-          title="Checkout funnel, % still in flow"
-          columns={["Step", "Still in flow"]}
-          max={100}
+        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
+        <ChartBarList
+          className="dp-lead-answer-card__bars"
           rows={MINI_FUNNEL.map((step) => ({
             label: step.label,
             value: step.pct,
             display: formatChartPercent(step.pct),
+            focal: "focal" in step && step.focal,
           }))}
+          max={100}
+          fillMode="index"
         />
       </div>
       <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">

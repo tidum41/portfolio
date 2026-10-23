@@ -1,5 +1,6 @@
 import ClipCard from "@/components/dialogue/product/ClipCard";
-import TextChart from "@/components/dialogue/product/chart/TextChart";
+import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
@@ -24,16 +25,17 @@ export default function FullAnswerFigure() {
             <UserMessageBubble>{MOBILE_FOLLOWUP.question}</UserMessageBubble>
             <QuerySearchStep searched={24} found={6} />
             <p className="dp-summary" data-annotate-part="summary">{MOBILE_FOLLOWUP.summary}</p>
-            <TextChart
-              title="Mobile checkout, % still in flow"
-              columns={["Step", "Still in flow"]}
-              max={100}
-              rows={MOBILE_STEPS.map((row) => ({
-                label: row.label,
-                value: row.pct,
-                display: formatChartPercent(row.pct),
-              }))}
-            />
+            <ChartVizCard title="Mobile checkout, % still in flow">
+              <ChartDotPlot
+                rows={MOBILE_STEPS.map((row) => ({
+                  label: row.label,
+                  value: row.pct,
+                  display: formatChartPercent(row.pct),
+                  focal: "focal" in row && row.focal,
+                }))}
+                max={100}
+              />
+            </ChartVizCard>
             <SourcesRow selectedParticipant="Jordan M." selectedTime="14:03" />
           </StudyChatShell>
         </div>

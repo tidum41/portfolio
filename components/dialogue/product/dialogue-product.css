@@ -1674,13 +1674,13 @@
 }
 
 .dp-anatomy-scene {
-  width: 618px; /* 122 + 48 + 448 */
+  width: 740px; /* 220 + 72 + 448 */
   max-width: 100%;
 }
 
 .dp-anatomy {
   display: grid;
-  grid-template-columns: 122px 48px 448px;
+  grid-template-columns: 220px 72px 448px;
   gap: 0;
   align-items: start;
   position: relative;
@@ -1706,12 +1706,23 @@
   position: absolute;
   left: 0;
   right: 0;
+  height: 0;
+}
+
+/* The label is counter-scaled by 1 / figure scale, so it paints at its real
+   14px (13px or more after the figure shrinks) while the rail position stays
+   in figure coordinates. */
+.dp-anatomy__callout-label {
+  position: absolute;
+  right: 0;
+  top: 0;
+  zoom: calc(1 / var(--dp-fig-scale, 1));
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--figure-ink-muted, var(--dp-muted));
+  gap: 6px;
+  font-size: var(--dp-anatomy-label-size);
+  line-height: var(--dp-anatomy-label-leading);
+  color: var(--figure-ink, var(--dp-ink));
   white-space: nowrap;
   transform: translateY(-50%);
 }
@@ -1720,12 +1731,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--dp-radius-pill);
   background: var(--dp-brand);
   color: var(--dp-on-strong);
-  font-size: var(--text-small-size);
+  font-size: var(--dp-anatomy-label-size);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -2299,7 +2310,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 .dp-synced-transcript__avatar--dialogue {
-  background: var(--dp-bg);
+  background: var(--dp-bg) url("/dialogue/dialogue-avatar.svg") center / contain no-repeat;
   color: var(--dp-brand);
 }
 
@@ -3019,9 +3030,26 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   margin-top: 4px;
 }
 
-/* Hero chart wrapper. The d38dd14 hover tooltip is gone: the hero shows Dialogue's text chart. */
+/* Hero chart hover tooltip (d38dd14): shows the largest drop. */
 .dp-hero-v2__chart {
   position: relative;
+}
+
+.dp-hero-tooltip {
+  position: absolute;
+  left: 46%;
+  top: 14px;
+  padding: 4px 8px;
+  border-radius: var(--dp-radius-chip);
+  border: 1px solid var(--dp-border);
+  background: var(--dp-surface);
+  box-shadow: var(--shadow-chat);
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: var(--dp-weight-normal);
+  color: var(--dp-ink);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .dp-low-signal__text {
@@ -3614,66 +3642,4 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dp-synced-transcript__viewport {
     max-height: none;
   }
-}
-
-/* Text chart: Dialogue's own chat output (tokens: extension 16). */
-.dp-textchart {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  width: 100%;
-}
-
-.dp-textchart__title {
-  margin: 0 0 8px;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  font-weight: var(--dp-weight-medium);
-  color: var(--dp-chart-label-color);
-}
-
-.dp-textchart__block {
-  margin: 0;
-  padding: var(--dp-textchart-pad-y) var(--dp-textchart-pad-x);
-  border-radius: var(--dp-radius-bar);
-  background: var(--dp-textchart-bg);
-  color: var(--dp-textchart-fg);
-  font-family: var(--dp-font-mono);
-  font-size: var(--dp-textchart-size);
-  line-height: var(--dp-textchart-leading);
-  font-weight: var(--dp-weight-normal);
-  white-space: pre;
-  overflow: hidden;
-  letter-spacing: normal;
-}
-
-.dp-textchart__table {
-  width: 100%;
-  margin: 8px 0 0;
-  border-collapse: collapse;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--dp-ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.dp-textchart__table th,
-.dp-textchart__table td {
-  padding: 4px 8px 4px 0;
-  text-align: left;
-  border-bottom: 1px solid var(--dp-border);
-}
-
-.dp-textchart__table th {
-  font-weight: var(--dp-weight-medium);
-}
-
-.dp-textchart__table td {
-  font-weight: var(--dp-weight-normal);
-}
-
-.dp-textchart__table th + th,
-.dp-textchart__table td + td {
-  text-align: right;
-  padding-right: 0;
 }

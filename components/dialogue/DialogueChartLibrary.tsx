@@ -1,8 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartGroupedBars from "@/components/dialogue/product/chart/ChartGroupedBars";
 import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
 import ChartLinePlot from "@/components/dialogue/product/chart/ChartLinePlot";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
@@ -15,6 +17,7 @@ import { dialogueProductFontClassName } from "@/components/dialogue/product/font
 import {
   CHECKOUT_FUNNEL,
   COVERAGE_ADDRESS,
+  MOBILE_FUNNEL_STEPS,
   SEGMENT_ADDRESS,
   SENTIMENT_LINE,
 } from "@/lib/dialogue/product/sampleData";
@@ -25,12 +28,12 @@ const ROUNDS = SENTIMENT_LINE.points;
 
 type Points = { pros: readonly string[]; cons: readonly string[] };
 
+/** Phosphor, the icon set BruinLease uses; bold at 16px so the stroke holds up at this size. */
 function Mark({ kind }: { kind: "pro" | "con" }) {
+  const Icon = kind === "pro" ? Check : Minus;
   return (
     <span className="dialogue-lib__mark" data-kind={kind} aria-hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {kind === "pro" ? <path d="M20 6 9 17l-5-5" /> : <path d="M5 12h14" />}
-      </svg>
+      <Icon size={16} weight="bold" />
     </span>
   );
 }
@@ -91,9 +94,9 @@ const ENTRIES = [
   {
     id: "dropoff",
     badName: "Full detail",
-    badPoints: {"pros": ["Shows every step's drop"], "cons": ["Gridlines and a drop on every row compete for attention"]},
+    badPoints: {"pros": ["All participants and mobile side by side", "A drop figure on every step"], "cons": ["Two series, a legend and gridlines compete for attention"]},
     goodName: "Simplified",
-    goodPoints: {"pros": ["The drop on Address is found first", "One cherry bar marks the step that matters"], "cons": ["The other drops are not labeled"]},
+    goodPoints: {"pros": ["One bar per step, read straight off its length", "One cherry bar marks the step that matters"], "cons": ["Mobile and the size of each drop are not shown"]},
     name: "Drop-off between steps",
     verdict: "Bars show where people quit, so the one big drop has to stand out.",
     tech: [
@@ -102,32 +105,24 @@ const ENTRIES = [
       ["Tradeoff", "loses theme overlap."],
     ],
     caption:
-      "Removed the quarter gridlines and the drop on every row. Kept the drop on Address only and gave that bar the one cherry accent, because it is the largest and the reader should find it first.",
+      "Removed the mobile series, the legend, the gridlines and every drop figure. Kept one bar per step and gave the Address bar the one cherry accent, because it is the largest drop and the reader should find it first.",
     bad: (
       <ChartVizCard title="Drop-off by step">
-        <ChartBarList
-          gridlines
-          rows={STEPS.map((s) => ({
+        <ChartGroupedBars
+          seriesNames={["All participants", "Mobile only"]}
+          rows={STEPS.map((s, i) => ({
             label: s.label,
-            value: s.pct,
-            display: formatChartPercent(s.pct),
+            all: s.pct,
+            segment: MOBILE_FUNNEL_STEPS[i]!.pct,
             detail: "drop" in s ? `-${s.drop}` : "",
           }))}
           max={100}
-          fillMode="index"
         />
       </ChartVizCard>
     ),
     good: (
       <ChartVizCard title="Drop-off by step">
-        <ChartBarList
-          rows={STEP_ROWS.map((r, i) => ({
-            ...r,
-            detail: r.focal ? `-${STEPS[i]!.drop}` : "",
-          }))}
-          max={100}
-          fillMode="index"
-        />
+        <ChartBarList rows={STEP_ROWS} max={100} fillMode="index" />
       </ChartVizCard>
     ),
   },
@@ -136,7 +131,7 @@ const ENTRIES = [
     badName: "Full detail",
     badPoints: {"pros": ["A gridline every 20% reads exact values", "Gap to Mobile on every row"], "cons": ["Dense for three groups"]},
     goodName: "Simplified",
-    goodPoints: {"pros": ["Axis ends keep the zero baseline", "One line says Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
+    goodPoints: {"pros": ["Dots sit on one shared scale", "One line says Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
     name: "How groups differ",
     verdict: "A dot plot puts each group on one shared axis, so the gap reads as distance.",
     tech: [
@@ -145,7 +140,7 @@ const ENTRIES = [
       ["Tradeoff", "no view of spread inside a group."],
     ],
     caption:
-      "Removed the gridline every 20% and the points-behind-Mobile figure on each row. Kept the axis ends, so the zero baseline is still there, and one line saying Mobile is about twice Desktop.",
+      "Removed the gridline every 20%, the 0 to 100 scale and the points-behind-Mobile figure on each row. Kept the dots on one shared scale and one line saying Mobile is about twice Desktop.",
     bad: (
       <ChartVizCard title={SEGMENT_ADDRESS.title}>
         <ChartDotPlot
@@ -159,13 +154,13 @@ const ENTRIES = [
             detail: g.label === "Mobile" ? "" : GAP_PTS(g.label),
           }))}
           max={100}
+          note="Right column: percentage points behind Mobile"
         />
       </ChartVizCard>
     ),
     good: (
       <ChartVizCard title={SEGMENT_ADDRESS.title}>
         <ChartDotPlot
-          ticks={[0, 100]}
           rows={GROUPS.map((g) => ({
             label: g.label,
             value: g.pct,

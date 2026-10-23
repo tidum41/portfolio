@@ -2484,6 +2484,7 @@ agentation-toolbar,
 .dialogue-lead-answer__answer {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 .dialogue-lead-answer__answer--structured .dp-study-chat {
   height: 100%;
@@ -2777,18 +2778,23 @@ agentation-toolbar,
 .dialogue-lib__pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  column-gap: 16px;
   margin-top: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 .dialogue-lib__col {
   min-width: 0;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
 }
 .dialogue-lib__specimen {
   margin: 0;
   min-width: 0;
-  padding: 12px;
-  border-radius: var(--radius-control);
+  display: flex;
+  flex-direction: column;
+  padding: var(--dp-lib-pad);
+  border-radius: var(--dp-radius-control);
   background: var(--dp-figure-surface-system);
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
   box-sizing: border-box;
@@ -2822,34 +2828,32 @@ agentation-toolbar,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-sizing: border-box;
-  width: 1.05em;
-  height: 1.05em;
-  margin-top: calc((var(--text-meta-leading) - 1.05em) / 2);
-  border-radius: var(--dp-radius-bar);
-}
-.dialogue-lib__mark svg {
-  width: 80%;
-  height: 80%;
+  width: 16px;
+  height: 16px;
+  margin-top: calc((var(--text-meta-leading) - 16px) / 2);
 }
 .dialogue-lib__mark[data-kind="pro"] {
-  background: var(--dp-brand);
-  color: var(--dp-card);
+  color: var(--dp-brand);
 }
 .dialogue-lib__mark[data-kind="con"] {
-  border: 1px solid var(--dp-faint);
-  color: var(--dp-faint);
+  color: var(--color-text-tertiary);
 }
 .dialogue-lib__chart {
   min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 .dialogue-lib__chart .dp-chart-root {
   --dp-chart-min-width: 0px;
   min-width: 0;
 }
 .dialogue-lib__chart .dp-chart-viz-card {
+  flex: 1 1 auto;
   background: var(--dp-surface, #fcfbf9);
   border-color: transparent;
+  /* Concentric: inner radius is the frame radius minus the frame padding. */
+  border-radius: calc(var(--dp-radius-control) - var(--dp-lib-pad));
 }
 html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
   border-color: var(--dp-chart-card-border);

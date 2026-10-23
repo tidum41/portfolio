@@ -1,7 +1,6 @@
 import {
   ArrowDownIcon,
   CopyIcon,
-  DialogueAsteriskIcon,
   PersonIcon,
 } from "@/components/dialogue/product/icons";
 
@@ -57,9 +56,7 @@ export default function SyncedTranscript() {
                 ].join(" ")}
                 data-annotate-part={`transcript-avatar-${i + 1}`}
               >
-                {row.role === "dialogue" ? (
-                  <DialogueAsteriskIcon className="dp-synced-transcript__avatar-icon" />
-                ) : (
+                {row.role === "dialogue" ? null : (
                   <PersonIcon className="dp-synced-transcript__person-icon" />
                 )}
               </span>

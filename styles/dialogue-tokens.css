@@ -112,6 +112,9 @@
   --dp-funnel-bar-dark: var(--ds-stone-600);
 
   --dp-anatomy-line: var(--ds-stone-300);
+  /* Callout labels are 14px so they stay 13px or more after the figure scales (about 0.94 at 1440). */
+  --dp-anatomy-label-size: 14px;
+  --dp-anatomy-label-leading: 20px;
 
   --text-body-size: var(--ds-text-sm);
   --text-body-leading: var(--ds-text-body-leading);
@@ -267,16 +270,9 @@
    *    stone-200 border, the DS border, rather than a new fill. */
   --dp-chart-card-border: var(--ds-stone-200);
 
-  /* 16. Text chart: what Dialogue itself prints in a chat answer. A stone-900
-   *    block with stone-100 DM Mono text and block-character bars, then a
-   *    markdown table. Used wherever a product figure would otherwise show a
-   *    designed chart as if it were Dialogue's output. */
-  --dp-textchart-bg: var(--ds-stone-900);
-  --dp-textchart-fg: var(--ds-stone-100);
-  --dp-textchart-size: 10.29px;
-  --dp-textchart-leading: 1.667;
-  --dp-textchart-pad-y: 8px;
-  --dp-textchart-pad-x: 12px;
+  /* 15b. Chart library frame padding. The chart card inside takes the frame
+   *    radius minus this padding, so the two corners are concentric. */
+  --dp-lib-pad: 8px;
 
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);

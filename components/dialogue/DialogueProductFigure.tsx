@@ -23,8 +23,8 @@ function figureName(scenario: Scenario): string {
 
 /** Live study-chat panel width (t384: ~447.78px → 448). */
 const CHAT_W = 448;
-/** Callout rail 122 + gutter 48 + chat 448 */
-const ANATOMY_W = 618;
+/** Callout rail 220 + gutter 72 + chat 448. The rail holds 14px labels counter-scaled to real size. */
+const ANATOMY_W = 740;
 /** Answer column + clip drawer cluster */
 const FULL_ANSWER_W = 688;
 /** Below 480px: crop instead of shrinking past this (12px labels stay >= 11px). */
@@ -32,6 +32,8 @@ const PHONE_MIN_SCALE = Math.max(0.85, 11 / 12);
 const DESKTOP_MIN_SCALE = 0.94;
 /** Desktop figures scale down to at most this tall, so figure plus caption fit an 844px viewport. */
 const FIGURE_MAX_H = 640;
+/** The anatomy figure is zoomed in a little (about 12%) so the chat reads larger. */
+const ANATOMY_MAX_H = 720;
 
 function useNarrow(query = "(max-width: 600px)") {
   const [narrow, setNarrow] = useState(false);
@@ -98,7 +100,7 @@ function scaleProps(
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }
-        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: FIGURE_MAX_H };
+        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: ANATOMY_MAX_H };
     case "full-answer":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
@@ -142,6 +144,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
             minScale={scale.minScale}
             maxOuterHeight={zoomed ? undefined : scale.maxOuterHeight}
             maxHeight={zoomed ? undefined : scale.maxHeight}
+            fitViewport={zoomed}
             fit={scale.fit}
             fade={zoomed ? false : scale.fade}
           >

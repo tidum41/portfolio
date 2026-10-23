@@ -1,27 +1,35 @@
 import HeroChatCard from "@/components/dialogue/product/scenarios/HeroChatCard";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
 import EvidenceFooter from "@/components/dialogue/product/EvidenceFooter";
-import TextChart from "@/components/dialogue/product/chart/TextChart";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
 
-function FunnelCard() {
+function FunnelCard({ tooltip = false }: { tooltip?: boolean }) {
   return (
     <div
       className={`dp-hero-v2__card dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
       <div className="dp-hero-v2__chart">
-        <TextChart
-          title="Drop-off by step"
-          columns={["Step", "Still in flow"]}
-          max={100}
+      <ChartVizCard title="Drop-off by step">
+        <ChartBarList
           rows={CHECKOUT_FUNNEL.steps.slice(0, 4).map((s) => ({
             label: s.label,
             value: s.pct,
             display: formatChartPercent(s.pct),
+            focal: Boolean(s.focal),
           }))}
+          max={100}
+          fillMode="index"
         />
+      </ChartVizCard>
+      {tooltip && (
+        <span className="dp-hero-tooltip" data-annotate-part="drop-tooltip">
+          -38% drop
+        </span>
+      )}
       </div>
     </div>
   );
@@ -38,7 +46,7 @@ export default function HeroStructuredFigure() {
       <div className="dp-hero-v2__desktop">
         <HeroChatCard />
         <div className="dp-hero-v2__aside" data-annotate-part="aside">
-          <FunnelCard />
+          <FunnelCard tooltip />
           <div
             className={`dp-hero-v2__card dp-hero-v2__quotes dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
             data-annotate-part="quotes-card"

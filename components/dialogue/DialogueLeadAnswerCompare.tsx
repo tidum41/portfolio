@@ -5,6 +5,8 @@ import LeadCompareAnswerCard, {
 } from "@/components/dialogue/product/scenarios/LeadCompareAnswerCard";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario as Scenario } from "@/components/dialogue/product/DialogueProductScenario";
+import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import { LEAD_COMPARE_QUESTION } from "@/lib/dialogue/product/sampleData";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
@@ -49,6 +51,7 @@ function OptionPanel({
     <div
       className={`dialogue-lead-answer__answer dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
+      <UserMessageBubble>{LEAD_COMPARE_QUESTION}</UserMessageBubble>
       <LeadCompareAnswerCard variant={scenarioToVariant(option.productScenario)} />
     </div>
   );

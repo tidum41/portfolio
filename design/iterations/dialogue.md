@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r24, Oct 23 2026 (text chart reverted, library and anatomy fixes)
+- Changed: designed charts back in product figures (r23 palette kept), hero hover restored, question bubbles on the lead compare with a bar chart on the chosen card, anatomy zoomed with real-size labels, lightbox fits the viewport, Paper avatar on Dialogue transcript rows, Phosphor pros and cons icons, a busier first draft for the dropoff pair, new chart title treatment, equal-height concentric library frames.
+- Why: Mudit's r24 notes, ledger DLG-99 to DLG-113.
+- Preview: none, local build only (no [preview] tag)
+
 ## r23, Oct 23 2026 (color pass)
 - Changed: chart fills limited to stone-500 plus cherry, stacked bars on stone-500 and stone-600 with white labels, 1px stone-200 card border in light mode, product figures show Dialogue's own text chart (dark block and markdown table) instead of designed charts.
 - Why: Mudit's r23 color pass, ledger DLG-95 to DLG-98.

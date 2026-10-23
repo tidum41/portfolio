@@ -134,7 +134,22 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-95 | r23: charts stay inside Dialogue's palette. Muted fills are stone-500 #79716b (4.1:1 on the track), cherry only for the highlight; ramp steps that fail 3:1 removed as data fills (stone-200/300/400 only as tracks, gridlines, baselines); unused chart-ds palette tokens deleted; RULES.md line added | Oct 23 | in progress | Mudit, r23 color pass |
 | DLG-96 | r23: stacked bars use stone-500 and stone-600 segments (cherry for the highlight) with white labels, 4.8:1 or better, and a 1px gap between segments | Oct 23 | in progress | Mudit, r23 color pass |
 | DLG-97 | r23: light mode, library chart cards get a 1px stone-200 border against the figure well (no new color); dark mode unchanged | Oct 23 | in progress | Mudit, r23 color pass |
-| DLG-98 | r23: product-UI figures (hero funnel, anatomy funnel, full answer, lead compare chosen card) show Dialogue's own text chart: stone-900 block, stone-100 DM Mono 10.29px/166.7%, block-character bars, py 8px px 12px, rounded-sm, then a markdown table; the hero hover tooltip (d38dd14) is removed with the designed chart; chart library keeps its designed charts | Oct 23 | in progress | Mudit, r23 color pass |
+| DLG-98 | superseded by DLG-99. r23: product-UI figures (hero funnel, anatomy funnel, full answer, lead compare chosen card) show Dialogue's own text chart: stone-900 block, stone-100 DM Mono 10.29px/166.7%, block-character bars, py 8px px 12px, rounded-sm, then a markdown table; the hero hover tooltip (d38dd14) is removed with the designed chart; chart library keeps its designed charts | Oct 23 | in progress | Mudit, r23 color pass |
+| DLG-99 | r24: TextChart removed everywhere (hero, anatomy, full answer, lead compare); designed charts restored in the r23 palette; hero -38% drop hover restored from d38dd14; RULES line: Product figures show the redesigned designed charts, never Dialogue's real text-chart | Oct 23 | in progress | Mudit rejected the text-chart swap |
+| DLG-100 | r24: lead compare shows the user's question bubble above each option, "How many participants dropped off at shipping address in checkout?" (existing words), same user-message style as the study chat | Oct 23 | in progress | Mudit, r24 note 1 |
+| DLG-101 | r24: lead compare chosen card uses a bar chart instead of a dot plot (bars now 6 of 13) | Oct 23 | in progress | Mudit, r24 note 2 |
+| DLG-102 | r24: anatomy figure zoomed in about 12% (720px height cap), callout labels 14px counter-scaled to real size, readable and not overlapping at 1440 | Oct 23 | in progress | Mudit, r24 note 3 |
+| DLG-103 | r24: lightbox scales the live figure to fit the viewport width and height, no scrolling (checked 1440x844, 1280x720, 1920x1080, light and dark) | Oct 23 | in progress | Mudit, r24 note 4 |
+| DLG-104 | r24: player skip labels nudged: back 10 down and left, forward 10 down and right, judged on 4x crops | Oct 23 | in progress | Mudit, r24 note 5 |
+| DLG-105 | r24: transcript Dialogue rows use the original Paper avatar (public/dialogue/dialogue-avatar.svg, 48px circle) | Oct 23 | in progress | Mudit, r24 note 6 |
+| DLG-106 | r24: library pros and cons use Phosphor Check and Minus (BruinLease icon set), 16px bold, brand accent for pros | Oct 23 | in progress | Mudit, r24 note 7 |
+| DLG-107 | r24: dropoff full-detail specimen is a dense two-series table-like bar chart (all participants and mobile only, legend, gridlines, All, Mobile and Drop columns); the simplified one is a single bar list | Oct 23 | in progress | Mudit, r24 note 8 |
+| DLG-108 | r24: dropoff chosen chart no longer prints the -38 drop; copy updated | Oct 23 | in progress | Mudit, r24 note 9 |
+| DLG-109 | r24: chart titles are 14/20 at 500 ink with a stone-200 hairline and more space (all charts) | Oct 23 | in progress | Mudit, r24 note 10 |
+| DLG-110 | r24: library specimens share one height via subgrid; chart card radius is frame radius minus padding (8px frame padding, concentric) | Oct 23 | in progress | Mudit, r24 note 11 |
+| DLG-111 | r24: groups chosen dot plot drops the 0 to 100 axis | Oct 23 | in progress | Mudit, r24 note 12 |
+| DLG-112 | r24: groups full-detail right column explained: Right column: percentage points behind Mobile | Oct 23 | in progress | Mudit, r24 note 13 |
+| DLG-113 | r24: full answer chart renders again (designed dot plot), checked at 1440 and 390 | Oct 23 | in progress | Mudit, r24 notes 14 and 15 |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

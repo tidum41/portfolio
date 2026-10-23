@@ -36,7 +36,7 @@ export default function AnatomyStructureFigure() {
       }
 
       const cardLeft = rel(card.getBoundingClientRect().left - rootRect.left);
-      const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout")];
+      const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout-label")];
 
       const nextCallouts: CalloutLayout[] = [];
       const nextLines: LeaderLine[] = [];
@@ -49,8 +49,7 @@ export default function AnatomyStructureFigure() {
         const c = callout.getBoundingClientRect();
         const y = rel(t.top + t.height / 2 - rootRect.top);
         const x2 = cardLeft - 1;
-        let x1 = rel(c.right - rootRect.left) + 6;
-        if (x2 - x1 < 40) x1 = x2 - 44;
+        const x1 = rel(c.right - rootRect.left) + 8 / k;
         nextCallouts[i] = { top: y };
         nextLines.push({ y, x1, x2 });
       });
@@ -98,8 +97,10 @@ export default function AnatomyStructureFigure() {
             data-annotate-part={`callout-${i + 1}`}
             style={callouts[i] ? { top: callouts[i].top } : undefined}
           >
-            <span className="dp-anatomy__num">{i + 1}</span>
-            <span className="dp-anatomy__name">{label}</span>
+            <span className="dp-anatomy__callout-label">
+              <span className="dp-anatomy__num">{i + 1}</span>
+              <span className="dp-anatomy__name">{label}</span>
+            </span>
           </div>
         ))}
       </div>

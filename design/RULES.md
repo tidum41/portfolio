@@ -99,5 +99,16 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Charts use only Dialogue palette colors: stone ramp, cherry #B43F7F for the highlight; no invented fills. Graphical fills must reach 3:1 against their background.
 - Muted data fills are stone-500 #79716b only. Stone-200, 300 and 400 are tracks, gridlines and baselines, never data fills. Stacked segments alternate stone-500 and stone-600 (cherry for the highlight) with white labels (4.5:1 or better).
 - In light mode the library chart card is separated from the figure well by a 1px stone-200 border, not a new fill.
-- Product-UI figures show Dialogue's real chart output, a stone-900 block with stone-100 DM Mono text and block-character bars, then a markdown table. Designed charts live only in the case study's own chart library.
+- Product figures show the redesigned designed charts, never Dialogue's real text-chart. (This case study shows the redesign; the r23 text-chart swap was rejected.)
+
+## Dialogue r24 rules
+
+- Chart titles are 14/20 at 500 in primary ink with a 1px stone-200 hairline under them (8px above the rule, 12px below); they must read as titles at a glance, one step above the 12px muted labels.
+- Library pairs: both specimens share one height (subgrid rows), and the chart card radius is the frame radius minus the frame padding (concentric). The library's pros and cons use Phosphor Check and Minus (the BruinLease icon set) at 16px bold, brand accent for pros.
+- A "before" specimen must be genuinely busier than the "after" (two series, legend, gridlines, extra number columns), so the simplification is a real edit.
+- Compare answers sit under the user's question bubble, so it is clear they answer a statistic question. The question uses only existing copy words.
+- Anatomy callout labels are 14px and are counter-scaled to their real size (13px or more at 1440 even when the figure is scaled down). The figure may zoom in only as far as the 720px height cap.
+- Lightbox figures scale to fit the viewport (width and height), never scroll.
+- Transcript Dialogue rows use the original Paper avatar (the Dialogue mark in a 48px circle, public/dialogue/dialogue-avatar.svg).
+- Plain bars stay at about 40 to 45% of charts; 6 of 13 is accepted where Mudit asks for bars (lead compare).
 
