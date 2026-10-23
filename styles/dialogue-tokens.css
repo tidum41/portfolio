@@ -27,6 +27,7 @@
   --ds-white: #fff;
   --ds-black: #000;
   --ds-stone-900: #1c1917;
+  --ds-stone-100: #f5f5f4;
   --ds-stone-600: #57534d;
   --ds-stone-500: #79716b;
   --ds-stone-400: #a6a09b;
@@ -107,8 +108,6 @@
   --dp-warn-fg: var(--ds-amber-700);
 
   --dp-funnel-track: var(--ds-paper-100);
-  --dp-funnel-bar: var(--ds-stone-400);
-  --dp-funnel-bar-cart: var(--ds-stone-300);
   --dp-funnel-bar-focal: var(--dp-brand);
   --dp-funnel-bar-dark: var(--ds-stone-600);
 
@@ -174,26 +173,21 @@
   --dp-figure-surface-problem: var(--figure-well, var(--dp-well-fallback));
   --dp-figure-surface-solution: var(--figure-well, var(--dp-well-fallback));
 
-  /* 2. Chart palette: one brand focal mark on a stone ramp, one finding per
-   *    chart (design/briefs/dialogue-chart-spec.md). The DS chart-1..5 set is
-   *    kept for reference only. */
+  /* 2. Chart palette: cherry for the highlighted mark, stone-500 for every
+   *    muted data fill (4.1:1 on the paper-100 track), stone-600 as the
+   *    alternate for adjacent stacked segments. Stone-200/300/400 are tracks,
+   *    gridlines and baselines only, never data fills (3:1 rule). One finding
+   *    per chart (design/briefs/dialogue-chart-spec.md). */
   --dp-chart-focal: var(--dp-brand);
   --dp-chart-track: var(--ds-paper-100);
   --dp-chart-gridline: color-mix(in srgb, var(--ds-stone-200) 60%, transparent);
   --dp-chart-baseline: var(--ds-stone-200);
-  --dp-chart-line: var(--ds-stone-600);
-  --dp-chart-ramp-1: var(--ds-stone-200);
-  --dp-chart-ramp-2: var(--ds-stone-300);
-  --dp-chart-ramp-3: var(--ds-stone-400);
-  --dp-chart-ramp-4: var(--ds-stone-500);
-  --dp-chart-ramp-5: var(--ds-stone-600);
+  --dp-chart-line: var(--dp-chart-muted);
+  --dp-chart-muted: var(--ds-stone-500);
+  --dp-chart-muted-alt: var(--ds-stone-600);
+  --dp-chart-seg-label: var(--ds-white);
   --dp-chart-label-color: var(--ds-stone-600);
   --dp-chart-value-color: var(--ds-stone-900);
-  --dp-chart-ds-1: var(--ds-cherry-300);
-  --dp-chart-ds-2: var(--ds-blue-200);
-  --dp-chart-ds-3: var(--ds-orange-300);
-  --dp-chart-ds-4: var(--ds-amber-200);
-  --dp-chart-ds-5: var(--ds-lime-200);
 
   /* 3. Citation pill states. The DS shows no citation pills. */
   --dp-pill-selected-bg: color-mix(in srgb, var(--dp-brand) 12%, transparent);
@@ -268,6 +262,21 @@
    *    transcript title, so the answer reads as the hero of the figure. */
   --dp-lead-size: 16px;
   --dp-lead-leading: 24px;
+
+  /* 15. Light mode: chart cards separate from the figure well with a 1px
+   *    stone-200 border, the DS border, rather than a new fill. */
+  --dp-chart-card-border: var(--ds-stone-200);
+
+  /* 16. Text chart: what Dialogue itself prints in a chat answer. A stone-900
+   *    block with stone-100 DM Mono text and block-character bars, then a
+   *    markdown table. Used wherever a product figure would otherwise show a
+   *    designed chart as if it were Dialogue's output. */
+  --dp-textchart-bg: var(--ds-stone-900);
+  --dp-textchart-fg: var(--ds-stone-100);
+  --dp-textchart-size: 10.29px;
+  --dp-textchart-leading: 1.667;
+  --dp-textchart-pad-y: 8px;
+  --dp-textchart-pad-x: 12px;
 
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);

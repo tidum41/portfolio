@@ -430,10 +430,10 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: var(--dp-chart-ramp-3);
+  background: var(--dp-chart-muted);
   font-size: var(--dp-chart-value-size);
   line-height: var(--dp-chart-value-leading);
-  color: var(--dp-bg);
+  color: var(--dp-chart-seg-label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -441,9 +441,12 @@
   background: var(--dp-chart-focal);
 }
 
-.dp-chart-stack__seg[data-index="1"]:not([data-focal]) {
-  background: var(--dp-chart-ramp-2);
-  color: var(--dp-chart-value-color);
+.dp-chart-stack__seg + .dp-chart-stack__seg {
+  box-shadow: inset 1px 0 0 var(--dp-bg);
+}
+
+.dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]) {
+  background: var(--dp-chart-muted-alt);
 }
 
 .dp-chart-stack__labels {
@@ -510,15 +513,15 @@
   width: 8px;
   height: 8px;
   border-radius: var(--dp-radius-bar);
-  background: var(--dp-chart-ramp-3);
+  background: var(--dp-chart-muted);
 }
 
 .dp-chart-stack__swatch[data-focal] {
   background: var(--dp-chart-focal);
 }
 
-.dp-chart-stack__swatch[data-index="1"]:not([data-focal]) {
-  background: var(--dp-chart-ramp-2);
+.dp-chart-stack__swatch[data-index]:nth-child(even):not([data-focal]) {
+  background: var(--dp-chart-muted-alt);
 }
 
 /* —— Line plot extras —— */

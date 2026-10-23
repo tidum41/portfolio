@@ -2851,6 +2851,9 @@ agentation-toolbar,
   background: var(--dp-surface, #fcfbf9);
   border-color: transparent;
 }
+html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
+  border-color: var(--dp-chart-card-border);
+}
 .dialogue-lib__tech {
   margin-top: 12px;
   max-width: 640px;

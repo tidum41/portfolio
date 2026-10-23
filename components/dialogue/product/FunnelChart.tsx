@@ -1,5 +1,4 @@
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import TextChart from "@/components/dialogue/product/chart/TextChart";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
@@ -20,7 +19,7 @@ export default function FunnelChart({
   hero,
   showLargestDrop = true,
   anatomy,
-  vizCard = true,
+  vizCard: _vizCard = true,
   showSummary = true,
   showChart = true,
 }: Props) {
@@ -64,17 +63,11 @@ export default function FunnelChart({
       </>
     ) : undefined;
 
-  const bars = (
-    <ChartBarList rows={rows} max={100} fillMode="index" note={note} />
-  );
-
-  const plot = vizCard ? (
-    <ChartVizCard title={dialogueCopy.funnelTitle}>{bars}</ChartVizCard>
-  ) : (
-    <div className="dp-chart-root">
-      <p className="dp-chart-title">{dialogueCopy.funnelTitle}</p>
-      {bars}
-    </div>
+  const plot = (
+    <>
+      <TextChart title={dialogueCopy.funnelTitle} rows={rows} columns={["Step", "Still in flow"]} max={100} />
+      {note ? <p className="dp-chart-bars__note" data-annotate-part="bars-note">{note}</p> : null}
+    </>
   );
 
   const chart = anatomy ? (

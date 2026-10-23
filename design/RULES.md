@@ -92,4 +92,12 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Library pairs have no status chips. Both specimens share one frame; a plain sentence-case name sits under each, then pros (brand check square) and cons (quiet outline minus square), icons 1.05em, 8px gap, 4px between rows. Under the pair: one medium-weight verdict sentence and one tertiary reason line.
 - Skip "10" labels are centred on the arrow circle (7,7 in the 14px icon). Back and forward are mirrors.
 - Full answer hierarchy comes from size, weight and spacing steps, not color: lead paragraph 16/24 at 500, supporting 14 and 12, quotes 14/20.
-- Chart colors are frozen unless a round says otherwise.
+- Chart colors are frozen unless a round says otherwise (r23 was such a round).
+
+## Dialogue r23 rules
+
+- Charts use only Dialogue palette colors: stone ramp, cherry #B43F7F for the highlight; no invented fills. Graphical fills must reach 3:1 against their background.
+- Muted data fills are stone-500 #79716b only. Stone-200, 300 and 400 are tracks, gridlines and baselines, never data fills. Stacked segments alternate stone-500 and stone-600 (cherry for the highlight) with white labels (4.5:1 or better).
+- In light mode the library chart card is separated from the figure well by a 1px stone-200 border, not a new fill.
+- Product-UI figures show Dialogue's real chart output, a stone-900 block with stone-100 DM Mono text and block-character bars, then a markdown table. Designed charts live only in the case study's own chart library.
+

@@ -32,14 +32,9 @@ export const dialogueChartSpec = {
   },
   color: {
     focal: "var(--dp-chart-focal)",
-    /** Neutral stone ramp (light to dark) for non-focal bars */
-    stoneRamp: [
-      "var(--dp-chart-ramp-1)",
-      "var(--dp-chart-ramp-2)",
-      "var(--dp-chart-ramp-3)",
-      "var(--dp-chart-ramp-4)",
-      "var(--dp-chart-ramp-5)",
-    ] as const,
+    /** Every non-focal data fill. Stone-500, 3:1 or better on the track and card. */
+    muted: "var(--dp-chart-muted)",
+    mutedAlt: "var(--dp-chart-muted-alt)",
     track: "var(--dp-chart-track)",
     gridline: "var(--dp-chart-gridline)",
     baseline: "var(--dp-chart-baseline)",
@@ -89,25 +84,14 @@ export type ChartBarDatum = {
   detail?: string;
 };
 
-/** Stone ramp by index; focal always cherry. */
-export function chartBarFill(index: number, focal?: boolean): string {
-  if (focal) return dialogueChartSpec.color.focal;
-  const ramp = dialogueChartSpec.color.stoneRamp;
-  return ramp[Math.min(index, ramp.length - 1)]!;
+/** Cherry for the focal bar, stone-500 for everything else. */
+export function chartBarFill(_index: number, focal?: boolean): string {
+  return focal ? dialogueChartSpec.color.focal : dialogueChartSpec.color.muted;
 }
 
-/** Descending magnitude → darker stone (Carbon sequential intuition). */
-export function chartBarFillByMagnitude(
-  value: number,
-  max: number,
-  focal?: boolean
-): string {
-  if (focal) return dialogueChartSpec.color.focal;
-  const ramp = dialogueChartSpec.color.stoneRamp;
-  if (max <= 0) return ramp[0]!;
-  const t = value / max;
-  const idx = Math.min(ramp.length - 1, Math.max(0, Math.round(t * (ramp.length - 1))));
-  return ramp[idx]!;
+/** Magnitude is carried by bar length; the fill stays stone-500 (no light ramp steps). */
+export function chartBarFillByMagnitude(_value: number, _max: number, focal?: boolean): string {
+  return chartBarFill(0, focal);
 }
 
 export function formatChartPercent(n: number): string {

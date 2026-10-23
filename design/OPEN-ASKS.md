@@ -131,6 +131,10 @@ The ledger of every design ask Mudit has made for the portfolio. If it is not he
 | DLG-92 | r22: skip 10 labels centred in their arrow circles (circle centre 7,7 of the 14px icon), back and forward symmetric | Oct 23 | in progress | Mudit, r22 notes |
 | DLG-93 | r22: chart library drops the Chosen and Ruled out chips; identical frames, a plain name under each, pro and con lists (brand check square, quiet outline minus square), then one medium-weight verdict sentence and a tertiary reason line (Caleb Wu RevisionDojo pattern) | Oct 23 | in progress | Mudit, r22 notes |
 | DLG-94 | r22: full answer hierarchy: lead paragraph 16/24 at 500, supporting rows 14 and 12, clip names and times 12/16, quotes 14/20, drawer spacing 16; new --dp-lead-size and --dp-lead-leading tokens (extension 14) | Oct 23 | in progress | Mudit, r22 notes |
+| DLG-95 | r23: charts stay inside Dialogue's palette. Muted fills are stone-500 #79716b (4.1:1 on the track), cherry only for the highlight; ramp steps that fail 3:1 removed as data fills (stone-200/300/400 only as tracks, gridlines, baselines); unused chart-ds palette tokens deleted; RULES.md line added | Oct 23 | in progress | Mudit, r23 color pass |
+| DLG-96 | r23: stacked bars use stone-500 and stone-600 segments (cherry for the highlight) with white labels, 4.8:1 or better, and a 1px gap between segments | Oct 23 | in progress | Mudit, r23 color pass |
+| DLG-97 | r23: light mode, library chart cards get a 1px stone-200 border against the figure well (no new color); dark mode unchanged | Oct 23 | in progress | Mudit, r23 color pass |
+| DLG-98 | r23: product-UI figures (hero funnel, anatomy funnel, full answer, lead compare chosen card) show Dialogue's own text chart: stone-900 block, stone-100 DM Mono 10.29px/166.7%, block-character bars, py 8px px 12px, rounded-sm, then a markdown table; the hero hover tooltip (d38dd14) is removed with the designed chart; chart library keeps its designed charts | Oct 23 | in progress | Mudit, r23 color pass |
 ## BruinLease (BRL)
 
 | ID | Ask | Date | Status | Evidence |

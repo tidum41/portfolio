@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r23, Oct 23 2026 (color pass)
+- Changed: chart fills limited to stone-500 plus cherry, stacked bars on stone-500 and stone-600 with white labels, 1px stone-200 card border in light mode, product figures show Dialogue's own text chart (dark block and markdown table) instead of designed charts.
+- Why: Mudit's r23 color pass, ledger DLG-95 to DLG-98.
+- Preview: none, local build only (no [preview] tag)
+
 ## r22, Oct 23 2026 (Agentation notes)
 - Changed: skip labels centred in their circles, chart library judged by pro and con lists instead of status chips, full answer gets a lead, supporting and quote hierarchy. No chart colors changed.
 - Why: Mudit's r22 notes, ledger DLG-92 to DLG-94.
