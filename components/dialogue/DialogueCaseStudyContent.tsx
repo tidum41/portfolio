@@ -7,8 +7,11 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
-import DialogueChartLibrary, { DialogueCoverageFigure } from "@/components/dialogue/DialogueChartLibrary";
+import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
+import DialogueQueryMoment from "@/components/dialogue/DialogueQueryMoment";
+import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
 import DialogueRachelFrame, {
@@ -16,7 +19,14 @@ import DialogueRachelFrame, {
   type DialogueFrameTone,
 } from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
+import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
+import {
+  ADDRESS_FOLLOWUP,
+  CHECKOUT_QUESTION,
+  CLIPS,
+  COVERAGE_ADDRESS,
+  SEGMENT_ADDRESS,
+} from "@/lib/dialogue/product/sampleData";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -30,20 +40,38 @@ export type RasterAnnotator = (assetId: string, children: React.ReactNode) => Re
 
 /** Contents labels match the section H2s. */
 export const DIALOGUE_TOC_ITEMS = [
+  { id: "what-dialogue-is", label: "Dialogue runs AI-moderated interviews for research teams" },
   {
     id: "problem",
     label: "The chat could answer anything, but not say which interview said it",
+  },
+  { id: "why-it-was-hard", label: "The hard part was never writing the answer" },
+  {
+    id: "my-role",
+    label: "I designed the study chat and owned the shape of its answers",
   },
   {
     id: "why-it-matters",
     label: "A finding only travels if you can point to the interview behind it",
   },
+  {
+    id: "counter-evidence",
+    label: "Three people had no trouble at the address step, and their quotes stay in the answer",
+  },
+  { id: "the-comparison", label: "First I tried paragraphs, then quotes, then a structure" },
   { id: "one-structure", label: "Every answer gets the same five parts, in the same order" },
   { id: "clips", label: "Every quote opens the recording at the second it was said" },
   { id: "chart-library", label: "A chart only when the data asks for one" },
   { id: "thin-data", label: "Say when the data is thin" },
-  { id: "full-answer", label: "One answer, start to finish" },
-  { id: "reflection", label: "What I did not solve" },
+  {
+    id: "full-answer",
+    label: "A follow-up keeps the evidence of the answer it came from",
+  },
+  { id: "learning-room", label: "When room runs out, a chart goes before a source" },
+  {
+    id: "learning-changed-my-mind",
+    label: "I changed my mind about how much a chart should carry",
+  },
 ];
 
 function Section({
@@ -198,15 +226,37 @@ export function DialogueCaseStudyContent({
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
+            <div style={{ marginBottom: "var(--dialogue-section-gap)" }}>
+              <CaseStudyBody>
+                If you only read one answer here, read the last one:{" "}
+                <a href="#full-answer">a follow-up that keeps the evidence of the answer it came
+                from</a>
+                . Everything before it is how that answer got its shape.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                The problem I could see was answers with no sources. The quieter problem: a chart
+                can sound certain on four interviews, and nothing in the answer said so.
+              </CaseStudyBody>
+            </div>
+
+            <Section id="what-dialogue-is">
+              <H2>Dialogue runs AI-moderated interviews for research teams</H2>
+              <CaseStudyBody>
+                Participants talk to an AI interviewer, and the team gets back recordings and
+                transcripts. The study chat is where researchers ask questions across those
+                interviews in plain language. The running example is a checkout study,
+                24 interviews for a store the study called Northline.
+              </CaseStudyBody>
+            </Section>
+
             <Section id="problem">
               <H2>The chat could answer anything, but not say which interview said it</H2>
               <CaseStudyBody>
-                Dialogue runs AI-moderated interviews for UX teams, and I designed its study chat.
-                A researcher could ask a question about a study and get a long, confident answer,
-                and the answer never said which interview it came from. The question I kept coming
-                back to was who said that, and the chat could not answer it. The answers were on
-                their way into slides and reports, where a claim nobody can trace has to be
-                checked by hand or left out.
+                A researcher could ask the chat a question and get a long, confident answer, and
+                the answer never said which interview it came from. I kept coming back to one
+                question: who said that? The chat could not answer it. The answers were headed into
+                slides and reports, where an untraceable claim has to be checked by hand or left
+                out.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="problem-paragraphs"
@@ -215,20 +265,75 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
+            <Section id="why-it-was-hard">
+              <H2>The hard part was never writing the answer</H2>
+              <CaseStudyBody>
+                A model can write a fluent answer from transcripts. The design problem sits around
+                the sentences: which interviews are behind a claim, how many there are, and where
+                a reader can hear the line. The first version shipped with none of that attached.
+                [PLACEHOLDER: why the first version shipped without sources] Until it is, a strong
+                answer and a thin one read exactly the same.
+              </CaseStudyBody>
+            </Section>
+
+            <Section id="my-role">
+              <H2>I designed the study chat and owned the shape of its answers</H2>
+              <CaseStudyBody>
+                I was the product designer on Dialogue from December 2025 to March 2026, working
+                with Benjamin Lo and Justin Hoang. The decisions here are mine: the five parts
+                every answer carries, when a chart is allowed in, and what an answer does when its
+                evidence is thin. I designed in Figma and built prototypes to test the answers
+                with people.
+              </CaseStudyBody>
+            </Section>
+
             <Section id="why-it-matters">
               <H2>A finding only travels if you can point to the interview behind it</H2>
               <CaseStudyBody>
                 I tested with Benjamin and Justin, and with students running mock interviews. I did
                 not have Dialogue customers to test with, and I will not pretend those sessions
-                were that. What I had was the same reaction in both rooms: people asked who said
-                that before they would trust a long answer, and without a path back to the
-                interview, the answer stayed a guess. The structured answer below also keeps a
-                source that disagrees inside the card, under counter-evidence, because a split in
-                the interviews is a finding too.
+                were that. Across [PLACEHOLDER: count] sessions and [PLACEHOLDER: count] rounds,
+                the answer card went through [PLACEHOLDER: count] versions. The reaction was the
+                same in both rooms: people asked who said that before they would use an answer.
+              </CaseStudyBody>
+            </Section>
+
+            <Section id="counter-evidence">
+              <H2>
+                Three people had no trouble at the address step, and their quotes stay in the
+                answer
+              </H2>
+              <CaseStudyBody>
+                The address finding is not unanimous. Three participants had no trouble, and a
+                card that quotes only the 18 who struggled would oversell it. So every answer keeps
+                a counter-evidence block with the names and lines of the people it does not fit. A
+                split in the interviews is a finding too.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame
+                  label="Counter-evidence: three participants had no trouble at the address step, and the answer keeps their lines."
+                  tone="system"
+                >
+                  <div
+                    className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+                  >
+                    <CounterEvidence />
+                  </div>
+                </DialogueRachelFrame>
+              </figure>
+            </Section>
+
+            <Section id="the-comparison">
+              <H2>First I tried paragraphs, then quotes, then a structure</H2>
+              <CaseStudyBody>
+                Each version answered the same question: where did people drop off in checkout?
+                Paragraphs prioritised sounding complete. The quote list prioritised the footage
+                itself. The structured answer prioritises being checked, and its cost is room.
+                That cost runs through the rest of this page.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
-                heading="Lead with the answer"
-                subheading="Three ways the chat could answer the same question."
+                heading="Three tries, one question"
+                subheading="The same question, answered in the order I tried them."
                 question={CHECKOUT_QUESTION}
                 chosenId="structured"
                 annotateRaster={wrap}
@@ -238,7 +343,7 @@ export function DialogueCaseStudyContent({
                     label: "Wall of text",
                     title: "Paragraphs",
                     costLine:
-                      "Reads complete, but you still cannot name who said what before you act.",
+                      "Prioritised sounding complete, and nothing in it can be traced to a person.",
                     productScenario: "decision-paragraphs",
                     rasterAssetId: "D-04",
                   },
@@ -246,7 +351,7 @@ export function DialogueCaseStudyContent({
                     id: "quote-list",
                     label: "Quotes only",
                     title: "Quote list",
-                    costLine: "Faithful to the footage, but you still count by hand.",
+                    costLine: "Prioritised the footage itself, and the reader still counts by hand.",
                     productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
@@ -254,8 +359,7 @@ export function DialogueCaseStudyContent({
                     id: "structured",
                     label: "Answer + evidence",
                     title: "Structured answer",
-                    costLine:
-                      "Clearer in one glance. The cost is room: summary, chart, and clips all have to fit inside one answer.",
+                    costLine: "Prioritised being checked, at the cost of room inside one answer.",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
@@ -266,13 +370,12 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets the same five parts, in the same order</H2>
               <CaseStudyBody>
-                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart
-                because the chart is the finding drawn as a shape, and the reader should meet the
-                interviews behind it before the shape. I kept the order fixed so a reader
-                learns the shape once and then only reads what changes. I study cognitive science,
-                so I think about order as a memory problem: attention should go to the answer, not
-                to relearning the layout. The cost of a fixed order is that a simple answer
-                carries the same furniture as a hard one.
+                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart: the
+                chart is the finding drawn as a shape, and a reader should meet the interviews
+                before the shape. The order stays fixed so the shape is
+                learned once, and after that only the content changes. I study cognitive science,
+                so order is a memory problem: attention belongs on the answer, not on relearning
+                the layout.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -286,11 +389,11 @@ export function DialogueCaseStudyContent({
             <Section id="clips">
               <H2>Every quote opens the recording at the second it was said</H2>
               <CaseStudyBody>
-                A quote without a timestamp forces you to hunt the recording, and a quote you
-                cannot check is the chat asking to be trusted again. The player opens at the exact
+                A quote without a timestamp sends the reader hunting through the recording, and a
+                quote that cannot be checked asks to be trusted again. The player opens at the
                 second, with the transcript in sync, so the line can be verified in one click. The
                 cost is context: a clip that starts mid-thought can mislead, so the transcript
-                around the line stays visible.
+                stays visible.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -299,26 +402,48 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Solution: clip starts at 01:38, on the line about the card that failed, so the quote can be checked in one click"
               />
+              <CaseStudyBody>
+                Ruled out: a quote card that stops at the speaker's name. It scans faster, and it
+                leaves a claim with no way back to the recording.
+              </CaseStudyBody>
             </Section>
 
             <Section id="chart-library">
               <H2>A chart only when the data asks for one</H2>
               <CaseStudyBody>
                 This pair puts the chart I first reached for next to the one I kept, on the same
-                data. The reader should find the step that matters without reading a legend, and a
-                chart that cannot do that does not belong in the answer.
+                data. A reader should find the step that matters without a legend, and a chart
+                that cannot do that does not belong in an answer. Under the pair, the segment
+                question shows the same rule inside a full answer.
               </CaseStudyBody>
               <DialogueChartLibrary />
+              <DialogueQueryMoment
+                frameLabel="Inside an answer: the segment question gets a breakdown chart, and the mobile bar keeps its clip."
+                question={SEGMENT_ADDRESS.question}
+                summary={SEGMENT_ADDRESS.summary}
+                chartTitle={SEGMENT_ADDRESS.title}
+                chartCaption={SEGMENT_ADDRESS.caption}
+                rows={SEGMENT_ADDRESS.rows.map((r) => ({
+                  label: r.label,
+                  value: r.pct,
+                  display: formatChartPercent(r.pct),
+                  focal: Boolean(r.focal),
+                }))}
+                max={100}
+                selectedParticipant="Priya K."
+                clip={CLIPS[2]}
+                evidenceCount={24}
+              />
             </Section>
 
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
-                A chart makes four interviews look like a trend. When the evidence is thin, the
-                answer leads with the count and holds the chart back. A count cannot look like
-                more than it is: 4 of 24 reads as thin at a glance, and a chart would not. The
-                cost is a weaker-looking answer, and I would rather the answer look weak than
-                borrow confidence it has not earned.
+                A chart makes four interviews look like a trend. When evidence is thin, the
+                answer leads with the count and holds the chart back, because a count cannot look
+                like more than it is: 4 of 24 reads as thin at a glance, and a chart would not.
+                The cost is a weaker-looking answer, one I would rather show than borrow
+                confidence it has not earned.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
@@ -328,20 +453,48 @@ export function DialogueCaseStudyContent({
                 frameLabel="Thin data: a finding from four interviews must not reach a roadmap as a trend."
               />
               <CaseStudyBody>
-                Coverage is the other side of the same rule: when the count behind a finding is
-                large, the chart is allowed back in.
+                The rule cuts the other way at 18 of 24. When that many interviews mention address
+                friction, the finding earned its chart, and the answer below is the same system
+                with the chart let back in.
               </CaseStudyBody>
-              <DialogueCoverageFigure />
+              <DialogueQueryMoment
+                frameLabel="Coverage as an answer: 18 of 24 interviews mention address friction, so the chart is allowed back in."
+                question={COVERAGE_ADDRESS.question}
+                summary={
+                  <>
+                    {COVERAGE_ADDRESS.headline}. {COVERAGE_ADDRESS.detail}.
+                  </>
+                }
+                searchStep={{ searched: 24, found: 18 }}
+                chartTitle={COVERAGE_ADDRESS.title}
+                rows={COVERAGE_ADDRESS.rows.map((r) => ({
+                  label: r.label,
+                  value: r.count,
+                  display: String(r.count),
+                  focal: Boolean(r.focal),
+                }))}
+                max={24}
+                fillMode="magnitude"
+                selectedParticipant="Jordan M."
+                selectedTime="14:03"
+                clip={ADDRESS_FOLLOWUP.clips[0]}
+                evidenceCount={24}
+              />
+              <CaseStudyBody>
+                Where thin starts, between 4 and 18, is a line I drew by feel. [PLACEHOLDER: why
+                the cutoff sits where it does] What would move it is just as open. [PLACEHOLDER:
+                what would change my mind about the cutoff] Until then, the count stays in the
+                lead, where a reader can argue with it.
+              </CaseStudyBody>
             </Section>
 
             <Section id="full-answer">
-              <H2>One answer, start to finish</H2>
+              <H2>A follow-up keeps the evidence of the answer it came from</H2>
               <CaseStudyBody>
-                Ask a follow-up and the question narrows, and the structure does not reset. A
-                follow-up could have started over with a fresh answer, and the reader would have
-                had to check that answer from zero. Instead the filtered answer keeps the first
-                answer's sources, its chart, and every supporting clip in one drawer. The cost
-                is that the drawer has to hold everything the full answer holds, in less room.
+                Ask a follow-up and the question narrows, and the structure does not reset. The
+                filtered answer keeps the answer's sources, its chart, and every clip in one
+                drawer, so the thread from question to footage never breaks. The cost: the
+                drawer holds everything the full answer holds, in less room.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
@@ -350,15 +503,30 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
               />
+              <CaseStudyBody>
+                Ruled out: a follow-up that starts over with a fresh answer. Simpler to build, and
+                it makes the reader check the answer from zero, as if the first one never
+                happened.
+              </CaseStudyBody>
             </Section>
 
-            <Section id="reflection">
-              <H2>What I did not solve</H2>
+            <Section id="learning-room">
+              <H2>When room runs out, a chart goes before a source</H2>
               <CaseStudyBody>
-                Room. One answer has to hold a summary, a chart, and clips, and those parts still
-                compete, so when something has to give, I cut a chart before I cut a source. The
-                harder test is still ahead: researchers asking about their own studies, where
-                they already know when an answer is wrong.
+                Room is the problem I did not solve. A summary, a chart, and clips compete, and
+                that has not changed. The lesson is the order to cut in: a chart is a
+                summary of the evidence, and a source is the evidence, so when something has to
+                give, the chart goes first.
+              </CaseStudyBody>
+            </Section>
+
+            <Section id="learning-changed-my-mind">
+              <H2>I changed my mind about how much a chart should carry</H2>
+              <CaseStudyBody>
+                My first reach on the drop-off question was bubbles, because the steps felt like
+                sizes, and I thought more weight would read as more insight. It read as guessing,
+                because nobody could compare the steps. The plainer bars carry less and
+                prove more, and I reach for them first now.
               </CaseStudyBody>
             </Section>
           </article>
