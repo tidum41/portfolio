@@ -225,7 +225,10 @@ async function lightboxSweeps(browser) {
         const bad = await page.evaluate(`(${sweepInPage.toString()})(".cs-lightbox-backdrop")`);
         const n = await page.evaluate(`(${sweepInPage.toString()})(".cs-lightbox-backdrop").inspected`);
         const closeSeen = await page.evaluate(
-          () => !!document.querySelector(".cs-lightbox-close") && document.querySelector(".cs-lightbox-close").textContent.trim().length > 0,
+          () => {
+          const x = document.querySelector('[role="dialog"][aria-modal="true"] .cs-lightbox-close');
+          return !!x && (x.getAttribute("aria-label") || x.textContent || "").trim().length > 0;
+        },
         );
         log(bad.length === 0 && closeSeen, `${label} (${closeSeen ? "Close present" : "no Close"}, ${n} text nodes inspected, ${bad.length} below AA)`);
         for (const b of bad.slice(0, 10)) console.log(`     ${b.ratio}:1 < ${b.need}  "${b.text}"  .${b.cls}`);
