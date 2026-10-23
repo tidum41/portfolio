@@ -99,7 +99,7 @@ export const COVERAGE_ADDRESS = {
 export const ADDRESS_FOLLOWUP = {
   question: "Address step only",
   summary: "At the address step, the apartment field clearing on autocomplete was the sharpest complaint.",
-  drawerSub: "18 moments from the address step",
+  drawerSub: "Clips from 18 interviews at the address step",
   clips: [
     {
       id: "addr-1",

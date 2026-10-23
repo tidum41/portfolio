@@ -34,6 +34,10 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - If the page fixes an order, it argues the sequence, not only the fixedness; each position in the structure earns its place in one sentence.
 - A choice reads as a choice when the rejected default is named first; an unnamed alternative makes the design look inevitable.
 
+## 2026-10-23 (round F)
+
+- One unit per figure: a filtered answer restates its own subset count in the same unit across the search line, the evidence footer, and the clips line, and that count matches the coverage figure for the same finding.
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.
