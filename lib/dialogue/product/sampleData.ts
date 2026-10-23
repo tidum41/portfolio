@@ -16,8 +16,8 @@ export const PARAGRAPH_ANSWER = [
 ];
 
 export const CHECKOUT_FUNNEL = {
-  summary: "Shipping address loses 38% of participants, the largest single-step drop in checkout.",
-  emphasis: "loses 38% of participants",
+  summary: "Shipping address loses 38 points, the largest single-step drop in checkout.",
+  emphasis: "loses 38 points",
   steps: [
     { label: "Cart", pct: 100 },
     { label: "Address", pct: 62, focal: true, drop: 38 },
@@ -34,7 +34,7 @@ export const SOURCES = [
   { participant: "Hannah L.", topic: "payment", time: "22:41" },
 ];
 
-export const FOLLOW_UPS = ["Show mobile only", "Compare to round 1"];
+export const FOLLOW_UPS = ["Address step only", "Compare to round 1"];
 
 export const CLIPS = [
   {
@@ -95,14 +95,14 @@ export const COVERAGE_ADDRESS = {
   ],
 };
 
-/** Full-answer section: follow-up filter, not the hero checkout funnel. */
-export const MOBILE_FOLLOWUP = {
-  question: "Show mobile only",
-  summary: "On mobile, the apartment field clearing was the sharpest address complaint.",
-  drawerSub: "6 moments from mobile sessions",
+/** Full-answer section: the address step follow-up, filtered from the checkout answer. */
+export const ADDRESS_FOLLOWUP = {
+  question: "Address step only",
+  summary: "At the address step, the apartment field clearing on autocomplete was the sharpest complaint.",
+  drawerSub: "18 moments from the address step",
   clips: [
     {
-      id: "mob-1",
+      id: "addr-1",
       participant: "Jordan M.",
       segment: "14:03–14:19",
       transcript:
@@ -110,7 +110,7 @@ export const MOBILE_FOLLOWUP = {
       highlight: "almost closed the tab",
     },
     {
-      id: "mob-2",
+      id: "addr-2",
       participant: "Priya K.",
       segment: "16:02–16:18",
       transcript:
@@ -118,7 +118,7 @@ export const MOBILE_FOLLOWUP = {
       highlight: "start the address over",
     },
     {
-      id: "mob-3",
+      id: "addr-3",
       participant: "Sam R.",
       segment: "11:22–11:40",
       transcript: "I gave up on saved address and typed it again with my thumbs.",

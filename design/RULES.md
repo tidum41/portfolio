@@ -22,6 +22,12 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 - On phones a comparison leads with its chosen option, the same way the answers it argues for lead with the answer.
 - Insider shorthand from the work (ticket names, clipped compounds) is spelled out or cut; a cold reader cannot decode it.
 
+## 2026-10-23 (light check)
+
+- Numbers inside figures must reconcile across every figure on the page; the same finding carries the same interview and moment counts everywhere it appears.
+- A filtered answer shows its own count in the evidence footer, never the full study count.
+- Hyphenate compound modifiers in prose (AI-moderated, follow-up, counter-evidence, mid-thought) and match the UI label spelling exactly.
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.

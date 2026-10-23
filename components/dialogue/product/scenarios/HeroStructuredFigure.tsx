@@ -7,7 +7,7 @@ import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpe
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
 
-function FunnelCard({ tooltip = false }: { tooltip?: boolean }) {
+function FunnelCard() {
   return (
     <div
       className={`dp-hero-v2__card dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
@@ -25,11 +25,6 @@ function FunnelCard({ tooltip = false }: { tooltip?: boolean }) {
           fillMode="index"
         />
       </ChartVizCard>
-      {tooltip && (
-        <span className="dp-hero-tooltip" data-annotate-part="drop-tooltip">
-          -38% drop
-        </span>
-      )}
       </div>
     </div>
   );
@@ -46,7 +41,7 @@ export default function HeroStructuredFigure() {
       <div className="dp-hero-v2__desktop">
         <HeroChatCard />
         <div className="dp-hero-v2__aside" data-annotate-part="aside">
-          <FunnelCard tooltip />
+          <FunnelCard />
           <div
             className={`dp-hero-v2__card dp-hero-v2__quotes dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
             data-annotate-part="quotes-card"

@@ -31,7 +31,7 @@ export default function StructuredAnswerFigure({
     return (
       <StudyChatShell compact={shellCompact} evidence={24}>
         <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-        <QuerySearchStep searched={24} found={9} />
+        <QuerySearchStep searched={24} found={18} />
         <FunnelChart
           compact={compact}
           hero={hero}
@@ -71,7 +71,7 @@ export default function StructuredAnswerFigure({
   return (
     <StudyChatShell compact={shellCompact} hero={hero} hideComposer={hideComposer}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-      <QuerySearchStep searched={24} found={9} />
+      <QuerySearchStep searched={24} found={18} />
       <FunnelChart compact={compact} hero={hero} vizCard={!hero} />
       {showClips && !hero && <ClipThumbnails selectedTime="15:47" />}
       {showClips && hero && <ClipCard clip={CLIPS[0]} />}

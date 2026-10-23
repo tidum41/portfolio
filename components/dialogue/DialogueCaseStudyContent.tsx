@@ -16,6 +16,7 @@ import DialogueRachelFrame, {
   type DialogueFrameTone,
 } from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import { CHECKOUT_QUESTION } from "@/lib/dialogue/product/sampleData";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -138,12 +139,12 @@ export function DialogueCaseStudyContent({
           </div>
 
           <CaseStudyOpen
-            tagline="Dialogue, contract, Dec 2025 to March 2026"
+            tagline="Dialogue, contract, December 2025 to March 2026"
             title={DIALOGUE_TITLE}
             subtitle={DIALOGUE_SUBTITLE}
             metadata={[
               { _key: "role", label: "Role", values: ["Product designer (contract)"] },
-              { _key: "timeline", label: "Timeline", values: ["Dec 2025 to March 2026"] },
+              { _key: "timeline", label: "Timeline", values: ["December 2025 to March 2026"] },
               {
                 _key: "team",
                 label: "Team",
@@ -200,7 +201,7 @@ export function DialogueCaseStudyContent({
             <Section id="problem">
               <H2>The chat could answer anything, but not say which interview said it</H2>
               <CaseStudyBody>
-                Dialogue runs AI moderated interviews for UX teams, and I designed its study chat.
+                Dialogue runs AI-moderated interviews for UX teams, and I designed its study chat.
                 A researcher could ask a question about a study and get a long, confident answer,
                 and the answer never said which interview it came from. The question I kept coming
                 back to was who said that, and the chat could not answer it.
@@ -220,12 +221,13 @@ export function DialogueCaseStudyContent({
                 were that. What I had was the same reaction in both rooms: people asked who said
                 that before they would trust a long answer, and without a path back to the
                 interview, the answer stayed a guess. The structured answer below also keeps a
-                source that disagrees inside the card, under counter evidence, because a split in
+                source that disagrees inside the card, under counter-evidence, because a split in
                 the interviews is a finding too.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
                 heading="Lead with the answer"
                 subheading="Three ways the chat could answer the same question."
+                question={CHECKOUT_QUESTION}
                 chosenId="structured"
                 annotateRaster={wrap}
                 options={[
@@ -262,7 +264,7 @@ export function DialogueCaseStudyContent({
             <Section id="one-structure">
               <H2>Every answer gets the same five parts, in the same order</H2>
               <CaseStudyBody>
-                Summary, sources, chart, clips, follow ups. I kept the order fixed so a reader
+                Summary, sources, chart, clips, follow-ups. I kept the order fixed so a reader
                 learns the shape once and then only reads what changes. I study cognitive science,
                 so I think about order as a memory problem: attention should go to the answer, not
                 to relearning the layout. The cost of a fixed order is that a simple answer
@@ -283,7 +285,7 @@ export function DialogueCaseStudyContent({
                 A quote without a timestamp forces you to hunt the recording, and a quote you
                 cannot check is the chat asking to be trusted again. The player opens at the exact
                 second, with the transcript in sync, so the line can be verified in one click. The
-                cost is context: a clip that starts mid thought can mislead, so the transcript
+                cost is context: a clip that starts mid-thought can mislead, so the transcript
                 around the line stays visible.
               </CaseStudyBody>
               <ProductFigureBlock
@@ -309,8 +311,8 @@ export function DialogueCaseStudyContent({
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
                 A chart makes four interviews look like a trend. When the evidence is thin, the
-                answer leads with the count and holds the chart back. The cost is a weaker
-                looking answer, and I would rather the answer look weak than borrow confidence it
+                answer leads with the count and holds the chart back. The cost is a weaker-looking
+                answer, and I would rather the answer look weak than borrow confidence it
                 has not earned.
               </CaseStudyBody>
               <ProductFigureBlock
@@ -330,19 +332,15 @@ export function DialogueCaseStudyContent({
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                Ask a follow up and the question narrows, and the structure does not reset. The
+                Ask a follow-up and the question narrows, and the structure does not reset. The
                 filtered answer keeps its sources, its chart, and every supporting clip in one
                 drawer, so the reader never has to rebuild the evidence for a smaller question.
                 The cost is that the drawer has to hold everything the full answer holds, in less
                 room.
               </CaseStudyBody>
-              <CaseStudyBody>
-                A second answer is already on this page: the thin data answer above, where the
-                count leads and the chart is held back.
-              </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
-                title="Follow-up answer for mobile only, with every supporting clip in one drawer"
+                title="Follow-up answer for the address step only, with every supporting clip in one drawer"
                 assetId="D-15"
                 wrapRaster={wrap}
                 frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
