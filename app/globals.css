@@ -880,9 +880,11 @@ html[data-theme="dark"] .project-image {
 }
 
 /* ─── Case study 3-column layout ────────────────────────────────────
-   Desktop  : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
-   Tablet   : [TOC 160px] [content 1fr] — right spacer drops
-   Mobile   : [content 1fr] — TOC hidden
+   Desktop (≥1200px) : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
+   Below 1200px      : [content max-750px] centered — TOC hidden, back
+                       control lives inside .cs-content (see .cs-mobile-back)
+   Mobile (≤767px)   : [content 1fr] — TOC hidden
+   The 1200px cutoff matches rachelchen.tech's lg breakpoint.
    ─────────────────────────────────────────────────────────────────── */
 .cs-layout {
   max-width: var(--grid-max-w);
@@ -900,12 +902,21 @@ html[data-theme="dark"] .project-image {
   align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
-/* Tablet: right spacer col gone, TOC gets fixed 160px */
-@media (max-width: 1100px) {
+/* Below 1200px: TOC aside hidden. The content column stays capped at
+   --content-max-w and centered in the middle track (the same centering
+   .cs-layout--no-toc uses); the in-content back control takes over from
+   the aside's desktop back button (see the .cs-mobile-back rule below
+   the back-button section, which must come after its display:none base). */
+@media (max-width: 1199px) {
   .cs-layout {
-    grid-template-columns: 160px minmax(0, 1fr);
+    grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   }
-  .cs-aside { padding-right: var(--space-2); }
+  .cs-layout > .cs-content {
+    grid-column: 2;
+  }
+  .cs-aside {
+    display: none !important;
+  }
 }
 /* Mobile: single column. Aside (desktop TOC) is hidden; the back control
    lives inside .cs-content so it shares the hero media's left edge. */
@@ -920,6 +931,9 @@ html[data-theme="dark"] .project-image {
   }
   .cs-layout > * {
     min-width: 0;
+  }
+  .cs-layout > .cs-content {
+    grid-column: 1;
   }
   .cs-aside {
     display: none !important;
@@ -1072,6 +1086,23 @@ html[data-theme="dark"] .project-image {
   }
   .cs-hero-title {
     transform: translateX(var(--cs-align-d-title, 0px));
+  }
+}
+
+/* Below 1200px the aside (and its .cs-back-desktop) is hidden, so the
+   in-content back control is the reachable back button at every width
+   under the breakpoint, not just on mobile. It keeps the desktop back
+   nudge at ≥768px; the ≤767px block below swaps in the mobile nudge. */
+@media (max-width: 1199px) {
+  .cs-mobile-back {
+    display: block;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+  }
+  .cs-back-mobile {
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateX(var(--cs-align-d-back, 0px));
   }
 }
 
@@ -1623,7 +1654,7 @@ html:has(#agentation-cursor) .dp-zoom__trigger {
 .cs-layout.cs-layout--no-toc .cs-content {
   grid-column: 2;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1199px) {
   .cs-layout.cs-layout--no-toc {
     grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   }
