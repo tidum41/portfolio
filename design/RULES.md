@@ -4,6 +4,15 @@ Every build and review reads STORY-PRINCIPLES.md and AI-TELLS.md with this file.
 
 Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI keeps its real 600). Figures stay the approved components with no hover state. Clicking a figure opens a lightbox (see below). Do not commit fonts, Dialogue screenshots, or unblurred frames.
 
+## 2026-10-23 (story build)
+
+- Every decision names its cost in the same breath as its win; a cost deferred to the end of the page reads as fine print.
+- Missing evidence is admitted in the body where the claim is made (no customers, no metrics), with what was done instead.
+- A comparison earns its place per pair; when two pairs teach the same lesson, the weaker one is cut, not kept for completeness.
+- The section gap has one owner; verify the rendered gap in the browser at both widths instead of trusting the CSS.
+- Every figure gets the same caption treatment, a label plus at most one sentence, the hero included; a fact stated in a figure is not restated as a list under it.
+- The figures are recreations of the redesign, never describe them as built from the product's own components.
+
 ## 2026-10-21
 
 - One caption style: a 13px label plus at most one sentence, below the figure, with a 24px gap.

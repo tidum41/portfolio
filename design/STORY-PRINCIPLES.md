@@ -18,6 +18,10 @@ A checklist for case study writing and review. Each line is a test: a reviewer c
 - [ ] A tradeoff is stated as a cost accepted, not a balance celebrated. Example: Chen rejects the UI code fix because it "would require a lot of engineering effort, and still result in a buggy and unreliable experience." The price is named, then the option dies.
 - [ ] The closing names one specific imperfection, constraint, or reversal the work still carries. Example: Chen's reflection ends on technical constraints making the flow imperfect; Wu's key learnings admit the first search solution created the decision paralysis it was meant to fix.
 
+- [ ] The cost is named in the same breath as the win, in the same sentence or the one right after it, never deferred to a limitations section. Test: underline every claim of benefit and check a price sits next to it. Example: Stripe's Sessions post recommends A/B testing checkout and admits in the same breath that testing two options "can take up to three weeks".
+- [ ] What the writer did not have is admitted out loud, and the sentence after it says what they did anyway. Test: a page with no metrics, no customers, or no access says so in the body, not nowhere. Example: Caleb Wu, RevisionDojo, writes under Metrics that the feature "is currently in development so we don't have metrics on its efficacy yet", then reports what he observed in testing instead.
+- [ ] Where there are no outcome metrics, count what can be counted honestly: steps, options, settings, rounds, interviews. Test: every number on the page is a count of something the writer touched, not a result they claim. Example: Chen's proof of diligence is a count of work, every combination of macOS and Safari settings tested, not a percentage improvement.
+
 ## Sources
 
 - Rachel Chen, 1Password case study, rachelchen.tech/projects/1password

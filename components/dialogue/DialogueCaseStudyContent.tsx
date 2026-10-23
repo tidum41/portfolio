@@ -7,13 +7,15 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
-import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
+import DialogueChartLibrary, { DialogueCoverageFigure } from "@/components/dialogue/DialogueChartLibrary";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
 import "@/components/dialogue/product/dialogue-product.css";
-import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
+import DialogueRachelFrame, {
+  DialogueCaption,
+  type DialogueFrameTone,
+} from "@/components/dialogue/DialogueRachelFrame";
 import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import { ANATOMY_LABELS, ANATOMY_PART_IDS } from "@/lib/dialogue/product/sampleData";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -35,11 +37,12 @@ export const DIALOGUE_TOC_ITEMS = [
     id: "why-it-matters",
     label: "A finding only travels if you can point to the interview behind it",
   },
-  { id: "one-structure", label: "Every answer gets one fixed structure" },
-  { id: "clips", label: "A quote with no context" },
+  { id: "one-structure", label: "Every answer gets the same five parts, in the same order" },
+  { id: "clips", label: "Every quote opens the recording at the second it was said" },
   { id: "chart-library", label: "A chart only when the data asks for one" },
   { id: "thin-data", label: "Say when the data is thin" },
   { id: "full-answer", label: "One answer, start to finish" },
+  { id: "reflection", label: "What I did not solve" },
 ];
 
 function Section({
@@ -135,7 +138,7 @@ export function DialogueCaseStudyContent({
           </div>
 
           <CaseStudyOpen
-            tagline="Dialogue, contract, 2026"
+            tagline="Dialogue, contract, Dec 2025 to March 2026"
             title={DIALOGUE_TITLE}
             subtitle={DIALOGUE_SUBTITLE}
             metadata={[
@@ -163,46 +166,55 @@ export function DialogueCaseStudyContent({
               },
             ]}
           >
-            {wrap
-              ? wrap(
-                  "D-01",
-                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueProductFigure
-                      scenario="hero"
-                      title="Study chat structured answer hero"
-                      assetId="D-01"
-                      className="dialogue-product-figure--hero-fill"
-                    />
-                  </div>,
-                )
-              : (
-                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueProductFigure
-                      scenario="hero"
-                      title="Study chat structured answer hero"
-                      assetId="D-01"
-                      className="dialogue-product-figure--hero-fill"
-                    />
-                  </div>
-                )}
+            <>
+              {wrap
+                ? wrap(
+                    "D-01",
+                    <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
+                      <DialogueProductFigure
+                        scenario="hero"
+                        title="Study chat structured answer hero"
+                        assetId="D-01"
+                        className="dialogue-product-figure--hero-fill"
+                      />
+                    </div>,
+                  )
+                : (
+                    <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
+                      <DialogueProductFigure
+                        scenario="hero"
+                        title="Study chat structured answer hero"
+                        assetId="D-01"
+                        className="dialogue-product-figure--hero-fill"
+                      />
+                    </div>
+                  )}
+              <DialogueCaption
+                label="The structured answer"
+                sentence="The summary leads, and the sources, chart, and clips sit under it in the same order on every answer."
+              />
+            </>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem">
               <H2>The chat could answer anything, but not say which interview said it</H2>
               <CaseStudyBody>
-                AI-moderated interviews for enterprise UX teams and startups. Teams could not see
-                which interview said what, so a long answer felt like a guess.
+                Dialogue runs AI moderated interviews for UX teams, and I designed its study chat.
+                A researcher could ask a question about a study and get a long, confident answer,
+                and the answer never said which interview it came from. The question I kept coming
+                back to was who said that, and the chat could not answer it.
               </CaseStudyBody>
             </Section>
 
             <Section id="why-it-matters">
               <H2>A finding only travels if you can point to the interview behind it</H2>
               <CaseStudyBody>
-                In sessions with Benjamin and Justin, and with students running mock interviews,
-                people asked who said that before they would trust a long answer. Those sessions
-                stood in for research customers. The gap was the same either way: without a path
-                back to the interview, the answer stayed a guess.
+                I tested with Benjamin and Justin, and with students running mock interviews. I did
+                not have Dialogue customers to test with, and I will not pretend those sessions
+                were that. What I had was the same reaction in both rooms: people asked who said
+                that before they would trust a long answer, and without a path back to the
+                interview, the answer stayed a guess.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
                 heading="Lead with the answer"
@@ -232,7 +244,7 @@ export function DialogueCaseStudyContent({
                     label: "Answer + evidence",
                     title: "Structured answer",
                     costLine:
-                      "Clearer in one glance, but the chat has to hold summary, chart, and clips without feeling crowded.",
+                      "Clearer in one glance. The cost is room: summary, chart, and clips all have to fit inside one answer.",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
@@ -241,32 +253,32 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="one-structure">
-              <H2>Every answer gets one fixed structure</H2>
+              <H2>Every answer gets the same five parts, in the same order</H2>
               <CaseStudyBody>
-                Parts stay in order: 1 Summary, 2 Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only
-                the chart changes shape. A source that disagrees stays in the card, under Counter-evidence.
+                Summary, sources, chart, clips, follow ups. I kept the order fixed so a reader
+                learns the shape once and then only reads what changes. I study cognitive science,
+                so I think about order as a memory problem: attention should go to the answer, not
+                to relearning the layout. A source that disagrees stays in the answer, under
+                counter evidence, because a split in the interviews is a finding too. The cost of
+                a fixed order is that a simple answer carries the same furniture as a hard one.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
                 title="Study chat answer card with numbered callouts for summary through follow-ups"
                 assetId="D-08"
                 wrapRaster={wrap}
+                frameLabel="One structure: the same five parts in the same order on every answer, so the shape is learned once."
               />
-              <ol className="dialogue-anatomy-list">
-                {ANATOMY_LABELS.map((label, i) => (
-                  <li key={label} data-anatomy-list-part={ANATOMY_PART_IDS[i]}>
-                    <span>{i + 1}</span>
-                    {label}
-                  </li>
-                ))}
-              </ol>
             </Section>
 
             <Section id="clips">
-              <H2>A quote with no context</H2>
+              <H2>Every quote opens the recording at the second it was said</H2>
               <CaseStudyBody>
-                A quote without a timestamp forces you to hunt the recording. The player opens at
-                the exact second, with the transcript in sync.
+                A quote without a timestamp forces you to hunt the recording, and a quote you
+                cannot check is the chat asking to be trusted again. The player opens at the exact
+                second, with the transcript in sync, so the line can be verified in one click. The
+                cost is context: a clip that starts mid thought can mislead, so the transcript
+                around the line stays visible.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
@@ -280,7 +292,11 @@ export function DialogueCaseStudyContent({
             <Section id="chart-library">
               <H2>A chart only when the data asks for one</H2>
               <CaseStudyBody>
-                Each pair puts the common choice next to mine, on the same data.
+                This pair puts the chart I first reached for next to the one I kept, on the same
+                data. The reader should find the step that matters without reading a legend, and a
+                chart that cannot do that does not belong in the answer. Coverage, the count of
+                interviews behind a finding, sits with the thin data answer below, where the
+                count itself is the point.
               </CaseStudyBody>
               <DialogueChartLibrary />
             </Section>
@@ -288,8 +304,10 @@ export function DialogueCaseStudyContent({
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
-                A chart of four interviews looks like a trend. The warning makes the evidence size the
-                first thing you see.
+                A chart of four interviews looks like a trend, and a trend is what a finding from
+                four interviews cannot claim. When the evidence is thin, the answer leads with the
+                count and holds the chart back. The cost is a weaker looking answer, and I would
+                rather the answer look weak than borrow confidence it has not earned.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
@@ -298,17 +316,25 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Thin data: a finding from four interviews must not reach a roadmap as a trend."
               />
+              <CaseStudyBody>
+                Coverage is the other side of the same rule. When most of the study mentions a
+                finding, the count can carry a chart, because the chart is then showing the size
+                of the evidence and not dressing up a guess.
+              </CaseStudyBody>
+              <DialogueCoverageFigure />
             </Section>
 
             <Section id="full-answer">
               <H2>One answer, start to finish</H2>
               <CaseStudyBody>
-                You ask a follow-up, get a filtered answer, tap a source, and every supporting clip
-                for that answer sits in one drawer. The structure does not reset when the question
-                narrows.
+                Ask a follow up and the question narrows, and the structure does not reset. The
+                filtered answer keeps its sources, its chart, and every supporting clip in one
+                drawer, so the reader never has to rebuild the evidence for a smaller question.
+                The cost is that the drawer has to hold everything the full answer holds, in less
+                room.
               </CaseStudyBody>
               <CaseStudyBody>
-                A second answer is already on this page: the payment question above, where the
+                A second answer is already on this page: the thin data answer above, where the
                 count leads and the chart is held back.
               </CaseStudyBody>
               <ProductFigureBlock
@@ -318,11 +344,17 @@ export function DialogueCaseStudyContent({
                 wrapRaster={wrap}
                 frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
               />
-              <div className="dialogue-full-answer-outcome">
-                <CaseStudyBody>
-                  Limit: the chat has to hold summary, chart, and clips without feeling crowded.
-                </CaseStudyBody>
-              </div>
+            </Section>
+
+            <Section id="reflection">
+              <H2>What I did not solve</H2>
+              <CaseStudyBody>
+                Room. One answer has to hold a summary, a chart, and clips, and those parts still
+                compete, so when something has to give, I cut a chart before I cut a source. The
+                harder test is still ahead: this page shows answers citing their sources, and it
+                has not been researchers asking about their own studies, where they already know
+                when an answer is wrong.
+              </CaseStudyBody>
             </Section>
           </article>
           <CaseStudyPager href="/dialogue" />
