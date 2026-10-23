@@ -59,13 +59,22 @@
   padding: 16px;
 }
 
-/* Chart title rule: 12/16, 500, muted, a fixed 12px above the plot. */
+/* Chart title rule: its own row, 12/16, 500, muted, 12px above the plot and at
+   least 16px below any text above it. Never inline, never overlapping. */
 .dp-chart-title {
-  margin: 0 0 12px;
+  display: block;
+  clear: both;
+  position: static;
+  width: 100%;
+  margin: 16px 0 12px;
   font-size: var(--text-small-size);
-  line-height: 16px;
-  font-weight: 500;
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
   color: var(--dp-chart-label-color);
+}
+
+.dp-chart-title:first-child {
+  margin-top: 0;
 }
 
 .dp-chart-caption {

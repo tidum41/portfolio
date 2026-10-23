@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## r19, Oct 22 2026 (Agentation notes)
+- Changed: lead compare no longer clips and gets a calmer surface (two extension tokens), figures capped at 640px by scaling, chart titles on their own row, chart library near-miss specimens with numbered markers, thin-data "Add to my plan" copies a prompt, ClipCard accent bar removed, hero footer expand icon dropped.
+- Why: Mudit's r19 notes, ledger DLG-79 to DLG-85 (his DLG-70 to 78).
+- Preview: none, local build only (no [preview] tag)
+
 ## r18, Oct 22 2026 (polish)
 - Changed: 390 anatomy shows all five parts, hero search step within two lines (chat column +24px, shorter copy at phone width), hero "-38% drop" tooltip back, transcript player black edge to edge, balanced wrap in the amber warning.
 - Why: r18 audit of 3585bb6. DLG-70 to DLG-72.

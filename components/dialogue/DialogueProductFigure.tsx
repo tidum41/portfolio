@@ -30,6 +30,8 @@ const FULL_ANSWER_W = 688;
 /** Below 480px: crop instead of shrinking past this (12px labels stay >= 11px). */
 const PHONE_MIN_SCALE = Math.max(0.85, 11 / 12);
 const DESKTOP_MIN_SCALE = 0.94;
+/** Desktop figures scale down to at most this tall, so figure plus caption fit an 844px viewport. */
+const FIGURE_MAX_H = 640;
 
 function useNarrow(query = "(max-width: 600px)") {
   const [narrow, setNarrow] = useState(false);
@@ -64,6 +66,7 @@ function scaleProps(
   maxScale?: number;
   minScale?: number;
   maxOuterHeight?: number;
+  maxHeight?: number;
   fit?: "scale" | "reflow";
   fade?: boolean;
 } | null {
@@ -95,15 +98,15 @@ function scaleProps(
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }
-        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
+        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: FIGURE_MAX_H };
     case "full-answer":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
-        : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
+        : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: FIGURE_MAX_H };
     case "clip-player":
       return narrow
         ? { innerWidth: 656, fit: "reflow" }
-        : { innerWidth: 656, minScale: DESKTOP_MIN_SCALE, maxScale: 1 };
+        : { innerWidth: 656, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: FIGURE_MAX_H };
     case "problem-paragraphs":
     case "decision-paragraphs":
     case "decision-quotes":
@@ -138,6 +141,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
             maxScale={zoomed && scale.fit !== "reflow" ? Math.max(scale.maxScale ?? 1, 1.2) : scale.maxScale}
             minScale={scale.minScale}
             maxOuterHeight={zoomed ? undefined : scale.maxOuterHeight}
+            maxHeight={zoomed ? undefined : scale.maxHeight}
             fit={scale.fit}
             fade={zoomed ? false : scale.fade}
           >
@@ -152,7 +156,14 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
   };
 
   return (
-    <div className="dp-zoom">
+    <div
+      className="dp-zoom"
+      onClick={(e) => {
+        if (narrow || !(e.target instanceof Element) || !e.currentTarget.contains(e.target)) return;
+        if (e.target.closest("[data-interactive]") || e.target.closest(".dp-zoom__trigger")) return;
+        setOpen(true);
+      }}
+    >
       {render(false)}
       {narrow ? null : (
       <button

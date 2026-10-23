@@ -15,6 +15,10 @@ type Props = {
   fillMode?: "index" | "magnitude";
   note?: ReactNode;
   className?: string;
+  /** Library near-miss only: drop the direct labels (a legend names the bars instead). */
+  hideLabels?: boolean;
+  /** Library near-miss only: bars start here instead of zero (truncated baseline). */
+  baseline?: number;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -24,20 +28,24 @@ export default function ChartBarList({
   fillMode = "index",
   note,
   className,
+  hideLabels = false,
+  baseline = 0,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
 
   return (
     <div className={["dp-chart-root dp-chart-bars", className].filter(Boolean).join(" ")}>
       {rows.map((row, i) => {
-        const widthPct = Math.max(0, Math.min(100, (row.value / max) * 100));
+        const widthPct = Math.max(0, Math.min(100, ((row.value - baseline) / (max - baseline)) * 100));
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
             : chartBarFill(i, row.focal);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
-            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
+            {hideLabels ? null : (
+              <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
+            )}
             <div
               className="dp-chart-bars__track"
               data-annotate-part={`bar-track-${annotateSlug(row.label)}`}

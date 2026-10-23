@@ -21,6 +21,8 @@ type Props = {
   minScale?: number;
   /** Cap the visible crop height in outer px. */
   maxOuterHeight?: number;
+  /** Scale the whole figure down until it is at most this tall (outer px). Never crops. */
+  maxHeight?: number;
   /** `reflow` paints children at the frame width with no zoom. */
   fit?: "scale" | "reflow";
   /** Bottom fade for equal-height compare crops. */
@@ -59,6 +61,7 @@ export default function ScaledChatViewport({
   maxScale,
   minScale,
   maxOuterHeight,
+  maxHeight,
   fit = "scale",
   fade = false,
   className,
@@ -98,6 +101,8 @@ export default function ScaledChatViewport({
       let raw = w / innerWidth;
       if (maxScale !== undefined) raw = Math.min(raw, maxScale);
       if (minScale !== undefined) raw = Math.max(raw, minScale);
+      const contentH = inner?.offsetHeight ?? 0;
+      if (maxHeight !== undefined && contentH > 0) raw = Math.min(raw, maxHeight / contentH);
       const s = snapScale(raw, innerWidth, dpr);
       setScale(s);
 
@@ -124,7 +129,7 @@ export default function ScaledChatViewport({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [cropHeight, innerWidth, maxScale, minScale, useZoom, dpr]);
+  }, [cropHeight, innerWidth, maxScale, minScale, maxHeight, useZoom, dpr]);
 
   useLayoutEffect(() => {
     if (fit !== "reflow") return;

@@ -17,6 +17,8 @@ type Props = {
   /** Color the whole line cherry (single-series finding) */
   seriesFocal?: boolean;
   className?: string;
+  /** Library near-miss only: no point values, the axis carries the numbers. */
+  hideValues?: boolean;
 };
 
 /**
@@ -30,6 +32,7 @@ export default function ChartLinePlot({
   focalIndex,
   seriesFocal = false,
   className,
+  hideValues = false,
 }: Props) {
   const s = dialogueChartSpec.line;
   const w = s.plotWidth;
@@ -130,6 +133,7 @@ export default function ChartLinePlot({
           return (
             <g key={c.label} data-annotate-part={`point-${annotateSlug(c.label)}`}>
               <circle cx={c.x} cy={c.y} r={r} fill={fill} data-annotate-part={`point-dot-${annotateSlug(c.label)}`} />
+              {hideValues ? null : (
               <text
                 x={c.x}
                 y={c.y - 8}
@@ -143,6 +147,7 @@ export default function ChartLinePlot({
               >
                 {fmt(c.value)}
               </text>
+              )}
               <text
                 x={c.x}
                 y={h - 8}

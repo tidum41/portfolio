@@ -83,21 +83,6 @@ export function CopyIcon({ className }: IconProps) {
   );
 }
 
-export function ExpandIcon({ className }: IconProps) {
-  return (
-    <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>
-      <path d="m15 15 6 6" />
-      <path d="m15 9 6-6" />
-      <path d="M21 16v5h-5" />
-      <path d="M21 8V3h-5" />
-      <path d="M3 16v5h5" />
-      <path d="m3 21 6-6" />
-      <path d="M3 8V3h5" />
-      <path d="M9 9 3 3" />
-    </svg>
-  );
-}
-
 export function WaveformIcon({ className }: IconProps) {
   return (
     <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>
@@ -129,6 +114,14 @@ export function PersonIcon({ className }: IconProps) {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
       <circle cx="12" cy="9" r="3.6" />
       <path d="M5.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6z" />
+    </svg>
+  );
+}
+
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>
+      <path d="M20 6 9 17l-5-5" />
     </svg>
   );
 }

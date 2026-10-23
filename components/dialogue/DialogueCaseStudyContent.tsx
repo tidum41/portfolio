@@ -291,6 +291,10 @@ export function DialogueCaseStudyContent({
                 A chart of four interviews looks like a trend. The warning makes the evidence size the
                 first thing you see.
               </CaseStudyBody>
+              <CaseStudyBody>
+                The next step copies a ready-to-paste prompt for the follow-up study. People work out
+                of generated docs and idea docs, so the plan should travel there, not stay in the chat.
+              </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
                 title="Study chat answer that leads with the interview count and holds the chart back"

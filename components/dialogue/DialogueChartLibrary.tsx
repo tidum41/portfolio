@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import StaticFigure from "@/components/dialogue/StaticFigure";
-import { annotateSlug } from "@/components/dialogue/annotate";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartLinePlot from "@/components/dialogue/product/chart/ChartLinePlot";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
@@ -23,13 +22,23 @@ const STEPS = CHECKOUT_FUNNEL.steps.slice(0, 4);
 const GROUPS = SEGMENT_ADDRESS.rows;
 const ROUNDS = SENTIMENT_LINE.points;
 
+function Marker({ n = 1, part }: { n?: number; part?: string }) {
+  return (
+    <span className="dialogue-lib__marker" aria-hidden data-annotate-part={part ?? `marker-${n}`}>
+      {n}
+    </span>
+  );
+}
+
 function Specimen({
   entryId,
   status,
+  caption,
   children,
 }: {
   entryId: string;
   status: "ruled-out" | "chosen";
+  caption?: string;
   children: ReactNode;
 }) {
   return (
@@ -41,84 +50,101 @@ function Specimen({
       >
         {children}
       </StaticFigure>
+      {caption ? (
+        <figcaption className="dialogue-lib__caption">
+          <Marker />
+          <span>{caption}</span>
+        </figcaption>
+      ) : null}
     </figure>
   );
 }
 
-function Bubbles() {
+/** Same bars as the chosen chart, but a legend names them instead of direct labels. */
+function LegendNearMiss() {
   return (
     <ChartVizCard title="Drop-off by step">
-      <div className="dialogue-lib__bubbles">
-        {STEPS.map((s) => (
-          <div key={s.label} className="dialogue-lib__bubble-cell" data-annotate-part={`bubble-${annotateSlug(s.label)}`}>
-            <span
-              className="dialogue-lib__bubble"
-              style={{ width: 24 + s.pct * 0.56, height: 24 + s.pct * 0.56 }}
-            >
-              {formatChartPercent(s.pct)}
-            </span>
-            <span className="dialogue-lib__bubble-label">{s.label}</span>
-          </div>
+      <ChartBarList
+        hideLabels
+        rows={STEPS.map((s) => ({
+          label: s.label,
+          value: s.pct,
+          display: formatChartPercent(s.pct),
+        }))}
+        max={100}
+        fillMode="index"
+      />
+      <div className="dialogue-lib__legend" data-annotate-part="legend">
+        <Marker part="legend-marker" />
+        {STEPS.map((s, i) => (
+          <span key={s.label} className="dialogue-lib__legend-item">
+            <span className="dialogue-lib__swatch" data-ramp={i + 1} aria-hidden />
+            {s.label}
+          </span>
         ))}
       </div>
     </ChartVizCard>
   );
 }
 
-function Distribution() {
-  const buckets = Array.from({ length: 10 }, (_, i) => ({
-    lo: i * 10,
-    count: GROUPS.filter((g) => g.pct >= i * 10 && g.pct < i * 10 + 10).length,
-  }));
+/** Same bars, but the baseline starts at 20% so the gaps look larger than they are. */
+function TruncatedNearMiss() {
   return (
-    <ChartVizCard title="Address resets, all interviews">
-      <svg viewBox="0 0 280 110" className="dialogue-lib__dist" role="img" aria-label="Pooled distribution">
-        <line x1="8" y1="84" x2="272" y2="84" className="dialogue-lib__axis" />
-        {buckets.map((b, i) => (
-          <g key={b.lo}>
-            {b.count > 0 ? (
-              <rect data-annotate-part={`dist-bar-${b.lo}`} x={12 + i * 26} y={84 - b.count * 36} width={20} height={b.count * 36} rx={3} className="dialogue-lib__dist-bar" />
-            ) : null}
-            {i % 2 === 0 ? (
-              <text x={22 + i * 26} y={102} textAnchor="middle" className="dialogue-lib__svg-label">
-                {b.lo}%
-              </text>
-            ) : null}
-          </g>
-        ))}
-      </svg>
+    <ChartVizCard title={SEGMENT_ADDRESS.title}>
+      <ChartBarList
+        rows={GROUPS.map((g) => ({
+          label: g.label,
+          value: g.pct,
+          display: formatChartPercent(g.pct),
+          focal: "focal" in g && g.focal,
+        }))}
+        max={100}
+        baseline={20}
+        fillMode="index"
+        note={
+          <span className="dialogue-lib__note-row" data-annotate-part="baseline-note">
+            <Marker part="baseline-marker" />
+            Axis starts at 20%
+          </span>
+        }
+      />
     </ChartVizCard>
   );
 }
 
-function Timeline() {
+/** Same line and axis, but a legend replaces the point values. */
+function LegendLineNearMiss() {
   return (
-    <ChartVizCard title="Sentiment timeline">
-      <svg viewBox="0 0 280 110" className="dialogue-lib__dist" role="img" aria-label="Timeline of rounds">
-        <line x1="20" y1="50" x2="260" y2="50" className="dialogue-lib__axis" />
-        {ROUNDS.map((p, i) => {
-          const x = 20 + (i * 240) / Math.max(ROUNDS.length - 1, 1);
-          return (
-            <g key={p.label}>
-              <circle data-annotate-part={`timeline-dot-${annotateSlug(p.label)}`} cx={x} cy={50} r={6} className="dialogue-lib__timeline-dot" />
-              <text x={x} y={78} textAnchor="middle" className="dialogue-lib__svg-label">
-                {p.label}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+    <ChartVizCard title="Sentiment by round">
+      <ChartLinePlot points={ROUNDS} yMode="trend" hideValues seriesFocal={false} />
+      <div className="dialogue-lib__legend dialogue-lib__legend--line" data-annotate-part="legend">
+        <Marker part="legend-marker" />
+        <span className="dialogue-lib__swatch dialogue-lib__swatch--line" aria-hidden />
+        Sentiment score
+      </div>
     </ChartVizCard>
   );
 }
 
-function MentionTotal() {
+/** Same counts, but the scale ends at the largest bar instead of all 24 interviews. */
+function LargestScaleNearMiss() {
   return (
     <ChartVizCard title="Address friction">
-      <div className="dialogue-lib__total">
-        <span className="dialogue-lib__total-bar" data-annotate-part="total-bar" />
-        <span className="dialogue-lib__total-value" data-annotate-part="total-value">31 quotes</span>
-      </div>
+      <ChartBarList
+        rows={COVERAGE_ADDRESS.rows.map((r) => ({
+          label: r.label === "Mentioned it" ? "Said it" : "Did not",
+          value: r.count,
+          display: formatChartCount(r.count),
+        }))}
+        max={COVERAGE_ADDRESS.rows[0]!.count}
+        fillMode="magnitude"
+        note={
+          <span className="dialogue-lib__note-row" data-annotate-part="scale-note">
+            <Marker part="scale-marker" />
+            Scale ends at the largest count
+          </span>
+        }
+      />
     </ChartVizCard>
   );
 }
@@ -127,13 +153,14 @@ const ENTRIES = [
   {
     id: "dropoff",
     name: "Drop-off between steps",
-    verdict: "Bars show where people quit. Bubbles make you guess.",
+    verdict: "Bars show where people quit. A legend makes you look away to read them.",
     tech: [
       ["Data shape", "ordered steps, counts."],
-      ["Encoding", "length on a zero baseline is read precisely; area is not."],
+      ["Encoding", "direct labels sit on the bar; length on a zero baseline is read precisely."],
       ["Tradeoff", "loses theme overlap."],
     ],
-    bad: <Bubbles />,
+    bad: <LegendNearMiss />,
+    badCaption: "Legend instead of direct labels: you match a shade to a name before you can read the drop.",
     good: (
       <ChartVizCard title="Drop-off by step">
         <ChartBarList
@@ -152,13 +179,14 @@ const ENTRIES = [
   {
     id: "groups",
     name: "How groups differ",
-    verdict: "Bars line up so the gap is obvious. A pooled spread hides it.",
+    verdict: "Bars line up so the gap is obvious. A cut baseline inflates it.",
     tech: [
       ["Data shape", "one rate per group."],
-      ["Encoding", "one aligned bar per group; a pooled spread drops the group names."],
+      ["Encoding", "one aligned bar per group, starting at zero so lengths compare honestly."],
       ["Tradeoff", "no view of spread inside a group."],
     ],
-    bad: <Distribution />,
+    bad: <TruncatedNearMiss />,
+    badCaption: "Truncated baseline: the axis starts at 20%, so the gap between groups looks larger than it is.",
     good: (
       <ChartVizCard title={SEGMENT_ADDRESS.title}>
         <ChartBarList
@@ -177,13 +205,14 @@ const ENTRIES = [
   {
     id: "trend",
     name: "Change over sessions",
-    verdict: "A line shows the climb. A bare timeline hides the size.",
+    verdict: "A line shows the climb. A legend without point values hides the size.",
     tech: [
       ["Data shape", "one score per round, in order."],
       ["Encoding", "slope shows direction; height on a shared axis shows size."],
       ["Tradeoff", "needs three or more rounds."],
     ],
-    bad: <Timeline />,
+    bad: <LegendLineNearMiss />,
+    badCaption: "Legend instead of point values: you see the climb but have to estimate each round from the axis.",
     good: (
       <ChartVizCard title="Sentiment by round">
         <ChartLinePlot
@@ -198,13 +227,14 @@ const ENTRIES = [
   {
     id: "coverage",
     name: "How much was covered",
-    verdict: "Interview counts show how thin the proof is. Quote counts hide it.",
+    verdict: "Interview counts show how thin the proof is. A scale cut to the largest bar hides it.",
     tech: [
       ["Data shape", "interviews that mention it, out of 24."],
       ["Encoding", "counts against the full set show coverage."],
       ["Tradeoff", "says nothing about how strong each quote is."],
     ],
-    bad: <MentionTotal />,
+    bad: <LargestScaleNearMiss />,
+    badCaption: "Scale ends at the largest count, not at 24: the top bar fills the track, so coverage looks complete.",
     good: (
       <ChartVizCard title="Address friction">
         <ChartBarList
@@ -229,7 +259,7 @@ export default function DialogueChartLibrary() {
           <h3 className="dialogue-lib__name">{entry.name}</h3>
           <p className="dialogue-lib__verdict">{entry.verdict}</p>
           <div className="dialogue-lib__pair">
-            <Specimen entryId={entry.id} status="ruled-out">{entry.bad}</Specimen>
+            <Specimen entryId={entry.id} status="ruled-out" caption={entry.badCaption}>{entry.bad}</Specimen>
             <Specimen entryId={entry.id} status="chosen">{entry.good}</Specimen>
           </div>
           <div className="dialogue-lib__tech">

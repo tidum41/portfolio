@@ -14,7 +14,9 @@
  * allowed only in this file.
  */
 
-.dialogue-product-root {
+.dialogue-product-root,
+.dialogue-lead-answer,
+.dialogue-lib {
   /* ---------------------------------------------------------------
    * Layer 1. DS raw values
    * ------------------------------------------------------------- */
@@ -222,7 +224,15 @@
   /* 8. Letterbox behind the interview still: black, so the player is black edge to edge. */
   --dp-still-letterbox: var(--ds-black);
 
-  /* 9. Anatomy callout numbering, lines and markers. An annotation layer, not
+  /* 9. Compare surfaces. The DS card (paper-10) and quote (paper-50) fills sit
+   *    within about 4% lightness of the figure well, so the three specimens
+   *    blur into the frame in light mode. The compare card uses white with a
+   *    DS border, and quote rows use paper-100. Figures stay light in dark
+   *    mode, so the same fills hold in both themes. */
+  --dp-compare-surface: var(--ds-white);
+  --dp-compare-quote-bg: var(--ds-paper-100);
+
+  /* 10. Anatomy callout numbering, lines and markers. An annotation layer, not
    *    product UI. Stone tokens only. */
   --dp-anatomy-marker-bg: var(--ds-paper-100);
   --dp-anatomy-marker-fg: var(--ds-white);

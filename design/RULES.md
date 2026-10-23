@@ -66,3 +66,13 @@ Use stable `data-annotate="<figure>/<part>"` on every figure part so copied mark
 For image or video figures, tag the **container** (`…/media`), not only the inner `<img>` / `<video>`. Pass `annotate` into `CaseStudyFigure` when the default `cs-figure` is too generic. Dialogue live figures must adopt the same `figure/part` shape when that branch rebases.
 
 Agentation is configured with `identifyingAttributes` including `data-annotate` so the attribute appears in copied output.
+
+## Dialogue r19 rules
+
+- Chart titles are their own block row: 12/16, weight 500, muted, 12px to the chart, 16px from any paragraph above. Never inline with body text.
+- Figures in ProductFigureBlock stay at 640px tall or less at desktop. Scale content down; never crop it. The lightbox is uncapped.
+- Ruled-out chart specimens are near-misses of the chosen chart: same data and type scale, one or two marked details (numbered marker plus a one-sentence caption) that make the chosen version better. If a pair cannot be made clear, drop it.
+- Compare surfaces use `--dp-compare-surface` and `--dp-compare-quote-bg` (extension block 9); DS paper-10/50 are too close to the figure well.
+- No left accent bars on cards. Separate with the DS surface and a border.
+- Figures with real controls mark them `data-interactive`; StaticFigure keeps them clickable and the zoom trigger steps aside.
+- Hero and study chat footers match: "Based on N of 24 interviews", no icon.

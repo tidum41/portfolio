@@ -3,7 +3,7 @@
 import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
 import { stampAnnotateParts } from "@/components/dialogue/useAnnotateParts";
 
-const FOCUSABLE = "a[href], button, input, textarea, select, [tabindex]";
+const FOCUSABLE = "a[href], button:not([data-interactive]), input, textarea, select, [tabindex]";
 
 type Props = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   figure: string;
@@ -22,6 +22,7 @@ export default function StaticFigure({ figure, children, ...rest }: Props) {
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
+    if (root.querySelector("[data-interactive]")) root.removeAttribute("aria-hidden");
     root.querySelectorAll<HTMLElement>(FOCUSABLE).forEach((el) => {
       el.setAttribute("tabindex", "-1");
     });
