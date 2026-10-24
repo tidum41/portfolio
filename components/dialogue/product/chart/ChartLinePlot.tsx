@@ -17,6 +17,16 @@ type Props = {
   /** Color the whole line cherry (single-series finding) */
   seriesFocal?: boolean;
   className?: string;
+  /** Only these point indexes print a value (direct labels on the ends). */
+  valueIndices?: number[];
+  /** Y gridlines and tick labels; default 3. */
+  tickCount?: number;
+  /** Tint under the line (the analyst's first draft). */
+  area?: boolean;
+  /** Change between neighbouring points, printed on the segment. */
+  deltas?: boolean;
+  /** One quiet tick and label on a point, for an event on the timeline. */
+  annotation?: { index: number; label: string };
 };
 
 /**
@@ -30,6 +40,11 @@ export default function ChartLinePlot({
   focalIndex,
   seriesFocal = false,
   className,
+  valueIndices,
+  tickCount = 3,
+  area = false,
+  deltas = false,
+  annotation,
 }: Props) {
   const s = dialogueChartSpec.line;
   const w = s.plotWidth;
@@ -63,7 +78,6 @@ export default function ChartLinePlot({
     return { x, y, ...p, i };
   });
 
-  const tickCount = 3;
   const ticks = Array.from({ length: tickCount }, (_, i) => {
     const t = i / (tickCount - 1);
     const value = yMax - t * span;
@@ -112,6 +126,31 @@ export default function ChartLinePlot({
             {fmt(tick.value)}
           </text>
         ))}
+        {area ? (
+          <polygon
+            className="dp-chart-line__area"
+            data-annotate-part="line-area"
+            points={`${coords[0]!.x},${h - s.padBottom} ${coords.map((c) => `${c.x},${c.y}`).join(" ")} ${coords[coords.length - 1]!.x},${h - s.padBottom}`}
+          />
+        ) : null}
+        {annotation && coords[annotation.index] ? (
+          <g data-annotate-part="line-annotation">
+            <line
+              className="dp-chart-line__event"
+              x1={coords[annotation.index]!.x}
+              x2={coords[annotation.index]!.x}
+              y1={s.padTop - 6}
+              y2={h - s.padBottom}
+            />
+            <text
+              className="dp-chart-line__event-label"
+              x={coords[annotation.index]!.x + 4}
+              y={s.padTop - 8}
+            >
+              {annotation.label}
+            </text>
+          </g>
+        ) : null}
         <polyline
           className="dp-chart-line__path"
           data-annotate-part="line"
@@ -130,10 +169,11 @@ export default function ChartLinePlot({
           return (
             <g key={c.label} data-annotate-part={`point-${annotateSlug(c.label)}`}>
               <circle cx={c.x} cy={c.y} r={r} fill={fill} data-annotate-part={`point-dot-${annotateSlug(c.label)}`} />
+              {(valueIndices && !valueIndices.includes(c.i)) ? null : (
               <text
-                x={c.x}
+                x={c.i === 0 ? c.x + 2 : c.x}
                 y={c.y - 8}
-                textAnchor="middle"
+                textAnchor={c.i === 0 ? "start" : "middle"}
                 className={[
                   "dp-chart-line__value",
                   focal ? "dp-chart-line__value--focal" : "",
@@ -143,6 +183,7 @@ export default function ChartLinePlot({
               >
                 {fmt(c.value)}
               </text>
+              )}
               <text
                 x={c.x}
                 y={h - 8}
@@ -154,6 +195,25 @@ export default function ChartLinePlot({
             </g>
           );
         })}
+        {deltas
+          ? coords.slice(1).map((c, i) => {
+              const prev = coords[i]!;
+              const d = c.value - prev.value;
+              return (
+                <text
+                  key={`d-${c.label}`}
+                  className="dp-chart-line__delta"
+                  x={(c.x + prev.x) / 2}
+                  y={(c.y + prev.y) / 2 + 16}
+                  textAnchor="middle"
+                  data-annotate-part={`delta-${annotateSlug(c.label)}`}
+                >
+                  {d >= 0 ? "+" : "-"}
+                  {formatChartDecimal(Math.abs(d))}
+                </text>
+              );
+            })
+          : null}
       </svg>
     </div>
   );

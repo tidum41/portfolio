@@ -21,6 +21,10 @@ type Props = {
   minScale?: number;
   /** Cap the visible crop height in outer px. */
   maxOuterHeight?: number;
+  /** Scale the whole figure down until it is at most this tall (outer px). Never crops. */
+  maxHeight?: number;
+  /** Lightbox: scale to fit the viewport (width and height) so the live figure never scrolls. */
+  fitViewport?: boolean;
   /** `reflow` paints children at the frame width with no zoom. */
   fit?: "scale" | "reflow";
   /** Bottom fade for equal-height compare crops. */
@@ -59,6 +63,8 @@ export default function ScaledChatViewport({
   maxScale,
   minScale,
   maxOuterHeight,
+  maxHeight,
+  fitViewport = false,
   fit = "scale",
   fade = false,
   className,
@@ -97,7 +103,14 @@ export default function ScaledChatViewport({
 
       let raw = w / innerWidth;
       if (maxScale !== undefined) raw = Math.min(raw, maxScale);
-      if (minScale !== undefined) raw = Math.max(raw, minScale);
+      if (minScale !== undefined && !fitViewport) raw = Math.max(raw, minScale);
+      const contentH = inner?.offsetHeight ?? 0;
+      if (maxHeight !== undefined && contentH > 0) raw = Math.min(raw, maxHeight / contentH);
+      if (fitViewport && contentH > 0) {
+        // .cs-lightbox-live: max-height 80vh with 32px padding top and bottom.
+        const availH = window.innerHeight * 0.8 - 64 - 4;
+        raw = Math.min(raw, availH / contentH);
+      }
       const s = snapScale(raw, innerWidth, dpr);
       setScale(s);
 
@@ -116,15 +129,17 @@ export default function ScaledChatViewport({
     };
 
     fit();
+    window.addEventListener("resize", fit);
     const ro = new ResizeObserver(fit);
     ro.observe(layer);
     if (inner) ro.observe(inner);
     const raf = requestAnimationFrame(fit);
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("resize", fit);
       ro.disconnect();
     };
-  }, [cropHeight, innerWidth, maxScale, minScale, useZoom, dpr]);
+  }, [cropHeight, innerWidth, maxScale, minScale, maxHeight, fitViewport, useZoom, dpr]);
 
   useLayoutEffect(() => {
     if (fit !== "reflow") return;
@@ -207,18 +222,14 @@ export default function ScaledChatViewport({
           ref={innerRef}
           className={`dp-scaled-viewport__inner dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
           style={
-            scale >= 0.999
-              ? { width: innerWidth }
-              : useZoom
-                ? {
-                    width: innerWidth,
-                    zoom: scale,
-                  }
-                : {
-                    width: innerWidth,
-                    transform: `scale(${scale})`,
-                    transformOrigin: "top left",
-                  }
+            {
+              "--dp-fig-scale": scale >= 0.999 ? 1 : scale,
+              ...(scale >= 0.999
+                ? { width: innerWidth }
+                : useZoom
+                  ? { width: innerWidth, zoom: scale }
+                  : { width: innerWidth, transform: `scale(${scale})`, transformOrigin: "top left" }),
+            } as unknown as React.CSSProperties
           }
         >
           {children}

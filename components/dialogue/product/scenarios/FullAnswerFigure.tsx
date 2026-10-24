@@ -1,5 +1,5 @@
 import ClipCard from "@/components/dialogue/product/ClipCard";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
@@ -19,7 +19,7 @@ export default function FullAnswerFigure() {
             <QuerySearchStep searched={24} found={18} foundLabel="address moments" />
             <p className="dp-summary" data-annotate-part="summary">{ADDRESS_FOLLOWUP.summary}</p>
             <ChartVizCard title="Checkout, % still in flow">
-              <ChartBarList
+              <ChartDotPlot
                 rows={CHECKOUT_FUNNEL.steps.map((row) => ({
                   label: row.label,
                   value: row.pct,
@@ -27,7 +27,6 @@ export default function FullAnswerFigure() {
                   focal: Boolean(row.focal),
                 }))}
                 max={100}
-                fillMode="index"
               />
             </ChartVizCard>
             <SourcesRow selectedParticipant="Jordan M." selectedTime="14:03" />

@@ -47,7 +47,7 @@ export default function HeroStructuredFigure() {
             data-annotate-part="quotes-card"
           >
             <ClipQuotes />
-            <EvidenceFooter expand />
+            <EvidenceFooter />
           </div>
         </div>
       </div>
