@@ -61,9 +61,9 @@ export const DIALOGUE_TOC_ITEMS = [
     label: "Three people had no trouble at the address step, and their quotes stay in the answer",
   },
   { id: "the-comparison", label: "Eight versions of the answer card, and the turns were grouping" },
+  { id: "chart-library", label: "Carbon's rules, a bent palette, and a gate Carbon does not have" },
   { id: "one-structure", label: "Every answer gets the same five parts, in the same order" },
   { id: "clips", label: "Every quote opens the recording at the second it was said" },
-  { id: "chart-library", label: "Carbon's rules, a bent palette, and a gate Carbon does not have" },
   { id: "thin-data", label: "Say when the data is thin" },
   {
     id: "full-answer",
@@ -74,6 +74,7 @@ export const DIALOGUE_TOC_ITEMS = [
     id: "learning-changed-my-mind",
     label: "I changed my mind about how much a chart should carry",
   },
+  { id: "the-win", label: "The card at the top is the win" },
 ];
 
 function Section({
@@ -249,8 +250,8 @@ export function DialogueCaseStudyContent({
                 Every interview came back as a recording and a transcript, and the study numbers
                 sat in tables. Using any of it meant reading everything yourself. The study chat
                 was built to answer across the set, and its first version answered the way any LLM
-                would: a plain black and white markdown table, long, hard to glance at, with no
-                story in it. The answers were headed into slides and reports, and a table travels
+                would: a plain black and white markdown table, long and hard to glance
+                at, with no story in it. The answers were headed into slides and reports, and a table travels
                 badly. Version one is below, recreated from the study's own numbers.
               </CaseStudyBody>
               <DialogueVersionTable />
@@ -360,60 +361,24 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
-            <Section id="one-structure">
-              <H2>Every answer gets the same five parts, in the same order</H2>
-              <CaseStudyBody>
-                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart: the
-                chart is the finding drawn as a shape, and a reader should meet the interviews
-                before the shape. The order stays fixed so the shape is
-                learned once, and after that only the content changes. I study cognitive science,
-                so order is a memory problem: attention belongs on the answer, not on relearning
-                the layout.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="anatomy"
-                title="Study chat answer card with numbered callouts for summary through follow-ups"
-                assetId="D-08"
-                wrapRaster={wrap}
-                frameLabel="One structure: the same five parts in the same order on every answer, so the shape is learned once."
-              />
-            </Section>
-
-            <Section id="clips">
-              <H2>Every quote opens the recording at the second it was said</H2>
-              <CaseStudyBody>
-                A quote without a timestamp sends the reader hunting through the recording, and a
-                quote that cannot be checked asks to be trusted again. The player opens at the
-                second, with the transcript in sync, so the line can be verified in one click. The
-                cost is context: a clip that starts mid-thought can mislead, so the transcript
-                stays visible.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="clip-player"
-                title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
-                assetId="D-10"
-                wrapRaster={wrap}
-                frameLabel="Solution: clip starts at 01:38, on the line about the card that failed, so the quote can be checked in one click"
-              />
-              <CaseStudyBody>
-                Ruled out: a quote card that stops at the speaker's name. It scans faster, and it
-                leaves a claim with no way back to the recording.
-              </CaseStudyBody>
-            </Section>
-
             <Section id="chart-library">
               <H2>Carbon's rules, a bent palette, and a gate Carbon does not have</H2>
               <CaseStudyBody>
-                The chart rules lean on IBM Carbon's data visualisation guidance, named here
+                The chart rules lean on IBM Carbon's data visualization guidance, named here
                 because the page uses it. Bars start at zero: the drop-off bars and the segment
                 bars both sit on a zero baseline. A line may crop instead: the sentiment line runs
-                2.4, 3.1, 3.6 across three rounds, and its axis crops to the climb. Values are
-                labelled on the marks, so no chart carries a legend. The sentence above a chart is
-                the answer itself, and the peak is annotated in words, the largest drop, without
-                covering any data.
+                2.4, 3.1, 3.6 across the study, and its axis crops to the climb. Values are
+                labeled on the marks, so no shipped chart carries a legend. The sentence above a
+                chart is the answer itself, and the peak is annotated in words, the largest drop,
+                without covering any data.
               </CaseStudyBody>
               <CaseStudyBody>
-                Two things depart from Carbon. Its categorical palette runs to 14 colours; these
+                A research team reads a chart on its way into a deck, in seconds, often on a
+                projector across a room. What they need to see is the step that matters and the
+                count behind it, with nothing to decode first. These rules serve that read.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                Two things depart from Carbon. Its categorical palette runs to 14 colors; these
                 charts stay on stone neutrals with one cherry mark on the step or group that
                 matters. And Carbon has no rule for whether a chart should exist at all. Here the
                 evidence count decides that, which is the thin data rule further down. The library
@@ -441,13 +406,53 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
+            <Section id="one-structure">
+              <H2>Every answer gets the same five parts, in the same order</H2>
+              <CaseStudyBody>
+                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart: the
+                chart is the finding drawn as a shape, and a reader should meet the interviews
+                before the shape. The order stays fixed so the shape is
+                learned once, and after that only the content changes. I study cognitive science,
+                so order is a memory problem: attention belongs on the answer.
+              </CaseStudyBody>
+              <ProductFigureBlock
+                scenario="anatomy"
+                title="Study chat answer card with numbered callouts for summary through follow-ups"
+                assetId="D-08"
+                wrapRaster={wrap}
+                frameLabel="One structure: the same five parts in the same order on every answer, so the shape is learned once."
+              />
+            </Section>
+
+            <Section id="clips">
+              <H2>Every quote opens the recording at the second it was said</H2>
+              <CaseStudyBody>
+                A quote without a timestamp sends the reader hunting through the recording, and a
+                quote that cannot be checked asks to be trusted again. The player opens at the
+                second, with the transcript in sync, so the line can be verified in one click. The
+                tradeoff is context: a clip that starts mid-thought can mislead, so the transcript
+                stays visible.
+              </CaseStudyBody>
+              <ProductFigureBlock
+                scenario="clip-player"
+                title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
+                assetId="D-10"
+                wrapRaster={wrap}
+                frameLabel="Solution: clip starts at 01:38, on the line about the card that failed, so the quote can be checked in one click"
+              />
+              <CaseStudyBody>
+                Ruled out: a quote card that stops at the speaker's name. It scans faster, and it
+                leaves a claim with no way back to the recording.
+              </CaseStudyBody>
+            </Section>
+
             <Section id="thin-data">
               <H2>Say when the data is thin</H2>
               <CaseStudyBody>
                 A chart makes four interviews look like a trend. When evidence is thin, the
                 answer leads with the count and holds the chart back, because a count cannot look
                 like more than it is: 4 of 24 reads as thin at a glance, and a chart would not.
-                The cost is a weaker-looking answer, one I would rather show than borrow
+                That makes for a weaker-looking answer, one I would rather show than borrow
                 confidence it has not earned.
               </CaseStudyBody>
               <CaseStudyBody>
@@ -491,7 +496,7 @@ export function DialogueCaseStudyContent({
                 evidenceCount={24}
               />
               <CaseStudyBody>
-                Where thin starts, between 4 and 18, is a line I drew by feel. [PLACEHOLDER: why
+                Where thin starts, between 4 and 18: [PLACEHOLDER: why
                 the cutoff sits where it does] What would move it is just as open. [PLACEHOLDER:
                 what would change my mind about the cutoff] Until then, the count stays in the
                 lead, where a reader can argue with it.
@@ -503,7 +508,7 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Ask a follow-up and the question narrows, and the structure does not reset. The
                 filtered answer keeps the answer's sources, its chart, and every clip in one
-                drawer, so the thread from question to footage never breaks. The cost: the
+                drawer, so the thread from question to footage never breaks. The
                 drawer holds everything the full answer holds, in less room.
               </CaseStudyBody>
               <ProductFigureBlock
@@ -538,6 +543,16 @@ export function DialogueCaseStudyContent({
                 at nothing, so the largest drop hid in the detail. The plainer chart, one bar per
                 step and one cherry mark, carries less and proves more, and I reach for it first
                 now.
+              </CaseStudyBody>
+            </Section>
+            <Section id="the-win">
+              <H2>The card at the top is the win</H2>
+              <CaseStudyBody>
+                Version eight is the card this page opened on. It answers with the evidence
+                showing: the funnel, the 18 interviews behind it, the three who disagreed, and
+                the four that stay thin. Version one's table could only list the numbers. What
+                the eight versions bought is an answer a researcher can check as fast as they
+                can read it, and it still takes more room than I would like.
               </CaseStudyBody>
             </Section>
           </article>
