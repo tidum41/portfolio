@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ChartBar, Quotes, UsersThree } from "@phosphor-icons/react";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
@@ -36,10 +35,9 @@ type Props = {
 };
 
 /**
- * Round G: one query, then its answer, as a single figure. The evidence trail
- * (sources, chart, clip, evidence footer) stays inside the answer card, with
- * the trail steps marked by the Phosphor icon set the BruinLease case study
- * uses, in Dialogue stone with cherry on the chart step.
+ * Round G, trimmed in round H: one query, then its answer, as a single figure.
+ * The evidence trail (sources, chart, clip, evidence footer) stays inside the
+ * answer card in the answer's own order, with no extra markers.
  */
 export default function DialogueQueryMoment({
   frameLabel,
@@ -74,26 +72,11 @@ export default function DialogueQueryMoment({
             <p className="dp-summary dp-text-body" data-annotate-part="summary">
               {summary}
             </p>
-            <div className="dialogue-moment__step">
-              <span className="dialogue-moment__icon" aria-hidden>
-                <UsersThree />
-              </span>
-              <SourcesRow selectedParticipant={selectedParticipant} selectedTime={selectedTime} />
-            </div>
-            <div className="dialogue-moment__step dialogue-moment__step--chart">
-              <span className="dialogue-moment__icon" aria-hidden>
-                <ChartBar />
-              </span>
-              <ChartVizCard title={chartTitle} caption={chartCaption}>
-                <ChartBarList rows={rows} max={max} fillMode={fillMode} />
-              </ChartVizCard>
-            </div>
-            <div className="dialogue-moment__step">
-              <span className="dialogue-moment__icon" aria-hidden>
-                <Quotes />
-              </span>
-              <ClipCard clip={clip} />
-            </div>
+            <SourcesRow selectedParticipant={selectedParticipant} selectedTime={selectedTime} />
+            <ChartVizCard title={chartTitle} caption={chartCaption}>
+              <ChartBarList rows={rows} max={max} fillMode={fillMode} />
+            </ChartVizCard>
+            <ClipCard clip={clip} />
           </StudyChatShell>
         </div>
       </DialogueRachelFrame>

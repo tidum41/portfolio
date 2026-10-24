@@ -38,6 +38,16 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 
 - One unit per figure: a filtered answer restates its own subset count in the same unit across the search line, the evidence footer, and the clips line, and that count matches the coverage figure for the same finding.
 
+## 2026-10-23 (round H)
+
+- The hero is one full-width query-answer moment: question, search step, summary, sources, then the funnel beside the coverage split and counter-evidence, then a clip beside the thin slice (4 of 24), then follow-ups. Supporting evidence and counter-evidence share one card; nothing in the hero may invent a number.
+- Query-answer moments carry no icon rail or step markers; the parts sit in the answer's own order.
+- No chart, value, label or card may be cut off at 1440, 1024, 768, 390 or 360 in either theme; the only sideways overflow allowed is an intentional scroll row.
+- On mobile the source chips are a single row that scrolls sideways (no wrap, no stack), and the search step is tightened (shorter found label, smaller padding and type) so it wraps to at most two lines.
+- Counter-evidence quotes wrap on mobile instead of ellipsising.
+- The lead-answer comparison stacks at 940px and below (chosen first), because three squeezed panels fall under the readable scale floor and clip; three columns resume at 941px and up.
+- The search step's default found label is the short form ("found 18 moments"); a scoped label (the drawer's "address moments") still names its step.
+
 ## 2026-10-23 (round G)
 
 - The page opens by splitting what Dialogue is, the problem, why it was hard, and the role into separate claim headings, and a lead line after the hero points at the final answer before the first section.
