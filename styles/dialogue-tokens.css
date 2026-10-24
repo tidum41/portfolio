@@ -14,7 +14,9 @@
  * allowed only in this file.
  */
 
-.dialogue-product-root {
+.dialogue-product-root,
+.dialogue-lead-answer,
+.dialogue-lib {
   /* ---------------------------------------------------------------
    * Layer 1. DS raw values
    * ------------------------------------------------------------- */
@@ -25,6 +27,7 @@
   --ds-white: #fff;
   --ds-black: #000;
   --ds-stone-900: #1c1917;
+  --ds-stone-100: #f5f5f4;
   --ds-stone-600: #57534d;
   --ds-stone-500: #79716b;
   --ds-stone-400: #a6a09b;
@@ -105,12 +108,13 @@
   --dp-warn-fg: var(--ds-amber-700);
 
   --dp-funnel-track: var(--ds-paper-100);
-  --dp-funnel-bar: var(--ds-stone-400);
-  --dp-funnel-bar-cart: var(--ds-stone-300);
   --dp-funnel-bar-focal: var(--dp-brand);
   --dp-funnel-bar-dark: var(--ds-stone-600);
 
   --dp-anatomy-line: var(--ds-stone-300);
+  /* Callout labels are 14px so they stay 13px or more after the figure scales (about 0.94 at 1440). */
+  --dp-anatomy-label-size: 14px;
+  --dp-anatomy-label-leading: 20px;
 
   --text-body-size: var(--ds-text-sm);
   --text-body-leading: var(--ds-text-body-leading);
@@ -172,26 +176,23 @@
   --dp-figure-surface-problem: var(--figure-well, var(--dp-well-fallback));
   --dp-figure-surface-solution: var(--figure-well, var(--dp-well-fallback));
 
-  /* 2. Chart palette: one brand focal mark on a stone ramp, one finding per
-   *    chart (design/briefs/dialogue-chart-spec.md). The DS chart-1..5 set is
-   *    kept for reference only. */
+  /* 2. Chart palette: cherry for the highlighted mark, stone-500 for every
+   *    muted data fill (4.1:1 on the paper-100 track), stone-600 as the
+   *    alternate for adjacent stacked segments. Stone-200/300/400 are tracks,
+   *    gridlines and baselines only, never data fills (3:1 rule). One finding
+   *    per chart (design/briefs/dialogue-chart-spec.md). */
   --dp-chart-focal: var(--dp-brand);
   --dp-chart-track: var(--ds-paper-100);
   --dp-chart-gridline: color-mix(in srgb, var(--ds-stone-200) 60%, transparent);
   --dp-chart-baseline: var(--ds-stone-200);
-  --dp-chart-line: var(--ds-stone-600);
-  --dp-chart-ramp-1: var(--ds-stone-200);
-  --dp-chart-ramp-2: var(--ds-stone-300);
-  --dp-chart-ramp-3: var(--ds-stone-400);
-  --dp-chart-ramp-4: var(--ds-stone-500);
-  --dp-chart-ramp-5: var(--ds-stone-600);
+  --dp-chart-line: var(--dp-chart-muted);
+  --dp-chart-muted: var(--ds-stone-500);
+  --dp-chart-muted-alt: var(--ds-stone-600);
+  /* Second series in a dense chart: stone-300 fill with a 1px stone-500 outline (3:1 by outline). */
+  --dp-chart-series-alt-fill: var(--ds-stone-300);
+  --dp-chart-seg-label: var(--ds-white);
   --dp-chart-label-color: var(--ds-stone-600);
   --dp-chart-value-color: var(--ds-stone-900);
-  --dp-chart-ds-1: var(--ds-cherry-300);
-  --dp-chart-ds-2: var(--ds-blue-200);
-  --dp-chart-ds-3: var(--ds-orange-300);
-  --dp-chart-ds-4: var(--ds-amber-200);
-  --dp-chart-ds-5: var(--ds-lime-200);
 
   /* 3. Citation pill states. The DS shows no citation pills. */
   --dp-pill-selected-bg: color-mix(in srgb, var(--dp-brand) 12%, transparent);
@@ -222,8 +223,59 @@
   /* 8. Letterbox behind the interview still: black, so the player is black edge to edge. */
   --dp-still-letterbox: var(--ds-black);
 
-  /* 9. Anatomy callout numbering, lines and markers. An annotation layer, not
+  /* 9. Compare surfaces. The DS card (paper-10) and quote (paper-50) fills sit
+   *    within about 4% lightness of the figure well, so the three specimens
+   *    blur into the frame in light mode. The compare card uses white with a
+   *    DS border, and quote rows use paper-100. Figures stay light in dark
+   *    mode, so the same fills hold in both themes. */
+  --dp-compare-surface: var(--ds-white);
+  --dp-compare-quote-bg: var(--ds-paper-100);
+
+  /* 10. Anatomy callout numbering, lines and markers. An annotation layer, not
    *    product UI. Stone tokens only. */
   --dp-anatomy-marker-bg: var(--ds-paper-100);
   --dp-anatomy-marker-fg: var(--ds-white);
+
+  /* 11. Video player chrome, from the Paper export (node 597-0). The DS has no
+   *    media controls. Glass fill, rings, shadows and the bottom gradient are
+   *    the Paper values expressed as black or white at the same opacity. The
+   *    time and skip-label sizes are Paper's 13px and 8px. */
+  --dp-player-glass: color-mix(in srgb, var(--ds-white) 10%, transparent);
+  --dp-player-ring-bar: color-mix(in srgb, var(--ds-white) 5%, transparent);
+  --dp-player-ring-frame: color-mix(in srgb, var(--ds-white) 15%, transparent);
+  --dp-player-bar-outline: color-mix(in srgb, var(--ds-black) 10%, transparent);
+  --dp-player-bar-shadow: color-mix(in srgb, var(--ds-black) 15%, transparent);
+  --dp-player-text-shadow: color-mix(in srgb, var(--ds-black) 15%, transparent);
+  --dp-player-track: color-mix(in srgb, var(--ds-white) 20%, transparent);
+  --dp-player-track-ring: color-mix(in srgb, var(--ds-black) 5%, transparent);
+  --dp-player-gradient: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ds-black) 30%, transparent) 50%,
+    color-mix(in srgb, var(--ds-black) 50%, transparent) 100%
+  );
+  --dp-player-time-size: 13px;
+  --dp-player-skip-label-size: 8px;
+
+  /* 12. Transcript header is 16/24 at weight 500 in Paper; the DS body is 14. */
+  --dp-transcript-title-size: 16px;
+  --dp-transcript-title-leading: 24px;
+  /* 13. Action rows (the Add to my plan button) sit one 16px stack step below body copy. */
+  --dp-action-gap: 16px;
+
+  /* 14. Full-answer lead paragraph steps up to the 16/24 already used for the
+   *    transcript title, so the answer reads as the hero of the figure. */
+  --dp-lead-size: 16px;
+  --dp-lead-leading: 24px;
+
+  /* 15. Light mode: chart cards separate from the figure well with a 1px
+   *    stone-200 border, the DS border, rather than a new fill. */
+  --dp-chart-card-border: var(--ds-stone-200);
+
+  /* 15b. Chart library frame padding. The chart card inside takes the frame
+   *    radius minus this padding, so the two corners are concentric. */
+  --dp-lib-pad: 8px;
+
+  --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
+    0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
 }

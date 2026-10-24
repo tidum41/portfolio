@@ -36,6 +36,30 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 - Changed: full story and copy rewrite in first person (claim headings in sentence case, a why and its cost per decision, the missing customers admitted in the body, cognitive science used once, in the structure section). Eyebrow now matches the metadata dates and the subtitle says what the work is. Chart library cut to the drop off pair only; groups and change over sessions pairs removed, coverage moved into thin data as its own captioned figure. The repeated anatomy list is cut, the anatomy figure and the hero now carry the standard caption, and the Limit line is replaced by a text only Reflection section, "What I did not solve". The dead outcome margin rule is removed so the section gap keeps one owner. STORY-PRINCIPLES.md and AI-TELLS.md gained the missing tests: cost in the same breath as the win, admit what was not had, count steps and options instead of metrics, "not X but Y" at most once per page.
 - Why: Mudit approved the round 1 and round 2 review fixes on Oct 23. Verified in a local production build with Playwright at 1440 and 390, light and dark: every section gap measures exactly 48px, figure left edges sit on the text column at both widths, the pair stacks at 390 with its notes below both charts, and no horizontal overflow. On this base the hero already used the dark well token and the trio line already sat above its figure, so those two fixes needed no code.
 - Preview: PREVIEW_URL (deployment of the story build commit on review/dialogue-story-b, merged into review/dialogue-canvas)
+## r24, Oct 23 2026 (text chart reverted, library and anatomy fixes)
+- Changed: designed charts back in product figures (r23 palette kept), hero hover restored, question bubbles on the lead compare with a bar chart on the chosen card, anatomy zoomed with real-size labels, lightbox fits the viewport, Paper avatar on Dialogue transcript rows, Phosphor pros and cons icons, a busier first draft for the dropoff pair, new chart title treatment, equal-height concentric library frames.
+- Why: Mudit's r24 notes, ledger DLG-99 to DLG-113.
+- Preview: none, local build only (no [preview] tag)
+
+## r23, Oct 23 2026 (color pass)
+- Changed: chart fills limited to stone-500 plus cherry, stacked bars on stone-500 and stone-600 with white labels, 1px stone-200 card border in light mode, product figures show Dialogue's own text chart (dark block and markdown table) instead of designed charts.
+- Why: Mudit's r23 color pass, ledger DLG-95 to DLG-98.
+- Preview: none, local build only (no [preview] tag)
+
+## r22, Oct 23 2026 (Agentation notes)
+- Changed: skip labels centred in their circles, chart library judged by pro and con lists instead of status chips, full answer gets a lead, supporting and quote hierarchy. No chart colors changed.
+- Why: Mudit's r22 notes, ledger DLG-92 to DLG-94.
+- Preview: none, local build only (no [preview] tag)
+
+## r20, Oct 23 2026 (Agentation notes on 160151d)
+- Changed: anatomy callouts scale with the UI and the composer is DS height, interview player rebuilt from the Paper export with a mirrored skip back, chart library pairs now richer first draft versus simplified chosen, dot plot and stacked bar primitives for variety, DS button for Add to my plan.
+- Why: Mudit's r20 notes, ledger DLG-86 to DLG-90.
+- Preview: none, local build only (no [preview] tag)
+
+## r19, Oct 22 2026 (Agentation notes)
+- Changed: lead compare no longer clips and gets a calmer surface (two extension tokens), figures capped at 640px by scaling, chart titles on their own row, chart library near-miss specimens with numbered markers, thin-data "Add to my plan" copies a prompt, ClipCard accent bar removed, hero footer expand icon dropped.
+- Why: Mudit's r19 notes, ledger DLG-79 to DLG-85 (his DLG-70 to 78).
+- Preview: none, local build only (no [preview] tag)
 
 ## r18, Oct 22 2026 (polish)
 - Changed: 390 anatomy shows all five parts, hero search step within two lines (chat column +24px, shorter copy at phone width), hero "-38% drop" tooltip back, transcript player black edge to edge, balanced wrap in the amber warning.

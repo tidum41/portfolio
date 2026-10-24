@@ -21,6 +21,8 @@ export default function AnatomyStructureFigure() {
 
     const measure = () => {
       const rootRect = root.getBoundingClientRect();
+      const k = root.offsetWidth > 0 ? rootRect.width / root.offsetWidth : 1;
+      const rel = (n: number) => n / k;
       const card = root.querySelector<HTMLElement>(".dp-study-chat");
       const diagram = root.querySelector<HTMLElement>(".dp-anatomy__diagram");
       const rail = root.querySelector<HTMLElement>(".dp-anatomy__rail");
@@ -33,8 +35,8 @@ export default function AnatomyStructureFigure() {
         return;
       }
 
-      const cardLeft = card.getBoundingClientRect().left - rootRect.left;
-      const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout")];
+      const cardLeft = rel(card.getBoundingClientRect().left - rootRect.left);
+      const calloutNodes = [...root.querySelectorAll<HTMLElement>(".dp-anatomy__callout-label")];
 
       const nextCallouts: CalloutLayout[] = [];
       const nextLines: LeaderLine[] = [];
@@ -45,10 +47,9 @@ export default function AnatomyStructureFigure() {
         if (!target || !callout) return;
         const t = target.getBoundingClientRect();
         const c = callout.getBoundingClientRect();
-        const y = t.top + t.height / 2 - rootRect.top;
+        const y = rel(t.top + t.height / 2 - rootRect.top);
         const x2 = cardLeft - 1;
-        let x1 = c.right - rootRect.left + 6;
-        if (x2 - x1 < 40) x1 = x2 - 44;
+        const x1 = rel(c.right - rootRect.left) + 8 / k;
         nextCallouts[i] = { top: y };
         nextLines.push({ y, x1, x2 });
       });
@@ -62,6 +63,8 @@ export default function AnatomyStructureFigure() {
     requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
     ro.observe(root);
+    const clip = root.closest(".dp-scaled-viewport__clip");
+    if (clip) ro.observe(clip);
     window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
@@ -94,8 +97,10 @@ export default function AnatomyStructureFigure() {
             data-annotate-part={`callout-${i + 1}`}
             style={callouts[i] ? { top: callouts[i].top } : undefined}
           >
-            <span className="dp-anatomy__num">{i + 1}</span>
-            <span className="dp-anatomy__name">{label}</span>
+            <span className="dp-anatomy__callout-label">
+              <span className="dp-anatomy__num">{i + 1}</span>
+              <span className="dp-anatomy__name">{label}</span>
+            </span>
           </div>
         ))}
       </div>

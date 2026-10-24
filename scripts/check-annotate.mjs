@@ -113,14 +113,14 @@ if (expectProd) {
 
   await annotate(
     page,
-    "chart bar",
-    '[data-annotate="dialogue-chart-groups-chosen/bar-new-customers"], [data-annotate^="dialogue-chart-groups-chosen/bar-"]:not([data-annotate*="bar-row"]):not([data-annotate*="bar-label"]):not([data-annotate*="bar-track"]):not([data-annotate*="bar-value"])',
+    "chart dot",
+    '[data-annotate^="dialogue-chart-groups-chosen/dot-"]:not([data-annotate*="dot-row"]):not([data-annotate*="dot-label"]):not([data-annotate*="dot-plot"]):not([data-annotate*="dot-value"]):not([data-annotate*="dot-axis"])',
     await page.evaluate(() =>
-      [...document.querySelectorAll('[data-annotate^="dialogue-chart-groups-chosen/bar-"]')]
+      [...document.querySelectorAll('[data-annotate^="dialogue-chart-groups-chosen/dot-"]')]
         .map((e) => e.getAttribute("data-annotate"))
-        .find((a) => !/bar-(row|label|track|value)-/.test(a)),
+        .find((a) => !/dot-(row|label|plot|value|axis)/.test(a)),
     ),
-    "Chart bar sits too close to its value label",
+    "Chart dot sits too close to its value label",
   );
   await annotate(
     page,
@@ -173,7 +173,7 @@ if (expectProd) {
   await page.waitForTimeout(500);
   const md = await page.evaluate(() => navigator.clipboard.readText());
   console.log("\n----- copied markdown -----\n" + md + "\n---------------------------\n");
-  log(/chart-groups-chosen\/bar-/.test(md), "markdown names the chart bar by data-annotate");
+  log(/chart-groups-chosen\/dot-/.test(md), "markdown names the chart dot by data-annotate");
   log(/hero\/clip-quote-priya-k/.test(md), "markdown names the quote row by data-annotate");
   log(/dialogue-thin-data\/low-signal/.test(md), "markdown names the thin-data warning by data-annotate");
   log(/dialogue-hero-lightbox\/clip-quote-priya-k/.test(md), "markdown names the lightbox element by data-annotate");

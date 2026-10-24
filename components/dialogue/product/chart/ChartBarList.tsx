@@ -15,6 +15,8 @@ type Props = {
   fillMode?: "index" | "magnitude";
   note?: ReactNode;
   className?: string;
+  /** Quarter gridlines over the tracks (the analyst's first draft). */
+  gridlines?: boolean;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -24,11 +26,16 @@ export default function ChartBarList({
   fillMode = "index",
   note,
   className,
+  gridlines = false,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
+  const hasDetail = rows.some((r) => r.detail);
 
   return (
-    <div className={["dp-chart-root dp-chart-bars", className].filter(Boolean).join(" ")}>
+    <div
+      className={["dp-chart-root dp-chart-bars", hasDetail ? "dp-chart-bars--detail" : "", className].filter(Boolean).join(" ")}
+    >
+      {gridlines ? <span className="dp-chart-bars__grid" aria-hidden data-annotate-part="gridlines" /> : null}
       {rows.map((row, i) => {
         const widthPct = Math.max(0, Math.min(100, (row.value / max) * 100));
         const fill =
@@ -60,6 +67,11 @@ export default function ChartBarList({
             >
               {row.display ?? String(row.value)}
             </span>
+            {hasDetail ? (
+              <span className="dp-chart-bars__detail" data-annotate-part={`bar-detail-${annotateSlug(row.label)}`}>
+                {row.detail ?? ""}
+              </span>
+            ) : null}
           </div>
         );
       })}

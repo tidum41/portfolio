@@ -1,3 +1,12 @@
+export const LEAD_COMPARE_QUESTION = "How many participants dropped off at shipping address in checkout?";
+/** Mobile-only funnel, as shown in the full answer figure. */
+export const MOBILE_FUNNEL_STEPS = [
+  { label: "Cart", pct: 100 },
+  { label: "Address", pct: 48 },
+  { label: "Delivery", pct: 41 },
+  { label: "Payment", pct: 33 },
+] as const;
+
 export const CHECKOUT_QUESTION = "Where did people drop off in checkout?";
 
 export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";

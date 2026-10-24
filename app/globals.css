@@ -880,9 +880,11 @@ html[data-theme="dark"] .project-image {
 }
 
 /* ─── Case study 3-column layout ────────────────────────────────────
-   Desktop  : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
-   Tablet   : [TOC 160px] [content 1fr] — right spacer drops
-   Mobile   : [content 1fr] — TOC hidden
+   Desktop (≥1200px) : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
+   Below 1200px      : [content max-750px] centered — TOC hidden, back
+                       control lives inside .cs-content (see .cs-mobile-back)
+   Mobile (≤767px)   : [content 1fr] — TOC hidden
+   The 1200px cutoff matches rachelchen.tech's lg breakpoint.
    ─────────────────────────────────────────────────────────────────── */
 .cs-layout {
   max-width: var(--grid-max-w);
@@ -900,12 +902,21 @@ html[data-theme="dark"] .project-image {
   align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
-/* Tablet: right spacer col gone, TOC gets fixed 160px */
-@media (max-width: 1100px) {
+/* Below 1200px: TOC aside hidden. The content column stays capped at
+   --content-max-w and centered in the middle track (the same centering
+   .cs-layout--no-toc uses); the in-content back control takes over from
+   the aside's desktop back button (see the .cs-mobile-back rule below
+   the back-button section, which must come after its display:none base). */
+@media (max-width: 1199px) {
   .cs-layout {
-    grid-template-columns: 160px minmax(0, 1fr);
+    grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   }
-  .cs-aside { padding-right: var(--space-2); }
+  .cs-layout > .cs-content {
+    grid-column: 2;
+  }
+  .cs-aside {
+    display: none !important;
+  }
 }
 /* Mobile: single column. Aside (desktop TOC) is hidden; the back control
    lives inside .cs-content so it shares the hero media's left edge. */
@@ -920,6 +931,9 @@ html[data-theme="dark"] .project-image {
   }
   .cs-layout > * {
     min-width: 0;
+  }
+  .cs-layout > .cs-content {
+    grid-column: 1;
   }
   .cs-aside {
     display: none !important;
@@ -1072,6 +1086,23 @@ html[data-theme="dark"] .project-image {
   }
   .cs-hero-title {
     transform: translateX(var(--cs-align-d-title, 0px));
+  }
+}
+
+/* Below 1200px the aside (and its .cs-back-desktop) is hidden, so the
+   in-content back control is the reachable back button at every width
+   under the breakpoint, not just on mobile. It keeps the desktop back
+   nudge at ≥768px; the ≤767px block below swaps in the mobile nudge. */
+@media (max-width: 1199px) {
+  .cs-mobile-back {
+    display: block;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+  }
+  .cs-back-mobile {
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateX(var(--cs-align-d-back, 0px));
   }
 }
 
@@ -1524,27 +1555,44 @@ html[data-theme="dark"] .project-image {
   padding: 60px 24px 24px;
   box-sizing: border-box;
 }
+/* Icon-only close, matching the case study back button (CaseStudyTOC):
+   20px icon, strokeWidth 2, round caps/joins, stroke currentColor,
+   colour 0.2s ease, 44px hit area, global :focus-visible ring.
+   The backdrop is always near-black, so the colours are the back
+   button's dark-theme token values (rest --color-text-tertiary
+   #8A8A8A, hover --color-text-primary #EDEDEC); the light-theme
+   values (#6C6C6C to #2E2E2E) would be unreadable on it.
+   Positioned against the fixed backdrop, so it sits in the top-right
+   corner of the viewport, above the site header (header z-index 40,
+   backdrop z-index 100000), fully inside the viewport at 390px. */
 .cs-lightbox-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   min-height: 44px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ededec;
-  font-family: var(--font-sans-medium);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card);
+  background: none;
+  color: #8a8a8a;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: none;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-lightbox-close:hover { color: #ededec; }
+}
+.cs-lightbox-close:focus-visible {
+  outline: 2px solid #ededec;
+  outline-offset: 3px;
 }
 .cs-lightbox-media {
   border-radius: var(--radius-control);
@@ -1583,6 +1631,10 @@ body:has(.cs-lightbox-backdrop) .cs-back-desktop {
   cursor: zoom-in;
   border-radius: inherit;
 }
+.dp-zoom:has([data-interactive]) {
+  cursor: zoom-in;
+}
+.dp-zoom:has([data-interactive]) .dp-zoom__trigger,
 html:has(#agentation-cursor) .dp-zoom__trigger {
   pointer-events: none;
 }
@@ -1602,7 +1654,7 @@ html:has(#agentation-cursor) .dp-zoom__trigger {
 .cs-layout.cs-layout--no-toc .cs-content {
   grid-column: 2;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1199px) {
   .cs-layout.cs-layout--no-toc {
     grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
   }
@@ -2475,8 +2527,11 @@ agentation-toolbar,
   flex-direction: column;
   padding: 12px;
   border-radius: var(--radius-control);
-  background: var(--dp-surface, #fcfbf9);
+  border: 1px solid var(--dp-border);
+  background: var(--dp-compare-surface);
   box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
 }
 .dialogue-lead-answer__panel--selected .dialogue-lead-answer__option-card {
   outline: 2px solid rgb(214 70 140 / 55%);
@@ -2490,6 +2545,7 @@ agentation-toolbar,
 .dialogue-lead-answer__answer {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 .dialogue-lead-answer__answer--structured .dp-study-chat {
   height: 100%;
@@ -2512,7 +2568,7 @@ agentation-toolbar,
   gap: 8px;
 }
 .dialogue-lead-answer__answer .dp-study-chat {
-  background: var(--dp-surface, #fcfbf9);
+  background: var(--dp-compare-surface);
 }
 .dialogue-lead-answer__answer .dp-quote-item {
   padding: 12px;
@@ -2766,51 +2822,89 @@ agentation-toolbar,
   color: var(--color-text-primary);
 }
 .dialogue-lib__verdict {
-  margin: 4px 0 16px;
-  font-size: 15px;
-  line-height: 1.5;
-  font-weight: 400;
+  margin: 16px 0 0;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  font-weight: 500;
   color: var(--color-text-primary);
   max-width: 640px;
+}
+.dialogue-lib__reason {
+  margin: 4px 0 0;
+  max-width: 640px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
 }
 .dialogue-lib__pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  column-gap: 16px;
+  margin-top: 12px;
   align-items: stretch;
 }
+.dialogue-lib__col {
+  min-width: 0;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+}
 .dialogue-lib__specimen {
-  position: relative;
   margin: 0;
   min-width: 0;
-  padding: 40px 12px 12px;
-  border-radius: var(--radius-control);
+  display: flex;
+  flex-direction: column;
+  padding: var(--dp-lib-pad);
+  border-radius: var(--dp-radius-control);
   background: var(--dp-figure-surface-system);
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
-.dialogue-lib__tag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 2px 8px;
-  border-radius: var(--radius-chip, 8px);
-  font-size: 11px;
-  line-height: 1.4;
+.dialogue-lib__spec-name {
+  margin: 12px 0 8px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
   font-weight: 500;
-  color: #44403c;
-  background: rgb(28 25 23 / 8%);
+  color: var(--color-text-primary);
 }
-.dialogue-lib__specimen[data-status="chosen"] .dialogue-lib__tag {
-  background: transparent;
-  color: #b43f7f;
-  box-shadow: inset 0 0 0 1px #b43f7f;
+.dialogue-lib__points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dialogue-lib__points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+.dialogue-lib__mark {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: calc((var(--text-meta-leading) - 16px) / 2);
+}
+.dialogue-lib__mark[data-kind="pro"] {
+  color: var(--dp-brand);
+}
+.dialogue-lib__mark[data-kind="con"] {
+  color: var(--color-text-tertiary);
 }
 .dialogue-lib__chart {
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
@@ -2819,11 +2913,14 @@ agentation-toolbar,
   min-width: 0;
 }
 .dialogue-lib__chart .dp-chart-viz-card {
+  flex: 1 1 auto;
   background: var(--dp-surface, #fcfbf9);
   border-color: transparent;
-  flex: 1;
-  /* Concentric with the specimen frame: control radius minus the 12px specimen padding. */
-  border-radius: calc(var(--dp-radius-control) - 12px);
+  /* Concentric: inner radius is the frame radius minus the frame padding. */
+  border-radius: calc(var(--dp-radius-control) - var(--dp-lib-pad));
+}
+html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
+  border-color: var(--dp-chart-card-border);
 }
 .dialogue-lib__tech {
   margin-top: 12px;
@@ -2841,108 +2938,6 @@ agentation-toolbar,
 }
 .dialogue-lib__tech span {
   font-weight: 500;
-}
-.dialogue-lib__bubbles {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-}
-.dialogue-lib__bubble-cell,
-.dialogue-lib__dot-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.dialogue-lib__bubble {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #d6d3d1;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--dp-ink, #1c1917);
-}
-.dialogue-lib__bubble-cell:nth-child(2) .dialogue-lib__bubble {
-  background: #fe93ce;
-}
-.dialogue-lib__bubble-label {
-  font-size: 11px;
-  line-height: 1.2;
-  color: var(--dp-muted, #79716b);
-}
-.dialogue-lib__donut {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 128px;
-}
-.dialogue-lib__svg-label {
-  font-size: 11px;
-  fill: #57534d;
-}
-.dialogue-lib__axis {
-  stroke: #a8a29e;
-  stroke-width: 1;
-}
-.dialogue-lib__dist {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 128px;
-}
-.dialogue-lib__dist-bar {
-  fill: #79716b;
-}
-.dialogue-lib__timeline-dot {
-  fill: #79716b;
-}
-html[data-theme="dark"] .dialogue-lib__tag {
-  background: rgba(255, 255, 255, 0.1);
-  color: #d6d3d1;
-}
-html[data-theme="dark"] .dialogue-lib__specimen[data-status="chosen"] .dialogue-lib__tag {
-  background: transparent;
-  color: #fe93ce;
-  box-shadow: inset 0 0 0 1px #fe93ce;
-}
-.dialogue-lib__dots {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  padding: 12px 0 4px;
-}
-.dialogue-lib__dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #79716b;
-}
-.dialogue-lib__dot-value {
-  font-size: 11px;
-  line-height: 1;
-  color: var(--dp-ink, #1c1917);
-}
-.dialogue-lib__total {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0 4px;
-}
-.dialogue-lib__total-bar {
-  display: block;
-  height: 8px;
-  width: 100%;
-  border-radius: 2px;
-  background: #79716b;
-}
-.dialogue-lib__total-value {
-  font-size: 11px;
-  line-height: 1.2;
-  color: var(--dp-ink, #1c1917);
 }
 @media (max-width: 600px) {
   .dialogue-lib {
@@ -3154,4 +3149,20 @@ html[data-theme="dark"] {
   --dp-chart-min-width: 0px;
   --dp-chart-label-width: 72px;
   min-width: 0;
+}
+
+/* Restore r24: at 360 the bar charts' fixed label column plus the 60px track
+   floor pushed the value column past the card edge. Cap the label column and
+   lower the track floor on the smallest phones only; chart.css stays the
+   approved b056865 file. */
+@media (max-width: 400px) {
+  .dialogue-case-study .dp-chart-bars__label {
+    width: min(var(--dp-chart-label-width), 80px);
+  }
+  .dialogue-case-study .dp-chart-bars__track {
+    min-width: 24px;
+  }
+  .dialogue-case-study .dp-chart-bars__grid {
+    left: calc(min(var(--dp-chart-label-width), 80px) + var(--dp-chart-gutter));
+  }
 }

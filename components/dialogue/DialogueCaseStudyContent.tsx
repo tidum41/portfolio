@@ -436,6 +436,11 @@ export function DialogueCaseStudyContent({
                 The cost is a weaker-looking answer, one I would rather show than borrow
                 confidence it has not earned.
               </CaseStudyBody>
+              <CaseStudyBody>
+                So the thin answer ends with a next step. Add to my plan copies a ready-to-paste prompt
+                for the follow-up study. I put it there because people work out of generated docs and
+                idea docs, and the plan should travel with them instead of staying in the chat.
+              </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
                 title="Study chat answer that leads with the interview count and holds the chart back"

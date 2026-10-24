@@ -307,7 +307,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     name: "Evidence footer",
     Component: () => (
       <ProductRoot>
-        <EvidenceFooter count={18} expand />
+        <EvidenceFooter count={18} />
       </ProductRoot>
     ),
     x: 848, y: 3746, width: 448, height: 44,
