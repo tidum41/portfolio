@@ -43,7 +43,7 @@ export const SOURCES = [
   { participant: "Hannah L.", topic: "payment", time: "22:41" },
 ];
 
-export const FOLLOW_UPS = ["Address step only", "Compare to round 1"];
+export const FOLLOW_UPS = ["Address step only", "Compare to the first study"];
 
 export const CLIPS = [
   {
@@ -70,13 +70,13 @@ export const CLIPS = [
 ];
 
 export const SENTIMENT_LINE = {
-  title: "Sentiment climbs after autocomplete ships in round two.",
+  title: "Sentiment climbs after autocomplete ships.",
   points: [
     { label: "Round 1", value: 2.4 },
     { label: "Round 2", value: 3.1 },
     { label: "Round 3", value: 3.6 },
   ],
-  question: "How did sentiment shift across the 3 prototype rounds?",
+  question: "How did sentiment shift across the study?",
 };
 
 /** Segment comparison: same metric across participant groups (not a funnel). */
