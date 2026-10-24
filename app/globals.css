@@ -3025,6 +3025,73 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
   text-overflow: clip;
 }
 
+/* Round I: version one of the answer card, recreated as a plain markdown
+   table. Black and white on purpose: no brand color, no chart, just rows. */
+.dialogue-version-table {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 22px 24px;
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 14px;
+  color: #171412;
+  text-align: left;
+}
+
+.dialogue-version-table__question {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+}
+
+.dialogue-version-table__title {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+}
+
+.dialogue-version-table__title:first-of-type {
+  margin-top: 0;
+}
+
+.dialogue-version-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.dialogue-version-table__table th,
+.dialogue-version-table__table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid #e7e5e4;
+  font-weight: 400;
+  text-align: left;
+}
+
+.dialogue-version-table__table thead th {
+  color: #737373;
+  border-bottom: 1px solid #171412;
+}
+
+.dialogue-version-table__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dialogue-version-table__table .dialogue-version-table__num {
+  text-align: right;
+  padding-right: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .dialogue-version-table {
+    padding: 16px;
+  }
+}
+
 /* Round H: the comparison's chosen panel is narrow, and the funnel's default
    label column pushed its value column past the card edge. Shrink the chart
    to the panel, same treatment the moments got in the round G fix. */
@@ -3038,6 +3105,15 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
    row, the search step tightens so it wraps to at most two lines, and counter
    quotes wrap instead of ellipsising. */
 @media (max-width: 768px) {
+  /* Round I: in the live answer moments the chips wrap instead of scrolling,
+     so no name is ever cut mid word at the shell edge. Scaled product
+     figures keep the sideways scroll row below. */
+  .dialogue-case-study .dialogue-moment .dp-sources,
+  .dialogue-case-study .dialogue-hero-moment .dp-sources {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
   .dialogue-case-study .dp-sources {
     flex-wrap: nowrap;
     overflow-x: auto;

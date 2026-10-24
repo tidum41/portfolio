@@ -38,6 +38,15 @@ Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI ke
 
 - One unit per figure: a filtered answer restates its own subset count in the same unit across the search line, the evidence footer, and the clips line, and that count matches the coverage figure for the same finding.
 
+## 2026-10-23 (round I)
+
+- The story is the answer card's data viz, told non-linearly: the page opens on the finished card (version 8), rewinds to version 1, and walks the versions between. Four of the eight versions appear as figures: the table, paragraphs, quotes only, and the grouped answer. Every version states where it works and where it doesn't; the word "priority" never appears.
+- Version 1 (the markdown table) has no surviving asset in the repo. It is recreated faithfully from the study's own numbers (checkout funnel, segment resets) in plain black and white, and the recreation is listed in the round report. No invented numbers anywhere; 18/6, 4 of 24 and 64/31/22% stay exact.
+- The chart section cites IBM Carbon's data visualisation guidance inline: bars start at zero, lines may crop, values labelled on the marks (no legend), the answer sentence as the title, the peak annotated without covering data. Dialogue bends the palette (stone neutrals plus one cherry mark in place of Carbon's 14 colours) and adds a gate Carbon does not have: the evidence count decides whether a chart appears at all.
+- Restored r24 work is load-bearing: the interview player, the Paper avatar on transcript rows, Add to my plan, and the four-entry chart library must survive story rounds. A story rewrite may reframe sections around them, never remove them.
+- In the live answer moments (query moments and the hero) the source chips wrap at phone widths instead of scrolling, so no name is cut mid word at the shell edge. Scaled product figures keep the sideways-scrolling row.
+- The session and round count placeholders are retired by Mudit's instruction: the sentence is deleted and the card version count is stated as 8. The three unanswered placeholders stay visible (why the first version shipped without sources; why the cutoff sits where it does; what would change his mind about the cutoff).
+
 ## 2026-10-23 (round H)
 
 - The hero is one full-width query-answer moment: question, search step, summary, sources, then the funnel beside the coverage split and counter-evidence, then a clip beside the thin slice (4 of 24), then follow-ups. Supporting evidence and counter-evidence share one card; nothing in the hero may invent a number.
