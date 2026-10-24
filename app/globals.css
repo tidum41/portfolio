@@ -3150,3 +3150,19 @@ html[data-theme="dark"] {
   --dp-chart-label-width: 72px;
   min-width: 0;
 }
+
+/* Restore r24: at 360 the bar charts' fixed label column plus the 60px track
+   floor pushed the value column past the card edge. Cap the label column and
+   lower the track floor on the smallest phones only; chart.css stays the
+   approved b056865 file. */
+@media (max-width: 400px) {
+  .dialogue-case-study .dp-chart-bars__label {
+    width: min(var(--dp-chart-label-width), 80px);
+  }
+  .dialogue-case-study .dp-chart-bars__track {
+    min-width: 24px;
+  }
+  .dialogue-case-study .dp-chart-bars__grid {
+    left: calc(min(var(--dp-chart-label-width), 80px) + var(--dp-chart-gutter));
+  }
+}
