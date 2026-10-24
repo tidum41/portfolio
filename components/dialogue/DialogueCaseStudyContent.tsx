@@ -10,6 +10,7 @@ import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerC
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueQueryMoment from "@/components/dialogue/DialogueQueryMoment";
+import DialogueVersionTable from "@/components/dialogue/DialogueVersionTable";
 import DialogueHeroMoment from "@/components/dialogue/DialogueHeroMoment";
 import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -44,9 +45,9 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "what-dialogue-is", label: "Dialogue runs AI-moderated interviews for research teams" },
   {
     id: "problem",
-    label: "The chat could answer anything, but not say which interview said it",
+    label: "Researchers could see the transcripts and the data, but not chat with the insight",
   },
-  { id: "why-it-was-hard", label: "The hard part was never writing the answer" },
+  { id: "why-it-was-hard", label: "I grouped the answer before I touched its charts" },
   {
     id: "my-role",
     label: "I designed the study chat and owned the shape of its answers",
@@ -59,10 +60,10 @@ export const DIALOGUE_TOC_ITEMS = [
     id: "counter-evidence",
     label: "Three people had no trouble at the address step, and their quotes stay in the answer",
   },
-  { id: "the-comparison", label: "First I tried paragraphs, then quotes, then a structure" },
+  { id: "the-comparison", label: "Eight versions of the answer card, and the turns were grouping" },
   { id: "one-structure", label: "Every answer gets the same five parts, in the same order" },
   { id: "clips", label: "Every quote opens the recording at the second it was said" },
-  { id: "chart-library", label: "A chart only when the data asks for one" },
+  { id: "chart-library", label: "Carbon's rules, a bent palette, and a gate Carbon does not have" },
   { id: "thin-data", label: "Say when the data is thin" },
   {
     id: "full-answer",
@@ -219,14 +220,14 @@ export function DialogueCaseStudyContent({
           <article style={{ minWidth: 0 }}>
             <div style={{ marginBottom: "var(--dialogue-section-gap)" }}>
               <CaseStudyBody>
-                If you only read one answer here, read the last one:{" "}
-                <a href="#full-answer">a follow-up that keeps the evidence of the answer it came
-                from</a>
-                . Everything before it is how that answer got its shape.
+                That is the finished card, version eight of the answer. This page rewinds to{" "}
+                <a href="#problem">version one, a plain markdown table</a>. Everything after it
+                is how that answer got its shape.
               </CaseStudyBody>
               <CaseStudyBody>
-                The problem I could see was answers with no sources. The quieter problem: a chart
-                can sound certain on four interviews, and nothing in the answer said so.
+                One rule survived all eight versions: the evidence count decides whether a chart
+                appears at all. A chart can sound certain on four interviews, and nothing in the
+                answer said so.
               </CaseStudyBody>
             </div>
 
@@ -241,29 +242,30 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="problem">
-              <H2>The chat could answer anything, but not say which interview said it</H2>
+              <H2>
+                Researchers could see the transcripts and the data, but not chat with the insight
+              </H2>
               <CaseStudyBody>
-                A researcher could ask the chat a question and get a long, confident answer, and
-                the answer never said which interview it came from. I kept coming back to one
-                question: who said that? The chat could not answer it. The answers were headed into
-                slides and reports, where an untraceable claim has to be checked by hand or left
-                out.
+                Every interview came back as a recording and a transcript, and the study numbers
+                sat in tables. Using any of it meant reading everything yourself. The study chat
+                was built to answer across the set, and its first version answered the way any LLM
+                would: a plain black and white markdown table, long, hard to glance at, with no
+                story in it. The answers were headed into slides and reports, and a table travels
+                badly. Version one is below, recreated from the study's own numbers.
               </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="problem-paragraphs"
-                title="Study chat answer as paragraphs, with no source named for any claim"
-                frameLabel="Problem: a long answer with no source named, so nothing in it can be checked."
-              />
+              <DialogueVersionTable />
             </Section>
 
             <Section id="why-it-was-hard">
-              <H2>The hard part was never writing the answer</H2>
+              <H2>I grouped the answer before I touched its charts</H2>
               <CaseStudyBody>
-                A model can write a fluent answer from transcripts. The design problem sits around
-                the sentences: which interviews are behind a claim, how many there are, and where
-                a reader can hear the line. The first version shipped with none of that attached.
-                [PLACEHOLDER: why the first version shipped without sources] Until it is, a strong
-                answer and a thin one read exactly the same.
+                A model can write a fluent answer from transcripts, so writing was never the hard
+                part. The move was grouping: summary, sources, chart, clips, follow-ups, so every
+                claim sits next to the interviews behind it. I held off redesigning the data viz
+                until what existed had that structure. Quotes went first because the transcript
+                interaction was already built, so a quote could open the recording at the second
+                it was said. The first version shipped with the data and none of that attached.
+                [PLACEHOLDER: why the first version shipped without sources]
               </CaseStudyBody>
             </Section>
 
@@ -283,9 +285,8 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 I tested with Benjamin and Justin, and with students running mock interviews. I did
                 not have Dialogue customers to test with, and I will not pretend those sessions
-                were that. Across [PLACEHOLDER: count] sessions and [PLACEHOLDER: count] rounds,
-                the answer card went through [PLACEHOLDER: count] versions. The reaction was the
-                same in both rooms: people asked who said that before they would use an answer.
+                were that. The answer card went through 8 versions. The reaction was the same in
+                both rooms: people asked who said that before they would use an answer.
               </CaseStudyBody>
             </Section>
 
@@ -315,16 +316,15 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="the-comparison">
-              <H2>First I tried paragraphs, then quotes, then a structure</H2>
+              <H2>Eight versions of the answer card, and the turns were grouping</H2>
               <CaseStudyBody>
-                Each version answered the same question: where did people drop off in checkout?
-                Paragraphs prioritised sounding complete. The quote list prioritised the footage
-                itself. The structured answer prioritises being checked, and its cost is room.
-                That cost runs through the rest of this page.
+                Four of the eight versions are on this page: the table above, and the three below.
+                Each answered the same question, where did people drop off in checkout, and each
+                one works somewhere and fails somewhere else.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
-                heading="Three tries, one question"
-                subheading="The same question, answered in the order I tried them."
+                heading="Versions two, three and eight"
+                subheading="The same question, in the order I tried them."
                 question={CHECKOUT_QUESTION}
                 chosenId="structured"
                 annotateRaster={wrap}
@@ -332,25 +332,27 @@ export function DialogueCaseStudyContent({
                   {
                     id: "paragraphs",
                     label: "Wall of text",
-                    title: "Paragraphs",
+                    title: "Version two: paragraphs",
                     costLine:
-                      "Prioritised sounding complete, and nothing in it can be traced to a person.",
+                      "Where it works: it sounds complete, like an answer. Where it doesn't: nothing in it can be traced to a person.",
                     productScenario: "decision-paragraphs",
                     rasterAssetId: "D-04",
                   },
                   {
                     id: "quote-list",
                     label: "Quotes only",
-                    title: "Quote list",
-                    costLine: "Prioritised the footage itself, and the reader still counts by hand.",
+                    title: "Version three: quotes only",
+                    costLine:
+                      "Where it works: the footage is right there, unedited. Where it doesn't: the reader still counts by hand.",
                     productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
                   {
                     id: "structured",
                     label: "Answer + evidence",
-                    title: "Structured answer",
-                    costLine: "Prioritised being checked, at the cost of room inside one answer.",
+                    title: "Version eight: the grouped answer",
+                    costLine:
+                      "Where it works: every claim can be checked against its interview. Where it doesn't: it costs room inside one answer.",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
@@ -400,12 +402,24 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="chart-library">
-              <H2>A chart only when the data asks for one</H2>
+              <H2>Carbon's rules, a bent palette, and a gate Carbon does not have</H2>
               <CaseStudyBody>
-                This pair puts the chart I first reached for next to the one I kept, on the same
-                data. A reader should find the step that matters without a legend, and a chart
-                that cannot do that does not belong in an answer. Under the pair, the segment
-                question shows the same rule inside a full answer.
+                The chart rules lean on IBM Carbon's data visualisation guidance, named here
+                because the page uses it. Bars start at zero: the drop-off bars and the segment
+                bars both sit on a zero baseline. A line may crop instead: the sentiment line runs
+                2.4, 3.1, 3.6 across three rounds, and its axis crops to the climb. Values are
+                labelled on the marks, so no chart carries a legend. The sentence above a chart is
+                the answer itself, and the peak is annotated in words, the largest drop, without
+                covering any data.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                Two things depart from Carbon. Its categorical palette runs to 14 colours; these
+                charts stay on stone neutrals with one cherry mark on the step or group that
+                matters. And Carbon has no rule for whether a chart should exist at all. Here the
+                evidence count decides that, which is the thin data rule further down. The library
+                below is the working set: each chart in a fuller first draft and the version that
+                shipped in answers. Under it, the segment question shows the rules inside a full
+                answer.
               </CaseStudyBody>
               <DialogueChartLibrary />
               <DialogueQueryMoment
@@ -519,10 +533,11 @@ export function DialogueCaseStudyContent({
             <Section id="learning-changed-my-mind">
               <H2>I changed my mind about how much a chart should carry</H2>
               <CaseStudyBody>
-                My first reach on the drop-off question was bubbles, because the steps felt like
-                sizes, and I thought more weight would read as more insight. It read as guessing,
-                because nobody could compare the steps. The plainer bars carry less and
-                prove more, and I reach for them first now.
+                My first reach on the drop-off question was the full-detail chart: two series, a
+                legend, gridlines, a drop figure on every step. It showed everything and pointed
+                at nothing, so the largest drop hid in the detail. The plainer chart, one bar per
+                step and one cherry mark, carries less and proves more, and I reach for it first
+                now.
               </CaseStudyBody>
             </Section>
           </article>
