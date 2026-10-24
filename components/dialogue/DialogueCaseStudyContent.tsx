@@ -10,6 +10,7 @@ import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerC
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueQueryMoment from "@/components/dialogue/DialogueQueryMoment";
+import DialogueHeroMoment from "@/components/dialogue/DialogueHeroMoment";
 import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
@@ -200,27 +201,17 @@ export function DialogueCaseStudyContent({
                 ? wrap(
                     "D-01",
                     <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                      <DialogueProductFigure
-                        scenario="hero"
-                        title="Study chat structured answer hero"
-                        assetId="D-01"
-                        className="dialogue-product-figure--hero-fill"
-                      />
+                      <DialogueHeroMoment />
                     </div>,
                   )
                 : (
                     <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                      <DialogueProductFigure
-                        scenario="hero"
-                        title="Study chat structured answer hero"
-                        assetId="D-01"
-                        className="dialogue-product-figure--hero-fill"
-                      />
+                      <DialogueHeroMoment />
                     </div>
                   )}
               <DialogueCaption
-                label="The structured answer"
-                sentence="The summary leads, and the sources, chart, and clips sit under it in the same order on every answer."
+                label="One question, the whole answer"
+                sentence="The funnel and the interviews behind it, the three who disagreed, and the slice that stays thin, in one card."
               />
             </>
           </CaseStudyOpen>
