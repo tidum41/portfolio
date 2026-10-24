@@ -11,7 +11,7 @@ export const DIALOGUE_DRAFT = true;
 export const DIALOGUE_TITLE = "Making Dialogue's research chat cite its sources";
 
 /** Kept as the hero subline under the H1. */
-export const DIALOGUE_SUBTITLE = "Answers you can pinpoint";
+export const DIALOGUE_SUBTITLE = "I designed the study chat so every answer shows the interviews behind it";
 
 /** Hero uses round-34 section-6 frame. */
 export const DIALOGUE_HERO_SRC = "/dialogue/section-6.png";

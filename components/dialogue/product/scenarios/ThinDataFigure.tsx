@@ -7,7 +7,7 @@ import { CheckIcon, CopyIcon, InfoCircleIcon } from "@/components/dialogue/produ
 
 const NEXT_STUDY_PROMPT = [
   "Plan the next study on mobile checkout.",
-  "In the last study, 4 of 24 interviews said Autofill skipped the apartment field and address validation fired late on mobile. That is a lead, not a trend.",
+  "In the last study, 4 of 24 interviews said autofill skipped the apartment field and address validation fired late on mobile. That is a lead, not a trend.",
   "Recruit more mobile participants, ask each to complete checkout on a phone, and confirm whether the problem repeats.",
   "Report how many participants hit it and quote the moment they noticed.",
 ].join("\n\n");
@@ -51,7 +51,7 @@ export default function ThinDataFigure() {
     <StudyChatShell compact hideHeader hideComposer evidence={4}>
       <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
-        On mobile, several participants bailed when Autofill skipped the apartment field and
+        On mobile, several participants bailed when autofill skipped the apartment field and
         validation fired late.
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">

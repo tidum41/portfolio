@@ -147,6 +147,7 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
             fitViewport={zoomed}
             fit={scale.fit}
             fade={zoomed ? false : scale.fade}
+            uncapOnMobile={!zoomed && (scenario === "anatomy" || scenario === "full-answer")}
           >
             {inner}
           </ScaledChatViewport>

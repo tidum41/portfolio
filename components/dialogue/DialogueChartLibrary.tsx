@@ -176,20 +176,20 @@ const ENTRIES = [
   {
     id: "trend",
     badName: "Full detail",
-    badPoints: {"pros": ["Change between rounds is printed"], "cons": ["The shaded area and extra axis steps add noise"]},
+    badPoints: {"pros": ["Change between versions is printed"], "cons": ["The shaded area and extra axis steps add noise"]},
     goodName: "Simplified",
     goodPoints: {"pros": ["Both ends are labeled", "A marker shows where autocomplete ships"], "cons": ["The middle value is not shown"]},
-    name: "Change over sessions",
+    name: "Change over time",
     verdict: "A line shows the climb, and one marker says why it climbed.",
     tech: [
-      ["Data shape", "one score per round, in order."],
+      ["Data shape", "one score per version, in order."],
       ["Encoding", "slope shows direction; height on a shared axis shows size."],
-      ["Tradeoff", "needs three or more rounds."],
+      ["Tradeoff", "needs three or more versions."],
     ],
     caption:
-      "Removed the shaded area, the extra axis steps, the change between rounds and the middle value. Kept both ends labeled and the marker where autocomplete ships, because that event explains the climb.",
+      "Removed the shaded area, the extra axis steps, the change between versions and the middle value. Kept both ends labeled and the marker where autocomplete ships, because that event explains the climb.",
     bad: (
-      <ChartVizCard title="Sentiment by round">
+      <ChartVizCard title="Sentiment over time">
         <ChartLinePlot
           points={ROUNDS}
           yMode="trend"
@@ -203,7 +203,7 @@ const ENTRIES = [
       </ChartVizCard>
     ),
     good: (
-      <ChartVizCard title="Sentiment by round">
+      <ChartVizCard title="Sentiment over time">
         <ChartLinePlot
           points={ROUNDS}
           yMode="trend"
