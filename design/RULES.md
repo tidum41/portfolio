@@ -1,3 +1,5 @@
+Read [TASTE.md](TASTE.md) first: it is the source of truth for decided facts, likes, rejects and open items, and wins any conflict with this file. Font is Helvetica Neue with Arial fallback; Areal is abandoned.
+
 Every build and review reads STORY-PRINCIPLES.md and AI-TELLS.md with this file.
 
 # Dialogue case study rules
