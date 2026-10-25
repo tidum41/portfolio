@@ -1475,7 +1475,6 @@ html[data-theme="dark"] .project-image {
   flex-shrink: 0;
   /* Optical align to meta cap height (chevron sits a hair high in the em box). */
   transform: translateY(0.5px);
-  transition: transform 150ms ease-out;
 }
 /* Hang chevrons outside the prose text edge (icon 13px + kicker gap 6px).
    Negative margin cancels the icon from the flex size so kicker/title text
@@ -1486,23 +1485,7 @@ html[data-theme="dark"] .project-image {
 .cs-pager-kicker-icon--next {
   margin-right: calc(-1 * (13px + 6px));
 }
-@media (hover: hover) and (pointer: fine) {
-  .cs-pager-link:hover .cs-pager-kicker-icon--prev {
-    transform: translate(-2px, 0.5px);
-  }
-  .cs-pager-link:hover .cs-pager-kicker-icon--next {
-    transform: translate(2px, 0.5px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .cs-pager-kicker-icon {
-    transition: none;
-  }
-  .cs-pager-link:hover .cs-pager-kicker-icon--prev,
-  .cs-pager-link:hover .cs-pager-kicker-icon--next {
-    transform: translateY(0.5px);
-  }
-}
+
 .cs-pager-title {
   font-family: var(--font-sans-medium);
   font-size: var(--fs-lg); /* body-lg */
@@ -2843,6 +2826,9 @@ agentation-toolbar,
   column-gap: 16px;
   margin-top: 12px;
   align-items: stretch;
+}
+.dialogue-lib__single {
+  margin-top: 12px;
 }
 .dialogue-lib__col {
   min-width: 0;

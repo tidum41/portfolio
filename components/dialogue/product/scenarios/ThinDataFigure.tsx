@@ -56,7 +56,7 @@ export default function ThinDataFigure() {
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
         <InfoCircleIcon className="dp-low-signal__icon" />
-        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this. Treat it as a lead.</p>
+        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this. That makes it a lead to check, not a finding.</p>
       </div>
       <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
       <div className="dp-next-study-wrap">

@@ -6,6 +6,17 @@ Every build and review reads STORY-PRINCIPLES.md and AI-TELLS.md with this file.
 
 Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI keeps its real 600). Figures stay the approved components with no hover state. Clicking a figure opens a lightbox (see below). Do not commit fonts, Dialogue screenshots, or unblurred frames.
 
+## 2026-10-25 (round K, TASTE decisions)
+
+- Hero title is "Interactive insights for UX Research teams". The problem heading and body are Mudit's Oct 25 text, and the why-it-matters section is gone.
+- The three-way compare lives in its own section, "Bringing more depth to answers", with the labels Text only, Direct quotes, and Answer and evidence. The quotes card carries a View session action. The chosen card's sources row scales: a few initial avatars plus a "+N more" control that opens the list, with the count stated.
+- Chart library order follows what research teams reach for: themes counted by participant (the default), the funnel for task flows only, group comparisons, change over time, and the two-sided split. Counts come before percentages and the denominator stays in view. Mock data is allowed only in the worked example and is marked as mock wherever it appears.
+- The dropoff entry keeps only the simplified funnel; the coverage pair is one diverging bar (75% and 25%). A theme under 3 participants is an anecdote, flagged as a lead.
+- Anatomy annotation numbers share one alignment at the rail's right edge. Inside the anatomy scene the clip thumbnails flex to fit the card at 360px.
+- Counter-evidence's third participant is Alex P.; Sam R. is only the struggling user.
+- The full-answer figure shows two screens of the same answer; the second marks the tap on the source and opens the drawer on that clip.
+- The chart card's title divider runs the full width of the card. Pager arrows do not animate. TOC labels are short.
+
 ## 2026-10-23 (story build)
 
 - Every decision names its cost in the same breath as its win; a cost deferred to the end of the page reads as fine print.

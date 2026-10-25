@@ -35,6 +35,9 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Chart card: divider under the chart title always extends full width whenever data renders (Oct 25).
 - Full-answer section stays, with continuity: second screen is the same answer after tapping a source, tap marked (Oct 25).
 - TOC: short section labels in Rachel Chen's style (Oct 25).
+- Anatomy annotations: the numbers sit on one shared alignment at the rail's right edge, where the leader lines start (round K, Oct 25).
+- Counter-evidence's third participant is Alex P.; Sam R. stays the struggling user in the clips and the quotes card (round K, Oct 25).
+- Chart card divider runs the full width of the card whenever data renders (round K, Oct 25).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
@@ -95,10 +98,6 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Didn't: Muse stalled ~2h on one pending approval (round J); check approvals early.
 
 ## 7. Open
-- Round K fix: 360 anatomy clip-thumbnail strip overflows 5px (third thumb 16:02 clipped), light and dark.
-- Round K fix: Sam R. used for both counter-evidence and struggling user; give one a new name.
-- Round K fix: remaining lists of three in page copy.
-- Round K scope: the three fixes above plus every Oct 25 decision in Decided, Likes and Dislikes.
 - Call for Mudit: sentiment axis reads "Round 1 to 3"; suggest "First, second and third study".
 - Call for Mudit: "version" means two things; suggest product ones become "releases".
 - Unconfirmed facts: funnel 100/62/54/42/36, sentiment 2.4/3.1/3.6, mobile 48/41/33, "headed into slides and reports", store name Northline.
