@@ -9,6 +9,7 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
+import VerdictMark from "@/components/case-study/VerdictMark";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
@@ -49,9 +50,6 @@ const PhoneMockup         = dynamic(() => import("@/components/PhoneMockup"));
 const PhoneMockupDevPanel = dynamic(() => import("@/components/PhoneMockupDevPanel"));
 const QuarterPicker       = dynamic(() => import("@/components/QuarterPicker"));
 const DevNavigator        = dynamic(() => import("@/components/DevNavigator"));
-const COLOR_WRONG   = "#C62828";
-const COLOR_RIGHT   = "#2E7D32";
-const COLOR_NEUTRAL = "#757575";
 
 // ── Layout primitives ─────────────────────────────────────────────────────────
 
@@ -104,12 +102,12 @@ function Body({ children, style }: { children: React.ReactNode; style?: React.CS
   );
 }
 
-// Colors that sit next to the lilac accent (#9590C2) without competing with it —
+// Colors that sit next to the lilac accent without competing with it —
 // rose for stress, teal for trust, soft amber for outreach across platforms.
 const STAT_ICON_META: Record<string, { Icon: React.ComponentType<{ size?: number; weight?: "thin" | "light" | "regular" | "bold" | "fill" | "duotone"; "aria-hidden"?: boolean }>; color: string }> = {
-  "75%": { Icon: SmileySad, color: "#C4899A" }, // dusty rose — stress / frustration
-  "83%": { Icon: SealCheck, color: "#6FA8A0" }, // soft teal  — trust / safety
-  "70%": { Icon: Chats,     color: "#C4A878" }, // soft amber — multi-platform outreach
+  "75%": { Icon: SmileySad, color: "var(--color-stat-stress)" },
+  "83%": { Icon: SealCheck, color: "var(--color-stat-trust)" },
+  "70%": { Icon: Chats,     color: "var(--color-stat-outreach)" },
 };
 
 function Stat({ value, label }: { value: string; label: string }) {
@@ -120,7 +118,7 @@ function Stat({ value, label }: { value: string; label: string }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Icon && (
           <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
-            <Icon size={28} weight="light" aria-hidden={true} />
+            <Icon size={28} weight="regular" aria-hidden={true} />
           </span>
         )}
         <p style={{
@@ -148,34 +146,10 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-function XIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 4 }}>
-      <path d="M2.5 2.5L11.5 11.5M11.5 2.5L2.5 11.5" stroke={COLOR_WRONG} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 4 }}>
-      <path d="M2 7L5.5 10.5L12 3.5" stroke={COLOR_RIGHT} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function NeutralIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 4 }}>
-      <path d="M2.5 7H11.5" stroke={COLOR_NEUTRAL} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <XIcon />
+      <VerdictMark kind="wrong" />
       <p style={{ fontSize: "var(--fs-body)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
   );
@@ -202,11 +176,10 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
 }
 
 function CompRow({ type, text }: { type: string; text: string }) {
+  const kind = type === "right" || type === "wrong" || type === "neutral" ? type : "neutral";
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-      {type === "right"   && <CheckIcon />}
-      {type === "wrong"   && <XIcon />}
-      {type === "neutral" && <NeutralIcon />}
+      <VerdictMark kind={kind} />
       <p style={{ fontSize: "var(--fs-sm)", lineHeight: "var(--lh-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{text}</p>
     </div>
   );
@@ -675,9 +648,9 @@ async function BruinLeaseContent() {
                         showFrame
                         instanceKey="d4-after"
                         {...pp(cs.d3AfterPhonePos)}
-                        style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
+                        style={{ background: "var(--color-success-subtle)", border: "2px solid var(--color-success)" }}
                       />
-                      <p style={{ fontSize: "var(--fs-caption)", color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
+                      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-success)", textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
                     </div>
                   )}
                 </div>

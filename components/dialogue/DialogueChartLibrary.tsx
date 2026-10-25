@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
+import VerdictMark from "@/components/case-study/VerdictMark";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
@@ -23,16 +23,6 @@ const GROUPS = SEGMENT_ADDRESS.rows;
 const ROUNDS = SENTIMENT_LINE.points;
 
 type Points = { pros: readonly string[]; cons: readonly string[] };
-
-/** Phosphor, the icon set BruinLease uses; bold at 16px so the stroke holds up at this size. */
-function Mark({ kind }: { kind: "pro" | "con" }) {
-  const Icon = kind === "pro" ? Check : Minus;
-  return (
-    <span className="dialogue-lib__mark" data-kind={kind} aria-hidden>
-      <Icon size={16} weight="bold" />
-    </span>
-  );
-}
 
 function Specimen({
   entryId,
@@ -60,10 +50,10 @@ function Specimen({
       <p className="dialogue-lib__spec-name" data-annotate-part={`name-${entryId}-${status}`}>{name}</p>
       <ul className="dialogue-lib__points" data-annotate-part={`points-${entryId}-${status}`}>
         {points.pros.map((t) => (
-          <li key={t}><Mark kind="pro" />{t}</li>
+          <li key={t}><VerdictMark kind="pro" />{t}</li>
         ))}
         {points.cons.map((t) => (
-          <li key={t}><Mark kind="con" />{t}</li>
+          <li key={t}><VerdictMark kind="con" />{t}</li>
         ))}
       </ul>
     </div>
