@@ -817,6 +817,14 @@
   flex-shrink: 0;
 }
 
+/* Round K: inside the anatomy scene the strip must fit the card at 360px;
+   the fixed 72px items pushed the 16:02 thumb 4px past the card edge. */
+.dp-anatomy-scene .dp-clip-thumbs__item {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+
 .dp-clip-thumbs__frame {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -982,6 +990,49 @@
   gap: 16px;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* Round K continuity: a state label between the two screens of the same
+   answer, and the tapped state marked on the source pill and its clip. */
+.dp-full-answer__state-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-muted);
+}
+
+.dp-full-answer__state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-brand);
+  flex-shrink: 0;
+}
+
+.dp-full-answer__cluster--tapped .dp-source-pill--selected {
+  position: relative;
+  box-shadow: 0 0 0 2px var(--dp-brand);
+}
+
+.dp-full-answer__cluster--tapped .dp-source-pill--selected::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-brand);
+  border: 2px solid var(--dp-card);
+}
+
+.dp-full-answer__cluster--tapped .dp-full-answer__drawer-list .dp-clip-card:first-child {
+  box-shadow: 0 0 0 1.5px var(--dp-brand);
 }
 
 /* Hierarchy: the answer's lead paragraph is the hero (16/24 at 500), the
@@ -1718,6 +1769,9 @@
   top: 0;
   zoom: calc(1 / var(--dp-fig-scale, 1));
   display: flex;
+  /* Round K: number last, so every number sits on the one shared alignment
+     at the rail's right edge, where the leader lines start. */
+  flex-direction: row-reverse;
   align-items: center;
   gap: 6px;
   font-size: var(--dp-anatomy-label-size);
@@ -2473,6 +2527,225 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dp-lead-answer-card__sources {
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* Round K worked example: prompt as typed, mock data, and the chart it
+   produces, stacked inside one library specimen. */
+.dp-worked {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dp-worked__prompt-label,
+.dp-worked__mock-tag {
+  display: block;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-muted);
+  margin-bottom: 6px;
+}
+
+.dp-worked__mock-tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-pill);
+  color: var(--dp-ink);
+}
+
+.dp-worked__bubble {
+  margin: 0;
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: var(--dp-radius-control);
+  background: var(--dp-warm);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  color: var(--dp-ink);
+}
+
+.dp-worked__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-ink);
+}
+
+.dp-worked__table th {
+  text-align: left;
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-muted);
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--dp-border);
+}
+
+.dp-worked__table td {
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--dp-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-worked__data-note {
+  margin: 6px 0 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+/* Round K: one bar for a two-sided split. */
+.dp-diverge__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.dp-diverge__label {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+}
+
+.dp-diverge__label--rest {
+  color: var(--dp-muted);
+}
+
+.dp-diverge__label--focal {
+  color: var(--dp-brand);
+  text-align: right;
+}
+
+.dp-diverge__bar {
+  display: flex;
+  height: 22px;
+  border-radius: var(--dp-radius-xs);
+  overflow: hidden;
+}
+
+.dp-diverge__seg--rest {
+  background: var(--dp-muted-light);
+}
+
+.dp-diverge__seg--focal {
+  background: var(--dp-brand);
+}
+
+.dp-diverge__note {
+  margin: 8px 0 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+/* Round K: the quotes card carries a way into the exact response. */
+.dp-lead-answer-card__quote-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dp-lead-answer-card__view-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-brand);
+}
+
+.dp-lead-answer-card__view-session-icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Round K: sources row that scales to many participants. A few initial
+   avatars, a "+N more" button that opens the list, and the count stated. */
+.dp-sources-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dp-sources-scale__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dp-sources-scale__avatars {
+  display: inline-flex;
+}
+
+.dp-sources-scale__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-warm);
+  border: 1px solid var(--dp-border);
+  color: var(--dp-muted);
+  font-size: var(--text-clip-time-size);
+  font-weight: var(--dp-weight-medium);
+}
+
+.dp-sources-scale__avatar + .dp-sources-scale__avatar {
+  margin-left: -6px;
+}
+
+.dp-sources-scale__more {
+  appearance: none;
+  border: 1px solid var(--dp-border);
+  background: var(--dp-card);
+  border-radius: var(--dp-radius-pill);
+  padding: 3px 10px;
+  font: inherit;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-ink);
+  cursor: pointer;
+}
+
+.dp-sources-scale__count {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+.dp-sources-scale__list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-control);
+  background: var(--dp-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dp-sources-scale__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-ink);
+}
+
+.dp-sources-scale__time {
+  color: var(--dp-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-sources-scale__item--rest {
+  color: var(--dp-muted);
 }
 
 .dp-lead-answer-card .dp-clip-thumbs {

@@ -42,39 +42,20 @@ export type RasterAnnotator = (assetId: string, children: React.ReactNode) => Re
 
 /** Contents labels match the section H2s. */
 export const DIALOGUE_TOC_ITEMS = [
-  { id: "what-dialogue-is", label: "Dialogue runs AI-moderated interviews for research teams" },
-  {
-    id: "problem",
-    label: "Researchers could see the transcripts and the data, but not chat with the insight",
-  },
-  { id: "why-it-was-hard", label: "I grouped the answer before I touched its charts" },
-  {
-    id: "my-role",
-    label: "I designed the study chat and owned the shape of its answers",
-  },
-  {
-    id: "why-it-matters",
-    label: "A finding only travels if you can point to the interview behind it",
-  },
-  {
-    id: "counter-evidence",
-    label: "Three people had no trouble at the address step, and their quotes stay in the answer",
-  },
-  { id: "the-comparison", label: "Eight versions of the answer card, and the turns were grouping" },
-  { id: "chart-library", label: "Carbon's rules, a bent palette, and a gate Carbon does not have" },
-  { id: "one-structure", label: "Every answer gets the same five parts, in the same order" },
-  { id: "clips", label: "Every quote opens the recording at the second it was said" },
-  { id: "thin-data", label: "Say when the data is thin" },
-  {
-    id: "full-answer",
-    label: "A follow-up keeps the evidence of the answer it came from",
-  },
-  { id: "learning-room", label: "When room runs out, a chart goes before a source" },
-  {
-    id: "learning-changed-my-mind",
-    label: "I changed my mind about how much a chart should carry",
-  },
-  { id: "the-win", label: "The card at the top is the win" },
+  { id: "what-dialogue-is", label: "Dialogue" },
+  { id: "problem", label: "Problem" },
+  { id: "why-it-was-hard", label: "Why it was hard" },
+  { id: "my-role", label: "My role" },
+  { id: "counter-evidence", label: "Counter-evidence" },
+  { id: "more-depth", label: "More depth" },
+  { id: "chart-library", label: "Data visualization" },
+  { id: "one-structure", label: "Structure" },
+  { id: "clips", label: "Clips" },
+  { id: "thin-data", label: "Thin data" },
+  { id: "full-answer", label: "Follow-ups" },
+  { id: "learning-room", label: "Room" },
+  { id: "learning-changed-my-mind", label: "Changing my mind" },
+  { id: "the-win", label: "The win" },
 ];
 
 function Section({
@@ -243,16 +224,13 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="problem">
-              <H2>
-                Researchers could see the transcripts and the data, but not chat with the insight
-              </H2>
+              <H2>The chat provided interactive insights, at a surface level</H2>
               <CaseStudyBody>
-                Every interview came back as a recording and a transcript, and the study numbers
-                sat in tables. Using any of it meant reading everything yourself. The study chat
-                was built to answer across the set, and its first version answered the way any LLM
-                would: a plain black and white markdown table, long and hard to glance
-                at, with no story in it. The answers were headed into slides and reports, and a table travels
-                badly. Version one is below, recreated from the study's own numbers.
+                Dialogue provides AI-moderated interviews for UX teams. The interactive chat is
+                helpful, but didn't allow users to go deeper to the source. Its first version
+                answered the way any LLM would: a plain black and white markdown table, long and
+                hard to glance at, with no story in it. Version one is below, recreated from the
+                study's own numbers.
               </CaseStudyBody>
               <DialogueVersionTable />
             </Section>
@@ -274,20 +252,9 @@ export function DialogueCaseStudyContent({
               <H2>I designed the study chat and owned the shape of its answers</H2>
               <CaseStudyBody>
                 I was the product designer on Dialogue from December 2025 to March 2026, working
-                with Benjamin Lo and Justin Hoang. The decisions here are mine: the five parts
-                every answer carries, when a chart is allowed in, and what an answer does when its
-                evidence is thin. I designed in Figma and built prototypes to test the answers
-                with people.
-              </CaseStudyBody>
-            </Section>
-
-            <Section id="why-it-matters">
-              <H2>A finding only travels if you can point to the interview behind it</H2>
-              <CaseStudyBody>
-                I tested with Benjamin and Justin, and with students running mock interviews. I did
-                not have Dialogue customers to test with, and I will not pretend those sessions
-                were that. The answer card went through 8 versions. The reaction was the same in
-                both rooms: people asked who said that before they would use an answer.
+                with Benjamin Lo and Justin Hoang. The decisions here are mine: the shape every
+                answer carries, and what an answer does when its evidence is thin. I designed in
+                Figma and built prototypes to test the answers with people.
               </CaseStudyBody>
             </Section>
 
@@ -316,12 +283,13 @@ export function DialogueCaseStudyContent({
               </figure>
             </Section>
 
-            <Section id="the-comparison">
-              <H2>Eight versions of the answer card, and the turns were grouping</H2>
+            <Section id="more-depth">
+              <H2>Bringing more depth to answers</H2>
               <CaseStudyBody>
-                Four of the eight versions are on this page: the table above, and the three below.
-                Each answered the same question, where did people drop off in checkout, and each
-                one works somewhere and fails somewhere else.
+                The table above was version one. The three below answered the same question,
+                where did people drop off in checkout, and each added a layer the last one
+                lacked: the words alone, the words verbatim, and the answer with its evidence
+                attached.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
                 heading="Versions two, three and eight"
@@ -332,28 +300,28 @@ export function DialogueCaseStudyContent({
                 options={[
                   {
                     id: "paragraphs",
-                    label: "Wall of text",
-                    title: "Version two: paragraphs",
+                    label: "Text only",
+                    title: "Version two",
                     costLine:
-                      "Where it works: it sounds complete, like an answer. Where it doesn't: nothing in it can be traced to a person.",
+                      "Very simple text responses are condensed and easy to understand, but don't allow further interaction.",
                     productScenario: "decision-paragraphs",
                     rasterAssetId: "D-04",
                   },
                   {
                     id: "quote-list",
-                    label: "Quotes only",
-                    title: "Version three: quotes only",
+                    label: "Direct quotes",
+                    title: "Version three",
                     costLine:
-                      "Where it works: the footage is right there, unedited. Where it doesn't: the reader still counts by hand.",
+                      "Viewing responses verbatim can be helpful, but may not give researchers a higher-level overview.",
                     productScenario: "decision-quotes",
                     rasterAssetId: "D-05",
                   },
                   {
                     id: "structured",
-                    label: "Answer + evidence",
-                    title: "Version eight: the grouped answer",
+                    label: "Answer and evidence",
+                    title: "Version eight",
                     costLine:
-                      "Where it works: every claim can be checked against its interview. Where it doesn't: it costs room inside one answer.",
+                      "An easier-to-glance data visualization with embedded responses to view directly.",
                     productScenario: "decision-structured",
                     rasterAssetId: "D-06",
                   },
@@ -362,15 +330,14 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="chart-library">
-              <H2>Carbon's rules, a bent palette, and a gate Carbon does not have</H2>
+              <H2>Data visualization</H2>
               <CaseStudyBody>
                 The chart rules lean on IBM Carbon's data visualization guidance, named here
-                because the page uses it. Bars start at zero: the drop-off bars and the segment
-                bars both sit on a zero baseline. A line may crop instead: the sentiment line runs
-                2.4, 3.1, 3.6 across the study, and its axis crops to the climb. Values are
-                labeled on the marks, so no shipped chart carries a legend. The sentence above a
-                chart is the answer itself, and the peak is annotated in words, the largest drop,
-                without covering any data.
+                because the page uses it. Bars start at zero. A line may crop instead: the
+                sentiment line runs 2.4, 3.1, 3.6 across the study, and its axis crops to the
+                climb. Values are labeled on the marks, so no shipped chart carries a legend.
+                The sentence above a chart is the answer itself, and the peak is annotated in
+                words, the largest drop, without covering any data.
               </CaseStudyBody>
               <CaseStudyBody>
                 A research team reads a chart on its way into a deck, in seconds, often on a
@@ -381,10 +348,15 @@ export function DialogueCaseStudyContent({
                 Two things depart from Carbon. Its categorical palette runs to 14 colors; these
                 charts stay on stone neutrals with one cherry mark on the step or group that
                 matters. And Carbon has no rule for whether a chart should exist at all. Here the
-                evidence count decides that, which is the thin data rule further down. The library
-                below is the working set: each chart in a fuller first draft and the version that
-                shipped in answers. Under it, the segment question shows the rules inside a full
-                answer.
+                evidence count decides that, which is the thin data rule further down.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                The library below is the working set, in the order research teams reach for
+                charts: themes counted by participant first, then the funnel for task flows,
+                group comparisons, change over time, and the split of who raised a point and who
+                did not. Counts come before percentages in a study this size, and the
+                denominator stays in view. Under the library, the segment question shows the
+                rules inside a full answer.
               </CaseStudyBody>
               <DialogueChartLibrary />
               <DialogueQueryMoment
@@ -407,13 +379,14 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="one-structure">
-              <H2>Every answer gets the same five parts, in the same order</H2>
+              <H2>Structuring responses to set up further inquiry</H2>
               <CaseStudyBody>
-                Summary, sources, chart, clips, follow-ups. I put sources ahead of the chart: the
-                chart is the finding drawn as a shape, and a reader should meet the interviews
-                before the shape. The order stays fixed so the shape is
-                learned once, and after that only the content changes. I study cognitive science,
-                so order is a memory problem: attention belongs on the answer.
+                Research and design questions do not arrive in a straight line. A follow-up can
+                start from any part of the last answer, so every answer carries the same five
+                parts in the same order: summary, sources, chart, clips, follow-ups. The shared
+                shape builds a mental model of where things live, and once it is learned, only
+                the content changes. I put sources ahead of the chart: a reader should meet the
+                interviews before the shape drawn from them.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="anatomy"
@@ -425,20 +398,20 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="clips">
-              <H2>Every quote opens the recording at the second it was said</H2>
+              <H2>Viewing responses directly within the chat window</H2>
               <CaseStudyBody>
-                A quote without a timestamp sends the reader hunting through the recording, and a
-                quote that cannot be checked asks to be trusted again. The player opens at the
-                second, with the transcript in sync, so the line can be verified in one click. The
-                tradeoff is context: a clip that starts mid-thought can mislead, so the transcript
-                stays visible.
+                A quote can be exact and still leave a reader unsure which moment it came from.
+                Viewing the response directly removes that ambiguity: the clip opens the recording
+                at the second the words were said, inside the chat window the answer already
+                lives in. The tradeoff is context: a clip that starts mid-thought can mislead, so
+                the transcript stays visible.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="clip-player"
                 title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
                 assetId="D-10"
                 wrapRaster={wrap}
-                frameLabel="Solution: clip starts at 01:38, on the line about the card that failed, so the quote can be checked in one click"
+                frameLabel="Clips: the player sits in the chat window under the answer, opened at 01:38, the moment the participant describes the card that failed."
               />
               <CaseStudyBody>
                 Ruled out: a quote card that stops at the speaker's name. It scans faster, and it
@@ -447,18 +420,16 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="thin-data">
-              <H2>Say when the data is thin</H2>
+              <H2>Adding signals for unclear data and results</H2>
               <CaseStudyBody>
-                A chart makes four interviews look like a trend. When evidence is thin, the
-                answer leads with the count and holds the chart back, because a count cannot look
-                like more than it is: 4 of 24 reads as thin at a glance, and a chart would not.
-                That makes for a weaker-looking answer, one I would rather show than borrow
-                confidence it has not earned.
+                Four interviews cannot carry a chart. A chart would give the slice the same
+                weight as a finding built on eighteen, so when the evidence is thin the answer
+                leads with the count and holds the chart back: 4 of 24 reads as thin at a glance.
               </CaseStudyBody>
               <CaseStudyBody>
-                So the thin answer ends with a next step. Add to my plan copies a ready-to-paste prompt
-                for the follow-up study. I put it there because people work out of generated docs and
-                idea docs, and the plan should travel with them instead of staying in the chat.
+                Under the answer, Add to my plan copies a ready-to-paste prompt for the follow-up
+                study. The lead can then be checked against more interviews from the doc the team
+                is already working in, instead of staying as a loose end in the chat.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="thin-data"
@@ -507,9 +478,11 @@ export function DialogueCaseStudyContent({
               <H2>A follow-up keeps the evidence of the answer it came from</H2>
               <CaseStudyBody>
                 Ask a follow-up and the question narrows, and the structure does not reset. The
-                filtered answer keeps the answer's sources, its chart, and every clip in one
-                drawer, so the thread from question to footage never breaks. The
-                drawer holds everything the full answer holds, in less room.
+                filtered answer keeps the first answer's evidence in one drawer, so the thread
+                from question to footage never breaks. The drawer holds everything the full
+                answer holds, in less room. The second screen below is the same answer after a
+                source is tapped: the tap is marked, and the drawer opens on that interview's
+                clip.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
@@ -528,8 +501,8 @@ export function DialogueCaseStudyContent({
             <Section id="learning-room">
               <H2>When room runs out, a chart goes before a source</H2>
               <CaseStudyBody>
-                Room is the problem I did not solve. A summary, a chart, and clips compete, and
-                that has not changed. The lesson is the order to cut in: a chart is a
+                Room is the problem I did not solve. Every part of an answer competes for the
+                same space, and that has not changed. The lesson is the order to cut in: a chart is a
                 summary of the evidence, and a source is the evidence, so when something has to
                 give, the chart goes first.
               </CaseStudyBody>

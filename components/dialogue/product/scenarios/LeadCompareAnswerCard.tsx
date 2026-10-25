@@ -3,14 +3,10 @@ import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpe
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
 import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
-import SourcePill from "@/components/dialogue/product/SourcePill";
+import { ArrowUpRightIcon } from "@/components/dialogue/product/icons";
+import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
 
 const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
-
-const MINI_SOURCES = [
-  { participant: "Jordan M.", time: "14:03" },
-  { participant: "Priya K.", time: "15:47" },
-] as const;
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
@@ -43,6 +39,12 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
             </div>
           ))}
         </div>
+        <div className="dp-lead-answer-card__quote-actions">
+          <span className="dp-lead-answer-card__view-session">
+            View session
+            <ArrowUpRightIcon className="dp-lead-answer-card__view-session-icon" />
+          </span>
+        </div>
       </div>
     );
   }
@@ -72,11 +74,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
           fillMode="index"
         />
       </div>
-      <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
-        {MINI_SOURCES.map((s) => (
-          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={s.participant === "Priya K."} />
-        ))}
-      </div>
+      <SourcesScaleRow />
       <ClipThumbnails selectedTime="15:47" />
     </div>
   );
