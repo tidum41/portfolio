@@ -6,9 +6,11 @@ import {
   DialogueCaseStudyContent,
   type RasterAnnotator,
 } from "@/components/dialogue/DialogueCaseStudyContent";
+import DataVizOptionsSection from "@/components/dialogue/drafts/DataVizOptionsSection";
 import { DIALOGUE_CANVAS_ASSETS, DIALOGUE_CANVAS_BY_ID } from "@/lib/caseStudies/dialogueCanvasCatalog";
 import RasterAnnotation from "./RasterAnnotation";
 import LiveExportIframe from "./LiveExportIframe";
+import "./data-viz-options.css";
 
 const LIVE_ASSETS = DIALOGUE_CANVAS_ASSETS.filter((a) => a.staticExportSrc);
 
@@ -24,12 +26,16 @@ export default function DialogueCanvasV2() {
       <header className="dcv2__page-header">
         <h1 className="dcv2__page-title">Dialogue review canvas</h1>
         <p className="dcv2__page-lede">
-          Round-34 case study rasters, static export iframes, and source artifact index.
+          Data viz options, round-34 case study rasters, static export iframes, and source artifact index.
         </p>
       </header>
 
+      <div className="dcv2__section">
+        <DataVizOptionsSection />
+      </div>
+
       <section className="dcv2__section" aria-labelledby="dcv2-case-study">
-        <h2 id="dcv2-case-study" className="dcv2__section-title">1. Case study</h2>
+        <h2 id="dcv2-case-study" className="dcv2__section-title">2. Case study</h2>
         <p className="dcv2__section-intro">
           Same content as <code>/dialogue</code>. Raster frames include ID, status, and a one-line note.
         </p>
@@ -39,7 +45,7 @@ export default function DialogueCanvasV2() {
       </section>
 
       <section className="dcv2__section" aria-labelledby="dcv2-live">
-        <h2 id="dcv2-live" className="dcv2__section-title">2. Live components</h2>
+        <h2 id="dcv2-live" className="dcv2__section-title">3. Live components</h2>
         <p className="dcv2__section-intro">
           Round-34 static HTML exports from <code>export-static.zip</code>, embedded at intrinsic aspect ratio.
         </p>
@@ -92,7 +98,7 @@ export default function DialogueCanvasV2() {
       </section>
 
       <section className="dcv2__section" aria-labelledby="dcv2-sources">
-        <h2 id="dcv2-sources" className="dcv2__section-title">3. Source artifacts</h2>
+        <h2 id="dcv2-sources" className="dcv2__section-title">4. Source artifacts</h2>
         <p className="dcv2__section-intro">Committed round-34 PNGs and static export paths per asset ID.</p>
         <ul className="dcv2-artifacts">
           {DIALOGUE_CANVAS_ASSETS.map((asset) => (
