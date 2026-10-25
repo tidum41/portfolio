@@ -18,6 +18,23 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Process: main needs Mudit's explicit OK. No Vercel previews; local build plus screenshots at 1440 and 390, light and dark (also 1024/768/360 for cut-off checks).
 - Process: every round starts from a base containing all approved commits (`git merge-base --is-ancestor b056865 <base>` must pass).
 - Iteration log lives at [iterations/dialogue.md](iterations/dialogue.md); distinct rounds only.
+- Hero title: "Interactive insights for UX Research teams"; the "Answers you can pinpoint" line is removed (Oct 25).
+- Problem h2: "The chat provided interactive insights, at a surface level". Body: "Dialogue provides AI-moderated interviews for UX teams. The interactive chat is helpful, but didn't allow users to go deeper to the source." (Oct 25).
+- Why-it-matters h2 and its Benjamin/Justin paragraph are removed (Oct 25).
+- Lead-answer three-way compare gets its own section, roughly "Bringing more depth to answers" (Oct 25).
+- Compare labels: "Text only" (simple text is condensed and easy to understand, but allows no further interaction); "Direct quotes" (verbatim responses help, but may not give a higher-level overview); "Answer and evidence" (an easier-to-glance data viz with embedded responses to view directly) (Oct 25).
+- Quotes card gets more complexity, e.g. a "view session" action to see the exact response (Oct 25).
+- Sources row scales to many participants: a few avatars plus "+N more" that opens a list (Oct 25).
+- Anatomy figure sizing approved; annotations return to one shared alignment (Oct 25).
+- One-structure h2: "Structuring responses to set up further inquiry". Body idea: UX research and design are never linear; organizing answers this way builds mental models and invites further exploration (Oct 25).
+- Clips h2: "Viewing responses directly within the chat window". Body idea: reduce ambiguity by letting users pinpoint exact responses. Rewrite the "Clip starts at 01:38..." caption clearly (Oct 25).
+- Chart library h2: "Data visualization". Copy easy to understand while still technical (Oct 25).
+- Chart library: base chart types on what UX research teams actually use most (see muse/story dataviz research); rethink the basic drop-off-by-step funnel (Oct 25).
+- Chart library: add a worked example showing the actual prompt plus mock query data with a few more metrics (Oct 25).
+- Thin-data h2: "Adding signals for unclear data and results". Rewrite the "Only 4 of 24 interviews mention this..." note and the "A chart of four interviews..." and "The next step copies..." paragraphs (Oct 25).
+- Chart card: divider under the chart title always extends full width whenever data renders (Oct 25).
+- Full-answer section stays, with continuity: second screen is the same answer after tapping a source, tap marked (Oct 25).
+- TOC: short section labels in Rachel Chen's style (Oct 25).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
@@ -30,6 +47,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Chart-library icons reuse the BruinLease icon set.
 - Lead answer shows the user's question; bar chart over dot plot for the chosen lead answer.
 - Before-charts that are believable, complex near-misses, e.g. dense version one table (round J).
+- Chart library pair combined into one chart showing the 75% and 25% split (Oct 25).
 - Chosen/Ruled out indicators reworked in Caleb Wu's style (calebwu.ca).
 - Story voice like Rachel Chen's structure and clarity, his own words, non-linear, a win over a challenge.
 - Quality bar: Stripe, Linear, Vercel.
@@ -45,15 +63,17 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Status chips on library pairs; use pros/cons.
 - Hover states on figures.
 - Copywriting voice; he wants plain, specific site voice.
+- Chart library "full detail" first variant: rejected, remove (Oct 25).
+- Arrow animation on pager previous/next: remove (Oct 25).
 
 ## 4. Pinned approved versions
 - b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, Add to my plan, full chart library. Restored into canvas via PR #122.
 - 21cf2e8, bb55313, de1cfe5: lightbox fixes. d400584: TOC breakpoint.
-- 843faac (PR #124, round J): current canvas base; passes b056865 ancestry; verdict FIX FIRST (see Open).
+- 843faac (PR #124, round J): canvas base before the taste ledger (08f90a4); passes b056865 ancestry; verdict FIX FIRST (see Open).
 - Restore check: `git diff b056865 -- components/dialogue/DialogueInterviewPlayer.tsx components/dialogue/DialogueChartLibrary.tsx components/dialogue/product/chart` should be empty unless intended.
 
 ## 5. Case study language
-- Sentence case. No em dashes. No dot separators. US spelling.
+- Sentence case for all headings (Oct 25). No em dashes. No dot separators. US spelling.
 - Never the word "priority"; say where it works and where it doesn't.
 - Banned patterns: lists of three, "not X but Y" (max one per page, prefer zero), "The cost is" leads, buzzwords per [AI-TELLS](AI-TELLS.md).
 - Name a cost next to its win, but not with "The cost is" phrasing.
@@ -78,9 +98,10 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Round K fix: 360 anatomy clip-thumbnail strip overflows 5px (third thumb 16:02 clipped), light and dark.
 - Round K fix: Sam R. used for both counter-evidence and struggling user; give one a new name.
 - Round K fix: remaining lists of three in page copy.
+- Round K scope: the three fixes above plus every Oct 25 decision in Decided, Likes and Dislikes.
 - Call for Mudit: sentiment axis reads "Round 1 to 3"; suggest "First, second and third study".
 - Call for Mudit: "version" means two things; suggest product ones become "releases".
-- Unconfirmed facts: funnel 100/62/54/42/36, sentiment 2.4/3.1/3.6, mobile 48/41/33, "headed into slides and reports", Benjamin and Justin "both rooms" line, store name Northline.
+- Unconfirmed facts: funnel 100/62/54/42/36, sentiment 2.4/3.1/3.6, mobile 48/41/33, "headed into slides and reports", store name Northline.
 - Placeholders (3): why version one shipped without sources; why the cutoff sits where it does; what would change his mind about the cutoff.
 - Main still at 90beb49; promoting canvas to main waits on Mudit.
 
