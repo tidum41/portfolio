@@ -935,9 +935,9 @@
 }
 
 .dp-full-answer__answer {
-  flex: 1 1 360px;
-  width: min(360px, 100%);
-  max-width: 360px;
+  flex: 1 1 384px;
+  width: min(384px, 100%);
+  max-width: 384px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -950,9 +950,9 @@
 }
 
 .dp-full-answer__drawer {
-  flex: 1 1 268px;
-  width: min(268px, 100%);
-  max-width: 268px;
+  flex: 1 1 272px;
+  width: min(272px, 100%);
+  max-width: 272px;
   border-radius: var(--dp-radius);
   border: 1px solid var(--dp-border);
   background: var(--dp-surface);
@@ -2640,6 +2640,187 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   color: var(--dp-muted);
 }
 
+/* Round L: participant by theme matrix, the mock study's coding. */
+.dp-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dp-matrix__table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.dp-matrix__table th,
+.dp-matrix__table td {
+  padding: 3px 4px;
+  text-align: center;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+  font-weight: var(--dp-weight-regular);
+}
+
+.dp-matrix__table thead th {
+  color: var(--dp-ink);
+  font-weight: var(--dp-weight-medium);
+  padding-bottom: 6px;
+}
+
+.dp-matrix__table tbody th,
+.dp-matrix__table tfoot th {
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dp-matrix__table tfoot td {
+  color: var(--dp-ink);
+  font-weight: var(--dp-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding-top: 6px;
+}
+
+.dp-matrix__corner {
+  color: var(--dp-muted);
+  font-weight: var(--dp-weight-regular);
+}
+
+.dp-matrix__cell {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: var(--dp-radius-xs);
+  background: var(--dp-muted);
+  vertical-align: middle;
+}
+
+.dp-matrix__cell--focal {
+  background: var(--dp-brand);
+}
+
+.dp-matrix__note {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+/* Round L: sentiment as a split around one center line. */
+.dp-sentiment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dp-sentiment__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dp-sentiment__label {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-muted);
+}
+
+.dp-sentiment__label--focal {
+  color: var(--dp-brand);
+  text-align: right;
+}
+
+.dp-sentiment__track {
+  display: flex;
+  align-items: stretch;
+  height: 22px;
+}
+
+.dp-sentiment__half {
+  flex: 1 1 0;
+  display: flex;
+}
+
+.dp-sentiment__half--left {
+  justify-content: flex-end;
+}
+
+.dp-sentiment__bar {
+  display: block;
+  height: 100%;
+}
+
+.dp-sentiment__bar--rest {
+  background: var(--dp-muted);
+  border-radius: var(--dp-radius-xs) 0 0 var(--dp-radius-xs);
+}
+
+.dp-sentiment__bar--focal {
+  background: var(--dp-brand);
+  border-radius: 0 var(--dp-radius-xs) var(--dp-radius-xs) 0;
+}
+
+.dp-sentiment__axis {
+  flex: none;
+  width: 2px;
+  background: var(--dp-ink);
+}
+
+.dp-sentiment__note {
+  margin: 2px 0 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+/* Round L: a bar with its evidence open underneath it. */
+.dp-evidence {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dp-evidence__label {
+  margin: 4px 0 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-ink);
+}
+
+.dp-evidence__quote {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+.dp-evidence__name {
+  color: var(--dp-ink);
+  font-weight: var(--dp-weight-medium);
+  margin-right: 8px;
+}
+
+.dp-evidence__clips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dp-evidence__chip {
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-pill);
+  padding: 3px 10px;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-ink);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Round K: the quotes card carries a way into the exact response. */
 .dp-lead-answer-card__quote-actions {
   display: flex;
@@ -2672,7 +2853,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dp-sources-scale__row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -2684,8 +2865,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--dp-radius-pill);
   background: var(--dp-warm);
   border: 1px solid var(--dp-border);

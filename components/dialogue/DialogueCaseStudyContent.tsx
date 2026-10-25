@@ -226,11 +226,21 @@ export function DialogueCaseStudyContent({
             <Section id="problem">
               <H2>The chat provided interactive insights, at a surface level</H2>
               <CaseStudyBody>
-                Dialogue provides AI-moderated interviews for UX teams. The interactive chat is
-                helpful, but didn't allow users to go deeper to the source. Its first version
-                answered the way any LLM would: a plain black and white markdown table, long and
-                hard to glance at, with no story in it. Version one is below, recreated from the
-                study's own numbers.
+                In the real product, the insights summary is prose only. Each objective carries
+                its key insights with a sentiment pill and a stack of avatars as the evidence,
+                and the +N badges beside them carry no label. The summary has no charts, no
+                counts of the "N of 15" kind, and no quotes or clips, and the Insights stat
+                shows a dash. Sentiment counts run to one or two per section, and there are no
+                filters for segments.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                The evidence exists in the product. Quotes and clips live on the section pages,
+                in a video and transcript modal a few steps away, and a per-interview beta chat
+                answers with quote cards. It just sits away from the summary it supports, so
+                the redesign brings it next to the answer. The chat's own first version had the
+                same gap: a plain black and white markdown table, long and hard to glance at,
+                with no story in it. Version one is below, recreated from the study's own
+                numbers.
               </CaseStudyBody>
               <DialogueVersionTable />
             </Section>
@@ -241,10 +251,13 @@ export function DialogueCaseStudyContent({
                 A model can write a fluent answer from transcripts, so writing was never the hard
                 part. The move was grouping: summary, sources, chart, clips, follow-ups, so every
                 claim sits next to the interviews behind it. I held off redesigning the data viz
-                until what existed had that structure. Quotes went first because the transcript
-                interaction was already built, so a quote could open the recording at the second
-                it was said. The first version shipped with the data and none of that attached.
-                [PLACEHOLDER: why the first version shipped without sources]
+                until what existed had that structure.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                Quotes went first because the transcript interaction was already built, so a quote
+                could open the recording at the second it was said. The first version shipped with
+                the data and none of that attached. [PLACEHOLDER: why the first version shipped
+                without sources]
               </CaseStudyBody>
             </Section>
 
@@ -333,16 +346,15 @@ export function DialogueCaseStudyContent({
               <H2>Data visualization</H2>
               <CaseStudyBody>
                 The chart rules lean on IBM Carbon's data visualization guidance, named here
-                because the page uses it. Bars start at zero. A line may crop instead: the
-                sentiment line runs 2.4, 3.1, 3.6 across the study, and its axis crops to the
-                climb. Values are labeled on the marks, so no shipped chart carries a legend.
-                The sentence above a chart is the answer itself, and the peak is annotated in
-                words, the largest drop, without covering any data.
+                because the page uses it. Bars start at zero, so a bar's length never exaggerates
+                a count. Values sit on the marks themselves, so no shipped chart carries a
+                legend. The sentence above a chart is the answer itself, and the biggest value
+                is marked in words, without covering any data.
               </CaseStudyBody>
               <CaseStudyBody>
-                A research team reads a chart on its way into a deck, in seconds, often on a
-                projector across a room. What they need to see is the step that matters and the
-                count behind it, with nothing to decode first. These rules serve that read.
+                Answers are easy to share, so a chart has to read in seconds. What a research
+                team needs to see is the step that matters and the count behind it, with nothing
+                to decode first. These rules serve that read.
               </CaseStudyBody>
               <CaseStudyBody>
                 Two things depart from Carbon. Its categorical palette runs to 14 colors; these
@@ -351,12 +363,13 @@ export function DialogueCaseStudyContent({
                 evidence count decides that, which is the thin data rule further down.
               </CaseStudyBody>
               <CaseStudyBody>
-                The library below is the working set, in the order research teams reach for
-                charts: themes counted by participant first, then the funnel for task flows,
-                group comparisons, change over time, and the split of who raised a point and who
-                did not. Counts come before percentages in a study this size, and the
-                denominator stays in view. Under the library, the segment question shows the
-                rules inside a full answer.
+                The library below is the working set. Themes counted by participant come first,
+                because that is the question a study answers most often. Then the split of who
+                raised a point, group comparisons on one scale, the coding matrix behind the
+                themes, sentiment as a split, and the rule that every bar opens its evidence.
+                Counts come before percentages in a study this size, and the study size stays in
+                view. Under the library, the segment question shows the rules inside a full
+                answer.
               </CaseStudyBody>
               <DialogueChartLibrary />
               <DialogueQueryMoment
@@ -425,6 +438,8 @@ export function DialogueCaseStudyContent({
                 Four interviews cannot carry a chart. A chart would give the slice the same
                 weight as a finding built on eighteen, so when the evidence is thin the answer
                 leads with the count and holds the chart back: 4 of 24 reads as thin at a glance.
+                Maze labels its own confidence by session count the same way: low at 1 to 4
+                sessions, medium at 5 to 9, high at 10 or more.
               </CaseStudyBody>
               <CaseStudyBody>
                 Under the answer, Add to my plan copies a ready-to-paste prompt for the follow-up
@@ -479,10 +494,12 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Ask a follow-up and the question narrows, and the structure does not reset. The
                 filtered answer keeps the first answer's evidence in one drawer, so the thread
-                from question to footage never breaks. The drawer holds everything the full
-                answer holds, in less room. The second screen below is the same answer after a
-                source is tapped: the tap is marked, and the drawer opens on that interview's
-                clip.
+                from question to footage never breaks.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                The drawer holds everything the full answer holds, in less room. The second
+                screen below is the same answer after a source is tapped: the tap is marked, and
+                the drawer opens on that interview's clip.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="full-answer"
@@ -511,7 +528,7 @@ export function DialogueCaseStudyContent({
             <Section id="learning-changed-my-mind">
               <H2>I changed my mind about how much a chart should carry</H2>
               <CaseStudyBody>
-                My first reach on the drop-off question was the full-detail chart: two series, a
+                My first reach on the drop-off question was the densest chart: two series, a
                 legend, gridlines, a drop figure on every step. It showed everything and pointed
                 at nothing, so the largest drop hid in the detail. The plainer chart, one bar per
                 step and one cherry mark, carries less and proves more, and I reach for it first
@@ -522,7 +539,7 @@ export function DialogueCaseStudyContent({
               <H2>The card at the top is the win</H2>
               <CaseStudyBody>
                 Version eight is the card this page opened on. It answers with the evidence
-                showing: the funnel, the 18 interviews behind it, the three who disagreed, and
+                showing: the chart, the 18 interviews behind it, the three who disagreed, and
                 the four that stay thin. Version one's table could only list the numbers. What
                 the eight versions bought is an answer a researcher can check as fast as they
                 can read it, and it still takes more room than I would like.

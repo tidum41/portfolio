@@ -173,6 +173,7 @@ body {
   overflow-x: hidden;
   overflow-x: clip;
   overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
 }
 @media (max-width: 600px) {
   .work-hero {
@@ -2227,6 +2228,10 @@ agentation-toolbar,
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
 }
 .dialogue-case-study {
+  /* Round L: one neutral figure card. Near-white well in light, the dark
+     counterpart in dark, 8px radius (already --radius-control), and no
+     inset border box on any figure frame. */
+  --figure-well: #f7f7f5;
   --dp-figure-surface-system: var(--figure-well);
   --dp-figure-surface-problem: var(--figure-well);
   --dp-figure-surface-solution: var(--figure-well);
@@ -2453,6 +2458,15 @@ agentation-toolbar,
 @media (min-width: 941px) {
   .dialogue-lead-answer__row--trio {
     grid-template-rows: auto auto auto;
+  }
+  /* Round L: the three compare cards share one height, the tallest card
+     sets it through the shared subgrid row. */
+  .dialogue-lead-answer__row--trio .dialogue-lead-answer__option-card {
+    align-self: stretch;
+    height: 100%;
+  }
+  .dialogue-lead-answer__row--trio .dialogue-lead-answer__option-card .dialogue-product-block {
+    height: 100%;
   }
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel {
     display: grid;
@@ -2824,6 +2838,14 @@ agentation-toolbar,
   line-height: var(--text-meta-leading);
   font-weight: 400;
   color: var(--color-text-tertiary);
+}
+.dialogue-lib__why {
+  margin: 8px 0 0;
+  max-width: 640px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 .dialogue-lib__pair {
   display: grid;
@@ -3200,6 +3222,24 @@ html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
 html[data-theme="dark"] {
   --figure-well: #1b1e21;
   --figure-well-border: rgba(255, 255, 255, 0.04);
+}
+/* Round L: the Dialogue figure well keeps its dark counterpart in dark. */
+html[data-theme="dark"] .dialogue-case-study {
+  --figure-well: #1b1e21;
+}
+/* Round L: Dialogue figure frames carry no inset border box. */
+.dialogue-case-study .dialogue-rachel-frame,
+.dialogue-case-study .cs-figure-media,
+.dialogue-case-study .cs-figure-media--fill,
+.dialogue-case-study .cs-hero-media-frame {
+  box-shadow: none;
+}
+/* Round L: every Dialogue figure locks to the 640px text column. */
+.dialogue-case-study .cs-figure,
+.dialogue-case-study .dialogue-lead-answer,
+.dialogue-case-study .dialogue-lib,
+.dialogue-case-study .cs-hero-media-frame {
+  max-width: 640px;
 }
 
 /* Ink on the figure well, theme aware (DLG-32, DLG-33). */

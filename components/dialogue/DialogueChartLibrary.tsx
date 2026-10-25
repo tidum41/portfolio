@@ -5,22 +5,16 @@ import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
-import ChartLinePlot from "@/components/dialogue/product/chart/ChartLinePlot";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import {
-  formatChartDecimal,
-  formatChartPercent,
-} from "@/components/dialogue/product/chart/chartSpec";
+import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import {
-  CHECKOUT_FUNNEL,
+  ADDRESS_FOLLOWUP,
+  QUOTE_LIST,
   SEGMENT_ADDRESS,
-  SENTIMENT_LINE,
 } from "@/lib/dialogue/product/sampleData";
 
-const STEPS = CHECKOUT_FUNNEL.steps.slice(0, 4);
 const GROUPS = SEGMENT_ADDRESS.rows;
-const ROUNDS = SENTIMENT_LINE.points;
 
 type Points = { pros: readonly string[]; cons: readonly string[] };
 
@@ -70,30 +64,17 @@ function Specimen({
   );
 }
 
-const STEP_ROWS = STEPS.map((s) => ({
-  label: s.label,
-  value: s.pct,
-  display: formatChartPercent(s.pct),
-  focal: Boolean(s.focal),
-}));
-
-const GAP_PTS = (label: string) => {
-  const mobile = GROUPS[0]!.pct;
-  const g = GROUPS.find((r) => r.label === label)!;
-  return `${mobile - g.pct} pts`;
-};
-
-const EVENT_LABEL = "Autocomplete ships";
-
-/** Round K worked example. Every number in this block is mock data from a
-    mock study, marked as mock in the figure itself. */
+/** Worked example. Every number in this block is mock data from a mock
+    study of 15 participants, marked as mock in the figure itself. Round L
+    set the study size to 15 so its counts read "N of 15", the form the
+    answer uses. */
 const MOCK_THEMES = [
-  { theme: "Could not find the invite link", participants: 13, clips: 21 },
-  { theme: "First task was unclear", participants: 9, clips: 14 },
-  { theme: "Settings hard to reach", participants: 6, clips: 9 },
-  { theme: "Wanted a starting template", participants: 4, clips: 6 },
+  { theme: "Could not find the invite link", short: "Invite link", participants: 10, clips: 16 },
+  { theme: "First task was unclear", short: "First task", participants: 7, clips: 11 },
+  { theme: "Settings hard to reach", short: "Settings", participants: 5, clips: 7 },
+  { theme: "Wanted a starting template", short: "Template", participants: 3, clips: 5 },
 ] as const;
-const MOCK_TOTAL = 20;
+const MOCK_TOTAL = 15;
 
 function WorkedExample() {
   return (
@@ -161,10 +142,148 @@ function DivergingSplit() {
   );
 }
 
+/** The mock study's coding, person by person. Filled sets are chosen so each
+    column adds up to the theme counts the bars above show. */
+const MATRIX_FILLED: readonly (readonly number[])[] = [
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  [1, 2, 3, 5, 6, 8, 11],
+  [2, 4, 6, 9, 12],
+  [1, 7, 13],
+];
+
+function ThemeMatrix() {
+  const people = Array.from({ length: MOCK_TOTAL }, (_, i) => i + 1);
+  return (
+    <div className="dp-matrix">
+      <span className="dp-worked__mock-tag">Mock data</span>
+      <table className="dp-matrix__table">
+        <thead>
+          <tr>
+            <th scope="col">
+              <span className="dp-matrix__corner">Participant</span>
+            </th>
+            {MOCK_THEMES.map((t) => (
+              <th key={t.theme} scope="col">
+                {t.short}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {people.map((p) => (
+            <tr key={p}>
+              <th scope="row">P{p}</th>
+              {MOCK_THEMES.map((t, ci) => (
+                <td key={t.theme}>
+                  {MATRIX_FILLED[ci]!.includes(p) ? (
+                    <span
+                      className={
+                        ci === 0 ? "dp-matrix__cell dp-matrix__cell--focal" : "dp-matrix__cell"
+                      }
+                    />
+                  ) : null}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Raised it</th>
+            {MOCK_THEMES.map((t) => (
+              <td key={t.theme}>
+                {t.participants} of {MOCK_TOTAL}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
+      </table>
+      <p className="dp-matrix__note">
+        The same mock study as the themes chart above: onboarding interviews, {MOCK_TOTAL}{" "}
+        participants.
+      </p>
+    </div>
+  );
+}
+
+/** Sentiment as a split, not a score: the frustrated count grows left from
+    the center line, the happy count grows right, and the mixed count is
+    named under the axis instead of being averaged in. Mock data. */
+const MOCK_SENTIMENT = { frustrated: 9, mixed: 4, happy: 2 } as const;
+
+function SentimentSplit() {
+  const side = (n: number) => `${(n / MOCK_TOTAL) * 100}%`;
+  return (
+    <div className="dp-sentiment">
+      <span className="dp-worked__mock-tag">Mock data</span>
+      <div className="dp-sentiment__labels">
+        <span className="dp-sentiment__label">Frustrated, {MOCK_SENTIMENT.frustrated} of {MOCK_TOTAL}</span>
+        <span className="dp-sentiment__label dp-sentiment__label--focal">Happy, {MOCK_SENTIMENT.happy} of {MOCK_TOTAL}</span>
+      </div>
+      <div
+        className="dp-sentiment__track"
+        role="img"
+        aria-label={`Frustrated ${MOCK_SENTIMENT.frustrated} of ${MOCK_TOTAL}, mixed ${MOCK_SENTIMENT.mixed} of ${MOCK_TOTAL}, happy ${MOCK_SENTIMENT.happy} of ${MOCK_TOTAL}`}
+      >
+        <span className="dp-sentiment__half dp-sentiment__half--left">
+          <span className="dp-sentiment__bar dp-sentiment__bar--rest" style={{ width: side(MOCK_SENTIMENT.frustrated) }} />
+        </span>
+        <span className="dp-sentiment__axis" aria-hidden />
+        <span className="dp-sentiment__half">
+          <span className="dp-sentiment__bar dp-sentiment__bar--focal" style={{ width: side(MOCK_SENTIMENT.happy) }} />
+        </span>
+      </div>
+      <p className="dp-sentiment__note">
+        Mixed, {MOCK_SENTIMENT.mixed} of {MOCK_TOTAL}, sits on the center line and is counted in
+        neither bar.
+      </p>
+    </div>
+  );
+}
+
+/** The address bar with its evidence open: the study's real quotes and the
+    clips behind the count, in place under the bar. */
+function EvidenceBars() {
+  return (
+    <ChartVizCard title="Address friction, with its evidence open">
+      <ChartBarList
+        rows={[
+          {
+            label: "Raised address friction",
+            value: 18,
+            display: "18 of 24",
+            focal: true,
+          },
+        ]}
+        max={24}
+        fillMode="magnitude"
+      />
+      <div className="dp-evidence">
+        <p className="dp-evidence__label">Quotes behind the count</p>
+        {QUOTE_LIST.map((q) => (
+          <p key={q.participant} className="dp-evidence__quote">
+            <span className="dp-evidence__name">{q.participant}</span>
+            {q.quote}
+          </p>
+        ))}
+        <p className="dp-evidence__label">Clips behind the count</p>
+        <div className="dp-evidence__clips">
+          {ADDRESS_FOLLOWUP.clips.map((clip) => (
+            <span key={clip.id} className="dp-evidence__chip">
+              {clip.participant} · {clip.segment}
+            </span>
+          ))}
+        </div>
+      </div>
+    </ChartVizCard>
+  );
+}
+
 type Entry = {
   id: string;
   name: string;
   verdict: string;
+  why: string;
   tech: readonly (readonly [string, string])[];
   caption: string;
   badName?: string;
@@ -177,6 +296,39 @@ type Entry = {
   singlePoints?: Points;
   single?: ReactNode;
 };
+
+const PLAIN_TECH = {
+  themes: [
+    ["What goes in", "the themes from one study, with one count per theme: how many participants raised it."],
+    ["How it reads", "horizontal bars sorted biggest first, the count written on each bar, and the study size inside every count."],
+    ["Where it falls short", "a count says how many people raised a theme, not how much it mattered to them."],
+  ],
+  coverage: [
+    ["What goes in", "the interviews that mention a point, out of the 24 in the study."],
+    ["How it reads", "one bar split where the two sides meet, cherry for the side the answer is about and stone for the rest."],
+    ["Where it falls short", "it shows the divide and nothing about the reasons behind it."],
+  ],
+  groups: [
+    ["What goes in", "one rate per group: how often autocomplete reset a saved address on each device."],
+    ["How it reads", "one dot per group on a single scale that starts at zero, so the gap between dots is the gap between groups."],
+    ["Where it falls short", "it hides how people spread out inside a group. The matrix below shows that person by person."],
+  ],
+  matrix: [
+    ["What goes in", "one row per participant and one column per theme, coded from what each person said."],
+    ["How it reads", "a filled square means that participant raised that theme, and the footer repeats the count each column adds up to."],
+    ["Where it falls short", "it shows who raised a theme, not how strongly they felt it. The quotes carry that."],
+  ],
+  sentiment: [
+    ["What goes in", "how the mock study's participants felt about their first session, counted on each side."],
+    ["How it reads", "two bars grow out of one center line, frustrated to the left and happy to the right, each with its count written out."],
+    ["Where it falls short", "it is a snapshot of one question. It says nothing about how feelings move, and it is not averaged into a score."],
+  ],
+  evidence: [
+    ["What goes in", "the same kind of bar as the themes chart, drawn over the checkout study's real counts."],
+    ["How it reads", "the bar opens in place, and the quotes and clips behind its count sit directly under it."],
+    ["Where it falls short", "the evidence proves the count. The summary sentence above the chart still has to earn its wording."],
+  ],
+} as const;
 
 const ENTRIES: Entry[] = [
   {
@@ -191,67 +343,39 @@ const ENTRIES: Entry[] = [
       cons: ["A count says how many raised it, not how much it mattered"],
     },
     verdict: "The default chart: what came up, counted by the participants who raised it.",
-    tech: [
-      ["Data shape", "themes from one study, counted by participant."],
-      ["Encoding", "sorted horizontal bars, counts on the marks, the denominator in every label."],
-      ["Tradeoff", "a theme under 3 participants is an anecdote, and the answer flags it as a lead."],
-    ],
+    why: "Why it is here: NN/g's reporting guidance is to give the count itself, \u201c1 out of the 6 participants,\u201d not a percent, and MeasuringU makes the same point for small samples: raw numbers let a reader judge how common a theme really was.",
+    tech: PLAIN_TECH.themes,
     caption:
       "One question, run through the default: the prompt as it was typed, the data behind it, and the chart the answer carries. The study in this example is a mock study, and its numbers are marked as mock wherever they appear.",
     single: <WorkedExample />,
   },
   {
-    id: "dropoff",
-    name: "Drop-off between steps",
-    singleName: "Simplified",
-    singlePoints: {"pros": ["One bar per step, read straight off its length", "One cherry bar marks the step that matters"], "cons": ["Mobile and the size of each drop are not shown"]},
-    verdict: "A funnel is kept only when the answer is about a task flow. Checkout is one, so this funnel stays.",
-    tech: [
-      ["Data shape", "ordered steps, share still in flow."],
-      ["Encoding", "length on a zero baseline, direct labels on every bar."],
-      ["Tradeoff", "says nothing about themes; a theme question gets the bars above instead."],
-    ],
+    id: "coverage",
+    name: "Who raised it, and who did not",
+    singleName: "Combined",
+    singlePoints: {"pros": ["Counts first: 18 of 24 and 6 of 24, percents second", "Both sides of the split in one bar"], "cons": ["Says nothing about how strong each quote is"]},
+    verdict: "One bar for the split: who raised the point, and who did not.",
+    why: "Why it is here: the count comes before the percent, so a reader sees 18 of 24 before they see 75% and can weigh the study size for themselves.",
+    tech: PLAIN_TECH.coverage,
     caption:
-      "The fuller first draft (two series, a legend, gridlines, a drop figure on every step) is out of the library: it showed everything and pointed at nothing. What ships is one bar per step, with the Address bar in cherry because it is the largest drop and the reader should find it first.",
+      "The pair this replaces showed the same split twice, once with a legend and an axis, once without. Combined into one bar: 18 of 24 raised address friction and 6 of 24 did not, with the counts kept in front of the percents.",
     single: (
-      <ChartVizCard title="Drop-off by step">
-        <ChartBarList rows={STEP_ROWS} max={100} fillMode="index" />
+      <ChartVizCard title="Address friction">
+        <DivergingSplit />
       </ChartVizCard>
     ),
   },
   {
     id: "groups",
-    badName: "Full detail",
-    badPoints: {"pros": ["A gridline every 20% makes exact values easy to read", "Each row shows its gap to Mobile"], "cons": ["Dense for three groups"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["Dots sit on one shared scale, so gaps read as distance", "One line sums it up: Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
     name: "Comparing groups",
+    singleName: "One shared scale",
+    singlePoints: {"pros": ["Dots sit on one shared scale, so gaps read as distance", "One line sums it up: Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
     verdict: "To compare groups, put each group on one shared axis and let the gap read as distance.",
-    tech: [
-      ["Data shape", "one rate per group."],
-      ["Encoding", "position on a zero-based axis, one dot per group."],
-      ["Tradeoff", "no view of spread inside a group; for participant-level splits, a participant by theme matrix is the clearer form."],
-    ],
+    why: "Why it is here: a segment comparison only reads honestly when every group sits on the same scale, so the distance between the dots is the difference itself.",
+    tech: PLAIN_TECH.groups,
     caption:
-      "Removed the gridline every 20%, the 0 to 100 scale and the points-behind-Mobile figure on each row. Kept the dots on one shared scale and one line saying Mobile is about twice Desktop.",
-    bad: (
-      <ChartVizCard title={SEGMENT_ADDRESS.title}>
-        <ChartDotPlot
-          gridAt={[0, 20, 40, 60, 80, 100]}
-          ticks={[0, 50, 100]}
-          rows={GROUPS.map((g) => ({
-            label: g.label,
-            value: g.pct,
-            display: formatChartPercent(g.pct),
-            focal: "focal" in g && g.focal,
-            detail: g.label === "Mobile" ? "" : GAP_PTS(g.label),
-          }))}
-          max={100}
-          note="Right column: percentage points behind Mobile"
-        />
-      </ChartVizCard>
-    ),
-    good: (
+      "Groups get dots because the comparison is the point here, and dots on one scale make it without a legend or a second series. Bars return in the matrix below, where the unit is a person instead of a rate.",
+    single: (
       <ChartVizCard title={SEGMENT_ADDRESS.title}>
         <ChartDotPlot
           rows={GROUPS.map((g) => ({
@@ -267,65 +391,57 @@ const ENTRIES: Entry[] = [
     ),
   },
   {
-    id: "trend",
-    badName: "Full detail",
-    badPoints: {"pros": ["The change between versions is printed"], "cons": ["The shaded area and extra axis steps add noise"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["Both ends are labeled", "A marker shows the moment autocomplete shipped"], "cons": ["The middle value is not shown"]},
-    name: "Change over time",
-    verdict: "A line shows the climb, and one marker says what caused it.",
-    tech: [
-      ["Data shape", "one score per version, in order."],
-      ["Encoding", "slope shows direction; height on a shared axis shows size."],
-      ["Tradeoff", "needs three or more versions."],
-    ],
+    id: "matrix",
+    name: "Participant by theme matrix",
+    singleName: "The coding, visible",
+    singlePoints: {
+      pros: ["Every theme count can be checked against the people behind it", "A theme carried by two people reads differently from one carried by ten"],
+      cons: ["It takes more room than the bars it backs up"],
+    },
+    verdict: "The matrix sits behind the themes chart: the same counts, opened up person by person.",
+    why: "Why it is here: NN/g describes thematic analysis as coding what people said and clustering the codes into themes. The matrix is that coding, left visible instead of hidden behind the totals.",
+    tech: PLAIN_TECH.matrix,
     caption:
-      "Removed the shaded area, the extra axis steps and the printed change between versions. Kept both ends labeled and the marker where autocomplete ships, because that event explains the climb.",
-    bad: (
-      <ChartVizCard title="Sentiment over time">
-        <ChartLinePlot
-          points={ROUNDS}
-          yMode="trend"
-          tickCount={5}
-          area
-          deltas
-          annotation={{ index: 1, label: EVENT_LABEL }}
-          formatValue={(n) => formatChartDecimal(n)}
-          seriesFocal={false}
-        />
-      </ChartVizCard>
-    ),
-    good: (
-      <ChartVizCard title="Sentiment over time">
-        <ChartLinePlot
-          points={ROUNDS}
-          yMode="trend"
-          valueIndices={[0, ROUNDS.length - 1]}
-          annotation={{ index: 1, label: EVENT_LABEL }}
-          formatValue={(n) => formatChartDecimal(n)}
-          seriesFocal={false}
-        />
+      "Each column adds up to the count on the matching bar of the themes chart, so the two views can be checked against each other. The first column is cherry because the invite link is the theme the answer leads with.",
+    single: (
+      <ChartVizCard title="Who raised which theme">
+        <ThemeMatrix />
       </ChartVizCard>
     ),
   },
   {
-    id: "coverage",
-    name: "Who raised it, and who did not",
-    singleName: "Combined",
-    singlePoints: {"pros": ["Counts first: 18 of 24 and 6 of 24, percents second", "Both sides of the split in one bar"], "cons": ["Says nothing about how strong each quote is"]},
-    verdict: "One bar for the split: who raised the point, and who did not.",
-    tech: [
-      ["Data shape", "interviews that mention it, out of 24."],
-      ["Encoding", "one bar split where the two sides meet, cherry for the side the answer is about, stone for the rest."],
-      ["Tradeoff", "shows the divide, not the reasons behind it."],
-    ],
+    id: "sentiment",
+    name: "Sentiment as a split",
+    singleName: "Two ends, counted",
+    singlePoints: {
+      pros: ["Disagreement stays visible instead of averaging away", "Both ends carry their counts, so the split can be weighed"],
+      cons: ["The mixed middle needs its own line, or it disappears"],
+    },
+    verdict: "Sentiment ships as a split with counts on both ends, never as one averaged score.",
+    why: "Why it is here: an average would turn nine frustrated people and two happy ones into a single mild number. The split keeps both ends in view, counted.",
+    tech: PLAIN_TECH.sentiment,
     caption:
-      "The pair this replaces showed the same split twice, once with a legend and an axis, once without. Combined into one bar: 75% of the set raised address friction and 25% did not, with the counts kept in front of the percents.",
+      "Studies do not run in rounds, so there is no line of sentiment over time in this library. What a team needs from sentiment is the shape of the disagreement on one question, and that is a split.",
     single: (
-      <ChartVizCard title="Address friction">
-        <DivergingSplit />
+      <ChartVizCard title="How the first session felt">
+        <SentimentSplit />
       </ChartVizCard>
     ),
+  },
+  {
+    id: "evidence",
+    name: "Every bar opens its evidence",
+    singleName: "The bar, opened",
+    singlePoints: {
+      pros: ["The quotes and clips behind a count are one tap away, in place", "A reader can check the count without leaving the answer"],
+      cons: ["An opened bar takes room the answer may not have"],
+    },
+    verdict: "A rule, not a chart type: any bar in an answer can open the quotes and clips behind its count.",
+    why: "Why it is here: User Interviews' State of User Research 2025 found 80% of researchers use AI in their work and 91% worry about accuracy and hallucinations. A bar that opens its own evidence is how an AI answer answers that worry.",
+    tech: PLAIN_TECH.evidence,
+    caption:
+      "Shown with the checkout study's address bar, the strongest count in the study. The quotes and clips under it are the study's own, the same ones the answer card carries.",
+    single: <EvidenceBars />,
   },
 ];
 
@@ -352,6 +468,7 @@ export default function DialogueChartLibrary() {
             </div>
           )}
           <p className="dialogue-lib__verdict" data-annotate-part={`verdict-${entry.id}`}>{entry.verdict}</p>
+          <p className="dialogue-lib__why" data-annotate-part={`why-${entry.id}`}>{entry.why}</p>
           <p className="dialogue-lib__reason" data-annotate-part={`reason-${entry.id}`}>{entry.caption}</p>
           <div className="dialogue-lib__tech">
             {entry.tech.map(([label, text]) => (

@@ -38,6 +38,15 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
         .footer-links li {
           line-height: var(--lh-body);
         }
+        /* Every footer link target is at least 44 by 44, the one-letter
+           X link included (round L). */
+        .footer-links a,
+        .footer-links button.footer-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 44px;
+        }
         /* Phone only. At 480px and up the row stays name-left, links-right. */
         @media (max-width: 479px) {
           .footer-inner {
