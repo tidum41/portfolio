@@ -25,12 +25,11 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           justify-content: space-between;
           padding: 24px var(--page-px);
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
-          min-height: 69px;
         }
         .footer-links {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 24px;
           list-style: none;
           margin: 0;
           padding: 0;
@@ -45,14 +44,10 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
             flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
-            gap: 20px;
+            gap: 8px;
           }
           .footer-links {
-            gap: 20px;
-          }
-          .footer-links a,
-          .footer-links button.footer-link {
-            min-height: 0;
+            column-gap: 24px;
           }
         }
       `}</style>

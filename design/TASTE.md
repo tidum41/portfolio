@@ -38,6 +38,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Anatomy annotations: the numbers sit on one shared alignment at the rail's right edge, where the leader lines start (round K, Oct 25).
 - Counter-evidence's third participant is Alex P.; Sam R. stays the struggling user in the clips and the quotes card (round K, Oct 25).
 - Chart card divider runs the full width of the card whenever data renders (round K, Oct 25).
+- Nav is 76px tall (16px padding, 32px gap, 24px under 480px); the theme button is at least 44 by 44 with the icon centered; footer links sit 24px apart and keep 44px targets on phones; every page keeps 120px above the footer (nav and footer pass, Oct 25).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
