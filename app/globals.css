@@ -48,6 +48,14 @@
   --color-link-blue:      #0B5FFF;
   --color-accent:         #9590C2;
   --color-accent-subtle:  rgba(149,144,194,0.10);
+  /* Muted semantic status — case-study verdict marks, not saturated Material. */
+  --color-success:        #5F8A68;
+  --color-success-subtle: rgba(95, 138, 104, 0.12);
+  --color-error:          #A86F6F;
+  /* BruinLease research stat icons (rose / teal / amber). */
+  --color-stat-stress:    #C4899A;
+  --color-stat-trust:     #6FA8A0;
+  --color-stat-outreach:  #C4A878;
   --color-toc-track:      rgba(173, 173, 173, 0.25);
   --color-badge-bg:       #FFFFFF;
   --color-warm-bg:        #EBE6DF;
@@ -2074,6 +2082,12 @@ html[data-theme="dark"] {
   --color-link-blue:      #6EA8FF;
   --color-accent:         #A09DC8;
   --color-accent-subtle:  rgba(160, 157, 200, 0.15);
+  --color-success:        #7FA88A;
+  --color-success-subtle: rgba(127, 168, 138, 0.18);
+  --color-error:          #C08A8A;
+  --color-stat-stress:    #D4A0AE;
+  --color-stat-trust:     #86B8B0;
+  --color-stat-outreach:  #D4BC90;
   --color-toc-track:      rgba(255, 255, 255, 0.10);
   --color-badge-bg:       #1E2226;
   --color-warm-bg:        #1E1C19;
@@ -2878,19 +2892,28 @@ agentation-toolbar,
   font-weight: 400;
   color: var(--color-text-secondary);
 }
-.dialogue-lib__mark {
+/* Shared case-study list/verdict marks (BruinLease + Dialogue). */
+.cs-verdict-mark {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  margin-top: calc((var(--text-meta-leading) - 16px) / 2);
+  margin-top: calc((var(--text-meta-leading, 20px) - 16px) / 2);
+  color: var(--color-text-tertiary);
 }
-.dialogue-lib__mark[data-kind="pro"] {
+.cs-verdict-mark[data-kind="pro"] {
   color: var(--dp-brand);
 }
-.dialogue-lib__mark[data-kind="con"] {
+.cs-verdict-mark[data-kind="right"] {
+  color: var(--color-success);
+}
+.cs-verdict-mark[data-kind="wrong"] {
+  color: var(--color-error);
+}
+.cs-verdict-mark[data-kind="con"],
+.cs-verdict-mark[data-kind="neutral"] {
   color: var(--color-text-tertiary);
 }
 .dialogue-lib__chart {
