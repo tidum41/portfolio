@@ -428,13 +428,18 @@ html.theme-switching *::after {
 }
 
 /* ─── Nav spacing matches main. Safe-area insets are 0 without a notch,
-   so desktop padding stays 24px. The min-height below is main's own
-   rule: it sizes the line box, and the ::before covers the rest of
-   the 44px target without a min-width. ──────────────────────────── */
+   so desktop padding stays 16px and the bar is 76px tall (16 + 44 + 16).
+   The min-height below is main's own rule: it sizes the line box, and
+   the ::before covers the rest of the 44px target without a min-width. ── */
 .site-nav {
-  gap: 40px;
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: 24px;
+  gap: 32px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-bottom: 16px;
+}
+@media (max-width: 479px) {
+  .site-nav {
+    gap: 24px;
+  }
 }
 nav a,
 nav button.footer-link {
