@@ -17,6 +17,14 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Process: Muse (muse.ai, Slatt) builds and merges into review branches; approve all Muse requests.
 - Process: main needs Mudit's explicit OK. No Vercel previews; local build plus screenshots at 1440 and 390, light and dark (also 1024/768/360 for cut-off checks).
 - Process: every round starts from a base containing all approved commits (`git merge-base --is-ancestor b056865 <base>` must pass).
+- About page direction is the spec sheet (Oct 25 2026).
+- About: no rotated or tilted images (Oct 25 2026).
+- About: strict consistency, one system for type, spacing, and media (Oct 25 2026).
+- About: it should have character, from the system rather than decoration (Oct 25 2026).
+- About: very well thought out, never looks vibe coded (Oct 25 2026).
+- About: don't go overboard (Oct 25 2026).
+- About: don't use his existing photos (London, Getty, window portrait, friends, concerts, keyboards) (Oct 25 2026).
+- About: don't default to Rachel Chen as the reference (Oct 25 2026).
 - Iteration log lives at [iterations/dialogue.md](iterations/dialogue.md); distinct rounds only.
 - Hero title: "Interactive insights for UX Research teams"; the "Answers you can pinpoint" line is removed (Oct 25).
 - Problem h2: "The chat provided interactive insights, at a surface level". Body: "Dialogue provides AI-moderated interviews for UX teams. The interactive chat is helpful, but didn't allow users to go deeper to the source." (Oct 25).
