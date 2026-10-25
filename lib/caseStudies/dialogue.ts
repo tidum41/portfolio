@@ -8,7 +8,7 @@ import manifest from "@/lib/caseStudies/dialogueRasterManifest.json";
 
 export const DIALOGUE_DRAFT = true;
 
-export const DIALOGUE_TITLE = "Interactive insights for UX Research teams";
+export const DIALOGUE_TITLE = "Interactive insights for UX research teams";
 
 /** Kept as the hero subline under the H1. */
 export const DIALOGUE_SUBTITLE = "I designed the study chat so every answer shows the interviews behind it";

@@ -26,7 +26,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - About: don't use his existing photos (London, Getty, window portrait, friends, concerts, keyboards) (Oct 25 2026).
 - About: don't default to Rachel Chen as the reference (Oct 25 2026).
 - Iteration log lives at [iterations/dialogue.md](iterations/dialogue.md); distinct rounds only.
-- Hero title: "Interactive insights for UX Research teams"; the "Answers you can pinpoint" line is removed (Oct 25).
+- Hero title: "Interactive insights for UX research teams"; the "Answers you can pinpoint" line is removed (Oct 25, casing round L).
 - Problem h2: "The chat provided interactive insights, at a surface level". Body: "Dialogue provides AI-moderated interviews for UX teams. The interactive chat is helpful, but didn't allow users to go deeper to the source." (Oct 25).
 - Why-it-matters h2 and its Benjamin/Justin paragraph are removed (Oct 25).
 - Lead-answer three-way compare gets its own section, roughly "Bringing more depth to answers" (Oct 25).
@@ -47,12 +47,23 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Counter-evidence's third participant is Alex P.; Sam R. stays the struggling user in the clips and the quotes card (round K, Oct 25).
 - Chart card divider runs the full width of the card whenever data renders (round K, Oct 25).
 - Nav is 76px tall (16px padding, 32px gap, 24px under 480px); the theme button is at least 44 by 44 with the icon centered; footer links sit 24px apart and keep 44px targets on phones; every page keeps 120px above the footer (nav and footer pass, Oct 25).
+- Footer links are at least 44 wide as well as 44 tall, the one-letter X link included (round L, Oct 25).
+- Every Dialogue figure locks to the 640px text column; nothing breaks out wider (round L, Oct 25).
+- One neutral figure card: near-white well (#f7f7f5 in light, #1b1e21 in dark), 8px radius, no inset border box (round L, Oct 25).
+- The three compare cards are equal height, and the sources avatars are 24px with room to wrap (round L, Oct 25).
+- Full-answer screens render at near full size: answer panel 384px, drawer 272px, and the old 640px height cap is gone (round L, Oct 25).
+- Chart library cuts: the line and over-time chart, the funnel, rating averages and pies are out. Studies do not run in rounds, so no Round axes remain (round L, Oct 25).
+- Chart library adds a participant by theme matrix, a diverging sentiment bar, and evidence-linked bars: every bar opens the quotes and clips behind its count (round L, Oct 25).
+- Research figures on the page are limited to the round L set: NN/g counts over percents ("1 out of the 6 participants"), User Interviews 2025 (80% use AI, 91% worry about accuracy and hallucinations), Maze confidence bands (low 1 to 4, medium 5 to 9, high 10 or more), NN/g thematic analysis as coding clustered into themes (round L, Oct 25).
+- Problem section describes the real product's summary surface neutrally: prose only, sentiment pills, unlabeled +N badges, no counts or charts, evidence a few steps away on section pages (round L, Oct 25).
+- "UX research" casing everywhere, headings and the hero title included (round L, Oct 25).
+- overscroll-behavior-y: none on html and body, so the page does not bounce on scroll up (round L, Oct 25).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
 - Dialogue logo avatar on transcript rows (b056865, public/dialogue/dialogue-avatar.svg).
 - "Add to my plan" beat in the thin-data section (b056865).
-- Full chart library: dot plot, stacked bar, grouped bars, richer vs simplified pairs, pros/cons (85646e7, cc24a9f, dea3ad7).
+- Chart library: themes by participants, the split, group dot plot, participant by theme matrix, sentiment split, evidence-linked bars, each with pros and cons (round L, Oct 25).
 - Early Paper-recreated iterations are the standard; compare regressions against them.
 - Compared specimens: same height, concentric radii, shared proportions and font sizes (round G).
 - Chart titles visibly separated from the chart; answer sentence as title, values on marks (round I, Carbon).
@@ -75,7 +86,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Status chips on library pairs; use pros/cons.
 - Hover states on figures.
 - Copywriting voice; he wants plain, specific site voice.
-- Chart library "full detail" first variant: rejected, remove (Oct 25).
+- Any "full detail" chart variant: rejected, all removed (round L, Oct 25).
 - Arrow animation on pager previous/next: remove (Oct 25).
 
 ## 4. Pinned approved versions
@@ -107,9 +118,8 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Didn't: Muse stalled ~2h on one pending approval (round J); check approvals early.
 
 ## 7. Open
-- Call for Mudit: sentiment axis reads "Round 1 to 3"; suggest "First, second and third study".
 - Call for Mudit: "version" means two things; suggest product ones become "releases".
-- Unconfirmed facts: funnel 100/62/54/42/36, sentiment 2.4/3.1/3.6, mobile 48/41/33, "headed into slides and reports", store name Northline.
+- Unconfirmed facts: funnel 100/62/54/42/36, sentiment 2.4/3.1/3.6, mobile 48/41/33, store name Northline.
 - Placeholders (3): why version one shipped without sources; why the cutoff sits where it does; what would change his mind about the cutoff.
 - Main still at 90beb49; promoting canvas to main waits on Mudit.
 
