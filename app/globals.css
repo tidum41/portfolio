@@ -652,14 +652,14 @@ html[data-theme="light"] {
   .popup-close-btn:active { color: var(--color-text-primary); }
 }
 
-/* Info (i) control — same 24px glyph / 44px tap target as .popup-close-btn. */
+/* Info (i) control — identical chrome to .popup-close-btn (24px / 44px tap). */
 .popup-info-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-mosaic);
   border: none;
   padding: 0;
   cursor: pointer;
@@ -671,6 +671,7 @@ html[data-theme="light"] {
 .popup-info-btn::before {
   content: "";
   position: absolute;
+  /* 24px icon + 10px each side = 44px tap target. */
   inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -714,15 +715,16 @@ html[data-theme="light"] {
   z-index: 2;
 }
 
-/* Desktop: 8px under the top bar, right edge aligned to the info button
-   (topbar pad-right 12 + close 24 + gap 4 = 40). Cap at 320px. */
+/* Desktop: 8px under the floating controls (top 16 + btn 24 + 8 = 48),
+   right edge aligned to the info button (right 16 + close 24 + gap 8 = 48).
+   Cap at 320px. Compact spec sheet — single column, hairline rhythm. */
 .project-popup-info {
   position: absolute;
-  top: 8px;
-  right: 40px;
-  width: min(320px, calc(100% - 52px));
+  top: 48px;
+  right: 48px;
+  width: min(320px, calc(100% - 64px));
   max-width: 320px;
-  max-height: calc(100% - 16px);
+  max-height: calc(100% - 56px);
   overflow: auto;
   z-index: 3;
   background: var(--color-bg);
@@ -736,65 +738,118 @@ html[data-theme="light"] {
   padding: 16px;
 }
 
-.project-popup-info-meta.cs-meta-grid {
-  margin-top: 0;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 16px;
-}
-
-.project-popup-info-meta .cs-meta-item {
+.project-popup-spec {
+  margin: 0;
   padding: 0;
 }
 
+.project-popup-spec-row {
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.project-popup-spec-row:first-child {
+  padding-top: 0;
+}
+.project-popup-spec-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.project-popup-spec-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 4px;
+}
+
+.project-popup-spec-value {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Align with .project-popup-spec-value: same left edge + meta baseline. */
 .project-popup-info-link {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 16px;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 14px;
+  font-family: var(--font-sans);
   font-size: var(--fs-meta);
-  font-weight: 500;
+  font-weight: 400;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
   color: var(--color-link-blue);
   text-decoration: none;
 }
 .project-popup-info-link:hover {
   text-decoration: underline;
 }
+.project-popup-info-link-icon {
+  /* Optically centre the northeast arrow on the meta x-height. */
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+  top: 0.12em;
+}
 
 .project-popup-why {
-  margin-top: 16px;
-  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 14px;
   padding-top: 12px;
+  border-top: 1px solid var(--color-border-subtle);
 }
 .project-popup-why > summary {
   cursor: pointer;
   list-style: none;
-  font-size: var(--fs-meta);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
   user-select: none;
+  color: var(--color-text-primary);
 }
 .project-popup-why > summary::-webkit-details-marker {
   display: none;
 }
-.project-popup-why > summary::before {
-  content: "";
-  display: inline-block;
-  width: 0.45em;
-  height: 0.45em;
-  margin-right: 0.5em;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(-45deg) translateY(-1px);
-  transition: transform 120ms ease;
+.project-popup-why-label {
+  font-family: var(--font-page-title);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
 }
-.project-popup-why[open] > summary::before {
-  transform: rotate(45deg) translateY(-2px);
+.project-popup-why-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  color: var(--color-text-tertiary);
+  transform: rotate(0deg);
+  transition: transform 160ms var(--ease-out);
+}
+.project-popup-why[open] > summary .project-popup-why-chevron {
+  transform: rotate(90deg);
 }
 .project-popup-why > p {
   margin: 10px 0 0;
-  font-size: var(--fs-meta);
-  line-height: var(--lh-meta);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   color: var(--color-text-secondary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-popup-why-chevron {
+    transition: none;
+  }
 }
 
 /* Neutral skeleton while the large-popup iframe loads — no spinner flash. */
@@ -870,9 +925,6 @@ html[data-theme="light"] {
     border-left: none;
     border-right: none;
     border-bottom: none;
-  }
-  .project-popup-info-meta.cs-meta-grid {
-    grid-template-columns: 1fr;
   }
 }
 

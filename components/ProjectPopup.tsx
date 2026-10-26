@@ -43,6 +43,11 @@ interface Props {
   children: ReactNode;
 }
 
+const INFO_MOTION = {
+  duration: 0.16,
+  ease: EASE_OPACITY,
+} as const;
+
 // Lightweight in-page modal for grid items that are meant to be played with
 // rather than read (CD Player, Habit Tracker) — an alternative to a full
 // case-study page navigation. Portaled to <body> (same pattern as
@@ -78,6 +83,8 @@ export default function ProjectPopup({
   const panelEnter    = reduced ? 0.01 : PANEL_DURATION.panel.enter;
   const panelExit     = reduced ? 0.01 : PANEL_DURATION.panel.exit;
   const panelY        = reduced ? 0 : 10;
+  const infoY         = reduced ? 0 : 4;
+  const infoDuration  = reduced ? 0.01 : INFO_MOTION.duration;
 
   infoOpenRef.current = infoOpen;
 
@@ -192,6 +199,7 @@ export default function ProjectPopup({
         colorScheme: "inherit",
         boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
         outline: "none",
+        position: "relative",
       }
     : {
         width: `min(${maxWidth}px, 100%)`,
@@ -208,6 +216,38 @@ export default function ProjectPopup({
         boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
         outline: "none",
       };
+
+  const closeButton = (
+    <button
+      className="popup-close-btn"
+      onClick={onClose}
+      aria-label="Close"
+      title="Close"
+    >
+      <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="2" y1="2" x2="14" y2="14" />
+        <line x1="14" y1="2" x2="2" y2="14" />
+      </svg>
+    </button>
+  );
+
+  const infoButton = (
+    <button
+      type="button"
+      className="popup-info-btn"
+      onClick={() => setInfoOpen((v) => !v)}
+      aria-label={infoOpen ? "Hide project info" : "Show project info"}
+      aria-expanded={infoOpen}
+      aria-controls={infoPanelId}
+      title="Info"
+    >
+      <svg viewBox="0 0 16 16" width={14} height={14} fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="8" y1="7.25" x2="8" y2="11.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="5" r="0.85" fill="currentColor" />
+      </svg>
+    </button>
+  );
 
   return createPortal(
     <AnimatePresence onExitComplete={onExitComplete}>
@@ -272,67 +312,17 @@ export default function ProjectPopup({
             exit={{ opacity: 0, transform: `translateY(${panelY}px)`, transition: { duration: panelExit, ease: EASE_EXIT } }}
             style={panelStyle}
           >
-            <div
-              className={isLarge ? "project-popup-topbar" : undefined}
-              style={{
-                display: "flex",
-                alignItems: isLarge ? "center" : "flex-start",
-                justifyContent: "space-between",
-                padding: isLarge ? "10px 12px 10px 16px" : "16px 16px 0",
-                flexShrink: 0,
-                gap: 12,
-                borderBottom: isLarge ? "1px solid var(--color-border-subtle)" : undefined,
-              }}
-            >
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <p
-                  style={{
-                    fontSize: isLarge ? 15 : 18,
-                    fontWeight: 500,
-                    color: "var(--color-text-primary)",
-                    margin: 0,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {title}
-                </p>
-                {!isLarge && sub && (
-                  <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>
-                )}
+            {!isLarge && (
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
+                <div>
+                  <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
+                  {sub && (
+                    <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>
+                  )}
+                </div>
+                {closeButton}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                {isLarge && (
-                  <button
-                    type="button"
-                    className="popup-info-btn"
-                    onClick={() => setInfoOpen((v) => !v)}
-                    aria-label={infoOpen ? "Hide project info" : "Show project info"}
-                    aria-expanded={infoOpen}
-                    aria-controls={infoPanelId}
-                    title="Info"
-                  >
-                    <svg viewBox="0 0 16 16" width={16} height={16} fill="none" aria-hidden>
-                      <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
-                      <line x1="8" y1="7.25" x2="8" y2="11.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      <circle cx="8" cy="5" r="0.85" fill="currentColor" />
-                    </svg>
-                  </button>
-                )}
-                <button
-                  className="popup-close-btn"
-                  onClick={onClose}
-                  aria-label="Close"
-                  title="Close"
-                >
-                  <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <line x1="2" y1="2" x2="14" y2="14" />
-                    <line x1="14" y1="2" x2="2" y2="14" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            )}
 
             <div
               style={{
@@ -350,61 +340,99 @@ export default function ProjectPopup({
             >
               {children}
 
-              {isLarge && infoOpen && (
-                <>
-                  <button
-                    type="button"
-                    className="project-popup-info-scrim"
-                    aria-label="Dismiss project info"
-                    onClick={() => setInfoOpen(false)}
-                  />
-                  <div
-                    id={infoPanelId}
-                    className="project-popup-info"
-                    role="region"
-                    aria-label="Project details"
-                  >
-                    <div className="project-popup-info-inner">
-                      {infoMeta && infoMeta.length > 0 && (
-                        <div className="cs-meta-grid project-popup-info-meta">
-                          {infoMeta.map(({ label, values }) => (
-                            <div key={label} className="cs-meta-item">
-                              <p className="cs-meta-label">{label}</p>
-                              {values.map((v) => (
-                                <p key={v} className="cs-meta-value">
-                                  {v}
-                                </p>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {infoLink && (
-                        <a
-                          className="project-popup-info-link"
-                          href={infoLink.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {infoLink.label}
-                          <svg viewBox="0 0 12 12" width={11} height={11} fill="none" aria-hidden>
-                            <path d="M3.5 2.5H9.5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                          </svg>
-                        </a>
-                      )}
-                      <details
-                        className="project-popup-why"
-                        open={whyOpen}
-                        onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
-                      >
-                        <summary>Why I built it</summary>
-                        <p>{whyBuilt}</p>
-                      </details>
-                    </div>
-                  </div>
-                </>
+              {isLarge && (
+                // Float over the app at the same 16px inset as the CD/habit
+                // close control (panel border adds the measured +1px). No title
+                // strip — the iframe owns the full panel.
+                <div
+                  className="project-popup-topbar project-popup-topbar--large"
+                  style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 16,
+                    zIndex: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {infoButton}
+                  {closeButton}
+                </div>
               )}
+
+              <AnimatePresence>
+                {isLarge && infoOpen && (
+                  <>
+                    <motion.button
+                      key="info-scrim"
+                      type="button"
+                      className="project-popup-info-scrim"
+                      aria-label="Dismiss project info"
+                      onClick={() => setInfoOpen(false)}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1, transition: { duration: infoDuration, ease: EASE_OPACITY } }}
+                      exit={{ opacity: 0, transition: { duration: infoDuration, ease: EASE_EXIT } }}
+                    />
+                    <motion.div
+                      key="info-panel"
+                      id={infoPanelId}
+                      className="project-popup-info"
+                      role="region"
+                      aria-label="Project details"
+                      initial={{ opacity: 0, transform: `translateY(${infoY}px)` }}
+                      animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: infoDuration, ease: EASE_OPACITY } }}
+                      exit={{ opacity: 0, transform: `translateY(${infoY}px)`, transition: { duration: infoDuration, ease: EASE_EXIT } }}
+                    >
+                      <div className="project-popup-info-inner">
+                        {infoMeta && infoMeta.length > 0 && (
+                          <dl className="project-popup-spec">
+                            {infoMeta.map(({ label, values }) => (
+                              <div key={label} className="project-popup-spec-row">
+                                <dt className="project-popup-spec-label">{label}</dt>
+                                {values.map((v) => (
+                                  <dd key={v} className="project-popup-spec-value">
+                                    {v}
+                                  </dd>
+                                ))}
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                        {infoLink && (
+                          <a
+                            className="project-popup-info-link"
+                            href={infoLink.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <span className="project-popup-info-link-text">{infoLink.label}</span>
+                            <svg className="project-popup-info-link-icon" viewBox="0 0 12 12" width={10} height={10} fill="none" aria-hidden>
+                              <path d="M3.5 2.5H9.5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                            </svg>
+                          </a>
+                        )}
+                        <details
+                          className="project-popup-why"
+                          open={whyOpen}
+                          onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
+                        >
+                          <summary>
+                            <span className="project-popup-why-chevron" aria-hidden>
+                              <svg viewBox="0 0 12 12" width={10} height={10} fill="none">
+                                <path d="M4.25 2.5L7.75 6L4.25 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </span>
+                            <span className="project-popup-why-label">Why I built it</span>
+                          </summary>
+                          <p>{whyBuilt}</p>
+                        </details>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {!isLarge && (description || (tools && tools.length > 0)) && (

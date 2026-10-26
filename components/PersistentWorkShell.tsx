@@ -70,13 +70,15 @@ const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
 
 const ALLINONE_INFO_META = [
-  { label: "Role", values: ["Solo designer and engineer"] },
   { label: "Timeline", values: ["2 weeks"] },
   { label: "Built with", values: ["React, Vite, installable web app (PWA)"] },
-  { label: "AI", values: ["Groq API, gpt-oss-20b model, via a Vercel serverless function"] },
-  { label: "Data", values: ["browser storage, seeded with sample tasks"] },
-  { label: "Hosting", values: ["Vercel"] },
+  { label: "AI", values: ["Groq API, gpt-oss-20b"] },
+  { label: "Data", values: ["Google Sheets API, Supabase"] },
+  { label: "Designed with", values: ["Paper, Claude Code"] },
 ];
+
+const ALLINONE_WHY_BUILT =
+  "I found myself dumping all my tasks into one Apple Note, so I built a tool (all-in-one) that allows users to define how they want categories grouped, then have a model sort tasks accordingly. I imagined it as a stripped down version of Notes, with an organized list feature and standard notes.";
 // Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
 // carousel + drag hint aren't clipped at narrow modal widths. Sized to
 // fill more of the viewport while leaving room for panel chrome.
@@ -920,6 +922,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           panelBg="var(--color-bg)"
           infoMeta={[...ALLINONE_INFO_META]}
           infoLink={{ href: ALLINONE_APP_URL, label: "Open full app" }}
+          whyBuilt={ALLINONE_WHY_BUILT}
         >
           <div
             style={{
