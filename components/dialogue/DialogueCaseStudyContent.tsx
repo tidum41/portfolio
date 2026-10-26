@@ -4,9 +4,7 @@ import dynamic from "next/dynamic";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import DialogueRachelFrame, {
-  DialogueCaption,
-} from "@/components/dialogue/DialogueRachelFrame";
+import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import HearthsideViewport from "@/components/dialogue/HearthsideViewport";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -106,15 +104,6 @@ function NativeFigure({
   );
 }
 
-const NEEDS = [
-  "Comparisons",
-  "Segments and funnel stage",
-  "Non-researcher stakeholders",
-  "Share-outs in hours",
-  "Video evidence",
-  "Quality checks",
-] as const;
-
 export function DialogueCaseStudyContent({
   backHref = "/",
 }: {
@@ -138,6 +127,11 @@ export function DialogueCaseStudyContent({
             subtitle="Product designer (contract), Dec 2025 to Mar 2026"
             metadata={[]}
           >
+            <p className="cs-hero-body">
+              Dialogue runs AI-moderated interviews and turns them into a study site with a chat.
+              I redesigned how that chat answers, so a team can see who said something and how
+              many people said it. Part of it shipped, and the rest is shown as concept.
+            </p>
             <p className="cs-hero-meta-line">
               Dialogue&rsquo;s customers include Google, Meta, TikTok, Afterpay, Nextdoor and
               Wayfair.
@@ -151,32 +145,23 @@ export function DialogueCaseStudyContent({
                 <HeroLayeredFigure />
               </HearthsideViewport>
             </div>
-            <DialogueCaption
-              label="Hero answer"
-              sentence="One answer with its count, the quote behind it, and the clip open."
-            />
+            <p className="dialogue-caption">
+              <span className="dialogue-caption__sentence">
+                One answer, its count, and the clip behind a quote.
+              </span>
+            </p>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem" marginTop={64}>
-              <ClaimH2>The chat provided interactive insights, at a surface level</ClaimH2>
+              <ClaimH2>Teams needed to check an answer before sharing it</ClaimH2>
               <CaseStudyBody>
-                Dialogue provides AI-moderated interviews for UX teams. The interactive chat is
-                helpful, but didn&rsquo;t allow users to go deeper to the source.
-              </CaseStudyBody>
-              <p className="cs-needs-lead">
-                Dialogue&rsquo;s case studies with Wayfair, Kalshi, Doctronic and Suno describe
-                teams asking for:
-              </p>
-              <ul className="cs-needs">
-                {NEEDS.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-              <CaseStudyBody>
-                The deep dive for this direction was desk research: NN/g, Maze, User Interviews
-                and IBM Carbon. I conducted no interviews, so the needs above come from published
-                case studies and research, not from talking to Dialogue&rsquo;s users.
+                I did a desk research deep dive on how UX research teams work, using NN/g, Maze,
+                User Interviews and IBM Carbon, with no interviews. Dialogue&rsquo;s published
+                case studies show teams comparing segments and funnel stages, sharing with
+                non-researchers within hours, and wanting video evidence and quality checks. The
+                chat answered with a theme list, lost the subject on a follow-up, and summed up
+                with a table of names.
               </CaseStudyBody>
               <ProductFigure
                 caption="Recreated with invented data"
@@ -191,32 +176,24 @@ export function DialogueCaseStudyContent({
               <ClaimH2>I moved the chat from one interview to the whole study</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                The chat first answered questions about a single interview, so anything it said
-                rested on one person&rsquo;s answers. I redesigned its scope so a question runs
-                across every interview in the study, and the header says which scope is active. A
-                wider scope makes a wrong answer easier to spread, which is why the counts in the
-                next section had to open.
+                The chat first answered about a single interview. Teams act on patterns across a
+                study, so I moved it up to all 24 interviews. Every answer then had to say how
+                much of the study it covered.
               </CaseStudyBody>
-              <ProductFigure
-                caption="The chat's scope, from one interview to all 24."
-                name="dialogue-scope-pair"
-                title="The per-interview chat header, muted, beside the study-wide header"
-                innerWidth={640}
-              >
+              <NativeFigure caption="The chat moved from one interview to the whole study.">
                 <ScopePairFigure />
-              </ProductFigure>
+              </NativeFigure>
             </Section>
 
             <Section id="counts" marginTop={64}>
-              <ClaimH2>Answers carry a count that opens on both sides</ClaimH2>
+              <ClaimH2>Counts read as 18 of 24, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                A count without the people behind it asks for trust the answer has not earned.
-                Both segments of the bar open into the evidence behind them, including the
-                shoppers who did not say it.
+                With 24 interviews a percent hides how few people sit behind a claim. The bar
+                reads 18 of 24, and tapping either side opens the quotes behind it.
               </CaseStudyBody>
               <ProductFigure
-                caption="The 18 of 24 bar with both segments open."
+                caption="Tapping 18 or 6 opens the people behind the count."
                 name="dialogue-counts-open"
                 title="The count bar with the 6 of 24 segment outlined and both segments' evidence open beneath"
               >
@@ -225,60 +202,61 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="comparison" marginTop={64}>
-              <ClaimH2>Segments can be compared inside one answer</ClaimH2>
+              <ClaimH2>Comparisons answer with one row per segment</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Teams asked for comparisons, so I designed an answer that holds two segments in
-                one place, each with its count and a clip. It takes more room than a single
-                answer, so it appears when a question names two segments.
+                Teams asked how first-time buyers differ from repeat buyers. I gave comparisons
+                their own answer shape, one row per segment with its count and a clip. It depends
+                on reliable segment tags from the screener, and a wrong tag would mislead.
               </CaseStudyBody>
-              <NativeFigure caption="One row per segment, each with its count and clip.">
+              <NativeFigure caption="Each segment keeps its own count and its own evidence.">
                 <ComparisonRowsFigure />
               </NativeFigure>
             </Section>
 
             <Section id="levels" marginTop={64}>
-              <ClaimH2>One answer works at three depths</ClaimH2>
+              <ClaimH2>Each answer lets a team stop at the depth it needs</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A summary is enough for a skim, and some readers need the person&rsquo;s own words
-                or the moment itself. I kept all three depths in one answer so moving deeper
-                never starts the question over.
+                A stakeholder needs the sentence and a researcher needs the evidence. The answer
+                leads with a sentence and its count, and quotes sit one tap below.
               </CaseStudyBody>
-              <NativeFigure caption="The same answer at three depths.">
+              <NativeFigure caption="Three formats for one question; the last keeps overview and evidence.">
                 <LevelsFigure />
               </NativeFigure>
             </Section>
 
             <Section id="clips" marginTop={64}>
-              <ClaimH2>Viewing responses directly within the chat window</ClaimH2>
+              <ClaimH2>Clips play inside the chat instead of linking out</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A quote can be trimmed until it agrees with anyone. Playing the clip inside the
-                chat keeps the moment intact, with the transcript line lit as it plays, so the
-                reader hears the hesitation the text leaves out.
+                Linking a quote to its session page pulls you away from the answer you were
+                checking. In the concept, tapping a quote plays the clip in place from the moment
+                it&rsquo;s said, with the transcript following. Video is heavy in a chat panel,
+                so it loads only on tap.
               </CaseStudyBody>
               <ProductFigure
-                caption="The clip plays inside the answer, its transcript line lit."
+                caption="A quote opens its clip right where the answer is."
                 phoneCap={470}
                 name="dialogue-clips-in-chat"
-                title="Aisha's quote card open into the clip playing in the chat, with her transcript line highlighted"
+                title="Mei's quote card open into the clip playing in the chat, with her transcript line highlighted"
               >
                 <ClipsFigure />
               </ProductFigure>
             </Section>
 
             <Section id="thin-data" marginTop={64}>
-              <ClaimH2>Adding signals for unclear data and results</ClaimH2>
+              <ClaimH2>Thin findings say so and stay easy to check</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A finding from two people should travel as a lead, not as a result. The flag sits
-                in the answer where the claim is made, and Add to my plan copies it into a
-                follow-up prompt with its count attached. I would test next whether teams act on
-                a flagged finding or quietly drop it.
+                Two of five lapsed buyers mentioned a damaged first order. Shown like 18 of 24 it
+                would read as a pattern, so the answer carries a stone-500 line, &lsquo;Early
+                signal, 2 people&rsquo;. &lsquo;Add to my plan&rsquo; copies the answer, its
+                count and quotes into a prompt for the team&rsquo;s own tools. I have no outcome
+                numbers, so next I&rsquo;d test whether flagged findings change what teams plan.
               </CaseStudyBody>
               <ProductFigure
-                caption="A thin finding flagged in the answer, then copied into the next study's prompt."
+                caption="A thin finding gets flagged, then becomes a prompt for the next study."
                 name="dialogue-thin-plan"
                 title="The thin-data answer with its Early signal flag and the Add to my plan prompt it copies"
               >

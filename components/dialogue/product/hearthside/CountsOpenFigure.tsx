@@ -6,12 +6,14 @@ import QuoteCardH from "@/components/dialogue/product/hearthside/QuoteCardH";
 import {
   FRIDAY_FINDING,
   FRIDAY_QUESTION,
+  FRIDAY_QUOTE_18,
   FRIDAY_QUOTES,
   HEARTHSIDE_STUDY_SUBTITLE,
 } from "@/lib/dialogue/product/hearthside";
 
-/** Counts with both sides open: the bar (the 6 of 24 segment outlined), then
-    each segment's evidence under its own count label. */
+/** Counts with both sides open: the bar (the 6 of 24 segment outlined,
+    its side shown open), then each segment's quote under its count label.
+    Owen checked the date, so his card sits on the 6 side. */
 export default function CountsOpenFigure() {
   return (
     <StudyChatShell subtitle={HEARTHSIDE_STUDY_SUBTITLE} hideComposer>
@@ -26,15 +28,9 @@ export default function CountsOpenFigure() {
         />
       </ChartVizCard>
       <p className="dp-hs-group-label" data-annotate-part="counts-group-18">18 of 24</p>
-      <div className="dp-clip-quotes">
-        {FRIDAY_QUOTES.map((q) => (
-          <QuoteCardH key={q.name} quote={q} />
-        ))}
-      </div>
+      <QuoteCardH quote={FRIDAY_QUOTE_18} />
       <p className="dp-hs-group-label" data-annotate-part="counts-group-6">6 of 24 did not</p>
-      <p className="dp-hs-restate" data-annotate-part="counts-restate">
-        Did not read it as this Friday.
-      </p>
+      <QuoteCardH quote={FRIDAY_QUOTES[1]} />
     </StudyChatShell>
   );
 }

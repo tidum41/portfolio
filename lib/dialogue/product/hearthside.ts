@@ -17,7 +17,7 @@ export type HearthsideQuote = {
   text: string;
 };
 
-export const FRIDAY_QUESTION = "How did shoppers read the delivery date?";
+export const FRIDAY_QUESTION = "How did shoppers read 'Arrives by Friday'?";
 
 export const FRIDAY_FINDING =
   "18 of 24 shoppers read 'Arrives by Friday' as this Friday, whatever day they ordered.";
@@ -26,6 +26,25 @@ export const FRIDAY_QUOTES: HearthsideQuote[] = [
   { name: "Mei", range: "18:27-18:49", text: "Friday which week?" },
   { name: "Owen", range: "07:12-07:30", text: "I'd assume Friday after I order, so I checked the date." },
 ];
+
+/** The 18 side of the Friday count. Composed for the round P fix round,
+    which asked for a quote from someone who read it as this Friday; the
+    final doc's own quotes (Mei, Owen) both sit on the 6 side, since the
+    six asked which Friday or checked the date. */
+export const FRIDAY_QUOTE_18: HearthsideQuote = {
+  name: "Nadia",
+  range: "05:12-05:28",
+  text: "I just read it as this Friday.",
+};
+
+/** Jen's thin-data quote card. Composed for the fix round, which puts one
+    quote card in the thin figure; the final doc gives Jen's timecode
+    (08:15-08:44) and the damaged-first-order finding, no quote text. */
+export const JEN_QUOTE: HearthsideQuote = {
+  name: "Jen",
+  range: "08:15-08:44",
+  text: "My first order arrived damaged.",
+};
 
 export const PRICE_QUESTION = "Where did shoppers hesitate?";
 
@@ -76,7 +95,7 @@ export const THIN_QUESTION = "What did lapsed buyers say about their first order
 
 export const THIN_PROMPT = [
   "Plan the next study on lapsed buyers.",
-  "In the last study, 2 of 5 lapsed buyers mentioned a damaged first order. That is a lead, not a trend.",
+  "In the last study, 2 of 5 lapsed buyers mentioned a damaged first order. The count is small, so treat it as a lead.",
   "Recruit more lapsed buyers, ask each about their first order, and confirm whether the problem repeats.",
   "Report how many mention it and quote the moment they noticed.",
 ].join("\n\n");

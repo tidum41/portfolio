@@ -67,7 +67,7 @@ function SpecimenBody({ id }: { id: (typeof SPECIMENS)[number]["id"] }) {
 }
 
 /** The same answer at three depths. Equal-height specimens, 2+1 at desktop,
-    a scroll row on phones. The evidence specimen renders in dark. */
+    a scroll row on phones. All three share the page's light treatment. */
 export default function LevelsFigure() {
   return (
     <div className="dp-levels">
@@ -79,14 +79,18 @@ export default function LevelsFigure() {
       <div className="dp-levels__row">
         {SPECIMENS.map((s) => (
           <div key={s.id} className="dp-levels__panel">
+            {s.id === "evidence" ? (
+              <p className="dialogue-lead-answer__chosen-row">
+                <span className="dialogue-lead-answer__chosen-badge">Chosen</span>
+              </p>
+            ) : (
+              <p className="dialogue-lead-answer__chosen-row dialogue-lead-answer__chosen-row--spacer" aria-hidden />
+            )}
             <div
               className={[
                 "dp-levels__card dialogue-product-root dp-chat-panel-typography",
                 dialogueProductFontClassName,
-                s.id === "evidence" ? "dp-force-dark" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+              ].join(" ")}
             >
               <SpecimenBody id={s.id} />
             </div>

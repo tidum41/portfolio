@@ -1,25 +1,22 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterviewPlayer";
 import { ArrowDownIcon, CopyIcon, PersonIcon } from "@/components/dialogue/product/icons";
 import QuoteCardH from "@/components/dialogue/product/hearthside/QuoteCardH";
 import {
-  AISHA_QUOTE,
+  FRIDAY_QUESTION,
+  FRIDAY_QUOTES,
   HEARTHSIDE_STUDY_SUBTITLE,
-  PRICE_QUESTION,
-  PRICE_SPLIT,
 } from "@/lib/dialogue/product/hearthside";
 
 const TRANSCRIPT = [
-  { speaker: "Dialogue", time: "15:38", text: "What happened when you reached the cart?", role: "dialogue" as const },
-  { speaker: "Aisha", time: "15:40", text: AISHA_QUOTE.text, role: "participant" as const, active: true },
-  { speaker: "Dialogue", time: "16:04", text: "Did the total match what you expected?", role: "dialogue" as const },
+  { speaker: "Dialogue", time: "18:24", text: "What did you make of the delivery date?", role: "dialogue" as const },
+  { speaker: "Mei", time: "18:27", text: "Friday which week?", role: "participant" as const, active: true },
+  { speaker: "Dialogue", time: "18:51", text: "What did you do then?", role: "dialogue" as const },
 ];
 
 /** A synced transcript in the restored markup, with Hearthside rows. The
-    moderator's two questions are composed for the recreation; Aisha's line
+    moderator's two questions are composed for the recreation; Mei's line
     is the mock data's verbatim quote. */
 function TranscriptH() {
   return (
@@ -71,17 +68,13 @@ function TranscriptH() {
   );
 }
 
-/** The turning point: the price-doubt answer with its segment split, and
-    Aisha's quote card tapped open into the clip playing in the chat, its
-    transcript line lit. */
+/** The turning point: Mei's quote card tapped open into the clip playing
+    in the chat, with the transcript following and her line lit. */
 export default function ClipsFigure() {
   return (
     <StudyChatShell subtitle={HEARTHSIDE_STUDY_SUBTITLE} hideComposer>
-      <UserMessageBubble>{PRICE_QUESTION}</UserMessageBubble>
-      <ChartVizCard title="Price doubt at the cart made 9 of 24 shoppers hesitate.">
-        <ChartBarList rows={PRICE_SPLIT.map((r) => ({ ...r }))} max={24} />
-      </ChartVizCard>
-      <QuoteCardH quote={AISHA_QUOTE} selected part="clips-quote-aisha" />
+      <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
+      <QuoteCardH quote={FRIDAY_QUOTES[0]} selected part="clips-quote-mei" />
       <DialogueInterviewPlayer />
       <TranscriptH />
     </StudyChatShell>

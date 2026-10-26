@@ -4105,6 +4105,16 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   flex-wrap: wrap;
 }
 
+@media (max-width: 600px) {
+  .dp-scope-headers {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+  .dialogue-case-study .dp-scope-headers__panel {
+    flex: 0 0 auto;
+  }
+}
+
 .dp-scope-headers__panel {
   flex: 1 1 260px;
   min-width: 0;
@@ -4244,31 +4254,20 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   gap: 10px;
 }
 
-.dp-compare-rows__head {
-  margin: 0;
+.dp-compare-rows__media {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
 }
 
-.dp-compare-rows__segment {
-  font-size: var(--text-body-size);
-  font-weight: var(--dp-weight-bold);
-  color: var(--dp-ink);
+.dp-compare-rows__media > .dp-clip-quote {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.dp-compare-rows__theme {
-  font-size: var(--text-body-size);
-  color: var(--dp-muted);
-}
-
-.dp-compare-rows__count {
-  margin-left: auto;
-  font-size: var(--text-body-size);
-  font-weight: var(--dp-weight-bold);
-  color: var(--dp-ink);
-  font-variant-numeric: tabular-nums;
+.dp-hs-thumb--small {
+  flex: 0 0 30%;
+  max-width: 200px;
 }
 
 /* Round P: inside the narrow levels specimen the stacked bar's own labels

@@ -1,16 +1,18 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import { BEFORE_TABLE, HEARTHSIDE_STUDY_SUBTITLE } from "@/lib/dialogue/product/hearthside";
+import QuoteCardH from "@/components/dialogue/product/hearthside/QuoteCardH";
+import { AISHA_QUOTE, BEFORE_TABLE, HEARTHSIDE_STUDY_SUBTITLE } from "@/lib/dialogue/product/hearthside";
 
 const THEMES = [
-  { emoji: "🚚", label: "Delivery timing", line: "Shoppers cared a lot about when orders arrive." },
-  { emoji: "↩️", label: "Returns", line: "Returns came up often and mattered to people." },
-  { emoji: "🏷️", label: "Pricing", line: "Price was a recurring topic in the interviews." },
+  { emoji: "🏷️", label: "Delivery fee at cart", line: "a fee showed up late in the order." },
+  { emoji: "📅", label: "Unclear Friday promise", line: "the delivery date was hard to pin down." },
+  { emoji: "↩️", label: "Returns hidden", line: "the returns policy was hard to find." },
 ] as const;
 
-/** The chat as it was, recreated with invented data: an emoji theme list, a
-    follow-up question the chat could not answer, and a raw-text summary
-    table of names. */
+/** The chat as it was, recreated with invented data: an emoji theme list
+    and one quote card, a follow-up question the chat could not answer, and
+    a raw-text summary table of names. On phones the first turn clamps to
+    two themes and the table to one row. */
 export default function BeforeChatFigure() {
   return (
     <StudyChatShell subtitle={HEARTHSIDE_STUDY_SUBTITLE} hideComposer>
@@ -22,6 +24,7 @@ export default function BeforeChatFigure() {
           </p>
         ))}
       </div>
+      <QuoteCardH quote={AISHA_QUOTE} part="before-quote-aisha" />
       <UserMessageBubble>How many mentioned this?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="before-deflection">
         Could you clarify which specific pain point you&rsquo;re referring to?

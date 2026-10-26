@@ -1,7 +1,8 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { CheckIcon } from "@/components/dialogue/product/icons";
-import { THIN_PROMPT, THIN_QUESTION } from "@/lib/dialogue/product/hearthside";
+import QuoteCardH from "@/components/dialogue/product/hearthside/QuoteCardH";
+import { JEN_QUOTE, THIN_PROMPT, THIN_QUESTION } from "@/lib/dialogue/product/hearthside";
 
 /** The thin-data answer and the plan beat in one shell: the answer, the
     stone-500 "Early signal, 2 people" flag where the claim is made, then
@@ -17,6 +18,7 @@ export default function ThinPlanFigure() {
       <p className="dp-hs-flag" data-annotate-part="thin-flag">
         Early signal, 2 people
       </p>
+      <QuoteCardH quote={JEN_QUOTE} part="thin-quote-jen" />
       <div className="dp-next-study-wrap">
         <button
           type="button"
