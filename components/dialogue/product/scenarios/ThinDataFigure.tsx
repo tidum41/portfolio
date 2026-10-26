@@ -33,8 +33,16 @@ async function copyText(text: string) {
 /** f6a5192 low-signal answer: amber lead warning, clip link, plan action, evidence footer.
     Direction A: the note reads "Based on 4 of 24 interviews". With planTapped,
     the figure renders in its tapped state, showing the copied prompt's first
-    line (section 7's visual). */
-export default function ThinDataFigure({ planTapped = false }: { planTapped?: boolean }) {
+    line (section 7's visual). Round N: `slim` is the short form the story
+    uses now: the question, the answer, and the muted count note, nothing
+    else, so the figure sits at about half its neighbours' height. */
+export default function ThinDataFigure({
+  planTapped = false,
+  slim = false,
+}: {
+  planTapped?: boolean;
+  slim?: boolean;
+}) {
   const [copied, setCopied] = useState(planTapped);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,6 +57,22 @@ export default function ThinDataFigure({ planTapped = false }: { planTapped?: bo
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 4000);
   };
+
+  if (slim) {
+    return (
+      <StudyChatShell compact hideHeader hideComposer>
+        <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
+        <p className="dp-summary dp-text-body" data-annotate-part="summary">
+          On mobile, several participants bailed when autofill skipped the apartment field and
+          validation fired late.
+        </p>
+        <div className="dp-low-signal dp-low-signal--centered" data-annotate-part="low-signal-note">
+          <InfoCircleIcon className="dp-low-signal__icon" />
+          <p className="dp-low-signal__text">Based on 4 of 24 interviews</p>
+        </div>
+      </StudyChatShell>
+    );
+  }
 
   return (
     <StudyChatShell compact hideHeader hideComposer evidence={4}>

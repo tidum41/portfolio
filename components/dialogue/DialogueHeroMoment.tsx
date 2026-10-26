@@ -1,54 +1,36 @@
 "use client";
 
+import StudyPageChrome from "@/components/dialogue/product/StudyPageChrome";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import ClipCard from "@/components/dialogue/product/ClipCard";
+import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import {
-  CHECKOUT_FUNNEL,
-  CLIPS,
-  COVERAGE_ADDRESS,
-} from "@/lib/dialogue/product/sampleData";
+import { CHECKOUT_FUNNEL } from "@/lib/dialogue/product/sampleData";
 import { HERO_QUESTION } from "@/components/dialogue/product/scenarios/HeroChatCard";
 
 /**
- * Direction A hero: one question, one answer sentence, one count bar, one
- * quote card. Nothing else. Every string and count is the checkout study's
- * own (24 interviews, 18 of 24 on address friction, Jordan M.'s clip).
+ * Round N hero: a cropped study chat inside the whole product chrome. The
+ * question, a one-sentence answer, and one row of source avatars. No bar
+ * here; the count bar belongs to the Counts section alone.
  */
 export default function DialogueHeroMoment() {
   return (
     <div
       className={`dialogue-hero-moment dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
-      <StudyChatShell evidence={24}>
-        <UserMessageBubble>{HERO_QUESTION}</UserMessageBubble>
-        <p className="dp-summary dp-text-body" data-annotate-part="summary">
-          {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
-          <span className="dp-summary__emph" data-annotate-part="summary-emphasis">
-            {CHECKOUT_FUNNEL.emphasis}
-          </span>
-          {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
-        </p>
-        <ChartVizCard title={COVERAGE_ADDRESS.headline}>
-          <ChartBarList
-            className="dp-chart-bars--count"
-            rows={[
-              {
-                label: "Address friction",
-                value: 18,
-                display: "18 of 24 interviews",
-                focal: true,
-              },
-            ]}
-            max={24}
-            fillMode="magnitude"
-          />
-        </ChartVizCard>
-        <ClipCard clip={CLIPS[0]} />
-      </StudyChatShell>
+      <StudyPageChrome>
+        <StudyChatShell hideHeader hideComposer>
+          <UserMessageBubble>{HERO_QUESTION}</UserMessageBubble>
+          <p className="dp-summary dp-text-body" data-annotate-part="summary">
+            {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
+            <span className="dp-summary__emph" data-annotate-part="summary-emphasis">
+              {CHECKOUT_FUNNEL.emphasis}
+            </span>
+            {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
+          </p>
+          <SourcesScaleRow />
+        </StudyChatShell>
+      </StudyPageChrome>
     </div>
   );
 }

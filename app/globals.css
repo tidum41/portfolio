@@ -2144,6 +2144,43 @@ agentation-toolbar,
   color: var(--color-text-secondary);
 }
 
+/* Round N: the TOC back chevron sits a touch high against the label;
+   nudge it so their vertical centers match. */
+.cs-back-desktop svg,
+.cs-back-mobile svg {
+  transform: translateY(-1px);
+}
+
+/* Round N: the Next section's test and signal grid, plain site text with
+   no product chrome. */
+.dialogue-case-study .cs-test-grid {
+  margin-top: 28px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.dialogue-case-study .cs-test-grid__head,
+.dialogue-case-study .cs-test-grid__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.dialogue-case-study .cs-test-grid__head span {
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.dialogue-case-study .cs-test-grid__row p {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+  max-width: 300px;
+}
+
 /* Dialogue draft — intrinsic rasters (no letterboxing) */
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media .cs-figure {
   margin: 0;

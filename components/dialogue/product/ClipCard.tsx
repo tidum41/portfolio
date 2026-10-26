@@ -1,4 +1,5 @@
-import { ArrowUpRightIcon, WaveformIcon } from "@/components/dialogue/product/icons";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
+import PlayButton from "@/components/dialogue/product/PlayButton";
 
 type Clip = {
   participant: string;
@@ -6,8 +7,9 @@ type Clip = {
   transcript: string;
 };
 
-/** A quote card: the waveform icon and timecode up top, the excerpt, and a
-    view session action into the full interview (direction A rebuild). */
+/** A response row: waveform icon, name and timecode on one baseline, the
+    excerpt, and a play affordance that plays the clip inline (round N).
+    There is no "View session" link anymore. */
 export default function ClipCard({ clip }: { clip: Clip }) {
   return (
     <div className="dp-clip-card" data-annotate-part="clip-card">
@@ -18,10 +20,7 @@ export default function ClipCard({ clip }: { clip: Clip }) {
       </p>
       <p className="dp-clip-card__text">{clip.transcript}</p>
       <p className="dp-clip-card__actions">
-        <span className="dp-clip-card__session">
-          View session
-          <ArrowUpRightIcon className="dp-clip-card__session-icon" />
-        </span>
+        <PlayButton label={`Play ${clip.participant}'s clip`} />
       </p>
     </div>
   );

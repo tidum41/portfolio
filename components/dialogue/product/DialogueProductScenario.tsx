@@ -7,6 +7,7 @@ import AnatomyStructureFigure from "@/components/dialogue/product/scenarios/Anat
 import QuoteFrameFigure from "@/components/dialogue/product/scenarios/QuoteFrameFigure";
 import FullAnswerFigure from "@/components/dialogue/product/scenarios/FullAnswerFigure";
 import ThinDataFigure from "@/components/dialogue/product/scenarios/ThinDataFigure";
+import InlineClipFigure from "@/components/dialogue/product/scenarios/InlineClipFigure";
 
 export type DialogueProductScenario =
   | "hero"
@@ -18,7 +19,9 @@ export type DialogueProductScenario =
   | "clip-player"
   | "full-answer"
   | "thin-data"
-  | "thin-data-plan";
+  | "thin-data-plan"
+  | "thin-data-slim"
+  | "inline-clip";
 
 type Props = {
   scenario: DialogueProductScenario;
@@ -47,6 +50,10 @@ function renderScenario(scenario: DialogueProductScenario): ReactNode {
       return <ThinDataFigure />;
     case "thin-data-plan":
       return <ThinDataFigure planTapped />;
+    case "thin-data-slim":
+      return <ThinDataFigure slim />;
+    case "inline-clip":
+      return <InlineClipFigure />;
     default:
       return null;
   }

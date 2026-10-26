@@ -9,7 +9,6 @@ import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueHeroMoment from "@/components/dialogue/DialogueHeroMoment";
-import ScopeFigure from "@/components/dialogue/product/scenarios/ScopeFigure";
 import CountsFigure from "@/components/dialogue/product/scenarios/CountsFigure";
 import { HERO_QUESTION } from "@/components/dialogue/product/scenarios/HeroChatCard";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -31,14 +30,13 @@ const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
 export type RasterAnnotator = (assetId: string, children: React.ReactNode) => React.ReactNode;
 
-/** Direction A (decision log): one decision per section, TOC labels per the outline. */
+/** Round N (checkable answers): one decision per section, TOC per the plan. */
 export const DIALOGUE_TOC_ITEMS = [
-  { id: "overview", label: "Overview" },
+  { id: "context", label: "Context" },
   { id: "problem", label: "Problem" },
   { id: "evidence", label: "Evidence" },
-  { id: "clips", label: "Clips" },
-  { id: "scope", label: "Scope" },
   { id: "counts", label: "Counts" },
+  { id: "clips", label: "Clips" },
   { id: "thin-data", label: "Thin data" },
   { id: "next", label: "Next" },
 ];
@@ -47,10 +45,13 @@ function Section({
   id,
   children,
   noReveal = false,
+  separated = false,
 }: {
   id: string;
   children: React.ReactNode;
   noReveal?: boolean;
+  /** Round N: the Next section sits after a divider with a larger gap. */
+  separated?: boolean;
 }) {
   const inner = noReveal ? <>{children}</> : <ScrollReveal>{children}</ScrollReveal>;
   return (
@@ -61,6 +62,13 @@ function Section({
         scrollMarginTop: 96,
         paddingBottom: 0,
         marginBottom: "var(--dialogue-section-gap)",
+        ...(separated
+          ? {
+              marginTop: "calc(var(--dialogue-section-gap) * 0.5)",
+              borderTop: "1px solid var(--color-border-subtle)",
+              paddingTop: "calc(var(--dialogue-section-gap) * 0.5)",
+            }
+          : {}),
       }}
     >
       {inner}
@@ -157,7 +165,6 @@ export function DialogueCaseStudyContent({
           </div>
 
           <CaseStudyOpen
-            tagline="Dialogue"
             title={DIALOGUE_TITLE}
             subtitle={DIALOGUE_SUBTITLE}
             metadata={[
@@ -200,47 +207,41 @@ export function DialogueCaseStudyContent({
                   )}
               <DialogueCaption
                 label="Overview"
-                sentence="A study chat answer that shows its count and the quote behind it."
+                sentence="One answer in the study chat, with the sources it came from."
               />
             </>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
-            <Section id="overview">
+            <Section id="context">
+              <H2>Context</H2>
               <CaseStudyBody>
-                Dialogue runs AI-moderated interviews for UX research teams and synthesizes
-                them into a study site. I designed answers for its study chat that show the
-                count and the quotes behind every claim. Research is never linear, so each
-                answer is built to set up the next question. Dialogue&rsquo;s team adopted the
-                study-wide chat and its count bars.
+                Dialogue runs AI-moderated interviews for UX research teams and turns them into
+                a study site with a chat. I designed how that chat answers, so a team can see
+                who said something and watch them say it.
               </CaseStudyBody>
-              <CaseStudyBody>Product designer (contract), Dec 2025 to Mar 2026.</CaseStudyBody>
             </Section>
 
             <Section id="problem">
-              <H2>The chat provided interactive insights, at a surface level</H2>
+              <H2>The chat gave answers you couldn&rsquo;t check</H2>
               <CaseStudyBody>
-                Dialogue&rsquo;s interactive chat is helpful, but didn&rsquo;t allow users to go
-                deeper to the source. A stakeholder reading an answer asks who said that and
-                how many, and a paragraph can&rsquo;t tell them. It also gives the researcher
-                nowhere to go next.
+                An answer came back as a confident paragraph. A stakeholder reading it would
+                ask how many people said that, and the paragraph had no way to show them.
               </CaseStudyBody>
               <ProductFigureBlock
                 scenario="problem-paragraphs"
-                title="Study chat answer as it was: a prose paragraph above cited quote cards, with no count"
+                title="Study chat answer as it was: a prose paragraph over collapsed quote cards, with no count"
                 wrapRaster={wrap}
-                frameLabel="Problem: the answer as it was, a paragraph over cited quote cards, and no count anywhere."
+                frameLabel="Problem: the answer as it was, a paragraph over collapsed quote cards, and no count."
               />
             </Section>
 
             <Section id="evidence">
-              <H2>Answers lead with evidence you can check</H2>
+              <H2>Bringing more depth to answers</H2>
               <CaseStudyBody>
-                I put the same question through three formats. Text only is condensed and easy
-                to read, but it allows no further interaction. Direct quotes keep the
-                participants&rsquo; own words, but they don&rsquo;t give a higher-level
-                overview. Answer and evidence won: a sentence and an easy-to-glance count, with
-                the responses embedded so you can view them directly.
+                I put one question through three formats. Text only was quick to read but went
+                nowhere, while direct quotes kept people&rsquo;s words but lost the overview.
+                Answer and evidence kept both.
               </CaseStudyBody>
               <DialogueLeadAnswerCompare
                 question={HERO_QUESTION}
@@ -272,84 +273,69 @@ export function DialogueCaseStudyContent({
               />
             </Section>
 
-            <Section id="clips">
-              <H2>Viewing responses directly within the chat window</H2>
-              <CaseStudyBody>
-                If we linked each quote out to its section page, people would get the full
-                context of the interview. But every check would pull them out of the
-                conversation they were building. So the clip plays under the answer, starting
-                at the exact moment the participant says it, and a &ldquo;view session&rdquo;
-                action opens the full interview for anyone who needs more.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="clip-player"
-                title="Interview player in the chat window with the speaker's line highlighted in the synced transcript"
-                wrapRaster={wrap}
-                frameLabel="Clips: the player sits in the chat window under the answer, opened at the moment the participant says it."
-              />
-            </Section>
-
-            <Section id="scope">
-              <H2>One chat answers across the whole study</H2>
-              <CaseStudyBody>
-                Dialogue&rsquo;s chat already existed for single interviews, and keeping it
-                there would have kept answers tightly scoped. The questions teams ask, though,
-                run across people: how many hit this, and did anyone disagree. A per-interview
-                chat can&rsquo;t count. I moved the chat to the study level so every answer can
-                draw on all 24 interviews.
-              </CaseStudyBody>
-              <LiveFigureBlock label="Scope: the same question in a chat scoped to one interview, and in the study chat.">
-                <ScopeFigure />
-              </LiveFigureBlock>
-            </Section>
-
             <Section id="counts">
-              <H2>Counts come first, percents second</H2>
+              <H2>Counts you can open</H2>
               <CaseStudyBody>
-                With 24 interviews, a percent hides how few people sit behind it. The bar reads
-                &ldquo;18 of 24 interviews&rdquo; with the answer as its title and values on the
-                marks. Counter-evidence stays in the same bar, so the 6 who had no trouble are
-                weighed instead of averaged away. Each bar opens the quotes behind its count.
+                With 24 interviews a percent hides how few people sit behind it, so the bar
+                reads 18 of 24. Each segment opens the people inside it, including the 6 of 24
+                who did not struggle.
               </CaseStudyBody>
-              <LiveFigureBlock label="Counts: one bar for the split, with the quotes behind each side open under it.">
+              <LiveFigureBlock label="Counts: the 6 of 24 did not segment is selected, and its panel is open under the bar.">
                 <CountsFigure />
               </LiveFigureBlock>
             </Section>
 
-            <Section id="thin-data">
-              <H2>Adding signals for unclear data and results</H2>
+            <Section id="clips">
+              <H2>Watching the moment without leaving the chat</H2>
               <CaseStudyBody>
-                Some answers rest on very little. Only 4 of 24 interviews mention autofill
-                skipping the apartment field on mobile, which is a lead and not yet a trend. I
-                flag it in the answer instead of hiding it, because a researcher deciding what
-                to study next needs to see where the evidence is thin. Dialogue&rsquo;s team
-                adopted these flags too.
+                Tapping a response plays that clip inside the answer, starting at the moment
+                the participant says it. The transcript highlights along with it, so checking a
+                claim takes seconds and you never leave the conversation.
               </CaseStudyBody>
               <ProductFigureBlock
-                scenario="thin-data"
-                title="Thin-data answer with a muted note reading Based on 4 of 24 interviews"
+                scenario="inline-clip"
+                title="Clip playing inside the chat answer, with the speaker's line highlighted in the synced transcript"
                 wrapRaster={wrap}
-                frameLabel="Thin data: the answer flags its own count instead of hiding it."
+                frameLabel="Clips: the clip plays inside the answer, with the transcript line lit under it."
               />
             </Section>
 
-            <Section id="next">
-              <H2>Structuring responses to set up further inquiry</H2>
+            <Section id="thin-data">
+              <H2>Flagging answers that rest on little</H2>
               <CaseStudyBody>
-                UX research and design are never linear. Organizing every answer the same way
-                helps a team build a mental model of the study and invites the next question,
-                through follow-up chips and an &ldquo;Add to my plan&rdquo; action that copies a
-                prompt for a new study. I don&rsquo;t have outcome numbers yet. Next I&rsquo;d
-                test whether stakeholders who can open the evidence ask fewer &ldquo;who said
-                that&rdquo; questions, and whether thin-data flags change what teams choose to
-                research next.
+                Only 4 of 24 interviews mention autofill skipping the apartment field on
+                mobile. The answer says so under its count, so a lead isn&rsquo;t read as a
+                trend.
               </CaseStudyBody>
               <ProductFigureBlock
-                scenario="thin-data-plan"
-                title="Thin-data answer with Add to my plan tapped, showing the copied prompt"
+                scenario="thin-data-slim"
+                title="Thin-data answer with a plain text count reading Based on 4 of 24 interviews"
                 wrapRaster={wrap}
-                frameLabel="Next: Add to my plan, tapped, with the prompt it copies."
+                frameLabel="Thin data: the answer states its count in plain text."
               />
+            </Section>
+
+            <Section id="next" separated>
+              <H2>What I&rsquo;d test next</H2>
+              <CaseStudyBody>
+                I don&rsquo;t have outcome numbers yet. I&rsquo;d test whether stakeholders
+                who can open the evidence stop asking who said that, and whether thin-data flags
+                change what teams study next.
+              </CaseStudyBody>
+              <div className="cs-test-grid" data-annotate-part="test-grid">
+                <div className="cs-test-grid__head" aria-hidden>
+                  <span>Test</span>
+                  <span>Signal</span>
+                </div>
+                <div className="cs-test-grid__row">
+                  <p>Stakeholders who can open the evidence</p>
+                  <p>They stop asking who said that</p>
+                </div>
+                <div className="cs-test-grid__row">
+                  <p>Thin-data flags on answers</p>
+                  <p>What teams choose to study next changes</p>
+                </div>
+              </div>
             </Section>
           </article>
           <CaseStudyPager href="/dialogue" />

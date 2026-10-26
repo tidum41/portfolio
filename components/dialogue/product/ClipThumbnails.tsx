@@ -1,3 +1,5 @@
+import { PlayIcon } from "@/components/dialogue/product/icons";
+
 const THUMBS = [
   { src: "/dev/dialogue-static/clip-photos/clip-01.jpg", time: "14:03", focal: false },
   { src: "/dev/dialogue-static/clip-photos/clip-02.jpg", time: "15:47", focal: true },
@@ -6,9 +8,11 @@ const THUMBS = [
 
 type Props = {
   selectedTime?: string;
+  /** Round N: a cherry play badge on each thumb (compare's chosen card). */
+  playBadge?: boolean;
 };
 
-export default function ClipThumbnails({ selectedTime = "15:47" }: Props) {
+export default function ClipThumbnails({ selectedTime = "15:47", playBadge = false }: Props) {
   return (
     <div className="dp-clip-thumbs" aria-hidden data-annotate-part="clip-thumbs">
       {THUMBS.map((thumb) => {
@@ -29,6 +33,11 @@ export default function ClipThumbnails({ selectedTime = "15:47" }: Props) {
               loading="eager"
               decoding="sync"
             />
+            {playBadge ? (
+              <span className="dp-clip-thumbs__play" aria-hidden>
+                <PlayIcon className="dp-clip-thumbs__play-icon" />
+              </span>
+            ) : null}
           </div>
           <span className="dp-clip-thumbs__time">{thumb.time}</span>
         </div>

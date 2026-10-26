@@ -470,6 +470,11 @@
   background: var(--dp-chart-focal);
 }
 
+/* Round N: the selected segment is outlined; its panel opens under the bar. */
+.dp-chart-stack__seg[data-selected] {
+  box-shadow: inset 0 0 0 2px var(--dp-ink);
+}
+
 .dp-chart-stack__seg + .dp-chart-stack__seg {
   box-shadow: inset 1px 0 0 var(--dp-bg);
 }

@@ -1,5 +1,6 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
 import { annotateSlug } from "@/components/dialogue/annotate";
 import {
   CHECKOUT_QUESTION,
@@ -7,8 +8,9 @@ import {
   QUOTE_LIST,
 } from "@/lib/dialogue/product/sampleData";
 
-/** The problem answer as it was: a prose paragraph with the study's cited
-    quote cards under it, and no count anywhere (direction A, section 1). */
+/** The problem answer as it was: a prose paragraph with the study's quote
+    cards under it. In the round N problem state the cards are collapsed and
+    greyed, with a single annotation: no count. */
 export default function ParagraphAnswerFigure({
   focus,
   citedQuotes = false,
@@ -32,18 +34,22 @@ export default function ParagraphAnswerFigure({
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       {prose}
       {citedQuotes ? (
-        <div className="dp-lead-answer-card__quotes" data-annotate-part="cited-quotes">
-          {QUOTE_LIST.map((q) => (
-            <div
-              key={q.participant}
-              className="dp-lead-answer-card__quote"
-              data-annotate-part={`quote-${annotateSlug(q.participant)}`}
-            >
-              <strong>{q.participant}</strong>
-              {q.quote}
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="dp-problem-quotes" data-annotate-part="cited-quotes">
+            {QUOTE_LIST.map((q) => (
+              <div
+                key={q.participant}
+                className="dp-problem-quotes__row"
+                data-annotate-part={`quote-${annotateSlug(q.participant)}`}
+              >
+                <WaveformIcon className="dp-problem-quotes__wave" />
+                <strong>{q.participant}</strong>
+                <span className="dp-problem-quotes__text">{q.quote}</span>
+              </div>
+            ))}
+          </div>
+          <p className="dp-problem-note" data-annotate-part="no-count-note">No count</p>
+        </>
       ) : null}
     </StudyChatShell>
   );

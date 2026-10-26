@@ -874,6 +874,32 @@
   color: var(--dp-muted);
 }
 
+.dp-clip-thumbs__play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.dp-clip-thumbs__play::before {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-brand);
+}
+
+.dp-clip-thumbs__play-icon {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  color: var(--dp-card);
+}
+
 .dp-clip-card {
   padding: 12px;
   border: 1px solid var(--dp-border);
@@ -889,8 +915,13 @@
   color: var(--dp-muted);
   margin: 0;
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.dp-clip-card__time {
+  margin-left: auto;
+  text-align: right;
 }
 
 .dp-clip-card__wave {
@@ -899,8 +930,52 @@
   flex-shrink: 0;
 }
 
+/* Round N: the play affordance on response rows. 28px cherry circle,
+   44px hit target, hover and pressed states. */
+.dp-play-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 8px;
+  margin: -8px -8px -8px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dp-play-btn__circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-brand);
+  color: var(--dp-card);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.dp-play-btn:hover .dp-play-btn__circle {
+  filter: brightness(1.1);
+}
+
+.dp-play-btn:active .dp-play-btn__circle {
+  transform: scale(0.92);
+  filter: brightness(0.94);
+}
+
+.dp-play-btn__icon {
+  width: 13px;
+  height: 13px;
+  margin-left: 2px;
+}
+
 .dp-clip-card__actions {
-  margin: 8px 0 0;
+  margin: 2px 0 -6px;
   display: flex;
   justify-content: flex-end;
 }
@@ -2550,6 +2625,35 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   display: block;
 }
 
+/* Round N: quote rows in the compare carry the waveform and a play
+   affordance; the name no longer sits alone on its own line. */
+.dp-lead-answer-card__quote-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.dp-lead-answer-card__quote-head strong {
+  display: inline;
+}
+
+.dp-lead-answer-card__quote-wave {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--dp-muted);
+}
+
+.dp-lead-answer-card__quote-play {
+  margin-left: auto;
+  margin-right: -8px;
+}
+
+.dp-lead-answer-card__quote-text {
+  margin: 2px 0 0;
+}
+
 .dp-lead-answer-card__summary {
   margin: 0;
 }
@@ -2806,6 +2910,79 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   color: var(--dp-muted);
 }
 
+/* Round N hero: the app shell at the hero frame's width, chat in the main
+   body. The sidebar collapses away on phones. */
+.dialogue-hero-moment .dp-app-shell {
+  width: 100%;
+  height: auto;
+}
+
+.dialogue-hero-moment .dp-app-sidebar {
+  width: 176px;
+}
+
+.dialogue-hero-moment .dp-app-main__live {
+  padding: 16px;
+}
+
+.dialogue-hero-moment .dp-study-chat {
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .dialogue-hero-moment .dp-app-sidebar {
+    display: none;
+  }
+
+  .dialogue-hero-moment .dp-app-main__live {
+    padding: 10px;
+  }
+}
+
+/* Round N problem state: cited quote cards collapsed and greyed under the
+   prose answer, in muted stone with no cherry, plus the one annotation. */
+.dp-problem-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0.62;
+}
+
+.dp-problem-quotes__row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--dp-radius-control);
+  background: color-mix(in srgb, var(--dp-ink) 4%, transparent);
+  color: var(--dp-muted);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.dp-problem-quotes__wave {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.dp-problem-quotes__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-problem-note {
+  margin: 8px 0 0;
+  text-align: right;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-muted);
+}
+
 /* Direction A: the scope figure, per-interview chat beside the study chat. */
 .dp-scope {
   display: grid;
@@ -2826,6 +3003,172 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dp-scope {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Round N clips: the tapped response row and the player inside the answer. */
+.dp-inline-clip__row {
+  position: relative;
+  padding: 10px 12px;
+  border: 1px solid var(--dp-brand);
+  border-radius: var(--dp-radius-control);
+  background: color-mix(in srgb, var(--dp-brand) 5%, transparent);
+}
+
+.dp-inline-clip__who {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+.dp-inline-clip__wave {
+  width: 14px;
+  height: 14px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.dp-inline-clip__name {
+  font-weight: 500;
+  color: var(--dp-ink);
+}
+
+.dp-inline-clip__time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tap marker: a small cherry dot on the row's top right corner. */
+.dp-inline-clip__tap {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--dp-radius-pill);
+  background: var(--dp-brand);
+  box-shadow: 0 0 0 2px var(--dp-card);
+}
+
+.dp-inline-clip__text {
+  margin: 4px 0 0;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  color: var(--dp-ink);
+}
+
+.dp-inline-clip__player {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Round N thin data: the slim figure's note sits centered. */
+.dp-low-signal--centered {
+  justify-content: center;
+}
+
+/* Round N counts: connector from the selected segment into its panel,
+   and the panel's quote and clip rows. */
+.dp-counts__connector {
+  width: 2px;
+  height: 14px;
+  margin-left: calc(87.5% - 1px);
+  background: var(--dp-ink);
+}
+
+.dp-counts__panel {
+  border: 1.5px solid var(--dp-ink);
+  border-radius: var(--dp-radius-card);
+  padding: 10px 12px 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dp-counts__panel-title {
+  margin: 0 0 6px;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  font-weight: var(--dp-weight-medium);
+  color: var(--dp-ink);
+}
+
+.dp-counts__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--dp-border);
+}
+
+.dp-counts__thumb {
+  position: relative;
+  width: 84px;
+  flex-shrink: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--dp-radius-thumb);
+  background: var(--dp-black);
+  line-height: 0;
+}
+
+.dp-counts__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: blur(6px) saturate(1.08) brightness(0.96);
+  transform: scale(1.2);
+}
+
+/* The thumb is mid-play: a played line along its bottom edge. */
+.dp-counts__thumb-play {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 38%;
+  background: var(--dp-brand);
+}
+
+.dp-counts__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dp-counts__who {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+}
+
+.dp-counts__wave {
+  width: 13px;
+  height: 13px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.dp-counts__name {
+  font-weight: 500;
+  color: var(--dp-ink);
+}
+
+.dp-counts__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.dp-counts__quote {
+  margin: 2px 0 0;
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  color: var(--dp-ink);
 }
 
 /* Round L: a bar with its evidence open underneath it. */
@@ -2921,10 +3264,20 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   height: 24px;
   border-radius: var(--dp-radius-pill);
   background: var(--dp-warm);
-  border: 1px solid var(--dp-border);
+  /* Round N: separation is a 2px ring in the card's background color,
+     not a border, and each avatar carries its own tint. */
+  box-shadow: 0 0 0 2px var(--dp-card);
   color: var(--dp-muted);
   font-size: var(--text-clip-time-size);
   font-weight: var(--dp-weight-medium);
+}
+
+.dp-sources-scale__avatar:nth-child(2) {
+  background: color-mix(in srgb, var(--dp-brand) 16%, var(--dp-card));
+}
+
+.dp-sources-scale__avatar:nth-child(3) {
+  background: color-mix(in srgb, var(--dp-ink) 14%, var(--dp-card));
 }
 
 .dp-sources-scale__avatar + .dp-sources-scale__avatar {
@@ -3957,6 +4310,12 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* Round N playing state: the 16:9 frame crops the still instead of
+   letterboxing it. */
+.dp-qplayer__still-box--playing .dp-qplayer__still {
+  object-fit: cover;
 }
 
 .dp-qplayer__face-blur {

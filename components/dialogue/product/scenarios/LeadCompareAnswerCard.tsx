@@ -1,8 +1,9 @@
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
+import PlayButton from "@/components/dialogue/product/PlayButton";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
 import { CHECKOUT_FUNNEL, COVERAGE_ADDRESS, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
-import { ArrowUpRightIcon } from "@/components/dialogue/product/icons";
 import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
@@ -31,16 +32,16 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
         <div className="dp-lead-answer-card__quotes">
           {QUOTE_LIST.map((q) => (
             <div key={q.participant} className="dp-lead-answer-card__quote" data-annotate-part={`quote-${annotateSlug(q.participant)}`}>
-              <strong>{q.participant}</strong>
-              {q.quote}
+              <p className="dp-lead-answer-card__quote-head">
+                <WaveformIcon className="dp-lead-answer-card__quote-wave" />
+                <strong>{q.participant}</strong>
+                <span className="dp-lead-answer-card__quote-play">
+                  <PlayButton label={`Play ${q.participant}'s clip`} />
+                </span>
+              </p>
+              <p className="dp-lead-answer-card__quote-text">{q.quote}</p>
             </div>
           ))}
-        </div>
-        <div className="dp-lead-answer-card__quote-actions">
-          <span className="dp-lead-answer-card__view-session">
-            View session
-            <ArrowUpRightIcon className="dp-lead-answer-card__view-session-icon" />
-          </span>
         </div>
       </div>
     );
@@ -74,7 +75,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
         />
       </div>
       <SourcesScaleRow />
-      <ClipThumbnails selectedTime="15:47" />
+      <ClipThumbnails selectedTime="15:47" playBadge />
     </div>
   );
 }

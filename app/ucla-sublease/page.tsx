@@ -438,7 +438,6 @@ export default function BruinLeasePage() {
           </div>
 
           <CaseStudyOpen
-            tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={FB.metadata}
             muxPlaybackId={FB.heroMuxId}

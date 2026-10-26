@@ -1,5 +1,4 @@
 import type { ComponentType } from "react";
-import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterviewPlayer";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
@@ -174,7 +173,6 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
   { id: "study-chat-thin-data", name: "Study chat, thin data", Component: ThinDataFigure, x: 0, y: 604, width: 448, height: 392 },
   { id: "study-chat-full-answer", name: "Study chat, full answer", Component: FullAnswerFigure, x: 512, y: 604, width: 688, height: 688 },
   { id: "lead-answer-compare", name: "Lead answer compare", Component: LeadAnswerCompare, x: 1496, y: 776, width: 1152, height: 556 },
-  { id: "chart-library", name: "Chart library", Component: DialogueChartLibrary, x: 0, y: 1420, width: 784, height: 1610 },
   {
     id: "study-page-chrome",
     name: "Study page chrome",
