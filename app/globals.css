@@ -755,16 +755,16 @@ html[data-theme="light"] {
   z-index: 2;
 }
 
-/* Desktop: 8px under the title tab, right edge aligned to the info button
-   (topbar pad-right 12 + close 24 + gap 4 = 40). Cap at 320px.
-   Quiet spec sheet — muted labels, body-colour values, hairline rhythm. */
+/* Desktop: anchored to the info icon (right 40 = pad 12 + close 24 + gap 4),
+   starting 8px under the iframe app's 52px MenuBar so toolbar icons stay clear.
+   Cap at 320px. Quiet spec sheet — muted labels, body-colour values, hairline rhythm. */
 .project-popup-info {
   position: absolute;
-  top: 8px;
+  top: 60px; /* 52px iframe toolbar + 8px */
   right: 40px;
   width: min(320px, calc(100% - 52px));
   max-width: 320px;
-  max-height: calc(100% - 16px);
+  max-height: calc(100% - 68px);
   overflow: auto;
   z-index: 3;
   box-sizing: border-box;
@@ -825,7 +825,7 @@ html[data-theme="dark"] .project-popup-info {
   margin-top: 2px;
 }
 
-/* Align with .project-popup-spec-value: same left edge + meta baseline. */
+/* Body-colour link with a quiet always-on underline; keep the northeast arrow. */
 .project-popup-info-link {
   display: inline-flex;
   align-items: baseline;
@@ -836,11 +836,18 @@ html[data-theme="dark"] .project-popup-info {
   font-weight: 400;
   line-height: var(--lh-meta);
   letter-spacing: var(--ls-meta);
-  color: var(--color-link-blue);
+  color: var(--color-text-primary);
   text-decoration: none;
 }
 .project-popup-info-link:hover {
-  text-decoration: underline;
+  color: var(--color-text-primary);
+}
+.project-popup-info-link-text {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: auto;
+  text-decoration-color: currentColor;
 }
 .project-popup-info-link-icon {
   /* Optically centre the northeast arrow on the meta x-height. */

@@ -145,7 +145,8 @@ async function main() {
 
       if (vp.width >= 768) {
         assert(m.info.w <= 320 + 1, `${vp.name}/${theme}: info width ${m.info.w} > 320`);
-        assert(m.info.topBelowBar >= 6 && m.info.topBelowBar <= 12, `${vp.name}/${theme}: info topBelowBar ${m.info.topBelowBar}`);
+        // 52px iframe MenuBar + ~8px gap under the title tab.
+        assert(m.info.topBelowBar >= 56 && m.info.topBelowBar <= 68, `${vp.name}/${theme}: info topBelowBar ${m.info.topBelowBar}`);
         // Right-aligned to info button (within 2px)
         const rightDiff = Math.abs(m.info.right - m.infoBtn.right);
         assert(rightDiff <= 2, `${vp.name}/${theme}: info right ${m.info.right} vs btn ${m.infoBtn.right}`);

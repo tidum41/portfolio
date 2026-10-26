@@ -167,8 +167,8 @@ const PROJECT_CARD_COPY: Record<string, Pick<SanityProject, "title" | "label">> 
   },
 };
 
-/** Canonical live URL for the Allinone / AI to-do list exploration. */
-export const ALLINONE_APP_URL = "https://allinone-demo-iota.vercel.app/";
+/** Same-origin Allinone demo embed (seed trimmed; see public/allinone-demo). */
+export const ALLINONE_APP_URL = "/allinone-demo/index.html";
 
 const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   // Already the production Sanity href. Pinned here so the card stays on the
