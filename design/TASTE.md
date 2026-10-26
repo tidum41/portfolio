@@ -2,6 +2,8 @@
 
 Single source of truth for what Mudit likes, rejects and has settled. Read this before RULES.md, STORY-PRINCIPLES.md and AI-TELLS.md. Art director facts win any conflict. One line per item, newest facts replace old ones in place.
 
+- References: after this file, read [design/references/README.md](references/README.md) (hero findings, portfolio library, career facts).
+
 ## 1. Decided (never re-litigate)
 - Font: ABC Areal abandoned (Oct 21). Helvetica Neue (Arial fallback) for body and UI; Georgia for headings as currently built (reconfirmed Oct 25). Never mention Areal in briefs or copy.
 - Skim rules (Oct 25): every section heading states its point as a plain sentence; headings clearly bigger and heavier than body (e.g. 28/34 medium at 1440, 22/28 at 390) with 64px+ above and 16px below; body paragraphs max 3 sentences and ~65ch; one figure per section with a one-line caption; TOC labels match headings and track the active section; a reader reading only headings and captions must get the whole story.
