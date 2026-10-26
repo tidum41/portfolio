@@ -1051,7 +1051,7 @@ html[data-theme="dark"] .project-popup-info {
     bottom: 0;
     width: 100%;
     max-width: none;
-    /* Height is driven in JS (content up to 50/85dvh); keep a CSS ceiling. */
+    /* Height is driven in JS; CSS ceilings match so Open full app + Why fit. */
     max-height: 85dvh;
     overflow: auto;
     overscroll-behavior: contain;
@@ -1065,7 +1065,7 @@ html[data-theme="dark"] .project-popup-info {
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
   }
   .project-popup-info[data-why-open="false"] {
-    max-height: 50dvh;
+    max-height: 72dvh;
   }
   /* Clear the home indicator under the Why copy; keep 16px rhythm. */
   .project-popup-info .project-popup-info-inner {
@@ -1077,10 +1077,10 @@ html[data-theme="dark"] .project-popup-info {
   /* Short landscape: keep the sheet usable without covering the whole app. */
   @media (max-height: 500px) {
     .project-popup-info {
-      max-height: 70dvh;
+      max-height: 75dvh;
     }
     .project-popup-info[data-why-open="false"] {
-      max-height: 55dvh;
+      max-height: 70dvh;
     }
   }
 }

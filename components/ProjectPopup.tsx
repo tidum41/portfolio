@@ -140,11 +140,13 @@ export default function ProjectPopup({
     panel.style.height = prev;
     // Prefer visualViewport when present (iOS dynamic toolbars); fall back to
     // innerHeight. Caps are dvh-equivalent fractions of the live viewport.
+    // Closed Why must still fit Open full app + Why summary without clipping;
+    // open Why can grow further (sheet scrolls internally past the cap).
     const vh = window.visualViewport?.height ?? window.innerHeight;
     const shortLandscape = vh <= 500;
     const cap = shortLandscape
-      ? (whyOpen ? 0.7 : 0.55) * vh
-      : (whyOpen ? 0.85 : 0.5) * vh;
+      ? (whyOpen ? 0.75 : 0.7) * vh
+      : (whyOpen ? 0.85 : 0.72) * vh;
     setSheetHeight(Math.min(contentH, cap));
   }, [infoOpen, whyOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
