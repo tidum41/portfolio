@@ -85,6 +85,14 @@ export default function ProjectPopup({
   const infoInnerRef = useRef<HTMLDivElement>(null);
   const whySectionRef = useRef<HTMLDetailsElement>(null);
   const sheetDragRef = useRef<{ startY: number; dragging: boolean } | null>(null);
+  /** Outer large-panel sheet drag (below 640px). */
+  const panelDragRef = useRef<{
+    startY: number;
+    lastY: number;
+    lastT: number;
+    dragging: boolean;
+    vy: number;
+  } | null>(null);
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
@@ -92,8 +100,10 @@ export default function ProjectPopup({
   const [isMobile, setIsMobile] = useState(false);
   /** Measured mobile sheet height (px); null on desktop / before measure. */
   const [sheetHeight, setSheetHeight] = useState<number | null>(null);
-  /** Live drag offset while swiping the sheet handle down (mobile only). */
+  /** Live drag offset while swiping the info-sheet handle down (mobile only). */
   const [sheetDragY, setSheetDragY] = useState(0);
+  /** Live drag offset while swiping the outer modal sheet down (mobile large). */
+  const [panelDragY, setPanelDragY] = useState(0);
   const infoOpenRef = useRef(false);
   const infoPanelId = useId();
 
@@ -110,7 +120,7 @@ export default function ProjectPopup({
 
   infoOpenRef.current = infoOpen;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Bottom-sheet / compact chrome below 640px AND short landscape
     // viewports (e.g. 844×390) where a desktop popover would clip.
     const mq = window.matchMedia("(max-width: 639px), (max-height: 500px)");
@@ -128,7 +138,9 @@ export default function ProjectPopup({
       setWhyOpen(false);
       setSheetHeight(null);
       setSheetDragY(0);
+      setPanelDragY(0);
       sheetDragRef.current = null;
+      panelDragRef.current = null;
     }
   }, [open]);
 
@@ -392,7 +404,11 @@ export default function ProjectPopup({
             aria-label={title}
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
-            className={isLarge ? "project-popup-panel project-popup-panel--large" : undefined}
+            className={
+              isLarge
+                ? `project-popup-panel project-popup-panel--large${isMobile ? " project-popup-panel--sheet" : ""}`
+                : undefined
+            }
             // Opacity + y only, deliberately no scale — matches
             // PS3ControlPanel's own panel-open language (ExpandSection:
             // max-height + opacity, no scale) rather than a card-hover-press
@@ -401,11 +417,77 @@ export default function ProjectPopup({
             // never see a spurious resize mid-animation. Asymmetric timing —
             // slower open, snappier close — mirrors that same precedent
             // (320ms/220ms open vs 240ms/160ms close there).
-            initial={{ opacity: 0, transform: `translateY(${panelY}px)` }}
-            animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: panelEnter, ease: EASE_OPACITY } }}
-            exit={{ opacity: 0, transform: `translateY(${panelY}px)`, transition: { duration: panelExit, ease: EASE_EXIT } }}
+            // Mobile large: bottom sheet — enter from below; drag uses panelDragY.
+            initial={
+              isLarge && isMobile
+                ? { opacity: 1, y: "100%" }
+                : { opacity: 0, y: panelY }
+            }
+            animate={{
+              opacity: 1,
+              y: isLarge && isMobile ? panelDragY : 0,
+              transition: panelDragY > 0
+                ? { duration: 0 }
+                : {
+                    opacity: { duration: panelEnter, ease: EASE_OPACITY },
+                    y: { duration: panelEnter, ease: EASE_OPACITY },
+                  },
+            }}
+            exit={
+              isLarge && isMobile
+                ? { opacity: 1, y: "100%", transition: { duration: panelExit, ease: EASE_EXIT } }
+                : { opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }
+            }
             style={panelStyle}
           >
+            {isLarge && isMobile && (
+              <div
+                className="project-popup-panel-handle"
+                aria-hidden
+                onPointerDown={(e) => {
+                  if (e.button != null && e.button !== 0) return;
+                  const now = performance.now();
+                  panelDragRef.current = {
+                    startY: e.clientY,
+                    lastY: e.clientY,
+                    lastT: now,
+                    dragging: true,
+                    vy: 0,
+                  };
+                  (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+                }}
+                onPointerMove={(e) => {
+                  const drag = panelDragRef.current;
+                  if (!drag?.dragging) return;
+                  const now = performance.now();
+                  const dt = now - drag.lastT;
+                  if (dt > 0) drag.vy = (e.clientY - drag.lastY) / dt;
+                  drag.lastY = e.clientY;
+                  drag.lastT = now;
+                  setPanelDragY(Math.max(0, e.clientY - drag.startY));
+                }}
+                onPointerUp={() => {
+                  const drag = panelDragRef.current;
+                  panelDragRef.current = null;
+                  if (!drag?.dragging) return;
+                  const dy = Math.max(0, drag.lastY - drag.startY);
+                  // Close past 80px, or a quick downward flick (~0.5px/ms).
+                  if (dy > 80 || drag.vy > 0.5) {
+                    setPanelDragY(0);
+                    onClose();
+                  } else {
+                    setPanelDragY(0);
+                  }
+                }}
+                onPointerCancel={() => {
+                  panelDragRef.current = null;
+                  setPanelDragY(0);
+                }}
+              >
+                <span className="project-popup-panel-handle-bar" />
+              </div>
+            )}
+
             {!isLarge && (
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
                 <div>

@@ -767,8 +767,9 @@ html[data-theme="light"] {
   touch-action: none;
 }
 
-/* Grab handle — only rendered on mobile sheet; 44px hit area, 36×4 bar. */
-.project-popup-info-handle {
+/* Grab handles — only shown on the mobile sheet; 44px hit area, 36×4 bar. */
+.project-popup-info-handle,
+.project-popup-panel-handle {
   display: none;
 }
 
@@ -1000,32 +1001,56 @@ html[data-theme="dark"] .project-popup-why {
   background: var(--color-bg);
 }
 
-/* Below 640px OR short landscape (e.g. 844×390) — full-bleed panel +
-   bottom info sheet. Matches the JS isMobile media query. */
+/* Below 640px OR short landscape (e.g. 844×390) — outer modal is a
+   bottom sheet (~24px top gap so the 55% backdrop shows) + info sheet.
+   Matches the JS isMobile media query. */
 @media (max-width: 639px), (max-height: 500px) {
   .project-popup-backdrop--large {
     padding: 0;
-    align-items: stretch;
+    align-items: flex-end;
     justify-content: stretch;
     /* Avoid horizontal rubber-band that can reveal a second scrollbar. */
     overflow: hidden;
     overscroll-behavior: none;
   }
-  .project-popup-panel--large {
+  .project-popup-panel--large,
+  .project-popup-panel--large.project-popup-panel--sheet {
     width: 100%;
     max-width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
-    border-radius: 0;
+    /* ~24px gap above so the dimmed backdrop reads as a sheet, not fullscreen. */
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 16px 16px 0 0;
     border: none;
-    /* Safe-area insets for notched phones (box-sizing:border-box keeps
-       the outer box at 100dvh so nothing clips past the screen). */
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     overflow: hidden;
-    box-shadow: none;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+    box-sizing: border-box;
+  }
+
+  /* Outer sheet grab handle — 36×4, 8px from the top, 44px hit area. */
+  .project-popup-panel-handle {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 44px;
+    padding-top: 8px;
+    box-sizing: border-box;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .project-popup-panel-handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #8A8A8A;
   }
 
   /* Title tab stays a real bar above the iframe.
