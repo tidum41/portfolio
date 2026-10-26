@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect as _useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+
+const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
 export type PopupMetaItem = {
   label: string;
@@ -71,10 +81,16 @@ export default function ProjectPopup({
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElRef = useRef<Element | null>(null);
+  const infoPanelRef = useRef<HTMLDivElement>(null);
+  const infoInnerRef = useRef<HTMLDivElement>(null);
+  const whySectionRef = useRef<HTMLDetailsElement>(null);
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  /** Measured mobile sheet height (px); null on desktop / before measure. */
+  const [sheetHeight, setSheetHeight] = useState<number | null>(null);
   const infoOpenRef = useRef(false);
   const infoPanelId = useId();
 
@@ -85,8 +101,17 @@ export default function ProjectPopup({
   const panelY        = reduced ? 0 : 10;
   const infoY         = reduced ? 0 : 4;
   const infoDuration  = reduced ? 0.01 : INFO_MOTION.duration;
+  const sheetDuration = reduced ? 0.01 : 0.2;
 
   infoOpenRef.current = infoOpen;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   // Reset info chrome whenever the dialog closes so the next open starts
   // with the app filling the panel (info closed, disclosure collapsed).
@@ -94,8 +119,37 @@ export default function ProjectPopup({
     if (!open) {
       setInfoOpen(false);
       setWhyOpen(false);
+      setSheetHeight(null);
     }
   }, [open]);
+
+  // Mobile sheet: grow to content up to 50dvh (closed Why) / 85dvh (open Why).
+  useLayoutEffect(() => {
+    if (!infoOpen || !isMobile) {
+      if (!isMobile) setSheetHeight(null);
+      return;
+    }
+    const panel = infoPanelRef.current;
+    if (!panel) return;
+    // Measure natural height (ignore the animated inline height).
+    const prev = panel.style.height;
+    panel.style.height = "auto";
+    const contentH = panel.scrollHeight;
+    panel.style.height = prev;
+    const vh = window.innerHeight;
+    const cap = (whyOpen ? 0.85 : 0.5) * vh;
+    setSheetHeight(Math.min(contentH, cap));
+  }, [infoOpen, whyOpen, isMobile, infoMeta, whyBuilt, infoLink]);
+
+  // After Why expands, keep its body in view inside the sheet without a
+  // manual scroll when content hits the 85dvh cap.
+  useLayoutEffect(() => {
+    if (!whyOpen || !isMobile || !whySectionRef.current) return;
+    const id = requestAnimationFrame(() => {
+      whySectionRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [whyOpen, isMobile, sheetHeight, reduced]);
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
@@ -324,7 +378,18 @@ export default function ProjectPopup({
               </div>
             )}
 
+            {isLarge && (
+              // Desktop: floats over the iframe (CSS absolute, 16px inset).
+              // Mobile (<768): becomes a slim 44px bar above the iframe so
+              // the controls never cover the app's own toolbar / sort pill.
+              <div className="project-popup-topbar project-popup-topbar--large">
+                {infoButton}
+                {closeButton}
+              </div>
+            )}
+
             <div
+              className={isLarge ? "project-popup-body project-popup-body--large" : undefined}
               style={{
                 padding: isLarge ? 0 : 16,
                 // basis auto (not 0) so preferred child heights size the panel
@@ -339,27 +404,6 @@ export default function ProjectPopup({
               }}
             >
               {children}
-
-              {isLarge && (
-                // Float over the app at the same 16px inset as the CD/habit
-                // close control (panel border adds the measured +1px). No title
-                // strip — the iframe owns the full panel.
-                <div
-                  className="project-popup-topbar project-popup-topbar--large"
-                  style={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    zIndex: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  {infoButton}
-                  {closeButton}
-                </div>
-              )}
 
               <AnimatePresence>
                 {isLarge && infoOpen && (
@@ -376,15 +420,33 @@ export default function ProjectPopup({
                     />
                     <motion.div
                       key="info-panel"
+                      ref={infoPanelRef}
                       id={infoPanelId}
                       className="project-popup-info"
                       role="region"
                       aria-label="Project details"
-                      initial={{ opacity: 0, transform: `translateY(${infoY}px)` }}
-                      animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: infoDuration, ease: EASE_OPACITY } }}
-                      exit={{ opacity: 0, transform: `translateY(${infoY}px)`, transition: { duration: infoDuration, ease: EASE_EXIT } }}
+                      data-why-open={whyOpen ? "true" : "false"}
+                      initial={{ opacity: 0, y: infoY }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        ...(isMobile && sheetHeight != null ? { height: sheetHeight } : {}),
+                        transition: {
+                          opacity: { duration: infoDuration, ease: EASE_OPACITY },
+                          y: { duration: infoDuration, ease: EASE_OPACITY },
+                          height: { duration: sheetDuration, ease: EASE_OPACITY },
+                        },
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: infoY,
+                        transition: {
+                          opacity: { duration: infoDuration, ease: EASE_EXIT },
+                          y: { duration: infoDuration, ease: EASE_EXIT },
+                        },
+                      }}
                     >
-                      <div className="project-popup-info-inner">
+                      <div className="project-popup-info-inner" ref={infoInnerRef}>
                         {infoMeta && infoMeta.length > 0 && (
                           <dl className="project-popup-spec">
                             {infoMeta.map(({ label, values }) => (
@@ -414,6 +476,7 @@ export default function ProjectPopup({
                           </a>
                         )}
                         <details
+                          ref={whySectionRef}
                           className="project-popup-why"
                           open={whyOpen}
                           onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}

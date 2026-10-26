@@ -704,6 +704,22 @@ html[data-theme="light"] {
   box-sizing: border-box;
 }
 
+/* Desktop: float over the iframe at the CD/habit close inset. */
+.project-popup-topbar--large {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-popup-body--large {
+  /* Owns the iframe + info overlay under the (floating or bar) chrome. */
+  position: relative;
+}
+
 .project-popup-info-scrim {
   position: absolute;
   inset: 0;
@@ -727,6 +743,7 @@ html[data-theme="light"] {
   max-height: calc(100% - 56px);
   overflow: auto;
   z-index: 3;
+  box-sizing: border-box;
   background: var(--color-bg);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-subtle);
@@ -818,12 +835,14 @@ html[data-theme="light"] {
 .project-popup-why > summary::-webkit-details-marker {
   display: none;
 }
+/* Same sans voice as .project-popup-spec-label — one type system in the panel. */
 .project-popup-why-label {
-  font-family: var(--font-page-title);
-  font-size: var(--fs-meta);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
   font-weight: 400;
-  line-height: var(--lh-meta);
-  letter-spacing: var(--ls-meta);
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
+  color: var(--color-text-tertiary);
 }
 .project-popup-why-chevron {
   display: inline-flex;
@@ -912,6 +931,40 @@ html[data-theme="light"] {
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
   }
+
+  /* Slim 44px chrome bar above the iframe — matches site mobile nav
+     control height / 44px targets so info+close never cover app UI. */
+  .project-popup-topbar--large {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex-shrink: 0;
+    /* 44px button row + 1px hairline */
+    height: 45px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 4px;
+    justify-content: flex-end;
+    gap: 0;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border-subtle);
+    z-index: 5;
+  }
+  .project-popup-panel--large .popup-close-btn,
+  .project-popup-panel--large .popup-info-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .project-popup-panel--large .popup-close-btn::before,
+  .project-popup-panel--large .popup-info-btn::before {
+    inset: 0;
+  }
+  .project-popup-panel--large .popup-close-btn svg,
+  .project-popup-panel--large .popup-info-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
   .project-popup-info {
     top: auto;
     right: 0;
@@ -919,12 +972,16 @@ html[data-theme="light"] {
     bottom: 0;
     width: 100%;
     max-width: none;
-    max-height: 50dvh;
+    /* Height is driven in JS (content up to 50/85dvh); keep a CSS ceiling. */
+    max-height: 85dvh;
     overflow: auto;
     border-radius: var(--radius-panel) var(--radius-panel) 0 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
+  }
+  .project-popup-info[data-why-open="false"] {
+    max-height: 50dvh;
   }
 }
 
