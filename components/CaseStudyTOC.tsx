@@ -126,15 +126,33 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
-  const backArrow = (
+  const backArrowMobile = (
     <svg
       className="cs-back-arrow"
       width="20"
       height="20"
-      viewBox="9 5 11 14"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+
+  /** Desktop sidebar: cap-height ink (~10px), stem-weight stroke, tight viewBox. */
+  const backArrowDesktop = (
+    <svg
+      className="cs-back-arrow"
+      width="6"
+      height="10"
+      viewBox="8.25 5.25 7.5 13.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -164,7 +182,7 @@ export default function CaseStudyTOC({
           textDecoration: "none",
         }}
       >
-        {backArrow}
+        {backArrowMobile}
         <span className="cs-back-mobile-label">Back</span>
       </a>
     );
@@ -187,7 +205,7 @@ export default function CaseStudyTOC({
           textDecoration: "none",
         }}
       >
-        {backArrow}
+        {backArrowDesktop}
         <span className="cs-back-desktop-label">Back</span>
       </a>
 

@@ -956,7 +956,7 @@ html[data-theme="dark"] .project-image {
     margin: 0;
     padding-right: 0;
     /* Chevron ink left at 23px (1px overhang vs TOC label ink at 24px). */
-    padding-left: calc(22px - var(--page-px) - var(--cs-align-d-back, -6px));
+    padding-left: calc(23px - var(--page-px) - var(--cs-align-d-back, -6px));
     padding-bottom: 9px;
     height: 44px;
     min-width: 44px;
@@ -965,8 +965,10 @@ html[data-theme="dark"] .project-image {
   .cs-back-desktop .cs-back-arrow {
     flex-shrink: 0;
     display: block;
-    transform: translateY(1px);
-    margin-right: 2px;
+    width: 6px;
+    height: 10px;
+    margin-right: 4px;
+    transform: translateY(0.5px);
   }
   .cs-back-desktop-label {
     font-family: var(--font-sans);
