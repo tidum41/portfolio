@@ -84,6 +84,7 @@ export default function ProjectPopup({
   const infoPanelRef = useRef<HTMLDivElement>(null);
   const infoInnerRef = useRef<HTMLDivElement>(null);
   const whySectionRef = useRef<HTMLDetailsElement>(null);
+  const sheetDragRef = useRef<{ startY: number; dragging: boolean } | null>(null);
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
@@ -91,6 +92,8 @@ export default function ProjectPopup({
   const [isMobile, setIsMobile] = useState(false);
   /** Measured mobile sheet height (px); null on desktop / before measure. */
   const [sheetHeight, setSheetHeight] = useState<number | null>(null);
+  /** Live drag offset while swiping the sheet handle down (mobile only). */
+  const [sheetDragY, setSheetDragY] = useState(0);
   const infoOpenRef = useRef(false);
   const infoPanelId = useId();
 
@@ -102,13 +105,15 @@ export default function ProjectPopup({
   const infoY         = reduced ? 0 : 4;
   const infoDuration  = reduced ? 0.01 : INFO_MOTION.duration;
   const sheetDuration = reduced ? 0.01 : 0.2;
+  /** Dimmed info-sheet scrim — 200ms fade per spec. */
+  const scrimDuration = reduced ? 0.01 : 0.2;
 
   infoOpenRef.current = infoOpen;
 
   useEffect(() => {
-    // Bottom-sheet / compact chrome for narrow phones AND short landscape
+    // Bottom-sheet / compact chrome below 640px AND short landscape
     // viewports (e.g. 844×390) where a desktop popover would clip.
-    const mq = window.matchMedia("(max-width: 767px), (max-height: 500px)");
+    const mq = window.matchMedia("(max-width: 639px), (max-height: 500px)");
     const sync = () => setIsMobile(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -122,6 +127,8 @@ export default function ProjectPopup({
       setInfoOpen(false);
       setWhyOpen(false);
       setSheetHeight(null);
+      setSheetDragY(0);
+      sheetDragRef.current = null;
     }
   }, [open]);
 
@@ -450,10 +457,13 @@ export default function ProjectPopup({
                       type="button"
                       className="project-popup-info-scrim"
                       aria-label="Dismiss project info"
-                      onClick={() => setInfoOpen(false)}
+                      onClick={() => {
+                        setSheetDragY(0);
+                        setInfoOpen(false);
+                      }}
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1, transition: { duration: infoDuration, ease: EASE_OPACITY } }}
-                      exit={{ opacity: 0, transition: { duration: infoDuration, ease: EASE_EXIT } }}
+                      animate={{ opacity: 1, transition: { duration: scrimDuration, ease: EASE_OPACITY } }}
+                      exit={{ opacity: 0, transition: { duration: scrimDuration, ease: EASE_EXIT } }}
                     />
                     <motion.div
                       key="info-panel"
@@ -466,13 +476,15 @@ export default function ProjectPopup({
                       initial={{ opacity: 0, y: infoY }}
                       animate={{
                         opacity: 1,
-                        y: 0,
+                        y: isMobile ? sheetDragY : 0,
                         ...(isMobile && sheetHeight != null ? { height: sheetHeight } : {}),
-                        transition: {
-                          opacity: { duration: infoDuration, ease: EASE_OPACITY },
-                          y: { duration: infoDuration, ease: EASE_OPACITY },
-                          height: { duration: sheetDuration, ease: EASE_OPACITY },
-                        },
+                        transition: sheetDragY > 0
+                          ? { duration: 0 }
+                          : {
+                              opacity: { duration: infoDuration, ease: EASE_OPACITY },
+                              y: { duration: infoDuration, ease: EASE_OPACITY },
+                              height: { duration: sheetDuration, ease: EASE_OPACITY },
+                            },
                       }}
                       exit={{
                         opacity: 0,
@@ -483,6 +495,41 @@ export default function ProjectPopup({
                         },
                       }}
                     >
+                      {isMobile && (
+                        <div
+                          className="project-popup-info-handle"
+                          aria-hidden
+                          onPointerDown={(e) => {
+                            if (e.button != null && e.button !== 0) return;
+                            sheetDragRef.current = { startY: e.clientY, dragging: true };
+                            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+                          }}
+                          onPointerMove={(e) => {
+                            const drag = sheetDragRef.current;
+                            if (!drag?.dragging) return;
+                            const dy = Math.max(0, e.clientY - drag.startY);
+                            setSheetDragY(dy);
+                          }}
+                          onPointerUp={(e) => {
+                            const drag = sheetDragRef.current;
+                            sheetDragRef.current = null;
+                            if (!drag?.dragging) return;
+                            const dy = Math.max(0, e.clientY - drag.startY);
+                            if (dy > 64) {
+                              setSheetDragY(0);
+                              setInfoOpen(false);
+                            } else {
+                              setSheetDragY(0);
+                            }
+                          }}
+                          onPointerCancel={() => {
+                            sheetDragRef.current = null;
+                            setSheetDragY(0);
+                          }}
+                        >
+                          <span className="project-popup-info-handle-bar" />
+                        </div>
+                      )}
                       <div className="project-popup-info-inner" ref={infoInnerRef}>
                         {infoMeta && infoMeta.length > 0 && (
                           <dl className="project-popup-spec">
