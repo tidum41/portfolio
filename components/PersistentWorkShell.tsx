@@ -70,11 +70,11 @@ const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
 
 const ALLINONE_INFO_META = [
-  { label: "Timeline", values: ["2 weeks"] },
-  { label: "Built with", values: ["React, Vite, installable web app (PWA)"] },
-  { label: "AI", values: ["Groq API, gpt-oss-20b"] },
+  { label: "Built with", values: ["React, Vite, PWA"] },
+  { label: "AI", values: ["Groq"] },
   { label: "Data", values: ["Google Sheets API, Supabase"] },
   { label: "Designed with", values: ["Paper, Claude Code"] },
+  { label: "Timeline", values: ["2 weeks"] },
 ];
 
 const ALLINONE_WHY_BUILT =

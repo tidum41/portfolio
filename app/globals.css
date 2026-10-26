@@ -983,6 +983,10 @@ html[data-theme="light"] {
   .project-popup-info[data-why-open="false"] {
     max-height: 50dvh;
   }
+  /* Clear the iPhone home indicator under the Why copy. */
+  .project-popup-info .project-popup-info-inner {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ─── InteractiveBadge border — neutral grey, lighter/more visible than
