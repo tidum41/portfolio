@@ -197,6 +197,7 @@ const METADATA = [
 
 const FB = {
   tocItems: TOC_ITEMS,
+  heroTagline: "YouTube, Personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",
@@ -239,14 +240,13 @@ export default function SvizPage() {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
         <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <aside className="cs-aside">
+            <CaseStudyTOC
+              items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
+              backHref="/"
+            />
+          </aside>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>

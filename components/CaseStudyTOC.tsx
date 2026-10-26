@@ -161,7 +161,7 @@ export default function CaseStudyTOC({
 
   // Desktop: sticky sidebar
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div className="cs-toc-root">
       {/* Back button — inline-flex, narrow hit area */}
       <a
         href={backHref}
@@ -178,7 +178,6 @@ export default function CaseStudyTOC({
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
-          marginBottom: 16,
         }}
       >
         {backArrow}
@@ -186,7 +185,9 @@ export default function CaseStudyTOC({
       </a>
 
       {activeSections.length > 0 && (
-        <nav aria-label="Table of contents">
+        <div className="cs-aside-nav-host">
+          <div className="cs-aside-nav-rail-spacer" aria-hidden="true" />
+          <nav className="cs-toc-nav" aria-label="Table of contents">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {activeSections.map(({ id, label }) => {
               const isActive  = activeSection === label;
@@ -214,7 +215,8 @@ export default function CaseStudyTOC({
               );
             })}
           </div>
-        </nav>
+          </nav>
+        </div>
       )}
     </div>
   );

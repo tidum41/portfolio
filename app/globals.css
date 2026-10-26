@@ -361,9 +361,6 @@ html[data-intro="playing"] .intro-hide--snap,
 html[data-intro="done"] .intro-hide--snap {
   transition: none !important;
 }
-/* Cards stay opacity-gated with the rest of .intro-hide, but must accept
-   clicks during the hero intro so an early project-card tap can navigate
-   (and complete the intro) instead of falling through for ~1.9s. */
 html[data-intro="playing"] .intro-hide--snap {
   pointer-events: auto !important;
 }
@@ -900,30 +897,91 @@ html[data-theme="dark"] .project-image {
 .cs-layout {
   max-width: var(--grid-max-w);
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
-  align-items: start;
   padding-inline: var(--page-px);
   padding-top: var(--space-5);
   padding-bottom: var(--space-9);
 }
+.cs-content {
+  min-width: 0;
+}
 .cs-aside {
-  position: sticky;
-  top: 60px;
-  align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
-/* Below 1200px: TOC aside hidden. The content column stays capped at
-   --content-max-w and centered in the middle track (the same centering
-   .cs-layout--no-toc uses); the in-content back control takes over from
-   the aside's desktop back button (see the .cs-mobile-back rule below
-   the back-button section, which must come after its display:none base). */
-@media (max-width: 1199px) {
-  .cs-layout {
+.cs-toc-root {
+  display: flex;
+  flex-direction: column;
+}
+/* Desktop: inner grid — row 1 hero type, row 2 TOC nav + hero media share a row. */
+@media (min-width: 1200px) {
+  .cs-content {
+    display: grid;
     grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
+    grid-template-rows: auto auto auto;
+    grid-auto-rows: auto;
+    align-items: start;
+    max-width: none;
+    width: 100%;
   }
-  .cs-layout > .cs-content {
+  .cs-aside,
+  .cs-toc-root {
+    display: contents;
+  }
+  .cs-hero-header {
+    display: contents;
+  }
+  .cs-content > .cs-mobile-back {
+    display: none;
+  }
+  .cs-back-desktop {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    padding-right: var(--space-3);
+    margin-bottom: 0;
+  }
+  .cs-aside-nav-host {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    display: grid;
+    grid-template-rows: subgrid;
+    min-height: 0;
+    padding-right: var(--space-3);
+  }
+  .cs-aside-nav-rail-spacer {
+    grid-row: 1;
+  }
+  .cs-hero-pre-media {
     grid-column: 2;
+    grid-row: 1;
+  }
+  .cs-hero-media-wrap {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .cs-meta-grid {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .cs-content > *:not(.cs-mobile-back):not(.cs-aside):not(.cs-hero-header) {
+    grid-column: 2;
+  }
+  .cs-content > article {
+    grid-row: 4;
+    min-width: 0;
+  }
+  .cs-toc-nav {
+    grid-row: 2;
+    align-self: start;
+    position: sticky;
+    top: 60px;
+    margin-top: 0;
+  }
+}
+/* Below 1200px: TOC aside hidden; content column centered. */
+@media (max-width: 1199px) {
+  .cs-content {
+    max-width: var(--content-max-w);
+    margin-inline: auto;
   }
   .cs-aside {
     display: none !important;
@@ -933,18 +991,14 @@ html[data-theme="dark"] .project-image {
    lives inside .cs-content so it shares the hero media's left edge. */
 @media (max-width: 767px) {
   .cs-layout {
-    grid-template-columns: 1fr;
     padding-top: var(--space-2);
     /* Compress section rhythm on narrow viewports (ladder steps down). */
     --cs-section-gap: var(--space-7);
     --section-gap: var(--cs-section-gap);
     --section-pb: 0px;
   }
-  .cs-layout > * {
+  .cs-content {
     min-width: 0;
-  }
-  .cs-layout > .cs-content {
-    grid-column: 1;
   }
   .cs-aside {
     display: none !important;
@@ -957,14 +1011,9 @@ html[data-theme="dark"] .project-image {
    the last hard-coded optical nudges; tweak live, then lock in code. */
 :root {
   --cs-align-m-back:    -6px;
-  --cs-align-m-tagline: 0px;
   --cs-align-m-title:   -2px;
   --cs-align-d-back:    -6px;
-  --cs-align-d-tagline: 0px;
   --cs-align-d-title:   -2px;
-}
-.cs-content {
-  min-width: 0;
 }
 .cs-mobile-back {
   display: none;
@@ -979,6 +1028,7 @@ html[data-theme="dark"] .project-image {
   margin-left: 0;
   padding-left: 0;
 }
+.cs-hero-pre-media,
 .cs-hero-title-wrap,
 .cs-hero-media-wrap {
   display: block;
@@ -1126,6 +1176,7 @@ html[data-theme="dark"] .project-image {
   .cs-hero-header { margin-bottom: var(--space-4) !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
   .cs-hero-header,
+  .cs-hero-pre-media,
   .cs-hero-title-wrap,
   .cs-hero-media-wrap,
   .cs-hero-title {
@@ -1443,20 +1494,16 @@ html[data-theme="dark"] .project-image {
   background: var(--color-bg-primary);
 }
 
-/* No section nav: keep the 750px column centered instead of reserving a TOC rail. */
-.cs-layout.cs-layout--no-toc .cs-content {
-  grid-column: 2;
-}
-@media (max-width: 1199px) {
-  .cs-layout.cs-layout--no-toc {
-    grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
-  }
-}
-@media (max-width: 767px) {
-  .cs-layout.cs-layout--no-toc {
-    grid-template-columns: 1fr;
-  }
+/* No section nav: centered content column (same as default below 1200px). */
+@media (min-width: 1200px) {
   .cs-layout.cs-layout--no-toc .cs-content {
+    grid-template-columns: minmax(0, var(--content-max-w));
+    justify-content: center;
+  }
+  .cs-layout.cs-layout--no-toc .cs-hero-pre-media,
+  .cs-layout.cs-layout--no-toc .cs-hero-media-wrap,
+  .cs-layout.cs-layout--no-toc .cs-meta-grid,
+  .cs-layout.cs-layout--no-toc .cs-content > *:not(.cs-mobile-back):not(.cs-aside):not(.cs-hero-header) {
     grid-column: 1;
   }
 }

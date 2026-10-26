@@ -37,36 +37,38 @@ export default function CaseStudyOpen({
 }) {
   return (
     <header className="cs-hero-header">
-      <div className="cs-hero-title-wrap cs-open-type">
-        <h1
-          className="cs-hero-title"
-          style={{
-            fontFamily: "var(--font-doc-title)",
-            fontSize: "var(--fs-hero)",
-            fontWeight: "var(--fw-hero)" as CSSProperties["fontWeight"],
-            lineHeight: 1.1,
-            letterSpacing: "var(--ls-hero)",
-            color: "var(--color-text-primary)",
-            margin: subtitle ? "0 0 12px" : "0 0 var(--space-4)",
-          }}
-        >
-          {title}
-        </h1>
+      <div className="cs-hero-pre-media">
+        <div className="cs-hero-title-wrap cs-open-type">
+          <h1
+            className="cs-hero-title"
+            style={{
+              fontFamily: "var(--font-doc-title)",
+              fontSize: "var(--fs-hero)",
+              fontWeight: "var(--fw-hero)" as CSSProperties["fontWeight"],
+              lineHeight: 1.1,
+              letterSpacing: "var(--ls-hero)",
+              color: "var(--color-text-primary)",
+              margin: subtitle ? "0 0 12px" : "0 0 var(--space-4)",
+            }}
+          >
+            {title}
+          </h1>
+        </div>
+        {subtitle && (
+          <p
+            className="cs-hero-subtitle cs-open-type"
+            style={{
+              fontSize: "var(--fs-body)",
+              lineHeight: "var(--lh-body)",
+              letterSpacing: "0.1px",
+              color: "var(--color-text-secondary)",
+              margin: "0 0 var(--space-4)",
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
-      {subtitle && (
-        <p
-          className="cs-open-type"
-          style={{
-            fontSize: "var(--fs-body)",
-            lineHeight: "var(--lh-body)",
-            letterSpacing: "0.1px",
-            color: "var(--color-text-secondary)",
-            margin: "0 0 var(--space-4)",
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
           <div className="cs-hero-media-frame" style={{ background: heroBg }}>
