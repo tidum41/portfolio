@@ -2,28 +2,21 @@
 
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
-import SourcesRow from "@/components/dialogue/product/SourcesRow";
-import FunnelChart from "@/components/dialogue/product/FunnelChart";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import CounterEvidence from "@/components/dialogue/product/CounterEvidence";
 import ClipCard from "@/components/dialogue/product/ClipCard";
-import FollowUpChips from "@/components/dialogue/product/FollowUpChips";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import { formatChartCount } from "@/components/dialogue/product/chart/chartSpec";
 import {
   CHECKOUT_FUNNEL,
-  CHECKOUT_QUESTION,
   CLIPS,
   COVERAGE_ADDRESS,
 } from "@/lib/dialogue/product/sampleData";
+import { HERO_QUESTION } from "@/components/dialogue/product/scenarios/HeroChatCard";
 
 /**
- * Round H hero: one full-width query, then the whole answer. The summary,
- * sources and funnel carry the supporting evidence; the coverage split, the
- * three participants who had no trouble, and the thin mobile slice sit
- * alongside it in the same card. Every number is the study's own sample data.
+ * Direction A hero: one question, one answer sentence, one count bar, one
+ * quote card. Nothing else. Every string and count is the checkout study's
+ * own (24 interviews, 18 of 24 on address friction, Jordan M.'s clip).
  */
 export default function DialogueHeroMoment() {
   return (
@@ -31,8 +24,7 @@ export default function DialogueHeroMoment() {
       className={`dialogue-hero-moment dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
       <StudyChatShell evidence={24}>
-        <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-        <QuerySearchStep searched={24} found={18} />
+        <UserMessageBubble>{HERO_QUESTION}</UserMessageBubble>
         <p className="dp-summary dp-text-body" data-annotate-part="summary">
           {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
           <span className="dp-summary__emph" data-annotate-part="summary-emphasis">
@@ -40,38 +32,22 @@ export default function DialogueHeroMoment() {
           </span>
           {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
         </p>
-        <SourcesRow selectedParticipant="Priya K." />
-        <div className="dialogue-hero-moment__grid">
-          <FunnelChart showSummary={false} vizCard />
-          <div className="dialogue-hero-moment__side">
-            <ChartVizCard
-              title={COVERAGE_ADDRESS.title}
-              caption="Counts of the 24 interviews behind the funnel"
-            >
-              <ChartBarList
-                rows={COVERAGE_ADDRESS.rows.map((r) => ({
-                  label: r.label === "Mentioned it" ? "Said it" : "Did not",
-                  value: r.count,
-                  display: formatChartCount(r.count),
-                }))}
-                max={24}
-                fillMode="magnitude"
-              />
-            </ChartVizCard>
-            <CounterEvidence />
-          </div>
-        </div>
-        <div className="dialogue-hero-moment__clips">
-          <ClipCard clip={CLIPS[0]} />
-          <div className="dialogue-hero-moment__thin">
-            <p className="dialogue-hero-moment__thin-count">4 of 24</p>
-            <p className="dialogue-hero-moment__thin-text">
-              Where it stays thin: only four interviews mention the mobile autofill complaint,
-              so that answer leads with its count and holds the chart back.
-            </p>
-          </div>
-        </div>
-        <FollowUpChips />
+        <ChartVizCard title={COVERAGE_ADDRESS.headline}>
+          <ChartBarList
+            className="dp-chart-bars--count"
+            rows={[
+              {
+                label: "Address friction",
+                value: 18,
+                display: "18 of 24 interviews",
+                focal: true,
+              },
+            ]}
+            max={24}
+            fillMode="magnitude"
+          />
+        </ChartVizCard>
+        <ClipCard clip={CLIPS[0]} />
       </StudyChatShell>
     </div>
   );
