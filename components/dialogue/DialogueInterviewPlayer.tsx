@@ -56,13 +56,28 @@ function FullscreenIcon() {
   );
 }
 
-/** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static. */
-export function DialogueInterviewPlayer() {
+function PauseIcon() {
+  return (
+    <svg className="dp-qplayer__icon" viewBox="0 0 18 18" aria-hidden>
+      <rect x="3.5" y="2.5" width="3.6" height="13" rx="1" />
+      <rect x="10.9" y="2.5" width="3.6" height="13" rx="1" />
+    </svg>
+  );
+}
+
+/** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static.
+    Round N: with `playing`, the frame is 16:9 and the transport shows pause,
+    the state the clips figure needs. Default rendering is unchanged. */
+export function DialogueInterviewPlayer({ playing = false }: { playing?: boolean }) {
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
       <div
-        className="dp-qplayer__still-box"
-        style={{ aspectRatio: `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}` }}
+        className={["dp-qplayer__still-box", playing ? "dp-qplayer__still-box--playing" : ""].filter(Boolean).join(" ")}
+        style={{
+          aspectRatio: playing
+            ? "16 / 9"
+            : `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}`,
+        }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -84,7 +99,7 @@ export function DialogueInterviewPlayer() {
       <div className="dp-qplayer__gradient" aria-hidden data-annotate-part="player-gradient" />
       <div className="dp-qplayer__bar" aria-hidden data-annotate-part="player-controls">
         <div className="dp-qplayer__group">
-          <span className="dp-qplayer__btn" data-annotate-part="player-play"><PlayIcon /></span>
+          <span className="dp-qplayer__btn" data-annotate-part="player-play">{playing ? <PauseIcon /> : <PlayIcon />}</span>
           <span className="dp-qplayer__btn" data-annotate-part="player-skip-back"><SkipIcon back /></span>
           <span className="dp-qplayer__btn" data-annotate-part="player-skip-forward"><SkipIcon /></span>
         </div>

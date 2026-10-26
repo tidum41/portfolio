@@ -7,9 +7,7 @@ import AnatomyStructureFigure from "@/components/dialogue/product/scenarios/Anat
 import QuoteFrameFigure from "@/components/dialogue/product/scenarios/QuoteFrameFigure";
 import FullAnswerFigure from "@/components/dialogue/product/scenarios/FullAnswerFigure";
 import ThinDataFigure from "@/components/dialogue/product/scenarios/ThinDataFigure";
-import ChartGalleryFigure, {
-  type GalleryVariant,
-} from "@/components/dialogue/product/scenarios/ChartGalleryFigure";
+import InlineClipFigure from "@/components/dialogue/product/scenarios/InlineClipFigure";
 
 export type DialogueProductScenario =
   | "hero"
@@ -21,7 +19,9 @@ export type DialogueProductScenario =
   | "clip-player"
   | "full-answer"
   | "thin-data"
-  | { gallery: GalleryVariant };
+  | "thin-data-plan"
+  | "thin-data-slim"
+  | "inline-clip";
 
 type Props = {
   scenario: DialogueProductScenario;
@@ -29,13 +29,11 @@ type Props = {
 };
 
 function renderScenario(scenario: DialogueProductScenario): ReactNode {
-  if (typeof scenario === "object" && "gallery" in scenario) {
-    return <ChartGalleryFigure variant={scenario.gallery} />;
-  }
   switch (scenario) {
     case "hero":
       return <HeroStructuredFigure />;
     case "problem-paragraphs":
+      return <ParagraphAnswerFigure citedQuotes />;
     case "decision-paragraphs":
       return <ParagraphAnswerFigure />;
     case "decision-quotes":
@@ -50,6 +48,12 @@ function renderScenario(scenario: DialogueProductScenario): ReactNode {
       return <FullAnswerFigure />;
     case "thin-data":
       return <ThinDataFigure />;
+    case "thin-data-plan":
+      return <ThinDataFigure planTapped />;
+    case "thin-data-slim":
+      return <ThinDataFigure slim />;
+    case "inline-clip":
+      return <InlineClipFigure />;
     default:
       return null;
   }
