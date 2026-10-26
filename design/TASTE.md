@@ -60,7 +60,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - "UX research" casing everywhere, headings and the hero title included (round L, Oct 25).
 - overscroll-behavior-y: none on html and body, so the page does not bounce on scroll up (round L, Oct 25).
 - Decided: every Dialogue UI and chart must match what Dialogue really measures; audio/transcript UI uses the real WaveformIcon.
-- Decided: Dialogue's team adopted study-wide chat, count bars and thin-data flags; hero and counts use the 24-interview checkout study; role line 'Product designer (contract), Dec 2025 to Mar 2026'.
+- Decided (corrected Oct 25 10:10pm): Dialogue adopted only some findings; thin-data flags did not ship. Much of the work is concept, shown concretely and labelled honestly. Deep dive = desk research (NN/g, Maze, User Interviews, IBM Carbon), no interviews or quotes. Hero keeps the 18 of 24 bar; hero and counts use the 24-interview checkout study; role line 'Product designer (contract), Dec 2025 to Mar 2026'.
 
 - Case study basics (Oct 25): not a chronological recount. Context on why it exists, final artifacts up front, bulk is key design moments (hard or debatable calls with justification), why it matters, learnings framed as strengths, one obvious takeaway about Mudit.
 - Dialogue takeaway (Oct 25): he thinks from UX research teams' perspective via deep dives, designs within existing frontend design systems, and sweats the small decisions that shape product workflows.
