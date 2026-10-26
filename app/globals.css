@@ -951,11 +951,27 @@ html[data-theme="dark"] .project-image {
     top: calc(var(--cs-back-box-top) - var(--cs-site-header-bottom) - var(--space-5));
     left: 0;
     z-index: 45;
-    align-self: flex-start;
+    display: flex;
+    align-items: center;
     margin: 0;
     padding-right: 0;
+    /* Chevron ink left at 23px (1px overhang vs TOC label ink at 24px). */
+    padding-left: calc(22px - var(--page-px) - var(--cs-align-d-back, -6px));
+    padding-bottom: 9px;
     height: 44px;
+    min-width: 44px;
     box-sizing: border-box;
+  }
+  .cs-back-desktop .cs-back-arrow {
+    flex-shrink: 0;
+    display: block;
+    transform: translateY(1px);
+    margin-right: 2px;
+  }
+  .cs-back-desktop-label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    line-height: 16px;
   }
   .cs-aside-nav-host {
     flex: 1 1 auto;
@@ -987,16 +1003,19 @@ html[data-theme="dark"] .project-image {
     top: 60px;
     margin-top: 0;
   }
-  .cs-toc-nav > div {
+  .cs-toc-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-top: 0;
-    /* Optical cap align: meta caps sit above hero cap when line-height matches H1. */
-    padding-top: 6px;
+    /* Retuned when labels use 16px line-height (cap still matches hero H1). */
+    padding-top: 5px;
   }
   .cs-toc-nav .cs-toc-label {
     font-family: var(--font-sans);
     font-size: var(--fs-meta);
     letter-spacing: var(--ls-meta);
-    line-height: 1.1;
+    line-height: 16px;
   }
 }
 /* Below 1200px: TOC aside hidden; content column centered. */

@@ -127,7 +127,18 @@ export default function CaseStudyTOC({
   }, [router, backHref]);
 
   const backArrow = (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="cs-back-arrow"
+      width="20"
+      height="20"
+      viewBox="9 5 11 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <polyline points="15 18 9 12 15 6" />
     </svg>
   );
@@ -171,23 +182,19 @@ export default function CaseStudyTOC({
         className="cs-back-desktop"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "flex", alignItems: "flex-start", gap: 2,
-          minHeight: 44,
-          minWidth: 44,
-          marginLeft: 0,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
         }}
       >
         {backArrow}
-        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-meta)", lineHeight: 1.5 }}>Back</span>
+        <span className="cs-back-desktop-label">Back</span>
       </a>
 
       {activeSections.length > 0 && (
         <div className="cs-aside-nav-host">
           <nav className="cs-toc-nav" aria-label="Table of contents">
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="cs-toc-stack">
             {activeSections.map(({ id, label }) => {
               const isActive  = activeSection === label;
               const isHovered = hoveredSection === label;
