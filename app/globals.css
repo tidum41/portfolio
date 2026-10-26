@@ -810,7 +810,11 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-spec-row {
   margin: 0;
   padding: 8px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+  /* Neutral grey hairlines — not the site’s lavender --color-border-subtle. */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="dark"] .project-popup-spec-row {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 .project-popup-spec-row:first-child {
   padding-top: 0;
@@ -892,7 +896,10 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-why {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="dark"] .project-popup-why {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 .project-popup-why > summary {
   cursor: pointer;
