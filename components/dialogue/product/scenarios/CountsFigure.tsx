@@ -28,6 +28,9 @@ export default function CountsFigure() {
           ]}
         />
       </ChartVizCard>
+      <p className="dp-counts__group-label" data-annotate-part="counts-group-label">
+        6 of 24 did not
+      </p>
       <div className="dp-clip-quotes" data-annotate-part="counts-quotes">
         {DID_NOT_QUOTES.map((q) => (
           <QuoteCard key={q.name} name={q.name} time={q.time} text={q.text} />

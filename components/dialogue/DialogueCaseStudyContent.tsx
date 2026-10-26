@@ -9,7 +9,6 @@ import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import DialogueHeroMoment from "@/components/dialogue/DialogueHeroMoment";
-import CountsFigure from "@/components/dialogue/product/scenarios/CountsFigure";
 import { HERO_QUESTION } from "@/components/dialogue/product/scenarios/HeroChatCard";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
@@ -18,7 +17,7 @@ import DialogueRachelFrame, {
   DialogueCaption,
   type DialogueFrameTone,
 } from "@/components/dialogue/DialogueRachelFrame";
-import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
+import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 
 function frameToneFromLabel(label: string): DialogueFrameTone {
   if (label.startsWith("Problem:")) return "problem";
@@ -125,27 +124,6 @@ function ProductFigureBlock({
   return <figure className="cs-figure dialogue-live-block">{wrapped}</figure>;
 }
 
-/** A live product figure that is not a DialogueProductFigure scenario. */
-function LiveFigureBlock({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <figure className="cs-figure dialogue-live-block">
-      <DialogueRachelFrame label={label} tone="system">
-        <div
-          className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-        >
-          {children}
-        </div>
-      </DialogueRachelFrame>
-    </figure>
-  );
-}
-
 export function DialogueCaseStudyContent({
   annotateRaster,
   backHref = "/",
@@ -169,7 +147,6 @@ export function DialogueCaseStudyContent({
 
           <CaseStudyOpen
             title={DIALOGUE_TITLE}
-            subtitle={DIALOGUE_SUBTITLE}
             metadata={[
               {
                 _key: "team",
@@ -206,10 +183,6 @@ export function DialogueCaseStudyContent({
                       <DialogueHeroMoment />
                     </div>
                   )}
-              <DialogueCaption
-                label="Overview"
-                sentence="One answer, its count as text, and the quote behind it."
-              />
             </>
           </CaseStudyOpen>
 
@@ -329,7 +302,6 @@ export function DialogueCaseStudyContent({
                 scenario="inline-clip"
                 title="Clip playing inside the chat answer, with the speaker's line highlighted in the synced transcript"
                 wrapRaster={wrap}
-                frameLabel="Watching: the clip plays inside the answer, with the transcript line lit under it."
               />
             </Section>
 
@@ -340,9 +312,11 @@ export function DialogueCaseStudyContent({
                 percent hides how few people are behind it. Tapping the 6 of 24 who
                 didn&rsquo;t struggle opens their quotes too.
               </CaseStudyBody>
-              <LiveFigureBlock label="Counts: the 6 of 24 segment is outlined, and its quote cards are open beneath the bar.">
-                <CountsFigure />
-              </LiveFigureBlock>
+              <ProductFigureBlock
+                scenario="counts"
+                title="The count bar with the 6 of 24 segment open, showing its quote cards beneath"
+                wrapRaster={wrap}
+              />
             </Section>
 
             <Section id="few">
@@ -384,7 +358,6 @@ export function DialogueCaseStudyContent({
                 scenario="thin-data-prompt"
                 title="The thin-data answer with Add to my plan tapped, showing the copied prompt and the context it carries"
                 wrapRaster={wrap}
-                frameLabel="Next: Add to my plan copies the follow-up prompt with the plan's context."
               />
             </Section>
           </article>

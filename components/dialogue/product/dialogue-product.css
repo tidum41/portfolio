@@ -3864,7 +3864,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 .dp-clip-quote {
   padding: 8px 12px;
-  border: 1px solid var(--dp-border);
+  border: none;
   border-radius: var(--dp-radius-control);
   background: var(--dp-clip-card-bg);
 }
@@ -4219,7 +4219,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 .dp-clip-quote {
   padding: 8px 12px;
-  border: 1px solid var(--dp-border);
+  border: none;
   border-radius: var(--dp-radius-control);
   background: var(--dp-clip-card-bg);
 }
@@ -4596,4 +4596,14 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dp-synced-transcript__viewport {
     max-height: none;
   }
+}
+
+/* Round O fix: the label over the opened segment's quote cards in Counts,
+   tying the cards under the bar to the outlined 6 of 24 segment. */
+.dp-counts__group-label {
+  margin: 2px 0 -2px;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  color: var(--dp-muted);
+  font-weight: 500;
 }

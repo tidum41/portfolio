@@ -85,9 +85,16 @@ function scaleProps(
       case "full-answer":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 600, fade: true };
       case "problem-paragraphs":
-        /* Round O: the figure carries three full quote cards now; the old
-           652px cap and fade would cut the third card on phones. */
-        return { innerWidth: CHAT_W, fit: "reflow" };
+      case "inline-clip":
+      case "thin-data-slim":
+      case "thin-data-prompt":
+      case "counts":
+        /* Round O fix: on phones the chat figures scale the 448px panel
+           down to fit the column (transform scale) instead of reflowing
+           taller. The clip figure caps at about 560px with the fade. */
+        return scenario === "inline-clip"
+          ? { innerWidth: CHAT_W, maxScale: 1, maxOuterHeight: 500, fade: true }
+          : { innerWidth: CHAT_W, maxScale: 1 };
       default:
         return { innerWidth: CHAT_W, fit: "reflow" };
     }

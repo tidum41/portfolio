@@ -79,7 +79,7 @@ export default function ThinDataFigure({
   }
 
   return (
-    <StudyChatShell compact hideHeader hideComposer evidence={4}>
+    <StudyChatShell compact hideHeader hideComposer evidence={showPrompt ? undefined : 4}>
       <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
         On mobile, several participants bailed when autofill skipped the apartment field and

@@ -25,7 +25,7 @@ export default function InlineClipFigure() {
       </div>
       <div className="dp-inline-clip__player" data-annotate-part="inline-player">
         <DialogueInterviewPlayer playing />
-        <SyncedTranscript />
+        <SyncedTranscript bare />
       </div>
     </StudyChatShell>
   );

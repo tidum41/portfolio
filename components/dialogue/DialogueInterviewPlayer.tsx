@@ -1,4 +1,5 @@
 import {
+  DIALOGUE_CALL_FRAME_SRC,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH,
@@ -67,7 +68,8 @@ function PauseIcon() {
 
 /** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static.
     Round N: with `playing`, the frame is 16:9 and the transport shows pause,
-    the state the clips figure needs. Default rendering is unchanged. */
+    the state the clips figure needs. Round O fix: the playing state shows a
+    real call frame instead of the blurred still. Default rendering is unchanged. */
 export function DialogueInterviewPlayer({ playing = false }: { playing?: boolean }) {
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
@@ -83,18 +85,20 @@ export function DialogueInterviewPlayer({ playing = false }: { playing?: boolean
         <img
           data-dialogue-placement-still="true"
           data-annotate-part="player-still"
-          src={DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
+          src={playing ? DIALOGUE_CALL_FRAME_SRC : DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
           alt=""
-          width={1920}
-          height={888}
+          width={playing ? 1280 : 1920}
+          height={playing ? 720 : 888}
           className="dp-qplayer__still"
         />
-        <div
-          aria-hidden
-          data-face-blur="true"
-          data-annotate-part="player-face-blur"
-          className="dp-qplayer__face-blur"
-        />
+        {playing ? null : (
+          <div
+            aria-hidden
+            data-face-blur="true"
+            data-annotate-part="player-face-blur"
+            className="dp-qplayer__face-blur"
+          />
+        )}
       </div>
       <div className="dp-qplayer__gradient" aria-hidden data-annotate-part="player-gradient" />
       <div className="dp-qplayer__bar" aria-hidden data-annotate-part="player-controls">
