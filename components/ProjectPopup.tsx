@@ -379,12 +379,16 @@ export default function ProjectPopup({
             )}
 
             {isLarge && (
-              // Desktop: floats over the iframe (CSS absolute, 16px inset).
-              // Mobile (<768): becomes a slim 44px bar above the iframe so
-              // the controls never cover the app's own toolbar / sort pill.
+              // Title tab above the iframe — info icon lives here as its
+              // standard spot (restored from the pre-floating chrome design).
               <div className="project-popup-topbar project-popup-topbar--large">
-                {infoButton}
-                {closeButton}
+                <div className="project-popup-topbar-title">
+                  <p>{title}</p>
+                </div>
+                <div className="project-popup-topbar-actions">
+                  {infoButton}
+                  {closeButton}
+                </div>
               </div>
             )}
 

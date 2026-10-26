@@ -704,19 +704,43 @@ html[data-theme="light"] {
   box-sizing: border-box;
 }
 
-/* Desktop: float over the iframe at the CD/habit close inset. */
+/* Title tab above the iframe — info + close sit on this bar. */
 .project-popup-topbar--large {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 4;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-subtle);
+  z-index: 5;
+}
+.project-popup-topbar-title {
+  min-width: 0;
+  flex: 1;
+}
+.project-popup-topbar-title > p {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-popup-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .project-popup-body--large {
-  /* Owns the iframe + info overlay under the (floating or bar) chrome. */
+  /* Owns the iframe + info overlay under the title tab. */
   position: relative;
 }
 
@@ -731,16 +755,16 @@ html[data-theme="light"] {
   z-index: 2;
 }
 
-/* Desktop: 8px under the floating controls (top 16 + btn 24 + 8 = 48),
-   right edge aligned to the info button (right 16 + close 24 + gap 8 = 48).
-   Cap at 320px. Compact spec sheet — single column, hairline rhythm. */
+/* Desktop: 8px under the title tab, right edge aligned to the info button
+   (topbar pad-right 12 + close 24 + gap 4 = 40). Cap at 320px.
+   Quiet spec sheet — muted labels, body-colour values, hairline rhythm. */
 .project-popup-info {
   position: absolute;
-  top: 48px;
-  right: 48px;
-  width: min(320px, calc(100% - 64px));
+  top: 8px;
+  right: 40px;
+  width: min(320px, calc(100% - 52px));
   max-width: 320px;
-  max-height: calc(100% - 56px);
+  max-height: calc(100% - 16px);
   overflow: auto;
   z-index: 3;
   box-sizing: border-box;
@@ -748,7 +772,11 @@ html[data-theme="light"] {
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+html[data-theme="dark"] .project-popup-info {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .project-popup-info-inner {
@@ -762,7 +790,7 @@ html[data-theme="light"] {
 
 .project-popup-spec-row {
   margin: 0;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--color-border-subtle);
 }
 .project-popup-spec-row:first-child {
@@ -784,6 +812,7 @@ html[data-theme="light"] {
 }
 
 .project-popup-spec-value {
+  display: block;
   font-family: var(--font-sans);
   font-size: var(--fs-meta);
   font-weight: 400;
@@ -792,13 +821,16 @@ html[data-theme="light"] {
   color: var(--color-text-primary);
   margin: 0;
 }
+.project-popup-spec-value + .project-popup-spec-value {
+  margin-top: 2px;
+}
 
 /* Align with .project-popup-spec-value: same left edge + meta baseline. */
 .project-popup-info-link {
   display: inline-flex;
   align-items: baseline;
-  gap: 5px;
-  margin-top: 14px;
+  gap: 4px;
+  margin-top: 16px;
   font-family: var(--font-sans);
   font-size: var(--fs-meta);
   font-weight: 400;
@@ -819,8 +851,8 @@ html[data-theme="light"] {
 }
 
 .project-popup-why {
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--color-border-subtle);
 }
 .project-popup-why > summary {
@@ -828,7 +860,7 @@ html[data-theme="light"] {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   user-select: none;
   color: var(--color-text-primary);
 }
@@ -858,7 +890,7 @@ html[data-theme="light"] {
   transform: rotate(90deg);
 }
 .project-popup-why > p {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-sans);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
@@ -932,23 +964,11 @@ html[data-theme="light"] {
     padding-right: env(safe-area-inset-right, 0px);
   }
 
-  /* Slim 44px chrome bar above the iframe — matches site mobile nav
-     control height / 44px targets so info+close never cover app UI. */
+  /* Title tab stays a real bar on mobile (not floating over the app).
+     Enlarge tap targets to 44px while keeping the title + hairline. */
   .project-popup-topbar--large {
-    position: relative;
-    top: auto;
-    right: auto;
-    flex-shrink: 0;
-    /* 44px button row + 1px hairline */
-    height: 45px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 4px;
-    justify-content: flex-end;
-    gap: 0;
-    background: var(--color-bg);
-    border-bottom: 1px solid var(--color-border-subtle);
-    z-index: 5;
+    padding: 0 4px 0 16px;
+    min-height: 45px;
   }
   .project-popup-panel--large .popup-close-btn,
   .project-popup-panel--large .popup-info-btn {
@@ -979,6 +999,10 @@ html[data-theme="light"] {
     border-left: none;
     border-right: none;
     border-bottom: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  }
+  html[data-theme="dark"] .project-popup-info {
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
   }
   .project-popup-info[data-why-open="false"] {
     max-height: 50dvh;

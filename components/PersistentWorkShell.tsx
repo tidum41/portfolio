@@ -70,10 +70,10 @@ const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
 
 const ALLINONE_INFO_META = [
-  { label: "Built with", values: ["React, Vite, PWA"] },
+  { label: "Built with", values: ["React", "Vite", "PWA"] },
   { label: "AI", values: ["Groq"] },
-  { label: "Data", values: ["Google Sheets API, Supabase"] },
-  { label: "Designed with", values: ["Paper, Claude Code"] },
+  { label: "Data", values: ["Google Sheets API", "Supabase"] },
+  { label: "Designed with", values: ["Paper", "Claude Code"] },
   { label: "Timeline", values: ["2 weeks"] },
 ];
 
