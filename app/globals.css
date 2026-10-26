@@ -927,11 +927,14 @@ html[data-theme="dark"] .project-image {
     display: contents;
   }
   .cs-toc-root {
-    --cs-back-desk-lift: -52px;
-    --cs-back-toc-ink-gap: 20px;
+    /* Site bar is 76px; .cs-layout padding-top is --space-5 → row starts at 124px.
+       Back box spec: 4px below header (top 80), h 44 — independent of TOC cap row. */
+    --cs-site-header-bottom: 76px;
+    --cs-back-box-top: calc(var(--cs-site-header-bottom) + 4px);
     grid-column: 1;
     grid-row: 1 / span 1000;
     align-self: stretch;
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -944,17 +947,21 @@ html[data-theme="dark"] .project-image {
     display: none;
   }
   .cs-back-desktop {
-    flex: 0 0 auto;
+    position: absolute;
+    top: calc(var(--cs-back-box-top) - var(--cs-site-header-bottom) - var(--space-5));
+    left: 0;
+    z-index: 45;
     align-self: flex-start;
-    /* Lift out of the TOC cap row; gap to first label ink below. */
-    margin-top: var(--cs-back-desk-lift);
-    margin-bottom: var(--cs-back-toc-ink-gap);
+    margin: 0;
     padding-right: 0;
+    height: 44px;
+    box-sizing: border-box;
   }
   .cs-aside-nav-host {
     flex: 1 1 auto;
     min-height: 0;
     padding-right: 0;
+    padding-top: 0;
   }
   .cs-hero-pre-media {
     grid-column: 2;
@@ -982,12 +989,14 @@ html[data-theme="dark"] .project-image {
   }
   .cs-toc-nav > div {
     margin-top: 0;
+    /* Optical cap align: meta caps sit above hero cap when line-height matches H1. */
+    padding-top: 6px;
   }
   .cs-toc-nav .cs-toc-label {
     font-family: var(--font-sans);
     font-size: var(--fs-meta);
     letter-spacing: var(--ls-meta);
-    line-height: var(--lh-meta);
+    line-height: 1.1;
   }
 }
 /* Below 1200px: TOC aside hidden; content column centered. */
