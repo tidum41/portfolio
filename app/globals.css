@@ -923,9 +923,19 @@ html[data-theme="dark"] .project-image {
     max-width: none;
     width: 100%;
   }
-  .cs-aside,
-  .cs-toc-root {
+  .cs-aside {
     display: contents;
+  }
+  .cs-toc-root {
+    --cs-back-desk-lift: -52px;
+    --cs-back-toc-ink-gap: 20px;
+    grid-column: 1;
+    grid-row: 1 / span 1000;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-right: var(--space-3);
   }
   .cs-hero-header {
     display: contents;
@@ -934,19 +944,17 @@ html[data-theme="dark"] .project-image {
     display: none;
   }
   .cs-back-desktop {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: start;
-    padding-right: var(--space-3);
-    margin-bottom: 0;
+    flex: 0 0 auto;
+    align-self: flex-start;
+    /* Lift out of the TOC cap row; gap to first label ink below. */
+    margin-top: var(--cs-back-desk-lift);
+    margin-bottom: var(--cs-back-toc-ink-gap);
+    padding-right: 0;
   }
   .cs-aside-nav-host {
-    grid-column: 1;
-    /* Span article rows for sticky; start row 1 with hero title. */
-    grid-row: 1 / span 1000;
-    align-self: stretch;
+    flex: 1 1 auto;
     min-height: 0;
-    padding-right: var(--space-3);
+    padding-right: 0;
   }
   .cs-hero-pre-media {
     grid-column: 2;
@@ -968,22 +976,12 @@ html[data-theme="dark"] .project-image {
     min-width: 0;
   }
   .cs-toc-nav {
-    /* Optical cap-align with .cs-hero-title (lh 1.1) vs TOC labels (--lh-meta). */
-    --cs-hero-title-lh: 1.1;
-    --cs-toc-cap-align: calc(
-      (var(--fs-hero) * var(--cs-hero-title-lh) - var(--fs-meta) * var(--lh-meta)) * 0.5
-      - (var(--fs-hero) - var(--fs-meta)) * 0.68
-    );
     position: sticky;
     top: 60px;
     margin-top: 0;
   }
   .cs-toc-nav > div {
-    margin-top: var(--cs-toc-cap-align);
-  }
-  /* Subtitle case studies (e.g. Dialogue): meta cap reads high vs medium H1. */
-  .cs-content:has(.cs-hero-subtitle) .cs-toc-nav > div {
-    margin-top: calc(var(--cs-toc-cap-align) + var(--fs-meta) * 0.28);
+    margin-top: 0;
   }
   .cs-toc-nav .cs-toc-label {
     font-family: var(--font-sans);
