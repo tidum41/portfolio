@@ -368,10 +368,14 @@ export default function ProjectPopup({
                   // Positioning/size live in `.project-popup-backdrop--large`
                   // (100vw × 100dvh) so scrollbar-gutter on html cannot leave a
                   // strip outside inset:0. Shared chrome only here.
+                  // Mobile sheet: flex-end so the panel sits on the bottom with
+                  // a ~24px top gap (align-items set in CSS; omit here so the
+                  // media query wins).
                   zIndex: 999998,
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  ...(isMobile
+                    ? {}
+                    : { alignItems: "center" as const, justifyContent: "center" as const }),
                   background: "rgba(0,0,0,0.55)",
                   backdropFilter: "blur(8px)",
                   WebkitBackdropFilter: "blur(8px)",
