@@ -3,34 +3,57 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const SYSTEM_PROMPT = `You are a task categorization assistant for a product designer. Your job is to read a freeform note blob, extract individual tasks, lightly clean their formatting, assign each one to exactly one category, and assign a priority level.
+const FALLBACK_CATEGORIES = [
+  { name: 'school', description: 'classes, readings, quizzes, coursework' },
+  { name: 'product design', description: 'portfolio, wireframes, research, design work' },
+  { name: 'involvement', description: 'clubs, volunteering, community, events' },
+  { name: 'home', description: 'chores, groceries, errands, apartment stuff' },
+  { name: 'personal', description: 'health, friends, self-care, appointments' },
+  { name: 'thinking', description: 'loose ideas, half-formed plans, things to explore someday' },
+]
 
-CATEGORIES:
-- School: Coursework, assignments, lectures, studying, academic deadlines, anything learning or education related.
-- Product Design: Design work, wireframes, prototyping, user research, design systems, portfolio, client work, rebrand projects, UI/UX tasks.
-- Involvement: Community, clubs, volunteering, neighborhood, coalitions, organizations, journalism, events.
-- Home: Chores, groceries, errands, apartment tasks, renter admin, domestic anything.
-- Personal: Health, relationships, social plans, self-care, appointments, friends and family.
-- Thinking: Loose thoughts, future ideas, half-formed plans, career reflections, things to explore someday — not actionable right now.
+type CategoryInput = { name?: string; description?: string }
 
-PRIORITY LEVELS (do not assign to Thinking):
+function buildSystemPrompt(categories: CategoryInput[]) {
+  const list = categories.length > 0 ? categories : FALLBACK_CATEGORIES
+  const categoryBlock = list
+    .filter((c) => c?.name)
+    .map((c) => {
+      const name = String(c.name).trim()
+      const desc = String(c.description || '').trim()
+      return desc ? `- ${name}: ${desc}` : `- ${name}`
+    })
+    .join('\n')
+
+  const names = list.map((c) => String(c.name || '').trim()).filter(Boolean)
+  const exampleCat = names.find((n) => n.toLowerCase() !== 'thinking') || names[0] || 'product design'
+  const thinkingCat = names.find((n) => n.toLowerCase() === 'thinking') || 'thinking'
+
+  return `You are a task categorization assistant. Your job is to read a freeform note blob, extract individual tasks, lightly clean their formatting, assign each one to exactly one category, and assign a priority level.
+
+CATEGORIES (use these exact names — the descriptions are the user's definitions of what belongs in each):
+${categoryBlock}
+
+PRIORITY LEVELS (do not assign to "${thinkingCat}"):
 - Urgent: Needs to happen very soon, time-sensitive, deadlines implied
 - Soon: Should happen in the near future but not immediately critical
 - Eventually: No urgency, would be nice to do, no deadline implied
 
 FORMATTING RULES:
-- Preserve the user's exact wording and casing. Do NOT change capitalization.
+- Preserve the user's exact wording and casing for task text. Do NOT change capitalization of the task text.
+- Category names must match the list above exactly (including lowercase).
 - Strip bullet characters. Each task is its own object.
 - Do not merge tasks. Do not invent tasks not in the blob.
-- Thinking items get priority: null
+- "${thinkingCat}" items get priority: null
 
 OUTPUT: Respond only with a JSON object of the form {"tasks":[...]}. No explanation, no markdown fences. Example:
 {
   "tasks": [
-    { "id": "a1b2c3d4", "text": "finish wireframes for hero onboarding", "category": "Product Design", "priority": "Soon" },
-    { "id": "e5f6g7h8", "text": "think about switching to a smaller studio", "category": "Thinking", "priority": null }
+    { "id": "a1b2c3d4", "text": "finish wireframes for hero onboarding", "category": "${exampleCat}", "priority": "Soon" },
+    { "id": "e5f6g7h8", "text": "think about switching to a smaller studio", "category": "${thinkingCat}", "priority": null }
   ]
 }`
+}
 
 // Groq shut down llama-3.1-8b-instant for free/developer tiers on 2026-08-16.
 // Official replacement: openai/gpt-oss-20b. Qwen is available as GROQ_MODEL=qwen/qwen3.8-27b.
@@ -79,7 +102,7 @@ function makeId() {
   return Math.random().toString(36).slice(2, 10)
 }
 
-function extractTasks(raw: unknown) {
+function extractTasks(raw: unknown, categoryNames: string[]) {
   const cleaned = String(raw || '')
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```\s*$/, '')
@@ -89,12 +112,20 @@ function extractTasks(raw: unknown) {
   if (!Array.isArray(list)) {
     throw new Error('Model did not return a task list')
   }
-  return list.map((task: any) => ({
-    id: task.id || makeId(),
-    text: String(task.text || '').trim(),
-    category: task.category || 'Thinking',
-    priority: task.category === 'Thinking' ? null : (task.priority ?? null),
-  })).filter((task) => task.text)
+  const byLower = new Map(categoryNames.map((n) => [n.toLowerCase(), n]))
+  const fallback = byLower.get('thinking') || categoryNames[categoryNames.length - 1] || 'thinking'
+
+  return list.map((task: any) => {
+    const rawCat = String(task.category || '').trim()
+    const category = byLower.get(rawCat.toLowerCase()) || fallback
+    const isThinking = category.toLowerCase() === 'thinking'
+    return {
+      id: task.id || makeId(),
+      text: String(task.text || '').trim(),
+      category,
+      priority: isThinking ? null : (task.priority ?? null),
+    }
+  }).filter((task) => task.text)
 }
 
 function groqErrorMessage(status: number, body: string) {
@@ -125,9 +156,9 @@ export async function POST(req: Request) {
     return json({ error: 'Rate limit reached. Try again in an hour.' }, 429)
   }
 
-  let reqBody: { text?: string; categoryRules?: Rule[] } = {}
+  let reqBody: { text?: string; categoryRules?: Rule[]; categories?: CategoryInput[] } = {}
   try { reqBody = await req.json() } catch { reqBody = {} }
-  const { text, categoryRules = [] } = reqBody
+  const { text, categoryRules = [], categories = [] } = reqBody
   if (!text?.trim()) {
     return json({ error: 'No text provided' }, 400)
   }
@@ -136,6 +167,14 @@ export async function POST(req: Request) {
     console.error('GROQ_API_KEY is not set')
     return json({ error: 'Categorization is not configured. Set GROQ_API_KEY.' }, 500)
   }
+
+  const resolvedCategories = (Array.isArray(categories) && categories.length > 0
+    ? categories
+    : FALLBACK_CATEGORIES
+  ).filter((c) => c?.name)
+
+  const categoryNames = resolvedCategories.map((c) => String(c.name).trim())
+  const systemPrompt = buildSystemPrompt(resolvedCategories)
 
   const model = process.env.GROQ_MODEL || DEFAULT_MODEL
   const learnedCorrections = categoryRules.length > 0
@@ -147,7 +186,7 @@ export async function POST(req: Request) {
     max_tokens: 4096,
     temperature: 0.2,
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT + learnedCorrections },
+      { role: 'system', content: systemPrompt + learnedCorrections },
       { role: 'user', content: `Here is my note blob. Extract and categorize all tasks:\n\n${text}` },
     ],
     response_format: {
@@ -192,7 +231,7 @@ export async function POST(req: Request) {
   const data = await groqRes.json()
   const raw = data.choices?.[0]?.message?.content || ''
   try {
-    return json(extractTasks(raw))
+    return json(extractTasks(raw, categoryNames))
   } catch {
     console.error('Failed to parse Groq response:', raw)
     return json({ error: 'Invalid response from model' }, 502)
