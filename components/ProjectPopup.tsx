@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+
+export type PopupMetaItem = {
+  label: string;
+  values: string[];
+};
 
 interface Props {
   open: boolean;
@@ -20,7 +25,22 @@ interface Props {
   /** Match the panel's fill to the grid tile's own background so the popup
    *  reads as a continuation of that card, not a generic dialog. */
   panelBg?: string;
-  children: React.ReactNode;
+  /**
+   * `large` = near-fullscreen app embed (desktop ~90dvh panel; mobile full
+   * screen). Adds an info control that toggles a metadata overlay. Default
+   * keeps the existing CD / habit chrome unchanged.
+   */
+  size?: "default" | "large";
+  /** Metadata rows for the large-size info panel. */
+  infoMeta?: PopupMetaItem[];
+  /** External "open full app" link shown in the large-size info panel. */
+  infoLink?: { href: string; label: string };
+  /**
+   * Collapsed disclosure body under the metadata. Defaults to a clearly
+   * marked placeholder — do not invent a reason if omitted.
+   */
+  whyBuilt?: string;
+  children: ReactNode;
 }
 
 // Lightweight in-page modal for grid items that are meant to be played with
@@ -38,17 +58,37 @@ export default function ProjectPopup({
   tools,
   maxWidth = 560,
   panelBg = "var(--color-bg)",
+  size = "default",
+  infoMeta,
+  infoLink,
+  whyBuilt = "TODO(Mudit): one or two sentences on why you built it.",
   children,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElRef = useRef<Element | null>(null);
   const reduced = useReducedMotion();
+  const isLarge = size === "large";
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const infoOpenRef = useRef(false);
+  const infoPanelId = useId();
 
   const backdropEnter = reduced ? 0.01 : PANEL_DURATION.backdrop.enter;
   const backdropExit  = reduced ? 0.01 : PANEL_DURATION.backdrop.exit;
   const panelEnter    = reduced ? 0.01 : PANEL_DURATION.panel.enter;
   const panelExit     = reduced ? 0.01 : PANEL_DURATION.panel.exit;
   const panelY        = reduced ? 0 : 10;
+
+  infoOpenRef.current = infoOpen;
+
+  // Reset info chrome whenever the dialog closes so the next open starts
+  // with the app filling the panel (info closed, disclosure collapsed).
+  useEffect(() => {
+    if (!open) {
+      setInfoOpen(false);
+      setWhyOpen(false);
+    }
+  }, [open]);
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
@@ -65,6 +105,11 @@ export default function ProjectPopup({
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Large variant: dismiss the info overlay first, then the dialog.
+        if (isLarge && infoOpenRef.current) {
+          setInfoOpen(false);
+          return;
+        }
         onClose();
         return;
       }
@@ -132,9 +177,37 @@ export default function ProjectPopup({
       document.removeEventListener("keydown", onKeyDown);
       (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open, onClose, isLarge]);
 
   if (typeof document === "undefined") return null;
+
+  // Large dimensions / mobile full-screen live in `.project-popup-panel--large`
+  // so a max-width media query can override them (inline width/radius would win).
+  const panelStyle: CSSProperties = isLarge
+    ? {
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: panelBg,
+        colorScheme: "inherit",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
+        outline: "none",
+      }
+    : {
+        width: `min(${maxWidth}px, 100%)`,
+        // Leave a slim margin so the panel fills more of the viewport
+        // across breakpoints without scraping the edges.
+        maxHeight: "calc(100dvh - 2 * clamp(12px, 2.2vw, 20px))",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: panelBg,
+        colorScheme: "inherit",
+        borderRadius: "var(--radius-panel)",
+        border: "1px solid var(--color-border-subtle)",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
+        outline: "none",
+      };
 
   return createPortal(
     <AnimatePresence onExitComplete={onExitComplete}>
@@ -144,6 +217,7 @@ export default function ProjectPopup({
           animate={{ opacity: 1, transition: { duration: backdropEnter, ease: EASE_OPACITY } }}
           exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
           onClick={onClose}
+          className={isLarge ? "project-popup-backdrop project-popup-backdrop--large" : undefined}
           style={{
             position: "fixed",
             inset: 0,
@@ -156,7 +230,7 @@ export default function ProjectPopup({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "clamp(12px, 2.2vw, 20px)",
+            padding: isLarge ? undefined : "clamp(12px, 2.2vw, 20px)",
             background: "rgba(0,0,0,0.55)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
@@ -169,6 +243,7 @@ export default function ProjectPopup({
             aria-label={title}
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
+            className={isLarge ? "project-popup-panel project-popup-panel--large" : undefined}
             // Opacity + y only, deliberately no scale — matches
             // PS3ControlPanel's own panel-open language (ExpandSection:
             // max-height + opacity, no scale) rather than a card-hover-press
@@ -180,57 +255,144 @@ export default function ProjectPopup({
             initial={{ opacity: 0, transform: `translateY(${panelY}px)` }}
             animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: panelEnter, ease: EASE_OPACITY } }}
             exit={{ opacity: 0, transform: `translateY(${panelY}px)`, transition: { duration: panelExit, ease: EASE_EXIT } }}
-            style={{
-              width: `min(${maxWidth}px, 100%)`,
-              // Leave a slim margin so the panel fills more of the viewport
-              // across breakpoints without scraping the edges.
-              maxHeight: "calc(100dvh - 2 * clamp(12px, 2.2vw, 20px))",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              background: panelBg,
-              colorScheme: "inherit",
-              borderRadius: "var(--radius-panel)",
-              border: "1px solid var(--color-border-subtle)",
-              boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
-              outline: "none",
-            }}
+            style={panelStyle}
           >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
-              <div>
-                <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
-                {sub && (
+            <div
+              className={isLarge ? "project-popup-topbar" : undefined}
+              style={{
+                display: "flex",
+                alignItems: isLarge ? "center" : "flex-start",
+                justifyContent: "space-between",
+                padding: isLarge ? "10px 12px 10px 16px" : "16px 16px 0",
+                flexShrink: 0,
+                gap: 12,
+                borderBottom: isLarge ? "1px solid var(--color-border-subtle)" : undefined,
+              }}
+            >
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p
+                  style={{
+                    fontSize: isLarge ? 15 : 18,
+                    fontWeight: 500,
+                    color: "var(--color-text-primary)",
+                    margin: 0,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {title}
+                </p>
+                {!isLarge && sub && (
                   <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>
                 )}
               </div>
-              <button
-                className="popup-close-btn"
-                onClick={onClose}
-                aria-label="Close"
-                title="Close"
-              >
-                <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <line x1="2" y1="2" x2="14" y2="14" />
-                  <line x1="14" y1="2" x2="2" y2="14" />
-                </svg>
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                {isLarge && (
+                  <button
+                    type="button"
+                    className="popup-info-btn"
+                    onClick={() => setInfoOpen((v) => !v)}
+                    aria-label={infoOpen ? "Hide project info" : "Show project info"}
+                    aria-expanded={infoOpen}
+                    aria-controls={infoPanelId}
+                    title="Info"
+                  >
+                    <svg viewBox="0 0 16 16" width={16} height={16} fill="none" aria-hidden>
+                      <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
+                      <line x1="8" y1="7.25" x2="8" y2="11.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <circle cx="8" cy="5" r="0.85" fill="currentColor" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  className="popup-close-btn"
+                  onClick={onClose}
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <line x1="2" y1="2" x2="14" y2="14" />
+                    <line x1="14" y1="2" x2="2" y2="14" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div style={{
-              padding: 16,
-              // basis auto (not 0) so preferred child heights size the panel
-              // when it only has maxHeight; minHeight 0 still lets embeds
-              // shrink once the panel hits the viewport cap.
-              flex: "1 1 auto",
-              minHeight: 0,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}>
+            <div
+              style={{
+                padding: isLarge ? 0 : 16,
+                // basis auto (not 0) so preferred child heights size the panel
+                // when it only has maxHeight; minHeight 0 still lets embeds
+                // shrink once the panel hits the viewport cap.
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+              }}
+            >
               {children}
+
+              {isLarge && infoOpen && (
+                <>
+                  <button
+                    type="button"
+                    className="project-popup-info-scrim"
+                    aria-label="Dismiss project info"
+                    onClick={() => setInfoOpen(false)}
+                  />
+                  <div
+                    id={infoPanelId}
+                    className="project-popup-info"
+                    role="region"
+                    aria-label="Project details"
+                  >
+                    <div className="project-popup-info-inner">
+                      {infoMeta && infoMeta.length > 0 && (
+                        <div className="cs-meta-grid project-popup-info-meta">
+                          {infoMeta.map(({ label, values }) => (
+                            <div key={label} className="cs-meta-item">
+                              <p className="cs-meta-label">{label}</p>
+                              {values.map((v) => (
+                                <p key={v} className="cs-meta-value">
+                                  {v}
+                                </p>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {infoLink && (
+                        <a
+                          className="project-popup-info-link"
+                          href={infoLink.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {infoLink.label}
+                          <svg viewBox="0 0 12 12" width={11} height={11} fill="none" aria-hidden>
+                            <path d="M3.5 2.5H9.5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                          </svg>
+                        </a>
+                      )}
+                      <details
+                        className="project-popup-why"
+                        open={whyOpen}
+                        onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
+                      >
+                        <summary>Why I built it</summary>
+                        <p>{whyBuilt}</p>
+                      </details>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            {(description || (tools && tools.length > 0)) && (
+            {!isLarge && (description || (tools && tools.length > 0)) && (
               <div style={{ padding: "0 16px 16px", flexShrink: 0 }}>
                 {description && (
                   <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--color-text-secondary)", margin: "0 0 12px" }}>
