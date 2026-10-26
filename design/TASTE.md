@@ -58,6 +58,8 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Problem section describes the real product's summary surface neutrally: prose only, sentiment pills, unlabeled +N badges, no counts or charts, evidence a few steps away on section pages (round L, Oct 25).
 - "UX research" casing everywhere, headings and the hero title included (round L, Oct 25).
 - overscroll-behavior-y: none on html and body, so the page does not bounce on scroll up (round L, Oct 25).
+- Decided: every Dialogue UI and chart must match what Dialogue really measures; audio/transcript UI uses the real WaveformIcon.
+- Decided: Dialogue's team adopted study-wide chat, count bars and thin-data flags; hero and counts use the 24-interview checkout study; role line 'Product designer (contract), Dec 2025 to Mar 2026'.
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
@@ -88,12 +90,14 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Copywriting voice; he wants plain, specific site voice.
 - Any "full detail" chart variant: rejected, all removed (round L, Oct 25).
 - Arrow animation on pager previous/next: remove (Oct 25).
+- Rejected Oct 25: round L (PR #134, 9ab2166): hero too complex, text dense, invented version table and chart library UI not grounded in Dialogue.
 
 ## 4. Pinned approved versions
 - b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, Add to my plan, full chart library. Restored into canvas via PR #122.
 - 21cf2e8, bb55313, de1cfe5: lightbox fixes. d400584: TOC breakpoint.
 - 843faac (PR #124, round J): canvas base before the taste ledger (08f90a4); passes b056865 ancestry; verdict FIX FIRST (see Open).
 - Restore check: `git diff b056865 -- components/dialogue/DialogueInterviewPlayer.tsx components/dialogue/DialogueChartLibrary.tsx components/dialogue/product/chart` should be empty unless intended.
+- Approved Oct 25: direction A decision log per /workspace/research/directions/outline-A.md; one decision per section, ~700 words, ends on what he'd test next.
 
 ## 5. Case study language
 - Sentence case for all headings (Oct 25). No em dashes. No dot separators. US spelling.
