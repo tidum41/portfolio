@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { completeIntro } from "@/lib/introReady";
 import { introTimings } from "@/lib/introTimings";
 
 /** Drop this anywhere on the home page. Manages the first-load intro sequence:
@@ -9,6 +10,8 @@ import { introTimings } from "@/lib/introTimings";
  *  - This component starts the timer (duration from introTimings.gateDuration),
  *    then fires "intro-done" and swaps to "done"
  *  - Also listens for "intro-replay" to restart the sequence in-place
+ *  - Early project-card clicks call completeIntro() directly; the timer
+ *    no-ops once the attribute is no longer "playing"
  *
  *  StrictMode-safe: cleanup only clears the timeout; attribute stays "playing"
  *  so the double-invoked effect restarts the timer correctly. */
@@ -21,11 +24,7 @@ export function IntroOrchestrator() {
       if (!html.hasAttribute("data-intro")) return;
       clearTimeout(t);
       t = setTimeout(() => {
-        html.setAttribute("data-intro", "done");
-        window.dispatchEvent(new CustomEvent("intro-done"));
-        setTimeout(() => {
-          if (html.getAttribute("data-intro") === "done") html.removeAttribute("data-intro");
-        }, 900);
+        completeIntro();
       }, introTimings.gateDuration * 1000);
     }
 
