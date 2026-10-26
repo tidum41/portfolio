@@ -191,31 +191,79 @@ export function playUiSound(id: UiSoundId): void {
   })();
 }
 
+const INTERACTIVE_SELECTOR = [
+  "a[href]",
+  "button",
+  "[role='button']",
+  "input",
+  "select",
+  "summary",
+  "label",
+  "[data-ui-sound]",
+  "[data-sound]",
+].join(",");
+
+function labelControlsSomething(label: HTMLLabelElement): boolean {
+  if (label.control) return true;
+  return Boolean(label.querySelector("input, select, textarea, button"));
+}
+
+/**
+ * Closest real interactive host for UI ticks.
+ * Empty / text / image taps outside these return null — including archive
+ * canvas chrome that only carries data-ui-sound-scope for taxonomy.
+ */
+export function findUiSoundInteractiveHost(target: EventTarget | null): Element | null {
+  if (!(target instanceof Element)) return null;
+  if (target.closest("[data-ui-sound='off'], [data-sound='off']")) return null;
+
+  const host = target.closest(INTERACTIVE_SELECTOR);
+  if (!host) return null;
+
+  const hostExplicit =
+    host.getAttribute("data-ui-sound") || host.getAttribute("data-sound");
+
+  if (host instanceof HTMLLabelElement) {
+    if (hostExplicit !== "option" && hostExplicit !== "push" && !labelControlsSomething(host)) {
+      return null;
+    }
+  }
+
+  if (host instanceof HTMLAnchorElement) {
+    const href = host.getAttribute("href") || "";
+    if (!href || href === "#") return null;
+  }
+
+  if (
+    host instanceof HTMLButtonElement ||
+    host instanceof HTMLInputElement ||
+    host instanceof HTMLSelectElement
+  ) {
+    if (host.disabled) return null;
+  }
+
+  return host;
+}
+
 /** Resolve which sound a click target should play, if any. */
 export function resolveUiSoundFromEventTarget(target: EventTarget | null): UiSoundId | null {
-  if (!(target instanceof Element)) return null;
+  const host = findUiSoundInteractiveHost(target);
+  if (!host) return null;
 
-  if (target.closest("[data-ui-sound='off']")) return null;
-
-  const explicit = target.closest<HTMLElement>("[data-ui-sound]");
-  const value = explicit?.getAttribute("data-ui-sound");
+  const explicit =
+    host.closest<HTMLElement>("[data-ui-sound]") || host.closest<HTMLElement>("[data-sound]");
+  const value = explicit?.getAttribute("data-ui-sound") || explicit?.getAttribute("data-sound");
   if (value === "option" || value === "push") return value;
   if (value === "off") return null;
 
-  if (target.closest(".portfolio-grid-card, .project-card, [data-grid-card]")) {
+  // Entering a project / archive tile — push. Only after an interactive host
+  // matched above, so empty gaps and pan gestures stay silent.
+  if (host.closest(".portfolio-grid-card, .project-card, [data-grid-card]")) {
+    return "push";
+  }
+  if (host.closest("[data-ui-sound-scope='archive']")) {
     return "push";
   }
 
-  const link = target.closest<HTMLAnchorElement>("a[href]");
-  if (link) {
-    const href = link.getAttribute("href") || "";
-    if (!href || href === "#") return null;
-    return "option";
-  }
-
-  if (target.closest("[data-ui-sound-scope='archive']")) {
-    return "push";
-  }
-
-  return null;
+  return "option";
 }
