@@ -218,23 +218,38 @@ export default function ProjectPopup({
           exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
           onClick={onClose}
           className={isLarge ? "project-popup-backdrop project-popup-backdrop--large" : undefined}
-          style={{
-            position: "fixed",
-            inset: 0,
-            // Just under GlobalCustomCursor's z-index (999999, see
-            // components/GlobalCustomCursor.tsx) so the custom cursor keeps
-            // painting on top of the modal instead of disappearing behind
-            // it — the native cursor is hidden sitewide, so without this the
-            // popup left visitors with no visible cursor at all.
-            zIndex: 999998,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: isLarge ? undefined : "clamp(12px, 2.2vw, 20px)",
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-          }}
+          style={
+            isLarge
+              ? {
+                  // Positioning/size live in `.project-popup-backdrop--large`
+                  // (100vw × 100dvh) so scrollbar-gutter on html cannot leave a
+                  // strip outside inset:0. Shared chrome only here.
+                  zIndex: 999998,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(0,0,0,0.55)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }
+              : {
+                  position: "fixed",
+                  inset: 0,
+                  // Just under GlobalCustomCursor's z-index (999999, see
+                  // components/GlobalCustomCursor.tsx) so the custom cursor keeps
+                  // painting on top of the modal instead of disappearing behind
+                  // it — the native cursor is hidden sitewide, so without this the
+                  // popup left visitors with no visible cursor at all.
+                  zIndex: 999998,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "clamp(12px, 2.2vw, 20px)",
+                  background: "rgba(0,0,0,0.55)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }
+          }
         >
           <motion.div
             ref={panelRef}
