@@ -106,7 +106,9 @@ export default function ProjectPopup({
   infoOpenRef.current = infoOpen;
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
+    // Bottom-sheet / compact chrome for narrow phones AND short landscape
+    // viewports (e.g. 844×390) where a desktop popover would clip.
+    const mq = window.matchMedia("(max-width: 767px), (max-height: 500px)");
     const sync = () => setIsMobile(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -136,8 +138,13 @@ export default function ProjectPopup({
     panel.style.height = "auto";
     const contentH = panel.scrollHeight;
     panel.style.height = prev;
-    const vh = window.innerHeight;
-    const cap = (whyOpen ? 0.85 : 0.5) * vh;
+    // Prefer visualViewport when present (iOS dynamic toolbars); fall back to
+    // innerHeight. Caps are dvh-equivalent fractions of the live viewport.
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const shortLandscape = vh <= 500;
+    const cap = shortLandscape
+      ? (whyOpen ? 0.7 : 0.55) * vh
+      : (whyOpen ? 0.85 : 0.5) * vh;
     setSheetHeight(Math.min(contentH, cap));
   }, [infoOpen, whyOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
@@ -198,7 +205,11 @@ export default function ProjectPopup({
       left: body.style.left,
       right: body.style.right,
       width: body.style.width,
+      overflow: body.style.overflow,
       paddingRight: body.style.paddingRight,
+      overscroll: body.style.overscrollBehavior,
+      htmlOverflow: html.style.overflow,
+      htmlOverscroll: html.style.overscrollBehavior,
       bodyBg: body.style.backgroundColor,
       htmlBg: html.style.backgroundColor,
       htmlScheme: html.style.colorScheme,
@@ -210,12 +221,18 @@ export default function ProjectPopup({
     // paddingRight replaces the disappearing scrollbar so column widths stay put.
     // Lock color-scheme to the live data-theme so the browser canvas cannot
     // paint the opposite theme behind project cards / the CD plate.
+    // overflow + overscroll on html/body block background scroll and the
+    // rubber-band that can show a second scrollbar behind the modal.
     const scheme = html.getAttribute("data-theme") === "light" ? "light" : "dark";
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
     body.style.left = "0";
     body.style.right = "0";
     body.style.width = "auto";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
     body.style.backgroundColor = "var(--color-bg)";
     html.style.backgroundColor = "var(--color-bg)";
     html.style.colorScheme = scheme;
@@ -229,8 +246,12 @@ export default function ProjectPopup({
       body.style.left = prev.left;
       body.style.right = prev.right;
       body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      body.style.overscrollBehavior = prev.overscroll;
       body.style.paddingRight = prev.paddingRight;
       body.style.backgroundColor = prev.bodyBg;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
       html.style.backgroundColor = prev.htmlBg;
       html.style.colorScheme = prev.htmlScheme;
       body.style.colorScheme = prev.bodyScheme;
@@ -274,8 +295,16 @@ export default function ProjectPopup({
   const closeButton = (
     <button
       className="popup-close-btn"
-      onClick={onClose}
-      aria-label="Close"
+      onClick={() => {
+        // Large variant: dismiss the info sheet first (matches Esc / scrim),
+        // then close the dialog on a second tap.
+        if (isLarge && infoOpenRef.current) {
+          setInfoOpen(false);
+          return;
+        }
+        onClose();
+      }}
+      aria-label={isLarge && infoOpen ? "Close project info" : "Close"}
       title="Close"
     >
       <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -311,7 +340,7 @@ export default function ProjectPopup({
           animate={{ opacity: 1, transition: { duration: backdropEnter, ease: EASE_OPACITY } }}
           exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
           onClick={onClose}
-          className={isLarge ? "project-popup-backdrop project-popup-backdrop--large" : undefined}
+            className={isLarge ? "project-popup-backdrop project-popup-backdrop--large" : undefined}
           style={
             isLarge
               ? {
@@ -325,6 +354,7 @@ export default function ProjectPopup({
                   background: "rgba(0,0,0,0.55)",
                   backdropFilter: "blur(8px)",
                   WebkitBackdropFilter: "blur(8px)",
+                  overscrollBehavior: "none",
                 }
               : {
                   position: "fixed",
@@ -342,6 +372,7 @@ export default function ProjectPopup({
                   background: "rgba(0,0,0,0.55)",
                   backdropFilter: "blur(8px)",
                   WebkitBackdropFilter: "blur(8px)",
+                  overscrollBehavior: "none",
                 }
           }
         >
