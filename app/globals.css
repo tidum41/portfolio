@@ -967,7 +967,7 @@ html[data-theme="dark"] .project-image {
     display: block;
     width: 6px;
     height: 10px;
-    margin-right: 4px;
+    margin-right: 5px;
     transform: translateY(0.5px);
   }
   .cs-back-desktop-label {
