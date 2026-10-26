@@ -197,7 +197,6 @@ const METADATA = [
 
 const FB = {
   tocItems: TOC_ITEMS,
-  heroTagline: "YouTube, Personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",
@@ -253,7 +252,6 @@ export default function SvizPage() {
           </div>
 
           <CaseStudyOpen
-            tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={METADATA}
           >

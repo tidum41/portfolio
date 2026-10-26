@@ -285,7 +285,6 @@ const FB = {
     { _key: "t8", id: "solution",   label: "Solution"          },
     { _key: "t9", id: "reflection", label: "Reflection"        },
   ] as TocItem[],
-  heroTagline:   "BruinLease, Case Study, 2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
@@ -437,7 +436,6 @@ export default function BruinLeasePage() {
           </div>
 
           <CaseStudyOpen
-            tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={FB.metadata}
             muxPlaybackId={FB.heroMuxId}

@@ -32,7 +32,6 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
           </div>
 
           <CaseStudyOpen
-            tagline="JOOLA, Case Study, Internship 2026"
             title={JOOLA_TITLE}
             metadata={[
               { _key: "role", label: "Role", values: ["Product design intern"] },
