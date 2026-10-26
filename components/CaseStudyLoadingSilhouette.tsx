@@ -9,18 +9,20 @@ export default function CaseStudyLoadingSilhouette({
 }) {
   const hero = (
     <header className="cs-hero-header">
-      <div className="cs-hero-title-wrap">
-        <div
-          style={{
-            width: "78%",
-            maxWidth: 420,
-            height: "calc(var(--fs-hero) * 1.1)",
-            borderRadius: 6,
-            background: "var(--color-border-subtle)",
-            margin: "0 0 var(--space-4)",
-            opacity: 0.45,
-          }}
-        />
+      <div className="cs-hero-pre-media">
+        <div className="cs-hero-title-wrap">
+          <div
+            style={{
+              width: "78%",
+              maxWidth: 420,
+              height: "calc(var(--fs-hero) * 1.1)",
+              borderRadius: 6,
+              background: "var(--color-border-subtle)",
+              margin: "0 0 var(--space-4)",
+              opacity: 0.45,
+            }}
+          />
+        </div>
       </div>
     </header>
   );
@@ -33,11 +35,10 @@ export default function CaseStudyLoadingSilhouette({
       aria-hidden
     >
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <div style={{ height: 120 }} />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
+          <aside className="cs-aside">
+            <div style={{ height: 120 }} />
+          </aside>
           <div className="cs-mobile-back" style={{ height: 28, marginBottom: "var(--space-1)" }} />
           {hero}
         </div>

@@ -285,6 +285,7 @@ const FB = {
     { _key: "t8", id: "solution",   label: "Solution"          },
     { _key: "t9", id: "reflection", label: "Reflection"        },
   ] as TocItem[],
+  heroTagline:   "BruinLease, Case Study, 2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
@@ -423,14 +424,13 @@ export default function BruinLeasePage() {
         </>
       )}
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
+          <aside className="cs-aside">
+            <CaseStudyTOC
+              items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
+              backHref="/"
+            />
+          </aside>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>

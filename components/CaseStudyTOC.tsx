@@ -126,8 +126,37 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
-  const backArrow = (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  const backArrowMobile = (
+    <svg
+      className="cs-back-arrow"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+
+  /** Desktop sidebar: cap-height ink (~10px), stem-weight stroke, tight viewBox. */
+  const backArrowDesktop = (
+    <svg
+      className="cs-back-arrow"
+      width="6"
+      height="10"
+      viewBox="8.25 5.25 7.5 13.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <polyline points="15 18 9 12 15 6" />
     </svg>
   );
@@ -153,7 +182,7 @@ export default function CaseStudyTOC({
           textDecoration: "none",
         }}
       >
-        {backArrow}
+        {backArrowMobile}
         <span className="cs-back-mobile-label">Back</span>
       </a>
     );
@@ -161,7 +190,7 @@ export default function CaseStudyTOC({
 
   // Desktop: sticky sidebar
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div className="cs-toc-root">
       {/* Back button — inline-flex, narrow hit area */}
       <a
         href={backHref}
@@ -171,29 +200,26 @@ export default function CaseStudyTOC({
         className="cs-back-desktop"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "flex", alignItems: "flex-start", gap: 2,
-          minHeight: 44,
-          minWidth: 44,
-          marginLeft: 0,
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
-          marginBottom: 16,
         }}
       >
-        {backArrow}
-        <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-meta)", lineHeight: 1.5 }}>Back</span>
+        {backArrowDesktop}
+        <span className="cs-back-desktop-label">Back</span>
       </a>
 
       {activeSections.length > 0 && (
-        <nav aria-label="Table of contents">
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="cs-aside-nav-host">
+          <nav className="cs-toc-nav" aria-label="Table of contents">
+          <div className="cs-toc-stack">
             {activeSections.map(({ id, label }) => {
               const isActive  = activeSection === label;
               const isHovered = hoveredSection === label;
               return (
                 <button
                   key={label}
+                  className="cs-toc-label"
                   onClick={() => scrollTo(id, label)}
                   onMouseEnter={() => { if (canHover()) setHoveredSection(label); }}
                   onMouseLeave={() => setHoveredSection(null)}
@@ -201,8 +227,6 @@ export default function CaseStudyTOC({
                     ...NO_TAP_HIGHLIGHT,
                     background: "none", border: "none", padding: 0,
                     cursor: "pointer", textAlign: "left",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "var(--fs-meta)", letterSpacing: "var(--ls-meta)", lineHeight: 1.5,
                     color: (isActive || isHovered) ? COLOR_ACTIVE : COLOR_INACTIVE,
                     fontWeight: isActive ? 500 : 400,
                     transition: "color 0.15s ease, font-weight 0.15s ease",
@@ -214,7 +238,8 @@ export default function CaseStudyTOC({
               );
             })}
           </div>
-        </nav>
+          </nav>
+        </div>
       )}
     </div>
   );
