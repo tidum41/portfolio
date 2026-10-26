@@ -759,11 +759,17 @@ html[data-theme="light"] {
   border: none;
   padding: 0;
   margin: 0;
+  /* Desktop: transparent hit target. Mobile sheet dims via the media query. */
   background: transparent;
   cursor: default;
   z-index: 2;
   /* Scrim absorbs outside taps; don't let them scroll the iframe under it. */
   touch-action: none;
+}
+
+/* Grab handle — only rendered on mobile sheet; 44px hit area, 36×4 bar. */
+.project-popup-info-handle {
+  display: none;
 }
 
 /* Desktop: anchored to the info icon (right 40 = pad 12 + close 24 + gap 4),
@@ -804,7 +810,11 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-spec-row {
   margin: 0;
   padding: 8px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+  /* Neutral grey hairlines — not the site’s lavender --color-border-subtle. */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="dark"] .project-popup-spec-row {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 .project-popup-spec-row:first-child {
   padding-top: 0;
@@ -886,7 +896,10 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-why {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+html[data-theme="dark"] .project-popup-why {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 .project-popup-why > summary {
   cursor: pointer;
@@ -987,9 +1000,9 @@ html[data-theme="dark"] .project-popup-info {
   background: var(--color-bg);
 }
 
-/* Narrow phones OR short landscape (e.g. 844×390) — full-bleed panel +
+/* Below 640px OR short landscape (e.g. 844×390) — full-bleed panel +
    bottom info sheet. Matches the JS isMobile media query. */
-@media (max-width: 767px), (max-height: 500px) {
+@media (max-width: 639px), (max-height: 500px) {
   .project-popup-backdrop--large {
     padding: 0;
     align-items: stretch;
@@ -1040,7 +1053,15 @@ html[data-theme="dark"] .project-popup-info {
     height: 15px;
   }
 
-  /* Full-width bottom sheet — tap-open only (no hover). Scrim closes it. */
+  /* Dimmed backdrop behind the sheet — 200ms fade lives on the motion node. */
+  .project-popup-info-scrim {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  html[data-theme="dark"] .project-popup-info-scrim {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  /* Full-width bottom sheet — tap-open only (no hover). Scrim / swipe closes it. */
   .project-popup-info {
     top: auto;
     right: 0;
@@ -1064,8 +1085,37 @@ html[data-theme="dark"] .project-popup-info {
   .project-popup-info[data-why-open="false"] {
     max-height: 72dvh;
   }
-  /* Clear the home indicator under the Why copy; keep 16px rhythm. */
+
+  /* 44px swipe target; bar is 36×4, 8px from the sheet top, ~3:1 contrast. */
+  .project-popup-info-handle {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 44px;
+    padding-top: 8px;
+    box-sizing: border-box;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .project-popup-info-handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    /* ~3:1 on sheet bg (#FBFBFB / #101214). */
+    background: #8A8A8A;
+  }
+  html[data-theme="dark"] .project-popup-info-handle-bar {
+    background: #8A8A8A;
+  }
+
+  /* Clear the home indicator under the Why copy; keep 16px rhythm.
+     Top padding stays 16px under the handle so content isn’t cut off. */
   .project-popup-info .project-popup-info-inner {
+    padding-top: 8px;
     padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
