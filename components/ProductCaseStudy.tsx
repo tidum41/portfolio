@@ -22,7 +22,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
           <aside className="cs-aside">
             <CaseStudyTOC items={[]} backHref="/" />
           </aside>
