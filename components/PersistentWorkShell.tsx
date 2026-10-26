@@ -123,16 +123,30 @@ function OpensInPopupIcon() {
 // ─── Card label ────────────────────────────────────────────────────────
 function CardLabel({
   title,
+  label,
   showPopupIcon,
   external,
 }: {
   title: string;
+  /** Quiet meta line above the main title (PS3 XMB hierarchy). */
+  label?: string;
   showPopupIcon?: boolean;
   /** External project link — blue northeast arrow. */
   external?: boolean;
 }) {
   return (
     <div style={{ padding: "3px 0 0" }}>
+      {label && (
+        <p className="card-label-tag" style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: "var(--fs-caption)",
+          lineHeight: 1.4,
+          color: "var(--color-text-muted)",
+          margin: "0 0 2px",
+          letterSpacing: "0.01em",
+        }}>{label}</p>
+      )}
       <p style={{
         fontFamily: "var(--font-sans-medium)",
         fontWeight: "var(--fw-card-title)" as React.CSSProperties["fontWeight"],
@@ -623,6 +637,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         playbackId={p.muxPlaybackId}
                         href={p.href}
                         title={p.title}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -654,7 +669,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -703,7 +718,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     </div>
                   </div>
                 </div>
-                <CardLabel title="Designing micro-interactions for a digital CD player" showPopupIcon />
+                <CardLabel title="Designing micro-interactions for a digital CD player" label="Interaction" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
@@ -721,6 +736,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         playbackId={p.muxPlaybackId}
                         href={p.href}
                         title={p.title}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -752,7 +768,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -791,7 +807,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     />
                   </div>
                 </div>
-                <CardLabel title="Habit tracker focused on offering less" showPopupIcon />
+                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
