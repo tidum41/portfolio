@@ -9,19 +9,6 @@ export default function CaseStudyLoadingSilhouette({
 }) {
   const hero = (
     <header className="cs-hero-header">
-      <div className="cs-hero-tagline-wrap">
-        <div
-          style={{
-            width: "42%",
-            maxWidth: 220,
-            height: 14,
-            borderRadius: 4,
-            background: "var(--color-border-subtle)",
-            margin: "0 0 var(--space-2)",
-            opacity: 0.55,
-          }}
-        />
-      </div>
       <div className="cs-hero-title-wrap">
         <div
           style={{

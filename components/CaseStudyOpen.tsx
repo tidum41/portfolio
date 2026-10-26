@@ -17,7 +17,6 @@ type Meta = {
  * skipped tween cannot leave the title gone.
  */
 export default function CaseStudyOpen({
-  tagline,
   title,
   metadata,
   muxPlaybackId,
@@ -27,7 +26,6 @@ export default function CaseStudyOpen({
   subtitle,
   children,
 }: {
-  tagline?: ReactNode;
   title: string;
   metadata: Meta[];
   muxPlaybackId?: string;
@@ -39,23 +37,6 @@ export default function CaseStudyOpen({
 }) {
   return (
     <header className="cs-hero-header">
-      {tagline ? (
-        <div className="cs-hero-tagline-wrap cs-open-type">
-          <p
-            className="cs-hero-tagline"
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 14,
-              fontWeight: 400,
-              letterSpacing: "0.01em",
-              color: "var(--color-text-muted)",
-              margin: "0 0 var(--space-2)",
-            }}
-          >
-            {tagline}
-          </p>
-        </div>
-      ) : null}
       <div className="cs-hero-title-wrap cs-open-type">
         <h1
           className="cs-hero-title"

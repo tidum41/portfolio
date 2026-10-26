@@ -973,14 +973,12 @@ html[data-theme="dark"] .project-image {
   text-align: left;
   margin-bottom: var(--space-6);
 }
-.cs-hero-tagline,
 .cs-hero-title {
   text-align: left;
   width: 100%;
   margin-left: 0;
   padding-left: 0;
 }
-.cs-hero-tagline-wrap,
 .cs-hero-title-wrap,
 .cs-hero-media-wrap {
   display: block;
@@ -1092,9 +1090,6 @@ html[data-theme="dark"] .project-image {
   transform: translateX(var(--cs-align-d-back, 0px));
 }
 @media (min-width: 768px) {
-  .cs-hero-tagline {
-    transform: translateX(var(--cs-align-d-tagline, 0px));
-  }
   .cs-hero-title {
     transform: translateX(var(--cs-align-d-title, 0px));
   }
@@ -1131,10 +1126,8 @@ html[data-theme="dark"] .project-image {
   .cs-hero-header { margin-bottom: var(--space-4) !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
   .cs-hero-header,
-  .cs-hero-tagline-wrap,
   .cs-hero-title-wrap,
   .cs-hero-media-wrap,
-  .cs-hero-tagline,
   .cs-hero-title {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -1142,7 +1135,6 @@ html[data-theme="dark"] .project-image {
     padding-right: 0 !important;
     text-align: left !important;
   }
-  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline, 0px)); }
   .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 

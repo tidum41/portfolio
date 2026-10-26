@@ -15,12 +15,10 @@ export default function CaseStudyAlignDials() {
   const dk = useDialKit("CS Align", {
     Mobile: {
       backX:    [-6, -48, 48, 1],
-      taglineX: [0,  -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
     Desktop: {
       backX:    [-6, -48, 48, 1],
-      taglineX: [0,  -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
   });
@@ -35,19 +33,14 @@ export default function CaseStudyAlignDials() {
 /* CS Align — live DialKit overrides */
 :root {
   --cs-align-m-back: ${m.backX}px;
-  --cs-align-m-tagline: ${m.taglineX}px;
   --cs-align-m-title: ${m.titleX}px;
   --cs-align-d-back: ${d.backX}px;
-  --cs-align-d-tagline: ${d.taglineX}px;
   --cs-align-d-title: ${d.titleX}px;
 }
 .cs-back-desktop {
   transform: translateX(${d.backX}px) !important;
 }
 @media (min-width: 768px) {
-  .cs-hero-tagline {
-    transform: translateX(${d.taglineX}px) !important;
-  }
   .cs-hero-title {
     transform: translateX(${d.titleX}px) !important;
   }
@@ -55,9 +48,6 @@ export default function CaseStudyAlignDials() {
 @media (max-width: 767px) {
   .cs-back-mobile {
     transform: translateX(${m.backX}px) !important;
-  }
-  .cs-hero-tagline {
-    transform: translateX(${m.taglineX}px) !important;
   }
   .cs-hero-title {
     transform: translateX(${m.titleX}px) !important;
