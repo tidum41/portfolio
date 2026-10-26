@@ -186,7 +186,6 @@ export default function CaseStudyTOC({
 
       {activeSections.length > 0 && (
         <div className="cs-aside-nav-host">
-          <div className="cs-aside-nav-rail-spacer" aria-hidden="true" />
           <nav className="cs-toc-nav" aria-label="Table of contents">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {activeSections.map(({ id, label }) => {
@@ -195,6 +194,7 @@ export default function CaseStudyTOC({
               return (
                 <button
                   key={label}
+                  className="cs-toc-label"
                   onClick={() => scrollTo(id, label)}
                   onMouseEnter={() => { if (canHover()) setHoveredSection(label); }}
                   onMouseLeave={() => setHoveredSection(null)}
@@ -202,8 +202,6 @@ export default function CaseStudyTOC({
                     ...NO_TAP_HIGHLIGHT,
                     background: "none", border: "none", padding: 0,
                     cursor: "pointer", textAlign: "left",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "var(--fs-meta)", letterSpacing: "var(--ls-meta)", lineHeight: 1.5,
                     color: (isActive || isHovered) ? COLOR_ACTIVE : COLOR_INACTIVE,
                     fontWeight: isActive ? 500 : 400,
                     transition: "color 0.15s ease, font-weight 0.15s ease",

@@ -911,12 +911,13 @@ html[data-theme="dark"] .project-image {
   display: flex;
   flex-direction: column;
 }
-/* Desktop: inner grid — row 1 hero type, row 2 TOC nav + hero media share a row. */
+/* Desktop: inner grid — row 1 hero type + TOC cap-align; nav host spans article for sticky. */
 @media (min-width: 1200px) {
   .cs-content {
     display: grid;
     grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
-    grid-template-rows: auto auto auto;
+    /* Implicit rows only — explicit grid-template-rows made grid-row -1
+       stop at row 3 so the TOC host could not span the article. */
     grid-auto-rows: auto;
     align-items: start;
     max-width: none;
@@ -941,14 +942,11 @@ html[data-theme="dark"] .project-image {
   }
   .cs-aside-nav-host {
     grid-column: 1;
-    grid-row: 1 / -1;
-    display: grid;
-    grid-template-rows: subgrid;
+    /* Span article rows for sticky; start row 1 with hero title. */
+    grid-row: 1 / span 1000;
+    align-self: stretch;
     min-height: 0;
     padding-right: var(--space-3);
-  }
-  .cs-aside-nav-rail-spacer {
-    grid-row: 1;
   }
   .cs-hero-pre-media {
     grid-column: 2;
@@ -970,11 +968,28 @@ html[data-theme="dark"] .project-image {
     min-width: 0;
   }
   .cs-toc-nav {
-    grid-row: 2;
-    align-self: start;
+    /* Optical cap-align with .cs-hero-title (lh 1.1) vs TOC labels (--lh-meta). */
+    --cs-hero-title-lh: 1.1;
+    --cs-toc-cap-align: calc(
+      (var(--fs-hero) * var(--cs-hero-title-lh) - var(--fs-meta) * var(--lh-meta)) * 0.5
+      - (var(--fs-hero) - var(--fs-meta)) * 0.68
+    );
     position: sticky;
     top: 60px;
     margin-top: 0;
+  }
+  .cs-toc-nav > div {
+    margin-top: var(--cs-toc-cap-align);
+  }
+  /* Subtitle case studies (e.g. Dialogue): meta cap reads high vs medium H1. */
+  .cs-content:has(.cs-hero-subtitle) .cs-toc-nav > div {
+    margin-top: calc(var(--cs-toc-cap-align) + var(--fs-meta) * 0.28);
+  }
+  .cs-toc-nav .cs-toc-label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    line-height: var(--lh-meta);
   }
 }
 /* Below 1200px: TOC aside hidden; content column centered. */
