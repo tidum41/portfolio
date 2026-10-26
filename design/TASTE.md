@@ -138,3 +138,4 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Settled facts go in Decided and are not reopened without Mudit saying so.
 - Keep this file under ~150 lines; link to RULES.md sections instead of copying long rules.
 - Approved Oct 25 10:55pm: Dialogue round P structure built from Dialogue's customer case studies (Wayfair, Kalshi, Doctronic, Suno): problem, study-wide chat and count bars (shipped), comparison answer, levels of detail, clips in chat, thin-data flags and Add to my plan (concept), with Shipped/Concept status lines and fictional Hearthside mock data.
+- Oct 26 2026: Round P (PR #142, fba961b) sent back for fixes. Structure and restore approved; copy must match roundP-final.md, quotes must sit under the side they belong to, and no dark-on-dark text.
