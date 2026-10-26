@@ -535,11 +535,11 @@ function playgroundAspectRatio(it: RawPlaygroundItem): number | undefined {
 
 /** First in list → packed earliest → most visible in the default viewport. */
 const PLAYGROUND_PRIORITY = [
+  "the marias",
   "asap rocky",
   "j. cole",
   "gunna",
   "playboi carti",
-  "the marias",
   "geonworks f1-8x",
   "singa unikorn",
 ];
