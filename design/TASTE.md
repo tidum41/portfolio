@@ -137,3 +137,4 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - On every approve or reject, edit one line here in the same commit as the change (move it between Likes, Dislikes, Pinned, Open).
 - Settled facts go in Decided and are not reopened without Mudit saying so.
 - Keep this file under ~150 lines; link to RULES.md sections instead of copying long rules.
+- Approved Oct 25 10:55pm: Dialogue round P structure built from Dialogue's customer case studies (Wayfair, Kalshi, Doctronic, Suno): problem, study-wide chat and count bars (shipped), comparison answer, levels of detail, clips in chat, thin-data flags and Add to my plan (concept), with Shipped/Concept status lines and fictional Hearthside mock data.
