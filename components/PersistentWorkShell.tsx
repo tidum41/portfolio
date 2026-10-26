@@ -24,7 +24,7 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import type { SanityProject } from "@/lib/sanity/queries";
+import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
 import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -64,10 +64,21 @@ const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
-type PopupId = "cd" | "habit";
+type PopupId = "cd" | "habit" | "allinone";
 
 const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
+
+const ALLINONE_INFO_META = [
+  { label: "Built with", values: ["React", "Vite", "PWA"] },
+  { label: "AI", values: ["Groq"] },
+  { label: "Data", values: ["Google Sheets API", "Supabase"] },
+  { label: "Designed with", values: ["Paper", "Claude Code"] },
+  { label: "Timeline", values: ["2 weeks"] },
+];
+
+const ALLINONE_WHY_BUILT =
+  "I found myself dumping all my tasks into one Apple Note, so I built a tool (all-in-one) that allows users to define how they want categories grouped, then have a model sort tasks accordingly. I imagined it as a stripped down version of Notes, with an organized list feature and standard notes.";
 // Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
 // carousel + drag hint aren't clipped at narrow modal widths. Sized to
 // fill more of the viewport while leaving room for panel chrome.
@@ -244,6 +255,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
   // never mismatches; the effect below syncs if BootScripts flipped to "light".
   const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
+  // Allinone iframe mounts only while its popup is open; hide the skeleton
+  // once the embed fires load (no spinner flash on a fast load).
+  const [allinoneFrameLoaded, setAllinoneFrameLoaded] = useState(false);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -481,7 +495,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       if (!(el instanceof Element)) return;
       if (
         el.closest(
-          '.portfolio-grid-card a, .portfolio-grid-card[role="button"], .project-card a',
+          '.portfolio-grid-card a, .portfolio-grid-card[role="button"], .portfolio-grid-card [role="button"], .project-card a',
         )
       ) {
         completeIntro();
@@ -517,7 +531,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       setHeavyMediaLive(true);
       setCdPosterFade(false);
       setCdPosterOpacity(frozen ? 0 : 1);
-    } else {
+    } else if (id === "habit") {
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
     }
@@ -540,6 +554,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     // Drop the frozen still once the modal is fully closed and the live CD has
     // reparented back into the grid slot, so it goes live again next open.
     if (id === "cd") setCdFrozen(null);
+    if (id === "allinone") setAllinoneFrameLoaded(false);
   };
 
   // Seed habit poster theme from the site only until the live widget reports
@@ -635,7 +650,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
-                        href={p.href}
+                        href={p._id === "project-todolist" ? undefined : p.href}
+                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
                         label={p.label}
                         aspectRatio={p.aspectRatio}
@@ -734,7 +750,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
-                        href={p.href}
+                        href={p._id === "project-todolist" ? undefined : p.href}
+                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
                         label={p.label}
                         aspectRatio={p.aspectRatio}
@@ -891,6 +908,45 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
             }}
           >
             <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+          </div>
+        </ProjectPopup>
+      )}
+
+      {visible && openPopup === "allinone" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("allinone")}
+          title="Designing a to-do list with AI organization"
+          size="large"
+          panelBg="var(--color-bg)"
+          infoMeta={[...ALLINONE_INFO_META]}
+          infoLink={{ href: ALLINONE_APP_URL, label: "Open full app" }}
+          whyBuilt={ALLINONE_WHY_BUILT}
+        >
+          <div
+            style={{
+              position: "relative",
+              flex: "1 1 auto",
+              minHeight: 0,
+              overflow: "hidden",
+              background: "var(--color-placeholder)",
+            }}
+          >
+            <div
+              className="project-popup-iframe-skel"
+              data-hidden={allinoneFrameLoaded ? "true" : "false"}
+              aria-hidden
+            />
+            {/* Mount the iframe only while this popup is open (lazy). */}
+            <iframe
+              className="project-popup-iframe"
+              src={ALLINONE_APP_URL}
+              title="Allinone — AI to-do list"
+              allow="clipboard-write"
+              loading="lazy"
+              onLoad={() => setAllinoneFrameLoaded(true)}
+            />
           </div>
         </ProjectPopup>
       )}

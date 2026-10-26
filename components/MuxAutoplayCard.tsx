@@ -23,12 +23,15 @@ function CardLabel({
   label,
   labelFontSize,
   external,
+  showPopupIcon,
 }: {
   title: string;
   /** Quiet meta line above the main title (PS3 XMB hierarchy). */
   label?: string;
   labelFontSize: number;
   external?: boolean;
+  /** In-page popup tile — neutral northeast arrow (not the blue leave-site one). */
+  showPopupIcon?: boolean;
 }) {
   return (
     <div style={{ padding: "3px 0 0" }}>
@@ -57,6 +60,7 @@ function CardLabel({
       }}>
         {title}
         {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
+        {showPopupIcon && <NortheastArrow size={13} />}
       </p>
     </div>
   );
@@ -64,7 +68,7 @@ function CardLabel({
 
 interface Props {
   playbackId: string;
-  /** When omitted, the card is display-only (no link, no pointer). */
+  /** When omitted, the card is display-only (no link, no pointer) unless onOpen. */
   href?: string;
   title: string;
   /** Small quiet line above the title. */
@@ -76,6 +80,11 @@ interface Props {
   playing?: boolean;
   /** Grid order for staggered remount (0 first). */
   mountOrder?: number;
+  /**
+   * In-page popup opener (Allinone, etc.). When set, the card does not
+   * navigate — click/keyboard activate this instead of href.
+   */
+  onOpen?: () => void;
 }
 
 export default function MuxAutoplayCard({
@@ -87,6 +96,7 @@ export default function MuxAutoplayCard({
   active = true,
   playing = true,
   mountOrder = 0,
+  onOpen,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -100,7 +110,8 @@ export default function MuxAutoplayCard({
   // an IntersectionObserver tick; later cards latch after first intersection.
   const [shouldLoad, setShouldLoad] = useState(mountOrder <= 1);
   const [mountReady, setMountReady] = useState(false);
-  const clickable = Boolean(href);
+  const isPopup = Boolean(onOpen);
+  const clickable = Boolean(href) || isPopup;
   const warmCaseStudy = () => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
@@ -249,13 +260,19 @@ export default function MuxAutoplayCard({
 
   const linkStyle = { textDecoration: "none", display: "block", color: "inherit", cursor: "pointer" } as const;
   // Blue northeast arrow only when the card leaves the site — derived from
-  // href, not a hard-coded project id.
-  const external = Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
+  // href, not a hard-coded project id. Popup tiles never count as external.
+  const external = !isPopup && Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 
   const body = (
     <ProjectCardLift style={{ gap: dk.cardGap }}>
       {video}
-      <CardLabel title={title} label={label} labelFontSize={dk.labelFontSize} external={external} />
+      <CardLabel
+        title={title}
+        label={label}
+        labelFontSize={dk.labelFontSize}
+        external={external}
+        showPopupIcon={isPopup}
+      />
     </ProjectCardLift>
   );
 
@@ -266,6 +283,21 @@ export default function MuxAutoplayCard({
     >
       {!clickable ? (
         body
+      ) : isPopup ? (
+        <div
+          role="button"
+          tabIndex={0}
+          style={linkStyle}
+          onClick={onOpen}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpen?.();
+            }
+          }}
+        >
+          {body}
+        </div>
       ) : external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
           {body}

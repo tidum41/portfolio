@@ -633,20 +633,453 @@ html[data-theme="light"] {
   background: none;
   color: var(--color-text-card-sub);
   position: relative;
-  transition: color 120ms ease, transform 120ms ease;
+  transition: color 120ms ease, transform 120ms ease, background-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .popup-close-btn::before {
   content: "";
   position: absolute;
-  /* 24px icon + 10px each side = 44px tap target. */
+  /* 24px icon + 10px each side = 44px tap target (padding expand, icon stays). */
   inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
   .popup-close-btn:hover { color: var(--color-text-primary); }
   .popup-close-btn:active { transform: scale(0.96); }
 }
+/* Touch / coarse: no hover-only colour; visible pressed fill instead. */
 @media (hover: none), (pointer: coarse) {
-  .popup-close-btn:active { color: var(--color-text-primary); }
+  .popup-close-btn:active {
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+}
+
+/* Info (i) control — identical chrome to .popup-close-btn (24px / 44px tap). */
+.popup-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-mosaic);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-card-sub);
+  position: relative;
+  transition: color 120ms ease, transform 120ms ease, background-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.popup-info-btn::before {
+  content: "";
+  position: absolute;
+  /* 24px icon + 10px each side = 44px tap target. */
+  inset: -10px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .popup-info-btn:hover { color: var(--color-text-primary); }
+  .popup-info-btn:active { transform: scale(0.96); }
+}
+@media (hover: none), (pointer: coarse) {
+  .popup-info-btn:active {
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+}
+
+/* Large ProjectPopup — near-fullscreen app embed (Allinone, etc.).
+   Size with 100vw/100dvh (not inset:0) so html/body scrollbar-gutter cannot
+   leave a grey strip or shrink the mobile "full-screen" panel. */
+.project-popup-backdrop--large {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding: 48px;
+  margin: 0;
+}
+.project-popup-panel--large {
+  width: min(1240px, calc(100vw - 96px));
+  height: 90dvh;
+  max-height: 90dvh;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--color-border-subtle);
+  box-sizing: border-box;
+}
+
+/* Title tab above the iframe — info + close sit on this bar. */
+.project-popup-topbar--large {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-subtle);
+  z-index: 5;
+}
+.project-popup-topbar-title {
+  min-width: 0;
+  flex: 1;
+}
+.project-popup-topbar-title > p {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-popup-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.project-popup-body--large {
+  /* Owns the iframe + info overlay under the title tab. */
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-popup-info-scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: default;
+  z-index: 2;
+  /* Scrim absorbs outside taps; don't let them scroll the iframe under it. */
+  touch-action: none;
+}
+
+/* Desktop: anchored to the info icon (right 40 = pad 12 + close 24 + gap 4),
+   starting 8px under the iframe app's 52px MenuBar so toolbar icons stay clear.
+   Cap at 320px. Quiet spec sheet — muted labels, body-colour values, hairline rhythm. */
+.project-popup-info {
+  position: absolute;
+  top: 60px; /* 52px iframe toolbar + 8px */
+  right: 40px;
+  width: min(320px, calc(100% - 52px));
+  max-width: 320px;
+  max-height: calc(100% - 68px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  z-index: 3;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+html[data-theme="dark"] .project-popup-info {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.project-popup-info-inner {
+  padding: 16px;
+}
+
+.project-popup-spec {
+  margin: 0;
+  padding: 0;
+}
+
+.project-popup-spec-row {
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.project-popup-spec-row:first-child {
+  padding-top: 0;
+}
+.project-popup-spec-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.project-popup-spec-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 4px;
+}
+
+.project-popup-spec-value {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.project-popup-spec-value + .project-popup-spec-value {
+  margin-top: 2px;
+}
+
+/* Body-colour link with a quiet always-on underline on the label only
+   (arrow stays undecorated). 44×44 tap via padding, not a bigger glyph. */
+.project-popup-info-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 12px 0;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .project-popup-info-link:hover {
+    color: var(--color-text-primary);
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .project-popup-info-link:active {
+    opacity: 0.72;
+  }
+}
+.project-popup-info-link-text {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-skip-ink: auto;
+  text-decoration-color: currentColor;
+}
+.project-popup-info-link-icon {
+  /* Optically centre the northeast arrow on the meta x-height; no underline. */
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+  top: 0.12em;
+  text-decoration: none;
+}
+
+.project-popup-why {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.project-popup-why > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 0;
+  box-sizing: border-box;
+  user-select: none;
+  color: var(--color-text-primary);
+  -webkit-tap-highlight-color: transparent;
+  border-radius: var(--radius-mosaic);
+}
+.project-popup-why > summary::-webkit-details-marker {
+  display: none;
+}
+@media (hover: none), (pointer: coarse) {
+  .project-popup-why > summary:active {
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+}
+/* Same sans voice as .project-popup-spec-label — one type system in the panel. */
+.project-popup-why-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
+  color: var(--color-text-tertiary);
+}
+.project-popup-why-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  color: var(--color-text-tertiary);
+  transform: rotate(0deg);
+  transition: transform 160ms var(--ease-out);
+}
+.project-popup-why[open] > summary .project-popup-why-chevron {
+  transform: rotate(90deg);
+}
+.project-popup-why > p {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--color-text-secondary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-popup-why-chevron {
+    transition: none;
+  }
+}
+
+/* Neutral skeleton while the large-popup iframe loads — no spinner flash. */
+.project-popup-iframe-skel {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-placeholder) 0%,
+      color-mix(in srgb, var(--color-placeholder) 70%, var(--color-bg)) 50%,
+      var(--color-placeholder) 100%
+    );
+  background-size: 200% 100%;
+  animation: project-popup-skel-shine 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.project-popup-iframe-skel[data-hidden="true"] {
+  opacity: 0;
+  animation: none;
+}
+@keyframes project-popup-skel-shine {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-popup-iframe-skel {
+    animation: none;
+  }
+}
+
+.project-popup-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--color-bg);
+}
+
+/* Narrow phones OR short landscape (e.g. 844×390) — full-bleed panel +
+   bottom info sheet. Matches the JS isMobile media query. */
+@media (max-width: 767px), (max-height: 500px) {
+  .project-popup-backdrop--large {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+    /* Avoid horizontal rubber-band that can reveal a second scrollbar. */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .project-popup-panel--large {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    /* Safe-area insets for notched phones (box-sizing:border-box keeps
+       the outer box at 100dvh so nothing clips past the screen). */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    overflow: hidden;
+    box-shadow: none;
+  }
+
+  /* Title tab stays a real bar above the iframe.
+     44×44 buttons via padding box; glyph size unchanged. */
+  .project-popup-topbar--large {
+    padding: 0 max(4px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+    min-height: 44px;
+    gap: 0;
+  }
+  .project-popup-topbar-title > p {
+    font-size: 14px;
+  }
+  .project-popup-panel--large .popup-close-btn,
+  .project-popup-panel--large .popup-info-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .project-popup-panel--large .popup-close-btn::before,
+  .project-popup-panel--large .popup-info-btn::before {
+    inset: 0;
+  }
+  .project-popup-panel--large .popup-close-btn svg,
+  .project-popup-panel--large .popup-info-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Full-width bottom sheet — tap-open only (no hover). Scrim closes it. */
+  .project-popup-info {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    /* Height is driven in JS; CSS ceilings match so Open full app + Why fit. */
+    max-height: 85dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  }
+  html[data-theme="dark"] .project-popup-info {
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
+  }
+  .project-popup-info[data-why-open="false"] {
+    max-height: 72dvh;
+  }
+  /* Clear the home indicator under the Why copy; keep 16px rhythm. */
+  .project-popup-info .project-popup-info-inner {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  /* Short landscape: keep the sheet usable without covering the whole app. */
+  @media (max-height: 500px) {
+    .project-popup-info {
+      max-height: 75dvh;
+    }
+    .project-popup-info[data-why-open="false"] {
+      max-height: 70dvh;
+    }
+  }
 }
 
 /* ─── InteractiveBadge border — neutral grey, lighter/more visible than

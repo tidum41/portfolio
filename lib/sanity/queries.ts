@@ -167,11 +167,16 @@ const PROJECT_CARD_COPY: Record<string, Pick<SanityProject, "title" | "label">> 
   },
 };
 
+/** Same-origin Allinone demo embed (seed trimmed; see public/allinone-demo). */
+export const ALLINONE_APP_URL = "/allinone-demo/index.html";
+
 const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   // Already the production Sanity href. Pinned here so the card stays on the
   // existing case study even if that document's href changes.
   "project-bruinlease": "/ucla-sublease",
-  "project-todolist": "https://allinone-demo-amber.vercel.app/",
+  // Live Allinone demo URL (replaces the old amber deploy). The home card
+  // opens this in ProjectPopup rather than navigating away.
+  "project-todolist": ALLINONE_APP_URL,
 };
 
 /** Local first card — not in Sanity. Page copy lives in lib/caseStudies/joola.ts. */
@@ -206,7 +211,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+  unstable_cache(loadProjects, ["projects-v10-allinone-modal"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
