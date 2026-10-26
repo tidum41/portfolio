@@ -361,6 +361,12 @@ html[data-intro="playing"] .intro-hide--snap,
 html[data-intro="done"] .intro-hide--snap {
   transition: none !important;
 }
+/* Cards stay opacity-gated with the rest of .intro-hide, but must accept
+   clicks during the hero intro so an early project-card tap can navigate
+   (and complete the intro) instead of falling through for ~1.9s. */
+html[data-intro="playing"] .intro-hide--snap {
+  pointer-events: auto !important;
+}
 
 /* ─── Theme toggle — snap tokens, don't interpolate the tree ──────── */
 /* Links, nav, cards, and embeds already have standing color/background

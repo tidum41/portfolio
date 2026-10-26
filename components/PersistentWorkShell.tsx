@@ -22,7 +22,7 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
-import { afterIntroIdle } from "@/lib/introReady";
+import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { SanityProject } from "@/lib/sanity/queries";
 import CardFocusGrid from "@/components/CardFocusGrid";
@@ -467,11 +467,25 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // noise described above can't overwrite the frozen value before this
   // component is hidden. Un-suppressed by the restore effect once we're
   // confirmed back on "/", so normal tracking resumes for next time.
+  //
+  // Same capture pass: if the first-load intro is still playing and the
+  // click landed on a project card, end the intro immediately so soft nav
+  // / commitCaseStudyNav / visibilitychange replay stay coherent (and so
+  // nav/footer aren't left opacity-gated after we leave "/").
   useEffect(() => {
     if (!visible) return;
-    const onClickCapture = () => {
+    const onClickCapture = (e: MouseEvent) => {
       scrollYRef.current = window.scrollY;
       suppressTrackingRef.current = true;
+      const el = e.target;
+      if (!(el instanceof Element)) return;
+      if (
+        el.closest(
+          '.portfolio-grid-card a, .portfolio-grid-card[role="button"], .project-card a',
+        )
+      ) {
+        completeIntro();
+      }
     };
     window.addEventListener("click", onClickCapture, { capture: true });
     return () => window.removeEventListener("click", onClickCapture, { capture: true });
