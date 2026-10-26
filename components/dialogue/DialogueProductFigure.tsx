@@ -85,7 +85,9 @@ function scaleProps(
       case "full-answer":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 600, fade: true };
       case "problem-paragraphs":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 652, fade: true };
+        /* Round O: the figure carries three full quote cards now; the old
+           652px cap and fade would cut the third card on phones. */
+        return { innerWidth: CHAT_W, fit: "reflow" };
       default:
         return { innerWidth: CHAT_W, fit: "reflow" };
     }

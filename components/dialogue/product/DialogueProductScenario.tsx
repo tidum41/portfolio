@@ -8,6 +8,7 @@ import QuoteFrameFigure from "@/components/dialogue/product/scenarios/QuoteFrame
 import FullAnswerFigure from "@/components/dialogue/product/scenarios/FullAnswerFigure";
 import ThinDataFigure from "@/components/dialogue/product/scenarios/ThinDataFigure";
 import InlineClipFigure from "@/components/dialogue/product/scenarios/InlineClipFigure";
+import ScopeHeadersFigure from "@/components/dialogue/product/scenarios/ScopeHeadersFigure";
 
 export type DialogueProductScenario =
   | "hero"
@@ -21,7 +22,9 @@ export type DialogueProductScenario =
   | "thin-data"
   | "thin-data-plan"
   | "thin-data-slim"
-  | "inline-clip";
+  | "thin-data-prompt"
+  | "inline-clip"
+  | "scope-headers";
 
 type Props = {
   scenario: DialogueProductScenario;
@@ -52,8 +55,12 @@ function renderScenario(scenario: DialogueProductScenario): ReactNode {
       return <ThinDataFigure planTapped />;
     case "thin-data-slim":
       return <ThinDataFigure slim />;
+    case "thin-data-prompt":
+      return <ThinDataFigure planTapped showPrompt />;
     case "inline-clip":
       return <InlineClipFigure />;
+    case "scope-headers":
+      return <ScopeHeadersFigure />;
     default:
       return null;
   }

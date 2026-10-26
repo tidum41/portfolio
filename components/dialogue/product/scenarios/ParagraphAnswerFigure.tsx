@@ -1,16 +1,21 @@
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import { WaveformIcon } from "@/components/dialogue/product/icons";
-import { annotateSlug } from "@/components/dialogue/annotate";
+import QuoteCard from "@/components/dialogue/product/QuoteCard";
 import {
   CHECKOUT_QUESTION,
   PARAGRAPH_ANSWER_BRIEF,
   QUOTE_LIST,
 } from "@/lib/dialogue/product/sampleData";
 
-/** The problem answer as it was: a prose paragraph with the study's quote
-    cards under it. In the round N problem state the cards are collapsed and
-    greyed, with a single annotation: no count. */
+/** Start times for the cited quotes, from the address follow-up's clips. */
+const QUOTE_TIMES: Record<string, string> = {
+  "Jordan M.": "14:03",
+  "Priya K.": "16:02",
+  "Sam R.": "11:22",
+};
+
+/** The answer as it was: a prose paragraph with the study's real grey quote
+    cards cited underneath, and no count anywhere (round O). */
 export default function ParagraphAnswerFigure({
   focus,
   citedQuotes = false,
@@ -34,22 +39,16 @@ export default function ParagraphAnswerFigure({
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
       {prose}
       {citedQuotes ? (
-        <>
-          <div className="dp-problem-quotes" data-annotate-part="cited-quotes">
-            {QUOTE_LIST.map((q) => (
-              <div
-                key={q.participant}
-                className="dp-problem-quotes__row"
-                data-annotate-part={`quote-${annotateSlug(q.participant)}`}
-              >
-                <WaveformIcon className="dp-problem-quotes__wave" />
-                <strong>{q.participant}</strong>
-                <span className="dp-problem-quotes__text">{q.quote}</span>
-              </div>
-            ))}
-          </div>
-          <p className="dp-problem-note" data-annotate-part="no-count-note">No count</p>
-        </>
+        <div className="dp-clip-quotes" data-annotate-part="cited-quotes">
+          {QUOTE_LIST.map((q) => (
+            <QuoteCard
+              key={q.participant}
+              name={q.participant}
+              time={QUOTE_TIMES[q.participant] ?? ""}
+              text={q.quote}
+            />
+          ))}
+        </div>
       ) : null}
     </StudyChatShell>
   );

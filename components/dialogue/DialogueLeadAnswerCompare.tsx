@@ -28,7 +28,8 @@ type Props = {
   subheading?: string;
   question?: string;
   options: Option[];
-  chosenId: string;
+  /** Round O: optional. Without it no panel is marked chosen (no pill, no ring). */
+  chosenId?: string;
   annotateRaster?: RasterAnnotator;
 };
 

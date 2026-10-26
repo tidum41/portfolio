@@ -2144,11 +2144,36 @@ agentation-toolbar,
   color: var(--color-text-secondary);
 }
 
-/* Round N: the TOC back chevron sits a touch high against the label;
-   nudge it so their vertical centers match. */
+/* Rounds N/O: the TOC back chevron against its label. Pixel-measured on
+   the round O build: at -1px the chevron's ink centroid sat about 1.5px
+   above the label's, so the net nudge is half a pixel down. */
 .cs-back-desktop svg,
 .cs-back-mobile svg {
-  transform: translateY(-1px);
+  transform: translateY(0.5px);
+}
+
+/* Round O: on /dialogue the end of the article sits 120px above the footer
+   at every width. The pager keeps a 24px gap under the article, and the
+   layout's bottom padding takes the rest (the pager is one row on desktop,
+   stacked taller on phones). */
+.dialogue-case-study .cs-pager {
+  margin-top: 24px;
+}
+
+/* The last section's 48px bottom margin would otherwise set the floor for
+   the gap (adjacent margins collapse to the larger one). */
+.dialogue-case-study #next {
+  margin-bottom: 0;
+}
+
+.dialogue-case-study .cs-layout {
+  padding-bottom: 47px;
+}
+
+@media (max-width: 479px) {
+  .dialogue-case-study .cs-layout {
+    padding-bottom: 23px;
+  }
 }
 
 /* Round N: the Next section's test and signal grid, plain site text with

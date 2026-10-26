@@ -15,8 +15,7 @@ export default function InlineClipFigure() {
       <div className="dp-inline-clip__row" data-annotate-part="tapped-response-row">
         <p className="dp-inline-clip__who">
           <WaveformIcon className="dp-inline-clip__wave" />
-          <span className="dp-inline-clip__name">Marcus W.</span>
-          <span className="dp-inline-clip__time">01:38</span>
+          <span className="dp-inline-clip__line">Marcus W., 01:38</span>
           <span className="dp-inline-clip__tap" aria-hidden />
         </p>
         <p className="dp-inline-clip__text">

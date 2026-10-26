@@ -13,7 +13,7 @@ export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [
-  "Most participants hesitated at shipping address, delivery, and payment.",
+  "Most participants hesitated at the shipping address.",
   "Nothing in the thread linked quotes back to footage or funnel steps.",
 ];
 
