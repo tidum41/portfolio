@@ -184,7 +184,7 @@ export default function CaseStudyTOC({
         className="cs-back-desktop"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "flex", alignItems: "flex-start", gap: 2,
+          display: "flex", alignItems: "center", gap: 2,
           minHeight: 44,
           minWidth: 44,
           marginLeft: 0,

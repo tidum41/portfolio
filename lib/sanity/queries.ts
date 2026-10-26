@@ -188,10 +188,24 @@ const JOOLA_B2B_PROJECT: SanityProject = {
   featured: true,
 };
 
+/** Local Dialogue card — not in Sanity. The case study lives at /dialogue;
+ *  card copy is the case study's own title. */
+const DIALOGUE_PROJECT: SanityProject = {
+  _id: "project-dialogue",
+  title: "Interactive insights for UX research teams",
+  label: "Case study",
+  href: "/dialogue",
+  mediaType: "image",
+  image: { asset: { url: "/dialogue/section-6.png" } },
+  aspectRatio: "4 / 3",
+  order: 1,
+  featured: true,
+};
+
 async function loadProjects(): Promise<SanityProject[]> {
   const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY);
   const mapped = projects
-    .filter((p) => p._id !== JOOLA_B2B_PROJECT._id)
+    .filter((p) => p._id !== JOOLA_B2B_PROJECT._id && p._id !== DIALOGUE_PROJECT._id)
     .map((p) => {
       const copy = PROJECT_CARD_COPY[p._id];
       return {
@@ -202,11 +216,11 @@ async function loadProjects(): Promise<SanityProject[]> {
         href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
       };
     });
-  return [JOOLA_B2B_PROJECT, ...mapped];
+  return [JOOLA_B2B_PROJECT, DIALOGUE_PROJECT, ...mapped];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+  unstable_cache(loadProjects, ["projects-v10-dialogue-card"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),

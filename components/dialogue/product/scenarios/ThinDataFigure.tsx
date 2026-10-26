@@ -30,9 +30,24 @@ async function copyText(text: string) {
   }
 }
 
-/** f6a5192 low-signal answer: amber lead warning, clip link, plan action, evidence footer. */
-export default function ThinDataFigure() {
-  const [copied, setCopied] = useState(false);
+/** f6a5192 low-signal answer: amber lead warning, clip link, plan action, evidence footer.
+    Direction A: the note reads "Based on 4 of 24 interviews". With planTapped,
+    the figure renders in its tapped state, showing the copied prompt's first
+    line (section 7's visual). Round N: `slim` is the short form the story
+    uses now: the question, the answer, and the muted count note, nothing
+    else, so the figure sits at about half its neighbours' height. */
+export default function ThinDataFigure({
+  planTapped = false,
+  slim = false,
+  showPrompt = false,
+}: {
+  planTapped?: boolean;
+  slim?: boolean;
+  /** Round O: in the tapped state, show the full copied prompt, including
+      the context the original plan was based on. */
+  showPrompt?: boolean;
+}) {
+  const [copied, setCopied] = useState(planTapped);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -47,8 +62,24 @@ export default function ThinDataFigure() {
     timer.current = setTimeout(() => setCopied(false), 4000);
   };
 
+  if (slim) {
+    return (
+      <StudyChatShell compact hideHeader hideComposer>
+        <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
+        <p className="dp-summary dp-text-body" data-annotate-part="summary">
+          On mobile, several participants bailed when autofill skipped the apartment field and
+          validation fired late.
+        </p>
+        <div className="dp-low-signal dp-low-signal--centered" data-annotate-part="low-signal-note">
+          <InfoCircleIcon className="dp-low-signal__icon" />
+          <p className="dp-low-signal__text">Based on 4 of 24 interviews</p>
+        </div>
+      </StudyChatShell>
+    );
+  }
+
   return (
-    <StudyChatShell compact hideHeader hideComposer evidence={4}>
+    <StudyChatShell compact hideHeader hideComposer evidence={showPrompt ? undefined : 4}>
       <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
         On mobile, several participants bailed when autofill skipped the apartment field and
@@ -56,7 +87,7 @@ export default function ThinDataFigure() {
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
         <InfoCircleIcon className="dp-low-signal__icon" />
-        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this.</p>
+        <p className="dp-low-signal__text">Based on 4 of 24 interviews</p>
       </div>
       <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
       <div className="dp-next-study-wrap">
@@ -65,16 +96,28 @@ export default function ThinDataFigure() {
           className="dp-next-study"
           data-interactive
           data-annotate-part="next-study-button"
-          title="Copies a prompt to paste into Ask about your study."
-          aria-label="Add to my plan. Copies a prompt to paste into Ask about your study."
+          title="Copies a prompt to paste into any agent."
+          aria-label="Add to my plan. Copies a prompt to paste into any agent."
           onClick={onCopy}
         >
           {copied ? <CheckIcon className="dp-next-study__icon" /> : <CopyIcon className="dp-next-study__icon" />}
           Add to my plan
         </button>
-        <p className="dp-next-study__hint" role="status" data-annotate-part="next-study-hint">
-          {copied ? "Copied. Paste it into Ask about your study." : "Copies a prompt to paste into Ask about your study."}
-        </p>
+        {showPrompt && copied ? (
+          <div className="dp-copied-prompt" data-annotate-part="copied-prompt">
+            {NEXT_STUDY_PROMPT.split("\n\n").map((para) => (
+              <p key={para.slice(0, 24)}>{para}</p>
+            ))}
+          </div>
+        ) : (
+          <p className="dp-next-study__hint" role="status" data-annotate-part="next-study-hint">
+            {copied
+              ? planTapped
+                ? "Copied: \u201cPlan the next study on mobile checkout.\u201d"
+                : "Copied. Paste it into any agent."
+              : "Copies a prompt to paste into any agent."}
+          </p>
+        )}
       </div>
     </StudyChatShell>
   );

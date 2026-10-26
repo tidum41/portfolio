@@ -1,12 +1,12 @@
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
-import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
-import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
-import { annotateSlug } from "@/components/dialogue/annotate";
-import { ArrowUpRightIcon } from "@/components/dialogue/product/icons";
-import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
+import QuoteCard from "@/components/dialogue/product/QuoteCard";
+import { PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 
-const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
+/** Start times for the quotes, from the address follow-up's clips. */
+const QUOTE_TIMES: Record<string, string> = {
+  "Jordan M.": "14:03",
+  "Priya K.": "16:02",
+  "Sam R.": "11:22",
+};
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
@@ -14,7 +14,8 @@ type Props = {
   variant: LeadCompareVariant;
 };
 
-/** Lead option content only (layout differs per variant). */
+/** Round O: the three formats built from the real quote card. The kept
+    version adds only the count line and one 16:9 clip thumb to the quotes. */
 export default function LeadCompareAnswerCard({ variant }: Props) {
   if (variant === "paragraphs") {
     return (
@@ -28,54 +29,34 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
     );
   }
 
-  if (variant === "quotes") {
-    return (
-      <div className="dp-lead-answer-card dp-lead-answer-card--quotes">
-        <div className="dp-lead-answer-card__quotes">
-          {QUOTE_LIST.map((q) => (
-            <div key={q.participant} className="dp-lead-answer-card__quote" data-annotate-part={`quote-${annotateSlug(q.participant)}`}>
-              <strong>{q.participant}</strong>
-              {q.quote}
-            </div>
-          ))}
-        </div>
-        <div className="dp-lead-answer-card__quote-actions">
-          <span className="dp-lead-answer-card__view-session">
-            View session
-            <ArrowUpRightIcon className="dp-lead-answer-card__view-session-icon" />
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  const summary = (
-    <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
-      {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
-      <span className="dp-summary__emph">{CHECKOUT_FUNNEL.emphasis}</span>
-      {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
-    </p>
+  const quotes = (
+    <div className="dp-lead-answer-card__quotes">
+      {QUOTE_LIST.map((q) => (
+        <QuoteCard
+          key={q.participant}
+          name={q.participant}
+          time={QUOTE_TIMES[q.participant] ?? ""}
+          text={q.quote}
+        />
+      ))}
+    </div>
   );
+
+  if (variant === "quotes") {
+    return <div className="dp-lead-answer-card dp-lead-answer-card--quotes">{quotes}</div>;
+  }
 
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
-      {summary}
-      <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
-        <ChartBarList
-          className="dp-lead-answer-card__bars"
-          rows={MINI_FUNNEL.map((step) => ({
-            label: step.label,
-            value: step.pct,
-            display: formatChartPercent(step.pct),
-            focal: "focal" in step && step.focal,
-          }))}
-          max={100}
-          fillMode="index"
-        />
+      <p className="dp-lead-answer-card__count" data-annotate-part="count-line">
+        18 of 24 interviews
+      </p>
+      {quotes}
+      <div className="dp-lead-answer-card__thumb" data-annotate-part="clip-thumb">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/dev/dialogue-static/clip-photos/clip-01.jpg" alt="" loading="eager" decoding="sync" />
+        <span className="dp-lead-answer-card__thumb-time">14:03</span>
       </div>
-      <SourcesScaleRow />
-      <ClipThumbnails selectedTime="15:47" />
     </div>
   );
 }

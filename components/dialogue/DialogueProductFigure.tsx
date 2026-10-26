@@ -18,7 +18,7 @@ type Props = {
 };
 
 function figureName(scenario: Scenario): string {
-  return typeof scenario === "object" ? `chart-${scenario.gallery}` : scenario;
+  return scenario;
 }
 
 /** Live study-chat panel width (t384: ~447.78px → 448). */
@@ -74,9 +74,6 @@ function scaleProps(
   fade?: boolean;
 } | null {
   const minScale = phone ? PHONE_MIN_SCALE : DESKTOP_MIN_SCALE;
-  if (typeof scenario === "object" && "gallery" in scenario) {
-    return { innerWidth: CHAT_W, fit: "reflow" };
-  }
   if (phone) {
     switch (scenario) {
       case "anatomy":
@@ -88,7 +85,16 @@ function scaleProps(
       case "full-answer":
         return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 600, fade: true };
       case "problem-paragraphs":
-        return { innerWidth: CHAT_W, fit: "reflow", maxOuterHeight: 652, fade: true };
+      case "inline-clip":
+      case "thin-data-slim":
+      case "thin-data-prompt":
+      case "counts":
+        /* Round O fix: on phones the chat figures scale the 448px panel
+           down to fit the column (transform scale) instead of reflowing
+           taller. The clip figure caps at about 560px with the fade. */
+        return scenario === "inline-clip"
+          ? { innerWidth: CHAT_W, maxScale: 1, maxOuterHeight: 500, fade: true }
+          : { innerWidth: CHAT_W, maxScale: 1 };
       default:
         return { innerWidth: CHAT_W, fit: "reflow" };
     }

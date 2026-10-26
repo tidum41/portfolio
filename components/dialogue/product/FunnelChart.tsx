@@ -57,10 +57,7 @@ export default function FunnelChart({
   const note =
     showLargestDrop && !compact ? (
       <>
-        Largest drop:{" "}
-        <strong>
-          {dialogueCopy.funnelLargestDrop} ({dialogueCopy.funnelLargestDropPct} points)
-        </strong>
+        Largest drop: <strong>{dialogueCopy.funnelLargestDrop}</strong>
       </>
     ) : undefined;
 

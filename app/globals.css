@@ -2138,6 +2138,92 @@ agentation-toolbar,
   font-weight: 500;
 }
 
+/* Round M: the scope figure's panel labels sit on the figure well, not on a
+   product card, so they follow the site theme like the frame captions. */
+.dialogue-case-study .dp-scope__label {
+  color: var(--color-text-secondary);
+}
+
+/* Rounds N/O: the TOC back chevron against its label. Pixel-measured on
+   the round O build: at -1px the chevron's ink centroid sat about 1.5px
+   above the label's, so the net nudge is half a pixel down. */
+.cs-back-desktop svg,
+.cs-back-mobile svg {
+  transform: translateY(0.5px);
+}
+
+/* Round O fix: figure wells use 16px inner padding on phones. */
+@media (max-width: 600px) {
+  .dialogue-case-study .dialogue-rachel-frame__pad {
+    padding: 16px;
+  }
+}
+
+/* Round O fix: on phones the hero chat panel scales down like the other
+   chat figures instead of reflowing taller (laid out wider, zoomed back,
+   so its layout footprint stays the column width). */
+@media (max-width: 480px) {
+  .dialogue-case-study .dialogue-hero-moment {
+    width: 137.36%;
+    zoom: 0.7277;
+  }
+}
+
+/* Round O: on /dialogue the end of the article sits 120px above the footer
+   at every width. The pager keeps a 24px gap under the article, and the
+   layout's bottom padding takes the rest (the pager is one row on desktop,
+   stacked taller on phones). */
+.dialogue-case-study .cs-pager {
+  margin-top: 24px;
+}
+
+/* The last section's 48px bottom margin would otherwise set the floor for
+   the gap (adjacent margins collapse to the larger one). */
+.dialogue-case-study #next {
+  /* The section's own inline margin would otherwise set a 48px floor. */
+  margin-bottom: 0 !important;
+}
+
+.dialogue-case-study .cs-layout {
+  padding-bottom: 48px;
+}
+
+@media (max-width: 479px) {
+  .dialogue-case-study .cs-layout {
+    padding-bottom: 23px;
+  }
+}
+
+/* Round N: the Next section's test and signal grid, plain site text with
+   no product chrome. */
+.dialogue-case-study .cs-test-grid {
+  margin-top: 28px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.dialogue-case-study .cs-test-grid__head,
+.dialogue-case-study .cs-test-grid__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.dialogue-case-study .cs-test-grid__head span {
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.dialogue-case-study .cs-test-grid__row p {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+  max-width: 300px;
+}
+
 /* Dialogue draft — intrinsic rasters (no letterboxing) */
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media .cs-figure {
   margin: 0;
@@ -2497,6 +2583,57 @@ agentation-toolbar,
   }
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
     order: -1;
+  }
+}
+/* Round O fix: on phones the three compare cards become one horizontal
+   scroll-snap row, each about 85% wide with the next peeking, the label
+   above its card, equal heights, one quote per card, and no clip thumb
+   (the moment section already shows the clip). */
+@media (max-width: 600px) {
+  .dialogue-case-study .dialogue-lead-answer__row--trio {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 0 -16px;
+    padding: 4px 16px 12px;
+    scrollbar-width: none;
+  }
+  .dialogue-case-study .dialogue-lead-answer__row--trio::-webkit-scrollbar {
+    display: none;
+  }
+  .dialogue-case-study .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel {
+    flex: 0 0 85%;
+    width: auto;
+    align-self: stretch;
+    scroll-snap-align: start;
+  }
+  .dialogue-case-study .dialogue-lead-answer__option-card {
+    align-self: stretch;
+  }
+  .dialogue-case-study .dialogue-lead-answer__panel .dialogue-caption {
+    order: -1;
+    margin: 0 0 8px;
+  }
+  .dialogue-case-study .dialogue-lead-answer__chosen-row {
+    display: none;
+  }
+  .dialogue-case-study .dialogue-lead-answer__option-card {
+    flex: 1;
+  }
+  .dialogue-case-study .dialogue-lead-answer__option-card .dialogue-product-block {
+    height: 100%;
+  }
+  .dialogue-case-study .dp-lead-answer-card {
+    height: 100%;
+  }
+  .dialogue-case-study .dp-lead-answer-card__quotes > :nth-child(n + 2) {
+    display: none;
+  }
+  .dialogue-case-study .dp-lead-answer-card__thumb {
+    display: none;
   }
 }
 .dialogue-lead-answer__panel {

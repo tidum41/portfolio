@@ -25,7 +25,7 @@ const ROWS: Row[] = [
   { speaker: "Dialogue", time: "01:42", text: "Did the error tell you what to fix?", role: "dialogue" },
 ];
 
-export default function SyncedTranscript() {
+export default function SyncedTranscript({ bare = false }: { bare?: boolean }) {
   return (
     <div className="dp-synced-transcript" aria-hidden data-annotate-part="transcript">
       <div className="dp-synced-transcript__head" data-annotate-part="transcript-head">
@@ -47,19 +47,21 @@ export default function SyncedTranscript() {
                 .filter(Boolean)
                 .join(" ")}
             >
-              <span
-                className={[
-                  "dp-synced-transcript__avatar",
-                  row.role === "dialogue"
-                    ? "dp-synced-transcript__avatar--dialogue"
-                    : "dp-synced-transcript__avatar--participant",
-                ].join(" ")}
-                data-annotate-part={`transcript-avatar-${i + 1}`}
-              >
-                {row.role === "dialogue" ? null : (
-                  <PersonIcon className="dp-synced-transcript__person-icon" />
-                )}
-              </span>
+              {bare ? null : (
+                <span
+                  className={[
+                    "dp-synced-transcript__avatar",
+                    row.role === "dialogue"
+                      ? "dp-synced-transcript__avatar--dialogue"
+                      : "dp-synced-transcript__avatar--participant",
+                  ].join(" ")}
+                  data-annotate-part={`transcript-avatar-${i + 1}`}
+                >
+                  {row.role === "dialogue" ? null : (
+                    <PersonIcon className="dp-synced-transcript__person-icon" />
+                  )}
+                </span>
+              )}
               <span className="dp-synced-transcript__content">
                 <span className="dp-synced-transcript__meta">
                   <span className="dp-synced-transcript__speaker">{row.speaker}</span>
