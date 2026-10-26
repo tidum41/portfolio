@@ -279,3 +279,28 @@
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
 }
+
+/* Round P: one levels-of-detail specimen renders in dark. The same role
+   tokens repoint at dark stone values inside .dp-force-dark only; the
+   pinned figures otherwise stay light in both site themes. */
+.dialogue-product-root.dp-force-dark {
+  --dp-ink: #ece8e2;
+  --dp-muted: #a6a09b;
+  --dp-muted-light: #8f8a84;
+  --dp-faint: #6e6862;
+  --dp-border: #3a3631;
+  --dp-border-strong: #4d4841;
+  --dp-input-border: #3a3631;
+  --dp-surface: #232120;
+  --dp-bg: #1d1b1a;
+  --dp-warm: #2c2926;
+  --dp-card: #28251f;
+  --dp-clip-card-bg: #37332d;
+  --dp-skeleton: #3f3b36;
+  --dp-chart-track: #37332d;
+  --dp-chart-baseline: #3a3631;
+  --dp-chart-muted: #a6a09b;
+  --dp-chart-label-color: #a6a09b;
+  --dp-chart-value-color: #ece8e2;
+  --dp-chart-card-border: #3a3631;
+}
