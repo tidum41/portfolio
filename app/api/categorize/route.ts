@@ -14,7 +14,7 @@ const FALLBACK_CATEGORIES = [
 
 type CategoryInput = { name?: string; description?: string }
 
-function buildSystemPrompt(categories: CategoryInput[]) {
+function buildSystemPrompt(categories: CategoryInput[], noteCount: number) {
   const list = categories.length > 0 ? categories : FALLBACK_CATEGORIES
   const categoryBlock = list
     .filter((c) => c?.name)
@@ -29,7 +29,7 @@ function buildSystemPrompt(categories: CategoryInput[]) {
   const exampleCat = names.find((n) => n.toLowerCase() !== 'thinking') || names[0] || 'product design'
   const thinkingCat = names.find((n) => n.toLowerCase() === 'thinking') || 'thinking'
 
-  return `You are a task categorization assistant. Your job is to read a freeform note blob, extract individual tasks, lightly clean their formatting, assign each one to exactly one category, and assign a priority level.
+  return `You are a task categorization assistant. The user sends a numbered list of notes. Your job is to assign every note to exactly one category and a priority.
 
 CATEGORIES (use these exact names — the descriptions are the user's definitions of what belongs in each):
 ${categoryBlock}
@@ -39,20 +39,37 @@ PRIORITY LEVELS (do not assign to "${thinkingCat}"):
 - Soon: Should happen in the near future but not immediately critical
 - Eventually: No urgency, would be nice to do, no deadline implied
 
-FORMATTING RULES:
-- Preserve the user's exact wording and casing for task text. Do NOT change capitalization of the task text.
-- Category names must match the list above exactly (including lowercase).
-- Strip bullet characters. Each task is its own object.
-- Do not merge tasks. Do not invent tasks not in the blob.
-- "${thinkingCat}" items get priority: null
+COMPLETENESS (critical):
+- There are exactly ${noteCount} numbered notes.
+- Return exactly ${noteCount} task objects — one per note, same order as the input list.
+- Every input note must appear exactly once. Do not drop, merge, skip, or invent notes.
+- Copy each note's text verbatim into "text" (preserve casing and wording).
 
-OUTPUT: Respond only with a JSON object of the form {"tasks":[...]}. No explanation, no markdown fences. Example:
+FORMATTING RULES:
+- Category names must match the list above exactly (including lowercase).
+- Strip leading bullet/checkbox characters only; do not rewrite the note.
+- "${thinkingCat}" items get priority: null
+- "id" must be a new short random alphanumeric string (8 chars). Never reuse example ids.
+
+OUTPUT: Respond only with a JSON object of the form {"tasks":[...]}. No explanation, no markdown fences. Shape:
 {
   "tasks": [
-    { "id": "a1b2c3d4", "text": "finish wireframes for hero onboarding", "category": "${exampleCat}", "priority": "Soon" },
-    { "id": "e5f6g7h8", "text": "think about switching to a smaller studio", "category": "${thinkingCat}", "priority": null }
+    { "id": "<random>", "text": "<verbatim note 1>", "category": "${exampleCat}", "priority": "Soon" },
+    { "id": "<random>", "text": "<verbatim note 2>", "category": "${thinkingCat}", "priority": null }
   ]
 }`
+}
+
+function notesFromText(text: string) {
+  return String(text || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+}
+
+function buildUserPrompt(notes: string[]) {
+  const numbered = notes.map((n, i) => `${i + 1}. ${n}`).join('\n')
+  return `Categorize every note below. Return exactly ${notes.length} tasks in the same order.\n\n${numbered}`
 }
 
 // Groq shut down llama-3.1-8b-instant for free/developer tiers on 2026-08-16.
@@ -128,6 +145,41 @@ function extractTasks(raw: unknown, categoryNames: string[]) {
   }).filter((task) => task.text)
 }
 
+/** Align model output to the exact input note list (order-preserving). */
+function alignToInputNotes(
+  inputNotes: string[],
+  returned: ReturnType<typeof extractTasks>,
+  categoryNames: string[],
+) {
+  const byLower = new Map(categoryNames.map((n) => [n.toLowerCase(), n]))
+  const pool = [...returned]
+  const out: ReturnType<typeof extractTasks> = []
+
+  for (const note of inputNotes) {
+    const norm = note.toLowerCase()
+    let idx = pool.findIndex((t) => t.text.toLowerCase() === norm)
+    if (idx < 0) {
+      idx = pool.findIndex((t) => {
+        const rt = t.text.toLowerCase()
+        return rt && (rt.includes(norm) || norm.includes(rt))
+      })
+    }
+    if (idx >= 0) {
+      const hit = pool.splice(idx, 1)[0]
+      const cat = byLower.get(String(hit.category).toLowerCase()) || hit.category
+      out.push({ ...hit, text: note, category: cat })
+    } else {
+      out.push({
+        id: makeId(),
+        text: note,
+        category: byLower.get('thinking') || categoryNames[0] || 'thinking',
+        priority: null,
+      })
+    }
+  }
+  return out
+}
+
 function groqErrorMessage(status: number, body: string) {
   let parsed: any
   try { parsed = JSON.parse(body) } catch { parsed = null }
@@ -150,6 +202,25 @@ const json = (data: unknown, status = 200) => Response.json(data, { status })
 
 type Rule = { taskText: string; correctedCategory: string }
 
+/** Local/dev without GROQ: forward to the live site so the demo still sorts. */
+async function proxyCategorize(body: unknown) {
+  const proxyUrl = process.env.CATEGORIZE_PROXY_URL || 'https://muditm.com/api/categorize'
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const text = await res.text()
+  let data: unknown
+  try { data = JSON.parse(text) } catch {
+    return json({ error: 'Invalid response from categorize proxy' }, 502)
+  }
+  if (!res.ok) {
+    return json(typeof data === 'object' && data ? data : { error: 'Categorize proxy failed' }, res.status)
+  }
+  return json(data)
+}
+
 export async function POST(req: Request) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   if (!checkRateLimit(ip)) {
@@ -163,7 +234,17 @@ export async function POST(req: Request) {
     return json({ error: 'No text provided' }, 400)
   }
 
+  const inputNotes = notesFromText(text)
+  if (inputNotes.length === 0) {
+    return json({ error: 'No text provided' }, 400)
+  }
+
+  // No key on this machine / preview: proxy to production (skip on Vercel unless explicitly set).
   if (!process.env.GROQ_API_KEY) {
+    if (process.env.CATEGORIZE_PROXY_URL || !process.env.VERCEL) {
+      console.warn('GROQ_API_KEY unset — proxying categorize request')
+      return proxyCategorize({ text, categoryRules, categories })
+    }
     console.error('GROQ_API_KEY is not set')
     return json({ error: 'Categorization is not configured. Set GROQ_API_KEY.' }, 500)
   }
@@ -174,20 +255,23 @@ export async function POST(req: Request) {
   ).filter((c) => c?.name)
 
   const categoryNames = resolvedCategories.map((c) => String(c.name).trim())
-  const systemPrompt = buildSystemPrompt(resolvedCategories)
+  const systemPrompt = buildSystemPrompt(resolvedCategories, inputNotes.length)
 
   const model = process.env.GROQ_MODEL || DEFAULT_MODEL
   const learnedCorrections = categoryRules.length > 0
     ? `\n\nThe user has made these manual corrections before — use them:\n${categoryRules.map(r => `- "${r.taskText}" → "${r.correctedCategory}"`).join('\n')}`
     : ''
 
+  // ~80 tokens/task upper bound; pad so a 20-note blob cannot truncate mid-JSON.
+  const maxTokens = Math.min(8192, Math.max(4096, inputNotes.length * 120 + 512))
+
   const payload: Record<string, unknown> = {
     model,
-    max_tokens: 4096,
+    max_tokens: maxTokens,
     temperature: 0.2,
     messages: [
       { role: 'system', content: systemPrompt + learnedCorrections },
-      { role: 'user', content: `Here is my note blob. Extract and categorize all tasks:\n\n${text}` },
+      { role: 'user', content: buildUserPrompt(inputNotes) },
     ],
     response_format: {
       type: 'json_schema',
@@ -230,8 +314,15 @@ export async function POST(req: Request) {
 
   const data = await groqRes.json()
   const raw = data.choices?.[0]?.message?.content || ''
+  const finish = data.choices?.[0]?.finish_reason
+  if (finish === 'length') {
+    console.error('Groq response truncated (finish_reason=length)')
+    return json({ error: 'Categorization response was truncated. Try fewer notes.' }, 502)
+  }
   try {
-    return json(extractTasks(raw, categoryNames))
+    const extracted = extractTasks(raw, categoryNames)
+    const aligned = alignToInputNotes(inputNotes, extracted, categoryNames)
+    return json(aligned)
   } catch {
     console.error('Failed to parse Groq response:', raw)
     return json({ error: 'Invalid response from model' }, 502)
