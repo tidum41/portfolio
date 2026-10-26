@@ -92,6 +92,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Any "full detail" chart variant: rejected, all removed (round L, Oct 25).
 - Arrow animation on pager previous/next: remove (Oct 25).
 - Rejected Oct 25: round L (PR #134, 9ab2166): hero too complex, text dense, invented version table and chart library UI not grounded in Dialogue.
+- Rejected Oct 25: round O (PR #137, ec4e020): visually off the Dialogue system and dropped what already looked good (pinned b056865 figures, player, chart cards); also read as a chronological recount, not an intentionally framed story.
 
 ## 4. Pinned approved versions
 - b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, Add to my plan, full chart library. Restored into canvas via PR #122.
