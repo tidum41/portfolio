@@ -42,7 +42,65 @@ async function setTheme(page, theme) {
   }, theme);
 }
 
+/** Seed sorted tasks with urgencies so PriorityBadge mounts (demo dump has none). */
+const SAMPLE_TASKS = [
+  {
+    id: "pb1",
+    text: "read Norman chapter 3 before UX class tomorrow",
+    category: "School",
+    priority: "Urgent",
+    dateAdded: new Date().toISOString(),
+  },
+  {
+    id: "pb2",
+    text: "add an about section and PS3 sounds to my portfolio site",
+    category: "Product design",
+    priority: "Soon",
+    dateAdded: new Date().toISOString(),
+  },
+  {
+    id: "pb3",
+    text: "look for a standing desk",
+    category: "Home",
+    priority: "Eventually",
+    dateAdded: new Date().toISOString(),
+  },
+];
+
+async function seedPrioritizedTasks(context) {
+  await context.addInitScript((tasks) => {
+    try {
+      sessionStorage.setItem("demo:v11:tasks", JSON.stringify(tasks));
+    } catch {
+      /* ignore */
+    }
+  }, SAMPLE_TASKS);
+}
+
+async function armSkeletonWatcher(page) {
+  await page.evaluate(() => {
+    window.__aioSawSkeleton = false;
+    const watch = () => {
+      const sk = document.querySelector(".aio-demo-skel");
+      if (sk && sk.getAttribute("data-hidden") !== "true") {
+        window.__aioSawSkeleton = true;
+      }
+    };
+    watch();
+    window.__aioSkelMo?.disconnect();
+    const mo = new MutationObserver(watch);
+    mo.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-hidden"],
+    });
+    window.__aioSkelMo = mo;
+  });
+}
+
 async function openAllinone(page) {
+  await armSkeletonWatcher(page);
   const card = page.locator('[data-grid-card="project-todolist"]');
   await card.scrollIntoViewIfNeeded();
   await card.waitFor({ state: "visible", timeout: 20000 });
@@ -55,14 +113,7 @@ async function openAllinone(page) {
 }
 
 async function waitDemoReady(page) {
-  // Skeleton should appear before/while the iframe arms.
   await page.waitForSelector(".aio-demo-skel", { timeout: 10000 });
-  const sawSkeleton = await page.evaluate(() => {
-    const sk = document.querySelector(".aio-demo-skel");
-    return Boolean(sk && sk.getAttribute("data-hidden") !== "true");
-  });
-  assert(sawSkeleton, "expected AllinoneDemoSkeleton visible before ready");
-
   await page.waitForSelector(
     'iframe[title="Allinone — AI to-do list"][data-ready="true"]',
     { timeout: 25000 },
@@ -71,6 +122,12 @@ async function waitDemoReady(page) {
     const sk = document.querySelector(".aio-demo-skel");
     return sk?.getAttribute("data-hidden") === "true";
   }, { timeout: 10000 });
+
+  const sawSkeleton = await page.evaluate(() => {
+    window.__aioSkelMo?.disconnect();
+    return Boolean(window.__aioSawSkeleton);
+  });
+  assert(sawSkeleton, "expected AllinoneDemoSkeleton visible before ready crossfade");
 
   const frame = page.frameLocator('iframe[title="Allinone — AI to-do list"]');
   await frame.locator("[data-aio-priority-badge]").first().waitFor({
@@ -109,6 +166,7 @@ async function main() {
       colorScheme: "light",
       deviceScaleFactor: 1,
     });
+    await seedPrioritizedTasks(context);
     const page = await context.newPage();
     await page.goto(BASE + "/", { waitUntil: "networkidle", timeout: 60000 });
     await setTheme(page, "light");
@@ -154,6 +212,7 @@ async function main() {
       isMobile: true,
       colorScheme: "light",
     });
+    await seedPrioritizedTasks(context);
     const page = await context.newPage();
     await page.goto(BASE + "/", { waitUntil: "networkidle", timeout: 60000 });
     await setTheme(page, "light");
