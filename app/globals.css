@@ -798,14 +798,26 @@ html[data-theme="light"] {
 }
 
 /* Desktop: anchored to the (i) control; labelled clusters + Georgia why,
-   one hairline (≥1.5:1), solid CTA. Origin anim: top right. */
+   one hairline (≥1.5:1 via ink mix), solid CTA. Origin anim: top right.
+   All sizes/colors from design tokens (space / type / radius / color). */
 .project-popup-info {
+  /* Under large topbar (~space-5 + space-1) + space-1 air gap. */
+  --info-top: calc(var(--space-5) + var(--space-2));
+  --info-right: calc(var(--space-4) + var(--space-1));
+  /* ~24rem of meta column without inventing a width token. */
+  --info-width: calc(var(--fs-stat) * 8 + var(--space-4));
+  --info-edge: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  --info-hairline: color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+  --info-chip-edge: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  --info-chip-fill: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+  --info-shadow: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+
   position: absolute;
-  top: 60px; /* 52px iframe toolbar + 8px */
-  right: 40px;
-  width: min(380px, calc(100% - 52px));
-  max-width: 380px;
-  max-height: calc(100% - 68px);
+  top: var(--info-top);
+  right: var(--info-right);
+  width: min(var(--info-width), calc(100% - var(--space-5) - var(--space-1)));
+  max-width: var(--info-width);
+  max-height: calc(100% - var(--space-6) - var(--space-1) / 2);
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -813,45 +825,48 @@ html[data-theme="light"] {
   box-sizing: border-box;
   background: var(--color-bg);
   color: var(--color-text-primary);
-  border: 1px solid rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--info-edge);
   border-radius: var(--radius-panel);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 var(--space-1) var(--space-3) var(--info-shadow);
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--color-text-primary) 28%, transparent) transparent;
 }
 html[data-theme="dark"] .project-popup-info {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  border-color: rgba(255, 255, 255, 0.16);
+  --info-edge: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
+  --info-hairline: color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+  --info-chip-edge: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  --info-chip-fill: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  --info-shadow: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
 }
 .project-popup-info::-webkit-scrollbar {
-  width: 6px;
+  width: var(--radius-mosaic);
 }
 .project-popup-info::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-logo);
 }
 .project-popup-info::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .project-popup-info-inner {
-  padding: 16px 20px 20px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Labelled fact clusters — spacing rhythm 16/24, no per-row rules. */
+/* Labelled fact clusters — spacing rhythm space-2 / space-3, no per-row rules. */
 .project-popup-clusters {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
+  gap: var(--space-2) var(--space-3);
 }
 .project-popup-cluster {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: calc(var(--space-1) * 0.75);
 }
 .project-popup-cluster--timeline {
   grid-column: 1 / -1;
@@ -859,91 +874,72 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-cluster-label {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--fs-caption);
   font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: 0.06em;
+  line-height: var(--lh-caption);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--color-text-tertiary);
-}
-.project-popup-cluster-value {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: var(--ls-meta);
-  color: var(--color-text-primary);
 }
 .project-popup-cluster-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: calc(var(--space-1) * 0.75);
   min-width: 0;
 }
+/* One chip style everywhere — Helvetica Neue / Arial, never mono. */
 .project-popup-chip {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+  padding: calc(var(--space-1) / 2) var(--space-1);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--info-chip-edge);
+  background: var(--info-chip-fill);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: 0;
+  line-height: var(--lh-caption);
+  letter-spacing: var(--ls-caption);
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
-}
-.project-popup-chip--mono {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: -0.01em;
-}
-html[data-theme="dark"] .project-popup-chip {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
 }
 
 .project-popup-timeline {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-1);
 }
 .project-popup-timeline-numeral {
   font-family: var(--font-serif);
-  font-size: 40px;
+  font-size: var(--fs-stat);
   font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--ls-tight);
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 .project-popup-timeline-unit {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 400;
-  line-height: 1.3;
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
   color: var(--color-text-secondary);
 }
 
-/* One hairline ≥1.5:1 against panel (#FBFBFB / #101214). */
+/* One hairline ≥1.5:1 against panel via --info-hairline ink mix. */
 .project-popup-why {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.28);
-}
-html[data-theme="dark"] .project-popup-why {
-  border-top-color: rgba(255, 255, 255, 0.28);
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--info-hairline);
 }
 .project-popup-why-label {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-1);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--fs-caption);
   font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: 0.06em;
+  line-height: var(--lh-caption);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
@@ -951,9 +947,9 @@ html[data-theme="dark"] .project-popup-why {
   margin: 0;
   max-width: 52ch;
   font-family: var(--font-serif);
-  font-size: 14px;
-  line-height: 1.45;
-  letter-spacing: 0;
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
   color: var(--color-text-primary);
 }
 
@@ -962,23 +958,31 @@ html[data-theme="dark"] .project-popup-why {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-1);
   align-self: flex-start;
-  margin-top: 16px;
-  min-height: 36px;
-  padding: 8px 14px;
+  margin-top: var(--space-2);
+  min-height: calc(var(--space-4) + var(--space-1) / 2);
+  padding: var(--space-1) calc(var(--space-1) + var(--radius-mosaic));
   box-sizing: border-box;
-  border-radius: 6px;
+  border-radius: var(--radius-mosaic);
   background: var(--color-text-primary);
   color: var(--color-bg);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: var(--ls-meta);
+  line-height: var(--lh-sm);
+  letter-spacing: var(--ls-sm);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  transition: opacity 120ms ease-out;
+  transition: opacity 120ms var(--ease-out);
+}
+.project-popup-info-cta-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.project-popup-info-cta-icon svg {
+  width: var(--fs-sm);
+  height: var(--fs-sm);
 }
 @media (hover: hover) and (pointer: fine) {
   .project-popup-info-cta:hover {
@@ -987,7 +991,8 @@ html[data-theme="dark"] .project-popup-why {
 }
 @media (hover: none), (pointer: coarse) {
   .project-popup-info-cta {
-    min-height: 44px;
+    /* 44px touch target (TASTE.md). */
+    min-height: calc(var(--space-4) + var(--space-1) * 1.5);
     width: 100%;
   }
   .project-popup-info-cta:active {
@@ -1170,10 +1175,11 @@ html[data-theme="dark"] .aio-ht-loader {
 
   /* Dimmed backdrop behind the sheet — 200ms fade lives on the motion node. */
   .project-popup-info-scrim {
-    background: rgba(0, 0, 0, 0.4);
+    background: color-mix(in srgb, var(--color-text-primary) 40%, transparent);
   }
   html[data-theme="dark"] .project-popup-info-scrim {
-    background: rgba(0, 0, 0, 0.6);
+    /* Named black (not hex): keep dim readable over the embed in dark. */
+    background: color-mix(in srgb, black 60%, transparent);
   }
 
   /* Full-width bottom sheet — tap-open only (no hover). Scrim / swipe closes it. */
@@ -1192,35 +1198,32 @@ html[data-theme="dark"] .aio-ht-loader {
     border-left: none;
     border-right: none;
     border-bottom: none;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
-  }
-  html[data-theme="dark"] .project-popup-info {
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 calc(var(--space-1) * -1) var(--space-3) var(--info-shadow);
   }
   .project-popup-info-inner {
     mask-image: none;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-left: max(var(--space-2), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-2), env(safe-area-inset-right, 0px));
   }
   .project-popup-clusters {
-    gap: 14px 16px;
+    gap: calc(var(--space-1) + var(--radius-mosaic)) var(--space-2);
   }
   .project-popup-timeline-numeral {
-    font-size: 36px;
+    font-size: calc(var(--fs-stat) - var(--space-1));
   }
   .project-popup-why-body {
-    font-size: 13px;
-    line-height: 1.42;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-sm);
   }
 
-  /* 44px swipe target; bar is 36×4, 8px from the sheet top, ~3:1 contrast. */
+  /* 44px swipe target; bar uses space/radius tokens; ink via text-muted (~3:1). */
   .project-popup-info-handle {
     display: flex;
     align-items: flex-start;
     justify-content: center;
     flex-shrink: 0;
-    height: 44px;
-    padding-top: 8px;
+    height: calc(var(--space-4) + var(--space-1) * 1.5);
+    padding-top: var(--space-1);
     box-sizing: border-box;
     cursor: grab;
     touch-action: none;
@@ -1229,23 +1232,18 @@ html[data-theme="dark"] .aio-ht-loader {
   }
   .project-popup-info-handle-bar {
     display: block;
-    width: 36px;
-    height: 4px;
-    border-radius: 2px;
-    /* ~3:1 on sheet bg (#FBFBFB / #101214). */
-    background: #8A8A8A;
-  }
-  html[data-theme="dark"] .project-popup-info-handle-bar {
-    background: #8A8A8A;
+    width: calc(var(--space-4) + var(--space-1) / 2);
+    height: var(--radius-card);
+    border-radius: var(--radius-xs);
+    background: var(--color-text-muted);
   }
 
-  /* Clear the home indicator under the Why copy; keep 16px rhythm.
-     Top padding stays 16px under the handle so content isn’t cut off. */
+  /* Clear the home indicator under the Why copy; keep space-2 rhythm. */
   .project-popup-info .project-popup-info-inner {
-    padding-top: 8px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-top: var(--space-1);
+    padding-bottom: max(var(--space-2), env(safe-area-inset-bottom, 0px));
+    padding-left: max(var(--space-2), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--space-2), env(safe-area-inset-right, 0px));
   }
 
   /* Short landscape: keep the sheet usable without covering the whole app. */

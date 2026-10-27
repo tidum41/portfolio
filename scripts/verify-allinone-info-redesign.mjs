@@ -132,11 +132,27 @@ async function main() {
           JSON.stringify(["Stack", "AI", "Data", "Made with", "Timeline"]),
         `${prefix}: labels ${metrics.labels}`,
       );
-      assert(metrics.chips.includes("React") && metrics.chips.includes("Vite"), `${prefix}: stack chips`);
+      assert(
+        ["React", "Vite", "PWA", "Groq", "Google Sheets API", "Supabase", "Paper", "Claude Code"].every(
+          (c) => metrics.chips.includes(c),
+        ),
+        `${prefix}: chips ${metrics.chips}`,
+      );
+      assert(!metrics.chips.some((c) => /mono/i.test(c)), `${prefix}: unexpected chip`);
+      const monoChip = await page.evaluate(
+        () => document.querySelectorAll(".project-popup-chip--mono").length,
+      );
+      assert(monoChip === 0, `${prefix}: mono chip class still present`);
+      const chipFont = await page.evaluate(() => {
+        const el = document.querySelector(".project-popup-chip");
+        return el ? getComputedStyle(el).fontFamily : "";
+      });
+      assert(/Helvetica|Arial|sans-serif/i.test(chipFont), `${prefix}: chip font ${chipFont}`);
+      assert(!/mono|Geist Mono|Menlo/i.test(chipFont), `${prefix}: chip must not be mono`);
       assert(metrics.numeral === "2", `${prefix}: timeline numeral ${metrics.numeral}`);
       assert(/week/i.test(metrics.unit || ""), `${prefix}: timeline unit ${metrics.unit}`);
       assert(/Georgia/i.test(metrics.whyFont || ""), `${prefix}: why font ${metrics.whyFont}`);
-      assert(metrics.labelSize === "11px", `${prefix}: label size ${metrics.labelSize}`);
+      assert(metrics.labelSize === "12px", `${prefix}: label size ${metrics.labelSize}`);
       assert(metrics.labelTransform === "uppercase", `${prefix}: label transform`);
 
       const delta = metrics.scrollHeight - metrics.clientHeight;

@@ -710,37 +710,24 @@ export default function ProjectPopup({
                             {metaClusters.facts.map(({ key, title, values }) => (
                               <div key={key} className="project-popup-cluster">
                                 <div className="project-popup-cluster-label">{title}</div>
-                                <div
-                                  className={
-                                    key === "stack" || values.length > 1
-                                      ? "project-popup-cluster-chips"
-                                      : "project-popup-cluster-value"
-                                  }
-                                >
-                                  {key === "stack" || values.length > 1 ? (
-                                    values.map((v) => (
-                                      <span
-                                        key={v}
-                                        className={
-                                          key === "stack"
-                                            ? "project-popup-chip project-popup-chip--mono"
-                                            : "project-popup-chip"
-                                        }
-                                      >
-                                        {v}
-                                      </span>
-                                    ))
-                                  ) : (
-                                    <span>{values[0]}</span>
-                                  )}
+                                <div className="project-popup-cluster-chips">
+                                  {values.map((v) => (
+                                    <span key={v} className="project-popup-chip">
+                                      {v}
+                                    </span>
+                                  ))}
                                 </div>
                               </div>
                             ))}
                             {metaClusters.others.map(({ label, values }) => (
                               <div key={label} className="project-popup-cluster">
                                 <div className="project-popup-cluster-label">{label}</div>
-                                <div className="project-popup-cluster-value">
-                                  {values.join(", ")}
+                                <div className="project-popup-cluster-chips">
+                                  {values.map((v) => (
+                                    <span key={v} className="project-popup-chip">
+                                      {v}
+                                    </span>
+                                  ))}
                                 </div>
                               </div>
                             ))}
@@ -783,7 +770,9 @@ export default function ProjectPopup({
                             rel="noopener noreferrer"
                           >
                             <span>{infoLink.label}</span>
-                            <NortheastArrow size={12} />
+                            <span className="project-popup-info-cta-icon" aria-hidden>
+                              <NortheastArrow />
+                            </span>
                           </a>
                         )}
                       </div>
