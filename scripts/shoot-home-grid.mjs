@@ -15,8 +15,17 @@ function assert(cond, msg) {
 
 async function skipIntro(page) {
   await page.evaluate(() => {
-    document.documentElement.removeAttribute("data-intro");
+    const html = document.documentElement;
+    if (html.getAttribute("data-intro") === "playing") {
+      html.setAttribute("data-intro", "done");
+      window.dispatchEvent(new CustomEvent("intro-done"));
+    }
+    html.removeAttribute("data-intro");
   });
+  await page.waitForFunction(
+    () => !document.documentElement.hasAttribute("data-intro"),
+    { timeout: 10000 },
+  );
 }
 
 async function setTheme(page, theme) {
@@ -46,7 +55,17 @@ async function main() {
       await setTheme(page, theme);
       await skipIntro(page);
       await page.waitForSelector("[data-grid-card]", { timeout: 20000 });
-      await page.waitForTimeout(600);
+      await page.waitForFunction(
+        () => {
+          const cards = [...document.querySelectorAll("[data-grid-card]")];
+          return (
+            cards.length >= 2 &&
+            cards.every((el) => getComputedStyle(el).opacity === "1")
+          );
+        },
+        { timeout: 15000 },
+      );
+      await page.waitForTimeout(400);
 
       const ids = await page.$$eval("[data-grid-card]", (els) =>
         els.map((el) => el.getAttribute("data-grid-card")),
