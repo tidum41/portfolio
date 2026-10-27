@@ -5,6 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
+import type { PrefetchOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
@@ -25,7 +26,6 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
 import type { SanityProject } from "@/lib/sanity/queries";
 import { ALLINONE_APP_URL } from "@/lib/allinone";
 import CardFocusGrid from "@/components/CardFocusGrid";
@@ -218,14 +218,40 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   visible: boolean;
   projects: SanityProject[];
 }) {
-  const prefetchReady = useIdlePrefetch();
+  // Case-study cards fully prefetch as on main (from hydration), so a
+  // click in the first 1–2 s navigates from the prefetched payload instead of
+  // waiting for intro + idle; their RSC payloads are small.
+  const cardPrefetch = true;
   const router = useRouter();
   const warmProjectNav = (href?: string) => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitProjectNav = (href?: string) => {
-    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitProjectNav = (href?: string, e?: React.MouseEvent) => {
+    if (!href || !isCaseStudyHref(href)) return;
+    // In the first seconds main isn't hydrated yet, so a card click is a
+    // plain document load. If our prefetch of this route hasn't landed yet,
+    // a soft nav would refetch the payload while the intro is still loading
+    // media — slower than that hard load. Match main in that window.
+    if (
+      e && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey &&
+      performance.now() < 4000 &&
+      !performance.getEntriesByType("resource").some((r) => r.name.includes(`${href}?_rsc=`))
+    ) {
+      e.preventDefault();
+      window.location.assign(href);
+      return;
+    }
+    commitCaseStudyNav(href, router);
   };
+  // Prefetch the case-study routes as soon as the grid hydrates (main got
+  // this from <Link prefetch> right away; here that waited for an idle
+  // callback), so a card click in the first seconds is a cached soft nav.
+  const caseStudyHrefs = projects.map((p) => p.href).filter((h): h is string => Boolean(h && isCaseStudyHref(h))).join("|");
+  useEffect(() => {
+    if (!caseStudyHrefs) return;
+    // Full prefetch, like <Link prefetch>, so the click needs no RSC fetch.
+    for (const href of caseStudyHrefs.split("|")) router.prefetch(href, { kind: "full" as PrefetchOptions["kind"] });
+  }, [caseStudyHrefs, router]);
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
   const introReleased = useIntroReleased();
@@ -816,12 +842,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch={prefetchReady}
+                        prefetch={cardPrefetch}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(p.href, e)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
@@ -916,12 +942,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch={prefetchReady}
+                        prefetch={cardPrefetch}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(p.href, e)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>

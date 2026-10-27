@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
-import { onIntroDone, onIntroDoneAndLoaded } from "@/lib/introReady";
+import { afterIntroIdle, onIntroDone, onIntroDoneAndLoaded } from "@/lib/introReady";
+import { peekSoftNav } from "@/lib/instantNav";
 import { useDialKit } from "dialkit";
 import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
 import { warmRootMargin } from "@/lib/networkHint";
@@ -169,7 +170,19 @@ export default function MuxAutoplayCard({
       // The cards are hidden behind the first-load intro, so the player
       // script and segments wait for intro-done instead of competing with
       // the page's own JS and posters. Later cards keep their stagger.
+      let cancelDefer = () => {};
       const start = () => {
+        if (cancelled) return;
+        // A card or tab click during the intro also ends it; that page is
+        // leaving, so let its navigation go first and start the player once
+        // the browser is idle.
+        if (peekSoftNav()) {
+          cancelDefer = afterIntroIdle(run, 2500);
+          return;
+        }
+        run();
+      };
+      const run = () => {
         if (cancelled) return;
         preloadHlsModule();
         const introActive = document.documentElement.hasAttribute("data-intro");
@@ -187,6 +200,7 @@ export default function MuxAutoplayCard({
       return () => {
         cancelled = true;
         cancelIntro();
+        cancelDefer();
         window.clearTimeout(timeoutId);
       };
     }

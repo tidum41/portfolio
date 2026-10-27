@@ -11,7 +11,7 @@ import {
   loadOutlineMorph,
   type OutlineMorphComponent,
 } from "./outlineMorphLoader";
-import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
+import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary, peekSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -92,6 +92,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   useEffect(() => {
     let cancel = false;
     const start = () => {
+      // Don't parse it in the middle of a route change (e.g. a card click
+      // right after load); wait for that navigation to settle.
+      if (peekSoftNav()) {
+        window.addEventListener("soft-nav-settled", start, { once: true });
+        return;
+      }
       loadOutlineMorph().then((component) => {
         if (!cancel) setMorph(() => component);
       });
@@ -105,15 +111,24 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     const events = canHover
       ? (["pointermove", "pointerdown", "touchstart", "keydown", "focusin"] as const)
       : (["keydown", "focusin"] as const);
+    // Parse it in an idle slice, not inside the input task: a first click on
+    // a project card was otherwise sharing its frame with this chunk. A
+    // hover on the nav link itself still loads it at once (morphOn below).
+    let idle = 0;
     const onIntent = () => {
       for (const type of events) window.removeEventListener(type, onIntent, true);
-      start();
+      if (typeof window.requestIdleCallback === "function") {
+        idle = window.requestIdleCallback(start, { timeout: 400 });
+      } else {
+        idle = window.setTimeout(start, 150);
+      }
     };
     for (const type of events) {
       window.addEventListener(type, onIntent, { capture: true, passive: true });
     }
     return () => {
       cancel = true;
+      if (idle && typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
       for (const type of events) window.removeEventListener(type, onIntent, true);
     };
   }, []);
