@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
-import WorkShellPreload from "@/components/WorkShellPreload";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_PATH,
@@ -65,13 +64,10 @@ export default async function Home() {
   // The warm map is only read on "/" (HLS boot + MuxMediaSlot), so it is
   // written here rather than into every route's document.
   return (
-    <>
-    <WorkShellPreload />
     <script
       id="mux-card-warm"
       type="application/json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(warm.playlists).replace(/</g, "\\u003c") }}
     />
-    </>
   );
 }

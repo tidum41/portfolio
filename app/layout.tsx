@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// The Work grid is server-rendered on "/" but its client code can arrive
-// without its stylesheet (WorkShellPreload / lazy shell), so keep the grid
-// poster styles (358 B) render-blocking with the global CSS, as on main.
+// The Work grid is server-rendered on "/" but its code (and so its CSS
+// module) arrives through the lazy shell chunk, so keep the grid poster
+// styles (358 B) render-blocking with the global CSS, as on main.
 import "@/components/CdPlayerPoster.module.css";
 import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
