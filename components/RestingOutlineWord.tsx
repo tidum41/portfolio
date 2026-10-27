@@ -1,37 +1,41 @@
-import { OUTLINE_WORDS } from "./outlineMorphData";
+import { OUTLINE_META } from "./outlineMorphMeta";
+import { RESTING_PATHS } from "./outlineRestingPaths";
 
 /**
  * Resting nav letter, rendered on the server from the same droplet outlines
- * the morph uses at progress 0. The animated end-state paths stay out of the
- * first-load JavaScript and load with the morph on hover.
+ * the morph uses at progress 0 (stored as compact relative paths, same
+ * geometry). The animated end-state paths stay out of the first-load
+ * JavaScript and load with the morph on hover.
  * Color is inherited so the client link can mark the current page.
  */
 export default function RestingOutlineWord({ label }: { label: string }) {
-  const word =
-    OUTLINE_WORDS.find((entry) => entry.label === label) ||
-    OUTLINE_WORDS.find((entry) => entry.label.toLowerCase() === label.toLowerCase());
-  if (!word) {
+  const entry =
+    OUTLINE_META.find(([name]) => name === label) ||
+    OUTLINE_META.find(([name]) => name.toLowerCase() === label.toLowerCase());
+  const paths = entry && RESTING_PATHS[entry[0]];
+  if (!entry || !paths) {
     return <span>{label}</span>;
   }
+  const [, width, height] = entry;
 
   return (
     <span
       style={{
         display: "inline-flex",
         alignItems: "center",
-        height: word.height,
+        height,
         color: "inherit",
       }}
     >
       <svg
-        width={word.width}
-        height={word.height}
-        viewBox={`0 0 ${word.width} ${word.height}`}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
         aria-hidden
         style={{ display: "block", overflow: "visible" }}
       >
-        {word.droplets.map((droplet, index) => (
-          <path key={index} d={droplet.start} fill="currentColor" />
+        {paths.map((d, index) => (
+          <path key={index} d={d} fill="currentColor" />
         ))}
       </svg>
     </span>
