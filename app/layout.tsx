@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
-import { MUX_WARM_SSR_KEY } from "@/lib/muxWarmSsr";
-import { setSsrSlot } from "@/lib/ssrSlot";
 import MotionFeatures from "@/components/MotionFeatures";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
@@ -133,9 +131,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   ]);
   const dsStyle = designSystemToCss(ds);
 
-  // Read by BootScripts' server render (same process) so the warm map is
-  // written into the HTML once instead of also being an RSC prop.
-  setSsrSlot(MUX_WARM_SSR_KEY, muxWarm.playlists);
   return (
     <html
       lang="en"

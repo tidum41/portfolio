@@ -376,10 +376,13 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     if (cdWarm || !allowIdlePrefetch()) return;
     // ...and only once the CD card is near the viewport, so a phone that
     // never scrolls to it skips the live player and its ~1 MB of covers.
+    // Observe the live grid slot itself (a ref-tracked node), so a re-render
+    // that swaps the card re-attaches the observer instead of watching a
+    // detached element.
+    if (!gridCdEl) return;
     let obs: IntersectionObserver | null = null;
     const cancelIdle = afterIntroIdle(() => {
-      const cards = document.querySelectorAll('[data-grid-card="cd"]');
-      if (!cards.length || typeof IntersectionObserver === "undefined") {
+      if (typeof IntersectionObserver === "undefined") {
         setCdWarm(true);
         return;
       }
@@ -392,13 +395,13 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         },
         { rootMargin: "400px 0px" },
       );
-      cards.forEach((el) => obs?.observe(el));
+      obs.observe(gridCdEl);
     }, 4000);
     return () => {
       cancelIdle();
       obs?.disconnect();
     };
-  }, [openPopup, cdWarm]);
+  }, [openPopup, cdWarm, gridCdEl]);
 
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).

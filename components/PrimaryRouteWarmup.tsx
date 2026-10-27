@@ -10,10 +10,10 @@ import { usePathname } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 
-const CD_POSTERS = [
-  "/images/cd-player-poster-light.webp",
-  "/images/cd-player-poster-dark.webp",
-];
+const CD_POSTER = {
+  light: "/images/cd-player-poster-light.webp",
+  dark: "/images/cd-player-poster-dark.webp",
+} as const;
 
 export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
@@ -35,11 +35,12 @@ export default function PrimaryRouteWarmup() {
     };
 
     const warmAssets = () => {
-      for (const src of CD_POSTERS) {
-        const img = new window.Image();
-        img.decoding = "async";
-        img.src = src;
-      }
+      // Only the poster for the current theme; a theme toggle fetches the
+      // other one when it's shown, as on any image.
+      const theme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+      const img = new window.Image();
+      img.decoding = "async";
+      img.src = CD_POSTER[theme];
     };
 
     // The live CD player (and its dnd-kit) is warmed by the Work shell once

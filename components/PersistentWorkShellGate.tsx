@@ -4,14 +4,15 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
-import { afterIntroIdle } from "@/lib/introReady";
+import { afterIntroIdle, onIntroDoneAndLoaded } from "@/lib/introReady";
 import type { SanityProject } from "@/lib/sanity/queries";
 
 // The Work grid (hero, Mux cards, popups, CD/PS3 embeds) is only in the
 // first-load JS of "/". Elsewhere it mounts hidden once the page has loaded
 // and gone idle, keeping the instant return to Work, or at once if the Work
 // tab is shown first.
-const PersistentWorkShellImpl = dynamic(() => import("@/components/PersistentWorkShell"));
+const loadImpl = () => import("@/components/PersistentWorkShell");
+const PersistentWorkShellImpl = dynamic(loadImpl);
 
 
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
@@ -19,6 +20,14 @@ export function PersistentWorkShell({ projects }: { projects: SanityProject[] })
   const visible = useResolvedPrimaryTab(pathname) === "work";
   const [mounted, setMounted] = useState(visible);
   if (visible && !mounted) setMounted(true);
+
+  // Fetch the chunk as soon as the page has loaded (without mounting it), so
+  // an early Work click on a slow network only waits for the mount, not the
+  // download. Only the mount waits for idle.
+  useEffect(() => {
+    if (mounted) return;
+    return onIntroDoneAndLoaded(() => void loadImpl());
+  }, [mounted]);
 
   useEffect(() => {
     if (mounted) return;

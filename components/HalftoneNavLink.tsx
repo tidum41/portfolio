@@ -99,7 +99,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     // Load the morph (its path data is the largest lazy chunk) on the first
     // sign of a pointer or keyboard, well before it can reach a nav link,
     // instead of on idle during first load where it competed with the page.
-    const events = ["pointermove", "pointerdown", "touchstart", "keydown", "focusin"] as const;
+    // Touch-only devices never hover, so there the morph only loads for
+    // keyboard focus (or the explicit hover path below).
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    const events = canHover
+      ? (["pointermove", "pointerdown", "touchstart", "keydown", "focusin"] as const)
+      : (["keydown", "focusin"] as const);
     const onIntent = () => {
       for (const type of events) window.removeEventListener(type, onIntent, true);
       start();
