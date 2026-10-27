@@ -444,10 +444,15 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
   // globally (for anchor-link nav), which would otherwise make this snap-back
   // visibly animate instead of landing exactly where it was immediately.
+  // Skip it on the first mount: there is nothing to restore yet, and a reset
+  // at hydration would throw away a scroll the visitor made before it.
+  const firstLayoutRef = useRef(true);
   useLayoutEffect(() => {
+    const first = firstLayoutRef.current;
+    firstLayoutRef.current = false;
     if (!visible) return;
     if (!hasEverBeenActive) setHasEverBeenActive(true);
-    window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
+    if (!first) window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
     // Resume normal tracking now that we're confirmed back — the suppression
     // was only ever meant to survive the single departing transition.
     suppressTrackingRef.current = false;
