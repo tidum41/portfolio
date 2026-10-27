@@ -56,40 +56,10 @@ interface Props {
   children: ReactNode;
 }
 
-/** Desktop popover: scale + opacity from the (i) trigger, 180ms ease-out. */
 const INFO_MOTION = {
-  duration: 0.18,
-  ease: "easeOut" as const,
-};
-
-/** Map legacy/meta labels into display clusters without inventing facts. */
-function clusterKey(label: string): "stack" | "ai" | "data" | "made" | "timeline" | "other" {
-  const l = label.toLowerCase();
-  if (l.includes("stack") || l.includes("built")) return "stack";
-  if (l === "ai") return "ai";
-  if (l.includes("data")) return "data";
-  if (l.includes("made") || l.includes("designed")) return "made";
-  if (l.includes("timeline") || l.includes("time")) return "timeline";
-  return "other";
-}
-
-function clusterTitle(key: ReturnType<typeof clusterKey>, fallback: string): string {
-  switch (key) {
-    case "stack": return "Stack";
-    case "ai": return "AI";
-    case "data": return "Data";
-    case "made": return "Made with";
-    case "timeline": return "Timeline";
-    default: return fallback;
-  }
-}
-
-function parseTimeline(values: string[]): { numeral: string; unit: string } | null {
-  const raw = values.join(" ").trim();
-  const m = raw.match(/^(\d+)\s*(.*)$/);
-  if (!m) return null;
-  return { numeral: m[1], unit: m[2] || "" };
-}
+  duration: 0.16,
+  ease: EASE_OPACITY,
+} as const;
 
 // Lightweight in-page modal for grid items that are meant to be played with
 // rather than read (CD Player, Habit Tracker) — an alternative to a full
@@ -149,35 +119,12 @@ export default function ProjectPopup({
   const panelExit     = reduced ? 0.01 : PANEL_DURATION.panel.exit;
   const panelY        = reduced ? 0 : 10;
   const infoY         = reduced ? 0 : 4;
-  const infoScaleFrom = reduced ? 1 : 0.96;
   const infoDuration  = reduced ? 0.01 : INFO_MOTION.duration;
   const sheetDuration = reduced ? 0.01 : 0.2;
   /** Dimmed info-sheet scrim — 200ms fade per spec. */
   const scrimDuration = reduced ? 0.01 : 0.2;
 
   infoOpenRef.current = infoOpen;
-
-  const metaClusters = (infoMeta ?? []).reduce(
-    (acc, item) => {
-      const key = clusterKey(item.label);
-      if (key === "timeline") {
-        acc.timeline = item;
-      } else if (key === "other") {
-        acc.others.push(item);
-      } else {
-        acc.facts.push({ key, title: clusterTitle(key, item.label), values: item.values });
-      }
-      return acc;
-    },
-    {
-      facts: [] as { key: string; title: string; values: string[] }[],
-      others: [] as PopupMetaItem[],
-      timeline: null as PopupMetaItem | null,
-    },
-  );
-  const timelineParsed = metaClusters.timeline
-    ? parseTimeline(metaClusters.timeline.values)
-    : null;
 
   useLayoutEffect(() => {
     // Bottom-sheet / compact chrome below 640px AND short landscape
@@ -618,54 +565,27 @@ export default function ProjectPopup({
                       className="project-popup-info"
                       role="region"
                       aria-label="Project details"
-                      style={!isMobile ? { transformOrigin: "top right" } : undefined}
-                      initial={
-                        isMobile
-                          ? { opacity: 0, y: infoY }
-                          : { opacity: 0, scale: infoScaleFrom }
-                      }
-                      animate={
-                        isMobile
-                          ? {
-                              opacity: 1,
-                              y: sheetDragY,
-                              ...(sheetHeight != null ? { height: sheetHeight } : {}),
-                              transition: sheetDragY > 0
-                                ? { duration: 0 }
-                                : {
-                                    opacity: { duration: infoDuration, ease: INFO_MOTION.ease },
-                                    y: { duration: infoDuration, ease: INFO_MOTION.ease },
-                                    height: { duration: sheetDuration, ease: EASE_OPACITY },
-                                  },
-                            }
+                      initial={{ opacity: 0, y: infoY }}
+                      animate={{
+                        opacity: 1,
+                        y: isMobile ? sheetDragY : 0,
+                        ...(isMobile && sheetHeight != null ? { height: sheetHeight } : {}),
+                        transition: sheetDragY > 0
+                          ? { duration: 0 }
                           : {
-                              opacity: 1,
-                              scale: 1,
-                              transition: {
-                                duration: infoDuration,
-                                ease: INFO_MOTION.ease,
-                              },
-                            }
-                      }
-                      exit={
-                        isMobile
-                          ? {
-                              opacity: 0,
-                              y: infoY,
-                              transition: {
-                                opacity: { duration: infoDuration, ease: EASE_EXIT },
-                                y: { duration: infoDuration, ease: EASE_EXIT },
-                              },
-                            }
-                          : {
-                              opacity: 0,
-                              scale: infoScaleFrom,
-                              transition: {
-                                duration: infoDuration,
-                                ease: EASE_EXIT,
-                              },
-                            }
-                      }
+                              opacity: { duration: infoDuration, ease: EASE_OPACITY },
+                              y: { duration: infoDuration, ease: EASE_OPACITY },
+                              height: { duration: sheetDuration, ease: EASE_OPACITY },
+                            },
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: infoY,
+                        transition: {
+                          opacity: { duration: infoDuration, ease: EASE_EXIT },
+                          y: { duration: infoDuration, ease: EASE_EXIT },
+                        },
+                      }}
                     >
                       {isMobile && (
                         <div
@@ -703,76 +623,29 @@ export default function ProjectPopup({
                         </div>
                       )}
                       <div className="project-popup-info-inner" ref={infoInnerRef}>
-                        {(metaClusters.facts.length > 0 ||
-                          metaClusters.timeline ||
-                          metaClusters.others.length > 0) && (
-                          <div className="project-popup-clusters">
-                            {metaClusters.facts.map(({ key, title, values }) => (
-                              <div key={key} className="project-popup-cluster">
-                                <div className="project-popup-cluster-label">{title}</div>
-                                <div className="project-popup-cluster-chips">
-                                  {values.map((v) => (
-                                    <span key={v} className="project-popup-chip">
-                                      {v}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                            {metaClusters.others.map(({ label, values }) => (
-                              <div key={label} className="project-popup-cluster">
-                                <div className="project-popup-cluster-label">{label}</div>
-                                <div className="project-popup-cluster-chips">
-                                  {values.map((v) => (
-                                    <span key={v} className="project-popup-chip">
-                                      {v}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                            {metaClusters.timeline && (
-                              <div className="project-popup-cluster project-popup-cluster--timeline">
-                                <div className="project-popup-cluster-label">
-                                  {clusterTitle("timeline", metaClusters.timeline.label)}
-                                </div>
-                                {timelineParsed ? (
-                                  <div className="project-popup-timeline">
-                                    <span className="project-popup-timeline-numeral">
-                                      {timelineParsed.numeral}
-                                    </span>
-                                    {timelineParsed.unit && (
-                                      <span className="project-popup-timeline-unit">
-                                        {timelineParsed.unit}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="project-popup-cluster-value">
-                                    {metaClusters.timeline.values.join(" ")}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        <section ref={whySectionRef} className="project-popup-why">
-                          <h3 className="project-popup-why-label">Why I built it</h3>
-                          <p className="project-popup-why-body">{whyBuilt}</p>
-                        </section>
-
+                        {/* Rows reuse the case-study meta block (.cs-meta-label / .cs-meta-value). */}
+                        <div className="project-popup-meta">
+                          {(infoMeta ?? []).map(({ label, values }) => (
+                            <div key={label} className="project-popup-meta-row">
+                              <p className="cs-meta-label">{label}</p>
+                              <p className="cs-meta-value">{values.join(", ")}</p>
+                            </div>
+                          ))}
+                          <section ref={whySectionRef} className="project-popup-meta-row">
+                            <h3 className="cs-meta-label">Why I built it</h3>
+                            <p className="cs-meta-value">{whyBuilt}</p>
+                          </section>
+                        </div>
                         {infoLink && (
+                          /* Home-card external link: title type + blue northeast arrow. */
                           <a
-                            className="project-popup-info-cta"
+                            className="project-popup-info-link"
                             href={infoLink.href}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <span>{infoLink.label}</span>
-                            <span className="project-popup-info-cta-icon" aria-hidden>
-                              <NortheastArrow />
-                            </span>
+                            {infoLink.label}
+                            <NortheastArrow size={13} color="var(--color-link-blue)" />
                           </a>
                         )}
                       </div>
