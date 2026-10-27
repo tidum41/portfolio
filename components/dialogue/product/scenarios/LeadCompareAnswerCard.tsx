@@ -1,15 +1,12 @@
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
-import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
-import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
+import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
+import { PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
 import SourcePill from "@/components/dialogue/product/SourcePill";
 
-const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
-
+/** Hearthside mock data (illustrative), the same Friday finding as the hero. */
 const MINI_SOURCES = [
-  { participant: "Jordan M.", time: "14:03" },
-  { participant: "Priya K.", time: "15:47" },
+  { participant: "Mei L.", time: "18:27" },
+  { participant: "Owen P.", time: "07:12" },
 ] as const;
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
@@ -47,37 +44,25 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
     );
   }
 
-  const summary = (
-    <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
-      {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[0]}
-      <span className="dp-summary__emph">{CHECKOUT_FUNNEL.emphasis}</span>
-      {CHECKOUT_FUNNEL.summary.split(CHECKOUT_FUNNEL.emphasis)[1] ?? ""}
-    </p>
-  );
-
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
-      {summary}
-      <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
-        <ChartBarList
-          className="dp-lead-answer-card__bars"
-          rows={MINI_FUNNEL.map((step) => ({
-            label: step.label,
-            value: step.pct,
-            display: formatChartPercent(step.pct),
-            focal: "focal" in step && step.focal,
-          }))}
-          max={100}
-          fillMode="index"
+      <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
+        <span className="dp-summary__emph">18 of 24</span>{" "}shoppers read &lsquo;Arrives by Friday&rsquo; as this Friday.
+      </p>
+      <div className="dp-lead-answer-card__funnel" data-annotate-part="chart">
+        <ChartStackedBar
+          total={24}
+          segments={[
+            { label: "This Friday", value: 18, display: "18 of 24", focal: true },
+            { label: "Asked or checked", value: 6, display: "6 of 24" },
+          ]}
         />
       </div>
       <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
         {MINI_SOURCES.map((s) => (
-          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={s.participant === "Priya K."} />
+          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={s.participant === "Mei L."} />
         ))}
       </div>
-      <ClipThumbnails selectedTime="15:47" />
     </div>
   );
 }

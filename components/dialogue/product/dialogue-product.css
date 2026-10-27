@@ -2694,10 +2694,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: var(--dp-radius-chip);
-  background: var(--dp-warn-bg);
-  color: var(--dp-warn-fg);
+  padding: 0;
+  color: var(--dp-muted);
 }
 
 .dp-low-signal__icon {
@@ -2705,7 +2703,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   height: 16px;
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--dp-warn-fg);
+  color: var(--dp-muted);
 }
 
 .dp-low-signal__text {

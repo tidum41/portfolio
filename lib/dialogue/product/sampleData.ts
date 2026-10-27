@@ -1,4 +1,4 @@
-export const LEAD_COMPARE_QUESTION = "How many participants dropped off at shipping address in checkout?";
+export const LEAD_COMPARE_QUESTION = "How did shoppers read \u2018Arrives by Friday\u2019?";
 /** Mobile-only funnel, as shown in the full answer figure. */
 export const MOBILE_FUNNEL_STEPS = [
   { label: "Cart", pct: 100 },
@@ -13,8 +13,8 @@ export const STUDY_SUBTITLE = "Checkout signals, 24 interviews";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [
-  "Most shoppers hesitated over delivery dates and fees at the cart.",
-  "Nothing in the thread linked quotes back to footage or counts.",
+  "Shoppers talked about the delivery date and fees at the cart.",
+  "Many found \u2018Arrives by Friday\u2019 unclear, and some checked the date before ordering.",
 ];
 
 /** Lead option: full paragraph wall for comparison. */
@@ -156,6 +156,7 @@ export const MOBILE_FOLLOWUP = {
 };
 
 export const QUOTE_LIST = [
+  { participant: "Mei", quote: "Friday which week?" },
   { participant: "Owen", quote: "I'd assume Friday after I order, so I checked the date." },
 ];
 

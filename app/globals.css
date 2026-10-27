@@ -2489,8 +2489,16 @@ agentation-toolbar,
   align-items: start;
 }
 @media (min-width: 941px) {
+  /* Round P5: 2+1. The two ruled-out formats share the top row, the chosen
+     format takes the full width below, so no card drops under about 280px. */
   .dialogue-lead-answer__row--trio {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto auto auto;
+    grid-auto-rows: auto;
+    row-gap: 24px;
+  }
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+    grid-column: 1 / -1;
   }
   /* Round L: the three compare cards share one height, the tallest card
      sets it through the shared subgrid row. */
