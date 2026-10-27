@@ -7,14 +7,14 @@ export const MOBILE_FUNNEL_STEPS = [
   { label: "Payment", pct: 33 },
 ] as const;
 
-export const CHECKOUT_QUESTION = "Where did people drop off in checkout?";
+export const CHECKOUT_QUESTION = "How did shoppers read 'Arrives by Friday'?";
 
-export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";
+export const STUDY_SUBTITLE = "Checkout signals, 24 interviews";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [
-  "Most participants hesitated at shipping address, delivery, and payment.",
-  "Nothing in the thread linked quotes back to footage or funnel steps.",
+  "Most shoppers hesitated over delivery dates and fees at the cart.",
+  "Nothing in the thread linked quotes back to footage or counts.",
 ];
 
 /** Lead option: full paragraph wall for comparison. */
@@ -37,35 +37,22 @@ export const CHECKOUT_FUNNEL = {
 };
 
 export const SOURCES = [
-  { participant: "Jordan M.", topic: "checkout", time: "14:03" },
-  { participant: "Marcus W.", topic: "payment", time: "21:08" },
-  { participant: "Priya K.", topic: "address", time: "15:47" },
-  { participant: "Hannah L.", topic: "payment", time: "22:41" },
+  { participant: "Mei L.", topic: "delivery date", time: "18:27" },
+  { participant: "Owen P.", topic: "delivery date", time: "07:12" },
+  { participant: "Aisha K.", topic: "price at cart", time: "15:40" },
+  { participant: "Tomas R.", topic: "returns", time: "12:04" },
+  { participant: "Hannah L.", topic: "delivery date", time: "09:18" },
 ];
 
 export const FOLLOW_UPS = ["Address step only", "Compare to the first study"];
 
 export const CLIPS = [
   {
-    id: "ship-1",
-    participant: "Jordan M.",
-    segment: "14:03–14:19",
-    transcript: "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
-    highlight: "almost closed the tab",
-  },
-  {
-    id: "ship-2",
-    participant: "Priya K.",
-    segment: "15:47–16:04",
-    transcript: "International format wasn't obvious; I typed the whole address twice before it stuck.",
-    highlight: "typed the whole address twice",
-  },
-  {
-    id: "mobile-intl",
-    participant: "Priya K.",
-    segment: "16:02–16:18",
-    transcript: "On my phone the country switch reset everything, so I had to start the address over.",
-    highlight: "start the address over",
+    id: "friday-1",
+    participant: "Mei",
+    segment: "18:27\u201318:49",
+    transcript: "Friday which week?",
+    highlight: "Friday which week?",
   },
 ];
 
@@ -136,10 +123,40 @@ export const ADDRESS_FOLLOWUP = {
   ],
 };
 
+/** Full-answer section: follow-up filter, not the hero checkout funnel. */
+export const MOBILE_FOLLOWUP = {
+  question: "Show mobile only",
+  summary: "On mobile, the apartment field clearing was the sharpest address complaint.",
+  drawerSub: "6 moments from mobile sessions",
+  clips: [
+    {
+      id: "mob-1",
+      participant: "Jordan M.",
+      segment: "14:03–14:19",
+      transcript:
+        "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
+      highlight: "almost closed the tab",
+    },
+    {
+      id: "mob-2",
+      participant: "Priya K.",
+      segment: "16:02–16:18",
+      transcript:
+        "On my phone the country switch reset everything, so I had to start the address over.",
+      highlight: "start the address over",
+    },
+    {
+      id: "mob-3",
+      participant: "Sam R.",
+      segment: "11:22–11:40",
+      transcript: "I gave up on saved address and typed it again with my thumbs.",
+      highlight: "gave up on saved address",
+    },
+  ],
+};
+
 export const QUOTE_LIST = [
-  { participant: "Jordan M.", quote: "I almost closed the tab when autocomplete cleared the apartment field." },
-  { participant: "Priya K.", quote: "International format wasn't obvious on mobile." },
-  { participant: "Sam R.", quote: "Fees showed up late enough that I double-checked the cart." },
+  { participant: "Owen", quote: "I'd assume Friday after I order, so I checked the date." },
 ];
 
 export const ANATOMY_LABELS = [

@@ -4,18 +4,22 @@ import dynamic from "next/dynamic";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
+import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
-import HearthsideViewport from "@/components/dialogue/HearthsideViewport";
+import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
+import QuerySearchStep from "@/components/dialogue/product/QuerySearchStep";
+import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
+import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import BeforeChatFigure from "@/components/dialogue/product/hearthside/BeforeChatFigure";
-import ClipsFigure from "@/components/dialogue/product/hearthside/ClipsFigure";
-import ComparisonRowsFigure from "@/components/dialogue/product/hearthside/ComparisonRowsFigure";
-import CountsOpenFigure from "@/components/dialogue/product/hearthside/CountsOpenFigure";
-import HeroLayeredFigure from "@/components/dialogue/product/hearthside/HeroLayeredFigure";
-import LevelsToggleFigure from "@/components/dialogue/product/hearthside/LevelsToggleFigure";
-import ScopePairFigure from "@/components/dialogue/product/hearthside/ScopePairFigure";
-import ThinPlanFigure from "@/components/dialogue/product/hearthside/ThinPlanFigure";
+import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
+import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
+import SourcesRow from "@/components/dialogue/product/SourcesRow";
+import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import "@/components/dialogue/product/dialogue-product.css";
 
@@ -35,17 +39,27 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "takeaway", label: "Takeaway" },
 ];
 
+const FRIDAY_QUESTION = "How did shoppers read \u2018Arrives by Friday\u2019?";
+const FRIDAY_FINDING =
+  "18 of 24 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
+
 function Section({
   id,
-  marginTop,
   children,
 }: {
   id: string;
-  marginTop: number;
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} style={{ scrollMarginTop: 96, marginTop }}>
+    <section
+      id={id}
+      className="dialogue-cs-section"
+      style={{
+        scrollMarginTop: 96,
+        paddingBottom: 0,
+        marginBottom: "var(--dialogue-section-gap)",
+      }}
+    >
       <ScrollReveal>{children}</ScrollReveal>
     </section>
   );
@@ -59,48 +73,48 @@ function StatusLine({ children }: { children: React.ReactNode }) {
   return <p className="cs-status-line">{children}</p>;
 }
 
+function Caption({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="dialogue-caption cs-caption">
+      <span className="dialogue-caption__sentence">{children}</span>
+    </p>
+  );
+}
+
+/** A scaled product figure: Rachel frame, static wrapper, 448 panel viewport. */
 function ProductFigure({
   caption,
   name,
-  title,
-  innerWidth = 448,
-  phoneCap = 520,
+  maxHeight,
   children,
 }: {
   caption: string;
   name: string;
-  title: string;
-  innerWidth?: number;
-  phoneCap?: number;
+  maxHeight: number;
   children: React.ReactNode;
 }) {
   return (
     <figure className="cs-figure dialogue-live-block">
       <DialogueRachelFrame label={caption} tone="system">
-        <HearthsideViewport name={name} title={title} innerWidth={innerWidth} phoneCap={phoneCap}>
-          {children}
-        </HearthsideViewport>
+        <StaticFigure figure={name}>
+          <ScaledChatViewport maxHeight={maxHeight}>{children}</ScaledChatViewport>
+        </StaticFigure>
       </DialogueRachelFrame>
     </figure>
   );
 }
 
-/** A figure whose content is native column width (no scaled chat panel). */
-function NativeFigure({
-  caption,
-  children,
-}: {
-  caption: string;
-  children: React.ReactNode;
-}) {
+function FridayBar() {
   return (
-    <figure className="cs-figure dialogue-live-block">
-      <DialogueRachelFrame label={caption} tone="system">
-        <div className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}>
-          {children}
-        </div>
-      </DialogueRachelFrame>
-    </figure>
+    <ChartVizCard title={FRIDAY_FINDING}>
+      <ChartStackedBar
+        total={24}
+        segments={[
+          { label: "Read it as this Friday", value: 18, display: "18 of 24", focal: true },
+          { label: "Did not", value: 6, display: "6 of 24" },
+        ]}
+      />
+    </ChartVizCard>
   );
 }
 
@@ -129,33 +143,31 @@ export function DialogueCaseStudyContent({
           >
             <p className="cs-hero-body">
               Dialogue runs AI-moderated interviews and turns them into a study site with a chat.
-              I redesigned how that chat answers, so a team can see who said something and how
-              many people said it. Part of it shipped, and the rest is shown as concept.
+              I redesigned how that chat answers: who said it, and how many.
             </p>
-            <p className="cs-hero-meta-line">
-              Dialogue&rsquo;s customers include Google, Meta, TikTok, Afterpay, Nextdoor and
-              Wayfair.
-            </p>
-            <div style={{ marginTop: 28 }}>
-              <DialogueRachelFrame label="Figure: the study chat answer with its count and the quote behind it">
-                <HearthsideViewport
-                  name="dialogue-hero"
-                  title="The study chat answer with its count bar, Mei's quote card and its clip thumbnail"
-                  phoneCap={560}
+            <div className="cs-hero-media-frame">
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame
+                  label="Figure: the answer, its count and its quote"
+                  tone="system"
                 >
-                  <HeroLayeredFigure />
-                </HearthsideViewport>
-              </DialogueRachelFrame>
+                  <StaticFigure figure="hero">
+                    <ScaledChatViewport maxHeight={320}>
+                      <StudyChatShell hideComposer>
+                        <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
+                        <FridayBar />
+                        <ClipQuotes />
+                      </StudyChatShell>
+                    </ScaledChatViewport>
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
             </div>
-            <p className="dialogue-caption">
-              <span className="dialogue-caption__sentence">
-                One answer, traced to the person who said it.
-              </span>
-            </p>
+            <Caption>One answer, traced to the person who said it; illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
-            <Section id="problem" marginTop={64}>
+            <Section id="problem">
               <ClaimH2>Teams needed to check an answer before sharing it</ClaimH2>
               <CaseStudyBody>
                 I did a desk research deep dive on how UX research teams work, using NN/g, Maze,
@@ -164,16 +176,18 @@ export function DialogueCaseStudyContent({
                 findings with non-researchers within hours. The chat answered with a theme list,
                 lost the subject on a follow-up, and summed up with a table of names.
               </CaseStudyBody>
-              <ProductFigure
-                caption="Recreated with invented data"
-                name="dialogue-before-chat"
-                title="The chat as it was: an emoji theme list, a follow-up it could not answer, and a raw-text table of names"
-              >
-                <BeforeChatFigure />
-              </ProductFigure>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame label="Recreated with invented data" tone="system">
+                  <DialogueProductFigure
+                    scenario="problem-paragraphs"
+                    title="The chat as it was: a short prose answer with no count and no link back to the interviews"
+                  />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>Recreated with invented data.</Caption>
             </Section>
 
-            <Section id="study-wide" marginTop={64}>
+            <Section id="study-wide">
               <ClaimH2>I moved the chat from one interview to the whole study</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
@@ -181,12 +195,19 @@ export function DialogueCaseStudyContent({
                 study, so I moved it up to all 24 interviews. Every answer then had to say how
                 much of the study it covered.
               </CaseStudyBody>
-              <NativeFigure caption="The chat moved from one interview to the whole study.">
-                <ScopePairFigure />
-              </NativeFigure>
+              <ProductFigure
+                caption="The chat moved from one interview to the whole study"
+                name="study-wide"
+                maxHeight={520}
+              >
+                <StudyChatShell hideComposer>
+                  <QuerySearchStep searched={24} found={18} />
+                </StudyChatShell>
+              </ProductFigure>
+              <Caption>The chat moved from one interview to the whole study; illustrative data.</Caption>
             </Section>
 
-            <Section id="counts" marginTop={64}>
+            <Section id="counts">
               <ClaimH2>Counts read as 18 of 24, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
@@ -194,15 +215,20 @@ export function DialogueCaseStudyContent({
                 reads 18 of 24, and tapping either side opens the quotes behind it.
               </CaseStudyBody>
               <ProductFigure
-                caption="Tapping 18 or 6 opens the people behind the count."
-                name="dialogue-counts-open"
-                title="The count bar with the 6 of 24 segment outlined and both segments' evidence open beneath"
+                caption="Tapping 18 or 6 opens the people behind the count"
+                name="counts-open"
+                maxHeight={520}
               >
-                <CountsOpenFigure />
+                <StudyChatShell hideComposer>
+                  <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
+                  <FridayBar />
+                  <QuoteListFigure focus="answer" />
+                </StudyChatShell>
               </ProductFigure>
+              <Caption>Tapping 18 or 6 opens the people behind the count; illustrative data.</Caption>
             </Section>
 
-            <Section id="comparison" marginTop={64}>
+            <Section id="comparison">
               <ClaimH2>Comparisons answer with one row per segment</ClaimH2>
               <CaseStudyBody>
                 Teams asked how first-time buyers differ from repeat buyers, so comparisons get
@@ -210,28 +236,81 @@ export function DialogueCaseStudyContent({
                 claims, free returns for first-time buyers and the Friday promise for repeat
                 buyers, and both rest on the screener&rsquo;s segment tags being right.
               </CaseStudyBody>
-              <NativeFigure caption="Each segment keeps its own count and its own evidence.">
-                <ComparisonRowsFigure />
-              </NativeFigure>
+              <ProductFigure
+                caption="Each segment keeps its own count and its own evidence"
+                name="comparison-rows"
+                maxHeight={520}
+              >
+                <StudyChatShell hideComposer>
+                  <UserMessageBubble>
+                    How do first-time and repeat buyers differ?
+                  </UserMessageBubble>
+                  <ChartVizCard title="Free returns for first-time buyers, the Friday promise for repeat buyers.">
+                    <ChartBarList
+                      rows={[{ label: "First-time", value: 6, display: "6 of 9", focal: true }]}
+                      max={9}
+                    />
+                    <SourcesRow selectedParticipant="Tomas R." selectedTime="12:04" />
+                    <ChartBarList
+                      rows={[{ label: "Repeat", value: 7, display: "7 of 10" }]}
+                      max={10}
+                    />
+                    <SourcesRow selectedParticipant="Hannah L." selectedTime="09:18" />
+                  </ChartVizCard>
+                </StudyChatShell>
+              </ProductFigure>
+              <Caption>Each segment keeps its own count and its own evidence; illustrative data.</Caption>
             </Section>
 
-            <Section id="levels" marginTop={64}>
+            <Section id="levels">
               <ClaimH2>Each answer lets a team stop at the depth it needs</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
                 A stakeholder needs the sentence and a researcher needs the evidence. The answer
                 leads with a sentence and its count, and quotes sit one tap below.
               </CaseStudyBody>
-              <ProductFigure
-                caption="One answer at three depths; the deepest keeps the count, the quote and the clip."
-                name="dialogue-levels-toggle"
-                title="One answer panel with a three-step depth toggle, shown at the deepest step"
-              >
-                <LevelsToggleFigure />
-              </ProductFigure>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame
+                  label="Figure: one answer shown at three depths, with the deepest marked as chosen"
+                  tone="system"
+                >
+                  <DialogueLeadAnswerCompare
+                    heading="The same answer at three depths"
+                    subheading="Each option keeps the question at the top; the difference is how much evidence travels with the answer."
+                    options={[
+                      {
+                        id: "text-only",
+                        title: "Text only",
+                        label: "Text only",
+                        costLine: "Costs: nothing to check the claim against, and nothing to quote.",
+                        productScenario: "decision-paragraphs",
+                      },
+                      {
+                        id: "direct-quotes",
+                        title: "Direct quotes",
+                        label: "Direct quotes",
+                        costLine: "Costs: the reader still does the counting.",
+                        productScenario: "decision-quotes",
+                      },
+                      {
+                        id: "answer-evidence",
+                        title: "Answer and evidence",
+                        label: "Answer and evidence",
+                        costLine: "Costs: the most room in the thread.",
+                        productScenario: "decision-structured",
+                      },
+                    ]}
+                    chosenId="answer-evidence"
+                  />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>
+                One answer at three depths; the deepest keeps the count, the quote and the clip;
+                illustrative data.
+              </Caption>
             </Section>
 
-            <Section id="clips" marginTop={64}>
+            <Section id="clips">
               <ClaimH2>Playing the clip in place kept the answer in view</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
@@ -241,17 +320,24 @@ export function DialogueCaseStudyContent({
                 with the transcript following. Video is heavy in a chat panel, so it loads only
                 on tap.
               </CaseStudyBody>
-              <ProductFigure
-                caption="A quote opens its clip right where the answer is."
-                phoneCap={470}
-                name="dialogue-clips-in-chat"
-                title="Mei's quote card open into the clip playing in the chat, with her transcript line highlighted"
-              >
-                <ClipsFigure />
-              </ProductFigure>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame
+                  label="Figure: Mei's quote card over the clip playing in the chat"
+                  tone="system"
+                >
+                  <div className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}>
+                    <ClipQuotes />
+                  </div>
+                  <DialogueProductFigure
+                    scenario="clip-player"
+                    title="The clip playing in the chat, with Mei's transcript line highlighted"
+                  />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>A quote opens its clip right where the answer is; illustrative data.</Caption>
             </Section>
 
-            <Section id="thin-data" marginTop={64}>
+            <Section id="thin-data">
               <ClaimH2>Thin findings say so and stay easy to check</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
@@ -261,16 +347,30 @@ export function DialogueCaseStudyContent({
                 into a prompt for the team&rsquo;s own tools. I have no outcome numbers, so next
                 I&rsquo;d test whether flagged findings change what teams plan.
               </CaseStudyBody>
-              <ProductFigure
-                caption="A thin finding gets flagged, then becomes a prompt for the next study."
-                name="dialogue-thin-plan"
-                title="The thin-data answer with its Early signal flag and the Add to my plan prompt it copies"
-              >
-                <ThinPlanFigure />
-              </ProductFigure>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame
+                  label="Figure: the thin-data answer with its flag and plan action"
+                  tone="system"
+                >
+                  <DialogueProductFigure
+                    scenario="thin-data"
+                    title="The thin-data answer with its Early signal flag and the Add to my plan beat"
+                  />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>
+                A thin finding gets flagged, then becomes a prompt for the next study;
+                illustrative data.
+              </Caption>
             </Section>
 
-            <section id="takeaway" className="cs-takeaway" style={{ scrollMarginTop: 96 }}>
+            <section
+              id="takeaway"
+              className="cs-takeaway"
+              style={{
+                scrollMarginTop: 96,
+              }}
+            >
               <ScrollReveal>
                 <p className="cs-takeaway__text">
                   I study how UX research teams work, design inside Dialogue&rsquo;s own system,

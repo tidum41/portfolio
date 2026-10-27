@@ -554,6 +554,39 @@ html[data-theme="dark"] .project-card::before {
 /* ─── Card focus — grid cards only (JS: data-card-focus) ─────────────
    Hero, nav, and footer never dim. Focus is pointer-over-card only. */
 :root {
+  --dlg-fs-11: 11px;
+  --dlg-fs-12-5: 12.5px;
+  --dlg-fs-13: 13px;
+  --dlg-fs-15: 15px;
+  --dlg-fs-16: 16px;
+  --dlg-fs-22: 22px;
+  --dlg-fs-28: 28px;
+  --dlg-cherry: #b43f7f;
+  --dlg-cherry-bright: #fe93ce;
+  --dlg-selected-outline: rgb(214 70 140 / 55%);
+  --dlg-selected-shadow: rgb(214 70 140 / 12%);
+  --dlg-ink-18: rgb(28 25 23 / 18%);
+  --dlg-ink-8: rgb(28 25 23 / 8%);
+  --dlg-stone-500: #79716b;
+  --dlg-paper: #fff;
+  --dlg-border-soft: #e7e5e4;
+  --dlg-ink-900: #171412;
+  --dlg-grey-600: #404040;
+  --dlg-grey-500: #737373;
+  --dlg-radius-14: 14px;
+  --radius-chip: 8px;
+  --dlg-min-26: 26px;
+  --dlg-live-280: 280px;
+  --dlg-space-46: 46px;
+  --dlg-space-14: 14px;
+  --dlg-pad-12-14: 12px 14px;
+  --dlg-pad-18-20: 18px 20px;
+  --dlg-pad-cell: 3px 10px 3px 0;
+  --dlg-pad-6-10: 6px 10px;
+  --dlg-dark-ink: #f4f2ef;
+  --dlg-dark-muted: #a8a49e;
+  --figure-well-dialogue: #f7f7f5;
+  --dlg-caption-ink-light: #6b6b6b;
   --work-focus-recede: 0.35;
   --work-focus-in: 120ms;
   --work-focus-out: 160ms;
@@ -2186,7 +2219,7 @@ agentation-toolbar,
   align-items: baseline;
   gap: 8px;
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: var(--dlg-fs-15);
   line-height: 1.4;
   color: var(--color-text-primary);
 }
@@ -2231,7 +2264,7 @@ agentation-toolbar,
   /* Round L: one neutral figure card. Near-white well in light, the dark
      counterpart in dark, 8px radius (already --radius-control), and no
      inset border box on any figure frame. */
-  --figure-well: #f7f7f5;
+  --figure-well: var(--figure-well-dialogue);
   --dp-figure-surface-system: var(--figure-well);
   --dp-figure-surface-problem: var(--figure-well);
   --dp-figure-surface-solution: var(--figure-well);
@@ -2270,7 +2303,7 @@ agentation-toolbar,
 .dialogue-caption {
   margin: 24px 0 0;
   max-width: 640px;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 1.4;
   color: var(--caption-ink);
 }
@@ -2515,7 +2548,7 @@ agentation-toolbar,
 }
 .dialogue-lead-answer__chosen-row {
   margin: 0 0 8px;
-  min-height: 26px;
+  min-height: var(--dlg-min-26);
   display: flex;
   align-items: center;
 }
@@ -2536,9 +2569,9 @@ agentation-toolbar,
   width: 100%;
 }
 .dialogue-lead-answer__panel--selected .dialogue-lead-answer__option-card {
-  outline: 2px solid rgb(214 70 140 / 55%);
+  outline: 2px solid var(--dlg-selected-outline);
   outline-offset: 0;
-  box-shadow: 0 10px 28px rgb(214 70 140 / 12%);
+  box-shadow: 0 10px 28px var(--dlg-selected-shadow);
 }
 .dialogue-lead-answer__panel .dialogue-product-block {
   display: flex;
@@ -2583,7 +2616,7 @@ agentation-toolbar,
 .dialogue-evidence-pull {
   margin: 24px 0;
   padding: 0 0 0 8px;
-  border-left: 2px solid rgb(28 25 23 / 18%);
+  border-left: 2px solid var(--dlg-ink-18);
   max-width: 640px;
 }
 .dialogue-evidence-pull__quote {
@@ -2596,7 +2629,7 @@ agentation-toolbar,
 }
 .dialogue-evidence-pull__meta {
   margin: 8px 0 0;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 1.4;
   color: var(--color-text-muted);
 }
@@ -2608,10 +2641,10 @@ agentation-toolbar,
   gap: 0;
   margin: 0;
   max-width: 640px;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 1.4;
   color: var(--color-text-secondary);
-  border-top: 1px solid rgb(28 25 23 / 8%);
+  border-top: 1px solid var(--dlg-ink-8);
 }
 .dialogue-chart-map__head,
 .dialogue-chart-map__row {
@@ -2619,13 +2652,13 @@ agentation-toolbar,
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 16px;
   padding: 8px 0;
-  border-bottom: 1px solid rgb(28 25 23 / 8%);
+  border-bottom: 1px solid var(--dlg-ink-8);
 }
 .dialogue-chart-map__head {
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: #79716b;
+  color: var(--dlg-stone-500);
 }
 .dialogue-chart-gallery {
   display: grid;
@@ -2655,7 +2688,7 @@ agentation-toolbar,
   align-items: stretch;
   min-height: 0;
   /* Fill equal-height rows with the chat surface, not empty grey. */
-  background: var(--dp-surface, #fcfbf9);
+  background: var(--dp-surface);
 }
 .dialogue-chart-gallery__cell .dialogue-product-block,
 .dialogue-chart-gallery__cell .dialogue-react-figure,
@@ -2758,16 +2791,16 @@ agentation-toolbar,
   }
   .dialogue-placement-compare__cell .dialogue-rachel-frame {
     height: 100%;
-    min-height: 280px;
+    min-height: var(--dlg-live-280);
   }
   .dialogue-placement-compare__cell .dialogue-rachel-frame__pad {
     flex: 1;
-    min-height: 280px;
+    min-height: var(--dlg-live-280);
     display: flex;
     flex-direction: column;
   }
   .dialogue-placement-compare .dp-placement-layer--scene {
-    height: 280px;
+    height: var(--dlg-live-280);
     flex: 1;
   }
 }
@@ -2818,7 +2851,7 @@ agentation-toolbar,
 }
 .dialogue-lib__name {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--dlg-fs-16);
   line-height: 1.4;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -2927,7 +2960,7 @@ agentation-toolbar,
 }
 .dialogue-lib__chart .dp-chart-viz-card {
   flex: 1 1 auto;
-  background: var(--dp-surface, #fcfbf9);
+  background: var(--dp-surface);
   border-color: transparent;
   /* Concentric: inner radius is the frame radius minus the frame padding. */
   border-radius: calc(var(--dp-radius-control) - var(--dp-lib-pad));
@@ -2941,7 +2974,7 @@ html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
 }
 .dialogue-lib__tech p {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 1.5;
   font-weight: 400;
   color: var(--color-text-secondary);
@@ -2965,17 +2998,17 @@ html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
   display: inline-block;
   margin: 0;
   padding: 2px 8px;
-  border-radius: var(--radius-chip, 8px);
+  border-radius: var(--radius-chip);
   background: transparent;
-  color: #b43f7f;
-  box-shadow: inset 0 0 0 1px #b43f7f;
-  font-size: 11px;
+  color: var(--dlg-cherry);
+  box-shadow: inset 0 0 0 1px var(--dlg-cherry);
+  font-size: var(--dlg-fs-11);
   font-weight: 500;
   line-height: 1.4;
 }
 html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
-  color: #fe93ce;
-  box-shadow: inset 0 0 0 1px #fe93ce;
+  color: var(--dlg-cherry-bright);
+  box-shadow: inset 0 0 0 1px var(--dlg-cherry-bright);
 }
 
 /* Hero moment (round H): the whole answer in one full-width card. The funnel
@@ -3006,21 +3039,21 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
   flex-direction: column;
   gap: 4px;
   justify-content: center;
-  padding: 12px 14px;
+  padding: var(--dlg-pad-12-14);
   border: 1px solid var(--dp-border);
   border-radius: var(--dp-radius-control);
   min-width: 0;
 }
 .dialogue-hero-moment__thin-count {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 20px;
   font-weight: 500;
   color: var(--dp-brand);
 }
 .dialogue-hero-moment__thin-text {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 20px;
   color: var(--dp-muted);
 }
@@ -3043,33 +3076,33 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
 .dialogue-version-table {
   max-width: 560px;
   margin: 0 auto;
-  padding: 18px 20px;
-  background: #fff;
-  border: 1px solid #e7e5e4;
-  border-radius: 14px;
-  color: #171412;
+  padding: var(--dlg-pad-18-20);
+  background: var(--dlg-paper);
+  border: 1px solid var(--dlg-border-soft);
+  border-radius: var(--dlg-radius-14);
+  color: var(--dlg-ink-900);
   text-align: left;
 }
 
 .dialogue-version-table__question {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 19px;
   font-weight: 500;
 }
 
 .dialogue-version-table__title {
   margin: 16px 0 4px;
-  font-size: 13px;
+  font-size: var(--dlg-fs-13);
   line-height: 19px;
   font-weight: 500;
 }
 
 .dialogue-version-table__note {
   margin: 6px 0 0;
-  font-size: 12.5px;
+  font-size: var(--dlg-fs-12-5);
   line-height: 18px;
-  color: #404040;
+  color: var(--dlg-grey-600);
 }
 
 .dialogue-version-table__title:first-of-type {
@@ -3079,21 +3112,21 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
 .dialogue-version-table__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: var(--dlg-fs-12-5);
   line-height: 18px;
 }
 
 .dialogue-version-table__table th,
 .dialogue-version-table__table td {
-  padding: 3px 10px 3px 0;
-  border-bottom: 1px solid #e7e5e4;
+  padding: var(--dlg-pad-cell);
+  border-bottom: 1px solid var(--dlg-border-soft);
   font-weight: 400;
   text-align: left;
 }
 
 .dialogue-version-table__table thead th {
-  color: #737373;
-  border-bottom: 1px solid #171412;
+  color: var(--dlg-grey-500);
+  border-bottom: 1px solid var(--dlg-ink-900);
 }
 
 .dialogue-version-table__table tbody tr:last-child td {
@@ -3134,8 +3167,8 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
    ink tokens are dark on the dark well. Flip the two tokens for this block
    only; inside the chat shells it stays on the light product surface. */
 html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
-  --dp-ink: #f4f2ef;
-  --dp-muted: #a8a49e;
+  --dp-ink: var(--dlg-dark-ink);
+  --dp-muted: var(--dlg-dark-muted);
 }
 
 /* A paragraph that follows a figure starts clear of its caption. */
@@ -3158,7 +3191,7 @@ html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
   /* The transcript scroll button gets its own gutter, so it never sits on a
      line of the transcript. */
   .dialogue-case-study .dp-synced-transcript__viewport {
-    padding-right: 46px;
+    padding-right: var(--dlg-space-46);
   }
 
   /* Round J: on phones the evolution reads in version order, two, three,
@@ -3196,16 +3229,16 @@ html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
 }
 @media (max-width: 600px) {
   .dialogue-case-study .dp-search-step {
-    padding: 6px 10px;
+    padding: var(--dlg-pad-6-10);
     gap: 6px;
   }
   .dialogue-case-study .dp-search-step__text {
-    font-size: 11px;
+    font-size: var(--dlg-fs-11);
     line-height: 15px;
   }
   .dialogue-case-study .dp-search-step__chevron {
-    width: 14px;
-    height: 14px;
+    width: var(--dlg-space-14);
+    height: var(--dlg-space-14);
   }
   .dialogue-case-study .dp-counter__quote {
     white-space: normal;
@@ -3223,9 +3256,8 @@ html[data-theme="dark"] {
   --figure-well: #1b1e21;
   --figure-well-border: rgba(255, 255, 255, 0.04);
 }
-/* Round L: the Dialogue figure well keeps its dark counterpart in dark. */
-html[data-theme="dark"] .dialogue-case-study {
-  --figure-well: #1b1e21;
+html[data-theme="dark"] {
+  --figure-well-dialogue: #1b1e21;
 }
 /* Round L: Dialogue figure frames carry no inset border box. */
 .dialogue-case-study .dialogue-rachel-frame,
@@ -3328,397 +3360,64 @@ html[data-theme="dark"] {
   }
 }
 
-/* Round P3: status lines take the muted dark tone in dark mode, and
-   product panels inside case-study figures carry no drop shadow. */
-html[data-theme="dark"] .dialogue-case-study .cs-status-line {
-  color: #a8a49e;
-}
-
-.dialogue-case-study .dialogue-rachel-frame .dp-study-chat,
-.dialogue-case-study .dialogue-rachel-frame .dp-compare-panel,
-.dialogue-case-study .dialogue-rachel-frame .dp-scope-headers__panel {
-  box-shadow: none;
-}
-
-/* Round P: on /dialogue the TOC's first label cap top aligns with the hero
-   h1's cap top. The back link leaves the vertical stack (absolute, in the
-   48px above the aside, its foot at the nav's bottom edge) and the list
-   starts at the aside top, nudged 3px so the caps land level. */
-.dialogue-case-study .cs-back-desktop {
-  position: absolute;
-  top: -48px;
-  left: 0;
-  margin-bottom: 0;
-}
-
-.dialogue-case-study .cs-aside nav {
-  margin-top: 3px;
-}
-
-/* Round P: claim headings, status lines, hero meta, needs list, levels
-   specimens, and the takeaway, scoped to the Dialogue case study. */
+/* Round P4: story chrome on tokens. Claim headings state the point; the
+   status line sits directly under the heading in sections 2 to 7. */
 .dialogue-case-study .cs-claim-h2 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 28px;
+  font-family: Georgia, serif;
+  font-size: var(--dlg-fs-28);
   line-height: 34px;
   font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--color-text-primary);
   margin: 0 0 16px;
   max-width: 640px;
 }
-
+.dialogue-case-study .cs-status-line {
+  font-size: var(--dlg-fs-13);
+  line-height: 18px;
+  color: var(--dlg-stone-500);
+  margin: -8px 0 16px;
+}
+html[data-theme="dark"] .dialogue-case-study .cs-status-line {
+  color: var(--dlg-dark-muted);
+}
+.dialogue-case-study .cs-hero-body {
+  font-size: var(--dlg-fs-16);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  max-width: 640px;
+  margin: 0 0 16px;
+}
+.dialogue-case-study .cs-takeaway {
+  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 96px;
+  padding-top: 32px;
+}
+.dialogue-case-study .cs-takeaway__text {
+  font-size: var(--dlg-fs-16);
+  line-height: 1.6;
+  max-width: 640px;
+  margin: 0;
+}
 @media (max-width: 600px) {
   .dialogue-case-study .cs-claim-h2 {
-    font-size: 22px;
+    font-size: var(--dlg-fs-22);
     line-height: 28px;
   }
 }
 
-.dialogue-case-study .cs-status-line {
-  font-size: 13px;
-  line-height: 18px;
-  color: #79716b;
-  margin: -8px 0 16px;
+/* Round P4: section captions sit on the dark page bg and need the dark
+   muted token to clear AA (the stone caption tone measures 3.13:1 there).
+   Frame and compare captions sit on light bands in both themes, so they
+   keep the light caption ink in dark mode. */
+html[data-theme="dark"] .dialogue-case-study .cs-caption .dialogue-caption__label,
+html[data-theme="dark"] .dialogue-case-study .cs-caption .dialogue-caption__sentence {
+  color: var(--dlg-dark-muted);
 }
 
-.dialogue-case-study .cs-hero-body {
-  font-size: var(--body-font-size, 16px);
-  line-height: 1.6;
-  color: var(--color-text-primary);
-  margin: 0 0 12px;
-  max-width: 640px;
+/* Round P4: the Dialogue open runs tighter so the Problem heading clears
+   the fold at 1440 by 900; other case studies keep the shared rhythm. */
+.dialogue-case-study .cs-hero-header {
+  margin-bottom: 24px;
 }
-
-.dialogue-case-study .cs-hero-meta-line {
-  font-size: 14px;
-  line-height: 21px;
-  color: var(--color-text-secondary);
-  margin: 0 0 20px;
-  max-width: 640px;
-}
-
-.dialogue-case-study .cs-needs-lead {
-  font-size: var(--body-font-size, 16px);
-  line-height: 1.6;
-  color: var(--color-text-primary);
-  margin: 20px 0 0;
-  max-width: 640px;
-}
-
-.dialogue-case-study .cs-needs {
-  list-style: none;
-  margin: 0 0 4px;
-  padding: 0;
-  max-width: 640px;
-}
-
-.dialogue-case-study .cs-needs li {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-  font-size: 15px;
-  line-height: 22px;
-  color: var(--color-text-primary);
-}
-
-.dialogue-case-study .cs-needs li:first-child {
-  border-top: 1px solid var(--color-border-subtle);
-  margin-top: 12px;
-}
-
-@media (max-width: 600px) {
-  .dialogue-case-study .dialogue-rachel-frame__pad {
-    padding: 16px;
-  }
-  .dialogue-case-study .dp-compare-rows {
-    gap: 20px;
-  }
-  /* The before chat clamps its table on phones. */
-  .dialogue-case-study .dp-before-themes__row:nth-of-type(3) {
-    display: none;
-  }
-  .dialogue-case-study .dp-before-table tbody tr:nth-child(n + 2) {
-    display: none;
-  }
-}
-
-.dialogue-case-study #thin-data .dp-next-study {
-  height: 66px;
-  padding: 0 22px;
-  font-size: 15px;
-}
-.dialogue-case-study #thin-data .dp-hs-prompt {
-  margin-top: 12px;
-}
-
-.dialogue-case-study .cs-takeaway {
-  margin-top: 96px;
-  border-top: 1px solid var(--color-border-subtle);
-  padding-top: 40px;
-}
-
-.dialogue-case-study .cs-takeaway__text {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--color-text-primary);
-  margin: 0;
-  max-width: 640px;
-}
-
-@media (max-width: 600px) {
-  .dialogue-case-study .cs-takeaway__text {
-    font-size: 20px;
-    line-height: 27px;
-  }
-}
-
-/* Round P (Hearthside figures): scope header pair. */
-.dp-scope-headers {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 600px) {
-  .dp-scope-headers {
-    flex-direction: column;
-    flex-wrap: nowrap;
-  }
-  .dialogue-case-study .dp-scope-headers__panel {
-    flex: 0 0 auto;
-  }
-}
-
-.dp-scope-headers__panel {
-  flex: 1 1 260px;
-  min-width: 0;
-  background: var(--dp-surface);
-  border: 1px solid var(--dp-border);
-  border-radius: var(--dp-radius);
-  box-shadow: var(--shadow-chat);
-  padding: 14px 16px;
-}
-
-.dp-scope-headers__panel--muted {
-  opacity: 0.72;
-}
-
-/* Round P: the before chat's emoji theme list and raw-text table. */
-.dp-before-themes {
-  display: grid;
-  gap: 6px;
-}
-
-.dp-before-themes__row {
-  margin: 0;
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  color: var(--dp-ink);
-}
-
-.dp-before-themes__row strong {
-  font-weight: var(--dp-weight-bold);
-}
-
-.dp-before-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--dp-ink);
-}
-
-.dp-before-table th,
-.dp-before-table td {
-  text-align: left;
-  padding: 5px 8px;
-  border: 1px solid var(--dp-border);
-}
-
-.dp-before-table th {
-  font-weight: var(--dp-weight-bold);
-  color: var(--dp-muted);
-}
-
-/* Round P: count group labels, the did-not restatement, the thin flag, the
-   copied prompt block, and 16:9 clip thumbs. */
-.dp-hs-group-label {
-  margin: 4px 0 -2px;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--dp-muted);
-  font-weight: 500;
-}
-
-.dp-hs-restate {
-  margin: 0;
-  padding: 8px 12px;
-  border-radius: var(--dp-radius-control);
-  background: var(--dp-clip-card-bg);
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  color: var(--dp-muted);
-}
-
-.dp-hs-flag {
-  margin: 0;
-  font-size: var(--dp-player-time-size);
-  line-height: 18px;
-  color: var(--dp-muted);
-}
-
-.dp-hs-prompt {
-  display: grid;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: var(--dp-radius-control);
-  background: var(--dp-warm);
-}
-
-.dp-hs-prompt p {
-  margin: 0;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--dp-ink);
-}
-
-.dp-hs-thumb {
-  position: relative;
-  border-radius: var(--dp-radius-control);
-  overflow: hidden;
-  aspect-ratio: 16 / 9;
-  background: var(--dp-warm);
-}
-
-.dp-hs-thumb__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.dp-hs-thumb__time {
-  position: absolute;
-  left: 8px;
-  bottom: 6px;
-  font-size: var(--text-clip-time-size);
-  color: var(--dp-card);
-  background: var(--dp-ink);
-  padding: 1px 5px;
-  font-variant-numeric: tabular-nums;
-}
-
-.dp-hs-count-line {
-  margin: 0;
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-leading);
-  font-weight: var(--dp-weight-bold);
-  color: var(--dp-ink);
-}
-
-/* Round P: comparison rows, one per segment. */
-.dp-compare-rows {
-  display: grid;
-  gap: 28px;
-}
-
-.dp-compare-rows__group {
-  display: grid;
-  gap: 10px;
-}
-
-.dp-compare-rows__media {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.dp-compare-rows__media > .dp-clip-quote {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.dp-hs-thumb--small {
-  flex: 0 0 30%;
-  max-width: 200px;
-}
-.dp-hs-mini-legend {
-  margin: 0;
-  font-size: var(--text-small-size);
-  line-height: var(--text-small-leading);
-  color: var(--dp-muted);
-}
-
-/* Round P3: the comparison panel, the levels toggle, and the thin-data
-   participant rows. */
-.dp-compare-panel {
-  width: 448px;
-  max-width: 100%;
-  margin: 0 auto;
-  background: var(--dp-surface);
-  border: 1px solid var(--dp-border);
-  border-radius: var(--dp-radius);
-  padding: 20px;
-}
-
-.dp-compare-rows__theme {
-  margin: 0;
-  font-size: var(--dp-name-size, 13px);
-  color: var(--dp-muted);
-}
-
-.dp-hs-toggle {
-  display: flex;
-  gap: 2px;
-  padding: 4px;
-  border-radius: var(--dp-radius-pill, 999px);
-  background: var(--dp-warm);
-}
-
-.dp-hs-toggle__item {
-  flex: 1 1 0;
-  min-width: 0;
-  text-align: center;
-  font-size: var(--text-small-size);
-  line-height: 1.3;
-  padding: 6px 0;
-  border-radius: var(--dp-radius-pill, 999px);
-  color: var(--dp-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dp-hs-toggle__item[data-active] {
-  background: var(--dp-surface);
-  color: var(--dp-ink);
-  font-weight: var(--dp-weight-bold);
-  box-shadow: inset 0 0 0 1px var(--dp-border);
-  padding: 6px 0;
-}
-
-.dp-hs-prows {
-  display: grid;
-  gap: 8px;
-}
-
-.dp-hs-prow {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: var(--dp-radius-control);
-  background: var(--dp-warm);
-  font-size: var(--dp-player-time-size);
-  color: var(--dp-muted);
-}
-
-.dp-hs-prompt p {
-  font-size: var(--dp-player-time-size);
-  line-height: 18px;
+.dialogue-case-study .cs-caption {
+  margin-top: 16px;
 }

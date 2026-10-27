@@ -7,8 +7,6 @@ export type ChartStackSegment = {
   /** Text printed under (simple) or inside (detailed) the segment. */
   display: string;
   focal?: boolean;
-  /** The segment whose evidence is open; outlined per the round P spec. */
-  selected?: boolean;
 };
 
 type Props = {
@@ -42,7 +40,6 @@ export default function ChartStackedBar({
             key={seg.label}
             className="dp-chart-stack__seg"
             data-focal={seg.focal ? "" : undefined}
-            data-selected={seg.selected ? "" : undefined}
             data-index={i}
             style={{ width: `${(seg.value / total) * 100}%` }}
             data-annotate-part={`stack-seg-${annotateSlug(seg.label)}`}

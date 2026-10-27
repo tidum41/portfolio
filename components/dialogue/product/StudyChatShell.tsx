@@ -14,8 +14,6 @@ type Props = {
   hideHeader?: boolean;
   /** Interviews behind the answer; omit for a card that is not an answer. */
   evidence?: number;
-  /** Study line under the title; defaults to the checkout study. */
-  subtitle?: string;
   /** @deprecated Anatomy targets live on answer parts, not the chat head. */
   anatomy?: boolean;
 };
@@ -27,7 +25,6 @@ export default function StudyChatShell({
   hideComposer,
   hideHeader,
   evidence,
-  subtitle,
 }: Props) {
   return (
     <div
@@ -50,7 +47,7 @@ export default function StudyChatShell({
                 <p className="dp-study-chat__title">{dialogueCopy.assistantTitle}</p>
                 <span className="dp-study-chat__beta">{dialogueCopy.betaLabel}</span>
               </div>
-              <p className="dp-study-chat__sub">{subtitle ?? dialogueCopy.studySubtitle}</p>
+              <p className="dp-study-chat__sub">{dialogueCopy.studySubtitle}</p>
             </div>
             <span className="dp-study-chat__minimize" aria-hidden>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

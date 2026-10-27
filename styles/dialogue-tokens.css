@@ -279,28 +279,3 @@
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
 }
-
-/* Round P3: in the site's dark theme the product panels go dark too. The
-   panel body takes the well colour (#1b1e21), cards sit one step lighter,
-   ink is #f4f2ef and muted #a8a49e. Light theme values stay as pinned. */
-html[data-theme="dark"] .dialogue-product-root {
-  --dp-ink: #f4f2ef;
-  --dp-muted: #a8a49e;
-  --dp-muted-light: #8f8a84;
-  --dp-faint: #75706a;
-  --dp-border: #3a3e42;
-  --dp-border-strong: #4a4f54;
-  --dp-input-border: #3a3e42;
-  --dp-surface: #26292e;
-  --dp-bg: #1b1e21;
-  --dp-warm: #2b2f34;
-  --dp-card: #26292e;
-  --dp-clip-card-bg: #2b2f34;
-  --dp-skeleton: #3a3e42;
-  --dp-chart-track: #33373c;
-  --dp-chart-baseline: #3a3e42;
-  --dp-chart-muted: #a6a09b;
-  --dp-chart-label-color: #a8a49e;
-  --dp-chart-value-color: #f4f2ef;
-  --dp-chart-card-border: #3a3e42;
-}

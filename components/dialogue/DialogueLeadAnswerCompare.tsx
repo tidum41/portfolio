@@ -5,8 +5,9 @@ import LeadCompareAnswerCard, {
 } from "@/components/dialogue/product/scenarios/LeadCompareAnswerCard";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import type { DialogueProductScenario as Scenario } from "@/components/dialogue/product/DialogueProductScenario";
-import StaticFigure from "@/components/dialogue/StaticFigure";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import { LEAD_COMPARE_QUESTION } from "@/lib/dialogue/product/sampleData";
+import StaticFigure from "@/components/dialogue/StaticFigure";
 import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import type { RasterAnnotator } from "@/components/dialogue/DialogueCaseStudyContent";
 
@@ -26,7 +27,6 @@ type Option = {
 type Props = {
   heading: string;
   subheading: string;
-  question?: string;
   options: Option[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
@@ -51,6 +51,7 @@ function OptionPanel({
     <div
       className={`dialogue-lead-answer__answer dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
     >
+      <UserMessageBubble>{LEAD_COMPARE_QUESTION}</UserMessageBubble>
       <LeadCompareAnswerCard variant={scenarioToVariant(option.productScenario)} />
     </div>
   );
@@ -93,7 +94,6 @@ function OptionPanel({
 export default function DialogueLeadAnswerCompare({
   heading,
   subheading,
-  question,
   options,
   chosenId,
   annotateRaster,
@@ -104,13 +104,6 @@ export default function DialogueLeadAnswerCompare({
         <span className="dialogue-caption__label">{heading}</span>
         <span className="dialogue-caption__sentence">{subheading}</span>
       </p>
-      {question ? (
-        <div
-          className={`dialogue-lead-answer__question dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
-        >
-          <UserMessageBubble>{question}</UserMessageBubble>
-        </div>
-      ) : null}
       <DialogueRachelFrame tone="system" className="dialogue-lead-answer__well">
         <div className="dialogue-lead-answer__row dialogue-lead-answer__row--trio">
           {options.map((option) => (

@@ -5,7 +5,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - References: after this file, read [design/references/README.md](references/README.md) (hero findings, portfolio library, career facts).
 
 ## 1. Decided (never re-litigate)
-- Font: ABC Areal abandoned (Oct 21). Helvetica Neue (Arial fallback) for body and UI; Georgia for headings as currently built (reconfirmed Oct 25). Never mention Areal in briefs or copy.
+- Font: ABC Areal abandoned (Oct 21). Helvetica Neue (Arial fallback) for body and UI; Georgia for headings as currently built (reconfirmed Oct 25). Exception: DM Sans (Dialogue's real product font) only inside Dialogue product UI mockups (`.dialogue-product-root`), never on case-study chrome (Oct 27). Never mention Areal in briefs or copy.
 - Skim rules (Oct 25): every section heading states its point as a plain sentence; headings clearly bigger and heavier than body (e.g. 28/34 medium at 1440, 22/28 at 390) with 64px+ above and 16px below; body paragraphs max 3 sentences and ~65ch; one figure per section with a one-line caption; TOC labels match headings and track the active section; a reader reading only headings and captions must get the whole story.
 - Weight: site cap 500; Dialogue UI keeps its real 600. See [RULES standing rules](RULES.md#dialogue-case-study-rules).
 - Real study numbers, keep exact: 18/6 coverage, 4 of 24 mobile, 64/31/22%. No invented numbers (Oct 23).
@@ -67,7 +67,6 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Case study basics (Oct 25): not a chronological recount. Context on why it exists, final artifacts up front, bulk is key design moments (hard or debatable calls with justification), why it matters, learnings framed as strengths, one obvious takeaway about Mudit.
 - Dialogue takeaway (Oct 25): he thinks from UX research teams' perspective via deep dives, designs within existing frontend design systems, and sweats the small decisions that shape product workflows.
 - Oct 26 2026: Mudit OK'd illustrative quotes with placeholder names and timestamps in Dialogue; Comparison needs no concept label.
-- Oct 26 2026 (round P3): product panels go dark in dark mode (ink #f4f2ef, muted #a8a49e); the selected bar segment takes a 2px ink ring at 1px offset with a 2px gap between segments; the hero collapses its clip to a thumbnail at about 490px; Levels of detail is one 448 panel with a three-step toggle; composed quotes are cut and neutral participant rows stand in; Comparison carries no status line.
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
@@ -102,6 +101,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Rejected Oct 25: round O (PR #137, ec4e020): visually off the Dialogue system and dropped what already looked good (pinned b056865 figures, player, chart cards); also read as a chronological recount, not an intentionally framed story.
 
 ## 4. Pinned approved versions
+- b056865 is the round P4 base: restore its Dialogue components and figures, then port the approved story onto it. Build only from [SYSTEM-COMPONENTS.md](SYSTEM-COMPONENTS.md); new components need Mudit's OK (Oct 27).
 - b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, Add to my plan, full chart library. Restored into canvas via PR #122.
 - 21cf2e8, bb55313, de1cfe5: lightbox fixes. d400584: TOC breakpoint.
 - 843faac (PR #124, round J): canvas base before the taste ledger (08f90a4); passes b056865 ancestry; verdict FIX FIRST (see Open).
@@ -128,6 +128,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Worked: restore by merging the approved branch, take-theirs on approved files, hand-merge CSS (PR #122).
 - Worked: local build plus 10 width/theme screenshots and a cold critique per round (shots/j/critique.md).
 - Worked: visible [PLACEHOLDER] markers instead of invented facts.
+- Didn't: rounds M to P3 described figures freehand in briefs (raw hex/px, "rebuild as a toggle"), so Muse built new components and dropped the b056865 set; check:dialogue-tokens passed because it skipped globals.css. Fix: briefs name system components only, new UI needs approval, and `npm run check:dialogue-system` (lint, allowlist, 640 lock) must pass before any fix-list review (Oct 27).
 - Didn't: Muse stalled ~2h on one pending approval (round J); check approvals early.
 
 ## 7. Open
