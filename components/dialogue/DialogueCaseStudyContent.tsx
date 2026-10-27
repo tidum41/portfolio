@@ -34,6 +34,7 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "data-viz", label: "Data visualization" },
   { id: "clips", label: "Clips" },
   { id: "thin-data", label: "Thin data" },
+  { id: "measure", label: "Measuring it" },
   { id: "takeaway", label: "Takeaway" },
 ];
 
@@ -145,8 +146,11 @@ export function DialogueCaseStudyContent({
             metadata={[]}
           >
             <p className="cs-hero-body">
-              Dialogue runs AI-moderated interviews and turns them into a study site with a chat.
-              I redesigned how that chat answers: who said it, and how many.
+              Dialogue is an AI tool that runs user interviews and analyses them, then turns a
+              study into a site with a chat. UX research teams ask that chat questions and share
+              the answers with their product teams. I redesigned the answer so a research team can
+              surface an insight quickly without losing the detail behind it. Part of it shipped, and the
+              rest is shown as concept.
             </p>
             <div className="cs-hero-media-frame">
               <figure className="cs-figure dialogue-live-block">
@@ -192,7 +196,9 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 The chat first answered about a single interview, and I moved it up to the whole
                 study. With 24 interviews a percent hides how few people sit behind a claim, so
-                the bar reads 18 of 24, and tapping either side opens the quotes behind it.
+                the bar reads 18 of 24, and tapping either side opens the quotes behind it. The old paragraph made a team
+                reread transcripts to check it, and the count gives the headline at a glance with
+                the people one tap away.
               </CaseStudyBody>
               <ProductFigure
                 caption="Tapping 18 or 6 opens the people behind the count"
@@ -214,7 +220,8 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 A stakeholder needs the sentence and a researcher needs the evidence. Of the eight
                 versions of the answer card, these three show the call: the answer leads with a
-                sentence and its count, and the quotes sit one tap below.{" "}
+                sentence and its count, and the quotes sit one tap below. Next to the old paragraph, this format adds the
+                count and the people while the sentence still leads.{" "}
                 <Placeholder>what the eight versions taught you; where each format works and where
                 it doesn&rsquo;t</Placeholder>
               </CaseStudyBody>
@@ -254,11 +261,14 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Data visualization</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                I held off on redesigning the charts until the answer had a structure, since quotes
-                already worked in the transcript. Each pair puts the common chart next to mine, on
-                the same data.{" "}
-                <Placeholder>the IBM Carbon finding you adapted, and why it fits UX research
-                teams</Placeholder>
+                Dialogue&rsquo;s AI picks the chart for each answer, so I designed the set it picks
+                from. Each pair below is one template, with the common chart next to mine on the
+                same data. The model matches a template to the question and the level of detail
+                asked for, and rules cover edge cases, so a thin finding gets a plain line instead
+                of a chart. The old answer had no charts, and each chart here reads in one
+                glance while keeping the count it rests on.{" "}
+                <Placeholder>how the model matches a question to a template, and which Carbon
+                guideline you adapted</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary />
@@ -274,7 +284,8 @@ export function DialogueCaseStudyContent({
                 checking, and the check usually stopped there. Mei was one of the six who asked
                 which Friday, so her quote opens the clip in place from the moment she says it,
                 with the transcript following. Video is heavy in a chat panel, so it loads only
-                on tap.
+                on tap. Checking a quote used to mean leaving the answer, and now the
+                detail plays inside it without slowing the read.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">
@@ -296,8 +307,9 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 2 of 5 lapsed buyers mentioned a damaged first order. Shown like 18 of 24 it
                 would read as a pattern, so the answer carries a quiet line, &lsquo;Early signal,
-                2 people&rsquo;. &lsquo;Add to my plan&rsquo; copies the answer and its count
-                into a prompt for the team&rsquo;s own tools. I have no outcome numbers, so next
+                2 people&rsquo;. The old answer stated thin and strong findings the same
+                way, and the flag keeps the read fast while saying when it rests on two people. &lsquo;Add to my plan&rsquo;
+                copies the answer and its count into a prompt for the team&rsquo;s own tools. I have no outcome numbers, so next
                 I&rsquo;d test whether flagged findings change what teams plan.{" "}
                 <Placeholder>why the cutoff sits where it does, and what would change your
                 mind</Placeholder>
@@ -316,6 +328,23 @@ export function DialogueCaseStudyContent({
               </Caption>
             </Section>
 
+            <Section id="measure">
+              <ClaimH2>I&rsquo;d measure whether teams get answers faster without skipping the detail</ClaimH2>
+              <StatusLine>Proposed, no results yet</StatusLine>
+              <CaseStudyBody>
+                In the product I&rsquo;d track clip plays per answer, how often source quotes get
+                opened, answers shared or exported, and thin-data flags that a team follows up.
+                From teams I&rsquo;d ask whether they trusted an answer enough to share it and how
+                long checking it took.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                Speed alone would mislead, so I&rsquo;d read it next to quote opens. None of this tells me whether a checked answer led to a better product decision,
+                and I haven&rsquo;t run it with Dialogue&rsquo;s customers.{" "}
+                <Placeholder>which signal you&rsquo;d watch first, and what result would make you
+                change the design</Placeholder>
+              </CaseStudyBody>
+            </Section>
+
             <section
               id="takeaway"
               className="cs-takeaway"
@@ -325,8 +354,8 @@ export function DialogueCaseStudyContent({
             >
               <ScrollReveal>
                 <p className="cs-takeaway__text">
-                  I study how UX research teams work, design inside Dialogue&rsquo;s own system,
-                  and sweat the small decisions that shape a team&rsquo;s workflow.
+                  I redesigned Dialogue&rsquo;s answer so research teams get to an insight fast
+                  without losing the detail behind it, working inside Dialogue&rsquo;s own system.
                 </p>
               </ScrollReveal>
             </section>

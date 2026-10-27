@@ -2537,7 +2537,7 @@ agentation-toolbar,
     grid-template-rows: unset;
   }
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
-    order: -1;
+    order: 0;
   }
 }
 .dialogue-lead-answer__panel {
@@ -2748,7 +2748,7 @@ agentation-toolbar,
   }
   /* On phones the comparison leads with the answer, like the answers it argues for. */
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
-    order: -1;
+    order: 0;
   }
   .dialogue-lead-answer__panel,
   .dialogue-chart-gallery__cell {

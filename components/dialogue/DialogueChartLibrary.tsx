@@ -4,27 +4,10 @@ import type { ReactNode } from "react";
 import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import ChartGroupedBars from "@/components/dialogue/product/chart/ChartGroupedBars";
-import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
-import ChartLinePlot from "@/components/dialogue/product/chart/ChartLinePlot";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import {
-  formatChartDecimal,
-  formatChartPercent,
-} from "@/components/dialogue/product/chart/chartSpec";
+import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import {
-  CHECKOUT_FUNNEL,
-  COVERAGE_ADDRESS,
-  MOBILE_FUNNEL_STEPS,
-  SEGMENT_ADDRESS,
-  SENTIMENT_LINE,
-} from "@/lib/dialogue/product/sampleData";
-
-const STEPS = CHECKOUT_FUNNEL.steps.slice(0, 4);
-const GROUPS = SEGMENT_ADDRESS.rows;
-const ROUNDS = SENTIMENT_LINE.points;
 
 type Points = { pros: readonly string[]; cons: readonly string[] };
 
@@ -74,189 +57,84 @@ function Specimen({
   );
 }
 
-const STEP_ROWS = STEPS.map((s) => ({
-  label: s.label,
-  value: s.pct,
-  display: formatChartPercent(s.pct),
-  focal: Boolean(s.focal),
-}));
-
-const GAP_PTS = (label: string) => {
-  const mobile = GROUPS[0]!.pct;
-  const g = GROUPS.find((r) => r.label === label)!;
-  return `${mobile - g.pct} pts`;
-};
-
-const EVENT_LABEL = "Autocomplete ships";
-const TOTAL = COVERAGE_ADDRESS.rows.reduce((n, r) => n + r.count, 0);
+/* Round P5 (Mudit OK Oct 27): two pairs, Hearthside data only. The Friday
+   finding (18 of 24) is the hero's number; the segment counts (6 of 9,
+   7 of 10) are the approved illustrative Hearthside comparison. */
+const FRIDAY_TOTAL = 24;
+const FRIDAY_ROWS = [
+  { label: "Read it as this Friday", count: 18, focal: true },
+  { label: "Did not", count: 6, focal: false },
+] as const;
+const SEGMENTS = [
+  { label: "First-time, free returns", count: 6, of: 9, focal: true },
+  { label: "Repeat, arrives by Friday", count: 7, of: 10, focal: false },
+] as const;
 
 const ENTRIES = [
   {
-    id: "dropoff",
-    badName: "Full detail",
-    badPoints: {"pros": ["All participants and mobile side by side", "A drop figure on every step"], "cons": ["Two series, a legend and gridlines compete for attention"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["One bar per step, read straight off its length", "One cherry bar marks the step that matters"], "cons": ["Mobile and the size of each drop are not shown"]},
-    name: "Drop-off between steps",
-    verdict: "Bars show where people quit, so the one big drop has to stand out.",
-    tech: [
-      ["Data shape", "ordered steps, share still in flow."],
-      ["Encoding", "length on a zero baseline, direct labels on every bar."],
-      ["Tradeoff", "loses theme overlap."],
-    ],
-    caption:
-      "Removed the mobile series, the legend, the gridlines and every drop figure. Kept one bar per step and gave the Address bar the one cherry accent, because it is the largest drop and the reader should find it first.",
-    bad: (
-      <ChartVizCard title="Drop-off by step">
-        <ChartGroupedBars
-          seriesNames={["All participants", "Mobile only"]}
-          rows={STEPS.map((s, i) => ({
-            label: s.label,
-            all: s.pct,
-            segment: MOBILE_FUNNEL_STEPS[i]!.pct,
-            detail: "drop" in s ? `-${s.drop}` : "",
-          }))}
-          max={100}
-        />
-      </ChartVizCard>
-    ),
-    good: (
-      <ChartVizCard title="Drop-off by step">
-        <ChartBarList rows={STEP_ROWS} max={100} fillMode="index" />
-      </ChartVizCard>
-    ),
-  },
-  {
-    id: "groups",
-    badName: "Full detail",
-    badPoints: {"pros": ["A gridline every 20% reads exact values", "Gap to Mobile on every row"], "cons": ["Dense for three groups"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["Dots sit on one shared scale", "One line says Mobile is about twice Desktop"], "cons": ["Exact gaps are not printed"]},
-    name: "How groups differ",
-    verdict: "A dot plot puts each group on one shared axis, so the gap reads as distance.",
-    tech: [
-      ["Data shape", "one rate per group."],
-      ["Encoding", "position on a zero-based axis, one dot per group."],
-      ["Tradeoff", "no view of spread inside a group."],
-    ],
-    caption:
-      "Removed the gridline every 20%, the 0 to 100 scale and the points-behind-Mobile figure on each row. Kept the dots on one shared scale and one line saying Mobile is about twice Desktop.",
-    bad: (
-      <ChartVizCard title={SEGMENT_ADDRESS.title}>
-        <ChartDotPlot
-          gridAt={[0, 20, 40, 60, 80, 100]}
-          ticks={[0, 50, 100]}
-          rows={GROUPS.map((g) => ({
-            label: g.label,
-            value: g.pct,
-            display: formatChartPercent(g.pct),
-            focal: "focal" in g && g.focal,
-            detail: g.label === "Mobile" ? "" : GAP_PTS(g.label),
-          }))}
-          max={100}
-          note="Right column: percentage points behind Mobile"
-        />
-      </ChartVizCard>
-    ),
-    good: (
-      <ChartVizCard title={SEGMENT_ADDRESS.title}>
-        <ChartDotPlot
-          rows={GROUPS.map((g) => ({
-            label: g.label,
-            value: g.pct,
-            display: formatChartPercent(g.pct),
-            focal: "focal" in g && g.focal,
-          }))}
-          max={100}
-          note="Mobile is about twice Desktop"
-        />
-      </ChartVizCard>
-    ),
-  },
-  {
-    id: "trend",
-    badName: "Full detail",
-    badPoints: {"pros": ["Change between rounds is printed"], "cons": ["The shaded area and extra axis steps add noise"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["Both ends are labeled", "A marker shows where autocomplete ships"], "cons": ["The middle value is not shown"]},
-    name: "Change over sessions",
-    verdict: "A line shows the climb, and one marker says why it climbed.",
-    tech: [
-      ["Data shape", "one score per round, in order."],
-      ["Encoding", "slope shows direction; height on a shared axis shows size."],
-      ["Tradeoff", "needs three or more rounds."],
-    ],
-    caption:
-      "Removed the shaded area, the extra axis steps, the change between rounds and the middle value. Kept both ends labeled and the marker where autocomplete ships, because that event explains the climb.",
-    bad: (
-      <ChartVizCard title="Sentiment by round">
-        <ChartLinePlot
-          points={ROUNDS}
-          yMode="trend"
-          tickCount={5}
-          area
-          deltas
-          annotation={{ index: 1, label: EVENT_LABEL }}
-          formatValue={(n) => formatChartDecimal(n)}
-          seriesFocal={false}
-        />
-      </ChartVizCard>
-    ),
-    good: (
-      <ChartVizCard title="Sentiment by round">
-        <ChartLinePlot
-          points={ROUNDS}
-          yMode="trend"
-          valueIndices={[0, ROUNDS.length - 1]}
-          annotation={{ index: 1, label: EVENT_LABEL }}
-          formatValue={(n) => formatChartDecimal(n)}
-          seriesFocal={false}
-        />
-      </ChartVizCard>
-    ),
-  },
-  {
     id: "coverage",
-    badName: "Full detail",
-    badPoints: {"pros": ["The count axis and shares give the exact split"], "cons": ["The legend pulls the eye away from the bar"]},
-    goodName: "Simplified",
-    goodPoints: {"pros": ["Counts sit directly under their segments", "18 of 24 reads at a glance"], "cons": ["No percent is printed"]},
-    name: "How much was covered",
-    verdict: "One bar for all 24 interviews shows how much of the set backs the finding.",
+    badName: "Common chart",
+    badPoints: { pros: ["The count axis and shares give the exact split"], cons: ["The legend pulls the eye away from the bar"] },
+    goodName: "My version",
+    goodPoints: { pros: ["Counts sit directly under their segments", "18 of 24 reads at a glance"], cons: ["No percent is printed"] },
+    name: "How much of the study backs a finding",
+    verdict: "One bar for all 24 interviews shows how much of the study backs the finding.",
     tech: [
       ["Data shape", "interviews that mention it, out of 24."],
-      ["Encoding", "segment length against the full set."],
+      ["Encoding", "segment length against the whole study."],
       ["Tradeoff", "says nothing about how strong each quote is."],
     ],
     caption:
-      "Removed the count axis, the legend and the percent inside each segment. Kept the two counts printed directly under their segments, because the reader needs 18 of 24 and nothing else.",
+      "Removed the count axis, the legend and the percent inside each segment. Kept the two counts under their segments, because the reader needs 18 of 24 and nothing else.",
     bad: (
-      <ChartVizCard title="Address friction">
+      <ChartVizCard title="Read \u2018Arrives by Friday\u2019 as this Friday">
         <ChartStackedBar
           showShare
           legend
           ticks={[0, 6, 12, 18, 24]}
-          total={TOTAL}
-          segments={COVERAGE_ADDRESS.rows.map((r) => ({
-            label: r.label === "Mentioned it" ? "Said it" : "Did not",
-            value: r.count,
-            display: String(r.count),
-            focal: Boolean(r.focal),
-          }))}
+          total={FRIDAY_TOTAL}
+          segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: String(r.count), focal: r.focal }))}
         />
       </ChartVizCard>
     ),
     good: (
-      <ChartVizCard title="Address friction">
+      <ChartVizCard title="Read \u2018Arrives by Friday\u2019 as this Friday">
         <ChartStackedBar
-          total={TOTAL}
-          segments={COVERAGE_ADDRESS.rows.map((r) => ({
-            label: r.label === "Mentioned it" ? "said it" : "did not",
-            value: r.count,
-            display: String(r.count),
-            focal: Boolean(r.focal),
-          }))}
-          note={`of ${TOTAL} interviews`}
+          total={FRIDAY_TOTAL}
+          segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Did not" ? "did not" : "said it", value: r.count, display: String(r.count), focal: r.focal }))}
+          note={`of ${FRIDAY_TOTAL} interviews`}
+        />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "segments",
+    badName: "Common chart",
+    badPoints: { pros: ["Percents line the segments up on one scale"], cons: ["67% and 70% hide that each sits on about ten people"] },
+    goodName: "My version",
+    goodPoints: { pros: ["Each row says how many people it rests on", "Small segments read as small"], cons: ["The two rows are harder to compare exactly"] },
+    name: "How segments differ",
+    verdict: "Segments this small read as counts, so a team sees how few people sit behind each row.",
+    tech: [
+      ["Data shape", "one count per segment, out of that segment."],
+      ["Encoding", "bar length against each segment's own size."],
+      ["Tradeoff", "rows with different totals are not directly comparable."],
+    ],
+    caption:
+      "Swapped the percents for counts out of each segment, and kept the cherry on the row the answer leads with.",
+    bad: (
+      <ChartVizCard title="Top reason to buy, by segment">
+        <ChartBarList
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: Math.round((r.count / r.of) * 100), display: formatChartPercent(Math.round((r.count / r.of) * 100)), focal: r.focal }))}
+          max={100}
+        />
+      </ChartVizCard>
+    ),
+    good: (
+      <ChartVizCard title="Top reason to buy, by segment">
+        <ChartBarList
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, focal: r.focal }))}
+          max={1}
         />
       </ChartVizCard>
     ),

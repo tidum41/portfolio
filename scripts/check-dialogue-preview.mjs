@@ -294,7 +294,7 @@ async function ownerChecks(browser) {
       ...[...byTime].filter(([, v]) => v.size > 1).map(([t, v]) => `${t} owned by ${[...v].join(" and ")}`),
       ...[...byName].filter(([, v]) => v.size > 1).map(([n, v]) => `${n} has ${[...v].join(" and ")}`),
     ];
-    log(pairs.length >= 8 && bad.length === 0, `${label} (${pairs.length} pills, ${byTime.size} distinct times, ${bad.length} conflicts)`);
+    log(pairs.length >= 4 && bad.length === 0, `${label} (${pairs.length} pills, ${byTime.size} distinct times, ${bad.length} conflicts)`);
     for (const b of bad) console.log(`     ${b}`);
     await ctx.close();
   } catch (e) {

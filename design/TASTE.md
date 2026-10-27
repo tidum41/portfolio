@@ -68,6 +68,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Dialogue takeaway (Oct 25): he thinks from UX research teams' perspective via deep dives, designs within existing frontend design systems, and sweats the small decisions that shape product workflows.
 - Oct 26 2026: Mudit OK'd illustrative quotes with placeholder names and timestamps in Dialogue; Comparison needs no concept label.
 - Oct 27 2026: Round P5 direction (art director plan, /workspace/research/dialogue-eod-plan.md, approved): the story is the answer card's data viz plus decisions. Sections are problem, counts (study-wide folded in), levels of detail (Hearthside Friday data, 2+1 layout), data visualization (b056865 chart library restored), clips, thin data (stone line, not amber). Comparison section and study-wide figure are cut. One caption per figure, no frame labels. Mudit's copy sits in visible [PLACEHOLDER] markers.
+- Chart library trimmed to 2 pairs, labels fixed (Mudit OK Oct 27).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
@@ -145,3 +146,6 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Keep this file under ~150 lines; link to RULES.md sections instead of copying long rules.
 - Approved Oct 25 10:55pm: Dialogue round P structure built from Dialogue's customer case studies (Wayfair, Kalshi, Doctronic, Suno): problem, study-wide chat and count bars (shipped), comparison answer, levels of detail, clips in chat, thin-data flags and Add to my plan (concept), with Shipped/Concept status lines and fictional Hearthside mock data.
 - Oct 26 2026: Round P (PR #142, fba961b) sent back for fixes. Structure and restore approved; copy must match roundP-final.md, quotes must sit under the side they belong to, and no dark-on-dark text.
+
+- Decided (P5 spine, Mudit, Oct 27 2026): Dialogue's story is 'Redesigning the answer so research teams can surface insights quickly, at a level of insight that doesn't lose detail.' Tension is speed versus depth. Counts, levels, clips and thin flags are each framed as a way to get the answer fast without losing the detail behind it. Not 'shows how many said it and lets you hear them.'
+- Decided fact (Mudit, Oct 27 2026): Dialogue's AI chooses the chart type per answer, constrained by chart templates and guidelines adapted from IBM Carbon. It matches a template to the query and the level of detail wanted, with rules for edge cases such as thin data. The data viz section tells this; the chart library pairs are the templates. Write it plainly, no slogan.
