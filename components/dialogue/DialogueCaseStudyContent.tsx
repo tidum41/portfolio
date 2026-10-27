@@ -176,8 +176,7 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 I did a desk research deep dive on how UX research teams work, using NN/g, Maze,
                 User Interviews and IBM Carbon, with no interviews. Teams share findings with
-                non-researchers within hours, so they need to see who said something and how many
-                people said it. <Placeholder>first try: the chat answered like a standard LLM, with
+                non-researchers within hours, so they need the insight fast without losing the detail that backs it. <Placeholder>first try: the chat answered like a standard LLM, with
                 plain markdown tables that were long and hard to glance at; why grouping responses
                 was the move</Placeholder>
               </CaseStudyBody>
