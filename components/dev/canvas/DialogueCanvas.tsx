@@ -13,6 +13,8 @@ import {
 import { createPortal } from "react-dom";
 import { isEditableTarget } from "@/lib/isEditableTarget";
 import { DIALOGUE_CANVAS_REGISTRY, type CanvasRegistryEntry } from "./registry";
+import type { LiveComponent, LiveManifest } from "./liveManifest";
+import { auditPane, type AuditFlag } from "./auditPane";
 import "./dialogue-canvas.css";
 
 /**
@@ -24,7 +26,7 @@ import "./dialogue-canvas.css";
  * Saved layout is camera plus positions by registry id, nothing else.
  */
 
-const STORAGE_KEY = "muditm:dialogue-canvas:v1";
+const STORAGE_KEY = "muditm:dialogue-canvas:v2";
 const LABEL_H = 30;
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 3;
@@ -65,9 +67,33 @@ function finite(n: unknown): n is number {
   return typeof n === "number" && Number.isFinite(n);
 }
 
+/** Entries whose primary file (and scenario) the case study renders today. Set once per render of DialogueCanvas from the server manifest. */
+let ACTIVE: CanvasRegistryEntry[] = DIALOGUE_CANVAS_REGISTRY;
+
+let auditQueue = 0;
+const PANE_GAP = 16;
+const META_H = 168;
+/** A tile holds the light pane and the dark pane side by side, then the token and flag strip. */
+const tileW = (e: CanvasRegistryEntry) => e.width * 2 + PANE_GAP;
+const tileH = (e: CanvasRegistryEntry) => e.height + META_H;
+
+/** Shelf-pack the live entries, widest first, so new and removed components never overlap. */
 function defaultPositions(): Positions {
   const out: Positions = {};
-  for (const entry of DIALOGUE_CANVAS_REGISTRY) out[entry.id] = { x: entry.x, y: entry.y };
+  const rowW = 3600;
+  let x = 0;
+  let y = 0;
+  let rowH = 0;
+  for (const entry of [...ACTIVE].sort((a, b) => b.height - a.height)) {
+    if (x > 0 && x + tileW(entry) > rowW) {
+      x = 0;
+      y += rowH + LABEL_H + 64;
+      rowH = 0;
+    }
+    out[entry.id] = { x, y };
+    x += tileW(entry) + 64;
+    rowH = Math.max(rowH, tileH(entry));
+  }
   return out;
 }
 
@@ -90,7 +116,7 @@ function loadSaved(): { camera: Camera | null; positions: Positions | null } {
     if (doc.positions && typeof doc.positions === "object") {
       positions = {};
       const saved = doc.positions as Record<string, Partial<XY>>;
-      for (const entry of DIALOGUE_CANVAS_REGISTRY) {
+      for (const entry of ACTIVE) {
         const p = saved[entry.id];
         if (p && finite(p.x) && finite(p.y)) {
           positions[entry.id] = {
@@ -122,11 +148,13 @@ function GripIcon() {
 const CanvasItem = memo(function CanvasItem({
   entry,
   pos,
+  meta,
   onMoveBy,
   registerItem,
 }: {
   entry: CanvasRegistryEntry;
   pos: XY;
+  meta: LiveComponent | undefined;
   onMoveBy: (id: string, dx: number, dy: number) => void;
   registerItem: (id: string, el: HTMLDivElement | null) => void;
 }) {
@@ -134,6 +162,23 @@ const CanvasItem = memo(function CanvasItem({
   const copyTimer = useRef(0);
   const labelRef = useRef<HTMLButtonElement>(null);
   const { Component } = entry;
+  const lightRef = useRef<HTMLDivElement>(null);
+  const darkRef = useRef<HTMLDivElement>(null);
+  const [flags, setFlags] = useState<AuditFlag[]>([]);
+
+  // Audit the rendered panes after fonts and figures settle: hardcoded colour,
+  // WCAG AA contrast, off-system font. Live DOM, so it never goes stale.
+  useEffect(() => {
+    // Tiles take turns, one per 120ms, so the audit never blocks first paint.
+    const slot = auditQueue++;
+    const t = window.setTimeout(() => {
+      const out: AuditFlag[] = [];
+      if (lightRef.current) out.push(...auditPane(lightRef.current, "light"));
+      if (darkRef.current) out.push(...auditPane(darkRef.current, "dark"));
+      setFlags(out);
+    }, 1500 + slot * 120);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(
     () => () => {
@@ -182,7 +227,7 @@ const CanvasItem = memo(function CanvasItem({
       className="dc-item"
       data-canvas-item={entry.id}
       ref={(el) => registerItem(entry.id, el)}
-      style={{ left: pos.x, top: pos.y, width: entry.width }}
+      style={{ left: pos.x, top: pos.y, width: tileW(entry) }}
     >
       <div className="dc-item-head">
         <button
@@ -212,14 +257,65 @@ const CanvasItem = memo(function CanvasItem({
           </span>
         ) : null}
       </div>
-      <div className="dc-preview" style={{ width: entry.width, height: entry.height }}>
-        <Component />
+      <div className="dc-panes" style={{ gap: PANE_GAP }}>
+        {(["light", "dark"] as const).map((theme) => (
+          <div key={theme} className="dc-pane">
+            <span className="dc-pane-label">{theme === "light" ? "Light" : "Dark"}</span>
+            <div
+              className={`dc-preview dc-preview--${theme}`}
+              data-canvas-pane={theme}
+              ref={theme === "light" ? lightRef : darkRef}
+              style={{ width: entry.width, height: entry.height }}
+            >
+              <Component />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="dc-meta" style={{ height: META_H }}>
+        <p className="dc-meta-line">
+          <span className="dc-meta-file">{entry.files[0]?.replace("components/dialogue/", "")}</span>
+          {entry.scenario ? <span> · scenario {entry.scenario}</span> : null}
+          {meta?.via ? <span> · via {meta.via}</span> : null}
+        </p>
+        <p className="dc-meta-line">
+          {meta?.allowlisted ? (
+            <span className="dc-ok">On SYSTEM-COMPONENTS allowlist</span>
+          ) : (
+            <span className="dc-flag">Not on SYSTEM-COMPONENTS allowlist</span>
+          )}
+          <span className={flags.length ? "dc-flag" : "dc-ok"}>
+            {" · "}
+            {flags.length ? `${flags.length} audit flags` : "No audit flags"}
+          </span>
+        </p>
+        <p className="dc-meta-line dc-meta-tokens" title={(meta?.tokens ?? []).join(" ")}>
+          Tokens: {(meta?.tokens ?? []).join(" ") || "none found in CSS"}
+        </p>
+        {flags.length ? (
+          <ul className="dc-flags">
+            {flags.map((f, i) => (
+              <li key={i}>
+                <span className="dc-flag">{f.pane} · {f.kind}</span> {f.el}: {f.message}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </div>
   );
 });
 
-export default function DialogueCanvas() {
+export default function DialogueCanvas({ manifest }: { manifest: LiveManifest }) {
+  const liveFiles = new Set(manifest.components.map((c) => c.file));
+  const liveScenarios = new Set(manifest.scenarios);
+  ACTIVE = DIALOGUE_CANVAS_REGISTRY.filter(
+    (e) => liveFiles.has(e.files[0]!) && (!e.scenario || liveScenarios.has(e.scenario)),
+  );
+  const metaByFile = new Map(manifest.components.map((c) => [c.file, c]));
+  const covered = new Set(ACTIVE.flatMap((e) => e.files));
+  const uncovered = manifest.components.filter((c) => !covered.has(c.file));
+  const offList = manifest.components.filter((c) => !c.allowlisted);
   const rootRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -325,12 +421,12 @@ export default function DialogueCanvas() {
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
-    for (const entry of DIALOGUE_CANVAS_REGISTRY) {
+    for (const entry of ACTIVE) {
       const p = positionsRef.current[entry.id] ?? entry;
       minX = Math.min(minX, p.x);
       minY = Math.min(minY, p.y - LABEL_H);
-      maxX = Math.max(maxX, p.x + entry.width);
-      maxY = Math.max(maxY, p.y + entry.height);
+      maxX = Math.max(maxX, p.x + tileW(entry));
+      maxY = Math.max(maxY, p.y + tileH(entry));
     }
     const bw = Math.max(maxX - minX, 1);
     const bh = Math.max(maxY - minY, 1);
@@ -396,7 +492,7 @@ export default function DialogueCanvas() {
     const saved = loadSaved();
     if (saved.positions) {
       positionsRef.current = { ...defaultPositions(), ...saved.positions };
-      for (const entry of DIALOGUE_CANVAS_REGISTRY) {
+      for (const entry of ACTIVE) {
         const el = itemEls.current.get(entry.id);
         const p = positionsRef.current[entry.id];
         if (el && p) {
@@ -748,11 +844,12 @@ export default function DialogueCanvas() {
         onKeyUp={onKeyUp}
       >
         <div className="dc-world" ref={worldRef}>
-          {DIALOGUE_CANVAS_REGISTRY.map((entry) => (
+          {ACTIVE.map((entry) => (
             <CanvasItem
               key={entry.id}
               entry={entry}
               pos={positions[entry.id] ?? entry}
+              meta={metaByFile.get(entry.files[0]!)}
               onMoveBy={moveBy}
               registerItem={registerItem}
             />
@@ -784,6 +881,28 @@ export default function DialogueCanvas() {
             <option value="light">Light</option>
             <option value="dark">Dark</option>
           </select>
+          <a className="dc-link" href="/dialogue/ds-parity/token-audit">
+            Token audit
+          </a>
+        </div>
+        <div className="dc-summary" data-canvas-controls>
+          <p>
+            {manifest.components.length} live components reached from DialogueCaseStudyContent ·{" "}
+            {ACTIVE.length} previews · {uncovered.length} without a preview ·{" "}
+            <span className={offList.length ? "dc-flag" : undefined}>{offList.length} not on the allowlist</span>
+          </p>
+          <details>
+            <summary>Live, no preview ({uncovered.length})</summary>
+            <ul>
+              {uncovered.map((c) => (
+                <li key={c.file}>
+                  {c.name}
+                  {c.via ? ` · via ${c.via}` : ""}
+                  {c.allowlisted ? "" : " · not allowlisted"}
+                </li>
+              ))}
+            </ul>
+          </details>
         </div>
       </div>
     </div>

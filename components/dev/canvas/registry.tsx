@@ -24,6 +24,9 @@ import ThemeRankingCard from "@/components/dialogue/product/ThemeRankingCard";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
+import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
+import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import "@/components/dialogue/product/dialogue-product.css";
@@ -50,6 +53,11 @@ export type CanvasRegistryEntry = {
   name: string;
   /** The component to mount, with its sample props baked in below. */
   Component: ComponentType;
+  /** Source files this preview renders, primary first. The canvas shows the
+   *  entry only while the primary file is reachable from the case study. */
+  files: string[];
+  /** DialogueProductFigure scenario; shown only while the case study uses it. */
+  scenario?: string;
   x: number;
   y: number;
   width: number;
@@ -165,18 +173,39 @@ const RachelFrameSample: ComponentType = () => (
   </DialogueRachelFrame>
 );
 
+const ProblemParagraphsFigure: ComponentType = () => (
+  <DialogueProductFigure
+    scenario="problem-paragraphs"
+    title="The chat as it was: a short prose answer with no count and no link back to the interviews"
+  />
+);
+
+const FridayStackedBar: ComponentType = () => (
+  <ProductRoot>
+    <ChartVizCard title="18 of 24 read the delivery date as this Friday">
+      <ChartStackedBar
+        total={24}
+        segments={[
+          { label: "Read it as this Friday", value: 18, display: "18 of 24", focal: true },
+          { label: "Did not", value: 6, display: "6 of 24" },
+        ]}
+      />
+    </ChartVizCard>
+  </ProductRoot>
+);
+
 const FirstClip = CLIPS[0]!;
 
 export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
-  { id: "study-chat-hero", name: "Study chat, hero", Component: HeroFigure, x: 0, y: 0, width: 750, height: 540 },
-  { id: "study-chat-anatomy", name: "Study chat, anatomy", Component: AnatomyFigure, x: 814, y: 0, width: 618, height: 1232 },
-  { id: "study-chat-clip-player", name: "Study chat, clip player", Component: ClipPlayerFigure, x: 1496, y: 0, width: 656, height: 712 },
-  { id: "study-chat-thin-data", name: "Study chat, thin data", Component: ThinDataFigure, x: 0, y: 604, width: 448, height: 392 },
-  { id: "study-chat-full-answer", name: "Study chat, full answer", Component: FullAnswerFigure, x: 512, y: 604, width: 688, height: 688 },
-  { id: "lead-answer-compare", name: "Lead answer compare", Component: LeadAnswerCompare, x: 1496, y: 776, width: 1152, height: 556 },
-  { id: "chart-library", name: "Chart library", Component: DialogueChartLibrary, x: 0, y: 1420, width: 784, height: 1610 },
+  { id: "study-chat-hero", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "hero", name: "Study chat, hero", Component: HeroFigure, x: 0, y: 0, width: 750, height: 540 },
+  { id: "study-chat-anatomy", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "anatomy", name: "Study chat, anatomy", Component: AnatomyFigure, x: 814, y: 0, width: 618, height: 1232 },
+  { id: "study-chat-clip-player", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "clip-player", name: "Study chat, clip player", Component: ClipPlayerFigure, x: 1496, y: 0, width: 656, height: 712 },
+  { id: "study-chat-thin-data", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "thin-data", name: "Study chat, thin data", Component: ThinDataFigure, x: 0, y: 604, width: 448, height: 392 },
+  { id: "study-chat-full-answer", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "full-answer", name: "Study chat, full answer", Component: FullAnswerFigure, x: 512, y: 604, width: 688, height: 688 },
+  { id: "lead-answer-compare", files: ["components/dialogue/DialogueLeadAnswerCompare.tsx"], name: "Lead answer compare", Component: LeadAnswerCompare, x: 1496, y: 776, width: 1152, height: 556 },
+  { id: "chart-library", files: ["components/dialogue/DialogueChartLibrary.tsx"], name: "Chart library", Component: DialogueChartLibrary, x: 0, y: 1420, width: 784, height: 1610 },
   {
-    id: "study-page-chrome",
+    id: "study-page-chrome", files: ["components/dialogue/product/StudyPageChrome.tsx"],
     name: "Study page chrome",
     Component: () => (
       <ProductRoot>
@@ -185,9 +214,9 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     ),
     x: 848, y: 1420, width: 960, height: 752,
   },
-  { id: "study-chat-shell", name: "Study chat shell", Component: ChatShellSample, x: 1872, y: 1420, width: 448, height: 636 },
+  { id: "study-chat-shell", files: ["components/dialogue/product/StudyChatShell.tsx"], name: "Study chat shell", Component: ChatShellSample, x: 1872, y: 1420, width: 448, height: 636 },
   {
-    id: "interview-player",
+    id: "interview-player", files: ["components/dialogue/DialogueInterviewPlayer.tsx"],
     name: "Interview player",
     Component: () => (
       <ProductRoot>
@@ -197,7 +226,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 2236, width: 640, height: 360,
   },
   {
-    id: "synced-transcript",
+    id: "synced-transcript", files: ["components/dialogue/product/SyncedTranscript.tsx"],
     name: "Synced transcript",
     Component: () => (
       <ProductRoot>
@@ -207,7 +236,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1552, y: 2236, width: 448, height: 292,
   },
   {
-    id: "funnel-chart",
+    id: "funnel-chart", files: ["components/dialogue/product/FunnelChart.tsx"],
     name: "Funnel chart",
     Component: () => (
       <ProductRoot>
@@ -217,7 +246,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 2660, width: 448, height: 296,
   },
   {
-    id: "line-chart",
+    id: "line-chart", files: ["components/dialogue/product/LineChart.tsx"],
     name: "Line chart",
     Component: () => (
       <ProductRoot>
@@ -232,7 +261,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1360, y: 2660, width: 448, height: 242,
   },
   {
-    id: "theme-ranking-card",
+    id: "theme-ranking-card", files: ["components/dialogue/product/ThemeRankingCard.tsx"],
     name: "Theme ranking card",
     Component: () => (
       <ProductRoot>
@@ -242,7 +271,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 3020, width: 448, height: 162,
   },
   {
-    id: "quote-frequency-card",
+    id: "quote-frequency-card", files: ["components/dialogue/product/QuoteFrequencyCard.tsx"],
     name: "Quote frequency card",
     Component: () => (
       <ProductRoot>
@@ -251,9 +280,9 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     ),
     x: 1424, y: 3020, width: 448, height: 160,
   },
-  { id: "chart-bar-list", name: "Chart bar list, segment", Component: SegmentBarList, x: 848, y: 3246, width: 448, height: 162 },
+  { id: "chart-bar-list", files: ["components/dialogue/product/chart/ChartBarList.tsx", "components/dialogue/product/chart/ChartVizCard.tsx"], name: "Chart bar list, segment", Component: SegmentBarList, x: 848, y: 3246, width: 448, height: 162 },
   {
-    id: "counter-evidence",
+    id: "counter-evidence", files: ["components/dialogue/product/CounterEvidence.tsx"],
     name: "Counter evidence",
     Component: () => (
       <ProductRoot>
@@ -263,7 +292,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3244, width: 448, height: 188,
   },
   {
-    id: "clip-thumbnails",
+    id: "clip-thumbnails", files: ["components/dialogue/product/ClipThumbnails.tsx"],
     name: "Clip thumbnails",
     Component: () => (
       <ProductRoot>
@@ -273,7 +302,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 3472, width: 448, height: 60,
   },
   {
-    id: "clip-card",
+    id: "clip-card", files: ["components/dialogue/product/ClipCard.tsx"],
     name: "Clip card",
     Component: () => (
       <ProductRoot>
@@ -283,7 +312,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3496, width: 448, height: 90,
   },
   {
-    id: "sources-row",
+    id: "sources-row", files: ["components/dialogue/product/SourcesRow.tsx"],
     name: "Sources row",
     Component: () => (
       <ProductRoot>
@@ -293,7 +322,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 3596, width: 448, height: 86,
   },
   {
-    id: "source-pill",
+    id: "source-pill", files: ["components/dialogue/product/SourcePill.tsx"],
     name: "Source pill, disagreeing",
     Component: () => (
       <ProductRoot>
@@ -303,7 +332,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3650, width: 240, height: 42,
   },
   {
-    id: "evidence-footer",
+    id: "evidence-footer", files: ["components/dialogue/product/EvidenceFooter.tsx"],
     name: "Evidence footer",
     Component: () => (
       <ProductRoot>
@@ -313,7 +342,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 3746, width: 448, height: 44,
   },
   {
-    id: "follow-up-chips",
+    id: "follow-up-chips", files: ["components/dialogue/product/FollowUpChips.tsx"],
     name: "Follow-up chips",
     Component: () => (
       <ProductRoot>
@@ -323,7 +352,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3756, width: 448, height: 46,
   },
   {
-    id: "chat-composer",
+    id: "chat-composer", files: ["components/dialogue/product/ChatComposer.tsx"],
     name: "Chat composer",
     Component: () => (
       <ProductRoot>
@@ -333,7 +362,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 3854, width: 448, height: 160,
   },
   {
-    id: "user-message-bubble",
+    id: "user-message-bubble", files: ["components/dialogue/product/UserMessageBubble.tsx"],
     name: "User message bubble",
     Component: () => (
       <ProductRoot>
@@ -343,7 +372,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3866, width: 448, height: 44,
   },
   {
-    id: "query-search-step",
+    id: "query-search-step", files: ["components/dialogue/product/QuerySearchStep.tsx"],
     name: "Query search step",
     Component: () => (
       <ProductRoot>
@@ -353,7 +382,7 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 848, y: 4078, width: 448, height: 78,
   },
   {
-    id: "launcher-button",
+    id: "launcher-button", files: ["components/dialogue/product/DialogueLauncherButton.tsx"],
     name: "Launcher button",
     Component: () => (
       <ProductRoot>
@@ -364,5 +393,9 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     ),
     x: 1424, y: 3974, width: 96, height: 52,
   },
-  { id: "rachel-frame", name: "Rachel frame", Component: RachelFrameSample, x: 848, y: 4220, width: 512, height: 194 },
+  { id: "rachel-frame", files: ["components/dialogue/DialogueRachelFrame.tsx"], name: "Rachel frame", Component: RachelFrameSample, x: 848, y: 4220, width: 512, height: 194 },
+  { id: "study-chat-problem-paragraphs", name: "Study chat, problem paragraphs", files: ["components/dialogue/DialogueProductFigure.tsx"], scenario: "problem-paragraphs", Component: ProblemParagraphsFigure, x: 0, y: 0, width: 448, height: 420 },
+  { id: "chart-stacked-bar", name: "Chart stacked bar, Friday", files: ["components/dialogue/product/chart/ChartStackedBar.tsx", "components/dialogue/product/chart/ChartVizCard.tsx"], Component: FridayStackedBar, x: 0, y: 0, width: 448, height: 150 },
+  { id: "clip-quotes", name: "Clip quotes", files: ["components/dialogue/product/ClipQuotes.tsx"], Component: () => (<ProductRoot><ClipQuotes /></ProductRoot>), x: 0, y: 0, width: 448, height: 260 },
+  { id: "quote-list-figure", name: "Quote list, answer focus", files: ["components/dialogue/product/scenarios/QuoteListFigure.tsx"], Component: () => (<ProductRoot><QuoteListFigure focus="answer" /></ProductRoot>), x: 0, y: 0, width: 448, height: 320 },
 ];

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import DialogueCanvas from "@/components/dev/canvas/DialogueCanvas";
+import { buildLiveManifest } from "@/components/dev/canvas/liveManifest";
 
 export const metadata: Metadata = {
   title: "Dialogue canvas",
@@ -23,5 +24,7 @@ export default function DialogueCanvasPage() {
   ) {
     notFound();
   }
-  return <DialogueCanvas />;
+  // Discovered per request from the case study's import graph, so the canvas
+  // tracks added and removed components without a registry edit.
+  return <DialogueCanvas manifest={buildLiveManifest()} />;
 }

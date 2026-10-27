@@ -143,3 +143,96 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Live audit tiles: light and dark panes side by side, then tokens, allowlist
+   status and audit flags. Same borders, sizes and site tokens as above. */
+.dc-panes {
+  display: flex;
+}
+
+.dc-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dc-pane-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Figures stay light in dark mode, inside the dark figure well (TASTE, round L). */
+.dc-preview--light {
+  background: #f7f7f5;
+}
+
+.dc-preview--dark {
+  background: #1b1e21;
+}
+
+.dc-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  overflow: auto;
+  color: var(--color-text-secondary);
+}
+
+.dc-meta-line {
+  margin: 0 0 4px;
+}
+
+.dc-meta-file {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.dc-meta-tokens {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.dc-flags {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dc-flag {
+  color: #b43f7f;
+}
+
+.dc-ok {
+  color: var(--color-text-muted);
+}
+
+.dc-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: inherit;
+}
+
+.dc-summary {
+  position: absolute;
+  top: 60px;
+  left: 12px;
+  z-index: 5;
+  max-width: 560px;
+  padding: 6px 8px;
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 16%, transparent);
+  border-radius: var(--radius-control, 8px);
+}
+
+.dc-summary p {
+  margin: 0;
+}
+
+.dc-summary ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  max-height: 240px;
+  overflow: auto;
+}
