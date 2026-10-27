@@ -10,10 +10,17 @@ import { usePathname } from "next/navigation";
 import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 
+const CD_POSTERS = [
+  "/images/cd-player-poster-light.webp",
+  "/images/cd-player-poster-dark.webp",
+];
+
 export default function PrimaryRouteWarmup() {
   const pathname = usePathname();
 
   useEffect(() => {
+    let idleId = 0;
+    let timeoutId = 0;
     let heavyIdleId = 0;
     let heavyTimeoutId = 0;
 
@@ -27,7 +34,14 @@ export default function PrimaryRouteWarmup() {
       });
     };
 
-    // About still embeds the CD player — warm its chunk after lighter JS.
+    const warmAssets = () => {
+      for (const src of CD_POSTERS) {
+        const img = new window.Image();
+        img.decoding = "async";
+        img.src = src;
+      }
+    };
+
     const warmHeavy = () => {
       void import("@/components/CDPlayer");
     };
@@ -36,8 +50,10 @@ export default function PrimaryRouteWarmup() {
       if (!allowIdlePrefetch()) return;
       warmJs();
       if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
         heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
       } else {
+        timeoutId = window.setTimeout(warmAssets, 400);
         heavyTimeoutId = window.setTimeout(warmHeavy, 1200);
       }
     };
@@ -46,9 +62,13 @@ export default function PrimaryRouteWarmup() {
 
     return () => {
       cancelIntro();
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
       if (heavyIdleId && typeof window.cancelIdleCallback === "function") {
         window.cancelIdleCallback(heavyIdleId);
       }
+      if (timeoutId) window.clearTimeout(timeoutId);
       if (heavyTimeoutId) window.clearTimeout(heavyTimeoutId);
     };
   }, [pathname]);

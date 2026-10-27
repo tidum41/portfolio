@@ -1378,6 +1378,17 @@ html[data-theme="dark"] .project-image {
   outline-color: rgba(255, 255, 255, 0.06);
 }
 
+/* ─── Frozen CD tile stand-in (PersistentWorkShell) ───────────────────
+   A static HTML copy of the live CD player, shown in the grid slot while the
+   modal is open so the tile keeps its exact on-screen state (theme, album,
+   date). Kill all motion so the copy never re-runs the album-card entrance or
+   otherwise drifts from the moment it was captured. */
+[data-cd-frozen],
+[data-cd-frozen] * {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* ─── Back button — scale on press + adequate hit area ───────────── */
 .back-btn { transition: color 0.2s ease, transform 80ms ease, background-color 1s ease, border-color 1s ease; }
 @media (hover: hover) and (pointer: fine) {
@@ -2172,14 +2183,6 @@ html[data-theme="dark"] .project-image {
   min-width: 0;
 }
 
-/* Trailing odd-count card: one-col width, centered under both stacks so
-   neither project column ends with a hole. */
-.portfolio-grid-card--trail {
-  grid-column: 1 / -1;
-  width: calc((100% - var(--grid-gutter)) / 2);
-  justify-self: center;
-}
-
 /* Empty video shells (pre-activation) must not create phantom rows —
    that was the uneven 71–77 vs 2–8px alternating gap at 390. */
 .portfolio-grid-card:empty {
@@ -2198,13 +2201,8 @@ html[data-theme="dark"] .project-image {
   }
   /* Flatten the two DOM columns so cards can be reordered as one stack
      without changing the desktop 2-column structure. `order` is set in
-     JSX from Sanity index (plus habit trail). */
+     JSX from Sanity index (plus CD/habit trailing slots). */
   .portfolio-grid-col { display: contents; }
-  .portfolio-grid-card--trail {
-    grid-column: auto;
-    width: auto;
-    justify-self: stretch;
-  }
 }
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────
