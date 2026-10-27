@@ -172,7 +172,7 @@ export function DialogueCaseStudyContent({
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem">
-              <ClaimH2>Teams needed to check an answer before sharing it</ClaimH2>
+              <ClaimH2>Teams needed answers fast, and the detail got lost</ClaimH2>
               <CaseStudyBody>
                 I did a desk research deep dive on how UX research teams work, using NN/g, Maze,
                 User Interviews and IBM Carbon, with no interviews. Teams share findings with
@@ -217,11 +217,11 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Each answer lets a team stop at the depth it needs</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A stakeholder needs the sentence and a researcher needs the evidence. Of the eight
-                versions of the answer card, these three show the call: the answer leads with a
+                A stakeholder needs the sentence and a researcher needs the evidence. I tried several
+                versions of the answer card, and these three show the call: the answer leads with a
                 sentence and its count, and the quotes sit one tap below. Next to the old paragraph, this format adds the
                 count and the people while the sentence still leads.{" "}
-                <Placeholder>what the eight versions taught you; where each format works and where
+                <Placeholder>what the other versions taught you; where each format works and where
                 it doesn&rsquo;t</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
@@ -257,7 +257,7 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="data-viz">
-              <ClaimH2>Data visualization</ClaimH2>
+              <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
                 Dialogue&rsquo;s AI picks the chart for each answer, so I designed the set it picks

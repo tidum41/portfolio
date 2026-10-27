@@ -87,7 +87,7 @@ const ENTRIES = [
     caption:
       "Removed the count axis, the legend and the percent inside each segment. Kept the two counts under their segments, because the reader needs 18 of 24 and nothing else.",
     bad: (
-      <ChartVizCard title="Read \u2018Arrives by Friday\u2019 as this Friday">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
         <ChartStackedBar
           showShare
           legend
@@ -98,7 +98,7 @@ const ENTRIES = [
       </ChartVizCard>
     ),
     good: (
-      <ChartVizCard title="Read \u2018Arrives by Friday\u2019 as this Friday">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
         <ChartStackedBar
           total={FRIDAY_TOTAL}
           segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Did not" ? "did not" : "said it", value: r.count, display: String(r.count), focal: r.focal }))}

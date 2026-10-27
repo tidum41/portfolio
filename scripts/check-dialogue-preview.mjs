@@ -308,19 +308,21 @@ async function heroOverlapChecks(browser) {
     try {
       const { ctx, page } = await open(browser, "/dialogue", width, 900);
       const r = await page.evaluate(() => {
-        const m = document.querySelector(".dp-hero-v2__mobile");
-        const card = m.querySelector(".dp-hero-v2__card").getBoundingClientRect();
+        const frame = document.querySelector(".cs-hero-media-frame");
+        if (!frame) return { hits: 0, nodes: 0, missing: true };
+        const m = frame.closest("header, section, article") || document.body;
+        const card = frame.getBoundingClientRect();
         let hits = 0, nodes = 0;
         const w = document.createTreeWalker(m, NodeFilter.SHOW_TEXT);
         let n;
         while ((n = w.nextNode())) {
-          if (!n.textContent.trim() || n.parentElement.closest(".dp-hero-v2__card")) continue;
+          if (!n.textContent.trim() || n.parentElement.closest(".cs-hero-media-frame, nav, [aria-hidden=true]")) continue;
           const rg = document.createRange();
           rg.selectNodeContents(n);
           const q = rg.getBoundingClientRect();
           if (q.width === 0 || q.height === 0) continue;
           nodes++;
-          if (q.bottom > card.top && q.top < card.bottom && q.right > card.left && q.left < card.right) hits++;
+          if (q.bottom > card.top + 1 && q.top < card.bottom - 1 && q.right > card.left + 1 && q.left < card.right - 1) hits++;
         }
         return { hits, nodes };
       });
