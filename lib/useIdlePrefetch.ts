@@ -26,11 +26,12 @@ function arm() {
 export function useIdlePrefetch(): boolean {
   const [ready, setReady] = useState(released);
   useEffect(() => {
+    const fn = () => setReady(true);
     if (released) {
-      setReady(true);
+      // Released between render and effect.
+      queueMicrotask(fn);
       return;
     }
-    const fn = () => setReady(true);
     listeners.add(fn);
     arm();
     return () => {

@@ -4,12 +4,12 @@
  * the paths are written into the HTML once instead of also riding in the RSC
  * payload of every document and prefetch. The browser never reads it.
  */
+import { getSsrSlot } from "@/lib/ssrSlot";
+
 export const NAV_WORDS_SSR_KEY = "__muditNavWordsSvg";
 
 export type NavWordsSsr = Record<string, string>;
 
 export function readNavWordsSsr(label: string): string {
-  if (typeof window !== "undefined") return "";
-  const map = (globalThis as Record<string, unknown>)[NAV_WORDS_SSR_KEY] as NavWordsSsr | undefined;
-  return map?.[label] ?? "";
+  return getSsrSlot<NavWordsSsr>(NAV_WORDS_SSR_KEY)?.[label] ?? "";
 }
