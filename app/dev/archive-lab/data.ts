@@ -1,3 +1,11 @@
+import gunna from "@/public/playground/gunna.webp";
+import jcole from "@/public/playground/jcole.webp";
+import holl from "@/public/playground/2hollis.webp";
+import omar from "@/public/playground/omar-apollo.webp";
+import marias from "@/public/playground/the-marias.webp";
+import concert from "@/public/playground/concert.webp";
+import keyboard from "@/public/playground/keyboard.webp";
+
 export type ArchiveTag = "concerts" | "keyboards" | "life";
 
 export type ArchivePhoto = {
@@ -8,53 +16,57 @@ export type ArchivePhoto = {
   alt: string;
 };
 
+function srcOf(mod: string | { src: string }): string {
+  return typeof mod === "string" ? mod : mod.src;
+}
+
 /** Local playground assets already in the repo. Credits are placeholders. */
 export const ARCHIVE_PHOTOS: ArchivePhoto[] = [
   {
     id: "gunna",
-    src: "/playground/gunna.webp",
+    src: srcOf(gunna),
     tag: "concerts",
     credit: "Artist · Venue · Year",
     alt: "Concert photo",
   },
   {
     id: "jcole",
-    src: "/playground/jcole.webp",
+    src: srcOf(jcole),
     tag: "concerts",
     credit: "Artist · Venue · Year",
     alt: "Concert photo",
   },
   {
     id: "2hollis",
-    src: "/playground/2hollis.webp",
+    src: srcOf(holl),
     tag: "concerts",
     credit: "Artist · Venue · Year",
     alt: "Concert photo",
   },
   {
     id: "omar-apollo",
-    src: "/playground/omar-apollo.webp",
+    src: srcOf(omar),
     tag: "concerts",
     credit: "Artist · Venue · Year",
     alt: "Concert photo",
   },
   {
     id: "the-marias",
-    src: "/playground/the-marias.webp",
+    src: srcOf(marias),
     tag: "concerts",
     credit: "Artist · Venue · Year",
     alt: "Concert photo",
   },
   {
     id: "concert",
-    src: "/playground/concert.webp",
+    src: srcOf(concert),
     tag: "life",
     credit: "Artist · Venue · Year",
     alt: "Crowd photo",
   },
   {
     id: "keyboard",
-    src: "/playground/keyboard.webp",
+    src: srcOf(keyboard),
     tag: "keyboards",
     credit: "Build · Bench · Year",
     alt: "Keyboard build photo",
@@ -65,14 +77,14 @@ export const KEYBOARD_BUILD_PHOTOS: ArchivePhoto[] = [
   ARCHIVE_PHOTOS.find((p) => p.id === "keyboard")!,
   {
     id: "keyboard-2",
-    src: "/playground/keyboard.webp",
+    src: srcOf(keyboard),
     tag: "keyboards",
     credit: "Build · Bench · Year",
     alt: "Keyboard build photo",
   },
   {
     id: "keyboard-3",
-    src: "/playground/keyboard.webp",
+    src: srcOf(keyboard),
     tag: "keyboards",
     credit: "Build · Bench · Year",
     alt: "Keyboard build photo",
