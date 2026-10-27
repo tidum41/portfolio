@@ -623,16 +623,16 @@ export default function ProjectPopup({
                         </div>
                       )}
                       <div className="project-popup-info-inner" ref={infoInnerRef}>
-                        {/* Rows reuse the case-study meta block (.cs-meta-label / .cs-meta-value). */}
+                        {/* Rows reuse the home card label: muted caption tag over title-face value. */}
                         <div className="project-popup-meta">
                           {(infoMeta ?? []).map(({ label, values }) => (
                             <div key={label} className="project-popup-meta-row">
-                              <p className="cs-meta-label">{label}</p>
-                              <p className="cs-meta-value">{values.join(", ")}</p>
+                              <p className="card-label-tag">{label}</p>
+                              <p className="project-popup-meta-value">{values.join(", ")}</p>
                             </div>
                           ))}
                           <section ref={whySectionRef} className="project-popup-meta-row">
-                            <h3 className="cs-meta-label">Why I built it</h3>
+                            <h3 className="card-label-tag">Why I built it</h3>
                             <p className="cs-meta-value">{whyBuilt}</p>
                           </section>
                         </div>

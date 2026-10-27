@@ -848,8 +848,26 @@ html[data-theme="dark"] .project-popup-info {
 .project-popup-meta-row:first-child {
   padding-top: 0;
 }
-.project-popup-meta-row .cs-meta-value {
+/* Same values as CardLabel's tag + title (PersistentWorkShell CardLabel). */
+.project-popup-meta-row .card-label-tag {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  line-height: var(--lh-caption);
+  letter-spacing: 0.01em;
+  color: var(--color-text-muted);
+}
+.project-popup-meta-value {
+  margin: 0;
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-card-title);
+  line-height: var(--lh-meta);
   color: var(--color-text-primary);
+}
+.project-popup-meta-row .cs-meta-value {
+  color: var(--color-text-secondary);
 }
 
 /* Home-card external link: card title face + blue northeast arrow. */
