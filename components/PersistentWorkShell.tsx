@@ -14,7 +14,7 @@ import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
-import AllinoneDemoSkeleton from "@/components/AllinoneDemoSkeleton";
+import AllinoneHalftoneLoader from "@/components/AllinoneHalftoneLoader";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
@@ -257,10 +257,16 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // never mismatches; the effect below syncs if BootScripts flipped to "light".
   const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
   // Allinone: defer iframe src until the open animation settles, then
-  // crossfade the layout skeleton out once the same-origin embed paints.
+  // fade a delayed (~150ms) halftone loader and post allinone-enter so the
+  // embed can stagger its chrome in.
   const [allinoneAllowSrc, setAllinoneAllowSrc] = useState(false);
   const [allinoneFrameSrc, setAllinoneFrameSrc] = useState<string | undefined>(undefined);
   const [allinoneFrameReady, setAllinoneFrameReady] = useState(false);
+  const [allinoneLoaderVisible, setAllinoneLoaderVisible] = useState(false);
+  const [allinoneLoaderFading, setAllinoneLoaderFading] = useState(false);
+  const allinoneIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const allinoneEnterSentRef = useRef(false);
+  const allinoneReadyLatchedRef = useRef(false);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -561,8 +567,22 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       setAllinoneAllowSrc(false);
       setAllinoneFrameSrc(undefined);
       setAllinoneFrameReady(false);
+      setAllinoneLoaderVisible(false);
+      setAllinoneLoaderFading(false);
+      allinoneEnterSentRef.current = false;
+      allinoneReadyLatchedRef.current = false;
+      allinoneIframeRef.current = null;
     }
   };
+
+  // Show the halftone loader only after ~150ms so fast paints never flash it.
+  useEffect(() => {
+    if (openPopup !== "allinone" || !popupVisible || allinoneFrameReady) {
+      return;
+    }
+    const t = window.setTimeout(() => setAllinoneLoaderVisible(true), 150);
+    return () => window.clearTimeout(t);
+  }, [openPopup, popupVisible, allinoneFrameReady]);
 
   // Arm the iframe only after the panel enter finishes, then on idle so the
   // open animation + topbar hover stay on the main thread.
@@ -589,8 +609,36 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     };
   }, [allinoneAllowSrc, allinoneFrameSrc]);
 
-  // Same-origin: wait for load + first paint (double rAF). Also accept an
-  // optional postMessage from the demo if it ever signals ready.
+  const signalAllinoneEnter = (iframe: HTMLIFrameElement | null) => {
+    if (!iframe || allinoneEnterSentRef.current) return;
+    allinoneEnterSentRef.current = true;
+    try {
+      iframe.contentWindow?.postMessage(
+        { type: "allinone-enter" },
+        window.location.origin,
+      );
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const completeAllinoneReady = (iframe?: HTMLIFrameElement | null) => {
+    if (allinoneReadyLatchedRef.current) {
+      signalAllinoneEnter(iframe ?? allinoneIframeRef.current);
+      return;
+    }
+    allinoneReadyLatchedRef.current = true;
+    const el = iframe ?? allinoneIframeRef.current;
+    setAllinoneFrameReady(true);
+    setAllinoneLoaderFading(true);
+    setAllinoneLoaderVisible(false);
+    // Let the loader opacity transition finish, then unmount.
+    window.setTimeout(() => setAllinoneLoaderFading(false), 220);
+    signalAllinoneEnter(el);
+  };
+
+  // Same-origin: prefer the demo's allinone-ready postMessage; fall back to
+  // load + double rAF. Either path fades the loader and posts allinone-enter.
   useEffect(() => {
     if (openPopup !== "allinone") return;
     const onMessage = (e: MessageEvent) => {
@@ -600,7 +648,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         data === "allinone-ready" ||
         (data && typeof data === "object" && (data as { type?: string }).type === "allinone-ready")
       ) {
-        setAllinoneFrameReady(true);
+        completeAllinoneReady(allinoneIframeRef.current);
       }
     };
     window.addEventListener("message", onMessage);
@@ -609,19 +657,24 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   const markAllinonePainted = (iframe: HTMLIFrameElement | null) => {
     if (!iframe) return;
-    const finish = () => setAllinoneFrameReady(true);
+    allinoneIframeRef.current = iframe;
+    if (allinoneFrameReady) {
+      signalAllinoneEnter(iframe);
+      return;
+    }
     try {
       const doc = iframe.contentDocument;
       if (!doc) {
-        finish();
+        completeAllinoneReady(iframe);
         return;
       }
-      // Two frames after load ≈ first paint of the embed.
+      // Two frames after load ≈ first paint of the embed (fallback if the
+      // demo's ready message is late or missing).
       requestAnimationFrame(() => {
-        requestAnimationFrame(finish);
+        requestAnimationFrame(() => completeAllinoneReady(iframe));
       });
     } catch {
-      finish();
+      completeAllinoneReady(iframe);
     }
   };
 
@@ -994,10 +1047,14 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           whyBuilt={ALLINONE_WHY_BUILT}
         >
           <div className="aio-demo-embed">
-            <AllinoneDemoSkeleton hidden={allinoneFrameReady} />
+            <AllinoneHalftoneLoader
+              visible={allinoneLoaderVisible && !allinoneFrameReady}
+              fading={allinoneLoaderFading}
+            />
             {/* Src armed after open animation + idle — keeps × / info at 60fps. */}
             {allinoneFrameSrc ? (
               <iframe
+                ref={allinoneIframeRef}
                 className="project-popup-iframe"
                 src={allinoneFrameSrc}
                 title="Allinone — AI to-do list"

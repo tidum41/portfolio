@@ -86,7 +86,7 @@ export default function ProjectPopup({
   const triggerElRef = useRef<Element | null>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
   const infoInnerRef = useRef<HTMLDivElement>(null);
-  const whySectionRef = useRef<HTMLDetailsElement>(null);
+  const whySectionRef = useRef<HTMLElement>(null);
   const sheetDragRef = useRef<{ startY: number; dragging: boolean } | null>(null);
   /** Outer large-panel sheet drag (below 640px). */
   const panelDragRef = useRef<{
@@ -100,7 +100,6 @@ export default function ProjectPopup({
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
-  const [whyOpen, setWhyOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   /** Static backdrop blur sibling — never opacity-animated with the filter. */
   const [blurOn, setBlurOn] = useState(false);
@@ -137,11 +136,10 @@ export default function ProjectPopup({
   }, []);
 
   // Reset info chrome whenever the dialog closes so the next open starts
-  // with the app filling the panel (info closed, disclosure collapsed).
+  // with the app filling the panel (info closed).
   useEffect(() => {
     if (!open) {
       setInfoOpen(false);
-      setWhyOpen(false);
       setSheetHeight(null);
       setSheetDragY(0);
       setPanelDragY(0);
@@ -156,7 +154,8 @@ export default function ProjectPopup({
     }
   }, [open]);
 
-  // Mobile sheet: grow to content up to 50dvh (closed Why) / 85dvh (open Why).
+  // Mobile sheet: hug content up to ~78dvh so the full info (meta + why)
+  // fits without an inner scrollbar on typical phones.
   useLayoutEffect(() => {
     if (!infoOpen || !isMobile) {
       if (!isMobile) setSheetHeight(null);
@@ -169,27 +168,11 @@ export default function ProjectPopup({
     panel.style.height = "auto";
     const contentH = panel.scrollHeight;
     panel.style.height = prev;
-    // Prefer visualViewport when present (iOS dynamic toolbars); fall back to
-    // innerHeight. Caps are dvh-equivalent fractions of the live viewport.
-    // Closed Why must still fit Open full app + Why summary without clipping;
-    // open Why can grow further (sheet scrolls internally past the cap).
     const vh = window.visualViewport?.height ?? window.innerHeight;
     const shortLandscape = vh <= 500;
-    const cap = shortLandscape
-      ? (whyOpen ? 0.75 : 0.7) * vh
-      : (whyOpen ? 0.85 : 0.72) * vh;
+    const cap = (shortLandscape ? 0.82 : 0.78) * vh;
     setSheetHeight(Math.min(contentH, cap));
-  }, [infoOpen, whyOpen, isMobile, infoMeta, whyBuilt, infoLink]);
-
-  // After Why expands, keep its body in view inside the sheet without a
-  // manual scroll when content hits the 85dvh cap.
-  useLayoutEffect(() => {
-    if (!whyOpen || !isMobile || !whySectionRef.current) return;
-    const id = requestAnimationFrame(() => {
-      whySectionRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [whyOpen, isMobile, sheetHeight, reduced]);
+  }, [infoOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
@@ -581,7 +564,6 @@ export default function ProjectPopup({
                       className="project-popup-info"
                       role="region"
                       aria-label="Project details"
-                      data-why-open={whyOpen ? "true" : "false"}
                       initial={{ opacity: 0, y: infoY }}
                       animate={{
                         opacity: 1,
@@ -645,11 +627,13 @@ export default function ProjectPopup({
                             {infoMeta.map(({ label, values }) => (
                               <div key={label} className="project-popup-spec-row">
                                 <dt className="project-popup-spec-label">{label}</dt>
-                                {values.map((v) => (
-                                  <dd key={v} className="project-popup-spec-value">
-                                    {v}
-                                  </dd>
-                                ))}
+                                <dd className="project-popup-spec-values">
+                                  {values.map((v) => (
+                                    <span key={v} className="project-popup-spec-value">
+                                      {v}
+                                    </span>
+                                  ))}
+                                </dd>
                               </div>
                             ))}
                           </dl>
@@ -668,22 +652,10 @@ export default function ProjectPopup({
                             </svg>
                           </a>
                         )}
-                        <details
-                          ref={whySectionRef}
-                          className="project-popup-why"
-                          open={whyOpen}
-                          onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
-                        >
-                          <summary>
-                            <span className="project-popup-why-chevron" aria-hidden>
-                              <svg viewBox="0 0 12 12" width={10} height={10} fill="none">
-                                <path d="M4.25 2.5L7.75 6L4.25 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </span>
-                            <span className="project-popup-why-label">Why I built it</span>
-                          </summary>
+                        <section ref={whySectionRef} className="project-popup-why">
+                          <h3 className="project-popup-why-label">Why I built it</h3>
                           <p>{whyBuilt}</p>
-                        </details>
+                        </section>
                       </div>
                     </motion.div>
                   </>
