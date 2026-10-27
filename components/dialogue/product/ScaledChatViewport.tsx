@@ -29,12 +29,6 @@ type Props = {
   fit?: "scale" | "reflow";
   /** Bottom fade for equal-height compare crops. */
   fade?: boolean;
-  /**
-   * Round J: below 768px, drop the height cap and the fade so the whole
-   * figure shows (clips drawer, follow-ups, every chip). Anatomy and the
-   * full answer opt in from DialogueProductFigure.
-   */
-  uncapOnMobile?: boolean;
   className?: string;
 };
 
@@ -73,24 +67,10 @@ export default function ScaledChatViewport({
   fitViewport = false,
   fit = "scale",
   fade = false,
-  uncapOnMobile = false,
   className,
 }: Props) {
   const layerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const [mobileFull, setMobileFull] = useState(false);
-
-  useLayoutEffect(() => {
-    if (!uncapOnMobile) return;
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setMobileFull(mq.matches);
-    update();
-    mq.addEventListener?.("change", update);
-    return () => mq.removeEventListener?.("change", update);
-  }, [uncapOnMobile]);
-
-  const effMaxOuterHeight = mobileFull ? undefined : maxOuterHeight;
-  const effFade = fade && !mobileFull;
   const [scale, setScale] = useState(0.5);
   const [cropH, setCropH] = useState(cropHeight ?? 480);
   const [clipW, setClipW] = useState(0);
@@ -171,7 +151,7 @@ export default function ScaledChatViewport({
       const measured = inner.offsetHeight;
       if (measured < 1) return;
       let h = measured;
-      if (effMaxOuterHeight !== undefined) h = Math.min(h, effMaxOuterHeight);
+      if (maxOuterHeight !== undefined) h = Math.min(h, maxOuterHeight);
       setReflowH(h);
     };
 
@@ -179,9 +159,9 @@ export default function ScaledChatViewport({
     const ro = new ResizeObserver(measure);
     ro.observe(inner);
     return () => ro.disconnect();
-  }, [fit, effMaxOuterHeight, children]);
+  }, [fit, maxOuterHeight, children]);
 
-  const shadowSafe = effMaxOuterHeight === undefined && !effFade;
+  const shadowSafe = maxOuterHeight === undefined && !fade;
 
   if (fit === "reflow") {
     const outerH = reflowH;
@@ -207,7 +187,7 @@ export default function ScaledChatViewport({
           >
             {children}
           </div>
-          {effFade && outerH !== undefined ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
+          {fade && outerH !== undefined ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
         </div>
       </div>
     );
@@ -215,7 +195,7 @@ export default function ScaledChatViewport({
 
   const outerW = clipW > 0 ? clipW : Math.round(innerWidth * scale * dpr) / dpr;
   let outerH = Math.round(cropH * scale * dpr) / dpr;
-  if (effMaxOuterHeight !== undefined) outerH = Math.min(outerH, effMaxOuterHeight);
+  if (maxOuterHeight !== undefined) outerH = Math.min(outerH, maxOuterHeight);
 
   return (
     <div
@@ -254,7 +234,7 @@ export default function ScaledChatViewport({
         >
           {children}
         </div>
-        {effFade ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
+        {fade ? <div className="dp-scaled-viewport__fade" aria-hidden /> : null}
       </div>
     </div>
   );

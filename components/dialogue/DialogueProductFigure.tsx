@@ -25,9 +25,8 @@ function figureName(scenario: Scenario): string {
 const CHAT_W = 448;
 /** Callout rail 220 + gutter 72 + chat 448. The rail holds 14px labels counter-scaled to real size. */
 const ANATOMY_W = 740;
-/** Answer column + clip drawer cluster. Round L widened the panels and
-    raised the width so the two screens read at near full size. */
-const FULL_ANSWER_W = 704;
+/** Answer column + clip drawer cluster */
+const FULL_ANSWER_W = 688;
 /** Below 480px: crop instead of shrinking past this (12px labels stay >= 11px). */
 const PHONE_MIN_SCALE = Math.max(0.85, 11 / 12);
 const DESKTOP_MIN_SCALE = 0.94;
@@ -101,11 +100,11 @@ function scaleProps(
     case "anatomy":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1, maxOuterHeight: 440 }
-        : { innerWidth: ANATOMY_W, minScale: 0.84, maxScale: 1, maxHeight: ANATOMY_MAX_H };
+        : { innerWidth: ANATOMY_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: ANATOMY_MAX_H };
     case "full-answer":
       return narrow
         ? { innerWidth: CHAT_W, minScale, maxScale: 1 }
-        : { innerWidth: FULL_ANSWER_W, minScale: 0.88, maxScale: 1, maxHeight: 1600 };
+        : { innerWidth: FULL_ANSWER_W, minScale: DESKTOP_MIN_SCALE, maxScale: 1, maxHeight: FIGURE_MAX_H };
     case "clip-player":
       return narrow
         ? { innerWidth: 656, fit: "reflow" }
@@ -148,7 +147,6 @@ export default function DialogueProductFigure({ scenario, title, assetId, classN
             fitViewport={zoomed}
             fit={scale.fit}
             fade={zoomed ? false : scale.fade}
-            uncapOnMobile={!zoomed && (scenario === "anatomy" || scenario === "full-answer")}
           >
             {inner}
           </ScaledChatViewport>

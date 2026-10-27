@@ -22,7 +22,7 @@ type Props = {
   frameLabel: string;
   question: string;
   summary: ReactNode;
-  searchStep?: { searched: number; found: number; foundLabel?: string };
+  searchStep?: { searched: number; found: number };
   chartTitle: string;
   chartCaption?: string;
   rows: DialogueMomentRow[];
@@ -66,7 +66,6 @@ export default function DialogueQueryMoment({
               <QuerySearchStep
                 searched={searchStep.searched}
                 found={searchStep.found}
-                foundLabel={searchStep.foundLabel}
               />
             ) : null}
             <p className="dp-summary dp-text-body" data-annotate-part="summary">

@@ -6,10 +6,10 @@ import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { CheckIcon, CopyIcon, InfoCircleIcon } from "@/components/dialogue/product/icons";
 
 const NEXT_STUDY_PROMPT = [
-  "Plan the next study on mobile checkout.",
-  "In the last study, 4 of 24 interviews said autofill skipped the apartment field and address validation fired late on mobile. That is a lead, not a trend.",
-  "Recruit more mobile participants, ask each to complete checkout on a phone, and confirm whether the problem repeats.",
-  "Report how many participants hit it and quote the moment they noticed.",
+  "Plan the next study on lapsed buyers.",
+  "In the last study, 2 of 5 lapsed buyers mentioned a damaged first order. The count is small, so treat it as a lead.",
+  "Recruit more lapsed buyers and ask each about their first order.",
+  "Report how many mention it and quote the moment they noticed.",
 ].join("\n\n");
 
 async function copyText(text: string) {
@@ -48,15 +48,14 @@ export default function ThinDataFigure() {
   };
 
   return (
-    <StudyChatShell compact hideHeader hideComposer evidence={4}>
-      <UserMessageBubble>Why did people abandon on mobile?</UserMessageBubble>
+    <StudyChatShell compact hideHeader hideComposer evidence={2}>
+      <UserMessageBubble>What did lapsed buyers say about their first order?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
-        On mobile, several participants bailed when autofill skipped the apartment field and
-        validation fired late.
+        Two lapsed buyers mentioned that their first order arrived damaged.
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
         <InfoCircleIcon className="dp-low-signal__icon" />
-        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this.</p>
+        <p className="dp-low-signal__text">Early signal, 2 people</p>
       </div>
       <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
       <div className="dp-next-study-wrap">

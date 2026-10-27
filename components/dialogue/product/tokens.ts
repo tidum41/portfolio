@@ -11,7 +11,7 @@ export const dialogueCopy = {
   assistantTitle: "Study chat",
   betaLabel: "Beta",
   /** Case-study study context (live product uses a generic answering subtitle) */
-  studySubtitle: "Checkout usability, 24 interviews",
+  studySubtitle: "Checkout signals, 24 interviews",
   composerPlaceholder: "Ask about your study...",
   searchStep: (searched: number, found: number) =>
     `Searched ${searched} interviews, found ${found} relevant moments`,

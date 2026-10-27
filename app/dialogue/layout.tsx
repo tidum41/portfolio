@@ -1,15 +1,7 @@
 import type { ReactNode } from "react";
-import {
-  dialogueDmSans,
-  dialogueZillaSlab,
-} from "@/components/dialogue/product/fonts";
 
+/** Case-study chrome uses the site fonts. DM Sans and Zilla Slab live only
+    on .dialogue-product-root, applied by the product figures themselves. */
 export default function DialogueLayout({ children }: { children: ReactNode }) {
-  return (
-    <div
-      className={`dialogue-case-study-root ${dialogueDmSans.variable} ${dialogueDmSans.className} ${dialogueZillaSlab.variable}`}
-    >
-      {children}
-    </div>
-  );
+  return <div className="dialogue-case-study-root">{children}</div>;
 }
