@@ -14,6 +14,7 @@ import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
+import AllinoneDemoSkeleton from "@/components/AllinoneDemoSkeleton";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
@@ -255,9 +256,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
   // never mismatches; the effect below syncs if BootScripts flipped to "light".
   const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
-  // Allinone iframe mounts only while its popup is open; hide the skeleton
-  // once the embed fires load (no spinner flash on a fast load).
-  const [allinoneFrameLoaded, setAllinoneFrameLoaded] = useState(false);
+  // Allinone: defer iframe src until the open animation settles, then
+  // crossfade the layout skeleton out once the same-origin embed paints.
+  const [allinoneAllowSrc, setAllinoneAllowSrc] = useState(false);
+  const [allinoneFrameSrc, setAllinoneFrameSrc] = useState<string | undefined>(undefined);
+  const [allinoneFrameReady, setAllinoneFrameReady] = useState(false);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -554,7 +557,70 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     // Drop the frozen still once the modal is fully closed and the live CD has
     // reparented back into the grid slot, so it goes live again next open.
     if (id === "cd") setCdFrozen(null);
-    if (id === "allinone") setAllinoneFrameLoaded(false);
+    if (id === "allinone") {
+      setAllinoneAllowSrc(false);
+      setAllinoneFrameSrc(undefined);
+      setAllinoneFrameReady(false);
+    }
+  };
+
+  // Arm the iframe only after the panel enter finishes, then on idle so the
+  // open animation + topbar hover stay on the main thread.
+  useEffect(() => {
+    if (!allinoneAllowSrc || allinoneFrameSrc) return;
+    let cancelled = false;
+    const arm = () => {
+      if (cancelled) return;
+      setAllinoneFrameSrc(ALLINONE_APP_URL);
+    };
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(arm, { timeout: 320 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+    const t = window.setTimeout(arm, 48);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [allinoneAllowSrc, allinoneFrameSrc]);
+
+  // Same-origin: wait for load + first paint (double rAF). Also accept an
+  // optional postMessage from the demo if it ever signals ready.
+  useEffect(() => {
+    if (openPopup !== "allinone") return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data;
+      if (
+        data === "allinone-ready" ||
+        (data && typeof data === "object" && (data as { type?: string }).type === "allinone-ready")
+      ) {
+        setAllinoneFrameReady(true);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [openPopup]);
+
+  const markAllinonePainted = (iframe: HTMLIFrameElement | null) => {
+    if (!iframe) return;
+    const finish = () => setAllinoneFrameReady(true);
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) {
+        finish();
+        return;
+      }
+      // Two frames after load ≈ first paint of the embed.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(finish);
+      });
+    } catch {
+      finish();
+    }
   };
 
   // Seed habit poster theme from the site only until the live widget reports
@@ -917,6 +983,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           open={popupVisible}
           onClose={closePopup}
           onExitComplete={() => handlePopupExitComplete("allinone")}
+          onEntered={() => setAllinoneAllowSrc(true)}
           title="Designing a to-do list with AI organization"
           size="large"
           panelBg="var(--color-bg)"
@@ -924,29 +991,20 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           infoLink={{ href: ALLINONE_APP_URL, label: "Open full app" }}
           whyBuilt={ALLINONE_WHY_BUILT}
         >
-          <div
-            style={{
-              position: "relative",
-              flex: "1 1 auto",
-              minHeight: 0,
-              overflow: "hidden",
-              background: "var(--color-placeholder)",
-            }}
-          >
-            <div
-              className="project-popup-iframe-skel"
-              data-hidden={allinoneFrameLoaded ? "true" : "false"}
-              aria-hidden
-            />
-            {/* Mount the iframe only while this popup is open (lazy). */}
-            <iframe
-              className="project-popup-iframe"
-              src={ALLINONE_APP_URL}
-              title="Allinone — AI to-do list"
-              allow="clipboard-write"
-              loading="lazy"
-              onLoad={() => setAllinoneFrameLoaded(true)}
-            />
+          <div className="aio-demo-embed">
+            <AllinoneDemoSkeleton hidden={allinoneFrameReady} />
+            {/* Src armed after open animation + idle — keeps × / info at 60fps. */}
+            {allinoneFrameSrc ? (
+              <iframe
+                className="project-popup-iframe"
+                src={allinoneFrameSrc}
+                title="Allinone — AI to-do list"
+                allow="clipboard-write"
+                loading="lazy"
+                data-ready={allinoneFrameReady ? "true" : "false"}
+                onLoad={(e) => markAllinonePainted(e.currentTarget)}
+              />
+            ) : null}
           </div>
         </ProjectPopup>
       )}

@@ -620,6 +620,8 @@ html[data-theme="light"] {
    expansion language as PS3ControlPanel's .ps3cp-ibtn. Background stays flat
    (matches the panel, no resting "badge" box) — only the icon color shifts
    on hover, same as .ps3cp-ibtn's own resting/hover treatment. ─────────── */
+/* Hover/press use opacity + transform only (compositor) so info/× stay
+   responsive while a heavy iframe is parsing on the main thread. */
 .popup-close-btn {
   display: flex;
   align-items: center;
@@ -631,10 +633,15 @@ html[data-theme="light"] {
   padding: 0;
   cursor: pointer;
   background: none;
-  color: var(--color-text-card-sub);
+  color: var(--color-text-primary);
   position: relative;
-  transition: color 120ms ease, transform 120ms ease, background-color 120ms ease;
+  transition: transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
+}
+.popup-close-btn svg {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+  will-change: opacity;
 }
 .popup-close-btn::before {
   content: "";
@@ -643,15 +650,15 @@ html[data-theme="light"] {
   inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .popup-close-btn:hover { color: var(--color-text-primary); }
+  .popup-close-btn:hover svg { opacity: 1; }
   .popup-close-btn:active { transform: scale(0.96); }
 }
 /* Touch / coarse: no hover-only colour; visible pressed fill instead. */
 @media (hover: none), (pointer: coarse) {
   .popup-close-btn:active {
-    color: var(--color-text-primary);
     background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
   }
+  .popup-close-btn:active svg { opacity: 1; }
 }
 
 /* Info (i) control — identical chrome to .popup-close-btn (24px / 44px tap). */
@@ -666,10 +673,15 @@ html[data-theme="light"] {
   padding: 0;
   cursor: pointer;
   background: none;
-  color: var(--color-text-card-sub);
+  color: var(--color-text-primary);
   position: relative;
-  transition: color 120ms ease, transform 120ms ease, background-color 120ms ease;
+  transition: transform 120ms ease;
   -webkit-tap-highlight-color: transparent;
+}
+.popup-info-btn svg {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+  will-change: opacity;
 }
 .popup-info-btn::before {
   content: "";
@@ -678,14 +690,26 @@ html[data-theme="light"] {
   inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .popup-info-btn:hover { color: var(--color-text-primary); }
+  .popup-info-btn:hover svg { opacity: 1; }
   .popup-info-btn:active { transform: scale(0.96); }
 }
 @media (hover: none), (pointer: coarse) {
   .popup-info-btn:active {
-    color: var(--color-text-primary);
     background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
   }
+  .popup-info-btn:active svg { opacity: 1; }
+}
+
+/* Static blur sibling — never opacity-animated (animating opacity on an
+   element with backdrop-filter forces per-frame filter repaints). Lives
+   under the dim/panel shell; cleared on exit-complete. */
+.project-popup-backdrop-blur {
+  position: fixed;
+  inset: 0;
+  z-index: 999997;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Large ProjectPopup — near-fullscreen app embed (Allinone, etc.).
@@ -960,36 +984,164 @@ html[data-theme="dark"] .project-popup-why {
   }
 }
 
-/* Neutral skeleton while the large-popup iframe loads — no spinner flash. */
-.project-popup-iframe-skel {
+/* All in One embed host — isolate iframe paint/layout from parent chrome. */
+.aio-demo-embed {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+  contain: strict;
+  content-visibility: auto;
+}
+
+/* Layout-mirroring skeleton (toolbar + task rows). Crossfades out when ready. */
+.aio-demo-skel {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      var(--color-placeholder) 0%,
-      color-mix(in srgb, var(--color-placeholder) 70%, var(--color-bg)) 50%,
-      var(--color-placeholder) 100%
-    );
-  background-size: 200% 100%;
-  animation: project-popup-skel-shine 1.4s ease-in-out infinite;
-  pointer-events: none;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  pointer-events: none;
   opacity: 1;
   transition: opacity 180ms ease;
+  overflow: hidden;
 }
-.project-popup-iframe-skel[data-hidden="true"] {
+.aio-demo-skel[data-hidden="true"] {
   opacity: 0;
-  animation: none;
 }
-@keyframes project-popup-skel-shine {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+.aio-demo-skel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 52px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.aio-demo-skel-toolbar-left,
+.aio-demo-skel-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.aio-demo-skel-toolbar-right {
+  gap: 8px;
+  flex-shrink: 0;
+}
+.aio-demo-skel-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--color-placeholder);
+  flex-shrink: 0;
+  /* Pull toward the checkbox column like the demo's sidebar icon (-8px). */
+  margin-left: -4px;
+}
+.aio-demo-skel-icon-sm {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--color-placeholder);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.aio-demo-skel-title {
+  width: 72px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--color-placeholder);
+}
+.aio-demo-skel-pill {
+  height: 28px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--color-placeholder);
+}
+.aio-demo-skel-pill--ghost {
+  width: 96px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--color-placeholder);
+}
+.aio-demo-skel-pill--solid {
+  width: 64px;
+  background: color-mix(in srgb, var(--color-text-primary) 18%, var(--color-placeholder));
+}
+.aio-demo-skel-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 16px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+.aio-demo-skel-row {
+  display: flex;
+  align-items: flex-start;
+  min-height: 32px;
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+.aio-demo-skel-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-placeholder);
+  background: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+  margin-right: 10px;
+  box-sizing: border-box;
+}
+.aio-demo-skel-bar {
+  height: 11px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: var(--color-placeholder);
+  max-width: 100%;
+}
+/* Compositor-only shimmer (transform), not background-position. */
+.aio-demo-skel-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-bg) 55%, transparent) 45%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: aio-demo-skel-sweep 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes aio-demo-skel-sweep {
+  100% { transform: translateX(120%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .project-popup-iframe-skel {
+  .aio-demo-skel-shine {
     animation: none;
+    opacity: 0;
   }
+  .aio-demo-skel {
+    transition: none;
+  }
+  .project-popup-iframe {
+    transition: none;
+  }
+}
+@media (max-width: 680px) {
+  .aio-demo-skel-icon-sm { display: none; }
+  .aio-demo-skel-row { min-height: 44px; padding: 12px 0; }
+  .aio-demo-skel-check { margin-top: 6px; }
 }
 
 .project-popup-iframe {
@@ -999,6 +1151,14 @@ html[data-theme="dark"] .project-popup-why {
   height: 100%;
   border: 0;
   background: var(--color-bg);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  /* Keep iframe layout/paint off the parent topbar hover path. */
+  contain: strict;
+  transform: translateZ(0);
+}
+.project-popup-iframe[data-ready="true"] {
+  opacity: 1;
 }
 
 /* Below 640px OR short landscape (e.g. 844×390) — outer modal is a

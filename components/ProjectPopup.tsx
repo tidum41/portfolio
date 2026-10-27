@@ -50,6 +50,8 @@ interface Props {
    * marked placeholder — do not invent a reason if omitted.
    */
   whyBuilt?: string;
+  /** Fires once the enter animation has settled (panel onAnimationComplete). */
+  onEntered?: () => void;
   children: ReactNode;
 }
 
@@ -77,6 +79,7 @@ export default function ProjectPopup({
   infoMeta,
   infoLink,
   whyBuilt = "TODO(Mudit): one or two sentences on why you built it.",
+  onEntered,
   children,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -93,11 +96,14 @@ export default function ProjectPopup({
     dragging: boolean;
     vy: number;
   } | null>(null);
+  const enteredOnceRef = useRef(false);
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  /** Static backdrop blur sibling — never opacity-animated with the filter. */
+  const [blurOn, setBlurOn] = useState(false);
   /** Measured mobile sheet height (px); null on desktop / before measure. */
   const [sheetHeight, setSheetHeight] = useState<number | null>(null);
   /** Live drag offset while swiping the info-sheet handle down (mobile only). */
@@ -141,6 +147,13 @@ export default function ProjectPopup({
       setPanelDragY(0);
       sheetDragRef.current = null;
       panelDragRef.current = null;
+      // Keep enteredOnceRef true through exit so exit animationComplete
+      // cannot re-fire onEntered; clear on the next open instead.
+    } else {
+      enteredOnceRef.current = false;
+      // Mount static blur as soon as open — it does not animate opacity, so
+      // it won't thrash with the dim/panel fade. Cleared on exit-complete.
+      setBlurOn(true);
     }
   }, [open]);
 
@@ -354,7 +367,16 @@ export default function ProjectPopup({
   );
 
   return createPortal(
-    <AnimatePresence onExitComplete={onExitComplete}>
+    <>
+      {/* Blur sits under the opacity-animated dim/panel shell and is never
+          faded itself — opacity×backdrop-filter was the open-frame jank. */}
+      {blurOn && <div className="project-popup-backdrop-blur" aria-hidden />}
+      <AnimatePresence
+        onExitComplete={() => {
+          setBlurOn(false);
+          onExitComplete?.();
+        }}
+      >
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -377,8 +399,6 @@ export default function ProjectPopup({
                     ? {}
                     : { alignItems: "center" as const, justifyContent: "center" as const }),
                   background: "rgba(0,0,0,0.55)",
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
                   overscrollBehavior: "none",
                 }
               : {
@@ -395,8 +415,6 @@ export default function ProjectPopup({
                   justifyContent: "center",
                   padding: "clamp(12px, 2.2vw, 20px)",
                   background: "rgba(0,0,0,0.55)",
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
                   overscrollBehavior: "none",
                 }
           }
@@ -408,6 +426,11 @@ export default function ProjectPopup({
             aria-label={title}
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
+            onAnimationComplete={() => {
+              if (!open || enteredOnceRef.current) return;
+              enteredOnceRef.current = true;
+              onEntered?.();
+            }}
             className={
               isLarge
                 ? `project-popup-panel project-popup-panel--large${isMobile ? " project-popup-panel--sheet" : ""}`
@@ -698,7 +721,8 @@ export default function ProjectPopup({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
+      </AnimatePresence>
+    </>,
     document.body,
   );
 }
