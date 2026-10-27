@@ -25,6 +25,7 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
 import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
 import CardFocusGrid from "@/components/CardFocusGrid";
 
@@ -216,6 +217,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   visible: boolean;
   projects: SanityProject[];
 }) {
+  const prefetchReady = useIdlePrefetch();
   const router = useRouter();
   const warmProjectNav = (href?: string) => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
@@ -787,7 +789,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={prefetchReady}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
@@ -887,7 +889,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={prefetchReady}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}

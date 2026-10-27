@@ -8,6 +8,7 @@ import HalftoneNavLink from "./HalftoneNavLink";
 import { useDialKit } from "dialkit";
 import { hrefToPrimaryTab } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
 
 const links = [
   { href: "/",         label: "Work" },
@@ -24,13 +25,16 @@ export default function Nav({
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
 
-  // Warm primary routes immediately so first archive/about click isn't waiting
-  // on idle. Cheap if the destination is already cached.
+  // Warm primary routes once the first paint's own resources are in, so the
+  // payloads don't compete with them on a slow connection. Hover and
+  // pointerdown on a link still prefetch immediately.
+  const prefetchReady = useIdlePrefetch();
   useEffect(() => {
+    if (!prefetchReady) return;
     for (const { href } of links) {
       if (href !== pathname) router.prefetch(href);
     }
-  }, [pathname, router]);
+  }, [pathname, router, prefetchReady]);
 
   // DialKit auto-generates each slider's on-screen label from its key name
   // (camelCase -> "Title Case") and has no separate description field, so

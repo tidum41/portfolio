@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
 import {
   OUTLINE_MORPH_S,
   loadOutlineMorph,
@@ -50,6 +51,7 @@ function warmPrimary(href: string) {
 }
 
 export default function HalftoneNavLink({ href, label, isActive, dk, resting }: any & { resting?: ReactNode }) {
+  const prefetchReady = useIdlePrefetch();
   const router = useRouter();
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
@@ -92,17 +94,20 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         if (!cancel) setMorph(() => component);
       });
     };
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 2500 });
-      return () => {
-        cancel = true;
-        window.cancelIdleCallback(id);
-      };
+    // Load the morph (its path data is the largest lazy chunk) on the first
+    // sign of a pointer or keyboard, well before it can reach a nav link,
+    // instead of on idle during first load where it competed with the page.
+    const events = ["pointermove", "pointerdown", "touchstart", "keydown", "focusin"] as const;
+    const onIntent = () => {
+      for (const type of events) window.removeEventListener(type, onIntent, true);
+      start();
+    };
+    for (const type of events) {
+      window.addEventListener(type, onIntent, { capture: true, passive: true });
     }
-    const id = window.setTimeout(start, 1200);
     return () => {
       cancel = true;
-      window.clearTimeout(id);
+      for (const type of events) window.removeEventListener(type, onIntent, true);
     };
   }, []);
 
@@ -205,7 +210,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   return (
     <Link
       href={href}
-      prefetch
+      prefetch={prefetchReady}
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
       data-ui-sound="option"

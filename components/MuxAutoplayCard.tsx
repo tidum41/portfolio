@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
+import { onIntroDone } from "@/lib/introReady";
 import { useDialKit } from "dialkit";
 import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
 import { warmRootMargin } from "@/lib/networkHint";
@@ -105,6 +107,7 @@ export default function MuxAutoplayCard({
   });
 
   const router = useRouter();
+  const prefetchReady = useIdlePrefetch();
   const containerRef = useRef<HTMLDivElement>(null);
   // Above-the-fold pair (mountOrder <= 1) loads immediately without waiting on
   // an IntersectionObserver tick; later cards latch after first intersection.
@@ -160,25 +163,28 @@ export default function MuxAutoplayCard({
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         return;
       }
-      preloadHlsModule();
       const arm = () => {
         if (!cancelled) setMountReady(true);
       };
-      const introActive = document.documentElement.hasAttribute("data-intro");
-      const wait = !introActive
-        ? 0
-        : mountOrder <= 1
+      // The cards are hidden behind the first-load intro, so the player
+      // script and segments wait for intro-done instead of competing with
+      // the page's own JS and posters. Later cards keep their stagger.
+      const start = () => {
+        if (cancelled) return;
+        preloadHlsModule();
+        const introActive = document.documentElement.hasAttribute("data-intro");
+        const wait = !introActive
           ? 0
-          : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
-      if (wait <= 0) {
-        arm();
-        return () => {
-          cancelled = true;
-        };
-      }
-      timeoutId = window.setTimeout(arm, wait);
+          : mountOrder <= 1
+            ? 0
+            : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+        if (wait <= 0) arm();
+        else timeoutId = window.setTimeout(arm, wait);
+      };
+      const cancelIntro = onIntroDone(start);
       return () => {
         cancelled = true;
+        cancelIntro();
         window.clearTimeout(timeoutId);
       };
     }
@@ -305,7 +311,7 @@ export default function MuxAutoplayCard({
       ) : (
         <Link
           href={href!}
-          prefetch
+          prefetch={prefetchReady}
           style={linkStyle}
           onMouseEnter={warmCaseStudy}
           onFocus={warmCaseStudy}
