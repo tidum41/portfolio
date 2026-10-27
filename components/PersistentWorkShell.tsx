@@ -26,7 +26,8 @@ import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
-import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
+import type { SanityProject } from "@/lib/sanity/queries";
+import { ALLINONE_APP_URL } from "@/lib/allinone";
 import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */

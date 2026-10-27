@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
-import { onIntroDone } from "@/lib/introReady";
+import { onIntroDone, onIntroDoneAndLoaded } from "@/lib/introReady";
 import { useDialKit } from "dialkit";
 import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
 import { warmRootMargin } from "@/lib/networkHint";
@@ -181,7 +181,9 @@ export default function MuxAutoplayCard({
         if (wait <= 0) arm();
         else timeoutId = window.setTimeout(arm, wait);
       };
-      const cancelIntro = onIntroDone(start);
+      // Off the homepage the shell is hidden, so its cards also wait for load.
+      const cancelIntro =
+        window.location.pathname === "/" ? onIntroDone(start) : onIntroDoneAndLoaded(start);
       return () => {
         cancelled = true;
         cancelIntro();

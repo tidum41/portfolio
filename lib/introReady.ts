@@ -34,6 +34,28 @@ export function onIntroDone(cb: () => void): () => void {
   return () => window.removeEventListener("intro-done", cb);
 }
 
+/** Run `cb` once the intro gate is open and the window `load` event has
+ *  fired, so background work never competes with the page's own first-load
+ *  images, fonts and scripts on a slow connection. */
+export function onIntroDoneAndLoaded(cb: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  let removeLoad = () => {};
+  const afterIntro = () => {
+    if (document.readyState === "complete") {
+      cb();
+      return;
+    }
+    const onLoad = () => cb();
+    window.addEventListener("load", onLoad, { once: true });
+    removeLoad = () => window.removeEventListener("load", onLoad);
+  };
+  const cancelIntro = onIntroDone(afterIntro);
+  return () => {
+    cancelIntro();
+    removeLoad();
+  };
+}
+
 /** After intro (and idle), run `cb`. Used to prefetch About/Archive off the
  *  first-load critical path without changing later-nav keep-alive. */
 export function afterIntroIdle(cb: () => void, timeout = 2500): () => void {
@@ -46,7 +68,7 @@ export function afterIntroIdle(cb: () => void, timeout = 2500): () => void {
       timeoutId = window.setTimeout(cb, Math.min(timeout, 800));
     }
   };
-  const cancelIntro = onIntroDone(start);
+  const cancelIntro = onIntroDoneAndLoaded(start);
   return () => {
     cancelIntro();
     if (idleId && typeof cancelIdleCallback === "function") {
