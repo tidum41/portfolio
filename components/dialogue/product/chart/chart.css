@@ -77,16 +77,6 @@
   color: var(--dp-ink);
 }
 
-/* Round K: inside a viz card the divider always runs the full width of the
-   card, bleeding past the inner padding while the text stays inset. */
-.dp-chart-viz-card .dp-chart-title {
-  margin-left: -16px;
-  margin-right: -16px;
-  padding-left: 16px;
-  padding-right: 16px;
-  width: auto;
-}
-
 .dp-chart-title:first-child {
   margin-top: 0;
 }

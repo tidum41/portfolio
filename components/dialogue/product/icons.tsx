@@ -65,15 +65,6 @@ export function ArrowUpIcon({ className }: IconProps) {
   );
 }
 
-export function ArrowUpRightIcon({ className }: IconProps) {
-  return (
-    <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>
-      <path d="M7 17L17 7" />
-      <path d="M8 7h9v9" />
-    </svg>
-  );
-}
-
 export function ArrowDownIcon({ className }: IconProps) {
   return (
     <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>

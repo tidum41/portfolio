@@ -9,7 +9,7 @@ export default function HeroChatCard({ composer = true }: { composer?: boolean }
   return (
     <StudyChatShell compact hideComposer={!composer}>
       <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-      <QuerySearchStep searched={24} found={18} />
+      <QuerySearchStep searched={24} found={9} />
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
         {before}
         <span className="dp-summary__emph">{CHECKOUT_FUNNEL.emphasis}</span>

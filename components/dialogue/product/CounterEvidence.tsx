@@ -5,9 +5,9 @@ import { annotateSlug } from "@/components/dialogue/annotate";
 const AVATARS = ["clip-01", "clip-02", "clip-05"] as const;
 
 const ROWS = [
-  { name: "Elena R.", time: "08:12", quote: "The address form just took it, no errors…", photo: "clip-01" },
-  { name: "Avery C.", time: "25:02", quote: "Autocomplete filled my address in right…", photo: "clip-02" },
-  { name: "Alex P.", time: "18:22", quote: "My address was already saved, so I skipped…", photo: "clip-05" },
+  { name: "Elena R.", time: "08:12", quote: "I wasn't sure the discount…", photo: "clip-01" },
+  { name: "Avery C.", time: "25:02", quote: "I wanted one more look…", photo: "clip-02" },
+  { name: "Sam T.", time: "18:22", quote: "Delivery dates looked like…", photo: "clip-05" },
 ] as const;
 
 const photo = (id: string) => `/dev/dialogue-static/clip-photos/${id}.jpg`;

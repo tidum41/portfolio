@@ -10,8 +10,10 @@ export default function ParagraphAnswerFigure({ focus }: { focus?: "answer" }) {
   const paragraphs = focus === "answer" ? PARAGRAPH_ANSWER_BRIEF : PARAGRAPH_ANSWER_BRIEF;
   const prose = (
     <div
-      className={focus === "answer" ? "dp-text-prose-sm" : "dp-text-prose-sm dp-text-prose-light"}
-      style={{ display: "flex", flexDirection: "column", gap: 8 }}
+      className={[
+        focus === "answer" ? "dp-text-prose-sm" : "dp-text-prose-sm dp-text-prose-light",
+        "dp-prose-stack",
+      ].join(" ")}
     >
       {paragraphs.map((p) => (
         <p key={p.slice(0, 24)} style={{ margin: 0 }}>{p}</p>

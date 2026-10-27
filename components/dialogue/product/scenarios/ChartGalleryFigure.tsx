@@ -51,7 +51,7 @@ export default function ChartGalleryFigure({ variant }: { variant: GalleryVarian
       return (
         <StudyChatShell evidence={24} hideComposer hideHeader>
           <UserMessageBubble>{CHECKOUT_QUESTION}</UserMessageBubble>
-          <QuerySearchStep searched={24} found={18} />
+          <QuerySearchStep searched={24} found={9} />
           <FunnelChart />
         </StudyChatShell>
       );
