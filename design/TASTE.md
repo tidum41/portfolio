@@ -67,6 +67,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Case study basics (Oct 25): not a chronological recount. Context on why it exists, final artifacts up front, bulk is key design moments (hard or debatable calls with justification), why it matters, learnings framed as strengths, one obvious takeaway about Mudit.
 - Dialogue takeaway (Oct 25): he thinks from UX research teams' perspective via deep dives, designs within existing frontend design systems, and sweats the small decisions that shape product workflows.
 - Oct 26 2026: Mudit OK'd illustrative quotes with placeholder names and timestamps in Dialogue; Comparison needs no concept label.
+- Oct 26 2026 (round P3): product panels go dark in dark mode (ink #f4f2ef, muted #a8a49e); the selected bar segment takes a 2px ink ring at 1px offset with a 2px gap between segments; the hero collapses its clip to a thumbnail at about 490px; Levels of detail is one 448 panel with a three-step toggle; composed quotes are cut and neutral participant rows stand in; Comparison carries no status line.
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).

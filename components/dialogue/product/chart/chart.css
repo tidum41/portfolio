@@ -431,10 +431,10 @@
 
 .dp-chart-stack__bar {
   display: flex;
+  gap: 2px;
   height: 24px;
   background: var(--dp-chart-track);
   border-radius: var(--dp-radius-bar);
-  overflow: hidden;
 }
 
 .dp-chart-stack__seg {
@@ -453,8 +453,12 @@
   background: var(--dp-chart-focal);
 }
 
-.dp-chart-stack__seg + .dp-chart-stack__seg {
-  box-shadow: inset 1px 0 0 var(--dp-bg);
+.dp-chart-stack__seg:first-child {
+  border-radius: var(--dp-radius-bar) 0 0 var(--dp-radius-bar);
+}
+
+.dp-chart-stack__seg:last-child {
+  border-radius: 0 var(--dp-radius-bar) var(--dp-radius-bar) 0;
 }
 
 .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]) {
@@ -645,4 +649,13 @@
 
 .dp-chart-grouped__num--quiet {
   color: var(--dp-chart-label-color);
+}
+
+/* Round P: the selected segment (its evidence open) gets a 1px stone-500
+   outline, drawn inside so the bar's overflow cannot clip it. */
+.dp-chart-stack__seg[data-selected] {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--dp-ink);
+  outline-offset: 1px;
 }
