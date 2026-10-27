@@ -573,11 +573,13 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       if (cancelled) return;
       setAllinoneFrameSrc(ALLINONE_APP_URL);
     };
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(arm, { timeout: 320 });
+    const ric = window.requestIdleCallback?.bind(window);
+    const cic = window.cancelIdleCallback?.bind(window);
+    if (ric && cic) {
+      const id = ric(arm, { timeout: 320 });
       return () => {
         cancelled = true;
-        window.cancelIdleCallback(id);
+        cic(id);
       };
     }
     const t = window.setTimeout(arm, 48);

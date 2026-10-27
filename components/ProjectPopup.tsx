@@ -151,9 +151,8 @@ export default function ProjectPopup({
       // cannot re-fire onEntered; clear on the next open instead.
     } else {
       enteredOnceRef.current = false;
-      // Mount static blur as soon as open — it does not animate opacity, so
-      // it won't thrash with the dim/panel fade. Cleared on exit-complete.
-      setBlurOn(true);
+      // Blur mounts after enter settles (see onAnimationComplete) so the open
+      // frame only pays for the cheap rgba dim fade.
     }
   }, [open]);
 
@@ -427,8 +426,9 @@ export default function ProjectPopup({
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             onAnimationComplete={() => {
-              if (!open || enteredOnceRef.current) return;
+              if (enteredOnceRef.current) return;
               enteredOnceRef.current = true;
+              setBlurOn(true);
               onEntered?.();
             }}
             className={
