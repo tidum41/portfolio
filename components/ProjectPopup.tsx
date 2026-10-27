@@ -341,10 +341,12 @@ export default function ProjectPopup({
       aria-controls={infoPanelId}
       title="Info"
     >
-      <svg viewBox="0 0 16 16" width={14} height={14} fill="none" aria-hidden>
-        <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="8" y1="7.25" x2="8" y2="11.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="8" cy="5" r="0.85" fill="currentColor" />
+      {/* Glyph fills the 16 box edge to edge like the × beside it; 15px is the
+          popup icon size the mobile topbar already uses. */}
+      <svg viewBox="0 0 16 16" width={15} height={15} fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="8" y1="7.25" x2="8" y2="11.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="4.75" r="1" fill="currentColor" />
       </svg>
     </button>
   );
