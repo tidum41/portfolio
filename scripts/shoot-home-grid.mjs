@@ -1,6 +1,7 @@
 /**
  * Full-page home shots: 1440 + 390 × light + dark.
- * Also asserts the CD card is gone and habit remains.
+ * Asserts CD gone, habit present, desktop column balance, and that
+ * lazy Mux posters (e.g. SVIZ) have painted before capture.
  */
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
@@ -8,6 +9,7 @@ import { join } from "node:path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const OUT = process.env.ARTIFACT_DIR || "/opt/cursor/artifacts";
+const MAX_COL_BOTTOM_DELTA = 120;
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -34,6 +36,43 @@ async function setTheme(page, theme) {
     document.documentElement.setAttribute("data-theme", t);
     document.documentElement.style.colorScheme = t;
   }, theme);
+}
+
+/** Scroll every grid card into view so IntersectionObserver lazy media arms. */
+async function warmLazyMedia(page) {
+  const cards = page.locator("[data-grid-card]");
+  const n = await cards.count();
+  for (let i = 0; i < n; i++) {
+    await cards.nth(i).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(120);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForFunction(
+    () => {
+      const imgs = [...document.querySelectorAll("[data-grid-card] img")];
+      if (imgs.length === 0) return false;
+      return imgs.every((img) => img.complete && img.naturalWidth > 0);
+    },
+    { timeout: 20000 },
+  );
+  // SVIZ is Mux — require its poster (or video) painted, not just placeholder.
+  await page.waitForFunction(
+    () => {
+      const card = document.querySelector('[data-grid-card="project-sviz"]');
+      if (!card) return false;
+      const media = card.querySelector("img, video");
+      if (!media) return false;
+      if (media instanceof HTMLImageElement) {
+        return media.complete && media.naturalWidth > 0;
+      }
+      if (media instanceof HTMLVideoElement) {
+        return media.readyState >= 2 || (media.poster && media.videoWidth > 0);
+      }
+      return false;
+    },
+    { timeout: 20000 },
+  );
+  await page.waitForTimeout(200);
 }
 
 async function main() {
@@ -65,7 +104,7 @@ async function main() {
         },
         { timeout: 15000 },
       );
-      await page.waitForTimeout(400);
+      await warmLazyMedia(page);
 
       const ids = await page.$$eval("[data-grid-card]", (els) =>
         els.map((el) => el.getAttribute("data-grid-card")),
@@ -73,6 +112,27 @@ async function main() {
       assert(!ids.includes("cd"), `CD card still present: ${ids.join(",")}`);
       assert(ids.includes("habit"), `habit card missing: ${ids.join(",")}`);
       assert(ids.length >= 2, `expected a reflowed grid, got ${ids.length} cards`);
+
+      if (vp.width >= 768) {
+        const bal = await page.evaluate(() => {
+          const cols = [...document.querySelectorAll(".portfolio-grid-col")];
+          const bottoms = cols.map((col) => col.getBoundingClientRect().bottom);
+          const habit = document.querySelector('[data-grid-card="habit"]');
+          const trail = habit?.classList.contains("portfolio-grid-card--trail");
+          return {
+            delta: Math.abs(bottoms[0] - bottoms[1]),
+            trail: Boolean(trail),
+            habitCol: habit?.closest(".portfolio-grid-col") ? "in-col" : "span",
+          };
+        });
+        assert(bal.trail, "habit missing portfolio-grid-card--trail");
+        assert(bal.habitCol === "span", `habit should span under columns, got ${bal.habitCol}`);
+        assert(
+          bal.delta <= MAX_COL_BOTTOM_DELTA,
+          `column bottoms delta ${bal.delta}px > ${MAX_COL_BOTTOM_DELTA}px`,
+        );
+        console.log("balance", vp.name, theme, "delta", bal.delta);
+      }
 
       const path = join(OUT, `home-no-cd-${vp.name}-${theme}.png`);
       await page.screenshot({ path, fullPage: true });

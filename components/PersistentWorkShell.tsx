@@ -455,8 +455,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // Manual cross-column stagger rank: the two DOM columns (even/odd project
   // index) need to read as one interleaved sequence — project[0] (left),
   // project[1] (right), project[2] (left), ... — which the original Sanity
-  // index already encodes, since the columns are split by its parity. The
-  // trailing habit card continues that sequence as the last right-column slot.
+  // index already encodes, since the columns are split by its parity. Habit
+  // trails as a centered full-row card (not a third column slot) so an odd
+  // count doesn't leave a hole and the two project columns stay balanced.
   // Capped so a long grid doesn't take forever.
   const totalItems = projects.length + 1;
   const perItemStagger = totalItems > 1
@@ -662,43 +663,45 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                   </EntranceItem>
                 ) : null;
               })}
-
-            {/* Habit tracker — poster in grid; live PhoneEmbed only in the popup. */}
-            <EntranceItem
-              active={gridActive}
-              instant={instant}
-              replayToken={epoch}
-              delay={rankDelay(projects.length)}
-              className="project-card portfolio-grid-card"
-              data-grid-card="habit"
-              role="button"
-              tabIndex={0}
-              aria-label="Open Habit tracker focused on offering less"
-              onClick={() => openPopupHandler("habit")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={{ gap: 6, cursor: "pointer", order: projects.length }}
-            >
-              <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
-                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                      <InteractiveBadge />
-                    </div>
-                    <PhonePoster
-                      opacity={habitPosterOpacity}
-                      fade={habitPosterFade}
-                      theme={habitWidgetTheme}
-                      // Keep the inert screen mounted after the first "/" visit
-                      // so the poster reflects this session's habit state across
-                      // navigations (no cold remount flash on return).
-                      showScreen={hasEverBeenActive && introReleased}
-                    />
-                  </div>
-                </div>
-                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
-              </ProjectCardLift>
-            </EntranceItem>
           </div>
+
+          {/* Habit tracker — spans both columns and centers at one-col width so
+              an odd grid count doesn't leave a hole under either project stack.
+              Poster in grid; live PhoneEmbed only in the popup. */}
+          <EntranceItem
+            active={gridActive}
+            instant={instant}
+            replayToken={epoch}
+            delay={rankDelay(projects.length)}
+            className="project-card portfolio-grid-card portfolio-grid-card--trail"
+            data-grid-card="habit"
+            role="button"
+            tabIndex={0}
+            aria-label="Open Habit tracker focused on offering less"
+            onClick={() => openPopupHandler("habit")}
+            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
+            style={{ gap: 6, cursor: "pointer", order: projects.length }}
+          >
+            <ProjectCardLift style={{ gap: 6 }}>
+              <div className="project-media">
+                <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                  <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                    <InteractiveBadge />
+                  </div>
+                  <PhonePoster
+                    opacity={habitPosterOpacity}
+                    fade={habitPosterFade}
+                    theme={habitWidgetTheme}
+                    // Keep the inert screen mounted after the first "/" visit
+                    // so the poster reflects this session's habit state across
+                    // navigations (no cold remount flash on return).
+                    showScreen={hasEverBeenActive && introReleased}
+                  />
+                </div>
+              </div>
+              <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
+            </ProjectCardLift>
+          </EntranceItem>
         </CardFocusGrid>
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body

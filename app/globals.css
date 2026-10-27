@@ -2172,6 +2172,14 @@ html[data-theme="dark"] .project-image {
   min-width: 0;
 }
 
+/* Trailing odd-count card: one-col width, centered under both stacks so
+   neither project column ends with a hole. */
+.portfolio-grid-card--trail {
+  grid-column: 1 / -1;
+  width: calc((100% - var(--grid-gutter)) / 2);
+  justify-self: center;
+}
+
 /* Empty video shells (pre-activation) must not create phantom rows —
    that was the uneven 71–77 vs 2–8px alternating gap at 390. */
 .portfolio-grid-card:empty {
@@ -2190,8 +2198,13 @@ html[data-theme="dark"] .project-image {
   }
   /* Flatten the two DOM columns so cards can be reordered as one stack
      without changing the desktop 2-column structure. `order` is set in
-     JSX from Sanity index (plus CD/habit trailing slots). */
+     JSX from Sanity index (plus habit trail). */
   .portfolio-grid-col { display: contents; }
+  .portfolio-grid-card--trail {
+    grid-column: auto;
+    width: auto;
+    justify-self: stretch;
+  }
 }
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────
