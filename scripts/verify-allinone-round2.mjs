@@ -128,24 +128,24 @@ async function main() {
 
   const browser = await chromium.launch({ headless: true });
 
-  // CD close reference at 1440 dark
+  // Habit close reference at 1440 dark (shared ProjectPopup chrome geometry).
   {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await ctx.newPage();
     await boot(page, "dark");
-    await page.locator('[data-grid-card="cd"]').click();
-    await page.locator('[role="dialog"][aria-label="Drag a CD"]').waitFor({ state: "visible" });
-    const cdClose = await measureClose(page, '[role="dialog"][aria-label="Drag a CD"]');
-    writeFileSync(join(OUT, "allinone-r2-cd-close.json"), JSON.stringify(cdClose, null, 2));
-    console.log("CD close ref", cdClose);
+    await page.locator('[data-grid-card="habit"]').click({ force: true });
+    await page.locator('[role="dialog"][aria-label="Dumb Habit Tracker"]').waitFor({ state: "visible" });
+    const habitClose = await measureClose(page, '[role="dialog"][aria-label="Dumb Habit Tracker"]');
+    writeFileSync(join(OUT, "allinone-r2-habit-close.json"), JSON.stringify(habitClose, null, 2));
+    console.log("Habit close ref", habitClose);
     await ctx.close();
 
     // Store on global for comparisons below via closure
-    globalThis.__cdClose = cdClose;
+    globalThis.__habitClose = habitClose;
   }
 
   const report = [];
-  const cdClose = globalThis.__cdClose;
+  const habitClose = globalThis.__habitClose;
 
   for (const vp of VIEWPORTS) {
     for (const theme of THEMES) {
@@ -172,11 +172,11 @@ async function main() {
         '[role="dialog"][aria-label="Designing a to-do list with AI organization"]',
       );
       assert(close, "no close");
-      // Match CD close offset within 1px (at 1440; other widths share same pad)
+      // Match habit (default ProjectPopup) close offset within 1px at 1440.
       if (vp.width === 1440) {
-        assert(Math.abs(close.offsetTop - cdClose.offsetTop) <= 1, `close offsetTop ${close.offsetTop} vs CD ${cdClose.offsetTop}`);
-        assert(Math.abs(close.offsetRight - cdClose.offsetRight) <= 1, `close offsetRight ${close.offsetRight} vs CD ${cdClose.offsetRight}`);
-        assert(Math.abs(close.w - cdClose.w) <= 1 && Math.abs(close.h - cdClose.h) <= 1, `close size ${close.w}x${close.h}`);
+        assert(Math.abs(close.offsetTop - habitClose.offsetTop) <= 1, `close offsetTop ${close.offsetTop} vs habit ${habitClose.offsetTop}`);
+        assert(Math.abs(close.offsetRight - habitClose.offsetRight) <= 1, `close offsetRight ${close.offsetRight} vs habit ${habitClose.offsetRight}`);
+        assert(Math.abs(close.w - habitClose.w) <= 1 && Math.abs(close.h - habitClose.h) <= 1, `close size ${close.w}x${close.h}`);
       } else {
         // Same padding language: ~17px (16 pad + 1 border)
         assert(Math.abs(close.offsetTop - 17) <= 1.5, `${vp.name}: close offsetTop ${close.offsetTop}`);
@@ -221,11 +221,11 @@ async function main() {
         viewport: `${vp.width}x${vp.height}`,
         theme,
         close,
-        cdCloseDelta:
+        habitCloseDelta:
           vp.width === 1440
             ? {
-                top: +(close.offsetTop - cdClose.offsetTop).toFixed(2),
-                right: +(close.offsetRight - cdClose.offsetRight).toFixed(2),
+                top: +(close.offsetTop - habitClose.offsetTop).toFixed(2),
+                right: +(close.offsetRight - habitClose.offsetRight).toFixed(2),
               }
             : null,
         infoBtn: info.infoBtn,
@@ -245,7 +245,7 @@ async function main() {
     }
   }
 
-  writeFileSync(join(OUT, "allinone-r2-report.json"), JSON.stringify({ cdClose, report }, null, 2));
+  writeFileSync(join(OUT, "allinone-r2-report.json"), JSON.stringify({ habitClose, report }, null, 2));
   await browser.close();
   console.log("round2 verification passed");
 }

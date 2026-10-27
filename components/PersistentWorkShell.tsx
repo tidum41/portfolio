@@ -14,7 +14,6 @@ import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
-import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack } from "@/lib/instantNav";
@@ -22,8 +21,7 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
-import { afterIntroIdle, completeIntro } from "@/lib/introReady";
-import { allowIdlePrefetch } from "@/lib/networkHint";
+import { completeIntro } from "@/lib/introReady";
 import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
 import CardFocusGrid from "@/components/CardFocusGrid";
 
@@ -61,12 +59,10 @@ if (typeof window !== "undefined") {
 import MuxAutoplayCard from "@/components/MuxAutoplayCard";
 
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
-const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
-type PopupId = "cd" | "habit" | "allinone";
+type PopupId = "habit" | "allinone";
 
-const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
 
 const ALLINONE_INFO_META = [
@@ -79,12 +75,6 @@ const ALLINONE_INFO_META = [
 
 const ALLINONE_WHY_BUILT =
   "I found myself dumping all my tasks into one Apple Note, so I built a tool (all-in-one) that allows users to define how they want categories grouped, then have a model sort tasks accordingly. I imagined it as a stripped down version of Notes, with an organized list feature and standard notes.";
-// Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
-// carousel + drag hint aren't clipped at narrow modal widths. Sized to
-// fill more of the viewport while leaving room for panel chrome.
-// Width stays ≥ CDPlayerWork's mobileBreakpoint (1000) so desktop modals
-// keep the horizontal player + grid layout instead of the carousel.
-const CD_POPUP_EMBED_H = "min(76dvh, 880px)";
 // Phone mockup is ~9:19 — a 4:3 popup slot caps height and shrinks the
 // embed; give the habit popup a portrait slot so the phone can scale up.
 const HABIT_POPUP_EMBED_H = "min(calc(92dvh - 88px), 900px)";
@@ -230,27 +220,14 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // iframe doesn't unmount until onExitComplete fires.
   const [openPopup, setOpenPopup] = useState<PopupId | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
-  // CD: live grid preview once "/" visited (perf-gated via active=false + Disc
-  // RAF idle-stop). Habit: high-quality poster in grid; live PhoneEmbed only
-  // while the popup is open (state persists in localStorage across remounts).
-  const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
-  const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
+  // Habit: high-quality poster in grid; live PhoneEmbed only while the popup
+  // is open (state persists in localStorage across remounts).
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
-  const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
-  // CD poster only covers while the modal is open. Habit poster is the grid.
-  const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
   const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
-  const [cdPosterFade, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
-  // Frozen still of the live CD tile, captured (as static HTML) the instant the
-  // modal opens — so the grid slot keeps showing the exact on-screen state
-  // (site theme, loaded album, date) while the one live instance is portaled
-  // into the modal. Beats the generic light-mode poster image, which flipped
-  // the tile's theme and dropped the live album state. Cleared on close.
-  const [cdFrozen, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
   // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
   // never mismatches; the effect below syncs if BootScripts flipped to "light".
@@ -292,8 +269,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   const dk = useEntranceDials();
 
-  // Pause Mux/CD on leave. Reclaim after a long idle off-route — never on
-  // the About click frame. Grid CD poster only covers once live media unmounts.
+  // Pause Mux on leave. Reclaim after a long idle off-route — never on
+  // the About click frame.
   const HEAVY_TEARDOWN_MS = 15000;
   const [heavyMediaLive, setHeavyMediaLive] = useState(visible);
   useEffect(() => {
@@ -338,43 +315,13 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     return () => cancelAnimationFrame(raf);
   }, [visible]);
 
-  // Leaving "/" — close popups. Live CD stays in the hidden work shell until
-  // idle teardown; the grid poster covers the slot only when that happens.
+  // Leaving "/" — close popups.
   useEffect(() => {
     if (visible) return;
     setPopupVisible(false);
     setOpenPopup(null);
     setHabitPortalTarget(null);
   }, [visible]);
-
-  useEffect(() => {
-    if (heavyMediaLive) return;
-    setCdPosterOpacity(1);
-    setCdPosterFade(false);
-  }, [heavyMediaLive]);
-
-  // Album covers are about a megabyte. The grid keeps its still until the
-  // browser is idle on a normal connection, or the person opens the card.
-  const [cdWarm, setCdWarm] = useState(false);
-  useEffect(() => {
-    if (openPopup === "cd") {
-      setCdWarm(true);
-      return;
-    }
-    if (cdWarm || !allowIdlePrefetch()) return;
-    return afterIntroIdle(() => setCdWarm(true), 4000);
-  }, [openPopup, cdWarm]);
-
-  // Back on "/": once the remounted live CD is in place, fade the poster out
-  // (unless the modal is open — poster stays opaque behind the blur).
-  // The still stays up through the intro, and on a slow connection until
-  // the card is opened.
-  useEffect(() => {
-    if (!visible || !hasEverBeenActive || !introReleased || !cdWarm) return;
-    if (openPopup === "cd") return;
-    setCdPosterFade(true);
-    setCdPosterOpacity(0);
-  }, [visible, hasEverBeenActive, openPopup, introReleased, cdWarm]);
 
   // Restore scroll synchronously, before paint, whenever we become visible again.
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
@@ -509,29 +456,16 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // index) need to read as one interleaved sequence — project[0] (left),
   // project[1] (right), project[2] (left), ... — which the original Sanity
   // index already encodes, since the columns are split by its parity. The
-  // two trailing "extra" cards (CDPlayer, PhoneEmbed) continue that sequence
-  // as the last left/right slots. Capped so a long grid doesn't take forever.
-  const totalItems = projects.length + 2;
+  // trailing habit card continues that sequence as the last right-column slot.
+  // Capped so a long grid doesn't take forever.
+  const totalItems = projects.length + 1;
   const perItemStagger = totalItems > 1
     ? Math.min(dk.stagger, dk.maxSpread / (totalItems - 1))
     : dk.stagger;
   const rankDelay = (rank: number) => rank * perItemStagger;
 
   const openPopupHandler = (id: PopupId) => {
-    if (id === "cd") {
-      // Snapshot the live tile's current DOM synchronously, BEFORE the state
-      // update below reparents the single live instance into the modal (so the
-      // grid node is still populated). The frozen copy is inert HTML with all
-      // animations disabled (see [data-cd-frozen] in globals.css), so it neither
-      // re-runs the album entrance nor drifts from what was on screen. Falls
-      // back to the poster only if the live tile isn't mounted yet.
-      const frozen = gridCdEl?.innerHTML || null;
-      setCdFrozen(frozen);
-      setHasEverBeenActive(true);
-      setHeavyMediaLive(true);
-      setCdPosterFade(false);
-      setCdPosterOpacity(frozen ? 0 : 1);
-    } else if (id === "habit") {
+    if (id === "habit") {
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
     }
@@ -541,19 +475,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   const closePopup = () => {
     setPopupVisible(false);
-    // CD: fade poster out so the live grid preview returns.
-    // Habit: poster stays the grid face (no live-under-card).
-    if (openPopup === "cd") {
-      setCdPosterFade(true);
-      setCdPosterOpacity(0);
-    }
   };
 
   const handlePopupExitComplete = (id: PopupId) => {
     setOpenPopup(null);
-    // Drop the frozen still once the modal is fully closed and the live CD has
-    // reparented back into the grid slot, so it goes live again next open.
-    if (id === "cd") setCdFrozen(null);
     if (id === "allinone") setAllinoneFrameLoaded(false);
   };
 
@@ -579,16 +504,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     setHabitWidgetTheme(theme);
   };
 
-  // CD portals between grid ↔ popup. Habit live instance only targets the popup.
-  useLayoutEffect(() => {
-    if (!hasEverBeenActive) return;
-    if (openPopup === "cd" && popupVisible && popupCdEl) {
-      setCdPortalTarget(popupCdEl);
-    } else if (gridCdEl) {
-      setCdPortalTarget(gridCdEl);
-    }
-  }, [hasEverBeenActive, openPopup, popupVisible, popupCdEl, gridCdEl]);
-
+  // Habit live instance only targets the popup.
   useLayoutEffect(() => {
     if (openPopup === "habit" && popupHabitEl) {
       setHabitPortalTarget(popupHabitEl);
@@ -692,51 +608,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 ) : null;
               })}
 
-            {/* CDPlayer — whole card opens the popup; one live instance is
-                portaled between this grid slot and the modal (see below). */}
-            <EntranceItem
-              active={gridActive}
-              instant={instant}
-              replayToken={epoch}
-              delay={rankDelay(projects.length)}
-              className="project-card portfolio-grid-card"
-              data-grid-card="cd"
-              role="button"
-              tabIndex={0}
-              aria-label="Open Designing micro-interactions for a digital CD player"
-              onClick={() => openPopupHandler("cd")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
-              style={{ gap: 6, cursor: "pointer", order: projects.length }}
-            >
-              <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
-                    <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
-                    {cdFrozen && openPopup === "cd" && (
-                      <div
-                        data-cd-frozen
-                        aria-hidden
-                        style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
-                        dangerouslySetInnerHTML={{ __html: cdFrozen }}
-                      />
-                    )}
-                    <div
-                      ref={setGridCdEl}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
-                      }}
-                    />
-                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                      <InteractiveBadge />
-                    </div>
-                  </div>
-                </div>
-                <CardLabel title="Designing micro-interactions for a digital CD player" label="Interaction" showPopupIcon />
-              </ProjectCardLift>
-            </EntranceItem>
           </div>
 
           {/* ── Right column ── */}
@@ -792,12 +663,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 ) : null;
               })}
 
-            {/* Habit tracker — same single-instance portal treatment as CD. */}
+            {/* Habit tracker — poster in grid; live PhoneEmbed only in the popup. */}
             <EntranceItem
               active={gridActive}
               instant={instant}
               replayToken={epoch}
-              delay={rankDelay(projects.length + 1)}
+              delay={rankDelay(projects.length)}
               className="project-card portfolio-grid-card"
               data-grid-card="habit"
               role="button"
@@ -805,7 +676,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               aria-label="Open Habit tracker focused on offering less"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
+              style={{ gap: 6, cursor: "pointer", order: projects.length }}
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">
@@ -847,41 +718,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         )}
       </div>
     </div>
-
-      {visible && openPopup === "cd" && (
-        <ProjectPopup
-          open={popupVisible}
-          onClose={closePopup}
-          onExitComplete={() => handlePopupExitComplete("cd")}
-          title="Drag a CD"
-          sub="exploration"
-          maxWidth={POPUP_EMBED_MAX_W}
-          panelBg="var(--color-modal-bg)"
-        >
-          <div
-            className="project-image"
-            style={{
-              borderRadius: 4,
-              overflow: "hidden",
-              position: "relative",
-              height: CD_POPUP_EMBED_H,
-              flex: "1 1 auto",
-              minHeight: 280,
-              background: "var(--color-modal-bg)",
-              colorScheme: "inherit",
-            }}
-          >
-            <div
-              ref={(el) => {
-                setPopupCdEl(el);
-                if (el) setCdPortalTarget(el);
-                else if (gridCdEl) setCdPortalTarget(gridCdEl);
-              }}
-              style={{ position: "absolute", inset: 0 }}
-            />
-          </div>
-        </ProjectPopup>
-      )}
 
       {visible && openPopup === "habit" && (
         <ProjectPopup
@@ -951,16 +787,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         </ProjectPopup>
       )}
 
-      {/*
-        CD waits for an idle moment on a normal connection. Opening the card
-        mounts it immediately, including after the idle teardown.
-        Habit stays popup-only.
-      */}
-      {hasEverBeenActive && cdWarm && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
-        <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
-        </EmbedPortal>
-      )}
       {openPopup === "habit" && visible && habitPortalTarget && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
