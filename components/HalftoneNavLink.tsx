@@ -47,6 +47,8 @@ function warmPrimary(href: string) {
     void import("@/components/BentoGallery");
   } else if (href === "/about") {
     void import("@/components/AboutPageContent");
+  } else if (href === "/") {
+    void import("@/components/PersistentWorkShell");
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useAnimation, useReducedMotion } from "framer-motion";
+import {m, useAnimation, useReducedMotion} from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
 import { HERO_HEADLINE } from "@/lib/site";
@@ -93,7 +93,7 @@ export default function HeroText() {
           viewports under ~388px (iPhone SE, common Android widths), clipping
           the headline instead of just letting it wrap a bit tighter. */}
       <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: "min(340px, 100%)" }}>
-        <motion.h1
+        <m.h1
           initial={h1Initial}
           animate={h1Controls}
           className="hero-heading"
@@ -108,10 +108,10 @@ export default function HeroText() {
           }}
         >
           {HERO_HEADLINE}
-        </motion.h1>
+        </m.h1>
       </div>
 
-      <motion.p
+      <m.p
         className="hero-sub"
         data-hero-sub
         key={instant ? "rest" : playId}
@@ -140,7 +140,7 @@ export default function HeroText() {
             UCLA
           </a>
         </span>
-      </motion.p>
+      </m.p>
     </>
   );
 }

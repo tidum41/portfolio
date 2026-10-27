@@ -42,9 +42,9 @@ export default function PrimaryRouteWarmup() {
       }
     };
 
-    const warmHeavy = () => {
-      void import("@/components/CDPlayer");
-    };
+    // The live CD player (and its dnd-kit) is warmed by the Work shell once
+    // its card nears the viewport, or on open; nothing to do here.
+    const warmHeavy = () => {};
 
     const schedule = () => {
       if (!allowIdlePrefetch()) return;

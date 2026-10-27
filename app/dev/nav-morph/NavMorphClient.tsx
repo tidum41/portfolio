@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {m, useReducedMotion} from "framer-motion";
 import { HalftoneDotField } from "@/components/HalftoneDotField";
 import OutlineMorphWord from "@/components/OutlineMorphWord";
 import { useHalftoneMorph } from "@/components/useHalftoneMorph";
@@ -85,7 +85,7 @@ function MeltWord({ label, dk }: { label: string; dk: typeof NAV_DK }) {
         userSelect: "none",
       }}
     >
-      <motion.span
+      <m.span
         style={{
           color: "var(--color-text-muted)",
           fontWeight: 400,
@@ -98,8 +98,8 @@ function MeltWord({ label, dk }: { label: string; dk: typeof NAV_DK }) {
         transition={{ duration: baseMs / 1000, ease: "easeInOut" }}
       >
         {label}
-      </motion.span>
-      <motion.span
+      </m.span>
+      <m.span
         aria-hidden
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
         initial={false}
@@ -119,7 +119,7 @@ function MeltWord({ label, dk }: { label: string; dk: typeof NAV_DK }) {
             lineHeightPx: 24,
           }}
         />
-      </motion.span>
+      </m.span>
     </span>
   );
 }

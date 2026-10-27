@@ -5,13 +5,14 @@ import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
 import { MUX_WARM_SSR_KEY } from "@/lib/muxWarmSsr";
 import { setSsrSlot } from "@/lib/ssrSlot";
+import MotionFeatures from "@/components/MotionFeatures";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import { DevDialSlot, DevToolbarSlot } from "@/components/DevChrome";
-import { PersistentWorkShell } from "@/components/PersistentWorkShell";
+import { PersistentWorkShell } from "@/components/PersistentWorkShellGate";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentAboutShell from "@/components/PersistentAboutShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
@@ -185,6 +186,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
+        <MotionFeatures>
         {/* Injected via useServerInsertedHTML so React 19 never sees a
             <script> in the component tree (raw script / next/script both warn). */}
         <BootScripts
@@ -212,6 +214,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <DevToolbarSlot />
         <Analytics />
         <MobileViewportPlayback />
+        </MotionFeatures>
       </body>
     </html>
   );

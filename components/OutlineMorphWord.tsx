@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-  type MotionValue,
-} from "framer-motion";
+import {animate, m, useMotionValue, useReducedMotion, useTransform, type MotionValue} from "framer-motion";
 import { OUTLINE_WORDS, type OutlineWord } from "./outlineMorphData";
 
 import { OUTLINE_MORPH_S } from "./outlineMorphLoader";
@@ -27,7 +20,7 @@ function DropletPath({
   progress: MotionValue<number>;
 }) {
   const d = useTransform(progress, [0, 1], [start, end]);
-  return <motion.path d={d} fill="currentColor" />;
+  return <m.path d={d} fill="currentColor" />;
 }
 
 /**
@@ -89,7 +82,7 @@ export default function OutlineMorphWord({
   }
 
   return (
-    <motion.span
+    <m.span
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -116,6 +109,6 @@ export default function OutlineMorphWord({
           />
         ))}
       </svg>
-    </motion.span>
+    </m.span>
   );
 }

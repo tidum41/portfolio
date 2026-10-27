@@ -4,7 +4,7 @@ import { HalftoneDotField } from "./HalftoneDotField";
 import { SUN_MASK_SVG, MOON_MASK_SVG, SUN_CLONE_INNER, MOON_CLONE_INNER } from "./halftoneIconMasks";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
-import { motion, useReducedMotion } from "framer-motion";
+import {m, useReducedMotion} from "framer-motion";
 
 const ICON_SIZE = 15;
 
@@ -152,13 +152,13 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
       }}
     >
       {/* Base Icon */}
-      <motion.div
+      <m.div
         style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
         initial={false}
         animate={{ opacity: active ? 0 : 1 }}
         transition={baseTransition}
       >
-        <motion.span
+        <m.span
           aria-hidden
           style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           initial={false}
@@ -166,8 +166,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           transition={spring}
         >
           <SunIcon />
-        </motion.span>
-        <motion.span
+        </m.span>
+        <m.span
           aria-hidden
           style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           initial={false}
@@ -175,11 +175,11 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           transition={spring}
         >
           <MoonIcon />
-        </motion.span>
-      </motion.div>
+        </m.span>
+      </m.div>
 
       {/* Halftone Overlay Icon (independently-animated dots, see HalftoneDotField) */}
-      <motion.div
+      <m.div
         style={{
           position: "absolute",
           inset: 0,
@@ -189,7 +189,7 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         animate={{ opacity: active ? 1 : 0 }}
         transition={overlayTransition}
       >
-        <motion.span
+        <m.span
           aria-hidden
           style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           initial={false}
@@ -197,8 +197,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           transition={spring}
         >
           <HalftoneDotField id={filterId + "-sun"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: SUN_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: SUN_CLONE_INNER }} />
-        </motion.span>
-        <motion.span
+        </m.span>
+        <m.span
           aria-hidden
           style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
           initial={false}
@@ -206,8 +206,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
           transition={spring}
         >
           <HalftoneDotField id={filterId + "-moon"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: MOON_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: MOON_CLONE_INNER }} />
-        </motion.span>
-      </motion.div>
+        </m.span>
+      </m.div>
     </button>
   );
 }

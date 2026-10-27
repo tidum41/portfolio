@@ -1,7 +1,7 @@
 "use client";
 
 import { Children, createContext, useContext, useLayoutEffect, useRef } from "react";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
+import {animate, m, useMotionValue, useReducedMotion, useTransform} from "framer-motion";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { EASE_Y as PS3_EASE, EASE_OPACITY as PS3_OPACITY, ENTRANCE_DEFAULTS, SPAWN_REST, SPAWN_FROM_OPACITY, spawnHidden } from "@/lib/motion";
@@ -36,7 +36,7 @@ export function ScrollReveal({ children, delay = 0, style, className, y: yProp }
   const reduced = useReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       // Full `transform` string rather than the `y` shorthand, so this stays
       // on the compositor instead of running via rAF on the main thread —
       // this primitive backs nearly every scroll reveal on the site.
@@ -51,7 +51,7 @@ export function ScrollReveal({ children, delay = 0, style, className, y: yProp }
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -70,7 +70,7 @@ export function StaggerReveal({ children, stagger = 0.07, delay = 0, style, clas
   });
   const reduced = useReducedMotion();
   return (
-    <motion.div
+    <m.div
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-60px" }}
@@ -82,7 +82,7 @@ export function StaggerReveal({ children, stagger = 0.07, delay = 0, style, clas
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -90,7 +90,7 @@ export function StaggerReveal({ children, stagger = 0.07, delay = 0, style, clas
 export function StaggerItem({ children, style, className }: { children: ReactNode; style?: CSSProperties; className?: string }) {
   const reduced = useReducedMotion();
   return (
-    <motion.div
+    <m.div
       variants={{
         hidden:  { opacity: SPAWN_FROM_OPACITY, transform: reduced ? SPAWN_REST : spawnHidden(ENTRANCE_DEFAULTS.x, ENTRANCE_DEFAULTS.y) },
         visible: { opacity: 1, transform: SPAWN_REST, transition: { duration: reduced ? 0 : ENTRANCE_DEFAULTS.duration, ease: PS3_OPACITY } },
@@ -99,7 +99,7 @@ export function StaggerItem({ children, style, className }: { children: ReactNod
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -162,7 +162,7 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
   return (
     <EntranceTuneCtx.Provider value={{ dialKitName, defaults }}>
       <InstantEntranceCtx.Provider value={reduced}>
-        <motion.div
+        <m.div
           initial="hidden"
           animate={active ? "visible" : "hidden"}
           variants={{
@@ -178,7 +178,7 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
           className={className}
         >
           {children}
-        </motion.div>
+        </m.div>
       </InstantEntranceCtx.Provider>
     </EntranceTuneCtx.Provider>
   );
@@ -196,7 +196,7 @@ export function EntranceStagger({ active, children, stagger, delay = 0, style, c
 export function EntranceItem({ children, style, className, y: yProp, instant = false, active, delay = 0, replayToken = 0, dialKitName: dialKitNameProp, defaults: defaultsProp, ...rest }: {
   children: ReactNode; style?: CSSProperties; className?: string; y?: number; instant?: boolean;
   active?: boolean; delay?: number; replayToken?: number; dialKitName?: string; defaults?: Partial<EntranceDefaults>;
-  // Passed straight through to the underlying motion.div via ...rest below —
+  // Passed straight through to the underlying m.div via ...rest below —
   // framer-motion merges whileHover with the entrance animate/variants state
   // fine on its own, this just widens the prop type so callers (e.g. the
   // project-card hover) can pass them without a TS error.
@@ -321,7 +321,7 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
   }, [selfDriven, active, reduced, prefersReduced, replayToken, opacityMv, xMv, yMv]);
 
   return (
-    <motion.div
+    <m.div
       {...rest}
       {...(selfDriven ? { initial: false } : { initial: "hidden" })}
       variants={
@@ -350,6 +350,6 @@ export function EntranceItem({ children, style, className, y: yProp, instant = f
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

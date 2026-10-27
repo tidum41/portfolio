@@ -205,7 +205,7 @@ function CardLabel({
  *   - Primary-nav returns: shell is instant; hero + grid play the enter.
  *   - Hero wrapper stays instant during intro so it doesn't stack on HeroText.
  */
-export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
+export default function PersistentWorkShellImpl({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
   const visible = useResolvedPrimaryTab(pathname) === "work";
   return <WorkKeepAlive visible={visible} projects={projects} />;
@@ -374,7 +374,30 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       return;
     }
     if (cdWarm || !allowIdlePrefetch()) return;
-    return afterIntroIdle(() => setCdWarm(true), 4000);
+    // ...and only once the CD card is near the viewport, so a phone that
+    // never scrolls to it skips the live player and its ~1 MB of covers.
+    let obs: IntersectionObserver | null = null;
+    const cancelIdle = afterIntroIdle(() => {
+      const cards = document.querySelectorAll('[data-grid-card="cd"]');
+      if (!cards.length || typeof IntersectionObserver === "undefined") {
+        setCdWarm(true);
+        return;
+      }
+      obs = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            obs?.disconnect();
+            setCdWarm(true);
+          }
+        },
+        { rootMargin: "400px 0px" },
+      );
+      cards.forEach((el) => obs?.observe(el));
+    }, 4000);
+    return () => {
+      cancelIdle();
+      obs?.disconnect();
+    };
   }, [openPopup, cdWarm]);
 
   // Back on "/": once the remounted live CD is in place, fade the poster out

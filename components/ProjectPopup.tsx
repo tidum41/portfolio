@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {AnimatePresence, m, useReducedMotion} from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 
@@ -363,7 +363,7 @@ export default function ProjectPopup({
         }}
       >
       {open && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: backdropEnter, ease: EASE_OPACITY } }}
           exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
@@ -404,7 +404,7 @@ export default function ProjectPopup({
                 }
           }
         >
-          <motion.div
+          <m.div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
@@ -547,7 +547,7 @@ export default function ProjectPopup({
               <AnimatePresence>
                 {isLarge && infoOpen && (
                   <>
-                    <motion.button
+                    <m.button
                       key="info-scrim"
                       type="button"
                       className="project-popup-info-scrim"
@@ -560,7 +560,7 @@ export default function ProjectPopup({
                       animate={{ opacity: 1, transition: { duration: scrimDuration, ease: EASE_OPACITY } }}
                       exit={{ opacity: 0, transition: { duration: scrimDuration, ease: EASE_EXIT } }}
                     />
-                    <motion.div
+                    <m.div
                       key="info-panel"
                       ref={infoPanelRef}
                       id={infoPanelId}
@@ -651,7 +651,7 @@ export default function ProjectPopup({
                           </a>
                         )}
                       </div>
-                    </motion.div>
+                    </m.div>
                   </>
                 )}
               </AnimatePresence>
@@ -684,8 +684,8 @@ export default function ProjectPopup({
                 )}
               </div>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
       </AnimatePresence>
     </>,

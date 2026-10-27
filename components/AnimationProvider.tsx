@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "framer-motion";
+import {AnimatePresence, m, useIsPresent, useReducedMotion} from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
@@ -88,14 +88,14 @@ export default function AnimationProvider({ children }: { children: React.ReactN
         <div key={pathname}>{children}</div>
       ) : (
         <AnimatePresence mode="sync" initial={false}>
-          <motion.div
+          <m.div
             key={pathname}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { duration: dur(DURATION.routeEnterFast), ease: EASE_OPACITY } }}
             exit={{ opacity: 0, transition: { duration: dur(DURATION.routeExit), ease: EASE_EXIT } }}
           >
             <TransitionLayer>{children}</TransitionLayer>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       )}
     </div>

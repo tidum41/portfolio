@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import {m} from "framer-motion";
 import { useDialKit } from "dialkit";
 import {
   CASE_STUDY_ENTRANCE_DEFAULTS,
@@ -417,7 +417,7 @@ export function OpacityOnlyStage({ copy, replayKey, autoReplay, twoColumn }: Sta
   return (
     <Layout twoColumn={twoColumn} key={playKey}>
       {slots.map((node, i) => (
-        <motion.div
+        <m.div
           key={i}
           initial={{ opacity: dk.fromOpacity, transform: spawnHidden(0, dk.y) }}
           animate={{ opacity: 1, transform: SPAWN_REST }}
@@ -427,7 +427,7 @@ export function OpacityOnlyStage({ copy, replayKey, autoReplay, twoColumn }: Sta
           }}
         >
           {node}
-        </motion.div>
+        </m.div>
       ))}
     </Layout>
   );
@@ -461,7 +461,7 @@ export function SplitChannelsStage({ copy, replayKey, autoReplay, twoColumn }: S
   return (
     <Layout twoColumn={twoColumn} key={playKey}>
       {slots.map((node, i) => (
-        <motion.div
+        <m.div
           key={i}
           initial={{ opacity: dk.fromOpacity, transform: spawnHidden(0, dk.y) }}
           animate={{ opacity: 1, transform: SPAWN_REST }}
@@ -471,7 +471,7 @@ export function SplitChannelsStage({ copy, replayKey, autoReplay, twoColumn }: S
           }}
         >
           {node}
-        </motion.div>
+        </m.div>
       ))}
     </Layout>
   );
@@ -578,14 +578,14 @@ export function SpringSettleStage({ copy, replayKey, autoReplay, twoColumn }: St
   return (
     <Layout twoColumn={twoColumn} key={playKey}>
       {slots.map((node, i) => (
-        <motion.div
+        <m.div
           key={i}
           initial={{ opacity: dk.fromOpacity, transform: spawnHidden(0, dk.y) }}
           animate={{ opacity: 1, transform: SPAWN_REST }}
           transition={toFramerTransition(dk.spring, per * i)}
         >
           {node}
-        </motion.div>
+        </m.div>
       ))}
     </Layout>
   );
@@ -622,7 +622,7 @@ export function ComboStage({ copy, replayKey, autoReplay, twoColumn }: StageProp
     return (
       <Layout twoColumn={twoColumn} key={playKey}>
         {slots.map((node, i) => (
-          <motion.div
+          <m.div
             key={i}
             initial={{
               opacity: dk.fromOpacity,
@@ -639,7 +639,7 @@ export function ComboStage({ copy, replayKey, autoReplay, twoColumn }: StageProp
             transition={{ duration: dk.duration, ease, delay: per * i }}
           >
             {node}
-          </motion.div>
+          </m.div>
         ))}
       </Layout>
     );
