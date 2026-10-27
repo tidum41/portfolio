@@ -797,15 +797,14 @@ html[data-theme="light"] {
   display: none;
 }
 
-/* Desktop: anchored to the info icon (right 40 = pad 12 + close 24 + gap 4),
-   starting 8px under the iframe app's 52px MenuBar so toolbar icons stay clear.
-   Cap at 320px. Quiet spec sheet — muted labels, body-colour values, hairline rhythm. */
+/* Desktop: anchored to the info icon; wider compact popover so meta + why
+   scan without scrolling. Two-column spec rows + always-visible why. */
 .project-popup-info {
   position: absolute;
   top: 60px; /* 52px iframe toolbar + 8px */
   right: 40px;
-  width: min(320px, calc(100% - 52px));
-  max-width: 320px;
+  width: min(440px, calc(100% - 52px));
+  max-width: 440px;
   max-height: calc(100% - 68px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -817,170 +816,59 @@ html[data-theme="light"] {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* Thin, quiet scrollbar if content ever overflows. */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-primary) 28%, transparent) transparent;
 }
 html[data-theme="dark"] .project-popup-info {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   border-color: rgba(255, 255, 255, 0.08);
 }
+.project-popup-info::-webkit-scrollbar {
+  width: 6px;
+}
+.project-popup-info::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
+  border-radius: 999px;
+}
+.project-popup-info::-webkit-scrollbar-track {
+  background: transparent;
+}
 
 .project-popup-info-inner {
-  padding: 16px;
+  padding: var(--space-2);
 }
 
-.project-popup-spec {
-  margin: 0;
-  padding: 0;
+/* Info rows: case-study meta type (.cs-meta-label / .cs-meta-value),
+   separated by the case-study TOC hairline token. */
+.project-popup-meta-row {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-toc-track);
 }
-
-.project-popup-spec-row {
-  margin: 0;
-  padding: 8px 0;
-  /* Neutral grey hairlines — not the site’s lavender --color-border-subtle. */
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-html[data-theme="dark"] .project-popup-spec-row {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-.project-popup-spec-row:first-child {
+.project-popup-meta-row:first-child {
   padding-top: 0;
 }
-.project-popup-spec-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.project-popup-spec-label {
-  font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  line-height: var(--lh-sm);
-  letter-spacing: var(--ls-sm);
-  color: var(--color-text-tertiary);
-  margin: 0 0 4px;
-}
-
-.project-popup-spec-value {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: var(--fs-meta);
-  font-weight: 400;
-  line-height: var(--lh-meta);
-  letter-spacing: var(--ls-meta);
+.project-popup-meta-row .cs-meta-value {
   color: var(--color-text-primary);
-  margin: 0;
-}
-.project-popup-spec-value + .project-popup-spec-value {
-  margin-top: 2px;
 }
 
-/* Body-colour link with a quiet always-on underline on the label only
-   (arrow stays undecorated). 44×44 tap via padding, not a bigger glyph. */
+/* Home-card external link: card title face + blue northeast arrow. */
 .project-popup-info-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-  min-height: 44px;
-  padding: 12px 0;
-  box-sizing: border-box;
-  font-family: var(--font-sans);
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-family: var(--font-sans-medium);
   font-size: var(--fs-meta);
-  font-weight: 400;
+  font-weight: var(--fw-card-title);
   line-height: var(--lh-meta);
-  letter-spacing: var(--ls-meta);
   color: var(--color-text-primary);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-@media (hover: hover) and (pointer: fine) {
-  .project-popup-info-link:hover {
-    color: var(--color-text-primary);
-  }
-}
 @media (hover: none), (pointer: coarse) {
-  .project-popup-info-link:active {
-    opacity: 0.72;
-  }
-}
-.project-popup-info-link-text {
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  text-decoration-skip-ink: auto;
-  text-decoration-color: currentColor;
-}
-.project-popup-info-link-icon {
-  /* Optically centre the northeast arrow on the meta x-height; no underline. */
-  display: inline-block;
-  flex-shrink: 0;
-  position: relative;
-  top: 0.12em;
-  text-decoration: none;
-}
-
-.project-popup-why {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-html[data-theme="dark"] .project-popup-why {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-.project-popup-why > summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 12px 0;
-  box-sizing: border-box;
-  user-select: none;
-  color: var(--color-text-primary);
-  -webkit-tap-highlight-color: transparent;
-  border-radius: var(--radius-mosaic);
-}
-.project-popup-why > summary::-webkit-details-marker {
-  display: none;
-}
-@media (hover: none), (pointer: coarse) {
-  .project-popup-why > summary:active {
-    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
-  }
-}
-/* Same sans voice as .project-popup-spec-label — one type system in the panel. */
-.project-popup-why-label {
-  font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  line-height: var(--lh-sm);
-  letter-spacing: var(--ls-sm);
-  color: var(--color-text-tertiary);
-}
-.project-popup-why-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 10px;
-  height: 10px;
-  color: var(--color-text-tertiary);
-  transform: rotate(0deg);
-  transition: transform 160ms var(--ease-out);
-}
-.project-popup-why[open] > summary .project-popup-why-chevron {
-  transform: rotate(90deg);
-}
-.project-popup-why > p {
-  margin: 0 0 8px;
-  font-family: var(--font-sans);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  letter-spacing: var(--ls-body);
-  color: var(--color-text-secondary);
-}
-@media (prefers-reduced-motion: reduce) {
-  .project-popup-why-chevron {
-    transition: none;
+  .project-popup-info-link {
+    min-height: 44px;
   }
 }
 
@@ -995,205 +883,72 @@ html[data-theme="dark"] .project-popup-why {
   content-visibility: auto;
 }
 
-/* Layout-mirroring skeleton — same .app column as the demo (max 680 centered,
-   16px MenuBar/Blob gutters) so the crossfade has 0px lateral shift. */
-.aio-demo-skel {
-  /* Solid fills (not --color-placeholder) so light bars stay readable even at
-     the pulse floor; dark mixes stay quieter via the same tokens. */
-  --aio-skel-fill: color-mix(in srgb, var(--color-text-primary) 26%, var(--color-bg));
-  --aio-skel-line: color-mix(in srgb, var(--color-text-primary) 32%, var(--color-bg));
-  --aio-skel-strong: color-mix(in srgb, var(--color-text-primary) 40%, var(--color-bg));
+/* Halftone square loader — cursor-trail language (hard squares, flat ink,
+   opacity variance). Centered ~22px footprint; compositor-only ripple. */
+.aio-ht-loader {
+  /* One step darker than cursor rest #595959 so the wave reads on light bg. */
+  --aio-ht-ink: #3f3f3f;
   position: absolute;
   inset: 0;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg);
+  display: grid;
+  place-items: center;
   pointer-events: none;
-  opacity: 1;
+  background: var(--color-bg);
+  opacity: 0;
   transition: opacity 180ms ease;
-  overflow: hidden;
 }
-.aio-demo-skel[data-hidden="true"] {
+html[data-theme="dark"] .aio-ht-loader {
+  --aio-ht-ink: #efefef;
+}
+.aio-ht-loader[data-visible="true"] {
+  opacity: 1;
+}
+.aio-ht-loader[data-fading="true"] {
   opacity: 0;
 }
-/* Full-bleed toolbar strip + hairline (matches .toolbarStrip). */
-.aio-demo-skel-strip {
-  flex-shrink: 0;
-  width: 100%;
-  border-bottom: 1px solid var(--aio-skel-line);
-  background: var(--color-bg);
-  box-sizing: border-box;
-}
-/* Centered column — identical to demo `.app { max-width: 680px; margin: 0 auto }`. */
-.aio-demo-skel-col {
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-.aio-demo-skel-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  height: 52px;
-  padding: 0 16px;
-  min-width: 0;
-}
-.aio-demo-skel-toolbar-left,
-.aio-demo-skel-toolbar-right {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-.aio-demo-skel-toolbar-left {
-  /* MenuBar .left: gap 2px; sidebarBtn margin-left -8px */
+.aio-ht-loader-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 3.5px);
+  grid-template-rows: repeat(4, 3.5px);
   gap: 2px;
-  flex: 1;
+  width: 20px;
+  height: 20px;
 }
-.aio-demo-skel-toolbar-right {
-  /* icon cluster 4px + 8px before Categories/Sort */
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: 8px;
+.aio-ht-loader-cell {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 0;
+  background: var(--aio-ht-ink);
+  opacity: 0.28;
+  transform: scale(0.85);
+  animation: aio-ht-ripple 960ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: calc(var(--aio-ht-i, 0) * 55ms);
+  will-change: transform, opacity;
 }
-/* 32×32 hit like .sidebarBtn; -8px pulls glyph onto the checkbox column. */
-.aio-demo-skel-sidebar {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  margin-left: -8px;
-  border-radius: 6px;
-  flex-shrink: 0;
-  position: relative;
-}
-.aio-demo-skel-sidebar::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  border-radius: 4px;
-  background: var(--aio-skel-fill);
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-icon-sm {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  flex-shrink: 0;
-  position: relative;
-}
-.aio-demo-skel-icon-sm::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
-  border-radius: 3px;
-  background: var(--aio-skel-fill);
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-title {
-  width: 72px;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--aio-skel-fill);
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-pill {
-  height: 28px;
-  border-radius: 999px;
-  flex-shrink: 0;
-  background: var(--aio-skel-fill);
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-pill--ghost {
-  width: 110px;
-  height: 32px;
-  background: transparent;
-  border: 1px solid var(--aio-skel-line);
-  /* Border-only: pulse the border colour via opacity on the element. */
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-pill--solid {
-  width: 64px;
-  background: var(--aio-skel-strong);
-}
-.aio-demo-skel-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  /* Blob: padding var(--space-md) = 16px */
-  padding: 16px 16px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-}
-.aio-demo-skel-row {
-  /* Blob .line: flex, gap 10px, min-height 32 */
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-height: 32px;
-  box-sizing: border-box;
-}
-.aio-demo-skel-check {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid var(--aio-skel-line);
-  background: transparent;
-  flex-shrink: 0;
-  margin-top: 8px; /* matches TaskItem / Blob square offset */
-  box-sizing: border-box;
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-.aio-demo-skel-bar {
-  height: 11px;
-  margin-top: 10px;
-  border-radius: 4px;
-  background: var(--aio-skel-fill);
-  max-width: calc(100% - 0px);
-  min-width: 0;
-  animation: aio-demo-skel-pulse 1.4s ease-in-out infinite;
-}
-/* Subtle opacity pulse on the bars/controls only — no panel-wide streaks.
-   Floor stays high so light mode never drops back to “empty slab” faintness. */
-@keyframes aio-demo-skel-pulse {
-  0%, 100% { opacity: 0.78; }
-  50% { opacity: 1; }
+@keyframes aio-ht-ripple {
+  0%, 100% {
+    opacity: 0.22;
+    transform: scale(0.78);
+  }
+  45% {
+    opacity: 0.88;
+    transform: scale(1);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .aio-demo-skel-sidebar::after,
-  .aio-demo-skel-icon-sm::after,
-  .aio-demo-skel-title,
-  .aio-demo-skel-pill,
-  .aio-demo-skel-check,
-  .aio-demo-skel-bar {
-    animation: none;
-    opacity: 0.85;
-  }
-  .aio-demo-skel {
+  .aio-ht-loader {
     transition: none;
+  }
+  .aio-ht-loader-cell {
+    animation: none;
+    opacity: 0.55;
+    transform: none;
+    will-change: auto;
   }
   .project-popup-iframe {
     transition: none;
   }
-}
-@media (max-width: 680px) {
-  .aio-demo-skel-icon-sm { display: none; }
-  .aio-demo-skel-row { min-height: 44px; }
-  .aio-demo-skel-check { margin-top: 14px; }
-  .aio-demo-skel-bar { margin-top: 16px; }
-  /* Categories pill shortens; keep Sort 64→52 like the demo under 390. */
-  .aio-demo-skel-pill--ghost { width: 106px; }
-  .aio-demo-skel-pill--solid { width: 52px; }
 }
 
 .project-popup-iframe {
@@ -1306,8 +1061,8 @@ html[data-theme="dark"] .project-popup-why {
     bottom: 0;
     width: 100%;
     max-width: none;
-    /* Height is driven in JS; CSS ceilings match so Open full app + Why fit. */
-    max-height: 85dvh;
+    /* Height is driven in JS; keep the whole meta + why in view. */
+    max-height: 78dvh;
     overflow: auto;
     overscroll-behavior: contain;
     border-radius: var(--radius-panel) var(--radius-panel) 0 0;
@@ -1319,8 +1074,14 @@ html[data-theme="dark"] .project-popup-why {
   html[data-theme="dark"] .project-popup-info {
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
   }
-  .project-popup-info[data-why-open="false"] {
-    max-height: 72dvh;
+  .project-popup-meta-row {
+    padding: var(--space-1) 0;
+  }
+  .project-popup-meta-row:first-child {
+    padding-top: 0;
+  }
+  .project-popup-info-inner {
+    mask-image: none;
   }
 
   /* 44px swipe target; bar is 36×4, 8px from the sheet top, ~3:1 contrast. */
@@ -1361,10 +1122,7 @@ html[data-theme="dark"] .project-popup-why {
   /* Short landscape: keep the sheet usable without covering the whole app. */
   @media (max-height: 500px) {
     .project-popup-info {
-      max-height: 75dvh;
-    }
-    .project-popup-info[data-why-open="false"] {
-      max-height: 70dvh;
+      max-height: 82dvh;
     }
   }
 }

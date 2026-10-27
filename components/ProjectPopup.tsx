@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+import NortheastArrow from "@/components/icons/NortheastArrow";
 
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
@@ -86,7 +87,7 @@ export default function ProjectPopup({
   const triggerElRef = useRef<Element | null>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
   const infoInnerRef = useRef<HTMLDivElement>(null);
-  const whySectionRef = useRef<HTMLDetailsElement>(null);
+  const whySectionRef = useRef<HTMLElement>(null);
   const sheetDragRef = useRef<{ startY: number; dragging: boolean } | null>(null);
   /** Outer large-panel sheet drag (below 640px). */
   const panelDragRef = useRef<{
@@ -100,7 +101,6 @@ export default function ProjectPopup({
   const reduced = useReducedMotion();
   const isLarge = size === "large";
   const [infoOpen, setInfoOpen] = useState(false);
-  const [whyOpen, setWhyOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   /** Static backdrop blur sibling — never opacity-animated with the filter. */
   const [blurOn, setBlurOn] = useState(false);
@@ -137,11 +137,10 @@ export default function ProjectPopup({
   }, []);
 
   // Reset info chrome whenever the dialog closes so the next open starts
-  // with the app filling the panel (info closed, disclosure collapsed).
+  // with the app filling the panel (info closed).
   useEffect(() => {
     if (!open) {
       setInfoOpen(false);
-      setWhyOpen(false);
       setSheetHeight(null);
       setSheetDragY(0);
       setPanelDragY(0);
@@ -156,7 +155,8 @@ export default function ProjectPopup({
     }
   }, [open]);
 
-  // Mobile sheet: grow to content up to 50dvh (closed Why) / 85dvh (open Why).
+  // Mobile sheet: hug content up to ~78dvh so the full info (meta + why)
+  // fits without an inner scrollbar on typical phones.
   useLayoutEffect(() => {
     if (!infoOpen || !isMobile) {
       if (!isMobile) setSheetHeight(null);
@@ -169,27 +169,11 @@ export default function ProjectPopup({
     panel.style.height = "auto";
     const contentH = panel.scrollHeight;
     panel.style.height = prev;
-    // Prefer visualViewport when present (iOS dynamic toolbars); fall back to
-    // innerHeight. Caps are dvh-equivalent fractions of the live viewport.
-    // Closed Why must still fit Open full app + Why summary without clipping;
-    // open Why can grow further (sheet scrolls internally past the cap).
     const vh = window.visualViewport?.height ?? window.innerHeight;
     const shortLandscape = vh <= 500;
-    const cap = shortLandscape
-      ? (whyOpen ? 0.75 : 0.7) * vh
-      : (whyOpen ? 0.85 : 0.72) * vh;
+    const cap = (shortLandscape ? 0.82 : 0.78) * vh;
     setSheetHeight(Math.min(contentH, cap));
-  }, [infoOpen, whyOpen, isMobile, infoMeta, whyBuilt, infoLink]);
-
-  // After Why expands, keep its body in view inside the sheet without a
-  // manual scroll when content hits the 85dvh cap.
-  useLayoutEffect(() => {
-    if (!whyOpen || !isMobile || !whySectionRef.current) return;
-    const id = requestAnimationFrame(() => {
-      whySectionRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [whyOpen, isMobile, sheetHeight, reduced]);
+  }, [infoOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
@@ -357,10 +341,12 @@ export default function ProjectPopup({
       aria-controls={infoPanelId}
       title="Info"
     >
-      <svg viewBox="0 0 16 16" width={14} height={14} fill="none" aria-hidden>
-        <circle cx="8" cy="8" r="6.25" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="8" y1="7.25" x2="8" y2="11.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="8" cy="5" r="0.85" fill="currentColor" />
+      {/* Glyph fills the 16 box edge to edge like the × beside it; 15px is the
+          popup icon size the mobile topbar already uses. */}
+      <svg viewBox="0 0 16 16" width={15} height={15} fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="8" y1="7.25" x2="8" y2="11.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="4.75" r="1" fill="currentColor" />
       </svg>
     </button>
   );
@@ -581,7 +567,6 @@ export default function ProjectPopup({
                       className="project-popup-info"
                       role="region"
                       aria-label="Project details"
-                      data-why-open={whyOpen ? "true" : "false"}
                       initial={{ opacity: 0, y: infoY }}
                       animate={{
                         opacity: 1,
@@ -640,50 +625,31 @@ export default function ProjectPopup({
                         </div>
                       )}
                       <div className="project-popup-info-inner" ref={infoInnerRef}>
-                        {infoMeta && infoMeta.length > 0 && (
-                          <dl className="project-popup-spec">
-                            {infoMeta.map(({ label, values }) => (
-                              <div key={label} className="project-popup-spec-row">
-                                <dt className="project-popup-spec-label">{label}</dt>
-                                {values.map((v) => (
-                                  <dd key={v} className="project-popup-spec-value">
-                                    {v}
-                                  </dd>
-                                ))}
-                              </div>
-                            ))}
-                          </dl>
-                        )}
+                        {/* Rows reuse the case-study meta block (.cs-meta-label / .cs-meta-value). */}
+                        <div className="project-popup-meta">
+                          {(infoMeta ?? []).map(({ label, values }) => (
+                            <div key={label} className="project-popup-meta-row">
+                              <p className="cs-meta-label">{label}</p>
+                              <p className="cs-meta-value">{values.join(", ")}</p>
+                            </div>
+                          ))}
+                          <section ref={whySectionRef} className="project-popup-meta-row">
+                            <h3 className="cs-meta-label">Why I built it</h3>
+                            <p className="cs-meta-value">{whyBuilt}</p>
+                          </section>
+                        </div>
                         {infoLink && (
+                          /* Home-card external link: title type + blue northeast arrow. */
                           <a
                             className="project-popup-info-link"
                             href={infoLink.href}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <span className="project-popup-info-link-text">{infoLink.label}</span>
-                            <svg className="project-popup-info-link-icon" viewBox="0 0 12 12" width={10} height={10} fill="none" aria-hidden>
-                              <path d="M3.5 2.5H9.5V8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M9.5 2.5L2.5 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                            </svg>
+                            {infoLink.label}
+                            <NortheastArrow size={13} color="var(--color-link-blue)" />
                           </a>
                         )}
-                        <details
-                          ref={whySectionRef}
-                          className="project-popup-why"
-                          open={whyOpen}
-                          onToggle={(e) => setWhyOpen((e.target as HTMLDetailsElement).open)}
-                        >
-                          <summary>
-                            <span className="project-popup-why-chevron" aria-hidden>
-                              <svg viewBox="0 0 12 12" width={10} height={10} fill="none">
-                                <path d="M4.25 2.5L7.75 6L4.25 9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </span>
-                            <span className="project-popup-why-label">Why I built it</span>
-                          </summary>
-                          <p>{whyBuilt}</p>
-                        </details>
                       </div>
                     </motion.div>
                   </>
