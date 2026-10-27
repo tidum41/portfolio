@@ -145,8 +145,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
         WebkitTapHighlightColor: "transparent",
         // 44px tap target; 15px icon stays visually the same, centered.
         position: "relative",
-        width: 44,
-        height: 44,
+        minWidth: 44,
+        minHeight: 44,
         boxSizing: "border-box",
         justifyContent: "center",
       }}

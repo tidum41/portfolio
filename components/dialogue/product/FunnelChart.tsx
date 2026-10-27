@@ -46,7 +46,7 @@ export default function FunnelChart({
       </span>
       {summaryBody}
       <p className="dp-source-line" data-annotate-part="source-line">
-        From 9 checkout moments, including{" "}
+        From 18 checkout moments, including{" "}
         <span className="dp-source-line__link">Jordan M. at 14:03–14:19</span>
       </p>
     </div>
@@ -59,7 +59,7 @@ export default function FunnelChart({
       <>
         Largest drop:{" "}
         <strong>
-          {dialogueCopy.funnelLargestDrop} (−{dialogueCopy.funnelLargestDropPct}%)
+          {dialogueCopy.funnelLargestDrop} ({dialogueCopy.funnelLargestDropPct} points)
         </strong>
       </>
     ) : undefined;

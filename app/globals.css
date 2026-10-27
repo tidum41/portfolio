@@ -173,6 +173,7 @@ body {
   overflow-x: hidden;
   overflow-x: clip;
   overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
 }
 @media (max-width: 600px) {
   .work-hero {
@@ -428,13 +429,18 @@ html.theme-switching *::after {
 }
 
 /* ─── Nav spacing matches main. Safe-area insets are 0 without a notch,
-   so desktop padding stays 24px. The min-height below is main's own
-   rule: it sizes the line box, and the ::before covers the rest of
-   the 44px target without a min-width. ──────────────────────────── */
+   so desktop padding stays 16px and the bar is 76px tall (16 + 44 + 16).
+   The min-height below is main's own rule: it sizes the line box, and
+   the ::before covers the rest of the 44px target without a min-width. ── */
 .site-nav {
-  gap: 40px;
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: 24px;
+  gap: 32px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-bottom: 16px;
+}
+@media (max-width: 479px) {
+  .site-nav {
+    gap: 24px;
+  }
 }
 nav a,
 nav button.footer-link {
@@ -1475,7 +1481,6 @@ html[data-theme="dark"] .project-image {
   flex-shrink: 0;
   /* Optical align to meta cap height (chevron sits a hair high in the em box). */
   transform: translateY(0.5px);
-  transition: transform 150ms ease-out;
 }
 /* Hang chevrons outside the prose text edge (icon 13px + kicker gap 6px).
    Negative margin cancels the icon from the flex size so kicker/title text
@@ -1486,23 +1491,7 @@ html[data-theme="dark"] .project-image {
 .cs-pager-kicker-icon--next {
   margin-right: calc(-1 * (13px + 6px));
 }
-@media (hover: hover) and (pointer: fine) {
-  .cs-pager-link:hover .cs-pager-kicker-icon--prev {
-    transform: translate(-2px, 0.5px);
-  }
-  .cs-pager-link:hover .cs-pager-kicker-icon--next {
-    transform: translate(2px, 0.5px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .cs-pager-kicker-icon {
-    transition: none;
-  }
-  .cs-pager-link:hover .cs-pager-kicker-icon--prev,
-  .cs-pager-link:hover .cs-pager-kicker-icon--next {
-    transform: translateY(0.5px);
-  }
-}
+
 .cs-pager-title {
   font-family: var(--font-sans-medium);
   font-size: var(--fs-lg); /* body-lg */
@@ -2239,6 +2228,10 @@ agentation-toolbar,
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
 }
 .dialogue-case-study {
+  /* Round L: one neutral figure card. Near-white well in light, the dark
+     counterpart in dark, 8px radius (already --radius-control), and no
+     inset border box on any figure frame. */
+  --figure-well: #f7f7f5;
   --dp-figure-surface-system: var(--figure-well);
   --dp-figure-surface-problem: var(--figure-well);
   --dp-figure-surface-solution: var(--figure-well);
@@ -2444,6 +2437,11 @@ agentation-toolbar,
 .dialogue-live-block.cs-figure {
   margin: 24px 0 0;
 }
+.dialogue-lead-answer__question {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 16px;
+}
 .dialogue-lead-answer__row {
   display: grid;
   gap: 24px;
@@ -2457,14 +2455,48 @@ agentation-toolbar,
   row-gap: 0;
   align-items: start;
 }
-@media (min-width: 601px) {
+@media (min-width: 941px) {
   .dialogue-lead-answer__row--trio {
     grid-template-rows: auto auto auto;
+  }
+  /* Round L: the three compare cards share one height, the tallest card
+     sets it through the shared subgrid row. */
+  .dialogue-lead-answer__row--trio .dialogue-lead-answer__option-card {
+    align-self: stretch;
+    height: 100%;
+  }
+  .dialogue-lead-answer__row--trio .dialogue-lead-answer__option-card .dialogue-product-block {
+    height: 100%;
   }
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel {
     display: grid;
     grid-row: span 3;
     grid-template-rows: subgrid;
+    /* One explicit column: without it the column sized to the scaled
+       viewport's unscaled width and the panel caption overflowed the frame. */
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Round H: below 941px the three panels would squeeze under the readable
+   scale floor and the third panel's text clipped at the frame edge, so the
+   comparison stacks at full width, chosen first like on phones. */
+@media (max-width: 940px) {
+  .dialogue-lead-answer__row--trio {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow: visible;
+  }
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+    grid-row: auto;
+    grid-template-rows: unset;
+  }
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+    order: -1;
   }
 }
 .dialogue-lead-answer__panel {
@@ -2593,7 +2625,7 @@ agentation-toolbar,
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: #78716c;
+  color: #79716b;
 }
 .dialogue-chart-gallery {
   display: grid;
@@ -2673,6 +2705,10 @@ agentation-toolbar,
     overflow: visible;
     scroll-snap-type: none;
   }
+  /* On phones the comparison leads with the answer, like the answers it argues for. */
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+    order: -1;
+  }
   .dialogue-lead-answer__panel,
   .dialogue-chart-gallery__cell {
     display: flex;
@@ -2740,9 +2776,6 @@ agentation-toolbar,
     grid-template-columns: 1fr;
   }
 }
-.dialogue-full-answer-outcome {
-  margin-top: var(--dialogue-section-gap) !important;
-}
 @media (max-width: 600px) {
   .dialogue-chart-mapping {
     grid-template-columns: 1fr;
@@ -2806,12 +2839,23 @@ agentation-toolbar,
   font-weight: 400;
   color: var(--color-text-tertiary);
 }
+.dialogue-lib__why {
+  margin: 8px 0 0;
+  max-width: 640px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
 .dialogue-lib__pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 16px;
   margin-top: 12px;
   align-items: stretch;
+}
+.dialogue-lib__single {
+  margin-top: 12px;
 }
 .dialogue-lib__col {
   min-width: 0;
@@ -2829,6 +2873,8 @@ agentation-toolbar,
   background: var(--dp-figure-surface-system);
   box-shadow: inset 0 0 0 1px var(--figure-well-border);
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 .dialogue-lib__spec-name {
   margin: 12px 0 8px;
@@ -2921,15 +2967,251 @@ html:not([data-theme="dark"]) .dialogue-lib__chart .dp-chart-viz-card {
   padding: 2px 8px;
   border-radius: var(--radius-chip, 8px);
   background: transparent;
-  color: #b33a7a;
-  box-shadow: inset 0 0 0 1px #b33a7a;
+  color: #b43f7f;
+  box-shadow: inset 0 0 0 1px #b43f7f;
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
 }
 html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
-  color: #f19cc4;
-  box-shadow: inset 0 0 0 1px #f19cc4;
+  color: #fe93ce;
+  box-shadow: inset 0 0 0 1px #fe93ce;
+}
+
+/* Hero moment (round H): the whole answer in one full-width card. The funnel
+   and the coverage split sit side by side; below them the clip and the thin
+   slice. Stone and cherry only, on the product tokens. */
+.dialogue-hero-moment__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+}
+.dialogue-hero-moment__side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.dialogue-hero-moment__clips {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+.dialogue-hero-moment__thin {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  padding: 12px 14px;
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-control);
+  min-width: 0;
+}
+.dialogue-hero-moment__thin-count {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--dp-brand);
+}
+.dialogue-hero-moment__thin-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dp-muted);
+}
+@media (max-width: 600px) {
+  .dialogue-hero-moment__grid,
+  .dialogue-hero-moment__clips {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* In the hero's narrower side column the counter quotes wrap in full instead
+   of ellipsising mid-word. */
+.dialogue-hero-moment .dp-counter__quote {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Round I: version one of the answer card, recreated as a plain markdown
+   table. Black and white on purpose: no brand color, no chart, just rows. */
+.dialogue-version-table {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 14px;
+  color: #171412;
+  text-align: left;
+}
+
+.dialogue-version-table__question {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+}
+
+.dialogue-version-table__title {
+  margin: 16px 0 4px;
+  font-size: 13px;
+  line-height: 19px;
+  font-weight: 500;
+}
+
+.dialogue-version-table__note {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: #404040;
+}
+
+.dialogue-version-table__title:first-of-type {
+  margin-top: 0;
+}
+
+.dialogue-version-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.dialogue-version-table__table th,
+.dialogue-version-table__table td {
+  padding: 3px 10px 3px 0;
+  border-bottom: 1px solid #e7e5e4;
+  font-weight: 400;
+  text-align: left;
+}
+
+.dialogue-version-table__table thead th {
+  color: #737373;
+  border-bottom: 1px solid #171412;
+}
+
+.dialogue-version-table__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dialogue-version-table__table .dialogue-version-table__num {
+  text-align: right;
+  padding-right: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .dialogue-version-table {
+    padding: 16px;
+  }
+}
+
+/* Round H: the comparison's chosen panel is narrow, and the funnel's default
+   label column pushed its value column past the card edge. Shrink the chart
+   to the panel, same treatment the moments got in the round G fix. */
+.dialogue-lead-answer__panel .dp-chart-root {
+  --dp-chart-min-width: 0px;
+  --dp-chart-label-width: 64px;
+  min-width: 0;
+}
+
+/* Round J fixes. */
+/* The follow-up figure's dot values ran 4px past the chart card edge at 360:
+   shrink the dots chart to its card, same treatment as the bars before it. */
+.dialogue-case-study .dp-full-answer .dp-chart-root {
+  --dp-chart-min-width: 0px;
+  --dp-chart-value-width: 30px;
+  min-width: 0;
+}
+
+/* Counter-evidence sits bare on the frame well, so in dark mode its product
+   ink tokens are dark on the dark well. Flip the two tokens for this block
+   only; inside the chat shells it stays on the light product surface. */
+html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
+  --dp-ink: #f4f2ef;
+  --dp-muted: #a8a49e;
+}
+
+/* A paragraph that follows a figure starts clear of its caption. */
+.dialogue-case-study .dialogue-cs-section figure + .cs-prose {
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  /* Round J: in the anatomy and full-answer figures the source chips wrap
+     too, so the Marcus W. chip is fully visible instead of straddling the
+     shell edge. Other scaled figures keep the scroll row. */
+  .dialogue-case-study #one-structure .dp-sources,
+  .dialogue-case-study #full-answer .dp-sources {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+@media (max-width: 600px) {
+  /* The transcript scroll button gets its own gutter, so it never sits on a
+     line of the transcript. */
+  .dialogue-case-study .dp-synced-transcript__viewport {
+    padding-right: 46px;
+  }
+
+  /* Round J: on phones the evolution reads in version order, two, three,
+     eight, not chosen first. Tablets keep the round H chosen-first stack. */
+  .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+    order: 0;
+  }
+}
+
+/* Mobile evidence rows (round H): source chips run in one sideways-scrolling
+   row, the search step tightens so it wraps to at most two lines, and counter
+   quotes wrap instead of ellipsising. */
+@media (max-width: 768px) {
+  /* Round I: in the live answer moments the chips wrap instead of scrolling,
+     so no name is ever cut mid word at the shell edge. Scaled product
+     figures keep the sideways scroll row below. */
+  .dialogue-case-study .dialogue-moment .dp-sources,
+  .dialogue-case-study .dialogue-hero-moment .dp-sources {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .dialogue-case-study .dp-sources {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .dialogue-case-study .dp-sources::-webkit-scrollbar {
+    display: none;
+  }
+  .dialogue-case-study .dp-source-pill {
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 600px) {
+  .dialogue-case-study .dp-search-step {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .dialogue-case-study .dp-search-step__text {
+    font-size: 11px;
+    line-height: 15px;
+  }
+  .dialogue-case-study .dp-search-step__chevron {
+    width: 14px;
+    height: 14px;
+  }
+  .dialogue-case-study .dp-counter__quote {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 }
 
 /* Figure wells: offset from the page by about 6% lightness in both themes. */
@@ -2940,6 +3222,24 @@ html[data-theme="dark"] .dialogue-lead-answer__chosen-badge {
 html[data-theme="dark"] {
   --figure-well: #1b1e21;
   --figure-well-border: rgba(255, 255, 255, 0.04);
+}
+/* Round L: the Dialogue figure well keeps its dark counterpart in dark. */
+html[data-theme="dark"] .dialogue-case-study {
+  --figure-well: #1b1e21;
+}
+/* Round L: Dialogue figure frames carry no inset border box. */
+.dialogue-case-study .dialogue-rachel-frame,
+.dialogue-case-study .cs-figure-media,
+.dialogue-case-study .cs-figure-media--fill,
+.dialogue-case-study .cs-hero-media-frame {
+  box-shadow: none;
+}
+/* Round L: every Dialogue figure locks to the 640px text column. */
+.dialogue-case-study .cs-figure,
+.dialogue-case-study .dialogue-lead-answer,
+.dialogue-case-study .dialogue-lib,
+.dialogue-case-study .cs-hero-media-frame {
+  max-width: 640px;
 }
 
 /* Ink on the figure well, theme aware (DLG-32, DLG-33). */
@@ -3002,5 +3302,28 @@ html[data-theme="dark"] {
   .bento-minimap:hover {
     border-color: var(--minimap-border-hover) !important;
     box-shadow: var(--minimap-shadow-hover) !important;
+  }
+}
+
+/* Round G fix: let the moment chart shrink at 390 so bar values stay visible. */
+.dialogue-moment .dp-chart-root {
+  --dp-chart-min-width: 0px;
+  --dp-chart-label-width: 72px;
+  min-width: 0;
+}
+
+/* Restore r24: at 360 the bar charts' fixed label column plus the 60px track
+   floor pushed the value column past the card edge. Cap the label column and
+   lower the track floor on the smallest phones only; chart.css stays the
+   approved b056865 file. */
+@media (max-width: 400px) {
+  .dialogue-case-study .dp-chart-bars__label {
+    width: min(var(--dp-chart-label-width), 80px);
+  }
+  .dialogue-case-study .dp-chart-bars__track {
+    min-width: 24px;
+  }
+  .dialogue-case-study .dp-chart-bars__grid {
+    left: calc(min(var(--dp-chart-label-width), 80px) + var(--dp-chart-gutter));
   }
 }
