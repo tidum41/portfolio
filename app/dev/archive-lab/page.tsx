@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Rough Archive direction lab. Local `next dev` and Vercel Preview only.
- * Not linked from nav.
+ * Archive direction lab with a real DialKit root on the page.
+ * Local `next dev` and Vercel Preview only. Not linked from nav.
  *
  * Local: npm run dev → http://localhost:3000/dev/archive-lab
  */
