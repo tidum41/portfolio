@@ -646,3 +646,10 @@
 .dp-chart-grouped__num--quiet {
   color: var(--dp-chart-label-color);
 }
+
+/* Round P: the selected segment (its evidence open) gets a 1px stone-500
+   outline, drawn inside so the bar's overflow cannot clip it. */
+.dp-chart-stack__seg[data-selected] {
+  outline: 1px solid var(--dp-chart-muted);
+  outline-offset: -1px;
+}
