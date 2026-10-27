@@ -14,6 +14,27 @@ import { useDialKit } from "dialkit";
 import { cssEase, EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
 import BentoMinimap from "./BentoMinimap";
 
+const SIZE_STEPS = [320, 480, 640, 800, 960, 1200, 1440, 1600, 2000, 2400];
+/** srcset of Sanity CDN widths below the full file, so the browser fetches
+ *  about the tile's device-pixel size (same on server and client). */
+function sanitySrcSet(src: string): string | undefined {
+    if (!src.includes("cdn.sanity.io")) return undefined;
+    try {
+        const u = new URL(src);
+        const full = Number(u.searchParams.get("w")) || 2400;
+        const parts: string[] = [];
+        for (const w of SIZE_STEPS) {
+            if (w >= full) break;
+            u.searchParams.set("w", String(w));
+            parts.push(`${u.toString()} ${w}w`);
+        }
+        parts.push(`${src} ${full}w`);
+        return parts.join(", ");
+    } catch {
+        return undefined;
+    }
+}
+
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
 function BlurUpImage({
@@ -23,8 +44,14 @@ function BlurUpImage({
     priority,
     onLoad,
     deferFullSrc,
+    displayWidth,
+    hiRes = false,
 }: {
     src: string;
+    /** Rendered CSS width; the first request is sized to it. */
+    displayWidth?: number;
+    /** Zoom / focus: swap in the full-resolution source. */
+    hiRes?: boolean;
     blurDataURL?: string;
     alt: string;
     priority?: boolean;
@@ -34,7 +61,26 @@ function BlurUpImage({
 }) {
     const imgRef = useRef<HTMLImageElement>(null);
     const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+    // First paint uses a CDN rendition at the tile's device-pixel size; the
+    // full-resolution file is decoded off-screen and swapped in on zoom.
+    const srcSet = useMemo(() => sanitySrcSet(src), [src]);
+    // 1.25x headroom so downsampling stays as crisp as from the full file.
+    const sizes = displayWidth ? `${Math.ceil(displayWidth * 1.25)}px` : undefined;
+    const [upgraded, setUpgraded] = useState(false);
+    useEffect(() => {
+        if (!hiRes || upgraded || !srcSet || deferFullSrc) return;
+        let cancelled = false;
+        const img = new window.Image();
+        img.decoding = "async";
+        img.src = src;
+        const done = () => { if (!cancelled) setUpgraded(true); };
+        img.decode().then(done, done);
+        return () => { cancelled = true; };
+    }, [hiRes, upgraded, srcSet, src, deferFullSrc]);
     const liveSrc = deferFullSrc ? "" : src;
+    const liveSrcSet = upgraded || !sizes ? undefined : srcSet;
+    // src never changes on upgrade (only srcset is dropped), so the tile
+    // stays shown and never falls back to the LQIP.
     const loaded = Boolean(liveSrc) && loadedSrc === liveSrc;
 
     useLayoutEffect(() => {
@@ -77,6 +123,7 @@ function BlurUpImage({
                     loading="eager"
                     decoding="async"
                     {...(priority ? { fetchPriority: "high" as const } : {})}
+                    {...(liveSrcSet ? { srcSet: liveSrcSet, sizes } : {})}
                     src={liveSrc}
                     alt={alt}
                     draggable={false}
@@ -428,6 +475,10 @@ export default function BentoGallery({
     // post-paint overview transform snapped the grid — the Archive flash.
     const [layoutReady, setLayoutReady] = useState(false);
     const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
+    // Any zoom past the resting scale (or a focus) loads full-res tiles.
+    const [hiResZoom, setHiRes] = useState(false);
+    const baseScaleRef = useRef<number | null>(null);
+    const hiRes = hiResZoom || focusedIdx !== null;
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
     // One-time breakpoint check, matching the pattern used elsewhere in this
@@ -708,6 +759,8 @@ export default function BentoGallery({
             easing: "none" | "focus" | "snap" | "spring" | "flow" = "none"
         ) => {
             tx.current = { x, y, s };
+            if (baseScaleRef.current === null) baseScaleRef.current = s;
+            else if (s > baseScaleRef.current * 1.02) setHiRes(true);
             const fi = focusedRef.current;
             if (fi !== null) syncSelectorBox(fi);
             const el = canvasRef.current;
@@ -1626,6 +1679,8 @@ export default function BentoGallery({
                                         alt={item.alt ?? ""}
                                         priority={item.priority}
                                         deferFullSrc={deferFullSrc}
+                                        displayWidth={iw}
+                                        hiRes={hiRes}
                                     />
                                 ) : (
                                     <div
