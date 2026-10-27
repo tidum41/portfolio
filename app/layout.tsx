@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
+import { MUX_WARM_SSR_KEY } from "@/lib/muxWarmSsr";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
@@ -130,6 +131,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   ]);
   const dsStyle = designSystemToCss(ds);
 
+  // Read by BootScripts' server render (same process) so the warm map is
+  // written into the HTML once instead of also being an RSC prop.
+  (globalThis as Record<string, unknown>)[MUX_WARM_SSR_KEY] = muxWarm.playlists;
   return (
     <html
       lang="en"
@@ -184,7 +188,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <script> in the component tree (raw script / next/script both warn). */}
         <BootScripts
           jsonLd={getSiteJsonLd()}
-          playlists={muxWarm.playlists}
         />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />

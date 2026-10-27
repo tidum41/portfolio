@@ -4,6 +4,13 @@ import { useRef } from "react";
 import { useServerInsertedHTML } from "next/navigation";
 import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { MUX_WARM_SSR_KEY } from "@/lib/muxWarmSsr";
+
+/** Server render only: the root layout leaves the warm map on globalThis. */
+function serverPlaylists(): Record<string, unknown> {
+  if (typeof window !== "undefined") return {};
+  return ((globalThis as Record<string, unknown>)[MUX_WARM_SSR_KEY] as Record<string, unknown>) ?? {};
+}
 
 const THEME_INTRO_BOOT = `(function(){var t=localStorage.getItem("theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");try{sessionStorage.clear();}catch(e){}if(location.pathname!=="/")document.documentElement.removeAttribute("data-intro")})()`;
 
@@ -26,7 +33,7 @@ import type { MuxWarmEntry } from "@/lib/muxCardWarmup";
 
 export default function BootScripts({
   jsonLd,
-  playlists = {},
+  playlists,
 }: {
   jsonLd: string;
   /** playbackId → pre-resolved 480p/720p playlists on the homepage. */
@@ -50,7 +57,7 @@ export default function BootScripts({
         <script
           id="mux-card-warm"
           type="application/json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(playlists) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(playlists ?? serverPlaylists()) }}
         />
         <script
           id="hls-light-boot"
