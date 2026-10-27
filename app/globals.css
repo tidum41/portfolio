@@ -797,14 +797,14 @@ html[data-theme="light"] {
   display: none;
 }
 
-/* Desktop: anchored to the info icon; wider compact popover so meta + why
-   scan without scrolling. Two-column spec rows + always-visible why. */
+/* Desktop: anchored to the (i) control; labelled clusters + Georgia why,
+   one hairline (≥1.5:1), solid CTA. Origin anim: top right. */
 .project-popup-info {
   position: absolute;
   top: 60px; /* 52px iframe toolbar + 8px */
   right: 40px;
-  width: min(440px, calc(100% - 52px));
-  max-width: 440px;
+  width: min(380px, calc(100% - 52px));
+  max-width: 380px;
   max-height: calc(100% - 68px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -813,16 +813,15 @@ html[data-theme="light"] {
   box-sizing: border-box;
   background: var(--color-bg);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border-subtle);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: var(--radius-panel);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  /* Thin, quiet scrollbar if content ever overflows. */
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--color-text-primary) 28%, transparent) transparent;
 }
 html[data-theme="dark"] .project-popup-info {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 .project-popup-info::-webkit-scrollbar {
   width: 6px;
@@ -836,136 +835,164 @@ html[data-theme="dark"] .project-popup-info {
 }
 
 .project-popup-info-inner {
-  padding: 14px 16px 16px;
-}
-
-.project-popup-spec {
-  margin: 0;
-  padding: 0;
-  display: grid;
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
   gap: 0;
 }
 
-.project-popup-spec-row {
-  margin: 0;
-  padding: 7px 0;
+/* Labelled fact clusters — spacing rhythm 16/24, no per-row rules. */
+.project-popup-clusters {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 10px 12px;
-  align-items: baseline;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
 }
-html[data-theme="dark"] .project-popup-spec-row {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+.project-popup-cluster {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.project-popup-spec-row:first-child {
-  padding-top: 0;
+.project-popup-cluster--timeline {
+  grid-column: 1 / -1;
 }
-.project-popup-spec-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.project-popup-spec-label {
+.project-popup-cluster-label {
+  margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  line-height: var(--lh-sm);
-  letter-spacing: var(--ls-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--color-text-tertiary);
-  margin: 0;
 }
-
-.project-popup-spec-values {
+.project-popup-cluster-value {
   margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: var(--ls-meta);
+  color: var(--color-text-primary);
+}
+.project-popup-cluster-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 8px;
+  gap: 6px;
   min-width: 0;
 }
-
-.project-popup-spec-value {
-  display: inline;
-  font-family: var(--font-sans);
-  font-size: var(--fs-meta);
-  font-weight: 400;
-  line-height: var(--lh-meta);
-  letter-spacing: var(--ls-meta);
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-/* Body-colour link; compact on desktop, 44px tap on touch. */
-.project-popup-info-link {
+.project-popup-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 10px;
-  min-height: 32px;
-  padding: 6px 0;
-  box-sizing: border-box;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
   font-family: var(--font-sans);
-  font-size: var(--fs-meta);
+  font-size: 12px;
   font-weight: 400;
-  line-height: var(--lh-meta);
-  letter-spacing: var(--ls-meta);
+  line-height: 1.3;
+  letter-spacing: 0;
   color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.project-popup-chip--mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: -0.01em;
+}
+html[data-theme="dark"] .project-popup-chip {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+}
+
+.project-popup-timeline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.project-popup-timeline-numeral {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.project-popup-timeline-unit {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+}
+
+/* One hairline ≥1.5:1 against panel (#FBFBFB / #101214). */
+.project-popup-why {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.28);
+}
+html[data-theme="dark"] .project-popup-why {
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+.project-popup-why-label {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.project-popup-why-body {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: var(--color-text-primary);
+}
+
+/* Solid CTA — not a bare underlined link. */
+.project-popup-info-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: 16px;
+  min-height: 36px;
+  padding: 8px 14px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: var(--ls-meta);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity 120ms ease-out;
 }
 @media (hover: hover) and (pointer: fine) {
-  .project-popup-info-link:hover {
-    color: var(--color-text-primary);
+  .project-popup-info-cta:hover {
+    opacity: 0.88;
   }
 }
 @media (hover: none), (pointer: coarse) {
-  .project-popup-info-link {
+  .project-popup-info-cta {
     min-height: 44px;
-    padding: 12px 0;
+    width: 100%;
   }
-  .project-popup-info-link:active {
-    opacity: 0.72;
+  .project-popup-info-cta:active {
+    opacity: 0.8;
   }
-}
-.project-popup-info-link-text {
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  text-decoration-skip-ink: auto;
-  text-decoration-color: currentColor;
-}
-.project-popup-info-link-icon {
-  display: inline-block;
-  flex-shrink: 0;
-  position: relative;
-  top: 0.12em;
-  text-decoration: none;
-}
-
-.project-popup-why {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-html[data-theme="dark"] .project-popup-why {
-  border-top-color: rgba(255, 255, 255, 0.1);
-}
-.project-popup-why-label {
-  margin: 0 0 6px;
-  font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-  font-weight: 400;
-  line-height: var(--lh-sm);
-  letter-spacing: var(--ls-sm);
-  color: var(--color-text-tertiary);
-}
-.project-popup-why > p {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--fs-body);
-  line-height: 1.45;
-  letter-spacing: var(--ls-body);
-  color: var(--color-text-secondary);
 }
 
 /* All in One embed host — isolate iframe paint/layout from parent chrome. */
@@ -1170,13 +1197,20 @@ html[data-theme="dark"] .aio-ht-loader {
   html[data-theme="dark"] .project-popup-info {
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
   }
-  .project-popup-spec-row {
-    grid-template-columns: 96px minmax(0, 1fr);
-    gap: 8px 10px;
-    padding: 6px 0;
-  }
   .project-popup-info-inner {
     mask-image: none;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .project-popup-clusters {
+    gap: 14px 16px;
+  }
+  .project-popup-timeline-numeral {
+    font-size: 36px;
+  }
+  .project-popup-why-body {
+    font-size: 13px;
+    line-height: 1.42;
   }
 
   /* 44px swipe target; bar is 36×4, 8px from the sheet top, ~3:1 contrast. */
