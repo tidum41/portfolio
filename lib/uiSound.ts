@@ -149,6 +149,11 @@ export function unlockUiSounds() {
  * without instantiating AudioContext, avoiding Chrome autoplay warnings.
  * When allowContext is true (called on first gesture), instantiates and decodes immediately.
  */
+/** True once the tick files are in memory (raw or decoded). */
+export function uiSoundsCached(): boolean {
+  return rawBuffers.has("push") || buffers.has("push");
+}
+
 export function warmUiSounds(options?: { allowContext?: boolean }) {
   const allowContext = options?.allowContext ?? false;
   if (allowContext) {
