@@ -47,14 +47,14 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
-        <span className="dp-summary__emph">18 of 24</span>{" "}shoppers read &lsquo;Arrives by Friday&rsquo; as this Friday.
+        <span><span className="dp-summary__emph">18 of 24</span> shoppers read &lsquo;Arrives by Friday&rsquo; as this Friday.</span>
       </p>
       <div className="dp-lead-answer-card__funnel" data-annotate-part="chart">
         <ChartStackedBar
           total={24}
           segments={[
             { label: "This Friday", value: 18, display: "18 of 24", focal: true },
-            { label: "Asked or checked", value: 6, display: "6 of 24" },
+            { label: "Did not", value: 6, display: "6 of 24" },
           ]}
         />
       </div>
