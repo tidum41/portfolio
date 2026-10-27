@@ -48,6 +48,9 @@ let warmCacheMap: Record<string, string | WarmEntry> | null = null;
 const warmBlobUrls = new Map<string, string>();
 
 function getWarmMap(): Record<string, string | WarmEntry> | null {
+  // Set by the "/" HLS boot script once /api/mux-warm arrives.
+  const fetched = (window as Window & { __muxWarm?: Record<string, string | WarmEntry> }).__muxWarm;
+  if (fetched) return fetched;
   const raw = document.getElementById("mux-card-warm")?.textContent;
   if (!raw) return null;
   if (raw === warmCacheRaw && warmCacheMap) return warmCacheMap;

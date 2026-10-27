@@ -61,13 +61,7 @@ export default async function Home() {
   // BootScripts hls boot once the intro finishes, since the cards are hidden
   // until then. A preload here put 117 KB on the first-load critical path, and
   // the hint also fired on every other route that prefetched "/".
-  // The warm map is only read on "/" (HLS boot + MuxMediaSlot), so it is
-  // written here rather than into every route's document.
-  return (
-    <script
-      id="mux-card-warm"
-      type="application/json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(warm.playlists).replace(/</g, "\\u003c") }}
-    />
-  );
+  // The warm map is fetched from /api/mux-warm by that boot script, so it
+  // is not written into any document.
+  return null;
 }

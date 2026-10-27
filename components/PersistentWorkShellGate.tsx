@@ -11,8 +11,10 @@ import type { SanityProject } from "@/lib/sanity/queries";
 // first-load JS of "/". Elsewhere it mounts hidden once the page has loaded
 // and gone idle, keeping the instant return to Work, or at once if the Work
 // tab is shown first.
+// Keep the import inline in dynamic(): Next only adds the SSR-rendered
+// chunk to "/"'s HTML when it can see `dynamic(() => import("..."))`.
+const PersistentWorkShellImpl = dynamic(() => import("@/components/PersistentWorkShell"));
 const loadImpl = () => import("@/components/PersistentWorkShell");
-const PersistentWorkShellImpl = dynamic(loadImpl);
 
 
 export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
