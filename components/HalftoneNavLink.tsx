@@ -6,6 +6,7 @@ import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
+import { afterIntroIdle } from "@/lib/introReady";
 import {
   OUTLINE_MORPH_S,
   loadOutlineMorph,
@@ -126,8 +127,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     for (const type of events) {
       window.addEventListener(type, onIntent, { capture: true, passive: true });
     }
+    // Phones still play the morph on a tap, so have it parsed before the
+    // first tab tap after the intro (main had it from an idle load).
+    const cancelTouchWarm = canHover ? () => {} : afterIntroIdle(onIntent, 1500);
     return () => {
       cancel = true;
+      cancelTouchWarm();
       if (idle && typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
       for (const type of events) window.removeEventListener(type, onIntent, true);
     };
