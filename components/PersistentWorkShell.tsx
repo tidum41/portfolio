@@ -407,7 +407,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     // detached element.
     if (!gridCdEl) return;
     let obs: IntersectionObserver | null = null;
-    const cancelIdle = afterIntroIdle(() => {
+    let settleId = 0;
+    // A couple of seconds past idle, and only while Work is showing, so the
+    // covers don't compete with a tab tap or card click right after the intro.
+    const cancelIdle = afterIntroIdle(() => { settleId = window.setTimeout(() => {
+      if (window.location.pathname !== "/") return;
       if (typeof IntersectionObserver === "undefined") {
         setCdWarm(true);
         return;
@@ -422,9 +426,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         { rootMargin: "400px 0px" },
       );
       obs.observe(gridCdEl);
-    }, 4000);
+    }, 2500); }, 4000);
     return () => {
       cancelIdle();
+      window.clearTimeout(settleId);
       obs?.disconnect();
     };
   }, [openPopup, cdWarm, gridCdEl]);

@@ -7,7 +7,7 @@
  */
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { afterIntroIdle, onIntroDoneAndLoaded } from "@/lib/introReady";
+import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 
 const CD_POSTER = {
@@ -68,10 +68,15 @@ export default function PrimaryRouteWarmup() {
       jsWarmed = true;
       warmJs();
     };
-    const cancelJs = onIntroDoneAndLoaded(() => {
+    // Main shipped this code in first-load JS, so fetching it once we hydrate
+    // costs no more than main did.
+    const onLoad = () => {
       if ((window as Window & { __leavingHome?: number }).__leavingHome) return;
       warmJsOnce();
-    });
+    };
+    // Hydration is the point where main had already parsed this code.
+    const mountId = window.setTimeout(onLoad, 0);
+    const cancelJs = () => window.clearTimeout(mountId);
     const onIntent = (e: Event) => {
       const a = (e.target as Element | null)?.closest?.("a.nav-link");
       const href = a?.getAttribute("href");
