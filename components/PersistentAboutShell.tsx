@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
-import { afterIntroIdle } from "@/lib/introReady";
+import { onIntroDoneAndLoaded } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 
 const AboutPageContent = dynamic(() => import("@/components/AboutPageContent"));
@@ -28,15 +28,16 @@ export default function PersistentAboutShell() {
 
   useEffect(() => {
     if (hasShown) return;
-    // Pre-mount after the intro on idle, as on main. Skipped while a
-    // first-seconds card click is leaving "/".
-    return afterIntroIdle(() => {
+    // Pre-mount as soon as the intro and load are done (main waited for an
+    // idle callback that, on its slower load, still landed before people tap
+    // a tab). Skipped while a first-seconds card click is leaving "/".
+    return onIntroDoneAndLoaded(() => {
       if ((window as Window & { __leavingHome?: number }).__leavingHome) return;
       // Album covers are about a megabyte. On a slow or metered connection
       // they wait until About is actually opened.
       if (!allowIdlePrefetch()) return;
       setHasShown(true);
-    }, 4000);
+    });
   }, [hasShown]);
 
   return (
