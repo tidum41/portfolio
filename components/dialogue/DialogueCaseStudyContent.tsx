@@ -220,7 +220,7 @@ export function DialogueCaseStudyContent({
                     <p className="dlg-demo-pair__label dialogue-caption__label">B, kept: depth opens inside the answer</p>
                     <LevelReasoning reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the count, People and Source each open on a tap, and Insight folds it back" />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. People adds the chart and the quotes, and tapping Insight steps back out. The depth you pick carries to the next answer." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
