@@ -35,6 +35,12 @@ export const LIVE_TIMING = {
 } as const;
 
 const QUESTION = "How did shoppers read \u2018Arrives by Friday\u2019?";
+/**
+ * Chart rule, shared by both variants: when a question asks how much of the study holds a view,
+ * the answer carries its chart, whatever depth was picked. A count without its bar can't be checked
+ * at a glance. Questions about why or how skip the chart.
+ */
+const QUESTION_IS_HOW_MUCH = true;
 const FINDING =
   "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 
@@ -69,6 +75,7 @@ export default function DialogueChatLive({
   // depth: 0 insight, 1 chart, 2 people, 3 source. base starts at the chart (shipped behaviour).
   const [pick, setPick] = useState(1); // variant A: level chosen before asking
   const [chartOpen, setChartOpen] = useState(variant === "base" || startAnswered);
+  const showChart = chartOpen || QUESTION_IS_HOW_MUCH;
   const openTo = (lvl: number) => {
     if (lvl >= 1) setChartOpen(true);
     if (lvl >= 2) setSideOpen(true);
@@ -141,7 +148,7 @@ export default function DialogueChatLive({
       data-side={sideOpen ? "open" : "closed"}
       data-clip={clipOpen ? "open" : "closed"}
       data-variant={variant}
-      data-depth={clipOpen ? 3 : sideOpen ? 2 : chartOpen ? 1 : 0}
+      data-depth={clipOpen ? 3 : sideOpen ? 2 : showChart ? 1 : 0}
     >
       <div className="dp-study-chat__head">
         <div className="dp-study-chat__head-top">
@@ -198,12 +205,8 @@ export default function DialogueChatLive({
 
           {stage === "streaming" || stage === "answered" ? (
             <ChartVizCard title={FINDING.slice(0, len)}>
-              {stage === "answered" && variant === "toggles" && !chartOpen ? (
-                <button type="button" className="dlg-disclose" data-target="chart" onClick={() => setChartOpen(true)}>
-                  Show the chart
-                </button>
-              ) : null}
-              {stage === "answered" && chartOpen ? (
+              {stage === "answered" && showChart ? (
+                <>
                 <div className="dlg-live__bar">
                   <ChartStackedBar
                     total={300}
@@ -220,12 +223,19 @@ export default function DialogueChatLive({
                     aria-expanded={sideOpen}
                     onClick={() => setSideOpen(true)}
                   />
-                  <p className="dlg-segment" data-target="segment">
-                    First-time shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
-                  </p>
                 </div>
+                <p className="dlg-segment" data-target="segment">
+                  Repeat shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
+                </p>
+                </>
               ) : null}
             </ChartVizCard>
+          ) : null}
+
+          {variant === "toggles" && stage === "answered" && !sideOpen ? (
+            <button type="button" className="dlg-disclose" data-target="people" onClick={() => setSideOpen(true)}>
+              Show the people behind it
+            </button>
           ) : null}
 
           {sideOpen ? (

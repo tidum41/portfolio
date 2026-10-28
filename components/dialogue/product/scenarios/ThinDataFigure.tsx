@@ -61,17 +61,22 @@ export default function ThinDataFigure() {
       <div className="dp-next-study-wrap">
         <button
           type="button"
-          className="dp-next-study"
+          className={["dp-next-study", copied ? "dp-next-study--done" : ""].join(" ")}
           data-interactive
           data-annotate-part="next-study-button"
           title="Copies a prompt to paste into Ask about your study."
           aria-label="Add to my plan. Copies a prompt to paste into Ask about your study."
           onClick={onCopy}
         >
-          {copied ? <CheckIcon className="dp-next-study__icon" /> : <CopyIcon className="dp-next-study__icon" />}
+          {/* Dialogue's own enter (tw-animate fade-in-50, 300 ms) on the swapped icon and hint. */}
+          {copied ? (
+            <CheckIcon key="check" className="dp-next-study__icon dp-animate-in" />
+          ) : (
+            <CopyIcon key="copy" className="dp-next-study__icon" />
+          )}
           Add to my plan
         </button>
-        <p className="dp-next-study__hint" role="status" data-annotate-part="next-study-hint">
+        <p key={copied ? "done" : "idle"} className={["dp-next-study__hint", copied ? "dp-animate-in" : ""].join(" ")} role="status" data-annotate-part="next-study-hint">
           {copied ? "Copied. Paste it into Ask about your study." : "Copies a prompt to paste into Ask about your study."}
         </p>
       </div>

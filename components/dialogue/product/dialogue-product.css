@@ -3723,10 +3723,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @media (prefers-reduced-motion: reduce) { .dlg-scroll .dp-study-chat__body { transition: none; } }
 
 .dlg-flow-demo { position: relative; }
-.dlg-demo-ctl { position: absolute; right: 8px; bottom: 8px; z-index: 3; display: flex; gap: 4px; }
-.dlg-demo-ctl button { font-family: var(--dp-font-family); font-size: var(--text-meta-size); line-height: 1; padding: 4px 8px; border-radius: var(--dp-radius-pill);
-  border: 1px solid var(--dp-border); background: var(--dp-surface); color: var(--dp-muted); cursor: pointer; }
-@media (prefers-reduced-motion: reduce) { .dlg-demo-ctl { display: none; } }
 
 /* Round P10 live recreation. Keyframes copied verbatim from Dialogue's frontend
    (dialogue-anim/run2/keyframes.css: tw-animate enter, Tailwind spin) and spec.md (ellipsis). */
@@ -3756,7 +3752,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dlg-suggest { text-align: left; background: transparent; cursor: pointer; font-family: inherit; }
 .dlg-live .dlg-suggest:disabled { cursor: default; }
 .dlg-live__bar { position: relative; }
-.dlg-live__side { position: absolute; top: 0; right: 0; bottom: 0; width: 28%; border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-control); }
+.dlg-live__side { position: absolute; top: -6px; right: -6px; bottom: -6px; width: calc(28% + 12px); border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-control); }
 .dlg-live__side:focus-visible { outline: 2px solid var(--dp-brand); }
 .dlg-live__sample .dp-clip-quote { cursor: pointer; }
 .dlg-live__send { opacity: .5; }
@@ -3774,14 +3770,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Variant B disclosure: a text button in the answer card. */
 .dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
 .dlg-segment { margin: 12px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
-.dlg-demo { position: relative; }
-.dlg-demo__video { display: block; width: 100%; max-width: 471px; height: auto; margin: 0 auto; border-radius: var(--dp-radius); }
+.dlg-demo { position: relative; width: min(471px, 100%); max-width: 100%; margin: 0 auto; justify-self: center; align-self: center; line-height: 0; }
+.dlg-demo__video { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 5.1% / 4%; } /* the panel's 24px corner, as a share of the 471x600 recording */
 .dlg-demo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .dlg-demo-pair__label { margin: 0 0 8px; }
 @media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }
 .dlg-demo-pair__note { margin: 0 0 8px; color: var(--dp-muted); font-size: var(--text-meta-size); }
-.cs-hero-media-frame .dlg-demo__video { width: auto; max-height: 312px; }
-@media (max-width: 600px) { .cs-hero-media-frame .dlg-demo__video { max-height: 240px; } }
+.cs-hero-media-frame .dlg-demo { width: min(calc(312px * 942 / 760), 100%); }
 
 .dlg-live-stage__slot { width: 471px; margin: 40px auto; }
 .dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
@@ -3790,3 +3785,36 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-hero-opt .dialogue-rachel-frame { padding: 20px; }
 .dlg-hero-opt__panel { width: 471px; margin: 0 auto; }
 .dlg-hero-opt__b .dlg-hero-opt__panel { zoom: 1.45; }
+
+/* Round P10: low-signal note gets its warn surface back (as in e662d57, Round N), centred icon on the first line. */
+.dp-low-signal {
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-radius: var(--dp-radius-chip);
+  background: var(--dp-warn-bg);
+  color: var(--dp-warn-fg);
+}
+.dp-low-signal__icon { margin-top: calc((var(--text-meta-leading) - 16px) / 2); color: var(--dp-warn-fg); }
+.dp-low-signal__text { font-weight: var(--dp-weight-medium); }
+
+/* Round P10 interaction states, in Dialogue's language: Tailwind's default colour transition
+   (150 ms cubic-bezier(0.4, 0, 0.2, 1), measured on the real quote cards), warm hover fill,
+   active fill one step darker, brand focus ring. Enter feedback reuses tw-animate fade-in-50. */
+.dp-animate-in { animation: enter 300ms ease; --tw-enter-opacity: .5; }
+.dp-next-study, .dlg-live .dlg-suggest, .dlg-disclose, .dlg-depth__opt, .dlg-live__side, .dlg-live__sample .dp-clip-quote, .dlg-live__reset {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dp-next-study:active, .dp-next-study--done { background: var(--dp-nav-active-bg); }
+.dlg-live .dlg-suggest:not(:disabled):hover, .dlg-disclose:hover, .dlg-depth__opt:not(:disabled):hover, .dlg-live__reset:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-live .dlg-suggest:not(:disabled):active, .dlg-disclose:active, .dlg-depth__opt:not(:disabled):active, .dlg-live__reset:active { background: var(--dp-nav-active-bg); }
+.dlg-live .dlg-suggest:focus-visible, .dlg-disclose:focus-visible, .dlg-depth__opt:focus-visible, .dlg-live__reset:focus-visible, .dlg-live__sample .dp-clip-quote:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-live__sample .dp-clip-quote:hover { border-color: var(--dp-ink); }
+.dlg-live__sample .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
+.dlg-live__side:hover { box-shadow: inset 0 0 0 2px var(--dp-ink); }
+.dlg-live__side:active { box-shadow: inset 0 0 0 2px var(--dp-ink); background: var(--dp-brand-soft); }
+.dlg-live__side[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--dp-ink); }
+@media (prefers-reduced-motion: reduce) { .dp-animate-in { animation: none; } }
+
+.cs-hero-media-frame .dlg-demo__video { border-radius: 5.1% / 6.3%; } /* 471x380 recording */

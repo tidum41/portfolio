@@ -11,18 +11,19 @@ const prefix = (variant === "base" ? "live" : `variant-${variant}`) + tag;
 // Each step: [selector to click, mark name, hold after click in ms]
 const STEPS = {
   base: [['[data-target="ask"]', "ask", 0], ['[data-target="side"]', "side", 1800], [".dlg-live__sample .dp-clip-quote", "clip", 2600]],
-  toggles: [['[data-target="ask"]', "ask", 0], ['[data-target="chart"]', "chart", 1500], ['[data-target="side"]', "side", 1800], [".dlg-live__sample .dp-clip-quote", "clip", 2600]],
-  picker: [['[data-target="depth-1"]', "pick", 600], ['[data-target="ask"]', "ask", 0], ['[data-target="more-people"]', "people", 1800], ['[data-target="more-source"]', "source", 2600]],
+  toggles: [['[data-target="ask"]', "ask", 0], ['[data-target="people"]', "people", 1800], [".dlg-live__sample .dp-clip-quote", "clip", 2600]],
+  picker: [['[data-target="depth-0"]', "pick", 600], ['[data-target="ask"]', "ask", 0], ['[data-target="more-people"]', "people", 1800], ['[data-target="more-source"]', "source", 2600]],
 }[variant];
 const tmp = "/tmp/dlg-live-frames"; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true }); mkdirSync(out, { recursive: true });
 
 const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
 const ctx = await b.newContext({ viewport: { width: 1120, height: 1520 }, deviceScaleFactor: 1 });
+await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
 const page = await ctx.newPage();
 await page.goto(`${base}/dialogue/live?v=${variant}&h=${h}`, { waitUntil: "networkidle" });
 // Case-study cursor (annotation, not product UI). It follows real mouse events.
 await page.addStyleTag({ content: `#dlg-cursor{position:fixed;left:0;top:0;width:18px;height:18px;z-index:99;pointer-events:none;will-change:transform}
-#dlg-cursor svg{display:block}header,nav,.cs-toc-fab,[class*=toc],[class*=Toc],.site-header{display:none!important}#stage{margin:40px auto!important;zoom:2}#dlg-cursor{zoom:2}#dlg-cursor.down svg{transform:scale(.88);transform-origin:2px 2px}` });
+#dlg-cursor svg{display:block}header,nav,.cs-toc-fab,[class*=toc],[class*=Toc],.site-header{display:none!important}#stage{margin:40px auto!important;zoom:2}html,body,main{background:var(--dp-bg,#f6f5f3)!important}#dlg-cursor{zoom:2}#dlg-cursor.down svg{transform:scale(.88);transform-origin:2px 2px}` });
 await page.evaluate(() => {
   const c = document.createElement("div"); c.id = "dlg-cursor";
   c.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 1.5v13l3.6-3.4 2.4 5.4 2.2-1-2.4-5.3h5z" fill="#1c1917" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>';
@@ -52,7 +53,9 @@ async function glide(sel, ms = 700) {
     await page.mouse.move(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e); await page.waitForTimeout(16); }
   pos = to;
 }
-async function click() { await page.mouse.down(); await page.waitForTimeout(90); await page.mouse.up(); }
+// Realistic click: rest on the target so its hover state shows (Dialogue's 150 ms colour
+// transition plus a beat), hold the press so :active shows, then release for the feedback.
+async function click() { await page.waitForTimeout(320); await page.mouse.down(); await page.waitForTimeout(140); await page.mouse.up(); await page.waitForTimeout(60); }
 await page.waitForTimeout(700);
 for (const [sel, name, hold] of STEPS) {
   mark(`${name}-start`); await glide(sel); mark(`${name}-click`); await click();

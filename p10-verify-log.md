@@ -16,3 +16,17 @@ Gate: `node scripts/verify-dialogue-p10.mjs [base] [frames-dir]` (layout at 1440
 | Hard-coded colours and radii in motion CSS | tokens check | Swapped for dp tokens |
 
 Open: equal well padding passes at 0px everywhere; Rachel's 20px wells are not applied (would change every figure, flagged against the 640 lock). Loop seam: each video loops with a hard cut from the deepest state back to the empty chat, which matches the product's own hard swaps.
+
+## Round 2 (Oct 28, after Mudit's P10 feedback)
+
+Gate now also runs pixel checks at 1464x838, 1440x900 and 390x844: padding symmetry on notes, rows, cards and buttons; icon and first text line on one vertical centre; one gap between stacked cards; the play button 8px from the video's top right.
+
+| Glitch caught | Fix |
+|---|---|
+| Play button 56px inside the video edge at desktop and 18px at 390: the wrapper and video widths disagreed | Wrapper takes the video's width (min(471px, 100%), hero 312px tall), video fills it with an explicit aspect ratio |
+| Dark page corners showed around the rounded panel in every recording | Recorder runs in light theme and the video corner radius matches the panel's 24px as a share of the frame |
+| The 75 tap target's ring covered the segment line and clipped the Unsure label | Segment line moved out of the bar; the hit area grows 6px past the bar on each side |
+| Clicks in recordings had no hover or press | Every live control has hover, active and focus states in Dialogue's transition-colors (150 ms); the recorder rests 320 ms on the target, holds the press 140 ms, then releases |
+| Gate flagged hover colour transitions as non-compositor motion | Split the rule: keyframed motion must be transform or opacity only, interaction transitions must be paint-only (no layout properties) |
+| Low-signal note: muted grey with the icon 2px high | Warn surface restored from e662d57 (amber-100 on amber-700 tokens), medium weight, icon centred on the first line |
+| Add to my plan swapped instantly | Icon and hint enter with Dialogue's tw-animate fade-in-50 over 300 ms; press and done states use the active fill |

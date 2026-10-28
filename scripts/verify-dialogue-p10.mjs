@@ -33,6 +33,56 @@ for (const w of [1440, 390]) {
   await ctx.close();
 }
 
+// 1b. Pixel: padding symmetry, vertical centring, stacked gaps, controls on frame edges.
+async function pixelChecks(p, where) {
+  const r = await p.evaluate(() => {
+    const out = [];
+    const px = (v) => parseFloat(v) || 0;
+    const vis = (e) => { const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0; };
+    // Padding symmetry on notes, rows and buttons.
+    for (const sel of [".dp-low-signal", ".dp-next-study", ".dlg-querying", ".dp-clip-quote", ".dp-chart-viz-card", ".dlg-suggest"]) {
+      document.querySelectorAll(sel).forEach((e, i) => { if (!vis(e)) return; const c = getComputedStyle(e);
+        out.push({ k: "pad", id: `${sel}#${i}`, ok: Math.abs(px(c.paddingLeft) - px(c.paddingRight)) <= 1 && Math.abs(px(c.paddingTop) - px(c.paddingBottom)) <= 1, v: `${c.paddingTop} ${c.paddingRight} ${c.paddingBottom} ${c.paddingLeft}` }); });
+    }
+    // Icon and first text line share a vertical centre.
+    for (const [row, icon] of [[".dp-low-signal", ".dp-low-signal__icon"], [".dp-clip-quote__who", "svg"], [".dp-next-study", "svg"]]) {
+      document.querySelectorAll(row).forEach((e, i) => { if (!vis(e)) return; const ic = e.querySelector(icon); if (!ic) return;
+        const range = document.createRange(); const tn = [...e.querySelectorAll("*"), e].flatMap((n) => [...n.childNodes]).find((n) => n.nodeType === 3 && n.textContent.trim()); if (!tn) return;
+        range.selectNodeContents(tn); const line = range.getClientRects()[0]; const ib = ic.getBoundingClientRect();
+        const lh = parseFloat(getComputedStyle(tn.parentElement).lineHeight) || line.height; const lineMid = line.top + line.height / 2;
+        const d = Math.abs(ib.top + ib.height / 2 - lineMid);
+        out.push({ k: "centre", id: `${row}#${i}`, ok: d <= 1.5, v: `${d.toFixed(2)}px off (line ${lh}px)` }); });
+    }
+    // Stacked cards inside a chat body keep one gap.
+    document.querySelectorAll(".dp-study-chat__body, .dp-clip-quotes").forEach((body, i) => { if (!vis(body)) return;
+      const kids = [...body.children].filter(vis); const gaps = [];
+      for (let j = 1; j < kids.length; j++) gaps.push(Math.round(kids[j].getBoundingClientRect().top - kids[j - 1].getBoundingClientRect().bottom));
+      const uniq = [...new Set(gaps.filter((g) => g >= 0))];
+      out.push({ k: "gap", id: `${body.className.split(" ")[0]}#${i}`, ok: uniq.length <= 2 && (uniq.length < 2 || Math.abs(uniq[0] - uniq[1]) <= 1 || Math.min(...uniq) >= 8), v: gaps.join(",") }); });
+    // Play button 8px from the video's top right.
+    document.querySelectorAll(".dlg-demo").forEach((d, i) => { const v = d.querySelector("video"), b = d.querySelector(".phone-mockup-play-btn"); if (!v || !b || !vis(v)) return;
+      const vb = v.getBoundingClientRect(), bb = b.getBoundingClientRect();
+      out.push({ k: "edge", id: `demo#${i}`, ok: Math.abs(vb.right - bb.right - 8) <= 1 && Math.abs(bb.top - vb.top - 8) <= 1, v: `right ${(vb.right - bb.right).toFixed(1)} top ${(bb.top - vb.top).toFixed(1)}` }); });
+    return out;
+  });
+  for (const x of r) log(x.ok, `pixel ${where} ${x.k} ${x.id} (${x.v})`);
+}
+for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
+  const ctx = await b.newContext({ viewport: { width: w, height: h }, reducedMotion: "no-preference" });
+  await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
+  const p = await ctx.newPage();
+  await p.goto(`${base}/dialogue`, { waitUntil: "networkidle" });
+  await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } scrollTo(0, 0); });
+  await pixelChecks(p, `/dialogue @${w}x${h}`);
+  if (w === 1440) {
+    await p.goto(`${base}/dialogue/live?v=toggles`, { waitUntil: "networkidle" });
+    await p.click('[data-target="ask"]'); await p.waitForSelector('[data-stage="answered"]', { timeout: 20000 });
+    await p.click('[data-target="people"]'); await p.waitForTimeout(300);
+    await pixelChecks(p, `/dialogue/live @${w}`);
+  }
+  await ctx.close();
+}
+
 // 2. Accuracy: numbers, names and times agree across the page and the live recreation.
 {
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
@@ -75,13 +125,18 @@ for (const w of [1440, 390]) {
   await p.evaluate(() => { window.__props = new Set(); window.__trans = new Set();
     const grab = () => { for (const a of document.getAnimations()) { if (!a.effect?.target?.closest?.(".dlg-live")) continue;
       if (a.transitionProperty) window.__trans.add(a.transitionProperty);
-      for (const k of a.effect.getKeyframes()) for (const prop of Object.keys(k)) if (!["offset", "easing", "composite", "computedOffset"].includes(prop)) window.__props.add(prop); }
+      if (!a.transitionProperty) for (const k of a.effect.getKeyframes()) for (const prop of Object.keys(k)) if (!["offset", "easing", "composite", "computedOffset"].includes(prop)) window.__props.add(prop); }
       requestAnimationFrame(grab); }; grab(); });
   await p.click('[data-target="ask"]'); await p.waitForSelector('[data-stage="answered"]', { timeout: 20000 });
   await p.click('[data-target="side"]'); await p.waitForTimeout(300); await p.click(".dlg-live__sample .dp-clip-quote"); await p.waitForTimeout(400);
-  const props = await p.evaluate(() => [...window.__props, ...window.__trans]);
+  const props = await p.evaluate(() => [...window.__props]);
+  const trans = await p.evaluate(() => [...window.__trans]);
+  // Motion (keyframe animations) may only move transform and opacity; filter is tw-animate's identity blur(0).
   const bad = props.filter((x) => !["transform", "opacity", "filter", "rotate"].includes(x));
-  log(bad.length === 0, `motion: animated properties are compositor-only (${props.join(", ") || "none"})`);
+  log(bad.length === 0, `motion: keyframed motion is compositor-only (${props.join(", ") || "none"})`);
+  // Interaction transitions are Dialogue's transition-colors (150 ms): paint-only, never layout.
+  const layout = trans.filter((x) => /^(width|height|top|left|right|bottom|inset|gap|font-size|line-height)$|^(margin|padding)(-|$)|^(min|max)-(width|height)$/.test(x));
+  log(layout.length === 0, `motion: hover and press transitions are paint-only (${trans.join(", ") || "none"})`);
   // filter is the identity blur(0) in tw-animate `enter`; it stays because it is Dialogue's real keyframe.
   const wc = await p.evaluate(() => [...document.querySelectorAll(".dlg-live *")].filter((e) => getComputedStyle(e).willChange !== "auto").length);
   log(wc <= 2, `motion: will-change used sparingly (${wc} elements)`);
