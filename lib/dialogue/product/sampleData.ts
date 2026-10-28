@@ -9,7 +9,7 @@ export const MOBILE_FUNNEL_STEPS = [
 
 export const CHECKOUT_QUESTION = "How did shoppers read 'Arrives by Friday'?";
 
-export const STUDY_SUBTITLE = "Checkout signals, 24 interviews";
+export const STUDY_SUBTITLE = "Checkout signals, 300 interviews";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [

@@ -58,16 +58,16 @@ function Specimen({
 }
 
 /* Round P5 (Mudit OK Oct 27): two pairs, Hearthside data only. The Friday
-   finding (18 of 24) is the hero's number; the segment counts (6 of 9,
-   7 of 10) are the approved illustrative Hearthside comparison. */
-const FRIDAY_TOTAL = 24;
+   finding (225 of 300, P6 scale) is the hero's number; the segment counts (6 of 9,
+   88 of 125) are the approved illustrative Hearthside comparison. */
+const FRIDAY_TOTAL = 300;
 const FRIDAY_ROWS = [
-  { label: "Read it as this Friday", count: 18, focal: true },
-  { label: "Did not", count: 6, focal: false },
+  { label: "Read it as this Friday", count: 225, focal: true },
+  { label: "Did not", count: 75, focal: false },
 ] as const;
 const SEGMENTS = [
   { label: "First-time, free returns", count: 6, of: 9, focal: true },
-  { label: "Repeat, arrives by Friday", count: 7, of: 10, focal: false },
+  { label: "Repeat, arrives by Friday", count: 88, of: 125, focal: false },
 ] as const;
 
 const ENTRIES = [
@@ -76,22 +76,22 @@ const ENTRIES = [
     badName: "Common chart",
     badPoints: { pros: ["The count axis and shares give the exact split"], cons: ["The legend pulls the eye away from the bar"] },
     goodName: "My version",
-    goodPoints: { pros: ["Counts sit directly under their segments", "18 of 24 reads at a glance"], cons: ["No percent is printed"] },
+    goodPoints: { pros: ["Counts sit directly under their segments", "225 of 300 reads at a glance"], cons: ["No percent is printed"] },
     name: "How much of the study backs a finding",
-    verdict: "One bar for all 24 interviews shows how much of the study backs the finding.",
+    verdict: "One bar for all 300 interviews shows how much of the study backs the finding.",
     tech: [
-      ["Data shape", "interviews that mention it, out of 24."],
+      ["Data shape", "interviews that mention it, out of 300."],
       ["Encoding", "segment length against the whole study."],
       ["Tradeoff", "says nothing about how strong each quote is."],
     ],
     caption:
-      "Removed the count axis, the legend and the percent inside each segment. Kept the two counts under their segments, because the reader needs 18 of 24 and nothing else.",
+      "Removed the count axis, the legend and the percent inside each segment. Kept the two counts under their segments, because the reader needs 225 of 300 and nothing else.",
     bad: (
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
         <ChartStackedBar
           showShare
           legend
-          ticks={[0, 6, 12, 18, 24]}
+          ticks={[0, 75, 150, 225, 300]}
           total={FRIDAY_TOTAL}
           segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: String(r.count), focal: r.focal }))}
         />
@@ -110,11 +110,11 @@ const ENTRIES = [
   {
     id: "segments",
     badName: "Common chart",
-    badPoints: { pros: ["Percents line the segments up on one scale"], cons: ["67% and 70% hide that each sits on about ten people"] },
+    badPoints: { pros: ["Percents line the segments up on one scale"], cons: ["67% and 70% look alike, but one rests on 9 people and the other on 125"] },
     goodName: "My version",
     goodPoints: { pros: ["Each row says how many people it rests on", "Small segments read as small"], cons: ["The two rows are harder to compare exactly"] },
     name: "How segments differ",
-    verdict: "Segments this small read as counts, so a team sees how few people sit behind each row.",
+    verdict: "A filtered segment can be small inside a big study, so each row says how many people it rests on.",
     tech: [
       ["Data shape", "one count per segment, out of that segment."],
       ["Encoding", "bar length against each segment's own size."],

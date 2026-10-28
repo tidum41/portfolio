@@ -47,20 +47,20 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       <p className="dp-lead-answer-card__summary dp-text-body" data-annotate-part="summary">
-        <span><span className="dp-summary__emph">18 of 24</span> shoppers read &lsquo;Arrives by Friday&rsquo; as this Friday.</span>
+        <span><span className="dp-summary__emph">225 of 300</span> shoppers read &lsquo;Arrives by Friday&rsquo; as this Friday.</span>
       </p>
       <div className="dp-lead-answer-card__funnel" data-annotate-part="chart">
         <ChartStackedBar
-          total={24}
+          total={300}
           segments={[
-            { label: "This Friday", value: 18, display: "18 of 24", focal: true },
-            { label: "Did not", value: 6, display: "6 of 24" },
+            { label: "This Friday", value: 225, display: "225 of 300", focal: true },
+            { label: "Did not", value: 75, display: "75 of 300" },
           ]}
         />
       </div>
       <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
         {MINI_SOURCES.map((s) => (
-          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={s.participant === "Mei L."} />
+          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={false} />
         ))}
       </div>
     </div>

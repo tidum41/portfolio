@@ -1,5 +1,5 @@
 type Props = {
-  /** Interviews that support this answer, out of the 24 in the study. */
+  /** Interviews that support this answer, out of the 300 in the study. */
   count?: number;
 };
 
@@ -7,7 +7,7 @@ type Props = {
 export default function EvidenceFooter({ count = 24 }: Props) {
   return (
     <div className="dp-evidence-footer" data-annotate-part="evidence-footer">
-      <p className="dp-evidence-footer__text">Based on {count} of 24 interviews</p>
+      <p className="dp-evidence-footer__text">Based on {count} of 300 interviews</p>
     </div>
   );
 }

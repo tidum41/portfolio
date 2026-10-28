@@ -7,7 +7,7 @@ import { CheckIcon, CopyIcon, InfoCircleIcon } from "@/components/dialogue/produ
 
 const NEXT_STUDY_PROMPT = [
   "Plan the next study on lapsed buyers.",
-  "In the last study, 2 of 5 lapsed buyers mentioned a damaged first order. The count is small, so treat it as a lead.",
+  "In the last study, 2 of 63 lapsed buyers mentioned a damaged first order. The count is small, so treat it as a lead.",
   "Recruit more lapsed buyers and ask each about their first order.",
   "Report how many mention it and quote the moment they noticed.",
 ].join("\n\n");
