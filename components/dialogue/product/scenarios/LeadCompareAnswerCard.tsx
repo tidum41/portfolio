@@ -1,13 +1,8 @@
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import { PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
-import SourcePill from "@/components/dialogue/product/SourcePill";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
 
-/** Hearthside mock data (illustrative), the same Friday finding as the hero. */
-const MINI_SOURCES = [
-  { participant: "Mei L.", time: "18:27" },
-  { participant: "Owen P.", time: "07:12" },
-] as const;
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
@@ -34,9 +29,13 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
       <div className="dp-lead-answer-card dp-lead-answer-card--quotes">
         <div className="dp-lead-answer-card__quotes">
           {QUOTE_LIST.map((q) => (
-            <div key={q.participant} className="dp-lead-answer-card__quote" data-annotate-part={`quote-${annotateSlug(q.participant)}`}>
-              <strong>{q.participant}</strong>
-              {q.quote}
+            <div key={q.participant} className="dp-clip-quote" data-annotate-part={`clip-quote-${annotateSlug(q.participant)}`}>
+              <p className="dp-clip-quote__who">
+                <WaveformIcon className="dp-clip-quote__icon" />
+                <span className="dp-clip-quote__name">{q.participant}</span>
+                <span className="dp-clip-quote__time">{q.time}</span>
+              </p>
+              <p className="dp-clip-quote__text">{q.quote}</p>
             </div>
           ))}
         </div>
@@ -58,11 +57,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
           ]}
         />
       </div>
-      <div className="dp-sources dp-lead-answer-card__sources" data-annotate-part="sources-row">
-        {MINI_SOURCES.map((s) => (
-          <SourcePill key={s.participant} name={s.participant} time={s.time} selected={false} />
-        ))}
-      </div>
+      {/* Round P9: the default answer shows the count and the insight only; quotes open from a side. */}
     </div>
   );
 }

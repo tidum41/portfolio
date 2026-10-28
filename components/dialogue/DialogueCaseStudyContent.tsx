@@ -6,12 +6,11 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
-import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
+import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
-import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import SideSample from "@/components/dialogue/product/scenarios/SideSample";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -161,18 +160,17 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">
                   <StaticFigure figure="hero">
-                    <ScaledChatViewport maxHeight={320}>
+                    <ScaledChatViewport maxHeight={280}>
                       <StudyChatShell hideComposer>
                         <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
                         <FridayBar />
-                        <ClipQuotes />
                       </StudyChatShell>
                     </ScaledChatViewport>
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>One answer at study scale, with the people behind it a tap away. Illustrative data.</Caption>
+            <Caption>The answer opens on the count and the insight, and the people behind it wait for a tap. Illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
@@ -216,18 +214,36 @@ export function DialogueCaseStudyContent({
                 Maze&rsquo;s coverage percent, and say what pushback you got from Dialogue&rsquo;s
                 team.</Placeholder>
               </CaseStudyBody>
-              <ProductFigure
-                caption="Tapping 75 opens a sample of the shoppers who were unsure"
-                name="counts-open"
-                maxHeight={520}
-              >
-                <StudyChatShell hideComposer>
-                  <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
-                  <FridayBar />
-                  <SideSample label="unsure" total={75} />
-                </StudyChatShell>
-              </ProductFigure>
-              <Caption>Tapping 75 opens a sample of the shoppers who were unsure, with the rest one more tap away. Illustrative data.</Caption>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <div className="dialogue-lib__pair">
+                    <div>
+                      <StaticFigure figure="counts-default">
+                        <ScaledChatViewport maxHeight={520}>
+                          <StudyChatShell hideComposer>
+                            <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
+                            <FridayBar />
+                          </StudyChatShell>
+                        </ScaledChatViewport>
+                      </StaticFigure>
+                      <DialogueCaption label="Default" />
+                    </div>
+                    <div>
+                      <StaticFigure figure="counts-open">
+                        <ScaledChatViewport maxHeight={520}>
+                          <StudyChatShell hideComposer>
+                            <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
+                            <FridayBar />
+                            <SideSample label="unsure" total={75} />
+                          </StudyChatShell>
+                        </ScaledChatViewport>
+                      </StaticFigure>
+                      <DialogueCaption label="After tapping 75" />
+                    </div>
+                  </div>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>The quotes stay closed until someone taps a side, then a sample of that side opens. Illustrative data.</Caption>
             </Section>
 
             <Section id="clips">
@@ -313,7 +329,7 @@ export function DialogueCaseStudyContent({
                 wants the evidence. Other
                 research tools split this into a quick mode and a deep mode, which makes the
                 reader choose depth before seeing the answer. I layered depth inside one answer,
-                and that card takes the most room in the thread.
+                and the people behind the count take one more tap.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>the answer card went through 8 versions: what did you first assume
@@ -341,7 +357,7 @@ export function DialogueCaseStudyContent({
                       id: "answer-evidence",
                       title: "Answer and evidence",
                       label: "Answer and evidence",
-                      costLine: "Works for both readers. Takes the most room in the thread.",
+                      costLine: "Works for both readers. The people take one more tap.",
                       productScenario: "decision-structured",
                     },
                   ]}
@@ -349,7 +365,7 @@ export function DialogueCaseStudyContent({
                   chosenFirst
                 />
               </figure>
-              <Caption>Text is quickest and quotes go deepest, so the chosen answer carries both. Illustrative data.</Caption>
+              <Caption>Text is quickest and quotes go deepest, so the chosen answer leads with the count and opens the quotes on a tap. Illustrative data.</Caption>
             </Section>
 
             <Section id="measure">

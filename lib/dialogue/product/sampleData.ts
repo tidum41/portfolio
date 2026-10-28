@@ -162,8 +162,8 @@ export const MOBILE_FOLLOWUP = {
 };
 
 export const QUOTE_LIST = [
-  { participant: "Mei", quote: "Friday which week?" },
-  { participant: "Owen", quote: "I'd assume Friday after I order, so I checked the date." },
+  { participant: "Mei", time: "18:27\u201318:49", quote: "Friday which week?" },
+  { participant: "Owen", time: "07:12\u201307:30", quote: "I'd assume Friday after I order, so I checked the date." },
 ];
 
 export const ANATOMY_LABELS = [

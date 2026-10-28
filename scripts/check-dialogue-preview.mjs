@@ -282,6 +282,13 @@ async function ownerChecks(browser) {
         let m;
         while ((m = re.exec(t))) out.push([m[1], m[2]]);
       }
+      // Round P9 (Mudit verdict): default answers carry no source pills; timestamps now live on
+      // waveform quote rows, which show ranges, so read name and range start from those rows.
+      for (const el of document.querySelectorAll(".dp-clip-quote__who")) {
+        const name = el.querySelector(".dp-clip-quote__name")?.textContent?.trim();
+        const time = el.querySelector(".dp-clip-quote__time")?.textContent?.trim().slice(0, 5);
+        if (name && /^\d\d:\d\d$/.test(time || "")) out.push([name, time]);
+      }
       return out;
     });
     const byTime = new Map();
