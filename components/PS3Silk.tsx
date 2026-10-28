@@ -172,6 +172,14 @@ export default function PS3Silk({
     const wrapper = _wrapper as HTMLDivElement;
 
     const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    // moment.com-style touch trail: ring buffer of recent pointer samples,
+    // each with an age (frames) and a speed-derived strength. Uploaded as
+    // vec3(x, y, envelope*strength) so the shader can sum Gaussian pushes.
+    const TRAIL_N = 16;
+    const TRAIL_LIFE = 60; // frames @60 ≈ 1s
+    const trailRaw = new Float32Array(TRAIL_N * 4); // x, y, age, strength
+    const trailGpu = new Float32Array(TRAIL_N * 3);
+    const trail = { head: 0, lastX: NaN, lastY: NaN, live: false };
     let rafId = 0, lastT = 0;
     const START_OPACITY = 0.5;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
@@ -334,6 +342,19 @@ export default function PS3Silk({
         if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
         mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
+        if (reducedMotion) return;
+        const x = mouse.tx, y = mouse.ty;
+        if (x < -0.1 || x > 1.1 || y < -0.1 || y > 1.1) { trail.lastX = NaN; return; }
+        let strength = 0;
+        if (!Number.isNaN(trail.lastX)) {
+          const dx = (x - trail.lastX) * rect.width, dy = (y - trail.lastY) * rect.height;
+          strength = Math.min((dx * dx + dy * dy) / 400, 1); // ~20px move = full
+        }
+        trail.lastX = x; trail.lastY = y;
+        if (strength < 0.02) return;
+        const i = trail.head * 4;
+        trailRaw[i] = x; trailRaw[i + 1] = y; trailRaw[i + 2] = 0; trailRaw[i + 3] = strength;
+        trail.head = (trail.head + 1) % TRAIL_N;
       }
 
       function onPopState() {
@@ -410,6 +431,11 @@ uniform int   uMode;
 uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
+uniform vec3  uTrail[16];
+uniform float uTrailRadiusPx;
+uniform float uTrailPushPx;
+
+float hash21(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
 vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
   float phase, float cy, vec3 col, float width, float sharp, bool flip) {
@@ -426,7 +452,28 @@ vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
+  // Halftone: resolve the cell first, then push its *sample point* away from
+  // recent pointer positions (moment's Gaussian trail impulse, but stateless:
+  // we displace where the wave is read, not where the dot is drawn, so the
+  // grid stays crisp and no ping-pong FBO is needed).
+  vec2 frag = gl_FragCoord.xy;
+  vec2 cellC = (floor(frag / uHalftoneSize) + 0.5) * uHalftoneSize;
+  vec2 push = vec2(0.0);
+  float touch = 0.0;
+  if (uMode == 1) {
+    float r2 = uTrailRadiusPx * uTrailRadiusPx;
+    for (int k = 0; k < 16; k++) {
+      vec3 t = uTrail[k];
+      if (t.z <= 0.0) continue;
+      vec2 d = cellC - t.xy * uResolution;
+      float g = exp(-dot(d, d) / r2) * t.z;
+      push += normalize(d + 1e-4) * g;
+      touch += g;
+    }
+    touch = min(touch, 1.0);
+  }
+  vec2 samplePx = (uMode == 1 ? cellC : frag) - push * uTrailPushPx;
+  vec2 uv = samplePx / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
@@ -452,11 +499,18 @@ void main() {
     float mouseDist = length(cellUV - uMouse);
     float ripple    = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseStrength * 2.8;
     float d         = length(gl_FragCoord.xy - cellCenter);
-    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
+    // Per-cell jitter (moment's aJitter): ±20% size, ±20% alpha, so the
+    // field reads as printed grain instead of a CAD grid.
+    float jit       = hash21(cell);
+    float radius    = uHalftoneSize * 0.5 * (0.8 + 0.4 * jit)
+                    * clamp(waveLight - 0.05 + ripple * 0.38 + touch * 0.25, 0.0, 1.2);
     float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
-    vec3  dotColor  = uWaveColor * 0.55;
-    float vis       = smoothstep(0.02, 0.08, waveLight);
-    float a         = dotVal * vis;
+    // Log density boost (moment's 1 + k*log(1 + density)): dense crests glow,
+    // sparse tails stay quiet, without blowing out.
+    float boost     = 1.0 + 0.6 * log(1.0 + waveLight * 6.0);
+    vec3  dotColor  = uWaveColor * 0.55 * (1.0 + 0.6 * touch);
+    float vis       = smoothstep(0.02, 0.08, waveLight + touch * 0.1);
+    float a         = clamp(dotVal * vis * (0.8 + 0.4 * jit) * boost * 0.75, 0.0, 1.0);
     gl_FragColor = vec4(dotColor * a, a);
     return;
   }
@@ -492,6 +546,30 @@ void main() {
       const uHtSizeLoc        = gl.getUniformLocation(prog, "uHalftoneSize");
       const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
+      const uTrailLoc         = gl.getUniformLocation(prog, "uTrail");
+      const uTrailRLoc        = gl.getUniformLocation(prog, "uTrailRadiusPx");
+      const uTrailPLoc        = gl.getUniformLocation(prog, "uTrailPushPx");
+
+      // Age the trail by real elapsed frames; envelope = fast attack (first
+      // 30% of life) then slow release, same shape moment uses.
+      let lastTrailMs = 0;
+      function stepTrail(ms: number) {
+        const df = lastTrailMs ? Math.min((ms - lastTrailMs) / 16.667, 4) : 1;
+        lastTrailMs = ms;
+        let live = false;
+        for (let k = 0; k < TRAIL_N; k++) {
+          const i = k * 4, o = k * 3;
+          const st = trailRaw[i + 3];
+          if (st <= 0) { trailGpu[o + 2] = 0; continue; }
+          const age = (trailRaw[i + 2] += df);
+          if (age >= TRAIL_LIFE) { trailRaw[i + 3] = 0; trailGpu[o + 2] = 0; continue; }
+          const m = age / TRAIL_LIFE;
+          const env = m < 0.3 ? Math.sin((m / 0.3) * Math.PI / 2) : Math.sin((1 - (m - 0.3) / 0.7) * Math.PI / 2);
+          trailGpu[o] = trailRaw[i]; trailGpu[o + 1] = trailRaw[i + 1]; trailGpu[o + 2] = env * st;
+          live = true;
+        }
+        trail.live = live;
+      }
 
       // Sets every uniform from current state and paints one frame. Shared by
       // frame()'s regular throttled loop and resize()'s immediate post-resize
@@ -515,6 +593,10 @@ void main() {
         gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
         gl.uniform1f(uSpeedLoc, speedRef.current);
+        stepTrail(ms);
+        gl.uniform3fv(uTrailLoc, trailGpu);
+        gl.uniform1f(uTrailRLoc, Math.max(40, Math.min(canvas.width, canvas.height) / 5));
+        gl.uniform1f(uTrailPLoc, 28);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
