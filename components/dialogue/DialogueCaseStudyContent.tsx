@@ -11,7 +11,7 @@ import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
-import SideSample from "@/components/dialogue/product/scenarios/SideSample";
+import DialogueFlowDemo from "@/components/dialogue/motion/DialogueFlowDemo";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
@@ -64,8 +64,8 @@ function Section({
   );
 }
 
-function ClaimH2({ children }: { children: React.ReactNode }) {
-  return <h2 className="cs-claim-h2">{children}</h2>;
+function ClaimH2({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <h2 className={["cs-claim-h2", className].filter(Boolean).join(" ")}>{children}</h2>;
 }
 
 /** Round P8: names the researcher's step above each claim (Rachel Chen kicker). */
@@ -96,7 +96,9 @@ function ProductFigure({
   name,
   maxHeight,
   children,
+  tone = "system",
 }: {
+  tone?: "problem" | "solution" | "system";
   caption: string;
   name: string;
   maxHeight: number;
@@ -104,7 +106,7 @@ function ProductFigure({
 }) {
   return (
     <figure className="cs-figure dialogue-live-block">
-      <DialogueRachelFrame tone="system">
+      <DialogueRachelFrame tone={tone}>
         <StaticFigure figure={name}>
           <ScaledChatViewport maxHeight={maxHeight}>{children}</ScaledChatViewport>
         </StaticFigure>
@@ -151,44 +153,39 @@ export function DialogueCaseStudyContent({
             metadata={[]}
           >
             <p className="cs-hero-body">
-              Dialogue runs AI-moderated user interviews and turns each study into a site with a
-              chat, where UX research teams ask questions and share answers with product teams. I
-              redesigned that answer so a team can surface an insight quickly without losing the
-              detail behind it, and part of it shipped.
+              Dialogue runs AI-moderated interviews and gives each study a chat. I redesigned the
+              chat&rsquo;s answer so a research team gets to an insight fast without losing the
+              detail behind it.
             </p>
             <div className="cs-hero-media-frame">
               <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="system">
+                <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <ScaledChatViewport maxHeight={280}>
-                      <StudyChatShell hideComposer>
-                        <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
-                        <FridayBar />
-                      </StudyChatShell>
+                    <ScaledChatViewport cropHeight={300}>
+                      <DialogueFlowDemo scene="ask" />
                     </ScaledChatViewport>
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>The answer opens on the count and the insight, and the people behind it wait for a tap. Illustrative data.</Caption>
+            <Caption>Tap a suggested question and the answer lands as a count out of 300. Illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem">
               <Kicker>The moment</Kicker>
-              <ClaimH2>The chat answered fast, in prose nobody could check</ClaimH2>
+              <ClaimH2>The chat answered fast.</ClaimH2>
+              <ClaimH2 className="cs-h2--muted">Nobody could check the answer.</ClaimH2>
               <CaseStudyBody>
-                A researcher finishes a study on Monday and owes the team a share-out by Tuesday
-                morning, the bar one of Dialogue&rsquo;s customers names outright. The chat
-                answered her in prose with words like many and some, and the evidence sat a few
-                pages away. I worked from desk research on NN/g, Maze, User Interviews and IBM
-                Carbon, with no interviews of my own.
+                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning,
+                the bar one of Dialogue&rsquo;s customers names. The chat answered her in prose, so
+                she couldn&rsquo;t tell how many shoppers stood behind a claim.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>your first try: what did the markdown table answer look like, and
-                what made you switch to grouping responses?</Placeholder>
+                <Placeholder>the constraint you worked inside, and your first try: the markdown
+                table, and why you moved to grouping responses</Placeholder>
               </CaseStudyBody>
-              <ProductFigure caption="before" name="problem-before" maxHeight={420}>
+              <ProductFigure caption="before" name="problem-before" maxHeight={360} tone="problem">
                 <StudyChatShell hideComposer>
                   <UserMessageBubble>How many shoppers misread &lsquo;Arrives by Friday&rsquo;?</UserMessageBubble>
                   <ParagraphAnswerFigure focus="answer" wall />
@@ -198,96 +195,59 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="counts">
-              <Kicker>Reading the answer</Kicker>
+              <Kicker>Read the count, then tap a side</Kicker>
               <ClaimH2>The count is the way into the evidence, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                The chat first answered about one interview at a time, and I moved it up to the
-                whole study. Each answer leads with a count out of the whole study, and tapping
-                either side opens its people, including the ones who didn&rsquo;t say it. A
-                stakeholder reads the headline at a glance, and a skeptic can check the minority
-                in one tap.
+                A bare count asks the reader to trust it, so each side of the bar opens its people.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>why open the side that didn&rsquo;t say it, when other tools only
-                count citations? Confirm before naming Marvin&rsquo;s citation counts or
-                Maze&rsquo;s coverage percent, and say what pushback you got from Dialogue&rsquo;s
-                team.</Placeholder>
+                <Placeholder>the one reversal on the page: what you built here first, and what
+                made you open the minority side too</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="system">
-                  <div className="dialogue-lib__pair">
-                    <div>
-                      <StaticFigure figure="counts-default">
-                        <ScaledChatViewport maxHeight={520}>
-                          <StudyChatShell hideComposer>
-                            <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
-                            <FridayBar />
-                          </StudyChatShell>
-                        </ScaledChatViewport>
-                      </StaticFigure>
-                      <DialogueCaption label="Default" />
-                    </div>
-                    <div>
-                      <StaticFigure figure="counts-open">
-                        <ScaledChatViewport maxHeight={520}>
-                          <StudyChatShell hideComposer>
-                            <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
-                            <FridayBar />
-                            <SideSample label="unsure" total={75} />
-                          </StudyChatShell>
-                        </ScaledChatViewport>
-                      </StaticFigure>
-                      <DialogueCaption label="After tapping 75" />
-                    </div>
-                  </div>
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="counts-open">
+                    <ScaledChatViewport cropHeight={560}>
+                      <DialogueFlowDemo scene="open-side" />
+                    </ScaledChatViewport>
+                  </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The quotes stay closed until someone taps a side, then a sample of that side opens. Illustrative data.</Caption>
+              <Caption>Tapping 75 opens a sample of that side, with the rest one more tap away. Illustrative data.</Caption>
             </Section>
 
             <Section id="clips">
-              <Kicker>Checking a quote</Kicker>
+              <Kicker>Hear the clip</Kicker>
               <ClaimH2>The clip starts at the moment, so checking keeps the thread</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Inline clips already exist in other research tools, so the work here is in the
-                details. A quote from the
-                75 opens its clip at the moment it was said, with the transcript following. Video is heavy in a chat panel, so it loads only
-                on tap.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                <Placeholder>did you try linking out to the session modal first, and what made in
-                place win? Confirm before naming Dovetail&rsquo;s inline clip carousel.</Placeholder>
+                A quote proves itself when you hear it. Tapping one plays its clip from that moment
+                inside the answer, and the video loads only on tap.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="system">
-                  <div className={`dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}>
-                    <ClipQuotes />
-                  </div>
-                  <DialogueProductFigure
-                    scenario="clip-player"
-                    title="The clip playing in the chat, with Mei's transcript line highlighted"
-                  />
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="clip-open">
+                    <ScaledChatViewport cropHeight={620}>
+                      <DialogueFlowDemo scene="clip" />
+                    </ScaledChatViewport>
+                  </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>A quote opens its clip at the moment it was said. Illustrative data.</Caption>
+              <Caption>Tapping Mei&rsquo;s quote plays her clip in place, with the transcript following. Illustrative data.</Caption>
             </Section>
 
             <Section id="data-viz">
-              <Kicker>Comparing groups</Kicker>
+              <Kicker>Compare a segment</Kicker>
               <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Dialogue&rsquo;s AI picks the chart for each answer, so I designed the templates it
-                picks from, adapting IBM Carbon&rsquo;s chart guidance. Each pair shows the common
-                chart next to my version on the same data. The call most teams would question is
-                counts over percents, because a filtered segment can still be nine people inside a
-                big study.
+                Her PM asks whether first-time shoppers differ. The AI picks from templates I
+                adapted from IBM Carbon, and each one shows counts out of its own group.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>how does the model match a question to a template today, and which
-                Carbon rule did you bend for a 448px chat panel?</Placeholder>
+                <Placeholder>how the model matches a question to a template, and which Carbon rule
+                you bent</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary showTech={false} segmentsFirst />
@@ -296,18 +256,15 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="thin-data">
-              <Kicker>Spotting a thin finding</Kicker>
+              <Kicker>See the thin flag</Kicker>
               <ClaimH2>A thin finding is labelled before anyone shares it</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                When only two people raise something, a bar would make it look like a pattern.
-                The answer drops the chart and carries a quiet line, &lsquo;Early signal, 2
-                people&rsquo;, with the clip one tap away. &lsquo;Add to my plan&rsquo; turns that
-                line into a prompt for the next study.
+                Two lapsed buyers mentioned damaged orders, and a bar would make that look like a
+                pattern. The answer drops the chart and says &lsquo;Early signal, 2 people&rsquo;.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>why does the cutoff sit under 3 people, and what evidence would make
-                you move it?</Placeholder>
+                <Placeholder>why the cutoff sits under 3 people</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">
@@ -321,20 +278,17 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="levels">
-              <Kicker>Sharing it</Kicker>
+              <Kicker>Share it</Kicker>
               <ClaimH2>Depth sits inside one answer, so nobody picks a mode first</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                The share-out has two readers: a PM who wants the sentence and a skeptic who
-                wants the evidence. Other
-                research tools split this into a quick mode and a deep mode, which makes the
-                reader choose depth before seeing the answer. I layered depth inside one answer,
-                and the people behind the count take one more tap.
+                Priya&rsquo;s PM reads the sentence and a skeptical director wants the people. I
+                compared three formats and kept the one that leads with the count and opens the
+                quotes on a tap.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the answer card went through 8 versions: what did you first assume
-                would help that ended up hurting, and did you consider a quick and deep toggle? Confirm before naming
-                Dovetail&rsquo;s Fast and Deep modes or Marvin&rsquo;s Quick Answer.</Placeholder>
+                <Placeholder>the second turn: what you assumed would help across the 8 versions
+                that ended up hurting</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueLeadAnswerCompare
@@ -373,14 +327,12 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Counts shipped, and I&rsquo;d test the rest on speed and depth together</ClaimH2>
               <StatusLine>Counts shipped. The test is proposed, with no results yet</StatusLine>
               <CaseStudyBody>
-                Study-wide counts shipped in Dialogue, and the formats, templates, clips and flags
-                are concept. Speed alone would mislead, so I&rsquo;d read how fast an answer gets
-                shared next to how often its quotes get opened. I haven&rsquo;t run this with
-                Dialogue&rsquo;s customers.
+                I&rsquo;d track time from question to share next to how often a side gets opened,
+                and ask teams whether they trusted an answer enough to forward it. The gap is that
+                neither tells me whether a checked answer led to a better decision.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>which signal would you watch first, and what result would make you
-                change the design?</Placeholder>
+                <Placeholder>which signal you&rsquo;d watch first</Placeholder>
               </CaseStudyBody>
             </Section>
 

@@ -125,3 +125,12 @@ export function CheckIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Round P10: loading arc for the querying row (shape of Dialogue's spinner; drawn here, not Lucide). */
+export function LoaderArcIcon({ className }: IconProps) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M14 8a6 6 0 1 1-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

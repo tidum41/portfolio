@@ -3453,3 +3453,5 @@ html[data-theme="dark"] .dialogue-case-study .cs-caption .dialogue-caption__sent
     grid-row: span 2;
   }
 }
+
+.cs-claim-h2.cs-h2--muted { color: var(--color-text-secondary, currentColor); opacity: 1; margin-top: 0; }

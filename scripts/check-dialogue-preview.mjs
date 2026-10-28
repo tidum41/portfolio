@@ -63,7 +63,7 @@ async function closeTests(browser) {
         const { ctx, page } = await open(browser, path, width, 900, theme);
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
         const trigger = page
-          .locator(path === "/dialogue" ? ".dp-zoom__trigger" : ".cs-figure-zoom-trigger")
+          .locator(path === "/dialogue" ? ".dp-zoom:not(:has([data-interactive])) .dp-zoom__trigger" : ".cs-figure-zoom-trigger")
           .first();
         const box = await trigger.boundingBox();
         if (!box) { log(false, `${label}: no trigger`); await ctx.close(); continue; }
@@ -202,7 +202,7 @@ async function sweeps(browser) {
 }
 
 
-const TRIGGER = (path) => (path === "/dialogue" ? ".dp-zoom__trigger" : ".cs-figure-zoom-trigger");
+const TRIGGER = (path) => (path === "/dialogue" ? ".dp-zoom:not(:has([data-interactive])) .dp-zoom__trigger" : ".cs-figure-zoom-trigger");
 
 async function lightboxSweeps(browser) {
   for (const theme of ["light", "dark"]) for (const path of ["/dialogue", "/ucla-sublease"]) {

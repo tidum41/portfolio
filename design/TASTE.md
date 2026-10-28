@@ -151,3 +151,12 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Decided fact (Mudit, Oct 27 2026): Dialogue's AI chooses the chart type per answer, constrained by chart templates and guidelines adapted from IBM Carbon. It matches a template to the query and the level of detail wanted, with rules for edge cases such as thin data. The data viz section tells this; the chart library pairs are the templates. Write it plainly, no slogan.
 - Decided (P5 h2s, Oct 27 2026): problem h2 is 'Teams needed answers fast, and the detail got lost'; data viz h2 is 'The AI picks a chart from templates I designed'.
 - Decided (Mudit, Oct 27 2026, round P9): default answers show the count and the insight only, with no quotes; quotes surface only when the reader taps a side of the count (e.g. 75 unsure opens SideSample). Every quote row in the UI carries the Paper WaveformIcon row (`dp-clip-quote__who`, as in ClipQuotes), never a Lucide icon.
+- Rules for P10 onward (Mudit, Oct 28 2026; guidelines, not laws: follow a stronger move from Rachel Chen or another top case study and note why):
+  - Tell a real story with uneven pacing: most sections are quick builds, one or two carry the big turn; never repeat the same tried, changed, kept beat.
+  - Prove it with real work, not statistics; impact means what I'd track, what teams might report, and where the gaps are, with no usage results claimed.
+  - One spine: research teams surface insights quickly without losing detail.
+  - Plain, technical language: problem, then decision, then what I built; the opening stays short under its own header.
+  - Ground visuals in the real product and its light-mode tokens (dialogue-product stills, dialogue-anim run2 styles); invented Hearthside data only, nothing confidential.
+  - Mine Dialogue's customer case studies (dialogue-site.md) for what data to show and where the current chat falls short.
+  - Tight layouts: mobile compact, not desktop stacked tall; sections read as clearly separate.
+- Motion (Mudit, Oct 28 2026): simple looping demos in the real components (CSS, no Remotion), timed to the measured recording in /workspace/dialogue-anim (hard-cut swaps, 300 ms 0.5 to 1 enter, 1000 ms linear spin, about 137 chars/s stream, cards land whole with a ~133 ms scroll ease-out); static final state under prefers-reduced-motion.
