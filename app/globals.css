@@ -616,6 +616,49 @@ html[data-theme="light"] {
   .hero-ucla:hover { color: rgb(53, 121, 204); }
 }
 
+/* Hero "communities" — reads as plain text at rest; reveals the same hover
+   color as .hero-ucla plus a plain, Windows-style tooltip. */
+.hero-communities {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: inherit;
+  position: relative;
+  transition: color 0.3s ease;
+  outline: none;
+}
+.hero-communities:focus-visible {
+  color: rgb(53, 121, 204);
+  outline: 2px solid rgb(53, 121, 204);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.hero-communities-tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+  display: none;
+  white-space: nowrap;
+  padding: 2px 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--color-text-primary);
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-text-secondary);
+  border-radius: 0;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+.hero-communities:focus-visible .hero-communities-tip { display: block; }
+@media (hover: hover) and (pointer: fine) {
+  .hero-communities:hover { color: rgb(53, 121, 204); }
+  .hero-communities:hover .hero-communities-tip { display: block; }
+}
+
 /* ─── ProjectPopup close button — same 24px/radius-6/invisible-hit-area-
    expansion language as PS3ControlPanel's .ps3cp-ibtn. Background stays flat
    (matches the panel, no resting "badge" box) — only the icon color shifts
