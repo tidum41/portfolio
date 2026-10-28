@@ -340,7 +340,7 @@ export function DialogueCaseStudyContent({
 
             <Section id="measure">
               <ClaimH2>Counts shipped, and I&rsquo;d test the rest on speed and depth together</ClaimH2>
-              <StatusLine>Proposed, no results yet</StatusLine>
+              <StatusLine>Counts shipped. The test is proposed, with no results yet</StatusLine>
               <CaseStudyBody>
                 Study-wide counts shipped in Dialogue, and the formats, templates, clips and flags
                 are concept. Speed alone would mislead, so I&rsquo;d read how fast an answer gets

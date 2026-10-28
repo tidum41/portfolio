@@ -16,3 +16,11 @@
 - Found: the ending restated the hero and the measure section read as a metrics wish list. Fix, after Ori Porat's "What shipped and what's coming" and Caleb Wu's closing learnings: the h2 becomes "Counts shipped, and I'd test the rest on speed and depth together", the body says what shipped and what is concept, and the takeaway keeps a learning placeholder. TOC label is now "Shipped and next".
 - Found: the Levels placeholder asked which version failed, which invites a recount. Fix: it now asks for the reversal (what you assumed would help that ended up hurting), Caleb Wu's "initially assumed... actually created decision paralysis" move.
 - Learned: a shorter label is a weaker fix than dropping redundant text; the denominator only has to appear once per bar.
+
+## Loop 3
+- Skim test (headings and captions only, from `dlg copy`): problem, count, depth, charts, clips, thin data, what shipped. It reads as one thread. The data viz h2 is the one heading that doesn't carry speed versus depth; it is a TASTE-decided h2, so the caption carries the point instead.
+- Found: the measure status line said "Proposed, no results yet" under a heading that opens with "Counts shipped". Fix: "Counts shipped. The test is proposed, with no results yet".
+- Found, not fixed: in dark mode the chosen Levels card renders dark while the two ruled-out cards stay light (`shots/p7/loop3/dark-mid.png`). It predates P7; the cause sits in the shared compare CSS and needs a scoped fix.
+- Found, not fixed: at 1440 the chosen-first layout leaves an empty band between the chosen card's caption and the ruled-out pair, from the subgrid rows.
+- Gates: check:dialogue-system, check:dialogue-tokens and check:dialogue-preview pass; `dlg copy` reports 0 em dashes and 887 words.
+- Learned: status lines are copy too; when a heading changes, reread the line under it.
