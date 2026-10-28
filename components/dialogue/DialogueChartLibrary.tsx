@@ -1,25 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Check, Minus } from "@phosphor-icons/react/dist/ssr";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
+import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-
-type Points = { pros: readonly string[]; cons: readonly string[] };
-
-/** Phosphor, the icon set BruinLease uses; bold at 16px so the stroke holds up at this size. */
-function Mark({ kind }: { kind: "pro" | "con" }) {
-  const Icon = kind === "pro" ? Check : Minus;
-  return (
-    <span className="dialogue-lib__mark" data-kind={kind} aria-hidden>
-      <Icon size={16} weight="bold" />
-    </span>
-  );
-}
 
 function Specimen({
   entryId,
@@ -31,7 +20,7 @@ function Specimen({
   entryId: string;
   status: "ruled-out" | "chosen";
   name: string;
-  points: Points;
+  points?: string;
   children: ReactNode;
 }) {
   return (
@@ -45,14 +34,7 @@ function Specimen({
         </StaticFigure>
       </figure>
       <p className="dialogue-lib__spec-name" data-annotate-part={`name-${entryId}-${status}`}>{name}</p>
-      <ul className="dialogue-lib__points" data-annotate-part={`points-${entryId}-${status}`}>
-        {points.pros.map((t) => (
-          <li key={t}><Mark kind="pro" />{t}</li>
-        ))}
-        {points.cons.map((t) => (
-          <li key={t}><Mark kind="con" />{t}</li>
-        ))}
-      </ul>
+      {points ? <p className="dialogue-lib__note" data-annotate-part={`points-${entryId}-${status}`}>{points}</p> : null}
     </div>
   );
 }
@@ -66,17 +48,17 @@ const FRIDAY_ROWS = [
   { label: "Unsure", count: 75, focal: false },
 ] as const;
 const SEGMENTS = [
-  { label: "First-time, free returns", count: 6, of: 9, focal: true },
-  { label: "Repeat, arrives by Friday", count: 88, of: 125, focal: false },
+  { label: "First-time shoppers", count: 6, of: 9, focal: true },
+  { label: "Repeat shoppers", count: 88, of: 125, focal: false },
 ] as const;
 
 const ENTRIES = [
   {
     id: "coverage",
     badName: "Common chart",
-    badPoints: { pros: ["The count axis and shares give the exact split"], cons: ["The legend pulls the eye away from the bar"] },
+    badPoints: "The axis and percents give the exact split, but the legend pulls the eye off the bar.",
     goodName: "My version",
-    goodPoints: { pros: ["Counts sit directly under their segments", "225 of 300 reads at a glance"], cons: ["No percent is printed"] },
+    goodPoints: "225 of 300 reads at a glance under its segment, though no percent is printed.",
     name: "How much of the study backs a finding",
     verdict: "One bar for all 300 interviews shows how much of the study backs the finding.",
     tech: [
@@ -110,11 +92,11 @@ const ENTRIES = [
   {
     id: "segments",
     badName: "Common chart",
-    badPoints: { pros: ["Percents line the segments up on one scale"], cons: ["67% and 70% look alike, but one rests on 9 people and the other on 125"] },
+    badPoints: "Percents put both rows on one scale, so 67% and 70% look alike though one rests on 9 people.",
     goodName: "My version",
-    goodPoints: { pros: ["Each row says how many people it rests on", "Small segments read as small"], cons: ["The two rows are harder to compare exactly"] },
+    goodPoints: "Each row says how many people it rests on, which makes exact comparison a little slower.",
     name: "How segments differ",
-    verdict: "A filtered segment can be small inside a big study, so each row says how many people it rests on.",
+    verdict: "Percents make 67% and 70% look alike, so each row counts people out of its own group: 6 of 9 first-time shoppers, 88 of 125 repeat.",
     tech: [
       ["Data shape", "one count per segment, out of that segment."],
       ["Encoding", "bar length against each segment's own size."],
@@ -123,7 +105,7 @@ const ENTRIES = [
     caption:
       "Swapped the percents for counts out of each segment, and kept the cherry on the row the answer leads with.",
     bad: (
-      <ChartVizCard title="Top reason to buy, by segment">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
         <ChartBarList
           rows={SEGMENTS.map((r) => ({ label: r.label, value: Math.round((r.count / r.of) * 100), display: formatChartPercent(Math.round((r.count / r.of) * 100)), focal: r.focal }))}
           max={100}
@@ -131,7 +113,7 @@ const ENTRIES = [
       </ChartVizCard>
     ),
     good: (
-      <ChartVizCard title="Top reason to buy, by segment">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
         <ChartBarList
           rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, focal: r.focal }))}
           max={1}
@@ -141,23 +123,31 @@ const ENTRIES = [
   },
 ] as const;
 
-export default function DialogueChartLibrary({ showTech = true, segmentsFirst = false }: { showTech?: boolean; segmentsFirst?: boolean }) {
-  const entries = segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
+/** The segment question that asks for the redesigned chart (data viz, one pair). */
+const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives by Friday\u201d the same way?";
+
+export default function DialogueChartLibrary({ showTech = true, segmentsFirst = false, only }: { showTech?: boolean; segmentsFirst?: boolean; only?: "segments" | "coverage" }) {
+  const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">
       {entries.map((entry) => (
         <article key={entry.id} className="dialogue-lib__entry">
           <h3 className="dialogue-lib__name">{entry.name}</h3>
           <div className="dialogue-lib__pair">
-            <Specimen entryId={entry.id} status="ruled-out" name={entry.badName} points={entry.badPoints}>
+            <Specimen entryId={entry.id} status="ruled-out" name={entry.badName} points={only ? undefined : entry.badPoints}>
               {entry.bad}
             </Specimen>
-            <Specimen entryId={entry.id} status="chosen" name={entry.goodName} points={entry.goodPoints}>
-              {entry.good}
+            <Specimen entryId={entry.id} status="chosen" name={only ? "My version, as the chat answers" : entry.goodName} points={only ? undefined : entry.goodPoints}>
+              {only ? (
+                <StudyChatShell compact hideHeader hideComposer>
+                  <UserMessageBubble>{SEGMENT_QUESTION}</UserMessageBubble>
+                  {entry.good}
+                </StudyChatShell>
+              ) : entry.good}
             </Specimen>
           </div>
           <p className="dialogue-lib__verdict" data-annotate-part={`verdict-${entry.id}`}>{entry.verdict}</p>
-          <p className="dialogue-lib__reason" data-annotate-part={`reason-${entry.id}`}>{entry.caption}</p>
+          {only ? null : <p className="dialogue-lib__reason" data-annotate-part={`reason-${entry.id}`}>{entry.caption}</p>}
           {showTech ? (
             <div className="dialogue-lib__tech">
               {entry.tech.map(([label, text]) => (

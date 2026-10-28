@@ -69,6 +69,10 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Oct 26 2026: Mudit OK'd illustrative quotes with placeholder names and timestamps in Dialogue; Comparison needs no concept label.
 - Oct 27 2026: Round P5 direction (art director plan, /workspace/research/dialogue-eod-plan.md, approved): the story is the answer card's data viz plus decisions. Sections are problem, counts (study-wide folded in), levels of detail (Hearthside Friday data, 2+1 layout), data visualization (b056865 chart library restored), clips, thin data (stone line, not amber). Comparison section and study-wide figure are cut. One caption per figure, no frame labels. Mudit's copy sits in visible [PLACEHOLDER] markers.
 - Chart library trimmed to 2 pairs, labels fixed (Mudit OK Oct 27).
+- Oct 28 2026: the reversal comes early (Levels right after the problem: every level at once was too slow, so depth became optional), and the later sections prove it; Mudit approved the reorder.
+- Oct 28 2026: designing in code is a highlighted strength (fast iteration, attention to detail, owning the process end to end). Show it through the demos: captions say when a video is recorded from his live code recreation.
+- Oct 28 2026: establish the surface once, then crop to the decision. The hero shows the full Study chat (header with Beta, study subtitle, composer); every later figure crops tight to the response and its interaction.
+- Oct 28 2026: after the hero, case-study demos drop panel chrome (Study chat header, Beta, the 300-interviews subtitle, the composer, the Querying participants row) unless it explains the moment; the depth picker keeps the composer because it lives there. The real ~65 s wait collapses to one Analyzing beat. Real Dialogue marks a reply with nothing (plain prose under the user bubble, no avatar or label; dialogue-anim final.html), so the recreations add none.
 - Oct 28 2026: video controls live on the visual's background container, never on the product UI (play button 8px from the well's top right, as BruinLease's PhoneMockup).
 
 ## 2. Likes

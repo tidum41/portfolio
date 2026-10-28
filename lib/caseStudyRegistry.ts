@@ -2,7 +2,7 @@
 export const CASE_STUDY_PAGES = [
   { href: "/joola", title: "B2B ordering for JOOLA" },
   { href: "/ucla-sublease", title: "BruinLease" },
-  { href: "/sviz", title: "sviz" },
+  { href: "/sviz", title: "SViz" },
   { href: "/dialogue", title: "Dialogue" },
 ] as const;
 

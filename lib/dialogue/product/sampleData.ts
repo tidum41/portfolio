@@ -1,4 +1,4 @@
-export const LEAD_COMPARE_QUESTION = "How did shoppers read \u2018Arrives by Friday\u2019?";
+export const LEAD_COMPARE_QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
 /** Mobile-only funnel, as shown in the full answer figure. */
 export const MOBILE_FUNNEL_STEPS = [
   { label: "Cart", pct: 100 },
@@ -7,9 +7,9 @@ export const MOBILE_FUNNEL_STEPS = [
   { label: "Payment", pct: 33 },
 ] as const;
 
-export const CHECKOUT_QUESTION = "How did shoppers read 'Arrives by Friday'?";
+export const CHECKOUT_QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
 
-export const STUDY_SUBTITLE = "Checkout signals, 300 interviews";
+export const STUDY_SUBTITLE = "Answering questions about this study";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [

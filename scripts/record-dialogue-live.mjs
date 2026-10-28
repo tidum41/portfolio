@@ -6,12 +6,15 @@ import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
-const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p10/motion", variant = "base", h = "600", tag = ""] = process.argv;
+// chrome: "0" drops the panel header and composer (case-study default); quick: "1" collapses the server wait to one beat.
+const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p10/motion", variant = "base", h = "600", tag = "", chrome = "0", quick = "1"] = process.argv;
 const prefix = (variant === "base" ? "live" : `variant-${variant}`) + tag;
 // Each step: [selector to click, mark name, hold after click in ms]
 const STEPS = {
-  base: [['[data-target="ask"]', "ask", 0], ['[data-target="side"]', "side", 1800], [".dlg-live__sample .dp-clip-quote", "clip", 2600]],
-  toggles: [['[data-target="ask"]', "ask", 0], ['[data-target="people"]', "people", 1800], [".dlg-live__sample .dp-clip-quote", "clip", 2600]],
+  base: [['[data-target="ask"]', "ask", 0], ['[data-target="side"]', "side", 3200], ['[data-target="quote-owen"]', "clip", 2800], ['[data-target="quote-mei"]', "switch", 3000], ['[data-target="collapse"]', "collapse", 1200], ['[data-target="quote-mei"]', "replay", 3400]],
+  before: [['[data-target="ask"]', "ask", 0]],
+  every: [['[data-target="ask"]', "ask", 0]],
+  toggles: [['[data-target="ask"]', "ask", 0], ['[data-target="people"]', "people", 2400], ['[data-target="quote-mei"]', "clip", 3200]],
   picker: [['[data-target="depth-0"]', "pick", 600], ['[data-target="ask"]', "ask", 0], ['[data-target="more-people"]', "people", 1800], ['[data-target="more-source"]', "source", 2600]],
 }[variant];
 const tmp = "/tmp/dlg-live-frames"; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true }); mkdirSync(out, { recursive: true });
@@ -20,7 +23,7 @@ const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" })
 const ctx = await b.newContext({ viewport: { width: 1120, height: 1520 }, deviceScaleFactor: 1 });
 await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
 const page = await ctx.newPage();
-await page.goto(`${base}/dialogue/live?v=${variant}&h=${h}`, { waitUntil: "networkidle" });
+await page.goto(`${base}/dialogue/live?v=${variant}&h=${h}&c=${chrome}&q=${quick}`, { waitUntil: "networkidle" });
 // Case-study cursor (annotation, not product UI). It follows real mouse events.
 await page.addStyleTag({ content: `#dlg-cursor{position:fixed;left:0;top:0;width:18px;height:18px;z-index:99;pointer-events:none;will-change:transform}
 #dlg-cursor svg{display:block}header,nav,.cs-toc-fab,[class*=toc],[class*=Toc],.site-header{display:none!important}#stage{margin:40px auto!important;zoom:2}html,body,main{background:var(--dp-bg,#f6f5f3)!important}#dlg-cursor{zoom:2}#dlg-cursor.down svg{transform:scale(.88);transform-origin:2px 2px}` });
@@ -47,7 +50,7 @@ const mark = (k) => (marks[k] = Date.now() / 1000 - t0);
 // Ease-in-out glide over `ms`, 60 steps a second.
 async function glide(sel, ms = 700) {
   const bb = await (await page.$(sel)).boundingBox();
-  const to = sel.includes("side") || sel.includes("depth") ? { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.35 } : { x: bb.x + 24, y: bb.y + bb.height / 2 };
+  const to = sel.includes("side") || sel.includes("depth") || sel.includes("collapse") ? { x: bb.x + bb.width * 0.5, y: bb.y + (sel.includes("collapse") ? bb.height * 0.5 : bb.height * 0.35) } : { x: bb.x + 24, y: bb.y + bb.height / 2 };
   const n = Math.round(ms / 16.67), from = { ...pos };
   for (let i = 1; i <= n; i++) { const p = i / n, e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
     await page.mouse.move(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e); await page.waitForTimeout(16); }
@@ -59,7 +62,7 @@ async function click() { await page.waitForTimeout(320); await page.mouse.down()
 await page.waitForTimeout(700);
 for (const [sel, name, hold] of STEPS) {
   mark(`${name}-start`); await glide(sel); mark(`${name}-click`); await click();
-  if (name === "ask") { await page.waitForSelector('[data-stage="answered"]', { timeout: 20000 }); await page.waitForTimeout(1600); }
+  if (name === "ask") { await page.waitForSelector('[data-stage="answered"]', { timeout: 20000 }); await page.waitForTimeout(variant === "before" ? 2400 : variant === "every" ? 3600 : 1600); }
   else await page.waitForTimeout(hold);
   mark(`${name}-end`);
 }
@@ -82,7 +85,9 @@ const cut = (name, a, z) => {
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-ss", String(Math.max(0, marks[a] - off - 0.3)), "-to", String(marks[z] - off), "-i", full, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-r", "60", mp4]);
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", mp4, "-vf", "fps=30,scale=471:-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=none", `${out}/${prefix}-${name}.gif`]);
 };
-for (const [, name] of STEPS) if (name !== "pick") cut(name, `${name}-start`, `${name}-end`);
+// The clip cut carries the whole player story: play Mei, switch to Owen, collapse.
+const CUTS = variant === "base" ? [["ask", "ask"], ["side", "side"], ["clip", "replay"]] : STEPS.filter(([, n]) => n !== "pick").map(([, n]) => [n, n]);
+for (const [a, z] of CUTS) cut(a, `${a}-start`, `${z}-end`);
 execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", full, "-vf", "fps=30,scale=471:-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=none", `${out}/${prefix}-full.gif`]);
 writeFileSync(`${out}/${prefix}-marks.json`, JSON.stringify({ marks, screencastOffset: off, frames: frames.length,
   medianGapMs: (() => { const g = frames.slice(1).map((f, i) => (f.t - frames[i].t) * 1000).sort((a, b) => a - b); return g[g.length >> 1]; })() }, null, 1));

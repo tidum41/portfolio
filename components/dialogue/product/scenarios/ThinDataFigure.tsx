@@ -48,16 +48,16 @@ export default function ThinDataFigure() {
   };
 
   return (
-    <StudyChatShell compact hideHeader hideComposer evidence={2}>
+    <StudyChatShell compact hideHeader hideComposer evidence={2} evidenceOf={{ of: 63, group: "lapsed buyers" }}>
       <UserMessageBubble>What did lapsed buyers say about their first order?</UserMessageBubble>
       <p className="dp-summary dp-text-body" data-annotate-part="summary">
-        Two lapsed buyers mentioned that their first order arrived damaged.
+        Two of 63 lapsed buyers mentioned that their first order arrived damaged.
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
         <InfoCircleIcon className="dp-low-signal__icon" />
         <p className="dp-low-signal__text">Early signal, 2 people</p>
       </div>
-      <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
+      <p className="dp-clips-link" data-annotate-part="clips-link">View 2 clips</p>
       <div className="dp-next-study-wrap">
         <button
           type="button"

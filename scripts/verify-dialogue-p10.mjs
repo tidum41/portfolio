@@ -101,7 +101,7 @@ for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
   await p.click('[data-target="ask"]'); await p.waitForSelector('[data-stage="answered"]', { timeout: 20000 });
   await p.click('[data-target="side"]'); await p.waitForTimeout(300);
   const side = await p.evaluate(() => {
-    const head = document.querySelector(".dp-side-sample__head").innerText;
+    const head = document.querySelector(".dp-side-sample__head").innerText.replace(/\s+/g, " "); // the head is a flex row (count, label, collapse)
     const more = document.querySelector(".dp-side-sample .dp-sources").innerText;
     const rows = [...document.querySelectorAll(".dlg-live__sample .dp-clip-quote")].map((q) => ({ name: q.querySelector(".dp-clip-quote__name").innerText, time: q.querySelector(".dp-clip-quote__time").innerText, wave: !!q.querySelector("svg") }));
     return { head, more, rows };

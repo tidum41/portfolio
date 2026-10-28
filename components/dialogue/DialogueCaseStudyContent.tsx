@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Minus, Scales, Target } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
@@ -9,13 +10,10 @@ import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/Dial
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
-import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
+import DialogueChatLive from "@/components/dialogue/live/DialogueChatLive";
 import DialogueDemoVideo from "@/components/dialogue/motion/DialogueDemoVideo";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
-import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
-import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
@@ -28,16 +26,15 @@ export type RasterAnnotator = (assetId: string, children: React.ReactNode) => Re
 /** Short TOC labels (Rachel Chen style); the headings carry the full claims. */
 export const DIALOGUE_TOC_ITEMS = [
   { id: "problem", label: "Problem" },
+  { id: "levels", label: "Levels of detail" },
   { id: "counts", label: "Counts" },
   { id: "clips", label: "Clips" },
   { id: "data-viz", label: "Data visualization" },
   { id: "thin-data", label: "Thin data" },
-  { id: "levels", label: "Levels of detail" },
   { id: "measure", label: "Shipped and next" },
   { id: "takeaway", label: "Takeaway" },
 ];
 
-const FRIDAY_QUESTION = "How did shoppers read \u2018Arrives by Friday\u2019?";
 const FRIDAY_FINDING =
   "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 
@@ -90,29 +87,43 @@ function Caption({ children }: { children: React.ReactNode }) {
 }
 
 /** A scaled product figure: Rachel frame, static wrapper, 448 panel viewport. */
-function ProductFigure({
-  caption,
-  name,
-  maxHeight,
-  children,
-  tone = "system",
-}: {
-  tone?: "problem" | "solution" | "system";
-  caption: string;
-  name: string;
-  maxHeight: number;
-  children: React.ReactNode;
-}) {
+/* Levels pair: the reasoning behind each prototype as bet, pro, con and the deciding tradeoff.
+   Draft copy for Mudit to revise. Marks are Phosphor, the case-study icon set (BruinLease). */
+type ReasonRow = { kind: "bet" | "pro" | "con" | "tradeoff"; text: string };
+const LEVELS_KEPT: ReasonRow[] = [
+  { kind: "bet", text: "Most readers stop at the count, so the answer starts there." },
+  { kind: "pro", text: "A PM gets the sentence with no setup." },
+  { kind: "con", text: "A skeptical director taps up to three times to reach a clip." },
+  { kind: "tradeoff", text: "A tap per level costs less than choosing a depth blind." },
+];
+const LEVELS_EXPLORED: ReasonRow[] = [
+  { kind: "bet", text: "Researchers know how deep they want to go before they ask." },
+  { kind: "pro", text: "The answer lands at the chosen depth in one go." },
+  { kind: "con", text: "You pick a depth before you know if the count matters." },
+  { kind: "tradeoff", text: "It asks for the choice at the moment you know least." },
+];
+const REASON_ICON = { bet: Target, pro: Check, con: Minus, tradeoff: Scales } as const;
+const REASON_LABEL = { bet: "Bet", pro: "Pro", con: "Con", tradeoff: "Deciding tradeoff" } as const;
+
+function LevelReasoning({ rows }: { rows: ReasonRow[] }) {
   return (
-    <figure className="cs-figure dialogue-live-block">
-      <DialogueRachelFrame tone={tone}>
-        <StaticFigure figure={name}>
-          <ScaledChatViewport maxHeight={maxHeight}>{children}</ScaledChatViewport>
-        </StaticFigure>
-      </DialogueRachelFrame>
-    </figure>
+    <dl className="dlg-reason">
+      {rows.map((r) => {
+        const Icon = REASON_ICON[r.kind];
+        return (
+          <div key={r.kind} className="dlg-reason__row" data-kind={r.kind}>
+            <dt className="dlg-reason__term">
+              <span className="dialogue-lib__mark" data-kind={r.kind} aria-hidden><Icon size={16} weight="bold" /></span>
+              <span className="dlg-reason__label">{REASON_LABEL[r.kind]}</span>
+            </dt>
+            <dd className="dlg-reason__text">{r.text}</dd>
+          </div>
+        );
+      })}
+    </dl>
   );
 }
+
 
 function FridayBar() {
   return (
@@ -155,39 +166,88 @@ export function DialogueCaseStudyContent({
               Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
               answer so a research team can move fast on an insight and still check the people behind it.
             </p>
+            <p className="cs-hero-body">
+              [DRAFT, Mudit to reword] I design in code, so I can iterate fast and own every detail from first idea to the shipped panel.
+            </p>
             <div className="cs-hero-media-frame">
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="942 / 760" poster="/dialogue/motion/live-hero-ask.jpg" label="Priya taps a suggested question and the answer streams in as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="942 / 960" poster="/dialogue/motion/live-hero-ask.jpg" label="Priya taps a suggested question and the answer streams in as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>The final answer: a count out of 300, with each side one tap from its people. Illustrative data.</Caption>
+            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation, illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
             <Section id="problem">
               <Kicker>The moment</Kicker>
-              <ClaimH2>The chat answered in seconds.</ClaimH2>
-              <ClaimH2 className="cs-h2--muted">Nobody could tell how many people agreed.</ClaimH2>
+              <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
               <CaseStudyBody>
-                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
+                Priya, a researcher at Hearthside (a made-up retailer), owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
               <CaseStudyBody>
                 Her real question is how many shoppers stand behind each claim, and prose can&rsquo;t say. So the brief became a principle: every claim shows how many people hold it.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the constraint you were handed at the start, in one line</Placeholder>
+                [DRAFT, Mudit to reword] Dialogue&rsquo;s bet is speed, and in its Kalshi case study the bar is a share-out by tomorrow morning. In nine weeks, knowing research teams only through meetings with Dialogue and its customer case studies, I designed in code inside the shipped chat I&rsquo;d helped build: a fixed 415px panel with its own components and tokens. Counts shipped there; the depth levels and data visuals are concepts I built to carry ideas across.
               </CaseStudyBody>
-              <ProductFigure caption="before" name="problem-before" maxHeight={360} tone="problem">
-                <StudyChatShell hideComposer>
-                  <UserMessageBubble>How many shoppers misread &lsquo;Arrives by Friday&rsquo;?</UserMessageBubble>
-                  <ParagraphAnswerFigure focus="answer" wall />
-                </StudyChatShell>
-              </ProductFigure>
-              <Caption>&lsquo;Many&rsquo; could be 160 or 280 of 300, and the paragraph can&rsquo;t tell them apart. Recreated with invented data.</Caption>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="problem">
+                  <StaticFigure figure="problem-before">
+                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" ratio="942 / 1040" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. &lsquo;Many&rsquo; could be 160 or 280 of 300. Recreated in code with invented data.</Caption>
+            </Section>
+
+            <Section id="levels">
+              <Kicker>The turn</Kicker>
+              <ClaimH2>Every level at once was too slow, so depth became optional</ClaimH2>
+              <StatusLine>Concept</StatusLine>
+              <CaseStudyBody>
+                I first assumed every answer should carry every level of detail: the count, its chart, the people on each side and the source clip. The deepest detail seemed like the most useful.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                It slowed teams down, which cuts against the speed Dialogue sells. The open player pushed the count out of view, so a PM scrolled back up for the one number they came for. Depth had to be something the reader opens.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
+                <DialogueRachelFrame tone="problem">
+                  <StaticFigure figure="levels-every">
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the answer opens the chart, the people and a playing clip at once, and the count scrolls away" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>The count shows for a moment, then the people and the player push it out of view. Recorded from my live code recreation, illustrative data.</Caption>
+              <CaseStudyBody>
+                Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <div className="dlg-demo-pair">
+                  <div>
+                    <p className="dlg-demo-pair__label dialogue-caption__label">A, explored: pick a depth before asking</p>
+                    <LevelReasoning rows={LEVELS_EXPLORED} />
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer sets the level before the question is asked" />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <p className="dlg-demo-pair__label dialogue-caption__label">B, kept: depth opens inside the answer</p>
+                    <LevelReasoning rows={LEVELS_KEPT} />
+                    <DialogueRachelFrame tone="solution">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the count; the people and the clip each open on a tap" />
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
+              </figure>
+              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Illustrative data.</Caption>
+              <CaseStudyBody>
+                So every part that follows stays one tap away.
+              </CaseStudyBody>
             </Section>
 
             <Section id="counts">
@@ -195,10 +255,10 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Every claim leads with how many, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                A table fit the numbers but crowded a chat panel about 415px wide. I put the count in one bar with two labels, and each side opens a sample of its people, the 75 unsure included.
+                The count is the level everyone reads, so it leads. A table crowded the 415px panel, so the count became one bar with two labels, and each side opens its people on a tap.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>what you built before counts, in one line; and confirm the panel width, 415 or 448</Placeholder>
+                <Placeholder>what you built before counts, in one line</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
@@ -207,7 +267,21 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping 75 opens two of the unsure shoppers, with 73 more a tap away. Illustrative data.</Caption>
+              <Caption>Tapping 75 opens two of the unsure shoppers, and the chevron folds them back into the count. Recorded from my live code recreation, illustrative data.</Caption>
+              <CaseStudyBody>
+                The two shown are <Placeholder>how the 2 shown quotes are picked</Placeholder>. +73 more pages in the next few, still inside the answer.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="counts-more">
+                    <div className="dlg-demo dlg-demo--static dialogue-product-root dp-chat-panel-typography">
+                      <DialogueChatLive variant="base" startAnswered initialSide initialMore chrome={false} quick height={780} />
+                    </div>
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>After +73 more: five of the 75 unsure, with 70 still a tap away. Illustrative data.</Caption>
+
             </Section>
 
             <Section id="clips">
@@ -215,7 +289,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>A quote plays from its moment, inside the answer</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Video is the heaviest thing in the panel, so it loads only on a tap and starts at the quote&rsquo;s timestamp. Checking a claim never leaves the thread.
+                The source is the deepest level and the heaviest to load. The clip loads on a tap, starts at the quote&rsquo;s timestamp and folds away when you&rsquo;re done.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
@@ -224,7 +298,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping Mei&rsquo;s quote plays her interview from 18:27 in place. Illustrative data.</Caption>
+              <Caption>The player opens under the quote it belongs to, with the quote&rsquo;s span marked on the scrubber. Tapping another row moves it there, and the chevron closes it. It ends on Mei at 18:27. Illustrative data.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -232,15 +306,15 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Charts count people out of their own group</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                At 300 interviews a segment can hold nine people, and 67% hides that. I adapted chart templates from IBM Carbon for the AI to pick from, and each one labels N of its group.
+                A segment is a level only some readers open. At 300 interviews one can hold nine people, and 67% hides that, so each chart template I adapted from IBM Carbon labels N of its group.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>how the model matches a question to a template, and which Carbon rule you bent</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueChartLibrary showTech={false} segmentsFirst />
+                <DialogueChartLibrary showTech={false} only="segments" />
               </figure>
-              <Caption>6 of 9 first-time shoppers sits next to 88 of 125 repeat ones, so both group sizes stay visible. Illustrative data.</Caption>
+              <Caption>Illustrative data.</Caption>
             </Section>
 
             <Section id="thin-data">
@@ -248,7 +322,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Two people get a flag, and no chart</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A bar for two lapsed buyers would read as a pattern. Under three people the answer drops the chart, says &lsquo;Early signal, 2 people&rsquo; and offers to plan the next study.
+                Some levels are too thin to open. A bar for 2 of 63 lapsed buyers would read as a pattern, so under three people the answer drops the chart, says &lsquo;Early signal, 2 people&rsquo; and offers to plan the next study.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>why the cutoff sits under 3, and what Dialogue measures that set it</Placeholder>
@@ -261,40 +335,9 @@ export function DialogueCaseStudyContent({
                   />
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The early-signal note sits above the plan action, so nobody shares it as a finding. Illustrative data.</Caption>
+              <Caption>The early-signal note sits above the plan action, so it&rsquo;s harder to share as a finding. Illustrative data.</Caption>
             </Section>
 
-            <Section id="levels">
-              <Kicker>The turn</Kicker>
-              <ClaimH2>Depth is optional, and the reader opens it</ClaimH2>
-              <StatusLine>Concept</StatusLine>
-              <CaseStudyBody>
-                Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: a depth picker by the composer, and toggles inside the answer.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                I assumed that honing in on the smallest level of detail would be useful, but it might not be feasible or efficient for teams. That changed the goal from showing every level to making each one a tap away, so I kept the toggles.
-              </CaseStudyBody>
-              <figure className="cs-figure dialogue-live-block">
-                <div className="dlg-demo-pair">
-                  <div>
-                    <p className="dlg-demo-pair__label dialogue-caption__label">Kept: depth opens inside the answer</p>
-                    <p className="dlg-demo-pair__note">Fast by default. Each level costs one more tap.</p>
-                    <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the insight; the chart, the people and the clip each open on a tap" />
-                    </DialogueRachelFrame>
-                  </div>
-                  <div>
-                    <p className="dlg-demo-pair__label dialogue-caption__label">Explored: pick a depth before asking</p>
-                    <p className="dlg-demo-pair__note">Predictable. You choose the depth before you see the answer.</p>
-                    <DialogueRachelFrame tone="problem">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer sets the level before the question is asked" />
-                    </DialogueRachelFrame>
-                  </div>
-                </div>
-              </figure>
-              
-              <Caption>The picker works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. The toggles start at the count and go deeper on a tap. Illustrative data.</Caption>
-            </Section>
 
             <Section id="measure">
               <Kicker>What shipped</Kicker>

@@ -2924,22 +2924,13 @@ agentation-toolbar,
   font-weight: 500;
   color: var(--color-text-primary);
 }
-.dialogue-lib__points {
-  list-style: none;
+.dialogue-lib__note {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.dialogue-lib__points li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
   font-weight: 400;
   color: var(--color-text-secondary);
+  text-wrap: pretty;
 }
 .dialogue-lib__mark {
   flex-shrink: 0;

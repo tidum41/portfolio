@@ -3773,11 +3773,16 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-demo { position: static; width: min(471px, 100%); max-width: 100%; margin: 0 auto; justify-self: center; align-self: center; line-height: 0; }
 .dlg-demo__video { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 5.1% / 4%; } /* the panel's 24px corner, as a share of the 471x600 recording */
 /* .dlg-demo stays static so the play button (absolute, 8px top right) anchors to the figure's background well, .dialogue-rachel-frame, as PhoneMockup does on BruinLease; never over the product UI.
-   Where the recording fills the well's width (the kept/explored pair, and every well at phone width), a 40px top gutter
+   Where the recording fills the well's width (every well at phone width), a 40px top gutter
    (20px well pad + 40 = 8 + 44 + 8) keeps the 44px button above the video. Single desktop wells clear it at the side. */
-.dlg-demo-pair .dlg-demo { margin-top: 40px; }
 @media (max-width: 600px) { .dialogue-rachel-frame .dlg-demo { margin-top: 40px; } }
-.dlg-demo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dlg-demo-pair { display: grid; grid-template-columns: 1fr; gap: 40px; } /* stacked so each recording plays at its 471px size, readable at 1440 */
+/* Levels reasoning: four compact rows, mark plus a short term, then one line. */
+.dlg-reason { display: grid; grid-template-columns: max-content 1fr; column-gap: 12px; row-gap: 4px; margin: 0 0 12px; }
+.dlg-reason__row { display: contents; }
+.dlg-reason__term { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: 500; }
+.dlg-reason__text { margin: 0; color: var(--color-text-secondary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); text-wrap: pretty; }
+.dialogue-lib__mark[data-kind="bet"], .dialogue-lib__mark[data-kind="tradeoff"] { color: var(--color-text-primary); }
 .dlg-demo-pair__label { margin: 0 0 8px; }
 @media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }
 .dlg-demo-pair__note { margin: 0 0 8px; color: var(--dp-muted); font-size: var(--text-meta-size); }
@@ -3817,9 +3822,45 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dlg-suggest:focus-visible, .dlg-disclose:focus-visible, .dlg-depth__opt:focus-visible, .dlg-live__reset:focus-visible, .dlg-live__sample .dp-clip-quote:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
 .dlg-live__sample .dp-clip-quote:hover { border-color: var(--dp-ink); }
 .dlg-live__sample .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
-.dlg-live__side:hover { box-shadow: inset 0 0 0 2px var(--dp-ink); }
-.dlg-live__side:active { box-shadow: inset 0 0 0 2px var(--dp-ink); background: var(--dp-brand-soft); }
-.dlg-live__side[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--dp-ink); }
+/* Counts: no box around the hit area. The grey segment itself takes hover, press and open states. */
+.dlg-live__side, .dlg-live__side:hover, .dlg-live__side:active { box-shadow: none; background: transparent; }
+.dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease; }
+.dlg-live__bar:has(.dlg-live__side:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
+.dlg-live__bar:has(.dlg-live__side:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
+/* Open: the segment keeps an ink ring and its label goes ink, so the sample below reads as that side's. */
+.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { box-shadow: inset 0 0 0 2px var(--dp-ink), inset 0 0 0 3px var(--dp-bg); }
+.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__labels > :last-child { color: var(--dp-ink); font-weight: 500; }
+/* The open side reads as attached to its segment: a brand rule down the sample's left edge. */
+.dlg-live__sample .dp-side-sample { padding-left: 12px; box-shadow: inset 2px 0 0 var(--dp-border-strong); }
+/* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
+.dlg-live__sample .dp-clip-quote--selected { cursor: default; }
+.dlg-live__clip { margin-top: 8px; line-height: 0; }
+.dlg-clip-collapse { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.dlg-clip-collapse:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-clip-collapse:active { background: var(--dp-nav-active-bg); }
+.dlg-clip-collapse:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-live__sample .dp-clip-quotes { padding-bottom: 4px; }
+/* Bare panel for the case study: no header, subtitle or composer; the thread sits at the bottom like a chat. */
+.dlg-live.dlg-live--bare .dp-study-chat__body { padding-top: var(--dp-chat-pad); min-height: 100%; justify-content: flex-end; box-sizing: border-box; }
+.dlg-live .dp-user-bubble p { text-wrap: balance; }
+.dlg-live .dp-prose-stack p, .dlg-live .dp-chart-viz-card p { text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { .dp-animate-in { animation: none; } }
 
-.cs-hero-media-frame .dlg-demo__video { border-radius: 5.1% / 6.3%; } /* 471x380 recording */
+.cs-hero-media-frame .dlg-demo__video { border-radius: 5.1% / 5%; } /* 471x480 recording, full Study chat chrome (the one establishing shot) */
+
+/* P11: the panel header keeps a clean edge; scrolled content stops at a hairline instead of showing through. */
+.dlg-live .dp-study-chat__head { position: relative; z-index: 1; padding-bottom: 12px; background: var(--dp-bg); box-shadow: 0 1px 0 var(--dp-border); }
+.dlg-live:not(.dlg-live--bare) .dp-study-chat__body { padding-top: 16px; }
+/* Count sample: head carries the collapse; +73 more is a real button around the source pill. */
+.dlg-live .dp-side-sample__head { display: flex; align-items: center; gap: 4px; }
+.dlg-more { padding: 0; border: 0; background: transparent; font: inherit; cursor: pointer; border-radius: var(--dp-radius-control); }
+.dlg-more:hover .dp-source-pill { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-more:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+/* Clip bounds on the scrubber: the quote's span inside the whole interview. */
+.dlg-live__clip .dp-qplayer__track { position: relative; }
+.dlg-live__clip .dp-qplayer__track::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: var(--clip-a); width: max(var(--clip-w), 4px); border-radius: var(--dp-radius-chip); background: var(--dp-brand); }
+/* Variant B depth row inside the answer: the composer's segmented control, pressed levels filled. */
+.dlg-depth--inline { margin: 8px 0 0; }
+.dlg-depth--inline .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
+.dlg-demo--static { line-height: normal; }
+.dlg-live .dp-study-chat__body > * { flex-shrink: 0; }
