@@ -10,3 +10,9 @@
 - Found: at 390 the chosen Levels card still came last, because the round J phone rule forces version order. Fix: the chosen-first opt-in overrides it at every width.
 - Found: at 390 the chosen card's bar label clipped to "75 of 300 D". Fix: shorter label "Unsure", which also matches what Mei and Owen say.
 - Learned: every fold and clip fix has to be checked at 390 too; a desktop-only media query silently loses to an older phone rule.
+
+## Loop 2
+- Found: at 390 the chosen card still clipped, now as "75 of 300 U". Fix: the minority side shows "75" with the label "Unsure"; the majority keeps "225 of 300", so the denominator is still read once.
+- Found: the ending restated the hero and the measure section read as a metrics wish list. Fix, after Ori Porat's "What shipped and what's coming" and Caleb Wu's closing learnings: the h2 becomes "Counts shipped, and I'd test the rest on speed and depth together", the body says what shipped and what is concept, and the takeaway keeps a learning placeholder. TOC label is now "Shipped and next".
+- Found: the Levels placeholder asked which version failed, which invites a recount. Fix: it now asks for the reversal (what you assumed would help that ended up hurting), Caleb Wu's "initially assumed... actually created decision paralysis" move.
+- Learned: a shorter label is a weaker fix than dropping redundant text; the denominator only has to appear once per bar.

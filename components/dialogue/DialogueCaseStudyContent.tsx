@@ -34,7 +34,7 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "data-viz", label: "Data visualization" },
   { id: "clips", label: "Clips" },
   { id: "thin-data", label: "Thin data" },
-  { id: "measure", label: "Measuring it" },
+  { id: "measure", label: "Shipped and next" },
   { id: "takeaway", label: "Takeaway" },
 ];
 
@@ -231,8 +231,8 @@ export function DialogueCaseStudyContent({
                 and that card takes the most room in the thread.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the answer card went through 8 versions: which one failed most
-                clearly, and did you consider a quick and deep toggle? Confirm before naming
+                <Placeholder>the answer card went through 8 versions: what did you first assume
+                would help that ended up hurting, and did you consider a quick and deep toggle? Confirm before naming
                 Dovetail&rsquo;s Fast and Deep modes or Marvin&rsquo;s Quick Answer.</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
@@ -339,13 +339,13 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="measure">
-              <ClaimH2>I&rsquo;d know it worked if teams share faster and still open the quotes</ClaimH2>
+              <ClaimH2>Counts shipped, and I&rsquo;d test the rest on speed and depth together</ClaimH2>
               <StatusLine>Proposed, no results yet</StatusLine>
               <CaseStudyBody>
-                Speed alone would mislead, so I&rsquo;d read how fast an answer gets shared next to
-                how often its quotes get opened. I haven&rsquo;t run this with Dialogue&rsquo;s
-                customers, and none of it shows whether a checked answer led to a better product
-                decision.
+                Study-wide counts shipped in Dialogue, and the formats, templates, clips and flags
+                are concept. Speed alone would mislead, so I&rsquo;d read how fast an answer gets
+                shared next to how often its quotes get opened. I haven&rsquo;t run this with
+                Dialogue&rsquo;s customers.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>which signal would you watch first, and what result would make you
