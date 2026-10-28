@@ -1,8 +1,3 @@
-:root {
-  /* Figure tokens (motion spec G5): white card, hairline, two-layer shadow; the play button reads on the tinted well. */
-  --dlg-figure-hairline: rgba(0, 0, 0, 0.06);
-  --dlg-play-bg: rgba(255, 255, 255, 0.85);
-}
 /* Dialogue product UI — tokens: components/dialogue/product/tokens.ts */
 @import "../../../styles/dialogue-tokens.css";
 @import "./chart/chart.css";
@@ -3863,7 +3858,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* ===== P11 motion stage (design/TASTE.md "Motion"; build/p11-motion-spec.md) ===== */
 .dlg-motion-page { padding: 40px; }
 .dlg-motion-frame { width: 519px; padding: 48px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
-.dlg-motion-frame__panel { width: 423px; }
+.dlg-motion-frame__panel { width: 423px; overflow: visible; } /* the product root clips; the stage card's shadow needs its rounded bottom corners */
 /* The card sits whole inside 32px of air, with Dialogue's chat shadow; its body scrolls, the card never resizes. */
 .dlg-stage { height: 100%; display: flex; flex-direction: column; } /* panel surface, border and shadow stay Dialogue's own (.dp-study-chat) */
 .dlg-stage .dlg-stage__body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }

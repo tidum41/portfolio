@@ -8,7 +8,7 @@ const DEMOS: MotionDemo[] = ["hero", "side", "clip", "before", "every", "picker"
 const STAGE = {
   hero: { ratio: 0.75, tone: "solution", zoom: 0.88 },
   side: { ratio: 1, tone: "solution", zoom: 0.92 },
-  clip: { ratio: 0.75, tone: "solution", zoom: 0.88 },
+  clip: { ratio: 1, tone: "solution", zoom: 0.88 },
   before: { ratio: 1, tone: "problem", zoom: 1 },
   every: { ratio: 1, tone: "problem", zoom: 0.88 },
   picker: { ratio: 1, tone: "problem", zoom: 0.88 },

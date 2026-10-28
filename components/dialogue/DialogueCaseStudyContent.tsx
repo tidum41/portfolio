@@ -265,7 +265,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" ratio="4 / 3" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place, and the chevron closes it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place, and the chevron closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>

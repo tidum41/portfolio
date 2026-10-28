@@ -169,7 +169,7 @@ for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
   const NAME = { "live-hero-ask": "hero", "live-side": "side", "live-clip": "clip", "variant-before-full": "before", "variant-every-full": "every", "variant-picker-full": "picker", "variant-toggles-full": "toggles" };
   const c2 = await b.newContext({ viewport: { width: 1440, height: 900 } }); const q = await c2.newPage();
   await q.goto(`${base}/dialogue`, { waitUntil: "networkidle" });
-  const shown = await q.evaluate(() => [...document.querySelectorAll(".dlg-demo__video")].map((v) => [v.getAttribute("poster").split("/").pop().replace(".jpg", ""), v.getBoundingClientRect().width]));
+  const shown = await q.evaluate(() => [...document.querySelectorAll(".dlg-demo__video")].map((v) => [v.getAttribute("poster").split("/").pop().replace(".jpg", "").replace(/-dark$/, ""), v.getBoundingClientRect().width]));
   for (const [n, w] of shown) { const px = minFont[NAME[n]] * (w / 519); log(px >= 12, `motion: smallest text in ${n} renders at ${px.toFixed(1)}px on the page at 1440 (at least 12)`); }
   await c2.close();
 }
