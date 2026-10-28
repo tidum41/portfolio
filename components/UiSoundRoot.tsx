@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { playUiSound, resolveUiSoundFromEventTarget, unlockUiSounds, warmUiSounds } from "@/lib/uiSound";
+import { playUiSound, resolveUiSoundFromEventTarget, uiSoundsCached, unlockUiSounds, warmUiSounds } from "@/lib/uiSound";
+import { afterIntroIdle } from "@/lib/introReady";
 
 /**
  * Global pointer → PS3 UI sound bridge.
@@ -22,13 +23,21 @@ export default function UiSoundRoot() {
 
     // Fetch audio files ahead of the first gesture when idle without instantiating
     // AudioContext, so the first gesture unlocks and plays with zero console warnings.
-    let idleHandle: number | null = null;
+    // Wait for the intro and load to settle, and stay off the network while
+    // a first-seconds card click is fetching its route.
+    const leaving = () => Boolean((window as Window & { __leavingHome?: number }).__leavingHome);
     let idleTimeout: ReturnType<typeof setTimeout> | null = null;
-    if ("requestIdleCallback" in window) {
-      idleHandle = window.requestIdleCallback(() => warmUiSounds({ allowContext: false }), { timeout: 1500 });
-    } else {
-      idleTimeout = setTimeout(() => warmUiSounds({ allowContext: false }), 400);
-    }
+    const idleWarm = () => {
+      if (leaving() && performance.now() < 8000) {
+        idleTimeout = setTimeout(idleWarm, 1500);
+        return;
+      }
+      warmUiSounds({ allowContext: false });
+    };
+    const cancelIdle = afterIntroIdle(idleWarm, 1500);
+    const holdColdTick = (t: EventTarget | null) =>
+      leaving() && !uiSoundsCached() && performance.now() < 8000 &&
+      !(t as Element | null)?.closest?.("a.nav-link");
 
     // After a pointer play, skip the synthetic click for the same gesture
     // so we don't double-fire option/push.
@@ -47,7 +56,7 @@ export default function UiSoundRoot() {
     const MAX_TOUCH_MS = 500;
 
     const playFromTarget = (target: EventTarget | null) => {
-      if (reducedMotion) return;
+      if (reducedMotion || holdColdTick(target)) return;
       const id = resolveUiSoundFromEventTarget(target);
       if (!id) return;
       playUiSound(id);
@@ -56,6 +65,11 @@ export default function UiSoundRoot() {
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
+
+      // A cold first-seconds card press is leaving the page: its tick isn't
+      // in memory yet and would only land after the route anyway, so don't
+      // spend the connection on it. The next gesture warms them.
+      if (holdColdTick(e.target)) return;
 
       if (!reducedMotion) unlockUiSounds();
       warmUiSounds({ allowContext: true });
@@ -113,9 +127,7 @@ export default function UiSoundRoot() {
     document.addEventListener("pointercancel", onPointerCancel, { capture: true, passive: true });
     document.addEventListener("click", onClick, true);
     return () => {
-      if (idleHandle != null && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleHandle);
-      }
+      cancelIdle();
       if (idleTimeout != null) clearTimeout(idleTimeout);
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("pointerup", onPointerUp, true);

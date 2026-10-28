@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
+import { afterIntroIdle, onIntroDone, onIntroDoneAndLoaded } from "@/lib/introReady";
+import { peekSoftNav } from "@/lib/instantNav";
 import { useDialKit } from "dialkit";
 import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
 import { warmRootMargin } from "@/lib/networkHint";
@@ -105,6 +108,7 @@ export default function MuxAutoplayCard({
   });
 
   const router = useRouter();
+  const prefetchReady = useIdlePrefetch();
   const containerRef = useRef<HTMLDivElement>(null);
   // Above-the-fold pair (mountOrder <= 1) loads immediately without waiting on
   // an IntersectionObserver tick; later cards latch after first intersection.
@@ -160,25 +164,72 @@ export default function MuxAutoplayCard({
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         return;
       }
-      preloadHlsModule();
       const arm = () => {
         if (!cancelled) setMountReady(true);
       };
-      const introActive = document.documentElement.hasAttribute("data-intro");
-      const wait = !introActive
-        ? 0
-        : mountOrder <= 1
+      // The cards are hidden behind the first-load intro, so the player
+      // script and segments wait for intro-done instead of competing with
+      // the page's own JS and posters. Later cards keep their stagger.
+      let cancelDefer = () => {};
+      const start = () => {
+        if (cancelled) return;
+        // A card or tab click during the intro also ends it; that page is
+        // leaving, so let its navigation go first and start the player once
+        // the browser is idle.
+        const w = window as Window & { __ptrDown?: number; __leavingHome?: number };
+        // Intro-done can fire on the press itself (touch skips the intro on
+        // pointerdown); wait for the tap to resolve so a card tap is seen
+        // before the player script and segments start downloading.
+        if (w.__ptrDown) {
+          const again = () => {
+            window.removeEventListener("pointerup", again, true);
+            window.removeEventListener("pointercancel", again, true);
+            window.setTimeout(start, 0);
+          };
+          window.addEventListener("pointerup", again, true);
+          window.addEventListener("pointercancel", again, true);
+          return;
+        }
+        if (peekSoftNav() || w.__leavingHome) {
+          // Wait for the route to actually leave "/" (or 6 s), then give
+          // the destination a moment before the player starts loading.
+          let poll = 0;
+          let later = 0;
+          let cancelIdle = () => {};
+          const t0 = performance.now();
+          const check = () => {
+            if (cancelled) return;
+            if (window.location.pathname === "/" && performance.now() - t0 < 6000) {
+              poll = window.setTimeout(check, 100);
+              return;
+            }
+            later = window.setTimeout(() => { cancelIdle = afterIntroIdle(run, 3000); }, 1500);
+          };
+          check();
+          cancelDefer = () => { window.clearTimeout(poll); window.clearTimeout(later); cancelIdle(); };
+          return;
+        }
+        run();
+      };
+      const run = () => {
+        if (cancelled) return;
+        preloadHlsModule();
+        const introActive = document.documentElement.hasAttribute("data-intro");
+        const wait = !introActive
           ? 0
-          : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
-      if (wait <= 0) {
-        arm();
-        return () => {
-          cancelled = true;
-        };
-      }
-      timeoutId = window.setTimeout(arm, wait);
+          : mountOrder <= 1
+            ? 0
+            : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+        if (wait <= 0) arm();
+        else timeoutId = window.setTimeout(arm, wait);
+      };
+      // Off the homepage the shell is hidden, so its cards also wait for load.
+      const cancelIntro =
+        window.location.pathname === "/" ? onIntroDone(start) : onIntroDoneAndLoaded(start);
       return () => {
         cancelled = true;
+        cancelIntro();
+        cancelDefer();
         window.clearTimeout(timeoutId);
       };
     }
@@ -305,7 +356,7 @@ export default function MuxAutoplayCard({
       ) : (
         <Link
           href={href!}
-          prefetch
+          prefetch={prefetchReady}
           style={linkStyle}
           onMouseEnter={warmCaseStudy}
           onFocus={warmCaseStudy}

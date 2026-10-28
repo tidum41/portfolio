@@ -86,6 +86,11 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Content-hashed nav letter SVGs (scripts/bake-nav-svgs.mjs).
+        source: "/nav/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         source: "/resume.pdf",
         headers: [
           {

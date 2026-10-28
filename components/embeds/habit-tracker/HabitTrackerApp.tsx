@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type FocusEvent } from 'react';
 import { CaretLeft, CaretRight, Sun, Moon, Check } from '@phosphor-icons/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import styles from './HabitTrackerApp.module.css';
 
 /** Deterministic PRNG seed from calendar year + month (0-indexed). */
@@ -401,7 +401,7 @@ export default function HabitTrackerApp({
           </button>
 
           <AnimatePresence mode="wait" initial={false} custom={direction}>
-            <motion.p
+            <m.p
               key={currentMonth.getTime()}
               custom={direction}
               variants={slideVariants}
@@ -412,7 +412,7 @@ export default function HabitTrackerApp({
               className={styles.monthLabel}
             >
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </motion.p>
+            </m.p>
           </AnimatePresence>
 
           <button
@@ -427,7 +427,7 @@ export default function HabitTrackerApp({
         </div>
 
         <AnimatePresence mode="wait" initial={false} custom={direction}>
-          <motion.div
+          <m.div
             key={currentMonth.getTime()}
             custom={direction}
             variants={slideVariants}
@@ -447,7 +447,7 @@ export default function HabitTrackerApp({
             <div className={styles.calendarGrid}>
               {renderCalendar()}
             </div>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         <div className={styles.stats}>

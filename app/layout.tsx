@@ -1,15 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// The Work grid is server-rendered on "/" but its code (and so its CSS
+// module) arrives through the lazy shell chunk, so keep the grid poster
+// styles (358 B) render-blocking with the global CSS, as on main.
+import "@/components/CdPlayerPoster.module.css";
 import NavFrame from "@/components/NavFrame";
 import Footer from "@/components/Footer";
+import MotionFeatures from "@/components/MotionFeatures";
 import BootScripts from "@/components/BootScripts";
 import { getSiteJsonLd } from "@/components/JsonLd";
 import GlobalCustomCursor from "@/components/GlobalCustomCursor";
 import UiSoundRoot from "@/components/UiSoundRoot";
 import AnimationProvider from "@/components/AnimationProvider";
 import { DevDialSlot, DevToolbarSlot } from "@/components/DevChrome";
-import { PersistentWorkShell } from "@/components/PersistentWorkShell";
+import { PersistentWorkShell } from "@/components/PersistentWorkShellGate";
 import PersistentArchiveShell from "@/components/PersistentArchiveShell";
 import PersistentAboutShell from "@/components/PersistentAboutShell";
 import PersistentSilkLayer from "@/components/PersistentSilkLayer";
@@ -180,11 +185,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
+        <MotionFeatures>
         {/* Injected via useServerInsertedHTML so React 19 never sees a
             <script> in the component tree (raw script / next/script both warn). */}
         <BootScripts
           jsonLd={getSiteJsonLd()}
-          playlists={muxWarm.playlists}
         />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
@@ -208,6 +213,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <DevToolbarSlot />
         <Analytics />
         <MobileViewportPlayback />
+        </MotionFeatures>
       </body>
     </html>
   );

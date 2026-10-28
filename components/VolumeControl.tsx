@@ -5,7 +5,7 @@ import { HalftoneDotField } from "./HalftoneDotField";
 import { VOLUME_MASK_SVG, MUTED_MASK_SVG, VOLUME_CLONE_INNER, MUTED_CLONE_INNER } from "./halftoneIconMasks";
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
-import { motion, useReducedMotion } from "framer-motion";
+import {m, useReducedMotion} from "framer-motion";
 import { playUiSound, setUiSoundVolume, warmUiSounds } from "@/lib/uiSound";
 
 const ICON_SIZE = 17;
@@ -225,7 +225,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
     >
       <audio ref={setAudioNode} src="/audio/ps3-xmb-menu.mp3" loop preload="none" />
       {!isCompact && (
-        <motion.div
+        <m.div
           initial={false}
           animate={{ width: isHovered ? SLIDER_WIDTH : 0, opacity: isHovered ? 1 : 0 }}
           transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 30 }}
@@ -242,7 +242,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             aria-label="Background music volume"
             style={{ width: 64 }}
           />
-        </motion.div>
+        </m.div>
       )}
       <button
         onClick={handleMuteToggle}
@@ -263,13 +263,13 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           flexShrink: 0,
         }}
       >
-        <motion.div
+        <m.div
           style={{ position: "absolute", inset: 0, color: baseColor, willChange: "opacity" }}
           initial={false}
           animate={{ opacity: active ? 0 : 1 }}
           transition={baseTransition}
         >
-          <motion.span
+          <m.span
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
@@ -277,8 +277,8 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             transition={spring}
           >
             <VolumeIcon />
-          </motion.span>
-          <motion.span
+          </m.span>
+          <m.span
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
@@ -286,10 +286,10 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             transition={spring}
           >
             <MutedIcon />
-          </motion.span>
-        </motion.div>
+          </m.span>
+        </m.div>
 
-        <motion.div
+        <m.div
           style={{
             position: "absolute",
             inset: 0,
@@ -299,7 +299,7 @@ export default function VolumeControl({ dk }: { dk?: any }) {
           animate={{ opacity: active ? 1 : 0 }}
           transition={overlayTransition}
         >
-          <motion.span
+          <m.span
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
@@ -307,8 +307,8 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             transition={spring}
           >
             <HalftoneDotField id={filterId + "-volume"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: VOLUME_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: VOLUME_CLONE_INNER }} />
-          </motion.span>
-          <motion.span
+          </m.span>
+          <m.span
             aria-hidden
             style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
             initial={false}
@@ -316,8 +316,8 @@ export default function VolumeControl({ dk }: { dk?: any }) {
             transition={spring}
           >
             <HalftoneDotField id={filterId + "-muted"} dk={dk} hoverColor={hoverColor} t={t} content={{ type: "icon", svgMarkup: MUTED_MASK_SVG, sizeCss: ICON_SIZE, cloneInner: MUTED_CLONE_INNER }} />
-          </motion.span>
-        </motion.div>
+          </m.span>
+        </m.div>
       </button>
     </div>
   );

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
-import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 import {
   OG_IMAGE_ALT,
@@ -58,15 +57,11 @@ export default async function Home() {
   for (const origin of warm.preconnect) {
     preconnect(origin, { crossOrigin: "anonymous" });
   }
-  return (
-    <>
-      {/* Download the player with the HTML. Reduced motion never plays it. */}
-      <link
-        rel="preload"
-        as="script"
-        href={HLS_LIGHT_SRC}
-        media="(prefers-reduced-motion: no-preference)"
-      />
-    </>
-  );
+  // The grid player (public/vendor/hls-light.min.js) is injected by the
+  // BootScripts hls boot once the intro finishes, since the cards are hidden
+  // until then. A preload here put 117 KB on the first-load critical path, and
+  // the hint also fired on every other route that prefetched "/".
+  // The warm map is fetched from /api/mux-warm by that boot script, so it
+  // is not written into any document.
+  return null;
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import {m, useReducedMotion} from "framer-motion";
 import { SPAWN_FROM_OPACITY } from "@/lib/motion";
 
 export default function InteractiveBadge() {
   const reduced = useReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       className="interactive-badge"
       initial={{ opacity: SPAWN_FROM_OPACITY }}
       whileInView={{ opacity: 1 }}
@@ -41,6 +41,6 @@ export default function InteractiveBadge() {
         color: "var(--color-text-card-sub)",
         whiteSpace: "nowrap",
       }}>Interactive</span>
-    </motion.div>
+    </m.div>
   );
 }

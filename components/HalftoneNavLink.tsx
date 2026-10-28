@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
+import { useIdlePrefetch } from "@/lib/useIdlePrefetch";
+import { afterIntroIdle } from "@/lib/introReady";
 import {
   OUTLINE_MORPH_S,
   loadOutlineMorph,
   type OutlineMorphComponent,
 } from "./outlineMorphLoader";
-import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
+import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary, peekSoftNav } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
 
@@ -46,10 +48,13 @@ function warmPrimary(href: string) {
     void import("@/components/BentoGallery");
   } else if (href === "/about") {
     void import("@/components/AboutPageContent");
+  } else if (href === "/") {
+    void import("@/components/PersistentWorkShell");
   }
 }
 
 export default function HalftoneNavLink({ href, label, isActive, dk, resting }: any & { resting?: ReactNode }) {
+  const prefetchReady = useIdlePrefetch();
   const router = useRouter();
   const pathname = usePathname();
   const [isHovered, setIsHovered] = useState(false);
@@ -88,21 +93,48 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   useEffect(() => {
     let cancel = false;
     const start = () => {
+      // Don't parse it in the middle of a route change (e.g. a card click
+      // right after load); wait for that navigation to settle.
+      if (peekSoftNav()) {
+        window.addEventListener("soft-nav-settled", start, { once: true });
+        return;
+      }
       loadOutlineMorph().then((component) => {
         if (!cancel) setMorph(() => component);
       });
     };
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 2500 });
-      return () => {
-        cancel = true;
-        window.cancelIdleCallback(id);
-      };
+    // Load the morph (its path data is the largest lazy chunk) on the first
+    // sign of a pointer or keyboard, well before it can reach a nav link,
+    // instead of on idle during first load where it competed with the page.
+    // Touch-only devices never hover, so there the morph only loads for
+    // keyboard focus (or the explicit hover path below).
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    const events = canHover
+      ? (["pointermove", "pointerdown", "touchstart", "keydown", "focusin"] as const)
+      : (["keydown", "focusin"] as const);
+    // Parse it in an idle slice, not inside the input task: a first click on
+    // a project card was otherwise sharing its frame with this chunk. A
+    // hover on the nav link itself still loads it at once (morphOn below).
+    let idle = 0;
+    const onIntent = () => {
+      for (const type of events) window.removeEventListener(type, onIntent, true);
+      if (typeof window.requestIdleCallback === "function") {
+        idle = window.requestIdleCallback(start, { timeout: 400 });
+      } else {
+        idle = window.setTimeout(start, 150);
+      }
+    };
+    for (const type of events) {
+      window.addEventListener(type, onIntent, { capture: true, passive: true });
     }
-    const id = window.setTimeout(start, 1200);
+    // Phones still play the morph on a tap, so have it parsed before the
+    // first tab tap after the intro (main had it from an idle load).
+    const cancelTouchWarm = canHover ? () => {} : afterIntroIdle(onIntent, 1500);
     return () => {
       cancel = true;
-      window.clearTimeout(id);
+      cancelTouchWarm();
+      if (idle && typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      for (const type of events) window.removeEventListener(type, onIntent, true);
     };
   }, []);
 
@@ -205,7 +237,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   return (
     <Link
       href={href}
-      prefetch
+      prefetch={prefetchReady}
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
       data-ui-sound="option"

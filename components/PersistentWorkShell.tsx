@@ -5,6 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
+import type { PrefetchOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
@@ -25,7 +26,8 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
+import type { SanityProject } from "@/lib/sanity/queries";
+import { ALLINONE_APP_URL } from "@/lib/allinone";
 import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -203,7 +205,7 @@ function CardLabel({
  *   - Primary-nav returns: shell is instant; hero + grid play the enter.
  *   - Hero wrapper stays instant during intro so it doesn't stack on HeroText.
  */
-export function PersistentWorkShell({ projects }: { projects: SanityProject[] }) {
+export default function PersistentWorkShellImpl({ projects }: { projects: SanityProject[] }) {
   const pathname = usePathname();
   const visible = useResolvedPrimaryTab(pathname) === "work";
   return <WorkKeepAlive visible={visible} projects={projects} />;
@@ -216,13 +218,40 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   visible: boolean;
   projects: SanityProject[];
 }) {
+  // Case-study cards fully prefetch as on main (from hydration), so a
+  // click in the first 1–2 s navigates from the prefetched payload instead of
+  // waiting for intro + idle; their RSC payloads are small.
+  const cardPrefetch = true;
   const router = useRouter();
   const warmProjectNav = (href?: string) => {
     if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitProjectNav = (href?: string) => {
-    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitProjectNav = (href?: string, e?: React.MouseEvent) => {
+    if (!href || !isCaseStudyHref(href)) return;
+    // In the first seconds main isn't hydrated yet, so a card click is a
+    // plain document load. If our prefetch of this route hasn't landed yet,
+    // a soft nav would refetch the payload while the intro is still loading
+    // media — slower than that hard load. Match main in that window.
+    if (
+      e && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey &&
+      performance.now() < 4000 &&
+      !performance.getEntriesByType("resource").some((r) => r.name.includes(`${href}?_rsc=`))
+    ) {
+      e.preventDefault();
+      window.location.assign(href);
+      return;
+    }
+    commitCaseStudyNav(href, router);
   };
+  // Prefetch the case-study routes as soon as the grid hydrates (main got
+  // this from <Link prefetch> right away; here that waited for an idle
+  // callback), so a card click in the first seconds is a cached soft nav.
+  const caseStudyHrefs = projects.map((p) => p.href).filter((h): h is string => Boolean(h && isCaseStudyHref(h))).join("|");
+  useEffect(() => {
+    if (!caseStudyHrefs) return;
+    // Full prefetch, like <Link prefetch>, so the click needs no RSC fetch.
+    for (const href of caseStudyHrefs.split("|")) router.prefetch(href, { kind: "full" as PrefetchOptions["kind"] });
+  }, [caseStudyHrefs, router]);
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
   const introReleased = useIntroReleased();
@@ -371,8 +400,39 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       return;
     }
     if (cdWarm || !allowIdlePrefetch()) return;
-    return afterIntroIdle(() => setCdWarm(true), 4000);
-  }, [openPopup, cdWarm]);
+    // ...and only once the CD card is near the viewport, so a phone that
+    // never scrolls to it skips the live player and its ~1 MB of covers.
+    // Observe the live grid slot itself (a ref-tracked node), so a re-render
+    // that swaps the card re-attaches the observer instead of watching a
+    // detached element.
+    if (!gridCdEl) return;
+    let obs: IntersectionObserver | null = null;
+    let settleId = 0;
+    // A couple of seconds past idle, and only while Work is showing, so the
+    // covers don't compete with a tab tap or card click right after the intro.
+    const cancelIdle = afterIntroIdle(() => { settleId = window.setTimeout(() => {
+      if (window.location.pathname !== "/") return;
+      if (typeof IntersectionObserver === "undefined") {
+        setCdWarm(true);
+        return;
+      }
+      obs = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            obs?.disconnect();
+            setCdWarm(true);
+          }
+        },
+        { rootMargin: "400px 0px" },
+      );
+      obs.observe(gridCdEl);
+    }, 2500); }, 4000);
+    return () => {
+      cancelIdle();
+      window.clearTimeout(settleId);
+      obs?.disconnect();
+    };
+  }, [openPopup, cdWarm, gridCdEl]);
 
   // Back on "/": once the remounted live CD is in place, fade the poster out
   // (unless the modal is open — poster stays opaque behind the blur).
@@ -389,10 +449,15 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // `behavior: "instant"` is required here — `html` has `scroll-behavior: smooth`
   // globally (for anchor-link nav), which would otherwise make this snap-back
   // visibly animate instead of landing exactly where it was immediately.
+  // Skip it on the first mount: there is nothing to restore yet, and a reset
+  // at hydration would throw away a scroll the visitor made before it.
+  const firstLayoutRef = useRef(true);
   useLayoutEffect(() => {
+    const first = firstLayoutRef.current;
+    firstLayoutRef.current = false;
     if (!visible) return;
     if (!hasEverBeenActive) setHasEverBeenActive(true);
-    window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
+    if (!first) window.scrollTo({ top: scrollYRef.current, left: 0, behavior: "instant" });
     // Resume normal tracking now that we're confirmed back — the suppression
     // was only ever meant to survive the single departing transition.
     suppressTrackingRef.current = false;
@@ -787,12 +852,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={cardPrefetch}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(p.href, e)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
@@ -887,12 +952,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={cardPrefetch}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
                         onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
+                        onClick={(e) => commitProjectNav(p.href, e)}
                       >
                         <div className="project-media">
                           <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>

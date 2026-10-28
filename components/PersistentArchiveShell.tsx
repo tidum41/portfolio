@@ -2,6 +2,8 @@
 
 import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+// Static, as on main: a lazy chunk made the first Archive tap after the
+// intro wait on a download and a Suspense round-trip on phones.
 import ArchivePageClient from "@/app/archive/ArchivePageClient";
 import {
   peekArchiveGallery,
