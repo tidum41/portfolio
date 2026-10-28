@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import { introTimings } from "@/lib/introTimings";
 import { EASE_OPACITY, ENTRANCE_DEFAULTS } from "@/lib/motion";
-import { HERO_HEADLINE_LEAD, HERO_HEADLINE_LINK_TEXT, YOUTUBE_URL } from "@/lib/site";
+import { HERO_HEADLINE } from "@/lib/site";
 
 // Layer C only — see the Instant vs Orchestrated contract in lib/instantNav.ts.
 // This guards the long cold-load/tab-replay timeline. On an SPA soft return,
@@ -107,20 +107,7 @@ export default function HeroText() {
             margin: 0,
           }}
         >
-          {HERO_HEADLINE_LEAD}
-          <a
-            href={YOUTUBE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hero-communities"
-            aria-describedby="hero-communities-tip"
-          >
-            {HERO_HEADLINE_LINK_TEXT}
-            <span id="hero-communities-tip" role="tooltip" className="hero-communities-tip">
-              a community i built :)
-            </span>
-          </a>
-          {"."}
+          {HERO_HEADLINE}
         </motion.h1>
       </div>
 

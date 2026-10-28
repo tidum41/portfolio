@@ -4,13 +4,8 @@ export const SITE_URL = "https://www.muditm.com";
 export const SITE_NAME = "Mudit Mahajan";
 
 /** Visible homepage hero — single source of truth for on-page + SEO copy. */
-export const HERO_HEADLINE_LEAD =
-  "I’m Mudit, an AI-native product designer with a love for prototyping in code and a soft spot for ";
-export const HERO_HEADLINE_LINK_TEXT = "communities";
-export const HERO_HEADLINE = `${HERO_HEADLINE_LEAD}${HERO_HEADLINE_LINK_TEXT}.`;
-
-/** Mudit's YouTube channel (sviz) — linked from "communities" in the hero. */
-export const YOUTUBE_URL = "https://www.youtube.com/@sviz";
+export const HERO_HEADLINE =
+  "I’m Mudit, an AI-native product designer who loves prototyping in code.";
 
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
