@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Minus, Scales, Target } from "@phosphor-icons/react/dist/ssr";
+import { Check, Minus, X } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
@@ -87,40 +87,45 @@ function Caption({ children }: { children: React.ReactNode }) {
 }
 
 /** A scaled product figure: Rachel frame, static wrapper, 448 panel viewport. */
-/* Levels pair: the reasoning behind each prototype as bet, pro, con and the deciding tradeoff.
-   Draft copy for Mudit to revise. Marks are Phosphor, the case-study icon set (BruinLease). */
-type ReasonRow = { kind: "bet" | "pro" | "con" | "tradeoff"; text: string };
-const LEVELS_KEPT: ReasonRow[] = [
-  { kind: "bet", text: "Most readers stop at the count, so the answer starts there." },
-  { kind: "pro", text: "A PM gets the sentence with no setup." },
-  { kind: "con", text: "A skeptical director taps up to three times to reach a clip." },
-  { kind: "tradeoff", text: "A tap per level costs less than choosing a depth blind." },
-];
-const LEVELS_EXPLORED: ReasonRow[] = [
-  { kind: "bet", text: "Researchers know how deep they want to go before they ask." },
-  { kind: "pro", text: "The answer lands at the chosen depth in one go." },
-  { kind: "con", text: "You pick a depth before you know if the count matters." },
-  { kind: "tradeoff", text: "It asks for the choice at the moment you know least." },
-];
-const REASON_ICON = { bet: Target, pro: Check, con: Minus, tradeoff: Scales } as const;
-const REASON_LABEL = { bet: "Bet", pro: "Pro", con: "Con", tradeoff: "Deciding tradeoff" } as const;
+/* Levels pair: the reasoning behind each prototype. The bet leads as one line; under it, the marks
+   from earlier Dialogue rounds (Phosphor Check and Minus, bold 16, .dialogue-lib__mark) plus X for
+   the negative: check for the pro, X for the con, minus for the neutral tradeoff that decided it.
+   Draft copy for Mudit to revise. */
+type ReasonRow = { kind: "pro" | "con" | "tradeoff"; text: string };
+const LEVELS_KEPT = {
+  bet: "Bet: most readers stop at the count, so the answer starts there.",
+  rows: [
+    { kind: "pro", text: "A PM gets the sentence with no setup." },
+    { kind: "con", text: "A skeptical director taps up to three times to reach a clip." },
+    { kind: "tradeoff", text: "Kept: a tap per level costs less than choosing a depth blind." },
+  ] as ReasonRow[],
+};
+const LEVELS_EXPLORED = {
+  bet: "Bet: researchers know how deep they want to go before they ask.",
+  rows: [
+    { kind: "pro", text: "The answer lands at the chosen depth in one go." },
+    { kind: "con", text: "You pick a depth before you know if the count matters." },
+    { kind: "tradeoff", text: "Dropped: it asks for the choice when you know least." },
+  ] as ReasonRow[],
+};
+const REASON_ICON = { pro: Check, con: X, tradeoff: Minus } as const;
 
-function LevelReasoning({ rows }: { rows: ReasonRow[] }) {
+function LevelReasoning({ reasoning }: { reasoning: { bet: string; rows: ReasonRow[] } }) {
   return (
-    <dl className="dlg-reason">
-      {rows.map((r) => {
-        const Icon = REASON_ICON[r.kind];
-        return (
-          <div key={r.kind} className="dlg-reason__row" data-kind={r.kind}>
-            <dt className="dlg-reason__term">
+    <div className="dlg-reason">
+      <p className="dlg-reason__bet">{reasoning.bet}</p>
+      <ul className="dialogue-lib__points">
+        {reasoning.rows.map((r) => {
+          const Icon = REASON_ICON[r.kind];
+          return (
+            <li key={r.kind}>
               <span className="dialogue-lib__mark" data-kind={r.kind} aria-hidden><Icon size={16} weight="bold" /></span>
-              <span className="dlg-reason__label">{REASON_LABEL[r.kind]}</span>
-            </dt>
-            <dd className="dlg-reason__text">{r.text}</dd>
-          </div>
-        );
-      })}
-    </dl>
+              {r.text}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -173,7 +178,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="942 / 960" poster="/dialogue/motion/live-hero-ask.jpg" label="Priya taps a suggested question and the answer streams in as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -197,7 +202,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="problem-before">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" ratio="942 / 1040" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -218,7 +223,7 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the answer opens the chart, the people and a playing clip at once, and the count scrolls away" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the answer opens the chart, the people and the clip at once, and the count scrolls away" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -230,21 +235,21 @@ export function DialogueCaseStudyContent({
                 <div className="dlg-demo-pair">
                   <div>
                     <p className="dlg-demo-pair__label dialogue-caption__label">A, explored: pick a depth before asking</p>
-                    <LevelReasoning rows={LEVELS_EXPLORED} />
+                    <LevelReasoning reasoning={LEVELS_EXPLORED} />
                     <DialogueRachelFrame tone="problem">
                       <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer sets the level before the question is asked" />
                     </DialogueRachelFrame>
                   </div>
                   <div>
                     <p className="dlg-demo-pair__label dialogue-caption__label">B, kept: depth opens inside the answer</p>
-                    <LevelReasoning rows={LEVELS_KEPT} />
+                    <LevelReasoning reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the count; the people and the clip each open on a tap" />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the count, People and Source each open on a tap, and Insight folds it back" />
                     </DialogueRachelFrame>
                   </div>
                 </div>
               </figure>
-              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Illustrative data.</Caption>
+              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Recorded from my live code recreation, illustrative data.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -263,7 +268,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="counts-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 unsure opens a sample of that side" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 unsure opens a sample of that side, and it folds away again" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -275,7 +280,7 @@ export function DialogueCaseStudyContent({
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="counts-more">
                     <div className="dlg-demo dlg-demo--static dialogue-product-root dp-chat-panel-typography">
-                      <DialogueChatLive variant="base" startAnswered initialSide initialMore chrome={false} quick height={780} />
+                      <DialogueChatLive variant="base" startAnswered initialSide initialMore chrome={false} quick height={0} />
                     </div>
                   </StaticFigure>
                 </DialogueRachelFrame>
@@ -294,11 +299,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" ratio="4 / 3" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place, and the chevron closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under the quote it belongs to, with the quote&rsquo;s span marked on the scrubber. Tapping another row moves it there, and the chevron closes it. It ends on Mei at 18:27. Illustrative data.</Caption>
+              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber, and the chevron closes it. Recorded from my live code recreation, illustrative data.</Caption>
             </Section>
 
             <Section id="data-viz">

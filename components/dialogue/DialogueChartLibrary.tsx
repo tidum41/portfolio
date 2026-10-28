@@ -5,7 +5,6 @@ import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -139,10 +138,10 @@ export default function DialogueChartLibrary({ showTech = true, segmentsFirst = 
             </Specimen>
             <Specimen entryId={entry.id} status="chosen" name={only ? "My version, as the chat answers" : entry.goodName} points={only ? undefined : entry.goodPoints}>
               {only ? (
-                <StudyChatShell compact hideHeader hideComposer>
+                <div className="dlg-specimen-chat">
                   <UserMessageBubble>{SEGMENT_QUESTION}</UserMessageBubble>
                   {entry.good}
-                </StudyChatShell>
+                </div>
               ) : entry.good}
             </Specimen>
           </div>

@@ -175,7 +175,7 @@ export default function DialogueChatLive({
   return (
     <div
       className={["dp-study-chat dlg-live", chrome ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")}
-      style={{ height }}
+      style={{ height: height || undefined }} /* 0 = fit content (static frames) */
       data-stage={stage}
       data-side={sideOpen ? "open" : "closed"}
       data-clip={clipOpen ? "open" : "closed"}

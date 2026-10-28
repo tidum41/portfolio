@@ -2924,6 +2924,23 @@ agentation-toolbar,
   font-weight: 500;
   color: var(--color-text-primary);
 }
+.dialogue-lib__points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dialogue-lib__points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
 .dialogue-lib__note {
   margin: 0;
   font-size: var(--text-meta-size);
@@ -2944,7 +2961,8 @@ agentation-toolbar,
 .dialogue-lib__mark[data-kind="pro"] {
   color: var(--dp-brand);
 }
-.dialogue-lib__mark[data-kind="con"] {
+.dialogue-lib__mark[data-kind="con"],
+.dialogue-lib__mark[data-kind="tradeoff"] {
   color: var(--color-text-tertiary);
 }
 .dialogue-lib__chart {

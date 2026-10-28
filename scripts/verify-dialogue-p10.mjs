@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
-const [, , base = "http://localhost:3207", framesDir = "/tmp/dlg-live-frames"] = process.argv;
+const [, , base = "http://localhost:3207"] = process.argv;
 let fails = 0;
 const log = (ok, msg) => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"} ${msg}`); };
 const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
@@ -152,30 +152,43 @@ for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
   log(running === 0, `motion: no animations under prefers-reduced-motion (${running} running)`);
   await rctx.close();
 }
+// Rendered text in the demo videos: smallest stage font x stage zoom x (video width on the page / 519 css px recorded), at 1440.
+{
+  const ctx = await b.newContext({ viewport: { width: 640, height: 680 } }); const p = await ctx.newPage();
+  const minFont = {};
+  for (const d of ["hero", "side", "clip", "before", "every", "picker", "toggles"]) {
+    await p.goto(`${base}/dialogue/motion?demo=${d}`, { waitUntil: "load" });
+    // Every demo's full end state: open everything the storyboard opens.
+    await p.evaluate(() => { const a = window.__dlg; try { a.answer?.(); a.side?.(true); a.clip?.(true); a.pause?.(); a.deep?.(); } catch {} });
+    await p.waitForTimeout(700);
+    minFont[d] = await p.evaluate(() => { let m = 99; const z = Number(document.querySelector("[data-zoom]").dataset.zoom);
+      document.querySelectorAll("#frame *").forEach((e) => { const r = e.getBoundingClientRect(); if (!r.width || ![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return;
+        if (e.closest("[aria-hidden='true'], .dp-qplayer__video, video")) return; m = Math.min(m, parseFloat(getComputedStyle(e).fontSize) * z); }); return m; });
+  }
+  await ctx.close();
+  const NAME = { "live-hero-ask": "hero", "live-side": "side", "live-clip": "clip", "variant-before-full": "before", "variant-every-full": "every", "variant-picker-full": "picker", "variant-toggles-full": "toggles" };
+  const c2 = await b.newContext({ viewport: { width: 1440, height: 900 } }); const q = await c2.newPage();
+  await q.goto(`${base}/dialogue`, { waitUntil: "networkidle" });
+  const shown = await q.evaluate(() => [...document.querySelectorAll(".dlg-demo__video")].map((v) => [v.getAttribute("poster").split("/").pop().replace(".jpg", ""), v.getBoundingClientRect().width]));
+  for (const [n, w] of shown) { const px = minFont[NAME[n]] * (w / 519); log(px >= 12, `motion: smallest text in ${n} renders at ${px.toFixed(1)}px on the page at 1440 (at least 12)`); }
+  await c2.close();
+}
 await b.close();
 
-// Frame analysis of the latest recording (record-dialogue-live.mjs): cadence, flashes, layout jumps.
-if (existsSync(`${framesDir}/list.txt`)) {
-  const out = execFileSync("python3", ["-c", `
-import re,sys,numpy as np
-from PIL import Image
-L=open('${framesDir}/list.txt').read()
-fs=re.findall(r"file '([^']+)'\\nduration ([\\d.]+)",L)
-d=np.array([float(x) for _,x in fs])*1000
-im=lambda p: np.asarray(Image.open(p).convert('L').resize((140,175)),dtype=np.float32)
-A=[im(p) for p,_ in fs]
-diff=[float(np.abs(A[i+1]-A[i]).mean()) for i in range(len(A)-1)]
-flash=[i for i in range(1,len(A)-1) if np.abs(A[i-1]-A[i+1]).mean()<0.3 and diff[i-1]>2 and diff[i]>2]
-# stutter: while something moves, frame gaps should stay near 16.7 ms
-moving=[i for i in range(len(diff)) if 0.05<diff[i]<6]
-gaps=[d[i] for i in moving]
-p95=float(np.percentile(gaps,95)) if gaps else 0
-print(f"{len(A)} {p95:.1f} {len(flash)} {','.join(map(str,flash[:8]))}")
-`]).toString().trim().split(" ");
-  const [n, p95, flashes, where] = out;
-  log(+p95 <= 34, `motion: frame gap while moving, p95 ${p95} ms over ${n} frames (60 fps target, at most one dropped frame)`);
-  log(+flashes === 0, `motion: no single-frame flashes (${flashes}${where ? " at " + where : ""})`);
-} else log(false, `motion: no recording at ${framesDir}; run record-dialogue-live.mjs first`);
+// 4. The shipped demo videos against the motion checklist (design/TASTE.md "Motion"; scripts/check-dialogue-motion.py):
+// length 4-9 s, no frame jump over 20, holds of at most 2 s mid-video, a 1-1.9 s final hold, a loop that closes.
+{
+  const vids = ["live-hero-ask", "live-side", "live-clip", "variant-before-full", "variant-every-full", "variant-picker-full", "variant-toggles-full"].map((n) => `public/dialogue/motion/${n}.mp4`);
+  let out = "";
+  try { out = execFileSync("python3", ["scripts/check-dialogue-motion.py", ...vids], { stdio: "pipe" }).toString(); }
+  catch (e) { out = e.stdout?.toString() || ""; }
+  const rows = out.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  log(rows.length === vids.length, `motion: checklist ran on ${rows.length} of ${vids.length} videos`);
+  for (const r of rows) {
+    const failed = Object.entries(r.checks).filter(([, v]) => !v).map(([k]) => k);
+    log(failed.length === 0, `motion: ${r.video} ${r.seconds}s, max jump ${r.max_frame_diff}, mid hold ${r.longest_mid_hold_s}s, final hold ${r.final_hold_s}s, loop diff ${r.first_last_diff}${failed.length ? " FAILS " + failed.join(", ") : ""}`);
+  }
+}
 
 console.log(fails ? `\n${fails} FAILED` : "\nverify-dialogue-p10 OK");
 process.exit(fails ? 1 : 0);

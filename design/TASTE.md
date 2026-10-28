@@ -144,6 +144,15 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Placeholders (3): why version one shipped without sources; why the cutoff sits where it does; what would change his mind about the cutoff.
 - Main still at 90beb49; promoting canvas to main waits on Mudit.
 
+## 9. Motion (demo videos)
+- One storyboard per clip: 4-8 s (cap 9), one or two interactions, 0.8 s pre-roll, about 1 s hold after each beat, 1.2-1.8 s final hold.
+- UI moves in 300-450 ms with cubic-bezier(0.2, 0, 0, 1). Heights grow with the tapped element pinned; closing fades first, then folds; nothing pops.
+- Large fades (a player, a panel) use a symmetric ease so no single frame carries the change. No hard cuts and no scroll snaps; a needed scroll is a slow ease-in-out.
+- Cursor only when the click is the point: about 28px on the page, fades in near the target, glides 500-700 ms, presses at 0.92, fades out.
+- Crop to the decision at 1:1 or 4:3. Only the hero shows the panel header. Smallest text renders at 12px or more at 1440.
+- Loops close: collapse back to the start or crossfade 400 ms into the first frame. Posters show the held, open state.
+- Record from the live code stage (/dialogue/motion) at 2x; every take passes scripts/check-dialogue-motion.py (no frame jump over 20, holds within limits, loop closes) or is re-recorded.
+
 ## 8. Update protocol
 - Every brief, for Muse or any agent, starts with "Read design/TASTE.md first".
 - On every approve or reject, edit one line here in the same commit as the change (move it between Likes, Dislikes, Pinned, Open).

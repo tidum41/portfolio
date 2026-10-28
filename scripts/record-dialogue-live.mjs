@@ -79,7 +79,7 @@ const off = T0 - t0; // screencast start relative to marks
 const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.jpg`]).toString().trim()) / 1120; // screencast scale
 const crop = `crop=${Math.round(sb.width * k)}:${Math.round(sb.height * k)}:${Math.round(sb.x * k)}:${Math.round(sb.y * k)}`;
 const full = `${out}/${prefix}-full.mp4`;
-execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", `${crop},fps=60,scale=942:-2:flags=lanczos`, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", full]);
+execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", `${crop},fps=60,scale=942:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv`, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-crf", "16", full]);
 const cut = (name, a, z) => {
   const mp4 = `${out}/${prefix}-${name}.mp4`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-ss", String(Math.max(0, marks[a] - off - 0.3)), "-to", String(marks[z] - off), "-i", full, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-r", "60", mp4]);

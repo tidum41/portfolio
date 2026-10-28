@@ -10,7 +10,7 @@ import PlayPauseButton from "@/components/PlayPauseButton";
  * It plays only in view and keeps a pause the reader set. Under prefers-reduced-motion it shows
  * the poster (the final state) with no button.
  */
-export default function DialogueDemoVideo({ src, poster, label, ratio = "942 / 1200" }: { src: string; poster: string; label: string; ratio?: string }) {
+export default function DialogueDemoVideo({ src, poster, label, ratio = "1 / 1" }: { src: string; poster: string; label: string; ratio?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [reduce, setReduce] = useState(false);

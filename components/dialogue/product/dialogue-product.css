@@ -3770,23 +3770,19 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Variant B disclosure: a text button in the answer card. */
 .dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
 .dlg-segment { margin: 12px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
-.dlg-demo { position: static; width: min(471px, 100%); max-width: 100%; margin: 0 auto; justify-self: center; align-self: center; line-height: 0; }
-.dlg-demo__video { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 5.1% / 4%; } /* the panel's 24px corner, as a share of the 471x600 recording */
+.dlg-demo { position: static; width: 100%; max-width: 100%; margin: 40px 0 0; line-height: 0; }
+.dlg-demo__video { display: block; width: 100%; height: auto; margin: 0; }
 /* .dlg-demo stays static so the play button (absolute, 8px top right) anchors to the figure's background well, .dialogue-rachel-frame, as PhoneMockup does on BruinLease; never over the product UI.
-   Where the recording fills the well's width (every well at phone width), a 40px top gutter
-   (20px well pad + 40 = 8 + 44 + 8) keeps the 44px button above the video. Single desktop wells clear it at the side. */
-@media (max-width: 600px) { .dialogue-rachel-frame .dlg-demo { margin-top: 40px; } }
-.dlg-demo-pair { display: grid; grid-template-columns: 1fr; gap: 40px; } /* stacked so each recording plays at its 471px size, readable at 1440 */
-/* Levels reasoning: four compact rows, mark plus a short term, then one line. */
-.dlg-reason { display: grid; grid-template-columns: max-content 1fr; column-gap: 12px; row-gap: 4px; margin: 0 0 12px; }
-.dlg-reason__row { display: contents; }
-.dlg-reason__term { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: 500; }
-.dlg-reason__text { margin: 0; color: var(--color-text-secondary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); text-wrap: pretty; }
-.dialogue-lib__mark[data-kind="bet"], .dialogue-lib__mark[data-kind="tradeoff"] { color: var(--color-text-primary); }
+   Each recording carries its own 24px well margin and fills the well's width (so its smallest text renders at 12px or more at 1440).
+   The 40px top gutter (8 + 44 + the recording's own margin) keeps the 44px button above the video at every width. */
+.dlg-demo-pair { display: grid; grid-template-columns: 1fr; gap: 40px; } /* stacked so each recording plays at full well width, readable at 1440 */
+/* Levels reasoning: the bet as one line, then the earlier rounds' check / X / minus list. */
+.dlg-reason { margin: 0 0 12px; }
+.dlg-reason__bet { margin: 0 0 8px; color: var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: 500; text-wrap: pretty; }
 .dlg-demo-pair__label { margin: 0 0 8px; }
 @media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }
 .dlg-demo-pair__note { margin: 0 0 8px; color: var(--dp-muted); font-size: var(--text-meta-size); }
-.cs-hero-media-frame .dlg-demo { width: min(calc(312px * 942 / 760), 100%); }
+.cs-hero-media-frame .dlg-demo { width: 100%; }
 
 .dlg-live-stage__slot { width: 471px; margin: 40px auto; }
 .dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
@@ -3830,8 +3826,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Open: the segment keeps an ink ring and its label goes ink, so the sample below reads as that side's. */
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { box-shadow: inset 0 0 0 2px var(--dp-ink), inset 0 0 0 3px var(--dp-bg); }
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__labels > :last-child { color: var(--dp-ink); font-weight: 500; }
-/* The open side reads as attached to its segment: a brand rule down the sample's left edge. */
-.dlg-live__sample .dp-side-sample { padding-left: 12px; box-shadow: inset 2px 0 0 var(--dp-border-strong); }
 /* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
 .dlg-live__sample .dp-clip-quote--selected { cursor: default; }
 .dlg-live__clip { margin-top: 8px; line-height: 0; }
@@ -3841,7 +3835,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-clip-collapse:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
 .dlg-live__sample .dp-clip-quotes { padding-bottom: 4px; }
 /* Bare panel for the case study: no header, subtitle or composer; the thread sits at the bottom like a chat. */
-.dlg-live.dlg-live--bare .dp-study-chat__body { padding-top: var(--dp-chat-pad); min-height: 100%; justify-content: flex-end; box-sizing: border-box; }
+.dlg-live.dlg-live--bare .dp-study-chat__body { padding-top: var(--dp-chat-pad); }
 .dlg-live .dp-user-bubble p { text-wrap: balance; }
 .dlg-live .dp-prose-stack p, .dlg-live .dp-chart-viz-card p { text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { .dp-animate-in { animation: none; } }
@@ -3858,9 +3852,63 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-more:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
 /* Clip bounds on the scrubber: the quote's span inside the whole interview. */
 .dlg-live__clip .dp-qplayer__track { position: relative; }
-.dlg-live__clip .dp-qplayer__track::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: var(--clip-a); width: max(var(--clip-w), 4px); border-radius: var(--dp-radius-chip); background: var(--dp-brand); }
+.dlg-live__clip .dp-qplayer__track::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: var(--clip-a); width: max(var(--clip-w), 12px); border-radius: var(--dp-radius-chip); background: var(--dp-brand); }
 /* Variant B depth row inside the answer: the composer's segmented control, pressed levels filled. */
 .dlg-depth--inline { margin: 8px 0 0; }
 .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
 .dlg-demo--static { line-height: normal; }
 .dlg-live .dp-study-chat__body > * { flex-shrink: 0; }
+
+/* Static recreations show the resting state only: no hover, press or pointer interaction (hover lives in the videos). */
+.dlg-demo--static, .dlg-demo--static * { pointer-events: none; }
+.dlg-demo--static .dlg-live__bar:has(.dlg-live__side) .dp-chart-stack__seg:not([data-focal]) { box-shadow: none; }
+.dialogue-lib__chart, .dialogue-lib__chart * { pointer-events: none; }
+/* Selected quote keeps its brand edge under the cursor; hover never overrides selection. */
+.dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { border-color: var(--dp-brand); }
+/* Old answer: paragraphs keep the prose stack's gap. */
+.dlg-before { display: flex; flex-direction: column; gap: 12px; }
+/* Data viz: my version as the chat answers it, question bubble over the chart, no panel padding. */
+.dlg-specimen-chat { display: flex; flex-direction: column; gap: 12px; }
+.dlg-specimen-chat .dp-user-bubble { align-self: flex-end; }
+
+/* ===== P11 motion stage (design/TASTE.md "Motion"; build/p11-motion-spec.md) ===== */
+.dlg-motion-page { padding: 40px; }
+.dlg-motion-frame { width: 519px; padding: 24px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
+.dlg-motion-frame__panel { width: 471px; }
+.dlg-stage { height: auto; }
+.dlg-stage .dp-study-chat__head { box-shadow: 0 1px 0 var(--dp-border); padding-bottom: 12px; }
+.dlg-stage__body { display: flex; flex-direction: column; padding: var(--dp-chat-pad); }
+.dlg-stage__item + .dlg-stage__item { margin-top: 12px; }
+.dlg-stage__item.dlg-grow:not([data-open]) { margin-top: 0; }
+.dlg-stage__analyzing { display: flex; align-items: center; gap: 8px; }
+/* Closing: fade first, then fold. Opening: unfold, then fade in. Spreads the luma change over ~600 ms (no frame jump). */
+.dlg-grow { display: grid; grid-template-rows: 0fr; opacity: 0; transition: opacity 450ms cubic-bezier(0.45, 0, 0.55, 1), grid-template-rows 400ms cubic-bezier(0.2, 0, 0, 1) 250ms, margin-top 400ms cubic-bezier(0.2, 0, 0, 1) 250ms; }
+.dlg-grow[data-open] { grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 400ms cubic-bezier(0.2, 0, 0, 1), margin-top 400ms cubic-bezier(0.2, 0, 0, 1), opacity 450ms cubic-bezier(0.45, 0, 0.55, 1) 200ms; }
+/* Opacity crossfades use a symmetric ease so no single frame carries most of a large luma change. */
+.dlg-stage .dp-clip-quote { transition: background-color 300ms cubic-bezier(0.2, 0, 0, 1), border-color 300ms cubic-bezier(0.2, 0, 0, 1); }
+.dlg-grow__inner { min-height: 0; overflow: hidden; }
+@keyframes dlg-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.dlg-rise { animation: dlg-rise 350ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes dlg-fill { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.dlg-fill .dp-chart-stack__bar { animation: dlg-fill 600ms cubic-bezier(0.2, 0, 0, 1) 200ms both; }
+.dlg-stage .dlg-clip-collapse { opacity: 0; transition: opacity 200ms ease; }
+.dlg-stage .dlg-clip-collapse[data-shown] { opacity: 1; }
+.dlg-stage .dlg-live__clip { padding-top: 8px; margin-top: 0; }
+.dlg-line { opacity: 0; transition: opacity 350ms cubic-bezier(0.2, 0, 0, 1); }
+.dlg-line[data-shown] { opacity: 1; }
+.dlg-mark { background-image: linear-gradient(var(--dp-brand), var(--dp-brand)); background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 2px; transition: background-size 300ms cubic-bezier(0.2, 0, 0, 1); }
+.dlg-mark[data-on] { background-size: 100% 2px; }
+.dlg-stage .dp-study-chat__composer-text { margin: 0; color: var(--dp-ink); font-size: var(--text-body-size); }
+.dlg-stage .dlg-live__send[data-ready] { opacity: 1; }
+.dlg-stage .dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease, box-shadow 150ms ease; }
+.dlg-stage .dp-clip-quote { transition: background-color 150ms ease, border-color 150ms ease; }
+.dlg-stage .dlg-live__sample .dp-clip-quote:active, .dlg-stage .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
+/* Case-study cursor: 28 px on the page (about 23 css px at the 519 px stage shown 640 wide). */
+#dlg-cursor { position: fixed; left: 0; top: 0; width: 23px; height: 23px; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
+#dlg-cursor svg { display: block; width: 100%; height: 100%; transition: transform 120ms ease; transform-origin: 2px 2px; }
+#dlg-cursor.down svg { transform: scale(0.92); }
+.dlg-stage__item:has(> .dp-user-bubble) { display: flex; flex-direction: column; align-items: flex-end; }
+/* Hero: the panel fills the frame like the shipped chat, composer pinned to the bottom. */
+.dlg-stage--hero { height: 100%; display: flex; flex-direction: column; }
+.dlg-stage--hero .dlg-stage__body { flex: 1; min-height: 0; }
+.dlg-demo.dlg-demo--static { width: min(471px, 100%); margin: 0 auto; align-self: center; }
