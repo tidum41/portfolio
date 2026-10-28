@@ -146,10 +146,10 @@ export function DialogueCaseStudyContent({
             metadata={[]}
           >
             <p className="cs-hero-body">
-              Dialogue is an AI tool that runs user interviews and analyses them, then turns a
-              study into a site with a chat. UX research teams ask that chat questions and share
-              the answers with their product teams. I redesigned the answer so a team can surface
-              an insight quickly without losing the detail behind it, and part of it shipped.
+              Dialogue runs AI-moderated user interviews and turns each study into a site with a
+              chat, where UX research teams ask questions and share answers with product teams. I
+              redesigned that answer so a team can surface an insight quickly without losing the
+              detail behind it, and part of it shipped.
             </p>
             <div className="cs-hero-media-frame">
               <figure className="cs-figure dialogue-live-block">
@@ -184,11 +184,11 @@ export function DialogueCaseStudyContent({
               </CaseStudyBody>
               <ProductFigure caption="before" name="problem-before" maxHeight={420}>
                 <StudyChatShell hideComposer>
-                  <UserMessageBubble>{FRIDAY_QUESTION}</UserMessageBubble>
-                  <ParagraphAnswerFigure focus="answer" />
+                  <UserMessageBubble>How many shoppers misread &lsquo;Arrives by Friday&rsquo;?</UserMessageBubble>
+                  <ParagraphAnswerFigure focus="answer" wall />
                 </StudyChatShell>
               </ProductFigure>
-              <Caption>The chat before: themes in prose, with no count and no path to a person. Recreated with invented data.</Caption>
+              <Caption>Asked how many, the old chat answered with words like many and some. Recreated with invented data.</Caption>
             </Section>
 
             <Section id="counts">
@@ -261,6 +261,7 @@ export function DialogueCaseStudyContent({
                     },
                   ]}
                   chosenId="answer-evidence"
+                  chosenFirst
                 />
               </figure>
               <Caption>Text is quickest and quotes go deepest, so the chosen answer carries both. Illustrative data.</Caption>
@@ -281,7 +282,7 @@ export function DialogueCaseStudyContent({
                 Carbon rule did you bend for a 448px chat panel?</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueChartLibrary />
+                <DialogueChartLibrary showTech={false} segmentsFirst />
               </figure>
               <Caption>At study scale a percent can hide a segment of nine people. Illustrative data.</Caption>
             </Section>

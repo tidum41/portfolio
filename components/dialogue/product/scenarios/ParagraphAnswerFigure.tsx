@@ -4,10 +4,11 @@ import {
   CHECKOUT_QUESTION,
   PARAGRAPH_ANSWER,
   PARAGRAPH_ANSWER_BRIEF,
+  PARAGRAPH_ANSWER_WALL,
 } from "@/lib/dialogue/product/sampleData";
 
-export default function ParagraphAnswerFigure({ focus }: { focus?: "answer" }) {
-  const paragraphs = focus === "answer" ? PARAGRAPH_ANSWER_BRIEF : PARAGRAPH_ANSWER_BRIEF;
+export default function ParagraphAnswerFigure({ focus, wall }: { focus?: "answer"; wall?: boolean }) {
+  const paragraphs = wall ? PARAGRAPH_ANSWER_WALL : PARAGRAPH_ANSWER_BRIEF;
   const prose = (
     <div
       className={[

@@ -25,6 +25,7 @@ type Option = {
 };
 
 type Props = {
+  chosenFirst?: boolean;
   heading?: string;
   subheading?: string;
   options: Option[];
@@ -97,9 +98,10 @@ export default function DialogueLeadAnswerCompare({
   options,
   chosenId,
   annotateRaster,
+  chosenFirst = false,
 }: Props) {
   return (
-    <div className="dialogue-lead-answer">
+    <div className={["dialogue-lead-answer", chosenFirst ? "dialogue-lead-answer--chosen-first" : ""].filter(Boolean).join(" ")}>
       {heading || subheading ? (
         <p className="dialogue-caption dialogue-caption--block">
           <span className="dialogue-caption__label">{heading}</span>

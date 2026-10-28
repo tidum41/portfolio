@@ -2537,7 +2537,7 @@ agentation-toolbar,
     grid-template-rows: unset;
   }
   .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
-    order: 0;
+    order: -1;
   }
 }
 .dialogue-lead-answer__panel {
@@ -3428,4 +3428,10 @@ html[data-theme="dark"] .dialogue-case-study .cs-caption .dialogue-caption__sent
 }
 .dialogue-case-study .cs-caption {
   margin-top: 16px;
+}
+
+/* Round P7: chosen format leads at every width, ruled-out pair after it (Rachel Chen, final first).
+   Overrides the round J phone order only when the figure opts in. */
+.dialogue-lead-answer--chosen-first .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
+  order: -1;
 }

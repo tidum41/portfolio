@@ -17,6 +17,12 @@ export const PARAGRAPH_ANSWER_BRIEF = [
   "Many found \u2018Arrives by Friday\u2019 unclear, and some checked the date before ordering.",
 ];
 
+/** P7 problem figure: the prose answer at study scale, vague quantifiers and no path to a person. */
+export const PARAGRAPH_ANSWER_WALL = [
+  "Across the study, shoppers talked most about the delivery date and fees at the cart. Many found \u2018Arrives by Friday\u2019 unclear, and several said they checked the date before ordering. Some read Friday as this week, while others assumed the Friday after their order shipped.",
+  "Repeat shoppers raised it less often than first-time shoppers. A few tied the confusion to free returns, and a handful said it made them hesitate at payment.",
+];
+
 /** Lead option: full paragraph wall for comparison. */
 export const PARAGRAPH_ANSWER = [
   "Across the 24 interviews in this Northline checkout study, participants most often hesitated at shipping address, delivery options, and payment confirmation. Several described re-reading fields, backing out to check the cart, or pausing when error copy felt vague. Mobile sessions amplified autocomplete issues and international format confusion.",

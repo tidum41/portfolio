@@ -54,7 +54,7 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
           total={300}
           segments={[
             { label: "This Friday", value: 225, display: "225 of 300", focal: true },
-            { label: "Did not", value: 75, display: "75 of 300" },
+            { label: "Unsure", value: 75, display: "75 of 300" },
           ]}
         />
       </div>

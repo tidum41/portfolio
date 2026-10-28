@@ -141,10 +141,11 @@ const ENTRIES = [
   },
 ] as const;
 
-export default function DialogueChartLibrary() {
+export default function DialogueChartLibrary({ showTech = true, segmentsFirst = false }: { showTech?: boolean; segmentsFirst?: boolean }) {
+  const entries = segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">
-      {ENTRIES.map((entry) => (
+      {entries.map((entry) => (
         <article key={entry.id} className="dialogue-lib__entry">
           <h3 className="dialogue-lib__name">{entry.name}</h3>
           <div className="dialogue-lib__pair">
@@ -157,13 +158,15 @@ export default function DialogueChartLibrary() {
           </div>
           <p className="dialogue-lib__verdict" data-annotate-part={`verdict-${entry.id}`}>{entry.verdict}</p>
           <p className="dialogue-lib__reason" data-annotate-part={`reason-${entry.id}`}>{entry.caption}</p>
-          <div className="dialogue-lib__tech">
-            {entry.tech.map(([label, text]) => (
-              <p key={label}>
-                <span>{label}:</span> {text}
-              </p>
-            ))}
-          </div>
+          {showTech ? (
+            <div className="dialogue-lib__tech">
+              {entry.tech.map(([label, text]) => (
+                <p key={label}>
+                  <span>{label}:</span> {text}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </article>
       ))}
     </div>
