@@ -1,3 +1,11 @@
+:root {
+  /* Figure tokens (motion spec G5): white card, hairline, two-layer shadow; the play button reads on the tinted well. */
+  --dlg-figure-card: #ffffff;
+  --dlg-figure-hairline: rgba(0, 0, 0, 0.06);
+  --dlg-figure-shadow: 0 1px 2px rgba(20, 20, 15, 0.06), 0 8px 24px rgba(20, 20, 15, 0.08);
+  --dlg-seg-active-shadow: 0 1px 2px rgba(20, 20, 15, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --dlg-play-bg: rgba(255, 255, 255, 0.85);
+}
 /* Dialogue product UI — tokens: components/dialogue/product/tokens.ts */
 @import "../../../styles/dialogue-tokens.css";
 @import "./chart/chart.css";
@@ -3432,7 +3440,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   position: relative;
   isolation: isolate;
   width: 100%;
-  aspect-ratio: 1920 / 888; /* the interview still's own ratio: no letterbox bands */
+  aspect-ratio: 16 / 9;
   container-type: inline-size;
   border-radius: var(--dp-radius-chip);
   background: var(--dp-black);
@@ -3440,32 +3448,14 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   font-family: var(--dp-font-family);
 }
 
-.dp-qplayer__still-box {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.dp-qplayer__still {
+.dp-qplayer__placeholder {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--dp-ink) 22%, var(--dp-bg)); /* a neutral speaker tile, not a dark slab */
 }
-
-.dp-qplayer__face-blur {
-  position: absolute;
-  left: 73.8%;
-  top: 48.3%;
-  width: 20.1%;
-  height: 28.7%;
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-}
+.dp-qplayer__placeholder-icon { width: 32px; height: 32px; color: color-mix(in srgb, var(--dp-ink) 45%, transparent); }
 
 .dp-qplayer__gradient {
   position: absolute;
@@ -3762,9 +3752,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 /* Variant A depth picker: Dialogue's composer row plus a segmented control from system tokens. */
-.dlg-depth { display: flex; gap: 4px; padding: 4px; margin-bottom: 8px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-card); }
-.dlg-depth__opt { flex: 1; padding: 4px 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
-.dlg-depth__opt[aria-checked="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
+.dlg-depth { display: flex; gap: 2px; padding: 3px; margin-bottom: 8px; border-radius: var(--dp-radius-control); background: var(--dp-warm); } /* segmented control: idle transparent, active white with shadow */
+.dlg-depth__opt { flex: 1; padding: 6px 10px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: var(--dp-weight-medium); cursor: pointer; }
+.dlg-depth__opt[aria-checked="true"], .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"], .dlg-depth__opt[aria-checked="true"]:hover, .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"]:hover { background: var(--dlg-figure-card); color: var(--dp-ink); box-shadow: var(--dlg-seg-active-shadow); }
 .dlg-depth__opt:disabled { cursor: default; }
 .dlg-followups { display: flex; flex-direction: column; gap: 8px; }
 /* Variant B disclosure: a text button in the answer card. */
@@ -3824,7 +3814,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__bar:has(.dlg-live__side:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
 .dlg-live__bar:has(.dlg-live__side:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
 /* Open: the segment keeps an ink ring and its label goes ink, so the sample below reads as that side's. */
-.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { box-shadow: inset 0 0 0 2px var(--dp-ink), inset 0 0 0 3px var(--dp-bg); }
+.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 78%, var(--dp-ink)); box-shadow: none; } /* selected: a darker fill, no outline */
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__labels > :last-child { color: var(--dp-ink); font-weight: 500; }
 /* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
 .dlg-live__sample .dp-clip-quote--selected { cursor: default; }
@@ -3855,7 +3845,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__clip .dp-qplayer__track::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: var(--clip-a); width: max(var(--clip-w), 12px); border-radius: var(--dp-radius-chip); background: var(--dp-brand); }
 /* Variant B depth row inside the answer: the composer's segmented control, pressed levels filled. */
 .dlg-depth--inline { margin: 8px 0 0; }
-.dlg-depth--inline .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
 .dlg-demo--static { line-height: normal; }
 .dlg-live .dp-study-chat__body > * { flex-shrink: 0; }
 
@@ -3873,22 +3862,24 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* ===== P11 motion stage (design/TASTE.md "Motion"; build/p11-motion-spec.md) ===== */
 .dlg-motion-page { padding: 40px; }
-.dlg-motion-frame { width: 519px; padding: 24px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
-.dlg-motion-frame__panel { width: 471px; }
-.dlg-stage { height: auto; }
+.dlg-motion-frame { width: 519px; padding: 48px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
+.dlg-motion-frame__panel { width: 423px; }
+/* The card sits whole inside 32px of air, with Dialogue's chat shadow; its body scrolls, the card never resizes. */
+.dlg-stage { height: 100%; display: flex; flex-direction: column; background: var(--dlg-figure-card); border: 1px solid var(--dlg-figure-hairline); box-shadow: var(--dlg-figure-shadow); } /* G5: white card, hairline, two-layer shadow */
+.dlg-stage .dlg-stage__body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.dlg-stage .dlg-stage__body::-webkit-scrollbar { display: none; }
 .dlg-stage .dp-study-chat__head { box-shadow: 0 1px 0 var(--dp-border); padding-bottom: 12px; }
 .dlg-stage__body { display: flex; flex-direction: column; padding: var(--dp-chat-pad); }
 .dlg-stage__item + .dlg-stage__item { margin-top: 12px; }
-.dlg-stage__item.dlg-grow:not([data-open]) { margin-top: 0; }
 .dlg-stage__analyzing { display: flex; align-items: center; gap: 8px; }
-/* Closing: fade first, then fold. Opening: unfold, then fade in. Spreads the luma change over ~600 ms (no frame jump). */
-.dlg-grow { display: grid; grid-template-rows: 0fr; opacity: 0; transition: opacity 450ms cubic-bezier(0.45, 0, 0.55, 1), grid-template-rows 400ms cubic-bezier(0.2, 0, 0, 1) 250ms, margin-top 400ms cubic-bezier(0.2, 0, 0, 1) 250ms; }
-.dlg-grow[data-open] { grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 400ms cubic-bezier(0.2, 0, 0, 1), margin-top 400ms cubic-bezier(0.2, 0, 0, 1), opacity 450ms cubic-bezier(0.45, 0, 0.55, 1) 200ms; }
+.dlg-grow--in { animation: dlg-enter 240ms cubic-bezier(0.2, 0, 0, 1) both; }
+.dlg-grow--out { animation: dlg-exit 200ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes dlg-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes dlg-exit { from { opacity: 1; } to { opacity: 0; } }
 /* Opacity crossfades use a symmetric ease so no single frame carries most of a large luma change. */
 .dlg-stage .dp-clip-quote { transition: background-color 300ms cubic-bezier(0.2, 0, 0, 1), border-color 300ms cubic-bezier(0.2, 0, 0, 1); }
-.dlg-grow__inner { min-height: 0; overflow: hidden; }
-@keyframes dlg-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.dlg-rise { animation: dlg-rise 350ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes dlg-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.dlg-rise { animation: dlg-rise 240ms cubic-bezier(0.2, 0, 0, 1) both; }
 @keyframes dlg-fill { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .dlg-fill .dp-chart-stack__bar { animation: dlg-fill 600ms cubic-bezier(0.2, 0, 0, 1) 200ms both; }
 .dlg-stage .dlg-clip-collapse { opacity: 0; transition: opacity 200ms ease; }
@@ -3904,7 +3895,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-clip-quote { transition: background-color 150ms ease, border-color 150ms ease; }
 .dlg-stage .dlg-live__sample .dp-clip-quote:active, .dlg-stage .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
 /* Case-study cursor: 28 px on the page (about 23 css px at the 519 px stage shown 640 wide). */
-#dlg-cursor { position: fixed; left: 0; top: 0; width: 23px; height: 23px; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
+#dlg-cursor { position: fixed; left: 0; top: 0; width: 16px; height: 16px; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
 #dlg-cursor svg { display: block; width: 100%; height: 100%; transition: transform 120ms ease; transform-origin: 2px 2px; }
 #dlg-cursor.down svg { transform: scale(0.92); }
 .dlg-stage__item:has(> .dp-user-bubble) { display: flex; flex-direction: column; align-items: flex-end; }
@@ -3912,3 +3903,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage--hero { height: 100%; display: flex; flex-direction: column; }
 .dlg-stage--hero .dlg-stage__body { flex: 1; min-height: 0; }
 .dlg-demo.dlg-demo--static { width: min(471px, 100%); margin: 0 auto; align-self: center; }
+
+/* Pause and play on Dialogue's tinted wells: 85% white with a hairline so it reads (BruinLease keeps its own). */
+.dialogue-rachel-frame .phone-mockup-play-btn, .cs-hero-media-frame .dlg-demo .phone-mockup-play-btn { background: var(--dlg-play-bg); box-shadow: 0 0 0 1px var(--dlg-figure-hairline); }
+/* The constraint: one line under the problem heading, quieter than body copy. */
+.dlg-constraint { margin: 0 0 16px; max-width: 640px; color: var(--color-text-secondary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }

@@ -13,7 +13,9 @@ for p in sorted(glob.glob(os.path.join(d, "*.mp4"))):
     F = np.frombuffer(raw, np.uint8)[: n * 320 * hh].reshape(n, hh, 320).astype(np.float32)
     D = np.abs(np.diff(F, axis=0)).max(axis=(1, 2))
     best, score = n - 1, -1
-    for i in range(6, n - 6):
+    # Variant A's poster must show its depth picker: only the frames before the question is sent.
+    hi = min(n - 6, int(2.3 * 30)) if "picker" in p else n - 6
+    for i in range(6, hi):
         if D[i - 6 : i + 6].max() < 12:  # held for 0.4 s around it
             s = float(np.abs(np.diff(F[i], axis=1)).mean())  # edge density: more text and rows on screen
             if s > score: best, score = i, s

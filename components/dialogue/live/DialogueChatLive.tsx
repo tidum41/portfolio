@@ -265,9 +265,6 @@ export default function DialogueChatLive({
                     onClick={() => setSideOpen(true)}
                   />
                 </div>
-                <p className="dlg-segment" data-target="segment">
-                  Repeat shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
-                </p>
                 </>
               ) : null}
             </ChartVizCard>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Minus, X } from "@phosphor-icons/react/dist/ssr";
+import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
@@ -10,7 +10,6 @@ import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/Dial
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
-import DialogueChatLive from "@/components/dialogue/live/DialogueChatLive";
 import DialogueDemoVideo from "@/components/dialogue/motion/DialogueDemoVideo";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -88,44 +87,23 @@ function Caption({ children }: { children: React.ReactNode }) {
 
 /** A scaled product figure: Rachel frame, static wrapper, 448 panel viewport. */
 /* Levels pair: the reasoning behind each prototype. The bet leads as one line; under it, the marks
-   from earlier Dialogue rounds (Phosphor Check and Minus, bold 16, .dialogue-lib__mark) plus X for
+   from earlier Dialogue rounds (Phosphor Check and X, bold 16, .dialogue-lib__mark) plus X for
    the negative: check for the pro, X for the con, minus for the neutral tradeoff that decided it.
    Draft copy for Mudit to revise. */
-type ReasonRow = { kind: "pro" | "con" | "tradeoff"; text: string };
-const LEVELS_KEPT = {
-  bet: "Bet: most readers stop at the count, so the answer starts there.",
-  rows: [
-    { kind: "pro", text: "A PM gets the sentence with no setup." },
-    { kind: "con", text: "A skeptical director taps up to three times to reach a clip." },
-    { kind: "tradeoff", text: "Kept: a tap per level costs less than choosing a depth blind." },
-  ] as ReasonRow[],
-};
-const LEVELS_EXPLORED = {
-  bet: "Bet: researchers know how deep they want to go before they ask.",
-  rows: [
-    { kind: "pro", text: "The answer lands at the chosen depth in one go." },
-    { kind: "con", text: "You pick a depth before you know if the count matters." },
-    { kind: "tradeoff", text: "Dropped: it asks for the choice when you know least." },
-  ] as ReasonRow[],
-};
-const REASON_ICON = { pro: Check, con: X, tradeoff: Minus } as const;
+type ReasonRow = { kind: "pro" | "con"; text: string };
+const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "It starts at the count, and each deeper level is one tap inside the answer." };
+const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "It asks for a depth before you know whether the count matters." };
+const REASON_ICON = { pro: Check, con: X } as const;
 
-function LevelReasoning({ reasoning }: { reasoning: { bet: string; rows: ReasonRow[] } }) {
+function LevelReasoning({ reasoning }: { reasoning: ReasonRow }) {
+  const Icon = REASON_ICON[reasoning.kind];
   return (
-    <div className="dlg-reason">
-      <p className="dlg-reason__bet">{reasoning.bet}</p>
-      <ul className="dialogue-lib__points">
-        {reasoning.rows.map((r) => {
-          const Icon = REASON_ICON[r.kind];
-          return (
-            <li key={r.kind}>
-              <span className="dialogue-lib__mark" data-kind={r.kind} aria-hidden><Icon size={16} weight="bold" /></span>
-              {r.text}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="dialogue-lib__points dlg-reason">
+      <li>
+        <span className="dialogue-lib__mark" data-kind={reasoning.kind} aria-hidden><Icon size={16} weight="bold" /></span>
+        {reasoning.text}
+      </li>
+    </ul>
   );
 }
 
@@ -178,7 +156,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="4 / 3" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -190,14 +168,12 @@ export function DialogueCaseStudyContent({
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
+              <p className="dlg-constraint">[DRAFT, Mudit to reword] Nine weeks, a fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
               <CaseStudyBody>
                 Priya, a researcher at Hearthside (a made-up retailer), owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
               <CaseStudyBody>
                 Her real question is how many shoppers stand behind each claim, and prose can&rsquo;t say. So the brief became a principle: every claim shows how many people hold it.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                [DRAFT, Mudit to reword] Dialogue&rsquo;s bet is speed, and in its Kalshi case study the bar is a share-out by tomorrow morning. In nine weeks, knowing research teams only through meetings with Dialogue and its customer case studies, I designed in code inside the shipped chat I&rsquo;d helped build: a fixed 415px panel with its own components and tokens. Counts shipped there; the depth levels and data visuals are concepts I built to carry ideas across.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
@@ -227,7 +203,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The count shows for a moment, then the people and the player push it out of view. Recorded from my live code recreation, illustrative data.</Caption>
+              <Caption>The count shows for a moment, then the people and the player push it out of view. Illustrative data.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -249,7 +225,7 @@ export function DialogueCaseStudyContent({
                   </div>
                 </div>
               </figure>
-              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Recorded from my live code recreation, illustrative data.</Caption>
+              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Illustrative data.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -272,20 +248,10 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping 75 opens two of the unsure shoppers, and the chevron folds them back into the count. Recorded from my live code recreation, illustrative data.</Caption>
+              <Caption>Tapping 75 opens 2 of the unsure shoppers, and the chevron folds them back into the count. Illustrative data.</Caption>
               <CaseStudyBody>
-                The two shown are <Placeholder>how the 2 shown quotes are picked</Placeholder>. +73 more pages in the next few, still inside the answer.
+                Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and +73 more pages in 5 at a time inside the answer.
               </CaseStudyBody>
-              <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="solution">
-                  <StaticFigure figure="counts-more">
-                    <div className="dlg-demo dlg-demo--static dialogue-product-root dp-chat-panel-typography">
-                      <DialogueChatLive variant="base" startAnswered initialSide initialMore chrome={false} quick height={0} />
-                    </div>
-                  </StaticFigure>
-                </DialogueRachelFrame>
-              </figure>
-              <Caption>After +73 more: five of the 75 unsure, with 70 still a tap away. Illustrative data.</Caption>
 
             </Section>
 
@@ -303,7 +269,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber, and the chevron closes it. Recorded from my live code recreation, illustrative data.</Caption>
+              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber, and the chevron closes it. Illustrative data.</Caption>
             </Section>
 
             <Section id="data-viz">

@@ -1,8 +1,4 @@
-import {
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT,
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH,
-} from "@/lib/caseStudies/dialoguePlacementStill";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
 
 const BUFFERED = 17.269;
 
@@ -63,26 +59,9 @@ export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: 
   const played = Math.round((toSec(current) / toSec(total)) * 1000) / 10;
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
-      <div
-        className="dp-qplayer__still-box"
-        style={{ aspectRatio: `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}` }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          data-dialogue-placement-still="true"
-          data-annotate-part="player-still"
-          src={DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
-          alt=""
-          width={1920}
-          height={888}
-          className="dp-qplayer__still"
-        />
-        <div
-          aria-hidden
-          data-face-blur="true"
-          data-annotate-part="player-face-blur"
-          className="dp-qplayer__face-blur"
-        />
+      {/* A neutral speaker placeholder: no frame from any real recording appears in a visual. */}
+      <div className="dp-qplayer__placeholder" aria-hidden data-annotate-part="player-still">
+        <WaveformIcon className="dp-qplayer__placeholder-icon" />
       </div>
       <div className="dp-qplayer__gradient" aria-hidden data-annotate-part="player-gradient" />
       <div className="dp-qplayer__bar" aria-hidden data-annotate-part="player-controls">

@@ -585,7 +585,7 @@ html[data-theme="dark"] .project-card::before {
   --dlg-pad-6-10: 6px 10px;
   --dlg-dark-ink: #f4f2ef;
   --dlg-dark-muted: #a8a49e;
-  --figure-well-dialogue: #f7f7f5;
+  --figure-well-dialogue: #eceae4; /* G5 warm well: the white card and its shadow read at 1x */
   --dlg-caption-ink-light: #6b6b6b;
   --work-focus-recede: 0.35;
   --work-focus-in: 120ms;

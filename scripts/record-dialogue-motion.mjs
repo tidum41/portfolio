@@ -11,7 +11,7 @@ let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
 const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full" };
-const CROSSFADE = new Set(["hero", "before", "every", "picker"]);
+const CROSSFADE = new Set(["hero", "before", "every", "picker", "toggles"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 
@@ -32,7 +32,7 @@ async function record(demo) {
     addEventListener("mousedown", () => c.classList.add("down")); addEventListener("mouseup", () => c.classList.remove("down"));
   });
   // Hide the site's fixed chrome (nav, TOC button) so nothing but the stage can reach the crop.
-  await page.addStyleTag({ content: "#frame { zoom: 2; overflow: visible !important; } #dlg-cursor { width: 46px; height: 46px; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
+  await page.addStyleTag({ content: "#frame { zoom: 2; } #dlg-cursor { width: 32px; height: 32px; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
   // Decode every image up front: a lazy image entering view mid-scroll stalls the screencast for ~270 ms.
   await page.evaluate(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; i.decoding = "sync"; return i.decode().catch(() => {}); })));
   await page.waitForTimeout(400);
@@ -52,34 +52,24 @@ async function record(demo) {
       pos = { x: to.x + 70, y: to.y + 60 }; await page.mouse.move(pos.x, pos.y); await cursor(1); await hold(200);
     }
     const n = Math.round(ms / 16.7), from = { ...pos };
-    for (let i = 1; i <= n; i++) { const e = EASE_IO(i / n); await page.mouse.move(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e); await hold(14); }
+    // A hand's path bows slightly; never a ruler-straight line.
+    const dx = to.x - from.x, dy = to.y - from.y, bow = 0.08;
+    for (let i = 1; i <= n; i++) { const e = EASE_IO(i / n), b = Math.sin(Math.PI * e) * bow; await page.mouse.move(from.x + dx * e - dy * b, from.y + dy * e + dx * b); await hold(14); }
     pos = to;
   }
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
-  // A compositor-driven transform transition (ease-in-out), so a main-thread stall cannot drop scroll frames.
-  async function scrollPanel(ms) {
-    await page.evaluate((dur) => {
-      const panel = document.querySelector(".dlg-motion-frame__panel"); const frame = document.getElementById("frame");
-      const z = Number(panel.dataset.zoom) || 1;
-      const over = Math.max(0, panel.getBoundingClientRect().height - (frame.getBoundingClientRect().height - 96));
-      panel.style.willChange = "transform";
-      panel.style.transition = `transform ${dur}ms cubic-bezier(0.45, 0, 0.55, 1)`;
-      panel.style.transform = `translateY(${-over / (z * 2)}px)`;
-    }, ms);
-    await hold(ms);
-  }
   const t0 = Date.now() / 1000;
   await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, everyNthFrame: 1, maxWidth: 1280, maxHeight: 1700 });
   await hold(800); // pre-roll
   const S = {
-    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(800 + 1100); },
-    async side() { await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await hold(400); await cursorOut(); await hold(1300); await api("side(false)"); await hold(400 + 900); },
-    async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5 }); await press(); await hold(400); await cursorOut(); await hold(1200); await cursorTo('[data-target="close"]'); await press(); await hold(700); await cursorOut(); await hold(800); },
+    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(800 + 500); },
+    async side() { await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await hold(350); await api("follow(500)"); await hold(600); await cursorOut(); await hold(900); await api("up(500)"); await hold(650); await api("side(false)"); await hold(300 + 550); },
+    async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5 }); await press(); await api("pause()"); await api("follow(500)"); await hold(400); await cursorOut(); await hold(1200); await cursorTo('[data-target="close"]'); await press(); await hold(700); await cursorOut(); await hold(800); },
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300 + 1100); },
-    async every() { await api("answer()"); await hold(550); await api("side(true)"); await hold(550); await api("clip(true)"); await api("pause()"); await hold(800); await scrollPanel(3400); await hold(800); },
-    async picker() { await cursorTo('[data-target="depth-3"]'); await press(); await hold(400); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450); await api("answer()"); await api("deep()"); await hold(400); await cursorOut(); await hold(1100); },
-    async toggles() { await cursorTo('[data-target="level-2"]'); await press(); await hold(400 + 900); await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await hold(400 + 600); await cursorTo('[data-target="level-0"]', { ms: 600 }); await press(); await hold(500); await cursorOut(); await hold(650); },
+    async every() { await api("answer()"); await hold(550); await api("side(true)"); await hold(550); await api("clip(true)"); await api("pause()"); await hold(800); await api("follow(1500)"); await hold(1500 + 700); },
+    async picker() { await cursorTo('[data-target="depth-3"]'); await press(); await hold(400); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450); await api("answer()"); await api("deep()"); await api("pause()"); await hold(400); await cursorOut(); await api("follow(500)"); await hold(500 + 700 + (THEME === "dark" ? 150 : 0)); },
+    async toggles() { await cursorTo('[data-target="level-2"]'); await press(); await hold(300); await api("follow(500)"); await hold(500 + 700); await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await hold(300); await api("follow(800)"); await api("pause()"); await hold(800 + 300); await cursorOut(); await hold(THEME === "dark" ? 950 : 1100); },
   };
   await S[demo]();
   const tStop = Date.now() / 1000; await cdp.send("Page.stopScreencast"); await hold(150); await b.close();

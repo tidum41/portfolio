@@ -24,12 +24,33 @@ const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this 
 const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
 const MEI = QUOTE_LIST[0];
 
+/* Content enters the way Dialogue's own UI does (tw-animate `enter`: fade plus an 8 px rise, 300 ms) and leaves with
+   `exit` (fade, 200 ms), then unmounts. No container height animates; the panel is fixed and its body scrolls. */
 function Grow({ open, children, className }: { open: boolean; children: ReactNode; className?: string }) {
-  return (
-    <div className={["dlg-grow", className].filter(Boolean).join(" ")} data-open={open ? "" : undefined}>
-      <div className="dlg-grow__inner">{children}</div>
-    </div>
-  );
+  const [mounted, setMounted] = useState(open);
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    if (open) { setMounted(true); setLeaving(false); return; }
+    if (!mounted) return;
+    setLeaving(true);
+    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, 200);
+    return () => clearTimeout(t);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!mounted) return null;
+  return <div className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}>{children}</div>;
+}
+
+/* Keep the newest content in view: ease the panel body's scroll (600 ms ease-in-out), never a snap. */
+/* cubic-bezier(0.4, 0, 0.2, 1), sampled */
+const ease = (p: number) => { let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2; const x = 3 * 0.4 * m * (1 - m) ** 2 + 3 * 0.2 * m * m * (1 - m) + m ** 3; if (x < p) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3 * m * m * (1 - m) + m ** 3; };
+function follow(ms = 500, up = false) {
+  const body = document.querySelector<HTMLElement>(".dlg-stage__body");
+  if (!body) return;
+  const from = body.scrollTop, to = up ? 0 : body.scrollHeight - body.clientHeight;
+  if (Math.abs(to - from) <= 1) return;
+  const t0 = performance.now();
+  const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
 }
 
 const sec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
@@ -40,7 +61,7 @@ function clipRange(time: string): CSSProperties {
   return { ["--clip-a" as string]: `${(a / total) * 100}%`, ["--clip-w" as string]: `${((z - a) / total) * 100}%` } as CSSProperties;
 }
 
-function AnswerCard({ segment = true, onSide, sideOpen }: { segment?: boolean; onSide?: () => void; sideOpen?: boolean }) {
+function AnswerCard({ segment = false, onSide, sideOpen }: { segment?: boolean; onSide?: () => void; sideOpen?: boolean }) {
   return (
     <ChartVizCard title={FINDING}>
       <div className="dlg-live__bar">
@@ -143,6 +164,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       mark: () => setMark(true),
       pick: (i: number) => setPick(i),
       level: (i: number) => { if (i === 0) { setSide(false); api.clip(false); } if (i === 2) setSide(true); if (i === 3) { setSide(true); api.clip(true); } },
+      follow: (ms = 600) => follow(ms),
+      up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
       deep: () => { setSide(pick >= 2); if (pick >= 3) api.clip(true); },
     };
@@ -250,7 +273,6 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
                 <p className="dp-study-chat__title">{dialogueCopy.assistantTitle}</p>
                 <span className="dp-study-chat__beta">{dialogueCopy.betaLabel}</span>
               </div>
-              <p className="dp-study-chat__sub">{dialogueCopy.studySubtitle}</p>
             </div>
             <span className="dp-study-chat__minimize" aria-hidden>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
