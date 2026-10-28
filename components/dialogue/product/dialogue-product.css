@@ -1,9 +1,6 @@
 :root {
   /* Figure tokens (motion spec G5): white card, hairline, two-layer shadow; the play button reads on the tinted well. */
-  --dlg-figure-card: #ffffff;
   --dlg-figure-hairline: rgba(0, 0, 0, 0.06);
-  --dlg-figure-shadow: 0 1px 2px rgba(20, 20, 15, 0.06), 0 8px 24px rgba(20, 20, 15, 0.08);
-  --dlg-seg-active-shadow: 0 1px 2px rgba(20, 20, 15, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --dlg-play-bg: rgba(255, 255, 255, 0.85);
 }
 /* Dialogue product UI — tokens: components/dialogue/product/tokens.ts */
@@ -3752,9 +3749,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 /* Variant A depth picker: Dialogue's composer row plus a segmented control from system tokens. */
-.dlg-depth { display: flex; gap: 2px; padding: 3px; margin-bottom: 8px; border-radius: var(--dp-radius-control); background: var(--dp-warm); } /* segmented control: idle transparent, active white with shadow */
-.dlg-depth__opt { flex: 1; padding: 6px 10px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: var(--dp-weight-medium); cursor: pointer; }
-.dlg-depth__opt[aria-checked="true"], .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"], .dlg-depth__opt[aria-checked="true"]:hover, .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"]:hover { background: var(--dlg-figure-card); color: var(--dp-ink); box-shadow: var(--dlg-seg-active-shadow); }
+.dlg-depth { display: flex; gap: 4px; padding: 4px; margin-bottom: 8px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-card); } /* Dialogue tab row (Overall / Sections / Participants) */
+.dlg-depth__opt { flex: 1; padding: 4px 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
+.dlg-depth__opt[aria-checked="true"], .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); } /* Dialogue active tab chip */
 .dlg-depth__opt:disabled { cursor: default; }
 .dlg-followups { display: flex; flex-direction: column; gap: 8px; }
 /* Variant B disclosure: a text button in the answer card. */
@@ -3814,12 +3811,15 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__bar:has(.dlg-live__side:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
 .dlg-live__bar:has(.dlg-live__side:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
 /* Open: the segment keeps an ink ring and its label goes ink, so the sample below reads as that side's. */
-.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 78%, var(--dp-ink)); box-shadow: none; } /* selected: a darker fill, no outline */
+.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { box-shadow: none; } /* selected: keeps its own colour */
+.dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg[data-focal] { opacity: 0.35; transition: opacity 240ms ease; } /* the other segment recedes while the sample is open */
+.dlg-live__bar .dp-chart-stack__seg[data-focal] { transition: opacity 240ms ease; }
+.dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 2px; background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__labels > :last-child { color: var(--dp-ink); font-weight: 500; }
 /* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
 .dlg-live__sample .dp-clip-quote--selected { cursor: default; }
 .dlg-live__clip { margin-top: 8px; line-height: 0; }
-.dlg-clip-collapse { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.dlg-clip-collapse { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-ink); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; } /* same ink as the panel minimize */
 .dlg-clip-collapse:hover { background: var(--dp-warm); color: var(--dp-ink); }
 .dlg-clip-collapse:active { background: var(--dp-nav-active-bg); }
 .dlg-clip-collapse:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
@@ -3865,10 +3865,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-motion-frame { width: 519px; padding: 48px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
 .dlg-motion-frame__panel { width: 423px; }
 /* The card sits whole inside 32px of air, with Dialogue's chat shadow; its body scrolls, the card never resizes. */
-.dlg-stage { height: 100%; display: flex; flex-direction: column; background: var(--dlg-figure-card); border: 1px solid var(--dlg-figure-hairline); box-shadow: var(--dlg-figure-shadow); } /* G5: white card, hairline, two-layer shadow */
+.dlg-stage { height: 100%; display: flex; flex-direction: column; } /* panel surface, border and shadow stay Dialogue's own (.dp-study-chat) */
 .dlg-stage .dlg-stage__body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .dlg-stage .dlg-stage__body::-webkit-scrollbar { display: none; }
-.dlg-stage .dp-study-chat__head { box-shadow: 0 1px 0 var(--dp-border); padding-bottom: 12px; }
 .dlg-stage__body { display: flex; flex-direction: column; padding: var(--dp-chat-pad); }
 .dlg-stage__item + .dlg-stage__item { margin-top: 12px; }
 .dlg-stage__analyzing { display: flex; align-items: center; gap: 8px; }
@@ -3908,3 +3907,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dialogue-rachel-frame .phone-mockup-play-btn, .cs-hero-media-frame .dlg-demo .phone-mockup-play-btn { background: var(--dlg-play-bg); box-shadow: 0 0 0 1px var(--dlg-figure-hairline); }
 /* The constraint: one line under the problem heading, quieter than body copy. */
 .dlg-constraint { margin: 0 0 16px; max-width: 640px; color: var(--color-text-secondary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+/* Variant B: levels add up, so every level up to the current one keeps the active chip; the current one is also set in medium weight. Hover is the sidebar row hover. */
+.dlg-depth--inline .dlg-depth__opt[aria-current="true"] { font-weight: var(--dp-weight-medium); }
+.dlg-depth__opt:not([aria-pressed="true"]):not([aria-checked="true"]):hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-depth--inline .dlg-depth__opt[aria-current="true"] { cursor: default; }

@@ -61,9 +61,8 @@ function clipRange(time: string): CSSProperties {
   return { ["--clip-a" as string]: `${(a / total) * 100}%`, ["--clip-w" as string]: `${((z - a) / total) * 100}%` } as CSSProperties;
 }
 
-function AnswerCard({ segment = false, onSide, sideOpen }: { segment?: boolean; onSide?: () => void; sideOpen?: boolean }) {
-  return (
-    <ChartVizCard title={FINDING}>
+function AnswerCard({ segment = false, onSide, sideOpen, chart = true }: { segment?: boolean; onSide?: () => void; sideOpen?: boolean; chart?: boolean }) {
+  const bar = (
       <div className="dlg-live__bar">
         <ChartStackedBar
           total={300}
@@ -74,6 +73,10 @@ function AnswerCard({ segment = false, onSide, sideOpen }: { segment?: boolean; 
         />
         <button type="button" className="dlg-live__side" data-target="side" aria-label="Open the 75 unsure" aria-expanded={!!sideOpen} onClick={onSide} />
       </div>
+  );
+  return (
+    <ChartVizCard title={FINDING}>
+      <Grow open={chart}>{bar}</Grow>
       {segment ? (
         <p className="dlg-segment">
           Repeat shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
@@ -110,7 +113,7 @@ function Sample({ open, playing, onPlay, onClose, playSec, rows = QUOTE_LIST }: 
     <Grow open={open} className="dlg-stage__item">
       <div className="dp-side-sample dlg-stage__sample">
         <p className="dp-side-sample__head dp-text-body">
-          <span className="dp-summary__emph">75</span> unsure, {rows.length} shown
+          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">75</span> unsure, {rows.length} shown
           <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label="Collapse the 75 unsure" onClick={() => (window as unknown as { __dlg: { side: (b: boolean) => void } }).__dlg.side(false)}>
             <ChevronUpIcon />
           </button>
@@ -140,6 +143,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   const [lines, setLines] = useState(0);
   const [mark, setMark] = useState(false);
   const [pick, setPick] = useState(1);
+  const [level, setLevel] = useState(0);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sentences = PARAGRAPH_ANSWER_WALL.flatMap((p, pi) => p.split(/(?<=\.)\s+/).map((t, i) => ({ t, pi, first: i === 0 })));
@@ -163,7 +167,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       line: () => setLines((l) => l + 1),
       mark: () => setMark(true),
       pick: (i: number) => setPick(i),
-      level: (i: number) => { if (i === 0) { setSide(false); api.clip(false); } if (i === 2) setSide(true); if (i === 3) { setSide(true); api.clip(true); } },
+      // One depth at a time; levels add up (Chart adds the bar, People the quotes, Source the clip). Same level again does nothing.
+      level: (i: number) => setLevel((cur) => { if (i === cur) return cur; setSide(i >= 2); api.clip(i >= 3); return i; }),
       follow: (ms = 600) => follow(ms),
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
@@ -230,17 +235,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     body = (
       <>
         <div className="dlg-stage__item">
-          <AnswerCard />
+          <AnswerCard chart={level >= 1} sideOpen={level >= 2} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
-            {LEVELS.map((l, i) => {
-              const on = i <= 1 || (i === 2 && side) || (i === 3 && clip);
-              return (
-                <button key={l} type="button" className="dlg-depth__opt" aria-pressed={on} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
-              );
-            })}
+            {LEVELS.map((l, i) => (
+              <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
+            ))}
           </div>
         </div>
-        <Sample open={side} playing={clip} playSec={playSec} />
+        <Sample open={level >= 2} playing={level >= 3} playSec={playSec} />
       </>
     );
   }

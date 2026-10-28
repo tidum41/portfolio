@@ -69,7 +69,7 @@ async function record(demo) {
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300 + 1100); },
     async every() { await api("answer()"); await hold(550); await api("side(true)"); await hold(550); await api("clip(true)"); await api("pause()"); await hold(800); await api("follow(1500)"); await hold(1500 + 700); },
     async picker() { await cursorTo('[data-target="depth-3"]'); await press(); await hold(400); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450); await api("answer()"); await api("deep()"); await api("pause()"); await hold(400); await cursorOut(); await api("follow(500)"); await hold(500 + 700 + (THEME === "dark" ? 150 : 0)); },
-    async toggles() { await cursorTo('[data-target="level-2"]'); await press(); await hold(300); await api("follow(500)"); await hold(500 + 700); await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await hold(300); await api("follow(800)"); await api("pause()"); await hold(800 + 300); await cursorOut(); await hold(THEME === "dark" ? 950 : 1100); },
+    async toggles() { await cursorTo('[data-target="level-2"]'); await press(); await api("level(2)"); await hold(300); await api("follow(500)"); await hold(500 + 900); await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await api("up(500)"); await hold(500 + 300); await cursorOut(); await hold(THEME === "dark" ? 950 : 1100); },
   };
   await S[demo]();
   const tStop = Date.now() / 1000; await cdp.send("Page.stopScreencast"); await hold(150); await b.close();
