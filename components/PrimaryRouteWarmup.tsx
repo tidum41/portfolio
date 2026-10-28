@@ -74,9 +74,11 @@ export default function PrimaryRouteWarmup() {
       if ((window as Window & { __leavingHome?: number }).__leavingHome) return;
       warmJsOnce();
     };
-    // Hydration is the point where main had already parsed this code.
-    const mountId = window.setTimeout(onLoad, 0);
-    const cancelJs = () => window.clearTimeout(mountId);
+    // Start at hydration, but in an idle slice so it never shares a frame
+    // with an early card click (a click marks __leavingHome and skips it).
+    const hasRic = typeof window.requestIdleCallback === "function";
+    const mountId = hasRic ? window.requestIdleCallback(onLoad, { timeout: 1500 }) : window.setTimeout(onLoad, 300);
+    const cancelJs = () => (hasRic ? window.cancelIdleCallback(mountId) : window.clearTimeout(mountId));
     const onIntent = (e: Event) => {
       const a = (e.target as Element | null)?.closest?.("a.nav-link");
       const href = a?.getAttribute("href");
