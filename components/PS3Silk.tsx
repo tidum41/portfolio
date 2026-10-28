@@ -59,8 +59,6 @@ function readMode(fallback: number) {
 }
 function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m)); } catch {} }
 
-const TRAIL_N = 8;
-
 /**
  * Silk tuning. DialKit's panel only mounts in `next dev` (DevChrome); in
  * production `dialkit` resolves to lib/dialkit-prod.tsx, which returns these
@@ -73,17 +71,18 @@ const SILK_DIALS = {
   speed:             [1.2, 0, 4, 0.05],
   yOffset:           [49, -50, 100, 1],
   endOpacity:        [0.15, 0, 0.5, 0.01],
-  // Cursor reactivity
-  mouseStrength:     [0.11, 0, 0.5, 0.01],  // ribbon phase bend toward cursor
-  springStiffness:   [0.09, 0.01, 0.4, 0.005],
-  springDamping:     [0.8, 0.5, 0.98, 0.01], // higher = more inertia / glide
-  trailStrength:     [18, -40, 60, 1],        // px the silk parts around the wake (negative pulls in)
-  trailRadius:       [70, 20, 200, 1],        // px
-  trailLife:         [0.9, 0.2, 2.5, 0.05],   // s; fast in, slow out
-  flickGlow:         [0.55, 0, 2, 0.05],      // brightening on fast moves
-  rippleSize:        [0.32, 0, 1, 0.01],      // max ring radius, fraction of width
-  rippleDuration:    [0.9, 0.2, 2.5, 0.05],   // s
-} as const;
+  modeFade:          [0.45, 0.05, 1.5, 0.05],  // s, halftone <-> wave crossfade
+  // Cursor: ribbon crossings gather where the pointer is
+  attractStrength:   [0.6, 0, 1, 0.01],        // how far ribbons converge (1 = all meet)
+  attractFalloff:    [260, 60, 900, 10],       // px, horizontal Gaussian radius of the pinch
+  attractBandMin:    [0.32, 0, 1, 0.01],       // clamp target y into the ribbon band (uv)
+  attractBandMax:    [0.82, 0, 1, 0.01],
+  followStiffness:   [0.035, 0.005, 0.2, 0.005], // spring pull per 30fps step
+  followDamping:     [0.86, 0.5, 0.98, 0.01],    // higher = more glide
+  engageSpeed:       [0.05, 0.005, 0.3, 0.005],  // attraction fade-in per step
+  returnSpeed:       [0.015, 0.002, 0.2, 0.001], // fade-out per step after leave/idle
+  idleDelay:         [2.5, 0.5, 10, 0.1],        // s without movement before drifting back
+} as const
 
 type SilkParams = { [K in keyof typeof SILK_DIALS]: number };
 
@@ -98,8 +97,6 @@ export default function PS3Silk({
   const modeRef = useRef(initialMode);
   const activeRef = useRef(active);
   const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
-  // Click ripple request: set by the click handler, consumed by the GL loop.
-  const rippleRef = useRef<{ x: number; y: number; t0: number } | null>(null);
 
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
@@ -140,7 +137,8 @@ export default function PS3Silk({
     return () => window.removeEventListener("ps3-update", handler);
   }, []);
 
-  // Click on bare silk toggles halftone (0.21) <-> wave (0.07). The canvas
+  // Click on bare silk toggles halftone (0.21) <-> wave (0.07) with a
+  // soft crossfade. The canvas
   // stays pointer-events:none and this listens passively on window, so links,
   // cards and controls keep their clicks: anything interactive (or the rabbit-
   // hole trigger/popup), a text selection, or an already-handled click is
@@ -157,11 +155,6 @@ export default function PS3Silk({
       const next = modeRef.current === 0 ? 1 : 0;
       modeRef.current = next;
       saveMode(next);
-      rippleRef.current = {
-        x: (e.clientX - rect.left) / rect.width,
-        y: 1 - (e.clientY - rect.top) / rect.height,
-        t0: performance.now(),
-      };
       lifecycleRef.current?.wake();
     };
     window.addEventListener("click", onClick);
@@ -176,13 +169,12 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    // Spring-followed cursor (vx/vy carry inertia), plus a short wake of
-    // speed-weighted samples and a decaying "flick" energy for glow.
+    // Spring-followed pinch point (vx/vy carry inertia) and an attraction
+    // amount that eases in while the pointer is over the hero and drifts back
+    // to 0 after it leaves or idles.
     const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, vx: 0, vy: 0 };
-    const trailRaw = new Float32Array(TRAIL_N * 4); // x, y, age(s), strength
-    const trailGpu = new Float32Array(TRAIL_N * 3);
-    const trail = { head: 0, lastX: NaN, lastY: NaN, lastMs: 0 };
-    let flick = 0, flickTarget = 0;
+    let attract = 0, inside = false, lastMoveMs = -1e9;
+    let modeMix = modeRef.current === 1 ? 1 : 0; // 1 = halftone
     let rafId = 0, lastT = 0;
     const START_OPACITY = 0.5;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
@@ -200,7 +192,7 @@ export default function PS3Silk({
 
     // Reduced motion: keep the slow ambient wave loop (low-amplitude, not the
     // kind of motion this preference is meant to suppress), but skip the
-    // entrance fade and the cursor-reactive ripple/warp below — those are the
+    // entrance fade and the cursor-reactive pinch below — those are the
     // faster, more attention-grabbing pieces.
     const reducedMotion = typeof window !== "undefined"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -343,24 +335,12 @@ export default function PS3Silk({
         if (!activeRef.current) return;
         const rect = wrapperRect;
         if (!rect || rect.width < 2 || rect.height < 2) return;
-        mouse.tx = (e.clientX - rect.left) / rect.width;
-        mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
-        if (reducedMotion) return;
-        const x = mouse.tx, y = mouse.ty;
-        if (x < -0.1 || x > 1.1 || y < -0.1 || y > 1.1) { trail.lastX = NaN; return; }
-        const now = performance.now();
-        let speed = 0; // px per ms
-        if (!Number.isNaN(trail.lastX)) {
-          const dx = (x - trail.lastX) * rect.width, dy = (y - trail.lastY) * rect.height;
-          speed = Math.hypot(dx, dy) / Math.max(8, now - trail.lastMs);
-        }
-        trail.lastX = x; trail.lastY = y; trail.lastMs = now;
-        flickTarget = Math.max(flickTarget, Math.min(speed / 2.5, 1));
-        const strength = Math.min(speed / 1.2, 1);
-        if (strength < 0.04) return;
-        const i = trail.head * 4;
-        trailRaw[i] = x; trailRaw[i + 1] = y; trailRaw[i + 2] = 0; trailRaw[i + 3] = strength;
-        trail.head = (trail.head + 1) % TRAIL_N;
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = 1.0 - (e.clientY - rect.top) / rect.height;
+        inside = x >= 0 && x <= 1 && y >= -0.15 && y <= 1;
+        if (!inside || reducedMotion) return;
+        mouse.tx = x; mouse.ty = y;
+        lastMoveMs = performance.now();
         if (activeRef.current && !running && canvas.width >= 2) startLoop();
       }
 
@@ -431,27 +411,24 @@ uniform float uTime;
 uniform vec2  uResolution;
 uniform vec2  uMouse;
 uniform float uIntensity;
-uniform float uMouseStrength;
 uniform float uAspect;
 uniform float uYOffsetPx;
-uniform int   uMode;
+uniform float uModeMix;      // 1 halftone, 0 wave; between = crossfade
+uniform float uIntensityWave;
 uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
-uniform vec3  uTrail[${TRAIL_N}];
-uniform int   uTrailCount;   // 0 when idle: loop is skipped entirely
-uniform float uTrailRadiusPx;
-uniform float uTrailPushPx;
-uniform float uFlick;
-uniform vec3  uRipple;       // x, y (uv), progress 0..1; z < 0 = off
-uniform float uRippleSize;
+uniform float uAttract;      // 0 when idle: pinch is skipped entirely
+uniform float uFalloffPx;
 
+// pinch: weight (0..1) pulling this ribbon's centre line toward py, the
+// cursor's y. Every ribbon shares the same weight and target at a given x, so
+// their crossings gather under the cursor and relax away from it.
 vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
-  float md = length(uv - uMouse);
-  float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
-  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
-  float wy = sin(angle) * amp + cy;
+  float phase, float cy, vec3 col, float width, float sharp, bool flip,
+  float pinch, float py) {
+  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx) * 2.0;
+  float wy = mix(sin(angle) * amp + cy, py, pinch);
   float dy = wy - uv.y;
   float dist = abs(dy);
   if (flip) { if (dy > 0.0) dist *= 4.0; }
@@ -462,73 +439,48 @@ vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
 
 void main() {
   vec2 frag = gl_FragCoord.xy;
-  // Silk parting: displace where the ribbons are *sampled* away from the
-  // recent cursor wake. Stateless, no FBO; dots stay on their grid.
-  vec2 push = vec2(0.0);
-  float touch = 0.0;
-  if (uTrailCount > 0) {
-    float r2 = uTrailRadiusPx * uTrailRadiusPx;
-    for (int k = 0; k < ${TRAIL_N}; k++) {
-      if (k >= uTrailCount) break;
-      vec3 t = uTrail[k];
-      vec2 d = frag - t.xy * uResolution;
-      float g = exp(-dot(d, d) / r2) * t.z;
-      push += d / (length(d) + 1.0) * g;
-      touch += g;
-    }
-    touch = min(touch, 1.0);
-  }
-  vec2 uv = (frag - push * uTrailPushPx) / uResolution;
-  uv.y += uYOffsetPx / uResolution.y;
+  vec2 uv = frag / uResolution;
+  float yShift = uYOffsetPx / uResolution.y;
+  uv.y += yShift;
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
 
+  float pinch = 0.0;
+  float py = uMouse.y + yShift;
+  if (uAttract > 0.0005) {
+    float dx = (frag.x - uMouse.x * uResolution.x) / uFalloffPx;
+    pinch = uAttract * exp(-dx * dx);
+  }
+
   vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
+  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false,pinch,py);
+  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false,pinch,py);
+  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false,pinch,py);
+  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false,pinch,py);
+  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true,pinch,py);
+  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true,pinch,py);
+  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true,pinch,py);
+  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true,pinch,py);
   c = clamp(c,0.0,1.0);
+  float waveLuma = max(max(c.r,c.g),c.b);
 
-  float waveLuma  = max(max(c.r,c.g),c.b);
-  float waveLight = waveLuma * uIntensity * 4.5;
-  // Glow: crests near the (sprung) cursor and in the wake brighten briefly
-  // on fast flicks; the click ripple is a soft expanding ring.
-  if (uFlick > 0.001 || touch > 0.0) {
-    vec2 dm = (frag - uMouse * uResolution) / (uTrailRadiusPx * 1.8);
-    float near = exp(-dot(dm, dm));
-    waveLight *= 1.0 + uFlick * near + touch * 0.35;
-  }
-  if (uRipple.z >= 0.0) {
-    float rd = length(frag - uRipple.xy * uResolution);
-    float rr = uRipple.z * uRippleSize * uResolution.x;
-    float ring = exp(-pow((rd - rr) / 22.0, 2.0)) * (1.0 - uRipple.z);
-    waveLight += ring * 0.14 + ring * waveLight * 0.6;
-  }
-
-  if (uMode == 1) {
-    vec2 cell       = floor(gl_FragCoord.xy / uHalftoneSize);
+  vec4 outH = vec4(0.0);
+  vec4 outW = vec4(0.0);
+  if (uModeMix > 0.001) {
+    float waveLight = waveLuma * uIntensity * 4.5;
+    vec2 cell       = floor(frag / uHalftoneSize);
     vec2 cellCenter = (cell + 0.5) * uHalftoneSize;
-    vec2 cellUV     = cellCenter / uResolution;
-    float mouseDist = length(cellUV - uMouse);
-    float ripple    = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseStrength * 2.8;
-    float d         = length(gl_FragCoord.xy - cellCenter);
-    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
+    float d         = length(frag - cellCenter);
+    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05, 0.0, 1.2);
     float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
-    vec3  dotColor  = uWaveColor * 0.55;
-    float vis       = smoothstep(0.02, 0.08, waveLight);
-    float a         = dotVal * vis;
-    gl_FragColor = vec4(dotColor * a, a);
-    return;
+    float a         = dotVal * smoothstep(0.02, 0.08, waveLight);
+    outH = vec4(uWaveColor * 0.55 * a, a);
   }
-
-  vec3  darkWave = uWaveColor * 0.78;
-  float alpha    = clamp(waveLight * 1.1, 0.0, 1.0);
-  gl_FragColor = vec4(darkWave * alpha, alpha);
+  if (uModeMix < 0.999) {
+    float alpha = clamp(waveLuma * uIntensityWave * 4.5 * 1.1, 0.0, 1.0);
+    outW = vec4(uWaveColor * 0.78 * alpha, alpha);
+  }
+  gl_FragColor = mix(outW, outH, uModeMix);
 }`;
 
       function compile(src: string, type: number) {
@@ -550,41 +502,15 @@ void main() {
       const uResLoc           = gl.getUniformLocation(prog, "uResolution");
       const uMouseLoc         = gl.getUniformLocation(prog, "uMouse");
       const uIntLoc           = gl.getUniformLocation(prog, "uIntensity");
-      const uMStrLoc          = gl.getUniformLocation(prog, "uMouseStrength");
       const uAspLoc           = gl.getUniformLocation(prog, "uAspect");
       const uYOfsLoc          = gl.getUniformLocation(prog, "uYOffsetPx");
-      const uModeLoc          = gl.getUniformLocation(prog, "uMode");
       const uHtSizeLoc        = gl.getUniformLocation(prog, "uHalftoneSize");
       const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
-      const uTrailLoc         = gl.getUniformLocation(prog, "uTrail");
-      const uTrailCountLoc    = gl.getUniformLocation(prog, "uTrailCount");
-      const uTrailRLoc        = gl.getUniformLocation(prog, "uTrailRadiusPx");
-      const uTrailPLoc        = gl.getUniformLocation(prog, "uTrailPushPx");
-      const uFlickLoc         = gl.getUniformLocation(prog, "uFlick");
-      const uRippleLoc        = gl.getUniformLocation(prog, "uRipple");
-      const uRippleSizeLoc    = gl.getUniformLocation(prog, "uRippleSize");
-
-      // Ages the wake (fast sine attack over the first 25% of life, slow
-      // release) and packs live samples to the front so the shader loop can
-      // stop at uTrailCount. Returns that count.
-      let lastStepMs = 0;
-      function stepTrail(ms: number, life: number) {
-        const dt = lastStepMs ? Math.min((ms - lastStepMs) / 1000, 0.1) : 0;
-        lastStepMs = ms;
-        let n = 0;
-        for (let k = 0; k < TRAIL_N; k++) {
-          const i = k * 4;
-          if (trailRaw[i + 3] <= 0) continue;
-          const age = (trailRaw[i + 2] += dt);
-          if (age >= life) { trailRaw[i + 3] = 0; continue; }
-          const m = age / life;
-          const env = m < 0.25 ? Math.sin((m / 0.25) * Math.PI / 2) : Math.sin((1 - (m - 0.25) / 0.75) * Math.PI / 2);
-          trailGpu[n * 3] = trailRaw[i]; trailGpu[n * 3 + 1] = trailRaw[i + 1]; trailGpu[n * 3 + 2] = env * trailRaw[i + 3];
-          n++;
-        }
-        return n;
-      }
+      const uModeMixLoc       = gl.getUniformLocation(prog, "uModeMix");
+      const uIntWaveLoc       = gl.getUniformLocation(prog, "uIntensityWave");
+      const uAttractLoc       = gl.getUniformLocation(prog, "uAttract");
+      const uFalloffLoc       = gl.getUniformLocation(prog, "uFalloffPx");
 
       // Sets every uniform from current state and paints one frame. Shared by
       // frame()'s regular throttled loop and resize()'s immediate post-resize
@@ -594,33 +520,20 @@ void main() {
       function draw(ms: number) {
         const P = paramsRef.current;
         const wc = waveColorRef.current;
-        const mode = modeRef.current;
         // Reduced motion: frozen time, no cursor input, one frame (see frame()).
         gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
-        gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
-        gl.uniform1f(uIntLoc, mode === 1 ? P.intensityHalftone : P.intensityWave);
-        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : P.mouseStrength);
+        gl.uniform2f(uMouseLoc, mouse.x, Math.min(P.attractBandMax, Math.max(P.attractBandMin, mouse.y)));
+        gl.uniform1f(uIntLoc, P.intensityHalftone);
+        gl.uniform1f(uIntWaveLoc, P.intensityWave);
+        gl.uniform1f(uModeMixLoc, modeMix);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
         gl.uniform1f(uYOfsLoc, P.yOffset);
-        gl.uniform1i(uModeLoc, mode);
         gl.uniform1f(uHtSizeLoc, P.halftoneSize);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
         gl.uniform1f(uSpeedLoc, P.speed);
-        const n = reducedMotion ? 0 : stepTrail(ms, P.trailLife);
-        gl.uniform1i(uTrailCountLoc, n);
-        if (n > 0) gl.uniform3fv(uTrailLoc, trailGpu);
-        gl.uniform1f(uTrailRLoc, P.trailRadius);
-        gl.uniform1f(uTrailPLoc, P.trailStrength);
-        gl.uniform1f(uFlickLoc, reducedMotion ? 0 : flick * P.flickGlow);
-        const rp = rippleRef.current;
-        let prog = -1;
-        if (rp && !reducedMotion) {
-          prog = (performance.now() - rp.t0) / (P.rippleDuration * 1000);
-          if (prog >= 1) { rippleRef.current = null; prog = -1; }
-        }
-        gl.uniform3f(uRippleLoc, rp ? rp.x : 0, rp ? rp.y : 0, prog);
-        gl.uniform1f(uRippleSizeLoc, P.rippleSize);
+        gl.uniform1f(uAttractLoc, reducedMotion ? 0 : attract * P.attractStrength);
+        gl.uniform1f(uFalloffLoc, P.attractFalloff);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
@@ -679,16 +592,21 @@ void main() {
         if (ms - lastT < FRAME_MS) return;
         lastT = ms;
 
-        // Damped spring toward the pointer (per 30fps step): soft inertia
-        // that overshoots a touch on flicks, then glides back.
+        // Pinch point follows the pointer on a slow damped spring; the
+        // attraction amount eases in while hovering and drifts back out after
+        // the pointer leaves or rests for idleDelay.
         const P = paramsRef.current;
-        mouse.vx = mouse.vx * P.springDamping + (mouse.tx - mouse.x) * P.springStiffness;
-        mouse.vy = mouse.vy * P.springDamping + (mouse.ty - mouse.y) * P.springStiffness;
+        mouse.vx = mouse.vx * P.followDamping + (mouse.tx - mouse.x) * P.followStiffness;
+        mouse.vy = mouse.vy * P.followDamping + (mouse.ty - mouse.y) * P.followStiffness;
         mouse.x += mouse.vx;
         mouse.y += mouse.vy;
-        // Flick energy: quick rise, slow decay.
-        flick += (flickTarget - flick) * (flickTarget > flick ? 0.5 : 0.08);
-        flickTarget *= 0.7;
+        const engaged = inside && ms - lastMoveMs < P.idleDelay * 1000;
+        attract += engaged ? (1 - attract) * P.engageSpeed : -attract * P.returnSpeed;
+        if (attract < 0.0005) attract = 0;
+        const mixTarget = modeRef.current === 1 ? 1 : 0;
+        const mixStep = FRAME_MS / 1000 / Math.max(0.05, P.modeFade);
+        modeMix = reducedMotion ? mixTarget
+          : modeMix < mixTarget ? Math.min(mixTarget, modeMix + mixStep) : Math.max(mixTarget, modeMix - mixStep);
 
         updateScrollTarget();
         const isIntro = ms < introPhaseEnd;
