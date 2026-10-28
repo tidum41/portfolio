@@ -3770,8 +3770,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Variant B disclosure: a text button in the answer card. */
 .dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
 .dlg-segment { margin: 12px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
-.dlg-demo { position: relative; width: min(471px, 100%); max-width: 100%; margin: 0 auto; justify-self: center; align-self: center; line-height: 0; }
+.dlg-demo { position: static; width: min(471px, 100%); max-width: 100%; margin: 0 auto; justify-self: center; align-self: center; line-height: 0; }
 .dlg-demo__video { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 5.1% / 4%; } /* the panel's 24px corner, as a share of the 471x600 recording */
+/* .dlg-demo stays static so the play button (absolute, 8px top right) anchors to the figure's background well, .dialogue-rachel-frame, as PhoneMockup does on BruinLease; never over the product UI.
+   Where the recording fills the well's width (the kept/explored pair, and every well at phone width), a 40px top gutter
+   (20px well pad + 40 = 8 + 44 + 8) keeps the 44px button above the video. Single desktop wells clear it at the side. */
+.dlg-demo-pair .dlg-demo { margin-top: 40px; }
+@media (max-width: 600px) { .dialogue-rachel-frame .dlg-demo { margin-top: 40px; } }
 .dlg-demo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .dlg-demo-pair__label { margin: 0 0 8px; }
 @media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }

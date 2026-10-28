@@ -69,6 +69,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Oct 26 2026: Mudit OK'd illustrative quotes with placeholder names and timestamps in Dialogue; Comparison needs no concept label.
 - Oct 27 2026: Round P5 direction (art director plan, /workspace/research/dialogue-eod-plan.md, approved): the story is the answer card's data viz plus decisions. Sections are problem, counts (study-wide folded in), levels of detail (Hearthside Friday data, 2+1 layout), data visualization (b056865 chart library restored), clips, thin data (stone line, not amber). Comparison section and study-wide figure are cut. One caption per figure, no frame labels. Mudit's copy sits in visible [PLACEHOLDER] markers.
 - Chart library trimmed to 2 pairs, labels fixed (Mudit OK Oct 27).
+- Oct 28 2026: video controls live on the visual's background container, never on the product UI (play button 8px from the well's top right, as BruinLease's PhoneMockup).
 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).

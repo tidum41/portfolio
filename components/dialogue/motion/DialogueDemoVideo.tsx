@@ -5,7 +5,8 @@ import PlayPauseButton from "@/components/PlayPauseButton";
 
 /**
  * Round P10: a recorded product demo of the live recreation (scripts/record-dialogue-live.mjs).
- * Muted and auto-looping, with the BruinLease pause and play button (shared PlayPauseButton).
+ * Muted and auto-looping, with the BruinLease pause and play button (shared PlayPauseButton). The button
+ * anchors to the figure's background well (.dialogue-rachel-frame), 8px from its top right, not the video.
  * It plays only in view and keeps a pause the reader set. Under prefers-reduced-motion it shows
  * the poster (the final state) with no button.
  */
