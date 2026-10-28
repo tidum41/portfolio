@@ -304,7 +304,9 @@ async function ownerChecks(browser) {
       ...[...byTime].filter(([, v]) => v.size > 1).map(([t, v]) => `${t} owned by ${[...v].join(" and ")}`),
       ...[...byName].filter(([, v]) => v.size > 1).map(([n, v]) => `${n} has ${[...v].join(" and ")}`),
     ];
-    log(pairs.length >= 4 && bad.length === 0, `${label} (${pairs.length} pills, ${byTime.size} distinct times, ${bad.length} conflicts)`);
+    // P10: quote rows now live in recorded demos; verify-dialogue-p10 checks their times on /dialogue/live.
+    if (pairs.length === 0) log(true, `${label} (n/a: no DOM quote rows; see verify-dialogue-p10)`);
+    else log(pairs.length >= 4 && bad.length === 0, `${label} (${pairs.length} pills, ${byTime.size} distinct times, ${bad.length} conflicts)`);
     for (const b of bad) console.log(`     ${b}`);
     await ctx.close();
   } catch (e) {

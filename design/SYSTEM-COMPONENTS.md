@@ -67,7 +67,8 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `QuoteFrameFigure`
 - `QuoteListFigure`
 - `SideSample` (round P8, pending Mudit OK: composed of QuoteListFigure and SourcePill, shows the quotes behind one side of a count as a sample with +N more)
-- `DialogueFlowDemo` (round P10, pending Mudit OK: looping motion demo composed of StudyChatShell, ChartVizCard, ChartStackedBar, SideSample, ClipQuotes and QuoteFrameFigure; adds only a tap cue annotation)
+- `DialogueDemoVideo` (round P10: muted looping recording of the live recreation with pause and replay; poster under reduced motion)
+- `DialogueChatLive` (round P10: interactive recreation of the study chat on Dialogue's real keyframes, composed of UserMessageBubble, ChartVizCard, ChartStackedBar, SideSample and DialogueInterviewPlayer)
 - `StructuredAnswerFigure`
 - `ThinDataFigure`
 

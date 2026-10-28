@@ -9,7 +9,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const variant = v === "picker" || v === "toggles" ? v : "base";
   return (
     <main className="dialogue-product-root dp-chat-panel-typography dlg-live-stage">
-      <div id="stage" style={{ width: 471, margin: "40px auto" }}>
+      <div id="stage" className="dlg-live-stage__slot">
         <DialogueChatLive height={Number(h) || 600} variant={variant} key={variant} />
       </div>
     </main>
