@@ -5,14 +5,14 @@ export const SITE_NAME = "Mudit Mahajan";
 
 /** Visible homepage hero — single source of truth for on-page + SEO copy. */
 export const HERO_HEADLINE =
-  "I’m Mudit, an AI-native product designer who loves prototyping in code.";
+  "I’m Mudit, an AI-native product designer who prototypes in code to make tech feel empathetic.";
 
 /**
  * Meta description / OG / JSON-LD — composed from the hero copy so Google
  * isn't stitching mismatched phrases from separate strings.
  */
 export const SITE_DESCRIPTION =
-  `${HERO_HEADLINE} Cognitive Science @ UCLA`;
+  `${HERO_HEADLINE} Leading Cursor (SpaceXAI) @ UCLA`;
 
 /** Default social / Open Graph image (1200×630). */
 export const OG_IMAGE_PATH = "/og-default.png";
