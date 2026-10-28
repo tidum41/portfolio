@@ -423,7 +423,7 @@ export default function ProjectPopup({
                 : undefined
             }
             // Opacity + y only, deliberately no scale — matches
-            // PS3ControlPanel's own panel-open language (ExpandSection:
+            // the old PS3 panel's open language (ExpandSection:
             // max-height + opacity, no scale) rather than a card-hover-press
             // treatment, and keeps the panel's actual box size constant
             // throughout so embeds inside it (CDPlayer's ResizeObserver)
