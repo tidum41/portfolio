@@ -7,7 +7,7 @@ const DEMOS: MotionDemo[] = ["hero", "side", "clip", "before", "every", "picker"
 /** Frame per demo: 1:1 or 4:3 at 519 css px wide (471 panel + 24 px air), and the well tone it sits in on the page. */
 const STAGE = {
   hero: { ratio: 1, tone: "solution", zoom: 0.88 },
-  side: { ratio: 1, tone: "solution", zoom: 1 },
+  side: { ratio: 1, tone: "solution", zoom: 0.92 },
   clip: { ratio: 0.75, tone: "solution", zoom: 0.88 },
   before: { ratio: 1, tone: "problem", zoom: 1 },
   every: { ratio: 1, tone: "problem", zoom: 0.88 },

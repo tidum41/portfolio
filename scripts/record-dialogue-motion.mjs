@@ -12,6 +12,7 @@ const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shot
 mkdirSync(out, { recursive: true });
 const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full" };
 const CROSSFADE = new Set(["hero", "before", "every", "picker"]);
+const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 
 async function record(demo) {
@@ -19,7 +20,8 @@ async function record(demo) {
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   // The screencast delivers CSS-pixel frames, so the frame renders at zoom 2 in a 1280 px viewport (crisp 2x pixels, no upscale).
   const ctx = await b.newContext({ viewport: { width: 1280, height: 1700 }, deviceScaleFactor: 1 });
-  await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
+  // DLG_THEME=dark records the dark well (files end in -dark) so videos match the figure background in either theme.
+  await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
   await page.goto(`${base}/dialogue/motion?demo=${demo}`, { waitUntil: "networkidle" });
   await page.evaluate(() => {
@@ -92,7 +94,7 @@ async function record(demo) {
   const crop = `crop=${Math.round(fb.width * k)}:${Math.round(fb.height * k)}:${Math.round(fb.x * k)}:${Math.round(fb.y * k)}`;
   const enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
   const vf = `${crop},fps=30,scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv`;
-  const name = NAMES[demo]; const raw = `${tmp}/raw.mp4`; const mp4 = `${out}/${name}.mp4`;
+  const name = NAMES[demo]; const raw = `${tmp}/raw.mp4`; const mp4 = `${out}/${name}${SUFFIX}.mp4`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", vf, ...enc, raw]);
   const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", raw]).toString());
   if (CROSSFADE.has(demo)) {
@@ -110,7 +112,7 @@ const CHECK = new URL("./check-dialogue-motion.py", import.meta.url).pathname;
 for (const d of only.length ? only : Object.keys(NAMES)) {
   for (let take = 1; take <= 4; take++) {
     await record(d);
-    try { execFileSync("python3", [CHECK, `${out}/${NAMES[d]}.mp4`], { stdio: "pipe" }); console.log(JSON.stringify({ demo: d, take, checklist: "pass" })); break; }
+    try { execFileSync("python3", [CHECK, `${out}/${NAMES[d]}${SUFFIX}.mp4`], { stdio: "pipe" }); console.log(JSON.stringify({ demo: d, take, checklist: "pass" })); break; }
     catch (e) { console.log(JSON.stringify({ demo: d, take, checklist: "fail", detail: e.stdout?.toString().trim() })); }
   }
 }

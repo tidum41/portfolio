@@ -3432,7 +3432,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   position: relative;
   isolation: isolate;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1920 / 888; /* the interview still's own ratio: no letterbox bands */
   container-type: inline-size;
   border-radius: var(--dp-radius-chip);
   background: var(--dp-black);
