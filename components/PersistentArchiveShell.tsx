@@ -2,10 +2,9 @@
 
 import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
-// Only mounted once Archive is shown; on other routes the gallery's code waits
-// for PrimaryRouteWarmup's idle import instead of riding in first-load JS.
-const ArchivePageClient = dynamic(() => import("@/app/archive/ArchivePageClient"));
+// Static, as on main: a lazy chunk made the first Archive tap after the
+// intro wait on a download and a Suspense round-trip on phones.
+import ArchivePageClient from "@/app/archive/ArchivePageClient";
 import {
   peekArchiveGallery,
   rememberArchiveGallery,
