@@ -63,7 +63,7 @@ function Specimen({
 const FRIDAY_TOTAL = 300;
 const FRIDAY_ROWS = [
   { label: "Read it as this Friday", count: 225, focal: true },
-  { label: "Did not", count: 75, focal: false },
+  { label: "Unsure", count: 75, focal: false },
 ] as const;
 const SEGMENTS = [
   { label: "First-time, free returns", count: 6, of: 9, focal: true },
@@ -101,7 +101,7 @@ const ENTRIES = [
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
         <ChartStackedBar
           total={FRIDAY_TOTAL}
-          segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Did not" ? "did not" : "said it", value: r.count, display: String(r.count), focal: r.focal }))}
+          segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Unsure" ? "unsure" : "said it", value: r.count, display: String(r.count), focal: r.focal }))}
           note={`of ${FRIDAY_TOTAL} interviews`}
         />
       </ChartVizCard>

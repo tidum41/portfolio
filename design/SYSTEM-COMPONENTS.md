@@ -66,6 +66,7 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `ParagraphAnswerFigure`
 - `QuoteFrameFigure`
 - `QuoteListFigure`
+- `SideSample` (round P8, pending Mudit OK: composed of QuoteListFigure and SourcePill, shows the quotes behind one side of a count as a sample with +N more)
 - `StructuredAnswerFigure`
 - `ThinDataFigure`
 

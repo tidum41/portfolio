@@ -3647,3 +3647,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
     max-height: none;
   }
 }
+
+/* Round P8: sample of one side of a count. Spacing reuses the answer card's 8 and 12 steps. */
+.dp-side-sample {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dp-side-sample__head {
+  margin: 4px 0 0;
+}

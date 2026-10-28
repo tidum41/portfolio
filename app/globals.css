@@ -3435,3 +3435,21 @@ html[data-theme="dark"] .dialogue-case-study .cs-caption .dialogue-caption__sent
 .dialogue-lead-answer--chosen-first .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel--chosen {
   order: -1;
 }
+
+/* Round P8: kicker over each section h2 names the researcher's step (Rachel Chen kicker move).
+   Same type as the caption label, so no new style enters the system. */
+.dialogue-case-study .cs-kicker {
+  margin: 0 0 8px;
+  color: var(--caption-ink);
+  font-size: var(--dlg-fs-13);
+}
+/* Round P8: chosen-first Levels. The ruled-out pair needs no badge row, so it spans two
+   subgrid rows and the empty band under the chosen caption closes. */
+@media (min-width: 941px) {
+  .dialogue-lead-answer--chosen-first .dialogue-lead-answer__chosen-row--spacer {
+    display: none;
+  }
+  .dialogue-lead-answer--chosen-first .dialogue-lead-answer__row--trio > .dialogue-lead-answer__panel:not(.dialogue-lead-answer__panel--chosen) {
+    grid-row: span 2;
+  }
+}
