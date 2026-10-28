@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, startTransition } from "react";
+import { useEffect, useRef } from "react";
 import { useDialKit } from "dialkit";
 import { introTimings } from "@/lib/introTimings";
 
@@ -41,10 +41,8 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 export interface PS3SilkProps {
-  intensity?: number;
-  mouseStrength?: number;
-  yOffset?: number;
   waveColor?: string;
+  /** Fallback mode when nothing is saved this session: 1 halftone, 0 wave. */
   mode?: number;
   style?: React.CSSProperties;
   /** When false (work shell hidden via display:none), pause rendering and
@@ -53,10 +51,43 @@ export interface PS3SilkProps {
   active?: boolean;
 }
 
+// Mode is session state (same key the old control panel used), so a soft-nav
+// round trip keeps whatever the visitor clicked to.
+const MODE_KEY = "ps3cp_mode";
+function readMode(fallback: number) {
+  try { const r = sessionStorage.getItem(MODE_KEY); return r === "0" ? 0 : r === "1" ? 1 : fallback; } catch { return fallback; }
+}
+function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m)); } catch {} }
+
+const TRAIL_N = 8;
+
+/**
+ * Silk tuning. DialKit's panel only mounts in `next dev` (DevChrome); in
+ * production `dialkit` resolves to lib/dialkit-prod.tsx, which returns these
+ * defaults, so visitors never see controls.
+ */
+const SILK_DIALS = {
+  intensityHalftone: [0.21, 0, 1, 0.01],
+  intensityWave:     [0.07, 0, 1, 0.01],
+  halftoneSize:      [3.0, 1, 20, 0.5],
+  speed:             [1.2, 0, 4, 0.05],
+  yOffset:           [49, -50, 100, 1],
+  endOpacity:        [0.15, 0, 0.5, 0.01],
+  // Cursor reactivity
+  mouseStrength:     [0.11, 0, 0.5, 0.01],  // ribbon phase bend toward cursor
+  springStiffness:   [0.09, 0.01, 0.4, 0.005],
+  springDamping:     [0.8, 0.5, 0.98, 0.01], // higher = more inertia / glide
+  trailStrength:     [18, -40, 60, 1],        // px the silk parts around the wake (negative pulls in)
+  trailRadius:       [70, 20, 200, 1],        // px
+  trailLife:         [0.9, 0.2, 2.5, 0.05],   // s; fast in, slow out
+  flickGlow:         [0.55, 0, 2, 0.05],      // brightening on fast moves
+  rippleSize:        [0.32, 0, 1, 0.01],      // max ring radius, fraction of width
+  rippleDuration:    [0.9, 0.2, 2.5, 0.05],   // s
+} as const;
+
+type SilkParams = { [K in keyof typeof SILK_DIALS]: number };
+
 export default function PS3Silk({
-  intensity = 0.1,
-  mouseStrength = 0.11,
-  yOffset = 49,
   waveColor = "#ffffff",
   mode: initialMode = 1,
   style,
@@ -67,40 +98,21 @@ export default function PS3Silk({
   const modeRef = useRef(initialMode);
   const activeRef = useRef(active);
   const lifecycleRef = useRef<{ wake: () => void; pause: () => void } | null>(null);
-  const [mode, setMode] = useState(initialMode);
+  // Click ripple request: set by the click handler, consumed by the GL loop.
+  const rippleRef = useRef<{ x: number; y: number; t0: number } | null>(null);
 
   useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
 
-  const dk = useDialKit("PS3Silk", {
-    intensity:     [intensity,      0,    1.0],
-    mouseStrength: [mouseStrength,  0,    0.5],
-    yOffset:       [yOffset,        -50,  100],
-    halftoneSize:  [3.0,            1,    20],
-    speed:         [1.2,            0,    4],
-    endOpacity:    [0.15,           0,    0.5,  0.01],
-  });
+  const dk = useDialKit("PS3Silk", SILK_DIALS as never) as SilkParams;
+  const paramsRef = useRef<SilkParams>({ ...dk });
+  useEffect(() => { Object.assign(paramsRef.current, dk); });
 
-  const intensityRef    = useRef(intensity);
-  const mouseStrRef     = useRef(mouseStrength);
-  const yOffsetRef      = useRef(yOffset);
-  const waveColorRef    = useRef<[number, number, number]>(hexToRgb(waveColor));
-  const halftSizeRef    = useRef(3.0);
-  const speedRef        = useRef(1.2);
-  const endOpacityRef   = useRef(0.15);
-
-  // Sync DialKit live values into refs each frame
-  useEffect(() => { intensityRef.current = dk.intensity; }, [dk.intensity]);
-  useEffect(() => { mouseStrRef.current = dk.mouseStrength; }, [dk.mouseStrength]);
-  useEffect(() => { yOffsetRef.current = dk.yOffset; }, [dk.yOffset]);
-  useEffect(() => { halftSizeRef.current = dk.halftoneSize; }, [dk.halftoneSize]);
-  useEffect(() => { speedRef.current = dk.speed; }, [dk.speed]);
-  useEffect(() => { endOpacityRef.current = dk.endOpacity; }, [dk.endOpacity]);
+  const waveColorRef = useRef<[number, number, number]>(hexToRgb(waveColor));
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
-  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   // Wake immediately on return so soft-nav back to work doesn't blank the
-  // pattern for a couple of frames. Mux remount is staggered separately;
-  // silk is one canvas and should snap with the route. Pause stops RAF only.
+  // pattern for a couple of frames. Pause stops RAF only.
   useEffect(() => {
     if (!active) {
       lifecycleRef.current?.pause();
@@ -115,49 +127,42 @@ export default function PS3Silk({
     return () => window.removeEventListener("soft-nav-start", pause);
   }, []);
 
-  // ps3-update event
+  // PS3ThemeSync can still push a wave colour.
   useEffect(() => {
     const handler = (e: Event) => {
       const d = (e as CustomEvent).detail;
-      if (!d) return;
-      if (d.intensity    !== undefined) intensityRef.current  = d.intensity;
-      if (d.mouseStrength !== undefined) mouseStrRef.current  = d.mouseStrength;
-      if (d.yOffset      !== undefined) yOffsetRef.current    = d.yOffset;
-      if (d.halftoneSize !== undefined) halftSizeRef.current  = d.halftoneSize;
-      if (d.speed        !== undefined) speedRef.current      = d.speed;
-      if (d.waveColor    !== undefined) {
-        waveColorRef.current = Array.isArray(d.waveColor)
-          ? (d.waveColor as [number, number, number])
-          : hexToRgb(d.waveColor);
-      }
-      if (d.mode !== undefined) {
-        modeRef.current = d.mode;
-        startTransition(() => setMode(d.mode));
-      }
+      if (!d || d.waveColor === undefined) return;
+      waveColorRef.current = Array.isArray(d.waveColor)
+        ? (d.waveColor as [number, number, number])
+        : hexToRgb(d.waveColor);
     };
     window.addEventListener("ps3-update", handler);
     return () => window.removeEventListener("ps3-update", handler);
   }, []);
 
-  // click-to-cycle mode — ignore rabbit-holes trigger/hover (and any click
-  // already swallowed by RabbitHoleVideo's mobile dismiss handler) so opening
-  // or closing the video popup never flips the wave pattern.
+  // Click on bare silk toggles halftone (0.21) <-> wave (0.07). The canvas
+  // stays pointer-events:none and this listens passively on window, so links,
+  // cards and controls keep their clicks: anything interactive (or the rabbit-
+  // hole trigger/popup), a text selection, or an already-handled click is
+  // ignored.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (!wrapperRef.current) return;
+      if (!wrapperRef.current || !activeRef.current || e.defaultPrevented || e.button !== 0) return;
       const el = e.target as Element | null;
-      if (el?.closest?.("a, button, [role='button'], #rh-trigger, #rh-hover-zone, #rh-rabbit-wrapper")) return;
+      if (el?.closest?.("a, button, input, select, textarea, label, summary, [role='button'], [role='link'], [tabindex]:not([tabindex='-1']), .project-card, .portfolio-grid-card, #rh-trigger, #rh-hover-zone, #rh-rabbit-wrapper")) return;
+      const sel = window.getSelection?.();
+      if (sel && !sel.isCollapsed) return;
       const rect = wrapperRef.current.getBoundingClientRect();
-      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        startTransition(() => {
-          setMode(m => {
-            const next = m === 0 ? 1 : 0;
-            modeRef.current = next;
-            window.dispatchEvent(new CustomEvent("ps3-mode-sync", { detail: { mode: next } }));
-            return next;
-          });
-        });
-      }
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+      const next = modeRef.current === 0 ? 1 : 0;
+      modeRef.current = next;
+      saveMode(next);
+      rippleRef.current = {
+        x: (e.clientX - rect.left) / rect.width,
+        y: 1 - (e.clientY - rect.top) / rect.height,
+        t0: performance.now(),
+      };
+      lifecycleRef.current?.wake();
     };
     window.addEventListener("click", onClick);
     return () => window.removeEventListener("click", onClick);
@@ -171,7 +176,13 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    // Spring-followed cursor (vx/vy carry inertia), plus a short wake of
+    // speed-weighted samples and a decaying "flick" energy for glow.
+    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, vx: 0, vy: 0 };
+    const trailRaw = new Float32Array(TRAIL_N * 4); // x, y, age(s), strength
+    const trailGpu = new Float32Array(TRAIL_N * 3);
+    const trail = { head: 0, lastX: NaN, lastY: NaN, lastMs: 0 };
+    let flick = 0, flickTarget = 0;
     let rafId = 0, lastT = 0;
     const START_OPACITY = 0.5;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
@@ -306,7 +317,7 @@ export default function PS3Silk({
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
-        const endOp      = endOpacityRef.current;
+        const endOp      = paramsRef.current.endOpacity;
         targetOpacity = START_OPACITY + (endOp - START_OPACITY) *
           ease3(clamp((scrollY - fadeStart) / (fadeEnd - fadeStart), 0, 1));
       }
@@ -334,6 +345,23 @@ export default function PS3Silk({
         if (!rect || rect.width < 2 || rect.height < 2) return;
         mouse.tx = (e.clientX - rect.left) / rect.width;
         mouse.ty = 1.0 - (e.clientY - rect.top) / rect.height;
+        if (reducedMotion) return;
+        const x = mouse.tx, y = mouse.ty;
+        if (x < -0.1 || x > 1.1 || y < -0.1 || y > 1.1) { trail.lastX = NaN; return; }
+        const now = performance.now();
+        let speed = 0; // px per ms
+        if (!Number.isNaN(trail.lastX)) {
+          const dx = (x - trail.lastX) * rect.width, dy = (y - trail.lastY) * rect.height;
+          speed = Math.hypot(dx, dy) / Math.max(8, now - trail.lastMs);
+        }
+        trail.lastX = x; trail.lastY = y; trail.lastMs = now;
+        flickTarget = Math.max(flickTarget, Math.min(speed / 2.5, 1));
+        const strength = Math.min(speed / 1.2, 1);
+        if (strength < 0.04) return;
+        const i = trail.head * 4;
+        trailRaw[i] = x; trailRaw[i + 1] = y; trailRaw[i + 2] = 0; trailRaw[i + 3] = strength;
+        trail.head = (trail.head + 1) % TRAIL_N;
+        if (activeRef.current && !running && canvas.width >= 2) startLoop();
       }
 
       function onPopState() {
@@ -410,6 +438,13 @@ uniform int   uMode;
 uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
+uniform vec3  uTrail[${TRAIL_N}];
+uniform int   uTrailCount;   // 0 when idle: loop is skipped entirely
+uniform float uTrailRadiusPx;
+uniform float uTrailPushPx;
+uniform float uFlick;
+uniform vec3  uRipple;       // x, y (uv), progress 0..1; z < 0 = off
+uniform float uRippleSize;
 
 vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
   float phase, float cy, vec3 col, float width, float sharp, bool flip) {
@@ -426,7 +461,24 @@ vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec2 frag = gl_FragCoord.xy;
+  // Silk parting: displace where the ribbons are *sampled* away from the
+  // recent cursor wake. Stateless, no FBO; dots stay on their grid.
+  vec2 push = vec2(0.0);
+  float touch = 0.0;
+  if (uTrailCount > 0) {
+    float r2 = uTrailRadiusPx * uTrailRadiusPx;
+    for (int k = 0; k < ${TRAIL_N}; k++) {
+      if (k >= uTrailCount) break;
+      vec3 t = uTrail[k];
+      vec2 d = frag - t.xy * uResolution;
+      float g = exp(-dot(d, d) / r2) * t.z;
+      push += d / (length(d) + 1.0) * g;
+      touch += g;
+    }
+    touch = min(touch, 1.0);
+  }
+  vec2 uv = (frag - push * uTrailPushPx) / uResolution;
   uv.y += uYOffsetPx / uResolution.y;
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
@@ -444,6 +496,19 @@ void main() {
 
   float waveLuma  = max(max(c.r,c.g),c.b);
   float waveLight = waveLuma * uIntensity * 4.5;
+  // Glow: crests near the (sprung) cursor and in the wake brighten briefly
+  // on fast flicks; the click ripple is a soft expanding ring.
+  if (uFlick > 0.001 || touch > 0.0) {
+    vec2 dm = (frag - uMouse * uResolution) / (uTrailRadiusPx * 1.8);
+    float near = exp(-dot(dm, dm));
+    waveLight *= 1.0 + uFlick * near + touch * 0.35;
+  }
+  if (uRipple.z >= 0.0) {
+    float rd = length(frag - uRipple.xy * uResolution);
+    float rr = uRipple.z * uRippleSize * uResolution.x;
+    float ring = exp(-pow((rd - rr) / 22.0, 2.0)) * (1.0 - uRipple.z);
+    waveLight += ring * 0.14 + ring * waveLight * 0.6;
+  }
 
   if (uMode == 1) {
     vec2 cell       = floor(gl_FragCoord.xy / uHalftoneSize);
@@ -492,6 +557,34 @@ void main() {
       const uHtSizeLoc        = gl.getUniformLocation(prog, "uHalftoneSize");
       const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
+      const uTrailLoc         = gl.getUniformLocation(prog, "uTrail");
+      const uTrailCountLoc    = gl.getUniformLocation(prog, "uTrailCount");
+      const uTrailRLoc        = gl.getUniformLocation(prog, "uTrailRadiusPx");
+      const uTrailPLoc        = gl.getUniformLocation(prog, "uTrailPushPx");
+      const uFlickLoc         = gl.getUniformLocation(prog, "uFlick");
+      const uRippleLoc        = gl.getUniformLocation(prog, "uRipple");
+      const uRippleSizeLoc    = gl.getUniformLocation(prog, "uRippleSize");
+
+      // Ages the wake (fast sine attack over the first 25% of life, slow
+      // release) and packs live samples to the front so the shader loop can
+      // stop at uTrailCount. Returns that count.
+      let lastStepMs = 0;
+      function stepTrail(ms: number, life: number) {
+        const dt = lastStepMs ? Math.min((ms - lastStepMs) / 1000, 0.1) : 0;
+        lastStepMs = ms;
+        let n = 0;
+        for (let k = 0; k < TRAIL_N; k++) {
+          const i = k * 4;
+          if (trailRaw[i + 3] <= 0) continue;
+          const age = (trailRaw[i + 2] += dt);
+          if (age >= life) { trailRaw[i + 3] = 0; continue; }
+          const m = age / life;
+          const env = m < 0.25 ? Math.sin((m / 0.25) * Math.PI / 2) : Math.sin((1 - (m - 0.25) / 0.75) * Math.PI / 2);
+          trailGpu[n * 3] = trailRaw[i]; trailGpu[n * 3 + 1] = trailRaw[i + 1]; trailGpu[n * 3 + 2] = env * trailRaw[i + 3];
+          n++;
+        }
+        return n;
+      }
 
       // Sets every uniform from current state and paints one frame. Shared by
       // frame()'s regular throttled loop and resize()'s immediate post-resize
@@ -499,22 +592,35 @@ void main() {
       // current state is right now," so there's one definition of what that
       // means instead of two copies drifting apart.
       function draw(ms: number) {
+        const P = paramsRef.current;
         const wc = waveColorRef.current;
-        // Reduced-motion: freeze the shader's time input instead of feeding
-        // it the running clock, so the wave pattern still renders (just as a
-        // static frame) rather than keeping the animation loop's only
-        // visible effect running at full speed regardless of the preference.
+        const mode = modeRef.current;
+        // Reduced motion: frozen time, no cursor input, one frame (see frame()).
         gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
         gl.uniform2f(uMouseLoc, mouse.x, mouse.y);
-        gl.uniform1f(uIntLoc, intensityRef.current);
-        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : mouseStrRef.current);
+        gl.uniform1f(uIntLoc, mode === 1 ? P.intensityHalftone : P.intensityWave);
+        gl.uniform1f(uMStrLoc, reducedMotion ? 0 : P.mouseStrength);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
-        gl.uniform1f(uYOfsLoc, yOffsetRef.current);
-        gl.uniform1i(uModeLoc, modeRef.current);
-        gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
+        gl.uniform1f(uYOfsLoc, P.yOffset);
+        gl.uniform1i(uModeLoc, mode);
+        gl.uniform1f(uHtSizeLoc, P.halftoneSize);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
-        gl.uniform1f(uSpeedLoc, speedRef.current);
+        gl.uniform1f(uSpeedLoc, P.speed);
+        const n = reducedMotion ? 0 : stepTrail(ms, P.trailLife);
+        gl.uniform1i(uTrailCountLoc, n);
+        if (n > 0) gl.uniform3fv(uTrailLoc, trailGpu);
+        gl.uniform1f(uTrailRLoc, P.trailRadius);
+        gl.uniform1f(uTrailPLoc, P.trailStrength);
+        gl.uniform1f(uFlickLoc, reducedMotion ? 0 : flick * P.flickGlow);
+        const rp = rippleRef.current;
+        let prog = -1;
+        if (rp && !reducedMotion) {
+          prog = (performance.now() - rp.t0) / (P.rippleDuration * 1000);
+          if (prog >= 1) { rippleRef.current = null; prog = -1; }
+        }
+        gl.uniform3f(uRippleLoc, rp ? rp.x : 0, rp ? rp.y : 0, prog);
+        gl.uniform1f(uRippleSizeLoc, P.rippleSize);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
@@ -573,8 +679,16 @@ void main() {
         if (ms - lastT < FRAME_MS) return;
         lastT = ms;
 
-        mouse.x += (mouse.tx - mouse.x) * 0.042;
-        mouse.y += (mouse.ty - mouse.y) * 0.042;
+        // Damped spring toward the pointer (per 30fps step): soft inertia
+        // that overshoots a touch on flicks, then glides back.
+        const P = paramsRef.current;
+        mouse.vx = mouse.vx * P.springDamping + (mouse.tx - mouse.x) * P.springStiffness;
+        mouse.vy = mouse.vy * P.springDamping + (mouse.ty - mouse.y) * P.springStiffness;
+        mouse.x += mouse.vx;
+        mouse.y += mouse.vy;
+        // Flick energy: quick rise, slow decay.
+        flick += (flickTarget - flick) * (flickTarget > flick ? 0.5 : 0.08);
+        flickTarget *= 0.7;
 
         updateScrollTarget();
         const isIntro = ms < introPhaseEnd;
@@ -588,9 +702,13 @@ void main() {
           const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.035; // dim fast, recover medium
           currentOpacity += (targetOpacity - currentOpacity) * lerpSpeed;
         }
+        if (reducedMotion) currentOpacity = targetOpacity;
         writeWrapperOpacity(currentOpacity);
 
         draw(ms);
+        // Reduced motion: time is frozen, so one frame is the whole picture.
+        // Scroll / resize / click / wake restart the loop for a fresh frame.
+        if (reducedMotion) stopLoop();
       }
 
       // Start only if we're currently the visible work route; otherwise wait

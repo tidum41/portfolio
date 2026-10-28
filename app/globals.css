@@ -276,8 +276,6 @@ p, li       { text-wrap: pretty; }
 .portfolio-grid-card,
 .portfolio-grid,
 .interactive-badge,
-.ps3cp,
-.ps3cp *,
 .cs-aside,
 .cs-aside *,
 .cs-back-desktop,
@@ -298,8 +296,6 @@ p, li       { text-wrap: pretty; }
 .project-card video,
 .site-nav a,
 .site-nav button,
-.ps3cp a,
-.ps3cp button,
 .footer-link {
   -webkit-user-drag: none;
   user-drag: none;
@@ -660,9 +656,9 @@ html[data-theme="light"] {
 }
 
 /* ─── ProjectPopup close button — same 24px/radius-6/invisible-hit-area-
-   expansion language as PS3ControlPanel's .ps3cp-ibtn. Background stays flat
+   expansion language as the old PS3 panel icon buttons. Background stays flat
    (matches the panel, no resting "badge" box) — only the icon color shifts
-   on hover, same as .ps3cp-ibtn's own resting/hover treatment. ─────────── */
+   on hover. ─────────── */
 /* Hover/press use opacity + transform only (compositor) so info/× stay
    responsive while a heavy iframe is parsing on the main thread. */
 .popup-close-btn {
@@ -1375,9 +1371,6 @@ button.footer-link::before {
   border-radius: var(--radius-xs);
   transition: none;
 }
-
-/* ─── PS3 panel — injected stylesheet mirrored here for SSR safety ─ */
-.ps3cp * { box-sizing: border-box; }
 
 /* ─── Tabular nums utility ────────────────────────────────────────── */
 .tabular-nums { font-variant-numeric: tabular-nums; }
@@ -2461,15 +2454,6 @@ html[data-theme="dark"] .ps-polaroid-cap {
   opacity: 0 !important;
   pointer-events: none;
 }
-
-/* ─── PS3 Control Panel dark mode — overrides injected class rules ── */
-html[data-theme="dark"] .ps3cp-ibtn { color: rgba(255,255,255,0.78) !important; }
-@media (hover: hover) and (pointer: fine) {
-  html[data-theme="dark"] .ps3cp-ibtn:hover { color: rgba(255,255,255,0.92) !important; }
-  html[data-theme="dark"] .ps3cp-mode-btn:hover { background: rgba(255,255,255,0.07) !important; }
-}
-html[data-theme="dark"] .ps3cp input[type=range]::-webkit-slider-thumb { background: rgba(255,255,255,0.88) !important; }
-html[data-theme="dark"] .ps3cp input[type=range]::-moz-range-thumb { background: rgba(255,255,255,0.88) !important; }
 
 /* ─── Hero rabbit — scale with font, dim slightly in dark mode ────── */
 .hero-rabbit { color: inherit; }
