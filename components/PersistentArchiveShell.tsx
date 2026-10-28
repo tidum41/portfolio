@@ -2,10 +2,9 @@
 
 import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
-// Lazy, so it stays out of first-load JS; PrimaryRouteWarmup starts the
-// download at hydration on idle so the first Archive tap doesn't wait for it.
-const ArchivePageClient = dynamic(() => import("@/app/archive/ArchivePageClient"));
+// Static, as on main: a lazy chunk made the first Archive tap after the
+// intro wait on a download and a Suspense round-trip on phones.
+import ArchivePageClient from "@/app/archive/ArchivePageClient";
 import {
   peekArchiveGallery,
   rememberArchiveGallery,
