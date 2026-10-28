@@ -65,6 +65,8 @@ async function closeTests(browser) {
         const trigger = page
           .locator(path === "/dialogue" ? ".dp-zoom:not(:has([data-interactive])) .dp-zoom__trigger" : ".cs-figure-zoom-trigger")
           .first();
+        // P10: /dialogue figures are motion demos or interactive, so a page may have no enlargeable figure.
+        if ((await trigger.count()) === 0) { log(true, `${label} (n/a: no enlargeable figure)`); await ctx.close(); continue; }
         const box = await trigger.boundingBox();
         if (!box) { log(false, `${label}: no trigger`); await ctx.close(); continue; }
         // Click a point of the trigger that is inside the viewport at scrollY 0.
@@ -211,6 +213,7 @@ async function lightboxSweeps(browser) {
       try {
         const { ctx, page } = await open(browser, path, width, 900, theme);
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+        if ((await page.locator(TRIGGER(path)).count()) === 0) { log(true, `${label} (n/a: no enlargeable figure)`); await ctx.close(); continue; }
         await page.locator(TRIGGER(path)).first().click({ force: true });
         await page.waitForSelector(".cs-lightbox-backdrop", { timeout: 3000 });
         await page.waitForTimeout(500);

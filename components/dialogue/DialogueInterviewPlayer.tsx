@@ -4,7 +4,6 @@ import {
   DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH,
 } from "@/lib/caseStudies/dialoguePlacementStill";
 
-const PLAYED = 14.04;
 const BUFFERED = 17.269;
 
 function PlayIcon() {
@@ -57,7 +56,11 @@ function FullscreenIcon() {
 }
 
 /** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static. */
-export function DialogueInterviewPlayer() {
+const toSec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
+
+/** current and total are mm:ss; the played bar follows them so the clip time matches the quote row. */
+export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: { current?: string; total?: string } = {}) {
+  const played = Math.round((toSec(current) / toSec(total)) * 1000) / 10;
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
       <div
@@ -89,14 +92,14 @@ export function DialogueInterviewPlayer() {
           <span className="dp-qplayer__btn" data-annotate-part="player-skip-forward"><SkipIcon /></span>
         </div>
         <div className="dp-qplayer__time-controls">
-          <span className="dp-qplayer__time" data-annotate-part="player-time-current">01:39</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-current">{current}</span>
           <div className="dp-qplayer__scrub">
             <div className="dp-qplayer__track" data-annotate-part="player-track">
-              <span className="dp-qplayer__buffered" style={{ width: `${BUFFERED}%` }} />
-              <span className="dp-qplayer__played" style={{ width: `${PLAYED}%` }} />
+              <span className="dp-qplayer__buffered" style={{ width: `${Math.max(BUFFERED, played + 6)}%` }} />
+              <span className="dp-qplayer__played" style={{ width: `${played}%` }} />
             </div>
           </div>
-          <span className="dp-qplayer__time" data-annotate-part="player-time-total">11:45</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-total">{total}</span>
         </div>
         <div className="dp-qplayer__group dp-qplayer__group--end">
           <span className="dp-qplayer__btn dp-qplayer__btn--text" data-annotate-part="player-speed">1×</span>

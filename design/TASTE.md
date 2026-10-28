@@ -160,3 +160,5 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
   - Mine Dialogue's customer case studies (dialogue-site.md) for what data to show and where the current chat falls short.
   - Tight layouts: mobile compact, not desktop stacked tall; sections read as clearly separate.
 - Motion (Mudit, Oct 28 2026): simple looping demos in the real components (CSS, no Remotion), timed to the measured recording in /workspace/dialogue-anim (hard-cut swaps, 300 ms 0.5 to 1 enter, 1000 ms linear spin, about 137 chars/s stream, cards land whole with a ~133 ms scroll ease-out); static final state under prefers-reduced-motion.
+
+- Levels turning point (Mudit, Oct 28 2026, his words): "I assumed that honing in on the smallest levels of detail might be useful, but this might not be feasible and efficient for teams, rather optional." Depth is optional and opened by the reader; it is the page's one stated reversal and lives in Levels.

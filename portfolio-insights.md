@@ -1,10 +1,10 @@
 # Portfolio reference: top product design case studies
 
-Working reference for the Dialogue case study bot. Read live on Oct 27 and Oct 28 2026 (PT) with headless Chrome at 1440x900. Every quote below is copied from the live page or its text dump, with the source URL next to it. Layout numbers for Rachel Chen come from measuring the rendered DOM at 1440 wide (`shots/refs/rachel-all-layout.txt`). Screenshots and text dumps live in `/workspace/dialogue-agent/shots/refs/`.
+Working reference for the Dialogue case study bot. The question this page answers: **why is this designer a good problem solver, and how does the page prove it?** Every study gets a problem-solving proof (framing and reframing, constraints, options weighed, the turning point, how the decision is justified, how impact or missing impact is handled), then a content breakdown and a visual breakdown.
 
-How to use this page: Rachel Chen is the model for /dialogue, so her section is the deepest and ends with a mirror checklist. The other studies each get a content breakdown and a visual breakdown. The cross-cutting section at the end maps moves to Dialogue sections.
+Read live on Oct 27 and Oct 28 2026 (PT) with headless Chrome at 1440x900. Every quote is copied from the live page, with its URL. Layout numbers come from measuring the rendered DOM at 1440 wide (`shots/refs/*-layout.txt` and `rachel-all-layout.txt`). Screenshots live in `/workspace/dialogue-agent/shots/refs/`.
 
-Coverage: Rachel Chen (8 project pages, 6 full case studies), Caleb Wu (RevisionDojo, Axis), Christine Liang (Butternut), Ori Porat, Sean Marcano, Rauno Freiberg, Julia Ro, plus two new ones, Ali Chitsaz (Basion) and Trang Cao (Spec AI). Aditya Das (adityad.as) failed again on Oct 28: WebFetch returned a 500 and curl got no response, so his notes stay at the two lines already in REFERENCE-CASE-STUDIES.md.
+Coverage: Rachel Chen (deepest, the model for /dialogue), Caleb Wu, Christine Liang, Ori Porat, Sean Marcano, and five studies Mudit called strong: Megan Phi (Tally), Megan Yap (Splunk), Natalie Almosa (Notion Mail), Jess Fong (Patreon, Reddit). Removed on Oct 28 at Mudit's request as "just OK": Rauno Freiberg, Julia Ro, Ali Chitsaz (Basion), Trang Cao (Spec AI). Aditya Das (adityad.as) still does not load.
 
 ---
 
@@ -27,6 +27,15 @@ Word counts include headings, kickers and meta rows, so body prose is a bit lowe
 
 ![rachel-1password-hero](/workspace/dialogue-agent/shots/refs/rachel-1password-hero.jpg)
 1Password fold: autoplaying product video above the title, then meta row. https://www.rachelchen.tech/projects/1password
+
+### 1.0 How Rachel proves she is a good problem solver
+
+- **Framing and reframing.** She states the user goal, then turns it with the reason it is hard, in two headings: "Native macOS autofill is not supported on 1Password..." / "...but it’s not easy when you don’t own the operating system!" On Figma she reframes from a tool gap to a behavior: "Today’s design tools are not built for sparks of creativity" then "What if Figma enabled designers to capture ideas on-the-go?" https://www.rachelchen.tech/projects/figma
+- **Constraints named.** Platform: "This just wasn't possible with Apple's API limitations." Hardware: "A device that is light-weight and always-recording isn’t possible, yet." Translation: "The challenge lies in translating a broad intent in natural language into deterministic agent configurations." https://www.rachelchen.tech/projects/notion
+- **Options weighed.** Numbered explorations, each with an "If we could..." sentence and a verdict heading (1Password). Explorations ranked by what each one prioritizes: "Here, the priority is speed over structure." / "fidelity over speed." / "clarity over execution." (Figma).
+- **Turning point.** A hidden problem inside a simple result: "The final flows were simple, but there was a big problem hidden within." A first pass that fails: "However, the problem with this approach was that this could actually impede clarity and collaboration".
+- **Justification.** The rejected option sits inside the decision sentence: "Instead of a persistent save button that users become blind to, I decided keep the agent settings page as the single source of truth for saving". The cost is said out loud: "This is a trade-off that we're willing to make for mass adoption." https://www.rachelchen.tech/projects/openai
+- **Impact or missing impact.** No invented numbers. She reports a handoff ("I handed this off to the 1Password for Safari team!"), a ship ("Here is the 4 part solution I shipped"), or a limit ("The user flow couldn't be perfect, but we had to work with it.").
 
 ### 1.1 The page template (same on every project)
 
@@ -195,6 +204,14 @@ RevisionDojo: https://www.calebwu.ca/RevisionDojo (re-fetched Oct 28, unchanged)
 ![caleb-revisiondojo-evaluation](/workspace/dialogue-agent/shots/refs/caleb-revisiondojo-evaluation.jpg)
 RevisionDojo: research synthesis board, the relevant versus irrelevant circle diagram, the option carousel with check rows, and the verdict callout. https://www.calebwu.ca/RevisionDojo
 
+### How Caleb proves he is a good problem solver
+- **Framing.** A blunt user problem, then two evidence claims: "Searching for your IB courses is ridiculously hard", "Students focus on just 6/30 subjects, so the remaining content adds friction instead of value." https://www.calebwu.ca/RevisionDojo
+- **Constraints.** Named in the evaluation heading: "Evaluating ideas against research and technical constraint."
+- **Options weighed.** Four options with plus and minus rows, e.g. "Easy implementation: already built onsite" against "Carries stigma from poor maintenance".
+- **Turning point.** Testing breaks the first answer: "Users felt way too much pressure to choose a subject, then a corresponding feature."
+- **Justification.** "What we initially assumed to help with precise decision making, actually created decision paralysis." The fix is a "middle point": "navigating them to the subject itself".
+- **Impact.** None claimed; the page closes on learnings and "This is just a snapshot of the entire design process."
+
 ### Content breakdown (RevisionDojo)
 - **Structure.** Summary and team, then the solution story first (problem claims, then four feature sections), then "Where it all started" goes back to research, evaluation, prototype, feedback, final, "Key Learnings". Two passes: what it is, then how he got there.
 - **Opening.** "RevisionDojo is the fastest growing edtech startup, providing digital IB study tools to 400,000+ users." then "My team developed a scalable navigation system to anchor the products rapid growth."
@@ -235,6 +252,14 @@ https://christineliangdesign.com/works/butternut-ai (re-fetched Oct 28; the page
 ![christine-butternut-fold](/workspace/dialogue-agent/shots/refs/christine-butternut-fold.jpg)
 Butternut fold. https://christineliangdesign.com/works/butternut-ai
 
+### How Christine proves she is a good problem solver
+- **Reframing the ask.** "the surface-level ask was to modernize the interface. But the real question was: why were 85% of users abandoning before publishing?" https://christineliangdesign.com/works/butternut-ai
+- **Constraints.** The client's: "The client wanted to preserve the feeling of "editing directly on the site.""
+- **Options weighed.** A competitive map first, which kills the obvious answer: "The opportunity wasn't to add more features. It was to make the existing ones actually usable."
+- **Turning point.** Symptoms a reader can picture: "AI Assist would reply "Changes Done" with no explanation."
+- **Justification.** "So rather than moving everything to a collapsible sidebar, I introduced a clear separation between two types of tools: Universal and Contextual."
+- **Impact.** Real numbers (2.7 to 4.3), and the open problem stated anyway: "The drop-off between editing and publishing is still the core business problem."
+
 ### Content breakdown
 - **Structure.** Title "Closing the gap between generate and publish", meta (Role, Tools, Team, Duration), OVERVIEW_, INSIGHTS_, CHALLENGE_, SOLUTION_ (four sub-sections), TAKEAWAYS_, "If I had a few more weeks".
 - **Opening.** Metric first: "Redesigning the AI editor for a website builder used by 300k+ users, turning a 2.7 into a 4.3 satisfaction score." Then the overview H2 "Over 300k users tried it. Fewer than 15% published."
@@ -265,6 +290,13 @@ https://www.ori-porat.design/work/ai-chat
 ![ori-aichat-fold](/workspace/dialogue-agent/shots/refs/ori-aichat-fold.jpg)
 Ori Porat fold. https://www.ori-porat.design/work/ai-chat
 
+### How Ori proves he is a good problem solver
+- **Framing.** One object reveals the real problem: "That image stopped me. Not because of the icon itself, but because of what it revealed". https://www.ori-porat.design/work/ai-chat
+- **Constraints.** An existing build he did not design: "I found out that a different design had already been partially developed by engineering."
+- **Options weighed and turning point.** "The Hard Calls" section names two tensions, the foundation problem and "The trust vs. conversion tension".
+- **Justification.** "When I pushed back, I didn’t do it from instinct alone. I did my homework"
+- **Impact.** An early number with a caveat: "Not a final number".
+
 ### Content breakdown
 - **Structure.** "The problem all started with the wrong icon.", "Where I Was Coming From", "Understanding The Biz And More", "What the Work Actually Showed", "Building Blocks, Not a One-Off", "The Hard Calls", a "What Shipped" and "What's Coming" ending, "Connecting the Dots".
 - **Opening.** A story with a single object: "The team was running an A/B test on avatar icons" ... "A robot." Then "That image stopped me." and the stakes "Nobody was using it." It closes the intro with "This is the story of how we got there."
@@ -290,6 +322,13 @@ https://www.seanmarcano.com/work/moneda-ai-chat
 ![sean-moneda-fold](/workspace/dialogue-agent/shots/refs/sean-moneda-fold.jpg)
 Moneda fold. https://www.seanmarcano.com/work/moneda-ai-chat
 
+### How Sean proves he is a good problem solver
+- **Framing.** The structured UI is the obstacle, not the user: "Users knew exactly what they wanted to do. The structured UI was the obstacle." https://www.seanmarcano.com/work/moneda-ai-chat
+- **Constraints.** Trust in money movement: "They were not comfortable with AI taking action without a clear confirmation step."
+- **Options weighed.** Per intent, three paths: resolved, ambiguous, failure.
+- **Justification.** Research finding first, then the principle "Trust before capability."
+- **Impact.** "The product has not yet launched publicly."
+
 ### Content breakdown
 - **Structure.** Meta, research H2, "We tested how users understood AI before we designed anything.", "Designing for AI means designing the edges, not just the happy path.", "Designed end to end. Handed to engineering." with labeled callouts THE OPPORTUNITY, KEY RESEARCH FINDING, THE CORE DESIGN PRINCIPLE, WHAT THIS PROJECT ADDED.
 - **Opening.** "We had the research. The question was whether AI could make payments feel like a conversation."
@@ -309,139 +348,210 @@ Moneda fold. https://www.seanmarcano.com/work/moneda-ai-chat
 
 ---
 
-## 6. Rauno Freiberg (Vercel): Invisible details of interaction design
+## 6. Megan Phi: Tally
 
-https://rauno.me/craft/interaction-design
+https://www.meganphi.com/projects/tally (Product Designer, Sep 2024 to May 2025, startup that has since wound down)
 
-![rauno-interaction-fold](/workspace/dialogue-agent/shots/refs/rauno-interaction-fold.jpg)
-Rauno essay fold. https://rauno.me/craft/interaction-design
+![tally-hero](/workspace/dialogue-agent/shots/refs/tally-hero.jpg)
+Tally fold: dark page, outcome H1, product UI in a lavender frame. https://www.meganphi.com/projects/tally
+
+![tally-impact-combos](/workspace/dialogue-agent/shots/refs/tally-impact-combos.jpg)
+Impact stat tiles, then the "48 different combinations" diagram that makes the problem countable. https://www.meganphi.com/projects/tally
+
+### How Megan Phi proves she is a good problem solver
+- **Framing.** She names the gap in the market in one sentence, before any UI: "Existing inventory tools track complete SKUs, leaving made-to-order businesses to rely on spreadsheets to track raw materials."
+- **Making the problem countable.** A diagram plus caption turns "complex" into arithmetic: "For a "simple" product: 4 designs x 3 colors x 4 sizes = 48 different combinations". Then a metaphor: "Think of these combinations as recipes with overlapping ingredients."
+- **Reframe as an opportunity question.** "What if we used recipes to automate materials inventory?"
+- **Evidence for the call.** "We chatted with 10+ businesses from apparel to handmade jewelry. All managed their inventory using spreadsheets." Plus one user quote: "I'll make a Square sale and forget to update my Shopify... if someone buys off my Shopify storefront later... I have to email to cancel their order."
+- **Scope as a decision.** MVP from interviews ("We drew from our user interviews to determine high priority needs for an MVP."), v2 deferred ("We roadmapped a v2 based on signal from early user conversations.").
+- **Cheap validation first.** "Validating with a chatbot prototype" / "One of our engineers ran his own made-to-order business on this prototype."
+- **Decisions with a reason in one line.** "Modals → Drawers" / "Modals yielded inconsistent heights and blocked contextual information."
+- **Impact, honestly.** "We've since wound down, but our users fulfilled 2,500+ orders, processing over $120k in revenue." The outcome and the shutdown share one sentence.
 
 ### Content breakdown
-- **Structure.** Intro, then 13 detail sections (Metaphors, Kinetic Physics, Swipe Gestures, Responsive Gestures, Spatial Consistency, Fluid Morphing, Frequency & Novelty, Fidgetability, Scroll Landmarks, Touch Content Visiblity, Implicit Input, Fitts's Law, Scrolling), Closing Thoughts, Acknowledgments, Resources.
-- **Opening.** Sets the stance: "This essay is not a tutorial nor a collection of guidelines."
-- **Headings.** One or two word noun labels.
-- **Voice.** Observational, precise, short sentences that name a familiar interaction and then its hidden rule: "As a designer, I love to animate everything." then "But it's not so obvious when not to animate something."
-- **Backing calls.** Every claim sits next to a live demo or a real iOS example (the Dynamic Island under "Spatial Consistency").
-- **Ending.** "There must be a reason."
-- **Density.** About 3,500 words with 50 media; a demo every one or two paragraphs.
+- **Structure.** Title block, tl;dr, Impact, Background, The Status Quo, Opportunity, Early Validation, Design & Iteration, Solution, Reflection. Each section is a small gray kicker plus a large line.
+- **Opening.** Outcome headline: "Empowering small businesses to process over $120k in revenue". Then "We built an all-in-one fulfillment hub for made-to-order businesses."
+- **Heading style.** Kicker plus a 32 px claim: "Keeping Tally so you don't have to.", "Here's what happened when we launched Tally with early users.", "Made-to-order businesses face challenges scaling their operations.", "Materials inventory, automated". Sub-headings are short labels: "Incremental Inventory Counter", "Sweating the Details", "Design System".
+- **Voice.** Plain, warm, a pun in the tl;dr. Solution steps are imperatives: "Add products to your shop", "Connect your storefronts", "Watch the numbers move", "Cross the finish line with Tally".
+- **Decisions and rejected options.** "Modals → Drawers" names the old and new pattern in the heading.
+- **Missing or ended impact.** Reports early-user numbers, then says it wound down.
+- **Ending.** Numbered reflections: "Launch something... anything." and "Sell a story, not a product."
+- **Density.** About 830 words, 23 media, paragraphs of one to three sentences.
 
 ### Visual breakdown
-- Narrow centered column, white background, tiny sticky TOC at left.
-- 50 media, mostly small interactive or looping demos in rounded tiles, often phone-sized, with hands on iPad for touch.
-- Each demo shows one detail; you can play with many of them.
-- Story without text: strong. The demos prove each claim by feel.
-- Why it matters for Dialogue: a familiar pattern (a chat answer, a clip player) earns attention through its details when each detail gets its own tiny demo.
+- **Grid.** One 664 px column (x=388). Media sits on a near-black well rgb(26, 26, 26) with 4 px radius; the UI inside is usually 531 px wide, so there is about 66 px of dark padding each side. Triples are 213 px tiles with 12 px captions under each ("Manage inventory by materials", "Consolidate invoices across stores", "Streamline fulfillment with daily to-dos"). Pairs are 326 px.
+- **Type.** 32 px claims, 20 px sub-claims, 16 px body, 12 px captions.
+- **Motion.** 3 videos, muted. "Modals → Drawers" is a 664x480 clip that shows the change; the solution clips autoplay once (loop off).
+- **Impact tiles.** Three bordered dark tiles: "10 Businesses", "2.5K Orders", "$120K Processed".
+- **Why the UI looks strong.** Light product UI on a dark page, at a single consistent scale, cropped to the part that matters. Semantic color is explained in the copy ("Semantic color coding allows users to identify critical values at a glance.").
+- **Story without text.** Tally marks to 48 SKU cards, then the recipe link, then the counter moving.
 
 ---
 
-## 7. Julia Ro: Designing with, for and alongside AI
+## 7. Megan Yap: Splunk self-healing pipeline
 
-https://www.juliarodesign.com/work/designing-with-for-and-alongside-ai
+https://meganyap.me/work/splunk (Sole Product Designer, intern, Jul to Aug 2025)
 
-![julia-ai-fold](/workspace/dialogue-agent/shots/refs/julia-ai-fold.jpg)
-Julia Ro fold. https://www.juliarodesign.com/work/designing-with-for-and-alongside-ai
+![splunk-hero](/workspace/dialogue-agent/shots/refs/splunk-hero.jpg)
+Splunk fold: the hero is one AI investigation card set large on a pink gradient, then the title, a one-line outcome, and an orange meta bar. https://meganyap.me/work/splunk
+
+![splunk-options](/workspace/dialogue-agent/shots/refs/splunk-options.jpg)
+Entry point options as large frames with plus and minus rows beside each. https://meganyap.me/work/splunk
+
+### How Megan Yap proves she is a good problem solver
+- **Framing as a sequence.** Context, then a plain user problem H2: "It’s difficult and time-consuming to diagnose and resolve data ingestion issues." Then a labeled problem statement: "How might we allow users to efficiently identify potential root causes and remediation steps for triggered alerts?"
+- **Constraint found inside the design.** "But here was the problem: these investigations were long latency tasks (they could take several hours), so how would users know how to come back if their corresponding alert was further down the page, or even on the next?"
+- **Options weighed visibly.** Three entry points, each with plus and minus rows, e.g. "Separate Investigations page" and "Filter cards" ("Latency problem solved without information redundancy" against "Not up to accessibility standards"). Then a "FINAL PICK" label: "Hybrid approach: status cards + separate filter".
+- **Goal as the yardstick.** "MY GOAL" callout: "Deliver exactly the right amount of context and supporting data for users to have trust in the AI diagnosis, without including irrelevant details".
+- **Turning point.** "After leading feedback meetings with GDI SMEs, I found something new." The insight: "Each investigated alert can have multiple root causes, and each root cause can have multiple solutions."
+- **Justified narrowing.** "We decided to reduce the scope to just high confidence one root cause per issue to avoid overwhelming users."
+- **Critique as a starting move.** "I started by critiquing the prototype that was handed off from my manager."
+- **Impact.** Three stat tiles: "95%" "FASTER TICKET RESOLUTION", "6,000+" ".CONF25 DEMO AUDIENCE", "50+" "DESIGN ITERATIONS". The third is effort, which Dialogue can copy.
 
 ### Content breakdown
-- **Structure.** "What has actually changed?" essay, then "Case Study 1: AI Chat Experience" with Design Challenge, Technical Challenge, Process, v1, v2, Outcomes, Learnings.
-- **Opening.** "This is part case study, part blog post."
-- **Voice.** Honest and wry: "more heartburn and pivoting."
-- **Versions.** "v1 Static prompted question experience" then "v2 Transparent Agent experience". The reason for v1 is risk: "In our ‘start simple’ we intentionally constrained the experience to pre-populated questions with tightly scoped responses."
-- **Backing calls.** User truth stated first: "energy traders don’t trust AI in their workflows (yet)." The payoff line: "Rather than asking traders to believe the AI, we gave them the tools to interrogate it."
-- **Missing certainty.** "(And when the system doesn’t have a confident answer, it says so, providing partial support without pretending to know everything.)"
-- **Metrics.** Process speed instead of outcome numbers ("working feature that internal users were testing in ~1week").
-- **Ending.** Three learnings in columns: "Learner + User + Creator", "Designing for a moving target", "With great power…"
-- **Density.** About 1,350 words, dense blocks.
+- **Structure.** Numbered TOC: "01. Context", "02. User problem", "03. Entry point explorations", "04. Fleshing out the content", "05. Root cause: linear or tree-like?", "06. Final solution". Then Key flows and Reflection.
+- **Opening.** "A sunny summer in Boulder, Colorado." as the context H2, then the stakes (demoed to 6,000+ people at .conf).
+- **Heading style.** Small caps kicker (12 px, "ENTRY POINT EXPLORATIONS") over a 28 px serif sentence: "I needed to identify how this would integrate with the existing alerts page.", "What do Splunk users actually want to see?", "Figuring out how to deliver dense content in a lightweight way." A question in the TOC itself: "Root cause: linear or tree-like?"
+- **Voice.** First person, candid: "Information overload! There’s so much going on." and "Too many tabs and too little content" as captions on rejected layouts.
+- **Decisions.** Every chapter ends on a "FINAL PICK" or "FINAL SOLUTION" label and a one-line choice. Pros and cons use "+" and "-": "+ Order of information consumption now follows user workflow".
+- **Controversial calls.** Backed by SMEs: "I figured the best people to talk to would be our in-house Getting Data In (GDI) SMEs". And in reflection: "Not all feedback needs to be followed, especially if those giving it are not in the user group being designed for."
+- **Ending.** "Making a tangible impact on real users." plus three lessons as H3s, e.g. "In the real world, constraints change all the time".
+- **Density.** About 1,070 words, 20 media, paragraphs of two to four sentences.
 
 ### Visual breakdown
-- Landscape photo hero, then dark product UI screenshots (trading app, dark mode) at column width, a Storybook component list.
-- Dark UI on a white page gives strong contrast; the v1 and v2 screens are the same frame size so the change reads side by side.
+- **Grid.** 1020 px content area (x=362), text column 928 px. Option frames 663 px with text to the right; pairs of 502 px; final picks 637 px centered inside a 1020 px orange-tinted band rgba(203, 120, 54, 0.2) with 12 px radius. Frames sit on a beige well rgb(234, 230, 219), 12 px radius.
+- **Backgrounds.** Dark Splunk UI on vivid macOS-style wallpaper gradients (blue, orange), which makes dark enterprise UI pop.
+- **Motion.** 4 videos, all autoplay, loop, muted, no controls: the handoff critique, an entry point option, and two final flows at 714x510.
+- **Annotation.** Plus and minus rows next to each frame, a "FINAL PICK" label above the chosen frame, a tree diagram for the multiple root causes.
+- **Why the UI looks strong.** The hero is the product's most important object, the AI investigation card, enlarged until its copy is readable: "The likely root cause is schema drift."
+- **Story without text.** Three option frames, then one in an orange band; a tree diagram, then a single path.
 
 ---
 
-## 8. New: Ali Chitsaz, Basion "Beyond the Chat Box"
+## 8. Natalie Almosa: Notion Mail
 
-https://alich.design/casestudies/Basion (new pick; Senior Product Designer, Sep 2025 to Jul 2026; location not verified). Picked because it argues the same thing Dialogue does: some answers should not be prose.
+https://nataliealmosa.ca/notion-mail (only primary designer, beta October 2024, GA April 2025)
 
-![alich-basion-fold](/workspace/dialogue-agent/shots/refs/alich-basion-fold.jpg)
-Basion fold: real product UI in a browser frame on a near-black page. https://alich.design/casestudies/Basion
+![notionmail-hero](/workspace/dialogue-agent/shots/refs/notionmail-hero.jpg)
+Notion Mail fold: full-bleed sky photo, serif H1, the inbox at 1272 px. https://nataliealmosa.ca/notion-mail
+
+![notionmail-inbox](/workspace/dialogue-agent/shots/refs/notionmail-inbox.jpg)
+Ownership line, team, then the inbox with a compose window on a soft sky background. https://nataliealmosa.ca/notion-mail
+
+### How Natalie proves she is a good problem solver
+- **Framing from research variety.** "No matter how many users we talked to, we never found two who used email the same way."
+- **The reframe, in two sentences.** "How do you design for such variety? The answer: don't design the flows. Design the tools." This is the strongest single problem-solving line in the set.
+- **Constraint turned into a principle.** The product's own model: "Just like Notion blocks, users can customize their inbox however they wish."
+- **Decision with a reason.** Where to put AI: "We decided to inject AI into the most versatile email fundamental—labels." (her em dash, quoted exactly).
+- **Showing value early.** "To show value immediately, we surface auto label suggestions to the user that is relevant to their specific use case."
+- **Impact.** Ship dates stand in for metrics: "Launched to early beta in October 2024, and released to GA in April, 2025".
 
 ### Content breakdown
-- **Structure.** Overview, "Not every answer belongs in a text box", "The onboarding exploration that started GenUI", "From onboarding controls to a reusable system", "Designing the whole conversational lifecycle", "Handling more than the happy path", "From single controls to generated forms", "GenUI beyond data entry", "Collaboration and implementation", "What worked and what remained experimental", "What I learned".
-- **Opening.** "Conversation was its main interface" then "But chat was not always the easiest way to answer."
-- **Headings.** Claims in sentence case; the honest one is the best: "The components functioned. Agent selection remained inconsistent."
-- **Voice.** Calm, precise, no hype. The reasoning is cognitive: "A checklist could give the same question a clearer scope and let the user respond through recognition rather than recall."
-- **Decisions.** Each pattern documented in four parts (component, usage documentation, in-chat example, submitted state).
-- **Missing metrics.** States them directly: "We did not have reliable GenUI-specific metrics". And names the real limit: "The main limitation was not whether the components could render. It was whether the agent selected them at the right moment."
-- **Ending.** Principle line: "Use conversation for context and structured UI for precision."
-- **Density.** About 1,600 words, "8 Min Read".
+- **Structure.** Introduction, "How do you elevate email?", "Never write the same email twice", "An AI-Powered Experience". Short; about 400 words.
+- **Opening.** H1 "Reimagining the inbox to think like you", then "The first inbox to be personalized for you." and ownership: "I worked end-to-end on every screen, menu and detail."
+- **Heading style.** Questions and benefits, serif: "How do you elevate email?", "Never write the same email twice".
+- **Voice.** Conversational, talks to the reader: "If you're reading this you're probably a recruiter". A kaomoji in the last line.
+- **Density.** Very low text; the screens do most of the work.
 
 ### Visual breakdown
-- Dark page, light product UI inside a macOS-style browser frame, large and centered.
-- Component sets shown in groups with one caption sentence each ("Components could be combined when a task required several related answers.").
-- Story without text: the in-chat example frames show the component appearing inside a real conversation, then collapsing into a compact message after submit.
+- **Grid.** H1 at 64 px over a full-bleed 1440 px photo; a 1272 px hero screen; then an 800 px column with 800x514 frames.
+- **Backgrounds.** Every frame sits on the same soft watercolor sky, so a light-gray product looks premium and the set reads as one family.
+- **Motion.** No video elements found; all 8 media are images.
+- **Why the UI looks strong.** Real data in the screens (named senders, labels like "Work" and "School"), and generous crops that show the whole inbox structure.
+- **Story without text.** Inbox, then customized views, then snippets with variables, then auto label suggestions.
 
 ---
 
-## 9. New: Trang Cao, Spec AI
+## 9. Jess Fong: Patreon free content
 
-https://trangcaoportfolio.framer.website/specai (new pick; Product Designer, Winter 2026; location not verified). Picked because its third tradeoff is Dialogue's spine: "More depth or more usability in AI responses?"
+https://jessfong.com/work/patreon-free-content (Product Design Intern, May to Aug 2026)
 
-![trang-specai-fold](/workspace/dialogue-agent/shots/refs/trang-specai-fold.jpg)
-Spec AI fold: bold title and subtitle, UI crop with cursor, left section TOC. https://trangcaoportfolio.framer.website/specai
+![patreon-hero](/workspace/dialogue-agent/shots/refs/patreon-hero.jpg)
+Patreon fold: H1, subtitle, meta row, then a wide hero of phone frames on a light well. https://jessfong.com/work/patreon-free-content
 
-### Content breakdown
-- **Structure.** UI Audit, Competitive analysis, Constraint, Iteration, Trade-offs, Final Experience, What I learned, What's next (the left TOC lists exactly these).
-- **Opening.** Audit of the existing product as numbered problems, including "AI responses were long and unstructured."
-- **Headings.** The reversal is a heading: "It worked technically, but it broke the experience." with the lesson as H3s: "In AI products, speed to first value matters more than perfect output."
-- **Decisions.** "The trade-offs" lists three as questions (force context upfront, show or hide reasoning, depth or usability). The answers live in the figures, not the text dump.
-- **Before and after in words.** "Before" / "The experience was built around defining context upfront ." and "After" / "I shifted the flow from setup to intent ."
-- **Structured answers.** "Feedback is structured into severity, impact, source and actions, so users can scan fast and act immediately."
-- **Ending.** "What I learned" arrow list, then "What’s next".
+![patreon-exploration](/workspace/dialogue-agent/shots/refs/patreon-exploration.jpg)
+"Exploration 1: floating toast" with the pro above the clip and the con in a quote block below. https://jessfong.com/work/patreon-free-content
 
-### Visual breakdown
-- Bold sans display type, gray second line, a cropped UI hero with a big blue cursor showing the first click.
-- Wireframes are clickable ("Click on each frame to learn more about the process.").
-- States shown as labeled sequences: "Emty state" (her spelling), "Default state", "Switching presets".
+### How Jess proves she is a good problem solver (Patreon)
+- **Framing.** A design problem as a perception problem: "An unlocked post shouldn’t look like any other free post." Then the question: "How do we communicate value to earn more investment from fans?"
+- **Success criteria stated up front.** "Fans need to understand three things fast: this is normally paid, it was unlocked specifically for them, and free membership means more unlocks like it, enticing them to return."
+- **Tension as a heading.** "Where is the line for being attention-grabbing and feeling gimmicky?"
+- **Constraint.** What worked on desktop does not port: "on feed, fans are scrolling fast, space is tight, and the same experience couldn't just port over." And time: "The team wanted to push this experiment out in 3 weeks".
+- **Options weighed.** Three explorations, each a "Pro:" line, a video, and a "Con:" quote, e.g. "Con: The tooltip would un-ideally require content to be pushed down and would potentially be content overload for a fan at this moment."
+- **Testing changes the words.** "My internal testing revealed that "Unlocked for you" was ambiguous, leaving users unsure if a post was actually free or not. I tested leading with "Free for you" instead, which was significantly clearer."
+- **Turning point and decision.** "Given density concerns on feed, this led me to believe that the value-proposition moment we were seeking should happen on the post page, not the feed." Heading: "Winning design: Modal as a new-user experience".
+- **A rejected idea kept, with a reason.** "Rather than discarding the idea, I kept it in view as a direction worth building toward."
+- **Impact without results yet.** Reach and scope instead: "rolling out to ~6M users to test our hypothesis around repeat engagement and conversion." and "I shipped the the feed and email designs that covered 3 variants of the experiment."
+
+### How Jess proves she is a good problem solver (Reddit)
+- **Framing as a gap.** "While Reddit had already developed live scoreboards for leagues like the NFL and NBA, there was a gap for MLB community." https://jessfong.com/work/reddit
+- **Structure before screens.** "We knew our scoreboard modules would be broken down into three phases: pre-game, live, and post-game." and "I worked backwards to organize overlapping information vs. distinct information across the three phases".
+- **Each decision with a reason.** "Adaptive tables" / "This was necessary to accomodate for the number of scores while keeping even spacing." "Simplified visualization" / "The baseball diamond provides immediate visual recognition of game status, reducing cognitive load while tracking live progress."
+- **Constraint named in reflection.** "Designing within Reddit’s ecosystem" / "We had to get creative with how we presented complex, dynamic data like live scores and game stats within a limited UI toolkit".
+- **Impact honest.** "Our MLB scoreboard module is now being beta-tested in various baseball subreddits."
+
+### Content breakdown (both)
+- **Structure (Patreon).** OVERVIEW, PROBLEM, SOLUTION (preview), DEFINE, IDEATE, DESIGN DECISIONS, SOLUTION, EXTENDING CROSS-PLATFORM, FINAL FLOWS, REFLECTION. Left TOC: Overview, Define, Ideate, Design Decisions, Solution, Reflection.
+- **Structure (Reddit).** OVERVIEW (Context, Our Goal, My Impact), RESEARCH, DESIGN DECISIONS, SOLUTION (Pre-game, Live Game, Post-game), NEXT STEPS, REFLECTION (Challenges).
+- **Opening.** H1 plus a subtitle that says the scope: "Crafting rewarding experiences across Patreon's feed and emails"; Reddit: "Boosting live engagement through live scoreboards, reaching over 1.2 million monthly readers across baseball subreddits."
+- **Heading style.** Uppercase 18 px kicker over a 24 px sentence. Sub-decisions as questions: "Where and how do we present the "recsplanation"?", "Do sparkles signify AI?", "What about the email entry point?"
+- **Voice.** First person, specific, a little playful ("recsplanation"). Pros and cons are labeled words, not icons.
+- **Ending.** "What I learned" with H3 lessons: "Find ways to test conviction when the direction is ambiguous", "Good concepts can point toward what's next, even if they don't fit now".
+- **Density.** Patreon about 1,055 words, 21 media (9 video). Reddit about 700 words, 19 media (3 video).
+
+### Visual breakdown (both)
+- **Grid.** 800 px column (x=455) with a 200 px mono-type TOC on the left. Heroes break out to 1285 px. Reddit design decisions use a 345 px text column beside a 431 px frame.
+- **Frames.** Phone frames on a light gray well for feed work; email layouts as tall full-column images (800x855).
+- **Motion.** Patreon's explorations, solution and final flows are all autoplay loop clips at 800x550 to 800x617, so each option is seen moving before its con. "Keep reading" cards have hover videos (autoplay off, loop on).
+- **Annotation.** Reddit uses orange leader lines with small mono labels ("Poll for pre-game fan engagement", "Tap to view more stats").
+- **Before and after.** Patreon's "Unlocked for you" versus "Free for you" tag, and the sparkle to star icon swap, each in its own frame.
+- **Story without text.** Patreon: three moving options, then the modal. Reddit: competitor scoreboards, then the IA map, then the three phases.
+
+![reddit-hero](/workspace/dialogue-agent/shots/refs/reddit-hero.jpg)
+Reddit fold. https://jessfong.com/work/reddit
+
+![reddit-decisions](/workspace/dialogue-agent/shots/refs/reddit-decisions.jpg)
+Reddit design decisions: a short reason on the left, the annotated frame on the right. https://jessfong.com/work/reddit
 
 ---
 
-## 10. Cross-cutting
+## 10. Cross-cutting: what makes a case study prove problem solving
 
-### Patterns most of them share
-1. **The problem sits in a heading, early.** Rachel's "..." pair, Caleb's "Searching for your IB courses is ridiculously hard", Christine's "Over 300k users tried it. Fewer than 15% published.", Alich's "Not every answer belongs in a text box".
-2. **Final first, process second.** Rachel ("The final flows were simple, but..."), Caleb (solution features, then "Where it all started"), Rachel's Figma and OpenAI (solution introduced before research).
-3. **Rejected options are named, with a reason in the same unit.** Rachel's "Exploration 1/2" and verdict H3s, Caleb's check and minus rows, Christine's "rather than moving everything to a collapsible sidebar", Rachel's "Instead of ... I decided".
-4. **One explicit reversal.** Caleb "What we initially assumed...", Rachel "First pass" then "However", Trang "It worked technically, but it broke the experience.", Alich "Agent selection remained inconsistent."
-5. **Honesty about what is missing beats a weak number.** Sean "The product has not yet launched publicly.", Alich "We did not have reliable GenUI-specific metrics", Ori "Not a final number", Rachel ending with no metrics on 1Password, Notion and OpenAI.
-6. **AI failure shown as a visible symptom.** Christine's "Changes Done", Trang's long unstructured answers, Ori's robot icon.
-7. **Short endings with two or three lessons, one admitting a limit.** Rachel, Caleb, Christine ("If I had a few more weeks"), Julia.
-8. **Real UI in real chrome on quiet backgrounds, one interaction per frame, much of it in motion.** Rachel, Alich, Christine, Rauno.
+### The problem-solving moves most of them share
+1. **Reframe the ask.** Christine: "the surface-level ask was to modernize the interface. But the real question was: why were 85% of users abandoning before publishing?" Natalie: "don't design the flows. Design the tools."
+2. **State the success criteria before the options.** Jess: "Fans need to understand three things fast". Megan Yap's "MY GOAL" callout.
+3. **Make the problem countable.** Megan Phi: "4 designs x 3 colors x 4 sizes = 48 different combinations". Caleb: "6/30 subjects".
+4. **Name the constraint where it bites.** Megan Yap: "these investigations were long latency tasks (they could take several hours)". Rachel: "Apple's API limitations". Jess: "space is tight".
+5. **Weigh options visibly, each with a cost.** Jess's "Pro:" and "Con:", Megan Yap's plus and minus rows and "FINAL PICK", Caleb's rows, Rachel's "Exploration 1".
+6. **Show the turning point.** Megan Yap: "After leading feedback meetings with GDI SMEs, I found something new." Rachel: "However, the problem with this approach..." Jess: "Unlocked for you" was ambiguous.
+7. **Justify the decision in one sentence that includes what was rejected.** Rachel: "Instead of ... I decided". Jess: "should happen on the post page, not the feed." Megan Yap: "reduce the scope to just high confidence one root cause per issue to avoid overwhelming users."
+8. **Handle impact honestly.** Megan Phi's "We've since wound down, but...", Jess's "now being beta-tested", Megan Yap's "50+" "DESIGN ITERATIONS", Rachel's handoff.
 
-### Checklist for /dialogue
-- [ ] Problem H2 pair inside the 1440x900 fold.
-- [ ] Hero clip of the answer card in motion.
-- [ ] Final answer card first, then the options it beat.
-- [ ] Each option: heading, one "If we..." line, verdict with a reason from Dialogue's real constraints (448 px panel, what Dialogue measures, video weight).
-- [ ] One "First pass" and "However" reversal, in Mudit's words.
-- [ ] Decisions as "Instead of X, I decided Y".
-- [ ] One tradeoff sentence for speed against depth.
-- [ ] No invented outcome numbers; say what shipped and what is concept.
-- [ ] "What I learned" with two lessons, one a limit.
-- [ ] Figures: full column, light well, label inside the well, problem and solution tints.
-- [ ] Clips: muted loops that play on view, pause and replay controls.
-- [ ] Kickers that double as TOC labels.
-- [ ] 800 to 1,100 words; P7 copy is 887 words, which is in range.
+### /dialogue checklist, problem-solving first
+- [ ] **Reframe.** One sentence that turns the brief into the real question (from "show research answers" to "a prose answer can't say how many").
+- [ ] **Success criteria.** Before options, say what a good answer must let the reader do, in three short clauses (Jess pattern).
+- [ ] **Countable problem.** One figure plus caption that turns the problem into arithmetic (Megan Phi pattern), e.g. how many participants a prose answer hides behind "many".
+- [ ] **Constraint where it bites.** Name Dialogue's real constraints in the section where they force a choice: the 448 px panel, what Dialogue measures, clip weight.
+- [ ] **Options with pros and cons.** Each option frame gets one pro and one con, then a "final pick" line (Megan Yap, Jess).
+- [ ] **Turning point.** One "I found something new" or "First pass ... However" moment, in Mudit's words.
+- [ ] **Decision sentence with the rejected option.** "Instead of X, I decided Y" or "Y, not X".
+- [ ] **A rejected idea kept for later**, with the condition (Jess's tap to unlock).
+- [ ] **Impact handled honestly.** Say what shipped and what is concept; use effort counts (versions built, iterations) instead of outcome numbers.
+- [ ] **Learnings that name a limit.**
+
+Then the craft checks: problem H2 in the fold; hero is the key object enlarged (Megan Yap's AI card); final pick in a tinted band; muted autoplay loops; one consistent background for all frames (Natalie, Megan Phi); kickers as TOC labels; 800 to 1,100 words.
 
 ### Moves mapped to Dialogue sections
-| Dialogue section | Move | Source |
+| Dialogue section | Problem-solving move | Source |
 |---|---|---|
-| Hero | Autoplay loop of the answer card, wider than the column; meta row in three columns | Rachel, all projects |
-| Problem | "..." H2 pair turning on "but"; prose-only answer as the visible symptom | Rachel 1Password and Notion; Christine "Changes Done" |
-| Counts / Levels | Chosen card first, ruled-out options below, each with an "If we..." line and verdict | Rachel "Exploration 1"; Caleb evaluation rows |
-| Depth (clips) | One interaction per clip, details framed as craft | Rauno; Rachel Etch sequence |
-| Data viz | "Instead of X, I decided Y" on counts over percents; tradeoff line | Rachel Notion decisions; Rachel Figma tradeoff |
-| Thin data | Structure where precision matters, prose where context matters | Alich "Use conversation for context and structured UI for precision." |
-| Reversal (placeholder) | "First pass" then "However" in Mudit's words | Rachel Figma; Caleb |
-| Shipped and next | What is live, then what is next, no invented numbers | Ori; Sean "has not yet launched publicly" |
-| Takeaway | "What I learned", two lessons, one a limit | Rachel 1Password reflection |
-| Whole page | Kickers as TOC, problem and solution well tints | Rachel Notion |
+| Hero | Enlarge the answer card itself until its copy is readable | Megan Yap Splunk hero |
+| Problem | Reframe: the ask, then the real question | Christine; Natalie |
+| Problem figure | Make it countable, figure plus arithmetic caption | Megan Phi "48 different combinations" |
+| Before options | Success criteria in three clauses | Jess "three things fast"; Megan Yap "MY GOAL" |
+| Counts / Levels | Options with pro and con, "final pick" band | Megan Yap; Jess; Caleb |
+| Depth (clips) | Constraint where it bites (clip weight, panel width) | Megan Yap latency; Jess "space is tight" |
+| Data viz | Decision sentence naming the rejected option | Rachel Notion; Jess "not the feed" |
+| Reversal (placeholder) | Turning point from feedback | Megan Yap "I found something new"; Rachel "First pass" |
+| Thin data / ruled out | Rejected idea kept for later, with a condition | Jess tap to unlock |
+| Shipped and next | Honest impact plus effort counts | Megan Phi; Megan Yap "50+"; Jess beta |
+| Takeaway | Lessons that name a limit | Rachel; Megan Yap |

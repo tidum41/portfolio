@@ -5,13 +5,12 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
-import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
 import ParagraphAnswerFigure from "@/components/dialogue/product/scenarios/ParagraphAnswerFigure";
-import DialogueFlowDemo from "@/components/dialogue/motion/DialogueFlowDemo";
+import DialogueDemoVideo from "@/components/dialogue/motion/DialogueDemoVideo";
 import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import ScaledChatViewport from "@/components/dialogue/product/ScaledChatViewport";
@@ -161,9 +160,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <ScaledChatViewport cropHeight={300}>
-                      <DialogueFlowDemo scene="ask" />
-                    </ScaledChatViewport>
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="Priya taps a suggested question and the answer streams in as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -177,13 +174,12 @@ export function DialogueCaseStudyContent({
               <ClaimH2>The chat answered fast.</ClaimH2>
               <ClaimH2 className="cs-h2--muted">Nobody could check the answer.</ClaimH2>
               <CaseStudyBody>
-                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning,
-                the bar one of Dialogue&rsquo;s customers names. The chat answered her in prose, so
-                she couldn&rsquo;t tell how many shoppers stood behind a claim.
+                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. Her
+                real question is how many shoppers stand behind a claim, and a prose answer
+                can&rsquo;t say.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the constraint you worked inside, and your first try: the markdown
-                table, and why you moved to grouping responses</Placeholder>
+                A good answer has to read in seconds and hold up when someone checks it.
               </CaseStudyBody>
               <ProductFigure caption="before" name="problem-before" maxHeight={360} tone="problem">
                 <StudyChatShell hideComposer>
@@ -191,7 +187,7 @@ export function DialogueCaseStudyContent({
                   <ParagraphAnswerFigure focus="answer" wall />
                 </StudyChatShell>
               </ProductFigure>
-              <Caption>Asked how many, the old chat answered with words like many and some. Recreated with invented data.</Caption>
+              <Caption>&lsquo;Many&rsquo; could be 160 or 280 of 300, and the reader can&rsquo;t tell which. Recreated with invented data.</Caption>
             </Section>
 
             <Section id="counts">
@@ -199,18 +195,16 @@ export function DialogueCaseStudyContent({
               <ClaimH2>The count is the way into the evidence, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                A bare count asks the reader to trust it, so each side of the bar opens its people.
+                A bare count asks the reader to trust it. The panel is 448px wide, so I kept the count in
+                one bar and made each side open its people.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the one reversal on the page: what you built here first, and what
-                made you open the minority side too</Placeholder>
+                <Placeholder>what you built before counts, in one line</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="counts-open">
-                    <ScaledChatViewport cropHeight={560}>
-                      <DialogueFlowDemo scene="open-side" />
-                    </ScaledChatViewport>
+                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 unsure opens a sample of that side" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -228,9 +222,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <ScaledChatViewport cropHeight={620}>
-                      <DialogueFlowDemo scene="clip" />
-                    </ScaledChatViewport>
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -264,7 +256,7 @@ export function DialogueCaseStudyContent({
                 pattern. The answer drops the chart and says &lsquo;Early signal, 2 people&rsquo;.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>why the cutoff sits under 3 people</Placeholder>
+                <Placeholder>why the cutoff sits under 3 people, and what Dialogue measures that set it</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">
@@ -283,49 +275,42 @@ export function DialogueCaseStudyContent({
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
                 Priya&rsquo;s PM reads the sentence and a skeptical director wants the people. I
-                compared three formats and kept the one that leads with the count and opens the
-                quotes on a tap.
+                built two ways to reach each level and kept the one where depth opens inside the answer.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>the second turn: what you assumed would help across the 8 versions
-                that ended up hurting</Placeholder>
+                I assumed that honing in on the smallest level of detail would be useful, but it
+                might not be feasible or efficient for teams, so depth became optional.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueLeadAnswerCompare
-                  options={[
-                    {
-                      id: "text-only",
-                      title: "Text only",
-                      label: "Text only",
-                      costLine: "Works for a quick read. Doesn’t let anyone check the claim.",
-                      productScenario: "decision-paragraphs",
-                    },
-                    {
-                      id: "direct-quotes",
-                      title: "Direct quotes",
-                      label: "Direct quotes",
-                      costLine: "Works as proof. Doesn’t say how many people agree.",
-                      productScenario: "decision-quotes",
-                    },
-                    {
-                      id: "answer-evidence",
-                      title: "Answer and evidence",
-                      label: "Answer and evidence",
-                      costLine: "Works for both readers. The people take one more tap.",
-                      productScenario: "decision-structured",
-                    },
-                  ]}
-                  chosenId="answer-evidence"
-                  chosenFirst
-                />
+                <div className="dlg-demo-pair">
+                  <div>
+                    <p className="dlg-demo-pair__label dialogue-caption__label">Kept: depth opens inside the answer</p>
+                    <p className="dlg-demo-pair__note">Fast by default. Each level costs one more tap.</p>
+                    <DialogueRachelFrame tone="solution">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer starts at the insight; the chart, the people and the clip each open on a tap" />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <p className="dlg-demo-pair__label dialogue-caption__label">Explored: pick a depth before asking</p>
+                    <p className="dlg-demo-pair__note">Predictable. You choose the depth before you see the answer.</p>
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer sets the level before the question is asked" />
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
               </figure>
-              <Caption>Text is quickest and quotes go deepest, so the chosen answer leads with the count and opens the quotes on a tap. Illustrative data.</Caption>
+              
+              <Caption>The picker works like Dovetail&rsquo;s Fast and Deep modes. Inside the answer, nobody picks a mode first. Illustrative data.</Caption>
             </Section>
 
             <Section id="measure">
               <Kicker>What shipped</Kicker>
               <ClaimH2>Counts shipped, and I&rsquo;d test the rest on speed and depth together</ClaimH2>
               <StatusLine>Counts shipped. The test is proposed, with no results yet</StatusLine>
+              <CaseStudyBody>
+                Counts shipped. Clips in place, segment charts and the thin flag are concepts, and
+                the answer format took 8 versions to settle.
+              </CaseStudyBody>
               <CaseStudyBody>
                 I&rsquo;d track time from question to share next to how often a side gets opened,
                 and ask teams whether they trusted an answer enough to forward it. The gap is that
