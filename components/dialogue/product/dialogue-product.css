@@ -3814,7 +3814,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg:not([data-focal]) { box-shadow: none; } /* selected: keeps its own colour */
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__seg[data-focal] { opacity: 0.35; transition: opacity 240ms ease; } /* the other segment recedes while the sample is open */
 .dlg-live__bar .dp-chart-stack__seg[data-focal] { transition: opacity 240ms ease; }
-.dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 2px; background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
+.dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: var(--dp-radius-chip); background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
 .dlg-live__bar:has(.dlg-live__side[aria-expanded="true"]) .dp-chart-stack__labels > :last-child { color: var(--dp-ink); font-weight: 500; }
 /* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
 .dlg-live__sample .dp-clip-quote--selected { cursor: default; }
