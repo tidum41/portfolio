@@ -47,8 +47,7 @@ function downloadMarkdown(filename: string, text: string) {
 
 /**
  * Thin-data answer: amber lead warning, clip link, plan action, evidence footer.
- * P14 item 11: Markdown download with ArrowDownIcon. Label stays "Add to my plan"
- * (pinned b056865 / TASTE likes) until Mudit OKs renaming it to "Download study plan".
+ * P14 item 11 (Mudit OK): "Download study plan" saves a Markdown file for any agent.
  */
 export default function ThinDataFigure() {
   const [downloaded, setDownloaded] = useState(false);
@@ -83,7 +82,7 @@ export default function ThinDataFigure() {
           data-interactive
           data-annotate-part="next-study-button"
           title="Saves both answers and follow-up questions as a Markdown file for your agent."
-          aria-label="Add to my plan. Saves both answers and follow-up questions as a Markdown file for your agent."
+          aria-label="Download study plan. Saves both answers and follow-up questions as a Markdown file for your agent."
           onClick={onDownload}
         >
           {downloaded ? (
@@ -91,7 +90,7 @@ export default function ThinDataFigure() {
           ) : (
             <ArrowDownIcon key="down" className="dp-next-study__icon" />
           )}
-          {downloaded ? "Downloaded study-plan.md" : "Add to my plan"}
+          {downloaded ? "Downloaded study-plan.md" : "Download study plan"}
         </button>
         <p key={downloaded ? "done" : "idle"} className={["dp-next-study__hint", downloaded ? "dp-animate-in" : ""].join(" ")} role="status" data-annotate-part="next-study-hint">
           {downloaded

@@ -78,7 +78,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
 - Dialogue logo avatar on transcript rows (b056865, public/dialogue/dialogue-avatar.svg).
-- "Add to my plan" beat in the thin-data section (b056865).
+- "Download study plan" beat in the thin-data section (was "Add to my plan" at b056865; renamed Oct 29 to a Markdown download for any agent).
 - Chart library: themes by participants, the split, group dot plot, participant by theme matrix, sentiment split, evidence-linked bars, each with pros and cons (round L, Oct 25).
 - Early Paper-recreated iterations are the standard; compare regressions against them.
 - Compared specimens: same height, concentric radii, shared proportions and font sizes (round G).
@@ -109,7 +109,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 
 ## 4. Pinned approved versions
 - b056865 is the round P4 base: restore its Dialogue components and figures, then port the approved story onto it. Build only from [SYSTEM-COMPONENTS.md](SYSTEM-COMPONENTS.md); new components need Mudit's OK (Oct 27).
-- b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, Add to my plan, full chart library. Restored into canvas via PR #122.
+- b056865 (Oct 23 05:36 PT, cursor/dialogue-figure-parity-b9b1): r19 to r24, player, logo avatar, thin-data plan beat (now "Download study plan"), full chart library. Restored into canvas via PR #122.
 - 21cf2e8, bb55313, de1cfe5: lightbox fixes. d400584: TOC breakpoint.
 - 843faac (PR #124, round J): canvas base before the taste ledger (08f90a4); passes b056865 ancestry; verdict FIX FIRST (see Open).
 - Restore check: `git diff b056865 -- components/dialogue/DialogueInterviewPlayer.tsx components/dialogue/DialogueChartLibrary.tsx components/dialogue/product/chart` should be empty unless intended.

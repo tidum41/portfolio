@@ -304,7 +304,7 @@ export function DialogueCaseStudyContent({
                 <DialogueRachelFrame tone="system">
                   <DialogueProductFigure
                     scenario="thin-data"
-                    title="The thin-data answer with its Early signal flag and the Add to my plan beat"
+                    title="The thin-data answer with its Early signal flag and the Download study plan beat"
                   />
                 </DialogueRachelFrame>
               </figure>
