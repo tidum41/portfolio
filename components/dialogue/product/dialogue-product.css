@@ -3828,7 +3828,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .cs-hero-media-frame .dlg-demo__video { border-radius: 5.1% / 5%; } /* 471x480 recording, full Study chat chrome (the one establishing shot) */
 
 /* P11: the panel header keeps a clean edge; scrolled content stops at a hairline instead of showing through. */
-.dlg-live .dp-study-chat__head { position: relative; z-index: 1; padding-bottom: 12px; background: var(--dp-bg); box-shadow: 0 1px 0 var(--dp-border); }
+/* P13: Dialogue's header sits on the panel surface with no rule; py-7 top, gap-4 (16) to the thread (states/06). */
+.dp-study-chat.dlg-live:not(.dlg-live--bare) .dp-study-chat__head { position: relative; z-index: 1; padding: var(--dp-chat-pad) var(--dp-chat-pad) 0; background: var(--dp-surface); box-shadow: none; }
 .dlg-live:not(.dlg-live--bare) .dp-study-chat__body { padding-top: 16px; }
 /* Count sample: head carries the collapse; +73 more is a real button around the source pill. */
 .dlg-live .dp-side-sample__head { display: flex; align-items: center; gap: 4px; }
@@ -3906,3 +3907,10 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-depth--inline .dlg-depth__opt[aria-current="true"] { font-weight: var(--dp-weight-medium); }
 .dlg-depth__opt:not([aria-pressed="true"]):not([aria-checked="true"]):hover { background: var(--dp-warm); color: var(--dp-ink); }
 .dlg-depth--inline .dlg-depth__opt[aria-current="true"] { cursor: default; }
+
+/* P13 spacing parity with Dialogue's panel (flex-col gap-4 px-7 py-7): header 28 top, 16 to the thread, 16 thread to input, 28 bottom. */
+.dlg-stage--hero .dlg-stage__body { padding: 16px var(--dp-chat-pad) 0; }
+.dlg-stage--hero .dp-study-chat__composer { padding: 16px var(--dp-chat-pad) var(--dp-chat-pad); }
+.dlg-stage--picker .dp-study-chat__composer { padding-top: 16px; }
+.dlg-stage--picker .dlg-stage__body { padding-bottom: 0; }
+.dlg-live .dp-study-chat__minimize { margin: -8px -8px 0 0; }

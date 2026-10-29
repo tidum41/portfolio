@@ -3189,7 +3189,8 @@ html[data-theme="dark"] .dialogue-case-study #counter-evidence .dp-counter {
 }
 
 /* A paragraph that follows a figure starts clear of its caption. */
-.dialogue-case-study .dialogue-cs-section figure + .cs-prose {
+.dialogue-case-study .dialogue-cs-section figure + .cs-prose,
+.dialogue-case-study .dialogue-cs-section .cs-caption + .cs-prose {
   margin-top: 24px;
 }
 
