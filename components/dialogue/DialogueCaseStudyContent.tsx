@@ -91,8 +91,8 @@ function Caption({ children }: { children: React.ReactNode }) {
    the negative: check for the pro, X for the con, minus for the neutral tradeoff that decided it.
    Draft copy for Mudit to revise. */
 type ReasonRow = { kind: "pro" | "con"; text: string };
-const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "It starts at the count, and each deeper level is one tap inside the answer." };
-const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "It asks for a depth before you know whether the count matters." };
+const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Starts at the count. Each level is one tap away." };
+const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "asks for depth before you know if the count matters." };
 const REASON_ICON = { pro: Check, con: X } as const;
 
 function LevelReasoning({ reasoning }: { reasoning: ReasonRow }) {

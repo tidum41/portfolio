@@ -2941,6 +2941,20 @@ agentation-toolbar,
   font-weight: 400;
   color: var(--color-text-secondary);
 }
+/* Levels reasoning only (P14 item 3): mark flush left under the label, text in primary. Chart library keeps the flex list above. */
+.dlg-reason {
+  margin: 0 0 12px;
+}
+.dlg-reason li {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  column-gap: 8px;
+  align-items: start;
+  color: var(--color-text-primary);
+}
+.dlg-reason .dialogue-lib__mark {
+  margin-top: 2px; /* 20px line, 16px glyph: centred on the first line's box */
+}
 .dialogue-lib__note {
   margin: 0;
   font-size: var(--text-meta-size);
