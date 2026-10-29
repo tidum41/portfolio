@@ -1,0 +1,185 @@
+/* Data viz options: Carbon-style equal tiles on the review canvas.
+   Helvetica Neue / Arial sans, Georgia serif. Dialogue stone + cherry only. */
+
+.dcv2-dataviz {
+  --dviz-stone: #79716b;
+  --dviz-cherry: #b43f7f;
+  --dviz-ink: #1c1917;
+  --dviz-bg: #f8f6f3;
+  --dviz-card: #fcfbf9;
+  --dviz-border: #e7e5e4;
+  --dviz-frame-radius: 14px;
+  --dviz-frame-pad: 8px;
+  --dviz-card-radius: 6px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+html[data-theme="dark"] .dcv2-dataviz {
+  --dviz-ink: #f5f5f4;
+  --dviz-bg: #1c1917;
+  --dviz-card: #292524;
+  --dviz-border: #44403c;
+  --dviz-stone: #a6a09b;
+  margin: -8px -12px;
+  padding: 16px 12px 8px;
+  border-radius: 12px;
+  background: #141210;
+}
+
+html[data-theme="dark"] .dcv2-dataviz .dcv2__section-title,
+html[data-theme="dark"] .dcv2-dataviz .dcv2__section-intro {
+  color: var(--dviz-ink);
+}
+
+html[data-theme="dark"] .dcv2-dataviz .dcv2__section-intro {
+  color: var(--dviz-stone);
+}
+
+/* Product chart tokens stay light by default; bend them for this dashboard only. */
+html[data-theme="dark"] .dcv2-dataviz .dialogue-product-root {
+  --dp-ink: #f5f5f4;
+  --dp-bg: #292524;
+  --dp-surface: #292524;
+  --dp-border: #44403c;
+  --dp-chart-label-color: #a6a09b;
+  --dp-chart-value-color: #f5f5f4;
+  --dp-chart-muted: #79716b;
+  --dp-chart-muted-alt: #a6a09b;
+  --dp-chart-track: #44403c;
+  --dp-chart-gridline: rgb(68 64 60 / 60%);
+  --dp-chart-baseline: #57534d;
+  --dp-chart-line: #a6a09b;
+  --dp-chart-focal: #b43f7f;
+  --dp-on-strong: #f5f5f4;
+  --dp-figure-surface-system: #1c1917;
+  color: var(--dp-ink);
+}
+
+.dcv2-dataviz__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+@media (min-width: 1100px) {
+  .dcv2-dataviz__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dcv2-dataviz__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dcv2-dataviz__tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dcv2-dataviz__frame {
+  box-sizing: border-box;
+  height: 280px;
+  padding: var(--dviz-frame-pad);
+  border-radius: var(--dviz-frame-radius);
+  background: var(--dviz-bg);
+  box-shadow: inset 0 0 0 1px var(--dviz-border);
+  overflow: hidden;
+}
+
+.dcv2-dataviz__chart {
+  height: 100%;
+  min-width: 0;
+  overflow: auto;
+  border-radius: var(--dviz-card-radius);
+  background: var(--dviz-card);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.dcv2-dataviz__chart,
+.dcv2-dataviz__chart .dialogue-product-root,
+.dcv2-dataviz__chart.dialogue-product-root {
+  --dp-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ds-font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.dcv2-dataviz__chart .dp-chart-viz-card {
+  height: 100%;
+  border-radius: var(--dviz-card-radius);
+  border-color: transparent;
+  background: var(--dviz-card);
+  box-shadow: none;
+}
+
+.dcv2-dataviz__chart .dp-chart-viz-card__inner {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.dcv2-dataviz__chart .dp-chart-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.dcv2-dataviz__chart .dp-chart-root {
+  --dp-chart-min-width: 0px;
+  min-width: 0;
+}
+
+.dcv2-dataviz__meta {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dcv2-dataviz__name {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--dviz-ink);
+}
+
+.dcv2-dataviz__source {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--dviz-stone);
+}
+
+.dcv2-dataviz__status {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--dviz-stone);
+  text-transform: lowercase;
+}
+
+.dcv2-dataviz__status[data-status="in case study"] {
+  color: var(--dviz-cherry);
+}
+
+.dcv2-dataviz__status[data-status="rejected"] {
+  color: var(--dviz-stone);
+}
+
+.dcv2-dataviz__status[data-status="draft"] {
+  color: var(--dviz-ink);
+}
+
+.dcv2-dataviz__note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--dviz-stone);
+  max-width: 42ch;
+}
