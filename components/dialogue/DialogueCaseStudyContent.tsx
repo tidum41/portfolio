@@ -308,7 +308,7 @@ export function DialogueCaseStudyContent({
                   />
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The early-signal note sits above the plan action, so it&rsquo;s harder to share as a finding. Illustrative data.</Caption>
+              <Caption>A Markdown file, so any agent reads the quotes and questions as written. Illustrative data.</Caption>
             </Section>
 
 
