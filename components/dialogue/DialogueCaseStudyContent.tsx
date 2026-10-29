@@ -92,7 +92,7 @@ function Caption({ children }: { children: React.ReactNode }) {
    Draft copy for Mudit to revise. */
 type ReasonRow = { kind: "pro" | "con"; text: string };
 const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Starts at the count. Each level is one tap away." };
-const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "asks for depth before you know if the count matters." };
+const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "Asks for depth before you know if the count matters." };
 const REASON_ICON = { pro: Check, con: X } as const;
 
 function LevelReasoning({ reasoning }: { reasoning: ReasonRow }) {
@@ -141,17 +141,15 @@ export function DialogueCaseStudyContent({
           </div>
 
           <CaseStudyOpen
+            tagline="Dialogue AI, Case Study, Contract 2026"
             title={DIALOGUE_TITLE}
-            subtitle="Product designer (contract), Dec 2025 to Mar 2026"
-            metadata={[]}
+            metadata={[
+              { _key: "role", label: "Role", values: ["Product designer (contract)"] },
+              { _key: "timeline", label: "Timeline", values: ["Dec 2025 to Mar 2026"] },
+              { _key: "team", label: "Team", wide: true, values: [<Placeholder key="t">team names and roles</Placeholder>] },
+              { _key: "scope", label: "Scope", values: ["Product design", "Prototyping in code"] },
+            ]}
           >
-            <p className="cs-hero-body">
-              Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
-              answer so a research team can move fast on an insight and still check the people behind it.
-            </p>
-            <p className="cs-hero-body">
-              [DRAFT, Mudit to reword] I design in code, so I can iterate fast and own every detail from first idea to the shipped panel.
-            </p>
             <div className="cs-hero-media-frame">
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
@@ -161,14 +159,18 @@ export function DialogueCaseStudyContent({
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation, illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
+            <p className="cs-hero-body">
+              Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
+              answer so a research team can move fast on an insight and still check the people behind it.
+            </p>
+            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation, illustrative data.</Caption>
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
-              <p className="dlg-constraint">[DRAFT, Mudit to reword] Nine weeks, a fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
+              <p className="dlg-constraint">[DRAFT, Mudit to reword] Dec 2025 to Mar 2026, a fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
               <CaseStudyBody>
                 Priya, a researcher at Hearthside (a made-up retailer), owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
