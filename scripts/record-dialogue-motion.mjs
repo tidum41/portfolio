@@ -11,7 +11,8 @@ let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
 const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full" };
-const CROSSFADE = new Set(["hero", "before", "every", "picker", "toggles"]);
+// Picker ends on its start state (item 6), so it needs no crossfade. Others still blend end→start.
+const CROSSFADE = new Set(["hero", "before", "every", "toggles"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
@@ -72,8 +73,19 @@ async function record(demo) {
     async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000); await cursorTo('[data-target="close"]', { ms: 500 }); await press(); await hold(1600); await cursorOut(); },
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300 + 1100); },
     async every() { await api("answer()"); await hold(550); await api("side(true)"); await hold(550); await api("clip(true)"); await api("pause()"); await hold(800); await api("follow(1500)"); await hold(1500 + 700); },
-    async picker() { await cursorTo('[data-target="depth-3"]'); await press(); await hold(400); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450); await api("answer()"); await api("deep()"); await api("pause()"); await hold(400); await cursorOut(); await api("follow(500)"); await hold(500 + 700 + 250); },
-    async toggles() { await cursorTo('[data-target="level-2"]'); await press(); await api("level(2)"); await hold(300); await api("follow(500)"); await hold(500 + 900); await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await api("up(500)"); await hold(500 + 300); await cursorOut(); await hold(650); },
+    // P14 items 5+6: Insight default; pick Source; send; deep opens; clip ticks 1s; collapse to start (typed question, Insight).
+    async picker() {
+      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await hold(400);
+      await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
+      await api("answer()"); await api("deep()"); await hold(1000); await api("pause()"); await hold(1000);
+      await cursorOut(); await api("reset()"); await hold(1600);
+    },
+    // Pin happens inside level(); do not follow() during the grow.
+    async toggles() {
+      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(1000);
+      await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(1000);
+      await cursorOut(); await hold(1600);
+    },
   };
   await S[demo]();
   const tStop = Date.now() / 1000; await cdp.send("Page.stopScreencast"); await hold(150); await b.close();

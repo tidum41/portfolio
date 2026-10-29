@@ -56,6 +56,21 @@ function follow(ms = 500, up = false) {
   const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
+/** P14 item 5: while content grows above a pinned chip/control, keep its y steady by absorbing scrollHeight growth into scrollTop. Never call follow() during the grow. */
+function pinDuringGrow(ms = 400) {
+  const body = document.querySelector<HTMLElement>(".dlg-stage__body");
+  if (!body) return;
+  let lastH = body.scrollHeight;
+  const t0 = performance.now();
+  const step = (now: number) => {
+    const h = body.scrollHeight;
+    const growth = h - lastH;
+    if (growth > 0) body.scrollTop += growth;
+    lastH = h;
+    if (now - t0 < ms) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 const sec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -146,7 +161,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
   const [mark, setMark] = useState(false);
-  const [pick, setPick] = useState(1);
+  // P14 item 5: picker defaults to Insight (0), matching the decided default answer (count + insight).
+  const [pick, setPick] = useState(0);
   const [level, setLevel] = useState(0);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -171,12 +187,33 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       line: () => setLines((l) => l + 1),
       mark: () => setMark(true),
       pick: (i: number) => setPick(i),
-      // One depth at a time; levels add up (Chart adds the bar, People the quotes, Source the clip). Same level again does nothing.
-      level: (i: number) => setLevel((cur) => { if (i === cur) return cur; setSide(i >= 2); api.clip(i >= 3); return i; }),
+      // One depth at a time; levels add up. Pin the chip row while content grows above it (P14 item 5).
+      level: (i: number) => {
+        setLevel((cur) => {
+          if (i === cur) return cur;
+          setSide(i >= 2);
+          api.clip(i >= 3);
+          pinDuringGrow(400);
+          return i;
+        });
+      },
       follow: (ms = 600) => follow(ms),
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
-      deep: () => { setSide(pick >= 2); if (pick >= 3) api.clip(true); },
+      deep: () => { setSide(pick >= 2); if (pick >= 3) api.clip(true); pinDuringGrow(400); },
+      // P14 item 6: collapse picker back to the start state so the loop does not crossfade two composers.
+      reset: () => {
+        if (tick.current) clearInterval(tick.current);
+        setSent(false);
+        setAnalyzing(false);
+        setAnswered(false);
+        setSide(false);
+        setClip(false);
+        setPlaySec(0);
+        setPick(0);
+        setLevel(0);
+        setTyped(QUESTION);
+      },
     };
     (window as unknown as { __dlg: typeof api }).__dlg = api;
     return () => { if (tick.current) clearInterval(tick.current); };
@@ -256,7 +293,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       {demo === "picker" ? (
         <div className="dlg-depth" role="radiogroup" aria-label="Answer depth">
           {LEVELS.map((l, i) => (
-            <button key={l} type="button" role="radio" aria-checked={pick === i} data-target={`depth-${i}`} className="dlg-depth__opt" disabled={sent} onClick={() => setPick(i)}>{l}</button>
+            /* P14 item 6: cumulative highlight like toggles (levels add up). No X / clear affordance. */
+            <button key={l} type="button" role="radio" aria-checked={pick === i} aria-pressed={i <= pick} aria-current={i === pick ? "true" : undefined} data-target={`depth-${i}`} className="dlg-depth__opt" disabled={sent} onClick={() => setPick(i)}>{l}</button>
           ))}
         </div>
       ) : null}

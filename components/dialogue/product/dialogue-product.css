@@ -3746,8 +3746,12 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Variant A depth picker: Dialogue's composer row plus a segmented control from system tokens. */
 .dlg-depth { display: flex; gap: 4px; padding: 4px; margin-bottom: 8px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-card); } /* Dialogue tab row (Overall / Sections / Participants) */
 .dlg-depth__opt { flex: 1; padding: 4px 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
-.dlg-depth__opt[aria-checked="true"], .dlg-depth--inline .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); } /* Dialogue active tab chip */
+.dlg-depth__opt[aria-checked="true"], .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); } /* Dialogue active tab chip; cumulative on picker + toggles (P14 item 6) */
 .dlg-depth__opt:disabled { cursor: default; }
+/* Selected chips: no hover change, no X. Step back by tapping a lower level. */
+.dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth__opt[aria-checked="true"]:hover, .dlg-depth__opt[aria-current="true"]:hover { background: var(--dp-nav-active-bg); color: var(--dp-ink); cursor: default; }
+/* P14 item 5: composer keeps the 2-line height so the typed question ↔ placeholder swap never jumps the chip row. */
+.dlg-stage .dp-study-chat__composer-box { min-height: 108px; box-sizing: border-box; }
 .dlg-followups { display: flex; flex-direction: column; gap: 8px; }
 /* Variant B disclosure: a text button in the answer card. */
 .dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
