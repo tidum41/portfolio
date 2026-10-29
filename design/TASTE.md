@@ -177,3 +177,4 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 
 - Levels turning point (Mudit, Oct 28 2026, his words): "I assumed that honing in on the smallest levels of detail might be useful, but this might not be feasible and efficient for teams, rather optional." Depth is optional and opened by the reader; it is the page's one stated reversal and lives in Levels.
 - P14 (Mudit, Oct 29): levels-every is cursor-driven (click 225 then 75, same as counts-open). Selected depth chip stays stone-200. Hero Team metadata is a visible [PLACEHOLDER]. Recorder captures PNG so the video well matches `#eceae4` / `#1b1e21`.
+- P14 later (Mudit OK): quote rows are selection (no inner chevron); thin-data label is "Download study plan"; bar-tap video (any bar opens its people); chart library adds delivery-by-type, top-asks, and 1–5 confidence scenarios (no line charts).
