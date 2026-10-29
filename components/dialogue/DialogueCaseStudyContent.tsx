@@ -252,7 +252,7 @@ export function DialogueCaseStudyContent({
               </figure>
               <Caption>Each side opens 2 of its shoppers, and the chevron folds them back. Illustrative data.</Caption>
               <CaseStudyBody>
-                Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and +73 more pages in 5 at a time inside the answer.
+                Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and +73 more open inside the answer.
               </CaseStudyBody>
 
             </Section>
