@@ -159,7 +159,7 @@ for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
 {
   const ctx = await b.newContext({ viewport: { width: 640, height: 680 } }); const p = await ctx.newPage();
   const minFont = {};
-  for (const d of ["hero", "side", "clip", "before", "every", "picker", "toggles"]) {
+  for (const d of ["hero", "side", "clip", "before", "every", "picker", "toggles", "bars"]) {
     await p.goto(`${base}/dialogue/motion?demo=${d}`, { waitUntil: "load" });
     // Every demo's full end state: open everything the storyboard opens.
     await p.evaluate(() => { const a = window.__dlg; try { a.answer?.(); a.side?.(true); a.clip?.(true); a.pause?.(); a.deep?.(); } catch {} });
@@ -169,7 +169,7 @@ for (const [w, h] of [[1464, 838], [1440, 900], [390, 844]]) {
         if (e.closest("[aria-hidden='true'], .dp-qplayer__video, video")) return; m = Math.min(m, parseFloat(getComputedStyle(e).fontSize) * z); }); return m; });
   }
   await ctx.close();
-  const NAME = { "live-hero-ask": "hero", "live-side": "side", "live-clip": "clip", "variant-before-full": "before", "variant-every-full": "every", "variant-picker-full": "picker", "variant-toggles-full": "toggles" };
+  const NAME = { "live-hero-ask": "hero", "live-side": "side", "live-clip": "clip", "variant-before-full": "before", "variant-every-full": "every", "variant-picker-full": "picker", "variant-toggles-full": "toggles", "live-bars": "bars" };
   const c2 = await b.newContext({ viewport: { width: 1440, height: 900 } }); const q = await c2.newPage();
   await q.goto(`${base}/dialogue`, { waitUntil: "networkidle" });
   const shown = await q.evaluate(() => [...document.querySelectorAll(".dlg-demo__video")].map((v) => [v.getAttribute("poster").split("/").pop().replace(".jpg", "").replace(/-dark$/, ""), v.getBoundingClientRect().width]));
@@ -181,7 +181,7 @@ await b.close();
 // 4. The shipped demo videos against the motion checklist (design/TASTE.md "Motion"; scripts/check-dialogue-motion.py):
 // length 4-9 s, no frame jump over 20, holds of at most 2 s mid-video, a 1-1.9 s final hold, a loop that closes.
 {
-  const vids = ["live-hero-ask", "live-side", "live-clip", "variant-before-full", "variant-every-full", "variant-picker-full", "variant-toggles-full"].map((n) => `public/dialogue/motion/${n}.mp4`);
+  const vids = ["live-hero-ask", "live-side", "live-clip", "variant-before-full", "variant-every-full", "variant-picker-full", "variant-toggles-full", "live-bars"].map((n) => `public/dialogue/motion/${n}.mp4`);
   let out = "";
   try { out = execFileSync("python3", ["scripts/check-dialogue-motion.py", ...vids], { stdio: "pipe" }).toString(); }
   catch (e) { out = e.stdout?.toString() || ""; }
