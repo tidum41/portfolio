@@ -189,7 +189,6 @@ export default function DialogueChatLive({
               <p className="dp-study-chat__title">{asked ? dialogueCopy.assistantTitle : "New chat"}</p>
               <span className="dp-study-chat__beta">{dialogueCopy.betaLabel}</span>
             </div>
-            <p className="dp-study-chat__sub">{dialogueCopy.studySubtitle}</p>
           </div>
           <button type="button" className="dp-study-chat__minimize dlg-live__reset" onClick={reset} aria-label="Reset demo">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>

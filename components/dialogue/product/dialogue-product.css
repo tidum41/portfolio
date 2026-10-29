@@ -3914,3 +3914,5 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage--picker .dp-study-chat__composer { padding-top: 16px; }
 .dlg-stage--picker .dlg-stage__body { padding-bottom: 0; }
 .dlg-live .dp-study-chat__minimize { margin: -8px -8px 0 0; }
+/* P13: DM Sans sits high in a 16px line; shift the label 1px down so caps and x-height centre optically in the 20px chip. */
+.dlg-live .dp-study-chat__beta { padding: 3px 8px 1px; }
