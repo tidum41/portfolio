@@ -285,9 +285,17 @@ export function DialogueCaseStudyContent({
                 <Placeholder>how the model matches a question to a template, and which Carbon rule you bent</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueChartLibrary showTech={false} only="segments" />
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="bars-open">
+                    <DialogueDemoVideo src="/dialogue/motion/live-bars.mp4" poster="/dialogue/motion/live-bars.jpg" label="Tapping New shoppers opens the people behind that bar" ratio="1 / 1" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
               </figure>
-              <Caption>Illustrative data.</Caption>
+              <Caption>Any bar opens the people behind it. Illustrative data.</Caption>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueChartLibrary showTech={false} only="segments" scenarios />
+              </figure>
+              <Caption>The AI picks a template; every template opens its people the same way. Illustrative data.</Caption>
             </Section>
 
             <Section id="thin-data">

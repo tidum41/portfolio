@@ -3,7 +3,7 @@ import "@/components/dialogue/product/dialogue-product.css";
 
 export const metadata = { title: "Dialogue motion stage", robots: { index: false } };
 
-const DEMOS: MotionDemo[] = ["hero", "side", "clip", "before", "every", "picker", "toggles"];
+const DEMOS: MotionDemo[] = ["hero", "side", "clip", "before", "every", "picker", "toggles", "bars"];
 /** Frame per demo: 1:1 or 4:3 at 519 css px wide (471 panel + 24 px air), and the well tone it sits in on the page. */
 const STAGE = {
   hero: { ratio: 0.75, tone: "solution", zoom: 1 },
@@ -13,6 +13,7 @@ const STAGE = {
   every: { ratio: 1, tone: "problem", zoom: 0.88 },
   picker: { ratio: 1, tone: "problem", zoom: 0.88 },
   toggles: { ratio: 1, tone: "solution", zoom: 0.88 },
+  bars: { ratio: 1, tone: "solution", zoom: 0.92 },
 } as const;
 
 /** Recording stage for the P11 demos (scripts/record-dialogue-motion.mjs). 404s nothing; noindex. */

@@ -172,6 +172,12 @@ export const QUOTE_LIST_FRIDAY = [
   { participant: "Dev", time: "11:02\u201311:15", quote: "Friday means the closest one to me." },
 ];
 
+/** Hearthside mock for new shoppers 9 of 14 (P14 item 9 bar tap). */
+export const QUOTE_LIST_NEW = [
+  { participant: "Kai", time: "02:14\u201302:28", quote: "I am new here, so Friday meant this week to me." },
+  { participant: "Rae", time: "09:01\u201309:16", quote: "First order. I put Friday on my calendar as the nearest one." },
+];
+
 export const ANATOMY_LABELS = [
   "Summary",
   "Sources",

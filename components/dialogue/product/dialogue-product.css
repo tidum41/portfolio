@@ -3826,8 +3826,25 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg:not([data-focal]) { opacity: 0.35; }
 .dlg-live__bar[data-side] .dp-chart-stack__seg { box-shadow: none; }
 .dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: var(--dp-radius-chip); background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
-.dlg-stage__sample[data-side="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="friday"] .dlg-sample-key,
+.dlg-stage__sample[data-side="new"] .dlg-sample-key { background: var(--dp-chart-focal); }
 .dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
+/* P14 item 9: hit target over the first (focal) bar row in a ChartBarList answer. */
+.dlg-live__bars { position: relative; }
+.dlg-live__bar-hit {
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -4px;
+  height: calc(var(--text-meta-leading, 20px) + 16px);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--dp-radius-control);
+}
+.dlg-live__bar-hit:focus-visible { outline: 2px solid var(--dp-brand); }
+.dlg-live__bars:has(.dlg-live__bar-hit[aria-expanded="true"]) .dp-chart-bars__row:not(:first-child) { opacity: 0.35; transition: opacity 240ms ease; }
+.dlg-live__bars .dp-chart-bars__row { transition: opacity 240ms ease; }
 .dlg-live__bar[data-side="unsure"] .dp-chart-stack__labels > :last-child,
 .dlg-live__bar[data-side="friday"] .dp-chart-stack__labels > :first-child { color: var(--dp-ink); font-weight: 500; }
 /* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */

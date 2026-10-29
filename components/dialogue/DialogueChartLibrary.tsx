@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
+import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
@@ -49,6 +51,23 @@ const FRIDAY_ROWS = [
 const SEGMENTS = [
   { label: "First-time shoppers", count: 6, of: 9, focal: true },
   { label: "Repeat shoppers", count: 88, of: 125, focal: false },
+] as const;
+
+/** P14 item 10: extra Hearthside scenarios (Illustrative data). No line charts (TASTE cut). */
+const DELIVERY_BY_TYPE = [
+  { label: "New shoppers", count: 9, of: 14, focal: true },
+  { label: "Repeat shoppers", count: 88, of: 125, focal: false },
+] as const;
+const TOP_ASKS = [
+  { rank: 1, label: "Show an exact calendar date", value: 41 },
+  { rank: 2, label: "Say which Friday it means", value: 28 },
+  { rank: 3, label: "Warn when Friday slips", value: 17 },
+  { rank: 4, label: "Offer a pickup option", value: 11 },
+  { rank: 5, label: "Email the day before", value: 8 },
+] as const;
+const CONFIDENCE = [
+  { label: "New shoppers", value: 2, display: "2 · 14 people", focal: true, detail: "of 14" },
+  { label: "Repeat shoppers", value: 4, display: "4 · 125 people", detail: "of 125" },
 ] as const;
 
 const ENTRIES = [
@@ -122,10 +141,65 @@ const ENTRIES = [
   },
 ] as const;
 
+/** Scenario cards (P14 item 10): single chosen specimens, Hearthside mock only. Line charts stay cut (TASTE). */
+const SCENARIOS = [
+  {
+    id: "delivery-type",
+    name: "Delivery promise by shopper type",
+    note: "Each row is N of its own group. ChartBarList fits N-of-group; ChartGroupedBars hard-codes All/Mobile percent heads.",
+    card: (
+      <ChartVizCard title="Read Friday as this Friday, by shopper type">
+        <ChartBarList
+          rows={DELIVERY_BY_TYPE.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, focal: r.focal }))}
+          max={1}
+        />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "top-asks",
+    name: "Top asks after checkout",
+    note: "Five asks ranked by how many shoppers raised them. Illustrative data.",
+    card: (
+      <ChartVizCard title="What shoppers asked for after checkout">
+        <ChartRankList rows={[...TOP_ASKS]} />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "confidence",
+    name: "Confidence in the delivery date",
+    note: "Asked on a 1 to 5 scale (1 = not sure, 5 = sure). Dot position is the group median; the label carries N.",
+    card: (
+      <ChartVizCard title="How sure shoppers were about the delivery date">
+        <ChartDotPlot
+          rows={[...CONFIDENCE]}
+          max={5}
+          ticks={[1, 2, 3, 4, 5]}
+          formatTick={(n) => String(n)}
+          gridAt={[1, 2, 3, 4, 5]}
+          note="1 to 5 ask. Illustrative data."
+        />
+      </ChartVizCard>
+    ),
+  },
+] as const;
+
 /** The segment question that asks for the redesigned chart (data viz, one pair). */
 const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives by Friday\u201d the same way?";
 
-export default function DialogueChartLibrary({ showTech = true, segmentsFirst = false, only }: { showTech?: boolean; segmentsFirst?: boolean; only?: "segments" | "coverage" }) {
+export default function DialogueChartLibrary({
+  showTech = true,
+  segmentsFirst = false,
+  only,
+  scenarios = false,
+}: {
+  showTech?: boolean;
+  segmentsFirst?: boolean;
+  only?: "segments" | "coverage";
+  /** P14 item 10: also render the extra Hearthside scenario cards. */
+  scenarios?: boolean;
+}) {
   const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">
@@ -158,6 +232,26 @@ export default function DialogueChartLibrary({ showTech = true, segmentsFirst = 
           ) : null}
         </article>
       ))}
+      {scenarios
+        ? SCENARIOS.map((s) => (
+            <article key={s.id} className="dialogue-lib__entry">
+              <h3 className="dialogue-lib__name">{s.name}</h3>
+              <div className="dialogue-lib__single">
+                <div className="dialogue-lib__col" data-status="chosen">
+                  <figure className="dialogue-lib__specimen" data-status="chosen">
+                    <StaticFigure
+                      figure={`chart-${s.id}-chosen`}
+                      className={`dialogue-lib__chart dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
+                    >
+                      {s.card}
+                    </StaticFigure>
+                  </figure>
+                  <p className="dialogue-lib__note" data-annotate-part={`points-${s.id}`}>{s.note}</p>
+                </div>
+              </div>
+            </article>
+          ))
+        : null}
     </div>
   );
 }

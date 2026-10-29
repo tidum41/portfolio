@@ -10,8 +10,8 @@ const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
-const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full" };
-// Picker ends on its start state (item 6), so it needs no crossfade. Others still blend end→start.
+const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full", bars: "live-bars" };
+// Picker and bars end on their start state, so they need no crossfade. Others still blend end→start.
 const CROSSFADE = new Set(["hero", "before", "every", "toggles"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
@@ -100,6 +100,11 @@ async function record(demo) {
       await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(1000);
       await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(1000);
       await cursorOut(); await hold(1600);
+    },
+    // P14 item 9: tap New shoppers 9 of 14 → its people open; fold back to start (~5.5s).
+    async bars() {
+      await cursorTo('[data-target="bar-new"]', { fx: 0.4, fy: 0.5, ms: 500 }); await press(); await api("bar(true)"); await hold(1000);
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("bar(false)"); await hold(1600); await cursorOut();
     },
   };
   await S[demo]();

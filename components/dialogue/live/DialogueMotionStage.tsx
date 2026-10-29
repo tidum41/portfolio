@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
@@ -9,9 +10,10 @@ import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterview
 import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
-import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
+import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
 
 type SideWhich = "friday" | "unsure" | false;
+type SampleWhich = "friday" | "unsure" | "new";
 
 /*
  * P11 motion stage: one storyboard per case-study video (build/p11-motion-spec.md, design/TASTE.md "Motion").
@@ -19,7 +21,13 @@ type SideWhich = "friday" | "unsure" | false;
  * scrolls itself. New content grows below the tapped element (400 ms, cubic-bezier(0.2, 0, 0, 1)),
  * entrances fade and rise 8 px (350 ms), nothing pops. Hearthside mock data, same as the page.
  */
-export type MotionDemo = "hero" | "side" | "clip" | "before" | "every" | "picker" | "toggles";
+export type MotionDemo = "hero" | "side" | "clip" | "before" | "every" | "picker" | "toggles" | "bars";
+
+const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string }> = {
+  friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday" },
+  unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure" },
+  new: { rows: QUOTE_LIST_NEW, count: 9, of: 14, label: "new shoppers" },
+};
 
 const QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
 const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
@@ -138,18 +146,18 @@ function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time:
   );
 }
 
-function Sample({ open, which = "unsure", playing, onPlay, playSec }: { open: boolean; which?: "friday" | "unsure"; playing: boolean; onPlay?: () => void; playSec?: number }) {
-  const rows = which === "friday" ? QUOTE_LIST_FRIDAY : QUOTE_LIST;
-  const count = which === "friday" ? 225 : 75;
-  const label = which === "friday" ? "read it as this Friday" : "unsure";
-  const more = count - rows.length;
+function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
+  const meta = SAMPLE_META[which];
+  const rows = meta.rows;
+  const more = meta.count - rows.length;
   const lead = rows[0];
+  const collapse = onCollapse ?? (() => (window as unknown as { __dlg: { side: (b: SideWhich) => void } }).__dlg.side(false));
   return (
     <Grow open={open} className="dlg-stage__item">
       <div className="dp-side-sample dlg-stage__sample" data-side={which}>
         <p className="dp-side-sample__head dp-text-body">
-          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{count}</span> {label}, {rows.length} shown
-          <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${count} ${label}`} onClick={() => (window as unknown as { __dlg: { side: (b: SideWhich) => void } }).__dlg.side(false)}>
+          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{meta.count}</span> {meta.label}, {rows.length} shown
+          <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={collapse}>
             <ChevronUpIcon />
           </button>
         </p>
@@ -166,13 +174,39 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec }: { open: bo
   );
 }
 
+/** P14 item 9: segment bars; tap New shoppers to open its people (counts interaction on a chart). */
+function BarsCard({ open, onOpen }: { open: boolean; onOpen: () => void }) {
+  return (
+    <ChartVizCard title="Read Friday as this Friday, by shopper type">
+      <div className="dlg-live__bars">
+        <ChartBarList
+          rows={[
+            { label: "New shoppers", value: 9 / 14, display: "9 of 14", focal: true },
+            { label: "Repeat shoppers", value: 88 / 125, display: "88 of 125" },
+          ]}
+          max={1}
+        />
+        <button
+          type="button"
+          className="dlg-live__bar-hit"
+          data-target="bar-new"
+          aria-label="Open the 9 new shoppers"
+          aria-expanded={open}
+          onClick={onOpen}
+        />
+      </div>
+    </ChartVizCard>
+  );
+}
+
 export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
-  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip";
+  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "bars";
   const [typed, setTyped] = useState(demo === "picker" ? QUESTION : "");
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
   const [side, setSide] = useState<SideWhich>(false);
+  const [barOpen, setBarOpen] = useState(false);
   const [clip, setClip] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
@@ -222,6 +256,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
       deep: () => { setSide(pick >= 2 ? "unsure" : false); if (pick >= 3) api.clip(true); pinDuringGrow(400); },
+      // P14 item 9: open/close the New shoppers sample under the bar chart.
+      bar: (on: boolean) => { setBarOpen(on); if (on) pinDuringGrow(400); },
       // P14 item 6: collapse picker back to the start state so the loop does not crossfade two composers.
       reset: () => {
         if (tick.current) clearInterval(tick.current);
@@ -229,6 +265,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setAnalyzing(false);
         setAnswered(false);
         setSide(false);
+        setBarOpen(false);
         setClip(false);
         setPlaySec(0);
         setPick(0);
@@ -313,6 +350,15 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           </div>
         </div>
         <Sample open={level >= 2} which="unsure" playing={level >= 3} playSec={playSec} />
+      </>
+    );
+  } else if (demo === "bars") {
+    body = (
+      <>
+        <div className="dlg-stage__item">
+          <BarsCard open={barOpen} onOpen={() => setBarOpen(true)} />
+        </div>
+        <Sample open={barOpen} which="new" playing={false} onCollapse={() => setBarOpen(false)} />
       </>
     );
   }
