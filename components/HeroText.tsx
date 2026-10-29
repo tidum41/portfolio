@@ -150,7 +150,7 @@ export default function HeroText() {
         </span>
         <span className="hero-sub-sep" aria-hidden="true">{" · "}</span>{" "}
         <span className="hero-sub-end">
-          {"Previously design engineer @ "}
+          {"Previously designing @ "}
           <a href="/joola" className="hero-ucla">
             JOOLA
           </a>
