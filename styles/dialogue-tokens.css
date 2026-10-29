@@ -170,8 +170,9 @@
    * ------------------------------------------------------------- */
 
   /* 1. Figures stay light in dark mode, inside a dark well. They read as
-   *    product screenshots. The fallback applies when --figure-well is unset. */
-  --dp-well-fallback: #eeedeb;
+   *    product screenshots. The fallback applies when --figure-well is unset.
+   *    Light well is #eceae4 (--figure-well-dialogue), not the older #eeedeb. */
+  --dp-well-fallback: #eceae4;
   --dp-figure-surface-system: var(--figure-well, var(--dp-well-fallback));
   --dp-figure-surface-problem: var(--figure-well, var(--dp-well-fallback));
   --dp-figure-surface-solution: var(--figure-well, var(--dp-well-fallback));
@@ -275,6 +276,11 @@
   /* 15b. Chart library frame padding. The chart card inside takes the frame
    *    radius minus this padding, so the two corners are concentric. */
   --dp-lib-pad: 8px;
+
+  /* 16. Depth chip row (.dlg-depth) keeps a bordered card around the chips so
+   *    they group by the composer. Dialogue's real Overall/Sections/Participants
+   *    tabs sit bare on the surface; this box is a case-study extension (P14 C3).
+   *    Selected chip stays --dp-nav-active-bg (stone-200), Mudit Oct 29. */
 
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);

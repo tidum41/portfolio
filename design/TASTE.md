@@ -52,7 +52,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Nav is 76px tall (16px padding, 32px gap, 24px under 480px); the theme button is at least 44 by 44 with the icon centered; footer links sit 24px apart and keep 44px targets on phones; every page keeps 120px above the footer (nav and footer pass, Oct 25).
 - Footer links are at least 44 wide as well as 44 tall, the one-letter X link included (round L, Oct 25).
 - Every Dialogue figure locks to the 640px text column; nothing breaks out wider (round L, Oct 25).
-- One neutral figure card: near-white well (#f7f7f5 in light, #1b1e21 in dark), 8px radius, no inset border box (round L, Oct 25).
+- One neutral figure card: warm well (#eceae4 in light via --figure-well-dialogue, #1b1e21 in dark), 8px radius, no inset border box (round L, Oct 25; well locked to #eceae4 Oct 29 so the white panel and its shadow read at 1x).
 - The three compare cards are equal height, and the sources avatars are 24px with room to wrap (round L, Oct 25).
 - Full-answer screens render at near full size: answer panel 384px, drawer 272px, and the old 640px height cap is gone (round L, Oct 25).
 - Chart library cuts: the line and over-time chart, the funnel, rating averages and pies are out. Studies do not run in rounds, so no Round axes remain (round L, Oct 25).

@@ -4,7 +4,7 @@
 // adds a 400 ms crossfade back to the first frame where the end state differs from the start, then picks posters
 // (scripts/pick-dialogue-posters.py: the held frame with the most content, for first paint and reduced motion).
 import { createRequire } from "node:module";
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
@@ -14,6 +14,8 @@ const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", bef
 const CROSSFADE = new Set(["hero", "before", "every", "picker", "toggles"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+/** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
+const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
 
 async function record(demo) {
   const tmp = `/tmp/dlg-motion-${demo}`; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
@@ -60,7 +62,8 @@ async function record(demo) {
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
   const t0 = Date.now() / 1000;
-  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, everyNthFrame: 1, maxWidth: 1280, maxHeight: 1700 });
+  // PNG screencast: JPEG chroma loss shifted the flat well ~3 units greener/darker (P14 colour audit).
+  await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1280, maxHeight: 1700 });
   await hold(800); // pre-roll
   const S = {
     async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1000); },
@@ -75,11 +78,11 @@ async function record(demo) {
   const tStop = Date.now() / 1000; await cdp.send("Page.stopScreencast"); await hold(150); await b.close();
   // Constant 30 fps from screencast timestamps, cropped to the frame.
   const list = [];
-  frames.forEach((f, i) => { const p = `${tmp}/${String(i).padStart(5, "0")}.jpg`; writeFileSync(p, Buffer.from(f.data, "base64"));
+  frames.forEach((f, i) => { const p = `${tmp}/${String(i).padStart(5, "0")}.png`; writeFileSync(p, Buffer.from(f.data, "base64"));
     const next = frames[i + 1]?.t ?? Math.max(f.t + 1 / 30, tStop); list.push(`file '${p}'\nduration ${(next - f.t).toFixed(4)}`); });
-  list.push(`file '${tmp}/${String(frames.length - 1).padStart(5, "0")}.jpg'`);
+  list.push(`file '${tmp}/${String(frames.length - 1).padStart(5, "0")}.png'`);
   writeFileSync(`${tmp}/list.txt`, list.join("\n"));
-  const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.jpg`]).toString().trim()) / 1280;
+  const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.png`]).toString().trim()) / 1280;
   const W = 1038; // 519 css px at 2x
   const crop = `crop=${Math.round(fb.width * k)}:${Math.round(fb.height * k)}:${Math.round(fb.x * k)}:${Math.round(fb.y * k)}`;
   const enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
@@ -94,7 +97,23 @@ async function record(demo) {
       `[1:v]format=yuv420p,setsar=1,settb=1/30[first];[0:v]setsar=1,settb=1/30[main];[main][first]xfade=transition=fade:duration=0.4:offset=${(dur - 0.4).toFixed(3)}[v]`,
       "-map", "[v]", ...enc, mp4]);
   } else execFileSync("cp", [raw, mp4]);
-  console.log(JSON.stringify({ demo, out: mp4, seconds: Number(dur.toFixed(2)), frames: frames.length }));
+  // Well colour gate: decode frame 5 with the same bt709/tv matrix Chrome uses, assert corner ±2 of the well token.
+  const sample = `${tmp}/well-sample.png`;
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", mp4, "-vf", "select=eq(n\\,5),scale=in_color_matrix=bt709:in_range=tv", "-frames:v", "1", sample]);
+  const probe = execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "frame=width,height", "-of", "csv=p=0", sample]).toString().trim();
+  const [sw, sh] = probe.split(",").map(Number);
+  // Read the top-left corner via ffmpeg signalstats on a 1x1 crop (no sharp dependency).
+  const cornerLog = execFileSync("ffmpeg", ["-loglevel", "info", "-i", sample, "-vf", `crop=1:1:4:4,format=rgb24,signalstats`, "-f", "null", "-"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  // Prefer reading the PNG with node via a tiny decode through ffmpeg rawvideo.
+  const rawRgb = `${tmp}/corner.rgb`;
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", sample, "-vf", "crop=1:1:4:4", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", rawRgb]);
+  const rgb = readFileSync(rawRgb);
+  const [cr, cg, cb] = [rgb[0], rgb[1], rgb[2]];
+  const dr = Math.abs(cr - WELL.r), dg = Math.abs(cg - WELL.g), db = Math.abs(cb - WELL.b);
+  if (dr > 2 || dg > 2 || db > 2) {
+    throw new Error(`well colour fail ${THEME}: got (${cr},${cg},${cb}) want ${WELL.hex} ±2 (frame ${sw}x${sh}; ${cornerLog.split("\n").slice(-2).join(" ")})`);
+  }
+  console.log(JSON.stringify({ demo, out: mp4, seconds: Number(dur.toFixed(2)), frames: frames.length, well: [cr, cg, cb] }));
 }
 // The screencast occasionally drops frames under load (a skipped stretch reads as a jump), so each take is checked
 // against the motion checklist and re-recorded, up to 4 takes; the last take's checklist line is printed either way.
