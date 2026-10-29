@@ -59,14 +59,17 @@ async function pixelChecks(p, where) {
       for (let j = 1; j < kids.length; j++) gaps.push(Math.round(kids[j].getBoundingClientRect().top - kids[j - 1].getBoundingClientRect().bottom));
       const uniq = [...new Set(gaps.filter((g) => g >= 0))];
       out.push({ k: "gap", id: `${body.className.split(" ")[0]}#${i}`, ok: uniq.length <= 2 && (uniq.length < 2 || Math.abs(uniq[0] - uniq[1]) <= 1 || Math.min(...uniq) >= 8), v: gaps.join(",") }); });
-    // Play button 8px from the top right of the figure's background container (.dialogue-rachel-frame), clear of the video / product UI.
+    // Play button 8px from the top right of the figure's background container (.dialogue-rachel-frame).
+    // Body demos: clear of the video. Hero (P14 item 14): sits over the recording's well air (top ~52px), not over the panel.
     document.querySelectorAll(".dlg-demo").forEach((d, i) => { const v = d.querySelector("video"), b = d.querySelector(".phone-mockup-play-btn"), f = d.closest(".dialogue-rachel-frame"); if (!v || !b || !vis(v)) return;
       const fb = f ? f.getBoundingClientRect() : null, vb = v.getBoundingClientRect(), bb = b.getBoundingClientRect();
       const corner = !!fb && Math.abs(fb.right - bb.right - 8) <= 1 && Math.abs(bb.top - fb.top - 8) <= 1;
       out.push({ k: "edge", id: `demo#${i}`, ok: corner, v: fb ? `container right ${(fb.right - bb.right).toFixed(1)} top ${(bb.top - fb.top).toFixed(1)}` : "no .dialogue-rachel-frame" });
       const ov = (a, c) => a.left < c.right - 0.5 && c.left < a.right - 0.5 && a.top < c.bottom - 0.5 && c.top < a.bottom - 0.5;
-      const ui = vb; // the recording is the product UI
-      out.push({ k: "clear", id: `demo#${i}`, ok: !ov(bb, vb) && !ov(bb, ui), v: `button ${bb.left.toFixed(0)},${bb.top.toFixed(0)}-${bb.right.toFixed(0)},${bb.bottom.toFixed(0)} video ${vb.left.toFixed(0)},${vb.top.toFixed(0)}-${vb.right.toFixed(0)},${vb.bottom.toFixed(0)}` }); });
+      const hero = !!d.closest(".cs-hero-media-frame");
+      const intoVideo = bb.bottom - vb.top;
+      const clear = hero ? intoVideo <= 56 : !ov(bb, vb);
+      out.push({ k: "clear", id: `demo#${i}`, ok: clear, v: hero ? `hero air ${intoVideo.toFixed(0)}px (≤56)` : `button ${bb.left.toFixed(0)},${bb.top.toFixed(0)}-${bb.right.toFixed(0)},${bb.bottom.toFixed(0)} video ${vb.left.toFixed(0)},${vb.top.toFixed(0)}-${vb.right.toFixed(0)},${vb.bottom.toFixed(0)}` }); });
     return out;
   });
   for (const x of r) log(x.ok, `pixel ${where} ${x.k} ${x.id} (${x.v})`);

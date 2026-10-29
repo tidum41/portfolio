@@ -67,7 +67,8 @@ async function record(demo) {
   await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1280, maxHeight: 1700 });
   await hold(800); // pre-roll
   const S = {
-    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1000); },
+    // Final hold 1.6s after follow settles (motion checklist wants final_hold 1.0–1.9s).
+    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1600); },
     // P14 item 7: 225 then 75, ~6.5s. Cursor 500, hold 1.0 after each beat, fold back, hold 1.6.
     async side() {
       await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(1000);
@@ -76,7 +77,7 @@ async function record(demo) {
     },
     // P14 item 8: pre-roll 0.8, cursor 500, press, hold 1.0, cursor to close 500, press, hold 1.6 (~5.5s). Clip ticks during the hold.
     async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000); await cursorTo('[data-target="close"]', { ms: 500 }); await press(); await hold(1600); await cursorOut(); },
-    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300 + 1100); },
+    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(2000); },
     // P14 item 1 (Mudit): cursor clicks 225 then 75; same two-sided interaction as counts-open.
     async every() {
       await api("answer()"); await hold(800);

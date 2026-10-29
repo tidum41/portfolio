@@ -257,7 +257,7 @@ export default function DialogueChatLive({
                   />
                   <button
                     type="button"
-                    className="dlg-live__side"
+                    className="dlg-live__side dlg-live__side--unsure"
                     data-target="side"
                     aria-label="Open the 75 unsure"
                     aria-expanded={sideOpen}

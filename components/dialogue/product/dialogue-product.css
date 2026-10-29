@@ -3735,8 +3735,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dlg-suggest:disabled { cursor: default; }
 .dlg-live__bar { position: relative; }
 .dlg-live__side { position: absolute; top: -6px; bottom: -6px; border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-control); }
-.dlg-live__side--unsure { right: -6px; width: calc(25% + 12px); } /* 75 of 300 */
-.dlg-live__side--friday { left: -6px; width: calc(75% + 12px); } /* 225 of 300 */
+/* Default (live page, single hit target) and --unsure cover the 75 segment; --friday covers 225. */
+.dlg-live__side:not(.dlg-live__side--friday), .dlg-live__side--unsure { right: -6px; width: calc(25% + 12px); }
+.dlg-live__side--friday { left: -6px; width: calc(75% + 12px); }
 .dlg-live__side:focus-visible { outline: 2px solid var(--dp-brand); }
 .dlg-live__sample .dp-clip-quote { cursor: pointer; }
 .dlg-live__send { opacity: .5; }
@@ -3774,6 +3775,10 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* P14 item 14: hero only. Drop the 40px band; video fills the frame and the button floats over the recording's own well air. */
 .cs-hero-media-frame .dlg-demo { margin: 0; }
 .cs-hero-media-frame .dialogue-rachel-frame__pad { padding: 0; }
+/* At 390 the recording's 48px well air scales to ~16px, under the 52px the button needs. Keep the band on small screens so the button stays clear of the panel. */
+@media (max-width: 600px) {
+  .cs-hero-media-frame .dlg-demo { margin: 40px 0 0; }
+}
 
 .dlg-live-stage__slot { width: 471px; margin: 40px auto; }
 .dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
