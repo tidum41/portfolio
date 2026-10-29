@@ -454,7 +454,10 @@
 .dp-chart-stack__labels {
   display: flex;
   min-width: 0;
+  width: 100%;
   overflow: visible;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .dp-chart-stack__label {
@@ -466,9 +469,12 @@
   white-space: nowrap;
 }
 
-/* Short segments (75 of 300 Unsure) keep their text: grow left from the right edge. */
-.dp-chart-stack__label:last-child {
+/* Last label (e.g. 75 of 300 Unsure) sizes to its text so the card never clips it. */
+.dp-chart-stack__label[data-last] {
+  flex: 0 0 auto;
+  width: auto;
   text-align: right;
+  margin-left: auto;
 }
 
 .dp-chart-stack__label-value {

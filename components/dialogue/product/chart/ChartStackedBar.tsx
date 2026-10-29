@@ -68,12 +68,17 @@ export default function ChartStackedBar({
         </div>
       ) : (
         <div className="dp-chart-stack__labels">
-          {segments.map((seg) => (
+          {segments.map((seg, i) => (
             <span
               key={seg.label}
               className="dp-chart-stack__label"
               data-focal={seg.focal ? "" : undefined}
-              style={{ width: `${(seg.value / total) * 100}%` }}
+              data-last={i === segments.length - 1 ? "" : undefined}
+              style={
+                i === segments.length - 1
+                  ? undefined
+                  : { width: `${(seg.value / total) * 100}%`, maxWidth: `calc(100% - 7.5em)` }
+              }
               data-annotate-part={`stack-label-${annotateSlug(seg.label)}`}
             >
               <span className="dp-chart-stack__label-value">{seg.display}</span> {seg.label}

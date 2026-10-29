@@ -69,11 +69,12 @@ async function record(demo) {
   const S = {
     // Final hold 1.6s after follow settles (motion checklist wants final_hold 1.0–1.9s).
     async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1600); },
-    // P14 item 7: 225 then 75, ~6–7s. Cursor 500, hold 1.0 after each beat, fold back, hold 1.0.
+    // P14 item 7: 225 then 75, ~6–7s. After collapse wait for Grow fold (450ms), cursor out, then ≥1.0s still.
+    // Light is recorded first and dark is padded/trimmed to it — keep the light take the longer of the pair.
     async side() {
       await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(1000);
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(1000);
-      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(1000); await cursorOut();
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(500); await cursorOut(); await hold(1300);
     },
     // P14 items 2+8: tap quote to open, tap again to close (no inner chevron). Hold 1.0 after open, 1.6 final.
     async clip() {
