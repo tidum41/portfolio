@@ -109,17 +109,24 @@ function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }:
   );
 }
 
-function QuoteRow({ q, open, onTap, onClose, playSec }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; onClose?: () => void; playSec?: number }) {
+/** P14 item 2: quote rows are a selection, not a nested accordion. Tap opens (one at a time); tap again closes. No inner chevron. */
+function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number }) {
   const start = q.time.split(/[\u2013-]/)[0];
   return (
-    <div className={["dp-clip-quote", open ? "dp-clip-quote--selected" : ""].filter(Boolean).join(" ")} data-target={`quote-${q.participant.toLowerCase()}`} onClick={() => { if (!open) onTap?.(); }}>
+    <div
+      className={["dp-clip-quote", open ? "dp-clip-quote--selected" : ""].filter(Boolean).join(" ")}
+      data-target={`quote-${q.participant.toLowerCase()}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={open}
+      aria-label={open ? `Close ${q.participant}'s clip` : `Open ${q.participant}'s clip`}
+      onClick={() => onTap?.()}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTap?.(); } }}
+    >
       <p className="dp-clip-quote__who">
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
-        <button type="button" className="dlg-clip-collapse" data-target="close" aria-label={`Close ${q.participant}'s clip`} data-shown={open ? "" : undefined} onClick={(e) => { e.stopPropagation(); onClose?.(); }}>
-          <ChevronUpIcon />
-        </button>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open}>
@@ -131,7 +138,7 @@ function QuoteRow({ q, open, onTap, onClose, playSec }: { q: { participant: stri
   );
 }
 
-function Sample({ open, which = "unsure", playing, onPlay, onClose, playSec }: { open: boolean; which?: "friday" | "unsure"; playing: boolean; onPlay?: () => void; onClose?: () => void; playSec?: number }) {
+function Sample({ open, which = "unsure", playing, onPlay, playSec }: { open: boolean; which?: "friday" | "unsure"; playing: boolean; onPlay?: () => void; playSec?: number }) {
   const rows = which === "friday" ? QUOTE_LIST_FRIDAY : QUOTE_LIST;
   const count = which === "friday" ? 225 : 75;
   const label = which === "friday" ? "read it as this Friday" : "unsure";
@@ -148,7 +155,7 @@ function Sample({ open, which = "unsure", playing, onPlay, onClose, playSec }: {
         </p>
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === (which === "unsure" ? MEI : lead)} onTap={which === "unsure" && q === MEI ? onPlay : undefined} onClose={onClose} playSec={playSec} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === (which === "unsure" ? MEI : lead)} onTap={which === "unsure" && q === MEI ? onPlay : undefined} playSec={playSec} />
           ))}
         </div>
         <div className="dp-sources">
@@ -258,7 +265,12 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   } else if (demo === "clip") {
     body = (
       <div className="dlg-stage__item dp-clip-quotes dlg-live__sample">
-        <QuoteRow q={MEI} open={clip} onTap={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(true)} onClose={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(false)} playSec={playSec} />
+        <QuoteRow
+          q={MEI}
+          open={clip}
+          onTap={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)}
+          playSec={playSec}
+        />
       </div>
     );
   } else if (demo === "before") {

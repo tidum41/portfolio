@@ -75,8 +75,11 @@ async function record(demo) {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(1000);
       await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(1600); await cursorOut();
     },
-    // P14 item 8: pre-roll 0.8, cursor 500, press, hold 1.0, cursor to close 500, press, hold 1.6 (~5.5s). Clip ticks during the hold.
-    async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000); await cursorTo('[data-target="close"]', { ms: 500 }); await press(); await hold(1600); await cursorOut(); },
+    // P14 items 2+8: tap quote to open, tap again to close (no inner chevron). Hold 1.0 after open, 1.6 final.
+    async clip() {
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1600); await cursorOut();
+    },
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(2000); },
     // P14 item 1 (Mudit): cursor clicks 225 then 75; same two-sided interaction as counts-open.
     async every() {

@@ -267,11 +267,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place, and the chevron closes it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber, and the chevron closes it. Illustrative data.</Caption>
+              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber. Tap the quote again to close it. Illustrative data.</Caption>
             </Section>
 
             <Section id="data-viz">

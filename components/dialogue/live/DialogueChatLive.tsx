@@ -348,8 +348,8 @@ export default function DialogueChatLive({
 
 /**
  * One side of the count, sampled (SideSample's markup), with the clip player attached to the row
- * that is playing: the selected row (dp-clip-quote--selected) carries the speaker's name and the
- * player, a chevron collapses it, and tapping another row moves the player there.
+ * that is playing. Selection only: tap a quote to open its player (one at a time); tap again to
+ * close. The outer sample keeps the one chevron. P14 item 2.
  */
 /** Illustrative rows behind +73 more, for the static "more" frame. */
 const MORE_QUOTES = [
@@ -378,23 +378,12 @@ function LiveSideSample({ total, playing, onPlay, more, onMore, onCollapse }: { 
               className={["dp-clip-quote", on ? "dp-clip-quote--selected" : ""].filter(Boolean).join(" ")}
               data-target={`quote-${q.participant.toLowerCase()}`}
               data-playing={on ? "" : undefined}
-              onClick={() => { if (!on) onPlay(q.participant); }}
+              onClick={() => onPlay(on ? null : q.participant)}
             >
               <p className="dp-clip-quote__who">
                 <WaveformIcon className="dp-clip-quote__icon" />
                 <span className="dp-clip-quote__name">{q.participant}</span>
                 <span className="dp-clip-quote__time">{q.time}</span>
-                {on ? (
-                  <button
-                    type="button"
-                    className="dlg-clip-collapse"
-                    data-target="collapse"
-                    aria-label={`Collapse ${q.participant}'s clip`}
-                    onClick={(e) => { e.stopPropagation(); onPlay(null); }}
-                  >
-                    <ChevronUpIcon />
-                  </button>
-                ) : null}
               </p>
               <p className="dp-clip-quote__text">{q.quote}</p>
               {on ? (
