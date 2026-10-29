@@ -259,6 +259,13 @@ p, li       { text-wrap: pretty; }
 .hero-sub-end {
   white-space: nowrap;
 }
+/* Two-part sub tagline: one line with a middot on wide screens, two short
+   stacked lines on phones (no dangling separator). */
+.hero-sub-sep { color: var(--color-text-tertiary, inherit); }
+@media (max-width: 640px) {
+  .hero-sub-sep { display: none; }
+  [data-hero-sub] > .hero-sub-end { display: block; }
+}
 
 /* UI components, hero headline/subtitle, interactive widgets, cards, and chrome
    must not be text-highlightable or draggable, preventing glitchy selection blocks

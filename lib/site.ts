@@ -12,7 +12,7 @@ export const HERO_HEADLINE =
  * isn't stitching mismatched phrases from separate strings.
  */
 export const SITE_DESCRIPTION =
-  `${HERO_HEADLINE} Leading Cursor (SpaceXAI) @ UCLA`;
+  `${HERO_HEADLINE} Leading Cursor @ UCLA. Previously design engineer @ JOOLA.`;
 
 /** Default social / Open Graph image (1200×630). */
 export const OG_IMAGE_PATH = "/og-default.png";

@@ -128,18 +128,17 @@ export default function HeroText() {
           margin: 0,
         }}
       >
-        {"Leading "}
-        <a
-          href="https://cursor.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hero-ucla"
-        >
-          Cursor
-        </a>
-        {" (SpaceXAI) "}
         <span className="hero-sub-end">
-          {"@ "}
+          {"Leading "}
+          <a
+            href="https://cursor.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hero-ucla"
+          >
+            Cursor
+          </a>
+          {" @ "}
           <a
             href="https://www.ucla.edu/"
             target="_blank"
@@ -147,6 +146,13 @@ export default function HeroText() {
             className="hero-ucla"
           >
             UCLA
+          </a>
+        </span>
+        <span className="hero-sub-sep" aria-hidden="true">{" · "}</span>{" "}
+        <span className="hero-sub-end">
+          {"Previously design engineer @ "}
+          <a href="/joola" className="hero-ucla">
+            JOOLA
           </a>
         </span>
       </motion.p>
