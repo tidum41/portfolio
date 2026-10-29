@@ -3305,6 +3305,16 @@ html[data-theme="dark"] {
 .dialogue-case-study .cs-hero-media-frame {
   max-width: 640px;
 }
+/* P14 item 13: hero spans the content wrap like BruinLease (deviation: references' heroes are wider than body figures). Body figures stay at 640. */
+.dialogue-case-study .cs-hero-media-frame {
+  max-width: none;
+  width: 100%;
+}
+.dialogue-case-study .cs-hero-media-frame .cs-figure,
+.dialogue-case-study .cs-hero-media-frame .dialogue-rachel-frame {
+  max-width: none;
+  width: 100%;
+}
 
 /* Ink on the figure well, theme aware (DLG-32, DLG-33). */
 :root {
