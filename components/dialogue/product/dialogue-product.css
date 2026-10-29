@@ -3765,6 +3765,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }
 .dlg-demo-pair__note { margin: 0 0 8px; color: var(--dp-muted); font-size: var(--text-meta-size); }
 .cs-hero-media-frame .dlg-demo { width: 100%; }
+/* P14 item 14: hero only. Drop the 40px band; video fills the frame and the button floats over the recording's own well air. */
+.cs-hero-media-frame .dlg-demo { margin: 0; }
+.cs-hero-media-frame .dialogue-rachel-frame__pad { padding: 0; }
 
 .dlg-live-stage__slot { width: 471px; margin: 40px auto; }
 .dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
