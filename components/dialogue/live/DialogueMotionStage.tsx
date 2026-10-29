@@ -24,8 +24,7 @@ const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this 
 const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
 const MEI = QUOTE_LIST[0];
 
-/* Content enters the way Dialogue's own UI does (tw-animate `enter`: fade plus an 8 px rise, 300 ms) and leaves with
-   `exit` (fade, 200 ms), then unmounts. No container height animates; the panel is fixed and its body scrolls. */
+/* Height grows via grid rows (0fr→1fr open, fade then fold on close). Panel size stays fixed; its body scrolls. */
 function Grow({ open, children, className }: { open: boolean; children: ReactNode; className?: string }) {
   const [mounted, setMounted] = useState(open);
   const [leaving, setLeaving] = useState(false);
@@ -33,11 +32,16 @@ function Grow({ open, children, className }: { open: boolean; children: ReactNod
     if (open) { setMounted(true); setLeaving(false); return; }
     if (!mounted) return;
     setLeaving(true);
-    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, 200);
+    // Fade 150ms then fold 300ms; unmount after 450ms (P14 item 8).
+    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, 450);
     return () => clearTimeout(t);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!mounted) return null;
-  return <div className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}>{children}</div>;
+  return (
+    <div className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}>
+      <div className="dlg-grow__inner">{children}</div>
+    </div>
+  );
 }
 
 /* Keep the newest content in view: ease the panel body's scroll (600 ms ease-in-out), never a snap. */
