@@ -68,11 +68,22 @@ async function record(demo) {
   await hold(800); // pre-roll
   const S = {
     async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1000); },
-    async side() { await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await hold(350); await api("follow(500)"); await hold(600); await cursorOut(); await hold(900); await api("up(500)"); await hold(650); await api("side(false)"); await hold(300 + 550); },
+    // P14 item 7: 225 then 75, ~6.5s. Cursor 500, hold 1.0 after each beat, fold back, hold 1.6.
+    async side() {
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(1000);
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(1000);
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(1600); await cursorOut();
+    },
     // P14 item 8: pre-roll 0.8, cursor 500, press, hold 1.0, cursor to close 500, press, hold 1.6 (~5.5s). Clip ticks during the hold.
     async clip() { await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000); await cursorTo('[data-target="close"]', { ms: 500 }); await press(); await hold(1600); await cursorOut(); },
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300 + 1100); },
-    async every() { await api("answer()"); await hold(550); await api("side(true)"); await hold(550); await api("clip(true)"); await api("pause()"); await hold(800); await api("follow(1500)"); await hold(1500 + 700); },
+    // P14 item 1 (Mudit): cursor clicks 225 then 75; same two-sided interaction as counts-open.
+    async every() {
+      await api("answer()"); await hold(800);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(1000);
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(1000);
+      await cursorOut(); await hold(1600);
+    },
     // P14 items 5+6: Insight default; pick Source; send; deep opens; clip ticks 1s; collapse to start (typed question, Insight).
     async picker() {
       await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await hold(400);

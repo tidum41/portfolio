@@ -9,7 +9,9 @@ import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterview
 import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
-import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
+import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
+
+type SideWhich = "friday" | "unsure" | false;
 
 /*
  * P11 motion stage: one storyboard per case-study video (build/p11-motion-spec.md, design/TASTE.md "Motion").
@@ -80,9 +82,9 @@ function clipRange(time: string): CSSProperties {
   return { ["--clip-a" as string]: `${(a / total) * 100}%`, ["--clip-w" as string]: `${((z - a) / total) * 100}%` } as CSSProperties;
 }
 
-function AnswerCard({ segment = false, onSide, sideOpen, chart = true }: { segment?: boolean; onSide?: () => void; sideOpen?: boolean; chart?: boolean }) {
+function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }: { segment?: boolean; onSide?: (w: "friday" | "unsure") => void; sideOpen?: SideWhich; chart?: boolean }) {
   const bar = (
-      <div className="dlg-live__bar">
+      <div className="dlg-live__bar" data-side={sideOpen || undefined}>
         <ChartStackedBar
           total={300}
           segments={[
@@ -90,7 +92,9 @@ function AnswerCard({ segment = false, onSide, sideOpen, chart = true }: { segme
             { label: "Unsure", value: 75, display: "75 of 300" },
           ]}
         />
-        <button type="button" className="dlg-live__side" data-target="side" aria-label="Open the 75 unsure" aria-expanded={!!sideOpen} onClick={onSide} />
+        {/* P14 items 1+7: both segments tappable; focal segment carries data-target for the recorder. */}
+        <button type="button" className="dlg-live__side dlg-live__side--friday" data-target="side-friday" aria-label="Open the 225 this Friday" aria-expanded={sideOpen === "friday"} onClick={() => onSide?.("friday")} />
+        <button type="button" className="dlg-live__side dlg-live__side--unsure" data-target="side" aria-label="Open the 75 unsure" aria-expanded={sideOpen === "unsure"} onClick={() => onSide?.("unsure")} />
       </div>
   );
   return (
@@ -127,23 +131,28 @@ function QuoteRow({ q, open, onTap, onClose, playSec }: { q: { participant: stri
   );
 }
 
-function Sample({ open, playing, onPlay, onClose, playSec, rows = QUOTE_LIST }: { open: boolean; playing: boolean; onPlay?: () => void; onClose?: () => void; playSec?: number; rows?: typeof QUOTE_LIST }) {
+function Sample({ open, which = "unsure", playing, onPlay, onClose, playSec }: { open: boolean; which?: "friday" | "unsure"; playing: boolean; onPlay?: () => void; onClose?: () => void; playSec?: number }) {
+  const rows = which === "friday" ? QUOTE_LIST_FRIDAY : QUOTE_LIST;
+  const count = which === "friday" ? 225 : 75;
+  const label = which === "friday" ? "read it as this Friday" : "unsure";
+  const more = count - rows.length;
+  const lead = rows[0];
   return (
     <Grow open={open} className="dlg-stage__item">
-      <div className="dp-side-sample dlg-stage__sample">
+      <div className="dp-side-sample dlg-stage__sample" data-side={which}>
         <p className="dp-side-sample__head dp-text-body">
-          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">75</span> unsure, {rows.length} shown
-          <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label="Collapse the 75 unsure" onClick={() => (window as unknown as { __dlg: { side: (b: boolean) => void } }).__dlg.side(false)}>
+          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{count}</span> {label}, {rows.length} shown
+          <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${count} ${label}`} onClick={() => (window as unknown as { __dlg: { side: (b: SideWhich) => void } }).__dlg.side(false)}>
             <ChevronUpIcon />
           </button>
         </p>
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === MEI} onTap={q === MEI ? onPlay : undefined} onClose={onClose} playSec={playSec} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === (which === "unsure" ? MEI : lead)} onTap={which === "unsure" && q === MEI ? onPlay : undefined} onClose={onClose} playSec={playSec} />
           ))}
         </div>
         <div className="dp-sources">
-          <SourcePill name={`+${75 - rows.length} more`} time="" />
+          <SourcePill name={`+${more} more`} time="" />
         </div>
       </div>
     </Grow>
@@ -156,7 +165,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
-  const [side, setSide] = useState(false);
+  const [side, setSide] = useState<SideWhich>(false);
   const [clip, setClip] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
@@ -177,7 +186,12 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       send: () => { setSent(true); setTyped(""); },
       analyze: (on: boolean) => setAnalyzing(on),
       answer: () => { setAnalyzing(false); setAnswered(true); },
-      side: (on: boolean) => setSide(on),
+      // P14 items 1+7: side("friday" | "unsure" | false). true keeps the old "unsure" meaning for toggles/deep.
+      side: (on: SideWhich | boolean) => {
+        const next: SideWhich = on === true ? "unsure" : on === false ? false : on;
+        setSide(next);
+        if (next) pinDuringGrow(400);
+      },
       clip: (on: boolean) => {
         setClip(on);
         if (tick.current) clearInterval(tick.current);
@@ -191,7 +205,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       level: (i: number) => {
         setLevel((cur) => {
           if (i === cur) return cur;
-          setSide(i >= 2);
+          setSide(i >= 2 ? "unsure" : false);
           api.clip(i >= 3);
           pinDuringGrow(400);
           return i;
@@ -200,7 +214,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       follow: (ms = 600) => follow(ms),
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
-      deep: () => { setSide(pick >= 2); if (pick >= 3) api.clip(true); pinDuringGrow(400); },
+      deep: () => { setSide(pick >= 2 ? "unsure" : false); if (pick >= 3) api.clip(true); pinDuringGrow(400); },
       // P14 item 6: collapse picker back to the start state so the loop does not crossfade two composers.
       reset: () => {
         if (tick.current) clearInterval(tick.current);
@@ -237,8 +251,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   } else if (demo === "side") {
     body = (
       <>
-        <div className="dlg-stage__item"><AnswerCard sideOpen={side} onSide={() => setSide(true)} /></div>
-        <Sample open={side} playing={false} />
+        <div className="dlg-stage__item"><AnswerCard sideOpen={side} onSide={(w) => setSide(w)} /></div>
+        <Sample open={!!side} which={side || "unsure"} playing={false} />
       </>
     );
   } else if (demo === "clip") {
@@ -265,25 +279,28 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       </>
     );
   } else if (demo === "every" || demo === "picker") {
+    // P14 item 1 (Mudit): every is cursor-driven on both sides, same as counts-open. Picker still opens via deep().
     body = (
       <>
         {demo === "every" || sent ? <div className="dlg-stage__item dlg-rise">{bubble}</div> : null}
-        <Grow open={answered} className="dlg-stage__item"><AnswerCard /></Grow>
-        <Sample open={answered && side} playing={clip} playSec={playSec} />
+        <Grow open={answered} className="dlg-stage__item">
+          <AnswerCard sideOpen={side} onSide={(w) => setSide(w)} />
+        </Grow>
+        <Sample open={!!side} which={side || "unsure"} playing={clip} playSec={playSec} />
       </>
     );
   } else if (demo === "toggles") {
     body = (
       <>
         <div className="dlg-stage__item">
-          <AnswerCard chart={level >= 1} sideOpen={level >= 2} />
+          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "unsure" : false} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
             {LEVELS.map((l, i) => (
               <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} playing={level >= 3} playSec={playSec} />
+        <Sample open={level >= 2} which="unsure" playing={level >= 3} playSec={playSec} />
       </>
     );
   }

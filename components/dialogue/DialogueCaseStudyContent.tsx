@@ -201,11 +201,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the answer opens the chart, the people and the clip at once, and the count scrolls away" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: tapping each side of the count opens its people under the bar" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The count shows for a moment, then the people and the player push it out of view. Illustrative data.</Caption>
+              <Caption>Each side opens on a tap: 225 first, then 75 unsure. Illustrative data.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -246,11 +246,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="counts-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 unsure opens a sample of that side, and it folds away again" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Each side of the count opens 2 of its shoppers, and the chevron folds them back" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping 75 opens 2 of the unsure shoppers, and the chevron folds them back into the count. Illustrative data.</Caption>
+              <Caption>Each side opens 2 of its shoppers, and the chevron folds them back. Illustrative data.</Caption>
               <CaseStudyBody>
                 Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and +73 more pages in 5 at a time inside the answer.
               </CaseStudyBody>

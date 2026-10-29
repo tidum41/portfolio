@@ -166,6 +166,12 @@ export const QUOTE_LIST = [
   { participant: "Owen", time: "07:12\u201307:30", quote: "I'd assume Friday after I order, so I checked the date." },
 ];
 
+/** Hearthside mock for the 225 "this Friday" side (P14 item 7). */
+export const QUOTE_LIST_FRIDAY = [
+  { participant: "Ana", time: "04:10\u201304:24", quote: "It says Friday, so I planned for this Friday." },
+  { participant: "Dev", time: "11:02\u201311:15", quote: "Friday means the closest one to me." },
+];
+
 export const ANATOMY_LABELS = [
   "Summary",
   "Sources",
