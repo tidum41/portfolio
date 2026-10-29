@@ -154,7 +154,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="4 / 3" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="1 / 1" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -170,7 +170,7 @@ export function DialogueCaseStudyContent({
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
-              <p className="dlg-constraint">[DRAFT, Mudit to reword] Dec 2025 to Mar 2026, a fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
+              <p className="dlg-constraint">[DRAFT, Mudit to reword] A fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
               <CaseStudyBody>
                 Priya, a researcher at Hearthside (a made-up retailer), owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
@@ -180,11 +180,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="problem-before">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" ratio="4 / 3" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. &lsquo;Many&rsquo; could be 160 or 280 of 300. Recreated in code with invented data.</Caption>
+              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code with invented data.</Caption>
             </Section>
 
             <Section id="levels">
@@ -195,7 +195,7 @@ export function DialogueCaseStudyContent({
                 I first assumed every answer should carry every level of detail: the count, its chart, the people on each side and the source clip. The deepest detail seemed like the most useful.
               </CaseStudyBody>
               <CaseStudyBody>
-                It slowed teams down, which cuts against the speed Dialogue sells. The open player pushed the count out of view, so a PM scrolled back up for the one number they came for. Depth had to be something the reader opens.
+                In my build, the open player pushed the count out of view, so a PM scrolled back up for the one number they came for. Depth had to be something the reader opens.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
@@ -227,7 +227,7 @@ export function DialogueCaseStudyContent({
                   </div>
                 </div>
               </figure>
-              <Caption>A works like Dovetail&rsquo;s Fast and Deep modes and asks for depth up front. B starts at the count and goes deeper on a tap. Illustrative data.</Caption>
+              <Caption>A asks for depth up front. B starts at the count and goes deeper on a tap. Illustrative data.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -267,7 +267,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" ratio="4 / 3" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>

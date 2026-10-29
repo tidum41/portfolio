@@ -66,8 +66,8 @@ const TOP_ASKS = [
   { rank: 5, label: "Email the day before", value: 8 },
 ] as const;
 const CONFIDENCE = [
-  { label: "New shoppers", value: 2, display: "2 · 14 people", focal: true, detail: "of 14" },
-  { label: "Repeat shoppers", value: 4, display: "4 · 125 people", detail: "of 125" },
+  { label: "New shoppers", value: 2, display: "2 of 5 scale, 14 people", focal: true, detail: "of 14" },
+  { label: "Repeat shoppers", value: 4, display: "4 of 5 scale, 125 people", detail: "of 125" },
 ] as const;
 
 const ENTRIES = [
@@ -169,7 +169,7 @@ const SCENARIOS = [
   {
     id: "confidence",
     name: "Confidence in the delivery date",
-    note: "Asked on a 1 to 5 scale (1 = not sure, 5 = sure). Dot position is the group median; the label carries N.",
+    note: "Shoppers rated how sure they were of the delivery date on a 1–5 scale (1 = not sure, 5 = sure). Dot is the group median; the label is that score and how many people it rests on.",
     card: (
       <ChartVizCard title="How sure shoppers were about the delivery date">
         <ChartDotPlot
@@ -178,7 +178,7 @@ const SCENARIOS = [
           ticks={[1, 2, 3, 4, 5]}
           formatTick={(n) => String(n)}
           gridAt={[1, 2, 3, 4, 5]}
-          note="1 to 5 ask. Illustrative data."
+          note="1 = not sure, 5 = sure. Illustrative data."
         />
       </ChartVizCard>
     ),

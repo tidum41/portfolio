@@ -3753,8 +3753,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-depth__opt:disabled { cursor: default; }
 /* Selected chips: no hover change, no X. Step back by tapping a lower level. */
 .dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth__opt[aria-checked="true"]:hover, .dlg-depth__opt[aria-current="true"]:hover { background: var(--dp-nav-active-bg); color: var(--dp-ink); cursor: default; }
-/* P14 item 5: composer keeps the 2-line height so the typed question ↔ placeholder swap never jumps the chip row. */
-.dlg-stage .dp-study-chat__composer-box { min-height: 108px; box-sizing: border-box; }
+/* P14 item 5: picker only — composer keeps the 2-line height so typed ↔ placeholder never jumps the chip row. Hero must not inherit this or the answer scrolls/clips. */
+.dlg-stage--picker .dp-study-chat__composer-box { min-height: 108px; box-sizing: border-box; }
 .dlg-followups { display: flex; flex-direction: column; gap: 8px; }
 /* Variant B disclosure: a text button in the answer card. */
 .dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
@@ -3788,16 +3788,17 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-hero-opt__panel { width: 471px; margin: 0 auto; }
 .dlg-hero-opt__b .dlg-hero-opt__panel { zoom: 1.45; }
 
-/* Round P10: low-signal note gets its warn surface back (as in e662d57, Round N), centred icon on the first line. */
+/* P5 / TASTE: thin-data is a stone line, not amber. Keep the icon centred on the first line. */
 .dp-low-signal {
   align-items: flex-start;
-  padding: 8px 12px;
-  border-radius: var(--dp-radius-chip);
-  background: var(--dp-warn-bg);
-  color: var(--dp-warn-fg);
+  gap: 8px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dp-muted);
 }
-.dp-low-signal__icon { margin-top: calc((var(--text-meta-leading) - 16px) / 2); color: var(--dp-warn-fg); }
-.dp-low-signal__text { font-weight: var(--dp-weight-medium); }
+.dp-low-signal__icon { margin-top: calc((var(--text-meta-leading) - 16px) / 2); color: var(--dp-muted); }
+.dp-low-signal__text { font-weight: 400; color: var(--dp-muted); }
 
 /* Round P10 interaction states, in Dialogue's language: Tailwind's default colour transition
    (150 ms cubic-bezier(0.4, 0, 0.2, 1), measured on the real quote cards), warm hover fill,
@@ -3817,10 +3818,11 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Counts: no box around the hit area. The grey segment itself takes hover, press and open states. */
 .dlg-live__side, .dlg-live__side:hover, .dlg-live__side:active { box-shadow: none; background: transparent; }
 .dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease, opacity 240ms ease; }
-.dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]),
-.dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
-.dlg-live__bar:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]),
-.dlg-live__bar:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
+/* Hover only at rest (:not([data-side])). Focal darkens cherry; muted softens. Selected segment: no hover change. */
+.dlg-live__bar:not([data-side]):has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
+.dlg-live__bar:not([data-side]):has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
+.dlg-live__bar:not([data-side]):has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 75%, var(--dp-ink)); }
+.dlg-live__bar:not([data-side]):has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
 /* P14 items 1+7: selected side keeps colour; the other segment recedes to 35%. Label of the open side goes ink. */
 .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-focal],
 .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg:not([data-focal]) { opacity: 0.35; }

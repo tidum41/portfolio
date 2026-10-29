@@ -255,7 +255,16 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       follow: (ms = 600) => follow(ms),
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
-      deep: () => { setSide(pick >= 2 ? "unsure" : false); if (pick >= 3) api.clip(true); pinDuringGrow(400); },
+      // Picker: pin the answer top in view so the 4.7s poster still shows the count (not only the clip).
+      deep: () => {
+        setSide(pick >= 2 ? "unsure" : false);
+        if (pick >= 3) api.clip(true);
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body");
+        const ans = body?.querySelector<HTMLElement>(".dlg-grow, .dlg-fill, .dlg-stage__item");
+        if (body && ans) {
+          requestAnimationFrame(() => { body.scrollTop = Math.max(0, ans.offsetTop); });
+        }
+      },
       // P14 item 9: open/close the New shoppers sample under the bar chart.
       bar: (on: boolean) => { setBarOpen(on); if (on) pinDuringGrow(400); },
       // P14 item 6: collapse picker back to the start state so the loop does not crossfade two composers.

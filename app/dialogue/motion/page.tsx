@@ -6,12 +6,14 @@ export const metadata = { title: "Dialogue motion stage", robots: { index: false
 const DEMOS: MotionDemo[] = ["hero", "side", "clip", "before", "every", "picker", "toggles", "bars"];
 /** Frame per demo: 1:1 or 4:3 at 519 css px wide (471 panel + 24 px air), and the well tone it sits in on the page. */
 const STAGE = {
-  hero: { ratio: 0.75, tone: "solution", zoom: 1 },
+  // Hero: whole answer (finding + bar + Unsure) fits at zoom 1; 108px composer min-height is picker-only.
+  hero: { ratio: 1, tone: "solution", zoom: 1 },
   side: { ratio: 1, tone: "solution", zoom: 0.92 },
-  clip: { ratio: 0.82, tone: "solution", zoom: 0.88 },
-  before: { ratio: 0.84, tone: "problem", zoom: 1 },
+  clip: { ratio: 0.75, tone: "solution", zoom: 0.88 },
+  before: { ratio: 0.75, tone: "problem", zoom: 1 },
   every: { ratio: 1, tone: "problem", zoom: 0.88 },
-  picker: { ratio: 1, tone: "problem", zoom: 0.88 },
+  // Zoom 0.8 so Source depth keeps the answer top in the poster frame.
+  picker: { ratio: 1, tone: "problem", zoom: 0.8 },
   toggles: { ratio: 1, tone: "solution", zoom: 0.88 },
   bars: { ratio: 1, tone: "solution", zoom: 0.92 },
 } as const;

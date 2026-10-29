@@ -453,14 +453,22 @@
 
 .dp-chart-stack__labels {
   display: flex;
+  min-width: 0;
+  overflow: visible;
 }
 
 .dp-chart-stack__label {
   min-width: 0;
+  overflow: visible;
   font-size: var(--dp-chart-label-size);
   line-height: var(--dp-chart-label-leading);
   color: var(--dp-chart-label-color);
   white-space: nowrap;
+}
+
+/* Short segments (75 of 300 Unsure) keep their text: grow left from the right edge. */
+.dp-chart-stack__label:last-child {
+  text-align: right;
 }
 
 .dp-chart-stack__label-value {

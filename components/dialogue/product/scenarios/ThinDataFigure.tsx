@@ -81,8 +81,8 @@ export default function ThinDataFigure() {
           className={["dp-next-study", downloaded ? "dp-next-study--done" : ""].join(" ")}
           data-interactive
           data-annotate-part="next-study-button"
-          title="Saves both answers and follow-up questions as a Markdown file for your agent."
-          aria-label="Download study plan. Saves both answers and follow-up questions as a Markdown file for your agent."
+          title="Saves the answer, its 2 quotes and follow-up questions as a Markdown file for your agent."
+          aria-label="Download study plan. Saves the answer, its 2 quotes and follow-up questions as a Markdown file for your agent."
           onClick={onDownload}
         >
           {downloaded ? (
@@ -95,7 +95,7 @@ export default function ThinDataFigure() {
         <p key={downloaded ? "done" : "idle"} className={["dp-next-study__hint", downloaded ? "dp-animate-in" : ""].join(" ")} role="status" data-annotate-part="next-study-hint">
           {downloaded
             ? "Downloaded study-plan.md"
-            : "Saves both answers and follow-up questions as a Markdown file for your agent."}
+            : "Saves the answer, its 2 quotes and follow-up questions as a Markdown file for your agent."}
         </p>
       </div>
     </StudyChatShell>
