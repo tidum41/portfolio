@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
@@ -197,6 +197,8 @@ const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives b
    one con (P14's pros and cons). Group bars open their people on a tap (P14 bar tap) and show their percent on hover. */
 type Template = {
   id: string; name: string; carbon: string; note: string; target: string;
+  /** P16: the kind of question the AI matches to this template, so the figure's purpose reads at a glance. */
+  ask: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
@@ -204,6 +206,7 @@ const FIRST = SEGMENTS[0];
 const TEMPLATES: Template[] = [
   {
     id: "group",
+    ask: "Compares groups of different sizes",
     name: "By group",
     carbon: "Simple bar chart",
     note: "Count out of each group",
@@ -243,6 +246,7 @@ const TEMPLATES: Template[] = [
   },
   {
     id: "split",
+    ask: "Splits everyone into two sides",
     name: "Split",
     carbon: "Meter chart",
     note: "Count under each segment",
@@ -260,6 +264,7 @@ const TEMPLATES: Template[] = [
   },
   {
     id: "ranked",
+    ask: "Ranks what people asked for",
     name: "Ranked",
     carbon: "Simple bar chart, sorted",
     note: "Asks in rank order",
@@ -274,6 +279,7 @@ const TEMPLATES: Template[] = [
   },
   {
     id: "scale",
+    ask: "Asks people to rate from 1 to 5",
     name: "1 to 5 scale",
     carbon: "Lollipop chart",
     note: "Median score per group",
@@ -295,57 +301,50 @@ const TEMPLATES: Template[] = [
   },
 ];
 
-/** P15 item 3: a static annotation in the well beside the panel, level with what it names; on phones it sits under the panel. */
-function WellNote({ text, target, panel }: { text: string; target: string; panel: React.RefObject<HTMLDivElement | null> }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const [y, setY] = useState<number | null>(null);
-  useEffect(() => {
-    const measure = () => {
-      const host = ref.current?.parentElement, el = panel.current?.querySelector<HTMLElement>(target);
-      if (!host || !el) return;
-      const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
-      setY(r.top + r.height / 2 - h.top);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (ref.current?.parentElement) ro.observe(ref.current.parentElement);
-    return () => ro.disconnect();
-  }, [target, panel]);
+function Reason({ t }: { t: Template }) {
   return (
-    <p ref={ref} className="dlg-templates__note" style={{ ["--y" as string]: `${y ?? 0}px`, visibility: y === null ? "hidden" : undefined } as CSSProperties} aria-hidden>
-      <span className="dlg-note__line" />
-      <span className="dlg-note__text">{text}</span>
-    </p>
+    <div className="dlg-reason dlg-templates__reason">
+      <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="pro" aria-hidden><Check size={16} weight="bold" /></span><span>{t.pro}</span></p>
+      <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="con" aria-hidden><X size={16} weight="bold" /></span><span>{t.con}</span></p>
+    </div>
+  );
+}
+function TemplatePanel({ t, open, setOpen }: { t: Template; open: boolean; setOpen: (b: boolean) => void }) {
+  return (
+    <div className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id}>
+      {t.card(open, setOpen)}
+    </div>
   );
 }
 
-function ChartTemplates() {
+/** P16 (Mudit: "why?", cycling is mid): a direct picker. Every question type the AI matches is listed at once, each
+ *  with its template name, and the chosen one shows its chart, Carbon source, pro and con. Explored and not kept: a 2x2
+ *  grid of small multiples (cards clipped below their real width) and a full-size stack (four screens tall). */
+function ChartTemplatesPicker() {
   const [sel, setSel] = useState(TEMPLATES[0].id);
   const [open, setOpen] = useState(false);
-  const panel = useRef<HTMLDivElement>(null);
   const t = TEMPLATES.find((x) => x.id === sel) ?? TEMPLATES[0];
   return (
-    <div className="dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates">
-      <div className="dlg-templates__pick" role="group" aria-label="Chart templates">
+    <div className="dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--picker">
+      <div className="dlg-templates__list" role="radiogroup" aria-label="Question types">
         {TEMPLATES.map((x) => (
-          <button key={x.id} type="button" className="dlg-templates__opt" aria-pressed={x.id === sel} onClick={() => { setSel(x.id); setOpen(false); }}>{x.name}</button>
+          <button key={x.id} type="button" role="radio" aria-checked={x.id === sel} className="dlg-templates__row" onClick={() => { setSel(x.id); setOpen(false); }}>
+            <span className="dlg-templates__row-ask">{x.ask}</span>
+            <span className="dlg-templates__row-name">{x.name}</span>
+          </button>
         ))}
       </div>
-      <div className="dlg-templates__stage">
-        <div ref={panel} className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id} key={t.id}>
-          {t.card(open, setOpen)}
-        </div>
-        <WellNote key={`${t.id}-note`} text={t.note} target={t.target} panel={panel} />
-      </div>
-      <div className="dlg-templates__about">
-        <p className="dlg-templates__carbon"><span>Adapted from IBM Carbon</span> {t.carbon}</p>
-        <div className="dlg-reason dlg-templates__reason">
-          <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="pro" aria-hidden><Check size={16} weight="bold" /></span><span>{t.pro}</span></p>
-          <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="con" aria-hidden><X size={16} weight="bold" /></span><span>{t.con}</span></p>
-        </div>
+      <div className="dlg-templates__side">
+        <TemplatePanel t={t} open={open} setOpen={setOpen} />
+        <p className="dlg-templates__carbon"><span>From IBM Carbon</span> {t.carbon}</p>
+        <Reason t={t} />
       </div>
     </div>
   );
+}
+
+export function ChartTemplates() {
+  return <ChartTemplatesPicker />;
 }
 
 export default function DialogueChartLibrary({

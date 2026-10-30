@@ -3986,12 +3986,12 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-note__line { flex: 0 0 16px; height: 1px; background: var(--color-text-muted); opacity: 0.6; }
 .dlg-note__text { font-family: var(--font-sans); font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); text-wrap: pretty; }
 /* Item 9: View session shows on hover of a quote row, at the right of its name and time. */
-.dlg-view-session { margin-left: auto; opacity: 0; transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1); }
-.dp-clip-quote:hover .dlg-view-session { opacity: 1; }
+/* P16: the session link moved into the player bar (DialogueInterviewPlayer, open-in-new-tab icon). */
 .dlg-stage .dp-clip-quote__who { display: flex; align-items: center; }
 /* Item 17: the thin answer offers Dialogue's chat-start chips; the tapped chip keeps the stone-200 selected fill. */
 .dlg-thin { display: flex; flex-direction: column; gap: 8px; }
 .dlg-thin .dp-summary { margin: 0; }
+.dlg-thin__label { margin: 8px 0 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
 .dlg-thin .dp-clips-link { margin: 0; }
 .dlg-thin__chips { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 4px; }
 .dlg-live .dlg-suggest.dlg-thin__chip[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
@@ -4037,3 +4037,22 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* P16: the case-study clips show an illustrated interview still in place of the grey speaker tile. */
 .dlg-stage .dp-qplayer__placeholder { background: url("/dialogue/clip-still.svg") center / cover no-repeat; }
 .dlg-stage .dp-qplayer__placeholder-icon { display: none; }
+
+/* P16 chart templates: a direct picker. Question types on the left, the chosen template's chart on the right. */
+.dlg-templates__carbon + .dlg-templates__reason { margin-top: 0; }
+.dlg-templates--picker { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; }
+.dlg-templates__list { display: flex; flex-direction: column; gap: 4px; }
+.dlg-templates__row { display: flex; flex-direction: column; gap: 2px; text-align: left; margin: 0; padding: 8px 12px; border: 0; border-radius: var(--radius-control); background: none; font: inherit; cursor: pointer; color: var(--color-text-secondary); }
+.dlg-templates__row[aria-checked="true"] { background: var(--dp-surface); color: var(--color-text-primary); box-shadow: inset 0 0 0 1px var(--dlg-figure-hairline); }
+.dlg-templates__row:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.dlg-templates__row-ask { font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-templates__row-name { font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); }
+.dlg-templates__side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+@media (max-width: 600px) { .dlg-templates--picker { grid-template-columns: minmax(0, 1fr); } }
+
+/* P16 round 2: no motion blur, so the dark player must never land in a few frames. It grows over 520 ms and fades in
+   over 420 ms on a symmetric ease; closing fades over 300 ms, then folds. */
+.dlg-stage .dp-clip-quote .dlg-grow--in { animation-duration: 520ms; }
+.dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner { animation-duration: 420ms; animation-delay: 60ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-stage .dp-clip-quote .dlg-grow--out { animation-duration: 700ms; }
+.dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }

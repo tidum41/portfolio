@@ -74,7 +74,7 @@ const MEI = QUOTE_LIST[0];
 const ANA = QUOTE_LIST_FRIDAY[0];
 
 /* Height grows via grid rows (0fr→1fr open, fade then fold on close). Panel size stays fixed; its body scrolls. */
-function Grow({ open, children, className }: { open: boolean; children: ReactNode; className?: string }) {
+function Grow({ open, children, className, closeMs = 450 }: { open: boolean; children: ReactNode; className?: string; closeMs?: number }) {
   const [mounted, setMounted] = useState(open);
   const [leaving, setLeaving] = useState(false);
   useEffect(() => {
@@ -82,7 +82,7 @@ function Grow({ open, children, className }: { open: boolean; children: ReactNod
     if (!mounted) return;
     setLeaving(true);
     // Fade 150ms then fold 300ms; unmount after 450ms (P14 item 8).
-    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, 450);
+    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, closeMs);
     return () => clearTimeout(t);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!mounted) return null;
@@ -174,10 +174,9 @@ function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time:
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
-        <span className="dp-clips-link dlg-view-session" data-target={`session-${q.participant.toLowerCase()}`}>View session</span>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
-      <Grow open={open}>
+      <Grow open={open} closeMs={700}>
         <div className="dlg-live__clip" style={clipRange(q.time)}>
           <DialogueInterviewPlayer current={playSec !== undefined ? fmt(sec(start) + playSec) : start} />
         </div>
@@ -259,7 +258,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setSide(next);
         // Only the first try pins the bar while its people grow, which pushes the count up and out of view (its point).
         // Counts and clip grow below a still bar.
-        if (next && demo === "every") pinDuringGrow(400);
+        // P16: nothing pins; a later reveal() scrolls only when the next thing would be out of view.
       },
       clip: (on: boolean) => {
         setClip(on);
@@ -290,6 +289,16 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       ana: () => setAna(true),
       // P16 thin: the question and its thin answer arrive together.
       thin: () => { setSent(true); setThinShown(true); },
+      // P16: scroll just enough that an element's bottom sits `pad` px above the panel body's bottom edge.
+      reveal: (sel: string, pad = 16, ms = 600) => {
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
+        if (!body || !el) return;
+        const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
+        const to = Math.max(0, Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + r.bottom - (b.bottom - pad)));
+        const from = body.scrollTop, t0 = performance.now();
+        const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step);
+      },
       // P16 loop seam for add-only takes: a spacer one body tall lands under the chat and the body eases to it, so the
       // conversation scrolls up and out like a new chat. The panel, its header and composer never leave the card.
       clear: (ms = 700) => {
@@ -389,7 +398,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         <Grow open={answered} className="dlg-stage__item">
           <AnswerCard sideOpen={side} onSide={(w) => setSide(w)} />
         </Grow>
-        <Sample open={!!side} which={side || "unsure"} playing={clip} playSec={playSec} />
+        <Sample open={!!side} which={side || "unsure"} playing={clip} playSec={playSec} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
     );
   } else if (demo === "thin") {
@@ -398,11 +407,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         {thinShown ? <div className="dlg-stage__item dlg-rise"><UserMessageBubble>{THIN_QUESTION}</UserMessageBubble></div> : null}
         {thinShown ? <div className="dlg-stage__item dlg-thin dlg-rise">
           <p className="dp-summary dp-text-body">{THIN_FINDING}</p>
+          {/* P16: the flag says why there is no chart (the 3-person cutoff the page states). */}
           <div className="dp-low-signal" data-target="thin-flag">
             <InfoCircleIcon className="dp-low-signal__icon" />
-            <p className="dp-low-signal__text">Early signal, 2 people</p>
+            <p className="dp-low-signal__text">Early signal, 2 people. A chart needs 3 or more.</p>
           </div>
           <p className="dp-clips-link">View 2 clips</p>
+          {/* P16: the chips say what they are, follow-ups the same interviews can answer with a count. */}
+          <p className="dlg-thin__label">Suggested follow-ups with enough answers to count</p>
           <div className="dlg-thin__chips" data-target="thin-chips">
             {THIN_CHIPS.map((c, i) => (
               <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>

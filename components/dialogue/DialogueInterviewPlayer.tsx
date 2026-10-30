@@ -24,6 +24,16 @@ function SkipIcon({ back = false }: { back?: boolean }) {
   );
 }
 
+/** P16: opens the full session in a new tab. Same 18px filled glyph language as the Paper player icons. */
+function OpenSessionIcon() {
+  return (
+    <svg className="dp-qplayer__icon" viewBox="0 0 18 18" aria-hidden>
+      <path d="M10 2.75c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-1.5 0V4.56l-5.47 5.47a.75.75 0 1 1-1.06-1.06l5.47-5.47h-2.69a.75.75 0 0 1-.75-.75" />
+      <path d="M4.75 4.5A1.25 1.25 0 0 0 3.5 5.75v7.5c0 .69.56 1.25 1.25 1.25h7.5c.69 0 1.25-.56 1.25-1.25V10.5a.75.75 0 0 1 1.5 0v2.75A2.75 2.75 0 0 1 12.25 16h-7.5A2.75 2.75 0 0 1 2 13.25v-7.5A2.75 2.75 0 0 1 4.75 3H7.5a.75.75 0 0 1 0 1.5z" />
+    </svg>
+  );
+}
+
 function VolumeIcon() {
   return (
     <svg className="dp-qplayer__icon" viewBox="0 0 18 18" aria-hidden>
@@ -85,6 +95,8 @@ export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: 
           <span className="dp-qplayer__btn" data-annotate-part="player-volume"><VolumeIcon /></span>
           <span className="dp-qplayer__btn" data-annotate-part="player-pip"><PipIcon /></span>
           <span className="dp-qplayer__btn" data-annotate-part="player-fullscreen"><FullscreenIcon /></span>
+          {/* P16: the session link lives in the player, the same in the product UI and every case-study visual. */}
+          <span className="dp-qplayer__btn" data-annotate-part="player-session" title="Open session in a new tab"><OpenSessionIcon /></span>
         </div>
         <span className="dp-qplayer__bar-ring" aria-hidden />
       </div>

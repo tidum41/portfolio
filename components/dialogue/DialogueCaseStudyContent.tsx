@@ -206,11 +206,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: one tap on the 75 unsure opens its people and a playing clip at once" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the 75 opens its people, then Mei opens her clip, and the player pushes the count out of view" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>One tap on the 75 unsure opens its people and a playing clip at once, and the count slides up out of view.</Caption>
+              <Caption>Tapping the 75 opens its people. Tapping Mei opens her clip, and the player pushes the count out of view.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -290,7 +290,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Four templates, each with the Carbon chart it started from. Pick one to see its answer.</Caption>
+              <Caption>The kinds of question the AI matches to a template. Pick one to see the chart it gets and the Carbon chart it started from.</Caption>
             </Section>
 
             <Section id="thin-data">
@@ -310,7 +310,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Two shoppers get a flag instead of a chart, and a tapped follow-up counts repeat shoppers from the same interviews. Recorded from my live code recreation.</Caption>
+              <Caption>Two shoppers are too few for a chart, so the answer says so and suggests follow-ups the same interviews can count. Recorded from my live code recreation.</Caption>
             </Section>
 
 

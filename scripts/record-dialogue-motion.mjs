@@ -17,7 +17,7 @@ const STILLS = { picker: "variant-picker-full" };
 // P15: every and toggles now fold back to their start, so only hero, before and thin blend end to start.
 const CROSSFADE = new Set(); // P16: no take crossfades; add-only takes scroll their chat up and out (clear) instead.
 /** P15 item 9: subtle motion blur on the clip take (a 3-frame weighted blend; still frames are unchanged). */
-const BLUR = { has: () => true }; // P16: every take gets the same subtle motion blur
+const BLUR = { has: () => false }; // P16 round 2 (Mudit): no motion blur on any take; it read as choppy
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
@@ -108,7 +108,7 @@ async function record(demo) {
   const S = {
     // P16: the question is typed and sent, the count arrives and Ana's row lands under it; the chat then scrolls up and
     // out (clear), so the loop returns to the empty chat with the UI on the card the whole time.
-    async hero() { await api("type(20)"); await hold(200); await api("send()"); await api("analyze(true)"); await hold(700); await api("answer()"); await hold(1000); await api("ana()"); await hold(150); await api("follow(500)"); await hold(1800); await api("clear(700)"); await hold(650); },
+    async hero() { await api("type(20)"); await hold(200); await api("send()"); await api("analyze(true)"); await hold(700); await api("answer()"); await hold(1000); await api("ana()"); await hold(450); await api("follow(500)"); await hold(1800); await api("clear(700)"); await hold(650); },
     // Counts (Mudit, P15 round 2): 225 open with the cursor resting on it; tap 75, linger; tap 225, linger. Last frame is the first.
     async side() {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("unsure")'); await hold(1500);
@@ -116,20 +116,23 @@ async function record(demo) {
     },
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await hold(200); await api("follow(600)"); await hold(1300);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await hold(420); await api('reveal("[data-target=quote-ana]", 16, 850)'); await hold(1450);
       await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(false)"); await hold(450); await api("up(500)"); await hold(300); await cursorOut(); await hold(700);
     },
     async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(200); await api('note("Unstated count", ".dlg-mark")'); await hold(1600); await api("unnote()"); await hold(1300); await api("clear(700)"); await hold(650); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
     async every() {
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("unsure")'); await api("clip(true)"); await hold(300); await cursorOut(); await hold(1700);
-      await api("side(false)"); await api("clip(false)"); await hold(1000);
+      // P16 round 2 (Mudit): each tap shows only the next thing. The 75 opens its people; Mei opens her clip, and
+      // making room for the player scrolls the count out of view (the first try's problem). The chevron folds it all back.
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(650);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.4, ms: 500 }); await press(); await api("clip(true)"); await hold(420); await api('reveal("[data-target=quote-mei]", 16, 850)'); await hold(1350);
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(650);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
     async toggles() {
-      await cursorTo('[data-target="level-1"]'); await press(); await api("level(1)"); await hold(750);
-      await cursorTo('[data-target="level-3"]'); await press(); await api("level(3)"); await hold(250); await api("follow(700)"); await hold(1150);
-      await api("up(600)"); await hold(450); await cursorTo('[data-target="level-0"]'); await press(); await api("level(0)"); await hold(200);
+      await cursorTo('[data-target="level-1"]'); await press(); await api("level(1)"); await hold(650);
+      await cursorTo('[data-target="level-3"]'); await press(); await api("level(3)"); await hold(250); await api("follow(900)"); await hold(1200);
+      await api("up(950)"); await hold(550); await cursorTo('[data-target="level-0"]'); await press(); await api("level(0)"); await hold(200);
       await cursorOut(); await hold(700);
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.

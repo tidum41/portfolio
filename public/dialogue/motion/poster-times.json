@@ -1,16 +1,16 @@
 {
- "live-clip-dark": 0.267,
- "live-clip": 0.267,
- "live-hero-ask-dark": 5.167,
- "live-hero-ask": 5.167,
+ "live-clip-dark": 3.4,
+ "live-clip": 3.4,
+ "live-hero-ask-dark": 5.467,
+ "live-hero-ask": 5.467,
  "live-side-dark": 4.6,
  "live-side": 4.6,
- "live-thin-dark": 5.7,
- "live-thin": 5.7,
- "variant-before-full-dark": 5.0,
- "variant-before-full": 5.0,
- "variant-every-full-dark": 3.333,
- "variant-every-full": 3.333,
- "variant-toggles-full-dark": 7.567,
- "variant-toggles-full": 7.567
+ "live-thin-dark": 6.2,
+ "live-thin": 6.2,
+ "variant-before-full-dark": 5.7,
+ "variant-before-full": 5.7,
+ "variant-every-full-dark": 4.967,
+ "variant-every-full": 4.967,
+ "variant-toggles-full-dark": 4.8,
+ "variant-toggles-full": 4.8
 }
