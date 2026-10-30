@@ -19,7 +19,7 @@ const BLUR = new Set(["clip"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
-const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
+const WELL = THEME === "dark" ? { r: 27, g: 29, b: 31, hex: "#1b1d1f" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
 
 async function record(demo) {
   const tmp = `/tmp/dlg-motion-${demo}`; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });

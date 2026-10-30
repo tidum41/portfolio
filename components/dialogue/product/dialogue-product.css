@@ -4030,3 +4030,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-templates__chart:hover .dlg-callout { opacity: 0; }
 .dlg-templates__chart { margin-bottom: 24px; }
 @media (max-width: 600px) { .dlg-templates .dlg-callout[data-place="below"] { transform: translate(calc(-100% + 16px), 8px); align-items: flex-end; } .dlg-templates .dlg-callout[data-place="below"]::after { margin-right: 16px; } }
+/* P15 item 1 root cause: a video figure is the recording edge to edge. No CSS well shows around it at any width,
+   so a decoder's 1-unit shift can never read as a second shade; the frame colour is the recording's exact decode. */
+.dialogue-case-study .cs-figure .dialogue-rachel-frame:has(.dlg-demo) > .dialogue-rachel-frame__pad { padding: 0; }
+.dialogue-case-study .cs-figure .dlg-demo { margin: 0; }
+.dialogue-case-study .dlg-demo__video { object-fit: cover; background: var(--figure-well-dialogue); }
+@media (max-width: 600px) { .dialogue-case-study .cs-figure .dlg-demo, .cs-hero-media-frame .dlg-demo { margin: 0; } }
