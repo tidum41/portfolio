@@ -4029,3 +4029,4 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @media (max-width: 600px) { .dlg-templates { padding: 16px; } .dlg-templates__meta { grid-template-columns: 1fr; } .dlg-templates__chips { flex-wrap: wrap; } }
 .dlg-templates__chart:hover .dlg-callout { opacity: 0; }
 .dlg-templates__chart { margin-bottom: 24px; }
+@media (max-width: 600px) { .dlg-templates .dlg-callout[data-place="below"] { transform: translate(calc(-100% + 16px), 8px); align-items: flex-end; } .dlg-templates .dlg-callout[data-place="below"]::after { margin-right: 16px; } }

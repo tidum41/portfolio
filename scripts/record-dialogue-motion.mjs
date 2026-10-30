@@ -81,7 +81,7 @@ async function record(demo) {
     // P15 item 9: open Mei's clip, rest on the row so View session shows, then close.
     async clip() {
       await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(450);
-      await api('note("Plays from her quote, not from 00:00", ".dlg-live__clip", "below")');
+      await api('note("Starts at her quote", ".dlg-live__clip", "below")');
       await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(1100); await api("unnote()");
       await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.75, ms: 500 }); await press(); await hold(1400); await cursorOut();
     },
