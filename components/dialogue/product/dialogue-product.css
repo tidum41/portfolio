@@ -3902,7 +3902,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* ===== P11 motion stage (design/TASTE.md "Motion"; build/p11-motion-spec.md) ===== */
 .dlg-motion-page { padding: 40px; }
-.dlg-motion-frame { width: 519px; padding: 48px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
+.dlg-motion-frame { width: 535px; padding: 56px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
 .dlg-motion-frame__panel { width: 423px; overflow: visible; } /* the product root clips; the stage card's shadow needs its rounded bottom corners */
 /* The card sits whole inside 32px of air, with Dialogue's chat shadow; its body scrolls, the card never resizes. */
 .dlg-stage { height: 100%; display: flex; flex-direction: column; } /* panel surface, border and shadow stay Dialogue's own (.dp-study-chat) */
@@ -3981,7 +3981,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-chart-viz-card, .dlg-templates .dp-chart-viz-card { background: var(--dp-surface); }
 /* Item 3: a static annotation in the recording's right gutter. Small muted text and a thin leader from the panel edge,
    level with what it names. It only fades; it never moves and never sits over the panel. */
-.dlg-note { position: absolute; left: 479px; top: var(--y); width: 144px; display: flex; align-items: center; gap: 8px; transform: translateY(-50%); opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.dlg-note { position: absolute; left: 487px; top: var(--y); width: 144px; display: flex; align-items: center; gap: 8px; transform: translateY(-50%); opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
 .dlg-note[data-on] { opacity: 1; }
 .dlg-note__line { flex: 0 0 16px; height: 1px; background: var(--color-text-muted); opacity: 0.6; }
 .dlg-note__text { font-family: var(--font-sans); font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); text-wrap: pretty; }
@@ -4033,3 +4033,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* P15 hero root cause: the hero figure kept the body figures' 24px top margin, so a band of CSS well showed above the
    recording. The hero frame is now the recording edge to edge, clipped to the frame's radius. */
 .dialogue-case-study .cs-hero-media-frame .cs-figure { margin: 0; }
+
+/* P16: the case-study clips show an illustrated interview still in place of the grey speaker tile. */
+.dlg-stage .dp-qplayer__placeholder { background: url("/dialogue/clip-still.svg") center / cover no-repeat; }
+.dlg-stage .dp-qplayer__placeholder-icon { display: none; }

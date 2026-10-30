@@ -12,8 +12,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
   const b = stageBox(demo);
   return (
     <main className="dialogue-case-study dlg-motion-page">
-      <div id="frame" className={`dialogue-rachel-frame dialogue-rachel-frame--${s.tone} dlg-motion-frame`} style={{ width: `${b.w}px`, height: `${b.h}px`, paddingTop: `${b.top}px` }}>
-        <div className="dialogue-product-root dp-chat-panel-typography dlg-motion-frame__panel" data-zoom={s.zoom} style={{ zoom: s.zoom, width: `${STAGE_PANEL_W / s.zoom}px`, height: `${b.panelH / s.zoom}px` }}>
+      <div id="frame" className={`dialogue-rachel-frame dialogue-rachel-frame--${s.tone} dlg-motion-frame`} style={{ width: `${b.w}px`, height: `${b.h}px`, padding: `${b.top}px ${b.w - STAGE_PANEL_W - b.top}px ${b.top}px ${b.top}px` }}>
+        <div className="dialogue-product-root dp-chat-panel-typography dlg-motion-frame__panel" data-zoom={1} style={{ width: `${STAGE_PANEL_W}px`, height: `${b.panelH}px` }}>
           <DialogueMotionStage demo={demo} />
         </div>
       </div>

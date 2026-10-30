@@ -4,7 +4,8 @@ usage: check-dialogue-motion.py <video.mp4> [...]  -> one JSON line per video; e
 Metric: mean absolute luma difference between consecutive frames, 320x180, at the video's 30 fps.
 A frame is "still" when no pixel changes by 12 or more (one typed character or a playhead tick counts as change).
 Checks: length 4-9 s; no frame diff over 20; no mid-video hold over 2.0 s; a final hold of 1.0-1.9 s
-(the last still run, which on crossfaded loops ends where the 400 ms fade begins); first and last frames match."""
+(the last held state: the longest still run that ends in the final 1.3 s, which on add-only loops ends where the
+0.7 s scroll-out seam begins, and on crossfaded loops where the 400 ms fade begins); first and last frames match."""
 import json, subprocess, sys
 import numpy as np
 
@@ -20,9 +21,10 @@ for p in sys.argv[1:]:
     for i, x in enumerate(list(peak) + [255]):
         if x < 12 and start is None: start = i
         elif x >= 12 and start is not None: runs.append((start, i)); start = None
-    tail = [r for r in runs if r[1] >= len(d) - int(0.6 * fps)]  # crossfade tail is at most 0.5 s
-    final = tail[0] if tail else (runs[-1] if runs else (0, 0))
-    mid = [(b - a) / fps for (a, b) in runs if (a, b) != final and b < len(d) - int(0.6 * fps) and a > 0]
+    W = int(1.3 * fps)  # P16: a loop seam (scroll-out or crossfade) lasts at most 1.3 s after the last held state
+    tail = [r for r in runs if r[1] >= len(d) - W]
+    final = max(tail, key=lambda r: r[1] - r[0]) if tail else (runs[-1] if runs else (0, 0))
+    mid = [(b - a) / fps for (a, b) in runs if (a, b) != final and b < len(d) - W and a > 0]
     jump = d
     loop = float(np.abs(F[0] - F[-1]).mean())
     fh = (final[1] - final[0]) / fps

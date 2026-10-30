@@ -10,7 +10,7 @@ import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/Dial
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
-import DialogueDemoVideo from "@/components/dialogue/motion/DialogueDemoVideo";
+import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
@@ -159,7 +159,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the answer arrives as a count, and Ana's quote lands under it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -206,11 +206,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: tapping a side of the count opens its people and a clip at once, then folds back" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: one tap on the 75 unsure opens its people and a playing clip at once" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Each tap opens every level for one side at once, its people and a playing clip, then it folds back.</Caption>
+              <Caption>One tap on the 75 unsure opens its people and a playing clip at once, and the count slides up out of view.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -219,18 +219,18 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="A" label="Explored: pick a depth before asking" reasoning={LEVELS_EXPLORED} />
                     <DialogueRachelFrame tone="problem">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer sets the level before the question is asked" />
+                      <DialogueDemoStill src="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer, set to Source before the question is asked" />
                     </DialogueRachelFrame>
                   </div>
                   <div>
                     <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds a level under it, down to the clip of a quote, and Insight steps back out." />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Chart adds the count, Source opens the people and a clip, and Insight steps back out." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
               </figure>
-              <Caption>A asks for depth up front. B starts at the insight, then opens its people and their clip on a tap.</Caption>
+              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. B starts at the insight, and Chart and Source open under it on a tap.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -270,11 +270,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="From the open 225, tapping Ana&rsquo;s quote plays her clip in place; tapping again closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under the quote with its span marked on the scrubber. Tap the quote again to close it.</Caption>
+              <Caption>Ana&rsquo;s clip opens under her quote with its span marked on the scrubber. Tap the quote again to close it.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -310,7 +310,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The flag says the count is thin, and a tapped follow-up counts the same lapsed buyers. Recorded from my live code recreation.</Caption>
+              <Caption>Two shoppers get a flag instead of a chart, and a tapped follow-up counts repeat shoppers from the same interviews. Recorded from my live code recreation.</Caption>
             </Section>
 
 

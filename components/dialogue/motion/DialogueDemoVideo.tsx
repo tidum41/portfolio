@@ -58,3 +58,23 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
     </div>
   );
 }
+
+/** P16: a held still on the same stage as the videos (the picker), themed like them, with no play control. */
+export function DialogueDemoStill({ src, label }: { src: string; label: string }) {
+  const [dark, setDark] = useState<boolean | null>(null);
+  useEffect(() => {
+    setDark(isDarkNow());
+    const mo = new MutationObserver(() => setDark(isDarkNow()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  const ratio = recordingAspect(src) ?? "1 / 1";
+  return (
+    <div className="dlg-demo">
+      {dark === null ? <div className="dlg-demo__video" style={{ aspectRatio: ratio }} aria-hidden /> : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="dlg-demo__video" style={{ aspectRatio: ratio }} src={themed(src, dark)} alt={label} decoding="async" />
+      )}
+    </div>
+  );
+}

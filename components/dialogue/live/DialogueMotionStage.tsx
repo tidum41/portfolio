@@ -14,13 +14,15 @@ import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dial
 import type { MotionDemo } from "@/components/dialogue/motion/stages";
 import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 
-/* P15 item 17: after a thin answer, chips ask what the same 63 lapsed-buyer sessions can count (Hearthside mock). */
-const THIN_QUESTION = "What did lapsed buyers say about their first order?";
+/* P16: the thin answer stays on the page's one question, "Arrives by Friday". Two shoppers is too thin for a chart; the
+   tapped chip counts repeat shoppers from the same 300 interviews (88 of 125, the segment line the answer card already uses). */
+const THIN_QUESTION = "Did anyone miss a delivery over \u201cArrives by Friday\u201d?";
+const THIN_FINDING = "Two of 300 shoppers said they missed a delivery after reading it as this Friday.";
 const THIN_CHIPS = [
-  "How many lapsed buyers got their first order late?",
-  "What did lapsed buyers say about the delivery date?",
+  "How many repeat shoppers read it as this Friday?",
+  "What did shoppers say about the delivery date?",
 ] as const;
-const THIN_LATE = { late: 38, onTime: 25, of: 63 } as const;
+const THIN_REPEAT = { friday: 88, other: 37, of: 125 } as const;
 
 /* P15 item 3: a static case-study annotation in the well's right gutter, never over the panel. A thin leader runs
    from the panel's edge, level with what it names, to small muted text. It fades in and out; it never moves. */
@@ -69,6 +71,7 @@ const QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
 const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
 const MEI = QUOTE_LIST[0];
+const ANA = QUOTE_LIST_FRIDAY[0];
 
 /* Height grows via grid rows (0fr→1fr open, fade then fold on close). Panel size stays fixed; its body scrolls. */
 function Grow({ open, children, className }: { open: boolean; children: ReactNode; className?: string }) {
@@ -200,7 +203,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
         </p>
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === (which === "unsure" ? MEI : lead)} onTap={which === "unsure" && q === MEI ? onPlay : undefined} playSec={playSec} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} />
           ))}
         </div>
         <div className="dp-sources">
@@ -213,12 +216,14 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
 
 export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
-  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "every" || demo === "thin";
+  // P16: add-only takes (hero, before, thin) start on an empty chat and end by scrolling their conversation up and out,
+  // so the loop never fades the UI. Clip opens from the counts end state: 225 open, Ana first.
+  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "every";
   const [typed, setTyped] = useState("");
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
-  const [side, setSide] = useState<SideWhich>(demo === "side" ? "friday" : false);
+  const [side, setSide] = useState<SideWhich>(demo === "side" || demo === "clip" ? "friday" : false);
   const [clip, setClip] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
@@ -230,6 +235,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   const [thinAsk, setThinAsk] = useState(false);
   const [thinAnalyzing, setThinAnalyzing] = useState(false);
   const [thinAnswer, setThinAnswer] = useState(false);
+  const [ana, setAna] = useState(false);
+  const [thinShown, setThinShown] = useState(false);
+  const [clearH, setClearH] = useState(0);
   const [frameEl, setFrameEl] = useState<HTMLElement | null>(null);
   useEffect(() => { const id = requestAnimationFrame(() => setFrameEl(document.getElementById("frame"))); return () => cancelAnimationFrame(id); }, []);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -249,7 +257,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       side: (on: SideWhich | boolean) => {
         const next: SideWhich = on === true ? "unsure" : on === false ? false : on;
         setSide(next);
-        if (next) pinDuringGrow(400);
+        // Only the first try pins the bar while its people grow, which pushes the count up and out of view (its point).
+        // Counts and clip grow below a still bar.
+        if (next && demo === "every") pinDuringGrow(400);
       },
       clip: (on: boolean) => {
         setClip(on);
@@ -264,7 +274,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       level: (i: number) => {
         setLevel((cur) => {
           if (i === cur) return cur;
-          setSide(i >= 2 ? "friday" : false);
+          setSide(i >= 2 ? "unsure" : false);
           api.clip(i >= 3);
           pinDuringGrow(400);
           return i;
@@ -276,11 +286,23 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       ask: () => { setThinAsk(true); setThinAnalyzing(true); },
       reply: () => { setThinAnalyzing(false); setThinAnswer(true); },
       follow: (ms = 600) => follow(ms),
+      // P16 hero: Ana's row lands under the count, the one quote the page follows from here on.
+      ana: () => setAna(true),
+      // P16 thin: the question and its thin answer arrive together.
+      thin: () => { setSent(true); setThinShown(true); },
+      // P16 loop seam for add-only takes: a spacer one body tall lands under the chat and the body eases to it, so the
+      // conversation scrolls up and out like a new chat. The panel, its header and composer never leave the card.
+      clear: (ms = 700) => {
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body");
+        if (!body) return;
+        setClearH(body.clientHeight);
+        requestAnimationFrame(() => requestAnimationFrame(() => follow(ms)));
+      },
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
       // Picker: pin the answer top in view so the 4.7s poster still shows the count (not only the clip).
       deep: () => {
-        setSide(pick >= 2 ? "friday" : false);
+        setSide(pick >= 2 ? "unsure" : false);
         if (pick >= 3) api.clip(true);
         const body = document.querySelector<HTMLElement>(".dlg-stage__body");
         const ans = body?.querySelector<HTMLElement>(".dlg-grow, .dlg-fill, .dlg-stage__item");
@@ -308,9 +330,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     };
     (window as unknown as { __dlg: typeof api }).__dlg = api;
     return () => { if (tick.current) clearInterval(tick.current); };
-  }, [pick]);
+  }, [pick, demo]);
 
-  const bubble = sent || demo === "every" || demo === "before" ? <UserMessageBubble>{QUESTION}</UserMessageBubble> : null;
+  const bubble = sent ? <UserMessageBubble>{QUESTION}</UserMessageBubble> : null;
 
   let body: ReactNode = null;
   if (demo === "hero") {
@@ -323,6 +345,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           </p>
         ) : null}
         {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} /></div> : null}
+        <Grow open={ana} className="dlg-stage__item">
+          <div className="dp-clip-quotes dlg-live__sample"><QuoteRow q={ANA} open={false} /></div>
+        </Grow>
       </>
     );
   } else if (demo === "side") {
@@ -334,19 +359,15 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     );
   } else if (demo === "clip") {
     body = (
-      <div className="dlg-stage__item dp-clip-quotes dlg-live__sample">
-        <QuoteRow
-          q={MEI}
-          open={clip}
-          onTap={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)}
-          playSec={playSec}
-        />
-      </div>
+      <>
+        <div className="dlg-stage__item"><AnswerCard sideOpen="friday" /></div>
+        <Sample open which="friday" playing={clip} playSec={playSec} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
+      </>
     );
   } else if (demo === "before") {
     body = (
       <>
-        <div className="dlg-stage__item">{bubble}</div>
+        {bubble ? <div className="dlg-stage__item dlg-rise">{bubble}</div> : null}
         <div className="dp-text-prose-sm dlg-before dlg-stage__item">
           {PARAGRAPH_ANSWER_WALL.map((_, pi) => (
             <p key={pi} style={{ margin: 0 }}>
@@ -364,7 +385,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     // P14 item 1 (Mudit): every is cursor-driven on both sides, same as counts-open. Picker still opens via deep().
     body = (
       <>
-        {demo === "every" ? <div className="dlg-stage__item">{bubble}</div> : <Grow open={sent} className="dlg-stage__item"><UserMessageBubble>{QUESTION}</UserMessageBubble></Grow>}
+        {demo === "every" ? null : <Grow open={sent} className="dlg-stage__item"><div className="dlg-stage__item"><UserMessageBubble>{QUESTION}</UserMessageBubble></div></Grow>}
         <Grow open={answered} className="dlg-stage__item">
           <AnswerCard sideOpen={side} onSide={(w) => setSide(w)} />
         </Grow>
@@ -374,9 +395,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   } else if (demo === "thin") {
     body = (
       <>
-        <div className="dlg-stage__item"><UserMessageBubble>{THIN_QUESTION}</UserMessageBubble></div>
-        <div className="dlg-stage__item dlg-thin">
-          <p className="dp-summary dp-text-body">Two of 63 lapsed buyers mentioned that their first order arrived damaged.</p>
+        {thinShown ? <div className="dlg-stage__item dlg-rise"><UserMessageBubble>{THIN_QUESTION}</UserMessageBubble></div> : null}
+        {thinShown ? <div className="dlg-stage__item dlg-thin dlg-rise">
+          <p className="dp-summary dp-text-body">{THIN_FINDING}</p>
           <div className="dp-low-signal" data-target="thin-flag">
             <InfoCircleIcon className="dp-low-signal__icon" />
             <p className="dp-low-signal__text">Early signal, 2 people</p>
@@ -387,7 +408,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
               <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>
             ))}
           </div>
-        </div>
+        </div> : null}
         {thinAsk ? <div className="dlg-stage__item dlg-rise"><UserMessageBubble>{THIN_CHIPS[0]}</UserMessageBubble></div> : null}
         {thinAnalyzing ? (
           <p className="dlg-analyzing dlg-rise dlg-stage__item dlg-stage__analyzing">
@@ -396,12 +417,12 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         ) : null}
         {thinAnswer ? (
           <div className="dlg-stage__item dlg-rise" data-target="thin-answer">
-            <ChartVizCard title={`${THIN_LATE.late} of ${THIN_LATE.of} lapsed buyers got their first order after the date shown.`}>
+            <ChartVizCard title={`${THIN_REPEAT.friday} of ${THIN_REPEAT.of} repeat shoppers read \u2018Arrives by Friday\u2019 as this Friday.`}>
               <ChartStackedBar
-                total={THIN_LATE.of}
+                total={THIN_REPEAT.of}
                 segments={[
-                  { label: "Late", value: THIN_LATE.late, display: `${THIN_LATE.late} of ${THIN_LATE.of}`, focal: true },
-                  { label: "On time", value: THIN_LATE.onTime, display: `${THIN_LATE.onTime} of ${THIN_LATE.of}` },
+                  { label: "Read it as this Friday", value: THIN_REPEAT.friday, display: `${THIN_REPEAT.friday} of ${THIN_REPEAT.of}`, focal: true },
+                  { label: "Other", value: THIN_REPEAT.other, display: `${THIN_REPEAT.other} of ${THIN_REPEAT.of}` },
                 ]}
               />
             </ChartVizCard>
@@ -413,14 +434,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     body = (
       <>
         <div className="dlg-stage__item">
-          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "friday" : false} />
+          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "unsure" : false} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
             {LEVELS.map((l, i) => (
               <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} which="friday" playing={level >= 3} playSec={playSec} />
+        <Sample open={level >= 2} which="unsure" playing={level >= 3} playSec={playSec} />
       </>
     );
   }
@@ -461,7 +482,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           </div>
         </div>
       ) : null}
-      <div className="dlg-stage__body">{body}</div>
+      <div className="dlg-stage__body">{body}{clearH ? <div aria-hidden style={{ flex: `0 0 ${clearH}px` }} /> : null}</div>
       {composer}
       {frameEl ? createPortal(<Annotation note={note} />, frameEl) : null}
     </div>

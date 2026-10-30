@@ -1,35 +1,31 @@
 /**
  * Recording stages for the /dialogue demos (app/dialogue/motion, scripts/record-dialogue-motion.mjs).
- * Plain stage: the 423px panel with 48px of well left, right and bottom, and 104px on top so the play button
- * (44px, 8px inset) clears the panel down to a 257px-wide video (104/519 x 257 = 52).
- * Annotated stage (only where the point would be missed without a note): 48px on top and a 176px well gutter on the
- * right that holds the note and the play button (176/647 x 257 = 70).
+ * P16, one visual system: every panel renders at zoom 1.0 (the real 423px chat panel) with a 56px well gutter on
+ * every side. 56px also clears the play button (44px at an 8px inset). Stages are 1:1; the two annotated takes are
+ * 4:3 with a 176px right gutter that holds the note. First try and kept share one stage so they read as before and after.
  */
 export const STAGE_PANEL_W = 423;
-export const STAGE_AIR = 48;
-export const STAGE_TOP_PLAIN = 104;
-export const STAGE_GUTTER = 176;
+export const STAGE_GUTTER = 56;
+export const STAGE_NOTE_GUTTER = 176;
 
 export const STAGES = {
-  hero: { ratio: 1, tone: "solution", zoom: 1, note: false },
-  side: { ratio: 1, tone: "solution", zoom: 0.92, note: false },
-  clip: { ratio: 0.8, tone: "solution", zoom: 0.88, note: false },
-  before: { ratio: 0.75, tone: "problem", zoom: 1, note: true },
-  // Tall enough that each side opens its people and clip without the panel scrolling; the card never shifts.
-  every: { ratio: 1.5, tone: "problem", zoom: 0.88, note: false },
-  picker: { ratio: 1, tone: "problem", zoom: 0.8, note: false },
-  // Insight, Chart, People, Source; the body eases down slowly when the clip opens.
-  toggles: { ratio: 1.1, tone: "solution", zoom: 0.88, note: false },
-  thin: { ratio: 1.1, tone: "system", zoom: 0.88, note: true },
+  hero: { shape: "square", tone: "solution", note: false },
+  side: { shape: "square", tone: "solution", note: false },
+  clip: { shape: "square", tone: "solution", note: false },
+  before: { shape: "wide", tone: "problem", note: true },
+  every: { shape: "square", tone: "problem", note: false },
+  picker: { shape: "square", tone: "problem", note: false },
+  toggles: { shape: "square", tone: "solution", note: false },
+  thin: { shape: "wide", tone: "system", note: true },
 } as const;
 export type MotionDemo = keyof typeof STAGES;
 export const MOTION_DEMOS = Object.keys(STAGES) as MotionDemo[];
-/** Frame geometry in css px: panel box height stays 519 x ratio - 96, as before; only the well around it changes. */
+/** Frame geometry in css px. Square: 535 x 535. Wide (annotated): 655 x 491, 4:3. */
 export function stageBox(d: MotionDemo) {
   const note = STAGES[d].note;
-  const top = note ? STAGE_AIR : STAGE_TOP_PLAIN;
-  const panelH = Math.round(519 * STAGES[d].ratio) - 2 * STAGE_AIR;
-  return { w: STAGE_AIR + STAGE_PANEL_W + (note ? STAGE_GUTTER : STAGE_AIR), h: top + panelH + STAGE_AIR, top, panelH, note };
+  const w = STAGE_GUTTER + STAGE_PANEL_W + (note ? STAGE_NOTE_GUTTER : STAGE_GUTTER);
+  const h = STAGES[d].shape === "square" ? w : Math.round((w * 3) / 4);
+  return { w, h, top: STAGE_GUTTER, panelH: h - 2 * STAGE_GUTTER, note };
 }
 
 const FILES: Record<string, MotionDemo> = {

@@ -14,10 +14,10 @@ for p in sorted(glob.glob(os.path.join(d, "*.mp4"))):
     W, H, n = int(probe[0]), int(probe[1]), int(probe[2]); hh = round(320 * H / W / 2) * 2
     F = np.frombuffer(raw, np.uint8)[: n * 320 * hh].reshape(n, hh, 320).astype(np.float32)
     D = np.abs(np.diff(F, axis=0)).max(axis=(1, 2))
-    # P15: a poster never shows an annotation. Annotations live only in the right gutter (stages.ts: x from 475 of 647),
+    # P15: a poster never shows an annotation. Annotations live only in the right gutter (stages.ts P16: x from 483 of 655),
     # so a frame qualifies only when the whole gutter is flat well.
-    if W == 1294:  # annotated stage: the note lives only in the gutter
-        g = F[:, :, int(320 * 475 / 647):]
+    if W == 1310:  # annotated stage: the note lives only in the gutter
+        g = F[:, :, int(320 * 483 / 655):]
         clean = np.abs(g - np.median(g, axis=0)).max(axis=(1, 2)) < 14  # the median gutter is the empty well plus the panel shadow
     else:
         clean = np.ones(n, bool)  # plain stages carry no notes

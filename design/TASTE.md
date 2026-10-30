@@ -150,7 +150,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Large fades (a player, a panel) use a symmetric ease so no single frame carries the change. No hard cuts and no scroll snaps; a needed scroll is a slow ease-in-out.
 - Cursor only when the click is the point: about 28px on the page, fades in near the target, glides 500-700 ms, presses at 0.92, fades out.
 - Crop to the decision at 1:1 or 4:3. Only the hero shows the panel header. Smallest text renders at 12px or more at 1440.
-- Loops close: collapse back to the start or crossfade 400 ms into the first frame. Posters show the held, open state.
+- Loops close: collapse back to the start, or (add-only takes) scroll the chat up and out to the empty start; never a crossfade that fades the UI (P16). Posters show the held, open state.
 - Record from the live code stage (/dialogue/motion) at 2x; every take passes scripts/check-dialogue-motion.py (no frame jump over 20, holds within limits, loop closes) or is re-recorded.
 
 ## 8. Update protocol
@@ -179,3 +179,4 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - P14 (Mudit, Oct 29): levels-every is cursor-driven (click 225 then 75, same as counts-open). Selected depth chip stays stone-200. Hero Team metadata is a visible [PLACEHOLDER]. Recorder captures PNG so the video well matches `#eceae4` / `#1b1e21`.
 - P14 later (Mudit OK): quote rows are selection (no inner chevron); thin-data label is "Download study plan"; bar-tap video (any bar opens its people); chart library adds delivery-by-type, top-asks, and 1–5 confidence scenarios (no line charts).
 - P15 (Mudit, Oct 29): chart bars show their percent on hover (the one figure hover). After a thin-data answer, follow-up question chips replace "Download study plan". Callouts are static annotations in the well beside the panel, small muted text with a thin leader line, never over the product UI and never a hover popup.
+- P16 videos (Mudit approved plan, Oct 29): the 225 opens only in the counts video; first try is one burst on the 75 then a hold; kept steps Chart, Source, Insight on first try's stage; the picker is a still with its verdict in the caption; "Arrives by Friday" runs through every video (hero ends on Ana's row, clip opens from the counts end state with Ana, thin counts repeat shoppers). One system: zoom 1.0, 56px gutter, 28px cursor gliding 600 ms, about 1 s holds, illustrated clip still, 1:1 stages (4:3 for the two annotated). Loops never fade the UI: add-only takes scroll their chat up and out.
