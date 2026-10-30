@@ -29,7 +29,7 @@ async function record(demo) {
   const tmp = `/tmp/dlg-motion-${demo}`; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   // The screencast delivers CSS-pixel frames, so the frame renders at zoom 2 in a 1280 px viewport (crisp 2x pixels, no upscale).
-  const ctx = await b.newContext({ viewport: { width: 1400, height: 1700 }, deviceScaleFactor: 1 });
+  const ctx = await b.newContext({ viewport: { width: 1400, height: 1900 }, deviceScaleFactor: 1 });
   // DLG_THEME=dark records the dark well (files end in -dark) so videos match the figure background in either theme.
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
@@ -69,47 +69,47 @@ async function record(demo) {
   }
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
+  if (demo === "side") { const bb = await (await page.$('[data-target="side-friday"]')).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.3 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
   const t0 = Date.now() / 1000;
   // PNG screencast: JPEG chroma loss shifted the flat well ~3 units greener/darker (P14 colour audit).
-  await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1400, maxHeight: 1700 });
+  await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1400, maxHeight: 1900 });
   await hold(800); // pre-roll
   const S = {
-    // P15 item 3: at most one static annotation per beat, in the gutter; each is gone before the loop closes.
-    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(700); await api('note("Count out of all interviews", ".dp-chart-stack__labels")'); await hold(1500); await api("unnote()"); await hold(500); },
+    // P15 round 2: notes only where the point would be missed without one (before, thin); every other take is bare.
+    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(1400); },
+    // Counts-open (Mudit, P15 round 2): starts with 225 selected and its people open, the cursor resting on 225.
+    // Tap 75, linger; tap 225, linger; the last frame is the first frame. No accordion step.
     async side() {
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(800);
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(800);
-      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(500); await cursorOut(); await hold(750);
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 600 }); await press(); await api('side("unsure")'); await hold(1900);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 600 }); await press(); await api('side("friday")'); await hold(900);
     },
     // P15 item 9: open Mei's clip, rest on the row so View session shows, then close.
     async clip() {
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(350);
-      await api('note("Span of the quote on the scrubber", ".dlg-live__clip .dp-qplayer__track")'); await hold(1000); await api("unnote()"); await hold(300);
-      await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(800);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1200);
+      await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(900);
       await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.75, ms: 500 }); await press(); await hold(1400); await cursorOut();
     },
     async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300); await api('note("Unstated count", ".dlg-mark")'); await hold(1300); await api("unnote()"); await hold(1300); },
     // P15 item 4 and audit 10: starts answered; each tap opens every level for that side at once (people and a playing clip).
     async every() {
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 400 }); await press(); await api('side("friday")'); await api("clip(true)"); await hold(450);
-      await api('note("Every level at once", ".dlg-stage__sample .dp-side-sample__head")'); await hold(750); await api("unnote()");
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 400 }); await press(); await api('side("friday")'); await api("clip(true)"); await hold(1200);
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 400 }); await press(); await api('side("unsure")'); await hold(850);
       await cursorTo('[data-target="side-collapse"]', { ms: 350 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(450); await cursorOut(); await hold(700);
     },
+    // P15 round 2: depth first, then the question, then the answer at that depth; it folds back to the empty composer.
     async picker() {
-      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await api('note("Depth picked before the question", ".dlg-depth")'); await hold(900);
-      await api("unnote()"); await hold(300); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
-      await api("answer()"); await api("deep()"); await hold(1000); await api("pause()"); await hold(1000);
-      await cursorOut(); await api("reset()"); await hold(1000);
+      await cursorTo('[data-target="depth-3"]', { ms: 400 }); await press(); await api("pick(3)"); await hold(500);
+      await api("type(24)"); await hold(150);
+      await cursorTo('[data-target="send"]', { ms: 350 }); await press(); await api("send()"); await api("analyze(true)"); await hold(450);
+      await api("answer()"); await api("deep()"); await hold(900); await api("pause()");
+      await cursorOut(); await hold(150); await api("reset()"); await hold(700);
     },
     // P15 item 6: insight, then its chart, then the people behind the 225, then one of their clips, then back to the insight.
     async toggles() {
-      await cursorTo('[data-target="level-1"]', { ms: 300 }); await press(); await api("level(1)"); await hold(250);
-      await cursorTo('[data-target="level-2"]', { ms: 250 }); await press(); await api("level(2)"); await hold(250);
-      await api('note("People behind the 225", ".dlg-stage__sample .dp-side-sample__head")'); await hold(600); await api("unnote()");
-      await cursorTo('[data-target="level-3"]', { ms: 250 }); await press(); await api("level(3)"); await hold(250); await api("follow(600)"); await hold(600);
-      await api('note("Clip of Ana\u2019s quote", ".dp-clip-quote--selected .dp-clip-quote__who")'); await hold(650); await api("unnote()");
-      await api("up(500)"); await hold(500); await cursorTo('[data-target="level-0"]', { ms: 300 }); await press(); await api("level(0)"); await hold(200);
+      await cursorTo('[data-target="level-1"]', { ms: 350 }); await press(); await api("level(1)"); await hold(450);
+      await cursorTo('[data-target="level-2"]', { ms: 300 }); await press(); await api("level(2)"); await hold(650);
+      await cursorTo('[data-target="level-3"]', { ms: 300 }); await press(); await api("level(3)"); await hold(250); await api("follow(700)"); await hold(900);
+      await api("up(500)"); await hold(500); await cursorTo('[data-target="level-0"]', { ms: 350 }); await press(); await api("level(0)"); await hold(300);
       await cursorOut(); await hold(600);
     },
     // P15 item 17: the thin answer offers counts the same sessions can give; one chip is tapped and answered.

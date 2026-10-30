@@ -16,8 +16,11 @@ for p in sorted(glob.glob(os.path.join(d, "*.mp4"))):
     D = np.abs(np.diff(F, axis=0)).max(axis=(1, 2))
     # P15: a poster never shows an annotation. Annotations live only in the right gutter (stages.ts: x from 475 of 647),
     # so a frame qualifies only when the whole gutter is flat well.
-    g = F[:, :, int(320 * 475 / 647):]
-    clean = np.abs(g - np.median(g, axis=0)).max(axis=(1, 2)) < 14  # the median gutter is the empty well plus the panel shadow
+    if W == 1294:  # annotated stage: the note lives only in the gutter
+        g = F[:, :, int(320 * 475 / 647):]
+        clean = np.abs(g - np.median(g, axis=0)).max(axis=(1, 2)) < 14  # the median gutter is the empty well plus the panel shadow
+    else:
+        clean = np.ones(n, bool)  # plain stages carry no notes
     best, score = n - 1, -1
     # Every poster shows an answer state; Variant A's picker stays visible above the input after send.
     hi = n - 6
@@ -38,6 +41,17 @@ for name in [k for k in times if k.endswith("-dark")]:
     if nl != nd:
         tmp = dp[:-4] + ".tmp.mp4"
         vf = f"tpad=stop_mode=clone:stop={max(nl - nd, 0) + 2}"
+        if nd > nl:
+            # Trim inside the longest still hold so the loop's end frame (and any end-to-start blend) survives.
+            raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", dp, "-vf", "scale=96:-2,format=gray", "-f", "rawvideo", "-"], capture_output=True).stdout
+            fs = len(raw) // nd; fr = [raw[i * fs:(i + 1) * fs] for i in range(nd)]
+            still = [max(abs(x - y) for x, y in zip(fr[i], fr[i - 1])) <= 3 for i in range(1, nd)]
+            best, cur, end = 0, 0, 0
+            for i, v in enumerate(still[:-int(nd * 0.25)]):
+                cur = cur + 1 if v else 0
+                if cur > best: best, end = cur, i + 1
+            k = end - best // 2 - (nd - nl) // 2
+            vf = f"select='not(between(n\\,{k}\\,{k + nd - nl - 1}))',setpts=N/30/TB"
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", dp, "-vf", vf, "-frames:v", str(nl), "-r", "30", "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-movflags", "+faststart", "-an", tmp], check=True)
         os.replace(tmp, dp)
     t = times[light]; times[name] = t

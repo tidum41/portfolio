@@ -4030,3 +4030,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dlg-templates__note { transform: none; flex-direction: row; padding-left: 16px; }
 }
 .dlg-live__bars:has(.dlg-live__bar-hit:hover) .dp-chart-bars__row:first-child .dp-chart-bars__pct { opacity: 1; }
+/* P15 hero root cause: the hero figure kept the body figures' 24px top margin, so a band of CSS well showed above the
+   recording. The hero frame is now the recording edge to edge, clipped to the frame's radius. */
+.dialogue-case-study .cs-hero-media-frame .cs-figure { margin: 0; }

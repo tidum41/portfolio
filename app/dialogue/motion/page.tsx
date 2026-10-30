@@ -1,5 +1,5 @@
 import DialogueMotionStage from "@/components/dialogue/live/DialogueMotionStage";
-import { MOTION_DEMOS, STAGES, STAGE_AIR, STAGE_PANEL_W, STAGE_W, stageHeight, type MotionDemo } from "@/components/dialogue/motion/stages";
+import { MOTION_DEMOS, STAGES, STAGE_PANEL_W, stageBox, type MotionDemo } from "@/components/dialogue/motion/stages";
 import "@/components/dialogue/product/dialogue-product.css";
 
 export const metadata = { title: "Dialogue motion stage", robots: { index: false } };
@@ -9,11 +9,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
   const { demo: d } = await searchParams;
   const demo = (MOTION_DEMOS.includes(d as MotionDemo) ? d : "hero") as MotionDemo;
   const s = STAGES[demo];
-  const h = stageHeight(demo);
+  const b = stageBox(demo);
   return (
     <main className="dialogue-case-study dlg-motion-page">
-      <div id="frame" className={`dialogue-rachel-frame dialogue-rachel-frame--${s.tone} dlg-motion-frame`} style={{ width: `${STAGE_W}px`, height: `${h}px` }}>
-        <div className="dialogue-product-root dp-chat-panel-typography dlg-motion-frame__panel" data-zoom={s.zoom} style={{ zoom: s.zoom, width: `${STAGE_PANEL_W / s.zoom}px`, height: `${(h - 2 * STAGE_AIR) / s.zoom}px` }}>
+      <div id="frame" className={`dialogue-rachel-frame dialogue-rachel-frame--${s.tone} dlg-motion-frame`} style={{ width: `${b.w}px`, height: `${b.h}px`, paddingTop: `${b.top}px` }}>
+        <div className="dialogue-product-root dp-chat-panel-typography dlg-motion-frame__panel" data-zoom={s.zoom} style={{ zoom: s.zoom, width: `${STAGE_PANEL_W / s.zoom}px`, height: `${b.panelH / s.zoom}px` }}>
           <DialogueMotionStage demo={demo} />
         </div>
       </div>

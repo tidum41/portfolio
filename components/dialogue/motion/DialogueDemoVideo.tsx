@@ -20,8 +20,11 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   const [reduce, setReduce] = useState(false);
   const userPaused = useRef(false);
   const [dark, setDark] = useState(false);
+  // P15: render the video only once the theme is known, so the first poster painted is the right theme's.
+  const [themeKnown, setThemeKnown] = useState(false);
   useEffect(() => {
     setDark(isDarkNow());
+    setThemeKnown(true);
     const mo = new MutationObserver(() => setDark(isDarkNow()));
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
@@ -29,7 +32,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   useEffect(() => {
     const v = ref.current;
     if (v && !reduce && !userPaused.current) v.play().catch(() => {});
-  }, [dark, reduce]);
+  }, [dark, reduce, themeKnown]);
   useEffect(() => {
     const r = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setReduce(r);
@@ -41,7 +44,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
     }, { threshold: 0.3 });
     io.observe(v);
     return () => io.disconnect();
-  }, []);
+  }, [themeKnown]);
   const toggle = () => {
     const v = ref.current;
     if (!v) return;
@@ -50,7 +53,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   };
   return (
     <div className="dlg-demo">
-      <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} src={reduce ? undefined : themed(src, dark)} poster={themed(poster, dark)} muted loop playsInline preload="metadata" aria-label={label} />
+      {themeKnown ? <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} src={reduce ? undefined : themed(src, dark)} poster={themed(poster, dark)} muted loop playsInline preload="metadata" aria-label={label} /> : <div className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} aria-hidden />}
       {reduce ? null : <PlayPauseButton isPlaying={isPlaying} onToggle={toggle} />}
     </div>
   );

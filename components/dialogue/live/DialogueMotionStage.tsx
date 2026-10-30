@@ -214,11 +214,11 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
 export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
   const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "every" || demo === "thin";
-  const [typed, setTyped] = useState(demo === "picker" ? QUESTION : "");
+  const [typed, setTyped] = useState("");
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
-  const [side, setSide] = useState<SideWhich>(false);
+  const [side, setSide] = useState<SideWhich>(demo === "side" ? "friday" : false);
   const [clip, setClip] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
@@ -280,7 +280,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       pause: () => { if (tick.current) clearInterval(tick.current); },
       // Picker: pin the answer top in view so the 4.7s poster still shows the count (not only the clip).
       deep: () => {
-        setSide(pick >= 2 ? "unsure" : false);
+        setSide(pick >= 2 ? "friday" : false);
         if (pick >= 3) api.clip(true);
         const body = document.querySelector<HTMLElement>(".dlg-stage__body");
         const ans = body?.querySelector<HTMLElement>(".dlg-grow, .dlg-fill, .dlg-stage__item");
@@ -303,7 +303,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setThinAsk(false);
         setThinAnalyzing(false);
         setThinAnswer(false);
-        setTyped(QUESTION);
+        setTyped("");
       },
     };
     (window as unknown as { __dlg: typeof api }).__dlg = api;
@@ -364,7 +364,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     // P14 item 1 (Mudit): every is cursor-driven on both sides, same as counts-open. Picker still opens via deep().
     body = (
       <>
-        {demo === "every" || sent ? <div className="dlg-stage__item dlg-rise">{bubble}</div> : null}
+        {demo === "every" ? <div className="dlg-stage__item">{bubble}</div> : <Grow open={sent} className="dlg-stage__item"><UserMessageBubble>{QUESTION}</UserMessageBubble></Grow>}
         <Grow open={answered} className="dlg-stage__item">
           <AnswerCard sideOpen={side} onSide={(w) => setSide(w)} />
         </Grow>
