@@ -4010,7 +4010,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Items 11 to 16: chart templates. Picker and notes are case-study chrome; the panel holds only the answer. */
 .dlg-templates { padding: 32px 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; }
 .dlg-templates__pick { display: flex; flex-wrap: wrap; gap: 4px 20px; }
-.dlg-templates__opt { margin: 0; padding: 4px 0; border: 0; background: none; font: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-muted); cursor: pointer; box-shadow: inset 0 -1px 0 transparent; }
+.dlg-templates__opt { margin: 0; padding: 4px 0; border: 0; background: none; font: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); cursor: pointer; box-shadow: inset 0 -1px 0 transparent; }
 .dlg-templates__opt[aria-pressed="true"] { color: var(--color-text-primary); box-shadow: inset 0 -1px 0 currentColor; }
 .dlg-templates__opt:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
 .dlg-templates__stage { position: relative; display: grid; grid-template-columns: minmax(0, 423px) 1fr; column-gap: 8px; align-items: start; }
@@ -4018,7 +4018,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-templates__note { position: relative; margin: 0; display: flex; align-items: center; gap: 8px; transform: translateY(calc(var(--y) - 50%)); }
 .dlg-templates__about { display: flex; flex-direction: column; gap: 8px; max-width: 423px; }
 .dlg-templates__carbon { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
-.dlg-templates__carbon > span { color: var(--color-text-muted); margin-right: 8px; }
+.dlg-templates__carbon > span { color: var(--color-text-secondary); margin-right: 8px; }
 .dlg-templates__reason { margin: 0; }
 .dlg-templates__people { margin-top: 0; }
 /* Item 11: the share shows on hover, muted after the row label; the count column never moves. */
