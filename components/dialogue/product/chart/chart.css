@@ -11,7 +11,7 @@
   --dp-chart-bar-thickness: 8px;
   --dp-chart-bar-gap: 10px;
   --dp-chart-label-width: 110px;
-  --dp-chart-value-width: 40px;
+  --dp-chart-value-width: 64px; /* P15 item 10: one right-aligned column wide enough for "88 of 125" in every chart */
   --dp-chart-gutter: 8px;
   --dp-chart-min-width: 240px;
   --dp-chart-line-stroke: var(--dp-icon-stroke);

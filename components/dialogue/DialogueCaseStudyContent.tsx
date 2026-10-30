@@ -159,7 +159,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" ratio="1 / 1" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, and the answer arrives as a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -171,7 +171,7 @@ export function DialogueCaseStudyContent({
               Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
               answer so a research team can move fast on an insight and still check the people behind it.
             </p>
-            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation.</Caption>
+            <Caption>The final answer: a count of everyone interviewed, with each side one tap from its people. Recorded from my live code recreation.</Caption>
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
@@ -185,7 +185,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="problem-before">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" ratio="4 / 3" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -206,11 +206,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: tapping each side of the count opens its people under the bar, then folds back" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: tapping a side of the count opens its people and a clip at once, then folds back" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Each side opens on a tap: 225 first, then 75 unsure, then it folds back.</Caption>
+              <Caption>Each tap opens every level for one side at once, its people and a playing clip, then it folds back.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -225,7 +225,7 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. People adds the chart and the quotes, Source plays the clip, and Insight steps back out." />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds a level under it, down to the clip of a quote, and Insight steps back out." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
@@ -241,13 +241,21 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Every claim leads with how many, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                The count is the level everyone reads, so it leads. A table crowded the 415px panel, so the count became one bar with two labels, and each side opens its people on a tap, as in the first-try demo above.
+                The count is the level everyone reads, so it leads. A table crowded the 415px panel, so the count became one bar with two labels, and each side opens its people on a tap.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>what you built before counts, in one line</Placeholder>
               </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="counts-open">
+                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Each side of the count opens 2 of its shoppers, and the chevron folds them back" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>Each side opens 2 of its shoppers, and the chevron folds them back.</Caption>
               <CaseStudyBody>
-                Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and +73 more open inside the answer.
+                Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and the rest open inside the answer.
               </CaseStudyBody>
 
             </Section>
@@ -262,11 +270,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" ratio="4 / 3" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="Tapping Mei&rsquo;s quote plays her clip in place; tapping again closes it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber. Tap the quote again to close it.</Caption>
+              <Caption>The player opens under the quote with its span marked on the scrubber. Tap the quote again to close it.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -274,10 +282,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Charts count people out of their own group</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A segment is a level only some readers open. At 300 interviews one can hold nine people, and 67% hides that, so each chart template I adapted from IBM Carbon labels N of its group.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                The AI answers from a small set of templates. Each starts from a Carbon chart, and I changed what it labels so a count always says how many people it rests on.
+                A segment is a level only some readers open. A small group can sit beside a large one, and a percent hides that, so each chart template I adapted from IBM Carbon counts people out of their own group.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>how the model matches a question to a template, and which Carbon rule you bent</Placeholder>
@@ -285,7 +290,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Four templates, each with the Carbon chart it started from. Pick one to see its answer, and hover a bar for its share.</Caption>
+              <Caption>Four templates, each with the Carbon chart it started from. Pick one to see its answer.</Caption>
             </Section>
 
             <Section id="thin-data">
@@ -293,7 +298,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Two people get a flag, and no chart</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Some levels are too thin to open. A bar for 2 of 63 lapsed buyers would read as a pattern, so under three people the answer drops the chart, says &lsquo;Early signal, 2 people&rsquo; and offers questions the same sessions can answer with a real count.
+                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer drops the chart, flags an early signal and offers questions the same sessions can answer with a count.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>why the cutoff sits under 3, and what Dialogue measures that set it</Placeholder>
@@ -301,11 +306,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">
                   <StaticFigure figure="thin-followups">
-                    <DialogueDemoVideo src="/dialogue/motion/live-thin.mp4" poster="/dialogue/motion/live-thin.jpg" label="A thin answer flags its 2 people and offers follow-up questions; tapping one answers it with a ranked count" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-thin.mp4" poster="/dialogue/motion/live-thin.jpg" label="A thin answer flags its early signal and offers follow-up questions; tapping one answers it with a count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The flag says the count is thin, and a tapped follow-up answers from the whole study. Recorded from my live code recreation.</Caption>
+              <Caption>The flag says the count is thin, and a tapped follow-up counts the same lapsed buyers. Recorded from my live code recreation.</Caption>
             </Section>
 
 

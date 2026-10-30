@@ -10,8 +10,8 @@ const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
-const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full", bars: "live-bars", thin: "live-thin" };
-// Picker and bars end on their start state, so they need no crossfade. Others still blend end→start.
+const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full", thin: "live-thin" };
+// Picker ends on its start state, so they need no crossfade. Others still blend end→start.
 // P15: every and toggles now fold back to their start, so only hero, before and thin blend end to start.
 const CROSSFADE = new Set(["hero", "before", "thin"]);
 /** P15 item 9: subtle motion blur on the clip take (a 3-frame weighted blend; still frames are unchanged). */
@@ -19,13 +19,17 @@ const BLUR = new Set(["clip"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
-const WELL = THEME === "dark" ? { r: 27, g: 29, b: 31, hex: "#1b1d1f" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
+const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
+/* Dark well: swscale encodes the CSS well #1b1e21 to YUV (41,129,127), which Chrome shows as (26,30,31), 2 units off.
+   Recording the dark stage on #1b1e23 encodes to (42,130,126), which Chrome shows as (26,30,33), within 1 unit of the CSS
+   well. Only the recording page changes; the site token stays #1b1e21. */
+const REC_WELL = THEME === "dark" ? 'html[data-theme="dark"] { --figure-well-dialogue: #1b1e23; }' : "";
 
 async function record(demo) {
   const tmp = `/tmp/dlg-motion-${demo}`; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   // The screencast delivers CSS-pixel frames, so the frame renders at zoom 2 in a 1280 px viewport (crisp 2x pixels, no upscale).
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 1700 }, deviceScaleFactor: 1 });
+  const ctx = await b.newContext({ viewport: { width: 1400, height: 1700 }, deviceScaleFactor: 1 });
   // DLG_THEME=dark records the dark well (files end in -dark) so videos match the figure background in either theme.
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
@@ -38,7 +42,7 @@ async function record(demo) {
     addEventListener("mousedown", () => c.classList.add("down")); addEventListener("mouseup", () => c.classList.remove("down"));
   });
   // Hide the site's fixed chrome (nav, TOC button) so nothing but the stage can reach the crop.
-  await page.addStyleTag({ content: "#frame { zoom: 2; } #dlg-cursor { width: 32px; height: 32px; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
+  await page.addStyleTag({ content: REC_WELL + "#frame { zoom: 2; } #dlg-cursor { width: 32px; height: 32px; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
   // Decode every image up front: a lazy image entering view mid-scroll stalls the screencast for ~270 ms.
   await page.evaluate(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; i.decoding = "sync"; return i.decode().catch(() => {}); })));
   await page.waitForTimeout(400);
@@ -67,57 +71,52 @@ async function record(demo) {
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
   const t0 = Date.now() / 1000;
   // PNG screencast: JPEG chroma loss shifted the flat well ~3 units greener/darker (P14 colour audit).
-  await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1280, maxHeight: 1700 });
+  await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1400, maxHeight: 1700 });
   await hold(800); // pre-roll
   const S = {
-    // Final hold 1.6s after follow settles (motion checklist wants final_hold 1.0–1.9s).
-    // P15 item 3: one callout per beat, pointing at what to notice; it fades before the loop closes.
-    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(700); await api('note("The count leads the answer", ".dp-chart-stack__labels", "below")'); await hold(1500); await api("unnote()"); await hold(400); },
+    // P15 item 3: at most one static annotation per beat, in the gutter; each is gone before the loop closes.
+    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(700); await api('note("Count out of all interviews", ".dp-chart-stack__labels")'); await hold(1500); await api("unnote()"); await hold(500); },
     async side() {
       await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(800);
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(800);
-      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(500); await cursorOut(); await hold(1000);
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(500); await cursorOut(); await hold(750);
     },
     // P15 item 9: open Mei's clip, rest on the row so View session shows, then close.
     async clip() {
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(450);
-      await api('note("Starts at her quote", ".dlg-live__clip", "below")');
-      await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(1100); await api("unnote()");
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(350);
+      await api('note("Span of the quote on the scrubber", ".dlg-live__clip .dp-qplayer__track")'); await hold(1000); await api("unnote()"); await hold(300);
+      await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(800);
       await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.75, ms: 500 }); await press(); await hold(1400); await cursorOut();
     },
-    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await api('note("How many is many?", ".dlg-mark", "above")'); await hold(1600); await api("unnote()"); await hold(400); },
-    // P15 item 4: starts answered and folds back to it, so the card is always on screen and never moves.
+    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(300); await api('note("Unstated count", ".dlg-mark")'); await hold(1300); await api("unnote()"); await hold(1300); },
+    // P15 item 4 and audit 10: starts answered; each tap opens every level for that side at once (people and a playing clip).
     async every() {
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(400);
-      await api('note("Every level opens at once", ".dlg-stage__sample .dp-sources > *", "right")'); await hold(500);
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(800);
-      await api("unnote()"); await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(400); await cursorOut(); await hold(800);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 400 }); await press(); await api('side("friday")'); await api("clip(true)"); await hold(450);
+      await api('note("Every level at once", ".dlg-stage__sample .dp-side-sample__head")'); await hold(750); await api("unnote()");
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 400 }); await press(); await api('side("unsure")'); await hold(850);
+      await cursorTo('[data-target="side-collapse"]', { ms: 350 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(450); await cursorOut(); await hold(700);
     },
     async picker() {
-      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await api('note("Depth is set before the question", ".dlg-depth", "above")'); await hold(500);
-      await api("unnote()"); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
+      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await api('note("Depth picked before the question", ".dlg-depth")'); await hold(900);
+      await api("unnote()"); await hold(300); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
       await api("answer()"); await api("deep()"); await hold(1000); await api("pause()"); await hold(1000);
       await cursorOut(); await api("reset()"); await hold(1000);
     },
-    // P15 item 6: insight first, then the people behind it, then the source clip, then back to the insight.
+    // P15 item 6: insight, then its chart, then the people behind the 225, then one of their clips, then back to the insight.
     async toggles() {
-      await hold(200);
-      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(400);
-      await api('note("The people behind the count", ".dlg-stage__sample .dp-sources > *", "right")'); await hold(500);
-      await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await api("level(3)"); await hold(400);
-      await api('note("Then the clip, from her quote", ".dp-clip-quote--selected .dp-clip-quote__time", "right")'); await hold(600);
-      await api("unnote()"); await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(500);
-      await cursorOut(); await hold(900);
+      await cursorTo('[data-target="level-1"]', { ms: 300 }); await press(); await api("level(1)"); await hold(250);
+      await cursorTo('[data-target="level-2"]', { ms: 250 }); await press(); await api("level(2)"); await hold(250);
+      await api('note("People behind the 225", ".dlg-stage__sample .dp-side-sample__head")'); await hold(600); await api("unnote()");
+      await cursorTo('[data-target="level-3"]', { ms: 250 }); await press(); await api("level(3)"); await hold(250); await api("follow(600)"); await hold(600);
+      await api('note("Clip of Ana\u2019s quote", ".dp-clip-quote--selected .dp-clip-quote__who")'); await hold(650); await api("unnote()");
+      await api("up(500)"); await hold(500); await cursorTo('[data-target="level-0"]', { ms: 300 }); await press(); await api("level(0)"); await hold(200);
+      await cursorOut(); await hold(600);
     },
-    async bars() {
-      await cursorTo('[data-target="bar-new"]', { fx: 0.4, fy: 0.5, ms: 500 }); await press(); await api("bar(true)"); await hold(1000);
-      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("bar(false)"); await hold(1600); await cursorOut();
-    },
-    // P15 item 17: the thin answer offers questions the same sessions answer better; one is tapped and answered.
+    // P15 item 17: the thin answer offers counts the same sessions can give; one chip is tapped and answered.
     async thin() {
-      await api('note("Too few to chart, so it says so", "[data-target=thin-flag] .dp-low-signal__text", "right")'); await hold(1100); await api("unnote()");
+      await hold(300); await api('note("Flag instead of a chart", "[data-target=thin-flag]")'); await hold(1200); await api("unnote()"); await hold(300);
       await cursorTo('[data-target="chip-0"]', { fx: 0.3, ms: 500 }); await press(); await api("ask()"); await hold(250); await api("follow(500)"); await hold(550);
-      await cursorOut(); await api("reply()"); await hold(150); await api("follow(600)"); await hold(1700);
+      await cursorOut(); await api("reply()"); await hold(150); await api("follow(600)"); await hold(1050);
     },
   };
   await S[demo]();
@@ -128,12 +127,12 @@ async function record(demo) {
     const next = frames[i + 1]?.t ?? Math.max(f.t + 1 / 30, tStop); list.push(`file '${p}'\nduration ${(next - f.t).toFixed(4)}`); });
   list.push(`file '${tmp}/${String(frames.length - 1).padStart(5, "0")}.png'`);
   writeFileSync(`${tmp}/list.txt`, list.join("\n"));
-  const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.png`]).toString().trim()) / 1280;
-  const W = 1038; // 519 css px at 2x
+  const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.png`]).toString().trim()) / 1400;
+  const W = Math.round(fb.width * k) % 2 ? Math.round(fb.width * k) + 1 : Math.round(fb.width * k); // the frame at 2x (stages.ts STAGE_W)
   const crop = `crop=${Math.round(fb.width * k)}:${Math.round(fb.height * k)}:${Math.round(fb.x * k)}:${Math.round(fb.y * k)}`;
   // -g 600: one keyframe per take; x264's default keyframe at frame 250 flashed a visible re-quantize mid-hold (P15).
   const enc = ["-c:v", "libx264", "-g", "600", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
-  const vf = `${crop},fps=30,${BLUR.has(demo) ? "tmix=frames=3:weights=1 2 1," : ""}scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv`;
+  const vf = `${crop},fps=30,${BLUR.has(demo) ? "tmix=frames=3:weights=1 2 1," : ""}scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuv420p`;
   const name = NAMES[demo]; const raw = `${tmp}/raw.mp4`; const mp4 = `${out}/${name}${SUFFIX}.mp4`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", vf, ...enc, raw]);
   const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", raw]).toString());

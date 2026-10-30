@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
@@ -11,50 +10,47 @@ import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterview
 import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
-import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
-import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
+import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
+import type { MotionDemo } from "@/components/dialogue/motion/stages";
 import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 
-/* P15 item 17: thin answer, then follow-up chips the same 300 sessions answer with a real count (Hearthside mock). */
+/* P15 item 17: after a thin answer, chips ask what the same 63 lapsed-buyer sessions can count (Hearthside mock). */
 const THIN_QUESTION = "What did lapsed buyers say about their first order?";
 const THIN_CHIPS = [
-  "What did shoppers ask for after checkout?",
-  "How sure were shoppers about the delivery date?",
+  "How many lapsed buyers got their first order late?",
+  "What did lapsed buyers say about the delivery date?",
 ] as const;
-const TOP_ASKS = [
-  { rank: 1, label: "Show an exact calendar date", value: 41 },
-  { rank: 2, label: "Say which Friday it means", value: 28 },
-  { rank: 3, label: "Warn when Friday slips", value: 17 },
-] as const;
+const THIN_LATE = { late: 38, onTime: 25, of: 63 } as const;
 
-/* P15 item 3: a case-study callout drawn over the recording, outside the product UI. Points at one element. */
-type Note = { text: string; sel: string; place?: "above" | "below" | "right" } | null;
-function Callout({ note }: { note: Note }) {
-  const [box, setBox] = useState<{ x: number; y: number; place: string } | null>(null);
-  const [shown, setShown] = useState<Note>(null);
+/* P15 item 3: a static case-study annotation in the well's right gutter, never over the panel. A thin leader runs
+   from the panel's edge, level with what it names, to small muted text. It fades in and out; it never moves. */
+type Note = { text: string; sel: string } | null;
+const NOTE_MIN_Y = 128; // below the play button's corner at the narrowest width
+function Annotation({ note }: { note: Note }) {
+  const [shown, setShown] = useState<{ text: string; y: number } | null>(null);
+  const [on, setOn] = useState(false);
   useEffect(() => {
-    if (!note) { const t = setTimeout(() => { setShown(null); setBox(null); }, 300); return () => clearTimeout(t); }
+    if (!note) { const id = requestAnimationFrame(() => setOn(false)); const t = setTimeout(() => setShown(null), 320); return () => { cancelAnimationFrame(id); clearTimeout(t); }; }
     const frame = document.getElementById("frame");
     const el = document.querySelector<HTMLElement>(note.sel);
     if (!frame || !el) return;
     const zoom = Number(getComputedStyle(frame).zoom) || 1;
     const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
-    const place = note.place ?? "above";
-    const x = place === "right" ? r.right : r.left + r.width / 2;
-    const y = place === "right" ? r.top + r.height / 2 : place === "below" ? r.bottom : r.top;
-    const id = requestAnimationFrame(() => { setBox({ x: (x - f.left) / zoom, y: (y - f.top) / zoom, place }); setShown(note); });
+    const y = Math.max(NOTE_MIN_Y, (r.top + r.height / 2 - f.top) / zoom);
+    const id = requestAnimationFrame(() => { setShown({ text: note.text, y }); requestAnimationFrame(() => setOn(true)); });
     return () => cancelAnimationFrame(id);
   }, [note]);
-  if (!shown || !box) return null;
+  if (!shown) return null;
   return (
-    <div className="dlg-callout" data-place={box.place} data-on={note ? "" : undefined} style={{ ["--x" as string]: `${box.x}px`, ["--y" as string]: `${box.y}px` } as CSSProperties} aria-hidden>
-      <span className="dlg-callout__text">{shown.text}</span>
+    <div className="dlg-note" data-on={on ? "" : undefined} style={{ ["--y" as string]: `${shown.y}px` } as CSSProperties} aria-hidden>
+      <span className="dlg-note__line" />
+      <span className="dlg-note__text">{shown.text}</span>
     </div>
   );
 }
 
 type SideWhich = "friday" | "unsure" | false;
-type SampleWhich = "friday" | "unsure" | "new";
+type SampleWhich = "friday" | "unsure";
 
 /*
  * P11 motion stage: one storyboard per case-study video (build/p11-motion-spec.md, design/TASTE.md "Motion").
@@ -62,12 +58,11 @@ type SampleWhich = "friday" | "unsure" | "new";
  * scrolls itself. New content grows below the tapped element (400 ms, cubic-bezier(0.2, 0, 0, 1)),
  * entrances fade and rise 8 px (350 ms), nothing pops. Hearthside mock data, same as the page.
  */
-export type MotionDemo = "hero" | "side" | "clip" | "before" | "every" | "picker" | "toggles" | "bars" | "thin";
+export type { MotionDemo } from "@/components/dialogue/motion/stages";
 
 const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string }> = {
   friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday" },
   unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure" },
-  new: { rows: QUOTE_LIST_NEW, count: 9, of: 14, label: "new shoppers" },
 };
 
 const QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
@@ -216,40 +211,14 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
   );
 }
 
-/** P14 item 9: segment bars; tap New shoppers to open its people (counts interaction on a chart). */
-function BarsCard({ open, onOpen }: { open: boolean; onOpen: () => void }) {
-  return (
-    <ChartVizCard title="Read Friday as this Friday, by shopper type">
-      <div className="dlg-live__bars">
-        <ChartBarList
-          rows={[
-            { label: "New shoppers", value: 9 / 14, display: "9 of 14", focal: true },
-            { label: "Repeat shoppers", value: 88 / 125, display: "88 of 125" },
-          ]}
-          max={1}
-        />
-        <button
-          type="button"
-          className="dlg-live__bar-hit"
-          data-target="bar-new"
-          aria-label="Open the 9 new shoppers"
-          aria-expanded={open}
-          onClick={onOpen}
-        />
-      </div>
-    </ChartVizCard>
-  );
-}
-
 export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
-  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "bars" || demo === "every" || demo === "thin";
+  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "every" || demo === "thin";
   const [typed, setTyped] = useState(demo === "picker" ? QUESTION : "");
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
   const [side, setSide] = useState<SideWhich>(false);
-  const [barOpen, setBarOpen] = useState(false);
   const [clip, setClip] = useState(false);
   const [playSec, setPlaySec] = useState(0);
   const [lines, setLines] = useState(0);
@@ -295,13 +264,13 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       level: (i: number) => {
         setLevel((cur) => {
           if (i === cur) return cur;
-          setSide(i >= 2 ? "unsure" : false);
+          setSide(i >= 2 ? "friday" : false);
           api.clip(i >= 3);
           pinDuringGrow(400);
           return i;
         });
       },
-      note: (text: string, sel: string, place?: "above" | "below" | "right") => setNote({ text, sel, place }),
+      note: (text: string, sel: string) => setNote({ text, sel }),
       unnote: () => setNote(null),
       // P15 item 17: tap a follow-up chip; it becomes the next question and its answer fills in below.
       ask: () => { setThinAsk(true); setThinAnalyzing(true); },
@@ -319,8 +288,6 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           requestAnimationFrame(() => { body.scrollTop = Math.max(0, ans.offsetTop); });
         }
       },
-      // P14 item 9: open/close the New shoppers sample under the bar chart.
-      bar: (on: boolean) => { setBarOpen(on); if (on) pinDuringGrow(400); },
       // P14 item 6: collapse picker back to the start state so the loop does not crossfade two composers.
       reset: () => {
         if (tick.current) clearInterval(tick.current);
@@ -328,7 +295,6 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setAnalyzing(false);
         setAnswered(false);
         setSide(false);
-        setBarOpen(false);
         setClip(false);
         setPlaySec(0);
         setPick(0);
@@ -416,9 +382,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
             <p className="dp-low-signal__text">Early signal, 2 people</p>
           </div>
           <p className="dp-clips-link">View 2 clips</p>
-          <div className="dp-followups dlg-thin__chips" data-target="thin-chips">
+          <div className="dlg-thin__chips" data-target="thin-chips">
             {THIN_CHIPS.map((c, i) => (
-              <button key={c} type="button" className="dp-followup-btn dlg-chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>
+              <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>
             ))}
           </div>
         </div>
@@ -430,8 +396,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         ) : null}
         {thinAnswer ? (
           <div className="dlg-stage__item dlg-rise" data-target="thin-answer">
-            <ChartVizCard title="41 shoppers asked for an exact calendar date after checkout, the most of any ask.">
-              <ChartRankList rows={[...TOP_ASKS]} />
+            <ChartVizCard title={`${THIN_LATE.late} of ${THIN_LATE.of} lapsed buyers got their first order after the date shown.`}>
+              <ChartStackedBar
+                total={THIN_LATE.of}
+                segments={[
+                  { label: "Late", value: THIN_LATE.late, display: `${THIN_LATE.late} of ${THIN_LATE.of}`, focal: true },
+                  { label: "On time", value: THIN_LATE.onTime, display: `${THIN_LATE.onTime} of ${THIN_LATE.of}` },
+                ]}
+              />
             </ChartVizCard>
           </div>
         ) : null}
@@ -441,23 +413,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     body = (
       <>
         <div className="dlg-stage__item">
-          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "unsure" : false} />
+          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "friday" : false} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
             {LEVELS.map((l, i) => (
               <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} which="unsure" playing={level >= 3} playSec={playSec} />
-      </>
-    );
-  } else if (demo === "bars") {
-    body = (
-      <>
-        <div className="dlg-stage__item">
-          <BarsCard open={barOpen} onOpen={() => setBarOpen(true)} />
-        </div>
-        <Sample open={barOpen} which="new" playing={false} onCollapse={() => setBarOpen(false)} />
+        <Sample open={level >= 2} which="friday" playing={level >= 3} playSec={playSec} />
       </>
     );
   }
@@ -500,7 +463,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       ) : null}
       <div className="dlg-stage__body">{body}</div>
       {composer}
-      {frameEl ? createPortal(<Callout note={note} />, frameEl) : null}
+      {frameEl ? createPortal(<Annotation note={note} />, frameEl) : null}
     </div>
   );
 }

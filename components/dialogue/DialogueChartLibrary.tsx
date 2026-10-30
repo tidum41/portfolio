@@ -8,6 +8,10 @@ import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import SourcePill from "@/components/dialogue/product/SourcePill";
+import { ChevronUpIcon, WaveformIcon } from "@/components/dialogue/product/icons";
+import { QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
+import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 
@@ -53,7 +57,7 @@ const SEGMENTS = [
   { label: "Repeat shoppers", count: 88, of: 125, focal: false },
 ] as const;
 
-/** P14 item 10: extra Hearthside scenarios (Illustrative data). No line charts (TASTE cut). */
+/** P14 item 10: extra Hearthside scenarios. No line charts (TASTE cut). */
 const DELIVERY_BY_TYPE = [
   { label: "New shoppers", count: 9, of: 14, focal: true },
   { label: "Repeat shoppers", count: 88, of: 125, focal: false },
@@ -188,38 +192,65 @@ const SCENARIOS = [
 /** The segment question that asks for the redesigned chart (data viz, one pair). */
 const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives by Friday\u201d the same way?";
 
-/* P15 items 12, 13, 15, 16: one figure for the chart templates. The chips are Dialogue's follow-up chips;
-   each template answers one Hearthside question and names the IBM Carbon chart it was adapted from. */
-const TEMPLATES = [
+/* P15 items 11 to 16: one figure for the chart templates. The picker and the notes are case-study chrome; the panel
+   holds only Dialogue's answer card. Each template names the IBM Carbon chart it was adapted from, with one pro and
+   one con (P14's pros and cons). Group bars open their people on a tap (P14 bar tap) and show their percent on hover. */
+type Template = {
+  id: string; name: string; carbon: string; note: string; target: string;
+  pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
+};
+const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
+const FIRST = SEGMENTS[0];
+const TEMPLATES: Template[] = [
   {
     id: "group",
-    chip: "By group",
-    question: "Do new and repeat shoppers read \u201cArrives by Friday\u201d the same way?",
+    name: "By group",
     carbon: "Simple bar chart",
-    change: "Each row counts people out of its own group.",
-    callout: "Each row counts its own group",
-    target: ".dp-chart-bars__row:last-of-type .dp-chart-bars__value",
-    place: "below",
-    card: (
-      <ChartVizCard title="Read Friday as this Friday, by shopper type">
-        <ChartBarList
-          rows={DELIVERY_BY_TYPE.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: `${Math.round((r.count / r.of) * 100)}%`, focal: r.focal }))}
-          max={1}
-        />
-      </ChartVizCard>
+    note: "Count out of each group",
+    target: ".dp-chart-bars__row:first-child",
+    pro: "Each row says how many people it rests on.",
+    con: "Exact comparison across rows is a little slower.",
+    card: (open, onOpen) => (
+      <>
+        <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
+          <div className="dlg-live__bars">
+            <ChartBarList
+              rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal }))}
+              max={1}
+            />
+            <button type="button" className="dlg-live__bar-hit" aria-label={`Open the ${FIRST.count} ${FIRST.label.toLowerCase()}`} aria-expanded={open} onClick={() => onOpen(!open)} />
+          </div>
+        </ChartVizCard>
+        {open ? (
+          <div className="dp-side-sample dlg-stage__sample dlg-templates__people" data-side="new">
+            <p className="dp-side-sample__head dp-text-body">
+              <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{FIRST.count}</span> {FIRST.label.toLowerCase()}, {QUOTE_LIST_NEW.length} shown
+              <button type="button" className="dlg-clip-collapse" data-shown="" aria-label="Fold the people back" onClick={() => onOpen(false)}><ChevronUpIcon /></button>
+            </p>
+            <div className="dp-clip-quotes">
+              {QUOTE_LIST_NEW.map((q) => (
+                <div key={q.participant} className="dp-clip-quote">
+                  <p className="dp-clip-quote__who"><WaveformIcon className="dp-clip-quote__icon" /><span className="dp-clip-quote__name">{q.participant}</span><span className="dp-clip-quote__time">{q.time}</span></p>
+                  <p className="dp-clip-quote__text">{q.quote}</p>
+                </div>
+              ))}
+            </div>
+            <div className="dp-sources"><SourcePill name={`+${FIRST.count - QUOTE_LIST_NEW.length} more`} time="" /></div>
+          </div>
+        ) : null}
+      </>
     ),
   },
   {
     id: "split",
-    chip: "Split",
-    question: "How do shoppers read \u201cArrives by Friday\u201d?",
+    name: "Split",
     carbon: "Meter chart",
-    change: "Counts sit under their segments, with no legend or axis.",
-    callout: "Each side keeps its count",
+    note: "Count under each segment",
     target: ".dp-chart-stack__labels",
-    place: "below",
-    card: (
-      <ChartVizCard title="225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday.">
+    pro: "Each side’s count reads at a glance under its segment.",
+    con: "No percent is printed.",
+    card: () => (
+      <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
         <ChartStackedBar
           total={FRIDAY_TOTAL}
           segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))}
@@ -229,14 +260,13 @@ const TEMPLATES = [
   },
   {
     id: "ranked",
-    chip: "Ranked",
-    question: "What did shoppers ask for after checkout?",
+    name: "Ranked",
     carbon: "Simple bar chart, sorted",
-    change: "Asks read as words in rank order, with the count at the end.",
-    callout: "Ranked by how many raised it",
-    target: ".dp-chart-rank__row:last-child .dp-chart-rank__value",
-    place: "below",
-    card: (
+    note: "Asks in rank order",
+    target: ".dp-chart-rank__row:first-child",
+    pro: "Each ask reads as words, in rank order.",
+    con: "Only the top five asks show.",
+    card: () => (
       <ChartVizCard title="What shoppers asked for after checkout">
         <ChartRankList rows={[...TOP_ASKS]} />
       </ChartVizCard>
@@ -244,14 +274,13 @@ const TEMPLATES = [
   },
   {
     id: "scale",
-    chip: "1 to 5 scale",
-    question: "How sure were shoppers about the delivery date?",
+    name: "1 to 5 scale",
     carbon: "Lollipop chart",
-    change: "A dot at each group\u2019s median, labelled with how many people it rests on.",
-    callout: "Each dot is a group median",
-    target: ".dp-chart-dots__dot:not(.dp-chart-dots__dot--focal)",
-    place: "below",
-    card: (
+    note: "Median score per group",
+    target: ".dp-chart-dots__dot--focal",
+    pro: "Each dot says how many people it rests on.",
+    con: "A median hides how spread the scores are.",
+    card: () => (
       <ChartVizCard title="How sure shoppers were about the delivery date">
         <ChartDotPlot
           rows={[...CONFIDENCE]}
@@ -264,56 +293,56 @@ const TEMPLATES = [
       </ChartVizCard>
     ),
   },
-] as const;
+];
 
-/** P15 item 3: a callout pinned to one element of the chart, measured after layout. */
-function PinnedCallout({ text, target, place }: { text: string; target: string; place: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+/** P15 item 3: a static annotation in the well beside the panel, level with what it names; on phones it sits under the panel. */
+function WellNote({ text, target, panel }: { text: string; target: string; panel: React.RefObject<HTMLDivElement | null> }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [y, setY] = useState<number | null>(null);
   useEffect(() => {
     const measure = () => {
-      const host = ref.current?.parentElement;
-      const el = host?.querySelector<HTMLElement>(target);
+      const host = ref.current?.parentElement, el = panel.current?.querySelector<HTMLElement>(target);
       if (!host || !el) return;
       const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
-      const x = place === "right" ? r.right : r.left + r.width / 2;
-      const y = place === "right" ? r.top + r.height / 2 : place === "below" ? r.bottom : r.top;
-      setPos({ x: x - h.left, y: y - h.top });
+      setY(r.top + r.height / 2 - h.top);
     };
     measure();
     const ro = new ResizeObserver(measure);
     if (ref.current?.parentElement) ro.observe(ref.current.parentElement);
     return () => ro.disconnect();
-  }, [target, place]);
+  }, [target, panel]);
   return (
-    <span ref={ref} className="dlg-callout" data-place={place} data-on={pos ? "" : undefined} style={pos ? ({ ["--x" as string]: `${pos.x}px`, ["--y" as string]: `${pos.y}px` } as CSSProperties) : undefined} aria-hidden>
-      <span className="dlg-callout__text">{text}</span>
-    </span>
+    <p ref={ref} className="dlg-templates__note" style={{ ["--y" as string]: `${y ?? 0}px`, visibility: y === null ? "hidden" : undefined } as CSSProperties} aria-hidden>
+      <span className="dlg-note__line" />
+      <span className="dlg-note__text">{text}</span>
+    </p>
   );
 }
 
 function ChartTemplates() {
-  const [sel, setSel] = useState<(typeof TEMPLATES)[number]["id"]>("group");
+  const [sel, setSel] = useState(TEMPLATES[0].id);
+  const [open, setOpen] = useState(false);
+  const panel = useRef<HTMLDivElement>(null);
   const t = TEMPLATES.find((x) => x.id === sel) ?? TEMPLATES[0];
   return (
     <div className="dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates">
-      <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dp-study-chat ${dialogueProductFontClassName}`} data-template={t.id}>
-        <div className="dp-followups dlg-templates__chips" role="tablist" aria-label="Chart templates">
-          {TEMPLATES.map((x) => (
-            <button key={x.id} type="button" role="tab" aria-selected={x.id === sel} aria-pressed={x.id === sel} className="dp-followup-btn dlg-chip" onClick={() => setSel(x.id)}>{x.chip}</button>
-          ))}
+      <div className="dlg-templates__pick" role="group" aria-label="Chart templates">
+        {TEMPLATES.map((x) => (
+          <button key={x.id} type="button" className="dlg-templates__opt" aria-pressed={x.id === sel} onClick={() => { setSel(x.id); setOpen(false); }}>{x.name}</button>
+        ))}
+      </div>
+      <div className="dlg-templates__stage">
+        <div ref={panel} className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id} key={t.id}>
+          {t.card(open, setOpen)}
         </div>
-        <div className="dlg-templates__answer" key={t.id}>
-          <UserMessageBubble>{t.question}</UserMessageBubble>
-          <div className="dlg-templates__chart">
-            {t.card}
-            <PinnedCallout text={t.callout} target={t.target} place={t.place} />
-          </div>
+        <WellNote key={`${t.id}-note`} text={t.note} target={t.target} panel={panel} />
+      </div>
+      <div className="dlg-templates__about">
+        <p className="dlg-templates__carbon"><span>Adapted from IBM Carbon</span> {t.carbon}</p>
+        <div className="dlg-reason dlg-templates__reason">
+          <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="pro" aria-hidden><Check size={16} weight="bold" /></span><span>{t.pro}</span></p>
+          <p className="dlg-reason__row"><span className="dlg-reason__key dialogue-lib__mark" data-kind="con" aria-hidden><X size={16} weight="bold" /></span><span>{t.con}</span></p>
         </div>
-        <dl className="dlg-templates__meta">
-          <div><dt>Adapted from IBM Carbon</dt><dd>{t.carbon}</dd></div>
-          <div><dt>What I changed</dt><dd>{t.change}</dd></div>
-        </dl>
       </div>
     </div>
   );

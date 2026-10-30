@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import PlayPauseButton from "@/components/PlayPauseButton";
+import { recordingAspect } from "@/components/dialogue/motion/stages";
 
 /**
  * Round P10: a recorded product demo of the live recreation (scripts/record-dialogue-live.mjs).
@@ -13,7 +14,7 @@ import PlayPauseButton from "@/components/PlayPauseButton";
  */
 const themed = (path: string, dark: boolean) => (dark ? path.replace(/\.(mp4|jpg)$/, "-dark.$1") : path);
 const isDarkNow = () => document.documentElement.getAttribute("data-theme") !== "light";
-export default function DialogueDemoVideo({ src, poster, label, ratio = "1 / 1" }: { src: string; poster: string; label: string; ratio?: string }) {
+export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: string; poster: string; label: string; ratio?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [reduce, setReduce] = useState(false);
@@ -49,7 +50,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio = "1 / 1" 
   };
   return (
     <div className="dlg-demo">
-      <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio }} src={reduce ? undefined : themed(src, dark)} poster={themed(poster, dark)} muted loop playsInline preload="metadata" aria-label={label} />
+      <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} src={reduce ? undefined : themed(src, dark)} poster={themed(poster, dark)} muted loop playsInline preload="metadata" aria-label={label} />
       {reduce ? null : <PlayPauseButton isPlaying={isPlaying} onToggle={toggle} />}
     </div>
   );

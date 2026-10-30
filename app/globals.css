@@ -3289,7 +3289,7 @@ html[data-theme="dark"] {
   --figure-well-border: rgba(255, 255, 255, 0.04);
 }
 html[data-theme="dark"] {
-  --figure-well-dialogue: #1b1d1f; /* P15: exact bt709 decode of the recordings' dark well (Y41 U129 V127), so video and CSS match */
+  --figure-well-dialogue: #1b1e21;
 }
 /* Round L: Dialogue figure frames carry no inset border box. */
 .dialogue-case-study .dialogue-rachel-frame,

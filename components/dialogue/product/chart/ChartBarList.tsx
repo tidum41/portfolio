@@ -44,7 +44,7 @@ export default function ChartBarList({
             : chartBarFill(i, row.focal);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
-            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
+            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}{row.pct ? <span className="dp-chart-bars__pct">{row.pct}</span> : null}</span>
             <div
               className="dp-chart-bars__track"
               data-annotate-part={`bar-track-${annotateSlug(row.label)}`}
@@ -58,7 +58,6 @@ export default function ChartBarList({
             </div>
             <span
               data-annotate-part={`bar-value-${annotateSlug(row.label)}`}
-              data-pct={row.pct}
               className={[
                 "dp-chart-bars__value",
                 row.focal ? "dp-chart-bars__value--focal" : "",
