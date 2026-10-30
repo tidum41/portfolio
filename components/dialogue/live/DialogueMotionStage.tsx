@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
@@ -11,6 +12,46 @@ import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/compo
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
+import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
+import { InfoCircleIcon } from "@/components/dialogue/product/icons";
+
+/* P15 item 17: thin answer, then follow-up chips the same 300 sessions answer with a real count (Hearthside mock). */
+const THIN_QUESTION = "What did lapsed buyers say about their first order?";
+const THIN_CHIPS = [
+  "What did shoppers ask for after checkout?",
+  "How sure were shoppers about the delivery date?",
+] as const;
+const TOP_ASKS = [
+  { rank: 1, label: "Show an exact calendar date", value: 41 },
+  { rank: 2, label: "Say which Friday it means", value: 28 },
+  { rank: 3, label: "Warn when Friday slips", value: 17 },
+] as const;
+
+/* P15 item 3: a case-study callout drawn over the recording, outside the product UI. Points at one element. */
+type Note = { text: string; sel: string; place?: "above" | "below" | "right" } | null;
+function Callout({ note }: { note: Note }) {
+  const [box, setBox] = useState<{ x: number; y: number; place: string } | null>(null);
+  const [shown, setShown] = useState<Note>(null);
+  useEffect(() => {
+    if (!note) { const t = setTimeout(() => { setShown(null); setBox(null); }, 300); return () => clearTimeout(t); }
+    const frame = document.getElementById("frame");
+    const el = document.querySelector<HTMLElement>(note.sel);
+    if (!frame || !el) return;
+    const zoom = Number(getComputedStyle(frame).zoom) || 1;
+    const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
+    const place = note.place ?? "above";
+    const x = place === "right" ? r.right : r.left + r.width / 2;
+    const y = place === "right" ? r.top + r.height / 2 : place === "below" ? r.bottom : r.top;
+    const id = requestAnimationFrame(() => { setBox({ x: (x - f.left) / zoom, y: (y - f.top) / zoom, place }); setShown(note); });
+    return () => cancelAnimationFrame(id);
+  }, [note]);
+  if (!shown || !box) return null;
+  return (
+    <div className="dlg-callout" data-place={box.place} data-on={note ? "" : undefined} style={{ ["--x" as string]: `${box.x}px`, ["--y" as string]: `${box.y}px` } as CSSProperties} aria-hidden>
+      <span className="dlg-callout__text">{shown.text}</span>
+    </div>
+  );
+}
 
 type SideWhich = "friday" | "unsure" | false;
 type SampleWhich = "friday" | "unsure" | "new";
@@ -21,7 +62,7 @@ type SampleWhich = "friday" | "unsure" | "new";
  * scrolls itself. New content grows below the tapped element (400 ms, cubic-bezier(0.2, 0, 0, 1)),
  * entrances fade and rise 8 px (350 ms), nothing pops. Hearthside mock data, same as the page.
  */
-export type MotionDemo = "hero" | "side" | "clip" | "before" | "every" | "picker" | "toggles" | "bars";
+export type MotionDemo = "hero" | "side" | "clip" | "before" | "every" | "picker" | "toggles" | "bars" | "thin";
 
 const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string }> = {
   friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday" },
@@ -135,6 +176,7 @@ function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time:
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
+        <span className="dp-clips-link dlg-view-session" data-target={`session-${q.participant.toLowerCase()}`}>View session</span>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open}>
@@ -200,7 +242,8 @@ function BarsCard({ open, onOpen }: { open: boolean; onOpen: () => void }) {
 }
 
 export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
-  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "bars";
+  // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
+  const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "bars" || demo === "every" || demo === "thin";
   const [typed, setTyped] = useState(demo === "picker" ? QUESTION : "");
   const [sent, setSent] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -214,6 +257,12 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   // P14 item 5: picker defaults to Insight (0), matching the decided default answer (count + insight).
   const [pick, setPick] = useState(0);
   const [level, setLevel] = useState(0);
+  const [note, setNote] = useState<Note>(null);
+  const [thinAsk, setThinAsk] = useState(false);
+  const [thinAnalyzing, setThinAnalyzing] = useState(false);
+  const [thinAnswer, setThinAnswer] = useState(false);
+  const [frameEl, setFrameEl] = useState<HTMLElement | null>(null);
+  useEffect(() => { const id = requestAnimationFrame(() => setFrameEl(document.getElementById("frame"))); return () => cancelAnimationFrame(id); }, []);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sentences = PARAGRAPH_ANSWER_WALL.flatMap((p, pi) => p.split(/(?<=\.)\s+/).map((t, i) => ({ t, pi, first: i === 0 })));
@@ -252,6 +301,11 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           return i;
         });
       },
+      note: (text: string, sel: string, place?: "above" | "below" | "right") => setNote({ text, sel, place }),
+      unnote: () => setNote(null),
+      // P15 item 17: tap a follow-up chip; it becomes the next question and its answer fills in below.
+      ask: () => { setThinAsk(true); setThinAnalyzing(true); },
+      reply: () => { setThinAnalyzing(false); setThinAnswer(true); },
       follow: (ms = 600) => follow(ms),
       up: (ms = 600) => follow(ms, true),
       pause: () => { if (tick.current) clearInterval(tick.current); },
@@ -279,6 +333,10 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setPlaySec(0);
         setPick(0);
         setLevel(0);
+        setNote(null);
+        setThinAsk(false);
+        setThinAnalyzing(false);
+        setThinAnswer(false);
         setTyped(QUESTION);
       },
     };
@@ -347,6 +405,38 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         <Sample open={!!side} which={side || "unsure"} playing={clip} playSec={playSec} />
       </>
     );
+  } else if (demo === "thin") {
+    body = (
+      <>
+        <div className="dlg-stage__item"><UserMessageBubble>{THIN_QUESTION}</UserMessageBubble></div>
+        <div className="dlg-stage__item dlg-thin">
+          <p className="dp-summary dp-text-body">Two of 63 lapsed buyers mentioned that their first order arrived damaged.</p>
+          <div className="dp-low-signal" data-target="thin-flag">
+            <InfoCircleIcon className="dp-low-signal__icon" />
+            <p className="dp-low-signal__text">Early signal, 2 people</p>
+          </div>
+          <p className="dp-clips-link">View 2 clips</p>
+          <div className="dp-followups dlg-thin__chips" data-target="thin-chips">
+            {THIN_CHIPS.map((c, i) => (
+              <button key={c} type="button" className="dp-followup-btn dlg-chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>
+            ))}
+          </div>
+        </div>
+        {thinAsk ? <div className="dlg-stage__item dlg-rise"><UserMessageBubble>{THIN_CHIPS[0]}</UserMessageBubble></div> : null}
+        {thinAnalyzing ? (
+          <p className="dlg-analyzing dlg-rise dlg-stage__item dlg-stage__analyzing">
+            <LoaderArcIcon className="dlg-spin" /> Analyzing interviews
+          </p>
+        ) : null}
+        {thinAnswer ? (
+          <div className="dlg-stage__item dlg-rise" data-target="thin-answer">
+            <ChartVizCard title="41 shoppers asked for an exact calendar date after checkout, the most of any ask.">
+              <ChartRankList rows={[...TOP_ASKS]} />
+            </ChartVizCard>
+          </div>
+        ) : null}
+      </>
+    );
   } else if (demo === "toggles") {
     body = (
       <>
@@ -410,6 +500,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       ) : null}
       <div className="dlg-stage__body">{body}</div>
       {composer}
+      {frameEl ? createPortal(<Callout note={note} />, frameEl) : null}
     </div>
   );
 }

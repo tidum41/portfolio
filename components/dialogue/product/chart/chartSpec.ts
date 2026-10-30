@@ -82,6 +82,8 @@ export type ChartBarDatum = {
   focal?: boolean;
   /** Quiet secondary figure shown after the value (for example the drop at a step). */
   detail?: string;
+  /** P15 item 11: share shown on hover, e.g. "64%". */
+  pct?: string;
 };
 
 /** Cherry for the focal bar, stone-500 for everything else. */

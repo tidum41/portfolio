@@ -58,6 +58,7 @@ export default function ChartBarList({
             </div>
             <span
               data-annotate-part={`bar-value-${annotateSlug(row.label)}`}
+              data-pct={row.pct}
               className={[
                 "dp-chart-bars__value",
                 row.focal ? "dp-chart-bars__value--focal" : "",

@@ -10,9 +10,12 @@ const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
-const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full", bars: "live-bars" };
+const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", before: "variant-before-full", every: "variant-every-full", picker: "variant-picker-full", toggles: "variant-toggles-full", bars: "live-bars", thin: "live-thin" };
 // Picker and bars end on their start state, so they need no crossfade. Others still blend end→start.
-const CROSSFADE = new Set(["hero", "before", "every", "toggles"]);
+// P15: every and toggles now fold back to their start, so only hero, before and thin blend end to start.
+const CROSSFADE = new Set(["hero", "before", "thin"]);
+/** P15 item 9: subtle motion blur on the clip take (a 3-frame weighted blend; still frames are unchanged). */
+const BLUR = new Set(["clip"]);
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
@@ -68,44 +71,53 @@ async function record(demo) {
   await hold(800); // pre-roll
   const S = {
     // Final hold 1.6s after follow settles (motion checklist wants final_hold 1.0–1.9s).
-    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(600 + 1600); },
-    // P14 item 7: 225 then 75, ~6.9s. Hold 800 after each press; after fold + cursor out, 1.0s still.
-    // Light is recorded first and dark is padded/trimmed to it — keep the light take the longer of the pair.
+    // P15 item 3: one callout per beat, pointing at what to notice; it fades before the loop closes.
+    async hero() { await api("type(18)"); await hold(250); await api("send()"); await api("analyze(true)"); await hold(800); await api("answer()"); await hold(500); await api("follow(600)"); await hold(700); await api('note("The count leads the answer", ".dp-chart-stack__labels", "below")'); await hold(1500); await api("unnote()"); await hold(400); },
     async side() {
       await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(800);
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(800);
       await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(500); await cursorOut(); await hold(1000);
     },
-    // P14 items 2+8: tap quote to open, tap again to close (no inner chevron). Hold 1.0 after open, 1.6 final.
+    // P15 item 9: open Mei's clip, rest on the row so View session shows, then close.
     async clip() {
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1000);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(1600); await cursorOut();
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.5, ms: 500 }); await press(); await hold(450);
+      await api('note("Plays from her quote, not from 00:00", ".dlg-live__clip", "below")');
+      await cursorTo('[data-target="session-mei"]', { fx: 0.5, fy: 0.6, ms: 500 }); await hold(1100); await api("unnote()");
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.75, ms: 500 }); await press(); await hold(1400); await cursorOut();
     },
-    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await hold(2000); },
-    // P14 item 1 (Mudit): cursor clicks 225 then 75; same two-sided interaction as counts-open.
+    async before() { for (let i = 0; i < 5; i++) { await api("line()"); await hold(450); } await hold(300); await api("mark()"); await api('note("How many is many?", ".dlg-mark", "above")'); await hold(1600); await api("unnote()"); await hold(400); },
+    // P15 item 4: starts answered and folds back to it, so the card is always on screen and never moves.
     async every() {
-      await api("answer()"); await hold(800);
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(1000);
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(1000);
-      await cursorOut(); await hold(1600);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("friday")'); await hold(400);
+      await api('note("Every level opens at once", ".dlg-stage__sample .dp-sources > *", "right")'); await hold(500);
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(800);
+      await api("unnote()"); await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await hold(400); await cursorOut(); await hold(800);
     },
-    // P14 items 5+6: Insight default; pick Source; send; deep opens; clip ticks 1s; collapse to start (typed question, Insight).
     async picker() {
-      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await hold(400);
-      await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
+      await cursorTo('[data-target="depth-3"]', { ms: 500 }); await press(); await api('note("Depth is set before the question", ".dlg-depth", "above")'); await hold(500);
+      await api("unnote()"); await cursorTo('[data-target="send"]', { ms: 500 }); await press(); await api("send()"); await hold(450);
       await api("answer()"); await api("deep()"); await hold(1000); await api("pause()"); await hold(1000);
-      await cursorOut(); await api("reset()"); await hold(1600);
+      await cursorOut(); await api("reset()"); await hold(1000);
     },
-    // Pin happens inside level(); do not follow() during the grow.
+    // P15 item 6: insight first, then the people behind it, then the source clip, then back to the insight.
     async toggles() {
-      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(1000);
-      await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(1000);
-      await cursorOut(); await hold(1600);
+      await hold(200);
+      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(400);
+      await api('note("The people behind the count", ".dlg-stage__sample .dp-sources > *", "right")'); await hold(500);
+      await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await api("level(3)"); await hold(400);
+      await api('note("Then the clip, from her quote", ".dp-clip-quote--selected .dp-clip-quote__time", "right")'); await hold(600);
+      await api("unnote()"); await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(500);
+      await cursorOut(); await hold(900);
     },
-    // P14 item 9: tap New shoppers 9 of 14 → its people open; fold back to start (~5.5s).
     async bars() {
       await cursorTo('[data-target="bar-new"]', { fx: 0.4, fy: 0.5, ms: 500 }); await press(); await api("bar(true)"); await hold(1000);
       await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("bar(false)"); await hold(1600); await cursorOut();
+    },
+    // P15 item 17: the thin answer offers questions the same sessions answer better; one is tapped and answered.
+    async thin() {
+      await api('note("Too few to chart, so it says so", "[data-target=thin-flag] .dp-low-signal__text", "right")'); await hold(1100); await api("unnote()");
+      await cursorTo('[data-target="chip-0"]', { fx: 0.3, ms: 500 }); await press(); await api("ask()"); await hold(250); await api("follow(500)"); await hold(550);
+      await cursorOut(); await api("reply()"); await hold(150); await api("follow(600)"); await hold(1700);
     },
   };
   await S[demo]();
@@ -119,8 +131,9 @@ async function record(demo) {
   const k = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width", "-of", "csv=p=0", `${tmp}/00000.png`]).toString().trim()) / 1280;
   const W = 1038; // 519 css px at 2x
   const crop = `crop=${Math.round(fb.width * k)}:${Math.round(fb.height * k)}:${Math.round(fb.x * k)}:${Math.round(fb.y * k)}`;
-  const enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
-  const vf = `${crop},fps=30,scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv`;
+  // -g 600: one keyframe per take; x264's default keyframe at frame 250 flashed a visible re-quantize mid-hold (P15).
+  const enc = ["-c:v", "libx264", "-g", "600", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
+  const vf = `${crop},fps=30,${BLUR.has(demo) ? "tmix=frames=3:weights=1 2 1," : ""}scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv`;
   const name = NAMES[demo]; const raw = `${tmp}/raw.mp4`; const mp4 = `${out}/${name}${SUFFIX}.mp4`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", vf, ...enc, raw]);
   const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", raw]).toString());

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
@@ -188,18 +188,153 @@ const SCENARIOS = [
 /** The segment question that asks for the redesigned chart (data viz, one pair). */
 const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives by Friday\u201d the same way?";
 
+/* P15 items 12, 13, 15, 16: one figure for the chart templates. The chips are Dialogue's follow-up chips;
+   each template answers one Hearthside question and names the IBM Carbon chart it was adapted from. */
+const TEMPLATES = [
+  {
+    id: "group",
+    chip: "By group",
+    question: "Do new and repeat shoppers read \u201cArrives by Friday\u201d the same way?",
+    carbon: "Simple bar chart",
+    change: "Each row counts people out of its own group.",
+    callout: "Each row counts its own group",
+    target: ".dp-chart-bars__row:last-of-type .dp-chart-bars__value",
+    place: "below",
+    card: (
+      <ChartVizCard title="Read Friday as this Friday, by shopper type">
+        <ChartBarList
+          rows={DELIVERY_BY_TYPE.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: `${Math.round((r.count / r.of) * 100)}%`, focal: r.focal }))}
+          max={1}
+        />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "split",
+    chip: "Split",
+    question: "How do shoppers read \u201cArrives by Friday\u201d?",
+    carbon: "Meter chart",
+    change: "Counts sit under their segments, with no legend or axis.",
+    callout: "Each side keeps its count",
+    target: ".dp-chart-stack__labels",
+    place: "below",
+    card: (
+      <ChartVizCard title="225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday.">
+        <ChartStackedBar
+          total={FRIDAY_TOTAL}
+          segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))}
+        />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "ranked",
+    chip: "Ranked",
+    question: "What did shoppers ask for after checkout?",
+    carbon: "Simple bar chart, sorted",
+    change: "Asks read as words in rank order, with the count at the end.",
+    callout: "Ranked by how many raised it",
+    target: ".dp-chart-rank__row:last-child .dp-chart-rank__value",
+    place: "below",
+    card: (
+      <ChartVizCard title="What shoppers asked for after checkout">
+        <ChartRankList rows={[...TOP_ASKS]} />
+      </ChartVizCard>
+    ),
+  },
+  {
+    id: "scale",
+    chip: "1 to 5 scale",
+    question: "How sure were shoppers about the delivery date?",
+    carbon: "Lollipop chart",
+    change: "A dot at each group\u2019s median, labelled with how many people it rests on.",
+    callout: "Each dot is a group median",
+    target: ".dp-chart-dots__dot:not(.dp-chart-dots__dot--focal)",
+    place: "below",
+    card: (
+      <ChartVizCard title="How sure shoppers were about the delivery date">
+        <ChartDotPlot
+          rows={[...CONFIDENCE]}
+          max={5}
+          ticks={[1, 2, 3, 4, 5]}
+          formatTick={(n) => String(n)}
+          gridAt={[1, 2, 3, 4, 5]}
+          note="1 = not sure, 5 = sure."
+        />
+      </ChartVizCard>
+    ),
+  },
+] as const;
+
+/** P15 item 3: a callout pinned to one element of the chart, measured after layout. */
+function PinnedCallout({ text, target, place }: { text: string; target: string; place: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    const measure = () => {
+      const host = ref.current?.parentElement;
+      const el = host?.querySelector<HTMLElement>(target);
+      if (!host || !el) return;
+      const h = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+      const x = place === "right" ? r.right : r.left + r.width / 2;
+      const y = place === "right" ? r.top + r.height / 2 : place === "below" ? r.bottom : r.top;
+      setPos({ x: x - h.left, y: y - h.top });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (ref.current?.parentElement) ro.observe(ref.current.parentElement);
+    return () => ro.disconnect();
+  }, [target, place]);
+  return (
+    <span ref={ref} className="dlg-callout" data-place={place} data-on={pos ? "" : undefined} style={pos ? ({ ["--x" as string]: `${pos.x}px`, ["--y" as string]: `${pos.y}px` } as CSSProperties) : undefined} aria-hidden>
+      <span className="dlg-callout__text">{text}</span>
+    </span>
+  );
+}
+
+function ChartTemplates() {
+  const [sel, setSel] = useState<(typeof TEMPLATES)[number]["id"]>("group");
+  const t = TEMPLATES.find((x) => x.id === sel) ?? TEMPLATES[0];
+  return (
+    <div className="dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates">
+      <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dp-study-chat ${dialogueProductFontClassName}`} data-template={t.id}>
+        <div className="dp-followups dlg-templates__chips" role="tablist" aria-label="Chart templates">
+          {TEMPLATES.map((x) => (
+            <button key={x.id} type="button" role="tab" aria-selected={x.id === sel} aria-pressed={x.id === sel} className="dp-followup-btn dlg-chip" onClick={() => setSel(x.id)}>{x.chip}</button>
+          ))}
+        </div>
+        <div className="dlg-templates__answer" key={t.id}>
+          <UserMessageBubble>{t.question}</UserMessageBubble>
+          <div className="dlg-templates__chart">
+            {t.card}
+            <PinnedCallout text={t.callout} target={t.target} place={t.place} />
+          </div>
+        </div>
+        <dl className="dlg-templates__meta">
+          <div><dt>Adapted from IBM Carbon</dt><dd>{t.carbon}</dd></div>
+          <div><dt>What I changed</dt><dd>{t.change}</dd></div>
+        </dl>
+      </div>
+    </div>
+  );
+}
+
 export default function DialogueChartLibrary({
   showTech = true,
   segmentsFirst = false,
   only,
   scenarios = false,
+  templates = false,
 }: {
+  /** P15: the merged chart-templates figure (replaces the bars video and the specimen list on the page). */
+  templates?: boolean;
   showTech?: boolean;
   segmentsFirst?: boolean;
   only?: "segments" | "coverage";
   /** P14 item 10: also render the extra Hearthside scenario cards. */
   scenarios?: boolean;
 }) {
+  if (templates) return <ChartTemplates />;
   const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">

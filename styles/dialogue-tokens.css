@@ -16,7 +16,8 @@
 
 .dialogue-product-root,
 .dialogue-lead-answer,
-.dialogue-lib {
+.dialogue-lib,
+.dlg-callout {
   /* ---------------------------------------------------------------
    * Layer 1. DS raw values
    * ------------------------------------------------------------- */

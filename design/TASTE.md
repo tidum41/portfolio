@@ -78,7 +78,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 ## 2. Likes
 - Glass-bar video player with Paper skip labels (r19 to r24, b056865).
 - Dialogue logo avatar on transcript rows (b056865, public/dialogue/dialogue-avatar.svg).
-- "Download study plan" beat in the thin-data section (was "Add to my plan" at b056865; renamed Oct 29 to a Markdown download for any agent).
+- Thin-data follow-ups (P15, Mudit OK Oct 29): after a thin answer, Dialogue's follow-up chips suggest questions the same sessions answer better; the cursor taps one and its answer fills in. Replaces the "Download study plan" beat.
 - Chart library: themes by participants, the split, group dot plot, participant by theme matrix, sentiment split, evidence-linked bars, each with pros and cons (round L, Oct 25).
 - Early Paper-recreated iterations are the standard; compare regressions against them.
 - Compared specimens: same height, concentric radii, shared proportions and font sizes (round G).
@@ -100,7 +100,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Needless 0 to 100 scales, stray labels; unexplained units (pts must be explained).
 - Cutting the chart library to "one strong comparison" (1cc9b29, round A): overruled, he wants several complex charts.
 - Status chips on library pairs; use pros/cons.
-- Hover states on figures.
+- Hover states on figures (exception, P15 Mudit OK: chart template bars show their share on hover).
 - Copywriting voice; he wants plain, specific site voice.
 - Any "full detail" chart variant: rejected, all removed (round L, Oct 25).
 - Arrow animation on pager previous/next: remove (Oct 25).
@@ -178,3 +178,4 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Levels turning point (Mudit, Oct 28 2026, his words): "I assumed that honing in on the smallest levels of detail might be useful, but this might not be feasible and efficient for teams, rather optional." Depth is optional and opened by the reader; it is the page's one stated reversal and lives in Levels.
 - P14 (Mudit, Oct 29): levels-every is cursor-driven (click 225 then 75, same as counts-open). Selected depth chip stays stone-200. Hero Team metadata is a visible [PLACEHOLDER]. Recorder captures PNG so the video well matches `#eceae4` / `#1b1e21`.
 - P14 later (Mudit OK): quote rows are selection (no inner chevron); thin-data label is "Download study plan"; bar-tap video (any bar opens its people); chart library adds delivery-by-type, top-asks, and 1–5 confidence scenarios (no line charts).
+- P15 (Mudit OK Oct 29): every video and figure sits on the one shared well; the panel lifts off it by its chat shadow only (no border, no tinted chart card inside). Short callouts inside the visuals point at what to notice. Levels first try starts answered and folds back, so the loop never fades the UI. Toggles go Insight, People, Source, back to Insight. The counts-open video is cut so no demo repeats. Clip player shows View session on hover, with subtle motion blur. The bars video and the chart library merge into one chart templates figure, each template naming the IBM Carbon chart it was adapted from.

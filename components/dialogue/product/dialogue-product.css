@@ -3974,3 +3974,58 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dp-study-chat__minimize { margin: -8px -8px 0 0; }
 /* P13: DM Sans sits high in a 16px line; shift the label 1px down so caps and x-height centre optically in the 20px chip. */
 .dlg-live .dp-study-chat__beta { padding: 3px 8px 1px; }
+
+/* ===== P15 (Mudit fixes 1 to 17) ===== */
+/* Items 1, 2, 7: one shared well; the panel lifts off it by Dialogue's chat shadow alone, and nothing inside carries its own tint. */
+.dlg-stage.dp-study-chat { border-color: transparent; }
+.dlg-stage .dp-chart-viz-card { background: var(--dp-surface); }
+/* Item 10: N of M values sit in one right-aligned column wide enough for "88 of 125". */
+.dlg-stage .dp-chart-root, .dlg-templates .dp-chart-root { --dp-chart-value-width: 64px; }
+/* Item 3: callouts are case-study chrome over the recording, never product UI. */
+.dlg-callout { position: absolute; left: var(--x); top: var(--y); z-index: 5; display: flex; flex-direction: column; align-items: center; pointer-events: none; opacity: 0; transform: translate(-50%, calc(-100% - 8px)); transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); font-family: var(--font-sans); }
+.dlg-callout[data-on] { opacity: 1; }
+.dlg-callout[data-place="below"] { transform: translate(-50%, 8px); flex-direction: column-reverse; }
+.dlg-callout__text { display: block; padding: 4px 8px; border-radius: var(--dp-radius-chip); background: var(--dp-ink); color: var(--dp-surface); font-size: var(--dlg-fs-13); line-height: 1.4; white-space: nowrap; }
+.dlg-callout::after { content: ""; display: block; width: 1px; height: 8px; background: var(--dp-ink); }
+/* Item 9: View session shows on hover of a quote row, at the right of its name and time. */
+.dlg-view-session { margin-left: auto; opacity: 0; transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dp-clip-quote:hover .dlg-view-session { opacity: 1; }
+.dlg-stage .dp-clip-quote__who { display: flex; align-items: center; }
+/* Item 17: thin answer keeps Dialogue's follow-up chips; a tapped chip keeps the selected fill. */
+.dlg-thin { display: flex; flex-direction: column; gap: 8px; }
+.dlg-thin .dp-summary { margin: 0; }
+.dlg-thin .dp-clips-link { margin: 0; }
+.dlg-thin__chips { flex-direction: column; align-items: flex-start; padding-top: 4px; }
+.dlg-chip { font-family: inherit; text-align: left; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-chip:hover { background: var(--dp-warm); }
+.dlg-chip[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
+.dlg-callout[data-place="right"] { transform: translate(8px, -50%); flex-direction: row-reverse; align-items: center; }
+.dlg-callout[data-place="right"]::after { width: 8px; height: 1px; }
+/* Item 5: letter and mark share a 16px column; label and reason text share one left edge. */
+.dlg-reason { display: flex; flex-direction: column; gap: 4px; margin: 0 0 12px; }
+.dlg-reason__row { display: grid; grid-template-columns: 16px 1fr; column-gap: 8px; align-items: start; margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-reason__key { display: flex; align-items: center; justify-content: center; width: 16px; height: var(--text-meta-leading); margin: 0; font-variant-numeric: tabular-nums; }
+.dlg-reason__row .dlg-reason__key.dialogue-lib__mark { margin-top: 0; }
+/* Items 1, 2, 14: every recording fills its well the way the hero does; the play button floats in the recording's own air. */
+.dialogue-case-study .cs-figure .dlg-demo { margin: 0; }
+@media (max-width: 600px) { .dialogue-case-study .cs-figure .dlg-demo { margin: 40px 0 0; } }
+/* Items 12, 13, 15, 16: the chart templates figure sits on the shared well with the videos' panel shadow. */
+.dlg-templates { padding: 48px; box-sizing: border-box; }
+.dlg-templates__panel { position: relative; display: flex; flex-direction: column; gap: 16px; max-width: 448px; margin: 0 auto; padding: var(--dp-chat-pad); border-color: transparent; box-sizing: border-box; overflow: visible; }
+.dlg-templates__chips { flex-direction: row; padding: 0; }
+.dlg-templates__answer { display: flex; flex-direction: column; gap: 12px; animation: dlg-rise 240ms cubic-bezier(0.2, 0, 0, 1) both; }
+.dlg-templates__answer .dp-user-bubble { align-self: flex-end; }
+.dlg-templates__chart { position: relative; }
+.dlg-templates .dp-chart-viz-card { background: var(--dp-surface); }
+.dlg-templates__meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; padding-top: 12px; border-top: 1px solid var(--dp-border); }
+.dlg-templates__meta dt { margin: 0; font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--dp-muted); }
+.dlg-templates__meta dd { margin: 4px 0 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-ink); text-wrap: pretty; }
+/* Item 11: hover a bar row for its share; the count stays put and the share floats above it. */
+.dlg-templates .dp-chart-bars__value { position: relative; }
+.dlg-templates .dp-chart-bars__row { cursor: default; }
+.dlg-templates .dp-chart-bars__value[data-pct]::before { content: attr(data-pct); position: absolute; right: 0; bottom: calc(100% + 4px); padding: 2px 6px; border-radius: var(--dp-radius-chip); background: var(--dp-ink); color: var(--dp-surface); font-size: var(--text-small-size); line-height: var(--text-small-leading); font-weight: 400; opacity: 0; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.dlg-templates .dp-chart-bars__row:hover .dp-chart-bars__value[data-pct]::before { opacity: 1; }
+.dlg-templates .dp-chart-bars__row:hover .dp-chart-bars__value[data-pct] ~ * { opacity: 1; }
+@media (max-width: 600px) { .dlg-templates { padding: 16px; } .dlg-templates__meta { grid-template-columns: 1fr; } .dlg-templates__chips { flex-wrap: wrap; } }
+.dlg-templates__chart:hover .dlg-callout { opacity: 0; }
+.dlg-templates__chart { margin-bottom: 24px; }
