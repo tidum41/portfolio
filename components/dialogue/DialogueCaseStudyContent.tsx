@@ -171,13 +171,13 @@ export function DialogueCaseStudyContent({
               Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
               answer so a research team can move fast on an insight and still check the people behind it.
             </p>
-            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation, illustrative data.</Caption>
+            <Caption>The final answer: a count out of 300, with each side one tap from its people. Recorded from my live code recreation.</Caption>
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
               <p className="dlg-constraint">[DRAFT, Mudit to reword] A fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
               <CaseStudyBody>
-                Priya, a researcher at Hearthside (a made-up retailer), owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
+                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
               <CaseStudyBody>
                 Her real question is how many shoppers stand behind each claim, and prose can&rsquo;t say. So the brief became a principle: every claim shows how many people hold it.
@@ -189,7 +189,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code with invented data.</Caption>
+              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code.</Caption>
             </Section>
 
             <Section id="levels">
@@ -210,7 +210,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Each side opens on a tap: 225 first, then 75 unsure, then it folds back. Illustrative data.</Caption>
+              <Caption>Each side opens on a tap: 225 first, then 75 unsure, then it folds back.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -230,7 +230,7 @@ export function DialogueCaseStudyContent({
                   </div>
                 </div>
               </figure>
-              <Caption>A asks for depth up front. B starts at the insight, then opens its people and their clip on a tap. Illustrative data.</Caption>
+              <Caption>A asks for depth up front. B starts at the insight, then opens its people and their clip on a tap.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -266,7 +266,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber. Tap the quote again to close it. Illustrative data.</Caption>
+              <Caption>The player opens under Mei&rsquo;s quote with her 18:27 to 18:49 span marked on the scrubber. Tap the quote again to close it.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -285,7 +285,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Four templates, each with the Carbon chart it started from. Pick one to see its answer, and hover a bar for its share. Illustrative data.</Caption>
+              <Caption>Four templates, each with the Carbon chart it started from. Pick one to see its answer, and hover a bar for its share.</Caption>
             </Section>
 
             <Section id="thin-data">
@@ -305,7 +305,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>The flag says the count is thin, and a tapped follow-up answers from the whole study. Recorded from my live code recreation, illustrative data.</Caption>
+              <Caption>The flag says the count is thin, and a tapped follow-up answers from the whole study. Recorded from my live code recreation.</Caption>
             </Section>
 
 

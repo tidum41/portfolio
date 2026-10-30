@@ -159,7 +159,7 @@ const SCENARIOS = [
   {
     id: "top-asks",
     name: "Top asks after checkout",
-    note: "Five asks ranked by how many shoppers raised them. Illustrative data.",
+    note: "Five asks ranked by how many shoppers raised them.",
     card: (
       <ChartVizCard title="What shoppers asked for after checkout">
         <ChartRankList rows={[...TOP_ASKS]} />
@@ -178,7 +178,7 @@ const SCENARIOS = [
           ticks={[1, 2, 3, 4, 5]}
           formatTick={(n) => String(n)}
           gridAt={[1, 2, 3, 4, 5]}
-          note="1 = not sure, 5 = sure. Illustrative data."
+          note="1 = not sure, 5 = sure."
         />
       </ChartVizCard>
     ),

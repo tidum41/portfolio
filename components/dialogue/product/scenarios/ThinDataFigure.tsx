@@ -29,8 +29,6 @@ const STUDY_PLAN_MD = [
   "- What did you notice about the packaging when it arrived?",
   "- Did that first delivery change whether you ordered again?",
   "",
-  "_Illustrative data. Hearthside mock._",
-  "",
 ].join("\n");
 
 function downloadMarkdown(filename: string, text: string) {
