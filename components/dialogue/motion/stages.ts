@@ -7,6 +7,10 @@
 export const STAGE_PANEL_W = 423;
 export const STAGE_GUTTER = 56;
 export const STAGE_NOTE_GUTTER = 176;
+/** P16 round 3: phone takes are cropped to the card (no gutter, no notes). A 320px panel shown about 358px wide keeps
+ *  the smallest 12px product text at 12px or more on a 390px screen. */
+export const MOBILE_PANEL_W = 320;
+export const MOBILE_PANEL_H = 520;
 
 export const STAGES = {
   hero: { shape: "square", tone: "solution", note: false },
@@ -21,11 +25,12 @@ export const STAGES = {
 export type MotionDemo = keyof typeof STAGES;
 export const MOTION_DEMOS = Object.keys(STAGES) as MotionDemo[];
 /** Frame geometry in css px. Square: 535 x 535. Wide (annotated): 655 x 491, 4:3. */
-export function stageBox(d: MotionDemo) {
+export function stageBox(d: MotionDemo, mobile = false) {
+  if (mobile) return { w: MOBILE_PANEL_W, h: MOBILE_PANEL_H, top: 0, panelH: MOBILE_PANEL_H, note: false, panelW: MOBILE_PANEL_W };
   const note = STAGES[d].note;
   const w = STAGE_GUTTER + STAGE_PANEL_W + (note ? STAGE_NOTE_GUTTER : STAGE_GUTTER);
   const h = STAGES[d].shape === "square" ? w : Math.round((w * 3) / 4);
-  return { w, h, top: STAGE_GUTTER, panelH: h - 2 * STAGE_GUTTER, note };
+  return { w, h, top: STAGE_GUTTER, panelH: h - 2 * STAGE_GUTTER, note, panelW: STAGE_PANEL_W };
 }
 
 const FILES: Record<string, MotionDemo> = {
@@ -34,9 +39,10 @@ const FILES: Record<string, MotionDemo> = {
 };
 /** CSS aspect-ratio of a recording, from its file name, so the video box always matches the take (no crop, no letterbox). */
 export function recordingAspect(src: string): string | undefined {
-  const name = src.split("/").pop()?.replace(/(-dark)?\.(mp4|jpg)$/, "") ?? "";
-  const d = FILES[name];
+  const raw = src.split("/").pop()?.replace(/(-dark)?\.(mp4|jpg)$/, "") ?? "";
+  const mobile = raw.endsWith("-m");
+  const d = FILES[raw.replace(/-m$/, "")];
   if (!d) return undefined;
-  const b = stageBox(d);
+  const b = stageBox(d, mobile);
   return `${b.w} / ${b.h}`;
 }

@@ -163,7 +163,7 @@ export const MOBILE_FOLLOWUP = {
 
 export const QUOTE_LIST = [
   { participant: "Mei", time: "18:27\u201318:49", quote: "Friday which week?" },
-  { participant: "Owen", time: "07:12\u201307:30", quote: "I'd assume Friday after I order, so I checked the date." },
+  { participant: "Owen", time: "07:12\u201307:30", quote: "I checked the date to be sure." },
 ];
 
 /** Hearthside mock for the 225 "this Friday" side (P14 item 7). */

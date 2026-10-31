@@ -18,7 +18,11 @@ const STILLS = { picker: "variant-picker-full" };
 const CROSSFADE = new Set(); // P16: no take crossfades; add-only takes scroll their chat up and out (clear) instead.
 /** P15 item 9: subtle motion blur on the clip take (a 3-frame weighted blend; still frames are unchanged). */
 const BLUR = { has: () => false }; // P16 round 2 (Mudit): no motion blur on any take; it read as choppy
-const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light"; const SUFFIX = THEME === "dark" ? "-dark" : "";
+const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light";
+// P16 round 3: DLG_MOBILE=1 records the phone takes, cropped to a 320px card with no gutter (files end in -m).
+const MOBILE = process.env.DLG_MOBILE === "1"; const Q = MOBILE ? "&m=1" : "";
+const SUFFIX = (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
+const SHOWN_W = MOBILE ? 358 : 640; // css px the take is shown at (phone figure width at 390, desktop column)
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
 const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 236, g: 234, b: 228, hex: "#eceae4" };
@@ -27,13 +31,13 @@ const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 2
    well. Only the recording page changes; the site token stays #1b1e21. */
 const REC_WELL = THEME === "dark" ? 'html[data-theme="dark"] { --figure-well-dialogue: #1b1e23; }' : "";
 
-const DEMO_PREROLL = { hero: 300, before: 300, thin: 300 }; // add-only takes: the empty chat already closes the loop
+const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 300 }; // add-only takes: the empty chat already closes the loop
 async function still(demo) {
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1900 }, deviceScaleFactor: 2 });
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
-  await page.goto(`${base}/dialogue/motion?demo=${demo}`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/dialogue/motion?demo=${demo}${Q}`, { waitUntil: "networkidle" });
   // A PNG still keeps the true well (#1b1e21); REC_WELL only offsets the H.264 encode.
   await page.addStyleTag({ content: "body > *:not(main), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; } *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }" });
   await page.waitForFunction(() => window.__dlg);
@@ -47,7 +51,7 @@ async function still(demo) {
   await page.waitForTimeout(900);
   await page.evaluate(() => { document.querySelector(".dlg-stage__body").scrollTop = 0; });
   await page.waitForTimeout(100);
-  const png = `/tmp/dlg-still-${demo}.png`; const jpg = `${out}/${STILLS[demo]}${SUFFIX}.jpg`;
+  const png = `/tmp/dlg-still-${demo}${SUFFIX}.png`; const jpg = `${out}/${STILLS[demo]}${SUFFIX}.jpg`;
   await (await page.$("#frame")).screenshot({ path: png });
   await b.close();
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", png, "-q:v", "2", jpg]);
@@ -61,7 +65,7 @@ async function record(demo) {
   // DLG_THEME=dark records the dark well (files end in -dark) so videos match the figure background in either theme.
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
-  await page.goto(`${base}/dialogue/motion?demo=${demo}`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/dialogue/motion?demo=${demo}${Q}`, { waitUntil: "networkidle" });
   await page.evaluate(() => {
     const c = document.createElement("div"); c.id = "dlg-cursor"; c.style.opacity = "0";
     c.innerHTML = '<svg viewBox="0 0 18 18"><path d="M2 1.5v13l3.6-3.4 2.4 5.4 2.2-1-2.4-5.3h5z" fill="#1c1917" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>';
@@ -71,7 +75,7 @@ async function record(demo) {
   });
   // Hide the site's fixed chrome (nav, TOC button) so nothing but the stage can reach the crop.
   const fw = await page.evaluate(() => document.getElementById("frame").offsetWidth);
-  const CUR = Math.round((28 * 2 * fw) / 640); // P16: 28px on the page, where the 2x take shows 640px wide
+  const CUR = Math.round((28 * 2 * fw) / SHOWN_W); // P16: 28px on the page, where the 2x take shows SHOWN_W px wide
   // P16: no hover in any take (TASTE: hover states on figures are rejected). State changes come from window.__dlg, so the stage takes no pointer events.
   await page.addStyleTag({ content: REC_WELL + "#frame { zoom: 2; } " + `#dlg-cursor { width: ${CUR}px; height: ${CUR}px; }` + " .dlg-motion-frame, .dlg-motion-frame * { pointer-events: none !important; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
   // Decode every image up front: a lazy image entering view mid-scroll stalls the screencast for ~270 ms.
@@ -83,7 +87,9 @@ async function record(demo) {
   let pos = { x: fb.x + fb.width + 40, y: fb.y + fb.height * 0.7 };
   await page.mouse.move(pos.x, pos.y);
   const hold = (ms) => page.waitForTimeout(ms);
-  const api = (js) => page.evaluate(`window.__dlg.${js}`);
+  // Scroll speed multiplier (1: phone takes keep the desktop timings; the checker normalises their frame diff).
+  const SLOW = 1;
+  const api = (js) => page.evaluate(`window.__dlg.${js.replace(/^(follow|up|clear|chase)\((\d+)\)$/, (_, f, n) => f === "chase" ? `chase(${Math.round(n * SLOW)}, 0.07)` : `${f}(${Math.round(n * SLOW)})`)}`);
   const cursor = (o) => page.evaluate((v) => { document.getElementById("dlg-cursor").style.opacity = v; }, o);
   // Fade in near the target, then a 600 ms ease-in-out glide; never a teleport.
   async function cursorTo(sel, { ms = 600, fx = 0.5, fy = 0.5 } = {}) {
@@ -101,6 +107,7 @@ async function record(demo) {
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
   if (demo === "side") { const bb = await (await page.$('[data-target="side-friday"]')).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.3 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
+  if (demo === "every") { await api('side("unsure")'); await api("clip(true)"); await api("pause()"); await hold(900); await page.evaluate(() => { const b = document.querySelector(".dlg-stage__body"); b.scrollTop = b.scrollHeight; }); await hold(200); }
   const t0 = Date.now() / 1000;
   // PNG screencast: JPEG chroma loss shifted the flat well ~3 units greener/darker (P14 colour audit).
   await cdp.send("Page.startScreencast", { format: "png", everyNthFrame: 1, maxWidth: 1400, maxHeight: 1900 });
@@ -108,7 +115,13 @@ async function record(demo) {
   const S = {
     // P16: the question is typed and sent, the count arrives and Ana's row lands under it; the chat then scrolls up and
     // out (clear), so the loop returns to the empty chat with the UI on the card the whole time.
-    async hero() { await api("type(20)"); await hold(200); await api("send()"); await api("analyze(true)"); await hold(700); await api("answer()"); await hold(1000); await api("ana()"); await hold(450); await api("follow(500)"); await hold(1800); await api("clear(700)"); await hold(650); },
+    // P16 round 3: typed at about 40 characters a second, a 400 ms analyzing beat, then a tap on the 225 brings Ana's
+    // row (the rule counts teaches). The end holds about 1.2 s, then the chat scrolls up and out.
+    async hero() {
+      await api("type(40)"); await hold(150); await api("send()"); await api("analyze(true)"); await hold(400); await api("answer()"); await hold(800);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api("ana()"); await hold(450); await api("follow(500)"); await hold(550);
+      await cursorOut(); await hold(1200); await api("clear(700)"); await hold(Math.round(650 * SLOW));
+    },
     // Counts (Mudit, P15 round 2): 225 open with the cursor resting on it; tap 75, linger; tap 225, linger. Last frame is the first.
     async side() {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("unsure")'); await hold(1500);
@@ -116,30 +129,37 @@ async function record(demo) {
     },
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await hold(420); await api('reveal("[data-target=quote-ana]", 16, 850)'); await hold(1450);
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(false)"); await hold(450); await api("up(500)"); await hold(300); await cursorOut(); await hold(700);
+      // P16 round 3: the player opens, then the chat eases to its end so nothing sits across the card's bottom edge.
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await api("chase(1400)"); await hold(1900);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85 }); await press(); await api("clip(false)"); await hold(450); await api("up(500)"); await hold(300); await cursorOut(); await hold(700);
     },
-    async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(200); await api('note("Unstated count", ".dlg-mark")'); await hold(1600); await api("unnote()"); await hold(1300); await api("clear(700)"); await hold(650); },
+    async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(800); await api('note("Unstated count", ".dlg-mark")'); await hold(MOBILE ? 1100 : 1400); await api("clear(700)"); await hold(Math.round(650 * SLOW)); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
+    // P16 round 3: the first try starts overloaded (people open, Mei's player up, the count pushed out of view), folds
+    // back on the chevron, and one tap on the 75 overloads it again, every level at once.
     async every() {
-      // P16 round 2 (Mudit): each tap shows only the next thing. The 75 opens its people; Mei opens her clip, and
-      // making room for the player scrolls the count out of view (the first try's problem). The chevron folds it all back.
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await hold(650);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.4, ms: 500 }); await press(); await api("clip(true)"); await hold(420); await api('reveal("[data-target=quote-mei]", 16, 850)'); await hold(1350);
-      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(650);
+      await hold(900);
+      await cursorTo('[data-target="side-collapse"]', { ms: 500 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(1100);
+      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api('side("unsure")'); await api("clip(true)"); await api("pause()"); await api("chase(1300)"); await hold(1300);
+      await cursorOut(); await hold(700);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
+    // P16 round 3: Chart, People, Source, then Mei. Each tap shows one thing; Source marks rows playable, Mei plays.
     async toggles() {
-      await cursorTo('[data-target="level-1"]'); await press(); await api("level(1)"); await hold(650);
-      await cursorTo('[data-target="level-3"]'); await press(); await api("level(3)"); await hold(250); await api("follow(900)"); await hold(1200);
-      await api("up(950)"); await hold(550); await cursorTo('[data-target="level-0"]'); await press(); await api("level(0)"); await hold(200);
-      await cursorOut(); await hold(700);
+      await cursorTo('[data-target="level-1"]', { ms: 500 }); await press(); await api("level(1)"); await hold(350);
+      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(350);
+      await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await api("level(3)"); await hold(350);
+      // Mei plays; the chat eases so the chips sit at the top, so Insight is one tap away with no scroll back.
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.4, ms: 500 }); await press(); await api("clip(true)");
+      await api('top(".dlg-depth", 8, 800)'); await hold(1000);
+      await cursorTo('[data-target="level-0"]', { ms: 500 }); await press(); await api("level(0)"); await hold(150);
+      await cursorOut(); await hold(550);
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.
     async thin() {
-      await api("thin()"); await hold(500); await api('note("Flag instead of a chart", "[data-target=thin-flag]")'); await hold(1300); await api("unnote()"); await hold(200);
+      await api("thin()"); await hold(900); await api('note("Flag instead of a chart", "[data-target=thin-flag]")'); await hold(1000);
       await cursorTo('[data-target="chip-0"]', { fx: 0.3 }); await press(); await api("ask()"); await hold(200); await api("follow(500)"); await hold(450);
-      await cursorOut(); await api("reply()"); await hold(100); await api("follow(600)"); await hold(2000); await api("clear(700)"); await hold(650);
+      await cursorOut(); await api("reply()"); await hold(100); await api("follow(600)"); await hold(2000); await api("clear(700)"); await hold(Math.round(650 * SLOW));
     },
   };
   await S[demo]();

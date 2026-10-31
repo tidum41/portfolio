@@ -159,7 +159,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the answer arrives as a count, and Ana's quote lands under it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 brings Ana's quote under it" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -189,7 +189,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code.</Caption>
+              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code.<span className="dlg-mobile-only"> The underlined &ldquo;Many found&rdquo; is an unstated count.</span></Caption>
             </Section>
 
             <Section id="levels">
@@ -206,11 +206,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try: the 75 opens its people, then Mei opens her clip, and the player pushes the count out of view" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try opens every level at once, so Mei's player keeps the count out of view until the 75 is folded back" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping the 75 opens its people. Tapping Mei opens her clip, and the player pushes the count out of view.</Caption>
+              <Caption>My first try opened every level at once. Mei&rsquo;s player keeps the count out of view until the 75 is folded back.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -225,12 +225,12 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Chart adds the count, Source opens the people and a clip, and Insight steps back out." />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds one level under it, and tapping Mei plays her clip." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
               </figure>
-              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. B starts at the insight, and Chart and Source open under it on a tap.</Caption>
+              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. In B each toggle adds one level under the insight, and tapping Mei plays her clip.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -249,11 +249,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="counts-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Each side of the count opens 2 of its shoppers, and the chevron folds them back" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 swaps the 225 shoppers for the 75 unsure, and tapping 225 swaps them back" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Each side opens 2 of its shoppers, and the chevron folds them back.</Caption>
+              <Caption>Tapping 75 swaps the 225&rsquo;s shoppers for the 75 who were unsure. Tapping 225 swaps them back.</Caption>
               <CaseStudyBody>
                 Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and the rest open inside the answer.
               </CaseStudyBody>
@@ -310,7 +310,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Two shoppers are too few for a chart, so the answer says so and suggests follow-ups the same interviews can count. Recorded from my live code recreation.</Caption>
+              <Caption>Two shoppers are too few for a chart, so the answer says so and suggests follow-ups the same interviews can count.<span className="dlg-mobile-only"> The flag stands in for a chart.</span> Recorded from my live code recreation.</Caption>
             </Section>
 
 

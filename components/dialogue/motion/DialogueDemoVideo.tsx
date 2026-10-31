@@ -14,6 +14,20 @@ import { recordingAspect } from "@/components/dialogue/motion/stages";
  */
 const themed = (path: string, dark: boolean) => (dark ? path.replace(/\.(mp4|jpg)$/, "-dark.$1") : path);
 const isDarkNow = () => document.documentElement.getAttribute("data-theme") !== "light";
+/** P16 round 3: phones get takes cropped to the card (name-m.mp4), so figure text stays at 12px or more. */
+const PHONE = "(max-width: 600px)";
+const sized = (path: string, phone: boolean) => (phone ? path.replace(/\.(mp4|jpg)$/, "-m.$1") : path);
+function usePhone() {
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(PHONE);
+    const on = () => setPhone(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return phone;
+}
 export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: string; poster: string; label: string; ratio?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -22,6 +36,8 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   const [dark, setDark] = useState(false);
   // P15: render the video only once the theme is known, so the first poster painted is the right theme's.
   const [themeKnown, setThemeKnown] = useState(false);
+  const phone = usePhone();
+  const vsrc = sized(src, phone), vposter = sized(poster, phone);
   useEffect(() => {
     setDark(isDarkNow());
     setThemeKnown(true);
@@ -32,7 +48,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   useEffect(() => {
     const v = ref.current;
     if (v && !reduce && !userPaused.current) v.play().catch(() => {});
-  }, [dark, reduce, themeKnown]);
+  }, [dark, reduce, themeKnown, phone]);
   useEffect(() => {
     const r = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setReduce(r);
@@ -53,7 +69,7 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   };
   return (
     <div className="dlg-demo">
-      {themeKnown ? <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} src={reduce ? undefined : themed(src, dark)} poster={themed(poster, dark)} muted loop playsInline preload="metadata" aria-label={label} /> : <div className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} aria-hidden />}
+      {themeKnown ? <video ref={ref} className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(vsrc) ?? "1 / 1" }} src={reduce ? undefined : themed(vsrc, dark)} poster={themed(vposter, dark)} muted loop playsInline preload="metadata" aria-label={label} /> : <div className="dlg-demo__video" style={{ aspectRatio: ratio ?? recordingAspect(src) ?? "1 / 1" }} aria-hidden />}
       {reduce ? null : <PlayPauseButton isPlaying={isPlaying} onToggle={toggle} />}
     </div>
   );
@@ -68,12 +84,14 @@ export function DialogueDemoStill({ src, label }: { src: string; label: string }
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
   }, []);
-  const ratio = recordingAspect(src) ?? "1 / 1";
+  const phone = usePhone();
+  const ssrc = sized(src, phone);
+  const ratio = recordingAspect(ssrc) ?? "1 / 1";
   return (
     <div className="dlg-demo">
       {dark === null ? <div className="dlg-demo__video" style={{ aspectRatio: ratio }} aria-hidden /> : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="dlg-demo__video" style={{ aspectRatio: ratio }} src={themed(src, dark)} alt={label} decoding="async" />
+        <img className="dlg-demo__video" style={{ aspectRatio: ratio }} src={themed(ssrc, dark)} alt={label} decoding="async" />
       )}
     </div>
   );

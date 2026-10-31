@@ -3981,9 +3981,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-chart-viz-card, .dlg-templates .dp-chart-viz-card { background: var(--dp-surface); }
 /* Item 3: a static annotation in the recording's right gutter. Small muted text and a thin leader from the panel edge,
    level with what it names. It only fades; it never moves and never sits over the panel. */
-.dlg-note { position: absolute; left: 487px; top: var(--y); width: 144px; display: flex; align-items: center; gap: 8px; transform: translateY(-50%); opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.dlg-note { position: absolute; left: 467px; top: var(--y); width: 172px; display: flex; align-items: center; gap: 8px; transform: translateY(-50%); opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
 .dlg-note[data-on] { opacity: 1; }
-.dlg-note__line { flex: 0 0 16px; height: 1px; background: var(--color-text-muted); opacity: 0.6; }
+.dlg-note__line { flex: 0 0 28px; height: 1px; background: var(--color-text-muted); opacity: 0.6; }
 .dlg-note__text { font-family: var(--font-sans); font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); text-wrap: pretty; }
 /* Item 9: View session shows on hover of a quote row, at the right of its name and time. */
 /* P16: the session link moved into the player bar (DialogueInterviewPlayer, open-in-new-tab icon). */
@@ -4036,6 +4036,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* P16: the case-study clips show an illustrated interview still in place of the grey speaker tile. */
 .dlg-stage .dp-qplayer__placeholder { background: url("/dialogue/clip-still.svg") center / cover no-repeat; }
+.dlg-stage .dlg-live__clip[data-who="ana"] .dp-qplayer__placeholder { background-image: url("/dialogue/clip-still-ana.svg"); }
+.dlg-play-clip { margin-left: auto; }
 .dlg-stage .dp-qplayer__placeholder-icon { display: none; }
 
 /* P16 chart templates: a direct picker. Question types on the left, the chosen template's chart on the right. */
@@ -4056,3 +4058,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner { animation-duration: 420ms; animation-delay: 60ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
 .dlg-stage .dp-clip-quote .dlg-grow--out { animation-duration: 700ms; }
 .dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* P16 round 3: the two well notes are words in the caption on phones, where the takes have no gutter. */
+.dlg-mobile-only { display: none; }
+@media (max-width: 600px) { .dlg-mobile-only { display: inline; } }
+/* P16 round 3: on the 320px phone card the two bar labels wrap instead of overlapping. */
+[data-mobile] .dp-chart-stack__label { white-space: normal; }

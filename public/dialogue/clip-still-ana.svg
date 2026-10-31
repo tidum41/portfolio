@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <!-- Illustrated interview still for Ana's clip (Hearthside mock). Flat shapes, no likeness. -->
+  <rect width="320" height="180" fill="#cfd5cf"/>
+  <rect x="0" y="138" width="320" height="42" fill="#b9c1b8"/>
+  <rect x="22" y="30" width="70" height="106" rx="2" fill="#a7b0a6"/>
+  <rect x="28" y="40" width="58" height="3" fill="#8f988e"/><rect x="28" y="72" width="58" height="3" fill="#8f988e"/><rect x="28" y="104" width="58" height="3" fill="#8f988e"/>
+  <rect x="31" y="50" width="7" height="22" fill="#c48f6a"/><rect x="40" y="54" width="6" height="18" fill="#6f8aa3"/><rect x="48" y="48" width="8" height="24" fill="#d9c48f"/>
+  <rect x="33" y="84" width="9" height="20" fill="#8e5a6e"/><rect x="44" y="86" width="6" height="18" fill="#e3ddd2"/><rect x="62" y="82" width="10" height="22" fill="#6f8aa3"/>
+  <circle cx="262" cy="52" r="18" fill="#e6e1d5"/><path d="M262 34v18l10 6" stroke="#8f988e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M106 180c2-32 22-52 54-52s52 20 54 52z" fill="#5f7d68"/>
+  <path d="M147 114h26v16c0 8-26 8-26 0z" fill="#b98466"/>
+  <path d="M128 112c-6-34 8-62 32-62s38 28 32 62c-4 14-12 20-12 20h-40s-8-6-12-20z" fill="#6b4434"/>
+  <ellipse cx="160" cy="90" rx="23" ry="27" fill="#c99272"/>
+  <path d="M137 86c0-22 10-32 23-32s24 10 24 30c-6-10-14-16-24-16s-18 8-23 18z" fill="#6b4434"/>
+</svg>

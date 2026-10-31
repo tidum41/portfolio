@@ -24,23 +24,32 @@ const THIN_CHIPS = [
 ] as const;
 const THIN_REPEAT = { friday: 88, other: 37, of: 125 } as const;
 
-/* P15 item 3: a static case-study annotation in the well's right gutter, never over the panel. A thin leader runs
-   from the panel's edge, level with what it names, to small muted text. It fades in and out; it never moves. */
+/* P16 round 3: a static case-study annotation in the well's right gutter. Its leader starts in the panel's empty
+   right padding, exactly level with what it names (no clamp), and runs to small muted text. It fades in once when its
+   mark lands and then stays put to the end of the take; it rides along if the chat scrolls. Phone takes have none. */
 type Note = { text: string; sel: string } | null;
-const NOTE_MIN_Y = 128; // below the play button's corner at the narrowest width
 function Annotation({ note }: { note: Note }) {
   const [shown, setShown] = useState<{ text: string; y: number } | null>(null);
   const [on, setOn] = useState(false);
   useEffect(() => {
-    if (!note) { const id = requestAnimationFrame(() => setOn(false)); const t = setTimeout(() => setShown(null), 320); return () => { cancelAnimationFrame(id); clearTimeout(t); }; }
+    if (!note) { const id = requestAnimationFrame(() => { setOn(false); setShown(null); }); return () => cancelAnimationFrame(id); }
     const frame = document.getElementById("frame");
-    const el = document.querySelector<HTMLElement>(note.sel);
-    if (!frame || !el) return;
-    const zoom = Number(getComputedStyle(frame).zoom) || 1;
-    const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
-    const y = Math.max(NOTE_MIN_Y, (r.top + r.height / 2 - f.top) / zoom);
-    const id = requestAnimationFrame(() => { setShown({ text: note.text, y }); requestAnimationFrame(() => setOn(true)); });
-    return () => cancelAnimationFrame(id);
+    if (!frame || frame.hasAttribute("data-mobile")) return;
+    let id = 0;
+    const tick = () => {
+      const el = document.querySelector<HTMLElement>(note.sel);
+      if (el) {
+        const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
+        // The recorder zooms the frame 2x; client rects are zoomed, the note's offset is not.
+        const k = f.height / (frame.offsetHeight || f.height);
+        const y = (r.top + r.height / 2 - f.top) / k;
+        setShown((cur) => (cur && Math.abs(cur.y - y) < 0.25 && cur.text === note.text ? cur : { text: note.text, y }));
+      }
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    const t = requestAnimationFrame(() => requestAnimationFrame(() => setOn(true)));
+    return () => { cancelAnimationFrame(id); cancelAnimationFrame(t); };
   }, [note]);
   if (!shown) return null;
   return (
@@ -123,9 +132,11 @@ function pinDuringGrow(ms = 400) {
 
 const sec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-function clipRange(time: string): CSSProperties {
+/* P16 round 3: each participant's session has its own length (mock), and its own illustrated still. */
+const SESSION_TOTAL: Record<string, string> = { Ana: "31:45", Dev: "27:30", Mei: "42:10", Owen: "35:05" };
+function clipRange(time: string, totalStr = "42:10"): CSSProperties {
   const [a, z] = time.split(/[\u2013-]/).map(sec);
-  const total = sec("42:10");
+  const total = sec(totalStr);
   return { ["--clip-a" as string]: `${(a / total) * 100}%`, ["--clip-w" as string]: `${((z - a) / total) * 100}%` } as CSSProperties;
 }
 
@@ -157,8 +168,9 @@ function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }:
 }
 
 /** P14 item 2: quote rows are a selection, not a nested accordion. Tap opens (one at a time); tap again closes. No inner chevron. */
-function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number }) {
+function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number; playable?: boolean }) {
   const start = q.time.split(/[\u2013-]/)[0];
+  const total = SESSION_TOTAL[q.participant] ?? "42:10";
   return (
     <div
       className={["dp-clip-quote", open ? "dp-clip-quote--selected" : ""].filter(Boolean).join(" ")}
@@ -174,18 +186,20 @@ function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time:
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
+        {/* P16 round 3: the Source level marks each row as playable; tapping a row is the next step. */}
+        {playable && !open ? <span className="dp-clips-link dlg-play-clip">Play clip</span> : null}
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open} closeMs={700}>
-        <div className="dlg-live__clip" style={clipRange(q.time)}>
-          <DialogueInterviewPlayer current={playSec !== undefined ? fmt(sec(start) + playSec) : start} />
+        <div className="dlg-live__clip" data-who={q.participant.toLowerCase()} style={clipRange(q.time, total)}>
+          <DialogueInterviewPlayer current={playSec !== undefined ? fmt(sec(start) + playSec) : start} total={total} />
         </div>
       </Grow>
     </div>
   );
 }
 
-function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
+function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, playable = false }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void; playable?: boolean }) {
   const meta = SAMPLE_META[which];
   const rows = meta.rows;
   const more = meta.count - rows.length;
@@ -202,7 +216,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
         </p>
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} playable={playable} />
           ))}
         </div>
         <div className="dp-sources">
@@ -274,7 +288,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setLevel((cur) => {
           if (i === cur) return cur;
           setSide(i >= 2 ? "unsure" : false);
-          api.clip(i >= 3);
+          // P16 round 3: Source marks the rows playable; Mei's clip opens only when Mei is tapped.
+          if (i < 3) api.clip(false);
           pinDuringGrow(400);
           return i;
         });
@@ -285,6 +300,27 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       ask: () => { setThinAsk(true); setThinAnalyzing(true); },
       reply: () => { setThinAnalyzing(false); setThinAnswer(true); },
       follow: (ms = 600) => follow(ms),
+      // P16 round 3: while a player grows, ease the chat toward its end every frame, so no still frame holds a
+      // half-revealed row across the card's bottom edge.
+      // P16 round 3: ease an element's top to `pad` px below the body's top edge (the toggles keep their chips in view).
+      top: (sel: string, pad = 8, ms = 700) => {
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
+        if (!body || !el) return;
+        const from = body.scrollTop, to = Math.max(0, from + el.getBoundingClientRect().top - body.getBoundingClientRect().top - pad), t0 = performance.now();
+        const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+        const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step);
+      },
+      chase: (ms = 1300, rate = 0.07) => {
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body"); if (!body) return;
+        const t0 = performance.now();
+        const step = (now: number) => {
+          const max = body.scrollHeight - body.clientHeight, left = max - body.scrollTop;
+          body.scrollTop += Math.sign(left) * Math.min(Math.abs(left), Math.max(0.6, Math.abs(left) * rate));
+          if (now - t0 < ms) requestAnimationFrame(step); else body.scrollTop = body.scrollHeight - body.clientHeight;
+        };
+        requestAnimationFrame(step);
+      },
       // P16 hero: Ana's row lands under the count, the one quote the page follows from here on.
       ana: () => setAna(true),
       // P16 thin: the question and its thin answer arrive together.
@@ -296,6 +332,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
         const to = Math.max(0, Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + r.bottom - (b.bottom - pad)));
         const from = body.scrollTop, t0 = performance.now();
+        if (ms <= 0) { body.scrollTop = to; return; }
         const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
         requestAnimationFrame(step);
       },
@@ -353,7 +390,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
             <LoaderArcIcon className="dlg-spin" /> Analyzing interviews
           </p>
         ) : null}
-        {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} /></div> : null}
+        {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} sideOpen={ana ? "friday" : false} /></div> : null}
         <Grow open={ana} className="dlg-stage__item">
           <div className="dp-clip-quotes dlg-live__sample"><QuoteRow q={ANA} open={false} /></div>
         </Grow>
@@ -453,7 +490,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} which="unsure" playing={level >= 3} playSec={playSec} />
+        <Sample open={level >= 2} which="unsure" playing={clip} playSec={playSec} playable={level >= 3} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
     );
   }
