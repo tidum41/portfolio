@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 10, Nov 1 2026 (Muse re-check on review/round-p15)
+- Base: review/round-p15 at 9a6d3c7. Commit stays on review/round-p15; no PR, not main.
+- Unsure swatch now matches its segment in every take (75 no longer dims when the 225 opens); Ranked caption says bars scale to the top ask; By group names its two groups as a subset of the 300; toggles card hugs content on desktop; clip and toggles pointers rest on blank row space; closed rows keep the bare length (Source turns them into play chips).
+- Lines in design/notes/copy-diff-r10.md; review in design/notes/review-r10.md. Screenshots: /opt/cursor/artifacts/screenshots/r10-*. Preview: none (local validation only)
+
 ## Round 9, Nov 1 2026 (independent review fixes on review/round-p15)
 - Base: review/round-p15 at the Round 8 tip. Commit stays on review/round-p15; no PR, not main.
 - Source state is single select; one 225 cherry and 75 stone encoding with matching swatches; data viz cards each name their cut and denominator, Ranked is sorted bars, the scale names its dot; clip player runs 04:10 to 04:24; clip head no longer repeats 225; picker band closed; single quotes around 'Arrives by Friday'.

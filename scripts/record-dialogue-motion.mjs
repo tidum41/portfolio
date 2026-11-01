@@ -139,9 +139,9 @@ async function record(demo) {
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
       // P16 round 3: the player opens, then the chat eases to its end so nothing sits across the card's bottom edge.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(2000);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(2000);
       // The fold clamps the chat's scroll by itself, in step with the height, so nothing else moves.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85 }); await press(); await api("clip(false)"); await hold(900); await cursorOut(); await hold(1250);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); await press(); await api("clip(false)"); await hold(900); await cursorOut(); await hold(1250);
     },
     async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(800); await api('note("Unstated count", ".dlg-mark")'); await hold(MOBILE ? 1100 : 1400); await api("clear(700)"); await hold(Math.round(650 * SLOW)); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
@@ -151,7 +151,7 @@ async function record(demo) {
     // pushes the count out of view, which is the cost the first try proves. The chevron folds it back to the start.
     async every() {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 550 }); await press(); await api('side("unsure")'); await hold(800);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.72, ms: 550 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(1700);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(1700);
       await cursorTo('[data-target="side-collapse"]', { ms: 550 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(1250);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
@@ -165,8 +165,8 @@ async function record(demo) {
       await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72, ms: 400 }); await press(); await api("clip(true)");
       await api('stick(560, ".dlg-depth", 8)'); await hold(800);
       // Ana's row folds the player away (the chat settles by itself), then Insight folds everything back.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85, ms: 400 }); await press(); await api("clip(false)"); await hold(560);
-      await cursorTo('[data-target="level-0"]', { fx: 0.5, fy: 0.5, ms: 450 }); await press(); await api("level(0)"); await hold(1700);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17, ms: 400 }); await press(); await api("clip(false)"); await hold(560);
+      await cursorTo('[data-target="level-0"]', { fx: 0.5, fy: 0.5, ms: 450 }); await press(); await api("level(0)"); await hold(2300);
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.
     async thin() {

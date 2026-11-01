@@ -217,7 +217,7 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
-    cut: "each group, out of its own size",
+    cut: "14 new and 125 repeat shoppers, two groups within the 300, each out of its own size",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => (
@@ -279,7 +279,7 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart, sorted",
     note: "Asks in rank order",
     target: ".dp-chart-rank__row:first-child",
-    cut: "all 300 shoppers, top five asks",
+    cut: "all 300 shoppers, top five asks. Bars scale to the top ask, 41; each count is out of 300",
     pro: "Bars run longest first, so the top ask reads first.",
     con: "Only the top five asks show.",
     card: () => (

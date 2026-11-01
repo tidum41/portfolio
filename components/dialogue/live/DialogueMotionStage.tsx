@@ -95,12 +95,15 @@ function Grow({ open, children, className, closeMs = 450 }: { open: boolean; chi
     if (!mounted) return;
     setLeaving(true);
     // The fold ends at 0fr and holds (fill: both); unmount after it, never during its tail, so no pixel pops at the end.
-    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, (closeMs + 80) * K());
+    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, Math.max(closeMs + 80, 1500) * K());
     return () => clearTimeout(t);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!mounted) return null;
   return (
-    <div className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}>
+    <div
+      className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}
+      onAnimationEnd={(e) => { if (leaving && e.target === e.currentTarget) { setMounted(false); setLeaving(false); } }}
+    >
       <div className="dlg-grow__inner">{children}</div>
     </div>
   );
@@ -159,7 +162,7 @@ function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }:
   );
   return (
     <ChartVizCard title={FINDING}>
-      <Grow open={chart}>{bar}</Grow>
+      <Grow open={chart} className="dlg-grow--gap">{bar}</Grow>
       {segment ? (
         <p className="dlg-segment">
           Repeat shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
