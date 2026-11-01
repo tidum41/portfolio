@@ -1,7 +1,7 @@
 /**
  * Recording stages for the /dialogue demos (app/dialogue/motion, scripts/record-dialogue-motion.mjs).
  * P16, one visual system: every panel renders at zoom 1.0 (the real 423px chat panel) with a 56px well gutter on
- * every side. 56px also clears the play button (44px at an 8px inset). Stages are 1:1; the two annotated takes are
+ * every side. 56px also clears the play button (44px at an 8px inset). Stages are 1:1; the annotated still is
  * 4:3 with a 176px right gutter that holds the note. First try and kept share one stage so they read as before and after.
  */
 export const STAGE_PANEL_W = 423;
@@ -20,7 +20,7 @@ export const STAGES = {
   every: { shape: "square", tone: "problem", note: false },
   picker: { shape: "square", tone: "problem", note: false },
   toggles: { shape: "square", tone: "solution", note: false },
-  thin: { shape: "wide", tone: "system", note: true },
+  thin: { shape: "square", tone: "system", note: false },
 } as const;
 export type MotionDemo = keyof typeof STAGES;
 export const MOTION_DEMOS = Object.keys(STAGES) as MotionDemo[];

@@ -4054,13 +4054,47 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* P16 round 2: no motion blur, so the dark player must never land in a few frames. It grows over 520 ms and fades in
    over 420 ms on a symmetric ease; closing fades over 300 ms, then folds. */
-.dlg-stage .dp-clip-quote .dlg-grow--in { animation-duration: 520ms; }
-.dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner { animation-duration: 420ms; animation-delay: 60ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-stage .dp-clip-quote .dlg-grow--in { animation-duration: 700ms; }
+/* P16 round 4 (Mudit): the player opens and folds as a solid block, with no opacity fade. A fading still over moving rows
+   read as motion blur. */
+.dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner,
+.dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation: none; opacity: 1; }
 .dlg-stage .dp-clip-quote .dlg-grow--out { animation-duration: 700ms; }
-.dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation-duration: 300ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
 
 /* P16 round 3: the two well notes are words in the caption on phones, where the takes have no gutter. */
 .dlg-mobile-only { display: none; }
 @media (max-width: 600px) { .dlg-mobile-only { display: inline; } }
 /* P16 round 3: on the 320px phone card the two bar labels wrap instead of overlapping. */
 [data-mobile] .dp-chart-stack__label { white-space: normal; }
+
+/* P16 round 4: more room under the last row, so an open player never sits on the panel's bottom edge. */
+.dlg-stage .dlg-stage__body { padding-bottom: calc(var(--dp-chat-pad) * 1.5); }
+/* P16 round 4 (key decision): player times are fixed-width tabular figures, so the scrub never shifts as seconds tick. */
+.dp-qplayer__time { font-feature-settings: "tnum" 1; flex: 0 0 auto; min-width: 5ch; }
+.dp-qplayer__time[data-annotate-part="player-time-current"] { text-align: right; }
+
+/* P16 round 4 (Mudit): the early-signal flag gets its warm surface back, so it reads as a flag before it is read. */
+.dlg-thin .dp-low-signal { padding: var(--dp-flag-pad, 10px 12px); border-radius: var(--dp-radius-chip); background: var(--dp-warn-bg); color: var(--dp-warn-fg); }
+.dlg-thin .dp-low-signal__icon { color: var(--dp-warn-fg); }
+/* The follow-ups sit under a labelled group: the label leads with a small mark, and each chip states its answer count. */
+.dlg-thin__label { display: flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--dp-ink); font-weight: 500; }
+.dlg-thin__label-icon { width: 14px; height: 14px; color: var(--dp-brand); flex: 0 0 auto; }
+.dlg-live .dlg-suggest.dlg-thin__chip { display: inline-flex; align-items: baseline; gap: 8px; text-align: left; }
+.dlg-thin__chip-n { color: var(--dp-muted); font-size: var(--text-meta-size); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Source: each playable row ends in a play chip with the clip's length. */
+.dlg-play-clip { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: var(--dp-radius-chip); background: var(--dp-brand-soft); color: var(--dp-brand); font-size: var(--text-meta-size); font-weight: 500; font-variant-numeric: tabular-nums; }
+.dlg-play-clip__icon { width: 12px; height: 12px; }
+
+/* P16 round 4 (Mudit: compare side by side, make the point obvious): each template is a pair, the researcher's question
+   with the question type the AI read from it, then the chart that question gets. */
+.dlg-templates--pairs { gap: 20px; }
+.dlg-pair { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-pair__ask { display: flex; flex-direction: column; gap: 4px; }
+.dlg-pair__q { align-self: flex-start; margin: 0; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-ink); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-pair__type { margin: 0; font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-primary); }
+.dlg-pair__type > span { color: var(--color-text-secondary); margin-right: 8px; }
+.dlg-templates--grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+.dlg-templates--stack { max-width: 520px; margin-inline: auto; width: 100%; }
+@media (max-width: 600px) {
+  .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
+}

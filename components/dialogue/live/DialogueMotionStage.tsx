@@ -19,8 +19,8 @@ import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 const THIN_QUESTION = "Did anyone miss a delivery over \u201cArrives by Friday\u201d?";
 const THIN_FINDING = "Two of 300 shoppers said they missed a delivery after reading it as this Friday.";
 const THIN_CHIPS = [
-  "How many repeat shoppers read it as this Friday?",
-  "What did shoppers say about the delivery date?",
+  "How did repeat shoppers read it?",
+  "What did shoppers say about the date?",
 ] as const;
 const THIN_REPEAT = { friday: 88, other: 37, of: 125 } as const;
 
@@ -168,6 +168,16 @@ function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }:
 }
 
 /** P14 item 2: quote rows are a selection, not a nested accordion. Tap opens (one at a time); tap again closes. No inner chevron. */
+// Mock: repeat shoppers (125) and everyone asked about the delivery date (300), from the same 300 interviews.
+const THIN_CHIP_N = [125, 300] as const;
+function SparkGlyph() {
+  return <svg className="dlg-thin__label-icon" viewBox="0 0 16 16" aria-hidden><path d="M8 2l1.4 4.6L14 8l-4.6 1.4L8 14l-1.4-4.6L2 8l4.6-1.4z" fill="currentColor" /></svg>;
+}
+function PlayGlyph() {
+  return <svg className="dlg-play-clip__icon" viewBox="0 0 16 16" aria-hidden><path d="M5 3.5v9l7-4.5z" fill="currentColor" /></svg>;
+}
+const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
+
 function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number; playable?: boolean }) {
   const start = q.time.split(/[\u2013-]/)[0];
   const total = SESSION_TOTAL[q.participant] ?? "42:10";
@@ -187,7 +197,8 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
         {/* P16 round 3: the Source level marks each row as playable; tapping a row is the next step. */}
-        {playable && !open ? <span className="dp-clips-link dlg-play-clip">Play clip</span> : null}
+        {/* P16 round 4: Source turns each row into a clip you can play, with its length, so the tap's result is known. */}
+        {playable && !open ? <span className="dlg-play-clip" aria-hidden><PlayGlyph />{clipLen(q.time)}</span> : null}
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open} closeMs={700}>
@@ -287,8 +298,9 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       level: (i: number) => {
         setLevel((cur) => {
           if (i === cur) return cur;
-          setSide(i >= 2 ? "unsure" : false);
-          // P16 round 3: Source marks the rows playable; Mei's clip opens only when Mei is tapped.
+          // P16 round 4: People opens the same 225 the bar emphasises, so the segment never switches.
+          setSide(i >= 2 ? "friday" : false);
+          // Source marks the rows playable; Ana's clip opens only when Ana is tapped.
           if (i < 3) api.clip(false);
           pinDuringGrow(400);
           return i;
@@ -451,10 +463,13 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           </div>
           <p className="dp-clips-link">View 2 clips</p>
           {/* P16: the chips say what they are, follow-ups the same interviews can answer with a count. */}
-          <p className="dlg-thin__label">Suggested follow-ups with enough answers to count</p>
+          {/* P16 round 4: the label says what the chips are for; each chip shows how many answers it would count. */}
+          <p className="dlg-thin__label"><SparkGlyph />Follow-ups with more data to count</p>
           <div className="dlg-thin__chips" data-target="thin-chips">
             {THIN_CHIPS.map((c, i) => (
-              <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>{c}</button>
+              <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>
+                <span className="dlg-thin__chip-q">{c}</span><span className="dlg-thin__chip-n">{THIN_CHIP_N[i]} answers</span>
+              </button>
             ))}
           </div>
         </div> : null}
@@ -483,14 +498,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     body = (
       <>
         <div className="dlg-stage__item">
-          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "unsure" : false} />
+          <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "friday" : false} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
             {LEVELS.map((l, i) => (
               <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} which="unsure" playing={clip} playSec={playSec} playable={level >= 3} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
+        <Sample open={level >= 2} which="friday" playing={clip} playSec={playSec} playable={level >= 3} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
     );
   }
@@ -500,8 +515,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       {demo === "picker" ? (
         <div className="dlg-depth" role="radiogroup" aria-label="Answer depth">
           {LEVELS.map((l, i) => (
-            /* P14 item 6: cumulative highlight like toggles (levels add up). No X / clear affordance. */
-            <button key={l} type="button" role="radio" aria-checked={pick === i} aria-pressed={i <= pick} aria-current={i === pick ? "true" : undefined} data-target={`depth-${i}`} className="dlg-depth__opt" disabled={sent} onClick={() => setPick(i)}>{l}</button>
+            /* P16 round 4 (Mudit): one depth is picked before asking, so only that chip is filled. */
+            <button key={l} type="button" role="radio" aria-checked={pick === i} aria-pressed={i === pick} aria-current={i === pick ? "true" : undefined} data-target={`depth-${i}`} className="dlg-depth__opt" disabled={sent} onClick={() => setPick(i)}>{l}</button>
           ))}
         </div>
       ) : null}

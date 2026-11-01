@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import PlayPauseButton from "@/components/PlayPauseButton";
 import { recordingAspect } from "@/components/dialogue/motion/stages";
+import MOTION_VERSIONS from "@/lib/dialogue/motionVersions.json";
 
 /**
  * Round P10: a recorded product demo of the live recreation (scripts/record-dialogue-live.mjs).
@@ -12,7 +13,10 @@ import { recordingAspect } from "@/components/dialogue/motion/stages";
  * the poster (the held, open state) with no button. Each demo has a light and a dark recording whose well
  * matches the figure background in that theme; the html data-theme attribute picks one.
  */
-const themed = (path: string, dark: boolean) => (dark ? path.replace(/\.(mp4|jpg)$/, "-dark.$1") : path);
+/** P16 round 4: each take's URL carries its content hash, so a re-recorded take is never served from a stale cache. */
+const VERSIONS = MOTION_VERSIONS as Record<string, string>;
+const versioned = (path: string) => { const v = VERSIONS[path.split("/").pop() ?? ""]; return v ? `${path}?v=${v}` : path; };
+const themed = (path: string, dark: boolean) => versioned(dark ? path.replace(/\.(mp4|jpg)$/, "-dark.$1") : path);
 const isDarkNow = () => document.documentElement.getAttribute("data-theme") !== "light";
 /** P16 round 3: phones get takes cropped to the card (name-m.mp4), so figure text stays at 12px or more. */
 const PHONE = "(max-width: 600px)";

@@ -199,6 +199,8 @@ type Template = {
   id: string; name: string; carbon: string; note: string; target: string;
   /** P16: the kind of question the AI matches to this template, so the figure's purpose reads at a glance. */
   ask: string;
+  /** P16 round 4: the researcher's question that gets this template, shown above its chart. */
+  question: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
@@ -207,6 +209,7 @@ const TEMPLATES: Template[] = [
   {
     id: "group",
     ask: "Compares groups of different sizes",
+    question: SEGMENT_QUESTION,
     name: "By group",
     carbon: "Simple bar chart",
     note: "Count out of each group",
@@ -247,6 +250,7 @@ const TEMPLATES: Template[] = [
   {
     id: "split",
     ask: "Splits everyone into two sides",
+    question: "How do shoppers read \u201cArrives by Friday\u201d?",
     name: "Split",
     carbon: "Meter chart",
     note: "Count under each segment",
@@ -265,6 +269,7 @@ const TEMPLATES: Template[] = [
   {
     id: "ranked",
     ask: "Ranks what people asked for",
+    question: "What did shoppers ask for after checkout?",
     name: "Ranked",
     carbon: "Simple bar chart, sorted",
     note: "Asks in rank order",
@@ -280,6 +285,7 @@ const TEMPLATES: Template[] = [
   {
     id: "scale",
     ask: "Asks people to rate from 1 to 5",
+    question: "How sure were shoppers about the delivery date?",
     name: "1 to 5 scale",
     carbon: "Lollipop chart",
     note: "Median score per group",
@@ -343,8 +349,29 @@ function ChartTemplatesPicker() {
   );
 }
 
-export function ChartTemplates() {
-  return <ChartTemplatesPicker />;
+/** P16 round 4 option: question-to-chart pairs, all four at once. Each pair is the researcher's question, the
+ *  question type the AI read from it, and the chart it returned, so the match itself is what the figure shows. */
+function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
+      {TEMPLATES.map((t) => (
+        <div key={t.id} className="dlg-pair" data-template={t.id}>
+          <p className="dlg-pair__type"><span>{t.ask}</span> {t.name}</p>
+          {/* The panel is the product's: the researcher's question, then the chart its answer gets. */}
+          <div className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id}>
+            <UserMessageBubble>{t.question}</UserMessageBubble>
+            {t.card(t.id === "group" && open, setOpen)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export type TemplatesLayout = "picker" | "grid" | "stack";
+export function ChartTemplates({ layout = "stack" }: { layout?: TemplatesLayout }) {
+  return layout === "picker" ? <ChartTemplatesPicker /> : <ChartTemplatesPairs layout={layout} />;
 }
 
 export default function DialogueChartLibrary({

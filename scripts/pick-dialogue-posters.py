@@ -30,7 +30,7 @@ for p in sorted(glob.glob(os.path.join(d, "*.mp4"))):
             if s > score: best, score = i, s
     if not clean[min(int(OVERRIDE.get(os.path.basename(p)[:-4].removesuffix("-dark"), best / 30) * 30), n - 1)]:
         raise SystemExit(f"poster for {p} would show an annotation")
-    t = OVERRIDE.get(os.path.basename(p)[:-4].removesuffix("-dark"), best / 30); times[os.path.basename(p)[:-4]] = round(t, 3)
+    t = min(OVERRIDE.get(os.path.basename(p)[:-4].removesuffix("-dark"), best / 30), (n - 3) / 30); times[os.path.basename(p)[:-4]] = round(t, 3)
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{t:.3f}", "-i", p, "-frames:v", "1", "-q:v", "2", p[:-4] + ".jpg"], check=True)
 # Light/dark parity: each -dark video is padded or trimmed to its light twin's frame count and takes its poster time.
 for name in [k for k in times if k.endswith("-dark")]:
@@ -54,7 +54,7 @@ for name in [k for k in times if k.endswith("-dark")]:
             vf = f"select='not(between(n\\,{k}\\,{k + nd - nl - 1}))',setpts=N/30/TB"
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", dp, "-vf", vf, "-frames:v", str(nl), "-r", "30", "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-movflags", "+faststart", "-an", tmp], check=True)
         os.replace(tmp, dp)
-    t = times[light]; times[name] = t
+    t = min(times[light], (nl - 3) / 30); times[name] = t
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{t:.3f}", "-i", dp, "-frames:v", "1", "-q:v", "2", dp[:-4] + ".jpg"], check=True)
 json.dump(times, open(os.path.join(d, "poster-times.json"), "w"), indent=1)
 print(json.dumps(times))

@@ -185,11 +185,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="problem-before">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-before-full.mp4" poster="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: the question gets one fluent paragraph, with no count behind any claim" />
+                    <DialogueDemoStill src="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: one fluent paragraph under the question, with &ldquo;Many found&rdquo; underlined and noted as an unstated count" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>How Dialogue&rsquo;s chat answers today: plain prose under the question, with no count. Recreated in code.<span className="dlg-mobile-only"> The underlined &ldquo;Many found&rdquo; is an unstated count.</span></Caption>
+              <Caption>How Dialogue&rsquo;s chat answers today, recreated in code. &ldquo;Many found&rdquo; stands in for a count the answer never states.</Caption>
             </Section>
 
             <Section id="levels">
@@ -206,11 +206,11 @@ export function DialogueCaseStudyContent({
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="levels-every">
-                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="The first try opens every level at once, so Mei's player keeps the count out of view until the 75 is folded back" />
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="Tapping the 75 opens its people. Tapping Mei opens her clip, and the player pushes the count out of view until the chevron folds it back." />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>My first try opened every level at once. Mei&rsquo;s player keeps the count out of view until the 75 is folded back.</Caption>
+              <Caption>My first try opened each level below the last. By the time Mei&rsquo;s clip plays, the count it explains has scrolled out of view.</Caption>
               <CaseStudyBody>
                 Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
               </CaseStudyBody>
@@ -219,18 +219,18 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="A" label="Explored: pick a depth before asking" reasoning={LEVELS_EXPLORED} />
                     <DialogueRachelFrame tone="problem">
-                      <DialogueDemoStill src="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer, set to Source before the question is asked" />
+                      <DialogueDemoStill src="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer, set to Chart before the question is asked, with the count and bar that come back" />
                     </DialogueRachelFrame>
                   </div>
                   <div>
                     <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds one level under it, and tapping Mei plays her clip." />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds one level under it, and tapping Ana plays her clip." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
               </figure>
-              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. In B each toggle adds one level under the insight, and tapping Mei plays her clip.</Caption>
+              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. In B each toggle adds one level under the insight, and tapping Ana plays her clip.</Caption>
               <CaseStudyBody>
                 So every part that follows stays one tap away.
               </CaseStudyBody>
@@ -290,7 +290,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>The kinds of question the AI matches to a template. Pick one to see the chart it gets and the Carbon chart it started from.</Caption>
+              <Caption>Four questions from the study, each with the chart its answer gets. The AI reads what kind of question it is and picks the template that fits, so the match is what to compare.</Caption>
             </Section>
 
             <Section id="thin-data">
@@ -310,7 +310,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Two shoppers are too few for a chart, so the answer says so and suggests follow-ups the same interviews can count.<span className="dlg-mobile-only"> The flag stands in for a chart.</span> Recorded from my live code recreation.</Caption>
+              <Caption>Two shoppers are too few for a chart, so a flag takes its place. The follow-ups ask what the same interviews can count, and each shows how many answers it would draw on. Recorded from my live code recreation.</Caption>
             </Section>
 
 
