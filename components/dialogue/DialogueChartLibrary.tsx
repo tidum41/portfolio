@@ -11,7 +11,7 @@ import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import SourcePill from "@/components/dialogue/product/SourcePill";
 import { ChevronUpIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
-import { Check, X } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, Check, X } from "@phosphor-icons/react/dist/ssr";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 
@@ -202,10 +202,6 @@ type Template = {
   ask: string;
   /** P16 round 4: the researcher's question that gets this template, shown above its chart. */
   question: string;
-  /** Round 6: the option tried and dropped for this question type. */
-  ruledOut: string;
-  /** Round 6: one-line reason the ruled-out option lost. */
-  ruledReason: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
@@ -216,11 +212,9 @@ const TEMPLATES: Template[] = [
     ask: "Compares groups of different sizes",
     question: SEGMENT_QUESTION,
     name: "By group",
-    carbon: "Simple bar chart",
+    carbon: "simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
-    ruledOut: "100% stacked bar",
-    ruledReason: "Hides how many people sit in each group.",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => (
@@ -259,11 +253,9 @@ const TEMPLATES: Template[] = [
     ask: "Splits everyone into two sides",
     question: "How do shoppers read \u201cArrives by Friday\u201d?",
     name: "Split",
-    carbon: "Meter chart",
+    carbon: "meter chart",
     note: "Count under each segment",
     target: ".dp-chart-stack__labels",
-    ruledOut: "Donut",
-    ruledReason: "Arcs compare badly inside the panel.",
     pro: "Each side’s count reads at a glance under its segment.",
     con: "No percent is printed.",
     card: () => (
@@ -280,11 +272,9 @@ const TEMPLATES: Template[] = [
     ask: "Ranks what people asked for",
     question: "What did shoppers ask for after checkout?",
     name: "Ranked",
-    carbon: "Simple bar chart, sorted",
+    carbon: "simple bar chart, sorted",
     note: "Asks in rank order",
     target: ".dp-chart-rank__row:first-child",
-    ruledOut: "Lollipop with rank numbers",
-    ruledReason: "Adds rank numbers nobody asked for.",
     pro: "Each ask reads as words, in rank order.",
     con: "Only the top five asks show.",
     card: () => (
@@ -298,11 +288,9 @@ const TEMPLATES: Template[] = [
     ask: "Asks people to rate from 1 to 5",
     question: "How sure were shoppers about the delivery date?",
     name: "1 to 5 scale",
-    carbon: "Lollipop chart",
+    carbon: "lollipop chart, stems dropped",
     note: "Median score per group",
     target: ".dp-chart-dots__dot--focal",
-    ruledOut: "Box plot",
-    ruledReason: "Asks readers to parse quartiles on a 1 to 5 scale.",
     pro: "Each dot says how many people it rests on.",
     con: "A median hides how spread the scores are.",
     card: () => (
@@ -355,7 +343,7 @@ function ChartTemplatesPicker() {
       </div>
       <div className="dlg-templates__side">
         <TemplatePanel t={t} open={open} setOpen={setOpen} />
-        <p className="dlg-templates__carbon"><span>From IBM Carbon</span> {t.carbon}</p>
+        <p className="dlg-templates__carbon"><span>Adapted from IBM Carbon</span> {t.carbon}</p>
         <Reason t={t} />
       </div>
     </div>
@@ -375,46 +363,21 @@ const EDGES = [
   { when: "Two shapes in one answer", then: "One chart leads, and the other becomes a follow-up." },
 ];
 
-/* Case-study chrome on the well, in page tokens so it reads in both themes. Cherry stays inside the product
-   panels below, one focal each; the index uses weight and the neutral X mark. */
-function ChartRoute() {
+/* Round 8: the figure reads as one table. Each row is a question type, the chart it gets, the reason in one line, and
+   the product's own chart card. The routing and the awkward shapes are short bands around it. Only the first chart
+   keeps cherry (its 6 of 9 is the point of the figure); the other three are neutral. */
+function ChartFlow() {
   return (
     <div className="dlg-guide__block">
       <p className="dlg-guide__head dialogue-caption__label">How an answer reaches a chart, as concept</p>
-      <ol className="dlg-route">
+      <ol className="dlg-flow">
         {ROUTE.map((step, i) => (
-          <li key={step} className="dlg-route__step">
-            <span className="dlg-reason__key dlg-route__n">{i + 1}</span>
+          <li key={step} className="dlg-flow__step">
+            <span className="dlg-flow__n">{i + 1}</span>
             <span>{step}</span>
           </li>
         ))}
       </ol>
-      <p className="dlg-route__fallback">Under 3 people, the answer skips the chart and shows a flag with clips.</p>
-    </div>
-  );
-}
-
-function ChartTypeIndex() {
-  return (
-    <div className="dlg-guide__block">
-      <p className="dlg-guide__head dialogue-caption__label">Question type to chart</p>
-      <div className="dlg-index" role="list">
-        {TEMPLATES.map((t) => (
-          <div key={t.id} className="dlg-index__row" role="listitem">
-            <p className="dlg-index__ask">{t.ask}</p>
-            <div className="dlg-index__picks">
-              <p className="dlg-index__mark-row dlg-index__kept">
-                <span className="dlg-reason__key dialogue-lib__mark" data-kind="kept" aria-hidden><Check size={14} weight="bold" /></span>
-                <span>{t.name}</span>
-              </p>
-              <p className="dlg-index__mark-row dlg-index__ruled">
-                <span className="dlg-reason__key dialogue-lib__mark" data-kind="con" aria-hidden><X size={14} weight="bold" /></span>
-                <span><span className="dlg-index__ruled-name">{t.ruledOut}.</span> {t.ruledReason}</span>
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -423,42 +386,47 @@ function ChartEdges() {
   return (
     <div className="dlg-guide__block">
       <p className="dlg-guide__head dialogue-caption__label">When the shape is awkward</p>
-      <div className="dlg-index" role="list">
+      <dl className="dlg-edges">
         {EDGES.map((e) => (
-          <div key={e.when} className="dlg-index__row" role="listitem">
-            <p className="dlg-index__ask">{e.when}</p>
-            <p className="dlg-index__then">{e.then}</p>
+          <div key={e.when} className="dlg-edges__cell">
+            <dt>{e.when}</dt>
+            <dd>{e.then}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </div>
   );
 }
 
-/** P16 round 4 option: question-to-chart pairs, all four at once. Each pair is the researcher's question, the
- *  question type the AI read from it, and the chart it returned, so the match itself is what the figure shows.
- *  Round 7: the routing and the index lead, the pairs prove them, and the awkward shapes close the figure. */
-function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
+function ChartMatches() {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
-      <div className="dlg-guide">
-        <ChartRoute />
-        <ChartTypeIndex />
-      </div>
-      {TEMPLATES.map((t) => (
-        <div key={t.id} className="dlg-pair" data-template={t.id}>
-          <p className="dlg-pair__type dlg-pair__type--named"><span className="dlg-pair__name">{t.name}</span> <span className="dlg-pair__carbon">from Carbon&rsquo;s {t.carbon.toLowerCase()}</span></p>
-          {/* The panel is the product's: the researcher's question, then the chart its answer gets. */}
-          <div className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id}>
-            <UserMessageBubble>{t.question}</UserMessageBubble>
-            {t.card(t.id === "group" && open, setOpen)}
+    <div className="dlg-matches" role="list">
+      {TEMPLATES.map((t, i) => (
+        <div key={t.id} className="dlg-match" role="listitem" data-template={t.id}>
+          <div className="dlg-match__why">
+            <p className="dlg-match__ask">{t.ask}</p>
+            <p className="dlg-match__name"><ArrowRight size={14} weight="bold" aria-hidden />{t.name}</p>
+            <p className="dlg-match__reason">{t.pro}</p>
+          </div>
+          <div className="dlg-match__chart">
+            <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${dialogueProductFontClassName}`} data-neutral={i === 0 ? undefined : ""}>
+              {t.card(t.id === "group" && open, setOpen)}
+            </div>
+            <p className="dlg-match__carbon">Adapted from Carbon&rsquo;s {t.carbon}</p>
           </div>
         </div>
       ))}
-      <div className="dlg-guide dlg-guide--end">
-        <ChartEdges />
-      </div>
+    </div>
+  );
+}
+
+function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
+  return (
+    <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
+      <ChartFlow />
+      <ChartMatches />
+      <ChartEdges />
     </div>
   );
 }

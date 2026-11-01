@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 8, Nov 1 2026 (Mudit's page feedback on review/round-p15)
+- Base: review/round-p15 at fc34d18. Commit stays on review/round-p15; no PR, not main.
+- Picker still no longer cropped (taller stage); no figure or take clips content at 1440, 390, 360, light or dark. Source state shows play chips with clip lengths in a fixed lane. Clip take: player times in fixed digit cells, one solid fold on open and close, no pops. Thin take: plus icons back, answer counts as small chips. Phone player drops scrubber and total time under 300px so nothing overlaps.
+- Data viz figure rebuilt: three routing steps, then one row per question type with its chart and reason; one cherry focal. Takes now record in half-speed capture so no motion frame repeats.
+- Every changed line in design/notes/copy-diff-r8.md; review in design/notes/review-r8.md. Screenshots: /opt/cursor/artifacts/screenshots/r8-*.png. Preview: none (local validation only)
+
 ## Round 7, Nov 1 2026 (independent review on review/round-p15)
 - Base: review/round-p15 at 39064fb. Commit stays on review/round-p15; no PR, not main.
 - Data viz figure rebuilt as on-well chrome readable in dark, full column width, one route list, neutral kept and ruled marks, Carbon source on each pair label; scale chart value and count no longer duplicate.

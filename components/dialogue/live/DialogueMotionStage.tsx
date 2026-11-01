@@ -71,6 +71,10 @@ type SampleWhich = "friday" | "unsure";
  */
 export type { MotionDemo } from "@/components/dialogue/motion/stages";
 
+/** The recorder can run the page in slow motion (window.__K, CSS time is slowed by the same factor) and retime the
+ *  capture, so every frame of the final video is a real captured frame. Timers and scroll durations scale with it. */
+const K = () => (typeof window === "undefined" ? 1 : ((window as unknown as { __K?: number }).__K ?? 1));
+
 const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string }> = {
   friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday" },
   unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure" },
@@ -90,8 +94,8 @@ function Grow({ open, children, className, closeMs = 450 }: { open: boolean; chi
     if (open) { setMounted(true); setLeaving(false); return; }
     if (!mounted) return;
     setLeaving(true);
-    // Fade 150ms then fold 300ms; unmount after 450ms (P14 item 8).
-    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, closeMs);
+    // The fold ends at 0fr and holds (fill: both); unmount after it, never during its tail, so no pixel pops at the end.
+    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, (closeMs + 80) * K());
     return () => clearTimeout(t);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!mounted) return null;
@@ -106,21 +110,23 @@ function Grow({ open, children, className, closeMs = 450 }: { open: boolean; chi
 /* cubic-bezier(0.4, 0, 0.2, 1), sampled */
 const ease = (p: number) => { let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2; const x = 3 * 0.4 * m * (1 - m) ** 2 + 3 * 0.2 * m * m * (1 - m) + m ** 3; if (x < p) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3 * m * m * (1 - m) + m ** 3; };
 function follow(ms = 500, up = false) {
+  ms *= K();
   const body = document.querySelector<HTMLElement>(".dlg-stage__body");
   if (!body) return;
   const from = body.scrollTop, to = up ? 0 : body.scrollHeight - body.clientHeight;
   if (Math.abs(to - from) <= 1) return;
   const t0 = performance.now();
-  const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+  const step = () => { const now = performance.now(); const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 /** P14 item 5: while content grows above a pinned chip/control, keep its y steady by absorbing scrollHeight growth into scrollTop. Never call follow() during the grow. */
 function pinDuringGrow(ms = 400) {
+  ms *= K();
   const body = document.querySelector<HTMLElement>(".dlg-stage__body");
   if (!body) return;
   let lastH = body.scrollHeight;
   const t0 = performance.now();
-  const step = (now: number) => {
+  const step = () => { const now = performance.now();
     const h = body.scrollHeight;
     const growth = h - lastH;
     if (growth > 0) body.scrollTop += growth;
@@ -170,11 +176,11 @@ function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }:
 /** P14 item 2: quote rows are a selection, not a nested accordion. Tap opens (one at a time); tap again closes. No inner chevron. */
 // Mock: repeat shoppers (125) and everyone asked about the delivery date (300), from the same 300 interviews.
 const THIN_CHIP_N = [125, 300] as const;
-function SparkGlyph() {
-  return <svg className="dlg-thin__label-icon" viewBox="0 0 16 16" aria-hidden><path d="M8 2l1.4 4.6L14 8l-4.6 1.4L8 14l-1.4-4.6L2 8l4.6-1.4z" fill="currentColor" /></svg>;
-}
 function PlayGlyph() {
   return <svg className="dlg-play-clip__icon" viewBox="0 0 16 16" aria-hidden><path d="M5 3.5v9l7-4.5z" fill="currentColor" /></svg>;
+}
+function PlusGlyph() {
+  return <svg className="dlg-thin__chip-plus" viewBox="0 0 16 16" aria-hidden><path d="M8 3.25v9.5M3.25 8h9.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>;
 }
 const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
 
@@ -196,15 +202,15 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
-        {/* P16 round 3: the Source level marks each row as playable; tapping a row is the next step. */}
-        {/* P16 round 4: Source turns each row into a clip you can play, with its length, so the tap's result is known. */}
-        {/* Paper spec counts rows A: every row carries its clip length in a fixed right lane; at Source a quiet play mark
-            sits before it, so the row reads as playable without a coloured chip. */}
-        {playable && !open ? <PlayGlyph /> : null}
-        <span className="dlg-dur">{clipLen(q.time)}</span>
+        {/* Counts rows: every row carries its clip length in one fixed right lane. Source turns that lane into a play chip
+            (same lane, same width), so tapping it is the next step and nothing moves. */}
+        <span className="dlg-dur" data-play={playable && !open ? "" : undefined}>
+          <PlayGlyph />
+          {clipLen(q.time)}
+        </span>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
-      <Grow open={open} closeMs={700}>
+      <Grow open={open} closeMs={560}>
         <div className="dlg-live__clip" data-who={q.participant.toLowerCase()} style={clipRange(q.time, total)}>
           <DialogueInterviewPlayer current={playSec !== undefined ? fmt(sec(start) + playSec) : start} total={total} />
         </div>
@@ -223,7 +229,8 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, 
     <Grow open={open} className="dlg-stage__item">
       <div className="dp-side-sample dlg-stage__sample" data-side={which}>
         <p className="dp-side-sample__head dp-text-body">
-          <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{meta.count}</span> {meta.label}, {rows.length} shown
+          <span className="dlg-sample-key" aria-hidden />
+          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{meta.count}</span> <span className="dlg-nowrap">{meta.label},</span> <span className="dlg-nowrap">{rows.length} shown</span></span>
           <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={collapse}>
             <ChevronUpIcon />
           </button>
@@ -275,7 +282,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     const api = {
       type: (cps = 18) => new Promise<void>((res) => {
         let n = 0;
-        const id = setInterval(() => { n++; setTyped(QUESTION.slice(0, n)); if (n >= QUESTION.length) { clearInterval(id); res(); } }, 1000 / cps);
+        const id = setInterval(() => { n++; setTyped(QUESTION.slice(0, n)); if (n >= QUESTION.length) { clearInterval(id); res(); } }, (1000 / cps) * K());
       }),
       send: () => { setSent(true); setTyped(""); },
       analyze: (on: boolean) => setAnalyzing(on),
@@ -292,7 +299,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         setClip(on);
         if (tick.current) clearInterval(tick.current);
         setPlaySec(0);
-        if (on) tick.current = setInterval(() => setPlaySec((s) => s + 1), 1000);
+        if (on) tick.current = setInterval(() => setPlaySec((s) => s + 1), 1000 * K());
       },
       line: () => setLines((l) => l + 1),
       mark: () => setMark(true),
@@ -319,17 +326,35 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       // half-revealed row across the card's bottom edge.
       // P16 round 3: ease an element's top to `pad` px below the body's top edge (the toggles keep their chips in view).
       top: (sel: string, pad = 8, ms = 700) => {
+        ms *= K();
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
         if (!body || !el) return;
         const from = body.scrollTop, to = Math.max(0, from + el.getBoundingClientRect().top - body.getBoundingClientRect().top - pad), t0 = performance.now();
         const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
-        const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+        const step = () => { const now = performance.now(); const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step);
+      },
+      // While content grows below, keep the bottom of the chat (or, with `sel`, that element at `pad` px under the top)
+      // in view every frame, so the scroll and the grow are one motion and nothing lands in a second step.
+      stick: (ms = 560, sel?: string, pad = 8) => {
+        ms *= K();
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body"); if (!body) return;
+        const t0 = performance.now();
+        const step = () => { const now = performance.now();
+          const max = body.scrollHeight - body.clientHeight;
+          let want = max;
+          const el = sel ? document.querySelector<HTMLElement>(sel) : null;
+          if (el) want = Math.min(max, Math.max(0, body.scrollTop + el.getBoundingClientRect().top - body.getBoundingClientRect().top - pad));
+          if (want > body.scrollTop) body.scrollTop = want;
+          if (now - t0 < ms) requestAnimationFrame(step);
+        };
         requestAnimationFrame(step);
       },
       chase: (ms = 1300, rate = 0.07) => {
+        ms *= K(); rate /= K();
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); if (!body) return;
         const t0 = performance.now();
-        const step = (now: number) => {
+        const step = () => { const now = performance.now();
           const max = body.scrollHeight - body.clientHeight, left = max - body.scrollTop;
           body.scrollTop += Math.sign(left) * Math.min(Math.abs(left), Math.max(0.6, Math.abs(left) * rate));
           if (now - t0 < ms) requestAnimationFrame(step); else body.scrollTop = body.scrollHeight - body.clientHeight;
@@ -342,13 +367,14 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       thin: () => { setSent(true); setThinShown(true); },
       // P16: scroll just enough that an element's bottom sits `pad` px above the panel body's bottom edge.
       reveal: (sel: string, pad = 16, ms = 600) => {
+        ms *= K();
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
         if (!body || !el) return;
         const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
         const to = Math.max(0, Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + r.bottom - (b.bottom - pad)));
         const from = body.scrollTop, t0 = performance.now();
         if (ms <= 0) { body.scrollTop = to; return; }
-        const step = (now: number) => { const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
+        const step = () => { const now = performance.now(); const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
         requestAnimationFrame(step);
       },
       // P16 loop seam for add-only takes: a spacer one body tall lands under the chat and the body eases to it, so the
@@ -467,11 +493,13 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           <p className="dp-clips-link">View 2 clips</p>
           {/* P16: the chips say what they are, follow-ups the same interviews can answer with a count. */}
           {/* P16 round 4: the label says what the chips are for; each chip shows how many answers it would count. */}
-          <p className="dlg-thin__label"><SparkGlyph />Follow-ups with more data to count</p>
+          <p className="dlg-thin__label">Follow-ups with more data to count</p>
           <div className="dlg-thin__chips" data-target="thin-chips">
             {THIN_CHIPS.map((c, i) => (
-              <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>
-                <span className="dlg-thin__chip-q">{c}</span><span className="dlg-thin__chip-n">{THIN_CHIP_N[i]} answers</span>
+              <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} aria-label={`${c} ${THIN_CHIP_N[i]} answers`} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>
+                <PlusGlyph />
+                <span className="dlg-thin__chip-q">{c}</span>
+                <span className="dlg-thin__chip-n" aria-hidden>{THIN_CHIP_N[i]}</span>
               </button>
             ))}
           </div>
@@ -533,7 +561,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   ) : null;
 
   return (
-    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo}>
+    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo} data-neutral={demo === "toggles" || demo === "picker" ? "" : undefined}>
       {demo === "hero" ? (
         <div className="dp-study-chat__head">
           <div className="dp-study-chat__head-top">

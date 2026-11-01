@@ -3614,7 +3614,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 @container (max-width: 300px) {
-  .dp-qplayer__btn--text {
+  .dp-qplayer__btn--text,
+  .dp-qplayer__scrub,
+  .dp-qplayer__time[data-annotate-part="player-time-total"] {
     display: none;
   }
 
@@ -3871,6 +3873,10 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live:not(.dlg-live--bare) .dp-study-chat__body { padding-top: 16px; }
 /* Count sample: head carries the collapse; +73 more is a real button around the source pill. */
 .dlg-live .dp-side-sample__head { display: flex; align-items: center; gap: 4px; }
+.dlg-live .dp-side-sample__head { align-items: flex-start; }
+.dlg-live .dp-side-sample__head .dlg-sample-key { flex: 0 0 auto; margin: 10px 4px 0 0; }
+.dlg-sample-head__text { min-width: 0; padding-top: 2px; }
+.dlg-nowrap { white-space: nowrap; }
 .dlg-more { padding: 0; border: 0; background: transparent; font: inherit; cursor: pointer; border-radius: var(--dp-radius-control); }
 .dlg-more:hover .dp-source-pill { background: var(--dp-warm); color: var(--dp-ink); }
 .dlg-more:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
@@ -4039,7 +4045,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* P16: the case-study clips show an illustrated interview still in place of the grey speaker tile. */
 .dlg-stage .dp-qplayer__placeholder { background: url("/dialogue/clip-still.svg") center / cover no-repeat; }
 .dlg-stage .dlg-live__clip[data-who="ana"] .dp-qplayer__placeholder { background-image: url("/dialogue/clip-still-ana.svg"); }
-.dlg-play-clip { margin-left: auto; }
 .dlg-stage .dp-qplayer__placeholder-icon { display: none; }
 
 /* P16 chart templates: a direct picker. Question types on the left, the chosen template's chart on the right. */
@@ -4054,14 +4059,14 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-templates__side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 @media (max-width: 600px) { .dlg-templates--picker { grid-template-columns: minmax(0, 1fr); } }
 
-/* P16 round 2: no motion blur, so the dark player must never land in a few frames. It grows over 520 ms and fades in
-   over 420 ms on a symmetric ease; closing fades over 300 ms, then folds. */
-.dlg-stage .dp-clip-quote .dlg-grow--in { animation-duration: 700ms; }
-/* P16 round 4 (Mudit): the player opens and folds as a solid block, with no opacity fade. A fading still over moving rows
-   read as motion blur. */
+/* The player opens and folds as one solid block: height only, no opacity, the same 520 ms ease in and out. The row's warm
+   surface changes on the same clock, and the row's own padding never changes (the 4px under the player lives inside the
+   fold), so no frame holds a step. */
+.dlg-stage .dp-clip-quote .dlg-grow--in { animation: dlg-grow-open 520ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.dlg-stage .dp-clip-quote .dlg-grow--out { animation: dlg-grow-fold 520ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 .dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner,
 .dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation: none; opacity: 1; }
-.dlg-stage .dp-clip-quote .dlg-grow--out { animation-duration: 700ms; }
+@keyframes dlg-grow-fold { from { grid-template-rows: 1fr; } to { grid-template-rows: 0fr; } }
 
 /* P16 round 3: the two well notes are words in the caption on phones, where the takes have no gutter. */
 .dlg-mobile-only { display: none; }
@@ -4071,6 +4076,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* P16 round 4: more room under the last row, so an open player never sits on the panel's bottom edge. */
 .dlg-stage .dlg-stage__body { padding-bottom: calc(var(--dp-chat-pad) * 1.5); }
+/* The clip take starts and ends on the same unscrolled chat, so its resting state must fit the card with no overflow to settle. */
+.dlg-stage--clip .dlg-stage__body { padding-bottom: var(--dp-chat-pad); }
+[data-mobile] .dlg-stage--clip .dlg-stage__body { padding-bottom: 8px; }
 /* P16 round 4 (key decision): player times are fixed-width tabular figures, so the scrub never shifts as seconds tick. */
 .dp-qplayer__time { font-feature-settings: "tnum" 1; flex: 0 0 auto; min-width: 5ch; }
 .dp-qplayer__time[data-annotate-part="player-time-current"] { text-align: right; }
@@ -4080,23 +4088,10 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-thin .dp-low-signal__icon { color: var(--dp-warn-fg); }
 /* The follow-ups sit under a labelled group: the label leads with a small mark, and each chip states its answer count. */
 .dlg-thin__label { display: flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--dp-ink); font-weight: 500; }
-.dlg-thin__label-icon { width: 14px; height: 14px; color: var(--dp-brand); flex: 0 0 auto; }
-.dlg-live .dlg-suggest.dlg-thin__chip { display: inline-flex; align-items: baseline; gap: 8px; text-align: left; }
-.dlg-thin__chip-n { color: var(--dp-muted); font-size: var(--text-meta-size); font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* Source: each playable row ends in a play chip with the clip's length. */
-.dlg-play-clip { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 6px; border-radius: var(--dp-radius-chip); background: var(--dp-brand-soft); color: var(--dp-brand); font-size: var(--text-meta-size); font-weight: 500; font-variant-numeric: tabular-nums; }
-.dlg-play-clip__icon { width: 12px; height: 12px; }
 
-/* P16 round 4 (Mudit: compare side by side, make the point obvious): each template is a pair, the researcher's question
-   with the question type the AI read from it, then the chart that question gets. */
-.dlg-templates--pairs { gap: 20px; }
-.dlg-pair { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dlg-pair__ask { display: flex; flex-direction: column; gap: 4px; }
-.dlg-pair__q { align-self: flex-start; margin: 0; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-ink); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
-.dlg-pair__type { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
-.dlg-pair__type > span { color: var(--color-text-secondary); margin-right: 8px; }
+.dlg-templates--pairs { gap: 32px; }
 .dlg-templates--grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
-.dlg-templates--stack { width: 100%; padding-inline: max(48px, calc((100% - 448px) / 2)); }
+.dlg-templates--stack { width: 100%; padding-inline: 40px; }
 @media (max-width: 600px) {
   .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
   .dlg-templates--stack { padding-inline: 16px; }
@@ -4111,36 +4106,42 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis .dp-chart-dots__detail { display: none; }
 }
 
-/* Round 7: the data viz guide is case-study chrome on the well (page tokens, both themes), not a product card.
-   Rows are split by hairlines, the kept pick carries weight, and the ruled-out option takes the neutral X mark. */
-.dlg-guide { display: flex; flex-direction: column; gap: 24px; padding-bottom: 8px; }
-.dlg-guide--end { padding: 8px 0 0; border-top: 1px solid var(--dlg-guide-rule); }
-.dlg-guide__block { display: flex; flex-direction: column; gap: 8px; }
+/* Round 8: the data viz figure is one table on the well (page tokens, both themes). Three levels of type: the chart
+   name carries weight, the question type and the reason sit under it quietly, and the chart is the product's own card. */
+.dlg-guide__block { display: flex; flex-direction: column; gap: 12px; }
 .dlg-guide__head { margin: 0; color: var(--color-text-secondary); }
-.dlg-route { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-radius: var(--dp-radius-control); box-shadow: inset 0 0 0 1px var(--dlg-guide-rule); }
-.dlg-route__step { display: grid; grid-template-columns: 16px 1fr; column-gap: 8px; align-items: start; padding: 8px 12px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
-.dlg-route__step + .dlg-route__step { border-top: 1px solid var(--dlg-guide-rule); }
-.dlg-route__n { color: var(--color-text-tertiary); }
-.dlg-route__fallback { margin: 0; padding-left: 36px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
-.dlg-index { display: flex; flex-direction: column; }
-.dlg-index__row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); column-gap: 16px; padding: 12px 0; border-top: 1px solid var(--dlg-guide-rule); }
-.dlg-index__row:first-child { border-top: 0; padding-top: 4px; }
-.dlg-index__ask, .dlg-index__kept, .dlg-index__ruled, .dlg-index__then { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); text-wrap: pretty; }
-.dlg-index__ask { text-wrap: balance; }
-.dlg-index__ask { color: var(--color-text-secondary); }
-.dlg-index__picks { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dlg-index__mark-row { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px; align-items: start; }
-.dlg-index__mark-row .dialogue-lib__mark { align-self: start; margin-top: 0; }
-.dlg-index__kept { color: var(--color-text-primary); font-weight: 500; }
-.dlg-index__kept .dialogue-lib__mark { color: var(--color-text-primary); }
-.dlg-index__ruled { color: var(--color-text-secondary); }
-.dlg-index__ruled-name { color: var(--color-text-primary); }
-.dlg-index__then { color: var(--color-text-primary); }
-.dlg-pair__type--named > .dlg-pair__name { margin-right: 4px; color: var(--color-text-primary); font-family: var(--font-sans-medium); font-weight: 500; }
-.dlg-pair__type--named > .dlg-pair__carbon { margin-right: 0; color: var(--color-text-tertiary); }
+.dlg-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.dlg-flow__step { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); text-wrap: balance; }
+.dlg-flow__n { color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; }
+.dlg-matches { display: flex; flex-direction: column; }
+.dlg-match { display: grid; grid-template-columns: 168px minmax(0, 1fr); column-gap: 24px; padding: 24px 0; border-top: 1px solid var(--dlg-guide-rule); }
+.dlg-match:last-child { padding-bottom: 8px; }
+.dlg-match__why { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dlg-match__why > p, .dlg-match__carbon { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-match__ask { color: var(--color-text-tertiary); text-wrap: balance; }
+.dlg-match__why > .dlg-match__name { gap: 6px; margin: 4px 0; font-size: var(--dlg-fs-16); line-height: 24px; color: var(--color-text-primary); }
+.dlg-match__name { display: flex; align-items: center; }
+.dlg-match__name > svg { flex: 0 0 auto; color: var(--color-text-tertiary); }
+.dlg-match__reason { color: var(--color-text-secondary); text-wrap: pretty; }
+.dlg-match__chart { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-match__panel { padding: 0; }
+.dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 156px minmax(0, 1fr) 64px; }
+.dlg-templates__panel.dlg-match__panel .dp-chart-bars__label { width: auto; }
+.dlg-match__carbon { color: var(--color-text-tertiary); }
+.dlg-edges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
+.dlg-edges__cell { display: flex; flex-direction: column; gap: 2px; margin: 0; padding-top: 8px; border-top: 1px solid var(--dlg-guide-rule); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-edges__cell > dt { color: var(--color-text-primary); font-family: var(--font-sans-medium); font-weight: 500; }
+.dlg-edges__cell > dd { margin: 0; color: var(--color-text-secondary); text-wrap: pretty; }
 @media (max-width: 600px) {
-  .dlg-route__fallback { padding-left: 12px; }
-  .dlg-index__row { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  .dlg-flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .dlg-flow__step { flex-direction: row; gap: 8px; }
+  .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
+  .dlg-edges { grid-template-columns: minmax(0, 1fr); }
+  /* On a phone the group bars keep a readable track: label and count share a line, the track runs full width under it. */
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > span:last-child { grid-area: value; }
 }
 
 /* ===== P16 round 5: Paper spec fixes (/workspace/p16-sheets/paper/dialogue-spec.md, audit.md). Scoped to the product UI
@@ -4162,14 +4163,15 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* 1) Thin flag, variation A: warm surface, 40 tall. Follow-up chips full width, 36 tall, count in a fixed 64px lane. */
 .dlg-thin .dp-low-signal { align-items: center; min-height: 40px; box-sizing: border-box; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-muted); }
 .dlg-thin .dp-low-signal__icon { margin-top: 0; color: var(--dp-muted); }
-.dlg-thin .dp-low-signal__text { font-size: var(--ds-text-sm); line-height: 24px; color: var(--dp-muted); }
+.dlg-thin .dp-low-signal__text { font-size: var(--ds-text-sm); line-height: 24px; color: var(--dp-muted); text-wrap: balance; }
 .dlg-thin .dp-clips-link { font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); text-decoration: underline; }
 .dlg-thin__label { gap: 8px; font-size: var(--ds-text-sm); line-height: 20px; }
-.dlg-thin__label-icon { width: 16px; height: 16px; }
 .dlg-thin__chips { align-items: stretch; }
-.dlg-live .dlg-suggest.dlg-thin__chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 36px; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
-.dlg-thin__chip-q { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--ds-text-sm); line-height: 20px; color: var(--dp-ink); }
-.dlg-thin__chip-n { flex: 0 0 64px; width: 64px; text-align: right; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dlg-live .dlg-suggest.dlg-thin__chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 8px 6px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
+.dlg-thin__chip-plus { flex: 0 0 16px; width: 16px; height: 16px; color: var(--dp-muted); }
+.dlg-thin__chip-q { flex: 1 1 auto; min-width: 0; font-size: var(--ds-text-sm); line-height: 20px; color: var(--dp-ink); }
+/* The count is a small chip of its own, a fixed 40px lane so both rows end on the same edge. */
+.dlg-thin__chip-n { flex: 0 0 40px; width: 40px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; height: 24px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); font-size: var(--ds-text-xs); line-height: 16px; font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
 
 /* 2) Charts, variation A: 16 padding, 24px bar with a 2px seam, two tabular legend lanes, 120px label lane. */
 .dlg-live .dp-chart-viz-card, .dlg-templates__panel .dp-chart-viz-card { padding: 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); }
@@ -4195,17 +4197,27 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dp-clip-quote + .dp-clip-quote { margin-top: 0; }
 .dlg-live .dp-clip-quote__who { gap: 8px; font-size: var(--ds-text-xs); line-height: 16px; }
 .dlg-live .dp-clip-quote__text { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; }
-.dlg-dur { margin-left: auto; flex: 0 0 40px; width: 40px; text-align: right; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; }
-.dlg-live .dp-clip-quote__who .dlg-play-clip__icon { width: 12px; height: 12px; margin-left: auto; color: var(--dp-muted); }
-.dlg-live .dp-clip-quote__who .dlg-play-clip__icon + .dlg-dur { margin-left: 0; }
+/* One fixed right lane on every row. Source fills it with a warm play chip (icon, clip length) in the same box, so the
+   tap target appears without moving a pixel. The lane's -8px margin keeps the length on the row's right padding. */
+.dlg-dur { margin: -4px -8px -4px auto; flex: 0 0 68px; width: 68px; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 8px; border-radius: var(--dp-radius-chip); background: transparent; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur .dlg-play-clip__icon { flex: 0 0 12px; width: 12px; height: 12px; opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur[data-play] { background: var(--dp-warm); color: var(--dp-ink); font-weight: 500; }
+.dlg-dur[data-play] .dlg-play-clip__icon { opacity: 1; }
+.dp-time-d { display: inline-flex; justify-content: center; width: 0.64em; }
 .dlg-live .dp-sources { margin-top: 8px; }
 .dlg-live .dp-source-pill { display: inline-flex; align-items: center; height: 36px; box-sizing: border-box; padding: 8px 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
 
 /* 3) Clip player, variation A: the selected card is warm with a stone-200 edge, 16 below the player, 40px time lanes. */
-.dlg-live .dp-clip-quote--selected, .dlg-stage .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { background: var(--dp-warm); border-color: var(--dp-border); box-shadow: none; padding-bottom: 16px; }
-.dlg-stage .dlg-live__clip { padding-top: 8px; }
+.dlg-live .dp-clip-quote--selected, .dlg-stage .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { background: var(--dp-warm); border-color: var(--dp-border); box-shadow: none; }
+/* The row's 4px flex gap and the player's 8px lead-in live inside the fold, so mounting the grow adds no pixel to the row. */
+.dlg-stage .dp-clip-quote > .dlg-grow { margin-top: -4px; }
+.dlg-stage .dlg-live__clip { padding: 12px 0 4px; }
 .dlg-live .dp-qplayer__time { flex: 0 0 40px; width: 40px; min-width: 40px; }
 .dlg-live .dp-qplayer__time[data-annotate-part="player-time-total"] { text-align: right; }
 /* P16 round 5: the spec's 12x16 rows and 36px pills no longer fit the square stage, so the stage drops the "+N more"
    pill; the count line already says how many are shown. */
 .dlg-stage .dlg-stage__sample .dp-sources { display: none; }
+.dlg-stage .dp-clip-quote { transition: background-color 520ms cubic-bezier(0.4, 0, 0.2, 1), border-color 520ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
+.dlg-stage[data-neutral], .dlg-match__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }

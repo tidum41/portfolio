@@ -261,7 +261,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Each question type gets one chart, and the index names the option it beat. Edge cases sit under the templates.</Caption>
+              <Caption>Each question type gets one chart, with its reason beside it. The awkward shapes sit under the templates.</Caption>
               <CaseStudyBody>
                 Where I departed from Carbon, it was to keep people countable: one highlight on the value the answer is about, and counts printed out of their own group wherever groups differ in size. Carbon has no rule for thin data, so that path is my addition. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
               </CaseStudyBody>

@@ -64,6 +64,12 @@ function FullscreenIcon() {
 /** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static. */
 const toSec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
 
+/** Each digit sits in its own fixed cell, so a time never changes width as the seconds tick (the product font's tabular
+ *  figures are not guaranteed to load, and "1" is narrow in its proportional figures). */
+export function TimeDigits({ time }: { time: string }) {
+  return <>{[...time].map((c, i) => (/\d/.test(c) ? <span key={i} className="dp-time-d">{c}</span> : c))}</>;
+}
+
 /** current and total are mm:ss; the played bar follows them so the clip time matches the quote row. */
 export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: { current?: string; total?: string } = {}) {
   const played = Math.round((toSec(current) / toSec(total)) * 1000) / 10;
@@ -81,14 +87,14 @@ export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: 
           <span className="dp-qplayer__btn" data-annotate-part="player-skip-forward"><SkipIcon /></span>
         </div>
         <div className="dp-qplayer__time-controls">
-          <span className="dp-qplayer__time" data-annotate-part="player-time-current">{current}</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-current"><TimeDigits time={current} /></span>
           <div className="dp-qplayer__scrub">
             <div className="dp-qplayer__track" data-annotate-part="player-track">
               <span className="dp-qplayer__buffered" style={{ width: `${Math.max(BUFFERED, played + 6)}%` }} />
               <span className="dp-qplayer__played" style={{ width: `${played}%` }} />
             </div>
           </div>
-          <span className="dp-qplayer__time" data-annotate-part="player-time-total">{total}</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-total"><TimeDigits time={total} /></span>
         </div>
         <div className="dp-qplayer__group dp-qplayer__group--end">
           <span className="dp-qplayer__btn dp-qplayer__btn--text" data-annotate-part="player-speed">1×</span>

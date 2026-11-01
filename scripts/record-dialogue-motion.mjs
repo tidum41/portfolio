@@ -37,13 +37,14 @@ const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 2
    well. Only the recording page changes; the site token stays #1b1e21. */
 const REC_WELL = THEME === "dark" ? 'html[data-theme="dark"] { --figure-well-dialogue: #1b1e23; }' : "";
 
-const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 300 }; // add-only takes: the empty chat already closes the loop
+const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 200 }; // add-only takes: the empty chat already closes the loop
 async function still(demo) {
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1900 }, deviceScaleFactor: 2 });
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
   await page.goto(`${base}/dialogue/motion?demo=${demo}${Q}`, { waitUntil: "networkidle" });
+  await page.waitForSelector("#frame", { timeout: 60000 });
   // A PNG still keeps the true well (#1b1e21); REC_WELL only offsets the H.264 encode.
   await page.addStyleTag({ content: "body > *:not(main), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; } *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }" });
   await page.waitForFunction(() => window.__dlg);
@@ -67,6 +68,7 @@ async function record(demo) {
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
   const page = await ctx.newPage();
   await page.goto(`${base}/dialogue/motion?demo=${demo}${Q}`, { waitUntil: "networkidle" });
+  await page.waitForSelector("#frame", { timeout: 60000 });
   await page.evaluate(() => {
     const c = document.createElement("div"); c.id = "dlg-cursor"; c.style.opacity = "0";
     c.innerHTML = '<svg viewBox="0 0 18 18"><path d="M2 1.5v13l3.6-3.4 2.4 5.4 2.2-1-2.4-5.3h5z" fill="#1c1917" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>';
@@ -87,15 +89,20 @@ async function record(demo) {
   cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => { frames.push({ t: metadata.timestamp, data }); cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {}); });
   let pos = { x: fb.x + fb.width + 40, y: fb.y + fb.height * 0.7 };
   await page.mouse.move(pos.x, pos.y);
-  const hold = (ms) => page.waitForTimeout(ms);
+  // Slow-motion capture: the page runs at 1/K speed (CDP playback rate for CSS, window.__K for the stage's timers) so the
+  // ~25 fps screencast samples every motion densely; the encode retimes by K. Without it every 6th frame duplicated mid-motion.
+  const K = Number(process.env.DLG_SLOW ?? 2);
+  await cdp.send("Animation.enable"); await cdp.send("Animation.setPlaybackRate", { playbackRate: 1 / K });
+  await page.evaluate((k) => { window.__K = k; }, K);
+  const hold = (ms) => page.waitForTimeout(ms * K);
   // Scroll speed multiplier (1: phone takes keep the desktop timings; the checker normalises their frame diff).
   const SLOW = 1;
   const api = (js) => page.evaluate(`window.__dlg.${js.replace(/^(follow|up|clear|chase)\((\d+)\)$/, (_, f, n) => f === "chase" ? `chase(${Math.round(n * SLOW)}, 0.07)` : `${f}(${Math.round(n * SLOW)})`)}`);
   const cursor = (o) => page.evaluate((v) => { document.getElementById("dlg-cursor").style.opacity = v; }, o);
   // Fade in near the target, then a 600 ms ease-in-out glide; never a teleport.
-  async function cursorTo(sel, { ms = 600, fx = 0.5, fy = 0.5 } = {}) {
+  async function cursorTo(sel, { ms = 600, fx = 0.5, fy = 0.5, off = 0 } = {}) {
     const bb = await (await page.$(sel)).boundingBox();
-    const to = { x: bb.x + bb.width * fx, y: bb.y + bb.height * fy };
+    const to = { x: bb.x + bb.width * fx, y: bb.y + bb.height * fy + off };
     if ((await page.evaluate(() => getComputedStyle(document.getElementById("dlg-cursor")).opacity)) === "0") {
       pos = { x: to.x + 70, y: to.y + 60 }; await page.mouse.move(pos.x, pos.y); await cursor(1); await hold(200);
     }
@@ -127,13 +134,14 @@ async function record(demo) {
     // Counts (Mudit, P15 round 2): 225 open with the cursor resting on it; tap 75, linger; tap 225, linger. Last frame is the first.
     async side() {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("unsure")'); await hold(1500);
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("friday")'); await hold(950);
+      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("friday")'); await hold(1400);
     },
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
       // P16 round 3: the player opens, then the chat eases to its end so nothing sits across the card's bottom edge.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await api("chase(1400)"); await hold(1700);
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85 }); await press(); await api("clip(false)"); await hold(450); await api("up(500)"); await hold(300); await cursorOut(); await hold(700);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4 }); await press(); await api("clip(true)"); await api("stick(560)"); await hold(2000);
+      // The fold clamps the chat's scroll by itself, in step with the height, so nothing else moves.
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85 }); await press(); await api("clip(false)"); await hold(900); await cursorOut(); await hold(1250);
     },
     async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(800); await api('note("Unstated count", ".dlg-mark")'); await hold(MOBILE ? 1100 : 1400); await api("clear(700)"); await hold(Math.round(650 * SLOW)); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
@@ -143,20 +151,22 @@ async function record(demo) {
     // pushes the count out of view, which is the cost the first try proves. The chevron folds it back to the start.
     async every() {
       await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 550 }); await press(); await api('side("unsure")'); await hold(800);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.4, ms: 550 }); await press(); await api("clip(true)"); await api("chase(1400)"); await hold(1700);
-      await cursorTo('[data-target="side-collapse"]', { ms: 550 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(700);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.35, fy: 0.4, ms: 550 }); await press(); await api("clip(true)"); await api("stick(560)"); await hold(1700);
+      await cursorTo('[data-target="side-collapse"]', { ms: 550 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(1250);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
     // P16 round 3: Chart, People, Source, then Mei. Each tap shows one thing; Source marks rows playable, Mei plays.
     // P16 round 4 (Mudit): the cursor starts and ends resting on Insight, so the loop seam is the same frame. People opens
     // the 225 the bar already emphasises; Source turns rows into play chips; Ana plays; Insight folds it all back.
     async toggles() {
-      await cursorTo('[data-target="level-1"]', { ms: 500 }); await press(); await api("level(1)"); await hold(350);
-      await cursorTo('[data-target="level-2"]', { ms: 500 }); await press(); await api("level(2)"); await hold(350);
-      await cursorTo('[data-target="level-3"]', { ms: 500 }); await press(); await api("level(3)"); await hold(350);
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4, ms: 500 }); await press(); await api("clip(true)");
-      await api('top(".dlg-depth", 8, 800)'); await hold(900);
-      await cursorTo('[data-target="level-0"]', { fx: 0.5, fy: 0.5, ms: 500 }); await press(); await api("level(0)"); await hold(1100);
+      await cursorTo('[data-target="level-1"]', { ms: 400 }); await press(); await api("level(1)"); await hold(120);
+      await cursorTo('[data-target="level-2"]', { ms: 400 }); await press(); await api("level(2)"); await hold(120);
+      await cursorTo('[data-target="level-3"]', { ms: 400 }); await press(); await api("level(3)"); await hold(120);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.4, ms: 400 }); await press(); await api("clip(true)");
+      await api("stick(560)"); await hold(800);
+      // Ana's row folds the player away (the chat settles by itself), then Insight folds everything back.
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.35, fy: 0.85, ms: 400 }); await press(); await api("clip(false)"); await hold(560);
+      await cursorTo('[data-target="level-0"]', { fx: 0.5, fy: 0.5, ms: 450 }); await press(); await api("level(0)"); await hold(1700);
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.
     async thin() {
@@ -179,7 +189,7 @@ async function record(demo) {
   const crop = `crop=${Math.round(fb.width * k)}:${Math.round(fb.height * k)}:${Math.round(fb.x * k)}:${Math.round(fb.y * k)}`;
   // -g 600: one keyframe per take; x264's default keyframe at frame 250 flashed a visible re-quantize mid-hold (P15).
   const enc = ["-c:v", "libx264", "-g", "600", "-pix_fmt", "yuv420p", "-crf", "20", "-r", "30", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart"];
-  const vf = `${crop},fps=30,${BLUR.has(demo) ? "tmix=frames=3:weights=1 2 1," : ""}scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuv420p`;
+  const vf = `${crop},fps=${30 * K},setpts=PTS/${K},${BLUR.has(demo) ? "tmix=frames=3:weights=1 2 1," : ""}scale=${W}:-2:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuv420p`;
   const name = NAMES[demo]; const raw = `${tmp}/raw.mp4`; const mp4 = `${out}/${name}${SUFFIX}.mp4`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", `${tmp}/list.txt`, "-vf", vf, ...enc, raw]);
   const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", raw]).toString());

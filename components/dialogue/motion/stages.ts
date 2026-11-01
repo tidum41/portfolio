@@ -11,6 +11,9 @@ export const STAGE_NOTE_GUTTER = 176;
  *  the smallest 12px product text at 12px or more on a 390px screen. */
 export const MOBILE_PANEL_W = 320;
 export const MOBILE_PANEL_H = 520;
+/** Extra panel height for a stage whose content would otherwise run past the card (the picker still holds a composer
+ *  with its depth chips under the answer, so no UI is cropped). Desktop and phone differ. */
+const EXTRA_H: Partial<Record<string, { d: number; m: number }>> = { picker: { d: 48, m: 16 } };
 
 export const STAGES = {
   hero: { shape: "square", tone: "solution", note: false },
@@ -26,10 +29,11 @@ export type MotionDemo = keyof typeof STAGES;
 export const MOTION_DEMOS = Object.keys(STAGES) as MotionDemo[];
 /** Frame geometry in css px. Square: 535 x 535. Wide (annotated): 655 x 491, 4:3. */
 export function stageBox(d: MotionDemo, mobile = false) {
-  if (mobile) return { w: MOBILE_PANEL_W, h: MOBILE_PANEL_H, top: 0, panelH: MOBILE_PANEL_H, note: false, panelW: MOBILE_PANEL_W };
+  const extra = EXTRA_H[d];
+  if (mobile) { const h = MOBILE_PANEL_H + (extra?.m ?? 0); return { w: MOBILE_PANEL_W, h, top: 0, panelH: h, note: false, panelW: MOBILE_PANEL_W }; }
   const note = STAGES[d].note;
   const w = STAGE_GUTTER + STAGE_PANEL_W + (note ? STAGE_NOTE_GUTTER : STAGE_GUTTER);
-  const h = STAGES[d].shape === "square" ? w : Math.round((w * 3) / 4);
+  const h = (STAGES[d].shape === "square" ? w : Math.round((w * 3) / 4)) + (extra?.d ?? 0);
   return { w, h, top: STAGE_GUTTER, panelH: h - 2 * STAGE_GUTTER, note, panelW: STAGE_PANEL_W };
 }
 
