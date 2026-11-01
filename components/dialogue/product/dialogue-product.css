@@ -4098,3 +4098,70 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @media (max-width: 600px) {
   .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ===== P16 round 5: Paper spec fixes (/workspace/p16-sheets/paper/dialogue-spec.md, audit.md). Scoped to the product UI
+   in the case study (motion stages, the live chat and the template panels). ===== */
+/* 6) Product type: DM Sans 14/24 inside the product, so the page's 15/26 never leaks into a container (audit 2). */
+.dlg-live, .dlg-templates__panel { font-size: var(--ds-text-sm); line-height: 24px; }
+/* Panel edge: 1px stone-200 with radius 24, on top of the case-study drop shadow (audit 3). */
+.dlg-stage { border: 1px solid var(--dp-border); border-radius: var(--ds-radius-3xl); box-sizing: border-box; }
+/* Composer rests on stone-200, the warm border (audit 4). */
+.dlg-live .dp-study-chat__composer-box { border-color: var(--dp-border); }
+
+/* 4) Depth picker, variation B: Dialogue's tab row. Borderless, 36 tall, warm active fill, single select. */
+.dlg-depth { height: 36px; box-sizing: border-box; padding: 2px; gap: 4px; border: 0; border-radius: var(--ds-radius); background: transparent; margin-bottom: 8px; }
+.dlg-depth--inline { margin: 8px 0 0; }
+.dlg-depth .dlg-depth__opt { height: 32px; padding: 0 12px; border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 400; color: var(--dp-muted); }
+.dlg-depth .dlg-depth__opt[aria-pressed="true"], .dlg-depth .dlg-depth__opt[aria-checked="true"],
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:hover { background: var(--dp-warm); color: var(--dp-ink); font-weight: 500; }
+
+/* 1) Thin flag, variation A: warm surface, 40 tall. Follow-up chips full width, 36 tall, count in a fixed 64px lane. */
+.dlg-thin .dp-low-signal { align-items: center; min-height: 40px; box-sizing: border-box; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-muted); }
+.dlg-thin .dp-low-signal__icon { margin-top: 0; color: var(--dp-muted); }
+.dlg-thin .dp-low-signal__text { font-size: var(--ds-text-sm); line-height: 24px; color: var(--dp-muted); }
+.dlg-thin .dp-clips-link { font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); text-decoration: underline; }
+.dlg-thin__label { gap: 8px; font-size: var(--ds-text-sm); line-height: 20px; }
+.dlg-thin__label-icon { width: 16px; height: 16px; }
+.dlg-thin__chips { align-items: stretch; }
+.dlg-live .dlg-suggest.dlg-thin__chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 36px; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
+.dlg-thin__chip-q { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--ds-text-sm); line-height: 20px; color: var(--dp-ink); }
+.dlg-thin__chip-n { flex: 0 0 64px; width: 64px; text-align: right; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* 2) Charts, variation A: 16 padding, 24px bar with a 2px seam, two tabular legend lanes, 120px label lane. */
+.dlg-live .dp-chart-viz-card, .dlg-templates__panel .dp-chart-viz-card { padding: 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); }
+.dlg-live .dp-chart-viz-card__inner, .dlg-templates__panel .dp-chart-viz-card__inner { display: flex; flex-direction: column; gap: 16px; padding: 0; }
+.dlg-live .dp-chart-title, .dlg-templates__panel .dp-chart-title { margin: 0; padding: 0; border: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 400; color: var(--dp-ink); }
+.dlg-live .dp-chart-stack__bar, .dlg-templates__panel .dp-chart-stack__bar { height: 24px; gap: 2px; background: transparent; border-radius: calc(var(--ds-radius-xs) * 2); overflow: hidden; }
+.dlg-live .dp-chart-stack__seg, .dlg-templates__panel .dp-chart-stack__seg { height: 24px; border-radius: 0; }
+.dp-chart-stack__lanes { display: flex; justify-content: space-between; gap: 16px; margin-top: 0; }
+.dp-chart-stack__lane { display: inline-flex; align-items: center; gap: 8px; font-size: var(--ds-text-xs); line-height: 16px; }
+.dp-chart-stack__lane .dp-chart-stack__swatch { width: 8px; height: 8px; border-radius: var(--ds-radius-xs); flex: 0 0 auto; }
+.dp-chart-stack__lane-label { color: var(--dp-muted); }
+.dp-chart-stack__lane-value { font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
+.dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value { color: var(--dp-brand); }
+.dlg-live .dp-chart-bars, .dlg-templates__panel .dp-chart-bars { display: flex; flex-direction: column; gap: 8px; }
+.dlg-live .dp-chart-bars__row, .dlg-templates__panel .dp-chart-bars__row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 72px; align-items: center; column-gap: 16px; min-height: 24px; }
+.dlg-live .dp-chart-bars__label, .dlg-templates__panel .dp-chart-bars__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--ds-text-xs); line-height: 16px; color: var(--dp-muted); }
+.dlg-live .dp-chart-bars__track, .dlg-templates__panel .dp-chart-bars__track { height: 8px; border-radius: calc(var(--ds-radius-xs) * 2); background: var(--dp-warm); }
+.dlg-live .dp-chart-bars__bar, .dlg-templates__panel .dp-chart-bars__bar { height: 8px; border-radius: calc(var(--ds-radius-xs) * 2); }
+
+/* 5) Counts rows, variation A: cards 12 x 16, 8 between, clip lengths in a fixed 40px lane. */
+.dlg-live .dp-clip-quotes { display: flex; flex-direction: column; gap: 8px; }
+.dlg-live .dp-clip-quote { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); }
+.dlg-live .dp-clip-quote + .dp-clip-quote { margin-top: 0; }
+.dlg-live .dp-clip-quote__who { gap: 8px; font-size: var(--ds-text-xs); line-height: 16px; }
+.dlg-live .dp-clip-quote__text { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; }
+.dlg-dur { margin-left: auto; flex: 0 0 40px; width: 40px; text-align: right; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; }
+.dlg-live .dp-clip-quote__who .dlg-play-clip__icon { width: 12px; height: 12px; margin-left: auto; color: var(--dp-muted); }
+.dlg-live .dp-clip-quote__who .dlg-play-clip__icon + .dlg-dur { margin-left: 0; }
+.dlg-live .dp-sources { margin-top: 8px; }
+.dlg-live .dp-source-pill { display: inline-flex; align-items: center; height: 36px; box-sizing: border-box; padding: 8px 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
+
+/* 3) Clip player, variation A: the selected card is warm with a stone-200 edge, 16 below the player, 40px time lanes. */
+.dlg-live .dp-clip-quote--selected, .dlg-stage .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { background: var(--dp-warm); border-color: var(--dp-border); box-shadow: none; padding-bottom: 16px; }
+.dlg-stage .dlg-live__clip { padding-top: 8px; }
+.dlg-live .dp-qplayer__time { flex: 0 0 40px; width: 40px; min-width: 40px; }
+.dlg-live .dp-qplayer__time[data-annotate-part="player-time-total"] { text-align: right; }
+/* P16 round 5: the spec's 12x16 rows and 36px pills no longer fit the square stage, so the stage drops the "+N more"
+   pill; the count line already says how many are shown. */
+.dlg-stage .dlg-stage__sample .dp-sources { display: none; }

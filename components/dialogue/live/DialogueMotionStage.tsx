@@ -143,7 +143,7 @@ function clipRange(time: string, totalStr = "42:10"): CSSProperties {
 function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }: { segment?: boolean; onSide?: (w: "friday" | "unsure") => void; sideOpen?: SideWhich; chart?: boolean }) {
   const bar = (
       <div className="dlg-live__bar" data-side={sideOpen || undefined}>
-        <ChartStackedBar
+        <ChartStackedBar lanes
           total={300}
           segments={[
             { label: "Read it as this Friday", value: 225, display: "225 of 300", focal: true },
@@ -198,7 +198,10 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
         <span className="dp-clip-quote__time">{q.time}</span>
         {/* P16 round 3: the Source level marks each row as playable; tapping a row is the next step. */}
         {/* P16 round 4: Source turns each row into a clip you can play, with its length, so the tap's result is known. */}
-        {playable && !open ? <span className="dlg-play-clip" aria-hidden><PlayGlyph />{clipLen(q.time)}</span> : null}
+        {/* Paper spec counts rows A: every row carries its clip length in a fixed right lane; at Source a quiet play mark
+            sits before it, so the row reads as playable without a coloured chip. */}
+        {playable && !open ? <PlayGlyph /> : null}
+        <span className="dlg-dur">{clipLen(q.time)}</span>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open} closeMs={700}>
@@ -482,7 +485,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         {thinAnswer ? (
           <div className="dlg-stage__item dlg-rise" data-target="thin-answer">
             <ChartVizCard title={`${THIN_REPEAT.friday} of ${THIN_REPEAT.of} repeat shoppers read \u2018Arrives by Friday\u2019 as this Friday.`}>
-              <ChartStackedBar
+              <ChartStackedBar lanes
                 total={THIN_REPEAT.of}
                 segments={[
                   { label: "Read it as this Friday", value: THIN_REPEAT.friday, display: `${THIN_REPEAT.friday} of ${THIN_REPEAT.of}`, focal: true },

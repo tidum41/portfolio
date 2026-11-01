@@ -192,3 +192,9 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - P16 round 4, problem frame (Mudit): the before figure is a static annotated still, so a skimming reader gets the problem at once.
 - P16 round 4, picker still (Mudit): one depth is picked (Chart), with the answer that depth returns. The picker is single-select.
 - P16 round 4, toggles (Mudit): People opens the 225 the bar already emphasises, Source turns rows into play chips with clip lengths, Ana plays, and the cursor starts and ends resting on Insight so the loop has no seam.
+- Round 5: the thin flag is a warm 40px strip, and its chips run full width at 36px with a fixed 64px count lane that never wraps.
+- Round 5: stacked chart bars are 24px with a 120px label lane and tabular legend lanes, inside 16px card padding.
+- Round 5: the clip player sits 16px above the card, keeps 40px time lanes, and the selected card is warm with a #E7E5E4 edge, no brand ring.
+- Round 5: the depth picker is Dialogue's tab row, 36px tall, warm active fill, no border, single select.
+- Round 5: counts rows are cards padded 12 by 16, 8px apart, with the duration in a fixed lane.
+- Round 5: product UI type is scoped to DM Sans 14/24 so page type never leaks in, and the composer border is #E7E5E4.

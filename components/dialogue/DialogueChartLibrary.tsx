@@ -92,7 +92,7 @@ const ENTRIES = [
       "Removed the count axis, the legend and the percent inside each segment. Kept the two counts under their segments, because the reader needs 225 of 300 and nothing else.",
     bad: (
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
-        <ChartStackedBar
+        <ChartStackedBar lanes
           showShare
           legend
           ticks={[0, 75, 150, 225, 300]}
@@ -103,7 +103,7 @@ const ENTRIES = [
     ),
     good: (
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
-        <ChartStackedBar
+        <ChartStackedBar lanes
           total={FRIDAY_TOTAL}
           segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Unsure" ? "unsure" : "said it", value: r.count, display: String(r.count), focal: r.focal }))}
           note={`of ${FRIDAY_TOTAL} interviews`}
@@ -259,7 +259,7 @@ const TEMPLATES: Template[] = [
     con: "No percent is printed.",
     card: () => (
       <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
-        <ChartStackedBar
+        <ChartStackedBar lanes
           total={FRIDAY_TOTAL}
           segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))}
         />

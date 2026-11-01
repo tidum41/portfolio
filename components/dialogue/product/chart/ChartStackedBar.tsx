@@ -18,6 +18,8 @@ type Props = {
   /** Also print each share inside its segment. */
   showShare?: boolean;
   legend?: boolean;
+  /** Paper spec chart A: one legend line with two lanes, each a swatch, a muted label and its tabular count. */
+  lanes?: boolean;
   note?: ReactNode;
   className?: string;
 };
@@ -29,6 +31,7 @@ export default function ChartStackedBar({
   ticks,
   showShare = false,
   legend = false,
+  lanes = false,
   note,
   className,
 }: Props) {
@@ -57,7 +60,17 @@ export default function ChartStackedBar({
           ))}
         </div>
       ) : null}
-      {legend ? (
+      {lanes ? (
+        <div className="dp-chart-stack__lanes" data-annotate-part="stack-lanes">
+          {segments.map((seg, i) => (
+            <span key={seg.label} className="dp-chart-stack__lane" data-focal={seg.focal ? "" : undefined}>
+              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
+              <span className="dp-chart-stack__lane-label">{seg.label}</span>
+              <span className="dp-chart-stack__lane-value">{seg.value}</span>
+            </span>
+          ))}
+        </div>
+      ) : legend ? (
         <div className="dp-chart-stack__legend" data-annotate-part="stack-legend">
           {segments.map((seg, i) => (
             <span key={seg.label} className="dp-chart-stack__legend-item">
