@@ -11,6 +11,7 @@ Single source of truth for what Mudit likes, rejects and has settled. Read this 
 - Real study numbers, keep exact: 18/6 coverage, 4 of 24 mobile, 64/31/22%. No invented numbers (Oct 23).
 - Answer card has 8 versions; no session or round counts exist, so none are stated (Mudit answers, Oct 23).
 - Palette: Dialogue's existing system. Stone-500 #79716b muted, cherry #B43F7F single highlight (r23, Oct 23).
+- Cherry #B43F7F is an approved Dialogue accent token (Nov 1 2026). Use it with hierarchy: focal series an answer is about, picks, and where the reader should look first; at most one cherry focal per figure; neutrals elsewhere. Align with the system without being rigid.
 - Figures show his redesigned charts, never Dialogue's real dark text chart (r24 revert, Oct 23).
 - Figures are recreations; never say they were built from the product's components.
 - Story subject: the answer card's data viz, backed by IBM Carbon research (what helps teams see what, how and why adapted) (Oct 23).

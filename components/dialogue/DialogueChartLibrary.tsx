@@ -194,13 +194,18 @@ const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives b
 
 /* P15 items 11 to 16: one figure for the chart templates. The picker and the notes are case-study chrome; the panel
    holds only Dialogue's answer card. Each template names the IBM Carbon chart it was adapted from, with one pro and
-   one con (P14's pros and cons). Group bars open their people on a tap (P14 bar tap) and show their percent on hover. */
+   one con (P14's pros and cons). Group bars open their people on a tap (P14 bar tap) and show their percent on hover.
+   Round 6: compact index maps question type to chart, with one ruled-out option and a one-line reason. */
 type Template = {
   id: string; name: string; carbon: string; note: string; target: string;
   /** P16: the kind of question the AI matches to this template, so the figure's purpose reads at a glance. */
   ask: string;
   /** P16 round 4: the researcher's question that gets this template, shown above its chart. */
   question: string;
+  /** Round 6: the option tried and dropped for this question type. */
+  ruledOut: string;
+  /** Round 6: one-line reason the ruled-out option lost. */
+  ruledReason: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
@@ -214,6 +219,8 @@ const TEMPLATES: Template[] = [
     carbon: "Simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
+    ruledOut: "100% stacked bar",
+    ruledReason: "Hides how many people sit in each group.",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => (
@@ -255,6 +262,8 @@ const TEMPLATES: Template[] = [
     carbon: "Meter chart",
     note: "Count under each segment",
     target: ".dp-chart-stack__labels",
+    ruledOut: "Donut",
+    ruledReason: "Arcs compare badly inside the panel.",
     pro: "Each side’s count reads at a glance under its segment.",
     con: "No percent is printed.",
     card: () => (
@@ -274,6 +283,8 @@ const TEMPLATES: Template[] = [
     carbon: "Simple bar chart, sorted",
     note: "Asks in rank order",
     target: ".dp-chart-rank__row:first-child",
+    ruledOut: "Lollipop with rank numbers",
+    ruledReason: "Adds rank numbers nobody asked for.",
     pro: "Each ask reads as words, in rank order.",
     con: "Only the top five asks show.",
     card: () => (
@@ -290,6 +301,8 @@ const TEMPLATES: Template[] = [
     carbon: "Lollipop chart",
     note: "Median score per group",
     target: ".dp-chart-dots__dot--focal",
+    ruledOut: "Box plot",
+    ruledReason: "Asks readers to parse quartiles on a 1 to 5 scale.",
     pro: "Each dot says how many people it rests on.",
     con: "A median hides how spread the scores are.",
     card: () => (
@@ -349,12 +362,35 @@ function ChartTemplatesPicker() {
   );
 }
 
+/** Round 6: compact question-type index. One ruled-out option and reason per row.
+ *  Kept pick is weight, not cherry (each chart card below already has one cherry focal). */
+function ChartTypeIndex() {
+  return (
+    <div className="dlg-chart-index" role="list" aria-label="Question type to chart">
+      <p className="dlg-chart-index__head dialogue-caption__label">Question type to chart</p>
+      {TEMPLATES.map((t) => (
+        <div key={t.id} className="dlg-chart-index__row" role="listitem" data-template={t.id}>
+          <p className="dlg-chart-index__ask">{t.ask}</p>
+          <p className="dlg-chart-index__pick">
+            <span className="dlg-chart-index__kept">{t.name}</span>
+            <span className="dlg-chart-index__vs" aria-hidden>over</span>
+            <span className="dlg-chart-index__ruled">{t.ruledOut}</span>
+          </p>
+          <p className="dlg-chart-index__why">{t.ruledReason}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** P16 round 4 option: question-to-chart pairs, all four at once. Each pair is the researcher's question, the
- *  question type the AI read from it, and the chart it returned, so the match itself is what the figure shows. */
+ *  question type the AI read from it, and the chart it returned, so the match itself is what the figure shows.
+ *  Round 6 leads with the compact index so skimmers see the pick and the option that lost. */
 function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
+      <ChartTypeIndex />
       {TEMPLATES.map((t) => (
         <div key={t.id} className="dlg-pair" data-template={t.id}>
           <p className="dlg-pair__type"><span>{t.ask}</span> {t.name}</p>

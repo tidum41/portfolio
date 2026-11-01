@@ -2,6 +2,14 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 6, Nov 1 2026 (copy audit + chart index on review/round-p15)
+- Base: review/round-p15 at 971808f. Commit stays on review/round-p15; no PR, not main.
+- Copy: claim headings restored to TASTE where drifted (problem, data viz); captions aligned to what each figure shows; mock/illustrative notes and outcome claims kept out; every changed line in design/notes/copy-diff-r6.md.
+- Data viz: compact question-type → chart index with one ruled-out option and reason; generative chart mechanism written as concept (classify → ≥3 people → template → bind, else flag); edge cases beyond thin data; Carbon departures named; component proposals (step, heatmap, bullet, sparkline) listed, not built.
+- Cherry #B43F7F recorded in TASTE as approved accent; hierarchy is one cherry focal per figure (charts and the problem underline), neutrals elsewhere. Stageshow used sparingly for index hierarchy only, not new faux UI.
+- Rachel patterns adopted (structure only) in design/notes/rachel-patterns.md. Screenshots: /opt/cursor/artifacts/screenshots/r6-*.png (desktop light/dark, phone light/dark).
+- Preview: none (local validation only)
+
 ## Round P4, Oct 27 2026 (system-only rebuild on the restored b056865 components)
 - Base: review/dialogue-canvas at bf2b3d4 with PR #155 (review/dialogue-guardrails, bd27f9e) merged in; ancestry of b056865 and 7c91898 both checked with merge-base. Branch review/round-p4, PR into review/dialogue-canvas, not merged. No Vercel; validated locally on a fresh production server.
 - Restore: git checkout b056865 for components/dialogue/product, the interview player, the chart library, DialogueProductFigure, DialogueLeadAnswerCompare and DialogueRachelFrame. The gate diff (player, chart library, product/chart) against b056865 is empty. The only changes inside the restored tree are data: the study subtitle in tokens.ts, the transcript rows in SyncedTranscript, the strings and evidence count in ThinDataFigure, and ParagraphAnswerFigure's inline flex style moved to a .dp-prose-stack class so check:dialogue-system passes. sampleData carries the Hearthside values (Friday question, the brief answer pair, SOURCES as Name L. pills, QUOTE_LIST as Owen's quote, CLIPS as Mei's clip, MOBILE_FOLLOWUP restored verbatim from b056865 because the restored FullAnswerFigure imports it). No round P hearthside component is imported; DialogueQueryMoment only lost a foundLabel pass-through the restored QuerySearchStep no longer accepts.

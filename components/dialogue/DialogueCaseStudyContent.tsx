@@ -6,14 +6,10 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
-import DialogueRachelFrame, { DialogueCaption } from "@/components/dialogue/DialogueRachelFrame";
+import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import ClipQuotes from "@/components/dialogue/product/ClipQuotes";
 import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
-import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
-import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import "@/components/dialogue/product/dialogue-product.css";
 
@@ -32,9 +28,6 @@ export const DIALOGUE_TOC_ITEMS = [
   { id: "measure", label: "Shipped and next" },
   { id: "takeaway", label: "Takeaway" },
 ];
-
-const FRIDAY_FINDING =
-  "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 
 function Section({
   id,
@@ -84,18 +77,13 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A scaled product figure: Rachel frame, static wrapper, 448 panel viewport. */
-/* Levels pair: the reasoning behind each prototype. The bet leads as one line; under it, the marks
-   from earlier Dialogue rounds (Phosphor Check and X, bold 16, .dialogue-lib__mark) plus X for
-   the negative: check for the pro, X for the con, minus for the neutral tradeoff that decided it.
-   Draft copy for Mudit to revise. */
+/* Levels pair: the reasoning behind each prototype. Check for the kept path, X for the explored one. */
 type ReasonRow = { kind: "pro" | "con"; text: string };
 const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Starts at the count. Each level is one tap away." };
 const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "Asks for depth before you know if the count matters." };
 const REASON_ICON = { pro: Check, con: X } as const;
 
-/* P15 item 5: the variant letter and the mark share one 16px column, so the letter, the icon and both
-   text lines start on the same two edges. */
+/* P15 item 5: the variant letter and the mark share one 16px column. */
 function LevelReasoning({ letter, label, reasoning }: { letter: string; label: string; reasoning: ReasonRow }) {
   const Icon = REASON_ICON[reasoning.kind];
   return (
@@ -112,20 +100,6 @@ function LevelReasoning({ letter, label, reasoning }: { letter: string; label: s
   );
 }
 
-
-function FridayBar() {
-  return (
-    <ChartVizCard title={FRIDAY_FINDING}>
-      <ChartStackedBar
-        total={300}
-        segments={[
-          { label: "Read it as this Friday", value: 225, display: "225 of 300", focal: true },
-          { label: "Unsure", value: 75, display: "75 of 300" },
-        ]}
-      />
-    </ChartVizCard>
-  );
-}
 
 export function DialogueCaseStudyContent({
   backHref = "/",
@@ -174,8 +148,8 @@ export function DialogueCaseStudyContent({
             <Caption>The final answer: a count of everyone interviewed, with each side one tap from its people. Recorded from my live code recreation.</Caption>
             <Section id="problem">
               <Kicker>The moment</Kicker>
-              <ClaimH2>The chat answered in seconds, but nobody could tell how many agreed</ClaimH2>
-              <p className="dlg-constraint">[DRAFT, Mudit to reword] A fixed 415px panel, and research teams I knew only through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
+              <ClaimH2>Teams needed answers fast, and the detail got lost</ClaimH2>
+              <p className="dlg-constraint">A fixed 448px panel, and research teams I knew through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
               <CaseStudyBody>
                 Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
@@ -231,9 +205,6 @@ export function DialogueCaseStudyContent({
                 </div>
               </figure>
               <Caption>I ruled out A because the reader has to choose a depth before seeing the count. In B each toggle adds one level under the insight, and tapping Ana plays her clip.</Caption>
-              <CaseStudyBody>
-                So every part that follows stays one tap away.
-              </CaseStudyBody>
             </Section>
 
             <Section id="counts">
@@ -241,7 +212,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Every claim leads with how many, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                The count is the level everyone reads, so it leads. A table crowded the 415px panel, so the count became one bar with two labels, and each side opens its people on a tap.
+                The count is the level everyone reads, so it leads. A table crowded the 448px panel, so the count became one bar with two labels, and each side opens its people on a tap.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>what you built before counts, in one line</Placeholder>
@@ -278,19 +249,25 @@ export function DialogueCaseStudyContent({
             </Section>
 
             <Section id="data-viz">
-              <Kicker>Compare a segment</Kicker>
-              <ClaimH2>Charts count people out of their own group</ClaimH2>
+              <Kicker>Match the chart</Kicker>
+              <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
                 A segment is a level only some readers open. A small group can sit beside a large one, and a percent hides that, so each chart template I adapted from IBM Carbon counts people out of their own group.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>how the model matches a question to a template, and which Carbon rule you bent</Placeholder>
+                As concept work, the templates are meant to be chosen by answer shape: classify the shape, check at least 3 people sit behind each value, pick a template and bind the data, or fall back to the flag and clips. <Placeholder>how much the model decides versus fixed rules</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Four questions from the study, each with the chart its answer gets. The AI reads what kind of question it is and picks the template that fits, so the match is what to compare.</Caption>
+              <Caption>Four question types mapped to a chart, each with the option I ruled out and why it lost.</Caption>
+              <CaseStudyBody>
+                Beyond thin data: ties sort by name with no cherry mark; more than about 6 categories roll into Other; zero matches name the closest theme and offer a rephrase; mixed shapes lead with one chart and keep the second as a follow-up chip.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                Where this departs from Carbon: one cherry highlight on the focal value, a warm stone ramp instead of Carbon&rsquo;s categorical palette, printed x of y under every mark, and a thin-data path Carbon does not have. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
+              </CaseStudyBody>
             </Section>
 
             <Section id="thin-data">
@@ -298,10 +275,10 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Two people get a flag, and no chart</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer drops the chart, flags an early signal and offers questions the same sessions can answer with a count.
+                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer drops the chart, flags an early signal and offers questions the same interviews can answer with a count.
               </CaseStudyBody>
               <CaseStudyBody>
-                <Placeholder>why the cutoff sits under 3, and what Dialogue measures that set it</Placeholder>
+                <Placeholder>why the cutoff sits under 3, and what would change your mind</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="system">

@@ -4099,6 +4099,62 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Round 6: compact question-type index. Kept pick is weight; ruled-out stays muted.
+   Stageshow sparingly: one quiet head, real words only on the match, air between rows. */
+.dlg-chart-index {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--dp-radius);
+  background: var(--dp-surface);
+  box-shadow: inset 0 0 0 1px var(--dlg-figure-hairline);
+}
+.dlg-chart-index__head {
+  margin: 0 0 2px;
+  color: var(--color-text-secondary);
+}
+.dlg-chart-index__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 8px 16px;
+  align-items: baseline;
+}
+.dlg-chart-index__ask,
+.dlg-chart-index__pick,
+.dlg-chart-index__why {
+  margin: 0;
+  font-size: var(--text-meta-size);
+  line-height: var(--text-meta-leading);
+}
+.dlg-chart-index__ask { color: var(--color-text-secondary); }
+.dlg-chart-index__pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  color: var(--color-text-primary);
+}
+/* Kept pick is weight, not cherry: each chart card below already carries one cherry focal. */
+.dlg-chart-index__kept {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+.dlg-chart-index__vs {
+  color: var(--color-text-secondary);
+}
+.dlg-chart-index__ruled {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--color-text-secondary) 55%, transparent);
+}
+.dlg-chart-index__why { color: var(--color-text-primary); }
+@media (max-width: 600px) {
+  .dlg-chart-index__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
 /* ===== P16 round 5: Paper spec fixes (/workspace/p16-sheets/paper/dialogue-spec.md, audit.md). Scoped to the product UI
    in the case study (motion stages, the live chat and the template panels). ===== */
 /* 6) Product type: DM Sans 14/24 inside the product, so the page's 15/26 never leaks into a container (audit 2). */
