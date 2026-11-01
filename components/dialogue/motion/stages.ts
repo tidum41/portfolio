@@ -13,7 +13,7 @@ export const MOBILE_PANEL_W = 320;
 export const MOBILE_PANEL_H = 520;
 /** Extra panel height for a stage whose content would otherwise run past the card (the picker still holds a composer
  *  with its depth chips under the answer, so no UI is cropped). Desktop and phone differ. */
-const EXTRA_H: Partial<Record<string, { d: number; m: number }>> = { picker: { d: 48, m: 16 } };
+const EXTRA_H: Partial<Record<string, { d: number; m: number }>> = { picker: { d: 4, m: -28 }, toggles: { d: 56, m: 72 }, hero: { d: 24, m: 0 } };
 
 export const STAGES = {
   hero: { shape: "square", tone: "solution", note: false },

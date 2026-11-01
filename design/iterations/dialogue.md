@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 9, Nov 1 2026 (independent review fixes on review/round-p15)
+- Base: review/round-p15 at the Round 8 tip. Commit stays on review/round-p15; no PR, not main.
+- Source state is single select; one 225 cherry and 75 stone encoding with matching swatches; data viz cards each name their cut and denominator, Ranked is sorted bars, the scale names its dot; clip player runs 04:10 to 04:24; clip head no longer repeats 225; picker band closed; single quotes around 'Arrives by Friday'.
+- Every changed line in design/notes/copy-diff-r9.md; review in design/notes/review-r9.md. Screenshots: /opt/cursor/artifacts/screenshots/r9-*. Preview: none (local validation only)
+
 ## Round 8, Nov 1 2026 (Mudit's page feedback on review/round-p15)
 - Base: review/round-p15 at fc34d18. Commit stays on review/round-p15; no PR, not main.
 - Picker still no longer cropped (taller stage); no figure or take clips content at 1440, 390, 360, light or dark. Source state shows play chips with clip lengths in a fixed lane. Clip take: player times in fixed digit cells, one solid fold on open and close, no pops. Thin take: plus icons back, answer counts as small chips. Phone player drops scrubber and total time under 300px so nothing overlaps.

@@ -16,7 +16,7 @@ import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 
 /* P16: the thin answer stays on the page's one question, "Arrives by Friday". Two shoppers is too thin for a chart; the
    tapped chip counts repeat shoppers from the same 300 interviews (88 of 125, the segment line the answer card already uses). */
-const THIN_QUESTION = "Did anyone miss a delivery over \u201cArrives by Friday\u201d?";
+const THIN_QUESTION = "Did anyone miss a delivery over \u2018Arrives by Friday\u2019?";
 const THIN_FINDING = "Two of 300 shoppers said they missed a delivery after reading it as this Friday.";
 const THIN_CHIPS = [
   "How did repeat shoppers read it?",
@@ -80,7 +80,7 @@ const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number;
   unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure" },
 };
 
-const QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
+const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
 const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
 const MEI = QUOTE_LIST[0];
@@ -136,15 +136,11 @@ function pinDuringGrow(ms = 400) {
   requestAnimationFrame(step);
 }
 
+/** The recorder renders the stage with CSS zoom, where rects are in zoomed px and scrollTop is not; this is the factor between them. */
+const zoomOf = (el: HTMLElement) => (el.offsetHeight ? el.getBoundingClientRect().height / el.offsetHeight : 1) || 1;
 const sec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 /* P16 round 3: each participant's session has its own length (mock), and its own illustrated still. */
-const SESSION_TOTAL: Record<string, string> = { Ana: "31:45", Dev: "27:30", Mei: "42:10", Owen: "35:05" };
-function clipRange(time: string, totalStr = "42:10"): CSSProperties {
-  const [a, z] = time.split(/[\u2013-]/).map(sec);
-  const total = sec(totalStr);
-  return { ["--clip-a" as string]: `${(a / total) * 100}%`, ["--clip-w" as string]: `${((z - a) / total) * 100}%` } as CSSProperties;
-}
 
 function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }: { segment?: boolean; onSide?: (w: "friday" | "unsure") => void; sideOpen?: SideWhich; chart?: boolean }) {
   const bar = (
@@ -185,8 +181,7 @@ function PlusGlyph() {
 const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
 
 function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number; playable?: boolean }) {
-  const start = q.time.split(/[\u2013-]/)[0];
-  const total = SESSION_TOTAL[q.participant] ?? "42:10";
+  const [start, end] = q.time.split(/[\u2013-]/);
   return (
     <div
       className={["dp-clip-quote", open ? "dp-clip-quote--selected" : ""].filter(Boolean).join(" ")}
@@ -204,15 +199,15 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
         <span className="dp-clip-quote__time">{q.time}</span>
         {/* Counts rows: every row carries its clip length in one fixed right lane. Source turns that lane into a play chip
             (same lane, same width), so tapping it is the next step and nothing moves. */}
-        <span className="dlg-dur" data-play={playable && !open ? "" : undefined}>
+        <span className="dlg-dur" data-play={playable && !open ? "" : undefined} data-open={open ? "" : undefined}>
           <PlayGlyph />
           {clipLen(q.time)}
         </span>
       </p>
       <p className="dp-clip-quote__text">{q.quote}</p>
       <Grow open={open} closeMs={560}>
-        <div className="dlg-live__clip" data-who={q.participant.toLowerCase()} style={clipRange(q.time, total)}>
-          <DialogueInterviewPlayer current={playSec !== undefined ? fmt(sec(start) + playSec) : start} total={total} />
+        <div className="dlg-live__clip" data-who={q.participant.toLowerCase()}>
+          <DialogueInterviewPlayer start={start} current={playSec !== undefined ? fmt(Math.min(sec(end), sec(start) + playSec)) : start} total={end} />
         </div>
       </Grow>
     </div>
@@ -230,7 +225,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, 
       <div className="dp-side-sample dlg-stage__sample" data-side={which}>
         <p className="dp-side-sample__head dp-text-body">
           <span className="dlg-sample-key" aria-hidden />
-          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{meta.count}</span> <span className="dlg-nowrap">{meta.label},</span> <span className="dlg-nowrap">{rows.length} shown</span></span>
+          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{rows.length}</span> <span className="dlg-nowrap">quotes shown,</span> <span className="dlg-nowrap">picked from the {meta.count}</span></span>
           <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={collapse}>
             <ChevronUpIcon />
           </button>
@@ -329,7 +324,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         ms *= K();
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
         if (!body || !el) return;
-        const from = body.scrollTop, to = Math.max(0, from + el.getBoundingClientRect().top - body.getBoundingClientRect().top - pad), t0 = performance.now();
+        const from = body.scrollTop, to = Math.max(0, from + (el.getBoundingClientRect().top - body.getBoundingClientRect().top) / zoomOf(body) - pad), t0 = performance.now();
         const ease = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
         const step = () => { const now = performance.now(); const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
         requestAnimationFrame(step);
@@ -344,7 +339,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           const max = body.scrollHeight - body.clientHeight;
           let want = max;
           const el = sel ? document.querySelector<HTMLElement>(sel) : null;
-          if (el) want = Math.min(max, Math.max(0, body.scrollTop + el.getBoundingClientRect().top - body.getBoundingClientRect().top - pad));
+          if (el) want = Math.min(max, Math.max(0, body.scrollTop + (el.getBoundingClientRect().top - body.getBoundingClientRect().top) / zoomOf(body) - pad));
           if (want > body.scrollTop) body.scrollTop = want;
           if (now - t0 < ms) requestAnimationFrame(step);
         };
@@ -371,7 +366,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); const el = document.querySelector<HTMLElement>(sel);
         if (!body || !el) return;
         const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
-        const to = Math.max(0, Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + r.bottom - (b.bottom - pad)));
+        const to = Math.max(0, Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + (r.bottom - b.bottom) / zoomOf(body) + pad));
         const from = body.scrollTop, t0 = performance.now();
         if (ms <= 0) { body.scrollTop = to; return; }
         const step = () => { const now = performance.now(); const p = Math.min(1, (now - t0) / ms); body.scrollTop = from + (to - from) * ease(p); if (p < 1) requestAnimationFrame(step); };
@@ -532,7 +527,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           <AnswerCard chart={level >= 1} sideOpen={level >= 2 ? "friday" : false} />
           <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
             {LEVELS.map((l, i) => (
-              <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i <= level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
+              <button key={l} type="button" className="dlg-depth__opt" aria-pressed={i === level} aria-current={i === level ? "true" : undefined} data-target={`level-${i}`} onClick={() => (window as unknown as { __dlg: { level: (n: number) => void } }).__dlg.level(i)}>{l}</button>
             ))}
           </div>
         </div>
@@ -561,7 +556,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   ) : null;
 
   return (
-    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo} data-neutral={demo === "toggles" || demo === "picker" ? "" : undefined}>
+    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo} data-neutral={demo === "picker" ? "" : undefined}>
       {demo === "hero" ? (
         <div className="dp-study-chat__head">
           <div className="dp-study-chat__head-top">

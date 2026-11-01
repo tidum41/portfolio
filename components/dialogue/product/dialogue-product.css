@@ -3882,7 +3882,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-more:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
 /* Clip bounds on the scrubber: the quote's span inside the whole interview. */
 .dlg-live__clip .dp-qplayer__track { position: relative; }
-.dlg-live__clip .dp-qplayer__track::after { content: ""; position: absolute; top: -2px; bottom: -2px; left: var(--clip-a); width: max(var(--clip-w), 12px); border-radius: var(--dp-radius-chip); background: var(--dp-brand); }
 /* Variant B depth row inside the answer: the composer's segmented control, pressed levels filled. */
 .dlg-depth--inline { margin: 8px 0 0; }
 .dlg-demo--static { line-height: normal; }
@@ -4079,6 +4078,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* The clip take starts and ends on the same unscrolled chat, so its resting state must fit the card with no overflow to settle. */
 .dlg-stage--clip .dlg-stage__body { padding-bottom: var(--dp-chat-pad); }
 [data-mobile] .dlg-stage--clip .dlg-stage__body { padding-bottom: 8px; }
+.dlg-stage.dlg-stage--picker .dlg-stage__body { padding-bottom: 0; }
 /* P16 round 4 (key decision): player times are fixed-width tabular figures, so the scrub never shifts as seconds tick. */
 .dp-qplayer__time { font-feature-settings: "tnum" 1; flex: 0 0 auto; min-width: 5ch; }
 .dp-qplayer__time[data-annotate-part="player-time-current"] { text-align: right; }
@@ -4110,16 +4110,14 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
    name carries weight, the question type and the reason sit under it quietly, and the chart is the product's own card. */
 .dlg-guide__block { display: flex; flex-direction: column; gap: 12px; }
 .dlg-guide__head { margin: 0; color: var(--color-text-secondary); }
-.dlg-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
-.dlg-flow__step { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); text-wrap: balance; }
-.dlg-flow__n { color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; }
+.dlg-flow { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); text-wrap: pretty; max-width: 56ch; }
 .dlg-matches { display: flex; flex-direction: column; }
 .dlg-match { display: grid; grid-template-columns: 168px minmax(0, 1fr); column-gap: 24px; padding: 24px 0; border-top: 1px solid var(--dlg-guide-rule); }
 .dlg-match:last-child { padding-bottom: 8px; }
 .dlg-match__why { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .dlg-match__why > p, .dlg-match__carbon { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
-.dlg-match__ask { color: var(--color-text-tertiary); text-wrap: balance; }
-.dlg-match__why > .dlg-match__name { gap: 6px; margin: 4px 0; font-size: var(--dlg-fs-16); line-height: 24px; color: var(--color-text-primary); }
+.dlg-match__why > .dlg-match__ask { margin: 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: var(--dlg-fs-16); line-height: 24px; color: var(--color-text-primary); text-wrap: balance; }
+.dlg-match__why > .dlg-match__name { gap: 6px; margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
 .dlg-match__name { display: flex; align-items: center; }
 .dlg-match__name > svg { flex: 0 0 auto; color: var(--color-text-tertiary); }
 .dlg-match__reason { color: var(--color-text-secondary); text-wrap: pretty; }
@@ -4127,14 +4125,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-match__panel { padding: 0; }
 .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 156px minmax(0, 1fr) 64px; }
 .dlg-templates__panel.dlg-match__panel .dp-chart-bars__label { width: auto; }
-.dlg-match__carbon { color: var(--color-text-tertiary); }
+.dlg-match__carbon { display: flex; flex-direction: column; gap: 2px; color: var(--color-text-tertiary); }
+.dlg-match__carbon > span { color: var(--color-text-secondary); }
 .dlg-edges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
 .dlg-edges__cell { display: flex; flex-direction: column; gap: 2px; margin: 0; padding-top: 8px; border-top: 1px solid var(--dlg-guide-rule); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
 .dlg-edges__cell > dt { color: var(--color-text-primary); font-family: var(--font-sans-medium); font-weight: 500; }
 .dlg-edges__cell > dd { margin: 0; color: var(--color-text-secondary); text-wrap: pretty; }
 @media (max-width: 600px) {
-  .dlg-flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .dlg-flow__step { flex-direction: row; gap: 8px; }
   .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
   .dlg-edges { grid-template-columns: minmax(0, 1fr); }
   /* On a phone the group bars keep a readable track: label and count share a line, the track runs full width under it. */
@@ -4158,7 +4155,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-depth--inline { margin: 8px 0 0; }
 .dlg-depth .dlg-depth__opt { height: 32px; padding: 0 12px; border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 400; color: var(--dp-muted); }
 .dlg-depth .dlg-depth__opt[aria-pressed="true"], .dlg-depth .dlg-depth__opt[aria-checked="true"],
-.dlg-depth .dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:hover { background: var(--dp-warm); color: var(--dp-ink); font-weight: 500; }
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:hover { background: var(--dp-nav-active-bg); color: var(--dp-ink); font-weight: 500; }
 
 /* 1) Thin flag, variation A: warm surface, 40 tall. Follow-up chips full width, 36 tall, count in a fixed 64px lane. */
 .dlg-thin .dp-low-signal { align-items: center; min-height: 40px; box-sizing: border-box; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-muted); }
@@ -4199,7 +4196,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live .dp-clip-quote__text { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; }
 /* One fixed right lane on every row. Source fills it with a warm play chip (icon, clip length) in the same box, so the
    tap target appears without moving a pixel. The lane's -8px margin keeps the length on the row's right padding. */
-.dlg-dur { margin: -4px -8px -4px auto; flex: 0 0 68px; width: 68px; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 8px; border-radius: var(--dp-radius-chip); background: transparent; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur { margin: -4px -8px -4px auto; flex: 0 0 68px; width: 68px; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 8px; border-radius: var(--dp-radius-chip); background: transparent; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur[data-open] { opacity: 0; }
 .dlg-dur .dlg-play-clip__icon { flex: 0 0 12px; width: 12px; height: 12px; opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); }
 .dlg-dur[data-play] { background: var(--dp-warm); color: var(--dp-ink); font-weight: 500; }
 .dlg-dur[data-play] .dlg-play-clip__icon { opacity: 1; }
@@ -4221,3 +4219,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
 .dlg-stage[data-neutral], .dlg-match__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
+
+/* Round 9: one encoding for the 225 and the 75 in every figure. The 225 is the focal segment (cherry; neutral only inside a
+   figure that already carries another cherry focal). The 75 is stone-500 in the segment and in its legend swatch, so a
+   swatch always matches the segment it names (the pinned chart drew the segment stone-600 and the swatch stone-500). */
+.dialogue-product-root .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]),
+.dlg-live .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]) { background: var(--dp-chart-muted); }
+.dlg-reason .dialogue-lib__mark[data-kind="pro"] { color: var(--color-text-secondary); }
+@media (min-width: 601px) {
+  .dlg-match[data-template="ranked"] .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 188px minmax(0, 1fr) 72px; }
+}

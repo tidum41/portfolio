@@ -245,7 +245,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Ana&rsquo;s clip opens under her quote with its span marked on the scrubber. Tap the quote again to close it.</Caption>
+              <Caption>Ana&rsquo;s clip opens under her quote and runs only its 14 seconds, 04:10 to 04:24. Tap the quote again to close it.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -253,7 +253,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A segment is a level only some readers open, so its chart has to read at a glance. 6 of 9 and 88 of 125 look alike as percents, so each template I adapted from IBM Carbon counts people out of their own group.
+                A segment is a level only some readers open, so its chart has to read at a glance. 9 of 14 and 88 of 125 look alike as percents, so each template I adapted from IBM Carbon counts people out of their own group.
               </CaseStudyBody>
               <CaseStudyBody>
                 The routing in the figure is concept work, written as how the templates are meant to be chosen. <Placeholder>how much the model decides versus fixed rules</Placeholder>

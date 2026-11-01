@@ -45,7 +45,7 @@ function Specimen({
 }
 
 /* Round P5 (Mudit OK Oct 27): two pairs, Hearthside data only. The Friday
-   finding (225 of 300, P6 scale) is the hero's number; the segment counts (6 of 9,
+   finding (225 of 300, P6 scale) is the hero's number; the segment counts (9 of 14,
    88 of 125) are the approved illustrative Hearthside comparison. */
 const FRIDAY_TOTAL = 300;
 const FRIDAY_ROWS = [
@@ -53,7 +53,7 @@ const FRIDAY_ROWS = [
   { label: "Unsure", count: 75, focal: false },
 ] as const;
 const SEGMENTS = [
-  { label: "First-time shoppers", count: 6, of: 9, focal: true },
+  { label: "New shoppers", count: 9, of: 14, focal: true },
   { label: "Repeat shoppers", count: 88, of: 125, focal: false },
 ] as const;
 
@@ -70,8 +70,8 @@ const TOP_ASKS = [
   { rank: 5, label: "Email the day before", value: 8 },
 ] as const;
 const CONFIDENCE = [
-  { label: "New shoppers", value: 2, display: "2 of 5", focal: true, detail: "14 people" },
-  { label: "Repeat shoppers", value: 4, display: "4 of 5", detail: "125 people" },
+  { label: "New shoppers", value: 2, display: "2", focal: true, detail: "14 people" },
+  { label: "Repeat shoppers", value: 4, display: "4", detail: "125 people" },
 ] as const;
 
 const ENTRIES = [
@@ -118,7 +118,7 @@ const ENTRIES = [
     goodName: "My version",
     goodPoints: "Each row says how many people it rests on, which makes exact comparison a little slower.",
     name: "How segments differ",
-    verdict: "Percents make 67% and 70% look alike, so each row counts people out of its own group: 6 of 9 first-time shoppers, 88 of 125 repeat.",
+    verdict: "Percents make 64% and 70% look alike, so each row counts people out of its own group: 9 of 14 new shoppers, 88 of 125 repeat.",
     tech: [
       ["Data shape", "one count per segment, out of that segment."],
       ["Encoding", "bar length against each segment's own size."],
@@ -127,7 +127,7 @@ const ENTRIES = [
     caption:
       "Swapped the percents for counts out of each segment, and kept the cherry on the row the answer leads with.",
     bad: (
-      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
         <ChartBarList
           rows={SEGMENTS.map((r) => ({ label: r.label, value: Math.round((r.count / r.of) * 100), display: formatChartPercent(Math.round((r.count / r.of) * 100)), focal: r.focal }))}
           max={100}
@@ -175,14 +175,14 @@ const SCENARIOS = [
     name: "Confidence in the delivery date",
     note: "Shoppers rated how sure they were of the delivery date on a 1–5 scale (1 = not sure, 5 = sure). Dot is the group median; the label is that score and how many people it rests on.",
     card: (
-      <ChartVizCard title="How sure shoppers were about the delivery date">
+      <ChartVizCard title="How sure shoppers were about the delivery date, median score">
         <ChartDotPlot
           rows={[...CONFIDENCE]}
           max={5}
           ticks={[1, 2, 3, 4, 5]}
           formatTick={(n) => String(n)}
           gridAt={[1, 2, 3, 4, 5]}
-          note="1 = not sure, 5 = sure."
+          note="Each dot is a group’s median score. 1 = not sure, 5 = sure."
         />
       </ChartVizCard>
     ),
@@ -190,7 +190,7 @@ const SCENARIOS = [
 ] as const;
 
 /** The segment question that asks for the redesigned chart (data viz, one pair). */
-const SEGMENT_QUESTION = "Do first-time and repeat shoppers read \u201cArrives by Friday\u201d the same way?";
+const SEGMENT_QUESTION = "Do new and repeat shoppers read \u2018Arrives by Friday\u2019 the same way?";
 
 /* P15 items 11 to 16: one figure for the chart templates. The picker and the notes are case-study chrome; the panel
    holds only Dialogue's answer card. Each template names the IBM Carbon chart it was adapted from, with one pro and
@@ -202,6 +202,8 @@ type Template = {
   ask: string;
   /** P16 round 4: the researcher's question that gets this template, shown above its chart. */
   question: string;
+  /** Round 9: the cut this card counts out of, so no two cards read as one denominator. */
+  cut: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
@@ -215,11 +217,12 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
+    cut: "each group, out of its own size",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => (
       <>
-        <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
+        <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
           <div className="dlg-live__bars">
             <ChartBarList
               rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal }))}
@@ -251,11 +254,12 @@ const TEMPLATES: Template[] = [
   {
     id: "split",
     ask: "Splits everyone into two sides",
-    question: "How do shoppers read \u201cArrives by Friday\u201d?",
+    question: "How do shoppers read \u2018Arrives by Friday\u2019?",
     name: "Split",
     carbon: "meter chart",
     note: "Count under each segment",
     target: ".dp-chart-stack__labels",
+    cut: "all 300 shoppers",
     pro: "Each side’s count reads at a glance under its segment.",
     con: "No percent is printed.",
     card: () => (
@@ -275,11 +279,15 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart, sorted",
     note: "Asks in rank order",
     target: ".dp-chart-rank__row:first-child",
-    pro: "Each ask reads as words, in rank order.",
+    cut: "all 300 shoppers, top five asks",
+    pro: "Bars run longest first, so the top ask reads first.",
     con: "Only the top five asks show.",
     card: () => (
-      <ChartVizCard title="What shoppers asked for after checkout">
-        <ChartRankList rows={[...TOP_ASKS]} />
+      <ChartVizCard title="What shoppers asked for after checkout, top five">
+        <ChartBarList
+          rows={TOP_ASKS.map((r) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}`, focal: r.rank === 1 }))}
+          max={TOP_ASKS[0].value}
+        />
       </ChartVizCard>
     ),
   },
@@ -291,17 +299,18 @@ const TEMPLATES: Template[] = [
     carbon: "lollipop chart, stems dropped",
     note: "Median score per group",
     target: ".dp-chart-dots__dot--focal",
-    pro: "Each dot says how many people it rests on.",
+    cut: "the same two groups, scored 1 to 5",
+    pro: "Each dot is a group\u2019s median, with its people count beside it.",
     con: "A median hides how spread the scores are.",
     card: () => (
-      <ChartVizCard title="How sure shoppers were about the delivery date">
+      <ChartVizCard title="How sure shoppers were about the delivery date, median score">
         <ChartDotPlot
           rows={[...CONFIDENCE]}
           max={5}
           ticks={[1, 2, 3, 4, 5]}
           formatTick={(n) => String(n)}
           gridAt={[1, 2, 3, 4, 5]}
-          note="1 = not sure, 5 = sure."
+          note="Each dot is a group’s median score. 1 = not sure, 5 = sure."
         />
       </ChartVizCard>
     ),
@@ -350,12 +359,6 @@ function ChartTemplatesPicker() {
   );
 }
 
-/* Concept routing, written as how the templates are meant to be chosen; not a claim about Dialogue's model. */
-const ROUTE = [
-  "Classify the answer shape",
-  "Check for 3 or more people behind each value",
-  "Pick the template and bind the data",
-];
 const EDGES = [
   { when: "Two values tie", then: "No highlight, and the sentence says they tie." },
   { when: "Too many themes", then: "The top rows show, and the rest roll into Other." },
@@ -364,20 +367,13 @@ const EDGES = [
 ];
 
 /* Round 8: the figure reads as one table. Each row is a question type, the chart it gets, the reason in one line, and
-   the product's own chart card. The routing and the awkward shapes are short bands around it. Only the first chart
-   keeps cherry (its 6 of 9 is the point of the figure); the other three are neutral. */
+   the product's own chart card. The routing and the awkward shapes are short bands around it. Only the split chart
+   keeps cherry (its 225 is the one encoding the whole page shares); the other three are neutral. */
 function ChartFlow() {
   return (
     <div className="dlg-guide__block">
       <p className="dlg-guide__head dialogue-caption__label">How an answer reaches a chart, as concept</p>
-      <ol className="dlg-flow">
-        {ROUTE.map((step, i) => (
-          <li key={step} className="dlg-flow__step">
-            <span className="dlg-flow__n">{i + 1}</span>
-            <span>{step}</span>
-          </li>
-        ))}
-      </ol>
+      <p className="dlg-flow">The shape of the answer picks the template. A value with fewer than 3 people behind it gets a flag in place of a chart.</p>
     </div>
   );
 }
@@ -410,10 +406,10 @@ function ChartMatches() {
             <p className="dlg-match__reason">{t.pro}</p>
           </div>
           <div className="dlg-match__chart">
-            <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${dialogueProductFontClassName}`} data-neutral={i === 0 ? undefined : ""}>
+            <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${dialogueProductFontClassName}`} data-neutral={i === 1 ? undefined : ""}>
               {t.card(t.id === "group" && open, setOpen)}
             </div>
-            <p className="dlg-match__carbon">Adapted from Carbon&rsquo;s {t.carbon}</p>
+            <p className="dlg-match__carbon"><span>Cut: {t.cut}.</span> Adapted from Carbon&rsquo;s {t.carbon}</p>
           </div>
         </div>
       ))}

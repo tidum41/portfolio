@@ -71,8 +71,9 @@ export function TimeDigits({ time }: { time: string }) {
 }
 
 /** current and total are mm:ss; the played bar follows them so the clip time matches the quote row. */
-export function DialogueInterviewPlayer({ current = "18:27", total = "42:10" }: { current?: string; total?: string } = {}) {
-  const played = Math.round((toSec(current) / toSec(total)) * 1000) / 10;
+export function DialogueInterviewPlayer({ current = "18:27", total = "42:10", start }: { current?: string; total?: string; /** When set, the timeline is the clip: it runs from `start` to `total` instead of from 0. */ start?: string } = {}) {
+  const from = start ? toSec(start) : 0;
+  const played = Math.max(0, Math.min(100, Math.round(((toSec(current) - from) / (toSec(total) - from)) * 1000) / 10));
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
       {/* A neutral speaker placeholder: no frame from any real recording appears in a visual. */}

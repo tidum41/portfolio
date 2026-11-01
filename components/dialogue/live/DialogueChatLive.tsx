@@ -42,7 +42,7 @@ export const LIVE_TIMING = {
  */
 export const QUICK_TIMING = { analyzingMs: 450, firstTextMs: 150 } as const;
 
-const QUESTION = "How do shoppers read \u201cArrives by Friday\u201d?";
+const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
 /**
  * Chart rule, shared by both variants: when a question asks how much of the study holds a view,
  * the answer carries its chart, whatever depth was picked. A count without its bar can't be checked
