@@ -18,3 +18,6 @@ Checks: motion checker 24 of 24, typecheck clean, check:dialogue-system OK, DOM 
 ## Weak spots left
 - Phone takes scroll inside a 320 by 520 panel, so a mid-scroll frame shows a row cut by the panel edge; held frames are clean.
 - Arial fallback in this environment does not render weight 500, so the medium weight is checked in CSS, not in the screenshots.
+
+## Follow-up
+The pointer in the takes is the take's own cursor, not the OS cursor (the screencast does not capture that). It covered the 'I' in Ana's quote when it tapped the row. Opening taps in the clip, every and toggles takes now land on the empty right side of the row, below the play chip. Those three takes were re-recorded in all four variants; motion checker 24 of 24 after the Split recolour.
