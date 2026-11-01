@@ -138,6 +138,7 @@ export function DialogueCaseStudyContent({
                 </DialogueRachelFrame>
               </figure>
             </div>
+            <Caption>The final answer: 225 of 300 shoppers, and tapping the 225 brings Ana&rsquo;s quote under it. Recorded from my live code recreation.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
@@ -145,11 +146,10 @@ export function DialogueCaseStudyContent({
               Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
               answer so a research team can move fast on an insight and still check the people behind it.
             </p>
-            <Caption>The final answer: a count of everyone interviewed, with each side one tap from its people. Recorded from my live code recreation.</Caption>
             <Section id="problem">
               <Kicker>The moment</Kicker>
               <ClaimH2>Teams needed answers fast, and the detail got lost</ClaimH2>
-              <p className="dlg-constraint">A fixed 448px panel, and research teams I knew through Dialogue&rsquo;s customer stories, including Kalshi&rsquo;s share-out by tomorrow morning.</p>
+              <p className="dlg-constraint">Two constraints: Dialogue&rsquo;s fixed 448px chat panel, and teams I knew only through Dialogue&rsquo;s customer stories, where Kalshi sets the bar at a share-out by tomorrow morning.</p>
               <CaseStudyBody>
                 Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
@@ -224,7 +224,7 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Tapping 75 swaps the 225&rsquo;s shoppers for the 75 who were unsure. Tapping 225 swaps them back.</Caption>
+              <Caption>With the 225 open, tapping 75 swaps in two of the unsure shoppers, and tapping 225 swaps them back.</Caption>
               <CaseStudyBody>
                 Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and the rest open inside the answer.
               </CaseStudyBody>
@@ -236,7 +236,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>A quote plays from its moment, inside the answer</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                The source is the deepest level and the heaviest to load. The clip loads on a tap, starts at the quote&rsquo;s timestamp and folds away when you&rsquo;re done.
+                The source is the deepest level and the heaviest to load, so the clip loads only on a tap and starts at the moment the quote was said.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
@@ -253,20 +253,17 @@ export function DialogueCaseStudyContent({
               <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                A segment is a level only some readers open. A small group can sit beside a large one, and a percent hides that, so each chart template I adapted from IBM Carbon counts people out of their own group.
+                A segment is a level only some readers open, so its chart has to read at a glance. 6 of 9 and 88 of 125 look alike as percents, so each template I adapted from IBM Carbon counts people out of their own group.
               </CaseStudyBody>
               <CaseStudyBody>
-                As concept work, the templates are meant to be chosen by answer shape: classify the shape, check at least 3 people sit behind each value, pick a template and bind the data, or fall back to the flag and clips. <Placeholder>how much the model decides versus fixed rules</Placeholder>
+                The routing in the figure is concept work, written as how the templates are meant to be chosen. <Placeholder>how much the model decides versus fixed rules</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Four question types mapped to a chart, each with the option I ruled out and why it lost.</Caption>
+              <Caption>Each question type gets one chart, and the index names the option it beat. Edge cases sit under the templates.</Caption>
               <CaseStudyBody>
-                Beyond thin data: ties sort by name with no cherry mark; more than about 6 categories roll into Other; zero matches name the closest theme and offer a rephrase; mixed shapes lead with one chart and keep the second as a follow-up chip.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                Where this departs from Carbon: one cherry highlight on the focal value, a warm stone ramp instead of Carbon&rsquo;s categorical palette, printed x of y under every mark, and a thin-data path Carbon does not have. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
+                Where I departed from Carbon, it was to keep people countable: one highlight on the value the answer is about, and counts printed out of their own group wherever groups differ in size. Carbon has no rule for thin data, so that path is my addition. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
               </CaseStudyBody>
             </Section>
 
@@ -275,7 +272,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Two people get a flag, and no chart</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer drops the chart, flags an early signal and offers questions the same interviews can answer with a count.
+                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>why the cutoff sits under 3, and what would change your mind</Placeholder>
@@ -287,16 +284,16 @@ export function DialogueCaseStudyContent({
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Two shoppers are too few for a chart, so a flag takes its place. The follow-ups ask what the same interviews can count, and each shows how many answers it would draw on. Recorded from my live code recreation.</Caption>
+              <Caption>Two shoppers are too few for a chart, so a flag takes its place, and tapping a follow-up answers it with a count out of 125. Recorded from my live code recreation.</Caption>
             </Section>
 
 
             <Section id="measure">
               <Kicker>What shipped</Kicker>
               <ClaimH2>Counts shipped, and the rest is a concept I&rsquo;d test</ClaimH2>
-              <StatusLine>Counts shipped. The test is proposed, with no results yet</StatusLine>
+              <StatusLine>Proposed test, no results yet</StatusLine>
               <CaseStudyBody>
-                Counts shipped in Dialogue. Clips in place, segment charts, the thin flag and depth toggles are concepts, and the answer format took 8 versions to settle.
+                Everything here beyond the count is a concept I built in code, and the answer format took 8 versions to settle.
               </CaseStudyBody>
               <CaseStudyBody>
                 I&rsquo;d watch time from question to share-out next to how often a side gets opened. Neither tells me whether a checked answer changed a decision, and that&rsquo;s the gap I&rsquo;d ask teams about.

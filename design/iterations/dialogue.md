@@ -2,6 +2,13 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 7, Nov 1 2026 (independent review on review/round-p15)
+- Base: review/round-p15 at 39064fb. Commit stays on review/round-p15; no PR, not main.
+- Data viz figure rebuilt as on-well chrome readable in dark, full column width, one route list, neutral kept and ruled marks, Carbon source on each pair label; scale chart value and count no longer duplicate.
+- Phone takes get a well strip above the card so the play control stays off the product UI (TASTE Oct 28).
+- Copy: hero caption moved under the take; captions name what each take shows; the edge-case paragraph and "about 6" cut; the Carbon paragraph and the closing section tightened. Every line in design/notes/copy-diff-r7.md; review in design/notes/review-r7.md, which also corrects the unchecked round 6 dark and phone notes.
+- Screenshots: /opt/cursor/artifacts/screenshots/r7-*.png. Preview: none (local validation only)
+
 ## Round 6, Nov 1 2026 (copy audit + chart index on review/round-p15)
 - Base: review/round-p15 at 971808f. Commit stays on review/round-p15; no PR, not main.
 - Copy: claim headings restored to TASTE where drifted (problem, data viz); captions aligned to what each figure shows; mock/illustrative notes and outcome claims kept out; every changed line in design/notes/copy-diff-r6.md.

@@ -296,6 +296,10 @@
   --dp-chart-detail-width: 36px;
 }
 
+.dp-chart-dots--detail {
+  --dp-chart-detail-width: 64px;
+}
+
 .dp-chart-bars__detail,
 .dp-chart-dots__detail {
   width: var(--dp-chart-detail-width);

@@ -2272,6 +2272,7 @@ agentation-toolbar,
   --dialogue-section-gap: 48px;
   --section-gap: var(--dialogue-section-gap);
   --section-pb: 0px;
+  --dlg-guide-rule: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
 }
 .dialogue-case-study .cs-meta-name {
   display: block;
@@ -3437,7 +3438,7 @@ html[data-theme="dark"] .dialogue-case-study .cs-status-line {
   font-size: var(--dlg-fs-16);
   line-height: 1.6;
   max-width: 640px;
-  margin: 0;
+  margin: 0 0 16px;
 }
 @media (max-width: 600px) {
   .dialogue-case-study .cs-claim-h2 {

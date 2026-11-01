@@ -4007,6 +4007,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dialogue-case-study .dlg-demo__video { background: var(--figure-well-dialogue); }
 .cs-hero-media-frame .dlg-demo__video { border-radius: inherit; }
 @media (max-width: 600px) { .dialogue-case-study .cs-figure .dlg-demo, .cs-hero-media-frame .dlg-demo { margin: 0; } }
+/* Phone takes are cropped to the card, so the well grows a strip above it and the play control stays on the well, off the product UI. */
+@media (max-width: 600px) { .dialogue-case-study .cs-figure .dialogue-rachel-frame:has(.dlg-demo .phone-mockup-play-btn) > .dialogue-rachel-frame__pad { padding-top: 60px; } }
 /* Items 11 to 16: chart templates. Picker and notes are case-study chrome; the panel holds only the answer. */
 .dlg-templates { padding: 32px 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; }
 .dlg-templates__pick { display: flex; flex-wrap: wrap; gap: 4px 20px; }
@@ -4091,68 +4093,54 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-pair { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .dlg-pair__ask { display: flex; flex-direction: column; gap: 4px; }
 .dlg-pair__q { align-self: flex-start; margin: 0; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-ink); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
-.dlg-pair__type { margin: 0; font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-primary); }
+.dlg-pair__type { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
 .dlg-pair__type > span { color: var(--color-text-secondary); margin-right: 8px; }
 .dlg-templates--grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
-.dlg-templates--stack { max-width: 520px; margin-inline: auto; width: 100%; }
+.dlg-templates--stack { width: 100%; padding-inline: max(48px, calc((100% - 448px) / 2)); }
 @media (max-width: 600px) {
   .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
+  .dlg-templates--stack { padding-inline: 16px; }
+  /* The 1 to 5 plot keeps a usable track on a phone: group and size on one line, the plot and its value under it. */
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label detail" "plot value"; column-gap: var(--dp-chart-gutter); row-gap: 4px; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__label { grid-area: label; width: auto; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__detail { grid-area: detail; width: auto; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__plot { grid-area: plot; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__value { grid-area: value; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis { grid-template-areas: "plot value"; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis .dp-chart-dots__label,
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis .dp-chart-dots__detail { display: none; }
 }
 
-/* Round 6: compact question-type index. Kept pick is weight; ruled-out stays muted.
-   Stageshow sparingly: one quiet head, real words only on the match, air between rows. */
-.dlg-chart-index {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border-radius: var(--dp-radius);
-  background: var(--dp-surface);
-  box-shadow: inset 0 0 0 1px var(--dlg-figure-hairline);
-}
-.dlg-chart-index__head {
-  margin: 0 0 2px;
-  color: var(--color-text-secondary);
-}
-.dlg-chart-index__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.1fr);
-  gap: 8px 16px;
-  align-items: baseline;
-}
-.dlg-chart-index__ask,
-.dlg-chart-index__pick,
-.dlg-chart-index__why {
-  margin: 0;
-  font-size: var(--text-meta-size);
-  line-height: var(--text-meta-leading);
-}
-.dlg-chart-index__ask { color: var(--color-text-secondary); }
-.dlg-chart-index__pick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 6px;
-  color: var(--color-text-primary);
-}
-/* Kept pick is weight, not cherry: each chart card below already carries one cherry focal. */
-.dlg-chart-index__kept {
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-.dlg-chart-index__vs {
-  color: var(--color-text-secondary);
-}
-.dlg-chart-index__ruled {
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--color-text-secondary) 55%, transparent);
-}
-.dlg-chart-index__why { color: var(--color-text-primary); }
+/* Round 7: the data viz guide is case-study chrome on the well (page tokens, both themes), not a product card.
+   Rows are split by hairlines, the kept pick carries weight, and the ruled-out option takes the neutral X mark. */
+.dlg-guide { display: flex; flex-direction: column; gap: 24px; padding-bottom: 8px; }
+.dlg-guide--end { padding: 8px 0 0; border-top: 1px solid var(--dlg-guide-rule); }
+.dlg-guide__block { display: flex; flex-direction: column; gap: 8px; }
+.dlg-guide__head { margin: 0; color: var(--color-text-secondary); }
+.dlg-route { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-radius: var(--dp-radius-control); box-shadow: inset 0 0 0 1px var(--dlg-guide-rule); }
+.dlg-route__step { display: grid; grid-template-columns: 16px 1fr; column-gap: 8px; align-items: start; padding: 8px 12px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-route__step + .dlg-route__step { border-top: 1px solid var(--dlg-guide-rule); }
+.dlg-route__n { color: var(--color-text-tertiary); }
+.dlg-route__fallback { margin: 0; padding-left: 36px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
+.dlg-index { display: flex; flex-direction: column; }
+.dlg-index__row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); column-gap: 16px; padding: 12px 0; border-top: 1px solid var(--dlg-guide-rule); }
+.dlg-index__row:first-child { border-top: 0; padding-top: 4px; }
+.dlg-index__ask, .dlg-index__kept, .dlg-index__ruled, .dlg-index__then { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); text-wrap: pretty; }
+.dlg-index__ask { text-wrap: balance; }
+.dlg-index__ask { color: var(--color-text-secondary); }
+.dlg-index__picks { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dlg-index__mark-row { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px; align-items: start; }
+.dlg-index__mark-row .dialogue-lib__mark { align-self: start; margin-top: 0; }
+.dlg-index__kept { color: var(--color-text-primary); font-weight: 500; }
+.dlg-index__kept .dialogue-lib__mark { color: var(--color-text-primary); }
+.dlg-index__ruled { color: var(--color-text-secondary); }
+.dlg-index__ruled-name { color: var(--color-text-primary); }
+.dlg-index__then { color: var(--color-text-primary); }
+.dlg-pair__type--named > .dlg-pair__name { margin-right: 4px; color: var(--color-text-primary); font-family: var(--font-sans-medium); font-weight: 500; }
+.dlg-pair__type--named > .dlg-pair__carbon { margin-right: 0; color: var(--color-text-tertiary); }
 @media (max-width: 600px) {
-  .dlg-chart-index__row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2px;
-  }
+  .dlg-route__fallback { padding-left: 12px; }
+  .dlg-index__row { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
 }
 
 /* ===== P16 round 5: Paper spec fixes (/workspace/p16-sheets/paper/dialogue-spec.md, audit.md). Scoped to the product UI

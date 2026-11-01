@@ -70,8 +70,8 @@ const TOP_ASKS = [
   { rank: 5, label: "Email the day before", value: 8 },
 ] as const;
 const CONFIDENCE = [
-  { label: "New shoppers", value: 2, display: "2 of 5 scale, 14 people", focal: true, detail: "of 14" },
-  { label: "Repeat shoppers", value: 4, display: "4 of 5 scale, 125 people", detail: "of 125" },
+  { label: "New shoppers", value: 2, display: "2 of 5", focal: true, detail: "14 people" },
+  { label: "Repeat shoppers", value: 4, display: "4 of 5", detail: "125 people" },
 ] as const;
 
 const ENTRIES = [
@@ -362,38 +362,93 @@ function ChartTemplatesPicker() {
   );
 }
 
-/** Round 6: compact question-type index. One ruled-out option and reason per row.
- *  Kept pick is weight, not cherry (each chart card below already has one cherry focal). */
+/* Concept routing, written as how the templates are meant to be chosen; not a claim about Dialogue's model. */
+const ROUTE = [
+  "Classify the answer shape",
+  "Check for 3 or more people behind each value",
+  "Pick the template and bind the data",
+];
+const EDGES = [
+  { when: "Two values tie", then: "No highlight, and the sentence says they tie." },
+  { when: "Too many themes", then: "The top rows show, and the rest roll into Other." },
+  { when: "Nothing matches", then: "The closest theme shows with its count, with a rephrase to try." },
+  { when: "Two shapes in one answer", then: "One chart leads, and the other becomes a follow-up." },
+];
+
+/* Case-study chrome on the well, in page tokens so it reads in both themes. Cherry stays inside the product
+   panels below, one focal each; the index uses weight and the neutral X mark. */
+function ChartRoute() {
+  return (
+    <div className="dlg-guide__block">
+      <p className="dlg-guide__head dialogue-caption__label">How an answer reaches a chart, as concept</p>
+      <ol className="dlg-route">
+        {ROUTE.map((step, i) => (
+          <li key={step} className="dlg-route__step">
+            <span className="dlg-reason__key dlg-route__n">{i + 1}</span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="dlg-route__fallback">Under 3 people, the answer skips the chart and shows a flag with clips.</p>
+    </div>
+  );
+}
+
 function ChartTypeIndex() {
   return (
-    <div className="dlg-chart-index" role="list" aria-label="Question type to chart">
-      <p className="dlg-chart-index__head dialogue-caption__label">Question type to chart</p>
-      {TEMPLATES.map((t) => (
-        <div key={t.id} className="dlg-chart-index__row" role="listitem" data-template={t.id}>
-          <p className="dlg-chart-index__ask">{t.ask}</p>
-          <p className="dlg-chart-index__pick">
-            <span className="dlg-chart-index__kept">{t.name}</span>
-            <span className="dlg-chart-index__vs" aria-hidden>over</span>
-            <span className="dlg-chart-index__ruled">{t.ruledOut}</span>
-          </p>
-          <p className="dlg-chart-index__why">{t.ruledReason}</p>
-        </div>
-      ))}
+    <div className="dlg-guide__block">
+      <p className="dlg-guide__head dialogue-caption__label">Question type to chart</p>
+      <div className="dlg-index" role="list">
+        {TEMPLATES.map((t) => (
+          <div key={t.id} className="dlg-index__row" role="listitem">
+            <p className="dlg-index__ask">{t.ask}</p>
+            <div className="dlg-index__picks">
+              <p className="dlg-index__mark-row dlg-index__kept">
+                <span className="dlg-reason__key dialogue-lib__mark" data-kind="kept" aria-hidden><Check size={14} weight="bold" /></span>
+                <span>{t.name}</span>
+              </p>
+              <p className="dlg-index__mark-row dlg-index__ruled">
+                <span className="dlg-reason__key dialogue-lib__mark" data-kind="con" aria-hidden><X size={14} weight="bold" /></span>
+                <span><span className="dlg-index__ruled-name">{t.ruledOut}.</span> {t.ruledReason}</span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChartEdges() {
+  return (
+    <div className="dlg-guide__block">
+      <p className="dlg-guide__head dialogue-caption__label">When the shape is awkward</p>
+      <div className="dlg-index" role="list">
+        {EDGES.map((e) => (
+          <div key={e.when} className="dlg-index__row" role="listitem">
+            <p className="dlg-index__ask">{e.when}</p>
+            <p className="dlg-index__then">{e.then}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 /** P16 round 4 option: question-to-chart pairs, all four at once. Each pair is the researcher's question, the
  *  question type the AI read from it, and the chart it returned, so the match itself is what the figure shows.
- *  Round 6 leads with the compact index so skimmers see the pick and the option that lost. */
+ *  Round 7: the routing and the index lead, the pairs prove them, and the awkward shapes close the figure. */
 function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
-      <ChartTypeIndex />
+      <div className="dlg-guide">
+        <ChartRoute />
+        <ChartTypeIndex />
+      </div>
       {TEMPLATES.map((t) => (
         <div key={t.id} className="dlg-pair" data-template={t.id}>
-          <p className="dlg-pair__type"><span>{t.ask}</span> {t.name}</p>
+          <p className="dlg-pair__type dlg-pair__type--named"><span className="dlg-pair__name">{t.name}</span> <span className="dlg-pair__carbon">from Carbon&rsquo;s {t.carbon.toLowerCase()}</span></p>
           {/* The panel is the product's: the researcher's question, then the chart its answer gets. */}
           <div className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id}>
             <UserMessageBubble>{t.question}</UserMessageBubble>
@@ -401,6 +456,9 @@ function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
           </div>
         </div>
       ))}
+      <div className="dlg-guide dlg-guide--end">
+        <ChartEdges />
+      </div>
     </div>
   );
 }
