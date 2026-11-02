@@ -18,7 +18,12 @@ if (fs.existsSync(hlsLightSrc)) {
 const dialkitAlias =
   process.env.NODE_ENV === "production"
     ? { dialkit: "./lib/dialkit-prod.tsx" }
-    : undefined;
+    : {
+        // Dev: gate panels so the home panel only shows PS3Silk
+        // (lib/dialkit-gated.tsx); the gate imports the real package.
+        dialkit: "./lib/dialkit-gated.tsx",
+        "dialkit-real": "./node_modules/dialkit/dist/index.js",
+      };
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -28,10 +33,16 @@ const nextConfig = {
   // "Can't resolve '@/components/PhoneEmbed'" against a stale page.tsx.
   turbopack: {
     root: __dirname,
-    ...(dialkitAlias ? { resolveAlias: dialkitAlias } : {}),
+    resolveAlias: dialkitAlias,
   },
   webpack: (config, { dev }) => {
-    if (!dev) {
+    if (dev) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "dialkit$": path.join(__dirname, "lib/dialkit-gated.tsx"),
+        "dialkit-real$": path.join(__dirname, "node_modules/dialkit/dist/index.js"),
+      };
+    } else {
       config.resolve.alias = {
         ...config.resolve.alias,
         // Exact match only, so `dialkit/store` still resolves to the real

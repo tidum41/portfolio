@@ -22,6 +22,7 @@
       }
     ],
     "paths": {
+      "dialkit-real": ["./node_modules/dialkit/dist/index.d.ts"],
       "@/*": [
         "./*"
       ]
