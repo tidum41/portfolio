@@ -2,180 +2,145 @@
 
 import { useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
+import { setHeroScrim, type ScrimLine } from "@/lib/heroScrim";
 
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
-const smoothstep = (t: number) => t * t * (3 - 2 * t);
+const TEXT_SELECTORS = [".hero-heading", "[data-hero-sub]"];
 
-// Cheap deterministic per-pixel hash (the classic GLSL sin-hash) — good enough
-// for dithering, since we only need noise, not real randomness or cross-run
-// reproducibility, and it costs nothing extra to compute inline in the pixel loop.
-function hash(x: number, y: number) {
-  const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-  return s - Math.floor(s);
+// Page position from the offset chain, so entrance translateY animations on
+// the text (or its EntranceItem wrapper) never skew the measurement.
+function layoutOrigin(el: HTMLElement) {
+  let x = 0, y = 0;
+  let n: HTMLElement | null = el;
+  while (n) {
+    x += n.offsetLeft;
+    y += n.offsetTop;
+    n = n.offsetParent as HTMLElement | null;
+  }
+  return { x, y };
 }
 
-// Renders the falloff as a pre-dithered raster instead of a CSS gradient.
-//
-// A CSS radial-gradient — no matter how many color-mix() stops you sample it
-// at, and no matter how much you blur the result afterwards — still gets
-// quantized into an 8-bit-per-channel framebuffer before it reaches the
-// screen. Blurring an already-banded layer only softens the edges of bands
-// that are already there; it doesn't add back the bit depth that produced
-// them, and a static, low-opacity noise overlay is too weak to fully mask a
-// large step. The standard fix (the one behind every "buttery smooth"
-// gradient on a polished site) is to stop asking the GPU to interpolate the
-// gradient at all: compute the falloff yourself, one pixel at a time, and
-// dither the rounding error into each pixel's alpha *before* it gets
-// quantized — the same trick a proper image editor uses when exporting a
-// gradient to a lossy format. The browser then just positions and scales a
-// finished bitmap, which is exactly as cheap to composite as the gradient
-// was.
-//
-// This only needs to happen once per parameter change, not per frame — same
-// performance profile as the CSS version, just computed up front instead of
-// by the GPU's gradient rasterizer.
-const CANVAS_SIZE = 512;
-// Mobile devices commonly run devicePixelRatio 2-3 vs. many desktop monitors
-// at 1 — rendering this bitmap at a flat 512px with no DPR scaling meant the
-// *device*-pixel magnification (CSS stretch × DPR) mobile actually saw was
-// well beyond what desktop saw, which is exactly where an already-dithered-
-// but-still-8-bit bitmap starts showing its quantization steps again.
-// Clamped at 2x since generation is one-time (per param/theme change, not
-// per frame) but still not worth paying for a 3x's extra pixels.
-const MAX_DPR_SCALE = 2;
-
-function generateDitheredFalloff(feather: number, opacity: number, grain: number, bg: string) {
-  const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR_SCALE);
-  const size = Math.round(CANVAS_SIZE * dpr);
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  // Resolve the CSS custom property to concrete RGB — a canvas pixel buffer
-  // can't reference var(--color-bg) the way the old gradient string could,
-  // so we bake in whichever value is active (light/dark) at generation time
-  // and regenerate when the theme flips (see the effect below).
-  const probe = document.createElement("div");
-  probe.style.color = bg;
-  document.body.appendChild(probe);
-  const resolved = getComputedStyle(probe).color;
-  document.body.removeChild(probe);
-  const [r, g, b] = resolved.match(/\d+/g)!.map(Number);
-
-  const featherFrac = feather / 100;
-  const ditherAmount = grain * 6; // ± a handful of 8-bit levels at grain=1
-  const half = size / 2;
-
-  const image = ctx.createImageData(size, size);
-  const data = image.data;
-  for (let py = 0; py < size; py++) {
-    const ny = (py - half) / half;
-    for (let px = 0; px < size; px++) {
-      const nx = (px - half) / half;
-      const dist = Math.sqrt(nx * nx + ny * ny);
-      const u = featherFrac > 0 ? Math.min(dist / featherFrac, 1) : 1;
-      const alpha = (1 - smoothstep(u)) * opacity * 255;
-      const dithered = alpha + (hash(px, py) - 0.5) * ditherAmount;
-      const i = (py * size + px) * 4;
-      data[i] = r;
-      data[i + 1] = g;
-      data[i + 2] = b;
-      data[i + 3] = Math.max(0, Math.min(255, Math.round(dithered)));
+// Rendered line boxes of the hero headline + subtitle, merged per line, in
+// page CSS px. Line rects come from text ranges (the real ragged extents, not
+// the 50%-wide block), offset from the element's own transformed box.
+function measureLines(section: HTMLElement): { lines: ScrimLine[]; lineHeight: number } | null {
+  const lines: ScrimLine[] = [];
+  let lineHeight = 0;
+  for (const sel of TEXT_SELECTORS) {
+    const el = section.querySelector<HTMLElement>(sel);
+    if (!el || !el.offsetParent) continue;
+    if (!lineHeight) lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 0;
+    const origin = layoutOrigin(el);
+    const box = el.getBoundingClientRect();
+    const rects: ScrimLine[] = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!node.textContent?.trim() || node.parentElement?.closest("[role='tooltip']")) continue;
+      range.selectNodeContents(node);
+      for (const q of range.getClientRects()) {
+        if (q.width < 1 || q.height < 1) continue;
+        rects.push({
+          l: origin.x + q.left - box.left,
+          t: origin.y + q.top - box.top,
+          r: origin.x + q.right - box.left,
+          b: origin.y + q.bottom - box.top,
+        });
+      }
+    }
+    rects.sort((a, b) => a.t - b.t);
+    for (const q of rects) {
+      const last = lines[lines.length - 1];
+      const mid = (q.t + q.b) / 2;
+      if (last && mid > last.t && mid < last.b) {
+        last.l = Math.min(last.l, q.l); last.r = Math.max(last.r, q.r);
+        last.t = Math.min(last.t, q.t); last.b = Math.max(last.b, q.b);
+      } else {
+        lines.push({ ...q });
+      }
     }
   }
-  ctx.putImageData(image, 0, 0);
-  return canvas.toDataURL();
+  if (!lines.length) return null;
+  return { lines, lineHeight: lineHeight || lines[0].b - lines[0].t };
 }
 
+/**
+ * Measures the hero text lines and hands them to PS3Silk, which fades the
+ * silk behind them in its shader (a Gaussian blur of the line boxes, dithered
+ * at output). Nothing is painted here, so there is no large layer to
+ * composite and no 8-bit overlay to band over the background.
+ */
 export default function HeroLegibilityScrim() {
   const dk = useDialKit("Hero Scrim", {
-    opacity: [0.69, 0, 1, 0.01],
-    width: [86, 20, 100, 1],
-    height: [111, 20, 150, 1],
-    x: [24, 0, 100, 1],
-    y: [53, 0, 100, 1],
-    feather: [87, 20, 100, 1],
-    // Dither amount — spread into each pixel's alpha at generation time (see
-    // generateDitheredFalloff above), not a visible overlay layer, so this
-    // now controls real quantization-error diffusion rather than a texture.
-    grain: [0.19, 0, 1, 0.01],
-    // Outlines the ellipse this shape occupies (dashed) and the edge the
-    // falloff actually fades to transparent by (solid) — a tuning aid for
-    // width/height/x/y/feather, no effect on the rendered scrim itself.
+    opacity: [0.74, 0, 1, 0.01],
+    // Blur sigma in headline line heights: along the lines / across them.
+    spreadX: [2.6, 0.5, 8, 0.1],
+    spreadY: [1.15, 0.3, 4, 0.05],
+    // Outlines the measured line boxes (tuning aid only).
     debug: false,
   });
-
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const themeRef = useRef<string | null>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const dkRef = useRef(dk);
+  const [debugLines, setDebugLines] = useState<ScrimLine[] | null>(null);
+  const publishRef = useRef<() => void>(() => {});
 
   useLayoutEffect(() => {
-    const generate = () => {
-      const theme = document.documentElement.getAttribute("data-theme") ?? "dark";
-      themeRef.current = theme;
-      setDataUrl(generateDitheredFalloff(dk.feather, dk.opacity, dk.grain, "var(--color-bg)"));
+    const section = anchorRef.current?.parentElement;
+    if (!section) return;
+    let raf = 0;
+    const publish = () => {
+      raf = 0;
+      const m = measureLines(section);
+      if (!m) return;
+      const d = dkRef.current;
+      setHeroScrim({ ...m, opacity: d.opacity, spreadX: d.spreadX, spreadY: d.spreadY });
+      if (d.debug) {
+        const o = layoutOrigin(section);
+        setDebugLines(m.lines.map((q) => ({ l: q.l - o.x, t: q.t - o.y, r: q.r - o.x, b: q.b - o.y })));
+      }
     };
-    generate();
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(publish); };
+    publishRef.current = publish;
+    publish();
 
-    // Regenerate on a light/dark switch — the bitmap has a concrete color
-    // baked in, unlike the old gradient string which read the CSS variable
-    // live, so a theme flip needs a fresh bitmap to match.
-    const observer = new MutationObserver(() => {
-      const theme = document.documentElement.getAttribute("data-theme") ?? "dark";
-      if (theme !== themeRef.current) generate();
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, [dk.feather, dk.opacity, dk.grain]);
+    const ro = new ResizeObserver(schedule);
+    ro.observe(section);
+    for (const sel of TEXT_SELECTORS) {
+      const el = section.querySelector(sel);
+      if (el) ro.observe(el);
+    }
+    document.fonts?.ready.then(schedule).catch(() => {});
+    document.fonts?.addEventListener?.("loadingdone", schedule);
+    window.addEventListener("intro-done", schedule);
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+      document.fonts?.removeEventListener?.("loadingdone", schedule);
+      window.removeEventListener("intro-done", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
 
-  // `left/top: X%/Y%` + `translate(-50%,-50%)` centers the element's own
-  // middle at X%,Y% of the section — matching the old radial-gradient's
-  // `at X% Y%` semantics. (`background-position: X% Y%` on its own does
-  // NOT mean this — its offset scales with background-size, so the same
-  // 14%/64% pair used to visibly land the center around 37% instead.)
-  // Every outline below shares these exact four properties so they can
-  // never drift out of sync with what's actually rendered.
-  const centered = (widthPct: number, heightPct: number): React.CSSProperties => ({
-    position: "absolute",
-    left: `${dk.x}%`,
-    top: `${dk.y}%`,
-    width: `${widthPct}%`,
-    height: `${heightPct}%`,
-    transform: "translate(-50%, -50%)",
-    pointerEvents: "none",
-  });
+  useEffect(() => {
+    dkRef.current = dk;
+    if (!dk.debug) setDebugLines(null);
+    publishRef.current();
+  }, [dk.opacity, dk.spreadX, dk.spreadY, dk.debug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-      {/* Only rendered once a real data URL exists — an <img> with no src but
-          an explicit (and deliberately oversized/off-center, see centered())
-          box still gets the browser's "no image loaded" placeholder box
-          painted. Because 3 of its 4 edges sit off-screen by design, only
-          the 4th (usually the right edge) falls inside the viewport, which
-          on first paint (before the useLayoutEffect below generates dataUrl)
-          showed up as a stray vertical line. */}
-      {dataUrl && (
-        <img
-          src={dataUrl}
-          alt=""
-          style={{ ...centered(dk.width, dk.height), objectFit: "fill" }}
+    <div ref={anchorRef} aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      {debugLines?.map((q, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute", left: q.l, top: q.t, width: q.r - q.l, height: q.b - q.t,
+            border: "1px dashed rgba(255,64,64,0.8)", pointerEvents: "none",
+          }}
         />
-      )}
-      {dk.debug && (
-        <>
-          {/* Full ellipse this shape occupies — width%/height% at their
-              nominal 100% extent, regardless of feather. */}
-          <div style={{ ...centered(dk.width, dk.height), border: "1px dashed rgba(255,64,64,0.7)", borderRadius: "50%" }} />
-          {/* Where the falloff actually reaches transparent — feather% of
-              that same ellipse, i.e. the edge of the visible shadow. */}
-          <div style={{ ...centered(dk.width * dk.feather / 100, dk.height * dk.feather / 100), border: "1.5px solid rgba(255,64,64,0.9)", borderRadius: "50%" }} />
-          {/* Center point. */}
-          <div style={{ ...centered(0, 0), width: 6, height: 6, borderRadius: "50%", background: "rgba(255,64,64,0.9)" }} />
-        </>
-      )}
+      ))}
     </div>
   );
 }
