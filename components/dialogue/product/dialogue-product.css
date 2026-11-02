@@ -4127,10 +4127,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-templates__panel.dlg-match__panel .dp-chart-bars__label { width: auto; }
 .dlg-match__carbon { display: flex; flex-direction: column; gap: 2px; color: var(--color-text-tertiary); }
 .dlg-match__carbon > span { color: var(--color-text-secondary); }
-.dlg-edges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
-.dlg-edges__cell { display: flex; flex-direction: column; gap: 2px; margin: 0; padding-top: 8px; border-top: 1px solid var(--dlg-guide-rule); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
-.dlg-edges__cell > dt { color: var(--color-text-primary); font-family: var(--font-sans-medium); font-weight: 500; }
-.dlg-edges__cell > dd { margin: 0; color: var(--color-text-secondary); text-wrap: pretty; }
+.dlg-edges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin: 0; }
 @media (max-width: 600px) {
   .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
   .dlg-edges { grid-template-columns: minmax(0, 1fr); }
@@ -4218,7 +4215,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-clip-quote { transition: background-color 520ms cubic-bezier(0.4, 0, 0.2, 1), border-color 520ms cubic-bezier(0.4, 0, 0.2, 1); }
 
 /* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
-.dlg-stage[data-neutral], .dlg-match__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
+.dlg-stage[data-neutral], .dlg-match__panel[data-neutral], .dlg-edge__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
 
 /* Round 9: one encoding for the 225 and the 75 in every figure. The 225 is the focal segment (cherry; neutral only inside a
    figure that already carries another cherry focal). The 75 is stone-500 in the segment and in its legend swatch, so a
@@ -4242,4 +4239,29 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @keyframes dlg-hug-close {
   0%, 33% { grid-template-rows: 1fr; margin-top: var(--pull1); }
   100% { grid-template-rows: 0fr; margin-top: var(--pull0); }
+}
+
+/* Round 11: held frames for the near-misses and awkward shapes. A mini panel is a product card at half the figure width,
+   so its bar rows put the label and value on one line with the track under them (the phone layout, at every width). */
+.dlg-match[data-pair] { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
+.dlg-match[data-pair] .dlg-match__why { max-width: 448px; }
+.dlg-match__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.dlg-match__half { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-tertiary); }
+.dlg-match__tag[data-kept] { color: var(--color-text-primary); }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > span:last-child { grid-area: value; }
+.dlg-templates__panel.dlg-mini .dp-chart-stack__lanes { flex-wrap: wrap; gap: 4px 16px; }
+.dlg-edge { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-edge__when { margin: 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-edge__then { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); text-wrap: pretty; }
+.dlg-edge__panel { display: flex; flex-direction: column; gap: 8px; padding: 0; }
+.dlg-edge__chip { display: flex; align-items: center; gap: 8px; min-height: 36px; box-sizing: border-box; margin: 0; padding: 6px 8px 6px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
+.dlg-edge__other .dp-chart-bars__row:last-child .dp-chart-bars__bar { background: repeating-linear-gradient(135deg, var(--dp-chart-muted) 0 4px, transparent 4px 8px) !important; }
+.dlg-ph { font-weight: 500; color: var(--dp-ink); }
+.dlg-thin-miss { max-width: 448px; margin-inline: auto; }
+@media (max-width: 600px) {
+  .dlg-match__pair { grid-template-columns: minmax(0, 1fr); }
 }

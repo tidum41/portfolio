@@ -9,7 +9,7 @@ import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import SourcePill from "@/components/dialogue/product/SourcePill";
-import { ChevronUpIcon, WaveformIcon } from "@/components/dialogue/product/icons";
+import { ChevronUpIcon, PlusIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
 import { ArrowRight, Check, X } from "@phosphor-icons/react/dist/ssr";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
@@ -114,7 +114,7 @@ const ENTRIES = [
   {
     id: "segments",
     badName: "Common chart",
-    badPoints: "Percents put both rows on one scale, so 67% and 70% look alike though one rests on 9 people.",
+    badPoints: "Percents put both rows on one scale, so 64% and 70% look alike though one rests on 9 people.",
     goodName: "My version",
     goodPoints: "Each row says how many people it rests on, which makes exact comparison a little slower.",
     name: "How segments differ",
@@ -205,9 +205,49 @@ type Template = {
   /** Round 9: the cut this card counts out of, so no two cards read as one denominator. */
   cut: string;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
+  /** Round 11: the near-miss this template beat, drawn beside it. Only By group has one (percents on one scale). */
+  foil?: ReactNode;
+  /** What a tap opens under the card (By group opens its people). Shown only while open. */
+  more?: (onOpen: (b: boolean) => void) => ReactNode;
 };
 const pctOf = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
 const FIRST = SEGMENTS[0];
+const FIRST_GROUP_OF = SEGMENTS[1].of;
+
+function GroupChart({ open, onOpen }: { open: boolean; onOpen: (b: boolean) => void }) {
+  return (
+    <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
+      <div className="dlg-live__bars">
+        <ChartBarList
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal }))}
+          max={1}
+        />
+        <button type="button" className="dlg-live__bar-hit" aria-label={`Open the ${FIRST.count} ${FIRST.label.toLowerCase()}`} aria-expanded={open} onClick={() => onOpen(!open)} />
+      </div>
+    </ChartVizCard>
+  );
+}
+
+function GroupPeople({ onOpen }: { onOpen: (b: boolean) => void }) {
+  return (
+    <div className="dp-side-sample dlg-stage__sample dlg-templates__people" data-side="new">
+      <p className="dp-side-sample__head dp-text-body">
+        <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{FIRST.count}</span> {FIRST.label.toLowerCase()}, {QUOTE_LIST_NEW.length} shown
+        <button type="button" className="dlg-clip-collapse" data-shown="" aria-label="Fold the people back" onClick={() => onOpen(false)}><ChevronUpIcon /></button>
+      </p>
+      <div className="dp-clip-quotes">
+        {QUOTE_LIST_NEW.map((q) => (
+          <div key={q.participant} className="dp-clip-quote">
+            <p className="dp-clip-quote__who"><WaveformIcon className="dp-clip-quote__icon" /><span className="dp-clip-quote__name">{q.participant}</span><span className="dp-clip-quote__time">{q.time}</span></p>
+            <p className="dp-clip-quote__text">{q.quote}</p>
+          </div>
+        ))}
+      </div>
+      <div className="dp-sources"><SourcePill name={`+${FIRST.count - QUOTE_LIST_NEW.length} more`} time="" /></div>
+    </div>
+  );
+}
+
 const TEMPLATES: Template[] = [
   {
     id: "group",
@@ -220,36 +260,9 @@ const TEMPLATES: Template[] = [
     cut: "14 new and 125 repeat shoppers, two groups within the 300, each out of its own size",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
-    card: (open, onOpen) => (
-      <>
-        <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
-          <div className="dlg-live__bars">
-            <ChartBarList
-              rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal }))}
-              max={1}
-            />
-            <button type="button" className="dlg-live__bar-hit" aria-label={`Open the ${FIRST.count} ${FIRST.label.toLowerCase()}`} aria-expanded={open} onClick={() => onOpen(!open)} />
-          </div>
-        </ChartVizCard>
-        {open ? (
-          <div className="dp-side-sample dlg-stage__sample dlg-templates__people" data-side="new">
-            <p className="dp-side-sample__head dp-text-body">
-              <span className="dlg-sample-key" aria-hidden /><span className="dp-summary__emph">{FIRST.count}</span> {FIRST.label.toLowerCase()}, {QUOTE_LIST_NEW.length} shown
-              <button type="button" className="dlg-clip-collapse" data-shown="" aria-label="Fold the people back" onClick={() => onOpen(false)}><ChevronUpIcon /></button>
-            </p>
-            <div className="dp-clip-quotes">
-              {QUOTE_LIST_NEW.map((q) => (
-                <div key={q.participant} className="dp-clip-quote">
-                  <p className="dp-clip-quote__who"><WaveformIcon className="dp-clip-quote__icon" /><span className="dp-clip-quote__name">{q.participant}</span><span className="dp-clip-quote__time">{q.time}</span></p>
-                  <p className="dp-clip-quote__text">{q.quote}</p>
-                </div>
-              ))}
-            </div>
-            <div className="dp-sources"><SourcePill name={`+${FIRST.count - QUOTE_LIST_NEW.length} more`} time="" /></div>
-          </div>
-        ) : null}
-      </>
-    ),
+    card: (open, onOpen) => <GroupChart open={open} onOpen={onOpen} />,
+    more: (onOpen) => <GroupPeople onOpen={onOpen} />,
+    foil: ENTRIES[1].bad,
   },
   {
     id: "split",
@@ -329,6 +342,7 @@ function TemplatePanel({ t, open, setOpen }: { t: Template; open: boolean; setOp
   return (
     <div className={`dialogue-product-root dp-chat-panel-typography dp-study-chat dlg-templates__panel ${dialogueProductFontClassName}`} data-template={t.id}>
       {t.card(open, setOpen)}
+      {open && t.more ? t.more(setOpen) : null}
     </div>
   );
 }
@@ -359,13 +373,6 @@ function ChartTemplatesPicker() {
   );
 }
 
-const EDGES = [
-  { when: "Two values tie", then: "No highlight, and the sentence says they tie." },
-  { when: "Too many themes", then: "The top rows show, and the rest roll into Other." },
-  { when: "Nothing matches", then: "The closest theme shows with its count, with a rephrase to try." },
-  { when: "Two shapes in one answer", then: "One chart leads, and the other becomes a follow-up." },
-];
-
 /* Round 8: the figure reads as one table. Each row is a question type, the chart it gets, the reason in one line, and
    the product's own chart card. The routing and the awkward shapes are short bands around it. Only the split chart
    keeps cherry (its 225 is the one encoding the whole page shares); the other three are neutral. */
@@ -378,18 +385,82 @@ function ChartFlow() {
   );
 }
 
+/* Round 11 item 4: the awkward shapes are four small frames in the product's own card, tie first. Every frame is neutral:
+   the figure already spends its one cherry on the split chart. The sentences are the page's existing captions. Counts that
+   the page does not give stay visible placeholders. */
+const OTHER_ASKS = TOP_ASKS.slice(3).reduce((n, r) => n + r.value, 0);
+
+function EdgeFrame({ when, then, children }: { when: string; then: string; children: ReactNode }) {
+  return (
+    <div className="dlg-edge">
+      <p className="dlg-edge__when">{when}</p>
+      <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
+        {children}
+      </div>
+      <p className="dlg-edge__then">{then}</p>
+    </div>
+  );
+}
+
+function EdgeChip({ children, n }: { children: ReactNode; n?: number }) {
+  return (
+    <p className="dlg-edge__chip">
+      <PlusIcon className="dlg-thin__chip-plus" />
+      <span className="dlg-thin__chip-q">{children}</span>
+      {n ? <span className="dlg-thin__chip-n" aria-hidden>{n}</span> : null}
+    </p>
+  );
+}
+
 function ChartEdges() {
   return (
     <div className="dlg-guide__block">
       <p className="dlg-guide__head dialogue-caption__label">When the shape is awkward</p>
-      <dl className="dlg-edges">
-        {EDGES.map((e) => (
-          <div key={e.when} className="dlg-edges__cell">
-            <dt>{e.when}</dt>
-            <dd>{e.then}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="dlg-edges">
+        <EdgeFrame when="Two values tie" then="No highlight, and the sentence says they tie.">
+          <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
+            <ChartBarList
+              rows={[
+                { label: "Read it as this Friday", value: 1, display: "" },
+                { label: "Unsure", value: 1, display: "" },
+              ]}
+              max={1}
+              note={<>Both at <span className="dlg-ph">[PLACEHOLDER: tied count]</span></>}
+            />
+          </ChartVizCard>
+        </EdgeFrame>
+        <EdgeFrame when="Too many themes" then="The top rows show, and the rest roll into Other.">
+          <ChartVizCard title="What shoppers asked for after checkout">
+            <div className="dlg-edge__other">
+              <ChartBarList
+                rows={[
+                  ...TOP_ASKS.slice(0, 3).map((r) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}` })),
+                  { label: "Other", value: OTHER_ASKS, display: `${OTHER_ASKS} of ${FRIDAY_TOTAL}` },
+                ]}
+                max={TOP_ASKS[0].value}
+              />
+            </div>
+          </ChartVizCard>
+        </EdgeFrame>
+        <EdgeFrame when="Nothing matches" then="The closest theme shows with its count, with a rephrase to try.">
+          <ChartVizCard title="Closest theme">
+            <ChartBarList
+              rows={[{ label: TOP_ASKS[2].label, value: TOP_ASKS[2].value, display: `${TOP_ASKS[2].value} of ${FRIDAY_TOTAL}` }]}
+              max={TOP_ASKS[0].value}
+            />
+          </ChartVizCard>
+          <EdgeChip>What did shoppers ask for after checkout?</EdgeChip>
+        </EdgeFrame>
+        <EdgeFrame when="Two shapes in one answer" then="One chart leads, and the other becomes a follow-up.">
+          <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
+            <ChartStackedBar lanes
+              total={FRIDAY_TOTAL}
+              segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Unsure" ? "Unsure" : "This Friday", value: r.count, display: `${r.count}`, focal: r.focal }))}
+            />
+          </ChartVizCard>
+          <EdgeChip n={FIRST_GROUP_OF}>How did repeat shoppers read it?</EdgeChip>
+        </EdgeFrame>
+      </div>
     </div>
   );
 }
@@ -398,21 +469,39 @@ function ChartMatches() {
   const [open, setOpen] = useState(false);
   return (
     <div className="dlg-matches" role="list">
-      {TEMPLATES.map((t, i) => (
-        <div key={t.id} className="dlg-match" role="listitem" data-template={t.id}>
-          <div className="dlg-match__why">
-            <p className="dlg-match__ask">{t.ask}</p>
-            <p className="dlg-match__name"><ArrowRight size={14} weight="bold" aria-hidden />{t.name}</p>
-            <p className="dlg-match__reason">{t.pro}</p>
+      {TEMPLATES.map((t, i) => {
+        const group = t.id === "group";
+        const panel = (children: ReactNode, cls = "") => (
+          <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${cls} ${dialogueProductFontClassName}`} data-neutral={i === 1 ? undefined : ""}>
+            {children}
           </div>
-          <div className="dlg-match__chart">
-            <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${dialogueProductFontClassName}`} data-neutral={i === 1 ? undefined : ""}>
-              {t.card(t.id === "group" && open, setOpen)}
+        );
+        return (
+          <div key={t.id} className="dlg-match" role="listitem" data-template={t.id} data-pair={t.foil ? "" : undefined}>
+            <div className="dlg-match__why">
+              <p className="dlg-match__ask">{t.ask}</p>
+              <p className="dlg-match__name"><ArrowRight size={14} weight="bold" aria-hidden />{t.name}</p>
+              <p className="dlg-match__reason">{t.pro}</p>
             </div>
-            <p className="dlg-match__carbon"><span>Cut: {t.cut}.</span> Adapted from Carbon&rsquo;s {t.carbon}</p>
+            <div className="dlg-match__chart">
+              {t.foil ? (
+                <div className="dlg-match__pair">
+                  <div className="dlg-match__half">
+                    <p className="dlg-match__tag">Ruled out: percents on one scale</p>
+                    {panel(t.foil, "dlg-mini")}
+                  </div>
+                  <div className="dlg-match__half">
+                    <p className="dlg-match__tag" data-kept>Kept: counts out of each group</p>
+                    {panel(t.card(group && open, setOpen), "dlg-mini")}
+                  </div>
+                </div>
+              ) : panel(t.card(false, setOpen))}
+              {group && open && t.more ? panel(t.more(setOpen)) : null}
+              <p className="dlg-match__carbon"><span>Cut: {t.cut}.</span> Adapted from Carbon&rsquo;s {t.carbon}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -427,6 +516,24 @@ function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
   );
 }
 
+/* Round 11 item 3: the near-miss behind the thin flag. A bar for two people fills its track, so it reads as a finding.
+   The total behind it is not on the page, so it stays a visible placeholder. Neutral, like every frame that is not the 225. */
+function ThinNearMiss() {
+  return (
+    <StaticFigure figure="thin-bar" className="dlg-thin-miss">
+      <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
+        <ChartVizCard title="Two shoppers missed a delivery after reading it as this Friday.">
+          <ChartBarList
+            rows={[{ label: "Missed a delivery", value: 2, display: "2", focal: true }]}
+            max={2}
+            note={<>Out of <span className="dlg-ph">[PLACEHOLDER: total behind this bar]</span></>}
+          />
+        </ChartVizCard>
+      </div>
+    </StaticFigure>
+  );
+}
+
 export type TemplatesLayout = "picker" | "grid" | "stack";
 export function ChartTemplates({ layout = "stack" }: { layout?: TemplatesLayout }) {
   return layout === "picker" ? <ChartTemplatesPicker /> : <ChartTemplatesPairs layout={layout} />;
@@ -438,9 +545,12 @@ export default function DialogueChartLibrary({
   only,
   scenarios = false,
   templates = false,
+  thinNearMiss = false,
 }: {
   /** P15: the merged chart-templates figure (replaces the bars video and the specimen list on the page). */
   templates?: boolean;
+  /** Round 11: the two-person bar the thin flag replaces. */
+  thinNearMiss?: boolean;
   showTech?: boolean;
   segmentsFirst?: boolean;
   only?: "segments" | "coverage";
@@ -448,6 +558,7 @@ export default function DialogueChartLibrary({
   scenarios?: boolean;
 }) {
   if (templates) return <ChartTemplates />;
+  if (thinNearMiss) return <ThinNearMiss />;
   const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">

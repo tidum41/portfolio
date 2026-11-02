@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 11, Nov 1 2026 (audit items 1 to 4 on review/round-p15)
+- Base: review/round-p15 at 0adf459. Commit stays on review/round-p15; no PR, not main.
+- By group shows its dropped 64% and 70% percent card beside the kept counts; Levels posters hold the moment the count scrolls away and the open Source state; thin data pairs a two-person bar (total a visible placeholder) with the refusal flag; the awkward shapes are four small neutral frames, tie first. Item 5 (chart route) is held until the model-versus-rules placeholder is settled.
+- Stageshow used for its principles only (crop to the decision, one focal, a poster that tells the story); no new components. Lines in design/notes/copy-diff-r11.md; review in design/notes/review-r11.md. Screenshots: /opt/cursor/artifacts/screenshots/r11-*. Preview: none (local validation only)
+
 ## Round 10, Nov 1 2026 (Muse re-check on review/round-p15)
 - Base: review/round-p15 at 9a6d3c7. Commit stays on review/round-p15; no PR, not main.
 - Unsure swatch now matches its segment in every take (75 no longer dims when the 225 opens); Ranked caption says bars scale to the top ask; By group names its two groups as a subset of the 300; toggles card hugs content on desktop; clip and toggles pointers rest on blank row space; closed rows keep the bare length (Source turns them into play chips).

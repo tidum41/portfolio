@@ -81,6 +81,8 @@ function Caption({ children }: { children: React.ReactNode }) {
 type ReasonRow = { kind: "pro" | "con"; text: string };
 const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Starts at the count. Each level is one tap away." };
 const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "Asks for depth before you know if the count matters." };
+const THIN_BAR: ReasonRow = { kind: "con", text: "A full bar for two people reads as a pattern." };
+const THIN_FLAG: ReasonRow = { kind: "pro", text: "Says why there is no chart, and offers follow-ups to count." };
 const REASON_ICON = { pro: Check, con: X } as const;
 
 /* P15 item 5: the variant letter and the mark share one 16px column. */
@@ -278,11 +280,22 @@ export function DialogueCaseStudyContent({
                 <Placeholder>why the cutoff sits under 3, and what would change your mind</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="system">
-                  <StaticFigure figure="thin-followups">
-                    <DialogueDemoVideo src="/dialogue/motion/live-thin.mp4" poster="/dialogue/motion/live-thin.jpg" label="A thin answer flags its early signal and offers follow-up questions; tapping one answers it with a count" />
-                  </StaticFigure>
-                </DialogueRachelFrame>
+                <div className="dlg-demo-pair">
+                  <div>
+                    <LevelReasoning letter="A" label="Explored: a bar for two people" reasoning={THIN_BAR} />
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueChartLibrary thinNearMiss />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <LevelReasoning letter="B" label="Kept: a flag in place of the chart" reasoning={THIN_FLAG} />
+                    <DialogueRachelFrame tone="system">
+                      <StaticFigure figure="thin-followups">
+                        <DialogueDemoVideo src="/dialogue/motion/live-thin.mp4" poster="/dialogue/motion/live-thin.jpg" label="A thin answer flags its early signal and offers follow-up questions; tapping one answers it with a count" />
+                      </StaticFigure>
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
               </figure>
               <Caption>Two shoppers are too few for a chart, so a flag takes its place, and tapping a follow-up answers it with a count out of 125. Recorded from my live code recreation.</Caption>
             </Section>

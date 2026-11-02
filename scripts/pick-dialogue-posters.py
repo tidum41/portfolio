@@ -6,7 +6,9 @@ import glob, json, os, subprocess, sys
 import numpy as np
 d = sys.argv[1]; times = {}
 # Held-frame search can't see a brief state: Variant A's answer (question, count, bar) shows at 4.7 s before the follow scroll.
-OVERRIDE = {}  # P15: the annotation-free held search finds the picker answer on its own
+# Round 11 item 2: the Levels held frames are chosen by what they prove. First try: the instant the open player has pushed
+# the count out of view. Kept: the open Source state, with the tab row and the quotes in one frame.
+OVERRIDE = {"variant-every-full": 4.6, "variant-every-full-m": 4.5, "variant-toggles-full": 5.6, "variant-toggles-full-m": 5.3}
 for p in sorted(glob.glob(os.path.join(d, "*.mp4"))):
     raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", p, "-vf", "scale=320:-2", "-pix_fmt", "gray", "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
     w = 320; h = len(raw) // w
