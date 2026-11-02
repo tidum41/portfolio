@@ -32,3 +32,12 @@ Paper should mirror:
 - **One rail for the data viz templates.** Every row is a 168px left rail (question type, template name, reason) and a card column to its right, 24px apart. By group no longer breaks out full width: its ruled-out card sits above the kept card, both inside that row's card column, each at the card column width, 16px apart, with the tags "Ruled out: percents on one scale" and "Kept: counts out of each group".
 - **By group cut line.** After "each out of its own size." add "The other 161: [PLACEHOLDER: why they are in neither group]". 161 is 300 minus 14 minus 125.
 - **Phone clip still.** The phone clip frame shows the whole answer sentence at the top, then the bar and legend, the quotes header and Ana's open clip. Dev's row waits just below the fold, so the still no longer crops the sentence. Desktop is unchanged.
+
+## Page (cloud), Nov 2 2026, round 14
+
+Paper should mirror:
+- **Counts take poster.** The Counts video's still is now the 75 open: the 225 side of the bar dimmed to its pale pink, the Unsure segment in stone, the header "2 quotes shown, picked from the 75", and the two rows Mei ("Friday which week?") and Owen ("I checked the date to be sure."). This matches the Counts kept frame already in `paper-asks-r12.md`, so Paper's Counts B frame should already read this way. Phone gets the same state.
+- **Counts holds.** Each side now holds about two seconds before the pointer moves on (take 6.2s, limit 9s).
+- **No change to the other posters or frames.** Hero ends on Ana under the 225; Clip shows the quotes header, both rows and Ana's open player with nothing cropped; Every shows the count pushed out by the open player; Toggles shows Source; Thin shows the flag and its two follow-ups.
+- **Decision logged:** a version of the desktop Clip that keeps the bar in view cuts the answer sentence at the top edge, so it was not kept. Phone Clip keeps its pinned layout.
+- **Animation library:** none added. /dialogue is CSS keyframes, transitions and small requestAnimationFrame scroll loops; takes are recordings of those components. Details and file paths in `design/notes/motion-r14.md`.

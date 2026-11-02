@@ -156,8 +156,8 @@ async function record(demo) {
     },
     // Counts (Mudit, P15 round 2): 225 open with the cursor resting on it; tap 75, linger; tap 225, linger. Last frame is the first.
     async side() {
-      await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1 }); await press(); await api('side("unsure")'); await hold(1500);
-      await cursorTo(SEG.friday, { fx: 0.5, fy: 0.1 }); await press(); await api('side("friday")'); await hold(1400);
+      await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1 }); await press(); await api('side("unsure")'); await hold(1900);
+      await cursorTo(SEG.friday, { fx: 0.5, fy: 0.1 }); await press(); await api('side("friday")'); await hold(1800);
     },
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {

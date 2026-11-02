@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 14, Nov 2 2026 (motion report and Stageshow pass on review/round-p15)
+- Report in design/notes/motion-r14.md: /dialogue runs on CSS keyframes and transitions plus small requestAnimationFrame scroll loops; the takes are recordings of those components. No GSAP, no framer-motion on /dialogue except the page's ScrollReveal wrapper.
+- Counts take: poster now the 75 open (the unsure side), and each side holds about two seconds. Clip, Hero, Every, Toggles and Thin keep their posters and timing, with the reason logged per take.
+- Screenshots: /opt/cursor/artifacts/screenshots/r14-*.
+
 ## Round 13b, Nov 2 2026 (Muse review on review/round-p15)
 - Teal rule recorded and checked; explored cards in every pair recede; the data viz templates share one rail and card column, with By group's pair nested in its card column; By group's 161 unexplained shoppers are a visible placeholder; the phone clip still shows the answer sentence above the bar. Skipped by TASTE: cherry on every bar, a play pill on Dev's closed quote.
 - Screenshots: /opt/cursor/artifacts/screenshots/r13b-*.
