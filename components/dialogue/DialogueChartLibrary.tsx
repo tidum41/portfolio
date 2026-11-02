@@ -203,7 +203,7 @@ type Template = {
   /** P16 round 4: the researcher's question that gets this template, shown above its chart. */
   question: string;
   /** Round 9: the cut this card counts out of, so no two cards read as one denominator. */
-  cut: string;
+  cut: ReactNode;
   pro: string; con: string; card: (open: boolean, onOpen: (b: boolean) => void) => ReactNode;
   /** Round 11: the near-miss this template beat, drawn beside it. Only By group has one (percents on one scale). */
   foil?: ReactNode;
@@ -257,7 +257,7 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
-    cut: "14 new and 125 repeat shoppers, two groups within the 300, each out of its own size",
+    cut: <>14 new and 125 repeat shoppers, two groups within the 300, each out of its own size. The other 161: <span className="dlg-ph">[PLACEHOLDER: why they are in neither group]</span></>,
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => <GroupChart open={open} onOpen={onOpen} />,

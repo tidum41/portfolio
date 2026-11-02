@@ -4243,9 +4243,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* Round 11: held frames for the near-misses and awkward shapes. A mini panel is a product card at half the figure width,
    so its bar rows put the label and value on one line with the track under them (the phone layout, at every width). */
-.dlg-match[data-pair] { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
-.dlg-match[data-pair] .dlg-match__why { max-width: 448px; }
-.dlg-match__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.dlg-match__pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .dlg-match__half { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-tertiary); }
 .dlg-match__tag[data-kept] { color: var(--color-text-primary); }
@@ -4263,9 +4261,11 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-ph { font-weight: 500; color: var(--dp-ink); }
 .dlg-thin-miss { max-width: 448px; margin-inline: auto; }
 .dlg-counts-x { display: flex; flex-direction: column; gap: 16px; }
-@media (max-width: 600px) {
-  .dlg-match__pair { grid-template-columns: minmax(0, 1fr); }
-}
+
+/* Round 13b: in every explored versus kept pair the explored card recedes, so the decision reads before the labels.
+   The kept card and every label row stay at full strength. */
+.dlg-demo-pair > div:first-child .dialogue-rachel-frame__pad,
+.dlg-match__half:first-child .dlg-match__panel { opacity: 0.62; }
 
 /* Round 11b: on the phone the first try needs scroll room, so the open player can carry the count fully out of view
    instead of stopping with a sliver of the bar under the card's top edge. */

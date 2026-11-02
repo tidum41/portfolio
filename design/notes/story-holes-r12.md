@@ -30,6 +30,8 @@ Ranked by how much a skimming hiring manager would change their read of Mudit on
 
 Still open: holes 3, 4 and 5.
 
+New from Muse (round 13b): *Why are 161 of the 300 shoppers in neither By group card (14 new, 125 repeat)?* It's a visible placeholder on the By group cut line.
+
 Next in line: the thin cutoff (why under 3), how the 2 shown quotes are picked, and why a clip in place beat the session page.
 
 ---

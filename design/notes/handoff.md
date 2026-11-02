@@ -23,3 +23,12 @@ Levels body changed (first person, no witness): "Using my own build, I found the
 Code notes for Paper naming:
 - `ChartBarList` gained a `vertical` option (a prop on an existing allowlisted component, not a new component). Say if Mudit wants it treated as one.
 - Teal variables from `paper-asks-r12.md` section 1 are in the code as `--ds-teal-70` and `--ds-teal-20`, used only on the Repeat shoppers series (By group pair, 1 to 5 scale).
+
+## Page (cloud), Nov 2 2026, round 13b
+
+Paper should mirror:
+- **Teal rule.** Teal marks one thing only: a named second series (Repeat shoppers), labelled on its own row or dot. Never a rank position, highlight or chrome. Ranked, tie, Other and the 75 stay stone. The page follows this today; `paper-asks-r12.md` section 1 stays as written.
+- **Explored recedes.** In every A versus B pair (Levels, Counts, thin data) and in the By group ruled-out half, the explored card is drawn at 62% opacity over the well. The kept card and all label rows stay full strength.
+- **One rail for the data viz templates.** Every row is a 168px left rail (question type, template name, reason) and a card column to its right, 24px apart. By group no longer breaks out full width: its ruled-out card sits above the kept card, both inside that row's card column, each at the card column width, 16px apart, with the tags "Ruled out: percents on one scale" and "Kept: counts out of each group".
+- **By group cut line.** After "each out of its own size." add "The other 161: [PLACEHOLDER: why they are in neither group]". 161 is 300 minus 14 minus 125.
+- **Phone clip still.** The phone clip frame shows the whole answer sentence at the top, then the bar and legend, the quotes header and Ana's open clip. Dev's row waits just below the fold, so the still no longer crops the sentence. Desktop is unchanged.

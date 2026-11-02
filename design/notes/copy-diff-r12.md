@@ -29,3 +29,9 @@ Part B. No new facts, and every [PLACEHOLDER] stays word for word, including the
 | Counts figure | One take | Pair: A "Explored: two standard bar charts" (con row "Splits 225 and 75 across two marks to compare."), B "Kept: one bar with two sides" (pro row "One bar shows both counts at once in the 448px panel.") | Same pair as Levels and thin data. The A mark is the system's not-kept X, the same one Levels A uses. |
 | Counts caption | "With the 225 open, tapping 75 swaps in two of the unsure shoppers, and tapping 225 swaps them back." | "The kept bar holds 225 and 75 in one mark, and tapping 75 swaps in two of the unsure shoppers." | One short caption for the pair. |
 | Levels body | "In my build, a PM had to scroll back up for the one number they came for, so depth had to be something the reader opens." | "Using my own build, I found the open player pushed the count out of view, and I had to scroll back up for the one number I came for. Depth had to be something the reader opens." | Mudit's answer to story hole 2: he found it himself. No witness is invented. |
+
+## Round 13b additions
+
+| Section | Before | After | Why |
+| --- | --- | --- | --- |
+| Data viz, By group cut line | "14 new and 125 repeat shoppers, two groups within the 300, each out of its own size." | Same, then "The other 161: [PLACEHOLDER: why they are in neither group]" | 14 + 125 leaves 161 of 300. 161 is 300 minus 14 minus 125, not a new count. The data doesn't say why they are outside, so it stays a visible placeholder. |

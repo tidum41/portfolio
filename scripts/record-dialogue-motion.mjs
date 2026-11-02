@@ -162,8 +162,8 @@ async function record(demo) {
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
       // P16 round 3: the player opens, then the chat eases to its end so nothing sits across the card's bottom edge.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); const g2 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)"); await api(MOBILE ? 'stick(560, ".dp-chart-stack__bar", 12)' : 'stick(560, ".dp-side-sample__head", 12)'); await g2.ride(2000);
-      // On phone the scroll runs out before the quotes head reaches the top, so the bar stops whole at the top instead of cut across.
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); const g2 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)"); await api(MOBILE ? 'stickEnd(560, ".dp-clip-quote--selected", 8)' : 'stick(560, ".dp-side-sample__head", 12)'); await g2.ride(2000);
+      // On phone the answer sentence stays at the top with Ana's open clip fully below it; Dev's row waits just under the fold.
       // The fold clamps the chat's scroll by itself, in step with the height, so nothing else moves.
       await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); const g3 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g3.ride(900); await cursorOut(); await hold(1250);
     },

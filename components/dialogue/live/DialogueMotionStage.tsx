@@ -348,6 +348,22 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         };
         requestAnimationFrame(step);
       },
+      // Keep an element's bottom `pad` px above the body's bottom edge while content grows (scrolls down only), so a row
+      // below it waits just outside the held frame.
+      stickEnd: (ms = 560, sel = "", pad = 8) => {
+        ms *= K();
+        const body = document.querySelector<HTMLElement>(".dlg-stage__body"); if (!body) return;
+        const t0 = performance.now();
+        const step = () => { const now = performance.now();
+          const el = document.querySelector<HTMLElement>(sel);
+          if (el) {
+            const want = Math.min(body.scrollHeight - body.clientHeight, body.scrollTop + (el.getBoundingClientRect().bottom - body.getBoundingClientRect().bottom) / zoomOf(body) + pad);
+            if (want > body.scrollTop) body.scrollTop = want;
+          }
+          if (now - t0 < ms) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      },
       chase: (ms = 1300, rate = 0.07) => {
         ms *= K(); rate /= K();
         const body = document.querySelector<HTMLElement>(".dlg-stage__body"); if (!body) return;

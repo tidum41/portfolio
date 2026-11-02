@@ -2,6 +2,10 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 13b, Nov 2 2026 (Muse review on review/round-p15)
+- Teal rule recorded and checked; explored cards in every pair recede; the data viz templates share one rail and card column, with By group's pair nested in its card column; By group's 161 unexplained shoppers are a visible placeholder; the phone clip still shows the answer sentence above the bar. Skipped by TASTE: cherry on every bar, a play pill on Dev's closed quote.
+- Screenshots: /opt/cursor/artifacts/screenshots/r13b-*.
+
 ## Round 13, Nov 2 2026 (counts pair and Levels witness on review/round-p15)
 - Base: review/round-p15 at 070b6ea. Commit stays on review/round-p15; no PR, not main.
 - Counts holds an Explored (two standard bar charts, side by side and stacked, in the 448px panel) versus Kept (the single bar) pair, framed as an iteration choice from Mudit's answer to story hole 1. Levels now says in first person that he found the scrolled-away count in his own build (hole 2). Notes in design/notes/story-holes-r12.md, copy-diff-r12.md and handoff.md. Screenshots: /opt/cursor/artifacts/screenshots/r13-*.
