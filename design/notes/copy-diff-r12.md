@@ -1,6 +1,6 @@
 # Copy diff (round 12, Nov 2 2026)
 
-Part B. No new facts, and every [PLACEHOLDER] stays word for word, including the thin A total. Each change either moves a point the figure already shows out of the body, or cuts a line that repeats the line beside it. Net: the page loses about 45 words.
+Part B. No new facts, and every [PLACEHOLDER] stays word for word, including the thin A total. Each change either moves a point the figure already shows out of the body, or cuts a line that repeats the line beside it. Net: the page loses about 50 words.
 
 | Section | Before | After | Why |
 | --- | --- | --- | --- |
