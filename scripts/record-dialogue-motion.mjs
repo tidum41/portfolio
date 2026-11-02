@@ -26,6 +26,7 @@ const CROSSFADE = new Set(); // P16: no take crossfades; add-only takes scroll t
 const BLUR = { has: () => false }; // P16 round 2 (Mudit): no motion blur on any take; it read as choppy
 const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light";
 // P16 round 3: DLG_MOBILE=1 records the phone takes, cropped to a 320px card with no gutter (files end in -m).
+const AUDIT = process.env.DLG_AUDIT === "1";
 const MOBILE = process.env.DLG_MOBILE === "1"; const Q = MOBILE ? "&m=1" : "";
 const SUFFIX = (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
 const SHOWN_W = MOBILE ? 358 : 640; // css px the take is shown at (phone figure width at 390, desktop column)
@@ -97,25 +98,47 @@ async function record(demo) {
   const hold = (ms) => page.waitForTimeout(ms * K);
   // Scroll speed multiplier (1: phone takes keep the desktop timings; the checker normalises their frame diff).
   const SLOW = 1;
+  // Pointer rests: never on text. The two bar segments hold no text, tabs rest on their padding, and a chip's pointer
+  // lands in the blank after its last word (the same rule as the quote taps beside their text).
+  const SEG = { friday: ".dp-chart-stack__seg[data-focal]", unsure: ".dp-chart-stack__seg:not([data-focal])" };
+  const TAB_FX = 0.92;
   const api = (js) => page.evaluate(`window.__dlg.${js.replace(/^(follow|up|clear|chase)\((\d+)\)$/, (_, f, n) => f === "chase" ? `chase(${Math.round(n * SLOW)}, 0.07)` : `${f}(${Math.round(n * SLOW)})`)}`);
   const cursor = (o) => page.evaluate((v) => { document.getElementById("dlg-cursor").style.opacity = v; }, o);
   // Fade in near the target, then a 600 ms ease-in-out glide; never a teleport.
-  async function cursorTo(sel, { ms = 600, fx = 0.5, fy = 0.5, off = 0 } = {}) {
+  // Where the pointer should rest on a target right now. A target can be moving (a tab slides down as the chart grows
+  // above it), so tracked moves ask again every step and the pointer rides the target instead of being left behind.
+  async function aim(sel, { fx = 0.5, fy = 0.5, off = 0, afterText = false } = {}) {
+    if (afterText) {
+      // The blank right after the element's last word: the tip sits level with that line's top, past its end.
+      return page.$eval(sel, (el, gap) => { const r = document.createRange(); r.selectNodeContents(el); const q = [...r.getClientRects()].pop(); return { x: q.right + gap, y: q.top + 2 }; }, 20);
+    }
     const bb = await (await page.$(sel)).boundingBox();
-    const to = { x: bb.x + bb.width * fx, y: bb.y + bb.height * fy + off };
+    return { x: bb.x + bb.width * fx, y: bb.y + bb.height * fy + off };
+  }
+  async function cursorTo(sel, { ms = 600, track = true, ...o } = {}) {
+    let to = await aim(sel, o);
     if ((await page.evaluate(() => getComputedStyle(document.getElementById("dlg-cursor")).opacity)) === "0") {
-      pos = { x: to.x + 70, y: to.y + 60 }; await page.mouse.move(pos.x, pos.y); await cursor(1); await hold(200);
+      pos = { x: to.x + 70, y: to.y }; await page.mouse.move(pos.x, pos.y); await cursor(1); await hold(200);
     }
     const n = Math.round(ms / 16.7), from = { ...pos };
-    // A hand's path bows slightly; never a ruler-straight line.
-    const dx = to.x - from.x, dy = to.y - from.y, bow = 0.08;
-    for (let i = 1; i <= n; i++) { const e = EASE_IO(i / n), b = Math.sin(Math.PI * e) * bow; await page.mouse.move(from.x + dx * e - dy * b, from.y + dy * e + dx * b); await hold(14); }
+    for (let i = 1; i <= n; i++) {
+      if (track) to = await aim(sel, o);
+      // A hand's path bows slightly; never a ruler-straight line.
+      const dx = to.x - from.x, dy = to.y - from.y, bow = 0.08, e = EASE_IO(i / n), b = Math.sin(Math.PI * e) * bow;
+      await page.mouse.move(from.x + dx * e - dy * b, from.y + dy * e + dx * b); await hold(14);
+    }
     pos = to;
+  }
+  // After a tap the page moves under the pointer (tabs slide, a scroll follows). The pointer keeps its spot on the thing it
+  // tapped (same offset from its corner) for the length of the hold, so no text slides under it and it never rests on a word.
+  async function grab(sel) {
+    const h = await page.$(sel), bb0 = await h.boundingBox(), dx = pos.x - bb0.x, dy = pos.y - bb0.y;
+    return { ride: async (ms) => { const end = Date.now() + ms * K; while (Date.now() < end) { const bb = await h.boundingBox(); if (bb) { pos = { x: bb.x + dx, y: bb.y + dy }; await page.mouse.move(pos.x, pos.y); } await page.waitForTimeout(8); } } };
   }
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
-  if (demo === "toggles") { const bb = await (await page.$('[data-target="level-0"]')).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.5 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
-  if (demo === "side") { const bb = await (await page.$('[data-target="side-friday"]')).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.3 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
+  if (demo === "toggles") { const bb = await (await page.$('[data-target="level-0"]')).boundingBox(); pos = { x: bb.x + bb.width * TAB_FX, y: bb.y + bb.height * 0.5 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
+  if (demo === "side") { const bb = await (await page.$(SEG.friday)).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.1 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
   // P16 round 4: the first try starts closed (the answered count), like counts.
   const t0 = Date.now() / 1000;
   // PNG screencast: JPEG chroma loss shifted the flat well ~3 units greener/darker (P14 colour audit).
@@ -128,20 +151,20 @@ async function record(demo) {
     // row (the rule counts teaches). The end holds about 1.2 s, then the chat scrolls up and out.
     async hero() {
       await api("type(40)"); await hold(150); await api("send()"); await api("analyze(true)"); await hold(400); await api("answer()"); await hold(800);
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3, ms: 500 }); await press(); await api("ana()"); await hold(450); await api('top(".dlg-fill", 12, 500)'); await hold(550);
-      await cursorOut(); await hold(1200); await api("clear(700)"); await hold(Math.round(650 * SLOW));
+      await cursorTo(SEG.friday, { fx: 0.5, fy: 0.1, ms: 500 }); const g1 = await grab(SEG.friday); await press(); await api("ana()"); await g1.ride(450); await cursorOut(); await api('top(".dlg-fill", 12, 500)'); await hold(550);
+      await hold(1200); await api("clear(700)"); await hold(Math.round(650 * SLOW));
     },
     // Counts (Mudit, P15 round 2): 225 open with the cursor resting on it; tap 75, linger; tap 225, linger. Last frame is the first.
     async side() {
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("unsure")'); await hold(1500);
-      await cursorTo('[data-target="side-friday"]', { fx: 0.5, fy: 0.3 }); await press(); await api('side("friday")'); await hold(1400);
+      await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1 }); await press(); await api('side("unsure")'); await hold(1500);
+      await cursorTo(SEG.friday, { fx: 0.5, fy: 0.1 }); await press(); await api('side("friday")'); await hold(1400);
     },
     // P16: opens from the counts end state (225 open, Ana first). Tap Ana, her clip plays; tap again, it folds.
     async clip() {
       // P16 round 3: the player opens, then the chat eases to its end so nothing sits across the card's bottom edge.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(2000);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); const g2 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g2.ride(2000);
       // The fold clamps the chat's scroll by itself, in step with the height, so nothing else moves.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); await press(); await api("clip(false)"); await hold(900); await cursorOut(); await hold(1250);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); const g3 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g3.ride(900); await cursorOut(); await hold(1250);
     },
     async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(800); await api('note("Unstated count", ".dlg-mark")'); await hold(MOBILE ? 1100 : 1400); await api("clear(700)"); await hold(Math.round(650 * SLOW)); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
@@ -150,33 +173,63 @@ async function record(demo) {
     // P16 round 4 (Mudit): every tap causes exactly what appears. The 75 opens its people; Mei opens her clip; the player
     // pushes the count out of view, which is the cost the first try proves. The chevron folds it back to the start.
     async every() {
-      await cursorTo('[data-target="side"]', { fx: 0.5, fy: 0.3, ms: 550 }); await press(); await api('side("unsure")'); await hold(800);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await hold(1700);
-      await cursorTo('[data-target="side-collapse"]', { ms: 550 }); await press(); await api("side(false)"); await api("clip(false)"); await hold(500); await cursorOut(); await hold(1250);
+      await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1, ms: 550 }); const g4 = await grab(SEG.unsure); await press(); await api('side("unsure")'); await g4.ride(MOBILE ? 1300 : 800);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(1700);
+      await cursorTo('[data-target="side-collapse"]', { ms: 550 }); const g6 = await grab('[data-target="side-collapse"]'); await press(); await api("side(false)"); await api("clip(false)"); await g6.ride(500); await cursorOut(); await hold(1250);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
     // P16 round 3: Chart, People, Source, then Mei. Each tap shows one thing; Source marks rows playable, Mei plays.
     // P16 round 4 (Mudit): the cursor starts and ends resting on Insight, so the loop seam is the same frame. People opens
     // the 225 the bar already emphasises; Source turns rows into play chips; Ana plays; Insight folds it all back.
     async toggles() {
-      await cursorTo('[data-target="level-1"]', { ms: 400 }); await press(); await api("level(1)"); await hold(120);
-      await cursorTo('[data-target="level-2"]', { ms: 400 }); await press(); await api("level(2)"); await hold(120);
-      await cursorTo('[data-target="level-3"]', { ms: 400 }); await press(); await api("level(3)"); await hold(120);
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72, ms: 400 }); await press(); await api("clip(true)");
-      await api('stick(560, ".dlg-depth", 8)'); await hold(800);
+      await cursorTo('[data-target="level-1"]', { fx: TAB_FX, ms: 400, track: true }); const g7 = await grab('[data-target="level-1"]'); await press(); await api("level(1)"); await g7.ride(120);
+      await cursorTo('[data-target="level-2"]', { fx: TAB_FX, ms: 400, track: true }); const g8 = await grab('[data-target="level-2"]'); await press(); await api("level(2)"); await g8.ride(120);
+      await cursorTo('[data-target="level-3"]', { fx: TAB_FX, ms: 400, track: true }); const g9 = await grab('[data-target="level-3"]'); await press(); await api("level(3)"); await g9.ride(120);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72, ms: 400 }); const g10 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)");
+      await api('stick(560, ".dlg-depth", 8)'); await g10.ride(800);
       // Ana's row folds the player away (the chat settles by itself), then Insight folds everything back.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17, ms: 400 }); await press(); await api("clip(false)"); await hold(560);
-      await cursorTo('[data-target="level-0"]', { fx: 0.5, fy: 0.5, ms: 450 }); await press(); await api("level(0)"); await hold(2300);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17, ms: 400 }); const g11 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g11.ride(560);
+      await cursorTo('[data-target="level-0"]', { fx: TAB_FX, ms: 450, track: true }); const g12 = await grab('[data-target="level-0"]'); await press(); await api("level(0)"); await g12.ride(2300);
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.
     async thin() {
       // P16 round 4: no gutter note; the flag's surface and the labelled follow-ups explain themselves.
       await api("thin()"); await hold(1600);
-      await cursorTo('[data-target="chip-0"]', { fx: 0.3 }); await press(); await api("ask()"); await hold(200); await api("follow(500)"); await hold(450);
-      await cursorOut(); await api("reply()"); await hold(100); await api("follow(600)"); await hold(2000); await api("clear(700)"); await hold(Math.round(650 * SLOW));
+      await cursorTo('[data-target="chip-0"] .dlg-thin__chip-q', { afterText: true }); await press(); await api("ask()"); await hold(100); await cursorOut(); await api("follow(500)"); await hold(450);
+      await api("reply()"); await hold(100); await api("follow(600)"); await hold(2000); await api("clear(700)"); await hold(Math.round(650 * SLOW));
     },
   };
+  if (AUDIT) await page.evaluate(() => {
+    // Pointer-on-text audit: every frame, the pointer glyph's box against the visible text boxes of the stage.
+    const cur = document.getElementById("dlg-cursor"), frame = document.getElementById("frame"), segs = []; let open = null;
+    let last = { x: 0, y: 0 }, since = performance.now();
+    const tick = () => {
+      const c = cur.getBoundingClientRect(), vis = getComputedStyle(cur).opacity > 0.5;
+      if (Math.abs(c.left - last.x) > 0.6 || Math.abs(c.top - last.y) > 0.6) { last = { x: c.left, y: c.top }; since = performance.now(); }
+      const still = performance.now() - since > 120;
+      const g = { l: c.left + c.width * 0.11, t: c.top + c.height * 0.08, r: c.left + c.width * 0.83, b: c.top + c.height * 0.86 };
+      let hit = null;
+      if (vis && still) {
+        const w = document.createTreeWalker(frame, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n && !hit; n = w.nextNode()) {
+          if (!n.textContent.trim()) continue;
+          const el = n.parentElement, cs = getComputedStyle(el);
+          if (cs.visibility === "hidden" || cs.display === "none") continue;
+          let o = 1; for (let a = el; a && a !== document.body; a = a.parentElement) o *= Number(getComputedStyle(a).opacity);
+          if (o < 0.3) continue;
+          const r = document.createRange(); r.selectNodeContents(n);
+          for (const q of r.getClientRects()) if (q.width > 1 && g.l < q.right && g.r > q.left && g.t < q.bottom && g.b > q.top) { hit = n.textContent.trim().slice(0, 40); window.__dbg = [Math.round(q.left), Math.round(q.top), Math.round(q.right), Math.round(q.bottom), Math.round(g.l), Math.round(g.t), Math.round(g.r), Math.round(g.b), n.parentElement.className, Math.round(c.left), Math.round(c.top), JSON.stringify([...document.querySelectorAll('.dp-chart-stack__seg')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)]; }))]; break; }
+        }
+      }
+      if (hit && (!open || open.text !== hit)) { if (open) segs.push(open); open = { text: hit, t0: performance.now(), t1: 0, dbg: window.__dbg }; }
+      if (open) { if (hit === open.text) open.t1 = performance.now(); else { segs.push(open); open = null; } }
+      requestAnimationFrame(tick);
+    };
+    window.__audit = () => (open ? [...segs, open] : segs).map((s) => ({ text: s.text, ms: Math.round(s.t1 - s.t0), dbg: s.dbg })).filter((s) => s.ms >= 60);
+    requestAnimationFrame(tick);
+  });
   await S[demo]();
+  if (AUDIT) { console.log(JSON.stringify({ demo, mobile: MOBILE, touches: await page.evaluate(() => window.__audit()) })); await b.close(); return; }
   const tStop = Date.now() / 1000; await cdp.send("Page.stopScreencast"); await hold(150); await b.close();
   // Constant 30 fps from screencast timestamps, cropped to the frame.
   const list = [];
@@ -225,8 +278,9 @@ for (const d of only.length ? only : [...Object.keys(NAMES), ...Object.keys(STIL
   if (STILLS[d]) { await still(d); continue; }
   for (let take = 1; take <= 4; take++) {
     await record(d);
+    if (AUDIT) break;
     try { execFileSync("python3", [CHECK, `${out}/${NAMES[d]}${SUFFIX}.mp4`], { stdio: "pipe" }); console.log(JSON.stringify({ demo: d, take, checklist: "pass" })); break; }
     catch (e) { console.log(JSON.stringify({ demo: d, take, checklist: "fail", detail: e.stdout?.toString().trim() })); }
   }
 }
-execFileSync("python3", [new URL("./pick-dialogue-posters.py", import.meta.url).pathname, out], { stdio: "inherit" });
+if (!AUDIT) execFileSync("python3", [new URL("./pick-dialogue-posters.py", import.meta.url).pathname, out], { stdio: "inherit" });

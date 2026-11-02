@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 11b, Nov 2 2026 (pointer audit and phone first try on review/round-p15)
+- Base: review/round-p15 at 5b36d3f. Commit stays on review/round-p15; no PR, not main.
+- Every take re-recorded so the pointer never rests on text (thin chip, bar legends, tabs, quote rows); the recorder has a pointer-on-text audit (DLG_AUDIT=1). Phone first try holds the count in view for a beat, then the open player carries it fully out of view; poster at 5.0 s with nothing cropped. Levels kept and clip posters re-set to the new timings. Thin-data A placeholder unchanged.
+- Review in design/notes/review-r11b.md. Screenshots: /opt/cursor/artifacts/screenshots/r11b-*. Preview: none (local validation only)
+
 ## Round 11, Nov 1 2026 (audit items 1 to 4 on review/round-p15)
 - Base: review/round-p15 at 0adf459. Commit stays on review/round-p15; no PR, not main.
 - By group shows its dropped 64% and 70% percent card beside the kept counts; Levels posters hold the moment the count scrolls away and the open Source state; thin data pairs a two-person bar (total a visible placeholder) with the refusal flag; the awkward shapes are four small neutral frames, tie first. Item 5 (chart route) is held until the model-versus-rules placeholder is settled.

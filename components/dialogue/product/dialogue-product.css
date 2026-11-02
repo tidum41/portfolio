@@ -4265,3 +4265,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 @media (max-width: 600px) {
   .dlg-match__pair { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Round 11b: on the phone the first try needs scroll room, so the open player can carry the count fully out of view
+   instead of stopping with a sliver of the bar under the card's top edge. */
+[data-mobile] .dlg-stage--every .dlg-stage__body { padding-bottom: 160px; }
