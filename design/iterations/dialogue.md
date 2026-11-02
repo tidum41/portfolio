@@ -2,6 +2,11 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 12, Nov 2 2026 (story holes, copy, ramp C and phone clip on review/round-p15)
+- Base: review/round-p15 at 6569224. Commit stays on review/round-p15; no PR, not main.
+- Story holes ranked in design/notes/story-holes-r12.md, each with one question for Mudit; no facts added. Copy shows instead of asserts and cuts repeats (about 50 words), every line in design/notes/copy-diff-r12.md. Ramp C: Carbon teal-70 on the Repeat shoppers series in By group and the 1 to 5 scale, everything else unchanged. Phone clip take stops the bar whole at the top while the clip plays; poster held on that open state. Paper edits for a Mac agent in design/notes/paper-asks-r12.md.
+- Review in design/notes/review-r12.md. Screenshots: /opt/cursor/artifacts/screenshots/r12-*. Preview: none (local validation only)
+
 ## Round 11b, Nov 2 2026 (pointer audit and phone first try on review/round-p15)
 - Base: review/round-p15 at 5b36d3f. Commit stays on review/round-p15; no PR, not main.
 - Every take re-recorded so the pointer never rests on text (thin chip, bar legends, tabs, quote rows); the recorder has a pointer-on-text audit (DLG_AUDIT=1). Phone first try holds the count in view for a beat, then the open player carries it fully out of view; poster at 5.0 s with nothing cropped. Levels kept and clip posters re-set to the new timings. Thin-data A placeholder unchanged.
