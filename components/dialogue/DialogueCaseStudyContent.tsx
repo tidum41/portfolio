@@ -153,10 +153,10 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Teams needed answers fast, and the detail got lost</ClaimH2>
               <p className="dlg-constraint">Two constraints: Dialogue&rsquo;s fixed 448px chat panel, and teams I knew only through Dialogue&rsquo;s customer stories, where Kalshi sets the bar at a share-out by tomorrow morning.</p>
               <CaseStudyBody>
-                Priya, a researcher at Hearthside, owes her team a share-out by tomorrow morning. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
+                Priya, a researcher at Hearthside, has that deadline. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
               </CaseStudyBody>
               <CaseStudyBody>
-                Her real question is how many shoppers stand behind each claim, and prose can&rsquo;t say. So the brief became a principle: every claim shows how many people hold it.
+                Her real question is how many shoppers stand behind each claim, and prose can&rsquo;t say. So I set one principle: every claim shows how many people hold it.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
@@ -176,7 +176,7 @@ export function DialogueCaseStudyContent({
                 I first assumed every answer should carry every level of detail: the count, its chart, the people on each side and the source clip. The deepest detail seemed like the most useful.
               </CaseStudyBody>
               <CaseStudyBody>
-                In my build, the open player pushed the count out of view, so a PM scrolled back up for the one number they came for. Depth had to be something the reader opens.
+                In my build, a PM had to scroll back up for the one number they came for, so depth had to be something the reader opens.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
@@ -206,7 +206,7 @@ export function DialogueCaseStudyContent({
                   </div>
                 </div>
               </figure>
-              <Caption>I ruled out A because the reader has to choose a depth before seeing the count. In B each toggle adds one level under the insight, and tapping Ana plays her clip.</Caption>
+              <Caption>In B the toggles stay above the open clip, so one tap on Insight brings the count back.</Caption>
             </Section>
 
             <Section id="counts">
@@ -258,12 +258,12 @@ export function DialogueCaseStudyContent({
                 A segment is a level only some readers open, so its chart has to read at a glance. 9 of 14 and 88 of 125 look alike as percents, so each template I adapted from IBM Carbon counts people out of their own group.
               </CaseStudyBody>
               <CaseStudyBody>
-                The routing in the figure is concept work, written as how the templates are meant to be chosen. <Placeholder>how much the model decides versus fixed rules</Placeholder>
+                <Placeholder>how much the model decides versus fixed rules</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Each question type gets one chart, with its reason beside it. The awkward shapes sit under the templates.</Caption>
+              <Caption>Each question type gets one chart, with its reason beside it, and By group sits beside the percent chart I ruled out.</Caption>
               <CaseStudyBody>
                 Where I departed from Carbon, it was to keep people countable: one highlight on the value the answer is about, and counts printed out of their own group wherever groups differ in size. Carbon has no rule for thin data, so that path is my addition. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
               </CaseStudyBody>
@@ -274,7 +274,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Two people get a flag, and no chart</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                Some levels are too thin to open. A bar for two people would read as a pattern, so under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
+                Some levels are too thin to open, so under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
               </CaseStudyBody>
               <CaseStudyBody>
                 <Placeholder>why the cutoff sits under 3, and what would change your mind</Placeholder>
@@ -297,7 +297,7 @@ export function DialogueCaseStudyContent({
                   </div>
                 </div>
               </figure>
-              <Caption>Two shoppers are too few for a chart, so a flag takes its place, and tapping a follow-up answers it with a count out of 125. Recorded from my live code recreation.</Caption>
+              <Caption>A&rsquo;s bar fills its track for two people, so B puts a flag in its place, and a follow-up answers with a count out of 125. Recorded from my live code recreation.</Caption>
             </Section>
 
 
