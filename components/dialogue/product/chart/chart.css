@@ -158,6 +158,19 @@
   color: var(--dp-chart-focal);
 }
 
+/* —— Vertical two-bar chart (Counts exploration) —— */
+.dp-chart-cols { min-width: 0; width: 100%; }
+.dp-chart-cols__plot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: end; }
+.dp-chart-cols__col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.dp-chart-cols__track { display: flex; align-items: flex-end; width: 100%; height: 96px; background: var(--dp-chart-track); border-radius: var(--dp-radius-bar); overflow: hidden; }
+.dp-chart-cols__bar { width: 100%; border-radius: var(--dp-radius-bar); }
+.dp-chart-cols__label {
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  color: var(--dp-chart-label-color);
+  text-align: center;
+}
+
 .dp-chart-bars__note {
   margin: 8px 0 0;
   font-size: var(--dp-chart-label-size);

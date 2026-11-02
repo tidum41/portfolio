@@ -2,6 +2,10 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 13, Nov 2 2026 (counts pair and Levels witness on review/round-p15)
+- Base: review/round-p15 at 070b6ea. Commit stays on review/round-p15; no PR, not main.
+- Counts holds an Explored (two standard bar charts, side by side and stacked, in the 448px panel) versus Kept (the single bar) pair, framed as an iteration choice from Mudit's answer to story hole 1. Levels now says in first person that he found the scrolled-away count in his own build (hole 2). Notes in design/notes/story-holes-r12.md, copy-diff-r12.md and handoff.md. Screenshots: /opt/cursor/artifacts/screenshots/r13-*.
+
 ## Round 12, Nov 2 2026 (story holes, copy, ramp C and phone clip on review/round-p15)
 - Base: review/round-p15 at 6569224. Commit stays on review/round-p15; no PR, not main.
 - Story holes ranked in design/notes/story-holes-r12.md, each with one question for Mudit; no facts added. Copy shows instead of asserts and cuts repeats (about 50 words), every line in design/notes/copy-diff-r12.md. Ramp C: Carbon teal-70 on the Repeat shoppers series in By group and the 1 to 5 scale, everything else unchanged. Phone clip take stops the bar whole at the top while the clip plays; poster held on that open state. Paper edits for a Mac agent in design/notes/paper-asks-r12.md.

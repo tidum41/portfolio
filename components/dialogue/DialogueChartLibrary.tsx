@@ -535,6 +535,30 @@ function ThinNearMiss() {
   );
 }
 
+/* Round 13: the two standard two-bar charts tried before the single bar, drawn in the 448px panel with the page's 225 and 75.
+   Neutral, because the kept bar beside them (the take) carries the one cherry. */
+function CountsExplored() {
+  const rows = FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: String(r.count), focal: r.focal }));
+  const panel = (children: ReactNode) => (
+    <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
+      <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">{children}</ChartVizCard>
+    </div>
+  );
+  const note = `Out of ${FRIDAY_TOTAL} shoppers`;
+  return (
+    <StaticFigure figure="counts-explored" className="dlg-thin-miss dlg-counts-x">
+      <div className="dlg-match__half">
+        <p className="dlg-match__tag">Two bars, side by side</p>
+        {panel(<ChartBarList vertical rows={rows} max={FRIDAY_TOTAL} note={note} />)}
+      </div>
+      <div className="dlg-match__half">
+        <p className="dlg-match__tag">Two bars, stacked</p>
+        {panel(<ChartBarList rows={rows} max={FRIDAY_TOTAL} note={note} />)}
+      </div>
+    </StaticFigure>
+  );
+}
+
 export type TemplatesLayout = "picker" | "grid" | "stack";
 export function ChartTemplates({ layout = "stack" }: { layout?: TemplatesLayout }) {
   return layout === "picker" ? <ChartTemplatesPicker /> : <ChartTemplatesPairs layout={layout} />;
@@ -547,11 +571,14 @@ export default function DialogueChartLibrary({
   scenarios = false,
   templates = false,
   thinNearMiss = false,
+  countsExplored = false,
 }: {
   /** P15: the merged chart-templates figure (replaces the bars video and the specimen list on the page). */
   templates?: boolean;
   /** Round 11: the two-person bar the thin flag replaces. */
   thinNearMiss?: boolean;
+  /** Round 13: the two standard two-bar charts explored before the single bar. */
+  countsExplored?: boolean;
   showTech?: boolean;
   segmentsFirst?: boolean;
   only?: "segments" | "coverage";
@@ -560,6 +587,7 @@ export default function DialogueChartLibrary({
 }) {
   if (templates) return <ChartTemplates />;
   if (thinNearMiss) return <ThinNearMiss />;
+  if (countsExplored) return <CountsExplored />;
   const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">

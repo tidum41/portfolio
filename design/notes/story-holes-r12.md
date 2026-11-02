@@ -12,11 +12,11 @@ What a hiring manager looks for on her pages, and so on this one:
 
 Ranked by how much a skimming hiring manager would change their read of Mudit once the hole is filled.
 
-1. **Counts is the only shipped work, and it has no before.**
-   - Ask Mudit: *What did you build before the one bar? Show or describe the table that crowded the 448px panel, and say what broke when it sat there.*
+1. **Counts is the only shipped work, and it has no before.** ANSWERED (round 13): before the single bar he iterated on standard two-bar charts (vertical side by side, horizontal stacked). Nothing broke; the single bar came out of those iterations and reads quicker in the 448px panel. Counts now holds an Explored versus Kept pair, framed as an iteration choice. The question and notes below are kept for the record.
+   - Asked Mudit: *What did you build before the one bar? Show or describe the table that crowded the 448px panel, and say what broke when it sat there.*
    - Why first: shipped work is what a hiring manager trusts most. Today that decision rests on one sentence and a placeholder, while the concept sections each get a ruled-out option drawn.
-2. **The page's one turn has no witness.**
-   - Ask Mudit: *Who actually hit the scrolled-away count: a PM or teammate you watched, feedback from Dialogue, or you using your own build?*
+2. **The page's one turn has no witness.** ANSWERED (round 13): Mudit found the scrolled-away count himself, using his own build. Levels now says so in first person and names no other witness. The question and notes below are kept for the record.
+   - Asked Mudit: *Who actually hit the scrolled-away count: a PM or teammate you watched, feedback from Dialogue, or you using your own build?*
    - Why: "a PM had to scroll back up" is the evidence for the reversal, and the reader can't tell whether it was observed or imagined. Rachel's turns die on something real (Apple's API, noise she saw in testing).
 3. **No one else is on the page.**
    - Ask Mudit: *Who did you work with at Dialogue, and which calls on this page were yours alone versus agreed with them?*
@@ -27,6 +27,8 @@ Ranked by how much a skimming hiring manager would change their read of Mudit on
 5. **The close admits nothing.**
    - Ask Mudit: *Of the 8 versions, which one did you believe in that turned out wrong, and what would you do differently on the next answer surface?*
    - Why: "8 versions" is stated, but none is shown or named. The takeaway restates the hero line and the learning is a placeholder. One named wrong turn would cover both.
+
+Still open: holes 3, 4 and 5.
 
 Next in line: the thin cutoff (why under 3), how the 2 shown quotes are picked, and why a clip in place beat the session page.
 
@@ -60,7 +62,9 @@ Next in line: the thin cutoff (why under 3), how the 2 shown quotes are picked, 
   - The constraint that forced the call: a real person, a review, a test.
   - Why toggles beat a third option, such as a sticky count over the player. He'd have considered it; the page doesn't say.
   - What A would have been good for (its conditional benefit). The con row says only what it costs.
-- **Sharpest question.** *Who actually hit the scrolled-away count, and how did you find out?* (Top 2)
+- **Answered (round 13).** He found it himself, using his own build. The body now reads "Using my own build, I found the open player pushed the count out of view, and I had to scroll back up for the one number I came for." No PM witness is claimed.
+- **Still missing.** Why toggles beat a third option such as a sticky count over the player.
+- **Sharpest question now.** *Did you try keeping the count pinned over the player before choosing toggles, and what made it lose?*
 
 ### Counts: "Every claim leads with how many, and both sides open"
 - **Shown.** The bar swapping its two sides of people, in motion.
@@ -71,7 +75,8 @@ Next in line: the thin cutoff (why under 3), how the 2 shown quotes are picked, 
   - The before (placeholder).
   - What Dialogue released versus what he designed.
   - How the 2 quotes per side are picked (placeholder). That's a trust question, since an AI picking its own evidence is what researchers fear (ACM, Reddit in `user-story-root.md`).
-- **Sharpest question.** *What did you build before the one bar, and what broke when it sat in the 448px panel?* (Top 1)
+- **Answered (round 13).** He iterated on standard two-bar charts first (side by side, stacked), and the single bar came out of those iterations. The "table crowded the panel" line is gone, since nothing broke. A pair now shows both explored charts beside the kept bar.
+- **Sharpest question now.** *Of this section, what exactly is live in Dialogue today?*
 - **Second question.** *Of this section, what exactly is live in Dialogue today?*
 
 ### Clips: "A quote plays from its moment, inside the answer"
@@ -123,8 +128,8 @@ No new sections and no new figures. Each answer replaces a placeholder that alre
 
 | Hole | Lands in |
 | --- | --- |
-| 1, counts before | Counts, `[PLACEHOLDER: what you built before counts, in one line]`. If he has a screenshot or can describe the table, a first-try frame beside the bar is the Rachel move. It needs his OK as a figure. |
-| 2, the turn's witness | Levels, the "a PM had to scroll back up" sentence. Rewrite it in his words once he answers. |
+| 1, counts before | Done in round 13: Counts holds the explored versus kept pair, and its placeholder is gone. |
+| 2, the turn's witness | Done in round 13: the Levels sentence is first person, from his own build. |
 | 3, team | Hero metadata, `[PLACEHOLDER: team names and roles]`. Plus one first-person "with" clause where a call was shared. |
 | 4, model versus rules | Data viz, `[PLACEHOLDER: how much the model decides versus fixed rules]`. Then the held route band can be drawn (round 11 hold). |
 | 5, the close | Takeaway, `[PLACEHOLDER: one learning ...]`. |

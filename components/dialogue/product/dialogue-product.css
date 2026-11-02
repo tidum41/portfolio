@@ -4262,6 +4262,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-edge__other .dp-chart-bars__row:last-child .dp-chart-bars__bar { background: repeating-linear-gradient(135deg, var(--dp-chart-muted) 0 4px, transparent 4px 8px) !important; }
 .dlg-ph { font-weight: 500; color: var(--dp-ink); }
 .dlg-thin-miss { max-width: 448px; margin-inline: auto; }
+.dlg-counts-x { display: flex; flex-direction: column; gap: 16px; }
 @media (max-width: 600px) {
   .dlg-match__pair { grid-template-columns: minmax(0, 1fr); }
 }

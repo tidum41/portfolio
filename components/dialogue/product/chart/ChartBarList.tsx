@@ -17,6 +17,8 @@ type Props = {
   className?: string;
   /** Quarter gridlines over the tracks (the analyst's first draft). */
   gridlines?: boolean;
+  /** Columns side by side instead of rows (a standard two-bar chart, drawn for the Counts explorations). */
+  vertical?: boolean;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -27,8 +29,30 @@ export default function ChartBarList({
   note,
   className,
   gridlines = false,
+  vertical = false,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
+  if (vertical) {
+    return (
+      <div className={["dp-chart-root dp-chart-cols", className].filter(Boolean).join(" ")}>
+        <div className="dp-chart-cols__plot">
+          {rows.map((row, i) => (
+            <div key={row.label} className="dp-chart-cols__col" data-annotate-part={`col-${annotateSlug(row.label)}`}>
+              <span className={["dp-chart-bars__value", row.focal ? "dp-chart-bars__value--focal" : ""].filter(Boolean).join(" ")}>{row.display ?? String(row.value)}</span>
+              <div className="dp-chart-cols__track">
+                <div
+                  className="dp-chart-cols__bar"
+                  style={{ height: `${Math.max(0, Math.min(100, (row.value / max) * 100))}%`, backgroundColor: chartBarFill(i, row.focal, row.secondary) }}
+                />
+              </div>
+              <span className="dp-chart-cols__label">{row.label}</span>
+            </div>
+          ))}
+        </div>
+        {note ? <p className="dp-chart-bars__note">{note}</p> : null}
+      </div>
+    );
+  }
   const hasDetail = rows.some((r) => r.detail);
 
   return (

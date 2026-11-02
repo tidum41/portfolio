@@ -20,3 +20,12 @@ Part B. No new facts, and every [PLACEHOLDER] stays word for word, including the
 - "a PM had to scroll back up" (Levels): kept because it's approved copy. Whether a real PM did this is story hole 2.
 - The takeaway sentence: it restates the hero line. A better close needs Mudit's learning (story hole 5), so it waits.
 - Measure: already honest and light. Its two placeholders stay.
+
+## Round 13 additions (Nov 2 2026)
+
+| Section | Before | After | Why |
+| --- | --- | --- | --- |
+| Counts body | "A table crowded the 448px panel, so the count became one bar with two labels, and each side opens its people on a tap." and a placeholder for what came before | "I iterated on standard two-bar charts first, and the single bar came out of those iterations, with each side opening its people on a tap." | Mudit's answer to story hole 1. Nothing broke, so the crowded-table claim is gone and the placeholder is filled. |
+| Counts figure | One take | Pair: A "Explored: two standard bar charts" (con row "Splits 225 and 75 across two marks to compare."), B "Kept: one bar with two sides" (pro row "One bar shows both counts at once in the 448px panel.") | Same pair as Levels and thin data. The A mark is the system's not-kept X, the same one Levels A uses. |
+| Counts caption | "With the 225 open, tapping 75 swaps in two of the unsure shoppers, and tapping 225 swaps them back." | "The kept bar holds 225 and 75 in one mark, and tapping 75 swaps in two of the unsure shoppers." | One short caption for the pair. |
+| Levels body | "In my build, a PM had to scroll back up for the one number they came for, so depth had to be something the reader opens." | "Using my own build, I found the open player pushed the count out of view, and I had to scroll back up for the one number I came for. Depth had to be something the reader opens." | Mudit's answer to story hole 2: he found it himself. No witness is invented. |

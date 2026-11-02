@@ -81,6 +81,8 @@ function Caption({ children }: { children: React.ReactNode }) {
 type ReasonRow = { kind: "pro" | "con"; text: string };
 const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Starts at the count. Each level is one tap away." };
 const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "Asks for depth before you know if the count matters." };
+const COUNTS_EXPLORED: ReasonRow = { kind: "con", text: "Splits 225 and 75 across two marks to compare." };
+const COUNTS_KEPT: ReasonRow = { kind: "pro", text: "One bar shows both counts at once in the 448px panel." };
 const THIN_BAR: ReasonRow = { kind: "con", text: "A full bar for two people reads as a pattern." };
 const THIN_FLAG: ReasonRow = { kind: "pro", text: "Says why there is no chart, and offers follow-ups to count." };
 const REASON_ICON = { pro: Check, con: X } as const;
@@ -176,7 +178,7 @@ export function DialogueCaseStudyContent({
                 I first assumed every answer should carry every level of detail: the count, its chart, the people on each side and the source clip. The deepest detail seemed like the most useful.
               </CaseStudyBody>
               <CaseStudyBody>
-                In my build, a PM had to scroll back up for the one number they came for, so depth had to be something the reader opens.
+                Using my own build, I found the open player pushed the count out of view, and I had to scroll back up for the one number I came for. Depth had to be something the reader opens.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
@@ -214,19 +216,27 @@ export function DialogueCaseStudyContent({
               <ClaimH2>Every claim leads with how many, and both sides open</ClaimH2>
               <StatusLine>Shipped</StatusLine>
               <CaseStudyBody>
-                The count is the level everyone reads, so it leads. A table crowded the 448px panel, so the count became one bar with two labels, and each side opens its people on a tap.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                <Placeholder>what you built before counts, in one line</Placeholder>
+                The count is the level everyone reads, so it leads. I iterated on standard two-bar charts first, and the single bar came out of those iterations, with each side opening its people on a tap.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
-                <DialogueRachelFrame tone="solution">
-                  <StaticFigure figure="counts-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 swaps the 225 shoppers for the 75 unsure, and tapping 225 swaps them back" />
-                  </StaticFigure>
-                </DialogueRachelFrame>
+                <div className="dlg-demo-pair">
+                  <div>
+                    <LevelReasoning letter="A" label="Explored: two standard bar charts" reasoning={COUNTS_EXPLORED} />
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueChartLibrary countsExplored />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <LevelReasoning letter="B" label="Kept: one bar with two sides" reasoning={COUNTS_KEPT} />
+                    <DialogueRachelFrame tone="solution">
+                      <StaticFigure figure="counts-open">
+                        <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 swaps the 225 shoppers for the 75 unsure, and tapping 225 swaps them back" />
+                      </StaticFigure>
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
               </figure>
-              <Caption>With the 225 open, tapping 75 swaps in two of the unsure shoppers, and tapping 225 swaps them back.</Caption>
+              <Caption>The kept bar holds 225 and 75 in one mark, and tapping 75 swaps in two of the unsure shoppers.</Caption>
               <CaseStudyBody>
                 Each side opens with 2 quotes, picked by <Placeholder>how the 2 shown quotes are picked</Placeholder>, and the rest open inside the answer.
               </CaseStudyBody>
