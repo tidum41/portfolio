@@ -41,7 +41,7 @@ export default function ChartBarList({
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
-            : chartBarFill(i, row.focal);
+            : chartBarFill(i, row.focal, row.secondary);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
             <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}{row.pct ? <span className="dp-chart-bars__pct">{row.pct}</span> : null}</span>

@@ -32,6 +32,8 @@ export const dialogueChartSpec = {
   },
   color: {
     focal: "var(--dp-chart-focal)",
+    /** Ramp C: Carbon $teal-70, only for the second series of a two-series chart. */
+    secondary: "var(--dp-chart-secondary)",
     /** Every non-focal data fill. Stone-500, 3:1 or better on the track and card. */
     muted: "var(--dp-chart-muted)",
     mutedAlt: "var(--dp-chart-muted-alt)",
@@ -80,15 +82,17 @@ export type ChartBarDatum = {
   /** Display string; defaults to formatted value */
   display?: string;
   focal?: boolean;
+  /** The second series beside the focal one (teal). Leave unset for a remainder or any one-series chart. */
+  secondary?: boolean;
   /** Quiet secondary figure shown after the value (for example the drop at a step). */
   detail?: string;
   /** P15 item 11: share shown on hover, e.g. "64%". */
   pct?: string;
 };
 
-/** Cherry for the focal bar, stone-500 for everything else. */
-export function chartBarFill(_index: number, focal?: boolean): string {
-  return focal ? dialogueChartSpec.color.focal : dialogueChartSpec.color.muted;
+/** Cherry for the focal bar, teal for a second series, stone-500 for everything else. */
+export function chartBarFill(_index: number, focal?: boolean, secondary?: boolean): string {
+  return focal ? dialogueChartSpec.color.focal : secondary ? dialogueChartSpec.color.secondary : dialogueChartSpec.color.muted;
 }
 
 /** Magnitude is carried by bar length; the fill stays stone-500 (no light ramp steps). */

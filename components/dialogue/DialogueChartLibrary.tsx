@@ -53,8 +53,8 @@ const FRIDAY_ROWS = [
   { label: "Unsure", count: 75, focal: false },
 ] as const;
 const SEGMENTS = [
-  { label: "New shoppers", count: 9, of: 14, focal: true },
-  { label: "Repeat shoppers", count: 88, of: 125, focal: false },
+  { label: "New shoppers", count: 9, of: 14, focal: true, secondary: false },
+  { label: "Repeat shoppers", count: 88, of: 125, focal: false, secondary: true },
 ] as const;
 
 /** P14 item 10: extra Hearthside scenarios. No line charts (TASTE cut). */
@@ -71,7 +71,7 @@ const TOP_ASKS = [
 ] as const;
 const CONFIDENCE = [
   { label: "New shoppers", value: 2, display: "2", focal: true, detail: "14 people" },
-  { label: "Repeat shoppers", value: 4, display: "4", detail: "125 people" },
+  { label: "Repeat shoppers", value: 4, display: "4", secondary: true, detail: "125 people" },
 ] as const;
 
 const ENTRIES = [
@@ -129,7 +129,7 @@ const ENTRIES = [
     bad: (
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
         <ChartBarList
-          rows={SEGMENTS.map((r) => ({ label: r.label, value: Math.round((r.count / r.of) * 100), display: formatChartPercent(Math.round((r.count / r.of) * 100)), focal: r.focal }))}
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: Math.round((r.count / r.of) * 100), display: formatChartPercent(Math.round((r.count / r.of) * 100)), focal: r.focal, secondary: r.secondary }))}
           max={100}
         />
       </ChartVizCard>
@@ -137,7 +137,7 @@ const ENTRIES = [
     good: (
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by segment">
         <ChartBarList
-          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, focal: r.focal }))}
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, focal: r.focal, secondary: r.secondary }))}
           max={1}
         />
       </ChartVizCard>
@@ -219,7 +219,7 @@ function GroupChart({ open, onOpen }: { open: boolean; onOpen: (b: boolean) => v
     <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday, by group">
       <div className="dlg-live__bars">
         <ChartBarList
-          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal }))}
+          rows={SEGMENTS.map((r) => ({ label: r.label, value: r.count / r.of, display: `${r.count} of ${r.of}`, pct: pctOf(r.count, r.of), focal: r.focal, secondary: r.secondary }))}
           max={1}
         />
         <button type="button" className="dlg-live__bar-hit" aria-label={`Open the ${FIRST.count} ${FIRST.label.toLowerCase()}`} aria-expanded={open} onClick={() => onOpen(!open)} />
@@ -375,7 +375,8 @@ function ChartTemplatesPicker() {
 
 /* Round 8: the figure reads as one table. Each row is a question type, the chart it gets, the reason in one line, and
    the product's own chart card. The routing and the awkward shapes are short bands around it. Only the split chart
-   keeps cherry (its 225 is the one encoding the whole page shares); the other three are neutral. */
+   keeps cherry (its 225 is the one encoding the whole page shares); the other three are neutral, and where a chart
+   has a second group (By group, 1 to 5 scale) that group is teal (ramp C). */
 function ChartFlow() {
   return (
     <div className="dlg-guide__block">

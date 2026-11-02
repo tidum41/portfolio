@@ -377,6 +377,10 @@
   background: var(--dp-chart-focal);
 }
 
+.dp-chart-dots__dot--secondary {
+  background: var(--dp-chart-secondary);
+}
+
 .dp-chart-dots__value {
   width: var(--dp-chart-value-width);
   flex-shrink: 0;
