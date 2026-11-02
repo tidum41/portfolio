@@ -65,26 +65,29 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
  * defaults, so visitors never see controls.
  */
 const SILK_DIALS = {
-  intensityHalftone: [0.21, 0, 1, 0.01],
-  intensityWave:     [0.07, 0, 1, 0.01],
-  halftoneSize:      [3.0, 1, 20, 0.5],
-  speed:             [1.2, 0, 4, 0.05],
-  yOffset:           [49, -50, 100, 1],
-  endOpacity:        [0.15, 0, 0.5, 0.01],
-  modeFade:          [0.45, 0.05, 1.5, 0.05],  // s, halftone <-> wave crossfade
-  // Cursor: ribbon crossings gather where the pointer is
-  attractStrength:   [0.6, 0, 1, 0.01],        // how far ribbons converge (1 = all meet)
-  attractFalloff:    [260, 60, 900, 10],       // px, horizontal Gaussian radius of the pinch
-  attractBandMin:    [0.32, 0, 1, 0.01],       // clamp target y into the ribbon band (uv)
-  attractBandMax:    [0.82, 0, 1, 0.01],
-  followStiffness:   [0.035, 0.005, 0.2, 0.005], // spring pull per 30fps step
-  followDamping:     [0.86, 0.5, 0.98, 0.01],    // higher = more glide
-  engageSpeed:       [0.05, 0.005, 0.3, 0.005],  // attraction fade-in per step
-  returnSpeed:       [0.015, 0.002, 0.2, 0.001], // fade-out per step after leave/idle
-  idleDelay:         [2.5, 0.5, 10, 0.1],        // s without movement before drifting back
-} as const
+  drift: {
+    strength: [0.05, 0, 0.15, 0.005],   // max crossing shift (uv) at full build-up
+    smoothing: [2.2, 0.5, 5, 0.1],      // s, time constant the crossing eases toward its target
+    relax: [9, 2, 30, 0.5],             // s, time constant the build-up fades after you stop
+  },
+  silk: {
+    speed: [1.2, 0, 4, 0.05],
+    intensity: [0.21, 0, 1, 0.01],      // halftone mode
+    dotSize: [3.0, 1, 20, 0.5],
+  },
+} as const;
 
-type SilkParams = { [K in keyof typeof SILK_DIALS]: number };
+// Fixed design values (formerly dials).
+const INTENSITY_WAVE = 0.07;
+const Y_OFFSET = 49;
+const END_OPACITY = 0.15;
+const MODE_FADE = 0.45;     // s, halftone <-> wave crossfade
+const DRIFT_GAIN = 0.35;    // build-up per hero-width of pointer travel
+
+type SilkParams = {
+  drift: { strength: number; smoothing: number; relax: number };
+  silk: { speed: number; intensity: number; dotSize: number };
+};
 
 export default function PS3Silk({
   waveColor = "#ffffff",
@@ -101,9 +104,12 @@ export default function PS3Silk({
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
 
-  const dk = useDialKit("PS3Silk", SILK_DIALS as never) as SilkParams;
-  const paramsRef = useRef<SilkParams>({ ...dk });
-  useEffect(() => { Object.assign(paramsRef.current, dk); });
+  const dk = useDialKit("PS3Silk", SILK_DIALS as never, {
+    id: "ps3-silk-drift-v1",
+    persist: { key: "ps3-silk-drift-v1", storage: "localStorage" },
+  }) as SilkParams;
+  const paramsRef = useRef<SilkParams>(dk);
+  useEffect(() => { paramsRef.current = dk; });
 
   const waveColorRef = useRef<[number, number, number]>(hexToRgb(waveColor));
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
@@ -169,11 +175,12 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    // Spring-followed pinch point (vx/vy carry inertia) and an attraction
-    // amount that eases in while the pointer is over the hero and drifts back
-    // to 0 after it leaves or idles.
-    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, vx: 0, vy: 0 };
-    let attract = 0, inside = false, lastMoveMs = -1e9;
+    // Slow crossing drift. `charge` (0..1) builds with pointer travel over
+    // the hero and decays on a long time constant; the crossing offset eases
+    // toward (pointer - centre) * strength * charge on a ~2s time constant.
+    const ptr = { x: 0.5, y: 0.5, px: -1, py: -1 };
+    const drift = { x: 0, y: 0 };
+    let charge = 0, inside = false;
     let modeMix = modeRef.current === 1 ? 1 : 0; // 1 = halftone
     let rafId = 0, lastT = 0;
     const START_OPACITY = 0.5;
@@ -192,7 +199,7 @@ export default function PS3Silk({
 
     // Reduced motion: keep the slow ambient wave loop (low-amplitude, not the
     // kind of motion this preference is meant to suppress), but skip the
-    // entrance fade and the cursor-reactive pinch below — those are the
+    // entrance fade and the cursor drift below — those are the
     // faster, more attention-grabbing pieces.
     const reducedMotion = typeof window !== "undefined"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -309,7 +316,7 @@ export default function PS3Silk({
         const scrollY    = window.scrollY || 0;
         const fadeStart  = window.innerHeight * 0.04;  // ~36px at 900px vh
         const fadeEnd    = window.innerHeight * 0.12;  // ~108px
-        const endOp      = paramsRef.current.endOpacity;
+        const endOp      = END_OPACITY;
         targetOpacity = START_OPACITY + (endOp - START_OPACITY) *
           ease3(clamp((scrollY - fadeStart) / (fadeEnd - fadeStart), 0, 1));
       }
@@ -338,9 +345,12 @@ export default function PS3Silk({
         const x = (e.clientX - rect.left) / rect.width;
         const y = 1.0 - (e.clientY - rect.top) / rect.height;
         inside = x >= 0 && x <= 1 && y >= -0.15 && y <= 1;
-        if (!inside || reducedMotion) return;
-        mouse.tx = x; mouse.ty = y;
-        lastMoveMs = performance.now();
+        if (!inside || reducedMotion) { ptr.px = -1; return; }
+        if (ptr.px >= 0) {
+          const travel = Math.min(0.1, Math.hypot(x - ptr.px, (y - ptr.py) * rect.height / rect.width));
+          charge = Math.min(1, charge + travel * DRIFT_GAIN);
+        }
+        ptr.px = x; ptr.py = y; ptr.x = x; ptr.y = y;
         if (activeRef.current && !running && canvas.width >= 2) startLoop();
       }
 
@@ -409,7 +419,6 @@ export default function PS3Silk({
 precision highp float;
 uniform float uTime;
 uniform vec2  uResolution;
-uniform vec2  uMouse;
 uniform float uIntensity;
 uniform float uAspect;
 uniform float uYOffsetPx;
@@ -418,17 +427,14 @@ uniform float uIntensityWave;
 uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
-uniform float uAttract;      // 0 when idle: pinch is skipped entirely
-uniform float uFalloffPx;
+uniform vec2  uDrift;        // slow crossing offset in uv (x along ribbons, y across)
 
-// pinch: weight (0..1) pulling this ribbon's centre line toward py, the
-// cursor's y. Every ribbon shares the same weight and target at a given x, so
-// their crossings gather under the cursor and relax away from it.
+// The ribbons' shared phase origin and centre line are shifted by uDrift, so
+// the place where they cross slides a little toward where the visitor plays.
 vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip,
-  float pinch, float py) {
+  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
   float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx) * 2.0;
-  float wy = mix(sin(angle) * amp + cy, py, pinch);
+  float wy = sin(angle) * amp * (1.0 - abs(uDrift.y) * 2.0) + cy + uDrift.y;
   float dy = wy - uv.y;
   float dist = abs(dy);
   if (flip) { if (dy > 0.0) dist *= 4.0; }
@@ -443,24 +449,17 @@ void main() {
   float yShift = uYOffsetPx / uResolution.y;
   uv.y += yShift;
   float aspectScale = uAspect / 2.414;
-  float uvx = uv.x * aspectScale;
-
-  float pinch = 0.0;
-  float py = uMouse.y + yShift;
-  if (uAttract > 0.0005) {
-    float dx = (frag.x - uMouse.x * uResolution.x) / uFalloffPx;
-    pinch = uAttract * exp(-dx * dx);
-  }
+  float uvx = (uv.x - uDrift.x) * aspectScale;
 
   vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false,pinch,py);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false,pinch,py);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false,pinch,py);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false,pinch,py);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true,pinch,py);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true,pinch,py);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true,pinch,py);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true,pinch,py);
+  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
+  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
+  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
+  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
+  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
+  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
+  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
+  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
   c = clamp(c,0.0,1.0);
   float waveLuma = max(max(c.r,c.g),c.b);
 
@@ -500,7 +499,6 @@ void main() {
       posLoc                  = gl.getAttribLocation(prog, "aPos");
       const uTimeLoc          = gl.getUniformLocation(prog, "uTime");
       const uResLoc           = gl.getUniformLocation(prog, "uResolution");
-      const uMouseLoc         = gl.getUniformLocation(prog, "uMouse");
       const uIntLoc           = gl.getUniformLocation(prog, "uIntensity");
       const uAspLoc           = gl.getUniformLocation(prog, "uAspect");
       const uYOfsLoc          = gl.getUniformLocation(prog, "uYOffsetPx");
@@ -509,8 +507,7 @@ void main() {
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
       const uModeMixLoc       = gl.getUniformLocation(prog, "uModeMix");
       const uIntWaveLoc       = gl.getUniformLocation(prog, "uIntensityWave");
-      const uAttractLoc       = gl.getUniformLocation(prog, "uAttract");
-      const uFalloffLoc       = gl.getUniformLocation(prog, "uFalloffPx");
+      const uDriftLoc         = gl.getUniformLocation(prog, "uDrift");
 
       // Sets every uniform from current state and paints one frame. Shared by
       // frame()'s regular throttled loop and resize()'s immediate post-resize
@@ -523,17 +520,15 @@ void main() {
         // Reduced motion: frozen time, no cursor input, one frame (see frame()).
         gl.uniform1f(uTimeLoc, reducedMotion ? 0 : ms * 0.001);
         gl.uniform2f(uResLoc, canvas.width, canvas.height);
-        gl.uniform2f(uMouseLoc, mouse.x, Math.min(P.attractBandMax, Math.max(P.attractBandMin, mouse.y)));
-        gl.uniform1f(uIntLoc, P.intensityHalftone);
-        gl.uniform1f(uIntWaveLoc, P.intensityWave);
+        gl.uniform1f(uIntLoc, P.silk.intensity);
+        gl.uniform1f(uIntWaveLoc, INTENSITY_WAVE);
         gl.uniform1f(uModeMixLoc, modeMix);
         gl.uniform1f(uAspLoc, canvas.height > 0 ? canvas.width / canvas.height : 2.414);
-        gl.uniform1f(uYOfsLoc, P.yOffset);
-        gl.uniform1f(uHtSizeLoc, P.halftoneSize);
+        gl.uniform1f(uYOfsLoc, Y_OFFSET);
+        gl.uniform1f(uHtSizeLoc, P.silk.dotSize);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
-        gl.uniform1f(uSpeedLoc, P.speed);
-        gl.uniform1f(uAttractLoc, reducedMotion ? 0 : attract * P.attractStrength);
-        gl.uniform1f(uFalloffLoc, P.attractFalloff);
+        gl.uniform1f(uSpeedLoc, P.silk.speed);
+        gl.uniform2f(uDriftLoc, reducedMotion ? 0 : drift.x, reducedMotion ? 0 : drift.y);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
@@ -592,19 +587,21 @@ void main() {
         if (ms - lastT < FRAME_MS) return;
         lastT = ms;
 
-        // Pinch point follows the pointer on a slow damped spring; the
-        // attraction amount eases in while hovering and drifts back out after
-        // the pointer leaves or rests for idleDelay.
+        // Exponential smoothing with real time constants (frame-rate
+        // independent): charge relaxes over `relax` s, the crossing eases
+        // toward its target over `smoothing` s. Max shift = strength.
         const P = paramsRef.current;
-        mouse.vx = mouse.vx * P.followDamping + (mouse.tx - mouse.x) * P.followStiffness;
-        mouse.vy = mouse.vy * P.followDamping + (mouse.ty - mouse.y) * P.followStiffness;
-        mouse.x += mouse.vx;
-        mouse.y += mouse.vy;
-        const engaged = inside && ms - lastMoveMs < P.idleDelay * 1000;
-        attract += engaged ? (1 - attract) * P.engageSpeed : -attract * P.returnSpeed;
-        if (attract < 0.0005) attract = 0;
+        const dt = FRAME_MS / 1000;
+        charge *= Math.exp(-dt / Math.max(0.5, P.drift.relax));
+        if (charge < 1e-4) charge = 0;
+        const amt = P.drift.strength * charge;
+        const tx = (ptr.x - 0.5) * 2 * amt;
+        const ty = clamp(ptr.y - 0.6, -0.5, 0.5) * 2 * amt;
+        const k = 1 - Math.exp(-dt / Math.max(0.2, P.drift.smoothing));
+        drift.x += (tx - drift.x) * k;
+        drift.y += (ty - drift.y) * k;
         const mixTarget = modeRef.current === 1 ? 1 : 0;
-        const mixStep = FRAME_MS / 1000 / Math.max(0.05, P.modeFade);
+        const mixStep = FRAME_MS / 1000 / MODE_FADE;
         modeMix = reducedMotion ? mixTarget
           : modeMix < mixTarget ? Math.min(mixTarget, modeMix + mixStep) : Math.max(mixTarget, modeMix - mixStep);
 
