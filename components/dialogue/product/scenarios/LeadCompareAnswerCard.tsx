@@ -1,12 +1,10 @@
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
-import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
+import PlayButton from "@/components/dialogue/product/PlayButton";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
+import { CHECKOUT_FUNNEL, COVERAGE_ADDRESS, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
-import { ArrowUpRightIcon } from "@/components/dialogue/product/icons";
 import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
-
-const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
@@ -34,16 +32,16 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
         <div className="dp-lead-answer-card__quotes">
           {QUOTE_LIST.map((q) => (
             <div key={q.participant} className="dp-lead-answer-card__quote" data-annotate-part={`quote-${annotateSlug(q.participant)}`}>
-              <strong>{q.participant}</strong>
-              {q.quote}
+              <p className="dp-lead-answer-card__quote-head">
+                <WaveformIcon className="dp-lead-answer-card__quote-wave" />
+                <strong>{q.participant}</strong>
+                <span className="dp-lead-answer-card__quote-play">
+                  <PlayButton label={`Play ${q.participant}'s clip`} />
+                </span>
+              </p>
+              <p className="dp-lead-answer-card__quote-text">{q.quote}</p>
             </div>
           ))}
-        </div>
-        <div className="dp-lead-answer-card__quote-actions">
-          <span className="dp-lead-answer-card__view-session">
-            View session
-            <ArrowUpRightIcon className="dp-lead-answer-card__view-session-icon" />
-          </span>
         </div>
       </div>
     );
@@ -60,22 +58,24 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       {summary}
-      <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
+      <div className="dp-lead-answer-card__funnel" data-annotate-part="count-bar">
+        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">{COVERAGE_ADDRESS.headline}</p>
         <ChartBarList
-          className="dp-lead-answer-card__bars"
-          rows={MINI_FUNNEL.map((step) => ({
-            label: step.label,
-            value: step.pct,
-            display: formatChartPercent(step.pct),
-            focal: "focal" in step && step.focal,
-          }))}
-          max={100}
-          fillMode="index"
+          className="dp-lead-answer-card__bars dp-chart-bars--count"
+          rows={[
+            {
+              label: "Address friction",
+              value: 18,
+              display: "18 of 24 interviews",
+              focal: true,
+            },
+          ]}
+          max={24}
+          fillMode="magnitude"
         />
       </div>
       <SourcesScaleRow />
-      <ClipThumbnails selectedTime="15:47" />
+      <ClipThumbnails selectedTime="15:47" playBadge />
     </div>
   );
 }
