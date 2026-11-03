@@ -12,6 +12,9 @@
  *                                time with and without 1s/2s of pointer play
  *   intro-mid-*-levels.png       mid intro fade-in, levels stretched
  *   wave-*.png                   wave mode (click-toggled), plus levels
+ *   sweep-*.png                  frames during and after one cursor sweep,
+ *                                each with a diff against no input, and a
+ *                                contact sheet of both
  *
  * Usage: BASE_URL=http://localhost:3000 LABEL=after node scripts/shoot-hero-silk.mjs
  */
@@ -23,7 +26,7 @@ const BASE = process.env.BASE_URL || "http://localhost:3000";
 const LABEL = process.env.LABEL || "run";
 const OUT = join(process.env.ARTIFACT_DIR || "/opt/cursor/artifacts/screens", LABEL);
 const CHROME = process.env.CHROME || "/usr/local/bin/google-chrome";
-const ONLY = process.env.ONLY || "all"; // all | hero | drift | banding
+const ONLY = process.env.ONLY || "all"; // all | hero | drift | sweep | banding
 const T0 = new Date("2026-11-02T12:00:00Z");
 
 const VIEWPORTS = [
@@ -205,6 +208,74 @@ async function shootDrift(browser) {
   return out;
 }
 
+// Cursor sweep: one left-to-right pass through the ribbons at ~1200px/s,
+// then the pointer rests. Frames at fixed fake-clock times during and after
+// it, plus the same times with no input, so the diff is only the cursor.
+const SWEEP_AT = [150, 300, 450, 600, 900, 1300, 2000, 4000];
+async function shootSweep(browser) {
+  const vp = VIEWPORTS[1];
+  const out = {};
+  for (const theme of ["dark", "light"]) {
+    const shots = {};
+    for (const play of [false, true]) {
+      const { context, page } = await open(browser, vp, theme);
+      await page.addStyleTag({ content: `body > div[style*="position: fixed"][style*="pointer-events: none"] { visibility: hidden !important; }` });
+      const box = await heroBox(page);
+      const hb = await page.evaluate(() => {
+        const r = document.querySelector("[data-work-hero]").getBoundingClientRect();
+        return { x: r.left, y: r.top, w: r.width, h: r.height };
+      });
+      const sweepMs = 600, y = hb.y + hb.h * 0.5;
+      let t = 0;
+      for (const at of SWEEP_AT) {
+        for (; t < at; t += 16.667) {
+          if (play && t <= sweepMs) await page.mouse.move(hb.x + hb.w * (0.45 + 0.5 * (t / sweepMs)), y);
+          await page.clock.runFor(16.667);
+        }
+        await page.waitForTimeout(100);
+        shots[`${play}-${at}`] = await page.screenshot({ clip: box.hero });
+      }
+      await context.close();
+    }
+    const rows = [];
+    for (const at of SWEEP_AT) {
+      const play = shots[`true-${at}`], rest = shots[`false-${at}`];
+      writeFileSync(join(OUT, `sweep-${theme}-${at}ms.png`), play);
+      const d = await diffStats(browser, rest, play);
+      writeFileSync(join(OUT, `sweep-${theme}-${at}ms-diff.png`), d.png);
+      out[`${theme}-${at}`] = { changedPct: d.changedPct, meanAbs: d.meanAbs };
+      rows.push({ label: `${at} ms${at <= 600 ? " (sweeping)" : ""}`, play, diff: d.png });
+    }
+    writeFileSync(join(OUT, `sweep-${theme}-sheet.png`), await contactSheet(browser, rows));
+  }
+  return out;
+}
+
+// Frames stacked top to bottom: the frame on the left, its diff against no
+// input on the right.
+async function contactSheet(browser, rows) {
+  const page = await browser.newPage();
+  const b64 = await page.evaluate(async (rows) => {
+    const load = async (s) => { const i = new Image(); i.src = "data:image/png;base64," + s; await i.decode(); return i; };
+    const imgs = await Promise.all(rows.map(async (r) => [await load(r.play), await load(r.diff)]));
+    const s = 0.5, w = imgs[0][0].width * s, h = imgs[0][0].height * s, pad = 28;
+    const c = document.createElement("canvas");
+    c.width = w * 2 + 8; c.height = rows.length * (h + pad);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.font = "16px sans-serif"; ctx.fillStyle = "#fff";
+    rows.forEach((r, k) => {
+      const y = k * (h + pad);
+      ctx.fillText(r.label, 6, y + 19);
+      ctx.drawImage(imgs[k][0], 0, y + pad, w, h);
+      ctx.drawImage(imgs[k][1], w + 8, y + pad, w, h);
+    });
+    return c.toDataURL("image/png").split(",")[1];
+  }, rows.map((r) => ({ label: r.label, play: r.play.toString("base64"), diff: r.diff.toString("base64") })));
+  await page.close();
+  return Buffer.from(b64, "base64");
+}
+
 // Banding checks: mid intro fade (silk + scrim fading in) and wave mode
 // (smooth low-alpha gradients), both with levels stretched.
 async function shootBanding(browser) {
@@ -242,6 +313,7 @@ async function main() {
   const result = {};
   if (ONLY === "all" || ONLY === "hero") result.hero = await shootHero(browser);
   if (ONLY === "all" || ONLY === "drift") result.drift = await shootDrift(browser);
+  if (ONLY === "all" || ONLY === "sweep") result.sweep = await shootSweep(browser);
   if (ONLY === "all" || ONLY === "banding") await shootBanding(browser);
   await browser.close();
   writeFileSync(join(OUT, "report.json"), JSON.stringify(result, null, 2));
