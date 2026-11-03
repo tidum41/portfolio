@@ -12,14 +12,17 @@
  *                                time with and without 1s/2s of pointer play
  *   intro-mid-*-levels.png       mid intro fade-in, levels stretched
  *   wave-*.png                   wave mode (click-toggled), plus levels
- *   sweep-*.png                  frames during and after one cursor sweep,
- *                                each with a diff against no input, and a
- *                                contact sheet of both
+ *   sweep-*.png                  frames during and after one cursor sweep
+ *                                (then a rest and a leave), each with a diff
+ *                                against no input, and a contact sheet of both
+ *
+ * PRESET=wake|well|ripple shoots with that cursor preset (dev server only).
+ * THEMES=dark limits the sweep to one theme.
  *
  * Usage: BASE_URL=http://localhost:3000 LABEL=after node scripts/shoot-hero-silk.mjs
  */
 import { chromium } from "playwright";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
@@ -28,6 +31,21 @@ const OUT = join(process.env.ARTIFACT_DIR || "/opt/cursor/artifacts/screens", LA
 const CHROME = process.env.CHROME || "/usr/local/bin/google-chrome";
 const ONLY = process.env.ONLY || "all"; // all | hero | drift | sweep | banding
 const T0 = new Date("2026-11-02T12:00:00Z");
+// PRESET=wake|well|ripple (dev server only: the real DialKit reads saved
+// values) loads that cursor preset's dial values from components/PS3Silk.tsx.
+const PRESET = process.env.PRESET || "";
+const PRESET_VALUES = PRESET ? presetValues(PRESET) : null;
+
+function presetValues(name) {
+  const src = readFileSync(new URL("../components/PS3Silk.tsx", import.meta.url), "utf8");
+  const m = src.match(/const PRESETS = (\{[\s\S]*?\n\}) as const;/);
+  if (!m) throw new Error("PRESETS not found in PS3Silk.tsx");
+  const all = Function(`return (${m[1]})`)();
+  if (!all[name]) throw new Error(`unknown preset ${name}`);
+  const values = { "drift.preset": name };
+  for (const [k, v] of Object.entries(all[name])) values[`drift.${k}`] = v;
+  return values;
+}
 
 const VIEWPORTS = [
   { name: "1440", viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 },
@@ -58,7 +76,12 @@ async function openOnce(browser, vp, theme) {
     hasTouch: !!vp.hasTouch,
     colorScheme: theme,
   });
-  await context.addInitScript((t) => { try { localStorage.setItem("theme", t); } catch {} }, theme);
+  await context.addInitScript(([t, pv]) => {
+    try {
+      localStorage.setItem("theme", t);
+      if (pv) localStorage.setItem("ps3-silk-drift-v5", JSON.stringify({ version: 1, values: pv }));
+    } catch {}
+  }, [theme, PRESET_VALUES]);
   const page = await context.newPage();
   const errors = [];
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
@@ -208,28 +231,32 @@ async function shootDrift(browser) {
   return out;
 }
 
-// Cursor sweep: one left-to-right pass through the ribbons at ~1200px/s,
-// then the pointer rests. Frames at fixed fake-clock times during and after
-// it, plus the same times with no input, so the diff is only the cursor.
-const SWEEP_AT = [150, 300, 450, 600, 900, 1300, 2000, 4000];
+// Cursor sweep: one diagonal pass up across the ribbons (~1000px/s), ending
+// just above them, then the pointer rests in the hero, then leaves it.
+// Frames at fixed fake-clock times during and after it, plus the same times
+// with no input, so the diff is only the cursor.
+const SWEEP_AT = [150, 300, 450, 600, 900, 1300, 2000, 2600, 3500, 5000];
+const SWEEP_MS = 600, LEAVE_AT = 2000;
+const THEMES = (process.env.THEMES || "dark,light").split(",");
 async function shootSweep(browser) {
   const vp = VIEWPORTS[1];
   const out = {};
-  for (const theme of ["dark", "light"]) {
+  for (const theme of THEMES) {
     const shots = {};
     for (const play of [false, true]) {
       const { context, page } = await open(browser, vp, theme);
-      await page.addStyleTag({ content: `body > div[style*="position: fixed"][style*="pointer-events: none"] { visibility: hidden !important; }` });
+      await page.addStyleTag({ content: `body > div[style*="position: fixed"][style*="pointer-events: none"], [class*="dialkit"] { visibility: hidden !important; }` });
       const box = await heroBox(page);
       const hb = await page.evaluate(() => {
         const r = document.querySelector("[data-work-hero]").getBoundingClientRect();
         return { x: r.left, y: r.top, w: r.width, h: r.height };
       });
-      const sweepMs = 600, y = hb.y + hb.h * 0.5;
       let t = 0;
       for (const at of SWEEP_AT) {
         for (; t < at; t += 16.667) {
-          if (play && t <= sweepMs) await page.mouse.move(hb.x + hb.w * (0.45 + 0.5 * (t / sweepMs)), y);
+          const u = Math.min(1, t / SWEEP_MS);
+          if (play && t <= SWEEP_MS) await page.mouse.move(hb.x + hb.w * (0.42 + 0.44 * u), hb.y + hb.h * (0.62 - 0.58 * u));
+          if (play && t >= LEAVE_AT && t < LEAVE_AT + 16.667) await page.mouse.move(hb.x + hb.w * 0.86, vp.viewport.height - 2);
           await page.clock.runFor(16.667);
         }
         await page.waitForTimeout(100);
@@ -244,7 +271,8 @@ async function shootSweep(browser) {
       const d = await diffStats(browser, rest, play);
       writeFileSync(join(OUT, `sweep-${theme}-${at}ms-diff.png`), d.png);
       out[`${theme}-${at}`] = { changedPct: d.changedPct, meanAbs: d.meanAbs };
-      rows.push({ label: `${at} ms${at <= 600 ? " (sweeping)" : ""}`, play, diff: d.png });
+      const phase = at <= SWEEP_MS ? " (sweeping)" : at <= LEAVE_AT ? " (resting in the hero)" : " (pointer left the hero)";
+      rows.push({ label: `${PRESET ? PRESET + ": " : ""}${at} ms${phase}`, play, diff: d.png });
     }
     writeFileSync(join(OUT, `sweep-${theme}-sheet.png`), await contactSheet(browser, rows));
   }
@@ -282,7 +310,12 @@ async function shootBanding(browser) {
   const vp = VIEWPORTS[0];
   for (const theme of ["dark", "light"]) {
     const context = await browser.newContext({ viewport: vp.viewport, deviceScaleFactor: vp.deviceScaleFactor, colorScheme: theme });
-    await context.addInitScript((t) => { try { localStorage.setItem("theme", t); } catch {} }, theme);
+    await context.addInitScript(([t, pv]) => {
+      try {
+        localStorage.setItem("theme", t);
+        if (pv) localStorage.setItem("ps3-silk-drift-v5", JSON.stringify({ version: 1, values: pv }));
+      } catch {}
+    }, [theme, PRESET_VALUES]);
     const page = await context.newPage();
     await page.clock.install({ time: T0 });
     await page.goto(BASE + "/", { waitUntil: "load" });
