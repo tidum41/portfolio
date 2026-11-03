@@ -30,9 +30,12 @@ async function copyText(text: string) {
   }
 }
 
-/** f6a5192 low-signal answer: amber lead warning, clip link, plan action, evidence footer. */
-export default function ThinDataFigure() {
-  const [copied, setCopied] = useState(false);
+/** f6a5192 low-signal answer: amber lead warning, clip link, plan action, evidence footer.
+    Direction A: the note reads "Based on 4 of 24 interviews". With planTapped,
+    the figure renders in its tapped state, showing the copied prompt's first
+    line (section 7's visual). */
+export default function ThinDataFigure({ planTapped = false }: { planTapped?: boolean }) {
+  const [copied, setCopied] = useState(planTapped);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -56,7 +59,7 @@ export default function ThinDataFigure() {
       </p>
       <div className="dp-low-signal" data-annotate-part="low-signal-note">
         <InfoCircleIcon className="dp-low-signal__icon" />
-        <p className="dp-low-signal__text">Only 4 of 24 interviews mention this.</p>
+        <p className="dp-low-signal__text">Based on 4 of 24 interviews</p>
       </div>
       <p className="dp-clips-link" data-annotate-part="clips-link">View 1 clip</p>
       <div className="dp-next-study-wrap">
@@ -73,7 +76,11 @@ export default function ThinDataFigure() {
           Add to my plan
         </button>
         <p className="dp-next-study__hint" role="status" data-annotate-part="next-study-hint">
-          {copied ? "Copied. Paste it into Ask about your study." : "Copies a prompt to paste into Ask about your study."}
+          {copied
+            ? planTapped
+              ? "Copied: \u201cPlan the next study on mobile checkout.\u201d"
+              : "Copied. Paste it into Ask about your study."
+            : "Copies a prompt to paste into Ask about your study."}
         </p>
       </div>
     </StudyChatShell>

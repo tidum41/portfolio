@@ -1,12 +1,9 @@
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import ClipThumbnails from "@/components/dialogue/product/ClipThumbnails";
-import { CHECKOUT_FUNNEL, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
+import { CHECKOUT_FUNNEL, COVERAGE_ADDRESS, PARAGRAPH_ANSWER_BRIEF, QUOTE_LIST } from "@/lib/dialogue/product/sampleData";
 import { annotateSlug } from "@/components/dialogue/annotate";
 import { ArrowUpRightIcon } from "@/components/dialogue/product/icons";
 import SourcesScaleRow from "@/components/dialogue/product/scenarios/SourcesScaleRow";
-
-const MINI_FUNNEL = CHECKOUT_FUNNEL.steps.slice(0, 3);
 
 export type LeadCompareVariant = "paragraphs" | "quotes" | "structured";
 
@@ -60,18 +57,20 @@ export default function LeadCompareAnswerCard({ variant }: Props) {
   return (
     <div className="dp-lead-answer-card dp-lead-answer-card--structured">
       {summary}
-      <div className="dp-lead-answer-card__funnel" data-annotate-part="funnel">
-        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">Checkout funnel, % still in flow</p>
+      <div className="dp-lead-answer-card__funnel" data-annotate-part="count-bar">
+        <p className="dp-chart-title dp-lead-answer-card__funnel-title" data-annotate-part="chart-title">{COVERAGE_ADDRESS.headline}</p>
         <ChartBarList
-          className="dp-lead-answer-card__bars"
-          rows={MINI_FUNNEL.map((step) => ({
-            label: step.label,
-            value: step.pct,
-            display: formatChartPercent(step.pct),
-            focal: "focal" in step && step.focal,
-          }))}
-          max={100}
-          fillMode="index"
+          className="dp-lead-answer-card__bars dp-chart-bars--count"
+          rows={[
+            {
+              label: "Address friction",
+              value: 18,
+              display: "18 of 24 interviews",
+              focal: true,
+            },
+          ]}
+          max={24}
+          fillMode="magnitude"
         />
       </div>
       <SourcesScaleRow />

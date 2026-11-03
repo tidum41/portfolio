@@ -2138,6 +2138,12 @@ agentation-toolbar,
   font-weight: 500;
 }
 
+/* Round M: the scope figure's panel labels sit on the figure well, not on a
+   product card, so they follow the site theme like the frame captions. */
+.dialogue-case-study .dp-scope__label {
+  color: var(--color-text-secondary);
+}
+
 /* Dialogue draft — intrinsic rasters (no letterboxing) */
 .dialogue-case-study .cs-hero-media-frame.dialogue-hero-media .cs-figure {
   margin: 0;

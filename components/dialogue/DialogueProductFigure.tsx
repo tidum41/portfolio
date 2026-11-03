@@ -18,7 +18,7 @@ type Props = {
 };
 
 function figureName(scenario: Scenario): string {
-  return typeof scenario === "object" ? `chart-${scenario.gallery}` : scenario;
+  return scenario;
 }
 
 /** Live study-chat panel width (t384: ~447.78px → 448). */
@@ -74,9 +74,6 @@ function scaleProps(
   fade?: boolean;
 } | null {
   const minScale = phone ? PHONE_MIN_SCALE : DESKTOP_MIN_SCALE;
-  if (typeof scenario === "object" && "gallery" in scenario) {
-    return { innerWidth: CHAT_W, fit: "reflow" };
-  }
   if (phone) {
     switch (scenario) {
       case "anatomy":
