@@ -4,6 +4,10 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 ## Round 19
 
+### The hero ties the quote to the 225 with a header and source pills (option C)
+
+**Decision.** After the 225 is tapped, a header with the cherry swatch names the open segment ("Read it as this Friday 225"), a row of source pills holds the timestamps (Ana 04:10 selected, Dev 11:02, +223 more), and Ana's quote sits under them at the full panel width. The selected pill and the quote card share the warm fill. The pills have rest, hover and press, and there is no coloured left bar. **Tried.** My own options A and B on `/dialogue/hero-options`, which are deleted, and Mudit's Paper variants A to C. **Why.** The chips reuse the source pill, so the segment link comes from a shared label rather than a decoration, and the quote keeps full width. **Revisit.** If the header and the legend above it read as the same line twice, I would drop the count from the header.
+
 ### The page runs Problem, Levels with Clips, Counts, Data viz with Thin data, Shipped, Takeaway
 
 **Decision.** Six sections in that order. Clips is now the last beat of Levels, and Thin data is the closing rule of Data viz. **Tried.** The old eight sections, where Counts, Clips and Thin data each repeated an explored-then-kept beat. **Why.** Both reviews read the page as a tour of one card from top to bottom. Putting the deepest level inside Levels finishes the depth story in one place, and putting the thin-data gate inside Data viz makes it the chart section's last rule, because it decides when a chart appears. **Revisit.** If Levels gets too long to skim, Clips goes back to its own short section.

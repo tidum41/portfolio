@@ -4368,15 +4368,18 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage__sample[data-side="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
 .dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
 
-/* Round 18 hero options: the pills and chip rows show in the stage (the stage hides the Sample's "+N more" pill elsewhere). */
-.dlg-stage .dlg-stage__sample[data-hero] .dp-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 0; }
-.dlg-stage__sample[data-hero] .dp-sources .dlg-sample-key { margin: 0 -4px 0 0; }
-.dlg-hero-options { display: flex; gap: 40px; align-items: flex-start; padding: 40px; background: var(--figure-well-dialogue); min-width: max-content; }
-.dlg-hero-options__col { display: flex; flex-direction: column; gap: 16px; width: 423px; }
-.dlg-hero-options__name { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--color-text-primary); }
-.dlg-hero-options .dlg-stress__tag { color: var(--color-text-secondary); }
-.dlg-hero-options__panel { box-sizing: border-box; padding: 16px; border-radius: var(--dp-radius-control); background: var(--dp-surface); box-shadow: var(--shadow-chat); }
-.dlg-hero-options__panel .dlg-stage__body { display: flex; flex-direction: column; gap: 16px; }
+/* Round 19 hero (option C): the header names the open segment, the source pills are the timestamps, the quote is full width.
+   The selected pill shares the quote card's warm fill, and the pills carry rest, hover and press. */
+.dlg-stage .dlg-stage__sample[data-hero] { display: flex; flex-direction: column; gap: var(--space-2); }
+.dlg-hero-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--dp-ink); }
+.dlg-hero-head .dlg-sample-key { margin: 0; border-radius: var(--ds-radius-xs); }
+.dlg-stage__sample[data-hero] .dp-clip-quote { background: var(--dp-warm); border-color: var(--dp-border); }
+.dlg-hero-head__count { font-weight: 400; font-variant-numeric: tabular-nums; color: var(--dp-muted); }
+.dlg-stage .dlg-stage__sample[data-hero] .dp-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.dlg-stage__sample[data-hero] .dp-source-pill { background: var(--dp-surface); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
+.dlg-stage__sample[data-hero] .dp-source-pill--selected { background: var(--dp-warm); border-color: var(--dp-border); cursor: default; }
+.dlg-stage__sample[data-hero] .dp-source-pill:not(.dp-source-pill--selected):hover { border-color: var(--dp-ink); }
+.dlg-stage__sample[data-hero] .dp-source-pill:not(.dp-source-pill--selected):active { border-color: var(--dp-ink); background: var(--dp-warm); }
 
 /* Round 18: the thin card's info icon carries the reason in the existing tooltip chip. */
 .dlg-info { position: relative; display: inline-flex; flex: 0 0 auto; padding: 12px 12px 12px 16px; margin: -12px -12px -12px -16px; border-radius: var(--dp-radius-chip); outline: none; cursor: default; }

@@ -174,48 +174,27 @@ function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[Sa
   );
 }
 
-/* Round 18 hero options (app/dialogue/hero-options): how Ana's quote shows that it belongs to the 225 the shopper tapped, and how
-   the other people in that group stay reachable. Every part is an existing Dialogue element: the quotes head line with the
-   segment swatch, quote rows, source pills. The coloured left edge on the quote is gone in all three. */
-export type HeroOpt = "a" | "b" | "c";
+/* Round 19 (Mudit picked option C): a header names the open segment with its swatch, a row of source pills holds the
+   timestamps (the selected one shares the quote card's warm fill), and the quote uses the full panel width. Every part is
+   an existing Dialogue element, and there is no coloured edge on the quote. */
 const FRIDAY = SAMPLE_META.friday;
 const TAIL = FRIDAY.count - QUOTE_LIST_FRIDAY.length;
-export function HeroSelection({ opt }: { opt: HeroOpt }) {
+export function HeroSelection() {
   const [ana, dev] = QUOTE_LIST_FRIDAY;
   const startOf = (t: string) => t.split(/[\u2013-]/)[0];
-  const pills = (selected: boolean) => (
-    <div className="dp-sources" aria-hidden>
-      <SourcePill name={ana.participant} time={startOf(ana.time)} selected={selected} />
-      <SourcePill name={dev.participant} time={startOf(dev.time)} />
-      <SourcePill name={`+${TAIL} more`} time="" />
-    </div>
-  );
   return (
-    <div className="dp-side-sample dlg-stage__sample" data-side="friday" data-hero={opt}>
-      {opt === "a" ? (
-        <>
-          <SampleHead meta={FRIDAY} shown={2} onCollapse={() => {}} />
-          <div className="dp-clip-quotes">{QUOTE_LIST_FRIDAY.map((q) => <QuoteRow key={q.participant} q={q} open={false} />)}</div>
-          <div className="dp-sources" aria-hidden><SourcePill name={`+${TAIL} more`} time="" /></div>
-        </>
-      ) : null}
-      {opt === "b" ? (
-        <>
-          <SampleHead meta={FRIDAY} shown={1} onCollapse={() => {}} />
-          {pills(true)}
-          <div className="dp-clip-quotes"><QuoteRow q={ana} open={false} /></div>
-        </>
-      ) : null}
-      {opt === "c" ? (
-        <>
-          <div className="dp-sources" aria-hidden><span className="dlg-sample-key" /><SourcePill name={FRIDAY.label.replace(/^./, (c) => c.toUpperCase())} time={String(FRIDAY.count)} selected /></div>
-          <div className="dp-clip-quotes"><QuoteRow q={ana} open={false} /></div>
-          <div className="dp-sources" aria-hidden>
-            <SourcePill name={dev.participant} time={startOf(dev.time)} />
-            <SourcePill name={`+${TAIL} more`} time="" />
-          </div>
-        </>
-      ) : null}
+    <div className="dp-side-sample dlg-stage__sample" data-side="friday" data-hero="">
+      <p className="dlg-hero-head" aria-hidden>
+        <span className="dlg-sample-key" />
+        <span>{FRIDAY.label.replace(/^./, (c) => c.toUpperCase())}</span>
+        <span className="dlg-hero-head__count">{FRIDAY.count}</span>
+      </p>
+      <div className="dp-sources" aria-hidden>
+        <SourcePill name={ana.participant} time={startOf(ana.time)} selected />
+        <SourcePill name={dev.participant} time={startOf(dev.time)} />
+        <SourcePill name={`+${TAIL} more`} time="" />
+      </div>
+      <div className="dp-clip-quotes"><QuoteRow q={ana} open={false} /></div>
     </div>
   );
 }
@@ -243,7 +222,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
   );
 }
 
-export default function DialogueMotionStage({ demo, opt = "b" }: { demo: MotionDemo; opt?: HeroOpt }) {
+export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
   // P16: add-only takes (hero, before, thin) start on an empty chat and end by scrolling their conversation up and out,
   // so the loop never fades the UI. Clip opens from the counts end state: 225 open, Ana first.
@@ -444,7 +423,7 @@ export default function DialogueMotionStage({ demo, opt = "b" }: { demo: MotionD
         ) : null}
         {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} sideOpen={ana ? "friday" : false} /></div> : null}
         <Grow open={ana} className="dlg-stage__item">
-          <HeroSelection opt={opt} />
+          <HeroSelection />
         </Grow>
       </>
     );

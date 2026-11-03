@@ -270,7 +270,7 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 
 ## Page (cloud), Nov 3 2026, round 18
 
-- **Hero:** Ana's quote sits under a head line naming the 225, with source pills for the other people in the group and no coloured edge. Three builds on `/dialogue/hero-options`; B is on the page.
+- **Hero (Round 19, option C):** a header names the 225 with its swatch, source pills hold the timestamps (Ana selected, sharing the quote's warm fill), and Ana's quote is full width.
 - **Every, Toggles, Counts:** the 75 and 225 step to stone-300 when the other opens, no underline, no hue on rows, no cherry outline on the open row; the first tap lands in about a second.
 - **Source is gone as a level:** every quote row is a play button already.
 - **Data viz:** page-scale spacing; hover swaps counts for percents.

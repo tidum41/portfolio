@@ -132,12 +132,12 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 brings Ana's quote under it, with pills for the others in that group" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 names that group in a header, with a chip for each person and Ana's quote under them" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>The final answer: 225 of 300 shoppers. Tapping the 225 brings Ana&rsquo;s quote under it, with a pill for each other person in that group. Recorded from my live code recreation. Illustrative data.</Caption>
+            <Caption>The final answer: 225 of 300 shoppers. Tapping the 225 names that group in a header, with a chip for each person and Ana&rsquo;s quote under them. Recorded from my live code recreation. Illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
