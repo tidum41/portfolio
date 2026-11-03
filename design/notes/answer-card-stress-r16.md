@@ -29,3 +29,7 @@ Open choices for Mudit:
 1. A, B or C.
 2. If B: the switch points (more than 2 groups, or a label over 28 characters) are my guess; he may want 3 groups to stay a bar.
 3. A group of 3 people or fewer: the card should show the existing early-signal flag instead of a bar. Not built; the tiny case shows why.
+
+## Round 17
+
+Mudit chose B. It is built in the real `AnswerCard`; the switch points are 3 or more groups, or a label over 26 characters (measured at 471px: 26 fits on one line, 28 wraps; the earlier 28 was a guess). Open choice 3 (a flag for 3 people or fewer) is still not built. Column B on the stress page is now the real card.

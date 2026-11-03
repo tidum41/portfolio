@@ -23,3 +23,7 @@ The only thing Clips shows that Every does not is Ana's timecode (04:10 to 04:24
 3. **Change it so it shows something new.** The Clips section's own claim is that the clip loads only on a tap and starts at the moment the quote was said. A take could show that: tap Ana, a short loading beat (the existing arc loader), then the player starting at 04:10 with the transcript line under her quote highlighted as it plays. This uses components the page already has, but the transcript highlight is not in the shipped stage, so it needs Mudit's OK before I touch it, and it adds about a second.
 
 Open choice: 1, 2 or 3. Recommended: 1.
+
+## Round 17
+
+Mudit chose option 1: the take is cut and the figure is a still. The stills are rendered by `node scripts/record-dialogue-motion.mjs <base> <out> clipstill`.

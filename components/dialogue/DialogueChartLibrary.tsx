@@ -7,9 +7,10 @@ import ChartDotPlot from "@/components/dialogue/product/chart/ChartDotPlot";
 import ChartRankList from "@/components/dialogue/product/chart/ChartRankList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import { AnswerCard } from "@/components/dialogue/live/AnswerCard";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import SourcePill from "@/components/dialogue/product/SourcePill";
-import { ChevronUpIcon, PlusIcon, WaveformIcon } from "@/components/dialogue/product/icons";
+import { ChevronUpIcon, InfoCircleIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
 import { ArrowRight, Check, X } from "@phosphor-icons/react/dist/ssr";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
@@ -190,7 +191,7 @@ const SCENARIOS = [
 ] as const;
 
 /** The segment question that asks for the redesigned chart (data viz, one pair). */
-const SEGMENT_QUESTION = "Do new and repeat shoppers read \u2018Arrives by Friday\u2019 the same way?";
+const SEGMENT_QUESTION = "Do new and repeat shoppers read ‘Arrives by Friday’ the same way?";
 
 /* P15 items 11 to 16: one figure for the chart templates. The picker and the notes are case-study chrome; the panel
    holds only Dialogue's answer card. Each template names the IBM Carbon chart it was adapted from, with one pro and
@@ -267,7 +268,7 @@ const TEMPLATES: Template[] = [
   {
     id: "split",
     ask: "Splits everyone into two sides",
-    question: "How do shoppers read \u2018Arrives by Friday\u2019?",
+    question: "How do shoppers read ‘Arrives by Friday’?",
     name: "Split",
     carbon: "meter chart",
     note: "Count under each segment",
@@ -313,7 +314,7 @@ const TEMPLATES: Template[] = [
     note: "Median score per group",
     target: ".dp-chart-dots__dot--focal",
     cut: "the same two groups, scored 1 to 5",
-    pro: "Each dot is a group\u2019s median, with its people count beside it.",
+    pro: "Each dot is a group’s median, with its people count beside it.",
     con: "A median hides how spread the scores are.",
     card: () => (
       <ChartVizCard title="How sure shoppers were about the delivery date, median score">
@@ -377,132 +378,28 @@ function ChartTemplatesPicker() {
    the product's own chart card. The routing and the awkward shapes are short bands around it. Only the split chart
    keeps cherry (its 225 is the one encoding the whole page shares); the other three are neutral, and where a chart
    has a second group (By group, 1 to 5 scale) that group is teal (ramp C). */
-function ChartFlow() {
+/* Round 17 (Mudit's call on item 9): three rows, each one question and the chart it gets, one line under each chart. The split
+   chart spends the figure's one cherry, so the ranked card is neutral, as every frame that is not the 225 is. Counts are the
+   page's own Hearthside numbers. */
+function MatchPanel({ children, neutral = false }: { children: ReactNode; neutral?: boolean }) {
   return (
-    <div className="dlg-guide__block">
-      <p className="dlg-guide__head dialogue-caption__label">How an answer reaches a chart, as concept</p>
-      <p className="dlg-flow">The shape of the answer picks the template. A value with fewer than 3 people behind it gets a flag in place of a chart.</p>
+    <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${dialogueProductFontClassName}`} data-neutral={neutral ? "" : undefined}>
+      {children}
     </div>
   );
 }
 
-/* Round 11 item 4: the awkward shapes are four small frames in the product's own card, tie first. Every frame is neutral:
-   the figure already spends its one cherry on the split chart. The sentences are the page's existing captions. Counts that
-   the page does not give stay visible placeholders. */
-const OTHER_ASKS = TOP_ASKS.slice(3).reduce((n, r) => n + r.value, 0);
-
-function EdgeFrame({ when, then, children }: { when: string; then: string; children: ReactNode }) {
+function MatchRow({ ask, name, line, children }: { ask: string; name: string; line: string; children: ReactNode }) {
   return (
-    <div className="dlg-edge">
-      <p className="dlg-edge__when">{when}</p>
-      <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
+    <div className="dlg-match" role="listitem">
+      <div className="dlg-match__why">
+        <p className="dlg-match__ask">{ask}</p>
+        <p className="dlg-match__name"><ArrowRight size={14} weight="bold" aria-hidden />{name}</p>
+      </div>
+      <div className="dlg-match__chart">
         {children}
+        <p className="dlg-edge__then">{line}</p>
       </div>
-      <p className="dlg-edge__then">{then}</p>
-    </div>
-  );
-}
-
-function EdgeChip({ children, n }: { children: ReactNode; n?: number }) {
-  return (
-    <p className="dlg-edge__chip">
-      <PlusIcon className="dlg-thin__chip-plus" />
-      <span className="dlg-thin__chip-q">{children}</span>
-      {n ? <span className="dlg-thin__chip-n" aria-hidden>{n}</span> : null}
-    </p>
-  );
-}
-
-function ChartEdges() {
-  return (
-    <div className="dlg-guide__block">
-      <p className="dlg-guide__head dialogue-caption__label">When the shape is awkward</p>
-      <div className="dlg-edges">
-        <EdgeFrame when="Two values tie" then="No highlight, and the sentence says they tie.">
-          <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">
-            <ChartBarList
-              rows={[
-                { label: "Read it as this Friday", value: 1, display: "" },
-                { label: "Unsure", value: 1, display: "" },
-              ]}
-              max={1}
-              note={<>Both at <span className="dlg-ph">[PLACEHOLDER: tied count]</span></>}
-            />
-          </ChartVizCard>
-        </EdgeFrame>
-        <EdgeFrame when="Too many themes" then="The top rows show, and the rest roll into Other.">
-          <ChartVizCard title="What shoppers asked for after checkout">
-            <div className="dlg-edge__other">
-              <ChartBarList
-                rows={[
-                  ...TOP_ASKS.slice(0, 3).map((r) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}` })),
-                  { label: "Other", value: OTHER_ASKS, display: `${OTHER_ASKS} of ${FRIDAY_TOTAL}` },
-                ]}
-                max={TOP_ASKS[0].value}
-              />
-            </div>
-          </ChartVizCard>
-        </EdgeFrame>
-        <EdgeFrame when="Nothing matches" then="The closest theme shows with its count, with a rephrase to try.">
-          <ChartVizCard title="Closest theme">
-            <ChartBarList
-              rows={[{ label: TOP_ASKS[2].label, value: TOP_ASKS[2].value, display: `${TOP_ASKS[2].value} of ${FRIDAY_TOTAL}` }]}
-              max={TOP_ASKS[0].value}
-            />
-          </ChartVizCard>
-          <EdgeChip>What did shoppers ask for after checkout?</EdgeChip>
-        </EdgeFrame>
-        <EdgeFrame when="Two shapes in one answer" then="One chart leads, and the other becomes a follow-up.">
-          <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
-            <ChartStackedBar lanes
-              total={FRIDAY_TOTAL}
-              segments={FRIDAY_ROWS.map((r) => ({ label: r.label === "Unsure" ? "Unsure" : "This Friday", value: r.count, display: `${r.count}`, focal: r.focal }))}
-            />
-          </ChartVizCard>
-          <EdgeChip n={FIRST_GROUP_OF}>How did repeat shoppers read it?</EdgeChip>
-        </EdgeFrame>
-      </div>
-    </div>
-  );
-}
-
-function ChartMatches() {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="dlg-matches" role="list">
-      {TEMPLATES.map((t, i) => {
-        const group = t.id === "group";
-        const panel = (children: ReactNode, cls = "") => (
-          <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-match__panel ${cls} ${dialogueProductFontClassName}`} data-neutral={i === 1 ? undefined : ""}>
-            {children}
-          </div>
-        );
-        return (
-          <div key={t.id} className="dlg-match" role="listitem" data-template={t.id} data-pair={t.foil ? "" : undefined}>
-            <div className="dlg-match__why">
-              <p className="dlg-match__ask">{t.ask}</p>
-              <p className="dlg-match__name"><ArrowRight size={14} weight="bold" aria-hidden />{t.name}</p>
-              <p className="dlg-match__reason">{t.pro}</p>
-            </div>
-            <div className="dlg-match__chart">
-              {t.foil ? (
-                <div className="dlg-match__pair">
-                  <div className="dlg-match__half">
-                    <p className="dlg-match__tag">Ruled out: percents on one scale</p>
-                    {panel(t.foil, "dlg-mini")}
-                  </div>
-                  <div className="dlg-match__half">
-                    <p className="dlg-match__tag" data-kept>Kept: counts out of each group</p>
-                    {panel(t.card(group && open, setOpen), "dlg-mini")}
-                  </div>
-                </div>
-              ) : panel(t.card(false, setOpen))}
-              {group && open && t.more ? panel(t.more(setOpen)) : null}
-              <p className="dlg-match__carbon"><span>Cut: {t.cut}.</span> Adapted from Carbon&rsquo;s {t.carbon}</p>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -510,10 +407,61 @@ function ChartMatches() {
 function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
   return (
     <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
-      <ChartFlow />
-      <ChartMatches />
-      <ChartEdges />
+      <p className="dlg-flow">The shape of the question picks the chart. Fewer than 3 people gets a flag instead.</p>
+      <div className="dlg-matches" role="list">
+        <MatchRow ask="How many read it which way?" name="Split" line={`Each side shows its count out of ${FRIDAY_TOTAL}.`}>
+          <MatchPanel>
+            <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
+              <ChartStackedBar lanes total={FRIDAY_TOTAL} segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))} />
+            </ChartVizCard>
+          </MatchPanel>
+        </MatchRow>
+        <MatchRow ask="What did people ask for?" name="Ranked" line={`Longest bar first, each count out of ${FRIDAY_TOTAL}.`}>
+          <MatchPanel neutral>
+            <ChartVizCard title="What shoppers asked for after checkout, top five">
+              <div className="dlg-answer--rows">
+                <ChartBarList max={TOP_ASKS[0].value} rows={TOP_ASKS.map((r, i) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}`, focal: i === 0 }))} />
+              </div>
+            </ChartVizCard>
+          </MatchPanel>
+        </MatchRow>
+        <MatchRow ask="Did anyone miss a delivery?" name="Flag" line="Two people is too few for a chart, so it says so.">
+          <MatchPanel neutral>
+            <ChartVizCard title="Two of 300 shoppers said they missed a delivery.">
+              <div className="dp-low-signal">
+                <InfoCircleIcon className="dp-low-signal__icon" />
+                <p className="dp-low-signal__text">Early signal, 2 people. A chart needs 3 or more.</p>
+              </div>
+            </ChartVizCard>
+          </MatchPanel>
+        </MatchRow>
+      </div>
     </div>
+  );
+}
+
+/* Round 17 (Mudit's call on item 5): the answer card picks bar or rows per answer (lib/dialogue/product/answerLayout.ts).
+   This frame is the real card in its rows layout: a long question and group labels too long for the bar's lane. The counts
+   are the page's 225 and 75 of 300. */
+const ROWS_QUESTION = "Across everyone we interviewed about the delivery date at checkout, how do they read \u2018Arrives by Friday\u2019, and does it change what they expect?";
+const ROWS_ANSWER = {
+  finding: "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.",
+  total: FRIDAY_TOTAL,
+  groups: [
+    { label: "Read it as the Friday of the week they ordered", value: 225, focal: true },
+    { label: "Unsure which Friday it meant", value: 75 },
+  ],
+};
+function AnswerRows() {
+  return (
+    <StaticFigure figure="answer-rows" className="dlg-thin-miss">
+      <MatchPanel>
+        <div className="dlg-specimen-chat">
+          <UserMessageBubble>{ROWS_QUESTION}</UserMessageBubble>
+          <AnswerCard still answer={ROWS_ANSWER} />
+        </div>
+      </MatchPanel>
+    </StaticFigure>
   );
 }
 
@@ -572,11 +520,14 @@ export default function DialogueChartLibrary({
   templates = false,
   thinNearMiss = false,
   countsExplored = false,
+  answerRows = false,
 }: {
   /** P15: the merged chart-templates figure (replaces the bars video and the specimen list on the page). */
   templates?: boolean;
   /** Round 11: the two-person bar the thin flag replaces. */
   thinNearMiss?: boolean;
+  /** Round 17: the real answer card in its rows layout (a long question and long group labels). */
+  answerRows?: boolean;
   /** Round 13: the two standard two-bar charts explored before the single bar. */
   countsExplored?: boolean;
   showTech?: boolean;
@@ -588,6 +539,7 @@ export default function DialogueChartLibrary({
   if (templates) return <ChartTemplates />;
   if (thinNearMiss) return <ThinNearMiss />;
   if (countsExplored) return <CountsExplored />;
+  if (answerRows) return <AnswerRows />;
   const entries = only ? ENTRIES.filter((e) => e.id === only) : segmentsFirst ? [...ENTRIES].reverse() : ENTRIES;
   return (
     <div className="dialogue-lib">

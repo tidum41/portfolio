@@ -12,9 +12,11 @@ const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shot
 mkdirSync(out, { recursive: true });
 const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", every: "variant-every-full", toggles: "variant-toggles-full", thin: "live-thin", picker: "variant-picker-full" };
 // The problem frame is a still: `still` renders it to variant-before-full.jpg.
-const STILLS = { before: "variant-before-full" };
+const STILLS = { before: "variant-before-full", clipstill: "live-clip" };
 /* The problem frame is a still: the full prose answer with "Many found" underlined and its note in the gutter (none on phones). */
 const SETUP = {
+  // Round 17: the Clips figure is this still (Ana's clip open under the 225's head line), not a take; it holds the old poster's scroll.
+  clipstill: (mobile) => { const d = window.__dlg; d.clip(true); mobile ? d.stickEnd(600, ".dp-clip-quote--selected", 8) : d.stick(600, ".dp-side-sample__head", 12); },
   before: () => { const d = window.__dlg; d.send(); for (let i = 0; i < 5; i++) d.line(); d.mark(); setTimeout(() => d.note("Unstated count", ".dlg-mark"), 400); },
 };
 // Picker ends on its start state, so they need no crossfade. Others still blend end→start.
@@ -38,7 +40,8 @@ const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 2
 const REC_WELL = THEME === "dark" ? 'html[data-theme="dark"] { --figure-well-dialogue: #1b1e23; }' : "";
 
 const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 200, picker: 300 }; // add-only takes: the empty chat already closes the loop
-async function still(demo) {
+async function still(key) {
+  const demo = key === "clipstill" ? "clip" : key;
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1900 }, deviceScaleFactor: 2 });
   await ctx.addInitScript((t) => localStorage.setItem("theme", t), THEME);
@@ -49,15 +52,15 @@ async function still(demo) {
   await page.addStyleTag({ content: "body > *:not(main), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; } *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }" });
   await page.waitForFunction(() => window.__dlg);
   // P16 round 4: each still holds one meaningful state, rendered with no motion.
-  await page.evaluate(SETUP[demo]);
+  await page.evaluate(SETUP[key], MOBILE);
   await page.waitForTimeout(900);
-  await page.evaluate(() => { document.querySelector(".dlg-stage__body").scrollTop = 0; });
+  if (key !== "clipstill") await page.evaluate(() => { document.querySelector(".dlg-stage__body").scrollTop = 0; });
   await page.waitForTimeout(150);
-  const png = `/tmp/dlg-still-${demo}${SUFFIX}.png`; const jpg = `${out}/${STILLS[demo]}${SUFFIX}.jpg`;
+  const png = `/tmp/dlg-still-${key}${SUFFIX}.png`; const jpg = `${out}/${STILLS[key]}${SUFFIX}.jpg`;
   await (await page.$("#frame")).screenshot({ path: png });
   await b.close();
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", png, "-q:v", "2", jpg]);
-  console.log(JSON.stringify({ demo, still: jpg }));
+  console.log(JSON.stringify({ demo: key, still: jpg }));
 }
 async function record(demo) {
   const tmp = `/tmp/dlg-motion-${demo}`; rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
@@ -286,7 +289,7 @@ async function record(demo) {
 // The screencast occasionally drops frames under load (a skipped stretch reads as a jump), so each take is checked
 // against the motion checklist and re-recorded, up to 4 takes; the last take's checklist line is printed either way.
 const CHECK = new URL("./check-dialogue-motion.py", import.meta.url).pathname;
-for (const d of only.length ? only : [...Object.keys(NAMES), ...Object.keys(STILLS)]) {
+for (const d of only.length ? only : [...Object.keys(NAMES).filter((n) => n !== "clip"), ...Object.keys(STILLS)]) {
   if (STILLS[d]) { await still(d); continue; }
   for (let take = 1; take <= 4; take++) {
     await record(d);

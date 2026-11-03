@@ -56,3 +56,10 @@ Test only; the page still plays the current Every and Toggles takes. For Paper, 
 - **Open choices:** answer card (A patch the bar, B bar or rows by query, C rows every time; recommended B), Clips take (cut and keep a still, merge, or change; recommended cut), data viz section (Option 1 three rows, Option 2 worked example plus index; recommended 1).
 - **Audits:** `npm run audit:dialogue-ui`, `npm run audit:dialogue-clip`, plus `check:dialogue-system` and `typecheck`.
 
+## Page (cloud), Nov 3 2026, round 17
+
+- **Answer card:** two short groups keep the bar; three or more groups, or any label over 26 characters, return one row per group (`answerLayout.ts`). One rows frame in Data visualization.
+- **Clips:** a still replaces the take (no cursor, Ana's clip open under the 225's head line). Four clip videos removed.
+- **Data viz:** three rows (split bar, ranked bars, flag), one line under each chart; Split carries the one cherry. By group and the awkward-shape frames are off the page, so there is no teal series on the page.
+- Reasons for each are in `design/notes/decisions.md`.
+

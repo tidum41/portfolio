@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import { AnswerCard, type SideWhich } from "@/components/dialogue/live/AnswerCard";
+import { Grow, K } from "@/components/dialogue/live/Grow";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
@@ -60,7 +62,6 @@ function Annotation({ note }: { note: Note }) {
   );
 }
 
-type SideWhich = "friday" | "unsure" | false;
 type SampleWhich = "friday" | "unsure";
 
 /*
@@ -71,43 +72,15 @@ type SampleWhich = "friday" | "unsure";
  */
 export type { MotionDemo } from "@/components/dialogue/motion/stages";
 
-/** The recorder can run the page in slow motion (window.__K, CSS time is slowed by the same factor) and retime the
- *  capture, so every frame of the final video is a real captured frame. Timers and scroll durations scale with it. */
-const K = () => (typeof window === "undefined" ? 1 : ((window as unknown as { __K?: number }).__K ?? 1));
-
 const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string; who: string }> = {
   friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday", who: "who read it as this Friday" },
   unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure", who: "who were unsure" },
 };
 
 const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
-const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
 const MEI = QUOTE_LIST[0];
 const ANA = QUOTE_LIST_FRIDAY[0];
-
-/* Height grows via grid rows (0fr→1fr open, fade then fold on close). Panel size stays fixed; its body scrolls. */
-function Grow({ open, children, className, closeMs = 450 }: { open: boolean; children: ReactNode; className?: string; closeMs?: number }) {
-  const [mounted, setMounted] = useState(open);
-  const [leaving, setLeaving] = useState(false);
-  useEffect(() => {
-    if (open) { setMounted(true); setLeaving(false); return; }
-    if (!mounted) return;
-    setLeaving(true);
-    // The fold ends at 0fr and holds (fill: both); unmount after it, never during its tail, so no pixel pops at the end.
-    const t = setTimeout(() => { setMounted(false); setLeaving(false); }, Math.max(closeMs + 80, 1500) * K());
-    return () => clearTimeout(t);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!mounted) return null;
-  return (
-    <div
-      className={["dlg-grow", leaving ? "dlg-grow--out" : "dlg-grow--in", className].filter(Boolean).join(" ")}
-      onAnimationEnd={(e) => { if (leaving && e.target === e.currentTarget) { setMounted(false); setLeaving(false); } }}
-    >
-      <div className="dlg-grow__inner">{children}</div>
-    </div>
-  );
-}
 
 /* Keep the newest content in view: ease the panel body's scroll (600 ms ease-in-out), never a snap. */
 /* cubic-bezier(0.4, 0, 0.2, 1), sampled */
@@ -144,33 +117,6 @@ const zoomOf = (el: HTMLElement) => (el.offsetHeight ? el.getBoundingClientRect(
 const sec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 /* P16 round 3: each participant's session has its own length (mock), and its own illustrated still. */
-
-function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true }: { segment?: boolean; onSide?: (w: "friday" | "unsure") => void; sideOpen?: SideWhich; chart?: boolean }) {
-  const bar = (
-      <div className="dlg-live__bar" data-side={sideOpen || undefined}>
-        <ChartStackedBar lanes
-          total={300}
-          segments={[
-            { label: "Read it as this Friday", value: 225, display: "225 of 300", focal: true },
-            { label: "Unsure", value: 75, display: "75 of 300" },
-          ]}
-        />
-        {/* P14 items 1+7: both segments tappable; focal segment carries data-target for the recorder. */}
-        <button type="button" className="dlg-live__side dlg-live__side--friday" data-target="side-friday" aria-label="Open the 225 this Friday" aria-expanded={sideOpen === "friday"} onClick={() => onSide?.("friday")} />
-        <button type="button" className="dlg-live__side dlg-live__side--unsure" data-target="side" aria-label="Open the 75 unsure" aria-expanded={sideOpen === "unsure"} onClick={() => onSide?.("unsure")} />
-      </div>
-  );
-  return (
-    <ChartVizCard title={FINDING}>
-      <Grow open={chart} className="dlg-grow--gap">{bar}</Grow>
-      {segment ? (
-        <p className="dlg-segment">
-          Repeat shoppers: <span className="dp-summary__emph">88 of 125</span> read it as this Friday
-        </p>
-      ) : null}
-    </ChartVizCard>
-  );
-}
 
 /** P14 item 2: quote rows are a selection, not a nested accordion. Tap opens (one at a time); tap again closes. No inner chevron. */
 // Mock: repeat shoppers (125) and everyone asked about the delivery date (300), from the same 300 interviews.

@@ -2,6 +2,12 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 17, Nov 3 2026 (Mudit's three delegated choices on review/round-p15)
+- Answer card: bar for two short groups, rows for three or more groups or a label over 26 characters, one rule in `lib/dialogue/product/answerLayout.ts` and the real `AnswerCard`; the default card is pixel-identical so no take changed. One rows frame (long question, long labels) sits in Data visualization. The stress page stays as evidence.
+- Clips: the take is cut (four videos deleted) and the figure is a still of Ana's clip open, no cursor.
+- Data viz: three rows of question and chart with one line each. By group and the four awkward-shape frames leave the page.
+- Why each, in my voice: `design/notes/decisions.md`. Screenshots: /opt/cursor/artifacts/screenshots/r17-*.
+
 ## Round 16, Nov 3 2026 (Mudit's page feedback on review/round-p15)
 - Round 15 shipped as the default (assumption, Mudit did not confirm the test): trimmed Every and Toggles; `public/dialogue/motion/trim/` removed.
 - Bugs: selecting a segment moves nothing (the seam is the flex gap alone); selected segment carries a 2px hue marker, the quote rows carry that hue on their left edge, and the "quotes shown" line names the group; hover and press on every clickable in every take; the picker stage no longer draws the old grey bars (the remaining `data-neutral` panels are the rejected and awkward-shape frames in the chart library, kept per Round 11).

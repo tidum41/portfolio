@@ -4272,6 +4272,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
    3) Every clickable shows hover on arrival and a distinct press, at the product's 150ms timing. */
 .dlg-live .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-templates__panel .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-live__bar[data-side] .dp-chart-stack__seg { box-shadow: none; }
 .dlg-live__bar .dp-chart-stack__bar { overflow: visible; border-radius: 0; }
+.dlg-live__bar .dp-chart-stack__seg { min-width: 8px; }
 .dlg-live__bar .dp-chart-stack__seg:first-child { border-radius: calc(var(--ds-radius-xs) * 2) 0 0 calc(var(--ds-radius-xs) * 2); }
 .dlg-live__bar .dp-chart-stack__seg:last-child { border-radius: 0 calc(var(--ds-radius-xs) * 2) calc(var(--ds-radius-xs) * 2) 0; }
 .dlg-live__bar .dp-chart-stack__seg { position: relative; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
@@ -4342,11 +4343,15 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stress--fit .dp-chart-stack__lanes { flex-wrap: wrap; gap: 4px 16px; }
 .dlg-stress--fit [data-crowded] .dp-chart-stack__lanes { flex-direction: column; flex-wrap: nowrap; gap: 4px; }
 .dlg-stress--fit .dp-chart-stack__lane-label { overflow-wrap: break-word; }
-/* B and C: a row per group, label above its bar so a long label wraps instead of squeezing the track. */
-.dlg-stress--rows .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
-.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; overflow: visible; text-overflow: clip; }
-.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
-.dlg-stress--rows .dp-chart-bars__row > span:last-child { grid-area: value; width: auto; overflow: visible; white-space: nowrap; }
+/* B (now the real answer card, .dlg-answer--rows) and C: a row per group, label above its bar so a long label wraps instead of squeezing the track. */
+.dlg-stress--rows .dp-chart-bars__row,
+.dlg-answer--rows .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__label,
+.dlg-answer--rows .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; overflow: visible; text-overflow: clip; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__track,
+.dlg-answer--rows .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+.dlg-stress--rows .dp-chart-bars__row > span:last-child,
+.dlg-answer--rows .dp-chart-bars__row > span:last-child { grid-area: value; width: auto; overflow: visible; white-space: nowrap; }
 
 /* ---- Round 16 item 9: simpler data viz options (app/dialogue/viz-options). Options only. ---- */
 .dlg-viz-options { display: flex; flex-direction: column; gap: 48px; width: 640px; margin: 0 auto; padding: 40px 0; }

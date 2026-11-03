@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { AnswerCard } from "@/components/dialogue/live/AnswerCard";
+import { answerLayout } from "@/lib/dialogue/product/answerLayout";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar, { type ChartStackSegment } from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
@@ -24,8 +26,7 @@ const CASES: Case[] = [
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 const segs = (c: Case): ChartStackSegment[] => c.groups.map((g) => ({ label: g.label, value: g.value, display: `${fmt(g.value)} of ${fmt(c.total)}`, focal: g.focal }));
-/** The rule behind option B: two short groups keep the bar; three or more groups, or a long label, switch to rows. */
-const crowded = (c: Case) => c.groups.length > 2 || c.groups.some((g) => g.label.length > 28);
+const crowded = (c: Case) => answerLayout(c.groups) === "rows";
 
 function Panel({ children, width }: { children: ReactNode; width: number }) {
   return (
@@ -55,15 +56,12 @@ function OptionA({ c }: { c: Case }) {
     </>
   );
 }
-/** B. Switch: two short groups keep the bar; a crowded query returns one row per group. */
+/** B. The real answer card: the template is picked per answer by lib/dialogue/product/answerLayout.ts. */
 function OptionB({ c }: { c: Case }) {
-  if (!crowded(c)) return <OptionA c={c} />;
   return (
     <>
       <UserMessageBubble>{c.query}</UserMessageBubble>
-      <ChartVizCard title={c.finding} className="dlg-stress--rows">
-        <ChartBarList max={c.total} rows={c.groups.map((g) => ({ label: g.label, value: g.value, display: `${fmt(g.value)} of ${fmt(c.total)}`, focal: g.focal }))} />
-      </ChartVizCard>
+      <AnswerCard answer={{ finding: c.finding, total: c.total, groups: c.groups }} />
     </>
   );
 }
@@ -82,7 +80,7 @@ function OptionC({ c }: { c: Case }) {
 const OPTIONS = [
   { key: "current", name: "Current", Comp: Current },
   { key: "a", name: "A. Patch the bar", Comp: OptionA },
-  { key: "b", name: "B. Bar, or rows when it crowds", Comp: OptionB },
+  { key: "b", name: "B. Bar, or rows when it crowds (shipped)", Comp: OptionB },
   { key: "c", name: "C. Rows every time", Comp: OptionC },
 ] as const;
 

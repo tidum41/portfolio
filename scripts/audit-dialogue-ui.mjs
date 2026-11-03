@@ -11,7 +11,7 @@ const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const sharp = req("sharp");
 const [, , base = "http://localhost:3000", ...only] = process.argv;
-const DEMOS = only.length ? only : ["hero", "side", "clip", "every", "toggles", "thin", "picker"];
+const DEMOS = only.length ? only.filter((d) => d !== "answer") : ["hero", "side", "clip", "every", "toggles", "thin", "picker"];
 
 /** What each demo exposes, in order: a setup that reveals the clickables, then their selectors. */
 const SCENES = {
@@ -124,10 +124,35 @@ async function hoverPress(demo, mobile) {
   await ctx.close();
 }
 
+
+/** Round 17: the answer card picks bar or rows per answer. On the stress page the real card (third column) must pick the
+ *  expected template for each case, a bar's legend labels must stay on one line at desktop width, and a rows layout must not clip its text. */
+const EXPECT = { base: "bar", "long-query": "bar", "long-sentence": "bar", tiny: "bar", huge: "bar", "long-labels": "rows", groups: "rows" };
+async function layoutPick(mobile) {
+  const ctx = await browser.newContext({ viewport: { width: mobile ? 390 : 1500, height: 1000 } });
+  const page = await ctx.newPage();
+  await page.goto(`${base}/dialogue/answer-stress${mobile ? "?w=phone" : ""}`, { waitUntil: "networkidle", timeout: 90000 });
+  for (const [id, want] of Object.entries(EXPECT)) {
+    checks++;
+    const got = await page.evaluate((id) => {
+      const card = document.querySelectorAll(`#case-${id} .dlg-stress__col`)[2]?.querySelector("[data-layout]");
+      if (!card) return { layout: null };
+      const lanes = [...card.querySelectorAll(".dp-chart-stack__lane-label")].map((n) => Math.round(n.getBoundingClientRect().height));
+      const clipped = [...card.querySelectorAll(".dp-chart-bars__label, .dp-chart-bars__row > span:last-child")].filter((n) => n.scrollWidth > n.clientWidth + 1).length;
+      return { layout: card.getAttribute("data-layout"), lanes, clipped };
+    }, id);
+    if (got.layout !== want) fail({ check: "layout-pick", mobile, case: id, want, got: got.layout });
+    else if (want === "bar" && !mobile && got.lanes.some((h) => h > 20)) fail({ check: "layout-pick-wrap", case: id, lanes: got.lanes });
+    else if (want === "rows" && got.clipped) fail({ check: "layout-pick-clip", mobile, case: id, clipped: got.clipped });
+  }
+  await ctx.close();
+}
+
 for (const demo of DEMOS) for (const mobile of [false, true]) {
   if (BAR_DEMOS[demo] !== undefined) await layoutShift(demo, mobile);
   await hoverPress(demo, mobile);
 }
+if (!only.length || only.includes("answer")) for (const mobile of [false, true]) await layoutPick(mobile);
 await browser.close();
 console.log(JSON.stringify({ summary: true, checks, failures: fails.length }));
 process.exit(fails.length ? 1 : 0);

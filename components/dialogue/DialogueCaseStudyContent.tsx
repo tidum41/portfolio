@@ -253,11 +253,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoVideo src="/dialogue/motion/live-clip.mp4" poster="/dialogue/motion/live-clip.jpg" label="From the open 225, tapping Ana&rsquo;s quote plays her clip in place; tapping again closes it" />
+                    <DialogueDemoStill src="/dialogue/motion/live-clip.jpg" label="Ana&rsquo;s quote open under the head line &ldquo;picked from the 225&rdquo;, with her clip player showing 04:10 to 04:24 inside the answer" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>Ana&rsquo;s clip opens under her quote and runs only its 14 seconds, 04:10 to 04:24. Tap the quote again to close it.</Caption>
+              <Caption>Ana&rsquo;s clip opens under her quote, inside the answer, and runs only its 14 seconds, 04:10 to 04:24.</Caption>
             </Section>
 
             <Section id="data-viz">
@@ -273,7 +273,16 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Each question type gets one chart, with its reason beside it, and By group sits beside the percent chart I ruled out.</Caption>
+              <Caption>Three questions, three charts, and one line under each.</Caption>
+              <CaseStudyBody>
+                The split is one bar, and it fits two short groups. When a group&rsquo;s label is too long for its lane, or an answer has more than two groups, the template switches to one row per group, each scaled to the 300.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <DialogueChartLibrary answerRows />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>A long question with long group labels. Both labels would wrap on the bar, so each group gets its own row.</Caption>
               <CaseStudyBody>
                 Where I departed from Carbon, it was to keep people countable: one highlight on the value the answer is about, and counts printed out of their own group wherever groups differ in size. Carbon has no rule for thin data, so that path is my addition. <Placeholder>which Carbon guideline you bent on purpose</Placeholder>
               </CaseStudyBody>
