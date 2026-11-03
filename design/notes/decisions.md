@@ -2,6 +2,16 @@
 
 Written in my own voice so I can explain each one in an interview. Each entry holds the decision, what else I tried, why this one, and what would make me revisit it. Newest first.
 
+## Round 20
+
+### Soft-rule change: the Data viz heading states the rule the section shows
+
+**Decision.** The Data viz h2 is "Charts count people out of their own group". The old heading, "The AI picks a chart from templates I designed", moves to `design/OPEN-QUESTIONS.md` and comes back once it is settled whether a model or a fixed rule picks the chart. **Tried.** Keeping the P5 heading, which is an approved line in TASTE. **Why.** The heading states the rule the section shows, while how the AI picks stays an open question. **Revisit.** When the model-or-rule question is answered, restore the old heading if it is true.
+
+### TASTE.md is split into hard and soft rules
+
+**Decision.** `design/TASTE.md` has a HARD RULES section (never broken without Mudit's explicit OK) with a core list of twelve rules, then the existing lines that carry them, and a SOFT RULES section (defaults that can bend on judgment with the reason written down) holding everything else. No line was deleted, and the old section titles stay as sub-headings. One header line explains the difference. **Tried.** Splitting by the old section titles. **Why.** The old sections mixed laws with preferences, so an agent could not tell which lines it may bend. The reason for each bend now lives in decisions.md, which is itself a hard rule. **Revisit.** If a soft line keeps being treated as a law, it moves up.
+
 ## Round 19
 
 ### The hero ties the quote to the 225 with a header and source pills (option C)

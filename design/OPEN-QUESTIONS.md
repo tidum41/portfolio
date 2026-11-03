@@ -27,7 +27,11 @@ Blanks that were visible on the /dialogue page and are now off it. Each is a cal
 
 ## Other open calls
 
-- The Data viz h2 ("The AI picks a chart from templates I designed") is an approved TASTE heading, but the review notes it asserts a mechanism the body cannot yet explain. A rule-first alternative is "Charts count people out of their own group."
+- The old Data viz heading is parked in the section below.
 - Whether the real study numbers (18 of 24 and others) belong anywhere now that the page uses Hearthside only.
 - Priya does not come back after the Problem. A one-line return in the Takeaway is available if wanted.
 - Whether the page needs a page-level note that all numbers are invented, beyond the Problem line and each caption.
+
+## Parked headings
+
+- **"The AI picks a chart from templates I designed"** (old Data viz h2, an approved P5 heading). Bring it back once the question of whether a model or a fixed rule picks the chart is answered. Until then the h2 is "Charts count people out of their own group", which states the rule the section shows (Round 20).

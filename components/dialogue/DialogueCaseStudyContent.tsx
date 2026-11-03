@@ -247,7 +247,7 @@ export function DialogueCaseStudyContent({
 
             <Section id="data-viz">
               <Kicker>Match the chart</Kicker>
-              <ClaimH2>The AI picks a chart from templates I designed</ClaimH2>
+              <ClaimH2>Charts count people out of their own group</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
                 The chart follows a rule I wrote. Two short groups fit one bar, and three or more groups, or any label over 26 characters, get one row each, scaled to the 300.
