@@ -28,7 +28,9 @@ const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light";
 // P16 round 3: DLG_MOBILE=1 records the phone takes, cropped to a 320px card with no gutter (files end in -m).
 const AUDIT = process.env.DLG_AUDIT === "1";
 const MOBILE = process.env.DLG_MOBILE === "1"; const Q = MOBILE ? "&m=1" : "";
-const SUFFIX = (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
+// DLG_TRIM=1 records the trimmed Every and Toggles storyboards (one step fewer each) to files ending in -trim.
+const TRIM = process.env.DLG_TRIM === "1";
+const SUFFIX = (TRIM ? "-trim" : "") + (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
 const SHOWN_W = MOBILE ? 358 : 640; // css px the take is shown at (phone figure width at 390, desktop column)
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
@@ -138,6 +140,7 @@ async function record(demo) {
   async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
   if (demo === "toggles") { const bb = await (await page.$('[data-target="level-0"]')).boundingBox(); pos = { x: bb.x + bb.width * TAB_FX, y: bb.y + bb.height * 0.5 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
+  if (demo === "every" && TRIM) { await page.waitForFunction(() => window.__dlg); await api('side("unsure")'); await hold(1200); }
   if (demo === "side") { const bb = await (await page.$(SEG.friday)).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.1 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
   // P16 round 4: the first try starts closed (the answered count), like counts.
   const t0 = Date.now() / 1000;
@@ -174,6 +177,12 @@ async function record(demo) {
     // P16 round 4 (Mudit): every tap causes exactly what appears. The 75 opens its people; Mei opens her clip; the player
     // pushes the count out of view, which is the cost the first try proves. The chevron folds it back to the start.
     async every() {
+      if (TRIM) {
+        // Trimmed: the 75 is already open (the 75 tap is cut), so the take opens on Mei's row and folds her player back to its start.
+        await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(2000);
+        await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.17, ms: 550 }); const g6 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(false)"); await api("up(500)"); await g6.ride(700); await cursorOut(); await hold(1250);
+        return;
+      }
       await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1, ms: 550 }); const g4 = await grab(SEG.unsure); await press(); await api('side("unsure")'); await g4.ride(MOBILE ? 1300 : 800);
       await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(1700);
       await cursorTo('[data-target="side-collapse"]', { ms: 550 }); const g6 = await grab('[data-target="side-collapse"]'); await press(); await api("side(false)"); await api("clip(false)"); await g6.ride(500); await cursorOut(); await hold(1250);
@@ -185,9 +194,15 @@ async function record(demo) {
     async toggles() {
       await cursorTo('[data-target="level-1"]', { fx: TAB_FX, ms: 400, track: true }); const g7 = await grab('[data-target="level-1"]'); await press(); await api("level(1)"); await g7.ride(120);
       await cursorTo('[data-target="level-2"]', { fx: TAB_FX, ms: 400, track: true }); const g8 = await grab('[data-target="level-2"]'); await press(); await api("level(2)"); await g8.ride(120);
-      await cursorTo('[data-target="level-3"]', { fx: TAB_FX, ms: 400, track: true }); const g9 = await grab('[data-target="level-3"]'); await press(); await api("level(3)"); await g9.ride(120);
+      await cursorTo('[data-target="level-3"]', { fx: TAB_FX, ms: 400, track: true }); const g9 = await grab('[data-target="level-3"]'); await press(); await api("level(3)"); await g9.ride(TRIM ? Number(process.env.DLG_SRC_HOLD ?? 1300) : 120);
+      if (TRIM) {
+        // Trimmed: Ana's play beat is cut whole. Cutting only her fold lets Insight fade the open player as a ghost (P16 round 4 forbids it), so Source holds instead.
+        await cursorTo('[data-target="level-0"]', { fx: TAB_FX, ms: 450, track: true }); const g12t = await grab('[data-target="level-0"]'); await press(); await api("level(0)"); await g12t.ride(2300);
+        return;
+      }
       await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72, ms: 400 }); const g10 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)");
-      await api('stick(560, ".dlg-depth", 8)'); await g10.ride(800);
+      await api('stick(560, ".dlg-depth", 8)');
+      await g10.ride(800);
       // Ana's row folds the player away (the chat settles by itself), then Insight folds everything back.
       await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17, ms: 400 }); const g11 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g11.ride(560);
       await cursorTo('[data-target="level-0"]', { fx: TAB_FX, ms: 450, track: true }); const g12 = await grab('[data-target="level-0"]'); await press(); await api("level(0)"); await g12.ride(2300);

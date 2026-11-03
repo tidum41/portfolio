@@ -41,3 +41,10 @@ Paper should mirror:
 - **No change to the other posters or frames.** Hero ends on Ana under the 225; Clip shows the quotes header, both rows and Ana's open player with nothing cropped; Every shows the count pushed out by the open player; Toggles shows Source; Thin shows the flag and its two follow-ups.
 - **Decision logged:** a version of the desktop Clip that keeps the bar in view cuts the answer sentence at the top edge, so it was not kept. Phone Clip keeps its pinned layout.
 - **Animation library:** none added. /dialogue is CSS keyframes, transitions and small requestAnimationFrame scroll loops; takes are recordings of those components. Details and file paths in `design/notes/motion-r14.md`.
+
+## Page (cloud), Nov 3 2026, round 15
+
+Test only; the page still plays the current Every and Toggles takes. For Paper, if Mudit ships the trim:
+- **Every:** opens with the 75's people already showing (Mei and Owen under "picked from the 75", the 225 dimmed). One tap on Mei opens her player and pushes the count out of view; a second tap folds it, ending on the opening frame. 6.9s. Poster is the open player.
+- **Toggles:** Chart, People, Source, Insight. Source holds about 2s on its play chips. Ana's play and fold are gone. 7.4s. Poster is Source open.
+- Details, durations and still frames are in `design/notes/motion-r15.md`; trimmed files are in `public/dialogue/motion/trim/`.

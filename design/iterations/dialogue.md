@@ -2,6 +2,10 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 15, Nov 3 2026 (trimmed Every and Toggles test on review/round-p15)
+- Every loses the 75 tap (6.9s, was 8.3s); Toggles loses Ana's play beat (7.4s, was 9.0s). Cutting only Ana's fold was rejected: Insight would fade the open player as a ghost.
+- Trimmed files are in public/dialogue/motion/trim/ and are not on the page yet. Notes: design/notes/motion-r15.md. Screenshots: /opt/cursor/artifacts/screenshots/r15-*.
+
 ## Round 14, Nov 2 2026 (motion report and Stageshow pass on review/round-p15)
 - Report in design/notes/motion-r14.md: /dialogue runs on CSS keyframes and transitions plus small requestAnimationFrame scroll loops; the takes are recordings of those components. No GSAP, no framer-motion on /dialogue except the page's ScrollReveal wrapper.
 - Counts take: poster now the 75 open (the unsure side), and each side holds about two seconds. Clip, Hero, Every, Toggles and Thin keep their posters and timing, with the reason logged per take.
