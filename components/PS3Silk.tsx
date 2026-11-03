@@ -64,16 +64,19 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
  * defaults, so visitors never see controls.
  */
 const SILK_DIALS = {
-  // The crossing hangs on a damped spring. While the cursor moves over the
-  // hero the spring's target is `strength` x (cursor - crossing), faded by a
-  // Gaussian of that distance with sigma `radius`; after the cursor stops or
-  // leaves, the target fades back to rest over `relax`.
+  // Cursor input is a trail of touches sampled from the pointer's speed, so
+  // a still hover adds nothing. Each touch bows the ribbons away from it and
+  // rises and fades on a sine envelope over `trailDecay`, so the silk parts
+  // along the cursor's path like fabric. The same trail is the target of a
+  // damped spring on the ribbons' crossing: `driftStrength` x (where the
+  // trail is - crossing), easing back to rest a few seconds after it fades.
   drift: {
-    strength: [0.16, 0, 0.6, 0.01],     // share of the cursor's offset the crossing follows
-    radius: [560, 80, 1600, 10],        // px, cursors much farther than this barely pull
+    trailStrength: [12, 0, 40, 1],      // px, how far the ribbons part around the cursor's path
+    trailRadius: [120, 30, 300, 5],     // px, size of each touch
+    trailDecay: [1.0, 0.3, 3, 0.05],    // s, life of a touch
     stiffness: [10, 0.5, 40, 0.5],      // spring responsiveness (1/s^2)
     damping: [1.0, 0.2, 2, 0.05],       // damping ratio: 1 settles without overshoot, <1 sways
-    relax: [3, 0.5, 15, 0.25],          // s, time constant the pull fades after you stop
+    driftStrength: [0.13, 0, 0.6, 0.01], // share of the trail's offset the crossing follows
   },
   silk: {
     speed: [1.2, 0, 4, 0.05],
@@ -95,28 +98,50 @@ const MODE_FADE = 0.45;     // s, halftone <-> wave crossfade
 const RENDER_SCALE = 1;
 // ~30fps, evenly paced. The ribbons and the drift move well under a pixel
 // per frame at 30, while 60 doubles the GPU/compositor work the rest of the
-// page (scroll, cards, cursor trail) competes with.
+// page (scroll, cards, cursor trail) competes with. With no trail and
+// nothing easing, the slow ribbons alone drop to 20.
 const FRAME_MS = 1000 / 30;
+const IDLE_FRAME_MS = 1000 / 20;
+const MAX_DT = 1 / 30;      // s, simulation step ceiling (one paced frame)
 const MASK_TEXEL = 4;       // CSS px per scrim mask texel; the mask is a wide blur
 const SPRING_STEP = 1 / 120; // s, fixed physics step (frame-rate independent)
 const ENGAGE_TAU = 0.25;    // s, how fast the pull engages once the cursor moves
-const HOLD_S = 0.6;         // s after the last move before the pull starts to relax
+const RELAX_S = 3;          // s, how slowly it lets go after the trail fades
+const TRAIL_N = 16;          // touches in the ring
+const TRAIL_ATTACK = 0.3;   // share of a touch's life spent rising
+const TRAIL_SPEED = 900;    // px/s of pointer speed for a full-strength touch
 // Rest position of the ribbons' crossing, in the drift's uv (y up).
 const CROSS_X = 0.5, CROSS_Y = 0.6;
 const DRIFT_Y_MAX = 0.12;   // uv; more squashes the ribbon amplitude visibly
 
 type SilkParams = {
-  drift: { strength: number; radius: number; stiffness: number; damping: number; relax: number };
+  drift: {
+    trailStrength: number; trailRadius: number; trailDecay: number;
+    stiffness: number; damping: number; driftStrength: number;
+  };
   silk: { speed: number; intensity: number; dotSize: number };
 };
 
 const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
 // Pass 1: ribbon brightness. In halftone mode one texel per dot cell (the
-// dots only read their cell centre), so the 8 ribbons are evaluated ~9x less
-// often than per pixel. Wave mode needs it per CSS pixel.
-const LUMA_FS = `
+// dots only read their cell centre), so the 8 ribbons and the trail are
+// evaluated ~9x less often than per pixel. Wave mode needs it per CSS pixel.
+// Built twice: with TRAIL while touches are alive, without it otherwise, so
+// the idle silk never pays for the trail loop (a uniform-false branch around
+// it still slowed every frame on software GL).
+const lumaFs = (trail: boolean) => `
 precision highp float;
+${trail ? "#define TRAIL" : ""}
+#define TRAIL_N ${TRAIL_N}
+#ifdef TRAIL
+uniform vec3  uTrail[TRAIL_N]; // live touches first: xy CSS px (y up), z envelope x strength
+uniform float uTrailCount;
+uniform vec4  uTrailBox;     // live touches' bounds plus 3 radii (beyond that a push is < 0.02px)
+uniform float uTrailInvR2;   // 1 / radius^2
+uniform float uTrailGain;    // px of push per unit of d * gaussian
+uniform float uTrailMax;     // px
+#endif
 uniform float uTime;
 uniform vec2  uCssSize;
 uniform float uTexel;        // CSS px per texel
@@ -139,7 +164,29 @@ float wave(vec2 uv, float uvx, float spd, float freq, float amp,
 }
 
 void main() {
-  vec2 uv = gl_FragCoord.xy * uTexel / uCssSize;
+  vec2 px = gl_FragCoord.xy * uTexel;
+  // Each touch moves this cell's sample point toward it along the gradient
+  // of a Gaussian, so ribbons near the cursor's path bow away from it. The
+  // push is zero at the touch itself and smooth everywhere, so the silk
+  // stretches instead of folding or tearing.
+#ifdef TRAIL
+  if (all(greaterThan(px, uTrailBox.xy)) && all(lessThan(px, uTrailBox.zw))) {
+    vec2 push = vec2(0.0);
+    for (int k = 0; k < TRAIL_N; k++) {
+      if (float(k) >= uTrailCount) break;
+      vec3 t = uTrail[k];
+      vec2 d = px - t.xy;
+      float q = dot(d, d) * uTrailInvR2;
+      if (q < 9.0) push += d * (exp(-q) * t.z);
+    }
+    // Overlapping touches saturate smoothly toward uTrailMax (tanh), so a
+    // fast sweep never creases the ribbons where a hard clamp would kick in.
+    push *= uTrailGain;
+    float l = length(push) / uTrailMax + 1e-6;
+    px -= push * ((1.0 - 2.0 / (exp(2.0 * l) + 1.0)) / l);
+  }
+#endif
+  vec2 uv = px / uCssSize;
   uv.y += uYOffsetPx / uCssSize.y;
   float uvx = (uv.x - uDrift.x) * (uCssSize.x / uCssSize.y) / 2.414;
   float c = 0.0;
@@ -209,8 +256,8 @@ export default function PS3Silk({
   useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
 
   const dk = useDialKit("PS3Silk", SILK_DIALS as never, {
-    id: "ps3-silk-drift-v3",
-    persist: { key: "ps3-silk-drift-v3", storage: "localStorage" },
+    id: "ps3-silk-drift-v4",
+    persist: { key: "ps3-silk-drift-v4", storage: "localStorage" },
   }) as SilkParams;
   const paramsRef = useRef<SilkParams>(dk);
   useEffect(() => { paramsRef.current = dk; });
@@ -279,9 +326,16 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    // Crossing drift (see SILK_DIALS). Pointer in CSS px relative to the
-    // hero's top-left; offset/velocity in uv.
-    const ptr = { x: 0, y: 0, inside: false, lastMove: -1e9 };
+    // Touch trail and crossing drift (see SILK_DIALS). Pointer in CSS px
+    // relative to the hero's top-left (y down), plus its viewport position
+    // (cx, cy; lx, ly at the last frame); touches in CSS px, y up, as the
+    // shader sees them; drift offset/velocity in uv.
+    const ptr = { x: 0, y: 0, cx: 0, cy: 0, lx: 0, ly: 0, over: false };
+    const trail = new Float32Array(TRAIL_N * 4);  // x, y, age (s), strength
+    const trailGpu = new Float32Array(TRAIL_N * 3);
+    const trailBox = [0, 0, 0, 0];
+    let trailHead = 0, trailLive = 0, trailCredit = 1, pendingStrength = 0;
+    let trailCx = 0, trailCy = 0;
     const drift = { x: 0, y: 0, vx: 0, vy: 0 };
     let engage = 0, springAcc = 0;
     let modeMix = modeRef.current === 1 ? 1 : 0; // 1 = halftone
@@ -299,12 +353,15 @@ export default function PS3Silk({
     const isFirstLoad = !_hasMounted;
     if (isFirstLoad) _hasMounted = true;
 
-    // Reduced motion: keep the slow ambient wave loop (low-amplitude, not the
-    // kind of motion this preference is meant to suppress), but skip the
-    // entrance fade and the cursor drift below — those are the
-    // faster, more attention-grabbing pieces.
+    // Reduced motion: one still frame (time frozen, no cursor input, no
+    // entrance fade); the loop stops after each draw and only resize,
+    // scroll, a mode click or a wake asks for another.
     const reducedMotion = typeof window !== "undefined"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Simulation time: advances by the clamped frame step, so after a stall,
+    // a hidden tab or a soft-nav round trip the ribbons carry on from where
+    // they stopped instead of jumping.
+    let silkTime = reducedMotion ? 0 : performance.now() / 1000;
 
     // First-ever mount this session: fade in from 0 (in the shader, dithered).
     // Every later page nav: appear at full resting opacity immediately.
@@ -388,13 +445,13 @@ export default function PS3Silk({
       let wrapperShown = false;
       // Frame pacing (see frame()): recent rAF intervals, vsync estimate.
       const rawIntervals = new Float64Array(24);
-      let rawIdx = 0, rawLastT = 0, vsync = 0, frameMs = FRAME_MS, lastFrameT = 0;
+      let rawIdx = 0, rawLastT = 0, vsync = 0, frameMs = FRAME_MS, lastFrameT = 0, idle = false;
+      let trailWarm = false;
 
+      type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
       type GLState = {
-        lumaProg: WebGLProgram; compProg: WebGLProgram; buf: WebGLBuffer;
+        luma: Prog; trail: Prog; comp: Prog; buf: WebGLBuffer;
         lumaTex: WebGLTexture; lumaFb: WebGLFramebuffer; maskTex: WebGLTexture;
-        lu: Record<string, WebGLUniformLocation | null>;
-        cu: Record<string, WebGLUniformLocation | null>;
       };
       let S: GLState | null = null;
       let luma = { w: 0, h: 0, texel: 0 };
@@ -439,19 +496,18 @@ export default function PS3Silk({
         return t;
       }
 
-      type Pending = { l: WebGLProgram; c: WebGLProgram };
-      function beginGL(): Pending {
-        return { l: program(LUMA_FS), c: program(COMPOSITE_FS) };
-      }
-      function compiled(pp: Pending) {
-        if (!parallel) return true;
-        return gl.getProgramParameter(pp.l, parallel.COMPLETION_STATUS_KHR)
-          && gl.getProgramParameter(pp.c, parallel.COMPLETION_STATUS_KHR);
-      }
-
-      function finishGL(pp: Pending) {
-        const L = linked(pp.l, ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"]);
-        const C = linked(pp.c, ["uLuma", "uLumaUv", "uMask", "uMaskUv", "uPxToCss", "uModeMix", "uIntensity", "uIntensityWave", "uHalftoneSize", "uOpacity", "uWaveColor"]);
+      // Startup, one step per animation frame so no frame carries more than
+      // one piece of it: queue compile + link, create buffers and textures
+      // while the driver works, wait for KHR_parallel_shader_compile to
+      // report done, look up uniforms, warm up, then draw the first frame.
+      // Starts only if we're the visible work route; otherwise the
+      // active→true wake does it (sizing to 0×0 on an about/archive first
+      // paint used to flatten the pattern for good). The trail program is
+      // warmed later, once the silk first settles, so neither the intro nor
+      // the first hover pays for it.
+      function* setup(): Generator<void, void, void> {
+        const lp = program(lumaFs(false)), tp = program(lumaFs(true)), cp = program(COMPOSITE_FS);
+        yield;
         const buf = gl.createBuffer()!;
         gl.bindBuffer(gl.ARRAY_BUFFER, buf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -462,36 +518,59 @@ export default function PS3Silk({
         const maskTex = texture();
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 1, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array(1));
+        gl.clearColor(0, 0, 0, 0);
+        yield;
+        const done = (p: WebGLProgram) => !parallel || gl.getProgramParameter(p, parallel.COMPLETION_STATUS_KHR);
+        while (!(done(lp) && done(tp) && done(cp))) yield;
+        const ribbons = ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"];
+        const C = linked(cp, ["uLuma", "uLumaUv", "uMask", "uMaskUv", "uPxToCss", "uModeMix", "uIntensity", "uIntensityWave", "uHalftoneSize", "uOpacity", "uWaveColor"]);
         gl.useProgram(C.p);
         gl.uniform1i(C.u.uLuma, 0);
         gl.uniform1i(C.u.uMask, 1);
-        gl.clearColor(0, 0, 0, 0);
-        S = { lumaProg: L.p, compProg: C.p, buf, lumaTex, lumaFb, maskTex, lu: L.u, cu: C.u };
+        S = {
+          luma: linked(lp, ribbons),
+          trail: linked(tp, [...ribbons, "uTrail", "uTrailCount", "uTrailBox", "uTrailInvR2", "uTrailGain", "uTrailMax"]),
+          comp: C, buf, lumaTex, lumaFb, maskTex,
+        };
         luma = { w: 0, h: 0, texel: 0 };
         mask = { w: 1, h: 1, dirty: true };
-        warmUp();
+        yield;
+        warmUp(S.luma);
+        yield;
+        if (activeRef.current) lifecycleRef.current?.wake();
+      }
+
+      function runSetup() {
+        cancelAnimationFrame(initRaf);
+        trailWarm = false;
+        const steps = setup();
+        const step = () => {
+          initRaf = 0;
+          if (gl.isContextLost()) return;
+          if (!steps.next().done) initRaf = requestAnimationFrame(step);
+        };
+        step();
       }
 
       // Drivers finish pipeline setup (and SwiftShader JITs) on a program's
-      // first draw, per render target format. Draw both passes once into
-      // 1x1 targets at zero opacity, so that cost is paid off screen before
-      // the fade instead of as a hitch in its first frames.
-      function warmUp() {
+      // first draw, per render target format. Draw it once into one texel of
+      // the luma target (and the composite at zero opacity at startup), so
+      // that cost is paid off screen instead of as a hitch in visible frames.
+      // Every render() redraws the whole luma target anyway.
+      function warmUp(prog: Prog) {
         if (!S) return;
-        ensureLuma(-1);
+        if (!luma.w) ensureLuma(-1);
         gl.bindFramebuffer(gl.FRAMEBUFFER, S.lumaFb);
         gl.viewport(0, 0, 1, 1);
-        gl.useProgram(S.lumaProg);
+        gl.useProgram(prog.p);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.useProgram(S.compProg);
-        gl.uniform1f(S.cu.uOpacity, 0);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        if (prog === S.luma) {
+          gl.useProgram(S.comp.p);
+          gl.uniform1f(S.comp.u.uOpacity, 0);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
         gl.flush();
-      }
-
-      function setupGL() {
-        finishGL(beginGL());
       }
 
       function ensureLuma(texel: number) {
@@ -521,7 +600,7 @@ export default function PS3Silk({
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, m.width, m.height, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, m.data);
       }
 
-      function render(ms: number) {
+      function render() {
         if (!S || cssW < 2 || cssH < 2) return;
         const P = paramsRef.current;
         const wc = waveColorRef.current;
@@ -533,33 +612,49 @@ export default function PS3Silk({
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, S.lumaFb);
         gl.viewport(0, 0, luma.w, luma.h);
-        gl.useProgram(S.lumaProg);
-        // Reduced motion: frozen time, no cursor input, one frame (see frame()).
-        gl.uniform1f(S.lu.uTime, reducedMotion ? 0 : ms * 0.001);
-        gl.uniform2f(S.lu.uCssSize, Math.floor(cssW), Math.floor(cssH));
-        gl.uniform1f(S.lu.uTexel, texel);
-        gl.uniform1f(S.lu.uYOffsetPx, Y_OFFSET);
-        gl.uniform1f(S.lu.uSpeed, P.silk.speed);
-        gl.uniform2f(S.lu.uDrift, reducedMotion ? 0 : drift.x, reducedMotion ? 0 : drift.y);
-        gl.uniform1f(S.lu.uColorMax, Math.max(wc[0], wc[1], wc[2]));
+        const r = Math.max(1, P.drift.trailRadius);
+        // One touch's push d/r * exp(-d²/r²) peaks at 0.4289 (at d = r/√2).
+        // Peaks above ~0.42r would let the push outrun the distance and
+        // fold the silk over itself, so the strength is capped there.
+        const peak = Math.min(P.drift.trailStrength, 0.42 * r);
+        const live = peak > 0 ? trailLive : 0;
+        const L = live ? S.trail : S.luma;
+        gl.useProgram(L.p);
+        if (live) {
+          const m = 3 * r;
+          gl.uniform1f(L.u.uTrailCount, live);
+          gl.uniform4f(L.u.uTrailBox, trailBox[0] - m, trailBox[1] - m, trailBox[2] + m, trailBox[3] + m);
+          gl.uniform3fv(L.u.uTrail, trailGpu.subarray(0, live * 3));
+          gl.uniform1f(L.u.uTrailInvR2, 1 / (r * r));
+          gl.uniform1f(L.u.uTrailGain, peak / (0.4289 * r));
+          gl.uniform1f(L.u.uTrailMax, peak);
+        }
+        gl.uniform1f(L.u.uTime, silkTime);
+        gl.uniform2f(L.u.uCssSize, Math.floor(cssW), Math.floor(cssH));
+        gl.uniform1f(L.u.uTexel, texel);
+        gl.uniform1f(L.u.uYOffsetPx, Y_OFFSET);
+        gl.uniform1f(L.u.uSpeed, P.silk.speed);
+        gl.uniform2f(L.u.uDrift, drift.x, drift.y);
+        gl.uniform1f(L.u.uColorMax, Math.max(wc[0], wc[1], wc[2]));
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.useProgram(S.compProg);
+        const C = S.comp.u;
+        gl.useProgram(S.comp.p);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, S.lumaTex);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, S.maskTex);
-        gl.uniform2f(S.cu.uLumaUv, 1 / (luma.w * texel), 1 / (luma.h * texel));
-        gl.uniform2f(S.cu.uMaskUv, 1 / (mask.w * MASK_TEXEL), 1 / (mask.h * MASK_TEXEL));
-        gl.uniform2f(S.cu.uPxToCss, 1 / RENDER_SCALE, 1 / RENDER_SCALE);
-        gl.uniform1f(S.cu.uModeMix, modeMix);
-        gl.uniform1f(S.cu.uIntensity, P.silk.intensity);
-        gl.uniform1f(S.cu.uIntensityWave, INTENSITY_WAVE);
-        gl.uniform1f(S.cu.uHalftoneSize, P.silk.dotSize);
-        gl.uniform1f(S.cu.uOpacity, currentOpacity);
-        gl.uniform3f(S.cu.uWaveColor, wc[0], wc[1], wc[2]);
+        gl.uniform2f(C.uLumaUv, 1 / (luma.w * texel), 1 / (luma.h * texel));
+        gl.uniform2f(C.uMaskUv, 1 / (mask.w * MASK_TEXEL), 1 / (mask.h * MASK_TEXEL));
+        gl.uniform2f(C.uPxToCss, 1 / RENDER_SCALE, 1 / RENDER_SCALE);
+        gl.uniform1f(C.uModeMix, modeMix);
+        gl.uniform1f(C.uIntensity, P.silk.intensity);
+        gl.uniform1f(C.uIntensityWave, INTENSITY_WAVE);
+        gl.uniform1f(C.uHalftoneSize, P.silk.dotSize);
+        gl.uniform1f(C.uOpacity, currentOpacity);
+        gl.uniform3f(C.uWaveColor, wc[0], wc[1], wc[2]);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -589,7 +684,7 @@ export default function PS3Silk({
         // Reassigning canvas.width/height clears the drawing buffer; repaint
         // now instead of on the next paced frame, so a drag-resize never
         // flashes an empty canvas.
-        render(performance.now());
+        render();
       }
 
       // Native `resize` fires many times per second during a drag; coalescing
@@ -619,15 +714,22 @@ export default function PS3Silk({
         if (reducedMotion && visible) startLoop();
       }
 
+      // Only records where the pointer is; the frame loop turns its speed
+      // into touches.
       function onMouseMove(e: MouseEvent) {
-        if (!activeRef.current || cssW < 2 || cssH < 2) return;
+        if (reducedMotion || !activeRef.current || cssW < 2 || cssH < 2) return;
         const x = e.clientX - pageLeft;
         const y = e.clientY + scrollY - pageTop;
-        ptr.inside = !reducedMotion && x >= 0 && x <= cssW && y >= 0 && y <= cssH * 1.15;
-        if (!ptr.inside) return;
+        if (x < 0 || x > cssW || y < 0 || y > cssH * 1.15) {
+          ptr.over = false;
+          return;
+        }
+        // Speed is taken in viewport space, so scrolling under a still
+        // pointer adds nothing.
+        if (!ptr.over) { ptr.lx = e.clientX; ptr.ly = e.clientY; ptr.over = true; }
+        ptr.cx = e.clientX; ptr.cy = e.clientY;
         ptr.x = x; ptr.y = y;
-        ptr.lastMove = performance.now();
-        if (!running && visible) startLoop();
+        startLoop();
       }
 
       function onPopState() {
@@ -635,7 +737,7 @@ export default function PS3Silk({
       }
 
       function startLoop() {
-        if (running || !S || !activeRef.current || !visible) return;
+        if (running || !S || !activeRef.current || !visible || document.hidden) return;
         running = true;
         rawLastT = 0;
         lastFrameT = 0;
@@ -659,27 +761,29 @@ export default function PS3Silk({
       });
       ro.observe(wrapper);
 
-      // Offscreen (scrolled past the hero) = no frames at all.
+      // Offscreen (scrolled past the hero) or a hidden tab = no frames at all.
       const io = new IntersectionObserver((entries) => {
         visible = entries[entries.length - 1].isIntersecting;
         if (visible) startLoop(); else stopLoop();
       }, { rootMargin: "64px 0px" });
       io.observe(wrapper);
+      const onVisibility = () => {
+        if (document.hidden) stopLoop(); else startLoop();
+      };
+      document.addEventListener("visibilitychange", onVisibility);
 
       const unsubscribeScrim = subscribeHeroScrim(() => {
         mask.dirty = true;
-        if (!running) render(performance.now());
+        if (!running) render();
       });
 
       const onContextLost = (e: Event) => {
         e.preventDefault();
         stopLoop();
+        cancelAnimationFrame(initRaf);
         S = null;
       };
-      const onContextRestored = () => {
-        setupGL();
-        lifecycleRef.current?.wake();
-      };
+      const onContextRestored = () => runSetup();
       canvas.addEventListener("webglcontextlost", onContextLost, false);
       canvas.addEventListener("webglcontextrestored", onContextRestored, false);
 
@@ -690,6 +794,7 @@ export default function PS3Silk({
       removeListeners = () => {
         ro.disconnect();
         io.disconnect();
+        document.removeEventListener("visibilitychange", onVisibility);
         unsubscribeScrim();
         lifecycleRef.current = null;
         stopLoop();
@@ -702,8 +807,9 @@ export default function PS3Silk({
       };
       teardownGL = () => {
         if (!S || gl.isContextLost()) return;
-        gl.deleteProgram(S.lumaProg);
-        gl.deleteProgram(S.compProg);
+        gl.deleteProgram(S.luma.p);
+        gl.deleteProgram(S.trail.p);
+        gl.deleteProgram(S.comp.p);
         gl.deleteBuffer(S.buf);
         gl.deleteTexture(S.lumaTex);
         gl.deleteTexture(S.maskTex);
@@ -734,26 +840,66 @@ export default function PS3Silk({
       };
       lifecycleRef.current = { wake, pause };
 
+      // Touches are laid down at most every life/TRAIL_N seconds, so each
+      // lives out its whole envelope before the ring reuses its slot. A
+      // touch's strength is the fastest pointer speed seen since the last
+      // one. Ages everything, packs the live touches for the shader, and
+      // returns their summed strength.
+      function stepTrail(real: number, dt: number, life: number) {
+        if (ptr.over) {
+          const v = Math.hypot(ptr.cx - ptr.lx, ptr.cy - ptr.ly) / Math.max(real, 1e-3);
+          ptr.lx = ptr.cx; ptr.ly = ptr.cy;
+          pendingStrength = Math.max(pendingStrength, Math.min(1, (v / TRAIL_SPEED) ** 2));
+        }
+        let n = 0, sum = 0, sx = 0, sy = 0;
+        trailBox[0] = trailBox[1] = Infinity;
+        trailBox[2] = trailBox[3] = -Infinity;
+        for (let k = 0; k < TRAIL_N; k++) {
+          const i = k * 4;
+          if (trail[i + 3] <= 0) continue;
+          const m = (trail[i + 2] += dt) / life;
+          if (m >= 1) { trail[i + 3] = 0; continue; }
+          const env = m < TRAIL_ATTACK
+            ? Math.sin((m / TRAIL_ATTACK) * Math.PI / 2)
+            : Math.sin((1 - (m - TRAIL_ATTACK) / (1 - TRAIL_ATTACK)) * Math.PI / 2);
+          const s = env * trail[i + 3];
+          trailGpu[n * 3] = trail[i]; trailGpu[n * 3 + 1] = trail[i + 1]; trailGpu[n * 3 + 2] = s;
+          n++; sum += s; sx += s * trail[i]; sy += s * trail[i + 1];
+          trailBox[0] = Math.min(trailBox[0], trail[i]); trailBox[1] = Math.min(trailBox[1], trail[i + 1]);
+          trailBox[2] = Math.max(trailBox[2], trail[i]); trailBox[3] = Math.max(trailBox[3], trail[i + 1]);
+        }
+        trailCredit = Math.min(1, trailCredit + (dt * TRAIL_N) / life);
+        if (trailCredit >= 1) {
+          if (pendingStrength > 0.02) {
+            trailCredit -= 1;
+            const i = trailHead * 4;
+            trail[i] = ptr.x; trail[i + 1] = Math.floor(cssH) - ptr.y; trail[i + 2] = 0; trail[i + 3] = pendingStrength;
+            trailHead = (trailHead + 1) % TRAIL_N;
+          }
+          pendingStrength = 0;
+        }
+        trailLive = n;
+        if (sum > 0) { trailCx = sx / sum; trailCy = sy / sum; }
+        return sum;
+      }
+
       // Damped spring on the crossing offset, integrated in fixed steps so
-      // its feel doesn't depend on frame rate or dropped frames.
-      function stepDrift(D: SilkParams["drift"], dt: number, ms: number) {
-        const moving = ptr.inside && ms - ptr.lastMove < HOLD_S * 1000;
-        engage = moving
-          ? engage + (1 - engage) * (1 - Math.exp(-dt / ENGAGE_TAU))
-          : engage * Math.exp(-dt / Math.max(0.1, D.relax));
-        if (engage < 1e-4) engage = 0;
+      // its feel doesn't depend on frame rate or dropped frames. The pull
+      // engages with the trail's strength and keeps aiming at where the
+      // trail last was while it lets go.
+      function stepDrift(D: SilkParams["drift"], dt: number, energy: number) {
+        const goal = Math.min(1, energy);
+        engage += (goal - engage) * (1 - Math.exp(-dt / (goal > engage ? ENGAGE_TAU : RELAX_S)));
+        if (goal === 0 && engage < 0.01) engage = 0;
         let tx = 0, ty = 0;
         if (engage > 0 && cssW >= 2 && cssH >= 2) {
-          const dx = ptr.x - CROSS_X * cssW;
-          const dy = cssH - ptr.y - CROSS_Y * cssH;
-          const r = Math.max(1, D.radius);
-          const w = D.strength * engage * Math.exp(-(dx * dx + dy * dy) / (2 * r * r));
-          tx = (dx * w) / cssW;
-          ty = clamp((dy * w) / cssH, -DRIFT_Y_MAX, DRIFT_Y_MAX);
+          const w = D.driftStrength * engage;
+          tx = (w * (trailCx - CROSS_X * cssW)) / cssW;
+          ty = clamp((w * (trailCy - CROSS_Y * cssH)) / cssH, -DRIFT_Y_MAX, DRIFT_Y_MAX);
         }
         const k = Math.max(0.01, D.stiffness);
         const c = 2 * Math.max(0, D.damping) * Math.sqrt(k);
-        springAcc = Math.min(springAcc + dt, 0.25);
+        springAcc += dt;
         while (springAcc >= SPRING_STEP) {
           springAcc -= SPRING_STEP;
           drift.vx += (k * (tx - drift.x) - c * drift.vx) * SPRING_STEP;
@@ -778,8 +924,9 @@ export default function PS3Silk({
         }
 
         // Pacing: a frame every `frameMs`, a whole number of vsyncs near 33ms
-        // (60Hz: every 2nd, 120Hz: every 4th, 144Hz: every 5th), with half a
-        // vsync of slack for timestamp jitter. vsync is averaged over only
+        // (60Hz: every 2nd, 120Hz: every 4th, 144Hz: every 5th), or near 50ms
+        // while idle, with half a vsync of slack for timestamp jitter. vsync
+        // is averaged over only
         // the recent single-vsync intervals, so long frames can't inflate it:
         // the old running average crept up under hydration load and let
         // 120/144Hz displays drop to every 3rd vsync, mixing 25ms frames in
@@ -797,19 +944,23 @@ export default function PS3Silk({
             const v = rawIntervals[i];
             if (v > 2 && v < m * 1.5) { sum += v; n++; }
           }
-          if (n && m < 100) {
-            vsync = sum / n;
-            frameMs = vsync * Math.max(1, Math.round(FRAME_MS / vsync));
-          }
+          if (n && m < 100) vsync = sum / n;
         }
         rawLastT = ms;
+        const target = idle ? IDLE_FRAME_MS : FRAME_MS;
+        frameMs = vsync ? vsync * Math.max(1, Math.round(target / vsync)) : target;
         if (lastFrameT && ms - lastFrameT < frameMs - (vsync || 1000 / 60) / 2) return;
-        // Clamped so a stall (tab switch, long task) never lurches the spring.
-        const dt = lastFrameT ? Math.min(0.1, (ms - lastFrameT) / 1000) : FRAME_MS / 1000;
+        const real = lastFrameT ? (ms - lastFrameT) / 1000 : MAX_DT;
+        // Clamped to one paced frame, so a stall (long task, GC, hydration)
+        // slows everything for a frame instead of lurching it.
+        const dt = Math.min(real, Math.max(MAX_DT, frameMs / 1000));
         lastFrameT = ms;
 
         const P = paramsRef.current;
-        if (!reducedMotion) stepDrift(P.drift, dt, ms);
+        if (!reducedMotion) {
+          silkTime += dt;
+          stepDrift(P.drift, dt, stepTrail(real, dt, Math.max(0.05, P.drift.trailDecay)));
+        }
         const mixTarget = modeRef.current === 1 ? 1 : 0;
         const mixStep = dt / MODE_FADE;
         modeMix = reducedMotion ? mixTarget
@@ -827,35 +978,23 @@ export default function PS3Silk({
           // Dim fast, recover medium (time constants ~0.4s / ~0.9s).
           const tau = currentOpacity > targetOpacity ? 0.4 : 0.94;
           currentOpacity += (targetOpacity - currentOpacity) * (1 - Math.exp(-dt / tau));
+          if (Math.abs(targetOpacity - currentOpacity) < 1e-3) currentOpacity = targetOpacity;
         }
         if (reducedMotion) currentOpacity = targetOpacity;
 
-        render(ms);
+        render();
+        idle = trailLive === 0 && pendingStrength === 0 && modeMix === mixTarget
+          && !isIntro && currentOpacity === targetOpacity;
+        if (idle && !trailWarm && S && !reducedMotion) {
+          trailWarm = true;
+          warmUp(S.trail);
+        }
         // Reduced motion: time is frozen, so one frame is the whole picture.
         // Scroll / resize / click / wake restart the loop for a fresh frame.
         if (reducedMotion) stopLoop();
       }
 
-      // Compile, then warm up, then size the real buffers and draw the first
-      // visible frame, each in its own frame so none of them stack up into
-      // one long one. Start only if we're currently the visible work route;
-      // otherwise wait for the active→true wake (sizing to 0×0 on an
-      // about/archive first paint used to flatten the pattern for good).
-      const pending = beginGL();
-      const whenCompiled = () => {
-        initRaf = 0;
-        if (gl.isContextLost()) return;
-        if (!compiled(pending)) {
-          initRaf = requestAnimationFrame(whenCompiled);
-          return;
-        }
-        finishGL(pending);
-        initRaf = requestAnimationFrame(() => {
-          initRaf = 0;
-          if (activeRef.current) lifecycleRef.current?.wake();
-        });
-      };
-      initRaf = requestAnimationFrame(whenCompiled);
+      runSetup();
     }
 
     return () => {
