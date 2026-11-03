@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useDialKit } from "dialkit";
+import { useDialKitController } from "dialkit";
 import { introTimings } from "@/lib/introTimings";
 import { getHeroScrim, rasterizeHeroScrim, subscribeHeroScrim } from "@/lib/heroScrim";
 
@@ -63,20 +63,47 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
  * production `dialkit` resolves to lib/dialkit-prod.tsx, which returns these
  * defaults, so visitors never see controls.
  */
+// Cursor behaviours. Picking one in the panel writes its values into the
+// Drift dials, which stay tunable afterwards; the dials mean:
+//   wake    pointer speed lays down touches that part the ribbons behind the
+//           cursor. strength: px of parting; radius: touch size; decay: s a
+//           touch lives.
+//   well    while the pointer is over the hero the silk bends and lens-warps
+//           toward it, and lets go on leave. strength: px of pull; radius:
+//           well size; decay: s to let go; stiffness/damping: how the well
+//           follows the cursor.
+//   ripple  pointer speed emits rings that travel out and fade. strength: px
+//           of swell; radius: px a ring travels; decay: s a ring lives.
+// In every mode the ribbons' crossing hangs on a damped spring (stiffness,
+// damping) aimed `driftStrength` of the way at the effect, and `glow`
+// brightens the dots the effect touches.
+const PRESETS = {
+  wake: { strength: 30, radius: 130, decay: 1.4, stiffness: 10, damping: 1.0, driftStrength: 0.1, glow: 0.3 },
+  well: { strength: 150, radius: 250, decay: 2.5, stiffness: 14, damping: 1.0, driftStrength: 0.12, glow: 0.5 },
+  ripple: { strength: 14, radius: 300, decay: 1.8, stiffness: 10, damping: 1.0, driftStrength: 0.06, glow: 1.2 },
+} as const;
+type Preset = keyof typeof PRESETS;
+const DEFAULT_PRESET: Preset = "wake";
+const D0 = PRESETS[DEFAULT_PRESET];
+
 const SILK_DIALS = {
-  // Cursor input is a trail of touches sampled from the pointer's speed, so
-  // a still hover adds nothing. Each touch bows the ribbons away from it and
-  // rises and fades on a sine envelope over `trailDecay`, so the silk parts
-  // along the cursor's path like fabric. The same trail is the target of a
-  // damped spring on the ribbons' crossing: `driftStrength` x (where the
-  // trail is - crossing), easing back to rest a few seconds after it fades.
   drift: {
-    trailStrength: [12, 0, 40, 1],      // px, how far the ribbons part around the cursor's path
-    trailRadius: [120, 30, 300, 5],     // px, size of each touch
-    trailDecay: [1.0, 0.3, 3, 0.05],    // s, life of a touch
-    stiffness: [10, 0.5, 40, 0.5],      // spring responsiveness (1/s^2)
-    damping: [1.0, 0.2, 2, 0.05],       // damping ratio: 1 settles without overshoot, <1 sways
-    driftStrength: [0.13, 0, 0.6, 0.01], // share of the trail's offset the crossing follows
+    preset: {
+      type: "select",
+      options: [
+        { value: "wake", label: "Wake" },
+        { value: "well", label: "Gravity well" },
+        { value: "ripple", label: "Ripple" },
+      ],
+      default: DEFAULT_PRESET,
+    },
+    strength: [D0.strength, 0, 200, 1],       // px
+    radius: [D0.radius, 30, 400, 5],          // px
+    decay: [D0.decay, 0.3, 4, 0.05],          // s
+    stiffness: [D0.stiffness, 0.5, 40, 0.5],  // spring responsiveness (1/s^2)
+    damping: [D0.damping, 0.2, 2, 0.05],      // damping ratio: 1 settles without overshoot, <1 sways
+    driftStrength: [D0.driftStrength, 0, 0.6, 0.01], // share of the effect's offset the crossing follows
+    glow: [D0.glow, 0, 1.5, 0.05],            // extra dot brightness where the effect is
   },
   silk: {
     speed: [1.2, 0, 4, 0.05],
@@ -106,41 +133,57 @@ const MAX_DT = 1 / 30;      // s, simulation step ceiling (one paced frame)
 const MASK_TEXEL = 4;       // CSS px per scrim mask texel; the mask is a wide blur
 const SPRING_STEP = 1 / 120; // s, fixed physics step (frame-rate independent)
 const ENGAGE_TAU = 0.25;    // s, how fast the pull engages once the cursor moves
-const RELAX_S = 3;          // s, how slowly it lets go after the trail fades
+const WELL_TAU = 0.45;      // s, how fast the well deepens once the cursor is over the hero
+const RELAX_S = 3;          // s, how slowly the crossing lets go after the trail fades
+const SWITCH_S = 0.3;       // s, fade out / in around a preset switch
 const TRAIL_N = 16;          // touches in the ring
 const TRAIL_ATTACK = 0.3;   // share of a touch's life spent rising
-const TRAIL_SPEED = 900;    // px/s of pointer speed for a full-strength touch
+const RING_ATTACK = 0.12;   // same, for a ripple ring
+const RING_GAP = 0.16;      // s, minimum time between ripple rings
+const RING_WIDTH = 0.08;    // ring band, as a share of how far rings travel
+const WAKE_CLEAR = 0.85;    // share of the silk cleared right on the wake's path
+const RING_FLOOR = 0.12;    // luma a full ring adds off the ribbons, per unit of glow
+// Pointer speed (px/s) below which nothing is laid down, and the speed that
+// gives a full-strength touch.
+const SPEED_MIN = 60, SPEED_FULL = 760;
 // Rest position of the ribbons' crossing, in the drift's uv (y up).
 const CROSS_X = 0.5, CROSS_Y = 0.6;
 const DRIFT_Y_MAX = 0.12;   // uv; more squashes the ribbon amplitude visibly
 
 type SilkParams = {
   drift: {
-    trailStrength: number; trailRadius: number; trailDecay: number;
-    stiffness: number; damping: number; driftStrength: number;
+    preset: string;
+    strength: number; radius: number; decay: number;
+    stiffness: number; damping: number; driftStrength: number; glow: number;
   };
   silk: { speed: number; intensity: number; dotSize: number };
 };
+// Effect shader variants: wake and well share one (push away vs pull in).
+type Fx = "displace" | "ripple";
+const fxOf = (p: string): Fx => (p === "ripple" ? "ripple" : "displace");
 
 const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
 // Pass 1: ribbon brightness. In halftone mode one texel per dot cell (the
 // dots only read their cell centre), so the 8 ribbons and the trail are
 // evaluated ~9x less often than per pixel. Wave mode needs it per CSS pixel.
-// Built twice: with TRAIL while touches are alive, without it otherwise, so
-// the idle silk never pays for the trail loop (a uniform-false branch around
-// it still slowed every frame on software GL).
-const lumaFs = (trail: boolean) => `
+// Built once plain and once per cursor effect in use; the plain one runs
+// whenever no effect is alive, so the idle silk never pays for an effect
+// loop (a uniform-false branch around it still slowed every frame on
+// software GL).
+const lumaFs = (fx: Fx | null) => `
 precision highp float;
-${trail ? "#define TRAIL" : ""}
-#define TRAIL_N ${TRAIL_N}
-#ifdef TRAIL
-uniform vec3  uTrail[TRAIL_N]; // live touches first: xy CSS px (y up), z envelope x strength
-uniform float uTrailCount;
-uniform vec4  uTrailBox;     // live touches' bounds plus 3 radii (beyond that a push is < 0.02px)
-uniform float uTrailInvR2;   // 1 / radius^2
-uniform float uTrailGain;    // px of push per unit of d * gaussian
-uniform float uTrailMax;     // px
+${fx === "displace" ? "#define DISPLACE" : fx === "ripple" ? "#define RIPPLE" : ""}
+#define FX_N ${TRAIL_N}
+#if defined(DISPLACE) || defined(RIPPLE)
+uniform vec4  uFx[FX_N];     // live touches first: xy CSS px (y up), z envelope x strength, w ring radius px
+uniform float uFxCount;
+uniform vec4  uFxBox;        // live touches' reach (beyond it an effect is < 0.02px)
+uniform float uFxK;          // 1 / touch radius² (displace) or 1 / ring width (ripple)
+uniform float uFxGain;       // px of push per unit of profile; negative pulls in
+uniform float uFxMax;        // px, where the push saturates
+uniform float uGlow;
+uniform float uCore;         // displace: how much of the silk right on the path clears away
 #endif
 uniform float uTime;
 uniform vec2  uCssSize;
@@ -165,25 +208,40 @@ float wave(vec2 uv, float uvx, float spd, float freq, float amp,
 
 void main() {
   vec2 px = gl_FragCoord.xy * uTexel;
-  // Each touch moves this cell's sample point toward it along the gradient
-  // of a Gaussian, so ribbons near the cursor's path bow away from it. The
-  // push is zero at the touch itself and smooth everywhere, so the silk
-  // stretches instead of folding or tearing.
-#ifdef TRAIL
-  if (all(greaterThan(px, uTrailBox.xy)) && all(lessThan(px, uTrailBox.zw))) {
+  float fx = 0.0, fxCore = 0.0;
+  // Displace: each touch moves this cell's sample point toward it along the
+  // gradient of a Gaussian, so ribbons near it bow away (wake); a negative
+  // gain samples from farther out instead, drawing the silk in (well).
+  // Ripple: each ring moves sample points toward its centre within a soft
+  // band around its radius, so a swell travels out through the ribbons.
+  // Pushes are smooth everywhere and capped below the point where the
+  // mapping would fold, so the silk stretches instead of creasing.
+#if defined(DISPLACE) || defined(RIPPLE)
+  if (all(greaterThan(px, uFxBox.xy)) && all(lessThan(px, uFxBox.zw))) {
     vec2 push = vec2(0.0);
-    for (int k = 0; k < TRAIL_N; k++) {
-      if (float(k) >= uTrailCount) break;
-      vec3 t = uTrail[k];
+    float ring = 0.0; // summed touch / ring field, for the glow
+    float core = 0.0; // same, at half the radius
+    for (int k = 0; k < FX_N; k++) {
+      if (float(k) >= uFxCount) break;
+      vec4 t = uFx[k];
       vec2 d = px - t.xy;
-      float q = dot(d, d) * uTrailInvR2;
-      if (q < 9.0) push += d * (exp(-q) * t.z);
+#ifdef DISPLACE
+      float q = dot(d, d) * uFxK;
+      if (q < 9.0) { float a = exp(-q), g = a * t.z; push += d * g; ring += g; a *= a; core += a * a * t.z; }
+#else
+      float rho = length(d) + 1e-3;
+      float x = (rho - t.w) * uFxK;
+      if (abs(x) < 3.0) { float b = exp(-x * x) * t.z; push += d * (b / rho); ring += b; }
+#endif
     }
-    // Overlapping touches saturate smoothly toward uTrailMax (tanh), so a
-    // fast sweep never creases the ribbons where a hard clamp would kick in.
-    push *= uTrailGain;
-    float l = length(push) / uTrailMax + 1e-6;
-    px -= push * ((1.0 - 2.0 / (exp(2.0 * l) + 1.0)) / l);
+    // Overlapping touches saturate smoothly toward uFxMax (tanh), so a fast
+    // sweep never creases the ribbons where a hard clamp would kick in.
+    push *= uFxGain;
+    float l = length(push) / uFxMax + 1e-6;
+    float s = 1.0 - 2.0 / (exp(2.0 * l) + 1.0);
+    px -= push * (s / l);
+    fx = ring / (0.6 + ring);
+    fxCore = core / (0.3 + core);
   }
 #endif
   vec2 uv = px / uCssSize;
@@ -198,6 +256,18 @@ void main() {
   c += 0.62 * wave(uv,uvx,0.33,0.39,0.11,0.58,0.088,22.0,true);
   c += 0.32 * wave(uv,uvx,0.48,0.50,0.09,0.56,0.040,30.0,true);
   c += 0.14 * wave(uv,uvx,0.22,0.57,0.08,0.52,0.160,18.0,true);
+#if defined(DISPLACE) || defined(RIPPLE)
+  c *= 1.0 + uGlow * fx;
+#endif
+#ifdef DISPLACE
+  // Pushing away alone would magnify a ribbon the path runs along into a
+  // smear; clearing the core opens the silk behind the cursor instead.
+  c *= 1.0 - uCore * fxCore;
+#endif
+#ifdef RIPPLE
+  // A faint floor, so rings also show as a trace of dots off the ribbons.
+  c += uGlow * fx * ${RING_FLOOR.toFixed(3)};
+#endif
   gl_FragColor = vec4(clamp(c * uColorMax, 0.0, 1.0), 0.0, 0.0, 1.0);
 }`;
 
@@ -255,12 +325,23 @@ export default function PS3Silk({
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
 
-  const dk = useDialKit("PS3Silk", SILK_DIALS as never, {
-    id: "ps3-silk-drift-v4",
-    persist: { key: "ps3-silk-drift-v4", storage: "localStorage" },
-  }) as SilkParams;
+  const dkc = useDialKitController("PS3Silk", SILK_DIALS as never, {
+    id: "ps3-silk-drift-v5",
+    persist: { key: "ps3-silk-drift-v5", storage: "localStorage" },
+  }) as unknown as { values: SilkParams; setValues: (v: unknown) => void };
+  const dk = dkc.values;
   const paramsRef = useRef<SilkParams>(dk);
   useEffect(() => { paramsRef.current = dk; });
+  // Picking a preset writes its values into the dials (a saved session
+  // reloads with its own tuned values, not the preset's).
+  const presetRef = useRef(dk.drift.preset);
+  const { setValues } = dkc;
+  useEffect(() => {
+    const p = dk.drift.preset;
+    if (p === presetRef.current) return;
+    presetRef.current = p;
+    if (p in PRESETS) setValues({ drift: { ...PRESETS[p as Preset] } });
+  }, [dk.drift.preset, setValues]);
 
   const waveColorRef = useRef<[number, number, number]>(hexToRgb(waveColor));
   useEffect(() => { waveColorRef.current = hexToRgb(waveColor); }, [waveColor]);
@@ -326,18 +407,25 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    // Touch trail and crossing drift (see SILK_DIALS). Pointer in CSS px
-    // relative to the hero's top-left (y down), plus its viewport position
-    // (cx, cy; lx, ly at the last frame); touches in CSS px, y up, as the
-    // shader sees them; drift offset/velocity in uv.
-    const ptr = { x: 0, y: 0, cx: 0, cy: 0, lx: 0, ly: 0, over: false };
+    // Cursor effect and crossing drift (see PRESETS). Pointer in viewport
+    // px (cx, cy; lx, ly at the last frame), turned into hero CSS px (y up,
+    // as the shader sees it) each frame, so scrolling under a still pointer
+    // moves it with the page. Touches (wake, ripple) and the well in hero CSS
+    // px, y up; drift offset/velocity in uv.
+    const ptr = { cx: 0, cy: 0, lx: 0, ly: 0, over: false };
     const trail = new Float32Array(TRAIL_N * 4);  // x, y, age (s), strength
-    const trailGpu = new Float32Array(TRAIL_N * 3);
-    const trailBox = [0, 0, 0, 0];
-    let trailHead = 0, trailLive = 0, trailCredit = 1, pendingStrength = 0;
-    let trailCx = 0, trailCy = 0;
+    const fxGpu = new Float32Array(TRAIL_N * 4);
+    const fxBox = [0, 0, 0, 0];
+    let trailHead = 0, trailCredit = 1, pendingStrength = 0;
+    let fxLive = 0, fxCx = 0, fxCy = 0;
+    // The well's centre follows the pointer on the same spring as the drift.
+    const well = { x: 0, y: 0, vx: 0, vy: 0 };
     const drift = { x: 0, y: 0, vx: 0, vy: 0 };
     let engage = 0, springAcc = 0;
+    // Preset in effect, and a 0-1 gain that fades it out and the next one in
+    // when the panel switches presets.
+    let preset = paramsRef.current.drift.preset;
+    let fxGain = 1;
     let modeMix = modeRef.current === 1 ? 1 : 0; // 1 = halftone
     let rafId = 0;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
@@ -446,13 +534,16 @@ export default function PS3Silk({
       // Frame pacing (see frame()): recent rAF intervals, vsync estimate.
       const rawIntervals = new Float64Array(24);
       let rawIdx = 0, rawLastT = 0, vsync = 0, frameMs = FRAME_MS, lastFrameT = 0, idle = false;
-      let trailWarm = false;
 
       type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
+      // Effect programs: linked and warmed (ready), or compiling.
+      type FxProg = { prog: Prog | null; raw: WebGLProgram; warm: boolean };
       type GLState = {
-        luma: Prog; trail: Prog; comp: Prog; buf: WebGLBuffer;
+        luma: Prog; fx: Partial<Record<Fx, FxProg>>; comp: Prog; buf: WebGLBuffer;
         lumaTex: WebGLTexture; lumaFb: WebGLFramebuffer; maskTex: WebGLTexture;
       };
+      const RIBBON_U = ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"];
+      const FX_U = [...RIBBON_U, "uFx", "uFxCount", "uFxBox", "uFxK", "uFxGain", "uFxMax", "uGlow", "uCore"];
       let S: GLState | null = null;
       let luma = { w: 0, h: 0, texel: 0 };
       let mask = { w: 1, h: 1, dirty: true };
@@ -502,11 +593,13 @@ export default function PS3Silk({
       // report done, look up uniforms, warm up, then draw the first frame.
       // Starts only if we're the visible work route; otherwise the
       // active→true wake does it (sizing to 0×0 on an about/archive first
-      // paint used to flatten the pattern for good). The trail program is
+      // paint used to flatten the pattern for good). The effect program is
       // warmed later, once the silk first settles, so neither the intro nor
-      // the first hover pays for it.
+      // the first hover pays for it; another preset's variant is compiled
+      // the same way, in the background, when the panel picks it.
       function* setup(): Generator<void, void, void> {
-        const lp = program(lumaFs(false)), tp = program(lumaFs(true)), cp = program(COMPOSITE_FS);
+        const fx0 = fxOf(preset);
+        const lp = program(lumaFs(null)), tp = program(lumaFs(fx0)), cp = program(COMPOSITE_FS);
         yield;
         const buf = gl.createBuffer()!;
         gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -522,14 +615,13 @@ export default function PS3Silk({
         yield;
         const done = (p: WebGLProgram) => !parallel || gl.getProgramParameter(p, parallel.COMPLETION_STATUS_KHR);
         while (!(done(lp) && done(tp) && done(cp))) yield;
-        const ribbons = ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"];
         const C = linked(cp, ["uLuma", "uLumaUv", "uMask", "uMaskUv", "uPxToCss", "uModeMix", "uIntensity", "uIntensityWave", "uHalftoneSize", "uOpacity", "uWaveColor"]);
         gl.useProgram(C.p);
         gl.uniform1i(C.u.uLuma, 0);
         gl.uniform1i(C.u.uMask, 1);
         S = {
-          luma: linked(lp, ribbons),
-          trail: linked(tp, [...ribbons, "uTrail", "uTrailCount", "uTrailBox", "uTrailInvR2", "uTrailGain", "uTrailMax"]),
+          luma: linked(lp, RIBBON_U),
+          fx: { [fx0]: { prog: linked(tp, FX_U), raw: tp, warm: false } },
           comp: C, buf, lumaTex, lumaFb, maskTex,
         };
         luma = { w: 0, h: 0, texel: 0 };
@@ -540,9 +632,31 @@ export default function PS3Silk({
         if (activeRef.current) lifecycleRef.current?.wake();
       }
 
+      // The effect program for `f`, once it is linked and warmed; kicks off
+      // its compile (and later its warm-up) on first ask. Returns null until
+      // then.
+      function fxProgram(f: Fx): Prog | null {
+        if (!S) return null;
+        let e = S.fx[f];
+        if (!e) {
+          e = S.fx[f] = { prog: null, raw: program(lumaFs(f)), warm: false };
+          return null;
+        }
+        if (!e.prog) {
+          if (parallel && !gl.getProgramParameter(e.raw, parallel.COMPLETION_STATUS_KHR)) return null;
+          e.prog = linked(e.raw, FX_U);
+          return null;
+        }
+        if (!e.warm) {
+          e.warm = true;
+          warmUp(e.prog);
+          return null;
+        }
+        return e.prog;
+      }
+
       function runSetup() {
         cancelAnimationFrame(initRaf);
-        trailWarm = false;
         const steps = setup();
         const step = () => {
           initRaf = 0;
@@ -612,22 +726,27 @@ export default function PS3Silk({
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, S.lumaFb);
         gl.viewport(0, 0, luma.w, luma.h);
-        const r = Math.max(1, P.drift.trailRadius);
-        // One touch's push d/r * exp(-d²/r²) peaks at 0.4289 (at d = r/√2).
-        // Peaks above ~0.42r would let the push outrun the distance and
-        // fold the silk over itself, so the strength is capped there.
-        const peak = Math.min(P.drift.trailStrength, 0.42 * r);
-        const live = peak > 0 ? trailLive : 0;
-        const L = live ? S.trail : S.luma;
+        const D = P.drift;
+        const r = Math.max(1, D.radius);
+        const f = fxOf(preset);
+        // Displace: one touch's push (d/r) exp(-d²/r²) peaks at 0.4289 r (at
+        // d = r/√2). Pushing away folds the silk past ~0.42r, pulling in past
+        // ~0.96r, so the strength is capped below each. Ripple: a ring's
+        // radial push folds once it passes ~1.16x the band width.
+        const w = Math.max(8, RING_WIDTH * r);
+        const peak = Math.min(D.strength, f === "ripple" ? w : preset === "well" ? 0.8 * r : 0.42 * r) * fxGain;
+        const glow = Math.max(0, D.glow) * fxGain;
+        const L = fxLive && (peak > 0 || glow > 0) ? fxProgram(f) ?? S.luma : S.luma;
         gl.useProgram(L.p);
-        if (live) {
-          const m = 3 * r;
-          gl.uniform1f(L.u.uTrailCount, live);
-          gl.uniform4f(L.u.uTrailBox, trailBox[0] - m, trailBox[1] - m, trailBox[2] + m, trailBox[3] + m);
-          gl.uniform3fv(L.u.uTrail, trailGpu.subarray(0, live * 3));
-          gl.uniform1f(L.u.uTrailInvR2, 1 / (r * r));
-          gl.uniform1f(L.u.uTrailGain, peak / (0.4289 * r));
-          gl.uniform1f(L.u.uTrailMax, peak);
+        if (L !== S.luma) {
+          gl.uniform1f(L.u.uFxCount, fxLive);
+          gl.uniform4f(L.u.uFxBox, fxBox[0], fxBox[1], fxBox[2], fxBox[3]);
+          gl.uniform4fv(L.u.uFx, fxGpu.subarray(0, fxLive * 4));
+          gl.uniform1f(L.u.uFxK, f === "ripple" ? 1 / w : 1 / (r * r));
+          gl.uniform1f(L.u.uFxGain, f === "ripple" ? peak : (preset === "well" ? -peak : peak) / (0.4289 * r));
+          gl.uniform1f(L.u.uFxMax, Math.max(peak, 1e-3));
+          gl.uniform1f(L.u.uGlow, glow);
+          gl.uniform1f(L.u.uCore, preset === "wake" ? WAKE_CLEAR : 0);
         }
         gl.uniform1f(L.u.uTime, silkTime);
         gl.uniform2f(L.u.uCssSize, Math.floor(cssW), Math.floor(cssH));
@@ -714,22 +833,17 @@ export default function PS3Silk({
         if (reducedMotion && visible) startLoop();
       }
 
-      // Only records where the pointer is; the frame loop turns its speed
-      // into touches.
+      // Only records where the pointer is (`over`: on the page at all); the
+      // frame loop decides whether that is over the hero and turns its
+      // speed into touches.
       function onMouseMove(e: MouseEvent) {
-        if (reducedMotion || !activeRef.current || cssW < 2 || cssH < 2) return;
-        const x = e.clientX - pageLeft;
-        const y = e.clientY + scrollY - pageTop;
-        if (x < 0 || x > cssW || y < 0 || y > cssH * 1.15) {
-          ptr.over = false;
-          return;
-        }
-        // Speed is taken in viewport space, so scrolling under a still
-        // pointer adds nothing.
+        if (reducedMotion || !activeRef.current) return;
         if (!ptr.over) { ptr.lx = e.clientX; ptr.ly = e.clientY; ptr.over = true; }
         ptr.cx = e.clientX; ptr.cy = e.clientY;
-        ptr.x = x; ptr.y = y;
         startLoop();
+      }
+      function onMouseOut(e: MouseEvent) {
+        if (!e.relatedTarget) ptr.over = false;
       }
 
       function onPopState() {
@@ -789,6 +903,7 @@ export default function PS3Silk({
 
       window.addEventListener("resize", scheduledResize);
       window.addEventListener("mousemove", onMouseMove, { passive: true });
+      document.addEventListener("mouseout", onMouseOut, { passive: true });
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("popstate", onPopState);
       removeListeners = () => {
@@ -802,13 +917,14 @@ export default function PS3Silk({
         canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
         window.removeEventListener("resize", scheduledResize);
         window.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseout", onMouseOut);
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("popstate", onPopState);
       };
       teardownGL = () => {
         if (!S || gl.isContextLost()) return;
         gl.deleteProgram(S.luma.p);
-        gl.deleteProgram(S.trail.p);
+        for (const e of Object.values(S.fx)) if (e) gl.deleteProgram(e.raw);
         gl.deleteProgram(S.comp.p);
         gl.deleteBuffer(S.buf);
         gl.deleteTexture(S.lumaTex);
@@ -840,73 +956,123 @@ export default function PS3Silk({
       };
       lifecycleRef.current = { wake, pause };
 
-      // Touches are laid down at most every life/TRAIL_N seconds, so each
-      // lives out its whole envelope before the ring reuses its slot. A
-      // touch's strength is the fastest pointer speed seen since the last
-      // one. Ages everything, packs the live touches for the shader, and
-      // returns their summed strength.
-      function stepTrail(real: number, dt: number, life: number) {
+      function clearFx() {
+        trail.fill(0);
+        fxLive = 0;
+        pendingStrength = 0;
+        engage = 0;
+      }
+
+      // Wake and ripple. Touches are laid down at most every life/TRAIL_N
+      // seconds (ripple rings at least RING_GAP apart), so each lives out its
+      // whole envelope before the ring reuses its slot. A touch's strength is
+      // the fastest pointer speed over the hero since the last one. Ages
+      // everything, packs the live touches and their reach for the shader,
+      // and returns their summed strength.
+      function stepTrail(D: SilkParams["drift"], real: number, dt: number, hx: number, hy: number, inside: boolean) {
+        const life = Math.max(0.05, D.decay);
+        const ripple = preset === "ripple";
         if (ptr.over) {
           const v = Math.hypot(ptr.cx - ptr.lx, ptr.cy - ptr.ly) / Math.max(real, 1e-3);
           ptr.lx = ptr.cx; ptr.ly = ptr.cy;
-          pendingStrength = Math.max(pendingStrength, Math.min(1, (v / TRAIL_SPEED) ** 2));
+          if (inside) pendingStrength = Math.max(pendingStrength, clamp((v - SPEED_MIN) / (SPEED_FULL - SPEED_MIN), 0, 1));
         }
+        const attack = ripple ? RING_ATTACK : TRAIL_ATTACK;
+        const r = Math.max(1, D.radius), w = Math.max(8, RING_WIDTH * r);
         let n = 0, sum = 0, sx = 0, sy = 0;
-        trailBox[0] = trailBox[1] = Infinity;
-        trailBox[2] = trailBox[3] = -Infinity;
+        fxBox[0] = fxBox[1] = Infinity;
+        fxBox[2] = fxBox[3] = -Infinity;
         for (let k = 0; k < TRAIL_N; k++) {
           const i = k * 4;
           if (trail[i + 3] <= 0) continue;
           const m = (trail[i + 2] += dt) / life;
           if (m >= 1) { trail[i + 3] = 0; continue; }
-          const env = m < TRAIL_ATTACK
-            ? Math.sin((m / TRAIL_ATTACK) * Math.PI / 2)
-            : Math.sin((1 - (m - TRAIL_ATTACK) / (1 - TRAIL_ATTACK)) * Math.PI / 2);
+          const env = m < attack
+            ? Math.sin((m / attack) * Math.PI / 2)
+            : Math.sin((1 - (m - attack) / (1 - attack)) * Math.PI / 2);
           const s = env * trail[i + 3];
-          trailGpu[n * 3] = trail[i]; trailGpu[n * 3 + 1] = trail[i + 1]; trailGpu[n * 3 + 2] = s;
-          n++; sum += s; sx += s * trail[i]; sy += s * trail[i + 1];
-          trailBox[0] = Math.min(trailBox[0], trail[i]); trailBox[1] = Math.min(trailBox[1], trail[i + 1]);
-          trailBox[2] = Math.max(trailBox[2], trail[i]); trailBox[3] = Math.max(trailBox[3], trail[i + 1]);
+          // Rings travel out fast and slow down, like a swell on water.
+          const R = ripple ? r * (1 - (1 - m) * (1 - m)) : 0;
+          const reach = ripple ? R + 3 * w : 3 * r;
+          const x = trail[i], y = trail[i + 1];
+          fxGpu[n * 4] = x; fxGpu[n * 4 + 1] = y; fxGpu[n * 4 + 2] = s; fxGpu[n * 4 + 3] = R;
+          n++; sum += s; sx += s * x; sy += s * y;
+          fxBox[0] = Math.min(fxBox[0], x - reach); fxBox[1] = Math.min(fxBox[1], y - reach);
+          fxBox[2] = Math.max(fxBox[2], x + reach); fxBox[3] = Math.max(fxBox[3], y + reach);
         }
-        trailCredit = Math.min(1, trailCredit + (dt * TRAIL_N) / life);
+        const gap = ripple ? Math.max(RING_GAP, life / TRAIL_N) : life / TRAIL_N;
+        trailCredit = Math.min(1, trailCredit + dt / gap);
         if (trailCredit >= 1) {
           if (pendingStrength > 0.02) {
             trailCredit -= 1;
             const i = trailHead * 4;
-            trail[i] = ptr.x; trail[i + 1] = Math.floor(cssH) - ptr.y; trail[i + 2] = 0; trail[i + 3] = pendingStrength;
+            trail[i] = hx; trail[i + 1] = hy; trail[i + 2] = 0; trail[i + 3] = pendingStrength;
             trailHead = (trailHead + 1) % TRAIL_N;
           }
           pendingStrength = 0;
         }
-        trailLive = n;
-        if (sum > 0) { trailCx = sx / sum; trailCy = sy / sum; }
+        fxLive = n;
+        if (sum > 0) { fxCx = sx / sum; fxCy = sy / sum; }
         return sum;
       }
 
-      // Damped spring on the crossing offset, integrated in fixed steps so
-      // its feel doesn't depend on frame rate or dropped frames. The pull
-      // engages with the trail's strength and keeps aiming at where the
-      // trail last was while it lets go.
-      function stepDrift(D: SilkParams["drift"], dt: number, energy: number) {
-        const goal = Math.min(1, energy);
-        engage += (goal - engage) * (1 - Math.exp(-dt / (goal > engage ? ENGAGE_TAU : RELAX_S)));
-        if (goal === 0 && engage < 0.01) engage = 0;
+      // Damped springs, integrated in fixed steps so their feel doesn't
+      // depend on frame rate or dropped frames: the crossing offset (uv)
+      // aims `driftStrength` of the way at the effect while it is engaged,
+      // and the well (CSS px) follows the pointer while it is over the hero.
+      function stepSprings(D: SilkParams["drift"], dt: number, follow: boolean, hx: number, hy: number) {
         let tx = 0, ty = 0;
-        if (engage > 0 && cssW >= 2 && cssH >= 2) {
-          const w = D.driftStrength * engage;
-          tx = (w * (trailCx - CROSS_X * cssW)) / cssW;
-          ty = clamp((w * (trailCy - CROSS_Y * cssH)) / cssH, -DRIFT_Y_MAX, DRIFT_Y_MAX);
+        if (engage > 0) {
+          const s = D.driftStrength * engage;
+          tx = (s * (fxCx - CROSS_X * cssW)) / cssW;
+          ty = clamp((s * (fxCy - CROSS_Y * cssH)) / cssH, -DRIFT_Y_MAX, DRIFT_Y_MAX);
         }
         const k = Math.max(0.01, D.stiffness);
         const c = 2 * Math.max(0, D.damping) * Math.sqrt(k);
+        const h = SPRING_STEP;
         springAcc += dt;
-        while (springAcc >= SPRING_STEP) {
-          springAcc -= SPRING_STEP;
-          drift.vx += (k * (tx - drift.x) - c * drift.vx) * SPRING_STEP;
-          drift.vy += (k * (ty - drift.y) - c * drift.vy) * SPRING_STEP;
-          drift.x += drift.vx * SPRING_STEP;
-          drift.y += drift.vy * SPRING_STEP;
+        while (springAcc >= h) {
+          springAcc -= h;
+          drift.vx += (k * (tx - drift.x) - c * drift.vx) * h;
+          drift.vy += (k * (ty - drift.y) - c * drift.vy) * h;
+          drift.x += drift.vx * h;
+          drift.y += drift.vy * h;
+          if (!follow) continue;
+          well.vx += (k * (hx - well.x) - c * well.vx) * h;
+          well.vy += (k * (hy - well.y) - c * well.vy) * h;
+          well.x += well.vx * h;
+          well.y += well.vy * h;
         }
+      }
+
+      // One step of the cursor effect. Wake and ripple engage with their
+      // touches' strength and let go over RELAX_S; the well engages while
+      // the pointer is over the hero, whether or not it moves, holds where it
+      // was when the pointer leaves, and lets go over `decay`. Returns
+      // whether anything is still easing.
+      function stepFx(D: SilkParams["drift"], real: number, dt: number) {
+        const hx = ptr.cx - pageLeft, down = ptr.cy + scrollY - pageTop;
+        const inside = ptr.over && hx >= 0 && hx <= cssW && down >= 0 && down <= cssH * 1.15;
+        const hy = Math.floor(cssH) - down;
+        const isWell = preset === "well";
+        let goal: number, rise: number, fall: number;
+        if (isWell) {
+          if (inside && engage < 0.02) { well.x = hx; well.y = hy; well.vx = well.vy = 0; }
+          goal = inside ? 1 : 0; rise = WELL_TAU; fall = Math.max(0.05, D.decay);
+        } else {
+          goal = Math.min(1, stepTrail(D, real, dt, hx, hy, inside)); rise = ENGAGE_TAU; fall = RELAX_S;
+        }
+        engage += (goal - engage) * (1 - Math.exp(-dt / (goal > engage ? rise : fall)));
+        if (goal === 0 && engage < 0.005) engage = 0;
+        stepSprings(D, dt, isWell && inside, hx, hy);
+        if (!isWell) return fxLive > 0 || pendingStrength > 0;
+        const r = Math.max(1, D.radius);
+        fxLive = engage > 0 ? 1 : 0;
+        fxGpu[0] = fxCx = well.x; fxGpu[1] = fxCy = well.y; fxGpu[2] = engage; fxGpu[3] = 0;
+        fxBox[0] = well.x - 3 * r; fxBox[1] = well.y - 3 * r;
+        fxBox[2] = well.x + 3 * r; fxBox[3] = well.y + 3 * r;
+        return Math.abs(goal - engage) > 1e-3 || Math.hypot(well.vx, well.vy) > 2
+          || (inside && Math.hypot(hx - well.x, hy - well.y) > 0.5);
       }
 
       function frame(ms: number) {
@@ -957,9 +1123,19 @@ export default function PS3Silk({
         lastFrameT = ms;
 
         const P = paramsRef.current;
+        let fxBusy = false;
         if (!reducedMotion) {
           silkTime += dt;
-          stepDrift(P.drift, dt, stepTrail(real, dt, Math.max(0.05, P.drift.trailDecay)));
+          // A preset switch fades the current effect out, swaps once the new
+          // variant is compiled and warmed, then fades it back in.
+          const want = P.drift.preset in PRESETS ? P.drift.preset : DEFAULT_PRESET;
+          if (want !== preset) {
+            fxGain = Math.max(0, fxGain - dt / SWITCH_S);
+            if (fxProgram(fxOf(want)) && fxGain === 0) { preset = want; clearFx(); }
+          } else if (fxGain < 1) {
+            fxGain = Math.min(1, fxGain + dt / SWITCH_S);
+          }
+          fxBusy = stepFx(P.drift, real, dt) || want !== preset || fxGain < 1;
         }
         const mixTarget = modeRef.current === 1 ? 1 : 0;
         const mixStep = dt / MODE_FADE;
@@ -983,12 +1159,8 @@ export default function PS3Silk({
         if (reducedMotion) currentOpacity = targetOpacity;
 
         render();
-        idle = trailLive === 0 && pendingStrength === 0 && modeMix === mixTarget
-          && !isIntro && currentOpacity === targetOpacity;
-        if (idle && !trailWarm && S && !reducedMotion) {
-          trailWarm = true;
-          warmUp(S.trail);
-        }
+        idle = !fxBusy && modeMix === mixTarget && !isIntro && currentOpacity === targetOpacity;
+        if (idle && !reducedMotion) fxProgram(fxOf(preset));
         // Reduced motion: time is frozen, so one frame is the whole picture.
         // Scroll / resize / click / wake restart the loop for a fresh frame.
         if (reducedMotion) stopLoop();
