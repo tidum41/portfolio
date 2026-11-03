@@ -12,7 +12,8 @@
  *
  * MODE=startup instead profiles only the first 3s after the silk's first
  * on-screen draw: page rAF intervals, silk draw intervals (its 30fps
- * cadence), dropped frames, long tasks in that window, and how long the
+ * cadence, and its 20fps idle cadence once it settles, scored separately),
+ * dropped frames, long tasks in that window, and how long the
  * blocking WebGL calls (context, compile, link, uniform lookup, first draws)
  * held the main thread.
  */
@@ -267,6 +268,15 @@ function cadence(times, slot) {
   };
 }
 
+// The silk drops to 20fps once nothing is moving but the ribbons. Split its
+// frames where the closing run of ~50ms intervals starts (at least 5 of
+// them), so each part is scored against the slot it is paced to.
+function splitIdle(times) {
+  let i = times.length - 1;
+  while (i > 0 && times[i] - times[i - 1] >= 40 && times[i] - times[i - 1] <= 62) i--;
+  return times.length - 1 - i >= 5 ? i : times.length - 1;
+}
+
 // "+ms since silk start:interval" for every interval over `over`.
 function gaps(times, over, t0) {
   const out = [];
@@ -315,11 +325,17 @@ async function startupOnce(vp, run) {
   const glSetup = raw.gl.calls.filter(([t]) => t < t0 + 50);
   const sum = (names) => +glSetup.filter(([, , n]) => names.includes(n)).reduce((s, [, d]) => s + d, 0).toFixed(1);
   const glInWin = raw.gl.calls.filter(([t]) => inWin(t));
+  const idleAt = splitIdle(silkTimes);
   return {
     viewport: vp.name, run, errors,
     silkFirstDrawAt: Math.round(t0),
     page: cadence(pageTimes, 1000 / 60),
     silk: cadence(silkTimes, 1000 / 30),
+    // Same window for every build: before the idle drop can start.
+    silkFirst2s: cadence(silkTimes.filter((t) => t <= t0 + 2000), 1000 / 30),
+    silkIdleFromMs: idleAt < silkTimes.length - 1 ? Math.round(silkTimes[idleAt] - t0) : null,
+    silkActive: cadence(silkTimes.slice(0, idleAt + 1), 1000 / 30),
+    silkIdle: idleAt < silkTimes.length - 1 ? cadence(silkTimes.slice(idleAt), 1000 / 20) : null,
     longTasks: lt.length,
     longTaskMax: Math.round(Math.max(0, ...lt.map(([, d]) => d))),
     loafBlockingMs: Math.round(loaf.reduce((s, [, , bd]) => s + bd, 0)),
