@@ -1,17 +1,21 @@
+import type { ReactNode } from "react";
 import DialogueWordmark from "@/components/dialogue/product/DialogueWordmark";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
   /** Paper export frame (`section-6.html`: 922×540, 188px sidebar) for DS parity. */
   paperFrame?: boolean;
+  /** Round N: live content for the main body (the hero's chat). When given,
+      it replaces the skeleton stat grid and insights card. */
+  children?: ReactNode;
 };
 
-export default function StudyPageChrome({ paperFrame }: Props) {
+export default function StudyPageChrome({ paperFrame, children }: Props) {
   const nav = dialogueCopy.nav;
   const tabs = dialogueCopy.tabs;
 
   return (
-    <div className="dp-study-page-wrap" aria-hidden>
+    <div className="dp-study-page-wrap" aria-hidden={children ? undefined : true}>
       <div
         className={["dp-app-shell", paperFrame ? "dp-app-shell--paper-frame" : ""]
           .filter(Boolean)
@@ -44,6 +48,10 @@ export default function StudyPageChrome({ paperFrame }: Props) {
             </div>
           </header>
           <div className="dp-app-main__body">
+            {children ? (
+              <div className="dp-app-main__live">{children}</div>
+            ) : (
+              <>
             <div className="dp-app-stat-grid">
               {[
                 dialogueCopy.statTiles.completion,
@@ -68,6 +76,8 @@ export default function StudyPageChrome({ paperFrame }: Props) {
               </div>
               <div className="dp-app-chip" role="presentation">{dialogueCopy.mixedSentiment}</div>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>

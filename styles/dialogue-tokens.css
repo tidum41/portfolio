@@ -98,7 +98,8 @@
   --dp-search-bg: var(--ds-paper-10);
   --dp-nav-active-bg: var(--ds-stone-200);
   --dp-skeleton: var(--ds-stone-300);
-  --dp-clip-card-bg: var(--ds-paper-10);
+  /* Quote cards are Dialogue's grey stone well (stone-100), no border. */
+  --dp-clip-card-bg: var(--ds-stone-100);
   --dp-stat-tile-bg: var(--ds-white);
   --dp-suggestion: var(--ds-suggestion);
   --dp-brand: var(--ds-cherry-800);
@@ -278,4 +279,47 @@
 
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
+}
+
+/* Dark mode (round O fix): when the site is dark, the product figures go
+ * dark too. The same role tokens repoint at dark stone values; components
+ * do not change. Raw values live here, as everywhere in this file. */
+:root[data-theme="dark"] .dialogue-product-root,
+:root[data-theme="dark"] .dialogue-lead-answer,
+:root[data-theme="dark"] .dialogue-lib {
+  --dp-ink: #ece8e2;
+  --dp-muted: #a6a09b;
+  --dp-muted-light: #8f8a84;
+  --dp-faint: #6e6862;
+  --dp-border: #3a3631;
+  --dp-border-strong: #4d4841;
+  --dp-input-border: #3a3631;
+  --dp-surface: #232120;
+  --dp-bg: #1d1b1a;
+  --dp-warm: #2c2926;
+  --dp-card: #28251f;
+  --dp-app-bg: #171615;
+  --dp-sidebar-bg: #1d1b1a;
+  --dp-search-bg: #28251f;
+  --dp-nav-active-bg: #37332e;
+  --dp-skeleton: #3f3b36;
+  --dp-clip-card-bg: #37332d;
+  --dp-stat-tile-bg: #28251f;
+  --dp-brand-soft: #422633;
+  --dp-warn-bg: #3d3013;
+  --dp-warn-fg: #f0bd55;
+
+  --dp-funnel-track: #37332d;
+  --dp-funnel-bar-dark: #a6a09b;
+
+  --dp-chart-track: #37332d;
+  --dp-chart-gridline: rgb(255 255 255 / 0.08);
+  --dp-chart-baseline: #3a3631;
+  --dp-chart-muted: #a6a09b;
+  --dp-chart-muted-alt: #d6d3d1;
+  --dp-chart-series-alt-fill: #57534d;
+  --dp-chart-label-color: #a6a09b;
+  --dp-chart-value-color: #ece8e2;
+  --dp-chart-card-border: #3a3631;
+  --dp-anatomy-line: #4d4841;
 }

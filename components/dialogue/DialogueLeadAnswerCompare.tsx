@@ -24,11 +24,12 @@ type Option = {
 };
 
 type Props = {
-  heading: string;
-  subheading: string;
+  heading?: string;
+  subheading?: string;
   question?: string;
   options: Option[];
-  chosenId: string;
+  /** Round O: optional. Without it no panel is marked chosen (no pill, no ring). */
+  chosenId?: string;
   annotateRaster?: RasterAnnotator;
 };
 
@@ -100,10 +101,14 @@ export default function DialogueLeadAnswerCompare({
 }: Props) {
   return (
     <div className="dialogue-lead-answer">
-      <p className="dialogue-caption dialogue-caption--block">
-        <span className="dialogue-caption__label">{heading}</span>
-        <span className="dialogue-caption__sentence">{subheading}</span>
-      </p>
+      {heading ? (
+        <p className="dialogue-caption dialogue-caption--block">
+          <span className="dialogue-caption__label">{heading}</span>
+          {subheading ? (
+            <span className="dialogue-caption__sentence">{subheading}</span>
+          ) : null}
+        </p>
+      ) : null}
       {question ? (
         <div
           className={`dialogue-lead-answer__question dialogue-product-root dp-chat-panel-typography ${dialogueProductFontClassName}`}
