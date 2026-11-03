@@ -259,7 +259,7 @@ const TEMPLATES: Template[] = [
     carbon: "simple bar chart",
     note: "Count out of each group",
     target: ".dp-chart-bars__row:first-child",
-    cut: <>14 new and 125 repeat shoppers, two groups within the 300, each out of its own size. The other 161: <span className="dlg-ph">[PLACEHOLDER: why they are in neither group]</span></>,
+    cut: "14 new and 125 repeat shoppers, two groups within the 300, each out of its own size",
     pro: "Each row says how many people it rests on.",
     con: "Exact comparison across rows is a little slower.",
     card: (open, onOpen) => <GroupChart open={open} onOpen={onOpen} />,
@@ -470,7 +470,7 @@ function AnswerRows() {
 }
 
 /* Round 11 item 3: the near-miss behind the thin flag. A bar for two people fills its track, so it reads as a finding.
-   The total behind it is not on the page, so it stays a visible placeholder. Neutral, like every frame that is not the 225. */
+   Its track is scaled to the two shoppers who said it. Neutral, like every frame that is not the 225. */
 function ThinNearMiss() {
   return (
     <StaticFigure figure="thin-bar" className="dlg-thin-miss">
@@ -479,7 +479,7 @@ function ThinNearMiss() {
           <ChartBarList
             rows={[{ label: "Missed a delivery", value: 2, display: "2", focal: true }]}
             max={2}
-            note={<>Out of <span className="dlg-ph">[PLACEHOLDER: total behind this bar]</span></>}
+            note="Out of 2 shoppers"
           />
         </ChartVizCard>
       </div>
@@ -500,11 +500,11 @@ function CountsExplored() {
   return (
     <StaticFigure figure="counts-explored" className="dlg-thin-miss dlg-counts-x">
       <div className="dlg-match__half">
-        <p className="dlg-match__tag">Two bars, side by side</p>
+        <p className="dlg-match__tag">First: two bars, side by side</p>
         {panel(<ChartBarList vertical rows={rows} max={FRIDAY_TOTAL} note={note} />)}
       </div>
       <div className="dlg-match__half">
-        <p className="dlg-match__tag">Two bars, stacked</p>
+        <p className="dlg-match__tag">Next: two bars, stacked</p>
         {panel(<ChartBarList rows={rows} max={FRIDAY_TOTAL} note={note} />)}
       </div>
     </StaticFigure>

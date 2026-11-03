@@ -2,6 +2,40 @@
 
 Written in my own voice so I can explain each one in an interview. Each entry holds the decision, what else I tried, why this one, and what would make me revisit it. Newest first.
 
+## Round 19
+
+### The page runs Problem, Levels with Clips, Counts, Data viz with Thin data, Shipped, Takeaway
+
+**Decision.** Six sections in that order. Clips is now the last beat of Levels, and Thin data is the closing rule of Data viz. **Tried.** The old eight sections, where Counts, Clips and Thin data each repeated an explored-then-kept beat. **Why.** Both reviews read the page as a tour of one card from top to bottom. Putting the deepest level inside Levels finishes the depth story in one place, and putting the thin-data gate inside Data viz makes it the chart section's last rule, because it decides when a chart appears. **Revisit.** If Levels gets too long to skim, Clips goes back to its own short section.
+
+### The Problem is about speed against depth, and says the scenario is illustrative
+
+**Decision.** The Problem's first line says Priya and Hearthside are an illustrative scenario with invented data. The body says a fast answer and a deep one pull apart. The "every claim shows how many people hold it" principle is gone, and the constraint line sits under the figure. **Tried.** Keeping the principle and adding a label. **Why.** The principle promised a count on every claim, which is a different product from the page's spine of a fast answer with depth on a tap. A named persona with a deadline reads as fieldwork unless the first line says otherwise. **Revisit.** If the label feels defensive, I would shorten it and keep the per-figure captions.
+
+### Counts opens with the 8 versions and ends on the shipped bar
+
+**Decision.** Counts starts with "the answer format took 8 versions to settle", then shows the early versions (two bars side by side, then stacked) in one frame and the shipped bar under it, with no A and B letters and no check or cross rows. **Tried.** Another explored and kept pair. **Why.** The pair already appears in Levels and in Thin data, and a bar shape is a smaller decision than where depth lives. A sequence reads as iteration. The single bar came from iterating, so it is an iteration choice and nothing here is called a failure. **Revisit.** If a reader wants the reason each version fell away, I would add a line per step.
+
+### Data viz leads with the bar-or-rows rule
+
+**Decision.** The first thing in Data viz is the rule (two short groups fit one bar; three or more groups, or a label over 26 characters, get one row each) and its figure. The template library is second and the thin-data pair closes it. The Carbon paragraph is cut to one line. **Tried.** Leading with the template library. **Why.** The rule is the most concrete decision on the page, measured in the 448px panel, and the library grid shows less judgment than one rule that switches the chart. **Revisit.** If someone asks who picks the template, I would add the override answer once I have it.
+
+### Visible placeholders leave the page and go to OPEN-QUESTIONS
+
+**Decision.** The Team row, the quote-picking line, the model-versus-rules line, the Carbon line, the cutoff reason and the signal line are off the page, plus two placeholders inside chart cards. They are logged in `design/OPEN-QUESTIONS.md`. The Takeaway keeps its one placeholder. **Tried.** Leaving them as markers. **Why.** A visible blank at the top of the page costs more than a missing row, and a claim with a blank under it reads as assertion without judgment. **Revisit.** Each returns when Mudit has the answer.
+
+### Where Levels B starts is "the insight"
+
+**Decision.** The kept option reads "Opens at the insight, with the count", matching the video label and the caption that one tap on Insight brings the count back. **Tried.** "Starts at the count". **Why.** The page used two words for one place. The count is part of the insight, so one word is enough. **Revisit.** If Counts and Levels are read separately, the count could get its own level.
+
+### Illustrative data is back on every mock figure, and 04:10 to 04:24 appears once
+
+**Decision.** Each figure caption ends with "Illustrative data." The clip caption no longer repeats the clip's time range. **Tried.** Only the Problem label. **Why.** The P15 removal let 225 of 300 read as a real result. Captions sit next to the figure a skimmer is looking at. The range was in the body and the caption, which gave a loading detail twice the weight of the shipped bar. **Revisit.** If the repeated caption sentence feels heavy, I would keep it on the first figure of each section only.
+
+### The Takeaway keeps one placeholder and ends on the Levels reversal
+
+**Decision.** The Takeaway is one spine line, "Fast and deep can share one answer when depth waits for a tap", then a placeholder for Mudit's own learning about the reversal in Levels. The old sentence repeated the hero. `DIALOGUE_SUBTITLE` no longer says "every answer shows the interviews behind it". **Why.** The learning has to be in Mudit's words, and the reversal is the page's one real turn. The old subtitle carried the retired framing. **Revisit.** When the learning is written, the spine line may go.
+
 ## Round 18
 
 ### The hero ties Ana's quote to the 225 with a head line, a selected pill and the segment's fill

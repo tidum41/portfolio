@@ -4403,3 +4403,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   .dlg-templates--pairs { padding: var(--space-3) var(--space-2); }
   .dlg-templates--pairs .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-2); padding: var(--space-3) 0; }
 }
+
+/* Round 19: the constraint line moves under the problem figure, so it needs air below the caption. */
+.cs-caption + .dlg-constraint { margin-top: var(--space-3); }
