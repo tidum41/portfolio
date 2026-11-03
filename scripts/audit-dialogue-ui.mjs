@@ -15,16 +15,16 @@ const DEMOS = only.length ? only.filter((d) => d !== "answer") : ["hero", "side"
 
 /** What each demo exposes, in order: a setup that reveals the clickables, then their selectors. */
 const SCENES = {
-  hero: [{ setup: "d.send(); d.answer();", wait: 2200, targets: ['[data-target="side-friday"]', '[data-target="side"]'] }],
+  hero: [{ setup: "d.send(); d.answer();", wait: 2200, targets: ['[data-target="side-friday"]', '[data-target="side"]'] }, { setup: "d.ana();", wait: 1200, targets: ['[data-target="quote-ana"]'] }],
   side: [
     { setup: "", targets: ['[data-target="side-friday"]', '[data-target="side"]', '[data-target="quote-ana"]'] },
     { setup: "d.side('unsure');", wait: 900, targets: ['[data-target="side-collapse"]', '[data-target="quote-mei"]', '[data-target="side-friday"]'] },
   ],
   clip: [{ setup: "", targets: ['[data-target="quote-ana"]', '[data-target="side-collapse"]'] }, { setup: "d.clip(true);", wait: 900, targets: [".dp-qplayer__btn"] }],
   every: [{ setup: "d.side('unsure');", wait: 900, targets: ['[data-target="side"]', '[data-target="quote-mei"]', '[data-target="side-collapse"]'] }],
-  toggles: [{ setup: "d.level(3);", wait: 1100, targets: ['[data-target="level-0"]', '[data-target="level-1"]', '[data-target="level-2"]', '[data-target="level-3"]', '[data-target="quote-ana"]', ".dlg-dur[data-play]"] }],
+  toggles: [{ setup: "d.level(2);", wait: 1100, targets: ['[data-target="level-0"]', '[data-target="level-1"]', '[data-target="level-2"]', '[data-target="quote-ana"]', ".dlg-dur[data-play]"] }],
   thin: [{ setup: "d.thin();", wait: 1500, targets: ['[data-target="chip-0"]', '[data-target="chip-1"]'] }],
-  picker: [{ setup: "d.type(80);", wait: 1200, targets: ['[data-target="depth-0"]', '[data-target="depth-1"]', '[data-target="depth-2"]', '[data-target="depth-3"]', '[data-target="send"]'] }],
+  picker: [{ setup: "d.type(80);", wait: 1200, targets: ['[data-target="depth-0"]', '[data-target="depth-1"]', '[data-target="depth-2"]', '[data-target="send"]'] }],
 };
 /** Demos whose answer card carries the two-segment bar (layout-shift is measured on it). */
 const BAR_DEMOS = { hero: "d.send(); d.answer();", side: "", every: "", toggles: "d.level(2);", picker: "d.pick(1); d.send(); d.answer();" };

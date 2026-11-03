@@ -25,7 +25,7 @@ export function AnswerCard({ segment = false, onSide, sideOpen = false, chart = 
   const lead = Math.round((groups[0].value / total) * 10000) / 100;
   const bar = rows ? (
     <div className="dlg-answer--rows" data-layout="rows">
-      <ChartBarList max={total} rows={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, focal: g.focal }))} />
+      <ChartBarList max={total} rows={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, pct: `${Math.round((g.value / total) * 100)}%`, focal: g.focal }))} />
     </div>
   ) : (
       <div className="dlg-live__bar" data-layout="bar" data-side={sideOpen || undefined}>

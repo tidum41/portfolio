@@ -137,12 +137,12 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="hero">
-                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 brings Ana's quote under it" />
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 brings Ana's quote under it, with pills for the others in that group" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
             </div>
-            <Caption>The final answer: 225 of 300 shoppers, and tapping the 225 brings Ana&rsquo;s quote under it. Recorded from my live code recreation.</Caption>
+            <Caption>The final answer: 225 of 300 shoppers. Tapping the 225 brings Ana&rsquo;s quote under it, with a pill for each other person in that group. Recorded from my live code recreation.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
@@ -203,12 +203,12 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
                     <DialogueRachelFrame tone="solution">
-                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Each toggle adds one level under it, and tapping Ana plays her clip." />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Chart and People each add one level under it, and every quote already carries its play button." />
                     </DialogueRachelFrame>
                   </div>
                 </div>
               </figure>
-              <Caption>In B the toggles stay above the open clip, so one tap on Insight brings the count back.</Caption>
+              <Caption>In B the toggles stay where they are, so one tap on Insight brings the count back.</Caption>
             </Section>
 
             <Section id="counts">
@@ -248,7 +248,7 @@ export function DialogueCaseStudyContent({
               <ClaimH2>A quote plays from its moment, inside the answer</ClaimH2>
               <StatusLine>Concept</StatusLine>
               <CaseStudyBody>
-                The source is the deepest level and the heaviest to load, so the clip loads only on a tap and starts at the moment the quote was said.
+                The clip is the deepest level and the heaviest to load, so it loads only when a quote&rsquo;s play button is tapped and starts at the moment the quote was said.
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">

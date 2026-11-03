@@ -4021,14 +4021,17 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-templates__reason { margin: 0; }
 .dlg-templates__people { margin-top: 0; }
 /* Item 11: the share shows on hover, muted after the row label; the count column never moves. */
-.dp-chart-bars__pct { margin-left: 8px; white-space: nowrap; color: var(--dp-muted); opacity: 0; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
-.dp-chart-bars__row:hover .dp-chart-bars__pct { opacity: 1; }
+/* Round 18: a row that carries a share swaps its count for it on hover; both sit in one grid cell, so the column never moves. */
+.dp-chart-bars__value:has(.dp-chart-bars__v-share) { display: inline-grid; justify-items: end; }
+.dp-chart-bars__value > span { grid-area: 1 / 1; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dp-chart-bars__v-share { opacity: 0; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-share { opacity: 1; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-count { opacity: 0; }
 @media (max-width: 600px) {
   .dlg-templates { padding: 24px 16px; }
   .dlg-templates__stage { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
   .dlg-templates__note { transform: none; flex-direction: row; padding-left: 16px; }
 }
-.dlg-live__bars:has(.dlg-live__bar-hit:hover) .dp-chart-bars__row:first-child .dp-chart-bars__pct { opacity: 1; }
 /* P15 hero root cause: the hero figure kept the body figures' 24px top margin, so a band of CSS well showed above the
    recording. The hero frame is now the recording edge to edge, clipped to the frame's radius. */
 .dialogue-case-study .cs-hero-media-frame .cs-figure { margin: 0; }
@@ -4276,33 +4279,17 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-live__bar .dp-chart-stack__seg:first-child { border-radius: calc(var(--ds-radius-xs) * 2) 0 0 calc(var(--ds-radius-xs) * 2); }
 .dlg-live__bar .dp-chart-stack__seg:last-child { border-radius: 0 calc(var(--ds-radius-xs) * 2) calc(var(--ds-radius-xs) * 2) 0; }
 .dlg-live__bar .dp-chart-stack__seg { position: relative; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
-.dlg-live__bar .dp-chart-stack__seg::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--dp-chart-muted); opacity: 0; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
-.dlg-live__bar .dp-chart-stack__seg[data-focal]::after { background: var(--dp-chart-focal); }
-.dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal]::after,
-.dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal])::after { opacity: 0.4; }
-.dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal]::after,
-.dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal])::after { opacity: 1; }
-/* The 225 recedes when the 75 is open (colour mix, so its marker and hover still read). */
-.dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 35%, var(--dp-surface)); }
-.dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-focal] { opacity: 0.35; }
 /* Hover darkens the segment toward ink; press darkens it again. A receded 225 comes back to 65%. */
 .dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
 .dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink)); }
-.dlg-live__bar[data-side="unsure"]:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 65%, var(--dp-surface)); }
 .dlg-live__bar:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink)); }
 .dlg-live__bar:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink)); }
-.dlg-live__bar[data-side="unsure"]:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-surface)); }
 /* The legend names the open group in ink; no weight change, so no width change. */
 .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
 .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label { color: var(--dp-ink); }
 /* Legend swatch: its bottom sits on the text baseline and its height is the 12px cap height (8px), so it lines up with the digits. */
 .dp-chart-stack__lane { align-items: baseline; gap: 8px; }
 .dp-chart-stack__lane .dp-chart-stack__swatch { width: 8px; height: 8px; }
-/* The rows under a segment carry its hue on their left edge. */
-.dlg-stage__sample[data-side="friday"] .dp-clip-quote, .dlg-live__sample[data-side="friday"] .dp-clip-quote { box-shadow: inset 2px 0 0 var(--dp-chart-focal); }
-.dlg-stage__sample[data-side="unsure"] .dp-clip-quote { box-shadow: inset 2px 0 0 var(--dp-chart-muted); }
-.dlg-stage__sample[data-side="friday"] .dp-clip-quote--selected, .dlg-live__sample[data-side="friday"] .dp-clip-quote--selected { box-shadow: inset 0 0 0 1px var(--dp-clip-focal-border), inset 2px 0 0 var(--dp-chart-focal); }
-.dlg-stage__sample[data-side="unsure"] .dp-clip-quote--selected { box-shadow: inset 0 0 0 1px var(--dp-clip-focal-border), inset 2px 0 0 var(--dp-chart-muted); }
 /* Rows in a take behave like product rows: hover tints and inks the edge, press darkens, the play chip follows. */
 .dlg-stage .dp-clip-quote { cursor: pointer; }
 .dlg-stage .dp-clip-quote--selected { cursor: default; }
@@ -4363,3 +4350,56 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-viz-options { font-family: var(--font-sans); }
 .dlg-viz-options .dlg-templates__panel { padding: 0; }
 .dlg-viz-options .dlg-match__chart { align-items: stretch; text-align: left; }
+
+/* ---- Round 18 (Mudit, Nov 3 2026) ----
+   Selection is carried by what the system already has: the segment's fill, the head line naming the group with its swatch,
+   and the legend in ink. The 2px marker under the bar and the coloured left edge on quote rows are gone. Whichever segment
+   is not open steps down to stone-300, in both directions, so no off-ramp tint of cherry is drawn and nothing is receded
+   on one side only. Hover and press bring a stepped-down segment back to its own colour. */
+.dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal] { background: var(--ds-stone-300); }
+.dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-index][data-focal],
+.dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__swatch[data-index]:not([data-focal]) { background: var(--ds-stone-300); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-index][data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg[data-index]:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-index][data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg[data-index]:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink)); }
+/* The open group's quotes line names it with the same swatch the legend uses; the head line is the one tie to the rows. */
+.dlg-stage__sample[data-side="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
+
+/* Round 18 hero options: the pills and chip rows show in the stage (the stage hides the Sample's "+N more" pill elsewhere). */
+.dlg-stage .dlg-stage__sample[data-hero] .dp-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 0; }
+.dlg-stage__sample[data-hero] .dp-sources .dlg-sample-key { margin: 0 -4px 0 0; }
+.dlg-hero-options { display: flex; gap: 40px; align-items: flex-start; padding: 40px; background: var(--figure-well-dialogue); min-width: max-content; }
+.dlg-hero-options__col { display: flex; flex-direction: column; gap: 16px; width: 423px; }
+.dlg-hero-options__name { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--color-text-primary); }
+.dlg-hero-options .dlg-stress__tag { color: var(--color-text-secondary); }
+.dlg-hero-options__panel { box-sizing: border-box; padding: 16px; border-radius: var(--dp-radius-control); background: var(--dp-surface); box-shadow: var(--shadow-chat); }
+.dlg-hero-options__panel .dlg-stage__body { display: flex; flex-direction: column; gap: 16px; }
+
+/* Round 18: the thin card's info icon carries the reason in the existing tooltip chip. */
+.dlg-info { position: relative; display: inline-flex; flex: 0 0 auto; padding: 12px 12px 12px 16px; margin: -12px -12px -12px -16px; border-radius: var(--dp-radius-chip); outline: none; cursor: default; }
+.dlg-info:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 0; }
+.dlg-info .dlg-info__tip { left: calc(100% - 4px); top: 50%; bottom: auto; transform: translateY(-50%); width: max-content; max-width: 264px; white-space: normal; z-index: 3; opacity: 0; visibility: hidden; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), visibility 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-info:hover .dlg-info__tip, .dlg-info:focus-visible .dlg-info__tip { opacity: 1; visibility: visible; }
+
+/* Round 18: hovering a stacked bar switches its legend from counts to shares. Both live in one grid cell, so the lane never changes width. */
+.dp-chart-stack__lane-value { display: inline-grid; justify-items: end; }
+.dp-chart-stack__lane-value > span { grid-area: 1 / 1; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dp-chart-stack__lane-share { opacity: 0; }
+.dp-chart-stack:hover .dp-chart-stack__lane-share, .dlg-live__bar:hover .dp-chart-stack__lane-share { opacity: 1; }
+.dp-chart-stack:hover .dp-chart-stack__lane-count, .dlg-live__bar:hover .dp-chart-stack__lane-count { opacity: 0; }
+
+/* Round 18: the data viz figure breathes. Its spacing comes from the page scale (--space-*, 8/16/24/32/48): 48 between the
+   question and its chart rows, 32 above and below each row, 16 between a chart and its line. */
+.dlg-templates--pairs { gap: var(--space-4); padding: var(--space-4) var(--space-5) var(--space-5); }
+.dlg-templates--pairs .dlg-match { grid-template-columns: 176px minmax(0, 1fr); column-gap: var(--space-4); padding: var(--space-4) 0; }
+.dlg-templates--pairs .dlg-match:last-child { padding-bottom: var(--space-1); }
+.dlg-templates--pairs .dlg-match__why { gap: var(--space-1); }
+.dlg-templates--pairs .dlg-match__chart { gap: var(--space-2); }
+.dlg-templates--pairs .dlg-templates__panel { gap: var(--space-2); }
+@media (max-width: 600px) {
+  .dlg-templates--pairs { padding: var(--space-3) var(--space-2); }
+  .dlg-templates--pairs .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-2); padding: var(--space-3) 0; }
+}

@@ -15,6 +15,7 @@ import { QUOTE_LIST_NEW } from "@/lib/dialogue/product/sampleData";
 import { ArrowRight, Check, X } from "@phosphor-icons/react/dist/ssr";
 import { formatChartPercent } from "@/components/dialogue/product/chart/chartSpec";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
+import { THIN_FLAG, THIN_TIP } from "@/lib/dialogue/product/thinCopy";
 
 function Specimen({
   entryId,
@@ -409,18 +410,18 @@ function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
     <div className={`dialogue-rachel-frame dialogue-rachel-frame--solution dlg-templates dlg-templates--pairs dlg-templates--${layout}`}>
       <p className="dlg-flow">The shape of the question picks the chart. Fewer than 3 people gets a flag instead.</p>
       <div className="dlg-matches" role="list">
-        <MatchRow ask="How many read it which way?" name="Split" line={`Each side shows its count out of ${FRIDAY_TOTAL}.`}>
+        <MatchRow ask="How many read it which way?" name="Split" line={`Each side shows its count out of ${FRIDAY_TOTAL}. Hover for the percent.`}>
           <MatchPanel>
             <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
               <ChartStackedBar lanes total={FRIDAY_TOTAL} segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))} />
             </ChartVizCard>
           </MatchPanel>
         </MatchRow>
-        <MatchRow ask="What did people ask for?" name="Ranked" line={`Longest bar first, each count out of ${FRIDAY_TOTAL}.`}>
+        <MatchRow ask="What did people ask for?" name="Ranked" line={`Longest bar first, each count out of ${FRIDAY_TOTAL}. Hover a row for its percent.`}>
           <MatchPanel neutral>
             <ChartVizCard title="What shoppers asked for after checkout, top five">
               <div className="dlg-answer--rows">
-                <ChartBarList max={TOP_ASKS[0].value} rows={TOP_ASKS.map((r, i) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}`, focal: i === 0 }))} />
+                <ChartBarList max={TOP_ASKS[0].value} rows={TOP_ASKS.map((r, i) => ({ label: r.label, value: r.value, display: `${r.value} of ${FRIDAY_TOTAL}`, pct: pctOf(r.value, FRIDAY_TOTAL), focal: i === 0 }))} />
               </div>
             </ChartVizCard>
           </MatchPanel>
@@ -429,8 +430,11 @@ function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
           <MatchPanel neutral>
             <ChartVizCard title="Two of 300 shoppers said they missed a delivery.">
               <div className="dp-low-signal">
-                <InfoCircleIcon className="dp-low-signal__icon" />
-                <p className="dp-low-signal__text">Early signal, 2 people. A chart needs 3 or more.</p>
+                <span className="dlg-info" tabIndex={0} aria-describedby="dlg-flag-tip">
+                  <InfoCircleIcon className="dp-low-signal__icon" />
+                  <span id="dlg-flag-tip" role="tooltip" className="dp-hero-tooltip dlg-info__tip">{THIN_TIP}</span>
+                </span>
+                <p className="dp-low-signal__text">{THIN_FLAG}</p>
               </div>
             </ChartVizCard>
           </MatchPanel>

@@ -267,3 +267,12 @@ Distinct rounds only. No per-patch entries. Newest first. Previews are behind Ve
 - Why: dialogue-v2 brief, DLG-14 to DLG-20, DLG-26.
 - Preview: https://portfolio-n6p0w6bow-mudits-projects-d560e6b3.vercel.app (tip 9f220ec, includes 826bc80)
 - Image: ![v2](img/826bc80-hero.webp) after only, no before captured.
+
+## Page (cloud), Nov 3 2026, round 18
+
+- **Hero:** Ana's quote sits under a head line naming the 225, with source pills for the other people in the group and no coloured edge. Three builds on `/dialogue/hero-options`; B is on the page.
+- **Every, Toggles, Counts:** the 75 and 225 step to stone-300 when the other opens, no underline, no hue on rows, no cherry outline on the open row; the first tap lands in about a second.
+- **Source is gone as a level:** every quote row is a play button already.
+- **Data viz:** page-scale spacing; hover swaps counts for percents.
+- **Thin:** info-icon tooltip and shorter flag copy.
+- Reasons for each are in `design/notes/decisions.md`.

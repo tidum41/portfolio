@@ -63,3 +63,11 @@ Test only; the page still plays the current Every and Toggles takes. For Paper, 
 - **Data viz:** three rows (split bar, ranked bars, flag), one line under each chart; Split carries the one cherry. By group and the awkward-shape frames are off the page, so there is no teal series on the page.
 - Reasons for each are in `design/notes/decisions.md`.
 
+
+## Round 18 (cloud), Nov 3 2026
+
+- New: `app/dialogue/hero-options` (dev, noindex), `scripts/audit-dialogue-geom.mjs` (frame by frame geometry audit: layout jumps, overlaps, cut rows on held frames, gaps), `lib/dialogue/product/thinCopy.ts`.
+- `QuoteRow` is always playable; the Source level, `playable` prop and `level-3` are removed (audit scenes updated).
+- The stage takes `?opt=a|b|c` for the hero selection; b is the default and the page.
+- Stacked bar legend values and ranked row values hold a count and a percent in one grid cell; hover swaps them.
+- All six takes re-recorded in four variants; Clips still re-rendered.

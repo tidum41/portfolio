@@ -66,7 +66,10 @@ export default function ChartStackedBar({
             <span key={seg.label} className="dp-chart-stack__lane" data-focal={seg.focal ? "" : undefined}>
               <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
               <span className="dp-chart-stack__lane-label">{seg.label}</span>
-              <span className="dp-chart-stack__lane-value">{seg.value.toLocaleString("en-US")}</span>
+              <span className="dp-chart-stack__lane-value">
+                <span className="dp-chart-stack__lane-count">{seg.value.toLocaleString("en-US")}</span>
+                <span className="dp-chart-stack__lane-share" aria-hidden>{Math.round((seg.value / total) * 100)}%</span>
+              </span>
             </span>
           ))}
         </div>

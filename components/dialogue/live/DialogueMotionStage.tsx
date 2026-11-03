@@ -12,6 +12,7 @@ import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterview
 import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/components/dialogue/product/icons";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
+import { THIN_FLAG, THIN_TIP } from "@/lib/dialogue/product/thinCopy";
 import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
 import type { MotionDemo } from "@/components/dialogue/motion/stages";
 import { InfoCircleIcon } from "@/components/dialogue/product/icons";
@@ -19,7 +20,7 @@ import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 /* P16: the thin answer stays on the page's one question, "Arrives by Friday". Two shoppers is too thin for a chart; the
    tapped chip counts repeat shoppers from the same 300 interviews (88 of 125, the segment line the answer card already uses). */
 const THIN_QUESTION = "Did anyone miss a delivery over \u2018Arrives by Friday\u2019?";
-const THIN_FINDING = "Two of 300 shoppers said they missed a delivery after reading it as this Friday.";
+const THIN_FINDING = "Two of 300 shoppers said they missed a delivery.";
 const THIN_CHIPS = [
   "How did repeat shoppers read it?",
   "What did shoppers say about the date?",
@@ -78,9 +79,8 @@ const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number;
 };
 
 const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
-const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
+const LEVELS = ["Insight", "Chart", "People"] as const;
 const MEI = QUOTE_LIST[0];
-const ANA = QUOTE_LIST_FRIDAY[0];
 
 /* Keep the newest content in view: ease the panel body's scroll (600 ms ease-in-out), never a snap. */
 /* cubic-bezier(0.4, 0, 0.2, 1), sampled */
@@ -129,7 +129,7 @@ function PlusGlyph() {
 }
 const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
 
-function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number; playable?: boolean }) {
+export function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number }) {
   const [start, end] = q.time.split(/[\u2013-]/);
   return (
     <div
@@ -146,9 +146,8 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
         <WaveformIcon className="dp-clip-quote__icon" />
         <span className="dp-clip-quote__name">{q.participant}</span>
         <span className="dp-clip-quote__time">{q.time}</span>
-        {/* Counts rows: every row carries its clip length in one fixed right lane. Source turns that lane into a play chip
-            (same lane, same width), so tapping it is the next step and nothing moves. */}
-        <span className="dlg-dur" data-play={playable && !open ? "" : undefined} data-open={open ? "" : undefined}>
+        {/* Round 18: every row carries its clip length in one fixed right lane, drawn as a play chip. Tapping the row plays it; a second tap pauses it. */}
+        <span className="dlg-dur" data-play={!open ? "" : undefined} data-open={open ? "" : undefined}>
           <PlayGlyph />
           {clipLen(q.time)}
         </span>
@@ -163,7 +162,65 @@ function QuoteRow({ q, open, onTap, playSec, playable = false }: { q: { particip
   );
 }
 
-function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, playable = false }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void; playable?: boolean }) {
+function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[SampleWhich]; shown: number; onCollapse: () => void }) {
+  return (
+    <p className="dp-side-sample__head dp-text-body">
+      <span className="dlg-sample-key" aria-hidden />
+      <span className="dlg-sample-head__text"><span className="dp-summary__emph">{shown}</span> <span className="dlg-nowrap">{shown === 1 ? "quote shown," : "quotes shown,"}</span> <span className="dlg-nowrap">picked from the {meta.count}</span> <span className="dlg-nowrap">{meta.who}</span></span>
+      <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={onCollapse}>
+        <ChevronUpIcon />
+      </button>
+    </p>
+  );
+}
+
+/* Round 18 hero options (app/dialogue/hero-options): how Ana's quote shows that it belongs to the 225 the shopper tapped, and how
+   the other people in that group stay reachable. Every part is an existing Dialogue element: the quotes head line with the
+   segment swatch, quote rows, source pills. The coloured left edge on the quote is gone in all three. */
+export type HeroOpt = "a" | "b" | "c";
+const FRIDAY = SAMPLE_META.friday;
+const TAIL = FRIDAY.count - QUOTE_LIST_FRIDAY.length;
+export function HeroSelection({ opt }: { opt: HeroOpt }) {
+  const [ana, dev] = QUOTE_LIST_FRIDAY;
+  const startOf = (t: string) => t.split(/[\u2013-]/)[0];
+  const pills = (selected: boolean) => (
+    <div className="dp-sources" aria-hidden>
+      <SourcePill name={ana.participant} time={startOf(ana.time)} selected={selected} />
+      <SourcePill name={dev.participant} time={startOf(dev.time)} />
+      <SourcePill name={`+${TAIL} more`} time="" />
+    </div>
+  );
+  return (
+    <div className="dp-side-sample dlg-stage__sample" data-side="friday" data-hero={opt}>
+      {opt === "a" ? (
+        <>
+          <SampleHead meta={FRIDAY} shown={2} onCollapse={() => {}} />
+          <div className="dp-clip-quotes">{QUOTE_LIST_FRIDAY.map((q) => <QuoteRow key={q.participant} q={q} open={false} />)}</div>
+          <div className="dp-sources" aria-hidden><SourcePill name={`+${TAIL} more`} time="" /></div>
+        </>
+      ) : null}
+      {opt === "b" ? (
+        <>
+          <SampleHead meta={FRIDAY} shown={1} onCollapse={() => {}} />
+          {pills(true)}
+          <div className="dp-clip-quotes"><QuoteRow q={ana} open={false} /></div>
+        </>
+      ) : null}
+      {opt === "c" ? (
+        <>
+          <div className="dp-sources" aria-hidden><span className="dlg-sample-key" /><SourcePill name={FRIDAY.label.replace(/^./, (c) => c.toUpperCase())} time={String(FRIDAY.count)} selected /></div>
+          <div className="dp-clip-quotes"><QuoteRow q={ana} open={false} /></div>
+          <div className="dp-sources" aria-hidden>
+            <SourcePill name={dev.participant} time={startOf(dev.time)} />
+            <SourcePill name={`+${TAIL} more`} time="" />
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
   const meta = SAMPLE_META[which];
   const rows = meta.rows;
   const more = meta.count - rows.length;
@@ -172,16 +229,10 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, 
   return (
     <Grow open={open} className="dlg-stage__item">
       <div className="dp-side-sample dlg-stage__sample" data-side={which}>
-        <p className="dp-side-sample__head dp-text-body">
-          <span className="dlg-sample-key" aria-hidden />
-          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{rows.length}</span> <span className="dlg-nowrap">quotes shown,</span> <span className="dlg-nowrap">picked from the {meta.count}</span> <span className="dlg-nowrap">{meta.who}</span></span>
-          <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={collapse}>
-            <ChevronUpIcon />
-          </button>
-        </p>
+        <SampleHead meta={meta} shown={rows.length} onCollapse={collapse} />
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} playable={playable} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} />
           ))}
         </div>
         <div className="dp-sources">
@@ -192,7 +243,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, 
   );
 }
 
-export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
+export default function DialogueMotionStage({ demo, opt = "b" }: { demo: MotionDemo; opt?: HeroOpt }) {
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
   // P16: add-only takes (hero, before, thin) start on an empty chat and end by scrolling their conversation up and out,
   // so the loop never fades the UI. Clip opens from the counts end state: 225 open, Ana first.
@@ -254,8 +305,8 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           if (i === cur) return cur;
           // P16 round 4: People opens the same 225 the bar emphasises, so the segment never switches.
           setSide(i >= 2 ? "friday" : false);
-          // Source marks the rows playable; Ana's clip opens only when Ana is tapped.
-          if (i < 3) api.clip(false);
+          // Ana's clip opens only when her row is tapped; leaving People closes it.
+          if (i < 2) api.clip(false);
           pinDuringGrow(400);
           return i;
         });
@@ -393,7 +444,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         ) : null}
         {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} sideOpen={ana ? "friday" : false} /></div> : null}
         <Grow open={ana} className="dlg-stage__item">
-          <div className="dp-clip-quotes dlg-live__sample" data-side="friday"><QuoteRow q={ANA} open={false} /></div>
+          <HeroSelection opt={opt} />
         </Grow>
       </>
     );
@@ -447,13 +498,16 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
           <p className="dp-summary dp-text-body">{THIN_FINDING}</p>
           {/* P16: the flag says why there is no chart (the 3-person cutoff the page states). */}
           <div className="dp-low-signal" data-target="thin-flag">
-            <InfoCircleIcon className="dp-low-signal__icon" />
-            <p className="dp-low-signal__text">Early signal, 2 people. A chart needs 3 or more.</p>
+            <span className="dlg-info" tabIndex={0} aria-describedby="dlg-thin-tip" data-target="thin-info">
+              <InfoCircleIcon className="dp-low-signal__icon" />
+              <span id="dlg-thin-tip" role="tooltip" className="dp-hero-tooltip dlg-info__tip">{THIN_TIP}</span>
+            </span>
+            <p className="dp-low-signal__text">{THIN_FLAG}</p>
           </div>
           <p className="dp-clips-link">View 2 clips</p>
           {/* P16: the chips say what they are, follow-ups the same interviews can answer with a count. */}
           {/* P16 round 4: the label says what the chips are for; each chip shows how many answers it would count. */}
-          <p className="dlg-thin__label">Follow-ups with more data to count</p>
+          <p className="dlg-thin__label">Follow-ups with more data</p>
           <div className="dlg-thin__chips" data-target="thin-chips">
             {THIN_CHIPS.map((c, i) => (
               <button key={c} type="button" className="dlg-suggest dlg-thin__chip" data-target={`chip-${i}`} aria-pressed={thinAsk && i === 0} aria-label={`${c} ${THIN_CHIP_N[i]} answers`} onClick={() => (window as unknown as { __dlg: { ask: () => void } }).__dlg.ask()}>
@@ -496,7 +550,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
             ))}
           </div>
         </div>
-        <Sample open={level >= 2} which="friday" playing={clip} playSec={playSec} playable={level >= 3} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
+        <Sample open={level >= 2} which="friday" playing={clip} playSec={playSec} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
     );
   }

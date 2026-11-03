@@ -2,6 +2,44 @@
 
 Written in my own voice so I can explain each one in an interview. Each entry holds the decision, what else I tried, why this one, and what would make me revisit it. Newest first.
 
+## Round 18
+
+### The hero ties Ana's quote to the 225 with a head line, a selected pill and the segment's fill
+
+**Decision.** After the shopper taps the 225, the 225 keeps its cherry, the 75 steps down to stone-300, a head line with the cherry swatch says "1 quote shown, picked from the 225 who read it as this Friday", a row of source pills (Ana selected, Dev, "+223 more") sits under it, and Ana's quote row sits under the pills. The coloured left edge on the quote is gone. **Tried.** Three builds on `/dialogue/hero-options`: A, the head line and a row for each person; B, the head line, pills and one row; C, a selected pill that names the group, one row and pills for the others. **Why.** B is the one that answers both asks with parts the product already has: the head line and swatch name the group, and the pills put other people's timestamps one tap away without adding rows. A needed a second row, which made the take taller for no new information, and C's group pill read as a button that does nothing. **Revisit.** I would revisit if the pills need to switch the quote on tap, because today they are display only, as they are in the product. The hero frame is 96px taller on desktop and 160px taller on phone so the card and the quote hold in one frame with nothing cut.
+
+### The segment that is not open steps down to stone-300, in both directions
+
+**Decision.** When either segment is open, the other one draws in stone-300, and its legend swatch follows. The old pale pink tint of the 225 and the 2px marker under the open segment are removed. **Tried.** Keeping the 35% cherry tint, no step down at all, and a stone-300 step down on one side only. **Why.** The audit of Every found the receded 225 drawn as a pink that is not on ramp C, and it only happened when the 75 was open, so the two segments followed different rules. Stone-300 is on the ramp, and the same rule both ways means no one has to learn which side recedes. **Revisit.** If the 225 stepping to grey reads as the answer being dismissed when the 75 is open, I would try a lighter stone-200 or no step down in that direction only.
+
+### Every's rows carry no hue, and the open row is a warm fill
+
+**Decision.** Quote rows have no coloured left edge and the open row has no cherry outline; it is the warm fill with the normal stone border. **Tried.** Keeping the edge in the open segment's hue, and keeping the outline only when the 225 is open. **Why.** In Every the 75 is open, so the open row was outlined in cherry from the 225 and the other rows carried a stone edge clipped by the corner radius. Both read as rendering faults. The head line and its swatch already name the group. **Revisit.** If someone loses track of which group a row belongs to once the head line scrolls away, I would put the group name on the row itself rather than bring the edge back.
+
+### Source is not a level, and every timestamp is already a play button
+
+**Decision.** The depth toggles are Insight, Chart and People. Every quote row shows its clip length as a play chip from the start, tapping the row plays it and tapping again pauses it. The Source toggle is gone from the toggles, the picker and the live chat. **Tried.** Keeping Source as a fourth level, and keeping it as a switch that only shows the chips. **Why.** I read the code first. `SourcePill` and `SourcesRow` are display only: a name and a time, and "selected" only tints the pill. In the toggles take the Source level did one thing, which was to set `playable` so the lane showed a play glyph, while a tap on the row already played the clip at any level. A control that adds only an icon is an extra step, so the icon is the default. **Revisit.** If a later product decision makes clips cost something to open, the chip would need a gate again, and I would bring a level back for that reason.
+
+### Selecting a segment no longer underlines it
+
+**Decision.** The 2px marker under the open segment is removed. The selection is shown by the segment's fill, the legend label in ink, and the head line with its swatch. **Tried.** Keeping the marker and removing only the left edge on rows. **Why.** The marker was added in Round 16 so the rows could be tied back to a segment, and the head line with the swatch now does that job in words. Four marks for one selection (underline, left edge, legend, head line) was the funkiness; one fill and one line is enough. **Revisit.** If the open segment is hard to find in a long bar with many groups, I would bring back a mark, but on the legend, not under the bar.
+
+### Toggles and Counts reach the interaction in about a second, and Toggles shows the play chip by resting on Ana's row
+
+**Decision.** Pre-roll is zero on Toggles, Every and Counts, the pointer starts beside its first target, and the first tap lands near 1 second (Toggles 0.8s, Every 0.5s, Counts 1.2s, from 1.3s, 1.4s and 2.0s). The Toggles take ends on the hover on Ana's row and then the Insight tap, and it does not open her clip. The pointer now starts resting on the first tab, so it never fades in on top of a label. **Tried.** Opening Ana's clip and folding it before Insight, which ran 10.1s and carried the tabs out of view. **Why.** The clip beat was already cut once because Insight folding an open player fades it as a ghost, and the Clips still shows the open player. The hover shows the chip is the tap target. **Revisit.** If someone asks where play and pause are shown in motion, I would add a short take on the Clips figure rather than lengthen Toggles.
+
+### The data viz figure spaces itself with the page scale
+
+**Decision.** The figure's padding is 32 and 48, rows are separated by 32 above and below, the question column and chart are 32 apart, a chart and its line are 16 apart, and the names sit 8 under their question, all from `--space-1` to `--space-5`. **Tried.** Only widening the gap between rows. **Why.** The density came from the 24px row padding and 8px chart gaps next to 12px panel gaps; those are off the page scale, so the figure used three spacings the rest of the page does not. **Revisit.** If the figure becomes too tall at a 1471 by 844 view, I would drop to 24 between rows before touching the panel gaps.
+
+### Hovering a chart swaps counts for percents
+
+**Decision.** Hovering the stacked bar (and its legend) swaps each legend count for its percent, and hovering a ranked row swaps its "N of 300" for its percent. Both values sit in one grid cell, so nothing moves. The hover shows in the Hero and Counts takes because the pointer crosses the bar before it taps. **Tried.** The existing row hover that added a muted percent after the label. **Why.** That version added text beside the label and moved the value column, and it only existed on rows that no page figure used. Swapping keeps the one rule the page states, counts out of the group, as the default and gives the percent on request. **Revisit.** If people read the swap as a flicker, I would hold it for 150ms before it starts.
+
+### The thin flag's info icon says why, and the flag itself is shorter
+
+**Decision.** Hovering or focusing the info icon shows the existing tooltip chip with "Not enough data for a chart yet." The flag reads "Early signal from 2 people.", the finding drops "after reading it as this Friday", and the follow-ups label reads "Follow-ups with more data". **Tried.** Two longer tooltip lines that gave the 3 person rule. **Why.** An icon on a flag looks like it can be hovered, so it should answer. The chip opens over the flag's own label, in the same row, so it never covers the finding above it, and the pointer rests left of the icon so it is never on a word; the 3 person rule stays in the figure's intro. **Revisit.** If someone asks what the cutoff is, I would put the rule back in the tooltip as a second sentence.
+
 ## Round 17
 
 ### The answer card picks a bar or rows for each answer

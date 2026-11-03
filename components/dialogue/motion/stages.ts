@@ -14,7 +14,7 @@ export const MOBILE_PANEL_H = 520;
 /** Extra panel height for a stage whose content would otherwise run past the card (the picker holds a composer
  *  with its depth chips under the answer, and Round 16's quotes line names the group on a second line, so no UI is cropped).
  *  Desktop and phone differ. */
-const EXTRA_H: Partial<Record<string, { d: number; m: number }>> = { picker: { d: 4, m: -28 }, toggles: { d: 80, m: 96 }, hero: { d: 24, m: 0 }, side: { d: 24, m: 24 }, clip: { d: 24, m: 24 }, every: { d: 24, m: 24 } };
+const EXTRA_H: Partial<Record<string, { d: number; m: number }>> = { picker: { d: 4, m: -28 }, toggles: { d: 80, m: 96 }, hero: { d: 120, m: 160 }, side: { d: 24, m: 24 }, clip: { d: 24, m: 24 }, every: { d: 24, m: 24 } };
 
 export const STAGES = {
   hero: { shape: "square", tone: "solution", note: false },

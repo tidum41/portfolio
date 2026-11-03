@@ -68,7 +68,7 @@ export default function ChartBarList({
             : chartBarFill(i, row.focal, row.secondary);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
-            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}{row.pct ? <span className="dp-chart-bars__pct">{row.pct}</span> : null}</span>
+            <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
             <div
               className="dp-chart-bars__track"
               data-annotate-part={`bar-track-${annotateSlug(row.label)}`}
@@ -89,7 +89,12 @@ export default function ChartBarList({
                 .filter(Boolean)
                 .join(" ")}
             >
-              {row.display ?? String(row.value)}
+              {row.pct ? (
+                <>
+                  <span className="dp-chart-bars__v-count">{row.display ?? String(row.value)}</span>
+                  <span className="dp-chart-bars__v-share" aria-hidden>{row.pct}</span>
+                </>
+              ) : (row.display ?? String(row.value))}
             </span>
             {hasDetail ? (
               <span className="dp-chart-bars__detail" data-annotate-part={`bar-detail-${annotateSlug(row.label)}`}>

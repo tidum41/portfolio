@@ -53,7 +53,7 @@ const FINDING =
   "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 
 /** Depth levels, shallow to deep: insight, chart, the people behind a side, the source clip. */
-export const LEVELS = ["Insight", "Chart", "People", "Source"] as const;
+export const LEVELS = ["Insight", "Chart", "People"] as const;
 type Variant = "base" | "picker" | "toggles" | "before" | "every";
 /** The old answer (Dialogue today): one fluent paragraph, streamed. */
 const BEFORE_TEXT = PARAGRAPH_ANSWER_WALL.join("\n");
@@ -97,7 +97,7 @@ export default function DialogueChatLive({
   const clipOpen = playing !== null;
   const setClipOpen = (on: boolean) => setPlaying(on ? QUOTE_LIST[0].participant : null);
   const answerText = variant === "before" ? BEFORE_TEXT : FINDING;
-  // depth: 0 insight, 1 chart, 2 people, 3 source. base starts at the chart (shipped behaviour).
+  // depth: 0 insight, 1 chart, 2 people (Round 18: every row is already playable, so Source is not a level). base starts at the chart (shipped behaviour).
   const [pick, setPick] = useState(1); // variant A: level chosen before asking
   const [chartOpen, setChartOpen] = useState(variant === "base" || startAnswered);
   const showChart = chartOpen || QUESTION_IS_HOW_MUCH;
@@ -273,15 +273,15 @@ export default function DialogueChatLive({
           {variant === "toggles" && stage === "answered" ? (
             <div className="dlg-depth dlg-depth--inline" role="group" aria-label="Answer depth">
               {LEVELS.map((l, i) => {
-                const on = i === 0 || (i === 1 && showChart) || (i === 2 && sideOpen) || (i === 3 && clipOpen);
+                const on = i === 0 || (i === 1 && showChart) || (i === 2 && sideOpen);
                 return (
                   <button
                     key={l}
                     type="button"
                     className="dlg-depth__opt"
                     aria-pressed={on}
-                    data-target={i === 2 ? "people" : i === 3 ? "source" : `level-${i}`}
-                    onClick={() => { if (i === 2) setSideOpen(!sideOpen); if (i === 3) { setSideOpen(true); setClipOpen(!clipOpen); } }}
+                    data-target={i === 2 ? "people" : `level-${i}`}
+                    onClick={() => { if (i === 2) setSideOpen(!sideOpen); }}
                   >
                     {l}
                   </button>
