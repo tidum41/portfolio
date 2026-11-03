@@ -32,7 +32,22 @@ const VIEWPORTS = [
   { name: "390", viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
 ];
 
+// Now and then a load misses the fake-clock fast-forward (hero text still at
+// 0, silk at an earlier phase); retry those so pairs stay comparable.
 async function open(browser, vp, theme) {
+  for (let attempt = 0; ; attempt++) {
+    const o = await openOnce(browser, vp, theme);
+    const ok = await o.page.evaluate(() => {
+      let a = 1;
+      for (let n = document.querySelector(".hero-heading"); n; n = n.parentElement) a *= parseFloat(getComputedStyle(n).opacity);
+      return a > 0.99 && !!document.querySelector(".hero-heading");
+    });
+    if (ok || attempt >= 3) return o;
+    await o.context.close();
+  }
+}
+
+async function openOnce(browser, vp, theme) {
   const context = await browser.newContext({
     viewport: vp.viewport,
     deviceScaleFactor: vp.deviceScaleFactor,
