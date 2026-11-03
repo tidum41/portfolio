@@ -94,7 +94,9 @@
   --fs-display:       48px;
   /* clamp() so .cs-hero-title scales on narrow viewports; caps at 48px. */
   --fs-hero:          clamp(32px, 6vw, 48px);
-  --fs-home-hero:     clamp(26px, 2.8vw, 36px);
+  /* Two lines from ~768px up; 22px floor keeps a 390px phone at
+     three lines rather than dropping under the 18px subtitle. */
+  --fs-home-hero:     clamp(22px, 2.6vw + 10px, 36px);
   --fs-stat:          44px;
 
   /* Aliases onto the scale */
@@ -246,13 +248,30 @@ main#main-content {
 
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
-/* Hero type must not re-wrap after first layout — `balance` / `pretty`
-   reflow the subtitle (and the pill that docks to it) on load. */
-.hero-heading,
+/* Subtitle stays on `stable`. `balance` / `pretty` reflow it after first
+   layout, and the menu pill docks to [data-hero-sub]. */
 .hero-sub {
   text-wrap: wrap;
   text-wrap: stable;
   max-width: 100%;
+}
+.hero-heading-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+}
+/* 34ch is the Georgia measure (at --ls-hero) that holds this sentence
+   on two balanced lines from the 22px floor through 36px. One ch of
+   slack past the ~32.5ch threshold, so a slightly wider Georgia does
+   not drop a third line. At 1440 / 36px the box is ~751px and the
+   longer line ~711px, a little past the first work-grid column
+   ((100% - var(--grid-gutter)) / 2). ch follows --fs-home-hero, so
+   the break holds while the type scales. On a phone the 100% cap
+   wins; two lines there would sit under the 18px subtitle. */
+.hero-heading {
+  max-width: min(34ch, 100%);
+  text-wrap: wrap; /* fallback where balance is unsupported */
+  text-wrap: balance;
 }
 /* Keep "at ucla" together so the line doesn't orphan "ucla" on a third
    row when the 390px wrap boundary sits between the words. */
