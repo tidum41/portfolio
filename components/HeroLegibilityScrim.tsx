@@ -90,11 +90,18 @@ export default function HeroLegibilityScrim() {
     const section = anchorRef.current?.parentElement;
     if (!section) return;
     let raf = 0;
+    let lastKey = "";
     const publish = () => {
       raf = 0;
       const m = measureLines(section);
       if (!m) return;
       const d = dkRef.current;
+      // intro-done, font loads and observer callbacks mostly re-measure the
+      // same lines; only a real change re-rasterises the silk's mask.
+      const key = `${m.lineHeight}|${d.opacity}|${d.spreadX}|${d.spreadY}|${d.debug}|`
+        + m.lines.map((q) => `${Math.round(q.l)},${Math.round(q.t)},${Math.round(q.r)},${Math.round(q.b)}`).join(";");
+      if (key === lastKey) return;
+      lastKey = key;
       setHeroScrim({ ...m, opacity: d.opacity, spreadX: d.spreadX, spreadY: d.spreadY });
       if (d.debug) {
         const o = layoutOrigin(section);

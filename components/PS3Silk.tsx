@@ -64,11 +64,16 @@ function saveMode(m: number) { try { sessionStorage.setItem(MODE_KEY, String(m))
  * defaults, so visitors never see controls.
  */
 const SILK_DIALS = {
+  // The crossing hangs on a damped spring. While the cursor moves over the
+  // hero the spring's target is `strength` x (cursor - crossing), faded by a
+  // Gaussian of that distance with sigma `radius`; after the cursor stops or
+  // leaves, the target fades back to rest over `relax`.
   drift: {
-    strength: [0.08, 0, 0.3, 0.005],    // max crossing shift (uv) at full build-up
-    buildup: [0.9, 0.1, 3, 0.05],       // build-up per hero-width of pointer travel
-    smoothing: [1.0, 0.2, 5, 0.05],     // s, time constant the crossing eases toward its target
-    relax: [8, 2, 30, 0.5],             // s, time constant the build-up fades after you stop
+    strength: [0.16, 0, 0.6, 0.01],     // share of the cursor's offset the crossing follows
+    radius: [560, 80, 1600, 10],        // px, cursors much farther than this barely pull
+    stiffness: [10, 0.5, 40, 0.5],      // spring responsiveness (1/s^2)
+    damping: [1.0, 0.2, 2, 0.05],       // damping ratio: 1 settles without overshoot, <1 sways
+    relax: [3, 0.5, 15, 0.25],          // s, time constant the pull fades after you stop
   },
   silk: {
     speed: [1.2, 0, 4, 0.05],
@@ -88,14 +93,20 @@ const MODE_FADE = 0.45;     // s, halftone <-> wave crossfade
 // on; device-resolution rendering reads as crisp digital dots instead (and
 // costs 4-9x the fill).
 const RENDER_SCALE = 1;
-// 30fps, evenly paced. The ribbons and the drift move well under a pixel
+// ~30fps, evenly paced. The ribbons and the drift move well under a pixel
 // per frame at 30, while 60 doubles the GPU/compositor work the rest of the
 // page (scroll, cards, cursor trail) competes with.
 const FRAME_MS = 1000 / 30;
 const MASK_TEXEL = 4;       // CSS px per scrim mask texel; the mask is a wide blur
+const SPRING_STEP = 1 / 120; // s, fixed physics step (frame-rate independent)
+const ENGAGE_TAU = 0.25;    // s, how fast the pull engages once the cursor moves
+const HOLD_S = 0.6;         // s after the last move before the pull starts to relax
+// Rest position of the ribbons' crossing, in the drift's uv (y up).
+const CROSS_X = 0.5, CROSS_Y = 0.6;
+const DRIFT_Y_MAX = 0.12;   // uv; more squashes the ribbon amplitude visibly
 
 type SilkParams = {
-  drift: { strength: number; buildup: number; smoothing: number; relax: number };
+  drift: { strength: number; radius: number; stiffness: number; damping: number; relax: number };
   silk: { speed: number; intensity: number; dotSize: number };
 };
 
@@ -198,8 +209,8 @@ export default function PS3Silk({
   useEffect(() => { modeRef.current = readMode(initialMode); }, [initialMode]);
 
   const dk = useDialKit("PS3Silk", SILK_DIALS as never, {
-    id: "ps3-silk-drift-v2",
-    persist: { key: "ps3-silk-drift-v2", storage: "localStorage" },
+    id: "ps3-silk-drift-v3",
+    persist: { key: "ps3-silk-drift-v3", storage: "localStorage" },
   }) as SilkParams;
   const paramsRef = useRef<SilkParams>(dk);
   useEffect(() => { paramsRef.current = dk; });
@@ -268,15 +279,13 @@ export default function PS3Silk({
     const canvas = _canvas as HTMLCanvasElement;
     const wrapper = _wrapper as HTMLDivElement;
 
-    // Slow crossing drift. `charge` (0..1) builds with pointer travel over
-    // the hero and decays on a long time constant; the crossing offset eases
-    // toward (pointer - centre) * strength * charge on the smoothing time
-    // constant, so it is eased but readable within a second or two of play.
-    const ptr = { x: 0.5, y: 0.5, px: -1, py: -1 };
-    const drift = { x: 0, y: 0 };
-    let charge = 0;
+    // Crossing drift (see SILK_DIALS). Pointer in CSS px relative to the
+    // hero's top-left; offset/velocity in uv.
+    const ptr = { x: 0, y: 0, inside: false, lastMove: -1e9 };
+    const drift = { x: 0, y: 0, vx: 0, vy: 0 };
+    let engage = 0, springAcc = 0;
     let modeMix = modeRef.current === 1 ? 1 : 0; // 1 = halftone
-    let rafId = 0, lastT = 0;
+    let rafId = 0;
     let currentOpacity = 0, targetOpacity = START_OPACITY;
 
     // StrictMode-safety: in dev, React mounts this effect, tears it straight
@@ -315,23 +324,49 @@ export default function PS3Silk({
     // before shader init has run; every other intro-timed piece
     // (IntroOrchestrator/HeroText/GridFirstLoad/RabbitHoleVideo) arms its
     // own intro-replay listener synchronously at mount for the same reason.
+    // The fade is anchored to the first visible frame (GL init waits for an
+    // idle slot after hydration, so that frame can land well after mount):
+    // it always starts from 0, and still ends on the mount-based schedule
+    // the rest of the intro uses unless that would rush it.
     const INTRO_DURATION = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
-    let introPhaseStart = performance.now();
-    let introPhaseEnd = introPhaseStart + INTRO_DURATION;
+    const mountedAt = performance.now();
+    let introArmed = INTRO_DURATION > 0;
+    let introPhaseStart = mountedAt;
+    let introPhaseEnd = mountedAt + INTRO_DURATION;
+    function startIntro(ms: number) {
+      introArmed = false;
+      introPhaseStart = ms;
+      introPhaseEnd = ms + Math.max(INTRO_DURATION * 0.6, mountedAt + INTRO_DURATION - ms);
+    }
 
     function onReplay() {
       const dur = introTimings.patternDuration * 1000;
       currentOpacity = 0;
+      introArmed = false;
       introPhaseStart = performance.now();
       introPhaseEnd   = introPhaseStart + dur;
     }
     window.addEventListener("intro-replay", onReplay);
 
-    // Defer shader compilation on first load only, so it doesn't compete with the
-    // page-transition animation. On repeat navigations, init immediately — the
-    // shader is already GPU/driver-cached from the earlier compile, so there's
-    // no jank to protect against, and any delay would just read as a stutter.
-    const initTimer = setTimeout(() => {
+    // First load: start GL in an idle slot after hydration (Safari has no
+    // requestIdleCallback; a short timer stands in), so context creation and
+    // shader compile don't land in the same frames as hydration and the
+    // intro. Repeat navigations init immediately: the shaders are cached and
+    // any delay would read as a stutter.
+    let initRaf = 0;
+    let cancelInit = () => {};
+    if (!isFirstLoad) {
+      const t = setTimeout(initGL, 0);
+      cancelInit = () => clearTimeout(t);
+    } else if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(initGL, { timeout: 500 });
+      cancelInit = () => window.cancelIdleCallback(id);
+    } else {
+      const t = setTimeout(initGL, 150);
+      cancelInit = () => clearTimeout(t);
+    }
+
+    function initGL() {
       const _glNullable = canvas.getContext("webgl", {
         alpha: true,
         premultipliedAlpha: true,
@@ -351,7 +386,9 @@ export default function PS3Silk({
       let visible = true;
       let running = false;
       let wrapperShown = false;
-      let vsync = 1000 / 60, rawLastT = 0;
+      // Frame pacing (see frame()): recent rAF intervals, vsync estimate.
+      const rawIntervals = new Float64Array(24);
+      let rawIdx = 0, rawLastT = 0, vsync = 0, frameMs = FRAME_MS, lastFrameT = 0;
 
       type GLState = {
         lumaProg: WebGLProgram; compProg: WebGLProgram; buf: WebGLBuffer;
@@ -363,18 +400,31 @@ export default function PS3Silk({
       let luma = { w: 0, h: 0, texel: 0 };
       let mask = { w: 1, h: 1, dirty: true };
 
-      function compile(src: string, type: number) {
-        const s = gl.createShader(type)!;
-        gl.shaderSource(s, src); gl.compileShader(s);
-        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
-        return s;
-      }
-      function program(fs: string, names: string[]) {
+      // Compile + link are only queued here. Any status or uniform query
+      // blocks the main thread until the driver finishes (ANGLE/Metal on Macs
+      // can take tens of ms), so with KHR_parallel_shader_compile those wait
+      // until the driver reports completion.
+      const parallel = gl.getExtension("KHR_parallel_shader_compile");
+      function program(fs: string) {
         const p = gl.createProgram()!;
-        gl.attachShader(p, compile(VS, gl.VERTEX_SHADER));
-        gl.attachShader(p, compile(fs, gl.FRAGMENT_SHADER));
+        for (const [type, src] of [[gl.VERTEX_SHADER, VS], [gl.FRAGMENT_SHADER, fs]] as const) {
+          const s = gl.createShader(type)!;
+          gl.shaderSource(s, src);
+          gl.compileShader(s);
+          gl.attachShader(p, s);
+        }
         gl.bindAttribLocation(p, 0, "aPos");
         gl.linkProgram(p);
+        return p;
+      }
+      function linked(p: WebGLProgram, names: string[]) {
+        if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+          for (const s of gl.getAttachedShaders(p) ?? []) {
+            const log = gl.getShaderInfoLog(s);
+            if (log) console.error(log);
+          }
+          console.error(gl.getProgramInfoLog(p));
+        }
         const u: Record<string, WebGLUniformLocation | null> = {};
         for (const n of names) u[n] = gl.getUniformLocation(p, n);
         return { p, u };
@@ -389,9 +439,19 @@ export default function PS3Silk({
         return t;
       }
 
-      function setupGL() {
-        const L = program(LUMA_FS, ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"]);
-        const C = program(COMPOSITE_FS, ["uLuma", "uLumaUv", "uMask", "uMaskUv", "uPxToCss", "uModeMix", "uIntensity", "uIntensityWave", "uHalftoneSize", "uOpacity", "uWaveColor"]);
+      type Pending = { l: WebGLProgram; c: WebGLProgram };
+      function beginGL(): Pending {
+        return { l: program(LUMA_FS), c: program(COMPOSITE_FS) };
+      }
+      function compiled(pp: Pending) {
+        if (!parallel) return true;
+        return gl.getProgramParameter(pp.l, parallel.COMPLETION_STATUS_KHR)
+          && gl.getProgramParameter(pp.c, parallel.COMPLETION_STATUS_KHR);
+      }
+
+      function finishGL(pp: Pending) {
+        const L = linked(pp.l, ["uTime", "uCssSize", "uTexel", "uYOffsetPx", "uSpeed", "uDrift", "uColorMax"]);
+        const C = linked(pp.c, ["uLuma", "uLumaUv", "uMask", "uMaskUv", "uPxToCss", "uModeMix", "uIntensity", "uIntensityWave", "uHalftoneSize", "uOpacity", "uWaveColor"]);
         const buf = gl.createBuffer()!;
         gl.bindBuffer(gl.ARRAY_BUFFER, buf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -409,12 +469,36 @@ export default function PS3Silk({
         S = { lumaProg: L.p, compProg: C.p, buf, lumaTex, lumaFb, maskTex, lu: L.u, cu: C.u };
         luma = { w: 0, h: 0, texel: 0 };
         mask = { w: 1, h: 1, dirty: true };
+        warmUp();
+      }
+
+      // Drivers finish pipeline setup (and SwiftShader JITs) on a program's
+      // first draw, per render target format. Draw both passes once into
+      // 1x1 targets at zero opacity, so that cost is paid off screen before
+      // the fade instead of as a hitch in its first frames.
+      function warmUp() {
+        if (!S) return;
+        ensureLuma(-1);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, S.lumaFb);
+        gl.viewport(0, 0, 1, 1);
+        gl.useProgram(S.lumaProg);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.useProgram(S.compProg);
+        gl.uniform1f(S.cu.uOpacity, 0);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.flush();
+      }
+
+      function setupGL() {
+        finishGL(beginGL());
       }
 
       function ensureLuma(texel: number) {
         if (!S) return;
-        const w = texel === 1 ? Math.floor(cssW) : Math.ceil(cssW / texel);
-        const h = texel === 1 ? Math.floor(cssH) : Math.ceil(cssH / texel);
+        // texel -1: 1x1 warm-up target.
+        const w = texel < 0 ? 1 : texel === 1 ? Math.floor(cssW) : Math.ceil(cssW / texel);
+        const h = texel < 0 ? 1 : texel === 1 ? Math.floor(cssH) : Math.ceil(cssH / texel);
         if (w === luma.w && h === luma.h && texel === luma.texel) return;
         luma = { w, h, texel };
         gl.bindTexture(gl.TEXTURE_2D, S.lumaTex);
@@ -537,15 +621,12 @@ export default function PS3Silk({
 
       function onMouseMove(e: MouseEvent) {
         if (!activeRef.current || cssW < 2 || cssH < 2) return;
-        const x = (e.clientX - pageLeft) / cssW;
-        const y = 1.0 - (e.clientY + scrollY - pageTop) / cssH;
-        const inside = x >= 0 && x <= 1 && y >= -0.15 && y <= 1;
-        if (!inside || reducedMotion) { ptr.px = -1; return; }
-        if (ptr.px >= 0) {
-          const travel = Math.min(0.1, Math.hypot(x - ptr.px, (y - ptr.py) * cssH / cssW));
-          charge = Math.min(1, charge + travel * paramsRef.current.drift.buildup);
-        }
-        ptr.px = x; ptr.py = y; ptr.x = x; ptr.y = y;
+        const x = e.clientX - pageLeft;
+        const y = e.clientY + scrollY - pageTop;
+        ptr.inside = !reducedMotion && x >= 0 && x <= cssW && y >= 0 && y <= cssH * 1.15;
+        if (!ptr.inside) return;
+        ptr.x = x; ptr.y = y;
+        ptr.lastMove = performance.now();
         if (!running && visible) startLoop();
       }
 
@@ -556,8 +637,8 @@ export default function PS3Silk({
       function startLoop() {
         if (running || !S || !activeRef.current || !visible) return;
         running = true;
-        lastT = 0;
         rawLastT = 0;
+        lastFrameT = 0;
         rafId = requestAnimationFrame(frame);
       }
 
@@ -630,8 +711,6 @@ export default function PS3Silk({
         S = null;
       };
 
-      setupGL();
-
       // Called when the work route becomes visible again (and once at init if
       // already active). Re-measure against a real box so the pattern keeps
       // intensity / halftone / aspect after a round-trip.
@@ -642,7 +721,7 @@ export default function PS3Silk({
         updateScrollTarget();
         // Snap opacity to the scroll-derived target — no leftover intro/
         // hidden-state value that would wash the pattern out.
-        if (!(isFirstLoad && !reducedMotion && performance.now() < introPhaseEnd)) {
+        if (!(isFirstLoad && !reducedMotion && (introArmed || performance.now() < introPhaseEnd))) {
           currentOpacity = targetOpacity;
         }
         startLoop();
@@ -654,6 +733,35 @@ export default function PS3Silk({
         stopLoop();
       };
       lifecycleRef.current = { wake, pause };
+
+      // Damped spring on the crossing offset, integrated in fixed steps so
+      // its feel doesn't depend on frame rate or dropped frames.
+      function stepDrift(D: SilkParams["drift"], dt: number, ms: number) {
+        const moving = ptr.inside && ms - ptr.lastMove < HOLD_S * 1000;
+        engage = moving
+          ? engage + (1 - engage) * (1 - Math.exp(-dt / ENGAGE_TAU))
+          : engage * Math.exp(-dt / Math.max(0.1, D.relax));
+        if (engage < 1e-4) engage = 0;
+        let tx = 0, ty = 0;
+        if (engage > 0 && cssW >= 2 && cssH >= 2) {
+          const dx = ptr.x - CROSS_X * cssW;
+          const dy = cssH - ptr.y - CROSS_Y * cssH;
+          const r = Math.max(1, D.radius);
+          const w = D.strength * engage * Math.exp(-(dx * dx + dy * dy) / (2 * r * r));
+          tx = (dx * w) / cssW;
+          ty = clamp((dy * w) / cssH, -DRIFT_Y_MAX, DRIFT_Y_MAX);
+        }
+        const k = Math.max(0.01, D.stiffness);
+        const c = 2 * Math.max(0, D.damping) * Math.sqrt(k);
+        springAcc = Math.min(springAcc + dt, 0.25);
+        while (springAcc >= SPRING_STEP) {
+          springAcc -= SPRING_STEP;
+          drift.vx += (k * (tx - drift.x) - c * drift.vx) * SPRING_STEP;
+          drift.vy += (k * (ty - drift.y) - c * drift.vy) * SPRING_STEP;
+          drift.x += drift.vx * SPRING_STEP;
+          drift.y += drift.vy * SPRING_STEP;
+        }
+      }
 
       function frame(ms: number) {
         if (!running) return;
@@ -669,36 +777,45 @@ export default function PS3Silk({
           if (cssW < 2 || cssH < 2 || gl.isContextLost()) return;
         }
 
-        // Paced on rAF timestamps with half a vsync of slack, so the cadence
-        // is even on any refresh rate (60Hz: every 2nd vsync, 120Hz: every
-        // 4th). The old strict `ms - lastT < 33.3` test skipped a frame at
-        // random whenever vsync jitter landed just under the interval, which
-        // alternated 33/50ms (or 33/42ms at 120Hz) and read as judder.
-        const raw = rawLastT ? ms - rawLastT : 0;
+        // Pacing: a frame every `frameMs`, a whole number of vsyncs near 33ms
+        // (60Hz: every 2nd, 120Hz: every 4th, 144Hz: every 5th), with half a
+        // vsync of slack for timestamp jitter. vsync is averaged over only
+        // the recent single-vsync intervals, so long frames can't inflate it:
+        // the old running average crept up under hydration load and let
+        // 120/144Hz displays drop to every 3rd vsync, mixing 25ms frames in
+        // with the long ones for the first second or two.
+        if (rawLastT) {
+          rawIntervals[rawIdx] = ms - rawLastT;
+          rawIdx = (rawIdx + 1) % rawIntervals.length;
+          let m = Infinity;
+          for (let i = 0; i < rawIntervals.length; i++) {
+            const v = rawIntervals[i];
+            if (v > 2 && v < m) m = v;
+          }
+          let sum = 0, n = 0;
+          for (let i = 0; i < rawIntervals.length; i++) {
+            const v = rawIntervals[i];
+            if (v > 2 && v < m * 1.5) { sum += v; n++; }
+          }
+          if (n && m < 100) {
+            vsync = sum / n;
+            frameMs = vsync * Math.max(1, Math.round(FRAME_MS / vsync));
+          }
+        }
         rawLastT = ms;
-        if (raw > 0 && raw < 50) vsync += (raw - vsync) * 0.1;
-        const since = lastT ? ms - lastT : FRAME_MS;
-        if (lastT && since < FRAME_MS - vsync / 2) return;
-        lastT = ms;
-        const dt = Math.min(0.1, since / 1000);
+        if (lastFrameT && ms - lastFrameT < frameMs - (vsync || 1000 / 60) / 2) return;
+        // Clamped so a stall (tab switch, long task) never lurches the spring.
+        const dt = lastFrameT ? Math.min(0.1, (ms - lastFrameT) / 1000) : FRAME_MS / 1000;
+        lastFrameT = ms;
 
-        // Exponential smoothing with real time constants (frame-rate
-        // independent): charge relaxes over `relax` s, the crossing eases
-        // toward its target over `smoothing` s. Max shift = strength.
         const P = paramsRef.current;
-        charge *= Math.exp(-dt / Math.max(0.5, P.drift.relax));
-        if (charge < 1e-4) charge = 0;
-        const amt = P.drift.strength * charge;
-        const tx = (ptr.x - 0.5) * 2 * amt;
-        const ty = clamp(ptr.y - 0.6, -0.5, 0.5) * 2 * amt;
-        const k = 1 - Math.exp(-dt / Math.max(0.2, P.drift.smoothing));
-        drift.x += (tx - drift.x) * k;
-        drift.y += (ty - drift.y) * k;
+        if (!reducedMotion) stepDrift(P.drift, dt, ms);
         const mixTarget = modeRef.current === 1 ? 1 : 0;
         const mixStep = dt / MODE_FADE;
         modeMix = reducedMotion ? mixTarget
           : modeMix < mixTarget ? Math.min(mixTarget, modeMix + mixStep) : Math.max(mixTarget, modeMix - mixStep);
 
+        if (introArmed) startIntro(ms);
         const isIntro = ms < introPhaseEnd;
         if (isIntro && INTRO_DURATION > 0) {
           // Time-based ease-in-out: reaches exactly START_OPACITY at introPhaseEnd
@@ -719,18 +836,33 @@ export default function PS3Silk({
         if (reducedMotion) stopLoop();
       }
 
-      // Start only if we're currently the visible work route; otherwise wait
-      // for the active→true wake. Avoids the old path of sizing to 0×0 on
-      // about/archive first-paint and then permanently flattening the pattern.
-      if (activeRef.current) {
-        requestAnimationFrame(() => lifecycleRef.current?.wake());
-      }
-    }, isFirstLoad ? 150 : 0);
+      // Compile, then warm up, then size the real buffers and draw the first
+      // visible frame, each in its own frame so none of them stack up into
+      // one long one. Start only if we're currently the visible work route;
+      // otherwise wait for the active→true wake (sizing to 0×0 on an
+      // about/archive first paint used to flatten the pattern for good).
+      const pending = beginGL();
+      const whenCompiled = () => {
+        initRaf = 0;
+        if (gl.isContextLost()) return;
+        if (!compiled(pending)) {
+          initRaf = requestAnimationFrame(whenCompiled);
+          return;
+        }
+        finishGL(pending);
+        initRaf = requestAnimationFrame(() => {
+          initRaf = 0;
+          if (activeRef.current) lifecycleRef.current?.wake();
+        });
+      };
+      initRaf = requestAnimationFrame(whenCompiled);
+    }
 
     return () => {
       _hasMounted = hadMountedBefore;
       window.removeEventListener("intro-replay", onReplay);
-      clearTimeout(initTimer);
+      cancelInit();
+      cancelAnimationFrame(initRaf);
       lifecycleRef.current = null;
       cancelAnimationFrame(rafId);
       removeListeners();
