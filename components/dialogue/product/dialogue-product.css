@@ -3820,15 +3820,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Counts: no box around the hit area. The grey segment itself takes hover, press and open states. */
 .dlg-live__side, .dlg-live__side:hover, .dlg-live__side:active { box-shadow: none; background: transparent; }
 .dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease, opacity 240ms ease; }
-/* Hover only at rest (:not([data-side])). Focal darkens cherry; muted softens. Selected segment: no hover change. */
-.dlg-live__bar:not([data-side]):has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
-.dlg-live__bar:not([data-side]):has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 72%, var(--dp-bg)); }
-.dlg-live__bar:not([data-side]):has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 75%, var(--dp-ink)); }
-.dlg-live__bar:not([data-side]):has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 60%, var(--dp-bg)); }
-/* P14 items 1+7: selected side keeps colour; the other segment recedes to 35%. Label of the open side goes ink. */
-.dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-focal],
-.dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-focal] { opacity: 0.35; }
-.dlg-live__bar[data-side] .dp-chart-stack__seg { box-shadow: none; }
+
 .dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: var(--dp-radius-chip); background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
 .dlg-stage__sample[data-side="friday"] .dlg-sample-key,
 .dlg-stage__sample[data-side="new"] .dlg-sample-key { background: var(--dp-chart-focal); }
@@ -4262,11 +4254,107 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-thin-miss { max-width: 448px; margin-inline: auto; }
 .dlg-counts-x { display: flex; flex-direction: column; gap: 16px; }
 
-/* Round 13b: in every explored versus kept pair the explored card recedes, so the decision reads before the labels.
-   The kept card and every label row stay at full strength. */
-.dlg-demo-pair > div:first-child .dialogue-rachel-frame__pad,
-.dlg-match__half:first-child .dlg-match__panel { opacity: 0.62; }
+/* Round 16 (Mudit): explored options are finished work, not faded sketches. Both cards of a pair are full strength; the
+   explored label row (letter, "Explored", the X) says what was ruled out, and a hairline and 48px of air separate the options.
+   The stage's own drop shadow lifts each UI off its well. This overrides Round 13b's 0.62 opacity. */
+.dlg-demo-pair { gap: 0; }
+.dlg-demo-pair > div + div { margin-top: 48px; padding-top: 48px; border-top: 1px solid var(--dlg-guide-rule); }
 
 /* Round 11b: on the phone the first try needs scroll room, so the open player can carry the count fully out of view
    instead of stopping with a sliver of the bar under the card's top edge. */
 [data-mobile] .dlg-stage--every .dlg-stage__body { padding-bottom: 160px; }
+
+
+/* ---- Round 16: segments, selection, hover and press (Mudit, Nov 3 2026) ----
+   1) The seam between the two segments is the flex gap alone, in every state, so selecting a side moves nothing.
+   2) A selected segment keeps its colour and carries a 2px marker 6px under the bar, in its own hue; its quote rows carry
+      the same hue on their left edge, and the quotes line names the group. A hover shows the marker at 40%.
+   3) Every clickable shows hover on arrival and a distinct press, at the product's 150ms timing. */
+.dlg-live .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-templates__panel .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-live__bar[data-side] .dp-chart-stack__seg { box-shadow: none; }
+.dlg-live__bar .dp-chart-stack__bar { overflow: visible; border-radius: 0; }
+.dlg-live__bar .dp-chart-stack__seg:first-child { border-radius: calc(var(--ds-radius-xs) * 2) 0 0 calc(var(--ds-radius-xs) * 2); }
+.dlg-live__bar .dp-chart-stack__seg:last-child { border-radius: 0 calc(var(--ds-radius-xs) * 2) calc(var(--ds-radius-xs) * 2) 0; }
+.dlg-live__bar .dp-chart-stack__seg { position: relative; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-live__bar .dp-chart-stack__seg::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--dp-chart-muted); opacity: 0; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.dlg-live__bar .dp-chart-stack__seg[data-focal]::after { background: var(--dp-chart-focal); }
+.dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal]::after,
+.dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal])::after { opacity: 0.4; }
+.dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal]::after,
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal])::after { opacity: 1; }
+/* The 225 recedes when the 75 is open (colour mix, so its marker and hover still read). */
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 35%, var(--dp-surface)); }
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-focal] { opacity: 0.35; }
+/* Hover darkens the segment toward ink; press darkens it again. A receded 225 comes back to 65%. */
+.dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
+.dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink)); }
+.dlg-live__bar[data-side="unsure"]:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 65%, var(--dp-surface)); }
+.dlg-live__bar:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink)); }
+.dlg-live__bar:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink)); }
+.dlg-live__bar[data-side="unsure"]:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-surface)); }
+/* The legend names the open group in ink; no weight change, so no width change. */
+.dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label { color: var(--dp-ink); }
+/* Legend swatch: its bottom sits on the text baseline and its height is the 12px cap height (8px), so it lines up with the digits. */
+.dp-chart-stack__lane { align-items: baseline; gap: 8px; }
+.dp-chart-stack__lane .dp-chart-stack__swatch { width: 8px; height: 8px; }
+/* The rows under a segment carry its hue on their left edge. */
+.dlg-stage__sample[data-side="friday"] .dp-clip-quote, .dlg-live__sample[data-side="friday"] .dp-clip-quote { box-shadow: inset 2px 0 0 var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="unsure"] .dp-clip-quote { box-shadow: inset 2px 0 0 var(--dp-chart-muted); }
+.dlg-stage__sample[data-side="friday"] .dp-clip-quote--selected, .dlg-live__sample[data-side="friday"] .dp-clip-quote--selected { box-shadow: inset 0 0 0 1px var(--dp-clip-focal-border), inset 2px 0 0 var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="unsure"] .dp-clip-quote--selected { box-shadow: inset 0 0 0 1px var(--dp-clip-focal-border), inset 2px 0 0 var(--dp-chart-muted); }
+/* Rows in a take behave like product rows: hover tints and inks the edge, press darkens, the play chip follows. */
+.dlg-stage .dp-clip-quote { cursor: pointer; }
+.dlg-stage .dp-clip-quote--selected { cursor: default; }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):hover { border-color: var(--dp-ink); background: var(--dp-warm); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):active { border-color: var(--dp-ink); background: var(--dp-nav-active-bg); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):hover .dlg-dur[data-play] { background: var(--dp-nav-active-bg); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):active .dlg-dur[data-play] { background: var(--dp-surface); }
+.dlg-dur { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+/* Tabs and the depth picker: the press rule has to beat the not-pressed hover rule above it. */
+.dlg-depth .dlg-depth__opt:not([aria-pressed="true"]):not([aria-checked="true"]):not(:disabled):active { background: var(--dp-nav-active-bg); color: var(--dp-ink); transform: scale(0.97); }
+.dlg-depth .dlg-depth__opt:not(:disabled) { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:not(:disabled):hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:not(:disabled):hover { background: var(--dp-nav-active-bg); }
+/* The selected tab keeps its fill on hover (P14: no hover change on a selected chip) and only gives on press. */
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:not(:disabled):active, .dlg-depth .dlg-depth__opt[aria-checked="true"]:not(:disabled):active { transform: scale(0.97); }
+/* Player controls: the bar buttons take hover and press like the product's. */
+.dlg-stage .dp-qplayer__btn { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); border-radius: var(--dp-radius-chip); }
+.dlg-stage .dp-qplayer__btn:hover { background: color-mix(in srgb, var(--ds-white) 18%, transparent); }
+.dlg-stage .dp-qplayer__btn:active { background: color-mix(in srgb, var(--ds-white) 32%, transparent); }
+/* Chevron, chips: hover and press were present; the chip also lifts one step on press. */
+.dlg-live .dlg-suggest:not(:disabled):active { transform: scale(0.99); }
+
+/* Round 16: the composer send is a real button. Ready, it lightens one step on hover and gives on press. */
+.dlg-live .dlg-live__send { border: 0; padding: 0; font: inherit; cursor: default; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-live .dlg-live__send[data-ready] { cursor: pointer; }
+.dlg-live .dlg-live__send[data-ready]:hover { background: color-mix(in srgb, var(--dp-ink) 78%, var(--dp-surface)); }
+.dlg-live .dlg-live__send[data-ready]:active { background: color-mix(in srgb, var(--dp-ink) 60%, var(--dp-surface)); transform: scale(0.94); }
+
+/* ---- Round 16 item 5: answer card stress test (app/dialogue/answer-stress). Options only; the takes use the current card. ---- */
+.dlg-stress { display: flex; flex-direction: column; gap: 48px; padding: 40px; background: var(--figure-well-dialogue); min-width: max-content; }
+.dlg-stress__name { margin: 0 0 16px; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--dp-ink); }
+.dlg-stress__row { display: flex; gap: 40px; align-items: flex-start; }
+.dlg-stress__col { display: flex; flex-direction: column; gap: 8px; }
+.dlg-stress__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
+.dlg-stress__panel { box-sizing: border-box; }
+.dlg-stress__body { gap: 16px; }
+/* A: crowded legends stack in a column, labels wrap inside their lane, a segment never draws under 8px. */
+.dlg-stress--fit .dp-chart-stack__seg { min-width: 8px; }
+.dlg-stress--fit .dp-chart-stack__lanes { flex-wrap: wrap; gap: 4px 16px; }
+.dlg-stress--fit [data-crowded] .dp-chart-stack__lanes { flex-direction: column; flex-wrap: nowrap; gap: 4px; }
+.dlg-stress--fit .dp-chart-stack__lane-label { overflow-wrap: break-word; }
+/* B and C: a row per group, label above its bar so a long label wraps instead of squeezing the track. */
+.dlg-stress--rows .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; overflow: visible; text-overflow: clip; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+.dlg-stress--rows .dp-chart-bars__row > span:last-child { grid-area: value; width: auto; overflow: visible; white-space: nowrap; }
+
+/* ---- Round 16 item 9: simpler data viz options (app/dialogue/viz-options). Options only. ---- */
+.dlg-viz-options { display: flex; flex-direction: column; gap: 48px; width: 640px; margin: 0 auto; padding: 40px 0; }
+.dlg-viz-options__tag { margin: 0 0 8px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
+.dlg-index { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.dlg-index li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--dlg-guide-rule); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-index li > span:last-child { color: var(--color-text-secondary); }
+.dlg-viz-options .dlg-edge__then, .dlg-viz-options .dlg-flow { text-align: left; }
+.dlg-viz-options { font-family: var(--font-sans); }
+.dlg-viz-options .dlg-templates__panel { padding: 0; }
+.dlg-viz-options .dlg-match__chart { align-items: stretch; text-align: left; }

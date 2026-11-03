@@ -2,6 +2,13 @@
 
 Distinct rounds only. No per-patch entries. Newest first. Previews are behind Vercel auth. Each URL is the deployment of the commit named in its entry, or of the tip of the push that carried it where noted.
 
+## Round 16, Nov 3 2026 (Mudit's page feedback on review/round-p15)
+- Round 15 shipped as the default (assumption, Mudit did not confirm the test): trimmed Every and Toggles; `public/dialogue/motion/trim/` removed.
+- Bugs: selecting a segment moves nothing (the seam is the flex gap alone); selected segment carries a 2px hue marker, the quote rows carry that hue on their left edge, and the "quotes shown" line names the group; hover and press on every clickable in every take; the picker stage no longer draws the old grey bars (the remaining `data-neutral` panels are the rejected and awkward-shape frames in the chart library, kept per Round 11).
+- New audits: `npm run audit:dialogue-ui` (layout shift across selected and unselected states, hover and press by real mouse plus pixel diff, desktop and phone) and `npm run audit:dialogue-clip` (nothing clipped at 1440, 390, 360, light and dark). The recorder's pointer-on-text audit still holds.
+- Design: depth picker is a live take (hover, press, send, answer, reset); explored Levels options are drawn at full strength with a hairline and 48px of air; open choices for Mudit on answer-card stress (`design/notes/answer-card-stress-r16.md`, dev page `/dialogue/answer-stress`), the Clips take (`design/notes/clip-take-r16.md`) and the data viz section (dev page `/dialogue/viz-options`). Feasibility note for a live AI chart picker: `design/notes/live-ai.md`.
+- Screenshots: /opt/cursor/artifacts/screenshots/r16-*.
+
 ## Round 15, Nov 3 2026 (trimmed Every and Toggles test on review/round-p15)
 - Every loses the 75 tap (6.9s, was 8.3s); Toggles loses Ana's play beat (7.4s, was 9.0s). Cutting only Ana's fold was rejected: Insight would fade the open player as a ghost.
 - Trimmed files are in public/dialogue/motion/trim/ and are not on the page yet. Notes: design/notes/motion-r15.md. Screenshots: /opt/cursor/artifacts/screenshots/r15-*.

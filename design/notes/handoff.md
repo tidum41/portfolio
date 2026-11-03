@@ -47,4 +47,12 @@ Paper should mirror:
 Test only; the page still plays the current Every and Toggles takes. For Paper, if Mudit ships the trim:
 - **Every:** opens with the 75's people already showing (Mei and Owen under "picked from the 75", the 225 dimmed). One tap on Mei opens her player and pushes the count out of view; a second tap folds it, ending on the opening frame. 6.9s. Poster is the open player.
 - **Toggles:** Chart, People, Source, Insight. Source holds about 2s on its play chips. Ana's play and fold are gone. 7.4s. Poster is Source open.
-- Details, durations and still frames are in `design/notes/motion-r15.md`; trimmed files are in `public/dialogue/motion/trim/`.
+- Details, durations and still frames are in `design/notes/motion-r15.md`; the trimmed files shipped in round 16 and the `trim/` folder is gone.
+
+## Page (cloud), Nov 3 2026, round 16
+
+- **Shipped from round 15:** the trimmed Every and Toggles takes are the page defaults (assumption, not confirmed by Mudit).
+- **For Paper:** segment seams are the flex gap only; a selected segment has a 2px marker in its own hue 6px under the bar, and its quote rows carry the same hue on the left edge. Every clickable has a hover (tint or darken, 150ms) and a distinct press. The depth picker is a take in live UI.
+- **Open choices:** answer card (A patch the bar, B bar or rows by query, C rows every time; recommended B), Clips take (cut and keep a still, merge, or change; recommended cut), data viz section (Option 1 three rows, Option 2 worked example plus index; recommended 1).
+- **Audits:** `npm run audit:dialogue-ui`, `npm run audit:dialogue-clip`, plus `check:dialogue-system` and `typecheck`.
+

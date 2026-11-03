@@ -10,13 +10,11 @@ const req = createRequire(import.meta.url);
 let pw; try { pw = req("playwright"); } catch { pw = req("@playwright/test"); }
 const [, , base = "http://localhost:3207", out = "/workspace/dialogue-agent/shots/p11/motion", ...only] = process.argv;
 mkdirSync(out, { recursive: true });
-const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", every: "variant-every-full", toggles: "variant-toggles-full", thin: "live-thin" };
-// P16: the picker is a still (its verdict lives in the caption); `still` renders it to variant-picker-full.jpg.
-const STILLS = { picker: "variant-picker-full", before: "variant-before-full" };
-/* P16 round 4 (Mudit): the picker still shows one depth picked (Chart), with the answer that depth returns. The problem
-   frame is a still: the full prose answer with "Many found" underlined and its note in the gutter (none on phones). */
+const NAMES = { hero: "live-hero-ask", side: "live-side", clip: "live-clip", every: "variant-every-full", toggles: "variant-toggles-full", thin: "live-thin", picker: "variant-picker-full" };
+// The problem frame is a still: `still` renders it to variant-before-full.jpg.
+const STILLS = { before: "variant-before-full" };
+/* The problem frame is a still: the full prose answer with "Many found" underlined and its note in the gutter (none on phones). */
 const SETUP = {
-  picker: () => { const d = window.__dlg; d.pick(1); setTimeout(() => { d.send(); d.answer(); }, 100); },
   before: () => { const d = window.__dlg; d.send(); for (let i = 0; i < 5; i++) d.line(); d.mark(); setTimeout(() => d.note("Unstated count", ".dlg-mark"), 400); },
 };
 // Picker ends on its start state, so they need no crossfade. Others still blend end→start.
@@ -28,9 +26,8 @@ const THEME = process.env.DLG_THEME === "dark" ? "dark" : "light";
 // P16 round 3: DLG_MOBILE=1 records the phone takes, cropped to a 320px card with no gutter (files end in -m).
 const AUDIT = process.env.DLG_AUDIT === "1";
 const MOBILE = process.env.DLG_MOBILE === "1"; const Q = MOBILE ? "&m=1" : "";
-// DLG_TRIM=1 records the trimmed Every and Toggles storyboards (one step fewer each) to files ending in -trim.
-const TRIM = process.env.DLG_TRIM === "1";
-const SUFFIX = (TRIM ? "-trim" : "") + (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
+// Round 16: the trimmed Every and Toggles storyboards (Round 15) are the only ones; the old ones are gone.
+const SUFFIX = (MOBILE ? "-m" : "") + (THEME === "dark" ? "-dark" : "");
 const SHOWN_W = MOBILE ? 358 : 640; // css px the take is shown at (phone figure width at 390, desktop column)
 const EASE_IO = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 /** Figure well tokens (globals.css --figure-well-dialogue). Corner pixel of each take must land within ±2. */
@@ -40,7 +37,7 @@ const WELL = THEME === "dark" ? { r: 27, g: 30, b: 33, hex: "#1b1e21" } : { r: 2
    well. Only the recording page changes; the site token stays #1b1e21. */
 const REC_WELL = THEME === "dark" ? 'html[data-theme="dark"] { --figure-well-dialogue: #1b1e23; }' : "";
 
-const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 200 }; // add-only takes: the empty chat already closes the loop
+const DEMO_PREROLL = { hero: 300, before: 300, thin: 300, toggles: 200, picker: 300 }; // add-only takes: the empty chat already closes the loop
 async function still(demo) {
   const b = await pw.chromium.launch({ executablePath: "/usr/bin/google-chrome" });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1900 }, deviceScaleFactor: 2 });
@@ -82,8 +79,10 @@ async function record(demo) {
   // Hide the site's fixed chrome (nav, TOC button) so nothing but the stage can reach the crop.
   const fw = await page.evaluate(() => document.getElementById("frame").offsetWidth);
   const CUR = Math.round((28 * 2 * fw) / SHOWN_W); // P16: 28px on the page, where the 2x take shows SHOWN_W px wide
-  // P16: no hover in any take (TASTE: hover states on figures are rejected). State changes come from window.__dlg, so the stage takes no pointer events.
-  await page.addStyleTag({ content: REC_WELL + "#frame { zoom: 2; } " + `#dlg-cursor { width: ${CUR}px; height: ${CUR}px; }` + " .dlg-motion-frame, .dlg-motion-frame * { pointer-events: none !important; } body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
+  // Round 16 (Mudit): every clickable shows hover and press in the take, so the stage takes the real pointer. State changes still
+  // come from window.__dlg; the click listener below swallows the real click so nothing fires twice.
+  await page.addStyleTag({ content: REC_WELL + "#frame { zoom: 2; } " + `#dlg-cursor { width: ${CUR}px; height: ${CUR}px; }` + " body > *:not(main):not(#dlg-cursor), header, footer, nav, [class*='toc'], [class*='Toc'] { visibility: hidden !important; }" });
+  await page.evaluate(() => document.addEventListener("click", (e) => { if (e.target.closest?.("#frame")) { e.stopImmediatePropagation(); e.preventDefault(); } }, true));
   // Decode every image up front: a lazy image entering view mid-scroll stalls the screencast for ~270 ms.
   await page.evaluate(() => Promise.all([...document.images].map((i) => { i.loading = "eager"; i.decoding = "sync"; return i.decode().catch(() => {}); })));
   await page.waitForTimeout(400);
@@ -137,10 +136,11 @@ async function record(demo) {
     const h = await page.$(sel), bb0 = await h.boundingBox(), dx = pos.x - bb0.x, dy = pos.y - bb0.y;
     return { ride: async (ms) => { const end = Date.now() + ms * K; while (Date.now() < end) { const bb = await h.boundingBox(); if (bb) { pos = { x: bb.x + dx, y: bb.y + dy }; await page.mouse.move(pos.x, pos.y); } await page.waitForTimeout(8); } } };
   }
-  async function press() { await hold(150); await page.mouse.down(); await hold(120); await page.mouse.up(); }
+  // Round 16: the pointer rests on a target about a quarter second before it presses, so its hover shows; the press holds long enough to read.
+  async function press() { await hold(260); await page.mouse.down(); await hold(160); await page.mouse.up(); }
   async function cursorOut() { await page.evaluate(() => { document.getElementById("dlg-cursor").style.transition = "opacity 300ms ease"; }); await cursor(0); await hold(320); await page.mouse.move(2, 2); }
   if (demo === "toggles") { const bb = await (await page.$('[data-target="level-0"]')).boundingBox(); pos = { x: bb.x + bb.width * TAB_FX, y: bb.y + bb.height * 0.5 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
-  if (demo === "every" && TRIM) { await page.waitForFunction(() => window.__dlg); await api('side("unsure")'); await hold(1200); }
+  if (demo === "every") { await page.waitForFunction(() => window.__dlg); await api('side("unsure")'); await hold(1200); }
   if (demo === "side") { const bb = await (await page.$(SEG.friday)).boundingBox(); pos = { x: bb.x + bb.width * 0.5, y: bb.y + bb.height * 0.1 }; await page.mouse.move(pos.x, pos.y); await cursor(1); }
   // P16 round 4: the first try starts closed (the answered count), like counts.
   const t0 = Date.now() / 1000;
@@ -168,7 +168,7 @@ async function record(demo) {
       await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.55 }); const g2 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)"); await api(MOBILE ? 'stickEnd(560, ".dp-clip-quote--selected", 8)' : 'stick(560, ".dp-side-sample__head", 12)'); await g2.ride(2000);
       // On phone the answer sentence stays at the top with Ana's open clip fully below it; Dev's row waits just under the fold.
       // The fold clamps the chat's scroll by itself, in step with the height, so nothing else moves.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); const g3 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g3.ride(900); await cursorOut(); await hold(1250);
+      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17 }); const g3 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g3.ride(900); await cursorOut(); await hold(1480);
     },
     async before() { await api("send()"); await hold(500); for (let i = 0; i < 5; i++) { await api("line()"); await hold(380); } await api("mark()"); await hold(800); await api('note("Unstated count", ".dlg-mark")'); await hold(MOBILE ? 1100 : 1400); await api("clear(700)"); await hold(Math.round(650 * SLOW)); },
     // P16 first try: one tap on the 75 opens every level at once (people and a playing clip), then it holds and folds back.
@@ -177,15 +177,9 @@ async function record(demo) {
     // P16 round 4 (Mudit): every tap causes exactly what appears. The 75 opens its people; Mei opens her clip; the player
     // pushes the count out of view, which is the cost the first try proves. The chevron folds it back to the start.
     async every() {
-      if (TRIM) {
-        // Trimmed: the 75 is already open (the 75 tap is cut), so the take opens on Mei's row and folds her player back to its start.
-        await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(2000);
-        await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.17, ms: 550 }); const g6 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(false)"); await api("up(500)"); await g6.ride(700); await cursorOut(); await hold(1250);
-        return;
-      }
-      await cursorTo(SEG.unsure, { fx: 0.5, fy: 0.1, ms: 550 }); const g4 = await grab(SEG.unsure); await press(); await api('side("unsure")'); await g4.ride(MOBILE ? 1300 : 800);
-      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(1700);
-      await cursorTo('[data-target="side-collapse"]', { ms: 550 }); const g6 = await grab('[data-target="side-collapse"]'); await press(); await api("side(false)"); await api("clip(false)"); await g6.ride(500); await cursorOut(); await hold(1250);
+      // The 75 is already open (set up above), so the take opens on Mei's row and folds her player back to its start.
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.55, ms: 550 }); const g5 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(true)"); await api('stick(560, ".dp-side-sample__head", 12)'); await g5.ride(2000);
+      await cursorTo('[data-target="quote-mei"]', { fx: 0.93, fy: 0.17, ms: 550 }); const g6 = await grab('[data-target="quote-mei"]'); await press(); await api("clip(false)"); await api("up(500)"); await g6.ride(700); await cursorOut(); await hold(1480);
     },
     // P16 kept, on the same stage: Chart, then Source (people and Mei's clip on the 75), then back to Insight.
     // P16 round 3: Chart, People, Source, then Mei. Each tap shows one thing; Source marks rows playable, Mei plays.
@@ -194,18 +188,20 @@ async function record(demo) {
     async toggles() {
       await cursorTo('[data-target="level-1"]', { fx: TAB_FX, ms: 400, track: true }); const g7 = await grab('[data-target="level-1"]'); await press(); await api("level(1)"); await g7.ride(120);
       await cursorTo('[data-target="level-2"]', { fx: TAB_FX, ms: 400, track: true }); const g8 = await grab('[data-target="level-2"]'); await press(); await api("level(2)"); await g8.ride(120);
-      await cursorTo('[data-target="level-3"]', { fx: TAB_FX, ms: 400, track: true }); const g9 = await grab('[data-target="level-3"]'); await press(); await api("level(3)"); await g9.ride(TRIM ? Number(process.env.DLG_SRC_HOLD ?? 1300) : 120);
-      if (TRIM) {
-        // Trimmed: Ana's play beat is cut whole. Cutting only her fold lets Insight fade the open player as a ghost (P16 round 4 forbids it), so Source holds instead.
-        await cursorTo('[data-target="level-0"]', { fx: TAB_FX, ms: 450, track: true }); const g12t = await grab('[data-target="level-0"]'); await press(); await api("level(0)"); await g12t.ride(2300);
-        return;
-      }
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.72, ms: 400 }); const g10 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(true)");
-      await api('stick(560, ".dlg-depth", 8)');
-      await g10.ride(800);
-      // Ana's row folds the player away (the chat settles by itself), then Insight folds everything back.
-      await cursorTo('[data-target="quote-ana"]', { fx: 0.93, fy: 0.17, ms: 400 }); const g11 = await grab('[data-target="quote-ana"]'); await press(); await api("clip(false)"); await g11.ride(560);
+      await cursorTo('[data-target="level-3"]', { fx: TAB_FX, ms: 400, track: true }); const g9 = await grab('[data-target="level-3"]'); await press(); await api("level(3)"); await g9.ride(Number(process.env.DLG_SRC_HOLD ?? 1300));
+      // Ana's play beat is cut whole: cutting only her fold lets Insight fade the open player as a ghost (P16 round 4 forbids it).
       await cursorTo('[data-target="level-0"]', { fx: TAB_FX, ms: 450, track: true }); const g12 = await grab('[data-target="level-0"]'); await press(); await api("level(0)"); await g12.ride(2300);
+    },
+    // Round 16 (Mudit): the depth picker as live UI. Chart is picked before the question is asked, the question is typed and sent,
+    // and the answer that depth returns (count and bar) rises. A new chat resets the depth to Insight, which closes the loop.
+    async picker() {
+      // The pointer enters from the empty chat above the chips, so its fade-in never lands on a label.
+      { const bb = await (await page.$('[data-target="depth-1"]')).boundingBox(); pos = { x: bb.x + bb.width * (MOBILE ? 0.9 : 0.78), y: bb.y - 120 }; await page.mouse.move(pos.x, pos.y); await cursor(1); await hold(150); }
+      await cursorTo('[data-target="depth-1"]', { fx: MOBILE ? 0.9 : 0.78, fy: 0.5, ms: 600 }); const gp = await grab('[data-target="depth-1"]'); await press(); await api("pick(1)"); await gp.ride(300);
+      await api("type(46)"); await cursorTo('[data-target="send"]', { fx: 0.5, fy: 0.5, ms: 700 }); await hold(200);
+      const gs = await grab('[data-target="send"]'); await press(); await api("send()"); await api("analyze(true)"); await gs.ride(450); await cursorOut();
+      await api("answer()"); await api("follow(500)"); await hold(1800);
+      await api("pick(0)"); await api("clear(700)"); await hold(Math.round(650 * SLOW));
     },
     // P16: the thin answer arrives, the flag is named, a chip is tapped and counted, then the chat scrolls up and out.
     async thin() {

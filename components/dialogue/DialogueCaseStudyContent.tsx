@@ -197,7 +197,7 @@ export function DialogueCaseStudyContent({
                   <div>
                     <LevelReasoning letter="A" label="Explored: pick a depth before asking" reasoning={LEVELS_EXPLORED} />
                     <DialogueRachelFrame tone="problem">
-                      <DialogueDemoStill src="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer, set to Chart before the question is asked, with the count and bar that come back" />
+                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer. Picking Chart, typing the question and sending it returns the count with its bar." />
                     </DialogueRachelFrame>
                   </div>
                   <div>

@@ -66,7 +66,7 @@ export default function ChartStackedBar({
             <span key={seg.label} className="dp-chart-stack__lane" data-focal={seg.focal ? "" : undefined}>
               <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
               <span className="dp-chart-stack__lane-label">{seg.label}</span>
-              <span className="dp-chart-stack__lane-value">{seg.value}</span>
+              <span className="dp-chart-stack__lane-value">{seg.value.toLocaleString("en-US")}</span>
             </span>
           ))}
         </div>

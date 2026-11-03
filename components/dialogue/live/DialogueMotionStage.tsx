@@ -75,9 +75,9 @@ export type { MotionDemo } from "@/components/dialogue/motion/stages";
  *  capture, so every frame of the final video is a real captured frame. Timers and scroll durations scale with it. */
 const K = () => (typeof window === "undefined" ? 1 : ((window as unknown as { __K?: number }).__K ?? 1));
 
-const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string }> = {
-  friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday" },
-  unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure" },
+const SAMPLE_META: Record<SampleWhich, { rows: typeof QUOTE_LIST; count: number; of: number; label: string; who: string }> = {
+  friday: { rows: QUOTE_LIST_FRIDAY, count: 225, of: 300, label: "read it as this Friday", who: "who read it as this Friday" },
+  unsure: { rows: QUOTE_LIST, count: 75, of: 300, label: "unsure", who: "who were unsure" },
 };
 
 const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
@@ -228,7 +228,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, 
       <div className="dp-side-sample dlg-stage__sample" data-side={which}>
         <p className="dp-side-sample__head dp-text-body">
           <span className="dlg-sample-key" aria-hidden />
-          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{rows.length}</span> <span className="dlg-nowrap">quotes shown,</span> <span className="dlg-nowrap">picked from the {meta.count}</span></span>
+          <span className="dlg-sample-head__text"><span className="dp-summary__emph">{rows.length}</span> <span className="dlg-nowrap">quotes shown,</span> <span className="dlg-nowrap">picked from the {meta.count}</span> <span className="dlg-nowrap">{meta.who}</span></span>
           <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={collapse}>
             <ChevronUpIcon />
           </button>
@@ -447,7 +447,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         ) : null}
         {answered ? <div className="dlg-rise dlg-fill dlg-stage__item"><AnswerCard segment={false} sideOpen={ana ? "friday" : false} /></div> : null}
         <Grow open={ana} className="dlg-stage__item">
-          <div className="dp-clip-quotes dlg-live__sample"><QuoteRow q={ANA} open={false} /></div>
+          <div className="dp-clip-quotes dlg-live__sample" data-side="friday"><QuoteRow q={ANA} open={false} /></div>
         </Grow>
       </>
     );
@@ -488,7 +488,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       <>
         {demo === "every" ? null : <Grow open={sent} className="dlg-stage__item"><div className="dlg-stage__item"><UserMessageBubble>{QUESTION}</UserMessageBubble></div></Grow>}
         <Grow open={answered} className="dlg-stage__item">
-          <AnswerCard sideOpen={side} onSide={(w) => setSide(w)} />
+          <AnswerCard chart={demo === "picker" ? pick >= 1 : true} sideOpen={side} onSide={(w) => setSide(w)} />
         </Grow>
         <Sample open={!!side} which={side || "unsure"} playing={clip} playSec={playSec} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
@@ -561,21 +561,21 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
         <div className="dlg-depth" role="radiogroup" aria-label="Answer depth">
           {LEVELS.map((l, i) => (
             /* P16 round 4 (Mudit): one depth is picked before asking, so only that chip is filled. */
-            <button key={l} type="button" role="radio" aria-checked={pick === i} aria-pressed={i === pick} aria-current={i === pick ? "true" : undefined} data-target={`depth-${i}`} className="dlg-depth__opt" disabled={sent} onClick={() => setPick(i)}>{l}</button>
+            <button key={l} type="button" role="radio" aria-checked={pick === i} aria-pressed={i === pick} aria-current={i === pick ? "true" : undefined} data-target={`depth-${i}`} className="dlg-depth__opt" onClick={() => setPick(i)}>{l}</button>
           ))}
         </div>
       ) : null}
       <div className="dp-study-chat__composer-box">
         {typed ? <p className="dp-study-chat__composer-text">{typed}</p> : <p className="dp-study-chat__composer-placeholder">{dialogueCopy.composerPlaceholder}</p>}
-        <span className="dp-study-chat__composer-send dlg-live__send" data-target="send" data-ready={typed ? "" : undefined} aria-hidden>
+        <button type="button" className="dp-study-chat__composer-send dlg-live__send" data-target="send" data-ready={typed ? "" : undefined} aria-label="Send" onClick={() => (window as unknown as { __dlg: { send: () => void } }).__dlg.send()}>
           {analyzing ? <LoaderArcIcon className="dlg-spin" /> : <ArrowUpIcon />}
-        </span>
+        </button>
       </div>
     </div>
   ) : null;
 
   return (
-    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo} data-neutral={demo === "picker" ? "" : undefined}>
+    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo}>
       {demo === "hero" ? (
         <div className="dp-study-chat__head">
           <div className="dp-study-chat__head-top">
