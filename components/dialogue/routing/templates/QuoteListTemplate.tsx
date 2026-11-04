@@ -1,52 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import SourcePill from "@/components/dialogue/product/SourcePill";
-import { WaveformIcon } from "@/components/dialogue/product/icons";
+import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import type { QuoteResolved } from "@/lib/dialogue/routing/sampleDataset";
 
 type Props = {
   data: QuoteResolved;
+  /** Kept for screenshot harnesses that previously forced a selection. */
   initialSelected?: number;
 };
 
-/** Quote list with speaker and timestamp source-pill chips. Quiet selected quote. */
-export default function QuoteListTemplate({ data, initialSelected = 0 }: Props) {
-  const [selected, setSelected] = useState(initialSelected);
-  const active = data.quotes[selected] ?? data.quotes[0];
-
+/** Quote list: the live QuoteListFigure, fed by the routed example dataset. */
+export default function QuoteListTemplate({ data }: Props) {
   return (
     <div className="dlg-route-answer" data-template="quote_list">
       <p className="dlg-route-finding">{data.finding}</p>
-      <div className="dlg-route-pills" role="list">
-        {data.quotes.map((q, i) => (
-          <button
-            key={q.name}
-            type="button"
-            className="dlg-route-pill-btn"
-            aria-pressed={i === selected}
-            onClick={() => setSelected(i)}
-          >
-            <SourcePill
-              name={q.name}
-              time={q.time.split("\u2013")[0]}
-              selected={i === selected}
-            />
-          </button>
-        ))}
-      </div>
-      <div className="dlg-route-quote-slot">
-        {active ? (
-          <div className="dp-clip-quote dlg-route-quote dlg-route-quote--open">
-            <p className="dp-clip-quote__who">
-              <WaveformIcon className="dp-clip-quote__icon" />
-              <span className="dp-clip-quote__name">{active.name}</span>
-              <span className="dp-clip-quote__time">{active.time}</span>
-            </p>
-            <p className="dp-clip-quote__text">{active.quote}</p>
-          </div>
-        ) : null}
-      </div>
+      <QuoteListFigure
+        focus="answer"
+        quotes={data.quotes.map((q) => ({
+          participant: q.name,
+          time: q.time,
+          quote: q.quote,
+        }))}
+      />
     </div>
   );
 }

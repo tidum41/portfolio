@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import SourcePill from "@/components/dialogue/product/SourcePill";
+import { FridayBar } from "@/components/dialogue/live/AnswerCard";
+import SideSample from "@/components/dialogue/product/scenarios/SideSample";
 import { DialogueInterviewPlayer } from "@/components/dialogue/DialogueInterviewPlayer";
-import { WaveformIcon } from "@/components/dialogue/product/icons";
 import type { CountSplitResolved } from "@/lib/dialogue/routing/sampleDataset";
 
 type Props = {
@@ -21,8 +19,8 @@ type Props = {
 };
 
 /**
- * Count/split bar in the 448px panel. Tap a side to see those people,
- * then a source pill, then play the clip in place.
+ * Count/split answer. Composes the live FridayBar (AnswerCard), SideSample
+ * (QuoteListFigure + SourcePill), and DialogueInterviewPlayer — no chart fork.
  */
 export default function CountSplitTemplate({
   data,
@@ -34,10 +32,10 @@ export default function CountSplitTemplate({
   const [side, setSide] = useState<string | null>(initialSide);
   const [person, setPerson] = useState(initialPerson);
   const [clipOpen, setClipOpen] = useState(initialClip);
-  const total = data.total;
-  const lead = Math.round((data.groups[0].value / total) * 10000) / 100;
   const open = data.groups.find((g) => g.id === side) ?? null;
   const active = open?.people[person] ?? open?.people[0] ?? null;
+  const sideWhich =
+    side === data.groups[0]?.id ? "friday" : side === data.groups[1]?.id ? "unsure" : false;
 
   useEffect(() => {
     if (!side) onDepth?.("chart");
@@ -59,105 +57,57 @@ export default function CountSplitTemplate({
 
   return (
     <div className="dlg-route-answer" data-template="count_split">
-      <ChartVizCard title={data.finding} className="dlg-route-card">
-        <div className="dlg-live__bar" data-layout="bar" data-side={side || undefined}>
-          <ChartStackedBar
-            lanes
-            total={total}
-            segments={data.groups.map((g) => ({
-              label: g.label,
-              value: g.value,
-              display: `${g.value} of ${total}`,
-              focal: g.focal,
-            }))}
-          />
-          <button
-            type="button"
-            className="dlg-live__side dlg-live__side--friday"
-            style={{ width: `calc(${lead}% + 12px)` }}
-            aria-label={`Open ${data.groups[0].label}, ${data.groups[0].value} of ${total}`}
-            aria-expanded={side === data.groups[0].id}
-            onClick={() => openSide(data.groups[0].id)}
-          />
-          <button
-            type="button"
-            className="dlg-live__side dlg-live__side--unsure"
-            style={{ width: `calc(${100 - lead}% + 12px)` }}
-            aria-label={`Open ${data.groups[1].label}, ${data.groups[1].value} of ${total}`}
-            aria-expanded={side === data.groups[1].id}
-            onClick={() => openSide(data.groups[1].id)}
-          />
-        </div>
-      </ChartVizCard>
+      <FridayBar
+        still
+        sideOpen={sideWhich}
+        onSide={(which) => {
+          const id = which === "friday" ? data.groups[0]?.id : data.groups[1]?.id;
+          if (id) openSide(id);
+        }}
+        answer={{
+          finding: data.finding,
+          total: data.total,
+          groups: data.groups.map((g) => ({
+            label: g.label,
+            value: g.value,
+            focal: g.focal,
+          })),
+        }}
+      />
 
       <div className="dlg-route-side" data-open={open ? "" : undefined} aria-live="polite">
         {open ? (
-          <>
-            <p className="dlg-route-side__head">
-              <span
-                className="dlg-route-side__swatch"
-                data-focal={open.focal ? "" : undefined}
-                aria-hidden
-              />
-              <span className="dlg-route-side__label">{open.label}</span>
-              <span className="dlg-route-side__count">{open.value}</span>
-            </p>
-            <div className="dlg-route-pills" role="list">
-              {open.people.map((p, i) => (
-                <button
-                  key={p.name}
-                  type="button"
-                  className="dlg-route-pill-btn"
-                  aria-pressed={i === person}
-                  onClick={() => {
-                    setPerson(i);
-                    setClipOpen(false);
-                  }}
-                >
-                  <SourcePill
-                    name={p.name}
-                    time={p.time.split("\u2013")[0]}
-                    selected={i === person}
-                  />
-                </button>
-              ))}
-              {open.value > open.people.length ? (
-                <SourcePill name={`+${open.value - open.people.length} more`} time="" />
-              ) : null}
-            </div>
-            {active ? (
-              <button
-                type="button"
-                className={[
-                  "dp-clip-quote",
-                  "dlg-route-quote",
-                  "dlg-route-quote--open",
-                  clipOpen ? "dlg-route-quote--playing" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                aria-pressed={clipOpen}
-                onClick={() => setClipOpen((v) => !v)}
-              >
-                <p className="dp-clip-quote__who">
-                  <WaveformIcon className="dp-clip-quote__icon" />
-                  <span className="dp-clip-quote__name">{active.name}</span>
-                  <span className="dp-clip-quote__time">{active.time}</span>
-                </p>
-                <p className="dp-clip-quote__text">{active.quote}</p>
-              </button>
-            ) : null}
-            <div className="dlg-route-player-slot" data-open={clipOpen ? "" : undefined}>
-              {clipOpen && active ? (
-                <div className="dlg-live__clip" style={clipRange(active.time)}>
-                  <DialogueInterviewPlayer current={active.time.split("\u2013")[0]} />
-                </div>
-              ) : null}
-            </div>
-          </>
+          <SideSample
+            label={open.label.replace(/^[A-Z]/, (c) => c.toLowerCase())}
+            total={open.value}
+            quotes={open.people.map((p) => ({
+              participant: p.name,
+              time: p.time,
+              quote: p.quote,
+            }))}
+            selectedParticipant={active?.name ?? null}
+            onSelectQuote={(name) => {
+              const idx = open.people.findIndex((p) => p.name === name);
+              if (idx >= 0) {
+                setPerson(idx);
+                setClipOpen((v) => (idx === person ? !v : true));
+              }
+            }}
+          />
         ) : (
           <p className="dlg-route-side__hint">Tap a side of the bar to see those people.</p>
         )}
+      </div>
+
+      {/* Reserved slot: live LiveSideSample nests the player inside the quote and
+          shifts the list; the demo keeps the shared DialogueInterviewPlayer in a
+          fixed-height slot so selection never moves the outer boxes. */}
+      <div className="dlg-route-player-slot" data-open={clipOpen && active ? "" : undefined}>
+        {clipOpen && active ? (
+          <div className="dlg-live__clip" style={clipRange(active.time)}>
+            <DialogueInterviewPlayer current={active.time.split("\u2013")[0]} />
+          </div>
+        ) : null}
       </div>
 
       <div className="dlg-route-followups" role="list">
@@ -165,7 +115,7 @@ export default function CountSplitTemplate({
           type="button"
           className="dlg-route-followup"
           role="listitem"
-          disabled={side === data.groups[0].id}
+          disabled={side === data.groups[0]?.id}
           onClick={() => openSide(data.groups[0].id)}
         >
           See the {data.groups[0].value} who {data.groups[0].label.toLowerCase()}

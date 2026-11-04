@@ -303,12 +303,16 @@
 }
 
 .dlg-route-demo .dlg-route-quote:hover,
-.dlg-route-shot .dlg-route-quote:hover {
+.dlg-route-shot .dlg-route-quote:hover,
+.dlg-route-demo .dp-clip-quote:hover,
+.dlg-route-shot .dp-clip-quote:hover {
   border-color: var(--dp-ink);
 }
 
 .dlg-route-demo .dlg-route-quote:active,
-.dlg-route-shot .dlg-route-quote:active {
+.dlg-route-shot .dlg-route-quote:active,
+.dlg-route-demo .dp-clip-quote:active,
+.dlg-route-shot .dp-clip-quote:active {
   background: var(--dp-nav-active-bg);
 }
 
