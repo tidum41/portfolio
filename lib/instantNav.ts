@@ -49,7 +49,10 @@ export function hrefToPrimaryTab(href: string): PrimaryTab | null {
 }
 
 export function pathnameToPrimaryTab(pathname: string): PrimaryTab | null {
-  return HREF_TO_TAB[pathname] ?? null;
+  // Vercel's ISR regeneration of "/" server-renders with usePathname() ===
+  // "/index" while the client sees "/". Without this, regenerated HTML hides
+  // the Work shell and hydration fails (#418).
+  return HREF_TO_TAB[pathname === "/index" ? "/" : pathname] ?? null;
 }
 
 export function isPrimaryHref(href: string): boolean {
