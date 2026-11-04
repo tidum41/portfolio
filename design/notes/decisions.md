@@ -2,6 +2,30 @@
 
 Written in my own voice so I can explain each one in an interview. Each entry holds the decision, what else I tried, why this one, and what would make me revisit it. Newest first.
 
+## Routing demo (Nov 4 2026)
+
+### Round 2 interactions: cursor pill, one study base, clips stay clips
+
+**Decision.** Hovering a bar shows the percent in the existing tooltip chip (`.dp-hero-tooltip`), positioned from the pointer. Legend counts stay put. Press and selected states use the ink and warm tokens already on the chips. The Friday answer uses the case study split, 225 of 300, and the named rows are a quoted extract of that study. A comparison names the sum of its bars. Returns lines say return. A clip question stays `clip_list` when those people have timestamps, including damaged packaging. The composer clears on send. The reason streams, then the card mounts. Enter timing, pill chrome, layout, and the clip still are token-level placeholders so a later visual pass can restyle them. **Tried.** Leaving the legend to swap to a percent, and treating the 24 named people as a second study. **Why.** The audit asked the demo to mimic the product's hover, press and clip, and the 24 versus 300 bases were reading as two studies. **Revisit.** If a cursor pill covers the segment on a phone, pin it to the segment's top edge.
+
+
+
+### Round 2: quieter selection, visible routing, drill-down chips
+
+**Decision.** The count card drops the title divider. Legend lanes share one baseline with swatches translated by `0 calc(4px - 0.3065em)`, and the right lane reads count then label. A selected quote uses a warm fill and hairline stone border; the source pill carries the selection. The typed flow shows a short "Picked … because …" step, then the template, with follow-up chips into people and a clip, plus a How it routed toggle for query type, data available and goal. **Tried.** Keeping the cherry outline on the open quote. **Why.** The chip already marks who is open, and a heavy outline competed with the bar's cherry focal. **Revisit.** If the warm quote still reads as unselected beside a cherry pill, try matching the pill's warm fill on the quote without a border change.
+
+### A live router on the Data viz section, after the template rows
+
+**Decision.** `/dialogue` gets an interactive routing demo under Match the chart: the reader types a question (or taps a suggested chip), an API returns `{template, props, reason}`, and one of five templates renders in the 448px panel from a fixed 24-person example dataset. The UI labels whether the model or the rule path answered, and the figure caption says it was built after the engagement on example data. **Tried.** A separate `/dialogue/live-route` page only. **Why.** Mudit approved building the Round 16 live-AI note for real, and putting it next to the template rows makes the mapping visible without inventing a product claim. **Revisit.** If the section feels long, move the demo under Thin data as the closing interaction.
+
+### Templates are five, and thin data uses a named demo cutoff
+
+**Decision.** The templates are `count_split`, `segment_comparison`, `quote_list`, `clip_list`, and `thin_data`. The thin-data gate is `THIN_DATA_MIN_PARTICIPANTS = 3`, labelled as a demo choice in the routing spec and on the flag. Thin data keeps the early-signal strip and an "Add to my plan" action that copies a follow-up prompt. **Tried.** Collapsing quote and clip into one evidence template. **Why.** The brief asked for each of these as a distinct take, and the page already has the parts (stacked bar, bar list, source pills, clip player, plan button). **Revisit.** If quote and clip feel like the same interaction in use, merge them and keep the play chip as the only difference.
+
+### Model path through the AI Gateway, with a rule fallback that always works
+
+**Decision.** `POST /api/dialogue/route` calls Vercel AI SDK `generateObject` with a zod schema when a gateway key exists, and otherwise (or on error) runs the same routing table as keywords and data checks. Counts never come from the model; `props` are dataset keys only. **Tried.** Client-only keyword routing. **Why.** The live-ai note already picked structured output and a keyword fallback so a public page never sits empty. **Revisit.** If gateway latency stays over about a second on cold start, keep a skeleton card in the reserved side slot (already reserved at 120px).
+
 ## Round 20
 
 ### Soft-rule change: the Data viz heading states the rule the section shows
