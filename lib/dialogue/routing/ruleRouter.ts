@@ -53,7 +53,7 @@ export function inferTopic(question: string): RoutingTopic {
 
 export function inferQueryType(question: string): QueryType {
   const q = question.toLowerCase();
-  if (/\b(play|hear|listen|clip|footage|recording|watch)\b/.test(q)) return "clip";
+  if (/\b(play|hear|listen|watch|footage|recording|clips?)\b/.test(q)) return "clip";
   if (/\b(quotes?|said|say|verbatim|evidence|exact words|transcript)\b/.test(q)) {
     return "quote_evidence";
   }
@@ -124,7 +124,15 @@ function preferredTemplate(queryType: QueryType): RoutingTemplate {
 function pickWithFallback(
   preferred: RoutingTemplate,
   topic: RoutingTopic,
+  queryType: QueryType,
 ): RoutingTemplate {
+  // A clip ask stays a clip list when those people have timestamps, even under the thin cutoff.
+  if (
+    queryType === "clip" &&
+    TOPICS[topic].hasTimestamps(TOPICS[topic].supporters(PARTICIPANTS))
+  ) {
+    return "clip_list";
+  }
   if (isThinTopic(topic)) return "thin_data";
   if (canFill(preferred, topic)) return preferred;
   for (const next of FALLBACK_ORDER) {
@@ -139,24 +147,25 @@ export function routeByRules(question: string): RoutingResult {
   const queryType = inferQueryType(question);
   const compareBy = inferCompareBy(question);
   const preferred = preferredTemplate(queryType);
-  const template = pickWithFallback(preferred, topic);
+  const template = pickWithFallback(preferred, topic, queryType);
   const n = topicSupportCount(topic);
+  const topicLabel = TOPICS[topic].label;
 
   const labels: Record<RoutingTemplate, string> = {
-    count_split: "count split",
-    segment_comparison: "segment comparison",
-    quote_list: "quote list",
-    clip_list: "clip list",
-    thin_data: "thin data",
+    count_split: "Count split",
+    segment_comparison: "Segment comparison",
+    quote_list: "Quote list",
+    clip_list: "Clip list",
+    thin_data: "Thin data",
   };
 
   let reason: string;
   if (template === "thin_data") {
-    reason = `Picked thin data because ${n} supporting participant${n === 1 ? "" : "s"} is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`;
+    reason = `Thin data. ${n} ${n === 1 ? "person mentions" : "people mention"} ${topicLabel}, under the cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`;
   } else if (template !== preferred) {
-    reason = `Picked ${labels[template]} because the ask was ${queryType.replaceAll("_", " ")}, and the available coded data on ${topic.replaceAll("_", " ")} fits this template better.`;
+    reason = `${labels[template]}. The coded answers on ${topicLabel} fit this template.`;
   } else {
-    reason = `Picked ${labels[template]} because the question reads as ${queryType.replaceAll("_", " ")}, with ${n} coded people on ${topic.replaceAll("_", " ")}.`;
+    reason = `${labels[template]}. ${n} ${n === 1 ? "person is" : "people are"} coded on ${topicLabel}.`;
   }
 
   return {

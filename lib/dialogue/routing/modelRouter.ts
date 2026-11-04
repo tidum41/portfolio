@@ -44,13 +44,17 @@ function inventoryLines(): string {
   }).join("\n");
 }
 
+function labelsFallback(template: string): string {
+  return template.replaceAll("_", " ");
+}
+
 function systemPrompt(): string {
   return [
     "You route a UX research chat question to one answer template.",
     "This is a demo proposal, not Dialogue's real product logic.",
     `Study goal: ${STUDY_GOAL}`,
     `Templates: ${ROUTING_TEMPLATES.join(", ")}`,
-    `Thin-data rule (demo choice): if supporting participants < ${THIN_DATA_MIN_PARTICIPANTS}, you MUST return thin_data.`,
+    `Thin-data rule (demo choice): if supporting participants < ${THIN_DATA_MIN_PARTICIPANTS}, return thin_data, unless the question asks for clips and those people have timestamps. Then return clip_list.`,
     "Never invent counts. props.topic must be one of the listed topics.",
     "props.compareBy is only for segment_comparison (device or shopper_type).",
     "reason: one short sentence.",
@@ -81,19 +85,28 @@ export async function routeQuestion(question: string): Promise<RoutingResponse> 
       temperature: 0,
     });
     const n = topicSupportCount(object.props.topic);
-    if (n < THIN_DATA_MIN_PARTICIPANTS && object.template !== "thin_data") {
+    const stamped = TOPICS[object.props.topic].hasTimestamps(
+      TOPICS[object.props.topic].supporters(PARTICIPANTS),
+    );
+    if (
+      n < THIN_DATA_MIN_PARTICIPANTS &&
+      object.template !== "thin_data" &&
+      !(object.template === "clip_list" && stamped)
+    ) {
       return {
         template: "thin_data",
         props: { topic: object.props.topic },
-        reason: `Picked thin data because ${n} supporting participants is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`,
+        reason: `Thin data. ${n} people mention this, under the cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`,
         path: "model",
       };
     }
+    const reason = (object.reason || labelsFallback(object.template))
+      .replaceAll("\u2014", ", ")
+      .replaceAll("\u2013", "-");
+    const sentence = reason.charAt(0).toUpperCase() + reason.slice(1);
     return {
       ...object,
-      reason: object.reason?.startsWith("Picked ")
-        ? object.reason
-        : `Picked ${object.template.replaceAll("_", " ")} because ${object.reason}`,
+      reason: sentence,
       path: "model" satisfies RoutingPath,
     };
   } catch {

@@ -1,7 +1,7 @@
 # Routing demo ↔ live Counts parity
 
-Generated: 2026-11-04T07:11:11.537Z
-Base: http://127.0.0.1:3001
+Generated: 2026-11-04T07:57:44.202Z
+Base: http://localhost:3001
 
 ## 1. Shared live imports vs forks
 
@@ -125,10 +125,10 @@ No mismatches.
   },
   "layoutShift": {
     "count": {
-      "panelDeltaH": 0,
+      "panelDeltaH": 235.375,
       "quoteDeltaY": 0,
-      "beforeH": 758,
-      "afterH": 758
+      "beforeH": 622,
+      "afterH": 857.375
     },
     "clip": {
       "listDeltaH": 0,

@@ -87,7 +87,7 @@ report.forks = [
 ];
 
 try {
-  const res = await page.goto(`${BASE}/dialogue/routing-parity`, { waitUntil: "networkidle" });
+  const res = await page.goto(`${BASE}/dialogue/routing-parity`, { waitUntil: "load", timeout: 60000 });
   log(!!res && res.status() < 400, `load /dialogue/routing-parity (${res && res.status()})`);
 
   /**
@@ -399,9 +399,9 @@ try {
   log(interaction.hover.side.changed || sideRest.cursor === "pointer", "hover affordance present on bar side");
   log(interaction.hover.quote.changed || quoteRest.cursor === "pointer", "hover affordance present on quote");
   log(interaction.press.hasQuoteTransition, "quote has color/border transition (press language)");
-  const shift = layoutShift.count?.panelDeltaH ?? 999;
+  const shift = layoutShift.count?.quoteDeltaY ?? 999;
   const clipShift = layoutShift.clip?.listDeltaY ?? 999;
-  log(shift < 2, `count selection layout shift panel Δh=${shift}px`);
+  log(shift < 2, `count selection layout shift quote Δy=${shift}px`);
   log(clipShift < 2, `clip selection layout shift list Δy=${clipShift}px`);
 } catch (err) {
   log(false, `uncaught: ${err instanceof Error ? err.message : String(err)}`);

@@ -48,7 +48,7 @@ type State =
   | { kind: "error"; question: string; message: string };
 
 const IDLE_PREVIEW = resolveCountSplit("friday_reading");
-const ROUTING_HOLD_MS = 700;
+const STREAM_CHARS_PER_SEC = 137;
 
 /**
  * Live generative-UI routing demo for the Dialogue case study.
@@ -59,20 +59,48 @@ export default function RoutingDemo() {
   const [text, setText] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
   const [showExplain, setShowExplain] = useState(false);
+  const [reasonShown, setReasonShown] = useState("");
+  const [cardOn, setCardOn] = useState(true);
   const pending = state.kind === "loading" || state.kind === "routing";
 
   useEffect(() => {
     if (state.kind !== "routing") return;
-    const t = setTimeout(() => {
+    const reason = state.result.reason.replaceAll("\u2014", ", ").replaceAll("\u2013", "-");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setReasonShown(reason);
+      setCardOn(true);
       setState({ kind: "ready", question: state.question, result: state.result });
-    }, ROUTING_HOLD_MS);
-    return () => clearTimeout(t);
+      return;
+    }
+    setCardOn(false);
+    setReasonShown("");
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const n = Math.min(reason.length, Math.floor(((now - start) / 1000) * STREAM_CHARS_PER_SEC));
+      setReasonShown(reason.slice(0, n));
+      if (n < reason.length) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      setCardOn(true);
+      setState((current) =>
+        current.kind === "routing"
+          ? { kind: "ready", question: current.question, result: current.result }
+          : current,
+      );
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [state]);
 
   const ask = async (question: string) => {
     const q = question.trim();
     if (!q || pending) return;
-    setText(q);
+    setText("");
+    setCardOn(false);
+    setReasonShown("");
     setShowExplain(false);
     setState({ kind: "loading", question: q });
     try {
@@ -113,8 +141,7 @@ export default function RoutingDemo() {
       <div className="dlg-route-demo__meta">
         <span className="dlg-route-demo__badge">{EXAMPLE_STUDY.label}</span>
         <span className="dlg-route-demo__meta-text">
-          Interactive demo built after the engagement. {EXAMPLE_STUDY.participantCount}{" "}
-          participants.
+          Example data. Same checkout study as the case study, {EXAMPLE_STUDY.participantCount} shoppers.
         </span>
         {pathLabel ? (
           <span className="dlg-route-demo__path" data-path={ready?.path}>
@@ -141,11 +168,13 @@ export default function RoutingDemo() {
           ) : null}
           {state.kind === "routing" || state.kind === "ready" ? (
             <p className="dlg-route-demo__picked" role="status">
-              {state.result.reason}
+              {reasonShown}
             </p>
           ) : null}
-          {state.kind === "ready" ? (
-            <RoutingAnswer template={state.result.template} data={state.result.data} />
+          {state.kind === "ready" && cardOn ? (
+            <div className="dlg-route-enter" data-answer="">
+              <RoutingAnswer template={state.result.template} data={state.result.data} />
+            </div>
           ) : null}
           {state.kind === "error" ? (
             <p className="dlg-route-demo__status" role="alert">
@@ -213,13 +242,12 @@ export default function RoutingDemo() {
         </div>
       </form>
 
-      <div className="dlg-route-demo__chips" role="list">
+      <div className="dlg-route-demo__chips">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
             className="dlg-route-demo__chip"
-            role="listitem"
             onClick={() => ask(s)}
             disabled={pending}
           >
