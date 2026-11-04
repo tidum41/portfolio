@@ -61,7 +61,6 @@ if (typeof window !== "undefined") {
 
 import MuxAutoplayCard from "@/components/MuxAutoplayCard";
 
-const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
@@ -951,21 +950,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           </div>
         </CardFocusGrid>
 
-        {/* Keep the panel mounted across soft-nav — it portals to document.body
-            so parent display:none cannot hide it; `visible` toggles the portal.
-            Mount it with the shell, NOT after introReleased: like HeroText and
-            the grid, it must be mounted (at opacity 0, non-interactive) while
-            data-intro="playing" so its own onIntroDone listener is registered
-            before IntroOrchestrator fires "intro-done". Gating the mount on
-            introReleased started its whole portal/position/reveal chain only
-            after the gate lifted, so its fade ran late or, when the reveal
-            states batched into one commit, not at all. It just appeared. */}
-        {hasEverBeenActive && (
-          <PS3ControlPanel
-            instantReturn={instant}
-            visible={visible}
-          />
-        )}
       </div>
     </div>
 

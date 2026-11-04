@@ -10,7 +10,7 @@ export type CubicBezier = [number, number, number, number];
 export const EASE_OPACITY: CubicBezier = [0.16, 1, 0.3, 1];   // == --spring-panel
 export const EASE_Y:       CubicBezier = [0.22, 1, 0.36, 1];  // "settle" curve
 export const EASE_EXIT:    CubicBezier = [0.4, 0, 1, 1];      // fast, simple dismissal
-export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease / PS3ControlPanel
+export const EASE_EXPAND:  CubicBezier = [0.25, 0, 0, 1];     // == --expand-ease
 
 export const cssEase = (c: CubicBezier) => `cubic-bezier(${c.join(",")})`;
 

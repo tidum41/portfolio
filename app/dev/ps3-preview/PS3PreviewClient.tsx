@@ -22,7 +22,6 @@ export default function PS3PreviewClient() {
       <PS3Silk
         active
         mode={1}
-        intensity={0.18}
         waveColor="#ffffff"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       />
