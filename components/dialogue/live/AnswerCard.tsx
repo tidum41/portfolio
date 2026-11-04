@@ -19,6 +19,10 @@ const share = (n: number) => n.toLocaleString("en-US");
 
 /* Round 17: the template is picked per answer (lib/dialogue/product/answerLayout.ts). Two short groups keep the tappable bar;
    three or more groups, or a label too long for the lane, return one named row per group. */
+/**
+ * Live Counts bar (historically called FridayBar in design notes).
+ * Two short groups keep the tappable stacked bar; longer shapes go to rows.
+ */
 export function AnswerCard({ segment = false, onSide, sideOpen = false, chart = true, answer = HEARTHSIDE_ANSWER, still = false }: { segment?: boolean; onSide?: (w: "friday" | "unsure") => void; sideOpen?: SideWhich; chart?: boolean; answer?: AnswerData; still?: boolean }) {
   const { finding, total, groups } = answer;
   const rows = answerLayout(groups) === "rows";
@@ -49,3 +53,6 @@ export function AnswerCard({ segment = false, onSide, sideOpen = false, chart = 
     </ChartVizCard>
   );
 }
+
+/** Alias kept for the routing demo and older design notes that call this FridayBar. */
+export const FridayBar = AnswerCard;
