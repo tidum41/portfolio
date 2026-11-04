@@ -298,7 +298,7 @@
 .dlg-route-shot .dlg-route-quote--open,
 .dlg-route-shot .dlg-route-quote.dlg-route-quote--open {
   background: var(--dp-warm);
-  border-color: var(--dp-border);
+  border-color: var(--dp-border-strong);
   box-shadow: none;
 }
 
