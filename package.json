@@ -21,7 +21,8 @@
     "audit:dialogue-ui": "node scripts/audit-dialogue-ui.mjs",
     "audit:dialogue-clip": "node scripts/audit-dialogue-clip.mjs",
     "eval:dialogue-routing": "npx tsx scripts/eval-dialogue-routing.mjs",
-    "capture:dialogue-routing": "node scripts/capture-dialogue-routing.mjs"
+    "capture:dialogue-routing": "node scripts/capture-dialogue-routing.mjs",
+    "test:dialogue-routing-demo": "node scripts/test-dialogue-routing-demo.mjs"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^4.0.135",
