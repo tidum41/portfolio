@@ -100,7 +100,7 @@ export function designSystemToCss(ds: Required<DesignSystemData>): string {
   return `:root{
     --fs-display:${ds.fsDisplay}px;
     --fs-hero:clamp(32px, 6vw, ${ds.fsHero}px);
-    --fs-home-hero:clamp(26px, 2.8vw, 36px);
+    --fs-home-hero:clamp(22px, 2.6vw + 10px, 36px);
     --fs-h2:${ds.fsH2}px;
     --fw-hero:${ds.fwHero * 10};--fw-h2:${ds.fwH2 * 10};--fw-card-title:${ds.fwCardTitle * 10};
     --fs-section-label:${ds.fsSectionLabel}px;
