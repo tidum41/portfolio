@@ -1,7 +1,7 @@
 /** Live case study routes in portfolio order (homepage sequence). */
 export const CASE_STUDY_PAGES = [
-  { href: "/joola", title: "B2B ordering for JOOLA" },
   { href: "/ucla-sublease", title: "BruinLease" },
+  { href: "/joola", title: "B2B ordering for JOOLA" },
   { href: "/sviz", title: "sviz" },
 ] as const;
 

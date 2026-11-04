@@ -179,7 +179,7 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": ALLINONE_APP_URL,
 };
 
-/** Local first card — not in Sanity. Page copy lives in lib/caseStudies/joola.ts. */
+/** Local second card (after BruinLease) — not in Sanity. Page copy lives in lib/caseStudies/joola.ts. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
   title: "Designing B2B ordering for the #1 pickleball brand",
@@ -207,11 +207,14 @@ async function loadProjects(): Promise<SanityProject[]> {
         href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
       };
     });
-  return [JOOLA_B2B_PROJECT, ...mapped];
+  // Homepage order: BruinLease top-left, JOOLA B2B second, then the rest.
+  const bruin = mapped.filter((p) => p._id === "project-bruinlease");
+  const rest = mapped.filter((p) => p._id !== "project-bruinlease");
+  return [...bruin, JOOLA_B2B_PROJECT, ...rest];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v10-allinone-modal"], {
+  unstable_cache(loadProjects, ["projects-v11-bruinlease-first"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
