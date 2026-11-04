@@ -4391,8 +4391,23 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dp-chart-stack__lane-value { display: inline-grid; justify-items: end; }
 .dp-chart-stack__lane-value > span { grid-area: 1 / 1; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
 .dp-chart-stack__lane-share { opacity: 0; }
-.dp-chart-stack:hover .dp-chart-stack__lane-share, .dlg-live__bar:hover .dp-chart-stack__lane-share { opacity: 1; }
-.dp-chart-stack:hover .dp-chart-stack__lane-count, .dlg-live__bar:hover .dp-chart-stack__lane-count { opacity: 0; }
+/* Counts stay put. The share rides a cursor pill (.dlg-chart-pill), not a legend swap. */
+.dp-chart-stack:hover .dp-chart-stack__lane-share, .dlg-live__bar:hover .dp-chart-stack__lane-share { opacity: 0; }
+.dp-chart-stack:hover .dp-chart-stack__lane-count, .dlg-live__bar:hover .dp-chart-stack__lane-count { opacity: 1; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-share { opacity: 0; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-count { opacity: 1; }
+.dp-chart-root, .dlg-live__bar { position: relative; }
+.dp-hero-tooltip.dlg-chart-pill {
+  left: 0;
+  top: 0;
+  z-index: 6;
+  transform: translate(-50%, calc(-100% - 8px));
+  pointer-events: none;
+}
+.dlg-live__bar:has(.dlg-live__side:active) .dp-chart-stack__seg { transition-duration: 0ms; }
+.dp-chart-bars__row[role="button"] { cursor: pointer; }
+.dp-chart-bars__row:active .dp-chart-bars__bar { filter: brightness(0.78); }
+.dp-chart-bars__row[data-selected] .dp-chart-bars__bar { outline: 2px solid var(--dp-ink); outline-offset: 1px; }
 
 /* Round 18: the data viz figure breathes. Its spacing comes from the page scale (--space-*, 8/16/24/32/48): 48 between the
    question and its chart rows, 32 above and below each row, 16 between a chart and its line. */
