@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDialKit } from "dialkit";
-import MuxMediaSlot, { muxCardStreamUrl, muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
-import { constrainedNetwork, warmRootMargin } from "@/lib/networkHint";
+import MuxMediaSlot, { muxPosterUrl, preloadHlsModule } from "@/components/MuxMediaSlot";
+import { warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
+import { cardFocusPlay } from "@/lib/cardFocusVideo";
 
-/** Later cards start a beat after the two that are on screen at intro end. */
-const LATER_CARD_STAGGER_MS = 120;
+/** Later cards start a short beat after the two on screen during the intro. */
+const LATER_CARD_STAGGER_MS = 40;
 /** Spread Mux teardown when leaving "/" so About/Archive paint + cursor
  *  aren't blocked by N× MediaSource destroys on one commit. */
 const UNMOUNT_STAGGER_MS = 90;
@@ -19,17 +20,32 @@ const UNMOUNT_BASE_MS = 120;
 
 function CardLabel({
   title,
-  sub,
+  label,
   labelFontSize,
   external,
+  showPopupIcon,
 }: {
   title: string;
-  sub?: string;
+  /** Quiet meta line above the main title (PS3 XMB hierarchy). */
+  label?: string;
   labelFontSize: number;
   external?: boolean;
+  /** In-page popup tile — neutral northeast arrow (not the blue leave-site one). */
+  showPopupIcon?: boolean;
 }) {
   return (
-    <div style={{ padding: "3px 2px" }}>
+    <div style={{ padding: "3px 0 0" }}>
+      {label && (
+        <p className="card-label-tag" style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: "var(--fs-caption)",
+          lineHeight: 1.4,
+          color: "var(--color-text-muted)",
+          margin: "0 0 2px",
+          letterSpacing: "0.01em",
+        }}>{label}</p>
+      )}
       <p style={{
         fontFamily: "var(--font-sans-medium)",
         fontWeight: 500,
@@ -40,30 +56,23 @@ function CardLabel({
         display: "flex",
         alignItems: "center",
         gap: 6,
+        textWrap: "balance",
       }}>
         {title}
         {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
+        {showPopupIcon && <NortheastArrow size={13} />}
       </p>
-      {sub && (
-        <p style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 400,
-          fontSize: 13,
-          lineHeight: 1.5,
-          color: "var(--color-text-tertiary)",
-          margin: "5px 0 0",
-          letterSpacing: "0.01em",
-        }}>{sub}</p>
-      )}
     </div>
   );
 }
 
 interface Props {
   playbackId: string;
-  href: string;
+  /** When omitted, the card is display-only (no link, no pointer) unless onOpen. */
+  href?: string;
   title: string;
-  sub?: string;
+  /** Small quiet line above the title. */
+  label?: string;
   aspectRatio: string;
   /** When false, tear down Mux/HLS after a deferred window (memory). */
   active?: boolean;
@@ -71,17 +80,23 @@ interface Props {
   playing?: boolean;
   /** Grid order for staggered remount (0 first). */
   mountOrder?: number;
+  /**
+   * In-page popup opener (Allinone, etc.). When set, the card does not
+   * navigate — click/keyboard activate this instead of href.
+   */
+  onOpen?: () => void;
 }
 
 export default function MuxAutoplayCard({
   playbackId,
   href,
   title,
-  sub,
+  label,
   aspectRatio,
   active = true,
   playing = true,
   mountOrder = 0,
+  onOpen,
 }: Props) {
   const dk = useDialKit("ProjectCard", {
     cardRadius:    [4,  0, 24],
@@ -91,15 +106,17 @@ export default function MuxAutoplayCard({
 
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Latches after first in-view hit so returning to "/" can remount without
-  // waiting on IntersectionObserver again.
-  const [shouldLoad, setShouldLoad] = useState(false);
+  // Above-the-fold pair (mountOrder <= 1) loads immediately without waiting on
+  // an IntersectionObserver tick; later cards latch after first intersection.
+  const [shouldLoad, setShouldLoad] = useState(mountOrder <= 1);
   const [mountReady, setMountReady] = useState(false);
+  const isPopup = Boolean(onOpen);
+  const clickable = Boolean(href) || isPopup;
   const warmCaseStudy = () => {
-    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+    if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
   const commitCaseStudy = () => {
-    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   useEffect(() => {
@@ -120,10 +137,7 @@ export default function MuxAutoplayCard({
       );
       obs.observe(container);
     };
-    // Tight until the first scroll, so the card below the fold does not
-    // compete with the two on screen during the intro. A flick then uses the
-    // wider margin; a slow or metered connection stays close to the card.
-    const resting = "80px 0px 140px 0px";
+    const resting = "160px 0px 360px 0px";
     if (window.scrollY > 8) arm(warmRootMargin());
     else arm(resting);
     const widen = () => {
@@ -138,11 +152,6 @@ export default function MuxAutoplayCard({
     };
   }, [shouldLoad, active]);
 
-  // The manifest for the on-screen cards is fetched as soon as they are near
-  // the viewport, during the intro. The player attaches a moment later so the
-  // silk shader can take the opening frames. Reduced motion keeps the still.
-  // Leave still yields a paint first so soft-nav to About/Archive isn't one
-  // long Mux-destroy frame. mountReady alone gates the player.
   useEffect(() => {
     let cancelled = false;
     let timeoutId = 0;
@@ -152,20 +161,21 @@ export default function MuxAutoplayCard({
         return;
       }
       preloadHlsModule();
-      // Phone cards already have their playlist and first segment preloaded
-      // from the HTML. Fetching the master again only steals that bandwidth.
-      const narrow = window.innerWidth < 800 || constrainedNetwork();
-      if (mountOrder <= 1 && !narrow) {
-        void fetch(muxCardStreamUrl(playbackId), { mode: "cors", credentials: "omit" }).catch(() => {});
-      }
       const arm = () => {
         if (!cancelled) setMountReady(true);
       };
-      // A short beat so the silk shader can take the first frames, then the
-      // player attaches while the intro is still on screen.
-      const wait = mountOrder <= 1
-        ? 120
-        : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+      const introActive = document.documentElement.hasAttribute("data-intro");
+      const wait = !introActive
+        ? 0
+        : mountOrder <= 1
+          ? 0
+          : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+      if (wait <= 0) {
+        arm();
+        return () => {
+          cancelled = true;
+        };
+      }
       timeoutId = window.setTimeout(arm, wait);
       return () => {
         cancelled = true;
@@ -181,7 +191,7 @@ export default function MuxAutoplayCard({
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [active, shouldLoad, mountOrder, playbackId]);
+  }, [active, shouldLoad, mountOrder]);
 
   // Soft-nav leave: pause immediately so decode doesn't fight About paint,
   // but keep the element mounted until `active` deferred-teardown fires.
@@ -193,10 +203,7 @@ export default function MuxAutoplayCard({
     };
     const playEl = () => {
       const el = root?.querySelector("video");
-      try {
-        const p = el?.play();
-        if (p && typeof p.catch === "function") p.catch(() => {});
-      } catch { /* ignore */ }
+      if (el instanceof HTMLVideoElement) cardFocusPlay(el);
     };
 
     // Sync with soft-nav click — don't wait for React playing=false effect.
@@ -253,30 +260,56 @@ export default function MuxAutoplayCard({
 
   const linkStyle = { textDecoration: "none", display: "block", color: "inherit", cursor: "pointer" } as const;
   // Blue northeast arrow only when the card leaves the site — derived from
-  // href, not a hard-coded project id.
-  const external = /^(https?:|mailto:|tel:)/i.test(href);
+  // href, not a hard-coded project id. Popup tiles never count as external.
+  const external = !isPopup && Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 
   const body = (
     <ProjectCardLift style={{ gap: dk.cardGap }}>
       {video}
-      <CardLabel title={title} sub={sub} labelFontSize={dk.labelFontSize} external={external} />
+      <CardLabel
+        title={title}
+        label={label}
+        labelFontSize={dk.labelFontSize}
+        external={external}
+        showPopupIcon={isPopup}
+      />
     </ProjectCardLift>
   );
 
   return (
-    <div className="project-card project-card--video" style={{ gap: dk.cardGap }}>
-      {external ? (
+    <div
+      className={["project-card", "project-card--video", !clickable && "project-card--inert"].filter(Boolean).join(" ")}
+      style={{ gap: dk.cardGap, ...(!clickable ? { cursor: "default" } : null) }}
+    >
+      {!clickable ? (
+        body
+      ) : isPopup ? (
+        <div
+          role="button"
+          tabIndex={0}
+          style={linkStyle}
+          onClick={onOpen}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpen?.();
+            }
+          }}
+        >
+          {body}
+        </div>
+      ) : external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
           {body}
         </a>
       ) : (
         <Link
-          href={href}
+          href={href!}
           prefetch
           style={linkStyle}
           onMouseEnter={warmCaseStudy}
           onFocus={warmCaseStudy}
-          onPointerDown={commitCaseStudy}
+          onPointerDown={warmCaseStudy}
           onClick={commitCaseStudy}
         >
           {body}

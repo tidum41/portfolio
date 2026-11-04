@@ -74,7 +74,7 @@ export function DragHint({ variant, visible = true }: DragHintProps) {
       <span className={styles.row}>
         <HintDiscIcon />
         <HintArrow variant={variant} />
-        <span className={styles.label}>drag to play</span>
+        <span className={styles.label}>Drag to play</span>
       </span>
     </div>
   );

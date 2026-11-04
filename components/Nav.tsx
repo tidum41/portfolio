@@ -10,9 +10,9 @@ import { hrefToPrimaryTab } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 const links = [
-  { href: "/",         label: "work" },
-  { href: "/archive",  label: "archive" },
-  { href: "/about",    label: "about" },
+  { href: "/",         label: "Work" },
+  { href: "/archive",  label: "Archive" },
+  { href: "/about",    label: "About" },
 ];
 
 export default function Nav({

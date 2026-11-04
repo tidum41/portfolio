@@ -5,14 +5,17 @@ import dynamic from "next/dynamic";
 import { preload } from "react-dom";
 import { SmileySad, SealCheck, Chats } from "@phosphor-icons/react/dist/ssr";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyBody from "@/components/CaseStudyBody";
+import CaseStudyFigure from "@/components/CaseStudyFigure";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
-export const revalidate = 300;
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "BruinLease",
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
     "BruinLease case study — simplifying UCLA subleasing with quarter-based search, verified students, and clearer listings.",
   alternates: { canonical: `${SITE_URL}/ucla-sublease` },
   openGraph: {
-    title: "BruinLease — mudit mahajan",
+    title: "BruinLease — Mudit Mahajan",
     description:
       "Product design case study: a UCLA subleasing platform built around how students actually find housing.",
     url: `${SITE_URL}/ucla-sublease`,
@@ -72,7 +75,7 @@ function SectionLabel({ children, as: Tag = "p" }: { children: React.ReactNode; 
       fontWeight: 400,
       letterSpacing: "0.02em",
       color: "var(--color-text-tertiary)",
-      margin: "0 0 16px",
+      margin: "0 0 var(--cs-para-gap)",
     }}>
       {children}
     </Tag>
@@ -88,7 +91,7 @@ function H2({ children }: { children: React.ReactNode }) {
       lineHeight: "var(--lh-h2)",
       letterSpacing: "var(--ls-h2)",
       color: "var(--color-text-primary)",
-      margin: "0 0 24px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>
       {children}
     </h2>
@@ -97,16 +100,7 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Body({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <p style={{
-      fontSize: "var(--fs-body)",
-      lineHeight: "var(--lh-body)",
-      letterSpacing: "0.1px",
-      color: "var(--color-text-secondary)",
-      margin: "0 0 16px",
-      ...style,
-    }}>
-      {children}
-    </p>
+    <CaseStudyBody style={style}>{children}</CaseStudyBody>
   );
 }
 
@@ -122,7 +116,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   const meta = STAT_ICON_META[value];
   const Icon = meta?.Icon;
   return (
-    <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ background: "var(--color-accent-subtle)", borderRadius: "var(--radius-control)", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Icon && (
           <span style={{ display: "flex", flexShrink: 0, lineHeight: 0, color: meta.color }}>
@@ -182,7 +176,7 @@ function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
       <XIcon />
-      <p style={{ fontSize: 15, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
+      <p style={{ fontSize: "var(--fs-body)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0, fontWeight: 400 }}>{text}</p>
     </div>
   );
 }
@@ -201,7 +195,7 @@ function CardBox({ src, alt, label, position }: { src?: string; alt: string; lab
           : <div style={{ width: "100%", height: 160, background: "var(--color-border-subtle)" }} />
         }
       </div>
-      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>{label}</p>
+      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>{label}</p>
     </div>
   );
 }
@@ -212,7 +206,7 @@ function CompRow({ type, text }: { type: string; text: string }) {
       {type === "right"   && <CheckIcon />}
       {type === "wrong"   && <XIcon />}
       {type === "neutral" && <NeutralIcon />}
-      <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--color-text-secondary)", margin: 0 }}>{text}</p>
+      <p style={{ fontSize: "var(--fs-sm)", lineHeight: "var(--lh-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{text}</p>
     </div>
   );
 }
@@ -270,9 +264,9 @@ function ToolCard({ tool, desc }: { tool: string; desc: string }) {
     <div style={{ background: "var(--color-accent-subtle)", borderRadius: 8, padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
         {logo && <span style={{ display: "flex", flexShrink: 0, lineHeight: 0 }}>{logo}</span>}
-        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{tool}</p>
+        <p style={{ fontFamily: "var(--font-sans-medium)", fontSize: "var(--fs-sm)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{tool}</p>
       </div>
-      <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--color-text-secondary)", margin: 0 }}>{desc}</p>
+      <p style={{ fontSize: "var(--fs-sm)", lineHeight: "var(--lh-sm)", color: "var(--color-text-secondary)", margin: 0 }}>{desc}</p>
     </div>
   );
 }
@@ -291,15 +285,49 @@ const FB = {
     { _key: "t8", id: "solution",   label: "Solution"          },
     { _key: "t9", id: "reflection", label: "Reflection"        },
   ] as TocItem[],
-  heroTagline:   "Product Design  ·  Case Study  ·  2026",
+  heroTagline:   "BruinLease, Case Study, 2026",
   heroTitle:     "Simplifying UCLA subleasing",
   heroBg:        "#C6DDF2",
   heroMuxId:     "gEJdc76IbGz8NzGfdRM7v00biDmwgACII24guyZ01tbVU",
   metadata: [
-    { _key: "m1", label: "Role",          values: ["Product Designer", "& Frontend"] },
-    { _key: "m2", label: "Timeline",      values: ["5 Weeks"] },
-    { _key: "m3", label: "Tools",         values: ["Figma", "Google Stitch", "Claude Code"] },
-    { _key: "m4", label: "Collaborators", values: ["1 PM", "1 PMM"] },
+    { _key: "m1", label: "Role", values: ["Product designer and frontend"] },
+    { _key: "m2", label: "Timeline", values: ["5 weeks"] },
+    {
+      _key: "m3",
+      label: "Team",
+      wide: true,
+      values: [
+        <>
+          <a
+            className="cs-person-link"
+            href="https://www.linkedin.com/in/krishivharanath/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Krishiv Haranath
+          </a>
+          {" "}
+          <span style={{ color: "var(--color-text-muted)" }}>PM</span>
+        </>,
+        <>
+          <a
+            className="cs-person-link"
+            href="https://www.linkedin.com/in/shreya-gorrepati/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Shreya Gorrepati
+          </a>
+          {" "}
+          <span style={{ color: "var(--color-text-muted)" }}>PMM</span>
+        </>,
+      ],
+    },
+    {
+      _key: "m4",
+      label: "Scope",
+      values: ["User research", "Interaction design", "Prototyping", "Frontend development"],
+    },
   ],
   problemLabel: "The Problem",
   problemHeading: "UCLA students struggle with subleasing, using platforms that weren't built for it.",
@@ -396,20 +424,18 @@ export default function BruinLeasePage() {
         </>
       )}
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
+          <aside className="cs-aside">
+            <CaseStudyTOC
+              items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
+              backHref="/"
+            />
+          </aside>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
 
           <CaseStudyOpen
-            tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={FB.metadata}
             muxPlaybackId={FB.heroMuxId}
@@ -420,6 +446,7 @@ export default function BruinLeasePage() {
           <Suspense fallback={null}>
             <BruinLeaseContent />
           </Suspense>
+          <CaseStudyPager href="/ucla-sublease" />
         </div>
       </div>
     </div>
@@ -470,19 +497,27 @@ async function BruinLeaseContent() {
 
               {cs.problemImage
                 ? (
-                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/7", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }}>
-                    <Image
-                      src={cs.problemImage}
-                      alt="Fragmented subleasing platforms"
-                      fill
-                      sizes="(max-width: 767px) calc(100vw - 48px), 750px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
+                  <CaseStudyFigure
+                    src={cs.problemImage}
+                    alt="Fragmented subleasing platforms"
+                    caption={cs.problemImageCaption}
+                    fill
+                    aspectRatio="16/7"
+                    sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                  />
                 )
-                : <div style={{ width: "100%", aspectRatio: "16/7", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px", boxShadow: "inset 0 0 0 1px var(--color-border-subtle)" }} />
-              }
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", marginBottom: 28 }}>{cs.problemImageCaption}</p>
+                : (
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: "16/7",
+                      background: "var(--color-placeholder)",
+                      borderRadius: "var(--radius-control)",
+                      margin: "24px 0 8px",
+                      boxShadow: "inset 0 0 0 1px var(--color-border-subtle)",
+                    }}
+                  />
+                )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {painPoints.map((text, i) => <PainPoint key={i} text={text} />)}
@@ -514,13 +549,25 @@ async function BruinLeaseContent() {
 
               {cs.figmaComparison
                 ? (
-                  <div style={{ position: "relative", width: "100%", borderRadius: "var(--radius-card)", overflow: "hidden", margin: "24px 0 8px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)" }}>
-                    <img src={cs.figmaComparison} alt="Early layout exploration in Figma" loading="lazy" decoding="async" style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius-card)" }} />
-                  </div>
+                  <CaseStudyFigure
+                    src={cs.figmaComparison}
+                    alt="Early layout exploration in Figma"
+                    caption="Early layout exploration in Figma"
+                    width={1600}
+                    height={900}
+                  />
                 )
-                : <div style={{ width: "100%", aspectRatio: "16/9", background: "var(--color-placeholder)", borderRadius: "var(--radius-card)", margin: "24px 0 8px" }} />
-              }
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "0 0 24px", textAlign: "center" }}>Early layout exploration in Figma</p>
+                : (
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: "16/9",
+                      background: "var(--color-placeholder)",
+                      borderRadius: "var(--radius-control)",
+                      margin: "24px 0 8px",
+                    }}
+                  />
+                )}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }} className="cs-process-tools">
                 {processTools.map(({ _key, tool, desc }) => (
@@ -553,14 +600,14 @@ async function BruinLeaseContent() {
                 ))}
               </div>
 
-              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-tertiary)", margin: "0 0 12px", fontFamily: "var(--font-sans-medium)", letterSpacing: "-0.1px" }}>
+              <p style={{ fontSize: "var(--fs-sm)", fontWeight: 500, color: "var(--color-text-tertiary)", margin: "0 0 12px", fontFamily: "var(--font-sans-medium)", letterSpacing: "-0.1px" }}>
                 research insights drove key changes
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {d1Insights.map((point, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", width: "90%" }}>
-                    <span style={{ color: "var(--color-text-secondary)", fontSize: 19, lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
-                    <p style={{ fontSize: 14, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0 }}>{point}</p>
+                    <span style={{ color: "var(--color-text-secondary)", fontSize: "var(--fs-lg)", lineHeight: 1, marginTop: 3, flexShrink: 0 }}>•</span>
+                    <p style={{ fontSize: "var(--fs-meta)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0 }}>{point}</p>
                   </div>
                 ))}
               </div>
@@ -592,7 +639,7 @@ async function BruinLeaseContent() {
               <Body>{cs.d3Body}</Body>
 
               <div className="cs-quarter-picker" style={{ marginTop: 24 }}><QuarterPicker /></div>
-              <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
+              <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: "8px 0 0" }}>
                 Selecting a quarter autofills exact move-in and move-out dates.
               </p>
             </Section>
@@ -613,7 +660,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3BeforePhonePos)}
                         style={{ border: "2px solid transparent" }}
                       />
-                      <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>before</p>
+                      <p style={{ fontSize: "var(--fs-caption)", color: "var(--color-text-muted)", textAlign: "center", margin: 0 }}>Before</p>
                     </div>
                   )}
                   {cs.decision1Video && (
@@ -625,7 +672,7 @@ async function BruinLeaseContent() {
                         {...pp(cs.d3AfterPhonePos)}
                         style={{ background: `${COLOR_RIGHT}18`, border: `2px solid ${COLOR_RIGHT}` }}
                       />
-                      <p style={{ fontSize: 12, color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>after</p>
+                      <p style={{ fontSize: "var(--fs-caption)", color: COLOR_RIGHT, textAlign: "center", margin: 0, fontWeight: 500 }}>After</p>
                     </div>
                   )}
                 </div>
@@ -661,7 +708,7 @@ async function BruinLeaseContent() {
                   <div key={_key}>
                     <h3 style={{
                       fontFamily: "var(--font-sans-medium)",
-                      fontSize: 18,
+                      fontSize: "var(--fs-lg)",
                       fontWeight: 500,
                       color: "var(--color-text-primary)",
                       margin: "0 0 8px",
@@ -670,7 +717,7 @@ async function BruinLeaseContent() {
                     }}>
                       {heading}
                     </h3>
-                    <p style={{ fontSize: 14, lineHeight: "var(--lh-body)", color: "var(--color-text-secondary)", margin: 0 }}>
+                    <p style={{ fontSize: "var(--fs-meta)", lineHeight: "var(--lh-body)", letterSpacing: "var(--ls-body)", color: "var(--color-text-secondary)", margin: 0 }}>
                       {body}
                     </p>
                   </div>

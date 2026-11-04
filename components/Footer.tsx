@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import CopyEmail from "@/components/CopyEmail";
 import { FOOTER_LINKS } from "@/lib/site";
 
 const isDev = process.env.NODE_ENV === "development";
 
 const linkStyle = {
   fontFamily: "var(--font-sans)",
-  fontSize: 16,
-  lineHeight: "21px",
+  fontSize: "var(--fs-body)",
+  lineHeight: "var(--lh-body)",
+  letterSpacing: "var(--ls-body)",
   textDecoration: "none" as const,
 };
 
@@ -23,19 +25,18 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           justify-content: space-between;
           padding: 24px var(--page-px);
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
-          min-height: 69px;
         }
         .footer-links {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 24px;
           list-style: none;
           margin: 0;
           padding: 0;
-          line-height: 21px;
+          line-height: var(--lh-body);
         }
         .footer-links li {
-          line-height: 21px;
+          line-height: var(--lh-body);
         }
         /* Phone only. At 480px and up the row stays name-left, links-right. */
         @media (max-width: 479px) {
@@ -43,13 +44,10 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
             flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
-            gap: 20px;
+            gap: 8px;
           }
           .footer-links {
-            gap: 20px;
-          }
-          .footer-links a {
-            min-height: 0;
+            column-gap: 24px;
           }
         }
       `}</style>
@@ -86,17 +84,27 @@ export default function Footer() {
 
       <nav aria-label="Social links">
         <ul className="footer-links">
-          {FOOTER_LINKS.map(({ label, href }) => (
-            <li key={label}>
-              <a
-                href={href}
-                target={href.startsWith("mailto") ? undefined : "_blank"}
-                rel="noopener noreferrer"
-                className="footer-link"
-                style={{ ...linkStyle, color: "var(--color-text-primary)" }}
-              >
-                {label}
-              </a>
+          {FOOTER_LINKS.map((item) => (
+            <li key={item.label}>
+              {"copyEmail" in item ? (
+                <CopyEmail
+                  unstyled
+                  className="footer-link"
+                  style={{ ...linkStyle, color: "var(--color-text-primary)" }}
+                >
+                  {item.label}
+                </CopyEmail>
+              ) : (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="footer-link"
+                  style={{ ...linkStyle, color: "var(--color-text-primary)" }}
+                >
+                  {item.label}
+                </a>
+              )}
             </li>
           ))}
         </ul>

@@ -24,12 +24,12 @@ import {
   SITE_URL,
 } from "@/lib/site";
 import { Analytics } from '@vercel/analytics/next';
+import MobileViewportPlayback from "@/components/MobileViewportPlayback";
 import { getMuxCardWarmup } from "@/lib/muxCardWarmup";
 
 // Geist Mono: CD Player "MM-7" + drag hint. Geist Sans: habit tracker embed.
-// Site body copy stays on --font-sans/--font-mono ("HN"/Söhne Mono).
-// preload: false — body copy is local HN/Söhne. Geist is only used inside
-// the CD player + habit embed, which mount after first paint.
+// Site sans is Helvetica Neue via --font-sans in globals.css.
+// preload: false — Geist only mounts inside embeds after first paint.
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", preload: false });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", preload: false });
 
@@ -46,6 +46,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f8" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -117,16 +121,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Archive gallery is NOT fetched here — serializing LQIP data-URIs +
   // 2000px Sanity URLs into every `/` HTML payload was first-load bloat.
   // PersistentArchiveShell + PrimaryRouteWarmup hydrate it after intro.
-  const [ds, projects] = await Promise.all([
-    getDesignSystem(),
-    getProjects(),
-  ]).catch(
-    () =>
-      [DS_DEFAULTS, []] as [Required<DesignSystemData>, SanityProject[]]
-  );
   // Already returns an empty warmup if Mux is unreachable, so a video-CDN
   // blip cannot take the rest of the layout down with it.
-  const muxWarm = await getMuxCardWarmup();
+  const [ds, projects, muxWarm] = await Promise.all([
+    getDesignSystem().catch(() => DS_DEFAULTS),
+    getProjects().catch(() => [] as SanityProject[]),
+    getMuxCardWarmup(),
+  ]);
   const dsStyle = designSystemToCss(ds);
 
   return (
@@ -162,7 +163,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             .intro-hide elements are briefly visible (the flash). Inlining these
             rules here guarantees they apply in the same paint as the script.
             globals.css keeps a copy as a fallback. */}
-        <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `html[data-intro="playing"] .intro-hide{opacity:0!important;pointer-events:none!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="done"] .intro-hide{opacity:1!important;pointer-events:auto!important;transition:opacity 0.7s cubic-bezier(.16,1,.3,1)!important}html[data-intro="playing"] .intro-hide--snap,html[data-intro="done"] .intro-hide--snap{transition:none!important}html[data-intro="playing"] .intro-hide--snap{pointer-events:auto!important}` }} />
         <style dangerouslySetInnerHTML={{ __html: dsStyle }} />
         {/* Icons also declared in `metadata.icons` — keep a plain fallback here
             for crawlers that only read the first non-media icon link. */}
@@ -173,6 +174,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://stream.mux.com" crossOrigin="anonymous" />
+        {muxWarm.preconnect.map((origin) => (
+          <link key={origin} rel="preconnect" href={origin} crossOrigin="anonymous" />
+        ))}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
       </head>
       <body style={{ fontFamily: "var(--font-sans)", background: "var(--color-bg)" }}>
@@ -180,11 +184,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <script> in the component tree (raw script / next/script both warn). */}
         <BootScripts
           jsonLd={getSiteJsonLd()}
-          playlists={Object.fromEntries(
-            muxWarm.preload
-              .filter((item) => item.playbackId)
-              .map((item) => [item.playbackId as string, item.href]),
-          )}
+          playlists={muxWarm.playlists}
         />
         <a href="#main-content" className="skip-link">Skip to content</a>
         <GlobalCustomCursor />
@@ -207,6 +207,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Footer />
         <DevToolbarSlot />
         <Analytics />
+        <MobileViewportPlayback />
       </body>
     </html>
   );

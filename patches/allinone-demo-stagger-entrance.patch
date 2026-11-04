@@ -1,0 +1,520 @@
+From 0dc819d7342192e08d159b255b8f7d1fa5183731 Mon Sep 17 00:00:00 2001
+From: Mudit Mahajan <muditmahajan@g.ucla.edu>
+Date: Tue, 27 Oct 2026 00:00:32 -0700
+Subject: [PATCH] Make PriorityBadge urgency control discoverable (#6)
+
+* Make PriorityBadge urgency control discoverable
+
+Add pointer cursor, inset placeholder ring and reserved 8px chevron on
+hover/focus; always show reduced-opacity chevron on touch; native
+Change urgency / Add urgency titles.
+
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+
+* Scroll PriorityBadge into view for verify shots
+
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+
+* Strengthen PriorityBadge hover ring and pin label colour
+
+Use a 1px inset ring at currentColor 40% alpha so the affordance reads
+on all three urgency fills, and keep label colour/opacity unchanged on
+hover across light and dark.
+
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+
+* Parse color(srgb) form for PriorityBadge ring checks
+
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+
+* Bump PriorityBadge hover ring to currentColor 45% alpha
+
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+
+---------
+
+Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+Co-authored-by: Mudit Mahajan <tidum41@users.noreply.github.com>
+---
+ scripts/verify-priority-badge.mjs       | 270 ++++++++++++++++++++++++
+ src/components/PriorityBadge.jsx        |  15 +-
+ src/components/PriorityBadge.module.css |  83 +++++++-
+ src/components/icons.jsx                |  21 ++
+ 4 files changed, 382 insertions(+), 7 deletions(-)
+ create mode 100644 scripts/verify-priority-badge.mjs
+
+diff --git a/scripts/verify-priority-badge.mjs b/scripts/verify-priority-badge.mjs
+new file mode 100644
+index 0000000..0264c42
+--- /dev/null
++++ b/scripts/verify-priority-badge.mjs
+@@ -0,0 +1,270 @@
++/**
++ * PriorityBadge discoverability shots:
++ * 1440 hover × each urgency × light/dark; 390 rest × light/dark.
++ */
++import { chromium, devices } from 'playwright'
++import { mkdirSync, writeFileSync } from 'node:fs'
++import { join } from 'node:path'
++
++const BASE = process.env.BASE_URL || 'http://localhost:3200'
++const OUT = process.env.ARTIFACT_DIR || '/opt/cursor/artifacts/priority-badge'
++const PREVIEW = process.env.PREVIEW_DIR || '/workspace/preview/shots/priority-badge'
++
++const URGENCIES = ['urgent', 'soon', 'eventually']
++
++const SAMPLE_TASKS = [
++  {
++    id: 'pb1',
++    text: 'read Norman chapter 3 before UX class tomorrow',
++    category: 'School',
++    priority: 'Urgent',
++    dateAdded: new Date().toISOString(),
++  },
++  {
++    id: 'pb2',
++    text: 'add an about section and PS3 sounds to my portfolio site',
++    category: 'Product design',
++    priority: 'Soon',
++    dateAdded: new Date().toISOString(),
++  },
++  {
++    id: 'pb3',
++    text: 'look for a standing desk',
++    category: 'Home',
++    priority: 'Eventually',
++    dateAdded: new Date().toISOString(),
++  },
++  {
++    id: 'pb4',
++    text: 'check on my brother',
++    category: 'Personal',
++    priority: null,
++    dateAdded: new Date().toISOString(),
++  },
++]
++
++async function seed(page) {
++  await page.addInitScript((tasks) => {
++    sessionStorage.setItem('demo:v11:tasks', JSON.stringify(tasks))
++  }, SAMPLE_TASKS)
++}
++
++async function setTheme(page, theme) {
++  await page.evaluate((t) => {
++    localStorage.setItem('theme', t)
++    document.documentElement.setAttribute('data-theme', t)
++    document.documentElement.style.colorScheme = t
++  }, theme)
++}
++
++async function shot(page, dirs, name) {
++  for (const dir of dirs) {
++    mkdirSync(dir, { recursive: true })
++    await page.screenshot({ path: join(dir, `${name}.png`), fullPage: false })
++  }
++}
++
++async function measureBadge(locator) {
++  return locator.evaluate((badge) => {
++    const label = badge.querySelector('[class*="label"]')
++    const chevron = badge.querySelector('[class*="chevron"]')
++    const r = badge.getBoundingClientRect()
++    const cs = getComputedStyle(badge)
++    const ls = label ? getComputedStyle(label) : null
++    const ch = chevron ? getComputedStyle(chevron) : null
++    return {
++      text: label?.textContent || null,
++      title: badge.getAttribute('title'),
++      width: +r.width.toFixed(1),
++      cursor: cs.cursor,
++      color: cs.color,
++      labelColor: ls?.color || null,
++      labelOpacity: ls ? parseFloat(ls.opacity) : null,
++      boxShadow: cs.boxShadow,
++      chevronOpacity: ch ? parseFloat(ch.opacity) : null,
++    }
++  })
++}
++
++function parseRgb(str) {
++  if (!str) return null
++  const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
++  if (!m) return null
++  return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)]
++}
++
++function colorsEqual(a, b) {
++  const A = parseRgb(a)
++  const B = parseRgb(b)
++  if (!A || !B) return a === b
++  return A[0] === B[0] && A[1] === B[1] && A[2] === B[2]
++}
++
++/** Ring uses currentColor at ~35–45% alpha (color-mix). */
++function ringAlphaOk(boxShadow, labelColor) {
++  if (!boxShadow || !boxShadow.includes('inset')) return false
++  // Chromium may report color-mix as color(srgb r g b / a) or rgba(...)
++  const srgb = boxShadow.match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\/\s*([\d.]+)\)/)
++  if (srgb) {
++    const alpha = parseFloat(srgb[4])
++    if (!(alpha >= 0.35 && alpha <= 0.45)) return false
++    const ringRgb = `rgb(${Math.round(parseFloat(srgb[1]) * 255)}, ${Math.round(parseFloat(srgb[2]) * 255)}, ${Math.round(parseFloat(srgb[3]) * 255)})`
++    return colorsEqual(ringRgb, labelColor)
++  }
++  const m = boxShadow.match(/rgba?\(([^)]+)\)/)
++  if (!m) return false
++  const parts = m[1].split(',').map((s) => s.trim())
++  if (parts.length < 4) return false
++  const alpha = parseFloat(parts[3])
++  if (!(alpha >= 0.35 && alpha <= 0.45)) return false
++  const ringRgb = `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`
++  return colorsEqual(ringRgb, labelColor)
++}
++
++async function main() {
++  mkdirSync(OUT, { recursive: true })
++  mkdirSync(PREVIEW, { recursive: true })
++  const dirs = [OUT, PREVIEW]
++  const report = {}
++  const rows = []
++
++  const browser = await chromium.launch({ headless: true })
++
++  for (const theme of ['light', 'dark']) {
++    // 1440 — hover each urgency
++    {
++      const context = await browser.newContext({
++        viewport: { width: 1440, height: 900 },
++        deviceScaleFactor: 1,
++      })
++      const page = await context.newPage()
++      await seed(page)
++      await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 60000 })
++      await setTheme(page, theme)
++      await page.reload({ waitUntil: 'networkidle' })
++      await setTheme(page, theme)
++      await page.waitForSelector('[data-aio-priority-badge]', { timeout: 15000 })
++
++      for (const urgency of URGENCIES) {
++        const badge = page.locator('[data-aio-priority-badge]', { hasText: urgency }).first()
++        await badge.scrollIntoViewIfNeeded()
++        await page.waitForTimeout(120)
++        const before = await measureBadge(badge)
++        await badge.hover()
++        await page.waitForTimeout(200)
++        const after = await measureBadge(badge)
++        const key = `1440-${theme}-hover-${urgency}`
++        report[key] = { before, after }
++        await shot(page, dirs, key)
++
++        // Move pointer away so the next badge starts from rest
++        await page.mouse.move(8, 8)
++        await page.waitForTimeout(120)
++
++        rows.push({
++          shot: key,
++          labelColorBefore: before.labelColor,
++          labelColorAfter: after.labelColor,
++          labelStable: colorsEqual(before.labelColor, after.labelColor) && before.labelOpacity === 1 && after.labelOpacity === 1,
++          ringOk: ringAlphaOk(after.boxShadow, after.labelColor),
++          boxShadow: after.boxShadow,
++          chevronOpacity: after.chevronOpacity,
++          widthJump: Math.abs(after.width - before.width),
++          cursor: after.cursor,
++          title: after.title,
++        })
++      }
++      await context.close()
++    }
++
++    // 390 rest
++    {
++      const iPhone = devices['iPhone 13']
++      const context = await browser.newContext({
++        ...iPhone,
++        viewport: { width: 390, height: 844 },
++        deviceScaleFactor: 1,
++        hasTouch: true,
++        isMobile: true,
++      })
++      const page = await context.newPage()
++      await seed(page)
++      await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 60000 })
++      await setTheme(page, theme)
++      await page.reload({ waitUntil: 'networkidle' })
++      await setTheme(page, theme)
++      await page.waitForSelector('[data-aio-priority-badge]', { timeout: 15000 })
++      const badge = page.locator('[data-aio-priority-badge]').first()
++      await badge.scrollIntoViewIfNeeded()
++      await page.waitForTimeout(200)
++      const rest = await measureBadge(badge)
++      const touchMedia = await page.evaluate(() => window.matchMedia('(hover: none)').matches)
++      const key = `390-${theme}-rest`
++      report[key] = { rest, touchMedia }
++      await shot(page, dirs, key)
++      rows.push({
++        shot: key,
++        labelColorBefore: rest.labelColor,
++        labelColorAfter: rest.labelColor,
++        labelStable: rest.labelOpacity === 1,
++        ringOk: true, // rest has no ring
++        boxShadow: rest.boxShadow,
++        chevronOpacity: rest.chevronOpacity,
++        widthJump: 0,
++        cursor: rest.cursor,
++        title: rest.title,
++        touchMedia,
++      })
++      await context.close()
++    }
++  }
++
++  await browser.close()
++
++  writeFileSync(join(OUT, 'measure.json'), JSON.stringify(report, null, 2))
++  writeFileSync(join(PREVIEW, 'measure.json'), JSON.stringify(report, null, 2))
++
++  const cols = [
++    'shot', 'labelStable', 'labelColorAfter', 'ringOk', 'chevronOpacity',
++    'widthJump', 'cursor', 'title',
++  ]
++  const md = [
++    `| ${cols.join(' | ')} |`,
++    `| ${cols.map(() => '---').join(' | ')} |`,
++    ...rows.map((r) => `| ${cols.map((c) => r[c] ?? '').join(' | ')} |`),
++    '',
++  ].join('\n')
++  writeFileSync(join(OUT, 'measurements.md'), md)
++  writeFileSync(join(PREVIEW, 'measurements.md'), md)
++  console.log(md)
++  console.log('Artifacts:', OUT)
++
++  const failures = []
++  for (const r of rows) {
++    if (!r.labelStable) failures.push(`${r.shot} labelUnstable ${r.labelColorBefore}→${r.labelColorAfter}`)
++    if (r.cursor !== 'pointer') failures.push(`${r.shot} cursor=${r.cursor}`)
++    if (r.title !== 'Change urgency') failures.push(`${r.shot} title=${r.title}`)
++    if (r.shot.includes('1440')) {
++      if (!r.ringOk) failures.push(`${r.shot} ringBad shadow=${r.boxShadow}`)
++      if (!(r.chevronOpacity >= 0.9)) failures.push(`${r.shot} chevron=${r.chevronOpacity}`)
++      if (r.widthJump > 1) failures.push(`${r.shot} widthJump=${r.widthJump}`)
++    }
++    if (r.shot.includes('390')) {
++      if (!(r.chevronOpacity > 0.2 && r.chevronOpacity < 0.8)) {
++        failures.push(`${r.shot} touchChevron=${r.chevronOpacity}`)
++      }
++      if (!r.touchMedia) failures.push(`${r.shot} hoverNoneNotMatched`)
++    }
++  }
++  if (failures.length) {
++    console.error('FAILURES:', failures.join('; '))
++    process.exitCode = 2
++  } else {
++    console.log('All checks pass.')
++  }
++}
++
++main().catch((err) => {
++  console.error(err)
++  process.exit(1)
++})
+diff --git a/src/components/PriorityBadge.jsx b/src/components/PriorityBadge.jsx
+index 7e3d12f..e105cfa 100644
+--- a/src/components/PriorityBadge.jsx
++++ b/src/components/PriorityBadge.jsx
+@@ -1,3 +1,4 @@
++import { ChevronDownIcon } from './icons'
+ import styles from './PriorityBadge.module.css'
+ 
+ // Cycles: null → Urgent → Soon → Eventually → null
+@@ -14,9 +15,11 @@ export function PriorityBadge({ priority, onChange }) {
+   if (!priority) {
+     return (
+       <button
++        type="button"
+         className={styles.badgeEmpty}
+         onClick={handleClick}
+-        aria-label="Add priority"
++        aria-label="Add urgency"
++        title="Add urgency"
+       >
+         +
+       </button>
+@@ -25,11 +28,17 @@ export function PriorityBadge({ priority, onChange }) {
+ 
+   return (
+     <button
++      type="button"
+       className={`${styles.badge} ${styles[priority.toLowerCase()]}`}
+       onClick={handleClick}
+-      aria-label={`Priority: ${priority}. Tap to change.`}
++      aria-label={`${priority}. Change urgency`}
++      title="Change urgency"
++      data-aio-priority-badge
+     >
+-      {priority.toLowerCase()}
++      <span className={styles.label}>{priority.toLowerCase()}</span>
++      <span className={styles.chevron} aria-hidden="true">
++        <ChevronDownIcon />
++      </span>
+     </button>
+   )
+ }
+diff --git a/src/components/PriorityBadge.module.css b/src/components/PriorityBadge.module.css
+index 11272fe..0e247d8 100644
+--- a/src/components/PriorityBadge.module.css
++++ b/src/components/PriorityBadge.module.css
+@@ -11,6 +11,7 @@
+   padding-top: 1px;
+   color: var(--color-text-placeholder);
+   opacity: 0;
++  cursor: pointer;
+   transition: opacity var(--transition-fast), color var(--transition-fast);
+   flex-shrink: 0;
+ }
+@@ -21,7 +22,8 @@
+   opacity: 1;
+ }
+ 
+-.badgeEmpty:hover {
++.badgeEmpty:hover,
++.badgeEmpty:focus-visible {
+   color: var(--color-text-secondary);
+   opacity: 1;
+ }
+@@ -29,6 +31,7 @@
+ .badge {
+   display: inline-flex;
+   align-items: center;
++  gap: 3px;
+   padding: 2px 8px;
+   border-radius: var(--radius-full);
+   font-size: var(--font-size-xs);
+@@ -37,19 +40,91 @@
+   white-space: nowrap;
+   min-height: 22px;
+   flex-shrink: 0;
++  cursor: pointer;
++  /* Label colour is pinned on the urgency classes; do not transition colour on hover */
++  color: var(--color-text-secondary);
++  box-shadow: inset 0 0 0 1px transparent;
++  transition: box-shadow var(--transition-fast);
++}
++
++.label {
++  line-height: 1.2;
++  color: inherit;
++  opacity: 1;
++}
++
++/* Reserve chevron width so the badge does not jump on hover */
++.chevron {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  width: 8px;
++  height: 8px;
++  flex-shrink: 0;
++  opacity: 0;
++  color: currentColor;
++  transition: opacity var(--transition-fast);
++  /* Isolate so chevron opacity never paints the label */
++  isolation: isolate;
++}
++
++.badge:hover,
++.badge:focus-visible,
++.badge:active {
++  /* Keep the same label colour as rest — no fade, no token swap */
++  color: var(--color-text-secondary);
++  /* 1px inset ring at currentColor ~45% — readable on all three fills */
++  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent);
++}
++
++.badge:hover .label,
++.badge:focus-visible .label,
++.badge:active .label {
++  color: inherit;
++  opacity: 1;
++}
++
++.badge:hover .chevron,
++.badge:focus-visible .chevron {
++  opacity: 1;
++}
++
++/* Touch: chevron always visible at reduced opacity (no hover) */
++@media (hover: none) {
++  .chevron {
++    opacity: 0.45;
++  }
++
++  .badge:hover .chevron,
++  .badge:focus-visible .chevron {
++    opacity: 0.45;
++  }
++
++  .badgeEmpty {
++    opacity: 0.55;
++  }
+ }
+ 
+-.urgent {
++.urgent,
++.urgent:hover,
++.urgent:focus-visible,
++.urgent:active {
+   background: var(--color-urgent);
+   color: var(--color-text-secondary);
+ }
+ 
+-.soon {
++.soon,
++.soon:hover,
++.soon:focus-visible,
++.soon:active {
+   background: var(--color-soon);
+   color: var(--color-text-secondary);
+ }
+ 
+-.eventually {
++.eventually,
++.eventually:hover,
++.eventually:focus-visible,
++.eventually:active {
+   background: var(--color-eventually);
+   color: var(--color-text-secondary);
+ }
+diff --git a/src/components/icons.jsx b/src/components/icons.jsx
+index 6255fa6..29731f6 100644
+--- a/src/components/icons.jsx
++++ b/src/components/icons.jsx
+@@ -130,3 +130,24 @@ export function CloseIcon() {
+     </svg>
+   )
+ }
++
++/** 8px chevron for PriorityBadge hover affordance */
++export function ChevronDownIcon({ size = 8 } = {}) {
++  return (
++    <svg
++      width={size}
++      height={size}
++      viewBox="0 0 8 8"
++      fill="none"
++      aria-hidden="true"
++    >
++      <path
++        d="M1.75 3l2.25 2.25L6.25 3"
++        stroke="currentColor"
++        strokeWidth="1.25"
++        strokeLinecap="round"
++        strokeLinejoin="round"
++      />
++    </svg>
++  )
++}
+-- 
+2.43.0
+

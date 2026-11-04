@@ -31,7 +31,7 @@ function DropletPath({
 }
 
 /**
- * Solid ABC Areal letter pieces that deform into the halftone dots.
+ * Solid sans letter pieces that deform into the halftone dots.
  * `active` drives the shape (and, unless `emphasized`, the color) from
  * the outline to the dots. Reduced motion jumps to the target.
  */
@@ -55,7 +55,7 @@ export default function OutlineMorphWord({
   // and the effect below eases from that rest pose into the dots — same
   // 0.32s curve as when the word lived in the first-load bundle.
   const progress = useMotionValue(pinned ?? 0);
-  const word = WORDS.get(label);
+  const word = WORDS.get(label) || WORDS.get(label.toLowerCase());
 
   useEffect(() => {
     const target = pinned != null ? pinned : active ? 1 : 0;
@@ -74,12 +74,13 @@ export default function OutlineMorphWord({
     return (
       <span
         style={{
-          fontSize: 16,
+          fontSize: "var(--fs-body)",
           fontWeight: 400,
           lineHeight: "24px",
-          color: emphasized
+          color: (emphasized || active)
             ? "var(--color-text-primary)"
             : "var(--color-text-muted)",
+          transition: "color 0.25s ease",
         }}
       >
         {label}

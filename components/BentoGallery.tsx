@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useDialKit } from "dialkit";
 import { cssEase, EASE_OPACITY, ENTRANCE_DEFAULTS, SPAWN_FROM_OPACITY } from "@/lib/motion";
+import BentoMinimap from "./BentoMinimap";
 
 /** Full image over LQIP. Eager-load: this canvas is transformed, so `lazy`
  *  intersection never fires and tiles stay empty. */
@@ -592,6 +593,43 @@ export default function BentoGallery({
         return max;
     }, [positions, items, imgUnitH, hasCaps, gap, colUnit, columns]);
 
+    // ── Minimap geometry ──────────────────────────────────────────────────────
+    const { mapW, mapH, minimapK } = useMemo(() => {
+        if (canvasW <= 0 || canvasH <= 0) {
+            return { mapW: 132, mapH: 0, minimapK: 0 };
+        }
+        const aspect = canvasH / canvasW;
+        let w = 132;
+        let h = 132 * aspect;
+        if (h > 120) {
+            h = 120;
+            w = 120 / aspect;
+        }
+        return { mapW: w, mapH: h, minimapK: w / canvasW };
+    }, [canvasW, canvasH]);
+    const minimapRectRef = useRef<SVGRectElement>(null);
+    const minimapGeomRef = useRef({ mapW, mapH, k: minimapK });
+    minimapGeomRef.current = { mapW, mapH, k: minimapK };
+    /** Write the viewport rect imperatively (no React re-render). */
+    const syncMinimap = useCallback((x: number, y: number, s: number, vpW: number, vpH: number) => {
+        const mRect = minimapRectRef.current;
+        const { mapW: mW, mapH: mH, k: mK } = minimapGeomRef.current;
+        if (!mRect || mW <= 0 || mH <= 0 || mK <= 0 || s <= 0) return;
+        const x1 = clamp((-x / s) * mK, 0, mW);
+        const y1 = clamp((-y / s) * mK, 0, mH);
+        const x2 = clamp(((-x + vpW) / s) * mK, 0, mW);
+        const y2 = clamp(((-y + vpH) / s) * mK, 0, mH);
+        mRect.setAttribute("x", String(x1));
+        mRect.setAttribute("y", String(y1));
+        mRect.setAttribute("width", String(Math.max(0, x2 - x1)));
+        mRect.setAttribute("height", String(Math.max(0, y2 - y1)));
+    }, []);
+
+    useLayoutEffect(() => {
+        const { x, y, s } = tx.current;
+        syncMinimap(x, y, s, vw, vh);
+    }, [vw, vh, mapW, mapH, minimapK, syncMinimap]);
+
     // ── Bounds ────────────────────────────────────────────────────────────────
     // When content is larger than the viewport: classic pan limits + EDGE_PAD.
     // When content fits: allow ±slack around the centered position instead of
@@ -699,8 +737,10 @@ export default function BentoGallery({
                 th.style.left = trackPadH + thumbX + "px";
                 th.style.transform = "translate(-50%, -50%)";
             }
+
+            syncMinimap(x, y, s, vw, vh);
         },
-        [vw, vh, trackW, trackPadH]
+        [vw, vh, trackW, trackPadH, syncMinimap]
     );
 
     // A focus/flow transition can still be mid-flight when the user grabs the
@@ -729,10 +769,11 @@ export default function BentoGallery({
                 thumb.style.left = trackPadH + thumbX + "px";
                 thumb.style.transform = "translate(-50%, -50%)";
             }
+            syncMinimap(next.x, next.y, scale, vw, vh);
         } catch {
             el.style.transition = "none";
         }
-    }, [trackW, trackPadH]);
+    }, [vw, vh, trackW, trackPadH, syncMinimap]);
 
     const snapToBounds = useCallback(
         (easing: "none" | "spring" | "flow" = "spring") => {
@@ -888,6 +929,18 @@ export default function BentoGallery({
             if (rootRef.current) rootRef.current.style.cursor = "crosshair";
         },
         [getFocusT, applyTransform, showSelector, cancelZoomAnim]
+    );
+
+    const onMinimapCenter = useCallback(
+        (cx: number, cy: number) => {
+            cancelZoomAnim();
+            const s = tx.current.s;
+            const b = getBounds(s);
+            const targetX = clamp(vw / 2 - cx * s, b.minX, b.maxX);
+            const targetY = clamp(vh / 2 - cy * s, b.minY, b.maxY);
+            applyTransform(targetX, targetY, s, "flow");
+        },
+        [cancelZoomAnim, getBounds, vw, vh, applyTransform]
     );
 
     // ── Zoom helpers ──────────────────────────────────────────────────────────
@@ -1440,9 +1493,9 @@ export default function BentoGallery({
         background: "transparent",
         border: "none",
         color: zpBtnColor,
-        fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontSize: 18,
-        fontWeight: 300,
+        fontWeight: 400,
         lineHeight: 1,
         cursor: "pointer",
         padding: 0,
@@ -1588,9 +1641,8 @@ export default function BentoGallery({
                                             color: isDark
                                                 ? "rgba(255,255,255,0.15)"
                                                 : "rgba(0,0,0,0.15)",
-                                            fontSize: 11,
-                                            fontFamily:
-                                                "Helvetica Neue, Helvetica, Arial, sans-serif",
+                                            fontSize: "var(--fs-caption)",
+                                            fontFamily: "var(--font-sans)",
                                             letterSpacing: "0.08em",
                                         }}
                                     >
@@ -1611,12 +1663,10 @@ export default function BentoGallery({
                                         display: "flex",
                                         alignItems: "flex-start",
                                         gap: 6,
-                                        fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
-                                        fontSize: 11,
+                                        fontFamily: "var(--font-sans)",
+                                        fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
                                         lineHeight: 1.3,
                                         // Hide truncated preview while focused overlay is up
                                         visibility: isActive ? "hidden" : "visible",
@@ -1700,12 +1750,10 @@ export default function BentoGallery({
                                         display: "flex",
                                         alignItems: "flex-start",
                                         gap: 6,
-                                        fontFamily:
-                                            "var(--font-sans, 'Helvetica Neue', Helvetica, Arial, sans-serif)",
-                                        fontSize: 11,
+                                        fontFamily: "var(--font-sans)",
+                                        fontSize: "var(--fs-caption)",
                                         fontWeight: 400,
                                         letterSpacing: "0.02em",
-                                        textTransform: "lowercase",
                                         lineHeight: 1.3,
                                         color: item.link
                                           ? "var(--color-link-blue)"
@@ -1806,12 +1854,12 @@ export default function BentoGallery({
             >
                 <PanIcon />
                 <span style={{
-                    fontFamily: "var(--font-sans, system-ui, sans-serif)",
-                    fontSize: 11,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "var(--fs-caption)",
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",
-                }}>drag · scroll</span>
+                }}>Drag · Scroll</span>
                 <div style={{
                     width: 1,
                     height: 10,
@@ -1820,12 +1868,12 @@ export default function BentoGallery({
                 }} />
                 <TapIcon />
                 <span style={{
-                    fontFamily: "var(--font-sans, system-ui, sans-serif)",
-                    fontSize: 11,
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "var(--fs-caption)",
                     letterSpacing: "0.01em",
                     color: hintTextColor,
                     whiteSpace: "nowrap",
-                }}>tap to focus</span>
+                }}>Tap to focus</span>
             </div>
 
             {/* ── Zoom slider — where hint pill used to be ── */}
@@ -1938,6 +1986,30 @@ export default function BentoGallery({
                     <span style={{ display: "inline-block", transform: "translateY(-2px) translateX(-0.5px)", pointerEvents: "none" }}>+</span>
                 </button>
             </div>
+
+            {/* ── Minimap ── */}
+            {!isMobile && layoutReady && (
+                <BentoMinimap
+                    items={items}
+                    positions={positions}
+                    columns={columns}
+                    colUnit={colUnit}
+                    imgUnitH={imgUnitH}
+                    gap={gap}
+                    canvasW={canvasW}
+                    canvasH={canvasH}
+                    mapW={mapW}
+                    mapH={mapH}
+                    k={minimapK}
+                    vw={vw}
+                    vh={vh}
+                    currentTx={tx.current}
+                    focusedIdx={focusedIdx}
+                    panelBase={panelBase}
+                    viewportRef={minimapRectRef}
+                    onCenter={onMinimapCenter}
+                />
+            )}
         </div>
     );
 }

@@ -29,7 +29,7 @@ function Slider({
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <span style={{ fontSize: 10, color: "#888", fontFamily: "monospace" }}>{label}</span>
-        <span style={{ fontSize: 11, color: "#222", fontFamily: "monospace", fontWeight: 600 }}>
+        <span style={{ fontSize: 11, color: "#222", fontFamily: "monospace", fontWeight: 500 }}>
           {value.toFixed(2)}
         </span>
       </div>
@@ -127,7 +127,7 @@ export default function PhoneMockupDevPanel() {
   }
 
   return (
-    <div style={{ position: "fixed", bottom: 24, left: 24, zIndex: 9999, fontFamily: "var(--font-sans, system-ui)" }}>
+    <div style={{ position: "fixed", bottom: 24, left: 24, zIndex: 9999, fontFamily: "var(--font-sans)" }}>
       <button
         onClick={() => setOpen((o) => !o)}
         title="PhoneMockup dev panel"
@@ -178,7 +178,7 @@ export default function PhoneMockupDevPanel() {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#222", fontFamily: "monospace" }}>
+            <span style={{ fontSize: 11, fontWeight: 500, color: "#222", fontFamily: "monospace" }}>
               PhoneMockup/{instance.key}
             </span>
             <button onClick={reset} style={{ fontSize: 10, color: "#888", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>reset</button>

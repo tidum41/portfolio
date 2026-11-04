@@ -42,7 +42,7 @@
 .line1 {
   font-family: 'IBM Plex Mono', monospace;
   font-size: var(--cd-date-line1-font-size, 24px);
-  font-weight: 600;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.95);
   letter-spacing: 0.3px;
   line-height: 30px;
@@ -62,7 +62,7 @@
 .volPct {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 38px;
-  font-weight: 600;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.92);
   letter-spacing: 1px;
   line-height: 1;
@@ -87,7 +87,7 @@
 .scratchTime {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 26px;
-  font-weight: 600;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.95);
   letter-spacing: 0.5px;
   line-height: 1.1;

@@ -14,6 +14,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
+      url: `${SITE_URL}/joola`,
+      lastModified,
+      changeFrequency: "yearly",
+      priority: 0.9,
+    },
+    {
       url: `${SITE_URL}/ucla-sublease`,
       lastModified,
       changeFrequency: "yearly",

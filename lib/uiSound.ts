@@ -30,6 +30,8 @@ type Master = {
 
 let master: Master = { volume: 0.4, enabled: false };
 let ctx: AudioContext | null = null;
+const rawBuffers = new Map<UiSoundId, ArrayBuffer>();
+const rawInflight = new Map<UiSoundId, Promise<ArrayBuffer | null>>();
 const buffers = new Map<UiSoundId, AudioBuffer>();
 const inflight = new Map<UiSoundId, Promise<AudioBuffer | null>>();
 let unlocked = false;
@@ -58,19 +60,40 @@ async function resumeCtx(): Promise<AudioContext | null> {
   return audioCtx;
 }
 
+async function fetchRawBuffer(id: UiSoundId): Promise<ArrayBuffer | null> {
+  if (rawBuffers.has(id)) return rawBuffers.get(id)!;
+  const existing = rawInflight.get(id);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(SOURCES[id], { cache: "force-cache" });
+      if (!res.ok) return null;
+      const raw = await res.arrayBuffer();
+      rawBuffers.set(id, raw);
+      return raw;
+    } catch {
+      return null;
+    } finally {
+      rawInflight.delete(id);
+    }
+  })();
+
+  rawInflight.set(id, promise);
+  return promise;
+}
+
 async function loadBuffer(id: UiSoundId): Promise<AudioBuffer | null> {
   if (buffers.has(id)) return buffers.get(id)!;
   const existing = inflight.get(id);
   if (existing) return existing;
 
   const promise = (async () => {
-    // Decode works on a suspended context — don't wait for unlock/resume.
     const audioCtx = getCtx();
     if (!audioCtx) return null;
     try {
-      const res = await fetch(SOURCES[id], { cache: "force-cache" });
-      if (!res.ok) return null;
-      const raw = await res.arrayBuffer();
+      const raw = rawBuffers.get(id) || (await fetchRawBuffer(id));
+      if (!raw) return null;
       const buf = await audioCtx.decodeAudioData(raw.slice(0));
       buffers.set(id, buf);
       return buf;
@@ -114,19 +137,28 @@ export function getUiSoundMaster(): Master {
 
 /** First visitor gesture — unlock Web Audio + enable UI ticks. */
 export function unlockUiSounds() {
-  if (master.enabled) return;
-  master = { ...master, enabled: true };
-  void resumeCtx();
+  if (!master.enabled) {
+    master = { ...master, enabled: true };
+  }
+  warmUiSounds({ allowContext: true });
 }
 
 /**
- * Prefetch + decode both clips. Safe before unlock — decode works while the
- * context is still suspended, so the first press only needs resume + start.
+ * Prefetch UI sound assets into memory.
+ * When allowContext is false (default for idle prewarm), fetches raw ArrayBuffers
+ * without instantiating AudioContext, avoiding Chrome autoplay warnings.
+ * When allowContext is true (called on first gesture), instantiates and decodes immediately.
  */
-export function warmUiSounds() {
-  void loadBuffer("option");
-  void loadBuffer("push");
-  void resumeCtx();
+export function warmUiSounds(options?: { allowContext?: boolean }) {
+  const allowContext = options?.allowContext ?? false;
+  if (allowContext) {
+    void loadBuffer("option");
+    void loadBuffer("push");
+    void resumeCtx();
+  } else {
+    void fetchRawBuffer("option");
+    void fetchRawBuffer("push");
+  }
 }
 
 /**
@@ -159,31 +191,79 @@ export function playUiSound(id: UiSoundId): void {
   })();
 }
 
+const INTERACTIVE_SELECTOR = [
+  "a[href]",
+  "button",
+  "[role='button']",
+  "input",
+  "select",
+  "summary",
+  "label",
+  "[data-ui-sound]",
+  "[data-sound]",
+].join(",");
+
+function labelControlsSomething(label: HTMLLabelElement): boolean {
+  if (label.control) return true;
+  return Boolean(label.querySelector("input, select, textarea, button"));
+}
+
+/**
+ * Closest real interactive host for UI ticks.
+ * Empty / text / image taps outside these return null — including archive
+ * canvas chrome that only carries data-ui-sound-scope for taxonomy.
+ */
+export function findUiSoundInteractiveHost(target: EventTarget | null): Element | null {
+  if (!(target instanceof Element)) return null;
+  if (target.closest("[data-ui-sound='off'], [data-sound='off']")) return null;
+
+  const host = target.closest(INTERACTIVE_SELECTOR);
+  if (!host) return null;
+
+  const hostExplicit =
+    host.getAttribute("data-ui-sound") || host.getAttribute("data-sound");
+
+  if (host instanceof HTMLLabelElement) {
+    if (hostExplicit !== "option" && hostExplicit !== "push" && !labelControlsSomething(host)) {
+      return null;
+    }
+  }
+
+  if (host instanceof HTMLAnchorElement) {
+    const href = host.getAttribute("href") || "";
+    if (!href || href === "#") return null;
+  }
+
+  if (
+    host instanceof HTMLButtonElement ||
+    host instanceof HTMLInputElement ||
+    host instanceof HTMLSelectElement
+  ) {
+    if (host.disabled) return null;
+  }
+
+  return host;
+}
+
 /** Resolve which sound a click target should play, if any. */
 export function resolveUiSoundFromEventTarget(target: EventTarget | null): UiSoundId | null {
-  if (!(target instanceof Element)) return null;
+  const host = findUiSoundInteractiveHost(target);
+  if (!host) return null;
 
-  if (target.closest("[data-ui-sound='off']")) return null;
-
-  const explicit = target.closest<HTMLElement>("[data-ui-sound]");
-  const value = explicit?.getAttribute("data-ui-sound");
+  const explicit =
+    host.closest<HTMLElement>("[data-ui-sound]") || host.closest<HTMLElement>("[data-sound]");
+  const value = explicit?.getAttribute("data-ui-sound") || explicit?.getAttribute("data-sound");
   if (value === "option" || value === "push") return value;
   if (value === "off") return null;
 
-  if (target.closest(".portfolio-grid-card, .project-card, [data-grid-card]")) {
+  // Entering a project / archive tile — push. Only after an interactive host
+  // matched above, so empty gaps and pan gestures stay silent.
+  if (host.closest(".portfolio-grid-card, .project-card, [data-grid-card]")) {
+    return "push";
+  }
+  if (host.closest("[data-ui-sound-scope='archive']")) {
     return "push";
   }
 
-  const link = target.closest<HTMLAnchorElement>("a[href]");
-  if (link) {
-    const href = link.getAttribute("href") || "";
-    if (!href || href === "#") return null;
-    return "option";
-  }
-
-  if (target.closest("[data-ui-sound-scope='archive']")) {
-    return "push";
-  }
-
-  return null;
+  return "option";
 }

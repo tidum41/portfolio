@@ -14,6 +14,7 @@ import InteractiveBadge from "@/components/InteractiveBadge";
 import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
+import AllinoneHalftoneLoader from "@/components/AllinoneHalftoneLoader";
 import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
@@ -22,13 +23,14 @@ import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
 import { useIntroReleased } from "@/lib/useIntroReleased";
-import { afterIntroIdle } from "@/lib/introReady";
+import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import type { SanityProject } from "@/lib/sanity/queries";
+import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
+import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
-function isExternalHref(href: string) {
-  return /^(https?:|mailto:|tel:)/i.test(href);
+function isExternalHref(href?: string) {
+  return Boolean(href && /^(https?:|mailto:|tel:)/i.test(href));
 }
 
 const CARD_LINK_STYLE = {
@@ -57,15 +59,27 @@ if (typeof window !== "undefined") {
   window.history.scrollRestoration = "manual";
 }
 
+import MuxAutoplayCard from "@/components/MuxAutoplayCard";
+
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
 const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
-const MuxAutoplayCard = dynamic(() => import("@/components/MuxAutoplayCard"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
-type PopupId = "cd" | "habit";
+type PopupId = "cd" | "habit" | "allinone";
 
 const POPUP_EMBED_MAX_W = 1100;
 const HABIT_POPUP_MAX_W = 560;
+
+const ALLINONE_INFO_META = [
+  { label: "Built with", values: ["React", "Vite", "PWA"] },
+  { label: "AI", values: ["Groq"] },
+  { label: "Data", values: ["Google Sheets API", "Supabase"] },
+  { label: "Designed with", values: ["Paper", "Claude Code"] },
+  { label: "Timeline", values: ["2 weeks"] },
+];
+
+const ALLINONE_WHY_BUILT =
+  "I found myself dumping all my tasks into one Apple Note, so I built a tool (all-in-one) that allows users to define how they want categories grouped, then have a model sort tasks accordingly. I imagined it as a stripped down version of Notes, with an organized list feature and standard notes.";
 // Grid tiles keep 4:3; the CD popup needs a taller slot so vertical
 // carousel + drag hint aren't clipped at narrow modal widths. Sized to
 // fill more of the viewport while leaving room for panel chrome.
@@ -121,18 +135,30 @@ function OpensInPopupIcon() {
 // ─── Card label ────────────────────────────────────────────────────────
 function CardLabel({
   title,
-  sub,
+  label,
   showPopupIcon,
   external,
 }: {
   title: string;
-  sub?: string;
+  /** Quiet meta line above the main title (PS3 XMB hierarchy). */
+  label?: string;
   showPopupIcon?: boolean;
   /** External project link — blue northeast arrow. */
   external?: boolean;
 }) {
   return (
-    <div style={{ padding: 0 }}>
+    <div style={{ padding: "3px 0 0" }}>
+      {label && (
+        <p className="card-label-tag" style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: "var(--fs-caption)",
+          lineHeight: 1.4,
+          color: "var(--color-text-muted)",
+          margin: "0 0 2px",
+          letterSpacing: "0.01em",
+        }}>{label}</p>
+      )}
       <p style={{
         fontFamily: "var(--font-sans-medium)",
         fontWeight: "var(--fw-card-title)" as React.CSSProperties["fontWeight"],
@@ -143,22 +169,12 @@ function CardLabel({
         display: "flex",
         alignItems: "center",
         gap: 6,
+        textWrap: "balance",
       }}>
         {title}
         {external && <NortheastArrow size={13} color="var(--color-link-blue)" />}
         {showPopupIcon && <OpensInPopupIcon />}
       </p>
-      {sub && (
-        <p style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 400,
-          fontSize: 13,
-          lineHeight: 1.5,
-          color: "var(--color-text-tertiary)",
-          margin: "4px 0 0",
-          letterSpacing: "0.01em",
-        }}>{sub}</p>
-      )}
     </div>
   );
 }
@@ -201,11 +217,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   projects: SanityProject[];
 }) {
   const router = useRouter();
-  const warmProjectNav = (href: string) => {
-    if (isCaseStudyHref(href)) warmCaseStudyNav(href, router);
+  const warmProjectNav = (href?: string) => {
+    if (href && isCaseStudyHref(href)) warmCaseStudyNav(href, router);
   };
-  const commitProjectNav = (href: string) => {
-    if (isCaseStudyHref(href)) commitCaseStudyNav(href, router);
+  const commitProjectNav = (href?: string) => {
+    if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
@@ -237,9 +253,20 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // the tile's theme and dropped the live album state. Cleared on close.
   const [cdFrozen, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
-  // Always start "light" on server + first client paint so SSR HTML matches
-  // hydration (reading data-theme in useState caused a Next.js Issues badge).
-  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("light");
+  // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
+  // never mismatches; the effect below syncs if BootScripts flipped to "light".
+  const [habitWidgetTheme, setHabitWidgetTheme] = useState<'light' | 'dark'>("dark");
+  // Allinone: defer iframe src until the open animation settles, then
+  // fade a delayed (~150ms) halftone loader and post allinone-enter so the
+  // embed can stagger its chrome in.
+  const [allinoneAllowSrc, setAllinoneAllowSrc] = useState(false);
+  const [allinoneFrameSrc, setAllinoneFrameSrc] = useState<string | undefined>(undefined);
+  const [allinoneFrameReady, setAllinoneFrameReady] = useState(false);
+  const [allinoneLoaderVisible, setAllinoneLoaderVisible] = useState(false);
+  const [allinoneLoaderFading, setAllinoneLoaderFading] = useState(false);
+  const allinoneIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const allinoneEnterSentRef = useRef(false);
+  const allinoneReadyLatchedRef = useRef(false);
   const scrollYRef = useRef(0);
   // See the click-capture / scroll-tracking effects below for why this exists.
   const suppressTrackingRef = useRef(false);
@@ -306,28 +333,18 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     };
   }, [visible]);
 
-  // Resume Mux after Work paints — double-rAF + short delay so silk/shell
-  // show first without decode competing on the arrival frame.
+  // Resume Mux on the frame after Work paints so shell shows first without
+  // adding an artificial timer delay.
   const [mediaPlaying, setMediaPlaying] = useState(visible);
   useEffect(() => {
     if (!visible) {
       setMediaPlaying(false);
       return;
     }
-    let cancelled = false;
-    let timeoutId = 0;
-    const raf1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        timeoutId = window.setTimeout(() => {
-          if (!cancelled) setMediaPlaying(true);
-        }, 80);
-      });
+    const raf = requestAnimationFrame(() => {
+      setMediaPlaying(true);
     });
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf1);
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [visible]);
 
   // Leaving "/" — close popups. Live CD stays in the hidden work shell until
@@ -473,11 +490,25 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // noise described above can't overwrite the frozen value before this
   // component is hidden. Un-suppressed by the restore effect once we're
   // confirmed back on "/", so normal tracking resumes for next time.
+  //
+  // Same capture pass: if the first-load intro is still playing and the
+  // click landed on a project card, end the intro immediately so soft nav
+  // / commitCaseStudyNav / visibilitychange replay stay coherent (and so
+  // nav/footer aren't left opacity-gated after we leave "/").
   useEffect(() => {
     if (!visible) return;
-    const onClickCapture = () => {
+    const onClickCapture = (e: MouseEvent) => {
       scrollYRef.current = window.scrollY;
       suppressTrackingRef.current = true;
+      const el = e.target;
+      if (!(el instanceof Element)) return;
+      if (
+        el.closest(
+          '.portfolio-grid-card a, .portfolio-grid-card[role="button"], .portfolio-grid-card [role="button"], .project-card a',
+        )
+      ) {
+        completeIntro();
+      }
     };
     window.addEventListener("click", onClickCapture, { capture: true });
     return () => window.removeEventListener("click", onClickCapture, { capture: true });
@@ -509,7 +540,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       setHeavyMediaLive(true);
       setCdPosterFade(false);
       setCdPosterOpacity(frozen ? 0 : 1);
-    } else {
+    } else if (id === "habit") {
       setHabitPosterFade(false);
       setHabitPosterOpacity(1);
     }
@@ -532,6 +563,119 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     // Drop the frozen still once the modal is fully closed and the live CD has
     // reparented back into the grid slot, so it goes live again next open.
     if (id === "cd") setCdFrozen(null);
+    if (id === "allinone") {
+      setAllinoneAllowSrc(false);
+      setAllinoneFrameSrc(undefined);
+      setAllinoneFrameReady(false);
+      setAllinoneLoaderVisible(false);
+      setAllinoneLoaderFading(false);
+      allinoneEnterSentRef.current = false;
+      allinoneReadyLatchedRef.current = false;
+      allinoneIframeRef.current = null;
+    }
+  };
+
+  // Show the halftone loader only after ~150ms so fast paints never flash it.
+  useEffect(() => {
+    if (openPopup !== "allinone" || !popupVisible || allinoneFrameReady) {
+      return;
+    }
+    const t = window.setTimeout(() => setAllinoneLoaderVisible(true), 150);
+    return () => window.clearTimeout(t);
+  }, [openPopup, popupVisible, allinoneFrameReady]);
+
+  // Arm the iframe only after the panel enter finishes, then on idle so the
+  // open animation + topbar hover stay on the main thread.
+  useEffect(() => {
+    if (!allinoneAllowSrc || allinoneFrameSrc) return;
+    let cancelled = false;
+    const arm = () => {
+      if (cancelled) return;
+      setAllinoneFrameSrc(ALLINONE_APP_URL);
+    };
+    const ric = window.requestIdleCallback?.bind(window);
+    const cic = window.cancelIdleCallback?.bind(window);
+    if (ric && cic) {
+      const id = ric(arm, { timeout: 320 });
+      return () => {
+        cancelled = true;
+        cic(id);
+      };
+    }
+    const t = window.setTimeout(arm, 48);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [allinoneAllowSrc, allinoneFrameSrc]);
+
+  const signalAllinoneEnter = (iframe: HTMLIFrameElement | null) => {
+    if (!iframe || allinoneEnterSentRef.current) return;
+    allinoneEnterSentRef.current = true;
+    try {
+      iframe.contentWindow?.postMessage(
+        { type: "allinone-enter" },
+        window.location.origin,
+      );
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const completeAllinoneReady = (iframe?: HTMLIFrameElement | null) => {
+    if (allinoneReadyLatchedRef.current) {
+      signalAllinoneEnter(iframe ?? allinoneIframeRef.current);
+      return;
+    }
+    allinoneReadyLatchedRef.current = true;
+    const el = iframe ?? allinoneIframeRef.current;
+    setAllinoneFrameReady(true);
+    setAllinoneLoaderFading(true);
+    setAllinoneLoaderVisible(false);
+    // Let the loader opacity transition finish, then unmount.
+    window.setTimeout(() => setAllinoneLoaderFading(false), 220);
+    signalAllinoneEnter(el);
+  };
+
+  // Same-origin: prefer the demo's allinone-ready postMessage; fall back to
+  // load + double rAF. Either path fades the loader and posts allinone-enter.
+  useEffect(() => {
+    if (openPopup !== "allinone") return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data;
+      if (
+        data === "allinone-ready" ||
+        (data && typeof data === "object" && (data as { type?: string }).type === "allinone-ready")
+      ) {
+        completeAllinoneReady(allinoneIframeRef.current);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [openPopup]);
+
+  const markAllinonePainted = (iframe: HTMLIFrameElement | null) => {
+    if (!iframe) return;
+    allinoneIframeRef.current = iframe;
+    if (allinoneFrameReady) {
+      signalAllinoneEnter(iframe);
+      return;
+    }
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) {
+        completeAllinoneReady(iframe);
+        return;
+      }
+      // Two frames after load ≈ first paint of the embed (fallback if the
+      // demo's ready message is late or missing).
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => completeAllinoneReady(iframe));
+      });
+    } catch {
+      completeAllinoneReady(iframe);
+    }
   };
 
   // Seed habit poster theme from the site only until the live widget reports
@@ -615,18 +759,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
       <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
-        <section
-          aria-label="Portfolio"
-          className="project-grid portfolio-grid"
-          style={{
-            paddingTop: "var(--space-5)",
-            paddingBottom: "var(--space-8)",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
-            gap: "var(--grid-gutter)",
-            alignItems: "start",
-          }}
-        >
+        <CardFocusGrid>
           {/* ── Left column ── */}
           <div className="portfolio-grid-col">
             {projects
@@ -638,9 +771,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
-                        href={p.href}
+                        href={p._id === "project-todolist" ? undefined : p.href}
+                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
-                        sub={p.subtitle}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -648,7 +782,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       />
                     )}
                   </EntranceItem>
-                ) : p.image?.asset?.url ? (
+                ) : p.image?.asset?.url && p.href ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
@@ -657,7 +791,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
@@ -672,7 +806,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -690,7 +824,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               data-grid-card="cd"
               role="button"
               tabIndex={0}
-              aria-label="Open Drag a CD in a larger view"
+              aria-label="Open Designing micro-interactions for a digital CD player"
               onClick={() => openPopupHandler("cd")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
               style={{ gap: 6, cursor: "pointer", order: projects.length }}
@@ -721,7 +855,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     </div>
                   </div>
                 </div>
-                <CardLabel title="Drag a CD" sub="exploration" showPopupIcon />
+                <CardLabel title="Designing micro-interactions for a digital CD player" label="Interaction" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
@@ -737,9 +871,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     {hasEverBeenActive && (
                       <MuxAutoplayCard
                         playbackId={p.muxPlaybackId}
-                        href={p.href}
+                        href={p._id === "project-todolist" ? undefined : p.href}
+                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
-                        sub={p.subtitle}
+                        label={p.label}
                         aspectRatio={p.aspectRatio}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
@@ -747,7 +882,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                       />
                     )}
                   </EntranceItem>
-                ) : p.image?.asset?.url ? (
+                ) : p.image?.asset?.url && p.href ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
@@ -756,7 +891,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => commitProjectNav(p.href)}
+                        onPointerDown={() => warmProjectNav(p.href)}
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
@@ -771,7 +906,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             />
                           </div>
                         </div>
-                        <CardLabel title={p.title} sub={p.subtitle} external={isExternalHref(p.href)} />
+                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
                       </Link>
                     </ProjectCardLift>
                   </EntranceItem>
@@ -788,7 +923,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               data-grid-card="habit"
               role="button"
               tabIndex={0}
-              aria-label="Open Dumb Habit Tracker in a larger view"
+              aria-label="Open Habit tracker focused on offering less"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
               style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
@@ -810,15 +945,22 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     />
                   </div>
                 </div>
-                <CardLabel title="Dumb Habit Tracker" sub="product design + frontend" showPopupIcon />
+                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
               </ProjectCardLift>
             </EntranceItem>
           </div>
-        </section>
+        </CardFocusGrid>
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
-            so parent display:none cannot hide it; `visible` toggles the portal. */}
-        {hasEverBeenActive && introReleased && (
+            so parent display:none cannot hide it; `visible` toggles the portal.
+            Mount it with the shell, NOT after introReleased: like HeroText and
+            the grid, it must be mounted (at opacity 0, non-interactive) while
+            data-intro="playing" so its own onIntroDone listener is registered
+            before IntroOrchestrator fires "intro-done". Gating the mount on
+            introReleased started its whole portal/position/reveal chain only
+            after the gate lifted, so its fade ran late or, when the reveal
+            states batched into one commit, not at all. It just appeared. */}
+        {hasEverBeenActive && (
           <PS3ControlPanel
             instantReturn={instant}
             visible={visible}
@@ -887,6 +1029,41 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
             }}
           >
             <div ref={setPopupHabitEl} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+          </div>
+        </ProjectPopup>
+      )}
+
+      {visible && openPopup === "allinone" && (
+        <ProjectPopup
+          open={popupVisible}
+          onClose={closePopup}
+          onExitComplete={() => handlePopupExitComplete("allinone")}
+          onEntered={() => setAllinoneAllowSrc(true)}
+          title="Designing a to-do list with AI organization"
+          size="large"
+          panelBg="var(--color-bg)"
+          infoMeta={[...ALLINONE_INFO_META]}
+          infoLink={{ href: ALLINONE_APP_URL, label: "Open full app" }}
+          whyBuilt={ALLINONE_WHY_BUILT}
+        >
+          <div className="aio-demo-embed">
+            <AllinoneHalftoneLoader
+              visible={allinoneLoaderVisible && !allinoneFrameReady}
+              fading={allinoneLoaderFading}
+            />
+            {/* Src armed after open animation + idle — keeps × / info at 60fps. */}
+            {allinoneFrameSrc ? (
+              <iframe
+                ref={allinoneIframeRef}
+                className="project-popup-iframe"
+                src={allinoneFrameSrc}
+                title="Allinone — AI to-do list"
+                allow="clipboard-write"
+                loading="lazy"
+                data-ready={allinoneFrameReady ? "true" : "false"}
+                onLoad={(e) => markAllinonePainted(e.currentTarget)}
+              />
+            ) : null}
           </div>
         </ProjectPopup>
       )}

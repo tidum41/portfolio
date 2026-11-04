@@ -40,7 +40,7 @@ export default function InteractiveBadge() {
         lineHeight: "18px",
         color: "var(--color-text-card-sub)",
         whiteSpace: "nowrap",
-      }}>interactive</span>
+      }}>Interactive</span>
     </motion.div>
   );
 }

@@ -168,7 +168,7 @@ export default function PlaygroundPageClient({
         } as CSSProperties}
             data-ui-sound-scope="archive"
         >
-            <h1 className="sr-only">archive</h1>
+            <h1 className="sr-only">Archive</h1>
             {visible && <ArchivePosterGrid items={resolved} />}
             {resolved.length > 0 && (
               <BentoGallery

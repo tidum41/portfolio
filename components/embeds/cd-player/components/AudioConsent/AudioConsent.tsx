@@ -22,14 +22,14 @@ export function AudioConsent({ onAccept, onDecline }: AudioConsentProps) {
     <div className={styles.overlay}>
       <div ref={cardRef} className={styles.card}>
         <div className={styles.message}>
-          warning: music will<br />play (and sound good)
+          Warning: Music will<br />play (and sound good)
         </div>
         <div className={styles.actions}>
           <button className={`${styles.btn} ${styles.btnOn}`} onClick={onAccept}>
-            sound on
+            Sound on
           </button>
           <button className={`${styles.btn} ${styles.btnOff}`} onClick={onDecline}>
-            mute
+            Mute
           </button>
         </div>
       </div>

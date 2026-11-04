@@ -8,6 +8,21 @@ export function introIsPlaying(): boolean {
   );
 }
 
+/** Finish the first-load intro the same way IntroOrchestrator's timer does:
+ *  flip to "done", broadcast `intro-done`, then drop the attribute after the
+ *  fade window. Idempotent — safe to call from an early project-card click
+ *  while the orchestrator timeout is still armed. */
+export function completeIntro(): void {
+  if (typeof document === "undefined") return;
+  const html = document.documentElement;
+  if (html.getAttribute("data-intro") !== "playing") return;
+  html.setAttribute("data-intro", "done");
+  window.dispatchEvent(new CustomEvent("intro-done"));
+  window.setTimeout(() => {
+    if (html.getAttribute("data-intro") === "done") html.removeAttribute("data-intro");
+  }, 900);
+}
+
 /** Run `cb` now, or once on `intro-done` if the gate is still closed. */
 export function onIntroDone(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};

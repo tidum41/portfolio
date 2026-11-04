@@ -88,21 +88,19 @@ export default function HeroText() {
 
   return (
     <>
-      {/* minWidth caps at 100% of the available width via min() — a bare
-          340px floor overflowed the section's overflow:hidden ancestor on
-          viewports under ~388px (iPhone SE, common Android widths), clipping
-          the headline instead of just letting it wrap a bit tighter. */}
-      <div style={{ position: "relative", zIndex: 1, width: "50%", minWidth: "min(340px, 100%)" }}>
+      {/* Width lives on .hero-heading (34ch). A 50% column wrapped this
+          sentence to three lines on tablet; the ch measure stays two. */}
+      <div className="hero-heading-wrap">
         <motion.h1
           initial={h1Initial}
           animate={h1Controls}
           className="hero-heading"
           style={{
             fontFamily: "var(--font-page-title)",
-            fontSize: "clamp(26px, 2.8vw, 36px)",
+            fontSize: "var(--fs-home-hero)",
             fontWeight: 400,
             lineHeight: 1.2,
-            letterSpacing: "-0.5px",
+            letterSpacing: "var(--ls-hero)",
             color: "var(--color-text-primary)",
             margin: 0,
           }}
@@ -122,22 +120,37 @@ export default function HeroText() {
           position: "relative",
           zIndex: 1,
           fontFamily: "var(--font-sans)",
-          fontSize: 17,
+          fontSize: "var(--fs-lg)",
           lineHeight: 1.5,
           color: "var(--color-text-secondary)",
           margin: 0,
         }}
       >
-        {"cognitive science "}
         <span className="hero-sub-end">
-          {"at "}
+          {"Leading "}
+          <a
+            href="https://cursor.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hero-ucla"
+          >
+            Cursor
+          </a>
+          {" @ "}
           <a
             href="https://www.ucla.edu/"
             target="_blank"
             rel="noopener noreferrer"
             className="hero-ucla"
           >
-            ucla
+            UCLA
+          </a>
+        </span>
+        <span className="hero-sub-sep" aria-hidden="true">{" · "}</span>{" "}
+        <span className="hero-sub-end">
+          {"Previously designing @ "}
+          <a href="/joola" className="hero-ucla">
+            JOOLA
           </a>
         </span>
       </motion.p>

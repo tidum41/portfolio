@@ -3,22 +3,24 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
 import InViewLoopVideo from "@/components/InViewLoopVideo";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
 
-/** Hardcoded route — ISR so Sanity edits refresh without a cold hit every nav. */
-export const revalidate = 300;
+/** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "sviz",
+  title: "Sviz",
   description:
-    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+    "Sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
   alternates: { canonical: `${SITE_URL}/sviz` },
   openGraph: {
-    title: "sviz — mudit mahajan",
+    title: "Sviz — Mudit Mahajan",
     description:
       "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
     url: `${SITE_URL}/sviz`,
@@ -65,7 +67,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       fontWeight: 400,
       letterSpacing: "0.02em",
       color: "var(--color-text-tertiary)",
-      margin: "0 0 16px",
+      margin: "0 0 var(--cs-para-gap)",
     }}>
       {children}
     </p>
@@ -81,7 +83,7 @@ function H2({ children }: { children: React.ReactNode }) {
       lineHeight: "var(--lh-h2)",
       letterSpacing: "var(--ls-h2)",
       color: "var(--color-text-primary)",
-      margin: "0 0 24px",
+      margin: "0 0 var(--cs-h2-mb)",
     }}>
       {children}
     </h2>
@@ -89,17 +91,7 @@ function H2({ children }: { children: React.ReactNode }) {
 }
 
 function Body({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontSize: "var(--fs-body)",
-      lineHeight: "var(--lh-body)",
-      letterSpacing: "0.1px",
-      color: "var(--color-text-secondary)",
-      margin: "0 0 16px",
-    }}>
-      {children}
-    </p>
-  );
+  return <CaseStudyBody>{children}</CaseStudyBody>;
 }
 
 // Renders a Sanity/fallback body string as separate paragraphs, split on blank lines.
@@ -116,12 +108,13 @@ function Paragraphs({ text }: { text: string }) {
 // Media wrapper — same card treatment as the subleasing case study's embeds
 function MediaCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{
-      borderRadius: "var(--radius-card)",
-      overflow: "hidden",
-      boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset",
-      ...style,
-    }}>
+    <div
+      className="cs-hero-media-frame"
+      style={{
+        boxShadow: "0 0 0 1.5px var(--color-border-subtle) inset",
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -185,17 +178,26 @@ function IconCamera() {
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 const METADATA = [
-  { label: "Role",          values: ["Self-ran"] },
-  { label: "Timeline",      values: ["2021"] },
-  { label: "Tools",         values: ["DaVinci Resolve", "Photoshop", "Fujifilm XS10", "Tamron 17-70 f/2.8"] },
-  { label: "Collaborators", values: ["SteelSeries", "DROP", "Glorious", "KBDfans"] },
+  { _key: "role", label: "Role", values: ["Self-ran"] },
+  { _key: "timeline", label: "Timeline", values: ["2021"] },
+  {
+    _key: "team",
+    label: "Team",
+    wide: true,
+    values: ["SteelSeries", "DROP", "Glorious", "KBDfans"],
+  },
+  {
+    _key: "scope",
+    label: "Scope",
+    values: ["Video production", "Editing", "Community building"],
+  },
 ];
 
 // ── Fallback content — real copy, source of truth until authored in Sanity Studio ──
 
 const FB = {
   tocItems: TOC_ITEMS,
-  heroTagline: "YouTube · Personal · 2021",
+  heroTagline: "YouTube, Personal, 2021",
   heroTitle: "Personal YouTube, 1M+ views",
   problemLabel: "The Problem",
   problemHeading: "Custom Keyboards were hard to learn about",
@@ -238,20 +240,18 @@ export default function SvizPage() {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <CaseStudyTOC
-            items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
-          />
-        </aside>
-
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
+          <aside className="cs-aside">
+            <CaseStudyTOC
+              items={TOC_ITEMS.map((t) => ({ id: t.id, label: t.label }))}
+              backHref="/"
+            />
+          </aside>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
 
           <CaseStudyOpen
-            tagline={FB.heroTagline}
             title={FB.heroTitle}
             metadata={METADATA}
           >
@@ -270,6 +270,7 @@ export default function SvizPage() {
           <Suspense fallback={null}>
             <SvizContent />
           </Suspense>
+          <CaseStudyPager href="/sviz" />
         </div>
       </div>
     </div>

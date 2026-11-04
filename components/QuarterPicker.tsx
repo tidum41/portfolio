@@ -21,7 +21,7 @@ const C = {
     border: "#E2E8F0",
     background: "#efefef",
     white: "#ffffff",
-    font: "Helvetica Neue, Arial, sans-serif",
+    font: "var(--font-sans)",
 }
 
 const QUARTERS = [

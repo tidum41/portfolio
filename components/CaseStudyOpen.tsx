@@ -3,7 +3,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import MuxHero from "@/components/MuxHero";
 
-type Meta = { _key?: string; label: string; values: string[] };
+type Meta = {
+  _key?: string;
+  label: string;
+  values: ReactNode[];
+  /** Span the full meta row on small screens (long collaborator lists). */
+  wide?: boolean;
+};
 
 /**
  * Case-study above-the-fold: media is instant (autoplay). Type is visible
@@ -11,60 +17,61 @@ type Meta = { _key?: string; label: string; values: string[] };
  * skipped tween cannot leave the title gone.
  */
 export default function CaseStudyOpen({
-  tagline,
   title,
   metadata,
   muxPlaybackId,
   heroBg,
   posterWidth,
   posterHeight,
+  subtitle,
   children,
 }: {
-  tagline: string;
   title: string;
   metadata: Meta[];
   muxPlaybackId?: string;
   heroBg?: string;
   posterWidth?: number;
   posterHeight?: number;
+  subtitle?: ReactNode;
   children?: ReactNode;
 }) {
   return (
     <header className="cs-hero-header">
-      <div className="cs-hero-tagline-wrap cs-open-type">
-        <p
-          className="cs-hero-tagline"
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: 14,
-            fontWeight: 400,
-            letterSpacing: "0.01em",
-            color: "var(--color-text-muted)",
-            margin: "0 0 var(--space-2)",
-          }}
-        >
-          {tagline}
-        </p>
-      </div>
-      <div className="cs-hero-title-wrap cs-open-type">
-        <h1
-          className="cs-hero-title"
-          style={{
-            fontFamily: "var(--font-doc-title)",
-            fontSize: "var(--fs-hero)",
-            fontWeight: "var(--fw-hero)" as CSSProperties["fontWeight"],
-            lineHeight: 1.1,
-            letterSpacing: "var(--ls-hero)",
-            color: "var(--color-text-primary)",
-            margin: "0 0 var(--space-4)",
-          }}
-        >
-          {title}
-        </h1>
+      <div className="cs-hero-pre-media">
+        <div className="cs-hero-title-wrap cs-open-type">
+          <h1
+            className="cs-hero-title"
+            style={{
+              fontFamily: "var(--font-doc-title)",
+              fontSize: "var(--fs-hero)",
+              fontWeight: "var(--fw-hero)" as CSSProperties["fontWeight"],
+              lineHeight: 1.1,
+              letterSpacing: "var(--ls-hero)",
+              color: "var(--color-text-primary)",
+              margin: subtitle ? "0 0 12px" : "0 0 var(--space-4)",
+            }}
+          >
+            {title}
+          </h1>
+        </div>
+        {subtitle && (
+          <p
+            className="cs-hero-subtitle cs-open-type"
+            style={{
+              fontSize: "var(--fs-body)",
+              lineHeight: "var(--lh-body)",
+              letterSpacing: "0.1px",
+              color: "var(--color-text-secondary)",
+              margin: "0 0 var(--space-4)",
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
-          <div style={{ background: heroBg, borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+          <div className="cs-hero-media-frame" style={{ background: heroBg }}>
             <MuxHero
               playbackId={muxPlaybackId}
               posterWidth={posterWidth}
@@ -76,40 +83,12 @@ export default function CaseStudyOpen({
         )}
       </div>
       {metadata.length > 0 && (
-        <div
-          className="cs-meta-grid cs-open-type cs-open-type-meta"
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${metadata.length}, 1fr)`,
-            marginTop: "var(--space-4)",
-          }}
-        >
-          {metadata.map(({ _key, label, values }) => (
-            <div key={_key ?? label} style={{ padding: "0 24px 0 0" }}>
-              <p
-                style={{
-                  fontFamily: "var(--font-sans-medium)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  letterSpacing: "normal",
-                  color: "var(--color-text-tertiary)",
-                  margin: "0 0 8px",
-                }}
-              >
-                {label}
-              </p>
-              {values.map((v) => (
-                <p
-                  key={v}
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 400,
-                    color: "var(--color-text-primary)",
-                    margin: 0,
-                    lineHeight: 1.45,
-                    letterSpacing: "-0.1px",
-                  }}
-                >
+        <div className="cs-meta-grid cs-open-type cs-open-type-meta">
+          {metadata.map(({ _key, label, values, wide }) => (
+            <div key={_key ?? label} className={wide ? "cs-meta-item cs-meta-wide" : "cs-meta-item"}>
+              <p className="cs-meta-label">{label}</p>
+              {values.map((v, i) => (
+                <p key={i} className="cs-meta-value">
                   {v}
                 </p>
               ))}

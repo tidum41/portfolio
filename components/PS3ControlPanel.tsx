@@ -33,7 +33,9 @@ const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
 const REVEAL_EASE = cssCubic(EASE_OPACITY);
 const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
-// load is mounted only after introReleased; about/archive return replays settle.
+// load mounts with the work shell, before the intro gate lifts, and its
+// reveal is armed on "intro-done" like the rest of the intro (HeroText,
+// grid); about/archive return replays settle.
 const PICKER_MAX_H = 125;
 // Content-tight body (not a fixed 620). First-frame estimate only —
 // ResizeObserver replaces it with the inner's visible offsetHeight.
@@ -58,14 +60,14 @@ const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
-const DEFAULT_INTENSITY_HT = 0.18; // halftone mode default
+const DEFAULT_INTENSITY_HT = 0.19; // halftone mode default (+~6% from 0.18)
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
 const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
-const DEFAULT_SPEED        = 1.0;
+const DEFAULT_SPEED        = 1.2; // shared wave + halftone (+20% from 1.0)
 // First-pick intensity for any colored preset (index >= 1 in PRESETS below —
 // index 0 is the white/"no color" swatch and keeps using DEFAULT_INTENSITY_HT/WV
 // above). Only applied the first time a given preset is picked in a given
@@ -396,17 +398,12 @@ function PS3CircleGlyph({ size = 9, color = "currentColor" }) {
 }
 
 // ── Chevron/label optical alignment ─────────────────────────────────────────
-// "menu" renders in --font-sans, which is "HN" (a local() alias for the
-// system Helvetica Neue) falling through to "Helvetica Neue", Helvetica,
-// Arial, sans-serif. "HN" only resolves on Apple platforms — everywhere else
-// (Android, Windows, Linux) the stack lands on a substitute with different
-// ascent/descent proportions, so a marginTop tuned by eye against one font's
-// glyph metrics reads as misaligned against another's. Rather than guess a
-// static px value that only holds for whichever font the tuner happened to
-// have installed, measure the *actual* rendered ink of both the chevron and
-// the label — via Canvas TextMetrics for the glyph, getBoundingClientRect
-// for the stroke — and compute the delta needed to center them on each
-// other, whatever font actually won the fallback chain on this device.
+// "menu" renders in --font-sans (Helvetica Neue stack).
+// Ascent/descent differ across the fallback chain, so a marginTop tuned by
+// eye against one font's glyph metrics reads as misaligned against another's.
+// Measure the *actual* rendered ink of both the chevron and the label — via
+// CanvasTextMetrics for the glyph, getBoundingClientRect for the stroke —
+// and compute the delta needed to center them on each other.
 function useLabelOpticalOffset(
   chevronRef: React.RefObject<SVGPolylineElement | null>,
   labelRef: React.RefObject<HTMLSpanElement | null>,
@@ -896,6 +893,36 @@ export default function PS3ControlPanel({
       setShown(true);
       setPositionSettled(true);
     };
+    // Stage the reveal in two commits. First commit arms the reveal
+    // transition while the pill is still at opacity 0 (morphT is "none"
+    // until positionSettled, so settling must land here, not with `shown`);
+    // only after two frames (a painted frame with the transition armed)
+    // flip `shown`. Flipping settled + shown in one commit gave the pill a
+    // before-change style with no transition, so the fade was skipped and
+    // it popped in at full opacity whenever React batched those updates.
+    // Handles for everything stageReveal schedules, so the effect cleanup
+    // (unmount, or a dep change mid-stage) can cancel all of it instead of
+    // firing setState after the panel is gone.
+    let rafOuter = 0;
+    let rafInner = 0;
+    let clearTimer: ReturnType<typeof setTimeout> | undefined;
+    const cancelStaged = () => {
+      cancelAnimationFrame(rafOuter);
+      cancelAnimationFrame(rafInner);
+      if (clearTimer) clearTimeout(clearTimer);
+    };
+    const stageReveal = () => {
+      startTransition(() => {
+        setShowTransition(true);
+        setPositionSettled(true);
+      });
+      rafOuter = requestAnimationFrame(() => {
+        rafInner = requestAnimationFrame(() => startTransition(() => {
+          setShown(true);
+        }));
+      });
+      clearTimer = setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+    };
     if (instantReturn) {
       revealKindRef.current = "instant";
       revealImmediately();
@@ -908,31 +935,65 @@ export default function PS3ControlPanel({
         revealImmediately();
         return;
       }
-      startTransition(() => setShowTransition(true));
-      requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-        setShown(true); setPositionSettled(true);
-      })));
-      setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
-      return;
+      stageReveal();
+      return cancelStaged;
     }
     revealKindRef.current = "first";
+    // First-load only: intro-done is the normal signal. If it never arrives
+    // (HOM-01), a fail-safe still runs the same fade after 3000ms from load
+    // (or from this mount if load already fired). `revealed` keeps either
+    // path from running twice; tests may set window.__PS3CP_DISABLE_FAILSAFE.
+    let revealed = false;
+    let failsafeTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearFailsafe = () => {
+      if (failsafeTimer !== undefined) {
+        clearTimeout(failsafeTimer);
+        failsafeTimer = undefined;
+      }
+    };
     function reveal() {
+      if (revealed) return;
+      revealed = true;
+      clearFailsafe();
       if (reduced) {
         revealImmediately();
       } else {
-        startTransition(() => setShowTransition(true));
-        requestAnimationFrame(() => requestAnimationFrame(() => startTransition(() => {
-          setShown(true); setPositionSettled(true);
-        })));
-        setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+        stageReveal();
       }
       _ps3cpHasLoaded = true;
     }
-    // Parent already waits for introReleased before mounting this panel, so
-    // `data-intro` is often already "done" (attribute still present) when we
-    // run. Waiting for `intro-done` here misses the event and leaves the pill
-    // at opacity 0. onIntroDone treats anything but "playing" as released.
-    return onIntroDone(reveal);
+    // The panel mounts with the work shell, while data-intro is still
+    // "playing", so onIntroDone registers a real "intro-done" listener
+    // here, the same sequence HeroText and the grid follow. Its immediate
+    // path (anything but "playing") covers arrivals with no gate at all:
+    // a first visit that lands off-home, then soft-navs to "/".
+    const cancelIntro = onIntroDone(reveal);
+
+    const FAILSAFE_MS = 3000;
+    const onLoadForFailsafe = () => {
+      failsafeTimer = setTimeout(reveal, FAILSAFE_MS);
+    };
+    let loadListenerAttached = false;
+    const disableFailsafe =
+      typeof window !== "undefined" &&
+      (window as Window & { __PS3CP_DISABLE_FAILSAFE?: boolean }).__PS3CP_DISABLE_FAILSAFE;
+    if (!disableFailsafe) {
+      if (document.readyState === "complete") {
+        onLoadForFailsafe();
+      } else {
+        loadListenerAttached = true;
+        window.addEventListener("load", onLoadForFailsafe, { once: true });
+      }
+    }
+
+    return () => {
+      cancelIntro();
+      cancelStaged();
+      clearFailsafe();
+      if (loadListenerAttached) {
+        window.removeEventListener("load", onLoadForFailsafe);
+      }
+    };
   }, [instantReturn, posReady, reduced, visible]);
 
   // Sync dark mode from html[data-theme]
@@ -1117,8 +1178,16 @@ export default function PS3ControlPanel({
 
   const isColorLight = (waveColor[0]*0.299 + waveColor[1]*0.587 + waveColor[2]*0.114) > 0.5;
 
+  // Not shown yet (e.g. mounted during the intro gate, ~2s before its
+  // fade): the root is inert + aria-hidden so none of its controls (toggle,
+  // Reset, Minimize, color picker, presets, sliders) can be Tab-focused or
+  // read out while invisible, matching main, where it is not mounted then.
+  // Both come off in the same commit that flips `shown`, i.e. when the
+  // reveal actually starts.
+  const panelHidden = !(shown && posReady);
+
   const panelMarkup = (
-    <div ref={panelRef} className="ps3cp" style={{
+    <div ref={panelRef} className="ps3cp" inert={panelHidden} aria-hidden={panelHidden ? true : undefined} style={{
       position: "absolute", left: geo.left, top: geo.top,
       width: geo.w, height: geo.maxH, maxHeight: geo.maxH, borderRadius: geo.r,
       overflow: "hidden", zIndex: 49,
@@ -1130,7 +1199,11 @@ export default function PS3ControlPanel({
       boxShadow: pillShadow,
       touchAction: "none", color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)", userSelect: "none",
       display: "flex", flexDirection: flipped ? "column-reverse" : "column",
-      opacity: shown && posReady ? 1 : 0,
+      opacity: panelHidden ? 0 : 1,
+      // Hidden until revealed. Same contract as the intro's `.intro-hide`
+      // (opacity 0 + pointer-events none while the gate is playing), so the
+      // now-early-mounted pill can't intercept hero clicks before its fade.
+      pointerEvents: panelHidden ? "none" : "auto",
       // First load: the subtitle owns the Y settle. Sliding the pill
       // too made the pair look like a position jump. Soft-nav return still
       // uses the shared 8px fade-up.
@@ -1178,7 +1251,7 @@ export default function PS3ControlPanel({
                 marginTop: labelAutoOffset + dk.menuTextOffset,
               }}
             >
-              menu
+              Menu
             </span>
           </div>
         </div>
@@ -1207,7 +1280,7 @@ export default function PS3ControlPanel({
         {/* Pattern color */}
         <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
-            <span style={labelSt}>pattern color</span>
+            <span style={labelSt}>Pattern Color</span>
             <button
               className="ps3cp-custom-color-btn"
               onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
@@ -1263,12 +1336,15 @@ export default function PS3ControlPanel({
 
         {/* Pattern mode (Clean Text Label - Zero Icons) */}
         <div style={{ padding: "6px 16px 8px" }}>
-          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>pattern mode</span>
+          <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>Pattern Mode</span>
           <div style={{ display: "flex", gap: 4 }}>
-            {["wave", "halftone"].map((m, i) => (
-              <button key={m} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: i })} aria-pressed={mode === i}
-                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === i ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === i ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === i ? 500 : 400, letterSpacing: "0.02em" }}>
-                {m}
+            {[
+              { id: 0, label: "Wave" },
+              { id: 1, label: "Halftone" },
+            ].map(({ id, label }) => (
+              <button key={id} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: id })} aria-pressed={mode === id}
+                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === id ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === id ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === id ? 500 : 400, letterSpacing: "0.02em" }}>
+                {label}
               </button>
             ))}
           </div>
@@ -1277,7 +1353,7 @@ export default function PS3ControlPanel({
         {/* Dot size */}
         <ExpandSection open={mode === 1} maxH={68}>
           <div style={{ padding: "0 16px 4px", ...rowSt }}>
-            <div style={rowH}><span style={labelSt}>dot size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
+            <div style={rowH}><span style={labelSt}>Dot Size</span><span style={valueSt}>{Number(halftoneSize).toFixed(1)}px</span></div>
             <Slider min={2} max={10} step={0.5} value={halftoneSize} isDark={isDark} label="Dot size"
               onChange={v => setAndDispatch({ halftoneSize: v })} />
           </div>
@@ -1285,7 +1361,7 @@ export default function PS3ControlPanel({
 
         {/* Intensity */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
+          <div style={rowH}><span style={labelSt}>Intensity</span><span style={valueSt}>{Number(intensity).toFixed(2)}</span></div>
           <Slider min={0} max={1.0} step={0.01} value={intensity} isDark={isDark} label="Intensity"
             onChange={v => {
               if (activePreset >= 1) {
@@ -1297,21 +1373,21 @@ export default function PS3ControlPanel({
 
         {/* Speed */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
+          <div style={rowH}><span style={labelSt}>Speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
           <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
             onChange={v => setAndDispatch({ speed: v })} />
         </div>
 
         {/* Y offset */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>y offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
+          <div style={rowH}><span style={labelSt}>Y Offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
           <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
             onChange={v => setAndDispatch({ yOffset: v })} />
         </div>
 
         {/* Cursor reactivity */}
         <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>cursor reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
+          <div style={rowH}><span style={labelSt}>Cursor Reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
           <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark} label="Cursor reactivity"
             onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>

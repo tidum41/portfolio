@@ -6,7 +6,7 @@ import { HalftoneDotField } from "@/components/HalftoneDotField";
 import OutlineMorphWord from "@/components/OutlineMorphWord";
 import { useHalftoneMorph } from "@/components/useHalftoneMorph";
 
-const LABELS = ["work", "archive", "about"] as const;
+const LABELS = ["Work", "Archive", "About"] as const;
 
 // Resolved defaults from Nav.tsx's "Nav Links" DialKit config. Passed in
 // as a plain object so this lab does not mount a second dial panel.
@@ -245,7 +245,7 @@ export default function NavMorphClient() {
             ))}
           </div>
           <p style={noteStyle}>
-            Shape morph. Each droplet starts as a piece of the ABC Areal
+            Shape morph. Each droplet starts as a piece of the sans
             outline and the path deforms into the dot. This is the live nav.
             {reduced ? " Reduced motion is on, so this side jumps." : ""}
           </p>

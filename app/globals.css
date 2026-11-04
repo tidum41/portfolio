@@ -1,55 +1,30 @@
 @import "tailwindcss";
 
-/* ─── Helvetica Neue — local system font, precise variant binding ─────────── */
+/* Helvetica Neue — local faces for Regular (400) and Medium (500) only.
+   Site UI weights cap at 500. Georgia remains the serif / page-title face. */
 @font-face {
-  font-family: "HN";
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-UltraLight"), local("Helvetica Neue UltraLight");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Thin"), local("Helvetica Neue Thin");
-}
-@font-face {
-  font-family: "HN";
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Light"), local("Helvetica Neue Light");
-}
-@font-face {
-  font-family: "HN";
+  font-family: "Helvetica Neue";
   font-weight: 400;
   font-style: normal;
   font-display: swap;
   src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
 }
 @font-face {
-  font-family: "HN";
+  font-family: "Helvetica Neue";
   font-weight: 500;
   font-style: normal;
   font-display: swap;
   src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
 }
-@font-face {
-  font-family: "HN";
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: local("HelveticaNeue-Bold"), local("Helvetica Neue Bold");
-}
 
 @theme {
-  /* Fonts */
-  --font-sans:        "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-sans-medium: "HN", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* One sans token — Medium is the same family at font-weight: 500. */
+  --font-sans:        "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans-medium: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif:   Georgia, 'Times New Roman', serif;
-  --font-mono:    "Söhne Mono", "Soehne Mono", "SöhneMonoWeb", ui-monospace, monospace;
+  /* Prefer Geist Mono inside embeds; otherwise system ui-monospace stack
+     (main dropped Söhne / TestSohne). */
+  --font-mono:    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   /* Colors */
   --color-bg:             #FBFBFB;
@@ -81,40 +56,66 @@
   --color-modal-bg:       #E8E8E8;
   --color-hero-tint:      #dde6ef;
 
-  /* Typography scale */
+  /* Typography scale — ~8 roles + hero clamp + stat (see design/briefs/type-system.md) */
   --font-display:     Georgia, 'Times New Roman', serif;
   /* Title roles — Georgia for who/brand (home, about); HN Medium for docs (CS) */
   --font-page-title:  var(--font-display);
   --font-doc-title:   var(--font-sans-medium);
-  /* clamp() so .cs-hero-title (both case-study pages) scales down on narrow
-     viewports instead of holding a flat 48px with no mobile override — the
-     home hero already does the equivalent (see HeroText.tsx's inline
-     clamp(26px, 2.8vw, 36px)). Caps at exactly 48px from ~800px width up,
-     matching the previous flat value there unchanged. */
-  --fs-hero:          clamp(32px, 6vw, 48px);
+
+  --fs-caption:       12px;
+  --lh-caption:       1.4;
+  --ls-caption:       0px;
+
+  --fs-sm:            13px;
+  --lh-sm:            1.55;
+  --ls-sm:            0px;
+
+  --fs-meta:          14px;
+  --lh-meta:          1.45;
+  --ls-meta:         -0.1px;
+
+  --fs-body:          15px;
+  --lh-body:          1.72;
+  /* Helvetica Neue body — neutral tracking. */
+  --ls-body:          0px;
+
+  --fs-lg:            18px;
+  --lh-lg:            1.35;
+  --ls-lg:           -0.15px;
+
+  --fs-xl:            24px;
+  --lh-xl:            1.25;
+  --ls-xl:           -0.25px;
+
   --fs-h2:            30px;
-  /* Slider 10–50 × 10 = CSS font-weight 100–500. Max 50 = CSS 500 (Medium). */
+  --lh-h2:            1.15;
+  --ls-h2:           -0.25px;
+
+  --fs-display:       48px;
+  /* clamp() so .cs-hero-title scales on narrow viewports; caps at 48px. */
+  --fs-hero:          clamp(32px, 6vw, 48px);
+  /* Two lines from ~768px up; 22px floor keeps a 390px phone at
+     three lines rather than dropping under the 18px subtitle. */
+  --fs-home-hero:     clamp(22px, 2.6vw + 10px, 36px);
+  --fs-stat:          44px;
+
+  /* Aliases onto the scale */
+  --fs-section-label: var(--fs-body);
+  --fs-card-title:    var(--fs-lg);
+  --fs-label:         var(--fs-body);
+  --fs-h3:            var(--fs-xl);
+
+  /* Site UI weights cap at 500 (Medium). */
   --fw-hero:          500;
   --fw-h2:            500;
   --fw-card-title:    500;
-  --fs-section-label: 15px;
-  --fs-h3:            20px;
-  --fs-body:          15px;
-  --fs-label:         16px;
-  --fs-meta:          14px;
-  --fs-caption:       12px;
-  --fs-card-title:    18px;
-  --fs-stat:          44px;
-  --lh-h2:            1.1;
-  --lh-body:          1.72;
 
-  /* Letter-spacing */
+  /* Letter-spacing (shared + role) */
   --ls-tight:   -0.5px;
   --ls-snug:    -0.25px;
   --ls-normal:   0px;
   --ls-wide:     0.04em;
   --ls-wider:    0.08em;
-  --ls-h2:      -0.3px;
   --ls-hero:    -0.5px;
   --ls-label:    0.06em;
 
@@ -132,12 +133,18 @@
   --space-7:  80px;
   --space-8:  96px;
   --space-9:  120px;
+  --space-10: 144px;
 
   /* Spacing landmarks (aliases onto the ladder) */
   --page-px:         24px; /* = --space-3 */
   --content-max-w:   750px;
-  --section-gap:     var(--space-7);
-  --section-pb:      var(--space-6);
+  /* One case-study section separation (was pb 64 + mb 80). */
+  --cs-section-gap:  var(--space-10);
+  --cs-h2-mt:        var(--space-5); /* 48 */
+  --cs-h2-mb:        var(--space-3); /* 24 */
+  --cs-para-gap:     var(--space-2); /* 16 */
+  --section-gap:     var(--cs-section-gap);
+  --section-pb:      0px;
   --nav-h:           72px; /* 24+24 pad + ~24 line */
 
   /* Easing curves — exact from MotionWrappers.tsx */
@@ -163,6 +170,17 @@
 }
 
 /* ─── Base reset ──────────────────────────────────────────────────── */
+html,
+body {
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+@media (max-width: 600px) {
+  .work-hero {
+    overflow-x: clip !important;
+  }
+}
 html {
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
@@ -183,9 +201,10 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: var(--fs-body);
   font-weight: 400;
-  line-height: 1.72;
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
   overflow-wrap: break-word;
   /* Sticky-footer pattern: on short pages (e.g. the 404) content alone
      doesn't reach the viewport bottom, which left the footer floating
@@ -229,18 +248,87 @@ main#main-content {
 
 h1, h2, h3 { text-wrap: balance; }
 p, li       { text-wrap: pretty; }
-/* Hero type must not re-wrap after first layout — `balance` / `pretty`
-   reflow the subtitle (and the pill that docks to it) on load. */
-.hero-heading,
+/* Subtitle stays on `stable`. `balance` / `pretty` reflow it after first
+   layout, and the menu pill docks to [data-hero-sub]. */
 .hero-sub {
   text-wrap: wrap;
   text-wrap: stable;
   max-width: 100%;
 }
+.hero-heading-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+}
+/* 34ch is the Georgia measure (at --ls-hero) that holds this sentence
+   on two balanced lines from the 22px floor through 36px. One ch of
+   slack past the ~32.5ch threshold, so a slightly wider Georgia does
+   not drop a third line. At 1440 / 36px the box is ~751px and the
+   longer line ~711px, a little past the first work-grid column
+   ((100% - var(--grid-gutter)) / 2). ch follows --fs-home-hero, so
+   the break holds while the type scales. On a phone the 100% cap
+   wins; two lines there would sit under the 18px subtitle. */
+.hero-heading {
+  max-width: min(34ch, 100%);
+  text-wrap: wrap; /* fallback where balance is unsupported */
+  text-wrap: balance;
+}
 /* Keep "at ucla" together so the line doesn't orphan "ucla" on a third
    row when the 390px wrap boundary sits between the words. */
 .hero-sub-end {
   white-space: nowrap;
+}
+/* Two-part sub tagline: one line with a middot on wide screens, two short
+   stacked lines on phones (no dangling separator). */
+.hero-sub-sep { color: var(--color-text-tertiary, inherit); }
+@media (max-width: 640px) {
+  .hero-sub-sep { display: none; }
+  [data-hero-sub] > .hero-sub-end { display: block; }
+}
+
+/* UI components, hero headline/subtitle, interactive widgets, cards, and chrome
+   must not be text-highlightable or draggable, preventing glitchy selection blocks
+   while dragging or interacting with the silk background canvas. Editorial case-study
+   body copy remains fully selectable. */
+.work-hero,
+.work-hero *,
+.hero-heading,
+.hero-sub,
+#rh-trigger,
+.site-nav,
+.site-nav *,
+.nav-link,
+.project-card,
+.portfolio-grid-card,
+.portfolio-grid,
+.interactive-badge,
+.ps3cp,
+.ps3cp *,
+.cs-aside,
+.cs-aside *,
+.cs-back-desktop,
+.cs-mobile-back,
+.cs-pager,
+.popup-close-btn,
+.footer-inner,
+.footer-inner * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent ghost drag on UI chrome links, buttons, and media */
+.work-hero a,
+.work-hero img,
+.project-card a,
+.project-card img,
+.project-card video,
+.site-nav a,
+.site-nav button,
+.ps3cp a,
+.ps3cp button,
+.footer-link {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transition: color 0.25s ease, opacity 0.25s ease, background-color 1s ease, border-color 1s ease; }
 
@@ -298,6 +386,9 @@ html[data-intro="done"] .intro-hide {
 html[data-intro="playing"] .intro-hide--snap,
 html[data-intro="done"] .intro-hide--snap {
   transition: none !important;
+}
+html[data-intro="playing"] .intro-hide--snap {
+  pointer-events: auto !important;
 }
 
 /* ─── Theme toggle — snap tokens, don't interpolate the tree ──────── */
@@ -366,15 +457,21 @@ html.theme-switching *::after {
 }
 
 /* ─── Nav spacing matches main. Safe-area insets are 0 without a notch,
-   so desktop padding stays 24px. The min-height below is main's own
-   rule: it sizes the line box, and the ::before covers the rest of
-   the 44px target without a min-width. ──────────────────────────── */
+   so desktop padding stays 16px and the bar is 76px tall (16 + 44 + 16).
+   The min-height below is main's own rule: it sizes the line box, and
+   the ::before covers the rest of the 44px target without a min-width. ── */
 .site-nav {
-  gap: 40px;
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: 24px;
+  gap: 32px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-bottom: 16px;
 }
-nav a {
+@media (max-width: 479px) {
+  .site-nav {
+    gap: 24px;
+  }
+}
+nav a,
+nav button.footer-link {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -413,6 +510,10 @@ nav a {
   position: relative;
   isolation: isolate;
   cursor: pointer;
+}
+/* Display-only Mux cards (no case study link yet) — keep hover plate, drop pointer. */
+.project-card--inert {
+  cursor: default;
 }
 .project-card::before {
   content: "";
@@ -478,12 +579,46 @@ html[data-theme="dark"] .project-card::before {
   }
 }
 
+/* ─── Card focus — grid cards only (JS: data-card-focus) ─────────────
+   Hero, nav, and footer never dim. Focus is pointer-over-card only. */
+:root {
+  --work-focus-recede: 0.35;
+  --work-focus-in: 120ms;
+  --work-focus-out: 160ms;
+}
+html[data-theme="light"] {
+  --work-focus-recede: 0.45;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .portfolio-grid-card > * {
+    will-change: opacity;
+    transition: opacity var(--work-focus-out) ease-out;
+  }
+
+  html[data-card-focus] .portfolio-grid-card:not([data-card-focus-active]) > * {
+    opacity: var(--work-focus-recede);
+    transition: opacity var(--work-focus-in) ease-out;
+  }
+
+  html[data-card-focus] .portfolio-grid-card[data-card-focus-active] > * {
+    opacity: 1;
+    transition: opacity var(--work-focus-in) ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-grid-card > * {
+    transition: none !important;
+  }
+}
+
 /* ─── Nav link hover — smooth color fade, no underline ────────────
    Hover is desktop-only. Mobile has no hover; sticky :hover from a tap
    must never restyle these links. */
 .nav-link { transition: color 0.25s ease, background-color 1s ease, border-color 1s ease; }
 @media (hover: hover) and (pointer: fine) {
-  .nav-link:hover { color: var(--color-text-muted) !important; }
+  .nav-link:hover { color: var(--color-text-primary) !important; }
 }
 
 /* ─── "ucla" hover accent — a real link ──────────────────────────── */
@@ -511,6 +646,8 @@ html[data-theme="dark"] .project-card::before {
    expansion language as PS3ControlPanel's .ps3cp-ibtn. Background stays flat
    (matches the panel, no resting "badge" box) — only the icon color shifts
    on hover, same as .ps3cp-ibtn's own resting/hover treatment. ─────────── */
+/* Hover/press use opacity + transform only (compositor) so info/× stay
+   responsive while a heavy iframe is parsing on the main thread. */
 .popup-close-btn {
   display: flex;
   align-items: center;
@@ -522,22 +659,498 @@ html[data-theme="dark"] .project-card::before {
   padding: 0;
   cursor: pointer;
   background: none;
-  color: var(--color-text-card-sub);
+  color: var(--color-text-primary);
   position: relative;
-  transition: color 120ms ease, transform 120ms ease;
+  transition: transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.popup-close-btn svg {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+  will-change: opacity;
 }
 .popup-close-btn::before {
+  content: "";
+  position: absolute;
+  /* 24px icon + 10px each side = 44px tap target (padding expand, icon stays). */
+  inset: -10px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .popup-close-btn:hover svg { opacity: 1; }
+  .popup-close-btn:active { transform: scale(0.96); }
+}
+/* Touch / coarse: no hover-only colour; visible pressed fill instead. */
+@media (hover: none), (pointer: coarse) {
+  .popup-close-btn:active {
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+  .popup-close-btn:active svg { opacity: 1; }
+}
+
+/* Info (i) control — identical chrome to .popup-close-btn (24px / 44px tap). */
+.popup-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-mosaic);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text-primary);
+  position: relative;
+  transition: transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.popup-info-btn svg {
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+  will-change: opacity;
+}
+.popup-info-btn::before {
   content: "";
   position: absolute;
   /* 24px icon + 10px each side = 44px tap target. */
   inset: -10px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .popup-close-btn:hover { color: var(--color-text-primary); }
-  .popup-close-btn:active { transform: scale(0.96); }
+  .popup-info-btn:hover svg { opacity: 1; }
+  .popup-info-btn:active { transform: scale(0.96); }
 }
 @media (hover: none), (pointer: coarse) {
-  .popup-close-btn:active { color: var(--color-text-primary); }
+  .popup-info-btn:active {
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+  .popup-info-btn:active svg { opacity: 1; }
+}
+
+/* Static blur sibling — never opacity-animated (animating opacity on an
+   element with backdrop-filter forces per-frame filter repaints). Lives
+   under the dim/panel shell; cleared on exit-complete. */
+.project-popup-backdrop-blur {
+  position: fixed;
+  inset: 0;
+  z-index: 999997;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Large ProjectPopup — near-fullscreen app embed (Allinone, etc.).
+   Size with 100vw/100dvh (not inset:0) so html/body scrollbar-gutter cannot
+   leave a grey strip or shrink the mobile "full-screen" panel. */
+.project-popup-backdrop--large {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding: 48px;
+  margin: 0;
+}
+.project-popup-panel--large {
+  width: min(1240px, calc(100vw - 96px));
+  height: 90dvh;
+  max-height: 90dvh;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--color-border-subtle);
+  box-sizing: border-box;
+}
+
+/* Title tab above the iframe — info + close sit on this bar. */
+.project-popup-topbar--large {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-subtle);
+  z-index: 5;
+}
+.project-popup-topbar-title {
+  min-width: 0;
+  flex: 1;
+}
+.project-popup-topbar-title > p {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-popup-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.project-popup-body--large {
+  /* Owns the iframe + info overlay under the title tab. */
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-popup-info-scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  /* Desktop: transparent hit target. Mobile sheet dims via the media query. */
+  background: transparent;
+  cursor: default;
+  z-index: 2;
+  /* Scrim absorbs outside taps; don't let them scroll the iframe under it. */
+  touch-action: none;
+}
+
+/* Grab handles — only shown on the mobile sheet; 44px hit area, 36×4 bar. */
+.project-popup-info-handle,
+.project-popup-panel-handle {
+  display: none;
+}
+
+/* Desktop: anchored to the info icon; wider compact popover so meta + why
+   scan without scrolling. Two-column spec rows + always-visible why. */
+.project-popup-info {
+  position: absolute;
+  top: 60px; /* 52px iframe toolbar + 8px */
+  right: 40px;
+  width: min(440px, calc(100% - 52px));
+  max-width: 440px;
+  max-height: calc(100% - 68px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  z-index: 3;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* Thin, quiet scrollbar if content ever overflows. */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-primary) 28%, transparent) transparent;
+}
+html[data-theme="dark"] .project-popup-info {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.project-popup-info::-webkit-scrollbar {
+  width: 6px;
+}
+.project-popup-info::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
+  border-radius: 999px;
+}
+.project-popup-info::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-popup-info-inner {
+  padding: var(--space-2);
+}
+
+/* Info rows: case-study meta type (.cs-meta-label / .cs-meta-value),
+   separated by the case-study TOC hairline token. */
+.project-popup-meta-row {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-toc-track);
+}
+.project-popup-meta-row:first-child {
+  padding-top: 0;
+}
+.project-popup-meta-row .cs-meta-value {
+  color: var(--color-text-primary);
+}
+
+/* Home-card external link: card title face + blue northeast arrow. */
+.project-popup-info-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-card-title);
+  line-height: var(--lh-meta);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: none), (pointer: coarse) {
+  .project-popup-info-link {
+    min-height: 44px;
+  }
+}
+
+/* All in One embed host — isolate iframe paint/layout from parent chrome. */
+.aio-demo-embed {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+  contain: strict;
+  content-visibility: auto;
+}
+
+/* Halftone square loader — cursor-trail language (hard squares, flat ink,
+   opacity variance). Centered ~22px footprint; compositor-only ripple. */
+.aio-ht-loader {
+  /* One step darker than cursor rest #595959 so the wave reads on light bg. */
+  --aio-ht-ink: #3f3f3f;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: var(--color-bg);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+html[data-theme="dark"] .aio-ht-loader {
+  --aio-ht-ink: #efefef;
+}
+.aio-ht-loader[data-visible="true"] {
+  opacity: 1;
+}
+.aio-ht-loader[data-fading="true"] {
+  opacity: 0;
+}
+.aio-ht-loader-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 3.5px);
+  grid-template-rows: repeat(4, 3.5px);
+  gap: 2px;
+  width: 20px;
+  height: 20px;
+}
+.aio-ht-loader-cell {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 0;
+  background: var(--aio-ht-ink);
+  opacity: 0.28;
+  transform: scale(0.85);
+  animation: aio-ht-ripple 960ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: calc(var(--aio-ht-i, 0) * 55ms);
+  will-change: transform, opacity;
+}
+@keyframes aio-ht-ripple {
+  0%, 100% {
+    opacity: 0.22;
+    transform: scale(0.78);
+  }
+  45% {
+    opacity: 0.88;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aio-ht-loader {
+    transition: none;
+  }
+  .aio-ht-loader-cell {
+    animation: none;
+    opacity: 0.55;
+    transform: none;
+    will-change: auto;
+  }
+  .project-popup-iframe {
+    transition: none;
+  }
+}
+
+.project-popup-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--color-bg);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  /* Keep iframe layout/paint off the parent topbar hover path. */
+  contain: strict;
+  transform: translateZ(0);
+}
+.project-popup-iframe[data-ready="true"] {
+  opacity: 1;
+}
+
+/* Below 640px OR short landscape (e.g. 844×390) — outer modal is a
+   bottom sheet (~24px top gap so the 55% backdrop shows) + info sheet.
+   Matches the JS isMobile media query. */
+@media (max-width: 639px), (max-height: 500px) {
+  .project-popup-backdrop--large {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: stretch;
+    /* Avoid horizontal rubber-band that can reveal a second scrollbar. */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .project-popup-panel--large,
+  .project-popup-panel--large.project-popup-panel--sheet {
+    width: 100%;
+    max-width: 100%;
+    /* ~24px gap above so the dimmed backdrop reads as a sheet, not fullscreen. */
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 16px 16px 0 0;
+    border: none;
+    padding-top: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    overflow: hidden;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+    box-sizing: border-box;
+  }
+
+  /* Outer sheet grab handle — 36×4, 8px from the top, 44px hit area. */
+  .project-popup-panel-handle {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 44px;
+    padding-top: 8px;
+    box-sizing: border-box;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .project-popup-panel-handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #8A8A8A;
+  }
+
+  /* Title tab stays a real bar above the iframe.
+     44×44 buttons via padding box; glyph size unchanged. */
+  .project-popup-topbar--large {
+    padding: 0 max(4px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+    min-height: 44px;
+    gap: 0;
+  }
+  .project-popup-topbar-title > p {
+    font-size: 14px;
+  }
+  .project-popup-panel--large .popup-close-btn,
+  .project-popup-panel--large .popup-info-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .project-popup-panel--large .popup-close-btn::before,
+  .project-popup-panel--large .popup-info-btn::before {
+    inset: 0;
+  }
+  .project-popup-panel--large .popup-close-btn svg,
+  .project-popup-panel--large .popup-info-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Dimmed backdrop behind the sheet — 200ms fade lives on the motion node. */
+  .project-popup-info-scrim {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  html[data-theme="dark"] .project-popup-info-scrim {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  /* Full-width bottom sheet — tap-open only (no hover). Scrim / swipe closes it. */
+  .project-popup-info {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    /* Height is driven in JS; keep the whole meta + why in view. */
+    max-height: 78dvh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  }
+  html[data-theme="dark"] .project-popup-info {
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
+  }
+  .project-popup-meta-row {
+    padding: var(--space-1) 0;
+  }
+  .project-popup-meta-row:first-child {
+    padding-top: 0;
+  }
+  .project-popup-info-inner {
+    mask-image: none;
+  }
+
+  /* 44px swipe target; bar is 36×4, 8px from the sheet top, ~3:1 contrast. */
+  .project-popup-info-handle {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 44px;
+    padding-top: 8px;
+    box-sizing: border-box;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .project-popup-info-handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    /* ~3:1 on sheet bg (#FBFBFB / #101214). */
+    background: #8A8A8A;
+  }
+  html[data-theme="dark"] .project-popup-info-handle-bar {
+    background: #8A8A8A;
+  }
+
+  /* Clear the home indicator under the Why copy; keep 16px rhythm.
+     Top padding stays 16px under the handle so content isn’t cut off. */
+  .project-popup-info .project-popup-info-inner {
+    padding-top: 8px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  /* Short landscape: keep the sheet usable without covering the whole app. */
+  @media (max-height: 500px) {
+    .project-popup-info {
+      max-height: 82dvh;
+    }
+  }
 }
 
 /* ─── InteractiveBadge border — neutral grey, lighter/more visible than
@@ -599,12 +1212,14 @@ html[data-theme="dark"] .interactive-badge {
    does not change gap, alignment, or line height. */
 nav a,
 a.nav-link,
-a.footer-link {
+a.footer-link,
+button.footer-link {
   position: relative;
 }
 nav a::before,
 a.nav-link::before,
-a.footer-link::before {
+a.footer-link::before,
+button.footer-link::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -613,7 +1228,8 @@ a.footer-link::before {
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
-.theme-toggle-btn::before {
+.theme-toggle-btn::before,
+.volume-toggle-btn::before {
   content: "";
   position: absolute;
   inset: -20px;
@@ -622,6 +1238,92 @@ a.footer-link::before {
   content: "";
   position: absolute;
   inset: -6px;
+}
+
+/* ─── Copy email: natural-width track that eases between labels ─── */
+.copy-email-btn {
+  display: inline-flex;
+  align-items: center;
+  /* Match footer <a> baseline so the hosting <li> line box stays 21px. */
+  vertical-align: baseline;
+  max-width: 100%;
+}
+
+/* Track sizes to the visible label; JS animates width between the two
+   natural widths so neighbors keep an identical gap in both states. */
+.copy-email-track {
+  display: inline-grid;
+  grid-template-columns: max-content;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: start;
+  white-space: nowrap;
+  line-height: inherit;
+  position: relative;
+  overflow-x: clip;
+  overflow-y: visible;
+  transition: width 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-email-layer {
+  grid-area: 1 / 1;
+  display: block;
+  line-height: inherit;
+  font-weight: inherit;
+  transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-email-layer--idle {
+  opacity: 1;
+}
+
+.copy-email-layer--copied {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+/* At rest only the idle label defines the width. */
+.copy-email-btn[data-copied="false"] .copy-email-layer--copied {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1), visibility 0s 200ms;
+}
+
+.copy-email-layer svg {
+  display: block;
+  flex-shrink: 0;
+  /* Optical centering against lowercase-heavy label text */
+  transform: translateY(0.5px);
+}
+.cs-pill-btn .copy-email-layer svg {
+  transform: translateY(-0.8px);
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer {
+  transition-duration: 160ms;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer--idle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.copy-email-btn[data-copied="true"] .copy-email-layer--copied {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-email-track,
+  .copy-email-layer {
+    transition: none !important;
+  }
 }
 
 /* ─── Scroll-reveal — used by useScrollReveal hook ───────────────── */
@@ -690,44 +1392,159 @@ html[data-theme="dark"] .project-image {
 }
 
 /* ─── Case study 3-column layout ────────────────────────────────────
-   Desktop  : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
-   Tablet   : [TOC 160px] [content 1fr] — right spacer drops
-   Mobile   : [content 1fr] — TOC hidden
+   Desktop (≥1200px) : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
+   Below 1200px      : [content max-750px] centered — TOC hidden, back
+                       control lives inside .cs-content (see .cs-mobile-back)
+   Mobile (≤767px)   : [content 1fr] — TOC hidden
+   The 1200px cutoff matches rachelchen.tech's lg breakpoint.
    ─────────────────────────────────────────────────────────────────── */
 .cs-layout {
   max-width: var(--grid-max-w);
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
-  align-items: start;
   padding-inline: var(--page-px);
   padding-top: var(--space-5);
   padding-bottom: var(--space-9);
 }
+.cs-content {
+  min-width: 0;
+}
 .cs-aside {
-  position: sticky;
-  top: 60px;
-  align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
-/* Tablet: right spacer col gone, TOC gets fixed 160px */
-@media (max-width: 1100px) {
-  .cs-layout {
-    grid-template-columns: 160px minmax(0, 1fr);
+.cs-toc-root {
+  display: flex;
+  flex-direction: column;
+}
+/* Desktop: inner grid — row 1 hero type + TOC cap-align; nav host spans article for sticky. */
+@media (min-width: 1200px) {
+  .cs-content {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
+    /* Implicit rows only — explicit grid-template-rows made grid-row -1
+       stop at row 3 so the TOC host could not span the article. */
+    grid-auto-rows: auto;
+    align-items: start;
+    max-width: none;
+    width: 100%;
   }
-  .cs-aside { padding-right: var(--space-2); }
+  .cs-aside {
+    display: contents;
+  }
+  .cs-toc-root {
+    /* Site bar is 76px; .cs-layout padding-top is --space-5 → row starts at 124px.
+       Back box spec: 4px below header (top 80), h 44 — independent of TOC cap row. */
+    --cs-site-header-bottom: 76px;
+    --cs-back-box-top: calc(var(--cs-site-header-bottom) + 4px);
+    grid-column: 1;
+    grid-row: 1 / span 1000;
+    align-self: stretch;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-right: var(--space-3);
+  }
+  .cs-hero-header {
+    display: contents;
+  }
+  .cs-content > .cs-mobile-back {
+    display: none;
+  }
+  .cs-back-desktop {
+    position: absolute;
+    top: calc(var(--cs-back-box-top) - var(--cs-site-header-bottom) - var(--space-5));
+    left: 0;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding-right: 0;
+    /* Chevron ink left at 23px (1px overhang vs TOC label ink at 24px). */
+    padding-left: calc(23px - var(--page-px) - var(--cs-align-d-back, -6px));
+    padding-bottom: 9px;
+    height: 44px;
+    min-width: 44px;
+    box-sizing: border-box;
+  }
+  .cs-back-desktop .cs-back-arrow {
+    flex-shrink: 0;
+    display: block;
+    width: 6px;
+    height: 10px;
+    margin-right: 5px;
+    transform: translateY(0.5px);
+  }
+  .cs-back-desktop-label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    line-height: 16px;
+  }
+  .cs-aside-nav-host {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-right: 0;
+    padding-top: 0;
+  }
+  .cs-hero-pre-media {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .cs-hero-media-wrap {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .cs-meta-grid {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .cs-content > *:not(.cs-mobile-back):not(.cs-aside):not(.cs-hero-header) {
+    grid-column: 2;
+  }
+  .cs-content > article {
+    grid-row: 4;
+    min-width: 0;
+  }
+  .cs-toc-nav {
+    position: sticky;
+    top: 60px;
+    margin-top: 0;
+  }
+  .cs-toc-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 0;
+    /* Retuned when labels use 16px line-height (cap still matches hero H1). */
+    padding-top: 5px;
+  }
+  .cs-toc-nav .cs-toc-label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    letter-spacing: var(--ls-meta);
+    line-height: 16px;
+  }
+}
+/* Below 1200px: TOC aside hidden; content column centered. */
+@media (max-width: 1199px) {
+  .cs-content {
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+  }
+  .cs-aside {
+    display: none !important;
+  }
 }
 /* Mobile: single column. Aside (desktop TOC) is hidden; the back control
    lives inside .cs-content so it shares the hero media's left edge. */
 @media (max-width: 767px) {
   .cs-layout {
-    grid-template-columns: 1fr;
     padding-top: var(--space-2);
     /* Compress section rhythm on narrow viewports (ladder steps down). */
-    --section-gap: var(--space-5);
-    --section-pb: var(--space-4);
+    --cs-section-gap: var(--space-7);
+    --section-gap: var(--cs-section-gap);
+    --section-pb: 0px;
   }
-  .cs-layout > * {
+  .cs-content {
     min-width: 0;
   }
   .cs-aside {
@@ -741,14 +1558,9 @@ html[data-theme="dark"] .project-image {
    the last hard-coded optical nudges; tweak live, then lock in code. */
 :root {
   --cs-align-m-back:    -6px;
-  --cs-align-m-tagline: 0px;
   --cs-align-m-title:   -2px;
   --cs-align-d-back:    -6px;
-  --cs-align-d-tagline: 0px;
   --cs-align-d-title:   -2px;
-}
-.cs-content {
-  min-width: 0;
 }
 .cs-mobile-back {
   display: none;
@@ -757,14 +1569,13 @@ html[data-theme="dark"] .project-image {
   text-align: left;
   margin-bottom: var(--space-6);
 }
-.cs-hero-tagline,
 .cs-hero-title {
   text-align: left;
   width: 100%;
   margin-left: 0;
   padding-left: 0;
 }
-.cs-hero-tagline-wrap,
+.cs-hero-pre-media,
 .cs-hero-title-wrap,
 .cs-hero-media-wrap {
   display: block;
@@ -791,10 +1602,10 @@ html[data-theme="dark"] .project-image {
 }
 @media (prefers-reduced-motion: no-preference) {
   .cs-open-type {
-    animation: cs-open-in 1140ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: cs-open-in 960ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
-  .cs-hero-title-wrap.cs-open-type { animation-delay: 140ms; }
-  .cs-open-type-meta { animation-delay: 280ms; }
+  .cs-hero-title-wrap.cs-open-type { animation-delay: 45ms; }
+  .cs-open-type-meta { animation-delay: 95ms; }
 }
 
 /* Primary-nav page enter (About copy, archive tiles). Opacity + translate
@@ -876,11 +1687,25 @@ html[data-theme="dark"] .project-image {
   transform: translateX(var(--cs-align-d-back, 0px));
 }
 @media (min-width: 768px) {
-  .cs-hero-tagline {
-    transform: translateX(var(--cs-align-d-tagline, 0px));
-  }
   .cs-hero-title {
     transform: translateX(var(--cs-align-d-title, 0px));
+  }
+}
+
+/* Below 1200px the aside (and its .cs-back-desktop) is hidden, so the
+   in-content back control is the reachable back button at every width
+   under the breakpoint, not just on mobile. It keeps the desktop back
+   nudge at ≥768px; the ≤767px block below swaps in the mobile nudge. */
+@media (max-width: 1199px) {
+  .cs-mobile-back {
+    display: block;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+  }
+  .cs-back-mobile {
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateX(var(--cs-align-d-back, 0px));
   }
 }
 
@@ -898,10 +1723,9 @@ html[data-theme="dark"] .project-image {
   .cs-hero-header { margin-bottom: var(--space-4) !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
   .cs-hero-header,
-  .cs-hero-tagline-wrap,
+  .cs-hero-pre-media,
   .cs-hero-title-wrap,
   .cs-hero-media-wrap,
-  .cs-hero-tagline,
   .cs-hero-title {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -909,16 +1733,364 @@ html[data-theme="dark"] .project-image {
     padding-right: 0 !important;
     text-align: left !important;
   }
-  .cs-hero-tagline { transform: translateX(var(--cs-align-m-tagline, 0px)); }
   .cs-hero-title   { transform: translateX(var(--cs-align-m-title, 0px)); }
 }
 
-/* ─── Case study metadata grid — 2-col on mobile ─────────────────── */
+/* ─── Case study metadata grid (Role / Timeline / Team / Scope) ───── */
+.cs-meta-grid {
+  display: grid;
+  margin-top: var(--space-4);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.cs-meta-item {
+  min-width: 0;
+  padding: 0 24px 0 0;
+}
+.cs-meta-label {
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--color-text-tertiary);
+  margin: 0 0 8px;
+}
+.cs-meta-value {
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+}
+.cs-meta-value + .cs-meta-value {
+  margin-top: 4px;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cs-meta-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 24px;
+  }
+  .cs-meta-grid .cs-meta-wide {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 767px) {
   .cs-meta-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 20px 0 !important;
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
+  .cs-meta-item {
+    padding: 0;
+  }
+  .cs-meta-grid .cs-meta-wide {
+    grid-column: auto;
+  }
+  .cs-meta-label {
+    margin-bottom: 4px;
+  }
+}
+
+/* ─── Case study prose measure ─────────────────────────────────────── */
+.cs-prose {
+  max-width: 40rem;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--cs-para-gap);
+}
+
+/* ─── Case study media (8px radius everywhere) ─────────────────────── */
+.cs-hero-media-frame,
+.cs-figure-media,
+.cs-figure-media--fill {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-bg-secondary);
+}
+.cs-figure-media--fill {
+  position: relative;
+  width: 100%;
+}
+.cs-figure {
+  margin: 24px 0 28px;
+  min-width: 0;
+}
+.cs-figure-zoom-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  text-align: left;
+  border-radius: var(--radius-control);
+}
+.cs-figure-zoom-trigger:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+.cs-figcaption {
+  font-size: 12px;
+  line-height: 1.72;
+  color: var(--color-text-muted);
+  margin: 8px 0 0;
+  text-align: left;
+}
+
+.cs-to-fill {
+  margin: 20px 0;
+  padding: 16px 20px;
+  border-radius: var(--radius-control);
+  border: 1px dashed var(--color-text-muted);
+  background: var(--color-accent-subtle);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  max-width: 40rem;
+}
+.cs-to-fill-label {
+  font-family: var(--font-sans-medium);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+.cs-to-fill-body {
+  margin: 0;
+}
+
+.cs-back-mobile-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+}
+
+.cs-request-block {
+  margin-top: var(--space-5);
+}
+.cs-request-card {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-secondary);
+}
+.cs-pill-btn {
+  min-height: 44px;
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  font-weight: 500;
+}
+.cs-pill-btn:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+
+/* Prev/next: space-only separation from case body (no rule). Spans the
+   content column: Previous flush left, Next flush right.
+   Chevrons hang outside that measure; equal 1fr hit areas; meta + body-lg. */
+.cs-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-3);
+  row-gap: var(--space-3);
+  align-items: start;
+  /* Span the full content column (meta grid / NDA box) so Next's text edge
+     is flush with the column's right edge at every width. */
+  max-width: none;
+  width: 100%;
+  justify-self: stretch;
+  margin: var(--space-8) 0 0; /* 96px desktop */
+  padding: 0;
+  border: 0;
+}
+.cs-pager-slot {
+  display: block;
+  min-height: 0;
+}
+.cs-pager-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0;
+  text-decoration: none;
+  color: inherit;
+  /* Stretch to the grid cell so prev/next share equal hit width. */
+  width: 100%;
+  box-sizing: border-box;
+}
+.cs-pager-link--next {
+  text-align: right;
+  align-items: flex-end;
+}
+.cs-pager-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+.cs-pager-kicker-icon {
+  display: block;
+  flex-shrink: 0;
+  /* Optical align to meta cap height (chevron sits a hair high in the em box). */
+  transform: translateY(0.5px);
+  transition: transform 150ms ease-out;
+}
+/* Hang chevrons outside the prose text edge (icon 13px + kicker gap 6px).
+   Negative margin cancels the icon from the flex size so kicker/title text
+   aligns with .cs-prose paragraphs. */
+.cs-pager-kicker-icon--prev {
+  margin-left: calc(-1 * (13px + 6px));
+}
+.cs-pager-kicker-icon--next {
+  margin-right: calc(-1 * (13px + 6px));
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev {
+    transform: translate(-2px, 0.5px);
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translate(2px, 0.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-pager-kicker-icon {
+    transition: none;
+  }
+  .cs-pager-link:hover .cs-pager-kicker-icon--prev,
+  .cs-pager-link:hover .cs-pager-kicker-icon--next {
+    transform: translateY(0.5px);
+  }
+}
+.cs-pager-title {
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-lg); /* body-lg */
+  line-height: var(--lh-lg);
+  letter-spacing: var(--ls-lg);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  /* Prefer single-line titles; wrap only if the cell is too narrow. */
+  overflow-wrap: anywhere;
+}
+/* Phone: stack so long titles (e.g. JOOLA) stay one readable column.
+   Next keeps its right edge; previous stays left. */
+@media (max-width: 479px) {
+  .cs-pager {
+    grid-template-columns: 1fr;
+    margin-top: var(--space-6); /* 64px mobile */
+  }
+  .cs-pager-link--next {
+    text-align: right;
+    align-items: flex-end;
+    justify-self: stretch;
+  }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .cs-pager {
+    margin-top: var(--space-6);
+  }
+}
+
+.cs-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+}
+.cs-lightbox-dialog {
+  position: relative;
+  max-width: min(1200px, 100%);
+  max-height: 100%;
+  overflow: auto;
+}
+.cs-lightbox-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+.cs-lightbox-media {
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+
+/* No section nav: centered content column (same as default below 1200px). */
+@media (min-width: 1200px) {
+  .cs-layout.cs-layout--no-toc .cs-content {
+    grid-template-columns: minmax(0, var(--content-max-w));
+    justify-content: center;
+  }
+  .cs-layout.cs-layout--no-toc .cs-hero-pre-media,
+  .cs-layout.cs-layout--no-toc .cs-hero-media-wrap,
+  .cs-layout.cs-layout--no-toc .cs-meta-grid,
+  .cs-layout.cs-layout--no-toc .cs-content > *:not(.cs-mobile-back):not(.cs-aside):not(.cs-hero-header) {
+    grid-column: 1;
+  }
+}
+
+.cs-person-link {
+  color: inherit;
+}
+
+.cs-request-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-section-label);
+  line-height: 1.3;
+  color: var(--color-text-muted);
+}
+.cs-request-label svg {
+  display: block;
+  flex: 0 0 auto;
+}
+.cs-request-message {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  color: var(--color-text-secondary);
+  max-width: 40rem;
+}
+.cs-request-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: var(--fs-meta);
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
 }
 
 /* ─── Case study stats — single column on mobile ─────────────────── */
@@ -1007,11 +2179,22 @@ html[data-theme="dark"] .project-image {
   min-width: 0;
 }
 
+/* Empty video shells (pre-activation) must not create phantom rows —
+   that was the uneven 71–77 vs 2–8px alternating gap at 390. */
+.portfolio-grid-card:empty {
+  display: none;
+}
+
 /* ─── Portfolio grid — stays 2-col through tablet; only collapses to
        1-col at the mobile breakpoint (matches the .cs-layout mobile
        cutoff and CaseStudyTOC's isMobile check) ── */
 @media (max-width: 767px) {
-  .portfolio-grid { grid-template-columns: 1fr !important; }
+  .portfolio-grid {
+    grid-template-columns: 1fr !important;
+    /* One row-gap after columns flatten (display:contents drops flex gap). */
+    row-gap: var(--card-gap) !important;
+    column-gap: var(--grid-gutter) !important;
+  }
   /* Flatten the two DOM columns so cards can be reordered as one stack
      without changing the desktop 2-column structure. `order` is set in
      JSX from Sanity index (plus CD/habit trailing slots). */
@@ -1147,6 +2330,10 @@ html[data-theme="dark"] .ps-polaroid-cap {
   bottom: 40px;
   height: 36px;
 }
+.bento-minimap {
+  right: var(--page-px, 24px);
+  bottom: 40px;
+}
 .bento-zoom-track {
   touch-action: none;
 }
@@ -1156,6 +2343,7 @@ html[data-theme="dark"] .ps-polaroid-cap {
 @media (max-width: 767px) {
   .bento-hint-pill { top: 88px; }
   .bento-zoom-panel { bottom: 56px; height: 44px; min-height: 44px; box-sizing: border-box; }
+  .bento-minimap { display: none !important; }
   .bento-zoom-track {
     min-height: 44px;
     display: flex;
@@ -1232,6 +2420,28 @@ html[data-theme="dark"] .ps-polaroid-cap {
 .mux-media-slot.mux-media-slot--fill video.mux-cover {
   object-fit: cover;
   --media-object-fit: cover;
+  pointer-events: none;
+}
+/* Case-study film: full frame, no card crop, no hit target for native controls. */
+.mux-media-slot--contain {
+  background: #F4F4F4;
+}
+.mux-media-slot.mux-media-slot--contain .mux-cover,
+.mux-media-slot.mux-media-slot--contain video.mux-cover {
+  object-fit: contain;
+  --media-object-fit: contain;
+  pointer-events: none;
+  background: #F4F4F4;
+}
+/* iOS paints a native play glyph on muted inline video unless the controls
+   chrome is suppressed. The player never exposes controls. */
+.mux-media-slot video::-webkit-media-controls,
+.mux-media-slot video::-webkit-media-controls-enclosure,
+.mux-media-slot video::-webkit-media-controls-start-playback-button,
+.mux-media-slot video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
   pointer-events: none;
 }
 
@@ -1311,3 +2521,50 @@ html[data-theme="light"] {
   z-index: 999999999 !important;
 }
 
+/* ─── Text links: one underline rule site-wide ───────────────────
+   Plain at rest; 1px currentColor underline at 0.18em (~2.7px at 15px), skip-ink, on
+   hover (fine pointers) or keyboard focus. The underline is always laid
+   out but transparent at rest, so it fades in over 150ms with no shift. */
+a.about-link,
+.about-social,
+.cs-person-link {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  text-decoration-color: transparent;
+  transition: color 0.25s ease, text-decoration-color 150ms ease, background-color 1s ease, border-color 1s ease;
+}
+a.about-link:focus-visible,
+.about-social:focus-visible,
+.cs-person-link:focus-visible { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  a.about-link:hover,
+  .about-social:hover,
+  .cs-person-link:hover { text-decoration-color: currentColor; }
+}
+@media (prefers-reduced-motion: reduce) {
+  a.about-link, .about-social, .cs-person-link { transition: none; }
+}
+
+/* Archive bento minimap: elevated card that reads at a glance */
+:root {
+  --minimap-bg: #FFFFFF;
+  --minimap-border: rgba(0, 0, 0, 0.16);
+  --minimap-border-hover: rgba(0, 0, 0, 0.32);
+  --minimap-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.12);
+  --minimap-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 8px 26px rgba(0, 0, 0, 0.18);
+}
+html[data-theme="dark"] {
+  --minimap-bg: #1C1F23;
+  --minimap-border: rgba(255, 255, 255, 0.16);
+  --minimap-border-hover: rgba(255, 255, 255, 0.32);
+  --minimap-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.55);
+  --minimap-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 26px rgba(0, 0, 0, 0.7);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bento-minimap:hover {
+    border-color: var(--minimap-border-hover) !important;
+    box-shadow: var(--minimap-shadow-hover) !important;
+  }
+}

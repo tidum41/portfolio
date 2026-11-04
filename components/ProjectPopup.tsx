@@ -1,9 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect as _useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
+import NortheastArrow from "@/components/icons/NortheastArrow";
+
+const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
+
+export type PopupMetaItem = {
+  label: string;
+  values: string[];
+};
 
 interface Props {
   open: boolean;
@@ -20,8 +36,30 @@ interface Props {
   /** Match the panel's fill to the grid tile's own background so the popup
    *  reads as a continuation of that card, not a generic dialog. */
   panelBg?: string;
-  children: React.ReactNode;
+  /**
+   * `large` = near-fullscreen app embed (desktop ~90dvh panel; mobile full
+   * screen). Adds an info control that toggles a metadata overlay. Default
+   * keeps the existing CD / habit chrome unchanged.
+   */
+  size?: "default" | "large";
+  /** Metadata rows for the large-size info panel. */
+  infoMeta?: PopupMetaItem[];
+  /** External "open full app" link shown in the large-size info panel. */
+  infoLink?: { href: string; label: string };
+  /**
+   * Collapsed disclosure body under the metadata. Defaults to a clearly
+   * marked placeholder — do not invent a reason if omitted.
+   */
+  whyBuilt?: string;
+  /** Fires once the enter animation has settled (panel onAnimationComplete). */
+  onEntered?: () => void;
+  children: ReactNode;
 }
+
+const INFO_MOTION = {
+  duration: 0.16,
+  ease: EASE_OPACITY,
+} as const;
 
 // Lightweight in-page modal for grid items that are meant to be played with
 // rather than read (CD Player, Habit Tracker) — an alternative to a full
@@ -38,17 +76,104 @@ export default function ProjectPopup({
   tools,
   maxWidth = 560,
   panelBg = "var(--color-bg)",
+  size = "default",
+  infoMeta,
+  infoLink,
+  whyBuilt = "TODO(Mudit): one or two sentences on why you built it.",
+  onEntered,
   children,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElRef = useRef<Element | null>(null);
+  const infoPanelRef = useRef<HTMLDivElement>(null);
+  const infoInnerRef = useRef<HTMLDivElement>(null);
+  const whySectionRef = useRef<HTMLElement>(null);
+  const sheetDragRef = useRef<{ startY: number; dragging: boolean } | null>(null);
+  /** Outer large-panel sheet drag (below 640px). */
+  const panelDragRef = useRef<{
+    startY: number;
+    lastY: number;
+    lastT: number;
+    dragging: boolean;
+    vy: number;
+  } | null>(null);
+  const enteredOnceRef = useRef(false);
   const reduced = useReducedMotion();
+  const isLarge = size === "large";
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  /** Static backdrop blur sibling — never opacity-animated with the filter. */
+  const [blurOn, setBlurOn] = useState(false);
+  /** Measured mobile sheet height (px); null on desktop / before measure. */
+  const [sheetHeight, setSheetHeight] = useState<number | null>(null);
+  /** Live drag offset while swiping the info-sheet handle down (mobile only). */
+  const [sheetDragY, setSheetDragY] = useState(0);
+  /** Live drag offset while swiping the outer modal sheet down (mobile large). */
+  const [panelDragY, setPanelDragY] = useState(0);
+  const infoOpenRef = useRef(false);
+  const infoPanelId = useId();
 
   const backdropEnter = reduced ? 0.01 : PANEL_DURATION.backdrop.enter;
   const backdropExit  = reduced ? 0.01 : PANEL_DURATION.backdrop.exit;
   const panelEnter    = reduced ? 0.01 : PANEL_DURATION.panel.enter;
   const panelExit     = reduced ? 0.01 : PANEL_DURATION.panel.exit;
   const panelY        = reduced ? 0 : 10;
+  const infoY         = reduced ? 0 : 4;
+  const infoDuration  = reduced ? 0.01 : INFO_MOTION.duration;
+  const sheetDuration = reduced ? 0.01 : 0.2;
+  /** Dimmed info-sheet scrim — 200ms fade per spec. */
+  const scrimDuration = reduced ? 0.01 : 0.2;
+
+  infoOpenRef.current = infoOpen;
+
+  useLayoutEffect(() => {
+    // Bottom-sheet / compact chrome below 640px AND short landscape
+    // viewports (e.g. 844×390) where a desktop popover would clip.
+    const mq = window.matchMedia("(max-width: 639px), (max-height: 500px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Reset info chrome whenever the dialog closes so the next open starts
+  // with the app filling the panel (info closed).
+  useEffect(() => {
+    if (!open) {
+      setInfoOpen(false);
+      setSheetHeight(null);
+      setSheetDragY(0);
+      setPanelDragY(0);
+      sheetDragRef.current = null;
+      panelDragRef.current = null;
+      // Keep enteredOnceRef true through exit so exit animationComplete
+      // cannot re-fire onEntered; clear on the next open instead.
+    } else {
+      enteredOnceRef.current = false;
+      // Blur mounts after enter settles (see onAnimationComplete) so the open
+      // frame only pays for the cheap rgba dim fade.
+    }
+  }, [open]);
+
+  // Mobile sheet: hug content up to ~78dvh so the full info (meta + why)
+  // fits without an inner scrollbar on typical phones.
+  useLayoutEffect(() => {
+    if (!infoOpen || !isMobile) {
+      if (!isMobile) setSheetHeight(null);
+      return;
+    }
+    const panel = infoPanelRef.current;
+    if (!panel) return;
+    // Measure natural height (ignore the animated inline height).
+    const prev = panel.style.height;
+    panel.style.height = "auto";
+    const contentH = panel.scrollHeight;
+    panel.style.height = prev;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const shortLandscape = vh <= 500;
+    const cap = (shortLandscape ? 0.82 : 0.78) * vh;
+    setSheetHeight(Math.min(contentH, cap));
+  }, [infoOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
   // Remember what had focus before opening, so it can be restored on close —
   // and move focus into the panel itself so screen readers/keyboard users
@@ -65,6 +190,11 @@ export default function ProjectPopup({
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Large variant: dismiss the info overlay first, then the dialog.
+        if (isLarge && infoOpenRef.current) {
+          setInfoOpen(false);
+          return;
+        }
         onClose();
         return;
       }
@@ -92,7 +222,11 @@ export default function ProjectPopup({
       left: body.style.left,
       right: body.style.right,
       width: body.style.width,
+      overflow: body.style.overflow,
       paddingRight: body.style.paddingRight,
+      overscroll: body.style.overscrollBehavior,
+      htmlOverflow: html.style.overflow,
+      htmlOverscroll: html.style.overscrollBehavior,
       bodyBg: body.style.backgroundColor,
       htmlBg: html.style.backgroundColor,
       htmlScheme: html.style.colorScheme,
@@ -104,12 +238,18 @@ export default function ProjectPopup({
     // paddingRight replaces the disappearing scrollbar so column widths stay put.
     // Lock color-scheme to the live data-theme so the browser canvas cannot
     // paint the opposite theme behind project cards / the CD plate.
+    // overflow + overscroll on html/body block background scroll and the
+    // rubber-band that can show a second scrollbar behind the modal.
     const scheme = html.getAttribute("data-theme") === "light" ? "light" : "dark";
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
     body.style.left = "0";
     body.style.right = "0";
     body.style.width = "auto";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
     body.style.backgroundColor = "var(--color-bg)";
     html.style.backgroundColor = "var(--color-bg)";
     html.style.colorScheme = scheme;
@@ -123,8 +263,12 @@ export default function ProjectPopup({
       body.style.left = prev.left;
       body.style.right = prev.right;
       body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      body.style.overscrollBehavior = prev.overscroll;
       body.style.paddingRight = prev.paddingRight;
       body.style.backgroundColor = prev.bodyBg;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
       html.style.backgroundColor = prev.htmlBg;
       html.style.colorScheme = prev.htmlScheme;
       body.style.colorScheme = prev.bodyScheme;
@@ -132,35 +276,133 @@ export default function ProjectPopup({
       document.removeEventListener("keydown", onKeyDown);
       (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open, onClose, isLarge]);
 
   if (typeof document === "undefined") return null;
 
+  // Large dimensions / mobile full-screen live in `.project-popup-panel--large`
+  // so a max-width media query can override them (inline width/radius would win).
+  const panelStyle: CSSProperties = isLarge
+    ? {
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: panelBg,
+        colorScheme: "inherit",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
+        outline: "none",
+        position: "relative",
+      }
+    : {
+        width: `min(${maxWidth}px, 100%)`,
+        // Leave a slim margin so the panel fills more of the viewport
+        // across breakpoints without scraping the edges.
+        maxHeight: "calc(100dvh - 2 * clamp(12px, 2.2vw, 20px))",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: panelBg,
+        colorScheme: "inherit",
+        borderRadius: "var(--radius-panel)",
+        border: "1px solid var(--color-border-subtle)",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
+        outline: "none",
+      };
+
+  const closeButton = (
+    <button
+      className="popup-close-btn"
+      onClick={() => {
+        // Large variant: dismiss the info sheet first (matches Esc / scrim),
+        // then close the dialog on a second tap.
+        if (isLarge && infoOpenRef.current) {
+          setInfoOpen(false);
+          return;
+        }
+        onClose();
+      }}
+      aria-label={isLarge && infoOpen ? "Close project info" : "Close"}
+      title="Close"
+    >
+      <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <line x1="2" y1="2" x2="14" y2="14" />
+        <line x1="14" y1="2" x2="2" y2="14" />
+      </svg>
+    </button>
+  );
+
+  const infoButton = (
+    <button
+      type="button"
+      className="popup-info-btn"
+      onClick={() => setInfoOpen((v) => !v)}
+      aria-label={infoOpen ? "Hide project info" : "Show project info"}
+      aria-expanded={infoOpen}
+      aria-controls={infoPanelId}
+      title="Info"
+    >
+      {/* Glyph fills the 16 box edge to edge like the × beside it; 15px is the
+          popup icon size the mobile topbar already uses. */}
+      <svg viewBox="0 0 16 16" width={15} height={15} fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+        <line x1="8" y1="7.25" x2="8" y2="11.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="4.75" r="1" fill="currentColor" />
+      </svg>
+    </button>
+  );
+
   return createPortal(
-    <AnimatePresence onExitComplete={onExitComplete}>
+    <>
+      {/* Blur sits under the opacity-animated dim/panel shell and is never
+          faded itself — opacity×backdrop-filter was the open-frame jank. */}
+      {blurOn && <div className="project-popup-backdrop-blur" aria-hidden />}
+      <AnimatePresence
+        onExitComplete={() => {
+          setBlurOn(false);
+          onExitComplete?.();
+        }}
+      >
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: backdropEnter, ease: EASE_OPACITY } }}
           exit={{ opacity: 0, transition: { duration: backdropExit, ease: EASE_EXIT } }}
           onClick={onClose}
-          style={{
-            position: "fixed",
-            inset: 0,
-            // Just under GlobalCustomCursor's z-index (999999, see
-            // components/GlobalCustomCursor.tsx) so the custom cursor keeps
-            // painting on top of the modal instead of disappearing behind
-            // it — the native cursor is hidden sitewide, so without this the
-            // popup left visitors with no visible cursor at all.
-            zIndex: 999998,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "clamp(12px, 2.2vw, 20px)",
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-          }}
+            className={isLarge ? "project-popup-backdrop project-popup-backdrop--large" : undefined}
+          style={
+            isLarge
+              ? {
+                  // Positioning/size live in `.project-popup-backdrop--large`
+                  // (100vw × 100dvh) so scrollbar-gutter on html cannot leave a
+                  // strip outside inset:0. Shared chrome only here.
+                  // Mobile sheet: flex-end so the panel sits on the bottom with
+                  // a ~24px top gap (align-items set in CSS; omit here so the
+                  // media query wins).
+                  zIndex: 999998,
+                  display: "flex",
+                  ...(isMobile
+                    ? {}
+                    : { alignItems: "center" as const, justifyContent: "center" as const }),
+                  background: "rgba(0,0,0,0.55)",
+                  overscrollBehavior: "none",
+                }
+              : {
+                  position: "fixed",
+                  inset: 0,
+                  // Just under GlobalCustomCursor's z-index (999999, see
+                  // components/GlobalCustomCursor.tsx) so the custom cursor keeps
+                  // painting on top of the modal instead of disappearing behind
+                  // it — the native cursor is hidden sitewide, so without this the
+                  // popup left visitors with no visible cursor at all.
+                  zIndex: 999998,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "clamp(12px, 2.2vw, 20px)",
+                  background: "rgba(0,0,0,0.55)",
+                  overscrollBehavior: "none",
+                }
+          }
         >
           <motion.div
             ref={panelRef}
@@ -169,6 +411,17 @@ export default function ProjectPopup({
             aria-label={title}
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
+            onAnimationComplete={() => {
+              if (enteredOnceRef.current) return;
+              enteredOnceRef.current = true;
+              setBlurOn(true);
+              onEntered?.();
+            }}
+            className={
+              isLarge
+                ? `project-popup-panel project-popup-panel--large${isMobile ? " project-popup-panel--sheet" : ""}`
+                : undefined
+            }
             // Opacity + y only, deliberately no scale — matches
             // PS3ControlPanel's own panel-open language (ExpandSection:
             // max-height + opacity, no scale) rather than a card-hover-press
@@ -177,60 +430,234 @@ export default function ProjectPopup({
             // never see a spurious resize mid-animation. Asymmetric timing —
             // slower open, snappier close — mirrors that same precedent
             // (320ms/220ms open vs 240ms/160ms close there).
-            initial={{ opacity: 0, transform: `translateY(${panelY}px)` }}
-            animate={{ opacity: 1, transform: "translateY(0px)", transition: { duration: panelEnter, ease: EASE_OPACITY } }}
-            exit={{ opacity: 0, transform: `translateY(${panelY}px)`, transition: { duration: panelExit, ease: EASE_EXIT } }}
-            style={{
-              width: `min(${maxWidth}px, 100%)`,
-              // Leave a slim margin so the panel fills more of the viewport
-              // across breakpoints without scraping the edges.
-              maxHeight: "calc(100dvh - 2 * clamp(12px, 2.2vw, 20px))",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              background: panelBg,
-              colorScheme: "inherit",
-              borderRadius: "var(--radius-panel)",
-              border: "1px solid var(--color-border-subtle)",
-              boxShadow: "0 16px 48px rgba(0,0,0,0.28)",
-              outline: "none",
+            // Mobile large: bottom sheet — enter from below; drag uses panelDragY.
+            initial={
+              isLarge && isMobile
+                ? { opacity: 1, y: "100%" }
+                : { opacity: 0, y: panelY }
+            }
+            animate={{
+              opacity: 1,
+              y: isLarge && isMobile ? panelDragY : 0,
+              transition: panelDragY > 0
+                ? { duration: 0 }
+                : {
+                    opacity: { duration: panelEnter, ease: EASE_OPACITY },
+                    y: { duration: panelEnter, ease: EASE_OPACITY },
+                  },
             }}
+            exit={
+              isLarge && isMobile
+                ? { opacity: 1, y: "100%", transition: { duration: panelExit, ease: EASE_EXIT } }
+                : { opacity: 0, y: panelY, transition: { duration: panelExit, ease: EASE_EXIT } }
+            }
+            style={panelStyle}
           >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
-              <div>
-                <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
-                {sub && (
-                  <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>
-                )}
-              </div>
-              <button
-                className="popup-close-btn"
-                onClick={onClose}
-                aria-label="Close"
-                title="Close"
+            {isLarge && isMobile && (
+              <div
+                className="project-popup-panel-handle"
+                aria-hidden
+                onPointerDown={(e) => {
+                  if (e.button != null && e.button !== 0) return;
+                  const now = performance.now();
+                  panelDragRef.current = {
+                    startY: e.clientY,
+                    lastY: e.clientY,
+                    lastT: now,
+                    dragging: true,
+                    vy: 0,
+                  };
+                  (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+                }}
+                onPointerMove={(e) => {
+                  const drag = panelDragRef.current;
+                  if (!drag?.dragging) return;
+                  const now = performance.now();
+                  const dt = now - drag.lastT;
+                  if (dt > 0) drag.vy = (e.clientY - drag.lastY) / dt;
+                  drag.lastY = e.clientY;
+                  drag.lastT = now;
+                  setPanelDragY(Math.max(0, e.clientY - drag.startY));
+                }}
+                onPointerUp={() => {
+                  const drag = panelDragRef.current;
+                  panelDragRef.current = null;
+                  if (!drag?.dragging) return;
+                  const dy = Math.max(0, drag.lastY - drag.startY);
+                  // Close past 80px, or a quick downward flick (~0.5px/ms).
+                  if (dy > 80 || drag.vy > 0.5) {
+                    setPanelDragY(0);
+                    onClose();
+                  } else {
+                    setPanelDragY(0);
+                  }
+                }}
+                onPointerCancel={() => {
+                  panelDragRef.current = null;
+                  setPanelDragY(0);
+                }}
               >
-                <svg viewBox="0 0 16 16" width={14} height={14} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <line x1="2" y1="2" x2="14" y2="14" />
-                  <line x1="14" y1="2" x2="2" y2="14" />
-                </svg>
-              </button>
-            </div>
+                <span className="project-popup-panel-handle-bar" />
+              </div>
+            )}
 
-            <div style={{
-              padding: 16,
-              // basis auto (not 0) so preferred child heights size the panel
-              // when it only has maxHeight; minHeight 0 still lets embeds
-              // shrink once the panel hits the viewport cap.
-              flex: "1 1 auto",
-              minHeight: 0,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}>
+            {!isLarge && (
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "16px 16px 0", flexShrink: 0 }}>
+                <div>
+                  <p style={{ fontSize: 18, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>{title}</p>
+                  {sub && (
+                    <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>{sub}</p>
+                  )}
+                </div>
+                {closeButton}
+              </div>
+            )}
+
+            {isLarge && (
+              // Title tab above the iframe — info icon lives here as its
+              // standard spot (restored from the pre-floating chrome design).
+              <div className="project-popup-topbar project-popup-topbar--large">
+                <div className="project-popup-topbar-title">
+                  <p>{title}</p>
+                </div>
+                <div className="project-popup-topbar-actions">
+                  {infoButton}
+                  {closeButton}
+                </div>
+              </div>
+            )}
+
+            <div
+              className={isLarge ? "project-popup-body project-popup-body--large" : undefined}
+              style={{
+                padding: isLarge ? 0 : 16,
+                // basis auto (not 0) so preferred child heights size the panel
+                // when it only has maxHeight; minHeight 0 still lets embeds
+                // shrink once the panel hits the viewport cap.
+                flex: "1 1 auto",
+                minHeight: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+              }}
+            >
               {children}
+
+              <AnimatePresence>
+                {isLarge && infoOpen && (
+                  <>
+                    <motion.button
+                      key="info-scrim"
+                      type="button"
+                      className="project-popup-info-scrim"
+                      aria-label="Dismiss project info"
+                      onClick={() => {
+                        setSheetDragY(0);
+                        setInfoOpen(false);
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1, transition: { duration: scrimDuration, ease: EASE_OPACITY } }}
+                      exit={{ opacity: 0, transition: { duration: scrimDuration, ease: EASE_EXIT } }}
+                    />
+                    <motion.div
+                      key="info-panel"
+                      ref={infoPanelRef}
+                      id={infoPanelId}
+                      className="project-popup-info"
+                      role="region"
+                      aria-label="Project details"
+                      initial={{ opacity: 0, y: infoY }}
+                      animate={{
+                        opacity: 1,
+                        y: isMobile ? sheetDragY : 0,
+                        ...(isMobile && sheetHeight != null ? { height: sheetHeight } : {}),
+                        transition: sheetDragY > 0
+                          ? { duration: 0 }
+                          : {
+                              opacity: { duration: infoDuration, ease: EASE_OPACITY },
+                              y: { duration: infoDuration, ease: EASE_OPACITY },
+                              height: { duration: sheetDuration, ease: EASE_OPACITY },
+                            },
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: infoY,
+                        transition: {
+                          opacity: { duration: infoDuration, ease: EASE_EXIT },
+                          y: { duration: infoDuration, ease: EASE_EXIT },
+                        },
+                      }}
+                    >
+                      {isMobile && (
+                        <div
+                          className="project-popup-info-handle"
+                          aria-hidden
+                          onPointerDown={(e) => {
+                            if (e.button != null && e.button !== 0) return;
+                            sheetDragRef.current = { startY: e.clientY, dragging: true };
+                            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+                          }}
+                          onPointerMove={(e) => {
+                            const drag = sheetDragRef.current;
+                            if (!drag?.dragging) return;
+                            const dy = Math.max(0, e.clientY - drag.startY);
+                            setSheetDragY(dy);
+                          }}
+                          onPointerUp={(e) => {
+                            const drag = sheetDragRef.current;
+                            sheetDragRef.current = null;
+                            if (!drag?.dragging) return;
+                            const dy = Math.max(0, e.clientY - drag.startY);
+                            if (dy > 64) {
+                              setSheetDragY(0);
+                              setInfoOpen(false);
+                            } else {
+                              setSheetDragY(0);
+                            }
+                          }}
+                          onPointerCancel={() => {
+                            sheetDragRef.current = null;
+                            setSheetDragY(0);
+                          }}
+                        >
+                          <span className="project-popup-info-handle-bar" />
+                        </div>
+                      )}
+                      <div className="project-popup-info-inner" ref={infoInnerRef}>
+                        {/* Rows reuse the case-study meta block (.cs-meta-label / .cs-meta-value). */}
+                        <div className="project-popup-meta">
+                          {(infoMeta ?? []).map(({ label, values }) => (
+                            <div key={label} className="project-popup-meta-row">
+                              <p className="cs-meta-label">{label}</p>
+                              <p className="cs-meta-value">{values.join(", ")}</p>
+                            </div>
+                          ))}
+                          <section ref={whySectionRef} className="project-popup-meta-row">
+                            <h3 className="cs-meta-label">Why I built it</h3>
+                            <p className="cs-meta-value">{whyBuilt}</p>
+                          </section>
+                        </div>
+                        {infoLink && (
+                          /* Home-card external link: title type + blue northeast arrow. */
+                          <a
+                            className="project-popup-info-link"
+                            href={infoLink.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {infoLink.label}
+                            <NortheastArrow size={13} color="var(--color-link-blue)" />
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
-            {(description || (tools && tools.length > 0)) && (
+            {!isLarge && (description || (tools && tools.length > 0)) && (
               <div style={{ padding: "0 16px 16px", flexShrink: 0 }}>
                 {description && (
                   <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--color-text-secondary)", margin: "0 0 12px" }}>
@@ -260,7 +687,8 @@ export default function ProjectPopup({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
+      </AnimatePresence>
+    </>,
     document.body,
   );
 }
