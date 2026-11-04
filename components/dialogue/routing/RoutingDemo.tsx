@@ -101,7 +101,15 @@ export default function RoutingDemo() {
     : null;
 
   return (
-    <div className={["dlg-route-demo", dialogueProductFontClassName].join(" ")} data-example-data="">
+    <div
+      className={[
+        "dlg-route-demo",
+        "dialogue-product-root",
+        "dp-chat-panel-typography",
+        dialogueProductFontClassName,
+      ].join(" ")}
+      data-example-data=""
+    >
       <div className="dlg-route-demo__meta">
         <span className="dlg-route-demo__badge">{EXAMPLE_STUDY.label}</span>
         <span className="dlg-route-demo__meta-text">
