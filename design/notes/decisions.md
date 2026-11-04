@@ -2,6 +2,20 @@
 
 Written in my own voice so I can explain each one in an interview. Each entry holds the decision, what else I tried, why this one, and what would make me revisit it. Newest first.
 
+## Routing demo (Nov 4 2026)
+
+### A live router on the Data viz section, after the template rows
+
+**Decision.** `/dialogue` gets an interactive routing demo under Match the chart: the reader types a question (or taps a suggested chip), an API returns `{template, props, reason}`, and one of five templates renders in the 448px panel from a fixed 24-person example dataset. The UI labels whether the model or the rule path answered, and the figure caption says it was built after the engagement on example data. **Tried.** A separate `/dialogue/live-route` page only. **Why.** Mudit approved building the Round 16 live-AI note for real, and putting it next to the template rows makes the mapping visible without inventing a product claim. **Revisit.** If the section feels long, move the demo under Thin data as the closing interaction.
+
+### Templates are five, and thin data uses a named demo cutoff
+
+**Decision.** The templates are `count_split`, `segment_comparison`, `quote_list`, `clip_list`, and `thin_data`. The thin-data gate is `THIN_DATA_MIN_PARTICIPANTS = 3`, labelled as a demo choice in the routing spec and on the flag. Thin data keeps the early-signal strip and an "Add to my plan" action that copies a follow-up prompt. **Tried.** Collapsing quote and clip into one evidence template. **Why.** The brief asked for each of these as a distinct take, and the page already has the parts (stacked bar, bar list, source pills, clip player, plan button). **Revisit.** If quote and clip feel like the same interaction in use, merge them and keep the play chip as the only difference.
+
+### Model path through the AI Gateway, with a rule fallback that always works
+
+**Decision.** `POST /api/dialogue/route` calls Vercel AI SDK `generateObject` with a zod schema when a gateway key exists, and otherwise (or on error) runs the same routing table as keywords and data checks. Counts never come from the model; `props` are dataset keys only. **Tried.** Client-only keyword routing. **Why.** The live-ai note already picked structured output and a keyword fallback so a public page never sits empty. **Revisit.** If gateway latency stays over about a second on cold start, keep a skeleton card in the reserved side slot (already reserved at 120px).
+
 ## Round 20
 
 ### Soft-rule change: the Data viz heading states the rule the section shows

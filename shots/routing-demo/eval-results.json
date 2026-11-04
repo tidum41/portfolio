@@ -1,0 +1,297 @@
+{
+  "evaluatedAt": "2026-11-04T05:25:46.967Z",
+  "caseCount": 20,
+  "thinDataMinParticipants": 3,
+  "rules": {
+    "hits": 20,
+    "total": 20,
+    "accuracy": 1,
+    "accuracyPercent": "100.0%",
+    "rows": [
+      {
+        "id": "q01",
+        "question": "How do shoppers read 'Arrives by Friday'?",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q02",
+        "question": "How many shoppers read it as this Friday?",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q03",
+        "question": "What share of people were unsure about the delivery date?",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q04",
+        "question": "How widely did address friction show up?",
+        "expected": {
+          "template": "count_split",
+          "topic": "address_friction"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "address_friction",
+          "reason": "Matched count_split to count_split using coded data on address_friction (11 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q05",
+        "question": "How often did returns come up?",
+        "expected": {
+          "template": "count_split",
+          "topic": "returns"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "returns",
+          "reason": "Matched count_split to count_split using coded data on returns (5 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q06",
+        "question": "Compare address friction on mobile vs desktop",
+        "expected": {
+          "template": "segment_comparison",
+          "topic": "address_friction"
+        },
+        "got": {
+          "template": "segment_comparison",
+          "topic": "address_friction",
+          "reason": "Matched segment_comparison to segment_comparison using coded data on address_friction (11 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q07",
+        "question": "How does Friday reading differ between first-time and repeat shoppers?",
+        "expected": {
+          "template": "segment_comparison",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "segment_comparison",
+          "topic": "friday_reading",
+          "reason": "Matched segment_comparison to segment_comparison using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q08",
+        "question": "Break down returns by device",
+        "expected": {
+          "template": "segment_comparison",
+          "topic": "returns"
+        },
+        "got": {
+          "template": "segment_comparison",
+          "topic": "returns",
+          "reason": "Matched segment_comparison to segment_comparison using coded data on returns (5 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q09",
+        "question": "Compare Friday readings by shopper type",
+        "expected": {
+          "template": "segment_comparison",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "segment_comparison",
+          "topic": "friday_reading",
+          "reason": "Matched segment_comparison to segment_comparison using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q10",
+        "question": "What did shoppers say about returns?",
+        "expected": {
+          "template": "quote_list",
+          "topic": "returns"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "returns",
+          "reason": "Matched quote_evidence to quote_list using coded data on returns (5 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q11",
+        "question": "Show me quotes about Arrives by Friday",
+        "expected": {
+          "template": "quote_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "friday_reading",
+          "reason": "Matched quote_evidence to quote_list using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q12",
+        "question": "What exact words did people use about address friction?",
+        "expected": {
+          "template": "quote_list",
+          "topic": "address_friction"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "address_friction",
+          "reason": "Matched quote_evidence to quote_list using coded data on address_friction (11 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q13",
+        "question": "Give me verbatim evidence on the delivery promise",
+        "expected": {
+          "template": "quote_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "friday_reading",
+          "reason": "Matched quote_evidence to quote_list using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q14",
+        "question": "Play clips about the Friday label",
+        "expected": {
+          "template": "clip_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "clip_list",
+          "topic": "friday_reading",
+          "reason": "Matched clip to clip_list using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q15",
+        "question": "Let me hear the address friction clips",
+        "expected": {
+          "template": "clip_list",
+          "topic": "address_friction"
+        },
+        "got": {
+          "template": "clip_list",
+          "topic": "address_friction",
+          "reason": "Matched clip to clip_list using coded data on address_friction (11 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q16",
+        "question": "Watch the returns footage",
+        "expected": {
+          "template": "clip_list",
+          "topic": "returns"
+        },
+        "got": {
+          "template": "clip_list",
+          "topic": "returns",
+          "reason": "Matched clip to clip_list using coded data on returns (5 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q17",
+        "question": "Why were shoppers unsure about Friday?",
+        "expected": {
+          "template": "quote_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "friday_reading",
+          "reason": "Matched open_ended to quote_list using coded data on friday_reading (22 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q18",
+        "question": "Tell me about how people talked about returns",
+        "expected": {
+          "template": "quote_list",
+          "topic": "returns"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "returns",
+          "reason": "Matched open_ended to quote_list using coded data on returns (5 people)."
+        },
+        "ok": true
+      },
+      {
+        "id": "q19",
+        "question": "How many shoppers mentioned damaged packaging?",
+        "expected": {
+          "template": "thin_data",
+          "topic": "packaging_damage"
+        },
+        "got": {
+          "template": "thin_data",
+          "topic": "packaging_damage",
+          "reason": "Thin data: 2 supporting participants is under the demo cutoff of 3."
+        },
+        "ok": true
+      },
+      {
+        "id": "q20",
+        "question": "Play clips about damaged packaging",
+        "expected": {
+          "template": "thin_data",
+          "topic": "packaging_damage"
+        },
+        "got": {
+          "template": "thin_data",
+          "topic": "packaging_damage",
+          "reason": "Thin data: 2 supporting participants is under the demo cutoff of 3."
+        },
+        "ok": true
+      }
+    ]
+  },
+  "model": {
+    "skipped": true,
+    "reason": "No AI_GATEWAY_API_KEY / VERCEL_OIDC_TOKEN / OPENAI_API_KEY in env"
+  }
+}

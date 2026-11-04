@@ -71,6 +71,13 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `DialogueChatLive` (round P10: interactive recreation of the study chat on Dialogue's real keyframes, composed of UserMessageBubble, ChartVizCard, ChartStackedBar, SideSample and DialogueInterviewPlayer)
 - `StructuredAnswerFigure`
 - `ThinDataFigure`
+- `RoutingDemo` (Mudit OK Nov 4 2026: generative-UI routing demo on example data; composes StudyChatShell, UserMessageBubble, ChartVizCard, ChartStackedBar, ChartBarList, SourcePill, DialogueInterviewPlayer, and the thin-data plan button)
+- `RoutingAnswer`
+- `CountSplitTemplate`
+- `SegmentComparisonTemplate`
+- `QuoteListTemplate`
+- `ClipListTemplate`
+- `ThinDataTemplate`
 
 ## Not allowed without approval
 - Round P "hearthside" figures (BeforeChatFigure, ScopePairFigure, CountsOpenFigure, ComparisonRowsFigure, LevelsToggleFigure, ClipsFigure, ThinPlanFigure, HeroLayeredFigure, QuoteCardH, HearthsideViewport). Their content can be rebuilt from the components above.
