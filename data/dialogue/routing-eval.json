@@ -119,7 +119,7 @@
     {
       "id": "q20",
       "question": "Play clips about damaged packaging",
-      "expected": { "template": "thin_data", "topic": "packaging_damage" },
+      "expected": { "template": "clip_list", "topic": "packaging_damage" },
       "tag": "thin"
     },
     {
@@ -157,6 +157,12 @@
       "question": "Show me the NPS score for this brand",
       "expected": { "template": "count_split", "topic": "friday_reading" },
       "tag": "off_topic"
+    },
+    {
+      "id": "q27",
+      "question": "Show clips of shoppers who read the Friday label",
+      "expected": { "template": "clip_list", "topic": "friday_reading" },
+      "tag": "clear"
     }
   ]
 }

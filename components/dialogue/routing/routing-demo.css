@@ -15,7 +15,7 @@
   gap: var(--space-2) var(--space-3);
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
-  color: var(--dp-muted);
+  color: var(--dp-ink);
 }
 
 .dlg-route-demo__badge {
@@ -130,17 +130,8 @@
   grid-area: 1 / 1;
 }
 
-.dlg-route-demo .dp-chart-stack__lane-share {
-  opacity: 0;
-}
-
-.dlg-route-demo .dp-chart-stack:hover .dp-chart-stack__lane-share,
-.dlg-route-demo .dlg-live__bar:hover .dp-chart-stack__lane-share {
-  opacity: 1;
-}
-
-.dlg-route-demo .dp-chart-stack:hover .dp-chart-stack__lane-count,
-.dlg-route-demo .dlg-live__bar:hover .dp-chart-stack__lane-count {
+.dlg-route-demo .dp-chart-stack__lane-share,
+.dlg-route-demo .dp-chart-bars__v-share {
   opacity: 0;
 }
 
@@ -174,12 +165,10 @@
   gap: 16px;
 }
 
-/* Reserved side slot: open and closed share the same height so a tap never shifts. */
 .dlg-route-side {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 160px;
 }
 
 .dlg-route-side__hint {
@@ -337,10 +326,13 @@
 }
 
 .dlg-route-player-slot {
-  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+.dlg-route-player-slot:not([data-open]) {
+  display: none;
 }
 
 .dlg-route-player-slot .dlg-live__clip {
@@ -380,7 +372,9 @@
 }
 
 .dlg-route-followup:disabled {
-  opacity: 0.45;
+  opacity: 1;
+  color: var(--dp-ink);
+  background: var(--dp-warm);
   cursor: default;
 }
 
@@ -488,6 +482,8 @@
 .dlg-route-demo__input {
   flex: 1;
   min-width: 0;
+  height: 36px;
+  padding: 6px 0;
   border: 0;
   background: transparent;
   font: inherit;
@@ -523,7 +519,9 @@
 }
 
 .dlg-route-demo__send:disabled {
-  opacity: 0.4;
+  opacity: 1;
+  background: var(--dp-muted);
+  color: var(--dp-on-strong);
   cursor: default;
 }
 
@@ -568,7 +566,9 @@
 }
 
 .dlg-route-demo__chip:disabled {
-  opacity: 0.5;
+  opacity: 1;
+  color: var(--dp-ink);
+  background: var(--dp-warm);
   cursor: default;
 }
 
@@ -630,4 +630,44 @@
 
 .dlg-route-shot .dp-chart-stack__lane:last-child .dp-chart-stack__lane-value {
   order: 1;
+}
+
+/* Real clip still from the motion stage, not the gray waveform placeholder. */
+.dlg-route-demo .dp-qplayer__placeholder,
+.dlg-route-shot .dp-qplayer__placeholder {
+  background: url("/dialogue/clip-still.svg") center / cover no-repeat;
+}
+
+.dlg-route-demo .dp-qplayer__placeholder-icon,
+.dlg-route-shot .dp-qplayer__placeholder-icon {
+  display: none;
+}
+
+/* Reason streams first. Then the card fades 0.5 to 1 and the bars grow, 300ms. */
+@keyframes dlg-route-card-in {
+  from { opacity: 0.5; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dlg-route-bar-in {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.dlg-route-enter {
+  animation: dlg-route-card-in 300ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.dlg-route-enter .dp-chart-stack__seg,
+.dlg-route-enter .dp-chart-bars__bar {
+  transform-origin: left center;
+  animation: dlg-route-bar-in 300ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-route-enter,
+  .dlg-route-enter .dp-chart-stack__seg,
+  .dlg-route-enter .dp-chart-bars__bar {
+    animation: none;
+  }
 }

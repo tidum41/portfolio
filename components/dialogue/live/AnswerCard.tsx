@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, type PointerEvent } from "react";
 import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
@@ -27,19 +28,35 @@ export function AnswerCard({ segment = false, onSide, sideOpen = false, chart = 
   const { finding, total, groups } = answer;
   const rows = answerLayout(groups) === "rows";
   const lead = Math.round((groups[0].value / total) * 10000) / 100;
+  const barRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ x: number; y: number; text: string } | null>(null);
+  const track = (event: PointerEvent<HTMLElement>, value: number) => {
+    const box = barRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setPill({
+      x: event.clientX - box.left,
+      y: event.clientY - box.top,
+      text: `${Math.round((value / total) * 100)}%`,
+    });
+  };
   const bar = rows ? (
     <div className="dlg-answer--rows" data-layout="rows">
       <ChartBarList max={total} rows={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, pct: `${Math.round((g.value / total) * 100)}%`, focal: g.focal }))} />
     </div>
   ) : (
-      <div className="dlg-live__bar" data-layout="bar" data-side={sideOpen || undefined}>
+      <div ref={barRef} className="dlg-live__bar" data-layout="bar" data-side={sideOpen || undefined}>
         <ChartStackedBar lanes
           total={total}
           segments={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, focal: g.focal }))}
         />
         {/* P14 items 1+7: both segments tappable; focal segment carries data-target for the recorder. */}
-        <button type="button" className="dlg-live__side dlg-live__side--friday" style={{ width: `calc(${lead}% + 12px)` }} data-target="side-friday" aria-label={`Open ${groups[0].label}, ${share(groups[0].value)} of ${share(total)}`} aria-expanded={sideOpen === "friday"} onClick={() => onSide?.("friday")} />
-        <button type="button" className="dlg-live__side dlg-live__side--unsure" style={{ width: `calc(${100 - lead}% + 12px)` }} data-target="side" aria-label={`Open ${groups[1].label}, ${share(groups[1].value)} of ${share(total)}`} aria-expanded={sideOpen === "unsure"} onClick={() => onSide?.("unsure")} />
+        <button type="button" className="dlg-live__side dlg-live__side--friday" style={{ width: `calc(${lead}% + 12px)` }} data-target="side-friday" aria-label={`Open ${groups[0].label}, ${share(groups[0].value)} of ${share(total)}`} aria-expanded={sideOpen === "friday"} onClick={() => onSide?.("friday")} onPointerMove={(event) => track(event, groups[0].value)} onPointerLeave={() => setPill(null)} />
+        <button type="button" className="dlg-live__side dlg-live__side--unsure" style={{ width: `calc(${100 - lead}% + 12px)` }} data-target="side" aria-label={`Open ${groups[1].label}, ${share(groups[1].value)} of ${share(total)}`} aria-expanded={sideOpen === "unsure"} onClick={() => onSide?.("unsure")} onPointerMove={(event) => track(event, groups[1].value)} onPointerLeave={() => setPill(null)} />
+        {pill ? (
+          <span className="dp-hero-tooltip dlg-chart-pill" role="tooltip" data-chart-pill="" style={{ left: pill.x, top: pill.y }}>
+            {pill.text}
+          </span>
+        ) : null}
       </div>
   );
   return (

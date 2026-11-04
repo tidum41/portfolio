@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { annotateSlug } from "@/components/dialogue/annotate";
 
 export type ChartStackSegment = {
@@ -35,22 +37,39 @@ export default function ChartStackedBar({
   note,
   className,
 }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ x: number; y: number; text: string } | null>(null);
+  const track = (event: PointerEvent<HTMLElement>, text: string) => {
+    const box = rootRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setPill({ x: event.clientX - box.left, y: event.clientY - box.top, text });
+  };
   return (
-    <div className={["dp-chart-root dp-chart-stack", className].filter(Boolean).join(" ")}>
+    <div ref={rootRef} className={["dp-chart-root dp-chart-stack", className].filter(Boolean).join(" ")}>
       <div className="dp-chart-stack__bar" data-annotate-part="stack-bar">
-        {segments.map((seg, i) => (
-          <span
-            key={seg.label}
-            className="dp-chart-stack__seg"
-            data-focal={seg.focal ? "" : undefined}
-            data-index={i}
-            style={{ width: `${(seg.value / total) * 100}%` }}
-            data-annotate-part={`stack-seg-${annotateSlug(seg.label)}`}
-          >
-            {showShare ? `${Math.round((seg.value / total) * 100)}%` : null}
-          </span>
-        ))}
+        {segments.map((seg, i) => {
+          const share = `${Math.round((seg.value / total) * 100)}%`;
+          return (
+            <span
+              key={seg.label}
+              className="dp-chart-stack__seg"
+              data-focal={seg.focal ? "" : undefined}
+              data-index={i}
+              style={{ width: `${(seg.value / total) * 100}%` }}
+              data-annotate-part={`stack-seg-${annotateSlug(seg.label)}`}
+              onPointerMove={(event) => track(event, share)}
+              onPointerLeave={() => setPill(null)}
+            >
+              {showShare ? share : null}
+            </span>
+          );
+        })}
       </div>
+      {pill ? (
+        <span className="dp-hero-tooltip dlg-chart-pill" role="tooltip" data-chart-pill="" style={{ left: pill.x, top: pill.y }}>
+          {pill.text}
+        </span>
+      ) : null}
       {ticks ? (
         <div className="dp-chart-stack__ticks" data-annotate-part="stack-ticks">
           {ticks.map((t) => (

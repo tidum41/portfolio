@@ -1,10 +1,10 @@
 {
-  "evaluatedAt": "2026-11-04T05:38:58.432Z",
-  "caseCount": 26,
+  "evaluatedAt": "2026-11-04T07:56:09.472Z",
+  "caseCount": 27,
   "thinDataMinParticipants": 3,
   "rules": {
-    "hits": 26,
-    "total": 26,
+    "hits": 27,
+    "total": 27,
     "accuracy": 1,
     "accuracyPercent": "100.0%",
     "rows": [
@@ -18,7 +18,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -32,7 +32,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -46,7 +46,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -60,7 +60,7 @@
         "got": {
           "template": "count_split",
           "topic": "address_friction",
-          "reason": "Picked count split because the question reads as count split, with 11 coded people on address friction."
+          "reason": "Count split. 11 people are coded on Address friction."
         },
         "ok": true
       },
@@ -74,7 +74,7 @@
         "got": {
           "template": "count_split",
           "topic": "returns",
-          "reason": "Picked count split because the question reads as count split, with 5 coded people on returns."
+          "reason": "Count split. 5 people are coded on Returns."
         },
         "ok": true
       },
@@ -88,7 +88,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "address_friction",
-          "reason": "Picked segment comparison because the question reads as segment comparison, with 11 coded people on address friction."
+          "reason": "Segment comparison. 11 people are coded on Address friction."
         },
         "ok": true
       },
@@ -102,7 +102,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "friday_reading",
-          "reason": "Picked segment comparison because the question reads as segment comparison, with 22 coded people on friday reading."
+          "reason": "Segment comparison. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -116,7 +116,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "returns",
-          "reason": "Picked segment comparison because the question reads as segment comparison, with 5 coded people on returns."
+          "reason": "Segment comparison. 5 people are coded on Returns."
         },
         "ok": true
       },
@@ -130,7 +130,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "friday_reading",
-          "reason": "Picked segment comparison because the question reads as segment comparison, with 22 coded people on friday reading."
+          "reason": "Segment comparison. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -144,7 +144,7 @@
         "got": {
           "template": "quote_list",
           "topic": "returns",
-          "reason": "Picked quote list because the question reads as quote evidence, with 5 coded people on returns."
+          "reason": "Quote list. 5 people are coded on Returns."
         },
         "ok": true
       },
@@ -158,7 +158,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Picked quote list because the question reads as quote evidence, with 22 coded people on friday reading."
+          "reason": "Quote list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -172,7 +172,7 @@
         "got": {
           "template": "quote_list",
           "topic": "address_friction",
-          "reason": "Picked quote list because the question reads as quote evidence, with 11 coded people on address friction."
+          "reason": "Quote list. 11 people are coded on Address friction."
         },
         "ok": true
       },
@@ -186,7 +186,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Picked quote list because the question reads as quote evidence, with 22 coded people on friday reading."
+          "reason": "Quote list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -200,7 +200,7 @@
         "got": {
           "template": "clip_list",
           "topic": "friday_reading",
-          "reason": "Picked clip list because the question reads as clip, with 22 coded people on friday reading."
+          "reason": "Clip list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -214,7 +214,7 @@
         "got": {
           "template": "clip_list",
           "topic": "address_friction",
-          "reason": "Picked clip list because the question reads as clip, with 11 coded people on address friction."
+          "reason": "Clip list. 11 people are coded on Address friction."
         },
         "ok": true
       },
@@ -228,7 +228,7 @@
         "got": {
           "template": "clip_list",
           "topic": "returns",
-          "reason": "Picked clip list because the question reads as clip, with 5 coded people on returns."
+          "reason": "Clip list. 5 people are coded on Returns."
         },
         "ok": true
       },
@@ -242,7 +242,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Picked quote list because the question reads as open ended, with 22 coded people on friday reading."
+          "reason": "Quote list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -256,7 +256,7 @@
         "got": {
           "template": "quote_list",
           "topic": "returns",
-          "reason": "Picked quote list because the question reads as open ended, with 5 coded people on returns."
+          "reason": "Quote list. 5 people are coded on Returns."
         },
         "ok": true
       },
@@ -270,7 +270,7 @@
         "got": {
           "template": "thin_data",
           "topic": "packaging_damage",
-          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Thin data. 2 people mention Damaged first order, under the cutoff of 3."
         },
         "ok": true
       },
@@ -278,13 +278,13 @@
         "id": "q20",
         "question": "Play clips about damaged packaging",
         "expected": {
-          "template": "thin_data",
+          "template": "clip_list",
           "topic": "packaging_damage"
         },
         "got": {
-          "template": "thin_data",
+          "template": "clip_list",
           "topic": "packaging_damage",
-          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Clip list. 2 people are coded on Damaged first order."
         },
         "ok": true
       },
@@ -298,7 +298,7 @@
         "got": {
           "template": "thin_data",
           "topic": "packaging_damage",
-          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Thin data. 2 people mention Damaged first order, under the cutoff of 3."
         },
         "ok": true
       },
@@ -312,7 +312,7 @@
         "got": {
           "template": "thin_data",
           "topic": "packaging_damage",
-          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Thin data. 2 people mention Damaged first order, under the cutoff of 3."
         },
         "ok": true
       },
@@ -326,7 +326,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Picked quote list because the question reads as open ended, with 22 coded people on friday reading."
+          "reason": "Quote list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -340,7 +340,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -354,7 +354,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       },
@@ -368,7 +368,21 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+          "reason": "Count split. 22 people are coded on Arrives by Friday."
+        },
+        "ok": true
+      },
+      {
+        "id": "q27",
+        "question": "Show clips of shoppers who read the Friday label",
+        "expected": {
+          "template": "clip_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "clip_list",
+          "topic": "friday_reading",
+          "reason": "Clip list. 22 people are coded on Arrives by Friday."
         },
         "ok": true
       }

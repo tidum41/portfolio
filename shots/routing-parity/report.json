@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-04T07:11:11.537Z",
-  "base": "http://127.0.0.1:3001",
+  "generatedAt": "2026-11-04T07:57:44.202Z",
+  "base": "http://localhost:3001",
   "forks": [
     {
       "template": "count_split",
@@ -253,10 +253,10 @@
     },
     "layoutShift": {
       "count": {
-        "panelDeltaH": 0,
+        "panelDeltaH": 235.375,
         "quoteDeltaY": 0,
-        "beforeH": 758,
-        "afterH": 758
+        "beforeH": 622,
+        "afterH": 857.375
       },
       "clip": {
         "listDeltaH": 0,

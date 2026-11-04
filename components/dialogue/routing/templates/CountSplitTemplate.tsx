@@ -110,24 +110,26 @@ export default function CountSplitTemplate({
         ) : null}
       </div>
 
-      <div className="dlg-route-followups" role="list">
+      <div className="dlg-route-followups">
         <button
           type="button"
           className="dlg-route-followup"
-          role="listitem"
-          disabled={side === data.groups[0]?.id}
-          onClick={() => openSide(data.groups[0].id)}
+          onClick={() => {
+            const id = data.groups[0].id;
+            if (side !== id) openSide(id);
+          }}
         >
-          See the {data.groups[0].value} who {data.groups[0].label.toLowerCase()}
+          See the {data.groups[0].value} who {data.groups[0].label.replace(/^[A-Z]/, (c) => c.toLowerCase())}
         </button>
         <button
           type="button"
           className="dlg-route-followup"
-          role="listitem"
-          disabled={!open || clipOpen}
           onClick={() => {
-            if (!side) openSide(data.groups[0].id);
-            setPerson(0);
+            const id = data.groups[0].id;
+            if (side !== id) {
+              setSide(id);
+              setPerson(0);
+            }
             setClipOpen(true);
           }}
         >

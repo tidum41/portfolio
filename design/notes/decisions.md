@@ -4,6 +4,12 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 ## Routing demo (Nov 4 2026)
 
+### Round 2 interactions: cursor pill, one study base, clips stay clips
+
+**Decision.** Hovering a bar shows the percent in the existing tooltip chip (`.dp-hero-tooltip`), positioned from the pointer. Legend counts stay put. Press and selected states use the ink and warm tokens already on the chips. The Friday answer uses the case study split, 225 of 300, and the named rows are a quoted extract of that study. A comparison names the sum of its bars. Returns lines say return. A clip question stays `clip_list` when those people have timestamps, including damaged packaging. The composer clears on send. The reason streams, then the card mounts. Enter timing, pill chrome, layout, and the clip still are token-level placeholders so a later visual pass can restyle them. **Tried.** Leaving the legend to swap to a percent, and treating the 24 named people as a second study. **Why.** The audit asked the demo to mimic the product's hover, press and clip, and the 24 versus 300 bases were reading as two studies. **Revisit.** If a cursor pill covers the segment on a phone, pin it to the segment's top edge.
+
+
+
 ### Round 2: quieter selection, visible routing, drill-down chips
 
 **Decision.** The count card drops the title divider. Legend lanes share one baseline with swatches translated by `0 calc(4px - 0.3065em)`, and the right lane reads count then label. A selected quote uses a warm fill and hairline stone border; the source pill carries the selection. The typed flow shows a short "Picked … because …" step, then the template, with follow-up chips into people and a clip, plus a How it routed toggle for query type, data available and goal. **Tried.** Keeping the cherry outline on the open quote. **Why.** The chip already marks who is open, and a heavy outline competed with the bar's cherry focal. **Revisit.** If the warm quote still reads as unselected beside a cherry pill, try matching the pill's warm fill on the quote without a border change.
