@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { ArrowUpIcon } from "@/components/dialogue/product/icons";
@@ -23,6 +23,13 @@ const SUGGESTIONS = [
   "What did shoppers say about returns?",
 ] as const;
 
+type Explain = {
+  queryType: string;
+  dataAvailable: string;
+  goal: string;
+  template: string;
+};
+
 type ApiOk = {
   question: string;
   template: RoutingTemplate;
@@ -30,15 +37,18 @@ type ApiOk = {
   path: RoutingPath;
   data: RoutingAnswerData;
   study: typeof EXAMPLE_STUDY;
+  explain: Explain;
 };
 
 type State =
   | { kind: "idle" }
   | { kind: "loading"; question: string }
+  | { kind: "routing"; question: string; result: ApiOk }
   | { kind: "ready"; question: string; result: ApiOk }
   | { kind: "error"; question: string; message: string };
 
 const IDLE_PREVIEW = resolveCountSplit("friday_reading");
+const ROUTING_HOLD_MS = 700;
 
 /**
  * Live generative-UI routing demo for the Dialogue case study.
@@ -48,12 +58,22 @@ export default function RoutingDemo() {
   const inputId = useId();
   const [text, setText] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
-  const pending = state.kind === "loading";
+  const [showExplain, setShowExplain] = useState(false);
+  const pending = state.kind === "loading" || state.kind === "routing";
+
+  useEffect(() => {
+    if (state.kind !== "routing") return;
+    const t = setTimeout(() => {
+      setState({ kind: "ready", question: state.question, result: state.result });
+    }, ROUTING_HOLD_MS);
+    return () => clearTimeout(t);
+  }, [state]);
 
   const ask = async (question: string) => {
     const q = question.trim();
     if (!q || pending) return;
     setText(q);
+    setShowExplain(false);
     setState({ kind: "loading", question: q });
     try {
       const res = await fetch("/api/dialogue/route", {
@@ -63,7 +83,7 @@ export default function RoutingDemo() {
       });
       if (!res.ok) throw new Error(`Route failed (${res.status})`);
       const json = (await res.json()) as ApiOk;
-      setState({ kind: "ready", question: q, result: json });
+      setState({ kind: "routing", question: q, result: json });
     } catch (err) {
       setState({
         kind: "error",
@@ -73,12 +93,12 @@ export default function RoutingDemo() {
     }
   };
 
-  const pathLabel =
-    state.kind === "ready"
-      ? state.result.path === "model"
-        ? "Answered by the model router"
-        : "Answered by the rule router"
-      : null;
+  const ready = state.kind === "ready" || state.kind === "routing" ? state.result : null;
+  const pathLabel = ready
+    ? ready.path === "model"
+      ? "Answered by the model router"
+      : "Answered by the rule router"
+    : null;
 
   return (
     <div className={["dlg-route-demo", dialogueProductFontClassName].join(" ")} data-example-data="">
@@ -89,7 +109,7 @@ export default function RoutingDemo() {
           participants.
         </span>
         {pathLabel ? (
-          <span className="dlg-route-demo__path" data-path={state.kind === "ready" ? state.result.path : undefined}>
+          <span className="dlg-route-demo__path" data-path={ready?.path}>
             {pathLabel}
           </span>
         ) : null}
@@ -103,7 +123,7 @@ export default function RoutingDemo() {
               <RoutingAnswer template="count_split" data={IDLE_PREVIEW} />
             </>
           ) : null}
-          {state.kind === "loading" || state.kind === "ready" || state.kind === "error" ? (
+          {state.kind !== "idle" ? (
             <UserMessageBubble>{state.question}</UserMessageBubble>
           ) : null}
           {state.kind === "loading" ? (
@@ -111,11 +131,13 @@ export default function RoutingDemo() {
               Matching a template…
             </p>
           ) : null}
+          {state.kind === "routing" || state.kind === "ready" ? (
+            <p className="dlg-route-demo__picked" role="status">
+              {state.result.reason}
+            </p>
+          ) : null}
           {state.kind === "ready" ? (
-            <>
-              <p className="dlg-route-demo__reason">{state.result.reason}</p>
-              <RoutingAnswer template={state.result.template} data={state.result.data} />
-            </>
+            <RoutingAnswer template={state.result.template} data={state.result.data} />
           ) : null}
           {state.kind === "error" ? (
             <p className="dlg-route-demo__status" role="alert">
@@ -124,6 +146,33 @@ export default function RoutingDemo() {
           ) : null}
         </StudyChatShell>
       </div>
+
+      {ready ? (
+        <div className="dlg-route-explain">
+          <button
+            type="button"
+            className="dlg-route-explain__toggle"
+            aria-expanded={showExplain}
+            onClick={() => setShowExplain((v) => !v)}
+          >
+            {showExplain ? "Hide how it routed" : "How it routed"}
+          </button>
+          {showExplain ? (
+            <div className="dlg-route-explain__panel">
+              <dl>
+                <dt>Query type</dt>
+                <dd>{ready.explain.queryType}</dd>
+                <dt>Data available</dt>
+                <dd>{ready.explain.dataAvailable}</dd>
+                <dt>Study goal</dt>
+                <dd>{ready.explain.goal}</dd>
+                <dt>Template</dt>
+                <dd>{ready.explain.template}</dd>
+              </dl>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <form
         className="dlg-route-demo__composer"

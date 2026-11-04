@@ -23,12 +23,16 @@ import {
   type RoutingResponse,
 } from "@/lib/dialogue/routing/schema";
 
+/**
+ * Prefer AI_GATEWAY_API_KEY (Vercel AI Gateway). Also accept OIDC on Vercel
+ * and a plain OPENAI_API_KEY so local demos still work.
+ */
 export function hasGatewayKey(): boolean {
-  return Boolean(
-    process.env.AI_GATEWAY_API_KEY ||
-      process.env.VERCEL_OIDC_TOKEN ||
-      process.env.OPENAI_API_KEY,
-  );
+  const key =
+    process.env.AI_GATEWAY_API_KEY?.trim() ||
+    process.env.VERCEL_OIDC_TOKEN?.trim() ||
+    process.env.OPENAI_API_KEY?.trim();
+  return Boolean(key);
 }
 
 function inventoryLines(): string {
@@ -81,11 +85,17 @@ export async function routeQuestion(question: string): Promise<RoutingResponse> 
       return {
         template: "thin_data",
         props: { topic: object.props.topic },
-        reason: `Thin data override: ${n} supporting participants is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`,
+        reason: `Picked thin data because ${n} supporting participants is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`,
         path: "model",
       };
     }
-    return { ...object, path: "model" satisfies RoutingPath };
+    return {
+      ...object,
+      reason: object.reason?.startsWith("Picked ")
+        ? object.reason
+        : `Picked ${object.template.replaceAll("_", " ")} because ${object.reason}`,
+      path: "model" satisfies RoutingPath,
+    };
   } catch {
     return { ...routeByRules(trimmed), path: "rules" };
   }

@@ -4,6 +4,10 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 ## Routing demo (Nov 4 2026)
 
+### Round 2: quieter selection, visible routing, drill-down chips
+
+**Decision.** The count card drops the title divider. Legend lanes share one baseline with swatches translated by `0 calc(4px - 0.3065em)`, and the right lane reads count then label. A selected quote uses a warm fill and hairline stone border; the source pill carries the selection. The typed flow shows a short "Picked … because …" step, then the template, with follow-up chips into people and a clip, plus a How it routed toggle for query type, data available and goal. **Tried.** Keeping the cherry outline on the open quote. **Why.** The chip already marks who is open, and a heavy outline competed with the bar's cherry focal. **Revisit.** If the warm quote still reads as unselected beside a cherry pill, try matching the pill's warm fill on the quote without a border change.
+
 ### A live router on the Data viz section, after the template rows
 
 **Decision.** `/dialogue` gets an interactive routing demo under Match the chart: the reader types a question (or taps a suggested chip), an API returns `{template, props, reason}`, and one of five templates renders in the 448px panel from a fixed 24-person example dataset. The UI labels whether the model or the rule path answered, and the figure caption says it was built after the engagement on example data. **Tried.** A separate `/dialogue/live-route` page only. **Why.** Mudit approved building the Round 16 live-AI note for real, and putting it next to the template rows makes the mapping visible without inventing a product claim. **Revisit.** If the section feels long, move the demo under Thin data as the closing interaction.

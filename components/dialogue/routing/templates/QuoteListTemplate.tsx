@@ -10,7 +10,7 @@ type Props = {
   initialSelected?: number;
 };
 
-/** Quote list with speaker and timestamp source-pill chips. No coloured left bar. */
+/** Quote list with speaker and timestamp source-pill chips. Quiet selected quote. */
 export default function QuoteListTemplate({ data, initialSelected = 0 }: Props) {
   const [selected, setSelected] = useState(initialSelected);
   const active = data.quotes[selected] ?? data.quotes[0];
@@ -35,16 +35,18 @@ export default function QuoteListTemplate({ data, initialSelected = 0 }: Props) 
           </button>
         ))}
       </div>
-      {active ? (
-        <div className="dp-clip-quote dp-clip-quote--selected">
-          <p className="dp-clip-quote__who">
-            <WaveformIcon className="dp-clip-quote__icon" />
-            <span className="dp-clip-quote__name">{active.name}</span>
-            <span className="dp-clip-quote__time">{active.time}</span>
-          </p>
-          <p className="dp-clip-quote__text">{active.quote}</p>
-        </div>
-      ) : null}
+      <div className="dlg-route-quote-slot">
+        {active ? (
+          <div className="dp-clip-quote dlg-route-quote dlg-route-quote--open">
+            <p className="dp-clip-quote__who">
+              <WaveformIcon className="dp-clip-quote__icon" />
+              <span className="dp-clip-quote__name">{active.name}</span>
+              <span className="dp-clip-quote__time">{active.time}</span>
+            </p>
+            <p className="dp-clip-quote__text">{active.quote}</p>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

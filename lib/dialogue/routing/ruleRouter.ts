@@ -142,13 +142,21 @@ export function routeByRules(question: string): RoutingResult {
   const template = pickWithFallback(preferred, topic);
   const n = topicSupportCount(topic);
 
+  const labels: Record<RoutingTemplate, string> = {
+    count_split: "count split",
+    segment_comparison: "segment comparison",
+    quote_list: "quote list",
+    clip_list: "clip list",
+    thin_data: "thin data",
+  };
+
   let reason: string;
   if (template === "thin_data") {
-    reason = `Thin data: ${n} supporting participants is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`;
+    reason = `Picked thin data because ${n} supporting participant${n === 1 ? "" : "s"} is under the demo cutoff of ${THIN_DATA_MIN_PARTICIPANTS}.`;
   } else if (template !== preferred) {
-    reason = `Asked for ${queryType}, fell back to ${template} from available coded data on ${topic}.`;
+    reason = `Picked ${labels[template]} because the ask was ${queryType.replaceAll("_", " ")}, and the available coded data on ${topic.replaceAll("_", " ")} fits this template better.`;
   } else {
-    reason = `Matched ${queryType} to ${template} using coded data on ${topic} (${n} people).`;
+    reason = `Picked ${labels[template]} because the question reads as ${queryType.replaceAll("_", " ")}, with ${n} coded people on ${topic.replaceAll("_", " ")}.`;
   }
 
   return {

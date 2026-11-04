@@ -56,7 +56,7 @@ export default function RoutingShotsPage() {
         <section
           key={shot.id}
           id={`shot-${shot.id}`}
-          className="dlg-route-shot"
+          className="dlg-route-shot dlg-route-demo"
           data-shot={shot.id}
         >
           <div className="dlg-route-shot__panel">

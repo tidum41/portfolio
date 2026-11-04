@@ -27,6 +27,7 @@ type Props = {
   /** Screenshot helpers */
   initialSide?: string | null;
   initialPlaying?: string | null;
+  initialClip?: boolean;
 };
 
 export default function RoutingAnswer({
@@ -34,10 +35,17 @@ export default function RoutingAnswer({
   data,
   initialSide = null,
   initialPlaying = null,
+  initialClip = false,
 }: Props) {
   switch (template) {
     case "count_split":
-      return <CountSplitTemplate data={data as CountSplitResolved} initialSide={initialSide} />;
+      return (
+        <CountSplitTemplate
+          data={data as CountSplitResolved}
+          initialSide={initialSide}
+          initialClip={initialClip}
+        />
+      );
     case "segment_comparison":
       return <SegmentComparisonTemplate data={data as SegmentResolved} />;
     case "quote_list":

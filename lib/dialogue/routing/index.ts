@@ -16,6 +16,7 @@ export {
 } from "@/lib/dialogue/routing/sampleDataset";
 export { routeByRules, inferTopic, inferQueryType } from "@/lib/dialogue/routing/ruleRouter";
 export { routeQuestion, hasGatewayKey } from "@/lib/dialogue/routing/modelRouter";
+export { explainRouting, type RoutingExplain } from "@/lib/dialogue/routing/explain";
 export { resolveRouting, type ResolvedAnswer } from "@/lib/dialogue/routing/resolve";
 export {
   routingResultSchema,

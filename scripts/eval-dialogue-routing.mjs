@@ -28,8 +28,8 @@ function loadTs(specifier) {
 async function main() {
   const evalFile = JSON.parse(readFileSync(EVAL_PATH, "utf8"));
   const cases = evalFile.cases;
-  if (!Array.isArray(cases) || cases.length !== 20) {
-    console.error(`Expected 20 eval cases, got ${cases?.length ?? 0}`);
+  if (!Array.isArray(cases) || cases.length < 20 || cases.length > 30) {
+    console.error(`Expected 20 to 30 eval cases, got ${cases?.length ?? 0}`);
     process.exit(1);
   }
 

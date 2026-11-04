@@ -1,10 +1,10 @@
 {
-  "evaluatedAt": "2026-11-04T05:25:46.967Z",
-  "caseCount": 20,
+  "evaluatedAt": "2026-11-04T05:38:58.432Z",
+  "caseCount": 26,
   "thinDataMinParticipants": 3,
   "rules": {
-    "hits": 20,
-    "total": 20,
+    "hits": 26,
+    "total": 26,
     "accuracy": 1,
     "accuracyPercent": "100.0%",
     "rows": [
@@ -18,7 +18,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -32,7 +32,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -46,7 +46,7 @@
         "got": {
           "template": "count_split",
           "topic": "friday_reading",
-          "reason": "Matched count_split to count_split using coded data on friday_reading (22 people)."
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -60,7 +60,7 @@
         "got": {
           "template": "count_split",
           "topic": "address_friction",
-          "reason": "Matched count_split to count_split using coded data on address_friction (11 people)."
+          "reason": "Picked count split because the question reads as count split, with 11 coded people on address friction."
         },
         "ok": true
       },
@@ -74,7 +74,7 @@
         "got": {
           "template": "count_split",
           "topic": "returns",
-          "reason": "Matched count_split to count_split using coded data on returns (5 people)."
+          "reason": "Picked count split because the question reads as count split, with 5 coded people on returns."
         },
         "ok": true
       },
@@ -88,7 +88,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "address_friction",
-          "reason": "Matched segment_comparison to segment_comparison using coded data on address_friction (11 people)."
+          "reason": "Picked segment comparison because the question reads as segment comparison, with 11 coded people on address friction."
         },
         "ok": true
       },
@@ -102,7 +102,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "friday_reading",
-          "reason": "Matched segment_comparison to segment_comparison using coded data on friday_reading (22 people)."
+          "reason": "Picked segment comparison because the question reads as segment comparison, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -116,7 +116,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "returns",
-          "reason": "Matched segment_comparison to segment_comparison using coded data on returns (5 people)."
+          "reason": "Picked segment comparison because the question reads as segment comparison, with 5 coded people on returns."
         },
         "ok": true
       },
@@ -130,7 +130,7 @@
         "got": {
           "template": "segment_comparison",
           "topic": "friday_reading",
-          "reason": "Matched segment_comparison to segment_comparison using coded data on friday_reading (22 people)."
+          "reason": "Picked segment comparison because the question reads as segment comparison, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -144,7 +144,7 @@
         "got": {
           "template": "quote_list",
           "topic": "returns",
-          "reason": "Matched quote_evidence to quote_list using coded data on returns (5 people)."
+          "reason": "Picked quote list because the question reads as quote evidence, with 5 coded people on returns."
         },
         "ok": true
       },
@@ -158,7 +158,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Matched quote_evidence to quote_list using coded data on friday_reading (22 people)."
+          "reason": "Picked quote list because the question reads as quote evidence, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -172,7 +172,7 @@
         "got": {
           "template": "quote_list",
           "topic": "address_friction",
-          "reason": "Matched quote_evidence to quote_list using coded data on address_friction (11 people)."
+          "reason": "Picked quote list because the question reads as quote evidence, with 11 coded people on address friction."
         },
         "ok": true
       },
@@ -186,7 +186,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Matched quote_evidence to quote_list using coded data on friday_reading (22 people)."
+          "reason": "Picked quote list because the question reads as quote evidence, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -200,7 +200,7 @@
         "got": {
           "template": "clip_list",
           "topic": "friday_reading",
-          "reason": "Matched clip to clip_list using coded data on friday_reading (22 people)."
+          "reason": "Picked clip list because the question reads as clip, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -214,7 +214,7 @@
         "got": {
           "template": "clip_list",
           "topic": "address_friction",
-          "reason": "Matched clip to clip_list using coded data on address_friction (11 people)."
+          "reason": "Picked clip list because the question reads as clip, with 11 coded people on address friction."
         },
         "ok": true
       },
@@ -228,7 +228,7 @@
         "got": {
           "template": "clip_list",
           "topic": "returns",
-          "reason": "Matched clip to clip_list using coded data on returns (5 people)."
+          "reason": "Picked clip list because the question reads as clip, with 5 coded people on returns."
         },
         "ok": true
       },
@@ -242,7 +242,7 @@
         "got": {
           "template": "quote_list",
           "topic": "friday_reading",
-          "reason": "Matched open_ended to quote_list using coded data on friday_reading (22 people)."
+          "reason": "Picked quote list because the question reads as open ended, with 22 coded people on friday reading."
         },
         "ok": true
       },
@@ -256,7 +256,7 @@
         "got": {
           "template": "quote_list",
           "topic": "returns",
-          "reason": "Matched open_ended to quote_list using coded data on returns (5 people)."
+          "reason": "Picked quote list because the question reads as open ended, with 5 coded people on returns."
         },
         "ok": true
       },
@@ -270,7 +270,7 @@
         "got": {
           "template": "thin_data",
           "topic": "packaging_damage",
-          "reason": "Thin data: 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
         },
         "ok": true
       },
@@ -284,7 +284,91 @@
         "got": {
           "template": "thin_data",
           "topic": "packaging_damage",
-          "reason": "Thin data: 2 supporting participants is under the demo cutoff of 3."
+          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+        },
+        "ok": true
+      },
+      {
+        "id": "q21",
+        "question": "What did people say about a crushed box?",
+        "expected": {
+          "template": "thin_data",
+          "topic": "packaging_damage"
+        },
+        "got": {
+          "template": "thin_data",
+          "topic": "packaging_damage",
+          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+        },
+        "ok": true
+      },
+      {
+        "id": "q22",
+        "question": "Compare damaged packaging on mobile vs desktop",
+        "expected": {
+          "template": "thin_data",
+          "topic": "packaging_damage"
+        },
+        "got": {
+          "template": "thin_data",
+          "topic": "packaging_damage",
+          "reason": "Picked thin data because 2 supporting participants is under the demo cutoff of 3."
+        },
+        "ok": true
+      },
+      {
+        "id": "q23",
+        "question": "Tell me about Friday",
+        "expected": {
+          "template": "quote_list",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "quote_list",
+          "topic": "friday_reading",
+          "reason": "Picked quote list because the question reads as open ended, with 22 coded people on friday reading."
+        },
+        "ok": true
+      },
+      {
+        "id": "q24",
+        "question": "Anything useful on the delivery promise?",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+        },
+        "ok": true
+      },
+      {
+        "id": "q25",
+        "question": "What is the weather in the study?",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
+        },
+        "ok": true
+      },
+      {
+        "id": "q26",
+        "question": "Show me the NPS score for this brand",
+        "expected": {
+          "template": "count_split",
+          "topic": "friday_reading"
+        },
+        "got": {
+          "template": "count_split",
+          "topic": "friday_reading",
+          "reason": "Picked count split because the question reads as count split, with 22 coded people on friday reading."
         },
         "ok": true
       }

@@ -10,7 +10,7 @@ type Props = { data: SegmentResolved };
 export default function SegmentComparisonTemplate({ data }: Props) {
   return (
     <div className="dlg-route-answer" data-template="segment_comparison">
-      <ChartVizCard title={data.finding}>
+      <ChartVizCard title={data.finding} className="dlg-route-card">
         <ChartBarList max={data.max} rows={data.rows} />
       </ChartVizCard>
     </div>

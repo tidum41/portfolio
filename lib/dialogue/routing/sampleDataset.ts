@@ -224,12 +224,7 @@ export function resolveQuotes(topic: RoutingTopic, limit = 4): QuoteResolved {
     .slice(0, limit)
     .map(toPerson);
   return {
-    finding: TOPICS[topic].finding(
-      topicSupportCount(topic),
-      topic === "friday_reading"
-        ? PARTICIPANTS.filter((p) => p.fridayReading !== null).length
-        : PARTICIPANTS.length,
-    ),
+    finding: findingLine(topic),
     quotes: people,
   };
 }
@@ -252,9 +247,19 @@ export function resolveClips(topic: RoutingTopic, limit = 3): ClipResolved {
       end: p.quote!.end,
     }));
   return {
-    finding: TOPICS[topic].finding(topicSupportCount(topic), PARTICIPANTS.length),
+    finding: findingLine(topic),
     clips,
   };
+}
+
+/** Shared finding line so count, quote and clip templates agree on the number. */
+function findingLine(topic: RoutingTopic): string {
+  if (topic === "friday_reading") {
+    const friday = PARTICIPANTS.filter((p) => p.fridayReading === "this_friday").length;
+    const of = PARTICIPANTS.filter((p) => p.fridayReading !== null).length;
+    return TOPICS.friday_reading.finding(friday, of);
+  }
+  return TOPICS[topic].finding(topicSupportCount(topic), PARTICIPANTS.length);
 }
 
 export type ThinResolved = {
