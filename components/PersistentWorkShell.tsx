@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
@@ -15,7 +15,6 @@ import { EntranceItem, useEntranceDials } from "@/components/ScrollReveal";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import ProjectPopup from "@/components/ProjectPopup";
 import AllinoneHalftoneLoader from "@/components/AllinoneHalftoneLoader";
-import CdPlayerPoster from "@/components/CdPlayerPoster";
 import PhonePoster from "@/components/PhonePoster";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import { clearInstantBack } from "@/lib/instantNav";
@@ -25,7 +24,20 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
-import { ALLINONE_APP_URL, type SanityProject } from "@/lib/sanity/queries";
+import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
+import DialogueCardMedia from "@/components/DialogueCard";
+import GridHoverPill from "@/components/GridHoverPill";
+
+/** One media ratio for every grid tile so the two columns stay in step. */
+const GRID_MEDIA_ASPECT = "4 / 3";
+
+/** Hover pill copy, keyed by data-grid-card. Demo cards are left out on purpose. */
+const GRID_PILL_LABELS: Record<string, string> = {
+  "project-bruinlease": "View Case Study",
+  "project-joola-b2b": "View Case Study",
+  "project-sviz": "View Case Study",
+  [DIALOGUE_PROJECT_ID]: "Case Study Coming Soon!",
+};
 import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -62,7 +74,6 @@ if (typeof window !== "undefined") {
 import MuxAutoplayCard from "@/components/MuxAutoplayCard";
 
 const PS3ControlPanel = dynamic(() => import("@/components/PS3ControlPanel"));
-const CDPlayer        = dynamic(() => import("@/components/CDPlayer"));
 const PhoneEmbed      = dynamic(() => import("@/components/PhoneEmbed"));
 
 type PopupId = "cd" | "habit" | "allinone";
@@ -234,24 +245,24 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // CD: live grid preview once "/" visited (perf-gated via active=false + Disc
   // RAF idle-stop). Habit: high-quality poster in grid; live PhoneEmbed only
   // while the popup is open (state persists in localStorage across remounts).
-  const [gridCdEl, setGridCdEl] = useState<HTMLDivElement | null>(null);
+  const [gridCdEl] = useState<HTMLDivElement | null>(null);
   const [popupCdEl, setPopupCdEl] = useState<HTMLDivElement | null>(null);
   const [popupHabitEl, setPopupHabitEl] = useState<HTMLDivElement | null>(null);
-  const [cdPortalTarget, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
+  const [, setCdPortalTarget] = useState<HTMLDivElement | null>(null);
   const [habitPortalTarget, setHabitPortalTarget] = useState<HTMLDivElement | null>(null);
   // CD poster only covers while the modal is open. Habit poster is the grid.
-  const [cdPosterOpacity, setCdPosterOpacity] = useState(1);
+  const [, setCdPosterOpacity] = useState(1);
   const [habitPosterOpacity, setHabitPosterOpacity] = useState(1);
   // Poster opacity transitions only on close (reveal live embed). Open snaps
   // opaque so the grid card behind the backdrop doesn't empty/morph mid-blur.
-  const [cdPosterFade, setCdPosterFade] = useState(false);
+  const [, setCdPosterFade] = useState(false);
   const [habitPosterFade, setHabitPosterFade] = useState(false);
   // Frozen still of the live CD tile, captured (as static HTML) the instant the
   // modal opens — so the grid slot keeps showing the exact on-screen state
   // (site theme, loaded album, date) while the one live instance is portaled
   // into the modal. Beats the generic light-mode poster image, which flipped
   // the tile's theme and dropped the live album state. Cleared on close.
-  const [cdFrozen, setCdFrozen] = useState<string | null>(null);
+  const [, setCdFrozen] = useState<string | null>(null);
   // Habit poster frame/theme: site theme until the live widget reports its own.
   // Initialized to "dark" to match <html data-theme="dark"> on SSR so hydration
   // never mismatches; the effect below syncs if BootScripts flipped to "light".
@@ -520,7 +531,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   // index already encodes, since the columns are split by its parity. The
   // two trailing "extra" cards (CDPlayer, PhoneEmbed) continue that sequence
   // as the last left/right slots. Capped so a long grid doesn't take forever.
-  const totalItems = projects.length + 2;
+  const totalItems = projects.length + 1;
   const perItemStagger = totalItems > 1
     ? Math.min(dk.stagger, dk.maxSpread / (totalItems - 1))
     : dk.stagger;
@@ -718,6 +729,51 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
   }, [openPopup, popupHabitEl]);
 
+  // Homepage sequence: projects (BruinLease, JOOLA, Dialogue, SViz) then the
+  // phone demo, then any remaining demos. `null` marks the phone slot.
+  const HABIT_RANK = Math.min(4, projects.length);
+  const gridSlots: (SanityProject | null)[] = [
+    ...projects.slice(0, HABIT_RANK),
+    null,
+    ...projects.slice(HABIT_RANK),
+  ];
+  const habitCard = (
+    <EntranceItem
+              active={gridActive}
+              instant={instant}
+              replayToken={epoch}
+              delay={rankDelay(HABIT_RANK)}
+              className="project-card portfolio-grid-card"
+              data-grid-card="habit"
+              role="button"
+              tabIndex={0}
+              aria-label="Open Habit tracker focused on offering less"
+              onClick={() => openPopupHandler("habit")}
+              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
+              style={{ gap: 6, cursor: "pointer", order: HABIT_RANK }}
+            >
+              <ProjectCardLift style={{ gap: 6 }}>
+                <div className="project-media">
+                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
+                      <InteractiveBadge />
+                    </div>
+                    <PhonePoster
+                      opacity={habitPosterOpacity}
+                      fade={habitPosterFade}
+                      theme={habitWidgetTheme}
+                      // Keep the inert screen mounted after the first "/" visit
+                      // so the poster reflects this session's habit state across
+                      // navigations (no cold remount flash on return).
+                      showScreen={hasEverBeenActive && introReleased}
+                    />
+                  </div>
+                </div>
+                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
+              </ProjectCardLift>
+            </EntranceItem>
+  );
+
   return (
     <>
     <div
@@ -762,10 +818,23 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         <CardFocusGrid>
           {/* ── Left column ── */}
           <div className="portfolio-grid-col">
-            {projects
-              .filter((_, i) => i % 2 === 0)
-              .map((p, k) => {
-                const rank = k * 2;
+            {gridSlots
+              .map((p, rank) => ({ p, rank }))
+              .filter(({ rank }) => rank % 2 === 0)
+              .map(({ p, rank }) => {
+                if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
+                if (p._id === DIALOGUE_PROJECT_ID) return (
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
+                      <div className="project-media">
+                        <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                          <DialogueCardMedia />
+                        </div>
+                      </div>
+                      <CardLabel title={p.title} label={p.label} />
+                    </ProjectCardLift>
+                  </EntranceItem>
+                );
                 return p.mediaType === "video" && p.muxPlaybackId ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
@@ -775,7 +844,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
                         label={p.label}
-                        aspectRatio={p.aspectRatio}
+                        aspectRatio={GRID_MEDIA_ASPECT}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -795,7 +864,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
                               alt={p.title}
@@ -813,59 +882,27 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 ) : null;
               })}
 
-            {/* CDPlayer — whole card opens the popup; one live instance is
-                portaled between this grid slot and the modal (see below). */}
-            <EntranceItem
-              active={gridActive}
-              instant={instant}
-              replayToken={epoch}
-              delay={rankDelay(projects.length)}
-              className="project-card portfolio-grid-card"
-              data-grid-card="cd"
-              role="button"
-              tabIndex={0}
-              aria-label="Open Designing micro-interactions for a digital CD player"
-              onClick={() => openPopupHandler("cd")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("cd"); } }}
-              style={{ gap: 6, cursor: "pointer", order: projects.length }}
-            >
-              <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-image project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", position: "relative", aspectRatio: "4 / 3", background: "var(--color-modal-bg)", colorScheme: "inherit" }}>
-                    <CdPlayerPoster opacity={cdPosterOpacity} fade={cdPosterFade} />
-                    {cdFrozen && openPopup === "cd" && (
-                      <div
-                        data-cd-frozen
-                        aria-hidden
-                        style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
-                        dangerouslySetInnerHTML={{ __html: cdFrozen }}
-                      />
-                    )}
-                    <div
-                      ref={setGridCdEl}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        visibility: (openPopup === "cd" && popupVisible) ? "hidden" : "visible",
-                      }}
-                    />
-                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                      <InteractiveBadge />
-                    </div>
-                  </div>
-                </div>
-                <CardLabel title="Designing micro-interactions for a digital CD player" label="Interaction" showPopupIcon />
-              </ProjectCardLift>
-            </EntranceItem>
           </div>
 
           {/* ── Right column ── */}
           <div className="portfolio-grid-col">
-            {projects
-              .filter((_, i) => i % 2 === 1)
-              .map((p, k) => {
-                const rank = k * 2 + 1;
+            {gridSlots
+              .map((p, rank) => ({ p, rank }))
+              .filter(({ rank }) => rank % 2 === 1)
+              .map(({ p, rank }) => {
+                if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
+                if (p._id === DIALOGUE_PROJECT_ID) return (
+                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
+                    <ProjectCardLift style={{ gap: 8 }}>
+                      <div className="project-media">
+                        <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                          <DialogueCardMedia />
+                        </div>
+                      </div>
+                      <CardLabel title={p.title} label={p.label} />
+                    </ProjectCardLift>
+                  </EntranceItem>
+                );
                 return p.mediaType === "video" && p.muxPlaybackId ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
                     {hasEverBeenActive && (
@@ -875,7 +912,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
                         title={p.title}
                         label={p.label}
-                        aspectRatio={p.aspectRatio}
+                        aspectRatio={GRID_MEDIA_ASPECT}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -895,7 +932,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         onClick={() => commitProjectNav(p.href)}
                       >
                         <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: p.aspectRatio, position: "relative" }}>
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
                             <Image
                               src={p.image.asset.url}
                               alt={p.title}
@@ -913,43 +950,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 ) : null;
               })}
 
-            {/* Habit tracker — same single-instance portal treatment as CD. */}
-            <EntranceItem
-              active={gridActive}
-              instant={instant}
-              replayToken={epoch}
-              delay={rankDelay(projects.length + 1)}
-              className="project-card portfolio-grid-card"
-              data-grid-card="habit"
-              role="button"
-              tabIndex={0}
-              aria-label="Open Habit tracker focused on offering less"
-              onClick={() => openPopupHandler("habit")}
-              onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={{ gap: 6, cursor: "pointer", order: projects.length + 1 }}
-            >
-              <ProjectCardLift style={{ gap: 6 }}>
-                <div className="project-media">
-                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
-                    <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
-                      <InteractiveBadge />
-                    </div>
-                    <PhonePoster
-                      opacity={habitPosterOpacity}
-                      fade={habitPosterFade}
-                      theme={habitWidgetTheme}
-                      // Keep the inert screen mounted after the first "/" visit
-                      // so the poster reflects this session's habit state across
-                      // navigations (no cold remount flash on return).
-                      showScreen={hasEverBeenActive && introReleased}
-                    />
-                  </div>
-                </div>
-                <CardLabel title="Habit tracker focused on offering less" label="Exploration" showPopupIcon />
-              </ProjectCardLift>
-            </EntranceItem>
           </div>
         </CardFocusGrid>
+        <span id="grid-pill-desc-dialogue" hidden>Case study coming soon</span>
+        <GridHoverPill labels={GRID_PILL_LABELS} />
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
             so parent display:none cannot hide it; `visible` toggles the portal.
@@ -1068,16 +1072,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         </ProjectPopup>
       )}
 
-      {/*
-        CD waits for an idle moment on a normal connection. Opening the card
-        mounts it immediately, including after the idle teardown.
-        Habit stays popup-only.
-      */}
-      {hasEverBeenActive && cdWarm && (introReleased || openPopup === "cd") && (heavyMediaLive || openPopup === "cd") && (
-        <EmbedPortal container={cdPortalTarget}>
-          <CDPlayer active={visible && openPopup === "cd" && popupVisible} />
-        </EmbedPortal>
-      )}
       {openPopup === "habit" && visible && habitPortalTarget && (
         <EmbedPortal container={habitPortalTarget}>
           <PhoneEmbed
