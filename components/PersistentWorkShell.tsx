@@ -27,7 +27,7 @@ import { allowIdlePrefetch } from "@/lib/networkHint";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
 import GridHoverPill from "@/components/GridHoverPill";
-import DialogueCardTap from "@/components/DialogueCardTap";
+import DialogueCardTap, { DIALOGUE_PILL_LABEL } from "@/components/DialogueCardTap";
 
 /** One media ratio for every grid tile so the two columns stay in step. */
 const GRID_MEDIA_ASPECT = "4 / 3";
@@ -37,7 +37,7 @@ const GRID_PILL_LABELS: Record<string, string> = {
   "project-bruinlease": "View Case Study",
   "project-joola-b2b": "View Case Study",
   "project-sviz": "View Case Study",
-  [DIALOGUE_PROJECT_ID]: "Case Study Coming Soon!",
+  [DIALOGUE_PROJECT_ID]: DIALOGUE_PILL_LABEL,
 };
 import CardFocusGrid from "@/components/CardFocusGrid";
 
@@ -827,14 +827,16 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 if (p._id === DIALOGUE_PROJECT_ID) return (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
                     <ProjectCardLift style={{ gap: 6 }}>
-                      <DialogueCardTap>
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                            <DialogueCardMedia />
+                      <DialogueCardTap
+                        media={
+                          <div className="project-media">
+                            <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                              <DialogueCardMedia />
+                            </div>
                           </div>
-                        </div>
-                        <CardLabel title={p.title} label={p.label} />
-                      </DialogueCardTap>
+                        }
+                        label={<CardLabel title={p.title} label={p.label} />}
+                      />
                     </ProjectCardLift>
                   </EntranceItem>
                 );
@@ -897,14 +899,16 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 if (p._id === DIALOGUE_PROJECT_ID) return (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
                     <ProjectCardLift style={{ gap: 6 }}>
-                      <DialogueCardTap>
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                            <DialogueCardMedia />
+                      <DialogueCardTap
+                        media={
+                          <div className="project-media">
+                            <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                              <DialogueCardMedia />
+                            </div>
                           </div>
-                        </div>
-                        <CardLabel title={p.title} label={p.label} />
-                      </DialogueCardTap>
+                        }
+                        label={<CardLabel title={p.title} label={p.label} />}
+                      />
                     </ProjectCardLift>
                   </EntranceItem>
                 );
@@ -957,7 +961,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
           </div>
         </CardFocusGrid>
-        <span id="grid-pill-desc-dialogue" hidden>Case study coming soon</span>
+        <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_PILL_LABEL}</span>
         <GridHoverPill labels={GRID_PILL_LABELS} />
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
