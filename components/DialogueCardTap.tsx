@@ -10,7 +10,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 export default function DialogueCardTap({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [fade, setFade] = useState(false);
-  const timer = useRef<ReturnType<typeof window.setTimeout> | undefined>(undefined);
+  const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
