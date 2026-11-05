@@ -43,6 +43,7 @@ export default function PrimaryRouteWarmup() {
     };
 
     const warmHeavy = () => {
+      void import("@/components/CDPlayer");
     };
 
     const schedule = () => {

@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import CopyEmail from "@/components/CopyEmail";
+import CDPlayer from "@/components/CDPlayer";
 import BentoHero from "@/components/BentoHero";
 import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
 import {
@@ -201,6 +202,13 @@ export default function AboutPageContent({
             </div>
           </div>
         </div>
+
+        <ScrollReveal>
+          <section style={{ marginBottom: "var(--space-7)" }}>
+            <SectionLabel>Favorite Albums</SectionLabel>
+            <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
+          </section>
+        </ScrollReveal>
 
         <section style={{ marginBottom: "var(--space-7)" }}>
           <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>

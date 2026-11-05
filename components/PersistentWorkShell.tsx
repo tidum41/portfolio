@@ -27,6 +27,7 @@ import { allowIdlePrefetch } from "@/lib/networkHint";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
 import GridHoverPill from "@/components/GridHoverPill";
+import DialogueCardTap from "@/components/DialogueCardTap";
 
 /** One media ratio for every grid tile so the two columns stay in step. */
 const GRID_MEDIA_ASPECT = "4 / 3";
@@ -825,13 +826,15 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
                 if (p._id === DIALOGUE_PROJECT_ID) return (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
-                    <ProjectCardLift style={{ gap: 8 }}>
-                      <div className="project-media">
-                        <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                          <DialogueCardMedia />
+                    <ProjectCardLift style={{ gap: 6 }}>
+                      <DialogueCardTap>
+                        <div className="project-media">
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                            <DialogueCardMedia />
+                          </div>
                         </div>
-                      </div>
-                      <CardLabel title={p.title} label={p.label} />
+                        <CardLabel title={p.title} label={p.label} />
+                      </DialogueCardTap>
                     </ProjectCardLift>
                   </EntranceItem>
                 );
@@ -893,13 +896,15 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
                 if (p._id === DIALOGUE_PROJECT_ID) return (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
-                    <ProjectCardLift style={{ gap: 8 }}>
-                      <div className="project-media">
-                        <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                          <DialogueCardMedia />
+                    <ProjectCardLift style={{ gap: 6 }}>
+                      <DialogueCardTap>
+                        <div className="project-media">
+                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
+                            <DialogueCardMedia />
+                          </div>
                         </div>
-                      </div>
-                      <CardLabel title={p.title} label={p.label} />
+                        <CardLabel title={p.title} label={p.label} />
+                      </DialogueCardTap>
                     </ProjectCardLift>
                   </EntranceItem>
                 );
