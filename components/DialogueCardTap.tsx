@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   useEffect,
   useRef,
@@ -9,13 +8,11 @@ import {
   type ReactNode,
 } from "react";
 
-
 /** Grid pill copy. Hover states intent, the tap note confirms it in full. */
 export const DIALOGUE_HOVER_LABEL = "Coming Soon";
 export const DIALOGUE_TAP_LABEL = "Case Study Coming Soon";
 /** Alias kept for existing imports: the shared label is the tap label. */
 export const DIALOGUE_PILL_LABEL = DIALOGUE_TAP_LABEL;
-
 
 /** Shared pill chrome for the grid hover pill and the Dialogue tap note.
  *  Radius is the site --radius-control (8px), shadow is the single cheap
@@ -36,10 +33,8 @@ export const PILL_STYLE: CSSProperties = {
   userSelect: "none",
 };
 
-
 /** Hover variant: light lilac fill, dark ink (7.19:1). */
 export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE };
-
 
 /** Tap variant: rose fill, white ink (5.39:1), distinct from hover lilac. */
 export const TAP_PILL_STYLE: CSSProperties = {
@@ -48,10 +43,8 @@ export const TAP_PILL_STYLE: CSSProperties = {
   color: "var(--color-tap-rose-ink)",
 };
 
-
 const DISMISS_MS = 2000;
 const FADE_MS = 120;
-
 
 /** Dialogue has no case study yet: click, tap, Enter or Space shows tap
  *  feedback instead of navigating. The media cover crossfades to a
@@ -63,35 +56,31 @@ const FADE_MS = 120;
  *  auto-dismisses after 2s. The fade runs only when the user allows
  *  motion, checked with matchMedia at activation time; reduced motion
  *  gets an instant show and hide. An optional blurLayer overrides the
- *  duplicated media if a dedicated duplicate is ever supplied. */
+ *  duplicated media if a dedicated duplicate is supplied. */
 export default function DialogueCardTap({
   media,
+  blurLayer,
   label,
 }: {
   media: ReactNode;
-  /** @deprecated Prefer the static backdrop blur; kept out of the render tree for perf. */
+  /** Optional dedicated duplicate for the blurred cover; defaults to `media`. */
   blurLayer?: ReactNode;
   label?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [fade, setFade] = useState(false);
-  const [blurMounted, setBlurMounted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
-
   useEffect(() => () => window.clearTimeout(timer.current), []);
-
 
   const show = () => {
     setFade(
       window.matchMedia("(prefers-reduced-motion: no-preference)").matches,
     );
-    setBlurMounted(true);
     setOpen(true);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setOpen(false), DISMISS_MS);
   };
-
 
   const transition = open && fade ? `opacity ${FADE_MS}ms ease-out` : "none";
   return (
@@ -119,24 +108,32 @@ export default function DialogueCardTap({
     >
       <div style={{ position: "relative" }}>
         {media}
-        {/* Static blur layer mounts on first open only so first paint stays
-            free of backdrop-filter. Filter itself is never animated. */}
-        {blurMounted ? (
+        {/* Always mounted: static filter on the inner layer; opacity-only fade. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            overflow: "hidden",
+            opacity: open ? 1 : 0,
+            transition,
+            pointerEvents: "none",
+          }}
+        >
           <div
-            aria-hidden="true"
             style={{
               position: "absolute",
-              inset: 0,
-              overflow: "hidden",
-              opacity: open ? 1 : 0,
-              transition,
-              pointerEvents: "none",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-              background: "rgba(246, 245, 242, 0.28)",
+              inset: "-2.5%",
+              width: "105%",
+              height: "105%",
+              filter: "blur(8px)",
+              transform: "scale(1.05)",
+              transformOrigin: "center",
             }}
-          />
-        ) : null}
+          >
+            {blurLayer ?? media}
+          </div>
+        </div>
         <div
           aria-live="polite"
           aria-atomic="true"

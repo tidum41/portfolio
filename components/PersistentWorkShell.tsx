@@ -35,7 +35,7 @@ import DialogueCardTap, {
 /** One media ratio for every grid tile so the two columns stay in step. */
 const GRID_MEDIA_ASPECT = "4 / 3";
 
-/** Hover pill copy, keyed by data-grid-card. Demo cards are left out on purpose. */
+/** Hover pill copy, keyed by data-grid-card: Case Study, Coming Soon, or Demo. */
 const GRID_PILL_LABELS: Record<string, string> = {
   "project-bruinlease": "Case Study",
   "project-joola-b2b": "Case Study",
