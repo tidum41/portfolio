@@ -49,6 +49,7 @@
   --color-accent:         #9590C2;
   --color-accent-subtle:  rgba(149,144,194,0.10);
   /* lilac pill tokens — hover fill/ink AA 7.19:1; tap rose AA 5.39:1 */
+  --color-dialogue-ground: #F6F5F2;
   --color-lilac:          #C4B5E8;
   --color-lilac-ink:      #2E2E2E;
   --color-tap-rose:       #A8497A;
@@ -2421,7 +2422,8 @@ html[data-theme="dark"] {
   --color-link-blue:      #6EA8FF;
   --color-accent:         #A09DC8;
   --color-accent-subtle:  rgba(160, 157, 200, 0.15);
-  --color-lilac:          #C4B5E8;
+    --color-dialogue-ground: #F6F5F2;
+--color-lilac:          #C4B5E8;
   --color-lilac-ink:      #2E2E2E;
   --color-tap-rose:       #A8497A;
   --color-tap-rose-ink:   #FFFFFF;

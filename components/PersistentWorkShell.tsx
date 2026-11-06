@@ -35,6 +35,25 @@ import DialogueCardTap, {
 /** One media ratio for every grid tile so the two columns stay in step. */
 const GRID_MEDIA_ASPECT = "4 / 3";
 
+/** Cheap Dialogue tap cover: token fill matching DialogueCardMedia ground.
+ *  Avoids mounting a second DialogueCardMedia (hover/TBT cost). Static
+ *  filter:blur is applied by DialogueCardTap on this layer. */
+const DIALOGUE_BLUR_LAYER = (
+  <div className="project-media" aria-hidden>
+    <div
+      className="project-img-wrap"
+      style={{
+        borderRadius: "var(--radius-card)",
+        overflow: "hidden",
+        aspectRatio: GRID_MEDIA_ASPECT,
+        position: "relative",
+        background: "var(--color-dialogue-ground, #F6F5F2)",
+      }}
+    />
+  </div>
+);
+
+
 /** Hover pill copy, keyed by data-grid-card: Case Study, Coming Soon, or Demo. */
 const GRID_PILL_LABELS: Record<string, string> = {
   "project-bruinlease": "Case Study",
@@ -841,6 +860,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             </div>
                           </div>
                         }
+                        blurLayer={DIALOGUE_BLUR_LAYER}
                         label={<CardLabel title={p.title} label={p.label} />}
                       />
                     </ProjectCardLift>
@@ -913,6 +933,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                             </div>
                           </div>
                         }
+                        blurLayer={DIALOGUE_BLUR_LAYER}
                         label={<CardLabel title={p.title} label={p.label} />}
                       />
                     </ProjectCardLift>
