@@ -5,6 +5,8 @@ import { SUN_MASK_SVG, MOON_MASK_SVG, SUN_CLONE_INNER, MOON_CLONE_INNER } from "
 import { useHalftoneMorph } from "./useHalftoneMorph";
 import { useIsMobile } from "./useIsMobile";
 import { motion, useReducedMotion } from "framer-motion";
+import { getThemeTransitionMode } from "@/lib/theme-transition/preference";
+import { runThemeTransition } from "@/lib/theme-transition/runThemeTransition";
 
 const ICON_SIZE = 15;
 
@@ -65,6 +67,8 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
   const baseTransition = { duration: baseMs / 1000, ease: "easeInOut" as const };
   const unlockThemeRaf1 = useRef(0);
   const unlockThemeRaf2 = useRef(0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const transitionLock = useRef(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -77,10 +81,28 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
     if (unlockThemeRaf2.current) cancelAnimationFrame(unlockThemeRaf2.current);
   }, []);
 
-  const toggle = () => {
+  const toggle = async () => {
+    if (transitionLock.current) return;
     const newDark = !isDark;
-    setIsDark(newDark);
     const theme = newDark ? "dark" : "light";
+    const mode = getThemeTransitionMode();
+    const rect = buttonRef.current?.getBoundingClientRect();
+    const origin = rect
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      : undefined;
+
+    if (mode !== "default") {
+      transitionLock.current = true;
+      setIsDark(newDark);
+      try {
+        await runThemeTransition(theme, { mode, origin, reducedMotion: !!reduced });
+      } finally {
+        transitionLock.current = false;
+      }
+      return;
+    }
+
+    setIsDark(newDark);
     const html = document.documentElement;
     // Suppress standing hover color-tweens for one paint so the token
     // swap is a single frame, not a 200ms–1s chase across the tree.
@@ -110,7 +132,10 @@ export default function ThemeToggle({ dk }: { dk?: any }) {
 
   return (
     <button
-      onClick={toggle}
+      ref={buttonRef}
+      onClick={() => {
+        void toggle();
+      }}
       data-ui-sound="option"
       // Guarded like VolumeControl.tsx's onEnter — without this, a tap on
       // touch devices can trigger a synthetic mouseenter with no matching
