@@ -129,6 +129,9 @@ export default function DialogueCardTap({
               filter: "blur(8px)",
               transform: "scale(1.05)",
               transformOrigin: "center",
+              // Skip painting the static blur while the cover is closed so
+              // idle grid hover stays cheap; filter itself is never transitioned.
+              contentVisibility: open ? "visible" : "hidden",
             }}
           >
             {blurLayer ?? media}
