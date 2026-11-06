@@ -15,6 +15,14 @@ export interface GridHoverPillProps {
 const OFFSET_X = 14;
 const OFFSET_Y = 18;
 const VIEWPORT_PAD = 8;
+/* Fixed 112x28 box: 112 fits the longest hover label ("Coming Soon") at
+ * the shared 13px/500 pill type plus 10px side padding; 28 is the 16px
+ * line height plus 6px top/bottom padding. The size never changes, so
+ * label swaps need no measurement and clamping is pure arithmetic. */
+const PILL_W = 112;
+const PILL_H = 28;
+const EASE = 0.35;
+const SETTLE_PX = 0.5;
 
 
 const emptySubscribe = () => () => {};
@@ -22,24 +30,16 @@ const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
 
-/** Cursor-following grid pill, mounted once, fine pointers only. Perf
- *  contract, tightened against the branch trace (FunctionCall 3843 vs
- *  main 3184):
- *  - One pointermove listener (no duplicate pointerover pass). The move
- *    handler only resolves the card, stores coordinates, and schedules a
- *    single rAF; the rAF writes transform (translate3d) and nothing else.
- *  - No React state on the move path, and none at all after mount: the
- *    portal mount is read with useSyncExternalStore, labels live in a ref
- *    so a new labels object never rebinds listeners.
- *  - The label is written via ref.textContent only when the card changes,
- *    and the pill is measured (offsetWidth/Height) only at that moment;
- *    the cached size feeds viewport clamping, so no layout reads run
- *    per frame.
- *  - Opacity is written only on show/hide; will-change:transform stays on.
- *  - Chrome is the shared PILL_STYLE: opaque lilac token fill, 8px
- *    radius, one 2px shadow, no border, no filter, no backdrop-filter.
- *  Hidden on grid pointerleave, window blur, scroll, and visibility
- *  change. Keyboard focus-visible anchors it at the card's bottom-left. */
+/** Cursor-following grid pill, one portal element for the whole grid.
+ *  Always promoted, moved only with translate3d, fixed size with strict
+ *  containment, no shadow, no backdrop filter. pointermove only resolves
+ *  the card (cached while the pointer stays inside it), stores target
+ *  coordinates, and starts the loop; one rAF loop eases toward the target
+ *  and stops itself once settled, and hide stops it immediately. The
+ *  label is written via textContent only when the card changes. Grid
+ *  cover images are decoded once at idle time, never on hover. Hidden on
+ *  grid pointerleave, window blur, scroll, and visibility change.
+ *  Keyboard focus-visible anchors it at the card's bottom-left. */
 export default function GridHoverPill({
   gridSelector = ".portfolio-grid",
   labels = {},
@@ -74,12 +74,13 @@ export default function GridHoverPill({
     let enabled = hoverMq.matches;
     let visible = false;
     let currentId: string | null = null;
+    let lastCard: HTMLElement | null = null;
     let rafId = 0;
-    let pendingX = 0;
-    let pendingY = 0;
-    let hasPending = false;
-    let pillW = 0;
-    let pillH = 0;
+    let targetLeft = 0;
+    let targetTop = 0;
+    let currentLeft = 0;
+    let currentTop = 0;
+    let hasPosition = false;
 
 
     const applyTransition = () => {
@@ -94,6 +95,44 @@ export default function GridHoverPill({
       Math.min(Math.max(v, min), Math.max(min, max));
 
 
+    const writeTransform = () => {
+      pill.style.transform = `translate3d(${currentLeft}px, ${currentTop}px, 0)`;
+    };
+
+
+    const stopLoop = () => {
+      if (!rafId) return;
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    };
+
+
+    const tick = () => {
+      rafId = 0;
+      if (!visible) return;
+      const dx = targetLeft - currentLeft;
+      const dy = targetTop - currentTop;
+      if (
+        motionMq.matches ||
+        (Math.abs(dx) <= SETTLE_PX && Math.abs(dy) <= SETTLE_PX)
+      ) {
+        currentLeft = targetLeft;
+        currentTop = targetTop;
+        writeTransform();
+        return;
+      }
+      currentLeft += dx * EASE;
+      currentTop += dy * EASE;
+      writeTransform();
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+
+    const startLoop = () => {
+      if (!rafId) rafId = window.requestAnimationFrame(tick);
+    };
+
+
     const show = () => {
       if (visible) return;
       visible = true;
@@ -102,6 +141,9 @@ export default function GridHoverPill({
 
 
     const hide = () => {
+      stopLoop();
+      hasPosition = false;
+      lastCard = null;
       if (!visible) return;
       visible = false;
       pill.style.opacity = "0";
@@ -114,8 +156,6 @@ export default function GridHoverPill({
       if (label == null) return false;
       currentId = id;
       pill.textContent = label;
-      pillW = pill.offsetWidth;
-      pillH = pill.offsetHeight;
       return true;
     };
 
@@ -132,55 +172,70 @@ export default function GridHoverPill({
     };
 
 
-    const flush = () => {
-      rafId = 0;
-      if (!hasPending) return;
-      hasPending = false;
+    const targetForPointer = (x: number, y: number) => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      let left = pendingX + OFFSET_X;
-      let top = pendingY + OFFSET_Y;
-      if (left + pillW > vw - VIEWPORT_PAD) left = pendingX - pillW - OFFSET_X;
-      if (top + pillH > vh - VIEWPORT_PAD) top = pendingY - pillH - OFFSET_Y;
-      left = clamp(left, VIEWPORT_PAD, vw - pillW - VIEWPORT_PAD);
-      top = clamp(top, VIEWPORT_PAD, vh - pillH - VIEWPORT_PAD);
-      pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-    };
-
-
-    const schedule = (x: number, y: number) => {
-      pendingX = x;
-      pendingY = y;
-      hasPending = true;
-      if (!rafId) rafId = window.requestAnimationFrame(flush);
+      let left = x + OFFSET_X;
+      let top = y + OFFSET_Y;
+      if (left + PILL_W > vw - VIEWPORT_PAD) left = x - PILL_W - OFFSET_X;
+      if (top + PILL_H > vh - VIEWPORT_PAD) top = y - PILL_H - OFFSET_Y;
+      return [
+        clamp(left, VIEWPORT_PAD, vw - PILL_W - VIEWPORT_PAD),
+        clamp(top, VIEWPORT_PAD, vh - PILL_H - VIEWPORT_PAD),
+      ] as const;
     };
 
 
     const onPointerMove = (event: PointerEvent) => {
       if (!enabled || event.pointerType !== "mouse") return;
-      const id = idForCard(cardFromTarget(event.target));
+      let card: HTMLElement | null;
+      if (
+        lastCard &&
+        event.target instanceof Node &&
+        lastCard.contains(event.target)
+      ) {
+        card = lastCard;
+      } else {
+        card = cardFromTarget(event.target);
+        lastCard = card;
+      }
+      const id = idForCard(card);
       if (!id || !setLabelForId(id)) {
         hide();
         return;
       }
-      schedule(event.clientX, event.clientY);
+      const [left, top] = targetForPointer(event.clientX, event.clientY);
+      targetLeft = left;
+      targetTop = top;
+      if (!visible || !hasPosition) {
+        currentLeft = left;
+        currentTop = top;
+        hasPosition = true;
+        writeTransform();
+        show();
+        return;
+      }
       show();
+      startLoop();
     };
 
 
     const positionAtCard = (card: HTMLElement) => {
       const rect = card.getBoundingClientRect();
-      const left = clamp(
+      currentLeft = clamp(
         rect.left + 12,
         VIEWPORT_PAD,
-        window.innerWidth - pillW - VIEWPORT_PAD,
+        window.innerWidth - PILL_W - VIEWPORT_PAD,
       );
-      const top = clamp(
-        rect.bottom - pillH - 12,
+      currentTop = clamp(
+        rect.bottom - PILL_H - 12,
         VIEWPORT_PAD,
-        window.innerHeight - pillH - VIEWPORT_PAD,
+        window.innerHeight - PILL_H - VIEWPORT_PAD,
       );
-      pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+      targetLeft = currentLeft;
+      targetTop = currentTop;
+      hasPosition = true;
+      writeTransform();
     };
 
 
@@ -198,11 +253,8 @@ export default function GridHoverPill({
         hide();
         return;
       }
-      if (rafId) {
-        window.cancelAnimationFrame(rafId);
-        rafId = 0;
-        hasPending = false;
-      }
+      stopLoop();
+      lastCard = card;
       positionAtCard(card);
       show();
     };
@@ -240,8 +292,41 @@ export default function GridHoverPill({
     motionMq.addEventListener("change", onMotionMqChange);
 
 
+    /* Pre-decode grid covers once at idle time, so a first hover never
+     * pays image decode on its frame. */
+    const decodeCovers = () => {
+      grid.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
+        if (typeof img.decode === "function") {
+          void img.decode().catch(() => undefined);
+        }
+      });
+    };
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (
+        cb: () => void,
+        opts?: { timeout: number },
+      ) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    let idleId = 0;
+    let idleIsRic = false;
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      idleIsRic = true;
+      idleId = idleWindow.requestIdleCallback(decodeCovers, { timeout: 2000 });
+    } else {
+      idleId = window.setTimeout(decodeCovers, 1000);
+    }
+
+
     return () => {
-      if (rafId) window.cancelAnimationFrame(rafId);
+      stopLoop();
+      if (idleIsRic) {
+        if (typeof idleWindow.cancelIdleCallback === "function") {
+          idleWindow.cancelIdleCallback(idleId);
+        }
+      } else {
+        window.clearTimeout(idleId);
+      }
       grid.removeEventListener("pointermove", onPointerMove);
       grid.removeEventListener("pointerleave", onPointerLeave);
       grid.removeEventListener("focusin", onFocusIn);
@@ -261,6 +346,7 @@ export default function GridHoverPill({
   return createPortal(
     <div
       ref={pillRef}
+      data-grid-hover-pill=""
       aria-hidden="true"
       style={{
         ...HOVER_PILL_STYLE,
@@ -270,6 +356,15 @@ export default function GridHoverPill({
         zIndex: 60,
         display: "inline-flex",
         alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        width: PILL_W,
+        height: PILL_H,
+        contain: "strict",
+        boxShadow: "none",
+        backdropFilter: "none",
+        pointerEvents: "none",
         opacity: 0,
         willChange: "transform",
       }}

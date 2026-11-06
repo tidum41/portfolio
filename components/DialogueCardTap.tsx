@@ -1,5 +1,6 @@
 "use client";
 
+
 import {
   useEffect,
   useRef,
@@ -8,11 +9,13 @@ import {
   type ReactNode,
 } from "react";
 
+
 /** Grid pill copy. Hover states intent, the tap note confirms it in full. */
 export const DIALOGUE_HOVER_LABEL = "Coming Soon";
 export const DIALOGUE_TAP_LABEL = "Case Study Coming Soon";
 /** Alias kept for existing imports: the shared label is the tap label. */
 export const DIALOGUE_PILL_LABEL = DIALOGUE_TAP_LABEL;
+
 
 /** Shared pill chrome for the grid hover pill and the Dialogue tap note.
  *  Radius is the site --radius-control (8px), shadow is the single cheap
@@ -33,8 +36,10 @@ export const PILL_STYLE: CSSProperties = {
   userSelect: "none",
 };
 
+
 /** Hover variant: light lilac fill, dark ink (7.19:1). */
 export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE, boxShadow: "none" };
+
 
 /** Tap variant: rose fill, white ink (5.39:1), distinct from hover lilac. */
 export const TAP_PILL_STYLE: CSSProperties = {
@@ -43,8 +48,10 @@ export const TAP_PILL_STYLE: CSSProperties = {
   color: "var(--color-tap-rose-ink)",
 };
 
+
 const DISMISS_MS = 2000;
 const FADE_MS = 120;
+
 
 /** Dialogue has no case study yet: click, tap, Enter or Space shows tap
  *  feedback instead of navigating. The media cover crossfades to a
@@ -74,6 +81,7 @@ export default function DialogueCardTap({
   const timer = useRef<number | undefined>(undefined);
   const unmountTimer = useRef<number | undefined>(undefined);
 
+
   useEffect(
     () => () => {
       window.clearTimeout(timer.current);
@@ -81,6 +89,7 @@ export default function DialogueCardTap({
     },
     [],
   );
+
 
   const show = () => {
     const allowFade = window.matchMedia(
@@ -100,6 +109,7 @@ export default function DialogueCardTap({
       );
     }, DISMISS_MS);
   };
+
 
   const transition = open && fade ? `opacity ${FADE_MS}ms ease-out` : "none";
   return (
@@ -170,7 +180,10 @@ export default function DialogueCardTap({
             pointerEvents: "none",
           }}
         >
-          <span style={TAP_PILL_STYLE}>{open ? DIALOGUE_TAP_LABEL : ""}</span>
+          {/* Pill box exists only while open: while closed the live region
+              stays mounted and empty, and no shadowed rose box is painted
+              or promoted during idle grid hover. */}
+          {open ? <span style={TAP_PILL_STYLE}>{DIALOGUE_TAP_LABEL}</span> : null}
         </div>
       </div>
       {label}

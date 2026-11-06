@@ -532,6 +532,7 @@ nav button.footer-link {
   opacity: 0;
   z-index: -1;
   pointer-events: none;
+  contain: paint;
   transition: opacity var(--project-hover-out) var(--project-hover-ease);
 }
 html[data-theme="dark"] .project-card::before {
@@ -599,7 +600,6 @@ html[data-theme="light"] {
 
 @media (hover: hover) and (pointer: fine) {
   .portfolio-grid-card > * {
-    will-change: opacity;
     transition: opacity var(--work-focus-out) ease-out;
   }
 
