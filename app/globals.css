@@ -48,13 +48,10 @@
   --color-link-blue:      #0B5FFF;
   --color-accent:         #9590C2;
   --color-accent-subtle:  rgba(149,144,194,0.10);
-  /* lilac pill tokens — hover fill/ink AA 7.19:1; tap rose AA 5.39:1 */
   --color-dialogue-ground: #F6F5F2;
-  --color-lilac:          #C4B5E8;
-  --color-lilac-ink:      #2E2E2E;
-  --color-tap-rose:       #A8497A;
-  --color-tap-rose-ink:   #FFFFFF;
-  --shadow-pill:          0 1px 2px rgba(0, 0, 0, 0.06);
+  --color-tooltip-bg:     #1a1a1a;
+  --color-tooltip-ink:    #FFFFFF;
+  --color-tooltip-border: #2E2E2E;
   --color-toc-track:      rgba(173, 173, 173, 0.25);
   --color-badge-bg:       #FFFFFF;
   --color-warm-bg:        #EBE6DF;
@@ -2422,12 +2419,10 @@ html[data-theme="dark"] {
   --color-link-blue:      #6EA8FF;
   --color-accent:         #A09DC8;
   --color-accent-subtle:  rgba(160, 157, 200, 0.15);
-    --color-dialogue-ground: #F6F5F2;
---color-lilac:          #C4B5E8;
-  --color-lilac-ink:      #2E2E2E;
-  --color-tap-rose:       #A8497A;
-  --color-tap-rose-ink:   #FFFFFF;
-  --shadow-pill:          0 1px 2px rgba(0, 0, 0, 0.10);
+  --color-dialogue-ground: #F6F5F2;
+  --color-tooltip-bg:     #FFFFFF;
+  --color-tooltip-ink:    #1a1a1a;
+  --color-tooltip-border: #D9D9D9;
   --color-toc-track:      rgba(255, 255, 255, 0.10);
   --color-badge-bg:       #1E2226;
   --color-warm-bg:        #1E1C19;
@@ -2522,4 +2517,13 @@ html[data-theme="dark"] {
     border-color: var(--minimap-border-hover) !important;
     box-shadow: var(--minimap-shadow-hover) !important;
   }
+}
+
+/* iOS Safari: hide native play overlay. The videos are muted, inline autoplay elements with a poster; this only
+   hides WebKit's overlay, it does not size or position anything. */
+.mux-media-slot video::-webkit-media-controls,
+.mux-media-slot video::-webkit-media-controls-start-playback-button,
+.mux-media-slot video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
 }

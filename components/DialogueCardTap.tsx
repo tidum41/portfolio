@@ -10,23 +10,26 @@ import {
 } from "react";
 
 
-/** Grid pill copy. Hover states intent, the tap note confirms it in full. */
+/** Grid tooltip copy. Hover states intent, the tap note confirms it in full. */
 export const DIALOGUE_HOVER_LABEL = "Coming Soon";
 export const DIALOGUE_TAP_LABEL = "Case Study Coming Soon";
 /** Alias kept for existing imports: the shared label is the tap label. */
 export const DIALOGUE_PILL_LABEL = DIALOGUE_TAP_LABEL;
 
 
-/** Shared pill chrome for the grid hover pill and the Dialogue tap note.
- *  Radius is the site --radius-control (8px), shadow is the single cheap
- *  --shadow-pill, fills are solid opaque tokens from globals.css. No
- *  border, no translucency, no backdrop-filter, no filter animation. */
-export const PILL_STYLE: CSSProperties = {
-  padding: "6px 10px",
-  background: "var(--color-lilac)",
-  color: "var(--color-lilac-ink)",
-  borderRadius: "var(--radius-control)",
-  boxShadow: "var(--shadow-pill)",
+/** Shared tooltip chrome for the grid hover tooltip and the Dialogue
+ *  tap note: theme-aware tokens from globals.css, 1px subtle border,
+ *  4px radius, no shadow, no translucency, no backdrop-filter. */
+export const TOOLTIP_STYLE: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "4px 8px",
+  background: "var(--color-tooltip-bg)",
+  color: "var(--color-tooltip-ink)",
+  border: "1px solid var(--color-tooltip-border)",
+  borderRadius: 4,
+  boxShadow: "none",
   fontFamily: "var(--font-sans)",
   fontWeight: 500,
   fontSize: 13,
@@ -34,18 +37,6 @@ export const PILL_STYLE: CSSProperties = {
   whiteSpace: "nowrap",
   pointerEvents: "none",
   userSelect: "none",
-};
-
-
-/** Hover variant: light lilac fill, dark ink (7.19:1). */
-export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE, boxShadow: "none" };
-
-
-/** Tap variant: rose fill, white ink (5.39:1), distinct from hover lilac. */
-export const TAP_PILL_STYLE: CSSProperties = {
-  ...PILL_STYLE,
-  background: "var(--color-tap-rose)",
-  color: "var(--color-tap-rose-ink)",
 };
 
 
@@ -57,13 +48,14 @@ const FADE_MS = 120;
  *  feedback instead of navigating. The media cover crossfades to a
  *  permanently blurred duplicate of itself: the duplicate layer's
  *  filter: blur(8px) is static and never animated, its 1.05 scale hides
- *  the blur edge bleed, and only the wrapper opacity animates. The rose
- *  tap pill is centred over the blurred cover. The live region stays
- *  mounted, empty when closed, so screen readers announce the note; it
- *  auto-dismisses after 2s. The fade runs only when the user allows
- *  motion, checked with matchMedia at activation time; reduced motion
- *  gets an instant show and hide. An optional blurLayer overrides the
- *  duplicated media if a dedicated duplicate is supplied. */
+ *  the blur edge bleed, and only the wrapper opacity animates. The tap
+ *  note, in the shared tooltip style, is centred over the blurred
+ *  cover. The live region stays mounted, empty when closed, so screen
+ *  readers announce the note; it auto-dismisses after 2s. The fade runs
+ *  only when the user allows motion, checked with matchMedia at
+ *  activation time; reduced motion gets an instant show and hide. An
+ *  optional blurLayer overrides the duplicated media if a dedicated
+ *  duplicate is supplied. */
 export default function DialogueCardTap({
   media,
   blurLayer,
@@ -180,10 +172,10 @@ export default function DialogueCardTap({
             pointerEvents: "none",
           }}
         >
-          {/* Pill box exists only while open: while closed the live region
-              stays mounted and empty, and no shadowed rose box is painted
-              or promoted during idle grid hover. */}
-          {open ? <span style={TAP_PILL_STYLE}>{DIALOGUE_TAP_LABEL}</span> : null}
+          {/* Note box exists only while open: while closed the live region
+              stays mounted and empty, and no tooltip box is painted or
+              promoted during idle grid hover. */}
+          {open ? <span style={TOOLTIP_STYLE}>{DIALOGUE_TAP_LABEL}</span> : null}
         </div>
       </div>
       {label}

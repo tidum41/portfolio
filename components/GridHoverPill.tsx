@@ -1,374 +1,276 @@
 "use client";
 
-
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { HOVER_PILL_STYLE } from "./DialogueCardTap";
-
+import { TOOLTIP_STYLE } from "./DialogueCardTap";
 
 export interface GridHoverPillProps {
-  gridSelector?: string;
-  labels?: Record<string, string>;
+gridSelector?: string;
+labels?: Record<string, string>;
 }
 
-
-const OFFSET_X = 14;
-const OFFSET_Y = 18;
+const OFFSET = 12;
 const VIEWPORT_PAD = 8;
-/* Fixed 112x28 box: 112 fits the longest hover label ("Coming Soon") at
- * the shared 13px/500 pill type plus 10px side padding; 28 is the 16px
- * line height plus 6px top/bottom padding. The size never changes, so
- * label swaps need no measurement and clamping is pure arithmetic. */
-const PILL_W = 112;
-const PILL_H = 28;
-const EASE = 0.35;
-const SETTLE_PX = 0.5;
-
+const SHOW_DELAY_MS = 400;
+const WARM_MS = 300;
+const FADE_MS = 100;
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+/** Static grid tooltip, one shared portal element for the whole grid.
 
-/** Cursor-following grid pill, one portal element for the whole grid.
- *  Always promoted, moved only with translate3d, fixed size with strict
- *  containment, no shadow, no backdrop filter. pointermove only resolves
- *  the card (cached while the pointer stays inside it), stores target
- *  coordinates, and starts the loop; one rAF loop eases toward the target
- *  and stops itself once settled, and hide stops it immediately. The
- *  label is written via textContent only when the card changes. Grid
- *  cover images are decoded once at idle time, never on hover. Hidden on
- *  grid pointerleave, window blur, scroll, and visibility change.
- *  Keyboard focus-visible anchors it at the card's bottom-left. */
+Entering a card records the entry point and label once and starts a
+400ms delay; moves inside the same card after that do nothing, so
+the tooltip is placed once at entry + 12px, clamped inside both the
+card and the viewport, and never moves again until the card is left.
+Show is a 100ms opacity fade-in; hide is immediate with no fade-out.
+If a tooltip was showing and another card is entered within 300ms
+of it hiding, that tooltip shows instantly with no delay. Fine
+pointers only. Hides on card change, grid pointerleave, window
+scroll, window blur, and visibility change. Keyboard focus-visible
+anchors it at the card's bottom-left and shows it without delay. */
 export default function GridHoverPill({
-  gridSelector = ".portfolio-grid",
-  labels = {},
+gridSelector = ".portfolio-grid",
+labels = {},
 }: GridHoverPillProps) {
-  const pillRef = useRef<HTMLDivElement | null>(null);
-  const labelsRef = useRef(labels);
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    getClientSnapshot,
-    getServerSnapshot,
-  );
+const pillRef = useRef<HTMLDivElement | null>(null);
+const labelsRef = useRef(labels);
+const mounted = useSyncExternalStore(
+emptySubscribe,
+getClientSnapshot,
+getServerSnapshot,
+);
+
+useEffect(() => {
+labelsRef.current = labels;
+});
+
+useEffect(() => {
+if (!mounted) return;
+
+const pill = pillRef.current;
+const grid = document.querySelector<HTMLElement>(gridSelector);
+if (!pill || !grid) return;
 
 
-  useEffect(() => {
-    labelsRef.current = labels;
-  });
+const hoverMq = window.matchMedia("(hover: hover) and (pointer: fine)");
+const motionMq = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 
-  useEffect(() => {
-    if (!mounted) return;
+let enabled = hoverMq.matches;
+let visible = false;
+let currentCard: HTMLElement | null = null;
+let entryX = 0;
+let entryY = 0;
+let anchor: "pointer" | "card" = "pointer";
+let showTimer = 0;
+let lastShownHideAt = Number.NEGATIVE_INFINITY;
 
 
-    const pill = pillRef.current;
-    const grid = document.querySelector<HTMLElement>(gridSelector);
-    if (!pill || !grid) return;
+const clamp = (v: number, min: number, max: number) =>
+  Math.min(Math.max(v, min), Math.max(min, max));
 
 
-    const hoverMq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const motionMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+const clearShowTimer = () => {
+  if (!showTimer) return;
+  window.clearTimeout(showTimer);
+  showTimer = 0;
+};
 
 
-    let enabled = hoverMq.matches;
-    let visible = false;
-    let currentId: string | null = null;
-    let lastCard: HTMLElement | null = null;
-    let rafId = 0;
-    let targetLeft = 0;
-    let targetTop = 0;
-    let currentLeft = 0;
-    let currentTop = 0;
-    let hasPosition = false;
+const hide = () => {
+  clearShowTimer();
+  if (visible) lastShownHideAt = performance.now();
+  visible = false;
+  currentCard = null;
+  pill.style.transition = "none";
+  pill.style.opacity = "0";
+};
 
 
-    const applyTransition = () => {
-      pill.style.transition = motionMq.matches
-        ? "none"
-        : "opacity 120ms ease-out";
-    };
-    applyTransition();
+const cardFromTarget = (target: EventTarget | null) =>
+  target instanceof Element
+    ? target.closest<HTMLElement>(".portfolio-grid-card")
+    : null;
 
 
-    const clamp = (v: number, min: number, max: number) =>
-      Math.min(Math.max(v, min), Math.max(min, max));
+const idForCard = (card: HTMLElement | null) => {
+  const id = card?.getAttribute("data-grid-card");
+  return id && id in labelsRef.current ? id : null;
+};
 
 
-    const writeTransform = () => {
-      pill.style.transform = `translate3d(${currentLeft}px, ${currentTop}px, 0)`;
-    };
+const setLabelForId = (id: string) => {
+  const label = labelsRef.current[id];
+  if (label == null) return false;
+  pill.textContent = label;
+  return true;
+};
 
 
-    const stopLoop = () => {
-      if (!rafId) return;
-      window.cancelAnimationFrame(rafId);
-      rafId = 0;
-    };
+const show = () => {
+  showTimer = 0;
+  const card = currentCard;
+  if (!card || visible) return;
+  const w = pill.offsetWidth;
+  const h = pill.offsetHeight;
+  const rect = card.getBoundingClientRect();
+  let desiredLeft = entryX + OFFSET;
+  let desiredTop = entryY + OFFSET;
+  if (anchor === "card") {
+    desiredLeft = rect.left + OFFSET;
+    desiredTop = rect.bottom - h - OFFSET;
+  }
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const vMinLeft = VIEWPORT_PAD;
+  const vMaxLeft = vw - w - VIEWPORT_PAD;
+  const vMinTop = VIEWPORT_PAD;
+  const vMaxTop = vh - h - VIEWPORT_PAD;
+  const minLeft = Math.max(vMinLeft, rect.left);
+  const maxLeft = Math.min(vMaxLeft, rect.right - w);
+  const minTop = Math.max(vMinTop, rect.top);
+  const maxTop = Math.min(vMaxTop, rect.bottom - h);
+  const left =
+    minLeft <= maxLeft
+      ? clamp(desiredLeft, minLeft, maxLeft)
+      : clamp(desiredLeft, vMinLeft, vMaxLeft);
+  const top =
+    minTop <= maxTop
+      ? clamp(desiredTop, minTop, maxTop)
+      : clamp(desiredTop, vMinTop, vMaxTop);
+  pill.style.left = `${left}px`;
+  pill.style.top = `${top}px`;
+  pill.style.transition = motionMq.matches
+    ? "none"
+    : `opacity ${FADE_MS}ms ease-out`;
+  pill.style.opacity = "1";
+  visible = true;
+};
 
 
-    const tick = () => {
-      rafId = 0;
-      if (!visible) return;
-      const dx = targetLeft - currentLeft;
-      const dy = targetTop - currentTop;
-      if (
-        motionMq.matches ||
-        (Math.abs(dx) <= SETTLE_PX && Math.abs(dy) <= SETTLE_PX)
-      ) {
-        currentLeft = targetLeft;
-        currentTop = targetTop;
-        writeTransform();
-        return;
-      }
-      currentLeft += dx * EASE;
-      currentTop += dy * EASE;
-      writeTransform();
-      rafId = window.requestAnimationFrame(tick);
-    };
+const onPointerMove = (event: PointerEvent) => {
+  if (!enabled || event.pointerType !== "mouse") return;
+  let card: HTMLElement | null;
+  if (
+    currentCard &&
+    event.target instanceof Node &&
+    currentCard.contains(event.target)
+  ) {
+    card = currentCard;
+  } else {
+    card = cardFromTarget(event.target);
+  }
+  const id = idForCard(card);
+  if (!card || !id) {
+    hide();
+    return;
+  }
+  if (card === currentCard) return;
+  hide();
+  if (!setLabelForId(id)) return;
+  currentCard = card;
+  anchor = "pointer";
+  entryX = event.clientX;
+  entryY = event.clientY;
+  if (performance.now() - lastShownHideAt <= WARM_MS) {
+    show();
+  } else {
+    const scheduledCard = card;
+    showTimer = window.setTimeout(() => {
+      if (currentCard === scheduledCard) show();
+    }, SHOW_DELAY_MS);
+  }
+};
 
 
-    const startLoop = () => {
-      if (!rafId) rafId = window.requestAnimationFrame(tick);
-    };
+const onFocusIn = (event: FocusEvent) => {
+  if (!enabled || !(event.target instanceof Element)) return;
+  const card = cardFromTarget(event.target);
+  const id = idForCard(card);
+  let focusVisible = true;
+  try {
+    focusVisible = event.target.matches(":focus-visible");
+  } catch {
+    focusVisible = true;
+  }
+  if (!card || !id || !focusVisible) {
+    hide();
+    return;
+  }
+  hide();
+  if (!setLabelForId(id)) return;
+  currentCard = card;
+  anchor = "card";
+  show();
+};
 
 
-    const show = () => {
-      if (visible) return;
-      visible = true;
-      pill.style.opacity = "1";
-    };
+const onFocusOut = (event: FocusEvent) => {
+  const card = cardFromTarget(event.target);
+  const next = event.relatedTarget;
+  if (card && next instanceof Node && card.contains(next)) return;
+  hide();
+};
 
 
-    const hide = () => {
-      stopLoop();
-      hasPosition = false;
-      lastCard = null;
-      if (!visible) return;
-      visible = false;
-      pill.style.opacity = "0";
-    };
+const onPointerLeave = () => hide();
+const onBlur = () => hide();
+const onScroll = () => hide();
+const onVisibilityChange = () => {
+  if (document.hidden) hide();
+};
+const onHoverMqChange = (event: MediaQueryListEvent) => {
+  enabled = event.matches;
+  if (!enabled) hide();
+};
 
 
-    const setLabelForId = (id: string) => {
-      if (id === currentId) return true;
-      const label = labelsRef.current[id];
-      if (label == null) return false;
-      currentId = id;
-      pill.textContent = label;
-      return true;
-    };
+grid.addEventListener("pointermove", onPointerMove);
+grid.addEventListener("pointerleave", onPointerLeave);
+grid.addEventListener("focusin", onFocusIn);
+grid.addEventListener("focusout", onFocusOut);
+window.addEventListener("blur", onBlur);
+window.addEventListener("scroll", onScroll, true);
+document.addEventListener("visibilitychange", onVisibilityChange);
+hoverMq.addEventListener("change", onHoverMqChange);
 
 
-    const cardFromTarget = (target: EventTarget | null) =>
-      target instanceof Element
-        ? target.closest<HTMLElement>(".portfolio-grid-card")
-        : null;
+return () => {
+  clearShowTimer();
+  grid.removeEventListener("pointermove", onPointerMove);
+  grid.removeEventListener("pointerleave", onPointerLeave);
+  grid.removeEventListener("focusin", onFocusIn);
+  grid.removeEventListener("focusout", onFocusOut);
+  window.removeEventListener("blur", onBlur);
+  window.removeEventListener("scroll", onScroll, true);
+  document.removeEventListener("visibilitychange", onVisibilityChange);
+  hoverMq.removeEventListener("change", onHoverMqChange);
+};
 
+}, [mounted, gridSelector]);
 
-    const idForCard = (card: HTMLElement | null) => {
-      const id = card?.getAttribute("data-grid-card");
-      return id && id in labelsRef.current ? id : null;
-    };
+if (!mounted) return null;
 
-
-    const targetForPointer = (x: number, y: number) => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      let left = x + OFFSET_X;
-      let top = y + OFFSET_Y;
-      if (left + PILL_W > vw - VIEWPORT_PAD) left = x - PILL_W - OFFSET_X;
-      if (top + PILL_H > vh - VIEWPORT_PAD) top = y - PILL_H - OFFSET_Y;
-      return [
-        clamp(left, VIEWPORT_PAD, vw - PILL_W - VIEWPORT_PAD),
-        clamp(top, VIEWPORT_PAD, vh - PILL_H - VIEWPORT_PAD),
-      ] as const;
-    };
-
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (!enabled || event.pointerType !== "mouse") return;
-      let card: HTMLElement | null;
-      if (
-        lastCard &&
-        event.target instanceof Node &&
-        lastCard.contains(event.target)
-      ) {
-        card = lastCard;
-      } else {
-        card = cardFromTarget(event.target);
-        lastCard = card;
-      }
-      const id = idForCard(card);
-      if (!id || !setLabelForId(id)) {
-        hide();
-        return;
-      }
-      const [left, top] = targetForPointer(event.clientX, event.clientY);
-      targetLeft = left;
-      targetTop = top;
-      if (!visible || !hasPosition) {
-        currentLeft = left;
-        currentTop = top;
-        hasPosition = true;
-        writeTransform();
-        show();
-        return;
-      }
-      show();
-      startLoop();
-    };
-
-
-    const positionAtCard = (card: HTMLElement) => {
-      const rect = card.getBoundingClientRect();
-      currentLeft = clamp(
-        rect.left + 12,
-        VIEWPORT_PAD,
-        window.innerWidth - PILL_W - VIEWPORT_PAD,
-      );
-      currentTop = clamp(
-        rect.bottom - PILL_H - 12,
-        VIEWPORT_PAD,
-        window.innerHeight - PILL_H - VIEWPORT_PAD,
-      );
-      targetLeft = currentLeft;
-      targetTop = currentTop;
-      hasPosition = true;
-      writeTransform();
-    };
-
-
-    const onFocusIn = (event: FocusEvent) => {
-      if (!enabled || !(event.target instanceof Element)) return;
-      const card = cardFromTarget(event.target);
-      const id = idForCard(card);
-      let focusVisible = true;
-      try {
-        focusVisible = event.target.matches(":focus-visible");
-      } catch {
-        focusVisible = true;
-      }
-      if (!card || !id || !focusVisible || !setLabelForId(id)) {
-        hide();
-        return;
-      }
-      stopLoop();
-      lastCard = card;
-      positionAtCard(card);
-      show();
-    };
-
-
-    const onFocusOut = (event: FocusEvent) => {
-      const card = cardFromTarget(event.target);
-      const next = event.relatedTarget;
-      if (card && next instanceof Node && card.contains(next)) return;
-      hide();
-    };
-
-
-    const onPointerLeave = () => hide();
-    const onBlur = () => hide();
-    const onScroll = () => hide();
-    const onVisibilityChange = () => {
-      if (document.hidden) hide();
-    };
-    const onHoverMqChange = (event: MediaQueryListEvent) => {
-      enabled = event.matches;
-      if (!enabled) hide();
-    };
-    const onMotionMqChange = () => applyTransition();
-
-
-    grid.addEventListener("pointermove", onPointerMove);
-    grid.addEventListener("pointerleave", onPointerLeave);
-    grid.addEventListener("focusin", onFocusIn);
-    grid.addEventListener("focusout", onFocusOut);
-    window.addEventListener("blur", onBlur);
-    window.addEventListener("scroll", onScroll, true);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    hoverMq.addEventListener("change", onHoverMqChange);
-    motionMq.addEventListener("change", onMotionMqChange);
-
-
-    /* Pre-decode grid covers once at idle time, so a first hover never
-     * pays image decode on its frame. */
-    const decodeCovers = () => {
-      grid.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
-        if (typeof img.decode === "function") {
-          void img.decode().catch(() => undefined);
-        }
-      });
-    };
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (
-        cb: () => void,
-        opts?: { timeout: number },
-      ) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    let idleId = 0;
-    let idleIsRic = false;
-    if (typeof idleWindow.requestIdleCallback === "function") {
-      idleIsRic = true;
-      idleId = idleWindow.requestIdleCallback(decodeCovers, { timeout: 2000 });
-    } else {
-      idleId = window.setTimeout(decodeCovers, 1000);
-    }
-
-
-    return () => {
-      stopLoop();
-      if (idleIsRic) {
-        if (typeof idleWindow.cancelIdleCallback === "function") {
-          idleWindow.cancelIdleCallback(idleId);
-        }
-      } else {
-        window.clearTimeout(idleId);
-      }
-      grid.removeEventListener("pointermove", onPointerMove);
-      grid.removeEventListener("pointerleave", onPointerLeave);
-      grid.removeEventListener("focusin", onFocusIn);
-      grid.removeEventListener("focusout", onFocusOut);
-      window.removeEventListener("blur", onBlur);
-      window.removeEventListener("scroll", onScroll, true);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      hoverMq.removeEventListener("change", onHoverMqChange);
-      motionMq.removeEventListener("change", onMotionMqChange);
-    };
-  }, [mounted, gridSelector]);
-
-
-  if (!mounted) return null;
-
-
-  return createPortal(
-    <div
-      ref={pillRef}
-      data-grid-hover-pill=""
-      aria-hidden="true"
-      style={{
-        ...HOVER_PILL_STYLE,
-        position: "fixed",
-        left: 0,
-        top: 0,
-        zIndex: 60,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        boxSizing: "border-box",
-        width: PILL_W,
-        height: PILL_H,
-        contain: "strict",
-        boxShadow: "none",
-        backdropFilter: "none",
-        pointerEvents: "none",
-        opacity: 0,
-        willChange: "transform",
-      }}
-    />,
-    document.body,
-  );
+return createPortal(
+<div
+ref={pillRef}
+data-grid-hover-pill=""
+aria-hidden="true"
+style={{
+...TOOLTIP_STYLE,
+position: "fixed",
+left: 0,
+top: 0,
+zIndex: 60,
+boxSizing: "border-box",
+contain: "layout paint style",
+pointerEvents: "none",
+opacity: 0,
+}}
+/>,
+document.body,
+);
 }

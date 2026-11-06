@@ -1,20 +1,25 @@
 "use client";
 
+
 import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import type Hls from "hls.js";
 import { HLS_LIGHT_SRC } from "@/lib/hlsLight";
 import { cardFocusPlay } from "@/lib/cardFocusVideo";
 import { constrainedNetwork } from "@/lib/networkHint";
 
+
 type HlsStatic = typeof import("hls.js").default;
+
 
 export function muxPosterUrl(playbackId: string, width: number, time = 1) {
   return `https://image.mux.com/${playbackId}/thumbnail.webp?time=${time}&width=${width}`;
 }
 
+
 function muxHlsUrl(playbackId: string) {
   return `https://stream.mux.com/${playbackId}.m3u8`;
 }
+
 
 /**
  * Card streams cap the ladder. A grid tile doesn't need a 1080p rendition,
@@ -27,6 +32,7 @@ export function muxCardStreamUrl(playbackId: string) {
   return `${muxHlsUrl(playbackId)}?max_resolution=${cap}`;
 }
 
+
 function cardStartEstimate() {
   if (constrainedNetwork()) return 280_000;
   // A phone-width tile starts on the 480p rung. Desktop can take 720p.
@@ -34,7 +40,9 @@ function cardStartEstimate() {
   return 2_500_000;
 }
 
+
 let hlsModulePromise: Promise<HlsStatic> | null = null;
+
 
 type WarmEntry = {
   url480?: string;
@@ -43,9 +51,11 @@ type WarmEntry = {
   text720?: string;
 };
 
+
 let warmCacheRaw: string | null = null;
 let warmCacheMap: Record<string, string | WarmEntry> | null = null;
 const warmBlobUrls = new Map<string, string>();
+
 
 function getWarmMap(): Record<string, string | WarmEntry> | null {
   const raw = document.getElementById("mux-card-warm")?.textContent;
@@ -59,6 +69,7 @@ function getWarmMap(): Record<string, string | WarmEntry> | null {
     return null;
   }
 }
+
 
 function warmPlaylist(playbackId: string, narrow: boolean, allowBlob: boolean): string | null {
   if (typeof window === "undefined") return null;
@@ -91,6 +102,7 @@ function warmPlaylist(playbackId: string, narrow: boolean, allowBlob: boolean): 
   return narrow ? (hit.url480 ?? hit.url720 ?? null) : (hit.url720 ?? hit.url480 ?? null);
 }
 
+
 /**
  * The light player is a real script tag (preloaded from the homepage HTML)
  * so it can download during the intro, before this component hydrates.
@@ -99,6 +111,7 @@ export function preloadHlsModule() {
   if (typeof window === "undefined") return;
   void loadHlsCtor();
 }
+
 
 function loadHlsCtor(): Promise<HlsStatic> {
   const w = window as Window & { Hls?: HlsStatic };
@@ -131,6 +144,7 @@ function loadHlsCtor(): Promise<HlsStatic> {
   });
   return hlsModulePromise;
 }
+
 
 /**
  * Native <video> + HLS so muted autoplay is a real media element.
@@ -173,6 +187,7 @@ export default function MuxMediaSlot({
   const revealedRef = useRef(false);
   const detachRevealListenersRef = useRef<(() => void) | null>(null);
 
+
   const revealIfOnPoster = useCallback(() => {
     if (revealedRef.current) return;
     const video = videoRef.current;
@@ -191,12 +206,14 @@ export default function MuxMediaSlot({
     detachRevealListenersRef.current?.();
   }, [thumbnailTime]);
 
+
   const kickPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video || !playingRef.current) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     cardFocusPlay(video);
   }, []);
+
 
   const attachVideo = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -206,11 +223,13 @@ export default function MuxMediaSlot({
       if (!video) return;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+
       let cancelled = false;
       video.muted = true;
       video.controls = false;
       video.setAttribute("playsinline", "");
       video.setAttribute("webkit-playsinline", "");
+
 
       const start = async () => {
         let Hls: HlsStatic | null = null;
@@ -221,11 +240,13 @@ export default function MuxMediaSlot({
         }
         if (cancelled) return;
 
+
         const narrow = window.innerWidth < 800 || constrainedNetwork();
         const useHlsJs = Boolean(Hls?.isSupported());
         const live = fill ? muxCardStreamUrl(playbackId) : muxHlsUrl(playbackId);
         const warmed = fill ? warmPlaylist(playbackId, narrow, useHlsJs) : null;
         const stream = warmed || live;
+
 
         // Prefer hls.js in Chrome; native HLS is Safari. canPlayType("maybe")
         // on Chromium is not enough to skip MSE.
@@ -273,11 +294,29 @@ export default function MuxMediaSlot({
           return;
         }
 
+
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          // Native-HLS only: set the poster imperatively here so the
+          // hls.js / Chromium path has no poster attr and paints like main.
+          video.poster = muxPosterUrl(playbackId, fill ? 640 : 1280, thumbnailTime);
           const seekToPoster = () => {
-            if (thumbnailTime > 0 && video.currentTime < thumbnailTime - 0.35) {
-              try { video.currentTime = thumbnailTime; } catch { /* metadata not ready */ }
+            if (thumbnailTime <= 0) {
+              kickPlay();
+              return;
             }
+            let target = thumbnailTime;
+            if (Number.isFinite(video.duration) && video.duration > 0) {
+              target = Math.min(target, Math.max(0, video.duration - 0.1));
+            }
+            if (video.currentTime < target - 0.35) {
+              try { video.currentTime = target; } catch { /* metadata not ready */ }
+            } else {
+              kickPlay();
+            }
+          };
+          const onSeeked = () => {
+            if (cancelled) return;
+            kickPlay();
           };
           let nativeRecovered = false;
           const onNativeError = () => {
@@ -285,18 +324,36 @@ export default function MuxMediaSlot({
             nativeRecovered = true;
             video.addEventListener("loadedmetadata", seekToPoster, { once: true });
             video.src = live;
-            kickPlay();
           };
+          let watchdogId: number | null = null;
+          let watchdogTicks = 0;
+          watchdogId = window.setInterval(() => {
+            if (cancelled) {
+              if (watchdogId !== null) window.clearInterval(watchdogId);
+              watchdogId = null;
+              return;
+            }
+            watchdogTicks += 1;
+            if (watchdogTicks >= 20) {
+              if (watchdogId !== null) window.clearInterval(watchdogId);
+              watchdogId = null;
+              return;
+            }
+            if (!playingRef.current) return;
+            if (video.paused || video.ended) kickPlay();
+          }, 500);
           video.addEventListener("loadedmetadata", seekToPoster, { once: true });
+          video.addEventListener("seeked", onSeeked);
           video.addEventListener("error", onNativeError, { once: true });
           video.src = stream;
           rootRef.current?.setAttribute("data-hls", "native");
-          kickPlay();
           return;
         }
 
+
         rootRef.current?.setAttribute("data-hls", "unsupported");
       };
+
 
       void start();
       return () => {
@@ -306,17 +363,20 @@ export default function MuxMediaSlot({
     [playbackId, kickPlay, revealIfOnPoster, fill, thumbnailTime],
   );
 
+
   useEffect(() => {
     revealedRef.current = rootRef.current?.getAttribute("data-frame") === "shown";
     const video = videoRef.current;
     const stop = attachVideo(video);
     const onFrame = () => revealIfOnPoster();
 
+
     let rvfcId = 0;
     const vWithRvfc = video as (HTMLVideoElement & {
       requestVideoFrameCallback?: (cb: () => void) => number;
       cancelVideoFrameCallback?: (id: number) => void;
     }) | null;
+
 
     const detachReveal = () => {
       detachRevealListenersRef.current = null;
@@ -333,6 +393,7 @@ export default function MuxMediaSlot({
     };
     detachRevealListenersRef.current = detachReveal;
 
+
     if (!revealedRef.current) {
       video?.addEventListener("loadeddata", onFrame);
       video?.addEventListener("canplay", onFrame);
@@ -340,6 +401,7 @@ export default function MuxMediaSlot({
       video?.addEventListener("playing", onFrame);
       video?.addEventListener("timeupdate", onFrame);
       video?.addEventListener("seeked", onFrame);
+
 
       if (vWithRvfc && typeof vWithRvfc.requestVideoFrameCallback === "function") {
         const stepFrame = () => {
@@ -352,6 +414,7 @@ export default function MuxMediaSlot({
         rvfcId = vWithRvfc.requestVideoFrameCallback(stepFrame);
       }
     }
+
 
     const onEnded = () => {
       const el = videoRef.current;
@@ -391,12 +454,14 @@ export default function MuxMediaSlot({
     };
   }, [attachVideo, kickPlay, revealIfOnPoster, thumbnailTime]);
 
+
   useEffect(() => {
     if (playing) kickPlay();
     else {
       try { videoRef.current?.pause(); } catch { /* ignore */ }
     }
   }, [playing, kickPlay]);
+
 
   return (
     <div
@@ -426,7 +491,6 @@ export default function MuxMediaSlot({
       <video
         ref={videoRef}
         className="mux-cover"
-        poster={fill ? undefined : poster}
         autoPlay
         muted
         loop={thumbnailTime <= 0}
