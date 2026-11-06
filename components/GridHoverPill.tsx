@@ -35,7 +35,7 @@ const getServerSnapshot = () => false;
  *    and the pill is measured (offsetWidth/Height) only at that moment;
  *    the cached size feeds viewport clamping, so no layout reads run
  *    per frame.
- *  - Opacity and will-change are written only on show/hide transitions.
+ *  - Opacity is written only on show/hide; will-change:transform stays on.
  *  - Chrome is the shared PILL_STYLE: opaque lilac token fill, 8px
  *    radius, one 2px shadow, no border, no filter, no backdrop-filter.
  *  Hidden on grid pointerleave, window blur, scroll, and visibility
@@ -97,7 +97,6 @@ export default function GridHoverPill({
     const show = () => {
       if (visible) return;
       visible = true;
-      pill.style.willChange = "transform";
       pill.style.opacity = "1";
     };
 
@@ -106,7 +105,6 @@ export default function GridHoverPill({
       if (!visible) return;
       visible = false;
       pill.style.opacity = "0";
-      pill.style.willChange = "auto";
     };
 
 
@@ -273,7 +271,7 @@ export default function GridHoverPill({
         display: "inline-flex",
         alignItems: "center",
         opacity: 0,
-        willChange: "auto",
+        willChange: "transform",
       }}
     />,
     document.body,

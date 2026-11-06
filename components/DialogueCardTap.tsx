@@ -34,7 +34,7 @@ export const PILL_STYLE: CSSProperties = {
 };
 
 /** Hover variant: light lilac fill, dark ink (7.19:1). */
-export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE };
+export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE, boxShadow: "none" };
 
 /** Tap variant: rose fill, white ink (5.39:1), distinct from hover lilac. */
 export const TAP_PILL_STYLE: CSSProperties = {
