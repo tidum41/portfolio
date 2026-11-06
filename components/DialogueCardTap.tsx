@@ -10,46 +10,72 @@ import {
 } from "react";
 
 
-export const DIALOGUE_PILL_LABEL = "Case Study Coming Soon";
+/** Grid pill copy. Hover states intent, the tap note confirms it in full. */
+export const DIALOGUE_HOVER_LABEL = "Coming Soon";
+export const DIALOGUE_TAP_LABEL = "Case Study Coming Soon";
+/** Alias kept for existing imports: the shared label is the tap label. */
+export const DIALOGUE_PILL_LABEL = DIALOGUE_TAP_LABEL;
 
 
-/** Shared chrome for the tap note and the grid hover pill: one opaque
- *  dark badge, #FFFFFF on #2E2E2E at 13.58:1. No translucency, no
- *  backdrop-filter, no blur, no color-mix on the fill. */
+/** Shared pill chrome for the grid hover pill and the Dialogue tap note.
+ *  Radius is the site --radius-control (8px), shadow is the single cheap
+ *  --shadow-pill, fills are solid opaque tokens from globals.css. No
+ *  border, no translucency, no backdrop-filter, no filter animation. */
 export const PILL_STYLE: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  boxSizing: "border-box",
   padding: "6px 10px",
-  background: "#2E2E2E",
-  border: "1px solid #2E2E2E",
+  background: "var(--color-lilac)",
+  color: "var(--color-lilac-ink)",
   borderRadius: "var(--radius-control)",
-  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16)",
+  boxShadow: "var(--shadow-pill)",
   fontFamily: "var(--font-sans)",
   fontWeight: 500,
   fontSize: 13,
   lineHeight: "16px",
-  color: "#FFFFFF",
   whiteSpace: "nowrap",
   pointerEvents: "none",
+  userSelect: "none",
 };
 
 
-/** Dialogue has no case study yet: a click, tap, Enter or Space shows a
- *  pill identical to the grid hover pill instead of navigating. The note's
- *  live region stays mounted (empty when closed) so screen readers announce
- *  it, and the 120ms fade runs only when the user allows motion, checked
- *  with matchMedia at activation time. */
+/** Hover variant: light lilac fill, dark ink (7.19:1). */
+export const HOVER_PILL_STYLE: CSSProperties = { ...PILL_STYLE };
+
+
+/** Tap variant: rose fill, white ink (5.39:1), distinct from hover lilac. */
+export const TAP_PILL_STYLE: CSSProperties = {
+  ...PILL_STYLE,
+  background: "var(--color-tap-rose)",
+  color: "var(--color-tap-rose-ink)",
+};
+
+
+const DISMISS_MS = 2000;
+const FADE_MS = 120;
+
+
+/** Dialogue has no case study yet: click, tap, Enter or Space shows tap
+ *  feedback instead of navigating. The media cover crossfades to a
+ *  permanently blurred duplicate of itself: the duplicate layer's
+ *  filter: blur(8px) is static and never animated, its 1.05 scale hides
+ *  the blur edge bleed, and only the wrapper opacity animates. The rose
+ *  tap pill is centred over the blurred cover. The live region stays
+ *  mounted, empty when closed, so screen readers announce the note; it
+ *  auto-dismisses after 2s. The fade runs only when the user allows
+ *  motion, checked with matchMedia at activation time; reduced motion
+ *  gets an instant show and hide. An optional blurLayer overrides the
+ *  duplicated media if a dedicated duplicate is ever supplied. */
 export default function DialogueCardTap({
   media,
   label,
 }: {
   media: ReactNode;
-  label: ReactNode;
+  /** @deprecated Prefer the static backdrop blur; kept out of the render tree for perf. */
+  blurLayer?: ReactNode;
+  label?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [fade, setFade] = useState(false);
+  const [blurMounted, setBlurMounted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
 
@@ -60,17 +86,19 @@ export default function DialogueCardTap({
     setFade(
       window.matchMedia("(prefers-reduced-motion: no-preference)").matches,
     );
+    setBlurMounted(true);
     setOpen(true);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setOpen(false), 2000);
+    timer.current = window.setTimeout(() => setOpen(false), DISMISS_MS);
   };
 
 
+  const transition = open && fade ? `opacity ${FADE_MS}ms ease-out` : "none";
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Dialogue, generative answers for UX research. ${DIALOGUE_PILL_LABEL}`}
+      aria-label={`Dialogue, generative answers for UX research. ${DIALOGUE_TAP_LABEL}`}
       onClick={(e) => {
         e.preventDefault();
         show();
@@ -89,31 +117,42 @@ export default function DialogueCardTap({
         cursor: "pointer",
       }}
     >
-      <div style={{ position: "relative", containerType: "inline-size" }}>
+      <div style={{ position: "relative" }}>
         {media}
+        {/* Static blur layer mounts on first open only so first paint stays
+            free of backdrop-filter. Filter itself is never animated. */}
+        {blurMounted ? (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              overflow: "hidden",
+              opacity: open ? 1 : 0,
+              transition,
+              pointerEvents: "none",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              background: "rgba(246, 245, 242, 0.28)",
+            }}
+          />
+        ) : null}
         <div
           aria-live="polite"
           aria-atomic="true"
-          className="dialogue-tap-note"
-          data-open={open ? "true" : "false"}
           style={{
-            ...PILL_STYLE,
             position: "absolute",
-            left: "50%",
-            bottom: "clamp(9px, 2.8cqw, 12px)",
-            transform: "translateX(-50%)",
-            maxWidth: "calc(100% - 24px)",
-            padding:
-              "clamp(4px, 1.3cqw, 6px) clamp(8px, 2.5cqw, 10px)",
-            fontSize: "clamp(11.5px, 3.4cqw, 13px)",
-            lineHeight: "clamp(14px, 4.2cqw, 16px)",
-            textAlign: "center",
+            inset: 0,
             zIndex: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             opacity: open ? 1 : 0,
-            transition: open && fade ? "opacity 120ms ease-out" : "none",
+            transition,
+            pointerEvents: "none",
           }}
         >
-          {open ? DIALOGUE_PILL_LABEL : ""}
+          <span style={TAP_PILL_STYLE}>{open ? DIALOGUE_TAP_LABEL : ""}</span>
         </div>
       </div>
       {label}

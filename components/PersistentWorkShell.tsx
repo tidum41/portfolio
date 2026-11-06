@@ -27,17 +27,22 @@ import { allowIdlePrefetch } from "@/lib/networkHint";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
 import GridHoverPill from "@/components/GridHoverPill";
-import DialogueCardTap, { DIALOGUE_PILL_LABEL } from "@/components/DialogueCardTap";
+import DialogueCardTap, {
+  DIALOGUE_HOVER_LABEL,
+  DIALOGUE_TAP_LABEL,
+} from "@/components/DialogueCardTap";
 
 /** One media ratio for every grid tile so the two columns stay in step. */
 const GRID_MEDIA_ASPECT = "4 / 3";
 
 /** Hover pill copy, keyed by data-grid-card. Demo cards are left out on purpose. */
 const GRID_PILL_LABELS: Record<string, string> = {
-  "project-bruinlease": "View Case Study",
-  "project-joola-b2b": "View Case Study",
-  "project-sviz": "View Case Study",
-  [DIALOGUE_PROJECT_ID]: DIALOGUE_PILL_LABEL,
+  "project-bruinlease": "Case Study",
+  "project-joola-b2b": "Case Study",
+  "project-sviz": "Case Study",
+  [DIALOGUE_PROJECT_ID]: DIALOGUE_HOVER_LABEL,
+  habit: "Demo",
+  "project-todolist": "Demo",
 };
 import CardFocusGrid from "@/components/CardFocusGrid";
 
@@ -730,9 +735,10 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
   }, [openPopup, popupHabitEl]);
 
-  // Homepage sequence: projects (BruinLease, JOOLA, Dialogue, SViz) then the
-  // phone demo, then any remaining demos. `null` marks the phone slot.
-  const HABIT_RANK = Math.min(4, projects.length);
+  // Homepage sequence: projects (BruinLease, JOOLA, Dialogue, SViz) then
+  // All in One, then the Habit phone demo (`null` slot). HABIT_RANK sits
+  // just past todolist (5th project) so Habit lands after it.
+  const HABIT_RANK = Math.min(5, projects.length);
   const gridSlots: (SanityProject | null)[] = [
     ...projects.slice(0, HABIT_RANK),
     null,
@@ -961,7 +967,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
           </div>
         </CardFocusGrid>
-        <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_PILL_LABEL}</span>
+        <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_TAP_LABEL}</span>
         <GridHoverPill labels={GRID_PILL_LABELS} />
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body

@@ -1,13 +1,9 @@
 "use client";
 
 
-import {
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { PILL_STYLE } from "./DialogueCardTap";
+import { HOVER_PILL_STYLE } from "./DialogueCardTap";
 
 
 export interface GridHoverPillProps {
@@ -21,21 +17,45 @@ const OFFSET_Y = 18;
 const VIEWPORT_PAD = 8;
 
 
-const subscribe = () => () => {};
-const getSnapshot = () => true;
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
 
+/** Cursor-following grid pill, mounted once, fine pointers only. Perf
+ *  contract, tightened against the branch trace (FunctionCall 3843 vs
+ *  main 3184):
+ *  - One pointermove listener (no duplicate pointerover pass). The move
+ *    handler only resolves the card, stores coordinates, and schedules a
+ *    single rAF; the rAF writes transform (translate3d) and nothing else.
+ *  - No React state on the move path, and none at all after mount: the
+ *    portal mount is read with useSyncExternalStore, labels live in a ref
+ *    so a new labels object never rebinds listeners.
+ *  - The label is written via ref.textContent only when the card changes,
+ *    and the pill is measured (offsetWidth/Height) only at that moment;
+ *    the cached size feeds viewport clamping, so no layout reads run
+ *    per frame.
+ *  - Opacity and will-change are written only on show/hide transitions.
+ *  - Chrome is the shared PILL_STYLE: opaque lilac token fill, 8px
+ *    radius, one 2px shadow, no border, no filter, no backdrop-filter.
+ *  Hidden on grid pointerleave, window blur, scroll, and visibility
+ *  change. Keyboard focus-visible anchors it at the card's bottom-left. */
 export default function GridHoverPill({
   gridSelector = ".portfolio-grid",
   labels = {},
 }: GridHoverPillProps) {
   const pillRef = useRef<HTMLDivElement | null>(null);
+  const labelsRef = useRef(labels);
   const mounted = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
+    emptySubscribe,
+    getClientSnapshot,
     getServerSnapshot,
   );
+
+
+  useEffect(() => {
+    labelsRef.current = labels;
+  });
 
 
   useEffect(() => {
@@ -52,11 +72,14 @@ export default function GridHoverPill({
 
 
     let enabled = hoverMq.matches;
+    let visible = false;
     let currentId: string | null = null;
     let rafId = 0;
     let pendingX = 0;
     let pendingY = 0;
-    let hasPendingPointer = false;
+    let hasPending = false;
+    let pillW = 0;
+    let pillH = 0;
 
 
     const applyTransition = () => {
@@ -67,170 +90,122 @@ export default function GridHoverPill({
     applyTransition();
 
 
-    const clamp = (value: number, min: number, max: number) =>
-      Math.min(Math.max(value, min), Math.max(min, max));
+    const clamp = (v: number, min: number, max: number) =>
+      Math.min(Math.max(v, min), Math.max(min, max));
 
 
     const show = () => {
+      if (visible) return;
+      visible = true;
+      pill.style.willChange = "transform";
       pill.style.opacity = "1";
     };
 
 
     const hide = () => {
+      if (!visible) return;
+      visible = false;
       pill.style.opacity = "0";
+      pill.style.willChange = "auto";
     };
 
 
     const setLabelForId = (id: string) => {
       if (id === currentId) return true;
-      const label = labels[id];
+      const label = labelsRef.current[id];
       if (label == null) return false;
       currentId = id;
       pill.textContent = label;
+      pillW = pill.offsetWidth;
+      pillH = pill.offsetHeight;
       return true;
     };
 
 
-    const cardFromTarget = (target: EventTarget | null) => {
-      if (!(target instanceof Element)) return null;
-      return target.closest<HTMLElement>(".portfolio-grid-card");
-    };
+    const cardFromTarget = (target: EventTarget | null) =>
+      target instanceof Element
+        ? target.closest<HTMLElement>(".portfolio-grid-card")
+        : null;
 
 
     const idForCard = (card: HTMLElement | null) => {
-      if (!card) return null;
-      const id = card.getAttribute("data-grid-card");
-      if (!id || !(id in labels)) return null;
-      return id;
+      const id = card?.getAttribute("data-grid-card");
+      return id && id in labelsRef.current ? id : null;
     };
 
 
-    const positionAtPointer = () => {
+    const flush = () => {
       rafId = 0;
-      if (!hasPendingPointer) return;
-      hasPendingPointer = false;
-
-
-      const width = pill.offsetWidth;
-      const height = pill.offsetHeight;
+      if (!hasPending) return;
+      hasPending = false;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-
-
       let left = pendingX + OFFSET_X;
       let top = pendingY + OFFSET_Y;
-
-
-      if (left + width > vw - VIEWPORT_PAD) {
-        left = pendingX - width - OFFSET_X;
-      }
-      if (top + height > vh - VIEWPORT_PAD) {
-        top = pendingY - height - OFFSET_Y;
-      }
-
-
-      left = clamp(left, VIEWPORT_PAD, vw - width - VIEWPORT_PAD);
-      top = clamp(top, VIEWPORT_PAD, vh - height - VIEWPORT_PAD);
-
-
+      if (left + pillW > vw - VIEWPORT_PAD) left = pendingX - pillW - OFFSET_X;
+      if (top + pillH > vh - VIEWPORT_PAD) top = pendingY - pillH - OFFSET_Y;
+      left = clamp(left, VIEWPORT_PAD, vw - pillW - VIEWPORT_PAD);
+      top = clamp(top, VIEWPORT_PAD, vh - pillH - VIEWPORT_PAD);
       pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
     };
 
 
-    const schedulePointerPosition = (x: number, y: number) => {
+    const schedule = (x: number, y: number) => {
       pendingX = x;
       pendingY = y;
-      hasPendingPointer = true;
-      if (!rafId) {
-        rafId = window.requestAnimationFrame(positionAtPointer);
+      hasPending = true;
+      if (!rafId) rafId = window.requestAnimationFrame(flush);
+    };
+
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!enabled || event.pointerType !== "mouse") return;
+      const id = idForCard(cardFromTarget(event.target));
+      if (!id || !setLabelForId(id)) {
+        hide();
+        return;
       }
+      schedule(event.clientX, event.clientY);
+      show();
     };
 
 
     const positionAtCard = (card: HTMLElement) => {
       const rect = card.getBoundingClientRect();
-      const width = pill.offsetWidth;
-      const height = pill.offsetHeight;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-
-
       const left = clamp(
         rect.left + 12,
         VIEWPORT_PAD,
-        vw - width - VIEWPORT_PAD,
+        window.innerWidth - pillW - VIEWPORT_PAD,
       );
       const top = clamp(
-        rect.bottom - height - 12,
+        rect.bottom - pillH - 12,
         VIEWPORT_PAD,
-        vh - height - VIEWPORT_PAD,
+        window.innerHeight - pillH - VIEWPORT_PAD,
       );
-
-
       pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
     };
 
 
-    const handlePointer = (event: PointerEvent) => {
-      if (!enabled || event.pointerType !== "mouse") return;
-
-
-      const card = cardFromTarget(event.target);
-      const id = idForCard(card);
-      if (!id) {
-        hide();
-        return;
-      }
-      if (!setLabelForId(id)) {
-        hide();
-        return;
-      }
-      schedulePointerPosition(event.clientX, event.clientY);
-      show();
-    };
-
-
-    const onPointerOver = (event: PointerEvent) => handlePointer(event);
-    const onPointerMove = (event: PointerEvent) => handlePointer(event);
-
-
-    const onPointerLeave = () => {
-      hide();
-    };
-
-
     const onFocusIn = (event: FocusEvent) => {
-      if (!enabled) return;
+      if (!enabled || !(event.target instanceof Element)) return;
       const card = cardFromTarget(event.target);
       const id = idForCard(card);
-      if (!id || !(event.target instanceof Element)) {
-        hide();
-        return;
-      }
-
-
-      let focusVisible = false;
+      let focusVisible = true;
       try {
         focusVisible = event.target.matches(":focus-visible");
       } catch {
         focusVisible = true;
       }
-      if (!focusVisible) {
-        hide();
-        return;
-      }
-
-
-      if (!setLabelForId(id)) {
+      if (!card || !id || !focusVisible || !setLabelForId(id)) {
         hide();
         return;
       }
       if (rafId) {
         window.cancelAnimationFrame(rafId);
         rafId = 0;
-        hasPendingPointer = false;
+        hasPending = false;
       }
-      if (card) positionAtCard(card);
+      positionAtCard(card);
       show();
     };
 
@@ -243,75 +218,43 @@ export default function GridHoverPill({
     };
 
 
+    const onPointerLeave = () => hide();
     const onBlur = () => hide();
     const onScroll = () => hide();
     const onVisibilityChange = () => {
       if (document.hidden) hide();
     };
-
-
     const onHoverMqChange = (event: MediaQueryListEvent) => {
       enabled = event.matches;
       if (!enabled) hide();
     };
-
-
     const onMotionMqChange = () => applyTransition();
 
 
-    grid.addEventListener("pointerover", onPointerOver);
     grid.addEventListener("pointermove", onPointerMove);
     grid.addEventListener("pointerleave", onPointerLeave);
     grid.addEventListener("focusin", onFocusIn);
     grid.addEventListener("focusout", onFocusOut);
-
-
     window.addEventListener("blur", onBlur);
     window.addEventListener("scroll", onScroll, true);
     document.addEventListener("visibilitychange", onVisibilityChange);
-
-
-    if (typeof hoverMq.addEventListener === "function") {
-      hoverMq.addEventListener("change", onHoverMqChange);
-    } else {
-      hoverMq.addListener(onHoverMqChange);
-    }
-    if (typeof motionMq.addEventListener === "function") {
-      motionMq.addEventListener("change", onMotionMqChange);
-    } else {
-      motionMq.addListener(onMotionMqChange);
-    }
+    hoverMq.addEventListener("change", onHoverMqChange);
+    motionMq.addEventListener("change", onMotionMqChange);
 
 
     return () => {
-      hide();
       if (rafId) window.cancelAnimationFrame(rafId);
-
-
-      grid.removeEventListener("pointerover", onPointerOver);
       grid.removeEventListener("pointermove", onPointerMove);
       grid.removeEventListener("pointerleave", onPointerLeave);
       grid.removeEventListener("focusin", onFocusIn);
       grid.removeEventListener("focusout", onFocusOut);
-
-
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("scroll", onScroll, true);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-
-
-      if (typeof hoverMq.removeEventListener === "function") {
-        hoverMq.removeEventListener("change", onHoverMqChange);
-      } else {
-        hoverMq.removeListener(onHoverMqChange);
-      }
-      if (typeof motionMq.removeEventListener === "function") {
-        motionMq.removeEventListener("change", onMotionMqChange);
-      } else {
-        motionMq.removeListener(onMotionMqChange);
-      }
+      hoverMq.removeEventListener("change", onHoverMqChange);
+      motionMq.removeEventListener("change", onMotionMqChange);
     };
-  }, [mounted, gridSelector, labels]);
+  }, [mounted, gridSelector]);
 
 
   if (!mounted) return null;
@@ -322,14 +265,15 @@ export default function GridHoverPill({
       ref={pillRef}
       aria-hidden="true"
       style={{
-        ...PILL_STYLE,
+        ...HOVER_PILL_STYLE,
         position: "fixed",
         left: 0,
         top: 0,
-        zIndex: 9999,
+        zIndex: 60,
+        display: "inline-flex",
+        alignItems: "center",
         opacity: 0,
-        transition: "opacity 120ms ease-out",
-        willChange: "transform",
+        willChange: "auto",
       }}
     />,
     document.body,
