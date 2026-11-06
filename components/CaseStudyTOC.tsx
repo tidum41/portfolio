@@ -126,7 +126,8 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
-  const backArrowMobile = (
+  /** Shared 20×20 chevron for mobile + desktop (pre-#139; content-width Back). */
+  const backArrow = (
     <svg
       className="cs-back-arrow"
       width="20"
@@ -135,24 +136,6 @@ export default function CaseStudyTOC({
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  );
-
-  /** Desktop sidebar: cap-height ink (~10px), stem-weight stroke, tight viewBox. */
-  const backArrowDesktop = (
-    <svg
-      className="cs-back-arrow"
-      width="6"
-      height="10"
-      viewBox="8.25 5.25 7.5 13.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -182,36 +165,37 @@ export default function CaseStudyTOC({
           textDecoration: "none",
         }}
       >
-        {backArrowMobile}
+        {backArrow}
         <span className="cs-back-mobile-label">Back</span>
       </a>
     );
   }
 
-  // Desktop: sticky sidebar
+  // Desktop: sticky sidebar (in-flow Back; aside sticky owns stick point)
   return (
     <div className="cs-toc-root">
-      {/* Back button — inline-flex, narrow hit area */}
+      {/* Back — content-width hit area (min 44×44), not full aside column */}
       <a
         href={backHref}
         onClick={handleBack}
         onMouseEnter={() => { if (canHover()) setBackHovered(true); }}
         onMouseLeave={() => setBackHovered(false)}
         className="cs-back-desktop"
+        aria-label="Back to work"
         style={{
           ...NO_TAP_HIGHLIGHT,
+          // Layout (inline-flex, flex-start, 44×44, marginBottom 16) lives on .cs-back-desktop
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
         }}
       >
-        {backArrowDesktop}
+        {backArrow}
         <span className="cs-back-desktop-label">Back</span>
       </a>
 
       {activeSections.length > 0 && (
-        <div className="cs-aside-nav-host">
-          <nav className="cs-toc-nav" aria-label="Table of contents">
+        <nav className="cs-toc-nav" aria-label="Table of contents">
           <div className="cs-toc-stack">
             {activeSections.map(({ id, label }) => {
               const isActive  = activeSection === label;
@@ -238,8 +222,7 @@ export default function CaseStudyTOC({
               );
             })}
           </div>
-          </nav>
-        </div>
+        </nav>
       )}
     </div>
   );
