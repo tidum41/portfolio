@@ -184,15 +184,7 @@ export default function CaseStudyTOC({
         aria-label="Back to work"
         style={{
           ...NO_TAP_HIGHLIGHT,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 2,
-          minWidth: 44,
-          minHeight: 44,
-          width: "max-content",
-          maxWidth: "100%",
-          alignSelf: "flex-start",
-          marginBottom: 16,
+          // Layout (inline-flex, flex-start, 44×44, marginBottom 16) lives on .cs-back-desktop
           color: backHovered ? COLOR_ACTIVE : COLOR_INACTIVE,
           transition: "color 0.2s ease",
           textDecoration: "none",
