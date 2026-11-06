@@ -69,17 +69,36 @@ export default function DialogueCardTap({
 }) {
   const [open, setOpen] = useState(false);
   const [fade, setFade] = useState(false);
+  /** Mount blur cover only while open/fading so idle grid hover stays cheap. */
+  const [coverMounted, setCoverMounted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
+  const unmountTimer = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+      window.clearTimeout(unmountTimer.current);
+    },
+    [],
+  );
 
   const show = () => {
-    setFade(
-      window.matchMedia("(prefers-reduced-motion: no-preference)").matches,
-    );
+    const allowFade = window.matchMedia(
+      "(prefers-reduced-motion: no-preference)",
+    ).matches;
+    setFade(allowFade);
+    window.clearTimeout(unmountTimer.current);
+    setCoverMounted(true);
     setOpen(true);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setOpen(false), DISMISS_MS);
+    timer.current = window.setTimeout(() => {
+      setOpen(false);
+      // Unmount after opacity fade so idle hover pays nothing for the cover.
+      unmountTimer.current = window.setTimeout(
+        () => setCoverMounted(false),
+        allowFade ? FADE_MS : 0,
+      );
+    }, DISMISS_MS);
   };
 
   const transition = open && fade ? `opacity ${FADE_MS}ms ease-out` : "none";
@@ -108,35 +127,34 @@ export default function DialogueCardTap({
     >
       <div style={{ position: "relative" }}>
         {media}
-        {/* Always mounted: static filter on the inner layer; opacity-only fade. */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            overflow: "hidden",
-            opacity: open ? 1 : 0,
-            transition,
-            pointerEvents: "none",
-          }}
-        >
+        {/* Mounted only while open/fading: static filter, opacity-only fade. */}
+        {coverMounted ? (
           <div
+            aria-hidden="true"
             style={{
               position: "absolute",
-              inset: "-2.5%",
-              width: "105%",
-              height: "105%",
-              filter: "blur(8px)",
-              transform: "scale(1.05)",
-              transformOrigin: "center",
-              // Skip painting the static blur while the cover is closed so
-              // idle grid hover stays cheap; filter itself is never transitioned.
-              contentVisibility: open ? "visible" : "hidden",
+              inset: 0,
+              overflow: "hidden",
+              opacity: open ? 1 : 0,
+              transition,
+              pointerEvents: "none",
             }}
           >
-            {blurLayer ?? media}
+            <div
+              style={{
+                position: "absolute",
+                inset: "-2.5%",
+                width: "105%",
+                height: "105%",
+                filter: "blur(8px)",
+                transform: "scale(1.05)",
+                transformOrigin: "center",
+              }}
+            >
+              {blurLayer ?? media}
+            </div>
           </div>
-        </div>
+        ) : null}
         <div
           aria-live="polite"
           aria-atomic="true"
