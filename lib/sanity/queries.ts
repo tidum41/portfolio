@@ -179,6 +179,20 @@ const PROJECT_HREF_OVERRIDES: Record<string, string> = {
   "project-todolist": ALLINONE_APP_URL,
 };
 
+export const DIALOGUE_PROJECT_ID = "project-dialogue";
+
+/** Local third card. No case study page yet, so no href: the card is static
+ *  and the grid pill reads "Case Study Coming Soon!". */
+const DIALOGUE_PROJECT: SanityProject = {
+  _id: DIALOGUE_PROJECT_ID,
+  title: "Generative answers for UX research",
+  label: "Contract 2026",
+  mediaType: "image",
+  aspectRatio: "4 / 3",
+  order: 0,
+  featured: true,
+};
+
 /** Local second card (after BruinLease) — not in Sanity. Page copy lives in lib/caseStudies/joola.ts. */
 const JOOLA_B2B_PROJECT: SanityProject = {
   _id: "project-joola-b2b",
@@ -207,14 +221,22 @@ async function loadProjects(): Promise<SanityProject[]> {
         href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
       };
     });
-  // Homepage order: BruinLease top-left, JOOLA B2B second, then the rest.
-  const bruin = mapped.filter((p) => p._id === "project-bruinlease");
-  const rest = mapped.filter((p) => p._id !== "project-bruinlease");
-  return [...bruin, JOOLA_B2B_PROJECT, ...rest];
+  // Homepage order: BruinLease, JOOLA B2B, Dialogue, SViz, then the rest.
+  // The phone demo card is slotted in after these four by PersistentWorkShell.
+  const pick = (id: string) => mapped.filter((p) => p._id === id);
+  const lead = ["project-bruinlease", "project-sviz"];
+  const rest = mapped.filter((p) => !lead.includes(p._id));
+  return [
+    ...pick("project-bruinlease"),
+    JOOLA_B2B_PROJECT,
+    DIALOGUE_PROJECT,
+    ...pick("project-sviz"),
+    ...rest,
+  ];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v11-bruinlease-first"], {
+  unstable_cache(loadProjects, ["projects-v12-dialogue-third"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
