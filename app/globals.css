@@ -2523,3 +2523,12 @@ html[data-theme="dark"] {
     box-shadow: var(--minimap-shadow-hover) !important;
   }
 }
+
+/* iOS Safari: hide the native play overlay on muted inline autoplay card videos; this only
+   hides WebKit's overlay, it does not size or position anything. */
+.mux-media-slot video::-webkit-media-controls,
+.mux-media-slot video::-webkit-media-controls-start-playback-button,
+.mux-media-slot video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
