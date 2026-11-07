@@ -50,15 +50,15 @@ export default function PrimaryRouteWarmup() {
       if (!allowIdlePrefetch()) return;
       warmJs();
       if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(warmAssets, { timeout: 2500 });
-        heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 4000 });
+        idleId = window.requestIdleCallback(warmAssets, { timeout: 6000 });
+        heavyIdleId = window.requestIdleCallback(warmHeavy, { timeout: 8000 });
       } else {
-        timeoutId = window.setTimeout(warmAssets, 400);
-        heavyTimeoutId = window.setTimeout(warmHeavy, 1200);
+        timeoutId = window.setTimeout(warmAssets, 1200);
+        heavyTimeoutId = window.setTimeout(warmHeavy, 2400);
       }
     };
 
-    const cancelIntro = afterIntroIdle(schedule, pathname === "/" ? 2500 : 800);
+    const cancelIntro = afterIntroIdle(schedule, 6000);
 
     return () => {
       cancelIntro();

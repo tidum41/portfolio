@@ -8,6 +8,8 @@ import { introTimings } from "@/lib/introTimings";
 let _hasMounted = false;
 
 const FRAME_MS = 1000 / 30; // 30fps cap
+const FRAME_TOLERANCE_MS = 3.5; // allow 2nd 60Hz vsync (~33.3ms ± jitter) to hit cleanly
+const MAX_FADE_DT_MS = 50; // clamp per-frame fade step so stalled frames delay rather than skip
 
 function hexToRgb(hex: string): [number, number, number] {
   if (!hex || typeof hex !== "string") return [1, 1, 1];
@@ -115,9 +117,15 @@ export default function PS3Silk({
     return () => window.removeEventListener("soft-nav-start", pause);
   }, []);
 
-  // ps3-update event
+  // ps3-update event — arm after the initial hydration turn so PS3ControlPanel's
+  // mount-time default broadcast doesn't clobber the initial prop intensity.
   useEffect(() => {
+    let armed = false;
+    const armTimer = window.setTimeout(() => {
+      armed = true;
+    }, 0);
     const handler = (e: Event) => {
+      if (!armed) return;
       const d = (e as CustomEvent).detail;
       if (!d) return;
       if (d.intensity    !== undefined) intensityRef.current  = d.intensity;
@@ -130,13 +138,16 @@ export default function PS3Silk({
           ? (d.waveColor as [number, number, number])
           : hexToRgb(d.waveColor);
       }
-      if (d.mode !== undefined) {
+      if (d.mode !== undefined && d.mode !== modeRef.current) {
         modeRef.current = d.mode;
         startTransition(() => setMode(d.mode));
       }
     };
     window.addEventListener("ps3-update", handler);
-    return () => window.removeEventListener("ps3-update", handler);
+    return () => {
+      window.clearTimeout(armTimer);
+      window.removeEventListener("ps3-update", handler);
+    };
   }, []);
 
   // click-to-cycle mode — ignore rabbit-holes trigger/hover (and any click
@@ -194,14 +205,15 @@ export default function PS3Silk({
     const reducedMotion = typeof window !== "undefined"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // First-ever mount this session: start transparent, RAF loop fades in slowly.
+    // First-ever mount this session: start transparent in the shader (uOpacity=0),
+    // RAF loop fades in slowly to START_OPACITY while wrapper stays at constant
+    // CSS opacity 0.5 (no per-frame style writes or layer recompositing).
     // Every later page nav: appear at full resting opacity immediately — no fade, no gap.
     if (isFirstLoad && !reducedMotion) {
-      wrapper.style.opacity = "0";
+      currentOpacity = 0;
     } else {
       currentOpacity = START_OPACITY;
       targetOpacity  = START_OPACITY;
-      wrapper.style.opacity = String(START_OPACITY);
     }
 
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -212,31 +224,27 @@ export default function PS3Silk({
     let glProg: WebGLProgram | null = null;
     let running = false;
 
-    // Intro fade-in: linear ease-in-out from 0 → START_OPACITY over
-    // patternDuration, first load only. Uses time-based interpolation (not
-    // lerp) so it reaches exactly START_OPACITY at t=duration. Declared out
-    // here (not inside the deferred GL-init timer below) so onReplay — armed
-    // synchronously, immediately below — can reset it even if a replay fires
-    // before shader init has run; every other intro-timed piece
-    // (IntroOrchestrator/HeroText/GridFirstLoad/RabbitHoleVideo) arms its
-    // own intro-replay listener synchronously at mount for the same reason.
-    const INTRO_DURATION = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
-    let introPhaseStart = performance.now();
-    let introPhaseEnd = introPhaseStart + INTRO_DURATION;
+    // Intro fade-in: smoothstep from 0 → START_OPACITY over patternDuration,
+    // first load only. Starts on the first *drawn* frame (not at mount) and
+    // advances per rendered frame with clamped dt so stalled frames delay the
+    // fade rather than skipping ahead on wall-clock time.
+    let introDuration = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
+    let introElapsed = 0;
+    let lastFadeMs: number | null = null;
+    let introActive = introDuration > 0;
 
     function onReplay() {
-      const dur = introTimings.patternDuration * 1000;
+      introDuration = introTimings.patternDuration * 1000;
+      introElapsed = 0;
+      lastFadeMs = null;
+      introActive = introDuration > 0 && !reducedMotion;
       currentOpacity = 0;
-      wrapper.style.opacity = "0";
-      introPhaseStart = performance.now();
-      introPhaseEnd   = introPhaseStart + dur;
     }
     window.addEventListener("intro-replay", onReplay);
 
-    // Defer shader compilation on first load only, so it doesn't compete with the
-    // page-transition animation. On repeat navigations, init immediately — the
-    // shader is already GPU/driver-cached from the earlier compile, so there's
-    // no jank to protect against, and any delay would just read as a stutter.
+    // Yield a 0ms macrotask (removing the old 150ms first-load delay) so shader
+    // compilation doesn't extend React's hydration long task and runs right
+    // after initial hydration commits.
     const initTimer = setTimeout(() => {
       const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
       if (!_glNullable) return;
@@ -250,15 +258,6 @@ export default function PS3Silk({
       // trackpad/high-poll mouse, exactly while a visitor is interacting
       // with the hero.
       let wrapperRect: DOMRect | null = null;
-      let lastWrittenOpacity = -1;
-
-      function writeWrapperOpacity(val: number) {
-        if (!wrapper) return;
-        const clamped = Math.max(0, Math.min(1, val));
-        if (Math.abs(clamped - lastWrittenOpacity) < 0.0005) return;
-        lastWrittenOpacity = clamped;
-        wrapper.style.opacity = String(clamped);
-      }
 
       function resize() {
         const rect = wrapperRef.current?.getBoundingClientRect();
@@ -283,9 +282,9 @@ export default function PS3Silk({
         // more, if resize events keep arriving faster than it catches up)
         // behind. That gap between "buffer cleared" and "next scheduled
         // redraw" is what read as a flicker during a drag-resize. Redrawing
-        // synchronously, right here, closes it — draw() is only defined once
-        // the program/buffer exist (below), guarded via `buf`.
-        if (buf && posLoc >= 0) draw(performance.now());
+        // synchronously while running closes it without forcing a synchronous
+        // mid-hydration GPU draw of an invisible (uOpacity=0) frame at mount.
+        if ((!introActive || lastFadeMs !== null) && buf && posLoc >= 0) draw(performance.now());
       }
 
       // Native `resize` fires many times per second during a drag; coalescing
@@ -338,7 +337,6 @@ export default function PS3Silk({
 
       function onPopState() {
         targetOpacity = currentOpacity = START_OPACITY;
-        writeWrapperOpacity(START_OPACITY);
       }
 
       // Declared early so wake/start helpers (assigned after GL setup) can close
@@ -410,19 +408,27 @@ uniform int   uMode;
 uniform float uHalftoneSize;
 uniform vec3  uWaveColor;
 uniform float uSpeed;
+uniform float uOpacity;
 
-vec3 wave(vec2 uv, float uvx, float spd, float freq, float amp,
-  float phase, float cy, vec3 col, float width, float sharp, bool flip) {
-  float md = length(uv - uMouse);
-  float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
-  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvx + mnudge) * 2.0;
+vec3 wave(vec2 uv, float uvxNudged, float spd, float freq, float amp,
+  float phase, float cy, vec3 col, float width, int sharp, bool flip) {
+  float angle = uTime * uSpeed * spd * freq * -1.0 + (phase + uvxNudged) * 2.0;
   float wy = sin(angle) * amp + cy;
   float dy = wy - uv.y;
   float dist = abs(dy);
   if (flip) { if (dy > 0.0) dist *= 4.0; }
   else       { if (dy < 0.0) dist *= 4.0; }
   float s = smoothstep(width * 1.5, 0.0, dist);
-  return min(col * pow(s, sharp), col);
+  float s2 = s * s;
+  float s4 = s2 * s2;
+  float s8 = s4 * s4;
+  float s16 = s8 * s8;
+  float p = sharp == 18 ? (s16 * s2)
+          : sharp == 20 ? (s16 * s4)
+          : sharp == 22 ? (s16 * s4 * s2)
+          : sharp == 28 ? (s16 * s8 * s4)
+          : (s16 * s8 * s4 * s2);
+  return min(col * p, col);
 }
 
 void main() {
@@ -430,16 +436,19 @@ void main() {
   uv.y += uYOffsetPx / uResolution.y;
   float aspectScale = uAspect / 2.414;
   float uvx = uv.x * aspectScale;
+  float md = length(uv - uMouse);
+  float mnudge = smoothstep(0.45, 0.0, md) * uMouseStrength;
+  float uvxNudged = uvx + mnudge;
 
   vec3 c = vec3(0.0);
-  c += wave(uv,uvx,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18.0,false);
-  c += wave(uv,uvx,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20.0,false);
-  c += wave(uv,uvx,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28.0,false);
-  c += wave(uv,uvx,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22.0,false);
-  c += wave(uv,uvx,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20.0,true);
-  c += wave(uv,uvx,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22.0,true);
-  c += wave(uv,uvx,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30.0,true);
-  c += wave(uv,uvx,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18.0,true);
+  c += wave(uv,uvxNudged,0.18,0.22,0.32,0.00,0.62,uWaveColor*0.90,0.090,18,false);
+  c += wave(uv,uvxNudged,0.38,0.42,0.24,0.00,0.62,uWaveColor*0.68,0.085,20,false);
+  c += wave(uv,uvxNudged,0.28,0.62,0.20,0.00,0.62,uWaveColor*0.38,0.042,28,false);
+  c += wave(uv,uvxNudged,0.12,0.18,0.14,0.00,0.62,uWaveColor*0.16,0.065,22,false);
+  c += wave(uv,uvxNudged,0.14,0.28,0.14,0.00,0.58,uWaveColor*0.84,0.095,20,true);
+  c += wave(uv,uvxNudged,0.33,0.39,0.11,0.00,0.58,uWaveColor*0.62,0.088,22,true);
+  c += wave(uv,uvxNudged,0.48,0.50,0.09,0.00,0.56,uWaveColor*0.32,0.040,30,true);
+  c += wave(uv,uvxNudged,0.22,0.57,0.08,0.00,0.52,uWaveColor*0.14,0.160,18,true);
   c = clamp(c,0.0,1.0);
 
   float waveLuma  = max(max(c.r,c.g),c.b);
@@ -450,19 +459,20 @@ void main() {
     vec2 cellCenter = (cell + 0.5) * uHalftoneSize;
     vec2 cellUV     = cellCenter / uResolution;
     float mouseDist = length(cellUV - uMouse);
-    float ripple    = exp(-pow((mouseDist - 0.10) / 0.055, 2.0)) * uMouseStrength * 2.8;
+    float rx        = (mouseDist - 0.10) / 0.055;
+    float ripple    = exp(-rx * rx) * uMouseStrength * 2.8;
     float d         = length(gl_FragCoord.xy - cellCenter);
     float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
     float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
     vec3  dotColor  = uWaveColor * 0.55;
     float vis       = smoothstep(0.02, 0.08, waveLight);
-    float a         = dotVal * vis;
+    float a         = dotVal * vis * uOpacity;
     gl_FragColor = vec4(dotColor * a, a);
     return;
   }
 
   vec3  darkWave = uWaveColor * 0.78;
-  float alpha    = clamp(waveLight * 1.1, 0.0, 1.0);
+  float alpha    = clamp(waveLight * 1.1, 0.0, 1.0) * uOpacity;
   gl_FragColor = vec4(darkWave * alpha, alpha);
 }`;
 
@@ -492,6 +502,7 @@ void main() {
       const uHtSizeLoc        = gl.getUniformLocation(prog, "uHalftoneSize");
       const uWaveColorLoc     = gl.getUniformLocation(prog, "uWaveColor");
       const uSpeedLoc         = gl.getUniformLocation(prog, "uSpeed");
+      const uOpacityLoc       = gl.getUniformLocation(prog, "uOpacity");
 
       // Sets every uniform from current state and paints one frame. Shared by
       // frame()'s regular throttled loop and resize()'s immediate post-resize
@@ -499,7 +510,11 @@ void main() {
       // current state is right now," so there's one definition of what that
       // means instead of two copies drifting apart.
       function draw(ms: number) {
+        if (introActive && lastFadeMs === null) {
+          lastFadeMs = ms;
+        }
         const wc = waveColorRef.current;
+        const shaderOpacity = clamp(currentOpacity / START_OPACITY, 0, 1);
         // Reduced-motion: freeze the shader's time input instead of feeding
         // it the running clock, so the wave pattern still renders (just as a
         // static frame) rather than keeping the animation loop's only
@@ -515,6 +530,7 @@ void main() {
         gl.uniform1f(uHtSizeLoc, halftSizeRef.current);
         gl.uniform3f(uWaveColorLoc, wc[0], wc[1], wc[2]);
         gl.uniform1f(uSpeedLoc, speedRef.current);
+        gl.uniform1f(uOpacityLoc, shaderOpacity);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
@@ -535,9 +551,8 @@ void main() {
         updateTarget();
         // Snap opacity to the scroll-derived target — no leftover intro/
         // hidden-state value that would wash the pattern out.
-        if (!(isFirstLoad && !reducedMotion && performance.now() < introPhaseEnd)) {
+        if (!introActive) {
           currentOpacity = targetOpacity;
-          writeWrapperOpacity(currentOpacity);
         }
         if (glProg && buf) {
           glCtx.useProgram(glProg);
@@ -570,25 +585,32 @@ void main() {
           if (canvas.width < 2 || canvas.height < 2 || glCtx.isContextLost()) return;
         }
 
-        if (ms - lastT < FRAME_MS) return;
+        if (lastT !== 0 && ms - lastT < FRAME_MS - FRAME_TOLERANCE_MS) return;
         lastT = ms;
 
         mouse.x += (mouse.tx - mouse.x) * 0.042;
         mouse.y += (mouse.ty - mouse.y) * 0.042;
 
         updateScrollTarget();
-        const isIntro = ms < introPhaseEnd;
-        if (isIntro && INTRO_DURATION > 0) {
-          // Time-based ease-in-out: reaches exactly START_OPACITY at introPhaseEnd
-          const rawT = (ms - introPhaseStart) / (introPhaseEnd - introPhaseStart);
-          const t = Math.min(rawT, 1);
+        if (introActive && introDuration > 0) {
+          if (lastFadeMs === null) {
+            lastFadeMs = ms;
+            introElapsed = FRAME_MS;
+          } else {
+            const dt = Math.min(Math.max(0, ms - lastFadeMs), MAX_FADE_DT_MS);
+            lastFadeMs = ms;
+            introElapsed += dt;
+          }
+          const t = Math.min(introElapsed / introDuration, 1);
           const eased = t * t * (3 - 2 * t); // smoothstep
           currentOpacity = eased * START_OPACITY;
+          if (t >= 1) {
+            introActive = false;
+          }
         } else {
           const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.035; // dim fast, recover medium
           currentOpacity += (targetOpacity - currentOpacity) * lerpSpeed;
         }
-        writeWrapperOpacity(currentOpacity);
 
         draw(ms);
       }
@@ -597,9 +619,9 @@ void main() {
       // for the active→true wake. Avoids the old path of sizing to 0×0 on
       // about/archive first-paint and then permanently flattening the pattern.
       if (activeRef.current) {
-        requestAnimationFrame(() => lifecycleRef.current?.wake());
+        wake();
       }
-    }, isFirstLoad ? 150 : 0);
+    }, 0);
 
     return () => {
       _hasMounted = hadMountedBefore;
@@ -621,7 +643,7 @@ void main() {
         top: 0, left: 0,
         width: "100%", height: "100%",
         pointerEvents: "none",
-        opacity: 0,
+        opacity: 0.5,
       }}
     >
       <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", background: "transparent" }} />

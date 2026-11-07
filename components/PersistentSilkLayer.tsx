@@ -1,11 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import PS3Silk from "@/components/PS3Silk";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
-
-const PS3Silk = dynamic(() => import("@/components/PS3Silk"), { ssr: false });
 
 // 0 until the hero is measured — a 420px guess then ResizeObserver shrink
 // was a visible silk-height jump on first load (hero is ~230–320px).
@@ -25,6 +23,7 @@ export default function PersistentSilkLayer() {
     () => sessionVisitedWork || onWork
   );
   const [height, setHeight] = useState(0);
+  const hostRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (!onWork) return;
@@ -43,8 +42,14 @@ export default function PersistentSilkLayer() {
         return;
       }
       const sync = () => {
-        const next = hero.getBoundingClientRect().height;
-        if (next >= 2) setHeight(Math.round(next));
+        const next = Math.round(hero.getBoundingClientRect().height);
+        if (next >= 2) {
+          if (hostRef.current) {
+            hostRef.current.style.height = `${next}px`;
+            hostRef.current.style.visibility = "visible";
+          }
+          setHeight(next);
+        }
       };
       sync();
       observer = new ResizeObserver(sync);
@@ -61,6 +66,7 @@ export default function PersistentSilkLayer() {
 
   return (
     <div
+      ref={hostRef}
       aria-hidden
       data-silk-phase={onWork ? "work" : "hidden"}
       style={{

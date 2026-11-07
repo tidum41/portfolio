@@ -36,19 +36,36 @@ export function onIntroDone(cb: () => void): () => void {
 
 /** After intro (and idle), run `cb`. Used to prefetch About/Archive off the
  *  first-load critical path without changing later-nav keep-alive. */
-export function afterIntroIdle(cb: () => void, timeout = 2500): () => void {
+export function afterIntroIdle(cb: () => void, timeout = 6000): () => void {
   let idleId = 0;
   let timeoutId = 0;
-  const start = () => {
+  let settleId = 0;
+  const wasIntroPlaying = introIsPlaying();
+  const effectiveTimeout = Math.max(timeout, 6000);
+  const scheduleIdle = () => {
     if (typeof requestIdleCallback === "function") {
-      idleId = requestIdleCallback(() => cb(), { timeout });
+      idleId = requestIdleCallback(() => cb(), { timeout: effectiveTimeout });
     } else {
-      timeoutId = window.setTimeout(cb, Math.min(timeout, 800));
+      timeoutId = window.setTimeout(cb, Math.min(effectiveTimeout, 1500));
+    }
+  };
+  const start = () => {
+    // `intro-done` fires at gateDuration (1.9s), while the silk fade (2.3s)
+    // and grid reveal (0.7s) finish around ~2.6–3.0s. When armed during the
+    // first-load intro, wait until the 3s startup window has cleared before
+    // requesting an idle callback (since 30fps silk leaves alternate 16ms
+    // frames looking idle to requestIdleCallback).
+    if (wasIntroPlaying) {
+      const waitMs = Math.max(900, 3150 - performance.now());
+      settleId = window.setTimeout(scheduleIdle, waitMs);
+    } else {
+      scheduleIdle();
     }
   };
   const cancelIntro = onIntroDone(start);
   return () => {
     cancelIntro();
+    if (settleId) window.clearTimeout(settleId);
     if (idleId && typeof cancelIdleCallback === "function") {
       cancelIdleCallback(idleId);
     }

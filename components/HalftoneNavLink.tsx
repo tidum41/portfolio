@@ -10,6 +10,7 @@ import {
   loadOutlineMorph,
   type OutlineMorphComponent,
 } from "./outlineMorphLoader";
+import { afterIntroIdle } from "@/lib/introReady";
 import { markSoftNav, markPrimaryShow, hrefToPrimaryTab, isAlreadyShowingPrimary } from "@/lib/instantNav";
 
 const PRIMARY_NAV = new Set(["/", "/about", "/archive"]);
@@ -87,22 +88,14 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
 
   useEffect(() => {
     let cancel = false;
-    const start = () => {
+    const cancelIdle = afterIntroIdle(() => {
       loadOutlineMorph().then((component) => {
         if (!cancel) setMorph(() => component);
       });
-    };
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(start, { timeout: 2500 });
-      return () => {
-        cancel = true;
-        window.cancelIdleCallback(id);
-      };
-    }
-    const id = window.setTimeout(start, 1200);
+    }, 6000);
     return () => {
       cancel = true;
-      window.clearTimeout(id);
+      cancelIdle();
     };
   }, []);
 

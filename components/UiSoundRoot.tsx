@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { afterIntroIdle } from "@/lib/introReady";
 import { playUiSound, resolveUiSoundFromEventTarget, unlockUiSounds, warmUiSounds } from "@/lib/uiSound";
 
 /**
@@ -20,15 +21,10 @@ export default function UiSoundRoot() {
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Fetch audio files ahead of the first gesture when idle without instantiating
-    // AudioContext, so the first gesture unlocks and plays with zero console warnings.
-    let idleHandle: number | null = null;
-    let idleTimeout: ReturnType<typeof setTimeout> | null = null;
-    if ("requestIdleCallback" in window) {
-      idleHandle = window.requestIdleCallback(() => warmUiSounds({ allowContext: false }), { timeout: 1500 });
-    } else {
-      idleTimeout = setTimeout(() => warmUiSounds({ allowContext: false }), 400);
-    }
+    // Fetch audio files ahead of the first gesture when idle after the intro
+    // without instantiating AudioContext, so the first gesture unlocks and
+    // plays with zero console warnings while keeping the first 3s clear.
+    const cancelIdle = afterIntroIdle(() => warmUiSounds({ allowContext: false }), 6000);
 
     // After a pointer play, skip the synthetic click for the same gesture
     // so we don't double-fire option/push.
@@ -113,10 +109,7 @@ export default function UiSoundRoot() {
     document.addEventListener("pointercancel", onPointerCancel, { capture: true, passive: true });
     document.addEventListener("click", onClick, true);
     return () => {
-      if (idleHandle != null && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleHandle);
-      }
-      if (idleTimeout != null) clearTimeout(idleTimeout);
+      cancelIdle();
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("pointerup", onPointerUp, true);
       document.removeEventListener("pointercancel", onPointerCancel, true);
