@@ -7,6 +7,7 @@ import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
 import { useDialKit } from "dialkit";
 import { hrefToPrimaryTab } from "@/lib/instantNav";
+import { afterIntroIdle } from "@/lib/introReady";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 
 const links = [
@@ -24,12 +25,14 @@ export default function Nav({
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
 
-  // Warm primary routes immediately so first archive/about click isn't waiting
-  // on idle. Cheap if the destination is already cached.
+  // Warm primary routes after the first-load intro so RSC prefetches don't
+  // compete with the PS3 silk fade; hover/pointerdown still prefetch on demand.
   useEffect(() => {
-    for (const { href } of links) {
-      if (href !== pathname) router.prefetch(href);
-    }
+    return afterIntroIdle(() => {
+      for (const { href } of links) {
+        if (href !== pathname) router.prefetch(href);
+      }
+    }, 6000);
   }, [pathname, router]);
 
   // DialKit auto-generates each slider's on-screen label from its key name

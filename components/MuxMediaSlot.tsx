@@ -162,6 +162,8 @@ export default function MuxMediaSlot({
   playing = true,
   posterWidth,
   posterHeight,
+  objectFit,
+  videoBackground,
 }: {
   playbackId: string;
   thumbnailTime?: number;
@@ -177,6 +179,10 @@ export default function MuxMediaSlot({
    */
   posterWidth?: number;
   posterHeight?: number;
+  /** Override object-fit when a card video is letterboxed over a matching backdrop. */
+  objectFit?: "cover" | "contain";
+  /** Backdrop color painted by the <video> element when objectFit="contain". */
+  videoBackground?: string;
 }) {
   const poster = muxPosterUrl(playbackId, fill ? 640 : 1280, thumbnailTime);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -491,6 +497,14 @@ export default function MuxMediaSlot({
       <video
         ref={videoRef}
         className="mux-cover"
+        style={
+          objectFit || videoBackground
+            ? ({
+                ...(objectFit ? { objectFit, "--media-object-fit": objectFit } : null),
+                ...(videoBackground ? { background: videoBackground } : null),
+              } as CSSProperties)
+            : undefined
+        }
         autoPlay
         muted
         loop={thumbnailTime <= 0}

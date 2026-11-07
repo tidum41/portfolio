@@ -865,6 +865,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         title={p.title}
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
+                        objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
+                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -876,7 +878,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={false}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}
@@ -938,6 +940,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         title={p.title}
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
+                        objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
+                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -949,7 +953,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     <ProjectCardLift style={{ gap: 8 }}>
                       <Link
                         href={p.href}
-                        prefetch
+                        prefetch={false}
                         style={CARD_LINK_STYLE}
                         onMouseEnter={() => warmProjectNav(p.href)}
                         onFocus={() => warmProjectNav(p.href)}

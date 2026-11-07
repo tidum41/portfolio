@@ -10,6 +10,7 @@ import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
 import { cardFocusPlay } from "@/lib/cardFocusVideo";
+import { onIntroDone } from "@/lib/introReady";
 
 /** Later cards start a short beat after the two on screen during the intro. */
 const LATER_CARD_STAGGER_MS = 40;
@@ -74,6 +75,10 @@ interface Props {
   /** Small quiet line above the title. */
   label?: string;
   aspectRatio: string;
+  /** How poster + video fit inside the aspectRatio box (default "cover"). */
+  objectFit?: "cover" | "contain";
+  /** Card backdrop color (e.g. matching video background when objectFit="contain"). */
+  background?: string;
   /** When false, tear down Mux/HLS after a deferred window (memory). */
   active?: boolean;
   /** When false, pause playback immediately without unmounting (soft-nav). */
@@ -93,6 +98,8 @@ export default function MuxAutoplayCard({
   title,
   label,
   aspectRatio,
+  objectFit = "cover",
+  background,
   active = true,
   playing = true,
   mountOrder = 0,
@@ -160,25 +167,29 @@ export default function MuxAutoplayCard({
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         return;
       }
-      preloadHlsModule();
       const arm = () => {
-        if (!cancelled) setMountReady(true);
+        if (cancelled) return;
+        preloadHlsModule();
+        setMountReady(true);
       };
       const introActive = document.documentElement.hasAttribute("data-intro");
-      const wait = !introActive
-        ? 0
-        : mountOrder <= 1
-          ? 0
-          : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
-      if (wait <= 0) {
-        arm();
-        return () => {
-          cancelled = true;
-        };
-      }
-      timeoutId = window.setTimeout(arm, wait);
+      const startAfterGate = () => {
+        if (cancelled) return;
+        const wait = introActive
+          ? 650 + mountOrder * 120
+          : mountOrder <= 1
+            ? 0
+            : (mountOrder - 1) * LATER_CARD_STAGGER_MS;
+        if (wait <= 0) arm();
+        else timeoutId = window.setTimeout(arm, wait);
+      };
+      // Wait until the first-load hero intro gate lifts (1.9s, while the grid
+      // is hidden via .intro-hide) before booting HLS/MSE video players so
+      // segment fetches and video decode never stall the PS3 silk intro fade.
+      const cancelIntro = onIntroDone(startAfterGate);
       return () => {
         cancelled = true;
+        cancelIntro();
         window.clearTimeout(timeoutId);
       };
     }
@@ -226,7 +237,7 @@ export default function MuxAutoplayCard({
         style={{
           borderRadius: "var(--radius-card)",
           overflow: "hidden",
-          background: "var(--color-placeholder)",
+          background: background ?? "var(--color-placeholder)",
           aspectRatio,
           position: "relative",
           width: "100%",
@@ -243,7 +254,7 @@ export default function MuxAutoplayCard({
             inset: 0,
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit,
             pointerEvents: "none",
           }}
         />
@@ -252,6 +263,8 @@ export default function MuxAutoplayCard({
             playbackId={playbackId}
             fill
             playing={playing}
+            objectFit={objectFit !== "cover" ? objectFit : undefined}
+            videoBackground={background}
           />
         )}
       </div>
@@ -305,7 +318,7 @@ export default function MuxAutoplayCard({
       ) : (
         <Link
           href={href!}
-          prefetch
+          prefetch={false}
           style={linkStyle}
           onMouseEnter={warmCaseStudy}
           onFocus={warmCaseStudy}

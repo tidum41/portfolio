@@ -198,7 +198,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   return (
     <Link
       href={href}
-      prefetch
+      prefetch={false}
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
       data-ui-sound="option"
