@@ -26,9 +26,7 @@ import { afterIntroIdle, completeIntro } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
-import GridHoverPill from "@/components/GridHoverPill";
 import DialogueCardTap, {
-  DIALOGUE_HOVER_LABEL,
   DIALOGUE_TAP_LABEL,
 } from "@/components/DialogueCardTap";
 
@@ -54,15 +52,6 @@ const DIALOGUE_BLUR_LAYER = (
 );
 
 
-/** Hover pill copy, keyed by data-grid-card: Case Study, Coming Soon, or Demo. */
-const GRID_PILL_LABELS: Record<string, string> = {
-  "project-bruinlease": "Case Study",
-  "project-joola-b2b": "Case Study",
-  "project-sviz": "Case Study",
-  [DIALOGUE_PROJECT_ID]: DIALOGUE_HOVER_LABEL,
-  habit: "Demo",
-  "project-todolist": "Demo",
-};
 import CardFocusGrid from "@/components/CardFocusGrid";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
@@ -989,7 +978,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           </div>
         </CardFocusGrid>
         <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_TAP_LABEL}</span>
-        <GridHoverPill labels={GRID_PILL_LABELS} />
 
         {/* Keep the panel mounted across soft-nav — it portals to document.body
             so parent display:none cannot hide it; `visible` toggles the portal.
