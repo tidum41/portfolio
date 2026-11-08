@@ -70,11 +70,16 @@ export async function createSuiteContext(options = {}) {
     return page;
   };
 
-  const cleanup = async () => {
-    for (const { page, context } of activePages) {
-      try { await page.close(); } catch {}
-      try { await context.close(); } catch {}
+  const closeCurrentPages = async () => {
+    while (activePages.length > 0) {
+      const item = activePages.pop();
+      try { await item.page.close(); } catch {}
+      try { await item.context.close(); } catch {}
     }
+  };
+
+  const cleanup = async () => {
+    await closeCurrentPages();
     try { await browser.close(); } catch {}
   };
 
@@ -83,6 +88,7 @@ export async function createSuiteContext(options = {}) {
     targetUrl,
     liveServerReachable,
     createPage,
+    closeCurrentPages,
     cleanup,
   };
 }
@@ -270,7 +276,6 @@ function generatePortfolioHtml(config) {
       z-index: 10;
       padding: 60px 24px;
       opacity: 0;
-      transition: opacity 0.8s ease;
     }
     .hero-title {
       font-size: 28px;
@@ -426,10 +431,13 @@ function generatePortfolioHtml(config) {
         cursorPulls: 0,
       };
 
-      if (isReturn) {
-        window.__introCompleted = true;
+      if (isReturn || isReduced) {
         if (hero) hero.style.opacity = '1';
         if (nav) nav.style.opacity = '1';
+      }
+
+      if (isReturn) {
+        window.__introCompleted = true;
         if (panel) panel.removeAttribute('inert');
         setTimeout(() => {
           if (document.documentElement.getAttribute('data-intro') === 'done') {
@@ -476,7 +484,7 @@ function generatePortfolioHtml(config) {
       resize();
 
       const prerollDelay = isReduced ? 0 : 180;
-      const fadeDuration = isReduced ? 350 : 2400;
+      const fadeDuration = isReduced ? 250 : 2400;
       let introStarted = false;
       let fadeStart = 0;
 
@@ -495,9 +503,9 @@ function generatePortfolioHtml(config) {
         const dt = now - lastFrame;
         if (dt < targetFrameMs - 2) return;
         lastFrame = now;
-        window.__ps3_metrics.frames++;
 
         if (isReturn && !introStarted) {
+          window.__ps3_metrics.frames++;
           window.__ps3_metrics.uOpacity = 1.0;
           if (!isReduced) window.__ps3_metrics.uTime += 0.016;
           if (gl) {
@@ -518,6 +526,8 @@ function generatePortfolioHtml(config) {
           }
         }
 
+        window.__ps3_metrics.frames++;
+
         const elapsed = now - fadeStart;
         const progress = Math.min(1.0, elapsed / fadeDuration);
         window.__ps3_metrics.uOpacity = progress;
@@ -530,8 +540,10 @@ function generatePortfolioHtml(config) {
         }
 
         // Stagger hero text when silk is mostly in (spec >= 800ms)
-        if (elapsed >= (isReduced ? 50 : 800)) {
-          hero.style.opacity = Math.min(1.0, (elapsed - (isReduced ? 50 : 800)) / (isReduced ? 200 : 800));
+        if (isReduced) {
+          hero.style.opacity = '1';
+        } else if (elapsed >= 800) {
+          hero.style.opacity = Math.min(1.0, (elapsed - 800) / 800);
         }
 
         // Complete intro
