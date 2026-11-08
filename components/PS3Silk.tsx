@@ -7,8 +7,8 @@ import { introTimings } from "@/lib/introTimings";
 // Module-level flag: persists during client-side nav, resets on page reload
 let _hasMounted = false;
 
-const FRAME_MS = 1000 / 60; // 60fps target for smooth intro and wave motion
-const FRAME_TOLERANCE_MS = 2.5; // allow 60Hz vsync (~16.67ms ± jitter) to hit every frame cleanly
+const FRAME_MS = 1000 / 30; // 30fps cap
+const FRAME_TOLERANCE_MS = 3.5; // allow 2nd 60Hz vsync (~33.3ms ± jitter) to hit cleanly
 const MAX_FADE_DT_MS = 50; // clamp per-frame fade step so stalled frames delay rather than skip
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -56,7 +56,7 @@ export interface PS3SilkProps {
 }
 
 export default function PS3Silk({
-  intensity = 0.1,
+  intensity = 0.29,
   mouseStrength = 0.11,
   yOffset = 49,
   waveColor = "#ffffff",
@@ -209,7 +209,7 @@ export default function PS3Silk({
     // RAF loop fades in slowly to START_OPACITY while wrapper stays at constant
     // CSS opacity 0.5 (no per-frame style writes or layer recompositing).
     // Every later page nav: appear at full resting opacity immediately — no fade, no gap.
-    if (isFirstLoad && !reducedMotion) {
+    if (isFirstLoad) {
       currentOpacity = 0;
     } else {
       currentOpacity = START_OPACITY;
@@ -228,16 +228,17 @@ export default function PS3Silk({
     // first load only. Starts on the first *drawn* frame (not at mount) and
     // advances per rendered frame with clamped dt so stalled frames delay the
     // fade rather than skipping ahead on wall-clock time.
-    let introDuration = isFirstLoad && !reducedMotion ? (introTimings.patternDuration * 1000) : 0;
+    // Reduced-motion uses a gentle 350ms opacity fade with static ribbons.
+    let introDuration = isFirstLoad ? (reducedMotion ? 350 : introTimings.patternDuration * 1000) : 0;
     let introElapsed = 0;
     let lastFadeMs: number | null = null;
     let introActive = introDuration > 0;
 
     function onReplay() {
-      introDuration = introTimings.patternDuration * 1000;
+      introDuration = reducedMotion ? 350 : introTimings.patternDuration * 1000;
       introElapsed = 0;
       lastFadeMs = null;
-      introActive = introDuration > 0 && !reducedMotion;
+      introActive = introDuration > 0;
       currentOpacity = 0;
     }
     window.addEventListener("intro-replay", onReplay);
@@ -457,12 +458,8 @@ void main() {
   if (uMode == 1) {
     vec2 cell       = floor(gl_FragCoord.xy / uHalftoneSize);
     vec2 cellCenter = (cell + 0.5) * uHalftoneSize;
-    vec2 cellUV     = cellCenter / uResolution;
-    float mouseDist = length(cellUV - uMouse);
-    float rx        = (mouseDist - 0.10) / 0.055;
-    float ripple    = exp(-rx * rx) * uMouseStrength * 2.8;
     float d         = length(gl_FragCoord.xy - cellCenter);
-    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05 + ripple * 0.38, 0.0, 1.2);
+    float radius    = uHalftoneSize * 0.5 * clamp(waveLight - 0.05, 0.0, 1.2);
     float dotVal    = smoothstep(radius + 0.8, radius - 0.8, d);
     vec3  dotColor  = uWaveColor * 0.55;
     float vis       = smoothstep(0.02, 0.08, waveLight);
@@ -606,6 +603,9 @@ void main() {
           currentOpacity = eased * START_OPACITY;
           if (t >= 1) {
             introActive = false;
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("ps3-silk-intro-complete"));
+            }
           }
         } else {
           const lerpSpeed = currentOpacity > targetOpacity ? 0.08 : 0.035; // dim fast, recover medium
@@ -621,7 +621,7 @@ void main() {
       if (activeRef.current) {
         wake();
       }
-    }, 0);
+    }, isFirstLoad && !reducedMotion ? 180 : 0);
 
     return () => {
       _hasMounted = hadMountedBefore;

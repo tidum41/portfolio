@@ -45,14 +45,13 @@ const BODY_DOT_H = 49;
 const BODY_SLIDER_H = 55;
 const BODY_PAD_BOTTOM = 2;
 
-function estimateBodyH(mode: number, pickerOpen: boolean) {
+function estimateBodyH(mode: number) {
   return (
     BODY_COLOR_H +
     BODY_MODE_H +
-    BODY_SLIDER_H * 4 +
+    BODY_SLIDER_H * 2 +
     BODY_PAD_BOTTOM +
-    (mode === 1 ? BODY_DOT_H : 0) +
-    (pickerOpen ? PICKER_MAX_H : 0)
+    (mode === 1 ? BODY_DOT_H : 0)
   );
 }
 
@@ -60,7 +59,7 @@ const POS_KEY         = "ps3cp_pos";
 const WAVE_COLOR_KEY  = "ps3cp_wave_color";
 const MODE_KEY        = "ps3cp_mode";
 
-const DEFAULT_INTENSITY_HT = 0.19; // halftone mode default (+~6% from 0.18)
+const DEFAULT_INTENSITY_HT = 0.29; // halftone mode default
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
 const DEFAULT_YOFFSET      = 49;
@@ -300,19 +299,20 @@ const Slider = memo(function Slider({
     if (rect.width <= 0) return value;
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const raw = min + pct * (max - min);
-    const stepped = Math.round(raw / step) * step;
-    return clamp(Number(stepped.toFixed(4)));
-  }, [min, max, step, value, clamp]);
+    // Continuous live updates: 0.001 precision
+    const continuous = Math.round(raw * 1000) / 1000;
+    return clamp(continuous);
+  }, [min, max, value, clamp]);
 
   const active = isHovered || isDragging;
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 
-  // One ink family: track is a quieter cut of the same stroke as fill+thumb
-  // so the vertical button reads as part of the line, not a separate layer.
-  const ink       = isDark ? "255,255,255" : "0,0,0";
-  const trackBg   = `rgba(${ink},0.18)`;
-  const filledBg  = active ? `rgba(${ink},0.72)` : `rgba(${ink},0.55)`;
-  const thumbColor = filledBg;
+  // Non-overlapping tracks with solid opaque thumb to prevent double-darkening or see-through thumb
+  const trackBg = isDark ? "#3f3f46" : "#e4e4e7";
+  const filledBg = active
+    ? (isDark ? "#d4d4d8" : "#27272a")
+    : (isDark ? "#a1a1aa" : "#52525b");
+  const thumbBg = isDark ? "#ffffff" : "#18181b";
 
   return (
     <div
@@ -359,15 +359,18 @@ const Slider = memo(function Slider({
         try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
       }}
       onKeyDown={e => {
-        if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(clamp(value + step)); }
-        else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(clamp(value - step)); }
+        if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(clamp(Number((value + step).toFixed(4)))); }
+        else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(clamp(Number((value - step).toFixed(4)))); }
         else if (e.key === "Home") { e.preventDefault(); onChange(min); }
         else if (e.key === "End") { e.preventDefault(); onChange(max); }
       }}
     >
-      <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: trackBg }} />
-      <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: 1, pointerEvents: "none", background: filledBg, transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)" }} />
-      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbColor, boxShadow: isDark ? "0 1px 2px rgba(0,0,0,0.35)" : "0 1px 2px rgba(0,0,0,0.12)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
+      {/* Filled track: 0 to pct% */}
+      <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: "1px 0 0 1px", pointerEvents: "none", background: filledBg, transition: "background-color 150ms cubic-bezier(0.23, 1, 0.32, 1)" }} />
+      {/* Unfilled track: pct% to 100% */}
+      <div style={{ position: "absolute", left: `${pct}%`, right: 0, top: "50%", height: 2, transform: "translateY(-50%)", borderRadius: "0 1px 1px 0", pointerEvents: "none", background: trackBg }} />
+      {/* Opaque Thumb */}
+      <div style={{ position: "absolute", top: "50%", left: `${pct}%`, width: active ? 6 : 5, height: active ? 16 : 14, borderRadius: 2, backgroundColor: thumbBg, boxShadow: isDark ? "0 1px 3px rgba(0,0,0,0.5)" : "0 1px 2px rgba(0,0,0,0.25)", transform: `translate(-50%, -50%) scale(${isDragging ? 0.94 : 1})`, pointerEvents: "none", transition: "width 140ms cubic-bezier(0.23, 1, 0.32, 1), height 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease" }} />
     </div>
   );
 });
@@ -650,13 +653,11 @@ html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255
 }
 .ps3cp-swatch-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
 html[data-theme=dark] .ps3cp-swatch-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
-.ps3cp-mode-btn { transition:background 120ms ease,color 120ms ease,transform 120ms ease; min-height:44px; }
+.ps3cp-mode-btn { position:relative;transition:background 140ms ease,color 140ms ease,box-shadow 140ms ease,transform 120ms ease; min-height:32px; cursor:pointer; }
+.ps3cp-mode-btn:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 1px; }
+html[data-theme=dark] .ps3cp-mode-btn:focus-visible { outline-color: rgba(255,255,255,0.72); }
 @media (hover: hover) and (pointer: fine) {
-  .ps3cp-mode-btn:hover { background:rgba(0,0,0,0.07)!important; }
-  .ps3cp-mode-btn:active { transform:scale(0.96); }
-}
-@media (hover: none), (pointer: coarse) {
-  .ps3cp-mode-btn:active { background:rgba(0,0,0,0.07); }
+  .ps3cp-mode-btn:active { transform:scale(0.98); }
 }
 .ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
 @media (hover: hover) and (pointer: fine) {
@@ -691,7 +692,7 @@ export default function PS3ControlPanel({
   const panelRef       = useRef<HTMLDivElement>(null);
   const headerRef      = useRef<HTMLDivElement>(null);
   const bodyInnerRef   = useRef<HTMLDivElement>(null);
-  const contentBodyHRef = useRef(estimateBodyH(DEFAULT_MODE, false));
+  const contentBodyHRef = useRef(estimateBodyH(DEFAULT_MODE));
   const [measuredBodyH, setMeasuredBodyH] = useState(0);
   const dragRef        = useRef<{startX:number;startY:number;origX:number;origY:number} | null>(null);
   const didDragRef     = useRef(false);
@@ -1136,7 +1137,7 @@ export default function PS3ControlPanel({
       : baseMorphParts.join(", "));
 
   const pickerOpen = openColorPicker === "pattern";
-  const contentBodyH = measuredBodyH > 80 ? measuredBodyH : estimateBodyH(mode, pickerOpen);
+  const contentBodyH = measuredBodyH > 80 ? measuredBodyH : estimateBodyH(mode);
   contentBodyHRef.current = contentBodyH;
   const geo = getGeometry(pillPos, isOpen, flipped, contentBodyH);
 
@@ -1281,33 +1282,6 @@ export default function PS3ControlPanel({
         <div style={{ padding: "6px 16px 8px" }}>
           <div style={{ ...rowH, marginBottom: 8 }}>
             <span style={labelSt}>Pattern Color</span>
-            <button
-              className="ps3cp-custom-color-btn"
-              onClick={e => { e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); }}
-              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setOpenColorPicker(openColorPicker === "pattern" ? null : "pattern"); } }}
-              aria-label="Custom color picker"
-              aria-expanded={openColorPicker === "pattern"}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 18,
-                height: 18,
-                borderRadius: 4,
-                border: "none",
-                backgroundColor: rgbToHex(waveColor),
-                boxShadow: openColorPicker === "pattern"
-                  ? (isDark ? "0 0 0 2px rgba(20,20,20,0.9), 0 0 0 3.5px rgba(255,255,255,0.85)" : "0 0 0 2px rgba(252,252,252,0.9), 0 0 0 3.5px rgba(0,0,0,0.75)")
-                  : (isDark ? "inset 0 0 0 1px rgba(255,255,255,0.25)" : "inset 0 0 0 1px rgba(0,0,0,0.20)"),
-                transform: openColorPicker === "pattern" ? "scale(1.08)" : "scale(1)",
-                cursor: "pointer",
-                padding: 0,
-                flexShrink: 0,
-                transition: "transform 140ms cubic-bezier(0.23, 1, 0.32, 1), boxShadow 140ms cubic-bezier(0.23, 1, 0.32, 1)",
-              }}
-            >
-              <Plus size={8} color={isColorLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.90)"} />
-            </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, width: "100%" }}>
             {PRESETS.map((p, i) => (
@@ -1327,26 +1301,69 @@ export default function PS3ControlPanel({
               </button>
             ))}
           </div>
-          <ExpandSection open={openColorPicker === "pattern"} maxH={PICKER_MAX_H}>
-            <div style={{ paddingTop: 10 }}>
-              <PS3ColorPicker value={rgbToHex(waveColor)} onChange={hex => setAndDispatch({ waveColor: hexToRgb01(hex) })} />
-            </div>
-          </ExpandSection>
         </div>
 
-        {/* Pattern mode (Clean Text Label - Zero Icons) */}
+        {/* Pattern mode segmented toggle */}
         <div style={{ padding: "6px 16px 8px" }}>
           <span style={{ ...labelSt, display: "block", marginBottom: 6 }}>Pattern Mode</span>
-          <div style={{ display: "flex", gap: 4 }}>
+          <div
+            role="group"
+            aria-label="Pattern mode"
+            style={{
+              display: "flex",
+              padding: 2,
+              borderRadius: 7,
+              background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+              gap: 2,
+            }}
+          >
             {[
               { id: 0, label: "Wave" },
               { id: 1, label: "Halftone" },
-            ].map(({ id, label }) => (
-              <button key={id} className="ps3cp-mode-btn" onClick={() => setAndDispatch({ mode: id })} aria-pressed={mode === id}
-                style={{ flex: 1, height: 26, borderRadius: 6, border: "none", background: mode === id ? (isDark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.09)") : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"), color: mode === id ? (isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)") : (isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)"), fontSize: 10.5, fontWeight: mode === id ? 500 : 400, letterSpacing: "0.02em" }}>
-                {label}
-              </button>
-            ))}
+            ].map(({ id, label }) => {
+              const active = mode === id;
+              return (
+                <button
+                  key={id}
+                  className="ps3cp-mode-btn"
+                  onClick={() => setAndDispatch({ mode: id })}
+                  aria-pressed={active}
+                  style={{
+                    flex: 1,
+                    minHeight: 32,
+                    height: 32,
+                    borderRadius: 5,
+                    border: "none",
+                    background: active
+                      ? isDark
+                        ? "rgba(255,255,255,0.14)"
+                        : "rgba(255,255,255,0.95)"
+                      : "transparent",
+                    boxShadow: active
+                      ? isDark
+                        ? "0 1px 2px rgba(0,0,0,0.3)"
+                        : "0 1px 2px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.08)"
+                      : "none",
+                    color: active
+                      ? isDark
+                        ? "rgba(255,255,255,0.95)"
+                        : "rgba(0,0,0,0.90)"
+                      : isDark
+                        ? "rgba(255,255,255,0.45)"
+                        : "rgba(0,0,0,0.45)",
+                    fontSize: 11,
+                    fontWeight: active ? 550 : 450,
+                    letterSpacing: "0.01em",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 8px",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1376,20 +1393,6 @@ export default function PS3ControlPanel({
           <div style={rowH}><span style={labelSt}>Speed</span><span style={valueSt}>{Number(speed).toFixed(2)}×</span></div>
           <Slider min={0.2} max={2.5} step={0.05} value={speed} isDark={isDark} label="Speed"
             onChange={v => setAndDispatch({ speed: v })} />
-        </div>
-
-        {/* Y offset */}
-        <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>Y Offset</span><span style={valueSt}>{Math.round(yOffset)}px</span></div>
-          <Slider min={-200} max={200} step={1} value={yOffset} isDark={isDark} label="Y offset"
-            onChange={v => setAndDispatch({ yOffset: v })} />
-        </div>
-
-        {/* Cursor reactivity */}
-        <div style={{ padding: secPad, ...rowSt }}>
-          <div style={rowH}><span style={labelSt}>Cursor Reactivity</span><span style={valueSt}>{Number(mouseStr).toFixed(3)}</span></div>
-          <Slider min={0} max={0.3} step={0.005} value={mouseStr} isDark={isDark} label="Cursor reactivity"
-            onChange={v => setAndDispatch({ mouseStrength: v })} />
         </div>
 
         </div>

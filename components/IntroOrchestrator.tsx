@@ -2,30 +2,38 @@
 
 import { useEffect } from "react";
 import { completeIntro } from "@/lib/introReady";
-import { introTimings } from "@/lib/introTimings";
 
 /** Drop this anywhere on the home page. Manages the first-load intro sequence:
  *  - BootScripts injects the theme/intro gate script before first paint
  *    (via useServerInsertedHTML) so data-intro="playing" is cleared off-home
- *  - This component starts the timer (duration from introTimings.gateDuration),
- *    then fires "intro-done" and swaps to "done"
+ *  - Listens for "ps3-silk-intro-complete" from PS3Silk when the shader fade
+ *    completes, invoking completeIntro() to broadcast "intro-done"
+ *  - Maintains a 3500ms safety fallback timeout in case WebGL context fails
  *  - Also listens for "intro-replay" to restart the sequence in-place
- *  - Early project-card clicks call completeIntro() directly; the timer
+ *  - Early project-card clicks call completeIntro() directly; completeIntro()
  *    no-ops once the attribute is no longer "playing"
  *
- *  StrictMode-safe: cleanup only clears the timeout; attribute stays "playing"
- *  so the double-invoked effect restarts the timer correctly. */
+ *  StrictMode-safe: cleanup clears timeout and listener; attribute stays "playing"
+ *  so the double-invoked effect restarts correctly. */
 export function IntroOrchestrator() {
   useEffect(() => {
     const html = document.documentElement;
-    let t: ReturnType<typeof setTimeout>;
+    let fallbackTimer: ReturnType<typeof setTimeout>;
+
+    function onSilkComplete() {
+      clearTimeout(fallbackTimer);
+      completeIntro();
+    }
 
     function run() {
       if (!html.hasAttribute("data-intro")) return;
-      clearTimeout(t);
-      t = setTimeout(() => {
+      clearTimeout(fallbackTimer);
+      window.removeEventListener("ps3-silk-intro-complete", onSilkComplete);
+
+      window.addEventListener("ps3-silk-intro-complete", onSilkComplete, { once: true });
+      fallbackTimer = setTimeout(() => {
         completeIntro();
-      }, introTimings.gateDuration * 1000);
+      }, 3500);
     }
 
     run();
@@ -34,7 +42,8 @@ export function IntroOrchestrator() {
     window.addEventListener("intro-replay", onReplay as EventListener);
 
     return () => {
-      clearTimeout(t);
+      clearTimeout(fallbackTimer);
+      window.removeEventListener("ps3-silk-intro-complete", onSilkComplete);
       window.removeEventListener("intro-replay", onReplay as EventListener);
     };
   }, []);
