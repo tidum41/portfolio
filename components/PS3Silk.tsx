@@ -243,9 +243,8 @@ export default function PS3Silk({
     }
     window.addEventListener("intro-replay", onReplay);
 
-    // Yield a 0ms macrotask (removing the old 150ms first-load delay) so shader
-    // compilation doesn't extend React's hydration long task and runs right
-    // after initial hydration commits.
+    // Preserve deliberate 180ms pre-roll before silk starts on first load
+    // (cinematic PS3 pacing per Part 1), or 0ms for reduced-motion / soft returns.
     const initTimer = setTimeout(() => {
       const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
       if (!_glNullable) return;
@@ -646,7 +645,7 @@ void main() {
         opacity: 0.5,
       }}
     >
-      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", background: "transparent" }} />
+      <canvas id="ps3-silk-canvas" ref={canvasRef} style={{ display: "block", width: "100%", height: "100%", background: "transparent" }} />
     </div>
   );
 }
