@@ -830,7 +830,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
       <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
-        <CardFocusGrid>
+        <CardFocusGrid visible={visible}>
           {/* ── Left column ── */}
           <div className="portfolio-grid-col">
             {gridSlots

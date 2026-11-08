@@ -27,6 +27,8 @@ type HitTestMode = "pointer" | "scroll";
 export class CardFocusController {
   private grid: HTMLElement | null = null;
   private activeCard: CardEl | null = null;
+  private active = true;
+  private listenersAttached = false;
   private mounted = false;
   private unmountVideoGuards: (() => void) | null = null;
 
@@ -56,19 +58,74 @@ export class CardFocusController {
     return this.finePointerMq.matches;
   }
 
+  private shouldListen(): boolean {
+    if (!this.mounted || !this.active || !this.enabled()) return false;
+    if (typeof document !== "undefined" && document.hidden) return false;
+    return true;
+  }
+
+  private syncListeners() {
+    const want = this.shouldListen();
+    if (want === this.listenersAttached) return;
+
+    if (want) {
+      document.addEventListener("pointermove", this.onPointerMove, { passive: true });
+      window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
+      window.addEventListener("wheel", this.onScrollLike, { passive: true });
+      window.addEventListener("touchmove", this.onScrollLike, { passive: true });
+      document.documentElement.addEventListener("pointerleave", this.onDocumentPointerLeave);
+      window.addEventListener("blur", this.onWindowBlur);
+      this.listenersAttached = true;
+    } else {
+      document.removeEventListener("pointermove", this.onPointerMove);
+      window.removeEventListener("scroll", this.onScrollLike, true);
+      window.removeEventListener("wheel", this.onScrollLike);
+      window.removeEventListener("touchmove", this.onScrollLike);
+      document.documentElement.removeEventListener("pointerleave", this.onDocumentPointerLeave);
+      window.removeEventListener("blur", this.onWindowBlur);
+      this.listenersAttached = false;
+
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = 0;
+      }
+      this.hitTestMode = null;
+      this.lastPtrTarget = null;
+      this.lastPtrCaptured = false;
+      this.lastPtrX = Number.NaN;
+      this.lastPtrY = Number.NaN;
+      this.setActive(null, { skipVideos: true });
+      this.cancelVideoWork();
+    }
+  }
+
+  suspend() {
+    if (!this.active) return;
+    this.active = false;
+    this.syncListeners();
+  }
+
+  resume() {
+    if (this.active) return;
+    this.active = true;
+    this.syncListeners();
+  }
+
+  setActiveState(active: boolean) {
+    if (active) this.resume();
+    else this.suspend();
+  }
+
   mount(grid: HTMLElement) {
     if (this.mounted) this.unmount();
     this.grid = grid;
     this.mounted = true;
+    this.active = true;
 
-    document.addEventListener("pointermove", this.onPointerMove, { passive: true });
-    window.addEventListener("scroll", this.onScrollLike, { passive: true, capture: true });
-    window.addEventListener("wheel", this.onScrollLike, { passive: true });
-    window.addEventListener("touchmove", this.onScrollLike, { passive: true });
-    document.documentElement.addEventListener("pointerleave", this.onDocumentPointerLeave);
-    window.addEventListener("blur", this.onWindowBlur);
     window.addEventListener("soft-nav-start", this.onSoftNavStart);
     document.addEventListener("visibilitychange", this.onVisibility);
+
+    this.syncListeners();
 
     this.io = new IntersectionObserver(this.onIntersect);
     this.observedVideos = new WeakSet<HTMLVideoElement>();
@@ -78,12 +135,9 @@ export class CardFocusController {
 
   unmount() {
     if (!this.mounted) return;
-    if (this.rafId) cancelAnimationFrame(this.rafId);
-    this.rafId = 0;
-    this.hitTestMode = null;
-    this.lastPtrTarget = null;
-    this.lastPtrCaptured = false;
-    this.setActive(null, { skipVideos: true });
+    this.mounted = false;
+    this.syncListeners();
+
     pausedByFocus.clear();
 
     this.unmountVideoGuards?.();
@@ -92,17 +146,10 @@ export class CardFocusController {
     this.io = null;
     this.observedVideos = new WeakSet<HTMLVideoElement>();
 
-    document.removeEventListener("pointermove", this.onPointerMove);
-    window.removeEventListener("scroll", this.onScrollLike, true);
-    window.removeEventListener("wheel", this.onScrollLike);
-    window.removeEventListener("touchmove", this.onScrollLike);
-    document.documentElement.removeEventListener("pointerleave", this.onDocumentPointerLeave);
-    window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("soft-nav-start", this.onSoftNavStart);
     document.removeEventListener("visibilitychange", this.onVisibility);
 
     this.grid = null;
-    this.mounted = false;
   }
 
   /** Called when grid DOM changes (late Mux attach, remount). */
@@ -321,7 +368,10 @@ export class CardFocusController {
   };
 
   private onVisibility = () => {
-    this.setActive(null);
+    if (typeof document !== "undefined" && document.hidden) {
+      this.setActive(null);
+    }
+    this.syncListeners();
   };
 
   /** Leaving the page: stop all focus work and let the soft-nav own playback. */
@@ -330,6 +380,7 @@ export class CardFocusController {
     this.cancelVideoWork();
     this.setActive(null, { skipVideos: true });
     pausedByFocus.clear();
+    this.suspend();
   };
 }
 

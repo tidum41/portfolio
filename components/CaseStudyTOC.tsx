@@ -59,7 +59,8 @@ export default function CaseStudyTOC({
       window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
 
     if (nearBottom && activeSections.length > 0) {
-      setActiveSection(activeSections[activeSections.length - 1].label);
+      const last = activeSections[activeSections.length - 1].label;
+      setActiveSection((prev) => (prev !== last ? last : prev));
       return;
     }
 
@@ -68,7 +69,12 @@ export default function CaseStudyTOC({
       const el = document.getElementById(id);
       if (el && el.getBoundingClientRect().top <= target) current = label;
     });
-    if (current) setActiveSection(current);
+    if (!current && activeSections.length > 0) {
+      current = activeSections[0].label;
+    }
+    if (current) {
+      setActiveSection((prev) => (prev !== current ? current : prev));
+    }
   }, [activeSections]);
 
   // Layout effect (not a regular effect) so the initial `updateActive()` call
@@ -76,29 +82,38 @@ export default function CaseStudyTOC({
   // paints — a regular effect runs after paint, so the TOC would render with
   // nothing highlighted for one frame, then visibly snap to the right item
   // once the effect caught up. That was the flicker on page load.
-  // Skipped for the mobile-back-only instance (no section labels to track).
+  // Skipped for the mobile-back-only instance or when on mobile.
   useLayoutEffect(() => {
-    if (mobileBackOnly) return;
-    let lastScrollY = -1;
+    if (mobileBackOnly || isMobile) return;
 
-    const tick = () => {
-      const y = window.scrollY;
-      if (y !== lastScrollY) {
-        lastScrollY = y;
+    // Synchronous initial calculation before paint to avoid first-frame flicker
+    updateActive();
+
+    const handleScrollOrResize = () => {
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
         updateActive();
-      }
-      rafRef.current = requestAnimationFrame(tick);
+      });
     };
 
-    updateActive();
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
-  }, [updateActive, mobileBackOnly]);
+    window.addEventListener("scroll", handleScrollOrResize, { passive: true });
+    window.addEventListener("resize", handleScrollOrResize, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize);
+      window.removeEventListener("resize", handleScrollOrResize);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [updateActive, mobileBackOnly, isMobile]);
 
   useEffect(() => {
     if (mobileBackOnly) return;
     const check = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", check);
+    window.addEventListener("resize", check, { passive: true });
     check();
     return () => window.removeEventListener("resize", check);
   }, [mobileBackOnly]);

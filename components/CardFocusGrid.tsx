@@ -4,7 +4,13 @@ import { useEffect, useRef } from "react";
 import { cardFocusController } from "@/lib/cardFocusController";
 
 /** Wires the shared card-focus controller to the portfolio grid once. */
-export default function CardFocusGrid({ children }: { children: React.ReactNode }) {
+export default function CardFocusGrid({
+  children,
+  visible = true,
+}: {
+  children: React.ReactNode;
+  visible?: boolean;
+}) {
   const gridRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -20,6 +26,15 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
       (window as Window & { __cardFocusReady?: boolean }).__cardFocusReady = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!cardFocusController.enabled()) return;
+    if (visible) {
+      cardFocusController.resume();
+    } else {
+      cardFocusController.suspend();
+    }
+  }, [visible]);
 
   return (
     <section
