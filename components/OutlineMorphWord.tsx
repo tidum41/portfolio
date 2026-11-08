@@ -55,7 +55,9 @@ export default function OutlineMorphWord({
   // and the effect below eases from that rest pose into the dots — same
   // 0.32s curve as when the word lived in the first-load bundle.
   const progress = useMotionValue(pinned ?? 0);
-  const word = WORDS.get(label) || WORDS.get(label.toLowerCase());
+  const word =
+    WORDS.get(label) ||
+    WORDS.get(label.charAt(0).toUpperCase() + label.slice(1).toLowerCase());
 
   useEffect(() => {
     const target = pinned != null ? pinned : active ? 1 : 0;

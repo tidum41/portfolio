@@ -2,7 +2,12 @@
 
 import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import ArchivePageClient from "@/app/archive/ArchivePageClient";
+import dynamic from "next/dynamic";
+
+const ArchivePageClient = dynamic(
+  () => import("@/app/archive/ArchivePageClient"),
+  { ssr: false }
+);
 import {
   peekArchiveGallery,
   rememberArchiveGallery,
