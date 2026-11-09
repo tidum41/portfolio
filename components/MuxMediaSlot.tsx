@@ -171,7 +171,7 @@ export default function MuxMediaSlot({
   style?: CSSProperties;
   /** Fill a parent box (work-grid cards) with object-fit: cover. */
   fill?: boolean;
-  /** Pause without tearing down HLS (soft-nav). */
+  /** Pause playback; soft-nav also destroys the HLS loader so it stops fetching. */
   playing?: boolean;
   /**
    * Intrinsic poster size. CSS is `width: 100%; height: auto`, so without
@@ -438,11 +438,30 @@ export default function MuxMediaSlot({
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) kickPlay();
     };
-    const onSoftStart = () => {
-      try { videoRef.current?.pause(); } catch { /* ignore */ }
+    // Soft-nav click: fully stop segment fetches on this frame so case-study
+    // RSC / LCP aren't competing with homepage HLS. pause() alone left the
+    // loader buffering. Remount/reattach happens when playing resumes.
+    const destroyHls = () => {
+      const hls = hlsRef.current;
+      if (hls) {
+        try { hls.stopLoad(); } catch { /* ignore */ }
+        try { hls.detachMedia(); } catch { /* ignore */ }
+        try { hls.destroy(); } catch { /* ignore */ }
+        hlsRef.current = null;
+      }
+      const el = videoRef.current;
+      if (el) {
+        try { el.pause(); } catch { /* ignore */ }
+        try {
+          el.removeAttribute("src");
+          el.load();
+        } catch { /* ignore */ }
+      }
+      // Hide the empty video so the poster underneath stays painted.
+      revealedRef.current = false;
+      rootRef.current?.removeAttribute("data-frame");
     };
-    window.addEventListener("soft-nav-start", onSoftStart);
-    window.addEventListener("soft-nav-settled", kickPlay);
+    window.addEventListener("soft-nav-start", destroyHls);
     window.addEventListener("pageshow", onPageShow);
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -451,8 +470,7 @@ export default function MuxMediaSlot({
       video?.removeEventListener("ended", onEnded);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.removeEventListener("soft-nav-start", onSoftStart);
-      window.removeEventListener("soft-nav-settled", kickPlay);
+      window.removeEventListener("soft-nav-start", destroyHls);
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onVis);
       hlsRef.current?.destroy();
@@ -462,11 +480,16 @@ export default function MuxMediaSlot({
 
 
   useEffect(() => {
-    if (playing) kickPlay();
-    else {
+    if (playing) {
+      // Returning home after soft-nav destroy: reattach the stream, then play.
+      if (!hlsRef.current && videoRef.current) {
+        attachVideo(videoRef.current);
+      }
+      kickPlay();
+    } else {
       try { videoRef.current?.pause(); } catch { /* ignore */ }
     }
-  }, [playing, kickPlay]);
+  }, [playing, kickPlay, attachVideo]);
 
 
   return (
