@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMotionValueEvent, type MotionValue } from "framer-motion";
 import { buildTextMask, buildIconMask, dotLocalProgress, gooHump, type HalftoneDot } from "./halftoneMask";
+import { afterIntroIdle, introIsPlaying } from "@/lib/introReady";
 
 type Content =
   | { type: "text"; text: string; fontWeight: number; fontSizePx: number; lineHeightPx: number }
@@ -162,8 +163,17 @@ export function HalftoneDotField({ id, dk, hoverColor, t, content }: HalftoneDot
       setBox({ width: result.width, height: result.height, baselineY: result.baselineY ?? 0 });
     };
 
-    rebakeTimeoutRef.current = setTimeout(bake, 100);
+    let cancelIdle: (() => void) | null = null;
+    if (introIsPlaying()) {
+      cancelIdle = afterIntroIdle(() => {
+        void bake();
+      });
+    } else {
+      rebakeTimeoutRef.current = setTimeout(bake, 100);
+    }
+
     return () => {
+      if (cancelIdle) cancelIdle();
       if (rebakeTimeoutRef.current) clearTimeout(rebakeTimeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

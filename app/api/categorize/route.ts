@@ -221,23 +221,82 @@ async function proxyCategorize(body: unknown) {
   return json(data)
 }
 
+const MAX_PAYLOAD_BYTES = 100 * 1024 // 100KB limit
+const MAX_NOTES = 50
+const MAX_NOTE_LENGTH = 4000
+
 export async function POST(req: Request) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   if (!checkRateLimit(ip)) {
     return json({ error: 'Rate limit reached. Try again in an hour.' }, 429)
   }
 
-  let reqBody: { text?: string; categoryRules?: Rule[]; categories?: CategoryInput[] } = {}
-  try { reqBody = await req.json() } catch { reqBody = {} }
-  const { text, categoryRules = [], categories = [] } = reqBody
-  if (!text?.trim()) {
-    return json({ error: 'No text provided' }, 400)
+  // 1. Content-Length header check
+  const contentLength = req.headers.get('content-length')
+  if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+    return json({ error: 'Payload too large: maximum 100KB allowed' }, 413)
   }
 
-  const inputNotes = notesFromText(text)
+  // 2. Read and validate raw body byte size
+  let rawBody: string
+  try {
+    rawBody = await req.text()
+  } catch {
+    return json({ error: 'Failed to read request body' }, 400)
+  }
+
+  if (new TextEncoder().encode(rawBody).length > MAX_PAYLOAD_BYTES) {
+    return json({ error: 'Payload too large: maximum 100KB allowed' }, 413)
+  }
+
+  if (!rawBody.trim()) {
+    return json({ error: 'Empty request body' }, 400)
+  }
+
+  // 3. Parse JSON safely
+  let reqBody: any
+  try {
+    reqBody = JSON.parse(rawBody)
+  } catch {
+    return json({ error: 'Malformed JSON payload' }, 400)
+  }
+
+  if (typeof reqBody !== 'object' || reqBody === null) {
+    return json({ error: 'Invalid JSON payload: expected an object' }, 400)
+  }
+
+  // 4. Extract and validate notes & text
+  const categoryRules: Rule[] = Array.isArray(reqBody.categoryRules) ? reqBody.categoryRules : []
+  const categories: CategoryInput[] = Array.isArray(reqBody.categories) ? reqBody.categories : []
+  let inputNotes: string[] = []
+
+  if (Array.isArray(reqBody.notes)) {
+    if (reqBody.notes.length > MAX_NOTES) {
+      return json({ error: `Too many notes: maximum ${MAX_NOTES} allowed` }, 400)
+    }
+    inputNotes = reqBody.notes.map((n: unknown) => String(n ?? '').trim()).filter(Boolean)
+  } else if (typeof reqBody.text === 'string') {
+    inputNotes = notesFromText(reqBody.text)
+  } else {
+    return json({ error: 'No text or notes provided' }, 400)
+  }
+
   if (inputNotes.length === 0) {
     return json({ error: 'No text provided' }, 400)
   }
+
+  if (inputNotes.length > MAX_NOTES) {
+    return json({ error: `Too many notes: maximum ${MAX_NOTES} allowed` }, 400)
+  }
+
+  // 5. Individual note string length validation
+  for (const note of inputNotes) {
+    if (note.length > MAX_NOTE_LENGTH) {
+      return json({ error: `Note exceeds maximum length of ${MAX_NOTE_LENGTH} characters` }, 400)
+    }
+  }
+
+  const text = reqBody.text || inputNotes.join('\n')
 
   // No key on this machine / preview: proxy to production (skip on Vercel unless explicitly set).
   if (!process.env.GROQ_API_KEY) {

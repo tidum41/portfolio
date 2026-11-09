@@ -8,6 +8,15 @@ export function introIsPlaying(): boolean {
   );
 }
 
+/** Check if the first-load intro has completed. */
+export function isIntroComplete(): boolean {
+  return !introIsPlaying();
+}
+
+/** Alias for onIntroDone satisfying introReady contract. */
+export const whenIntroComplete = onIntroDone;
+
+
 /** Finish the first-load intro the same way IntroOrchestrator's timer does:
  *  flip to "done", broadcast `intro-done`, then drop the attribute after the
  *  fade window. Idempotent — safe to call from an early project-card click
@@ -50,11 +59,10 @@ export function afterIntroIdle(cb: () => void, timeout = 6000): () => void {
     }
   };
   const start = () => {
-    // `intro-done` fires at gateDuration (1.9s), while the silk fade (2.3s)
-    // and grid reveal (0.7s) finish around ~2.6–3.0s. When armed during the
-    // first-load intro, wait until the 3s startup window has cleared before
-    // requesting an idle callback (since 30fps silk leaves alternate 16ms
-    // frames looking idle to requestIdleCallback).
+    // `intro-done` fires at visual completion (2.4s), while the grid reveal (0.7s)
+    // finishes around ~3.1s. When armed during the first-load intro, wait until the
+    // 3s startup window has cleared before requesting an idle callback (since 30fps
+    // silk leaves alternate 16ms frames looking idle to requestIdleCallback).
     if (wasIntroPlaying) {
       const waitMs = Math.max(900, 3150 - performance.now());
       settleId = window.setTimeout(scheduleIdle, waitMs);

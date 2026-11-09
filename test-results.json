@@ -1,0 +1,1061 @@
+{
+  "summary": {
+    "total": 169,
+    "passed": 169,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 155654,
+    "timestamp": "2026-11-08T22:58:05.030Z",
+    "targetUrl": "http://localhost:3000",
+    "liveServerReachable": false
+  },
+  "tiers": {
+    "tier1-features": {
+      "total": 75,
+      "passed": 75,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "HOM-01.1: Pre-roll delay before silk drawing begins is >= 150ms",
+          "passed": true,
+          "durationMs": 260,
+          "error": null
+        },
+        {
+          "name": "HOM-01.2: Total silk fade duration is between 2.0s and 3.0s (PS3 boot pacing)",
+          "passed": true,
+          "durationMs": 2658,
+          "error": null
+        },
+        {
+          "name": "HOM-01.3: Window dispatches 'ps3-silk-intro-complete' event when fade reaches 1.0",
+          "passed": true,
+          "durationMs": 2690,
+          "error": null
+        },
+        {
+          "name": "HOM-01.4: Per-frame fade dt is clamped in shader animation loop (code contract)",
+          "passed": true,
+          "durationMs": 1,
+          "error": null
+        },
+        {
+          "name": "HOM-01.5: Opacity begins at 0.0 and increases monotonically without jumping",
+          "passed": true,
+          "durationMs": 1608,
+          "error": null
+        },
+        {
+          "name": "HOM-02.1: html tag has data-intro='playing' upon initial cold load",
+          "passed": true,
+          "durationMs": 85,
+          "error": null
+        },
+        {
+          "name": "HOM-02.2: Hero text computed opacity is 0 during the initial 200ms of intro",
+          "passed": true,
+          "durationMs": 197,
+          "error": null
+        },
+        {
+          "name": "HOM-02.3: Hero text reveal begins only after stagger delay (>= 800ms into intro)",
+          "passed": true,
+          "durationMs": 1896,
+          "error": null
+        },
+        {
+          "name": "HOM-02.4: Navigation links do not reveal ahead of hero text",
+          "passed": true,
+          "durationMs": 696,
+          "error": null
+        },
+        {
+          "name": "HOM-02.5: Upon intro completion, hero text reaches computed opacity 1.0",
+          "passed": true,
+          "durationMs": 2658,
+          "error": null
+        },
+        {
+          "name": "HOM-03.1: Mux card autoplay does not trigger while intro is playing",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-03.2: lib/introReady.ts introIsPlaying() matches data-intro attribute lifecycle",
+          "passed": true,
+          "durationMs": 2645,
+          "error": null
+        },
+        {
+          "name": "HOM-03.3: Route warmup for /about and /archive uses afterIntroIdle",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-03.4: Early project card click safely triggers completeIntro() without race condition",
+          "passed": true,
+          "durationMs": 293,
+          "error": null
+        },
+        {
+          "name": "HOM-03.5: IntroOrchestrator uses introTimings.gateDuration before dispatching completion",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-04.1: PS3Silk.tsx declares FRAME_MS = 1000 / 30 for 30fps cap",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-04.2: Runtime frame rate over 1000ms active window is capped <= 35fps",
+          "passed": true,
+          "durationMs": 1391,
+          "error": null
+        },
+        {
+          "name": "HOM-04.3: Simulation does not spin unconstrained at 60fps on normal display",
+          "passed": true,
+          "durationMs": 1596,
+          "error": null
+        },
+        {
+          "name": "HOM-04.4: Frame rate remains stable without dropping below 24fps",
+          "passed": true,
+          "durationMs": 1289,
+          "error": null
+        },
+        {
+          "name": "HOM-04.5: PS3Silk.tsx defines FRAME_TOLERANCE_MS jitter tolerance",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-05.1: prefers-reduced-motion produces short fade completing within <= 500ms",
+          "passed": true,
+          "durationMs": 388,
+          "error": null
+        },
+        {
+          "name": "HOM-05.2: Ribbons stay static with uTime = 0 under prefers-reduced-motion",
+          "passed": true,
+          "durationMs": 487,
+          "error": null
+        },
+        {
+          "name": "HOM-05.3: Hero text reveals quickly without long cinematic stagger",
+          "passed": true,
+          "durationMs": 436,
+          "error": null
+        },
+        {
+          "name": "HOM-05.4: Controls panel becomes non-inert within 500ms",
+          "passed": true,
+          "durationMs": 540,
+          "error": null
+        },
+        {
+          "name": "HOM-05.5: Reduced motion mode initializes without throwing or visual corruption",
+          "passed": true,
+          "durationMs": 487,
+          "error": null
+        },
+        {
+          "name": "HOM-06.1: Active mode is Halftone (mode 1) on initial cold load",
+          "passed": true,
+          "durationMs": 84,
+          "error": null
+        },
+        {
+          "name": "HOM-06.2: Intensity slider value defaults to 0.29 on first load",
+          "passed": true,
+          "durationMs": 83,
+          "error": null
+        },
+        {
+          "name": "HOM-06.3: Panel Reset button restores intensity to 0.29",
+          "passed": true,
+          "durationMs": 2712,
+          "error": null
+        },
+        {
+          "name": "HOM-06.4: PS3ControlPanel.tsx defines DEFAULT_INTENSITY_HT = 0.29 constant",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-06.5: Clearing sessionStorage preserves 0.29 Halftone default on reload",
+          "passed": true,
+          "durationMs": 110,
+          "error": null
+        },
+        {
+          "name": "HOM-07.1: Y offset controls are completely removed from the controls panel DOM",
+          "passed": true,
+          "durationMs": 89,
+          "error": null
+        },
+        {
+          "name": "HOM-07.2: Mode toggle buttons meet minimum 32px touch hit area requirement",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-07.3: Sliders declare step='any' or step <= 0.001 for continuous dragging",
+          "passed": true,
+          "durationMs": 89,
+          "error": null
+        },
+        {
+          "name": "HOM-07.4: Sliders have valid ARIA attributes and labels for accessibility",
+          "passed": true,
+          "durationMs": 91,
+          "error": null
+        },
+        {
+          "name": "HOM-07.5: Sliders respond to keyboard ArrowLeft and ArrowRight navigation",
+          "passed": true,
+          "durationMs": 2662,
+          "error": null
+        },
+        {
+          "name": "HOM-08.1: Moving cursor triggers spatial cursor pull interaction on canvas",
+          "passed": true,
+          "durationMs": 105,
+          "error": null
+        },
+        {
+          "name": "HOM-08.2: 0 circular donut ripple shockwaves are produced by cursor interaction",
+          "passed": true,
+          "durationMs": 117,
+          "error": null
+        },
+        {
+          "name": "HOM-08.3: PS3Silk.tsx does not contain exp(-rx*rx) donut ripple calculation",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "HOM-08.4: Moving cursor away smoothly relaxes silk without jarring artifacts",
+          "passed": true,
+          "durationMs": 200,
+          "error": null
+        },
+        {
+          "name": "HOM-08.5: Pointer reactivity setting does not distort non-interactive canvas areas",
+          "passed": true,
+          "durationMs": 87,
+          "error": null
+        },
+        {
+          "name": "HOM-09.1: Hero heading verbatim matches canonical copy exactly",
+          "passed": true,
+          "durationMs": 88,
+          "error": null
+        },
+        {
+          "name": "HOM-09.2: Hero subtitle verbatim contains canonical text",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-09.3: Link for @ JOOLA links to /joola",
+          "passed": true,
+          "durationMs": 85,
+          "error": null
+        },
+        {
+          "name": "HOM-09.4: Route /dialogue returns HTTP status 200",
+          "passed": true,
+          "durationMs": 71,
+          "error": null
+        },
+        {
+          "name": "HOM-09.5: /dialogue preserves sticky .cs-aside component intact",
+          "passed": true,
+          "durationMs": 79,
+          "error": null
+        },
+        {
+          "name": "PERF-01.1: Web Vitals PerformanceObserver can be initialized and observe paint timing",
+          "passed": true,
+          "durationMs": 89,
+          "error": null
+        },
+        {
+          "name": "PERF-01.2: Cumulative Layout Shift (CLS) during intro is <= 0.1",
+          "passed": true,
+          "durationMs": 1589,
+          "error": null
+        },
+        {
+          "name": "PERF-01.3: Largest Contentful Paint (LCP) occurs within <= 2500ms on desktop baseline",
+          "passed": true,
+          "durationMs": 2086,
+          "error": null
+        },
+        {
+          "name": "PERF-01.4: First Contentful Paint occurs within <= 1800ms",
+          "passed": true,
+          "durationMs": 87,
+          "error": null
+        },
+        {
+          "name": "PERF-01.5: Total Blocking Time (TBT) does not exceed 300ms budget",
+          "passed": true,
+          "durationMs": 2089,
+          "error": null
+        },
+        {
+          "name": "PERF-02.1: PerformanceObserver captures long tasks during first 3 seconds",
+          "passed": true,
+          "durationMs": 3088,
+          "error": null
+        },
+        {
+          "name": "PERF-02.2: Count of long tasks >= 50ms during first 3s is <= 5",
+          "passed": true,
+          "durationMs": 3088,
+          "error": null
+        },
+        {
+          "name": "PERF-02.3: Max individual long task duration is <= 150ms",
+          "passed": true,
+          "durationMs": 3088,
+          "error": null
+        },
+        {
+          "name": "PERF-02.4: Total sum of long task durations during first 3s is <= 300ms",
+          "passed": true,
+          "durationMs": 3088,
+          "error": null
+        },
+        {
+          "name": "PERF-02.5: Zero long tasks exceed 200ms during intro",
+          "passed": true,
+          "durationMs": 3091,
+          "error": null
+        },
+        {
+          "name": "PERF-03.1: CaseStudyTOC.tsx avoids continuous per-frame rAF loop when page is stationary",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-03.2: CaseStudyTOC.tsx uses passive event listeners for scroll and resize",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-03.3: CardFocusController suspends pointermove listener when hidden/inactive",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-03.4: Background tab visibility changes suspend continuous canvas rendering",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "PERF-03.5: RabbitHoleVideo.tsx caches and reuses sprite frame SVG groups",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-04.1: lib/sanity/imageUrl.ts configures builder without importing sanityClient",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-04.2: components/outlineMorphData.ts has no unused lowercase keys",
+          "passed": true,
+          "durationMs": 1,
+          "error": null
+        },
+        {
+          "name": "PERF-04.3: components/PersistentArchiveShell.tsx uses next/dynamic for ArchivePageClient",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "PERF-04.4: components/BootScripts.tsx does not duplicate Mux playlist serialization",
+          "passed": true,
+          "durationMs": 1,
+          "error": null
+        },
+        {
+          "name": "PERF-04.5: components/HalftoneDotField.tsx defers mask baking to afterIntroIdle",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-01.1: TypeScript typecheck passes with 0 diagnostics errors",
+          "passed": true,
+          "durationMs": 2157,
+          "error": null
+        },
+        {
+          "name": "QUAL-01.2: ESLint configuration exists and defines project rules",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-01.3: Intro modules have no circular import dependencies",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-01.4: Critical components and lib modules exist and are non-empty",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-01.5: package.json scripts contain working quality scripts",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "SEC-01.1: app/dev/actions.ts contains production guard check",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "SEC-01.2: patchCaseStudy rejects mutations unconditionally in production environment",
+          "passed": true,
+          "durationMs": 89,
+          "error": null
+        },
+        {
+          "name": "SEC-01.3: patchDesignSystem rejects mutations unconditionally in production environment",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "SEC-01.4: Actions require SANITY_API_WRITE_TOKEN and reject when missing",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "SEC-01.5: /api/categorize rejects oversized payloads > 100KB with HTTP 413",
+          "passed": true,
+          "durationMs": 110,
+          "error": null
+        }
+      ]
+    },
+    "tier2-boundary": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "HOM-01-BND.1: Rapid reload during pre-roll (at 50ms) does not corrupt state",
+          "passed": true,
+          "durationMs": 158,
+          "error": null
+        },
+        {
+          "name": "HOM-01-BND.2: Reload at exactly 150ms pre-roll boundary completes cleanly on second run",
+          "passed": true,
+          "durationMs": 2857,
+          "error": null
+        },
+        {
+          "name": "HOM-01-BND.3: Successive rapid reloads (3x in 200ms) do not create orphaned WebGL contexts",
+          "passed": true,
+          "durationMs": 338,
+          "error": null
+        },
+        {
+          "name": "HOM-01-BND.4: Per-frame fade clamping prevents opacity leap when tab is backgrounded",
+          "passed": true,
+          "durationMs": 186,
+          "error": null
+        },
+        {
+          "name": "HOM-01-BND.5: System clock jitter does not cause NaN or negative opacity progression",
+          "passed": true,
+          "durationMs": 595,
+          "error": null
+        },
+        {
+          "name": "HOM-02-BND.1: Viewport resize from desktop to mobile during stagger preserves reveal",
+          "passed": true,
+          "durationMs": 1589,
+          "error": null
+        },
+        {
+          "name": "HOM-02-BND.2: Scrolling down immediately during stagger does not cause layout shift or crash",
+          "passed": true,
+          "durationMs": 588,
+          "error": null
+        },
+        {
+          "name": "HOM-02-BND.3: Hero text does not wrap unexpectedly at narrowest mobile width (320px)",
+          "passed": true,
+          "durationMs": 2653,
+          "error": null
+        },
+        {
+          "name": "HOM-02-BND.4: Nav elements do not flash visible before their stagger phase",
+          "passed": true,
+          "durationMs": 692,
+          "error": null
+        },
+        {
+          "name": "HOM-02-BND.5: StrictMode double invocation does not corrupt stagger timing",
+          "passed": true,
+          "durationMs": 2650,
+          "error": null
+        },
+        {
+          "name": "HOM-03-BND.1: Navigating to /about at 100ms mid-intro unblocks immediately",
+          "passed": true,
+          "durationMs": 193,
+          "error": null
+        },
+        {
+          "name": "HOM-03-BND.2: Navigating away and hitting browser Back button restores cleanly",
+          "passed": true,
+          "durationMs": 414,
+          "error": null
+        },
+        {
+          "name": "HOM-03-BND.3: Multiple concurrent completeIntro() calls are idempotent",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-03-BND.4: Calling onIntroDone after intro is already done executes callback immediately",
+          "passed": true,
+          "durationMs": 2649,
+          "error": null
+        },
+        {
+          "name": "HOM-03-BND.5: Offline network during intro does not prevent visual intro completion",
+          "passed": true,
+          "durationMs": 2684,
+          "error": null
+        },
+        {
+          "name": "HOM-04-BND.1: Under 4x CPU throttling, silk does not spin excess frames",
+          "passed": true,
+          "durationMs": 1644,
+          "error": null
+        },
+        {
+          "name": "HOM-04-BND.2: High DPI screen (deviceScaleFactor = 2) renders without frame rate degradation",
+          "passed": true,
+          "durationMs": 487,
+          "error": null
+        },
+        {
+          "name": "HOM-04-BND.3: Simulated 500ms main thread freeze does not cause frame burst catch-up",
+          "passed": true,
+          "durationMs": 591,
+          "error": null
+        },
+        {
+          "name": "HOM-04-BND.4: Rapid window resize does not drop frame rate to zero",
+          "passed": true,
+          "durationMs": 599,
+          "error": null
+        },
+        {
+          "name": "HOM-04-BND.5: Frame timing delta is clamped to prevent division by zero or negative dt",
+          "passed": true,
+          "durationMs": 87,
+          "error": null
+        },
+        {
+          "name": "HOM-05-BND.1: Reduced motion under 4x CPU throttling still completes in <= 500ms",
+          "passed": true,
+          "durationMs": 440,
+          "error": null
+        },
+        {
+          "name": "HOM-05-BND.2: Reduced motion on narrow 320px viewport renders cleanly",
+          "passed": true,
+          "durationMs": 490,
+          "error": null
+        },
+        {
+          "name": "HOM-05-BND.3: Dynamically toggling reduced motion preference during session updates styling",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-05-BND.4: Switching color presets under reduced motion does not reactivate ribbon motion",
+          "passed": true,
+          "durationMs": 488,
+          "error": null
+        },
+        {
+          "name": "HOM-05-BND.5: Navigating to case study and back preserves static ribbon state",
+          "passed": true,
+          "durationMs": 515,
+          "error": null
+        },
+        {
+          "name": "HOM-06-BND.1: Corrupted sessionStorage for mode ('invalid_str') recovers to default mode 1",
+          "passed": true,
+          "durationMs": 109,
+          "error": null
+        },
+        {
+          "name": "HOM-06-BND.2: Intensity boundary value 0.0 sets slider and shader uniform cleanly",
+          "passed": true,
+          "durationMs": 2654,
+          "error": null
+        },
+        {
+          "name": "HOM-06-BND.3: Intensity boundary value 1.0 sets slider and shader uniform cleanly",
+          "passed": true,
+          "durationMs": 2684,
+          "error": null
+        },
+        {
+          "name": "HOM-06-BND.4: Rapid toggling between Halftone and Wave modes 10 times does not throw",
+          "passed": true,
+          "durationMs": 2651,
+          "error": null
+        },
+        {
+          "name": "HOM-06-BND.5: Corrupted color array in storage fallback gracefully to default color",
+          "passed": true,
+          "durationMs": 105,
+          "error": null
+        },
+        {
+          "name": "HOM-07-BND.1: Keyboard Home key sets slider to min value (0.0)",
+          "passed": true,
+          "durationMs": 2660,
+          "error": null
+        },
+        {
+          "name": "HOM-07-BND.2: Keyboard End key sets slider to max value (1.0)",
+          "passed": true,
+          "durationMs": 2692,
+          "error": null
+        },
+        {
+          "name": "HOM-07-BND.3: Dragging mouse beyond viewport bounds does not cause unhandled errors",
+          "passed": true,
+          "durationMs": 2706,
+          "error": null
+        },
+        {
+          "name": "HOM-07-BND.4: No slider controls remain focusable while panel is inert",
+          "passed": true,
+          "durationMs": 90,
+          "error": null
+        },
+        {
+          "name": "HOM-07-BND.5: Double click or rapid clicks on buttons do not trigger text selection",
+          "passed": true,
+          "durationMs": 2679,
+          "error": null
+        },
+        {
+          "name": "HOM-08-BND.1: Extreme pointer velocity (>1000px in single frame) does not crash WebGL",
+          "passed": true,
+          "durationMs": 97,
+          "error": null
+        },
+        {
+          "name": "HOM-08-BND.2: Negative coordinates (cursor outside window) are clamped without NaN uniforms",
+          "passed": true,
+          "durationMs": 95,
+          "error": null
+        },
+        {
+          "name": "HOM-08-BND.3: Pointer sweeps across hero text do not cause text flicker or re-renders",
+          "passed": true,
+          "durationMs": 2897,
+          "error": null
+        },
+        {
+          "name": "HOM-08-BND.4: Multi-step rapid cursor circle produces 0 concentric ripple rings",
+          "passed": true,
+          "durationMs": 150,
+          "error": null
+        },
+        {
+          "name": "HOM-08-BND.5: Pointer leaving canvas cleanly unbinds mouse coordinates",
+          "passed": true,
+          "durationMs": 100,
+          "error": null
+        },
+        {
+          "name": "HOM-09-BND.1: Hero heading text has no zero-width spaces or hidden unicode anomalies",
+          "passed": true,
+          "durationMs": 106,
+          "error": null
+        },
+        {
+          "name": "HOM-09-BND.2: Subtitle contains exact dot separator ' · ' and linking structure",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "HOM-09-BND.3: Hero text renders legibly on ultra-wide desktop (3840x2160)",
+          "passed": true,
+          "durationMs": 125,
+          "error": null
+        },
+        {
+          "name": "HOM-09-BND.4: /dialogue loads cleanly when accessed directly via URL",
+          "passed": true,
+          "durationMs": 71,
+          "error": null
+        },
+        {
+          "name": "HOM-09-BND.5: Navigating from / to /joola and back preserves hero copy invariant",
+          "passed": true,
+          "durationMs": 118,
+          "error": null
+        },
+        {
+          "name": "PERF-BND.1: Rapid soft navigation loop (3x / <-> /about) does not leak WebGL contexts",
+          "passed": true,
+          "durationMs": 476,
+          "error": null
+        },
+        {
+          "name": "PERF-BND.2: WebGL context loss event is handled gracefully without uncaught rejection",
+          "passed": true,
+          "durationMs": 88,
+          "error": null
+        },
+        {
+          "name": "PERF-BND.3: Viewport resize storm (10 rapid size changes) leaves canvas buffer intact",
+          "passed": true,
+          "durationMs": 110,
+          "error": null
+        },
+        {
+          "name": "PERF-BND.4: 100 continuous wheel events in 500ms do not freeze frame execution",
+          "passed": true,
+          "durationMs": 256,
+          "error": null
+        },
+        {
+          "name": "PERF-BND.5: Memory heap does not spike past threshold during extended 5s run",
+          "passed": true,
+          "durationMs": 4092,
+          "error": null
+        },
+        {
+          "name": "QUAL-BND.1: No references to deleted modules (CdPlayerPoster, cardHover.ts)",
+          "passed": true,
+          "durationMs": 5,
+          "error": null
+        },
+        {
+          "name": "QUAL-BND.2: No dangling playwright tarball in project repository root",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-BND.3: ESLint config specifies explicit ignores for build output (.next)",
+          "passed": true,
+          "durationMs": 0,
+          "error": null
+        },
+        {
+          "name": "QUAL-BND.4: No unhandled window error events during page lifecycle",
+          "passed": true,
+          "durationMs": 1088,
+          "error": null
+        },
+        {
+          "name": "QUAL-BND.5: Responsive viewport changes do not produce horizontal body overflow",
+          "passed": true,
+          "durationMs": 84,
+          "error": null
+        },
+        {
+          "name": "SEC-BND.1: Server Actions reject prototype pollution payloads (__proto__)",
+          "passed": true,
+          "durationMs": 1,
+          "error": null
+        },
+        {
+          "name": "SEC-BND.2: /api/categorize with null or malformed JSON body returns HTTP 400 or 500 cleanly",
+          "passed": true,
+          "durationMs": 86,
+          "error": null
+        },
+        {
+          "name": "SEC-BND.3: /api/categorize with 50,000-character single note text is safely handled",
+          "passed": true,
+          "durationMs": 89,
+          "error": null
+        },
+        {
+          "name": "SEC-BND.4: Prototype /dev/joola-b2b/* routes do not expose write APIs",
+          "passed": true,
+          "durationMs": 44,
+          "error": null
+        },
+        {
+          "name": "SEC-BND.5: Unicode control characters in categorize request do not break parser",
+          "passed": true,
+          "durationMs": 90,
+          "error": null
+        }
+      ]
+    },
+    "tier3-pairwise": {
+      "total": 29,
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "PAIR-04.1: Color preset swatches apply without altering default Halftone mode",
+          "passed": true,
+          "durationMs": 2668,
+          "error": null
+        },
+        {
+          "name": "PAIR-04.2: Selecting preset maintains intensity within valid [0.0, 1.0] range",
+          "passed": true,
+          "durationMs": 2650,
+          "error": null
+        },
+        {
+          "name": "PAIR-04.3: Clicking Reset after preset selection restores canonical 0.29 default",
+          "passed": true,
+          "durationMs": 2678,
+          "error": null
+        },
+        {
+          "name": "PAIR-04.4: Active swatch styling reflects selected color without layout jitter",
+          "passed": true,
+          "durationMs": 104,
+          "error": null
+        },
+        {
+          "name": "PAIR-03.1: Silk frame rate stays within [20, 35] fps under 4x CPU throttling",
+          "passed": true,
+          "durationMs": 1544,
+          "error": null
+        },
+        {
+          "name": "PAIR-03.2: Hero text reveal does not freeze under 4x CPU throttling",
+          "passed": true,
+          "durationMs": 2707,
+          "error": null
+        },
+        {
+          "name": "PAIR-03.3: Pre-roll delay completes without dropped frames causing instant opacity jump",
+          "passed": true,
+          "durationMs": 439,
+          "error": null
+        },
+        {
+          "name": "PAIR-03.4: Mouse cursor pull responds smoothly under 4x CPU throttling",
+          "passed": true,
+          "durationMs": 178,
+          "error": null
+        },
+        {
+          "name": "PAIR-08.1: Dark color scheme (prefers-color-scheme: dark) renders canvas with valid contrast",
+          "passed": true,
+          "durationMs": 588,
+          "error": null
+        },
+        {
+          "name": "PAIR-08.2: Light color scheme renders canvas and legible hero typography",
+          "passed": true,
+          "durationMs": 590,
+          "error": null
+        },
+        {
+          "name": "PAIR-08.3: Toggling color scheme dynamically does not trigger canvas crash",
+          "passed": true,
+          "durationMs": 492,
+          "error": null
+        },
+        {
+          "name": "PAIR-02.1: Continuous slider updates on mobile viewport (390x844) via touch events",
+          "passed": true,
+          "durationMs": 2663,
+          "error": null
+        },
+        {
+          "name": "PAIR-02.2: Mode toggle touch hit area on mobile meets >= 32px height and width",
+          "passed": true,
+          "durationMs": 84,
+          "error": null
+        },
+        {
+          "name": "PAIR-02.3: Slider drag does not trigger unintended vertical page scrolling",
+          "passed": true,
+          "durationMs": 2735,
+          "error": null
+        },
+        {
+          "name": "PAIR-02.4: Mobile viewport retains 0 horizontal body overflow with controls panel open",
+          "passed": true,
+          "durationMs": 2686,
+          "error": null
+        },
+        {
+          "name": "PAIR-05.1: Navigating to /about mid-intro and returning clears data-intro='playing'",
+          "passed": true,
+          "durationMs": 415,
+          "error": null
+        },
+        {
+          "name": "PAIR-05.2: Returning to / after soft navigation preserves silk canvas rendering buffer",
+          "passed": true,
+          "durationMs": 116,
+          "error": null
+        },
+        {
+          "name": "PAIR-05.3: Navigating to /dialogue and back preserves hero text and aside elements",
+          "passed": true,
+          "durationMs": 127,
+          "error": null
+        },
+        {
+          "name": "PAIR-05.4: 'intro-replay' event restarts intro without requiring full page reload",
+          "passed": true,
+          "durationMs": 2661,
+          "error": null
+        },
+        {
+          "name": "PAIR-01.1: Reset button restores 0.29 intensity under reduced motion with static ribbons",
+          "passed": true,
+          "durationMs": 517,
+          "error": null
+        },
+        {
+          "name": "PAIR-01.2: Toggling Halftone/Wave mode under reduced motion preserves static uTime = 0",
+          "passed": true,
+          "durationMs": 630,
+          "error": null
+        },
+        {
+          "name": "PAIR-01.3: Dragging intensity slider under reduced motion updates value live without stutter",
+          "passed": true,
+          "durationMs": 491,
+          "error": null
+        },
+        {
+          "name": "PAIR-01.4: Reloading with reduced motion preserves adjusted slider position",
+          "passed": true,
+          "durationMs": 512,
+          "error": null
+        },
+        {
+          "name": "PAIR-07.1: Controls panel clamps within viewport edges when resized from 1440px to 390px",
+          "passed": true,
+          "durationMs": 3060,
+          "error": null
+        },
+        {
+          "name": "PAIR-07.2: Controls panel remains on screen when resized from mobile back to desktop",
+          "passed": true,
+          "durationMs": 3056,
+          "error": null
+        },
+        {
+          "name": "PAIR-07.3: Edge padding constant (EDGE_PAD = 10) prevents panel from touching window frame",
+          "passed": true,
+          "durationMs": 2697,
+          "error": null
+        },
+        {
+          "name": "PAIR-06.1: afterIntroIdle executes safely under offline network without unhandled rejection",
+          "passed": true,
+          "durationMs": 2089,
+          "error": null
+        },
+        {
+          "name": "PAIR-06.2: Offline navigation to cached routes displays fallback cleanly",
+          "passed": true,
+          "durationMs": 93,
+          "error": null
+        },
+        {
+          "name": "PAIR-06.3: Network restore mid-session allows deferred prefetching to resume",
+          "passed": true,
+          "durationMs": 1092,
+          "error": null
+        }
+      ]
+    },
+    "tier4-application": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "tests": [
+        {
+          "name": "JOURNEY-01: Full desktop cold visit journey from PS3 boot to dialogue navigation",
+          "passed": true,
+          "durationMs": 2723,
+          "error": null
+        },
+        {
+          "name": "JOURNEY-02: Full mobile visit journey verifying touch targets, continuous sliders, and scroll lock",
+          "passed": true,
+          "durationMs": 2719,
+          "error": null
+        },
+        {
+          "name": "JOURNEY-03: Low-power 4x throttled journey verifying 30fps cap and long tasks budget",
+          "passed": true,
+          "durationMs": 2680,
+          "error": null
+        },
+        {
+          "name": "JOURNEY-04: Full accessibility journey verifying reduced motion, keyboard tab order, and slider a11y",
+          "passed": true,
+          "durationMs": 400,
+          "error": null
+        },
+        {
+          "name": "JOURNEY-05: Security attack simulation verifying Server Actions guards and API limits",
+          "passed": true,
+          "durationMs": 152,
+          "error": null
+        }
+      ]
+    }
+  },
+  "failures": []
+}

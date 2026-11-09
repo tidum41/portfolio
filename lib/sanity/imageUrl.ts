@@ -1,7 +1,17 @@
-import { createImageUrlBuilder, type SanityImageSource } from "@sanity/image-url";
-import { sanityClient } from "./client";
+import {
+  createImageUrlBuilder,
+  type ImageUrlBuilder,
+  type SanityImageSource,
+} from "@sanity/image-url";
 
-const builder = createImageUrlBuilder(sanityClient);
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "9vl5qk61";
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
+
+const builder = createImageUrlBuilder({ projectId, dataset });
+
+export function urlForImage(source: SanityImageSource): ImageUrlBuilder {
+  return builder.image(source);
+}
 
 /** Default max width for content images (retina-friendly, avoids full originals). */
 export const SANITY_IMG_WIDTH = 2000;

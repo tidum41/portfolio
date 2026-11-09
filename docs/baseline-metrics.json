@@ -1,0 +1,231 @@
+{
+  "timestamp": "2026-11-08T00:31:53.708Z",
+  "targetUrl": "http://localhost:3000",
+  "runsPerProfile": 3,
+  "profiles": [
+    {
+      "profileId": "desktop-1x",
+      "profileName": "Desktop 1440x900 @ 1x CPU",
+      "viewport": "1440x900",
+      "cpuThrottle": "1x",
+      "runsCount": 3,
+      "metrics": {
+        "longTasksCount": 0,
+        "longTasksTotalMs": 0,
+        "maxLongTaskMs": 0,
+        "tbtMs": 0,
+        "silkFrameCount": 81,
+        "silkFps": 30,
+        "lcpMs": 2708,
+        "cls": 0,
+        "fcpMs": 164
+      },
+      "runs": [
+        {
+          "longTaskCount": 1,
+          "longTaskTotalMs": 57,
+          "maxLongTaskMs": 57,
+          "tbtMs": 7,
+          "silkFrameCount": 78,
+          "silkFps": 29.8,
+          "lcpMs": 2796,
+          "cls": 0,
+          "fcpMs": 216,
+          "domLoadedMs": 129.7
+        },
+        {
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "maxLongTaskMs": 0,
+          "tbtMs": 0,
+          "silkFrameCount": 81,
+          "silkFps": 30,
+          "lcpMs": 2708,
+          "cls": 0,
+          "fcpMs": 164,
+          "domLoadedMs": 69.9
+        },
+        {
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "maxLongTaskMs": 0,
+          "tbtMs": 0,
+          "silkFrameCount": 81,
+          "silkFps": 30,
+          "lcpMs": 2700,
+          "cls": 0,
+          "fcpMs": 156,
+          "domLoadedMs": 61.4
+        }
+      ]
+    },
+    {
+      "profileId": "desktop-4x",
+      "profileName": "Desktop 1440x900 @ 4x CPU Throttle",
+      "viewport": "1440x900",
+      "cpuThrottle": "4x",
+      "runsCount": 3,
+      "metrics": {
+        "longTasksCount": 2,
+        "longTasksTotalMs": 347,
+        "maxLongTaskMs": 170,
+        "tbtMs": 232,
+        "silkFrameCount": 67,
+        "silkFps": 30.1,
+        "lcpMs": 3236,
+        "cls": 0,
+        "fcpMs": 700
+      },
+      "runs": [
+        {
+          "longTaskCount": 3,
+          "longTaskTotalMs": 351,
+          "maxLongTaskMs": 169,
+          "tbtMs": 201,
+          "silkFrameCount": 67,
+          "silkFps": 30.1,
+          "lcpMs": 3236,
+          "cls": 0,
+          "fcpMs": 700,
+          "domLoadedMs": 374.1
+        },
+        {
+          "longTaskCount": 2,
+          "longTaskTotalMs": 332,
+          "maxLongTaskMs": 170,
+          "tbtMs": 232,
+          "silkFrameCount": 67,
+          "silkFps": 30.1,
+          "lcpMs": 3220,
+          "cls": 0,
+          "fcpMs": 680,
+          "domLoadedMs": 357.3
+        },
+        {
+          "longTaskCount": 2,
+          "longTaskTotalMs": 347,
+          "maxLongTaskMs": 182,
+          "tbtMs": 247,
+          "silkFrameCount": 67,
+          "silkFps": 30.1,
+          "lcpMs": 3248,
+          "cls": 0,
+          "fcpMs": 712,
+          "domLoadedMs": 369
+        }
+      ]
+    },
+    {
+      "profileId": "mobile-1x",
+      "profileName": "Mobile 390x844 @ 1x CPU",
+      "viewport": "390x844",
+      "cpuThrottle": "1x",
+      "runsCount": 3,
+      "metrics": {
+        "longTasksCount": 0,
+        "longTasksTotalMs": 0,
+        "maxLongTaskMs": 0,
+        "tbtMs": 0,
+        "silkFrameCount": 81,
+        "silkFps": 30,
+        "lcpMs": 160,
+        "cls": 0,
+        "fcpMs": 160
+      },
+      "runs": [
+        {
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "maxLongTaskMs": 0,
+          "tbtMs": 0,
+          "silkFrameCount": 81,
+          "silkFps": 30,
+          "lcpMs": 160,
+          "cls": 0,
+          "fcpMs": 160,
+          "domLoadedMs": 64.2
+        },
+        {
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "maxLongTaskMs": 0,
+          "tbtMs": 0,
+          "silkFrameCount": 81,
+          "silkFps": 30,
+          "lcpMs": 160,
+          "cls": 0,
+          "fcpMs": 160,
+          "domLoadedMs": 67.3
+        },
+        {
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "maxLongTaskMs": 0,
+          "tbtMs": 0,
+          "silkFrameCount": 81,
+          "silkFps": 30.1,
+          "lcpMs": 156,
+          "cls": 0,
+          "fcpMs": 156,
+          "domLoadedMs": 86.8
+        }
+      ]
+    },
+    {
+      "profileId": "mobile-4x",
+      "profileName": "Mobile 390x844 @ 4x CPU Throttle",
+      "viewport": "390x844",
+      "cpuThrottle": "4x",
+      "runsCount": 3,
+      "metrics": {
+        "longTasksCount": 2,
+        "longTasksTotalMs": 347,
+        "maxLongTaskMs": 182,
+        "tbtMs": 247,
+        "silkFrameCount": 67,
+        "silkFps": 30.1,
+        "lcpMs": 700,
+        "cls": 0,
+        "fcpMs": 700
+      },
+      "runs": [
+        {
+          "longTaskCount": 2,
+          "longTaskTotalMs": 347,
+          "maxLongTaskMs": 178,
+          "tbtMs": 247,
+          "silkFrameCount": 67,
+          "silkFps": 30.1,
+          "lcpMs": 700,
+          "cls": 0,
+          "fcpMs": 700,
+          "domLoadedMs": 352.6
+        },
+        {
+          "longTaskCount": 2,
+          "longTaskTotalMs": 337,
+          "maxLongTaskMs": 182,
+          "tbtMs": 237,
+          "silkFrameCount": 67,
+          "silkFps": 30.1,
+          "lcpMs": 684,
+          "cls": 0,
+          "fcpMs": 684,
+          "domLoadedMs": 369.1
+        },
+        {
+          "longTaskCount": 2,
+          "longTaskTotalMs": 357,
+          "maxLongTaskMs": 184,
+          "tbtMs": 257,
+          "silkFrameCount": 67,
+          "silkFps": 30.2,
+          "lcpMs": 712,
+          "cls": 0,
+          "fcpMs": 712,
+          "domLoadedMs": 388.7
+        }
+      ]
+    }
+  ]
+}

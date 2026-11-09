@@ -11,18 +11,33 @@ const client = createClient({
   useCdn: false,
 });
 
+function requireDevAndToken() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Dev actions are disabled in production");
+  }
+  if (!process.env.SANITY_API_WRITE_TOKEN) {
+    throw new Error("No SANITY_API_WRITE_TOKEN in .env.local");
+  }
+}
+
 function requireToken() {
-  if (!process.env.SANITY_API_WRITE_TOKEN) throw new Error("No SANITY_API_WRITE_TOKEN in .env.local");
+  requireDevAndToken();
 }
 
 // Patch a subset of fields on a case study document
 export async function patchCaseStudy(slug: string, fields: Record<string, unknown>) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Dev actions are disabled in production");
+  }
   requireToken();
   await client.patch(`case-study-${slug}`).set(fields).commit();
 }
 
 // Patch (or create) the singleton design system document
 export async function patchDesignSystem(fields: Partial<DesignSystemData>) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Dev actions are disabled in production");
+  }
   requireToken();
   await client
     .transaction()

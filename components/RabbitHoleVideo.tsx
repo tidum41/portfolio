@@ -66,6 +66,55 @@ function computeSpriteTransform(
     return `translateX(${translateX.toFixed(1)}px) scaleX(${(direction * s).toFixed(3)}) scaleY(${s.toFixed(3)})`;
 }
 
+// Cache frame SVG groups (<g>) per SVGSVGElement instance so pose swaps
+// simply toggle display: none instead of allocating and garbage-collecting
+// hundreds of rect elements every hop tick.
+const frameGroupCache = new WeakMap<SVGSVGElement, Map<string, SVGGElement>>();
+
+function buildFrameGroup(frame: RabbitFrame, filled: boolean): SVGGElement {
+    const NS = "http://www.w3.org/2000/svg";
+    const group = document.createElementNS(NS, "g") as SVGGElement;
+    group.setAttribute("data-frame", String(frame));
+    if (filled) group.setAttribute("data-filled", "true");
+    group.style.display = "none";
+
+    const [w, h] = FRAME_VIEWBOX[frame];
+    // Bottom-center each tight crop inside the shared canvas so feet stay
+    // grounded and the hop reads as motion, not a scale pop.
+    const ox = (FRAME_CANVAS_W - w) / 2;
+    const oy = FRAME_CANVAS_H - h;
+
+    const frag = document.createDocumentFragment();
+    const rects = filled ? FILLED_FRAME_RECTS[frame] : FRAME_RECTS[frame];
+    for (const [x, y, rw, rh] of rects) {
+        const rect = document.createElementNS(NS, "rect");
+        rect.setAttribute("x", String(x + ox));
+        rect.setAttribute("y", String(y + oy));
+        rect.setAttribute("width", String(rw));
+        rect.setAttribute("height", String(rh));
+        rect.setAttribute("fill", "currentColor");
+        frag.appendChild(rect);
+    }
+    group.appendChild(frag);
+    return group;
+}
+
+function getOrCreateFrameGroup(svg: SVGSVGElement, frame: RabbitFrame, filled: boolean): SVGGElement {
+    let cache = frameGroupCache.get(svg);
+    if (!cache) {
+        cache = new Map<string, SVGGElement>();
+        frameGroupCache.set(svg, cache);
+    }
+    const key = `${frame}:${filled ? 1 : 0}`;
+    let group = cache.get(key);
+    if (!group) {
+        group = buildFrameGroup(frame, filled);
+        cache.set(key, group);
+        svg.appendChild(group);
+    }
+    return group;
+}
+
 function createRabbitSprite(filled: boolean, filledScale: number): SVGSVGElement {
     const NS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(NS, "svg") as SVGSVGElement;
@@ -85,31 +134,29 @@ function createRabbitSprite(filled: boolean, filledScale: number): SVGSVGElement
         overflow: visible; shape-rendering: crispEdges;
     `;
     svg.style.transform = computeSpriteTransform(0, 1, filled, filledScale);
+
+    // Pre-populate all 4 frames of the initial mode so tick swaps are pure O(1) display flips
+    for (const f of [0, 1, 2, 3] as const) {
+        getOrCreateFrameGroup(svg, f, filled);
+    }
     setSpriteFrame(svg, HOP_SEQUENCE[0], filled);
     return svg;
 }
 
 function setSpriteFrame(svg: SVGSVGElement, frame: RabbitFrame, filled = false): void {
-    const NS = "http://www.w3.org/2000/svg";
-    const [w, h] = FRAME_VIEWBOX[frame];
-    // Bottom-center each tight crop inside the shared canvas so feet stay
-    // grounded and the hop reads as motion, not a scale pop.
-    const ox = (FRAME_CANVAS_W - w) / 2;
-    const oy = FRAME_CANVAS_H - h;
-    svg.setAttribute("viewBox", `0 0 ${FRAME_CANVAS_W} ${FRAME_CANVAS_H}`);
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const frag = document.createDocumentFragment();
-    const rects = filled ? FILLED_FRAME_RECTS[frame] : FRAME_RECTS[frame];
-    for (const [x, y, rw, rh] of rects) {
-        const rect = document.createElementNS(NS, "rect");
-        rect.setAttribute("x", String(x + ox));
-        rect.setAttribute("y", String(y + oy));
-        rect.setAttribute("width", String(rw));
-        rect.setAttribute("height", String(rh));
-        rect.setAttribute("fill", "currentColor");
-        frag.appendChild(rect);
+    const targetGroup = getOrCreateFrameGroup(svg, frame, filled);
+    const cache = frameGroupCache.get(svg);
+    if (cache) {
+        for (const group of cache.values()) {
+            const shouldShow = group === targetGroup;
+            const currentDisplay = group.style.display;
+            if (shouldShow && currentDisplay !== "") {
+                group.style.display = "";
+            } else if (!shouldShow && currentDisplay !== "none") {
+                group.style.display = "none";
+            }
+        }
     }
-    svg.appendChild(frag);
 }
 
 // Cycles the sprite through its 4-pose hop loop by swapping frames on an
