@@ -524,8 +524,9 @@ export default function MuxMediaSlot({
       data-media-paused={playing ? undefined : ""}
     >
       {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio.
-          Fill/grid cards already paint a poster underneath; skip a second 1280 fetch. */}
-      {!fill && (
+          Cover/fill cards already paint a poster underneath; letterbox fill cards
+          keep an in-slot poster so the opaque slot color never blanks the media. */}
+      {(!fill || letterbox) && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="mux-media-sizer"
@@ -536,6 +537,14 @@ export default function MuxMediaSlot({
           height={posterHeight}
           decoding="async"
           fetchPriority="high"
+          style={
+            letterbox
+              ? ({
+                  objectFit: "contain",
+                  background: videoBackground,
+                } as CSSProperties)
+              : undefined
+          }
           onLoad={kickPlay}
         />
       )}

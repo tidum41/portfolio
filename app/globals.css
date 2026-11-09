@@ -2367,6 +2367,14 @@ html[data-theme="dark"] .ps-polaroid-cap {
 .mux-media-slot--fill.mux-media-slot--letterbox {
   background: var(--mux-letterbox, #aac5e0);
 }
+.mux-media-slot--fill.mux-media-slot--letterbox .mux-media-sizer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--mux-letterbox, #aac5e0);
+}
 .mux-media-slot--fill.mux-media-slot--letterbox .mux-cover,
 .mux-media-slot--fill.mux-media-slot--letterbox video.mux-cover {
   object-fit: contain;
