@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ProductCaseStudy from "@/components/ProductCaseStudy";
+import JoolaBody from "@/components/joola/JoolaBody";
 import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
 
@@ -17,5 +18,5 @@ export const metadata: Metadata = {
 };
 
 export default function JoolaCaseStudyPage() {
-  return <ProductCaseStudy />;
+  return <ProductCaseStudy body={<JoolaBody />} />;
 }

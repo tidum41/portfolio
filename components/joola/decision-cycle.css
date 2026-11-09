@@ -1,0 +1,215 @@
+.decision-cycle {
+  margin: 24px 0 8px;
+  outline: none;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+}
+
+.decision-cycle:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.dc-tabs {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-bottom: 16px;
+}
+.dc-tabs::-webkit-scrollbar { display: none; }
+
+.dc-tab {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: #79716b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dc-tab[aria-selected="true"] {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+.dc-tab:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dc-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.dc-versions {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dc-version {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.dc-version[aria-current="true"] {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+.dc-version:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+
+.dc-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #e7e5e4;
+  pointer-events: none;
+  z-index: 0;
+}
+.dc-highlight[data-ready="true"] {
+  transition: transform 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-highlight[data-ready="true"] { transition: none; }
+}
+:root[data-theme="dark"] .dc-highlight,
+html.dark .dc-highlight {
+  background: #292524;
+}
+
+.dc-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--color-border-subtle, #e7e5e4);
+  margin: 0 4px;
+}
+
+.dc-replay {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.dc-replay:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+
+.dc-stage {
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+  background: #fff;
+  touch-action: pan-y;
+}
+
+.dc-dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dc-arrow {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.dc-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.dc-arrow:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dc-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.dc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #d6d3d1;
+  border: 0;
+  padding: 0;
+}
+.dc-dot[data-active="true"] {
+  background: var(--color-text-primary);
+}
+
+.dc-round {
+  margin-top: 20px;
+  max-width: 40rem;
+}
+.dc-round__ver {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.dc-round__changed {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.dc-round__note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.dc-round__note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .dc-picker-row { display: none; }
+}

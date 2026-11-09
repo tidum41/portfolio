@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
-import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
+import { JOOLA_HERO_SRC, JOOLA_TITLE, JOOLA_TOC } from "@/lib/caseStudies/joola";
 
 const TEAM = [
   { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
@@ -16,19 +15,21 @@ const TEAM = [
 
 /**
  * JOOLA uses the BruinLease case-study open: title, hero, then metadata.
- * `body` is the slot for later sections, between that open and the NDA request.
+ * `body` fills the sections between the open and the pager.
  */
 export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
+  const tocItems = JOOLA_TOC.map((item) => ({ id: item.id, label: item.label }));
+
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
         <aside className="cs-aside">
-          <CaseStudyTOC items={[]} backHref="/" />
+          <CaseStudyTOC items={tocItems} backHref="/" />
         </aside>
 
         <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
           <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+            <CaseStudyTOC items={tocItems} backHref="/" mobileBackOnly />
           </div>
 
           <CaseStudyOpen
@@ -72,8 +73,6 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
           </CaseStudyOpen>
 
           {body}
-
-          <CaseStudyRequest />
 
           <CaseStudyPager href="/joola" />
         </div>

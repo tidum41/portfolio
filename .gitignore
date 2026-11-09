@@ -47,3 +47,4 @@ next-env.d.ts
 /fonts/ABCArealVariable.woff2
 /fonts/ABCAreal*.woff2
 /fonts/ABCAreal*.ttf
+.pr-screenshots/
