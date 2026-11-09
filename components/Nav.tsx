@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
@@ -24,6 +24,11 @@ export default function Nav({
   const pathname = usePathname();
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
+  // One hovered word at a time. Each link used to run its own 0.32s morph,
+  // so the word you just left was still in the hover shape while the next
+  // one started. A sibling enter replaces this; leaving the bar clears it
+  // and that last word eases out.
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   // Warm primary routes after the first-load intro so RSC prefetches don't
   // compete with the PS3 silk fade; hover/pointerdown still prefetch on demand.
@@ -191,6 +196,12 @@ export default function Nav({
                 isActive={isActive}
                 dk={dk}
                 resting={words[label]}
+                navHovered={hoveredHref === href}
+                snapRest={hoveredHref !== null && hoveredHref !== href}
+                onHoverStart={() => setHoveredHref(href)}
+                onHoverEnd={() =>
+                  setHoveredHref((current) => (current === href ? null : current))
+                }
               />
             );
           })}

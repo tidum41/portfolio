@@ -243,8 +243,12 @@ export default function PS3Silk({
     }
     window.addEventListener("intro-replay", onReplay);
 
-    // Preserve deliberate 180ms pre-roll before silk starts on first load
-    // (cinematic PS3 pacing per Part 1), or 0ms for reduced-motion / soft returns.
+    // Cinematic hold stays 180ms of black before the fade clock starts.
+    // GL is created on the next task, inside that hold, so shader compile
+    // and the first invisible draws don't land on the opening visible frames.
+    // Reduced motion and later mounts skip the hold.
+    const preRollMs = isFirstLoad && !reducedMotion ? 180 : 0;
+    const fadeNotBefore = performance.now() + preRollMs;
     const initTimer = setTimeout(() => {
       const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
       if (!_glNullable) return;
@@ -278,7 +282,7 @@ export default function PS3Silk({
         glCtx.viewport(0, 0, w, h);
         // Reassigning canvas.width/height clears the WebGL drawing buffer to
         // transparent — the only thing that ever repaints it otherwise is the
-        // 30fps-throttled frame() loop below, which can lag up to a frame (or
+        // frame-capped frame() loop below, which can lag up to a frame (or
         // more, if resize events keep arriving faster than it catches up)
         // behind. That gap between "buffer cleared" and "next scheduled
         // redraw" is what read as a flicker during a drag-resize. Redrawing
@@ -319,7 +323,7 @@ export default function PS3Silk({
         // getBoundingClientRect() is viewport-relative, so the resize-only
         // cache above would go stale as soon as the page scrolls without the
         // wrapper's own size changing. This runs on scroll (not every frame),
-        // keeping onMouseMove's cached rect current without 30fps layout reads.
+        // keeping onMouseMove's cached rect current without per-frame layout reads.
         wrapperRect = wrapperRef.current?.getBoundingClientRect() ?? null;
         updateScrollTarget();
         if (activeRef.current && !isScrolledPastHero() && canvas.width >= 2 && canvas.height >= 2) {
@@ -588,6 +592,11 @@ void main() {
         mouse.y += (mouse.ty - mouse.y) * 0.042;
 
         updateScrollTarget();
+        if (introActive && introDuration > 0 && ms < fadeNotBefore) {
+          currentOpacity = 0;
+          draw(ms);
+          return;
+        }
         if (introActive && introDuration > 0) {
           if (lastFadeMs === null) {
             lastFadeMs = ms;
@@ -620,7 +629,7 @@ void main() {
       if (activeRef.current) {
         wake();
       }
-    }, isFirstLoad && !reducedMotion ? 180 : 0);
+    }, 0);
 
     return () => {
       _hasMounted = hadMountedBefore;

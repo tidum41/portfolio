@@ -29,14 +29,13 @@ function runTest(name, fn) {
 // ---------------------------------------------------------
 console.log("\n[Group 1] WebGL Startup Timing & Pre-roll");
 
-runTest("1.1: PS3Silk.tsx sets 180ms delay on first load and 0ms on reduced-motion or soft nav", () => {
+runTest("1.1: PS3Silk.tsx keeps a 180ms first-load pre-roll and skips it for reduced-motion or soft nav", () => {
   const silkSrc = fs.readFileSync(path.join(repoRoot, "components/PS3Silk.tsx"), "utf8");
-  
-  // Verify the exact ternary condition
-  const match = silkSrc.match(/},\s*(isFirstLoad\s*&&\s*!reducedMotion\s*\?\s*180\s*:\s*0)\s*\);/);
-  assert(match, "Could not find `isFirstLoad && !reducedMotion ? 180 : 0` in components/PS3Silk.tsx");
 
-  // Simulate timing function
+  const match = silkSrc.match(/const\s+preRollMs\s*=\s*(isFirstLoad\s*&&\s*!reducedMotion\s*\?\s*180\s*:\s*0)/);
+  assert(match, "Could not find preRollMs = isFirstLoad && !reducedMotion ? 180 : 0 in components/PS3Silk.tsx");
+  assert(silkSrc.includes("ms < fadeNotBefore"), "Fade clock must stay held until the pre-roll ends");
+
   const calcDelay = (isFirstLoad, reducedMotion) => (isFirstLoad && !reducedMotion ? 180 : 0);
   assert.strictEqual(calcDelay(true, false), 180, "First load without reduced motion must delay 180ms");
   assert.strictEqual(calcDelay(true, true), 0, "First load with reduced motion must delay 0ms");

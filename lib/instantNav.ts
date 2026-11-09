@@ -18,8 +18,8 @@
  *
  * Layer C — first-load intro (data-intro / IntroOrchestrator / HeroText /
  * PS3Silk):
- *   - Cold "/" and tab/BFCache intro-replay only. Never use it for an SPA
- *     soft return.
+ *   - Cold "/" only. Never use it for an SPA soft return, and never replay
+ *     it when the tab becomes visible again.
  *
  * Primary paths:
  *   Cold "/"                  → intro, then orchestrated grid
@@ -28,7 +28,7 @@
  *   case-study Back → "/"     → instant fade/content return
  *   browser Back/Forward      → snap the destination tab at rest
  *   case-study → "/" via nav  → tab show this frame; work content enters
- *   tab/BFCache return on "/" → distinct intro-replay
+ *   tab/BFCache return on "/" → stay as left; do not replay the intro
  */
 
 const INSTANT_KEY = "instant-back";
