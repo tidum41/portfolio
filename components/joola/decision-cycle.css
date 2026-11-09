@@ -47,7 +47,7 @@
   border-radius: 4px;
 }
 
-/* Numbered chips removed from public and lab — dots + arrows + N of M only.
+/* Numbered chips removed from public and lab — dots + arrows + Version N only.
    DialKit on /dev/joola-cycles still selects versions via the panel. */
 .dc-picker-row {
   display: none;

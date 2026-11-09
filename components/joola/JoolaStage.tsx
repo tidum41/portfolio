@@ -12,6 +12,7 @@ export default function JoolaStage({
   wide = false,
   label,
   className = "",
+  footer,
 }: {
   children: ReactNode;
   caption?: string;
@@ -20,6 +21,7 @@ export default function JoolaStage({
   wide?: boolean;
   label?: string;
   className?: string;
+  footer?: ReactNode;
 }) {
   return (
     <figure
@@ -34,6 +36,7 @@ export default function JoolaStage({
           >
             {children}
           </div>
+          {footer ? <div className="joola-stage__footer">{footer}</div> : null}
         </div>
       </div>
       {caption ? <figcaption className="cs-figcaption joola-stage__caption">{caption}</figcaption> : null}

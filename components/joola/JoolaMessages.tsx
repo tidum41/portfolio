@@ -57,15 +57,19 @@ function MessagesInner({ replayKey = 0 }: { replayKey?: number }) {
             </div>
             {JOOLA_MESSAGES.anna}
           </div>
-          {showReply ? (
-            <div className={`bubble sam${reduced ? "" : " is-entering"}`}>
+          {/* Reserved slot prevents layout shift when the reply arrives */}
+          <div className="bubble-slot">
+            <div
+              className={`bubble sam${showReply && !reduced ? " is-entering" : ""}`}
+              data-visible={showReply ? "true" : "false"}
+            >
               <div className="who">
                 <b>Collin Johns</b>
                 <span>JOOLA Sales · {JOOLA_MESSAGES.samTime}</span>
               </div>
               {JOOLA_MESSAGES.sam}
             </div>
-          ) : null}
+          </div>
         </div>
       </div>
     </div>

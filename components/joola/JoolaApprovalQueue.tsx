@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import JoolaStage from "./JoolaStage";
+import JoolaDemoState, { JoolaSyncBanner } from "./JoolaDemoState";
 import { money, moneyWhole } from "@/lib/caseStudies/joolaLedger";
 
 type OrderRow = {
@@ -57,24 +58,43 @@ function RepChrome({
         </a>
       </aside>
       <div className="rep-main">
-        <div className="rep-user" aria-label="Signed in as Collin Johns, Sales rep">
-          <strong>Collin Johns</strong>
-          <span>Sales rep</span>
+        <div className="rep-topbar">
+          <div className="rep-user" aria-label="Signed in as Collin Johns, Sales rep">
+            <strong>Collin Johns</strong>
+            <span>Sales rep</span>
+          </div>
         </div>
-        {children}
+        <div className="rep-body">{children}</div>
       </div>
     </div>
   );
 }
 
-function ApprovalQueueInner() {
-  const [rows, setRows] = useState(SEED);
+function ApprovalQueueInner({
+  forceEmpty = false,
+  syncing = false,
+  forceResult = null,
+}: {
+  forceEmpty?: boolean;
+  syncing?: boolean;
+  forceResult?: "approved" | "rejected" | null;
+}) {
+  const [rows, setRows] = useState(forceEmpty ? [] : SEED);
   const [modalFor, setModalFor] = useState<OrderRow | null>(null);
   const [reason, setReason] = useState("");
   const [tried, setTried] = useState(false);
-  const [result, setResult] = useState<"approved" | "rejected" | null>(null);
-  const [resultRow, setResultRow] = useState<OrderRow | null>(null);
-  const [resultReason, setResultReason] = useState("");
+  const seed = SEED[0];
+  const [result, setResult] = useState<"approved" | "rejected" | null>(forceResult);
+  const [resultRow, setResultRow] = useState<OrderRow | null>(
+    forceResult ? seed : null,
+  );
+  const [resultReason, setResultReason] = useState(
+    forceResult === "approved"
+      ? "Seasonal restock for regional tournament demand."
+      : forceResult === "rejected"
+        ? "Remaining credit doesn't cover this order."
+        : "",
+  );
   const reasonId = useId();
   const errorId = useId();
 
@@ -185,6 +205,8 @@ function ApprovalQueueInner() {
         <span className="pending-pill">Pending approval</span>
         Your rep will need to approve before it ships.
       </div>
+
+      {syncing ? <JoolaSyncBanner>Syncing with NetSuite…</JoolaSyncBanner> : null}
 
       {rows.length === 0 ? (
         <div className="rep-empty">No orders are waiting on a credit override.</div>
@@ -313,10 +335,37 @@ function ApprovalQueueInner() {
   );
 }
 
+type ApprovalDemo = "default" | "empty" | "syncing" | "approved" | "rejected";
+
 export default function JoolaApprovalQueue({ caption }: { caption?: string }) {
+  const [demoState, setDemoState] = useState<ApprovalDemo>("default");
   return (
-    <JoolaStage caption={caption} label="Rep approval queue" wide>
-      <ApprovalQueueInner />
+    <JoolaStage
+      caption={caption}
+      label="Rep approval queue"
+      wide
+      footer={
+        <JoolaDemoState
+          value={demoState}
+          onChange={(v) => setDemoState(v as ApprovalDemo)}
+          options={[
+            { value: "default", label: "With order" },
+            { value: "empty", label: "Empty queue" },
+            { value: "approved", label: "Approved" },
+            { value: "rejected", label: "Rejected" },
+            { value: "syncing", label: "Syncing" },
+          ]}
+        />
+      }
+    >
+      <ApprovalQueueInner
+        key={demoState}
+        forceEmpty={demoState === "empty"}
+        syncing={demoState === "syncing"}
+        forceResult={
+          demoState === "approved" || demoState === "rejected" ? demoState : null
+        }
+      />
     </JoolaStage>
   );
 }

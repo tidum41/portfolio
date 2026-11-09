@@ -237,7 +237,7 @@ function DecisionCycleInner({
           <Chevron dir="next" />
         </button>
         <p className="dc-version-label" aria-live="polite">
-          {decision.rounds.findIndex((r) => r.v === round.v) + 1} of {decision.rounds.length}
+          Version {round.v}
           {decision.motion ? (
             <button
               type="button"
