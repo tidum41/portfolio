@@ -17,7 +17,13 @@ function isTopWindow() {
  * Single DialRoot for local `next dev` and Vercel preview. Hidden on
  * production (DialKit's default / our dialkit-prod stub) and in iframes.
  * Labs (`/dev/*`) open the panel; the rest of the site starts collapsed.
- * `versions="thumbnails"` is DialKit 2.1+'s default (save + gallery).
+ *
+ * Use `versions="menu"` (not the 2.1+ thumbnail default). Thumbnail capture
+ * DOM→SVG→canvas clones the whole viewport, including the PS3 silk WebGL
+ * canvas (ReadPixels stalls) and Mux videos (blob: srcs that 404 mid-capture).
+ * With many panels, missing/stale thumbs also re-capture on open via
+ * captureMissingSoon — that froze/crashed the preview. The classic menu still
+ * saves, lists, and restores versions without capturing the page.
  */
 export default function DevDialRoot() {
   const pathname = usePathname();
@@ -35,7 +41,7 @@ export default function DevDialRoot() {
   return (
     <DialRoot
       defaultOpen={openDials}
-      versions="thumbnails"
+      versions="menu"
       productionEnabled
     />
   );
