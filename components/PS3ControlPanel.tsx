@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallback, useMemo, memo } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, startTransition, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
@@ -36,7 +36,6 @@ const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // load mounts with the work shell, before the intro gate lifts, and its
 // reveal is armed on "intro-done" like the rest of the intro (HeroText,
 // grid); about/archive return replays settle.
-const PICKER_MAX_H = 125;
 // Content-tight body (not a fixed 620). First-frame estimate only —
 // ResizeObserver replaces it with the inner's visible offsetHeight.
 const BODY_COLOR_H = 107;
@@ -62,7 +61,6 @@ const MODE_KEY        = "ps3cp_mode";
 const DEFAULT_INTENSITY_HT = 0.29; // halftone mode default
 const DEFAULT_INTENSITY_WV = 0.04; // wave mode default
 const DEFAULT_MOUSE_STR    = 0.11;
-const DEFAULT_YOFFSET      = 49;
 const DEFAULT_WAVE_COLOR: [number, number, number] = [1, 1, 1];
 const DEFAULT_MODE         = 1;
 const DEFAULT_HALFTONE_SIZE = 3.0;
@@ -227,42 +225,6 @@ function getGeometry(
 }
 
 // ── Color math ─────────────────────────────────────────────────────────────
-function rgbToHex(rgb: [number,number,number]) {
-  return "#" + rgb.map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
-}
-function hexToRgb01(hex: string): [number,number,number] {
-  const c = (hex || "").replace("#", "");
-  const full = c.length === 3 ? c.split("").map(x => x + x).join("") : c;
-  if (full.length < 6) return [1, 1, 1];
-  return [parseInt(full.slice(0,2),16)/255, parseInt(full.slice(2,4),16)/255, parseInt(full.slice(4,6),16)/255];
-}
-function hexToHsl(hex: string): [number,number,number] {
-  const c = (hex || "#000000").replace("#", "");
-  if (c.length < 6) return [0, 100, 50];
-  const r = parseInt(c.slice(0,2),16)/255, g = parseInt(c.slice(2,4),16)/255, b = parseInt(c.slice(4,6),16)/255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h = 0, s = 0;
-  const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-      case g: h = ((b - r) / d + 2) / 6; break;
-      case b: h = ((r - g) / d + 4) / 6; break;
-    }
-  }
-  return [h * 360, s * 100, l * 100];
-}
-function hslToHex(h: number, s: number, l: number) {
-  s /= 100; l /= 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  const toB = (x: number) => Math.round(x * 255).toString(16).padStart(2, "0");
-  return "#" + toB(f(0)) + toB(f(8)) + toB(f(4));
-}
-
 function preventTextSelect(e?: React.PointerEvent) {
   if (e) { try { e.preventDefault(); } catch {} }
   try { window.getSelection()?.removeAllRanges(); } catch {}
@@ -462,158 +424,6 @@ function ExpandSection({ open, maxH, children }: { open: boolean; maxH: number; 
   );
 }
 
-// ── Color picker (Minimal, Pixel-Perfect Canvas + Hue Track) ────────────────
-const PS3ColorPicker = memo(function PS3ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
-  const svRef       = useRef<HTMLDivElement>(null);
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
-  const hueRef      = useRef<HTMLDivElement>(null);
-  const isSvDrag    = useRef(false);
-  const isHueDrag   = useRef(false);
-
-  const [hsl, setHsl] = useState<[number,number,number]>(() => hexToHsl(value || "#999999"));
-
-  useEffect(() => { if (value) { setHsl(hexToHsl(value)); } }, [value]);
-
-  const drawCanvas = useCallback((hue: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const W = canvas.width, H = canvas.height;
-    if (!W || !H) return;
-    const wg = ctx.createLinearGradient(0, 0, W, 0);
-    wg.addColorStop(0, "rgba(255,255,255,1)");
-    wg.addColorStop(1, `hsl(${hue},100%,50%)`);
-    ctx.fillStyle = wg; ctx.fillRect(0, 0, W, H);
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "transparent"); bg.addColorStop(1, "#000");
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current, wrap = svRef.current;
-    if (!canvas || !wrap || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      const rect = wrap.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        canvas.width = Math.round(rect.width); canvas.height = Math.round(rect.height);
-        drawCanvas(hsl[0]);
-      }
-    });
-    ro.observe(wrap);
-    return () => ro.disconnect();
-  }, []); // eslint-disable-line
-
-  useEffect(() => { drawCanvas(hsl[0]); }, [hsl[0], drawCanvas]);
-
-  const applySV = useCallback((x: number, y: number, hue: number) => {
-    const sat = Math.max(0, Math.min(1, x)), val = Math.max(0, Math.min(1, y));
-    const L = val * (1 - sat / 2);
-    const S = L === 0 || L === 1 ? 0 : (val - L) / Math.min(L, 1 - L);
-    const newHsl: [number,number,number] = [hue, S * 100, L * 100];
-    setHsl(newHsl);
-    onChange(hslToHex(newHsl[0], newHsl[1], newHsl[2]));
-  }, [onChange]);
-
-  const applyHueFromClientX = useCallback((clientX: number) => {
-    const el = hueRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const pad = 7;
-    const availW = Math.max(1, rect.width - pad * 2);
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left - pad) / availW));
-    const newHue = Math.round(pct * 360);
-    const newHsl: [number,number,number] = [newHue, hsl[1], hsl[2]];
-    setHsl(newHsl);
-    drawCanvas(newHue);
-    onChange(hslToHex(newHue, hsl[1], hsl[2]));
-  }, [hsl, drawCanvas, onChange]);
-
-  const getSVFromCanvas = useCallback((e: React.PointerEvent) => {
-    const rect = svRef.current!.getBoundingClientRect();
-    return [
-      Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
-      Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height)),
-    ] as [number, number];
-  }, []);
-
-  const { svX, svY } = useMemo(() => {
-    const [, s, l] = hsl;
-    const sn = s / 100, ln = l / 100;
-    const v = ln + sn * Math.min(ln, 1 - ln);
-    const sv_s = v === 0 ? 0 : 2 * (1 - ln / v);
-    return { svX: sv_s * 100, svY: (1 - v) * 100 };
-  }, [hsl]);
-
-  const huePct = Math.max(0, Math.min(100, (hsl[0] / 360) * 100));
-
-  return (
-    <div onPointerDown={e => e.stopPropagation()} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* SV Canvas */}
-      <div ref={svRef} style={{ position: "relative", width: "100%", height: 86, borderRadius: 5, overflow: "hidden", touchAction: "none", cursor: "crosshair", userSelect: "none", WebkitUserSelect: "none" } as React.CSSProperties}
-        onPointerDown={e => { preventTextSelect(e); isSvDrag.current = true; e.currentTarget.setPointerCapture(e.pointerId); applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerMove={e => { if (!isSvDrag.current) return; preventTextSelect(e); applySV(...getSVFromCanvas(e), hsl[0]); }}
-        onPointerUp={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
-        onPointerCancel={e => { isSvDrag.current = false; restoreTextSelect(); try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
-      >
-        <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-        <div style={{ position: "absolute", left: `${svX}%`, top: `${svY}%`, width: 12, height: 12, borderRadius: "50%", border: "2px solid #ffffff", boxShadow: "0 0 0 1px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
-      </div>
-
-      {/* Custom Precision Hue Rail (Zero Clipping) */}
-      <div
-        ref={hueRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          height: 12,
-          borderRadius: 6,
-          touchAction: "none",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          cursor: "pointer",
-          background: "linear-gradient(to right, hsl(0,95%,52%), hsl(30,95%,52%), hsl(60,95%,52%), hsl(90,95%,52%), hsl(120,95%,52%), hsl(150,95%,52%), hsl(180,95%,52%), hsl(210,95%,52%), hsl(240,95%,52%), hsl(270,95%,52%), hsl(300,95%,52%), hsl(330,95%,52%), hsl(360,95%,52%))",
-          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
-        } as React.CSSProperties}
-        onPointerDown={e => {
-          preventTextSelect(e);
-          isHueDrag.current = true;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          applyHueFromClientX(e.clientX);
-        }}
-        onPointerMove={e => {
-          if (!isHueDrag.current) return;
-          preventTextSelect(e);
-          applyHueFromClientX(e.clientX);
-        }}
-        onPointerUp={e => {
-          isHueDrag.current = false;
-          restoreTextSelect();
-          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
-        }}
-        onPointerCancel={e => {
-          isHueDrag.current = false;
-          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
-        }}
-      >
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: `calc(7px + (${huePct} / 100) * (100% - 14px))`,
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          backgroundColor: "#ffffff",
-          border: "2px solid #ffffff",
-          boxShadow: "0 0 0 1px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.25)",
-          transform: "translate(-50%, -50%)",
-          pointerEvents: "none",
-          transition: "left 40ms linear",
-        }} />
-      </div>
-    </div>
-  );
-});
 
 // ── CSS injected once ───────────────────────────────────────────────────────
 const PANEL_CSS = `
@@ -645,8 +455,6 @@ html[data-theme=dark] .ps3cp-header:focus-visible { outline-color: rgba(255,255,
 .ps3cp-ibtn:focus-visible { outline:2px solid rgba(0,0,0,0.65); outline-offset:2px; }
 html[data-theme=dark] .ps3cp-ibtn:focus-visible { outline-color:rgba(255,255,255,0.72); }
 .ps3cp-swatch-btn { position:relative;border:none;padding:0;transition:transform 140ms cubic-bezier(0.23, 1, 0.32, 1),box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); }
-.ps3cp-custom-color-btn { position:relative; }
-.ps3cp-custom-color-btn::before { content:"";position:absolute;inset:-13px; }
 .ps3cp-swatch-btn::before { content:"";position:absolute;inset:-4px; }
 @media (hover: hover) and (pointer: fine) {
   .ps3cp-swatch-btn:active { transform:scale(0.92)!important; }
@@ -659,12 +467,6 @@ html[data-theme=dark] .ps3cp-mode-btn:focus-visible { outline-color: rgba(255,25
 @media (hover: hover) and (pointer: fine) {
   .ps3cp-mode-btn:active { transform:scale(0.98); }
 }
-.ps3cp-color-swatch { transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer; }
-@media (hover: hover) and (pointer: fine) {
-  .ps3cp-color-swatch:active { transform:scale(0.96)!important; }
-}
-.ps3cp-color-swatch:focus-visible { outline: 2px solid rgba(0,0,0,0.65); outline-offset: 2px; }
-html[data-theme=dark] .ps3cp-color-swatch:focus-visible { outline-color: rgba(255,255,255,0.72); }
 `;
 
 export default function PS3ControlPanel({
@@ -720,7 +522,6 @@ export default function PS3ControlPanel({
   const [intensityWv,  setIntensityWv]  = useState(DEFAULT_INTENSITY_WV);
   const [presetIntensity, setPresetIntensity] = useState<Record<string, number>>({});
   const [mouseStr,     setMouseStr]     = useState(DEFAULT_MOUSE_STR);
-  const [yOffset,      setYOffset]      = useState(DEFAULT_YOFFSET);
   const [waveColor,    setWaveColor]    = useState<[number,number,number]>(() =>
     typeof window !== "undefined" ? readWaveColor() : DEFAULT_WAVE_COLOR
   );
@@ -734,7 +535,6 @@ export default function PS3ControlPanel({
   const [isDark, setIsDark] = useState(() =>
     typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") === "dark" : true
   );
-  const [openColorPicker, setOpenColorPicker] = useState<"pattern"|null>(null);
   const reduced = useReducedMotion();
 
   useSafeLayoutEffect(() => {
@@ -751,7 +551,7 @@ export default function PS3ControlPanel({
     const ro = new ResizeObserver(sync);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [mode, openColorPicker, portalEl]);
+  }, [mode, portalEl]);
 
   // Portal setup
   useEffect(() => {
@@ -930,7 +730,13 @@ export default function PS3ControlPanel({
       _ps3cpHasLoaded = true;
       return;
     }
-    if (!isVeryFirstLoad.current) {
+    // Same signal as the hero, nav, and grid: hidden while data-intro is
+    // "playing", revealed on "intro-done". The old return branch faded the
+    // pill on its own as soon as this effect re-ran, so a tab-return replay
+    // left it moving while everything else was still gated.
+    const introIsPlaying = () =>
+      document.documentElement.getAttribute("data-intro") === "playing";
+    if (!isVeryFirstLoad.current && !introIsPlaying()) {
       revealKindRef.current = "return";
       if (reduced) {
         revealImmediately();
@@ -940,60 +746,43 @@ export default function PS3ControlPanel({
       return cancelStaged;
     }
     revealKindRef.current = "first";
-    // First-load only: intro-done is the normal signal. If it never arrives
-    // (HOM-01), a fail-safe still runs the same fade after 3000ms from load
-    // (or from this mount if load already fired). `revealed` keeps either
-    // path from running twice; tests may set window.__PS3CP_DISABLE_FAILSAFE.
+    // intro-done is the only reveal. IntroOrchestrator already completes the
+    // gate if the silk never signals (3500ms). A second timer here used to
+    // fade the pill on its own, ahead of that signal.
     let revealed = false;
-    let failsafeTimer: ReturnType<typeof setTimeout> | undefined;
-    const clearFailsafe = () => {
-      if (failsafeTimer !== undefined) {
-        clearTimeout(failsafeTimer);
-        failsafeTimer = undefined;
-      }
-    };
+    let cancelIntro = () => {};
     function reveal() {
       if (revealed) return;
       revealed = true;
-      clearFailsafe();
       if (reduced) {
         revealImmediately();
       } else {
         stageReveal();
       }
       _ps3cpHasLoaded = true;
+      isVeryFirstLoad.current = false;
     }
-    // The panel mounts with the work shell, while data-intro is still
-    // "playing", so onIntroDone registers a real "intro-done" listener
-    // here, the same sequence HeroText and the grid follow. Its immediate
-    // path (anything but "playing") covers arrivals with no gate at all:
-    // a first visit that lands off-home, then soft-navs to "/".
-    const cancelIntro = onIntroDone(reveal);
-
-    const FAILSAFE_MS = 3000;
-    const onLoadForFailsafe = () => {
-      failsafeTimer = setTimeout(reveal, FAILSAFE_MS);
+    const arm = () => {
+      cancelIntro();
+      cancelIntro = onIntroDone(reveal);
     };
-    let loadListenerAttached = false;
-    const disableFailsafe =
-      typeof window !== "undefined" &&
-      (window as Window & { __PS3CP_DISABLE_FAILSAFE?: boolean }).__PS3CP_DISABLE_FAILSAFE;
-    if (!disableFailsafe) {
-      if (document.readyState === "complete") {
-        onLoadForFailsafe();
-      } else {
-        loadListenerAttached = true;
-        window.addEventListener("load", onLoadForFailsafe, { once: true });
-      }
-    }
+    const onReplay = () => {
+      revealed = false;
+      cancelStaged();
+      revealKindRef.current = "first";
+      startTransition(() => {
+        setShown(false);
+        setShowTransition(false);
+      });
+      arm();
+    };
+    arm();
+    window.addEventListener("intro-replay", onReplay);
 
     return () => {
       cancelIntro();
       cancelStaged();
-      clearFailsafe();
-      if (loadListenerAttached) {
-        window.removeEventListener("load", onLoadForFailsafe);
-      }
+      window.removeEventListener("intro-replay", onReplay);
     };
   }, [instantReturn, posReady, reduced, visible]);
 
@@ -1025,14 +814,13 @@ export default function PS3ControlPanel({
 
   function setAndDispatch(patch: {
     waveColor?: [number,number,number]; mode?: number; intensity?: number;
-    mouseStrength?: number; yOffset?: number; halftoneSize?: number; speed?: number;
+    mouseStrength?: number; halftoneSize?: number; speed?: number;
   }) {
     if (patch.intensity !== undefined) {
       if (mode === 1) startTransition(() => setIntensityHt(patch.intensity!));
       else            startTransition(() => setIntensityWv(patch.intensity!));
     }
     if (patch.mouseStrength !== undefined) startTransition(() => setMouseStr(patch.mouseStrength!));
-    if (patch.yOffset       !== undefined) startTransition(() => setYOffset(patch.yOffset!));
     if (patch.halftoneSize  !== undefined) startTransition(() => setHalftoneSize(patch.halftoneSize!));
     if (patch.speed         !== undefined) startTransition(() => setSpeed(patch.speed!));
     if (patch.waveColor     !== undefined) { startTransition(() => setWaveColor(patch.waveColor!)); saveWaveColor(patch.waveColor!); }
@@ -1047,8 +835,7 @@ export default function PS3ControlPanel({
   function handleReset(e: React.MouseEvent) {
     e.stopPropagation();
     startTransition(() => { setIntensityHt(DEFAULT_INTENSITY_HT); setIntensityWv(DEFAULT_INTENSITY_WV); });
-    setAndDispatch({ intensity: DEFAULT_MODE === 1 ? DEFAULT_INTENSITY_HT : DEFAULT_INTENSITY_WV, mouseStrength: DEFAULT_MOUSE_STR, yOffset: DEFAULT_YOFFSET, waveColor: DEFAULT_WAVE_COLOR, mode: DEFAULT_MODE, halftoneSize: DEFAULT_HALFTONE_SIZE, speed: DEFAULT_SPEED });
-    setOpenColorPicker(null);
+    setAndDispatch({ intensity: DEFAULT_MODE === 1 ? DEFAULT_INTENSITY_HT : DEFAULT_INTENSITY_WV, mouseStrength: DEFAULT_MOUSE_STR, waveColor: DEFAULT_WAVE_COLOR, mode: DEFAULT_MODE, halftoneSize: DEFAULT_HALFTONE_SIZE, speed: DEFAULT_SPEED });
   }
 
   // Drag logic — only flip `isDragging` once past the click threshold.
@@ -1136,7 +923,6 @@ export default function PS3ControlPanel({
       ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
       : baseMorphParts.join(", "));
 
-  const pickerOpen = openColorPicker === "pattern";
   const contentBodyH = measuredBodyH > 80 ? measuredBodyH : estimateBodyH(mode);
   contentBodyHRef.current = contentBodyH;
   const geo = getGeometry(pillPos, isOpen, flipped, contentBodyH);

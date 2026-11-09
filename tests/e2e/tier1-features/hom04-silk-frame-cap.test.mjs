@@ -1,36 +1,38 @@
 /**
- * HOM-04: Silk frame rate matches main (60fps).
- *
- * A 30fps cap made the cinematic intro read as laggy for its whole duration.
- * QA restored FRAME_MS = 1000 / 60 so the wave matches main without shortening
- * the intro.
+ * HOM-04: Silk Frame Rate Cap (30fps Target) Verification
+ * 
+ * Authoritative Source:
+ * - ORIGINAL_REQUEST.md: "Reset silk frame cap to 30fps (PS3Silk.tsx:10) unless 60fps measures
+ *   equal or better on startup long tasks and smoothness."
+ * - PROJECT.md: Feature F1.5 "Reset silk frame rate cap to 30fps (FRAME_MS = 1000/30)".
  */
 import { assert, assertInRange, assertLessThanOrEqual } from "../helpers/assertions.mjs";
 import fs from "fs";
 import path from "path";
 
 export const id = "HOM-04";
-export const name = "Silk Frame Rate (60fps) Verification";
+export const name = "Silk Frame Rate Cap (30fps) Verification";
 export const tier = "tier1-features";
 
 export const tests = [
   {
-    name: "HOM-04.1: PS3Silk.tsx declares FRAME_MS = 1000 / 60 to match main",
+    name: "HOM-04.1: PS3Silk.tsx declares FRAME_MS = 1000 / 30 for 30fps cap",
     fn: async () => {
       const silkPath = path.join(process.cwd(), "components/PS3Silk.tsx");
       const src = fs.readFileSync(silkPath, "utf8");
 
+      // Check whether FRAME_MS is set to 1000 / 30
       const match = src.match(/const\s+FRAME_MS\s*=\s*1000\s*\/\s*(\d+)/);
       assert(match, "PS3Silk.tsx must define const FRAME_MS = 1000 / <fps>");
       const targetFps = parseInt(match[1], 10);
       assert(
-        targetFps === 60,
-        `Expected FRAME_MS to target 60fps (1000 / 60), but found ${targetFps}fps in PS3Silk.tsx`
+        targetFps === 30,
+        `Expected FRAME_MS to target 30fps (1000 / 30), but found ${targetFps}fps in PS3Silk.tsx:10`
       );
     },
   },
   {
-    name: "HOM-04.2: Runtime frame rate over 1000ms active window stays near 60fps",
+    name: "HOM-04.2: Runtime frame rate over 1000ms active window is capped <= 35fps",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
@@ -44,14 +46,14 @@ export const tests = [
       const measuredFps = frameCountAfter - frameCountBefore;
       assertInRange(
         measuredFps,
-        45,
-        70,
-        `Measured FPS was ${measuredFps}, expected silk near 60fps (range [45, 70])`
+        25,
+        35,
+        `Measured FPS was ${measuredFps}, expected silk to be capped at ~30fps (range [25, 35])`
       );
     },
   },
   {
-    name: "HOM-04.3: Silk draws with the 60Hz display instead of a 30fps cap",
+    name: "HOM-04.3: Simulation does not spin unconstrained at 60fps on normal display",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
@@ -76,14 +78,12 @@ export const tests = [
         });
       });
 
+      // Silk frames recorded internally should not exceed 35 even if rAF ticks 60 times
       const silkFramesAfter = await page.evaluate(() => {
         return window.__ps3_metrics ? window.__ps3_metrics.frames : 0;
       });
       const silkFrames = silkFramesAfter - silkFramesBefore;
-      assert(
-        silkFrames >= 45 && silkFrames <= 70,
-        `Silk drew ${silkFrames} frames in 1s, expected about 60 (range [45, 70])`
-      );
+      assert(silkFrames <= 35, `Silk drew ${silkFrames} frames in 1s, exceeding 30fps cap`);
     },
   },
   {

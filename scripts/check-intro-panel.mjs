@@ -9,10 +9,11 @@
  *     the hero heading reaching computed opacity 1
  *   - no panel control is focusable while the panel is still hidden (inert)
  *
- * SELFTEST=failsafe  — suppress intro-done; prove the 3000ms fail-safe still
- *                      shows the panel (must exit 0).
- * SELFTEST=nofailsafe — suppress intro-done and set __PS3CP_DISABLE_FAILSAFE;
- *                       the normal timing check must fail (must exit 1).
+ * SELFTEST=failsafe  — suppress intro-done; the panel must stay hidden. It has no
+ *                      private timer. The orchestrator's intro-done fallback is
+ *                      swallowed by the same hook, so nothing reveals the pill.
+ * SELFTEST=nofailsafe — same suppression; the normal timing check must fail
+ *                      (must exit 1).
  */
 import { chromium } from "playwright";
 
@@ -89,11 +90,6 @@ async function runOnce(browser, { width, throttle, label, mode, forceNofailsafe 
 
   if (mode === "failsafe" || mode === "nofailsafe" || forceNofailsafe) {
     await page.addInitScript(suppressIntroDoneInit);
-  }
-  if (mode === "nofailsafe" || forceNofailsafe) {
-    await page.addInitScript(() => {
-      window.__PS3CP_DISABLE_FAILSAFE = true;
-    });
   }
 
   await applyThrottle(page, throttle);
@@ -190,9 +186,10 @@ async function runOnce(browser, { width, throttle, label, mode, forceNofailsafe 
   }, { mode, failsafeWaitMs: 3000 });
 
   if (mode === "failsafe") {
+    const stillHidden = timing.panelAt == null || timing.inert === true;
     log(
-      timing.panelAt != null && timing.inert === false,
-      `${label} fail-safe revealed panel (panelAt=${timing.panelAt != null ? Math.round(timing.panelAt) : "null"}ms, opacity=${timing.panelOpacity})`,
+      stillHidden,
+      `${label} no private timer (panel stays hidden; panelAt=${timing.panelAt != null ? Math.round(timing.panelAt) : "null"}, inert=${timing.inert})`,
     );
   } else if (mode === "nofailsafe") {
     // Expect the normal check to fail: panel should not reveal.
@@ -224,7 +221,7 @@ const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gestur
 
 try {
   if (selftest === "failsafe") {
-    console.log("SELFTEST=failsafe (suppress intro-done; expect fail-safe reveal)");
+    console.log("SELFTEST=failsafe (suppress intro-done; panel must stay hidden)");
     for (const width of [1440, 390]) {
       await runOnce(browser, {
         width,
@@ -234,9 +231,9 @@ try {
       });
     }
   } else if (selftest === "nofailsafe") {
-    console.log("SELFTEST=nofailsafe (suppress intro-done + disable fail-safe; expect the check to FAIL)");
-    // Same assertions as a normal run; without intro-done and without the
-    // fail-safe the panel never reveals, so this must exit non-zero.
+    console.log("SELFTEST=nofailsafe (suppress intro-done; expect the check to FAIL)");
+    // Same assertions as a normal run; without intro-done the panel never
+    // reveals, so this must exit non-zero.
     await runOnce(browser, {
       width: 1440,
       throttle: false,
@@ -261,7 +258,7 @@ try {
 }
 
 if (selftest === "nofailsafe") {
-  // Expect failures: exit 1 proves the check catches a missing fail-safe.
+  // Expect failures: exit 1 proves the check catches a panel that never reveals.
   console.log(
     failures.length
       ? `\nSELFTEST nofailsafe: check failed as required (${failures.length} FAIL)`

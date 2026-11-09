@@ -383,55 +383,6 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     if (visible) clearInstantBack();
   }, [visible]);
 
-  // Replay intro when the user returns to this tab from outside the site.
-  // visibilitychange covers tab-switch; pageshow(persisted) covers BFCache
-  // (navigated away in same tab and pressed Back). Neither event fires during
-  // client-side navigation, so /about → / remains instant with no delay.
-  //
-  // Exception: a target="_blank" link click fires the exact same
-  // hidden→visible sequence on this tab as a genuine tab-switch-away-and-back
-  // (the new tab steals focus, then the user switches back). To tell those
-  // apart, track the last click time and, if this tab went hidden within 1s
-  // of a click, treat that as "a link on the page opened a new tab" and skip
-  // the next replay — a real away-and-back (another app, an already-open
-  // tab, idle-then-return) has no such recent click and still replays.
-  useEffect(() => {
-    const lastClickAtRef = { current: 0 };
-    const hiddenByClickRef = { current: false };
-    const replay = () => {
-      if (!visible) return;
-      document.documentElement.setAttribute("data-intro", "playing");
-      window.dispatchEvent(new CustomEvent("intro-replay"));
-    };
-    const onClick = () => {
-      lastClickAtRef.current = Date.now();
-    };
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        hiddenByClickRef.current = Date.now() - lastClickAtRef.current < 1000;
-        return;
-      }
-      if (document.visibilityState === "visible") {
-        if (hiddenByClickRef.current) {
-          hiddenByClickRef.current = false;
-          return;
-        }
-        replay();
-      }
-    };
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) replay();
-    };
-    document.addEventListener("click", onClick, true);
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("pageshow", onPageShow);
-    return () => {
-      document.removeEventListener("click", onClick, true);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("pageshow", onPageShow);
-    };
-  }, [visible]);
-
   // Continuously track scroll position while visible, so it's always current
   // by the moment we're hidden. Suppressed after a navigating click (see
   // below) — without that guard, this alone isn't enough: AnimationProvider's
@@ -470,7 +421,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   //
   // Same capture pass: if the first-load intro is still playing and the
   // click landed on a project card, end the intro immediately so soft nav
-  // / commitCaseStudyNav / visibilitychange replay stay coherent (and so
+  // / commitCaseStudyNav stay coherent (and so
   // nav/footer aren't left opacity-gated after we leave "/").
   useEffect(() => {
     if (!visible) return;

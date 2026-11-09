@@ -7,8 +7,8 @@ import { introTimings } from "@/lib/introTimings";
 // Module-level flag: persists during client-side nav, resets on page reload
 let _hasMounted = false;
 
-const FRAME_MS = 1000 / 60; // match main: 60fps. 30fps read as a laggy wave for the whole intro.
-const FRAME_TOLERANCE_MS = 2.5; // let a 60Hz vsync (~16.7ms ± jitter) through; skip 120Hz doubles
+const FRAME_MS = 1000 / 30; // 30fps cap
+const FRAME_TOLERANCE_MS = 3.5; // allow 2nd 60Hz vsync (~33.3ms ± jitter) to hit cleanly
 const MAX_FADE_DT_MS = 50; // clamp per-frame fade step so stalled frames delay rather than skip
 
 function hexToRgb(hex: string): [number, number, number] {
