@@ -782,7 +782,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
                         objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
+                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -857,7 +857,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
                         objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
+                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}

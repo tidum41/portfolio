@@ -492,11 +492,27 @@ export default function MuxMediaSlot({
   }, [playing, kickPlay, attachVideo]);
 
 
+  const letterbox = Boolean(fill && objectFit === "contain" && videoBackground);
+  const slotStyle = (
+    letterbox
+      ? ({
+          ...style,
+          background: videoBackground,
+          ["--mux-letterbox" as string]: videoBackground,
+        } as CSSProperties)
+      : style
+  );
+
   return (
     <div
       ref={rootRef}
-      className={["mux-media-slot", fill ? "mux-media-slot--fill" : "", className].filter(Boolean).join(" ")}
-      style={style}
+      className={[
+        "mux-media-slot",
+        fill ? "mux-media-slot--fill" : "",
+        letterbox ? "mux-media-slot--letterbox" : "",
+        className,
+      ].filter(Boolean).join(" ")}
+      style={slotStyle}
       data-hls="pending"
       data-media-paused={playing ? undefined : ""}
     >
@@ -524,7 +540,12 @@ export default function MuxMediaSlot({
           objectFit || videoBackground
             ? ({
                 ...(objectFit ? { objectFit, "--media-object-fit": objectFit } : null),
-                ...(videoBackground ? { background: videoBackground } : null),
+                ...(videoBackground
+                  ? {
+                      background: videoBackground,
+                      "--media-background-color": videoBackground,
+                    }
+                  : null),
               } as CSSProperties)
             : undefined
         }

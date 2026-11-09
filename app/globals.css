@@ -2361,6 +2361,20 @@ html[data-theme="dark"] .ps-polaroid-cap {
   --media-object-fit: cover;
   pointer-events: none;
 }
+/* Letterboxed grid cards (BruinLease): keep wrap + video letterbox on the
+   Mux poster blue (#aac5e0). Default .mux-cover rules force transparent, which
+   flashed the old wrap color (#b3cde3) while opacity flipped at data-frame. */
+.mux-media-slot--fill.mux-media-slot--letterbox {
+  background: var(--mux-letterbox, #aac5e0);
+}
+.mux-media-slot--fill.mux-media-slot--letterbox .mux-cover,
+.mux-media-slot--fill.mux-media-slot--letterbox video.mux-cover {
+  object-fit: contain;
+  --media-object-fit: contain;
+  background: var(--mux-letterbox, #aac5e0);
+  --media-background-color: var(--mux-letterbox, #aac5e0);
+  pointer-events: none;
+}
 /* Case-study film: full frame, no card crop, no hit target for native controls. */
 .mux-media-slot--contain {
   background: #F4F4F4;
