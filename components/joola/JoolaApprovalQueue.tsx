@@ -179,62 +179,64 @@ function ApprovalQueueInner() {
       {rows.length === 0 ? (
         <div className="rep-empty">No orders are waiting on a credit override.</div>
       ) : (
-        <table className="rep-table">
-          <thead>
-            <tr>
-              <th>Distributor</th>
-              <th>Order vs remaining credit</th>
-              <th>Overdue AR</th>
-              <th>Status</th>
-              <th className="actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const over = row.orderTotal - row.remaining;
-              return (
-                <tr key={row.id}>
-                  <td className="rep-dist">
-                    <strong>{row.distributor}</strong>
-                    <div className="sub">
-                      {row.so} · {row.buyer}
-                      {row.detail ? <div>{row.detail}</div> : null}
-                    </div>
-                  </td>
-                  <td className="rep-credit">
-                    <div className="amt">{money(row.orderTotal)}</div>
-                    <div className="left">{money(row.remaining)} left</div>
-                    <div className={`over${row.status === "ar" ? " is-ar" : ""}`}>
-                      Over by {money(over)}
-                    </div>
-                  </td>
-                  <td className={`rep-ar${row.overdue > 0 ? " is-overdue" : ""}`}>
-                    {money(row.overdue)}
-                    {row.overdueInv ? <span className="inv">{row.overdueInv}</span> : null}
-                  </td>
-                  <td>
-                    <span className={`status-pill is-${row.status}`}>
-                      {row.status === "over" ? "Over limit" : "Overdue AR"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="rep-actions">
-                      <button type="button" className="btn-primary" onClick={() => openApprove(row)}>
-                        Approve
-                      </button>
-                      <button type="button" className="btn-outline" onClick={() => reject(row)}>
-                        Reject
-                      </button>
-                      <button type="button" className="btn-outline">
-                        Request change
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="rep-table-wrap">
+          <table className="rep-table">
+            <thead>
+              <tr>
+                <th>Distributor</th>
+                <th>Order vs remaining credit</th>
+                <th>Overdue AR</th>
+                <th>Status</th>
+                <th className="actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const over = row.orderTotal - row.remaining;
+                return (
+                  <tr key={row.id}>
+                    <td className="rep-dist">
+                      <strong>{row.distributor}</strong>
+                      <div className="sub">
+                        {row.so} · {row.buyer}
+                        {row.detail ? <div>{row.detail}</div> : null}
+                      </div>
+                    </td>
+                    <td className="rep-credit">
+                      <div className="amt">{money(row.orderTotal)}</div>
+                      <div className="left">{money(row.remaining)} left</div>
+                      <div className={`over${row.status === "ar" ? " is-ar" : ""}`}>
+                        Over by {money(over)}
+                      </div>
+                    </td>
+                    <td className={`rep-ar${row.overdue > 0 ? " is-overdue" : ""}`}>
+                      {money(row.overdue)}
+                      {row.overdueInv ? <span className="inv">{row.overdueInv}</span> : null}
+                    </td>
+                    <td>
+                      <span className={`status-pill is-${row.status}`}>
+                        {row.status === "over" ? "Over limit" : "Overdue AR"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="rep-actions">
+                        <button type="button" className="btn-primary" onClick={() => openApprove(row)}>
+                          Approve
+                        </button>
+                        <button type="button" className="btn-outline" onClick={() => reject(row)}>
+                          Reject
+                        </button>
+                        <button type="button" className="btn-outline">
+                          Request change
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {modalFor ? (
@@ -306,7 +308,7 @@ function ApprovalQueueInner() {
 
 export default function JoolaApprovalQueue({ caption }: { caption?: string }) {
   return (
-    <JoolaStage caption={caption} label="Rep approval queue">
+    <JoolaStage caption={caption} label="Rep approval queue" wide>
       <ApprovalQueueInner />
     </JoolaStage>
   );

@@ -103,28 +103,65 @@
 /* Framed stage — embedded product, not page UI */
 .joola-stage {
   margin: 24px 0 8px;
-  border-radius: var(--radius-control, 8px);
-  border: 1px solid var(--color-border-subtle, #e8e6e1);
-  background: var(--color-bg-secondary, #f6f5f2);
-  overflow: hidden;
   min-width: 0;
+  max-width: 100%;
+}
+
+.joola-stage__chrome {
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle, #e8e6e1);
+  background: #fff;
+  overflow: hidden;
+}
+
+.joola-stage__pad {
+  padding: 20px;
+}
+
+.joola-stage--mobile .joola-stage__pad {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  background: #fff;
 }
 
 .joola-stage__frame {
   background: #fff;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
 }
 
 .joola-stage__frame--mobile {
+  width: 100%;
   max-width: 390px;
   margin: 0 auto;
-  border-inline: 1px solid var(--line, #e6e8ef);
 }
 
-.joola-stage + .cs-figcaption,
-.joola-figure + .cs-figcaption {
-  margin-top: 8px;
+.joola-stage__caption {
+  margin: 10px 0 0;
+  padding: 0 4px;
+  /* Match site figure captions; keep clear of the stage edge */
+  max-width: 100%;
+}
+
+.joola-stage--wide {
+  width: min(1080px, calc(100vw - 48px));
+  max-width: none;
+}
+
+.joola-stage--wide .joola-stage__pad {
+  padding: 12px;
+}
+
+.joola-stage--wide .joola-stage__frame {
+  overflow-x: auto;
+}
+
+@media (min-width: 1100px) {
+  .joola-stage--wide {
+    width: min(1080px, calc(100% + 280px));
+  }
 }
 
 .joola-figure {
@@ -133,18 +170,29 @@
 }
 
 .joola-placeholder {
-  border: 1px dashed var(--color-text-muted, #8a8a96);
+  border: 1px dashed var(--color-border-subtle, #e8e6e1);
   border-radius: 8px;
-  background: var(--color-accent-subtle, #f3f1f8);
+  background: var(--color-bg-secondary, #f6f5f2);
   padding: 28px 20px;
   color: var(--color-text-secondary, #5c5c66);
   font-size: 14px;
   line-height: 1.55;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.joola-placeholder strong {
+.joola-placeholder__label {
   color: var(--color-text-primary, #1a1a1a);
   font-weight: 500;
+  font-size: 13px;
+}
+
+.joola-placeholder__hint {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted, #8a8a96);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -160,7 +208,7 @@
   --col-price: 120px;
   --col-qty: 172px;
   --col-total: 110px;
-  padding: 16px;
+  padding: 4px 0;
   background: #fff;
 }
 .joola-portal .qo-line__table { width: 100%; border-top: 1px solid var(--line); }
@@ -249,7 +297,7 @@
 .joola-portal .qo-line.is-mobile .qo-line__row > :nth-child(5) { grid-area: total; text-align: left; font-size: 22px; }
 
 /* ── Saved order ──────────────────────────────────────────────────── */
-.joola-portal .tpl-demo { padding: 16px; }
+.joola-portal .tpl-demo { padding: 4px 0; }
 .joola-portal .tpl-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
 .joola-portal .tpl-head {
   width: 100%; display: grid; grid-template-columns: 1fr auto 20px; align-items: center; gap: 24px;
@@ -281,7 +329,7 @@
 
 /* ── Recommended ──────────────────────────────────────────────────── */
 .joola-portal .rec-demo {
-  padding: 20px; background: var(--band); border-block: 1px solid var(--line);
+  padding: 16px; background: var(--band); border-radius: 8px;
 }
 .joola-portal .rec-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
@@ -317,7 +365,7 @@
 }
 
 /* ── Credit meter ─────────────────────────────────────────────────── */
-.joola-portal .credit-demo { padding: 20px; max-width: 420px; }
+.joola-portal .credit-demo { padding: 4px 0; max-width: 420px; }
 .joola-portal .credit-meter { position: relative; }
 .joola-portal .credit-meter-label {
   display: flex; justify-content: space-between; gap: 12px;
@@ -349,7 +397,7 @@
 }
 
 /* ── Messages thread ──────────────────────────────────────────────── */
-.joola-portal .msg-demo { padding: 0; background: #fff; }
+.joola-portal .msg-demo { padding: 0; background: #fff; border-radius: 8px; overflow: hidden; }
 .joola-portal .thread { display: flex; flex-direction: column; min-height: 280px; }
 .joola-portal .thread-head {
   display: flex; flex-direction: column; gap: 2px; padding: 16px 20px;
@@ -383,14 +431,18 @@
 
 /* ── Rep approval queue ───────────────────────────────────────────── */
 .joola-portal .rep-shell {
-  display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 420px;
-  background: #fff; color: var(--ink);
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  min-height: 420px;
+  min-width: 920px;
+  background: #fff;
+  color: var(--ink);
 }
 .joola-portal .rep-sidebar {
   background: var(--sidebar-bg); border-right: 1px solid var(--line);
-  padding: 20px 14px; display: flex; flex-direction: column; gap: 16px;
+  padding: 20px 12px; display: flex; flex-direction: column; gap: 16px;
 }
-.joola-portal .rep-logo { width: 88px; height: auto; }
+.joola-portal .rep-logo { width: 80px; height: auto; }
 .joola-portal .rep-wholesale {
   display: inline-flex; align-items: center; height: 22px; padding: 0 8px; width: fit-content;
   border-radius: 8px; background: var(--blue-soft); color: var(--blue); font-size: 12px; font-weight: 500;
@@ -404,56 +456,79 @@
 .joola-portal .rep-back {
   margin-top: auto; font-size: 12px; color: var(--muted); text-decoration: none;
 }
-.joola-portal .rep-main { padding: 24px 28px 32px; position: relative; }
+.joola-portal .rep-main { padding: 20px 24px 28px; position: relative; min-width: 0; }
 .joola-portal .rep-user {
-  position: absolute; top: 20px; right: 28px;
+  position: absolute; top: 16px; right: 24px;
   display: flex; flex-direction: column; align-items: flex-end;
   padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; line-height: 1.2;
 }
 .joola-portal .rep-user strong { font-size: 13px; font-weight: 500; }
 .joola-portal .rep-user span { font-size: 12px; color: var(--muted); }
-.joola-portal .rep-main h1 { margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.02em; }
+.joola-portal .rep-main h1 { margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
 .joola-portal .rep-lede { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
 .joola-portal .rep-banner {
-  margin-top: 20px; padding: 12px 14px; border-radius: 8px; background: var(--band);
+  margin-top: 18px; padding: 12px 14px; border-radius: 8px; background: var(--band);
   font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
-.joola-portal .rep-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+.joola-portal .rep-table-wrap {
+  margin-top: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.joola-portal .rep-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
 .joola-portal .rep-table th {
   text-align: left; font-size: 11px; font-weight: 500; color: var(--faint);
-  padding: 0 12px 10px; border-bottom: 1px solid var(--line); text-transform: none; letter-spacing: 0.02em;
+  padding: 0 10px 10px; border-bottom: 1px solid var(--line); text-transform: none; letter-spacing: 0.02em;
+  white-space: nowrap;
 }
+.joola-portal .rep-table th:nth-child(1) { width: 22%; }
+.joola-portal .rep-table th:nth-child(2) { width: 24%; }
+.joola-portal .rep-table th:nth-child(3) { width: 12%; }
+.joola-portal .rep-table th:nth-child(4) { width: 12%; }
+.joola-portal .rep-table th:nth-child(5) { width: 30%; }
 .joola-portal .rep-table th.actions { text-align: right; }
 .joola-portal .rep-table td {
-  padding: 16px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; font-size: 14px;
+  padding: 14px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; font-size: 14px;
 }
-.joola-portal .rep-dist strong { display: block; font-weight: 500; }
-.joola-portal .rep-dist .sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
-.joola-portal .rep-credit .amt { font-weight: 500; font-variant-numeric: tabular-nums; }
-.joola-portal .rep-credit .left { margin-top: 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.joola-portal .rep-credit .over { margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--over); font-variant-numeric: tabular-nums; }
+.joola-portal .rep-dist strong {
+  display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.joola-portal .rep-dist .sub {
+  margin-top: 4px; font-size: 12px; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.joola-portal .rep-credit .amt { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.joola-portal .rep-credit .left { margin-top: 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.joola-portal .rep-credit .over { margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--over); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .joola-portal .rep-credit .over.is-ar { color: var(--failed); }
-.joola-portal .rep-ar { font-variant-numeric: tabular-nums; color: var(--muted); }
+.joola-portal .rep-ar { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .joola-portal .rep-ar.is-overdue { color: var(--failed); font-weight: 500; }
 .joola-portal .rep-ar .inv { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); font-weight: 400; }
 .joola-portal .status-pill {
   display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 8px;
-  font-size: 12px; font-weight: 500;
+  font-size: 12px; font-weight: 500; white-space: nowrap;
 }
 .joola-portal .status-pill.is-over { background: var(--over-bg); color: var(--over); }
 .joola-portal .status-pill.is-ar { background: var(--failed-bg); color: var(--failed); }
 .joola-portal .status-pill.is-ok { background: var(--paid-bg); color: var(--paid); }
 .joola-portal .status-pill.is-rejected { background: var(--failed-bg); color: var(--failed); }
-.joola-portal .rep-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.joola-portal .rep-actions {
+  display: flex; gap: 8px; justify-content: flex-end; flex-wrap: nowrap; align-items: center;
+}
 .joola-portal .btn-primary {
   height: 36px; padding: 0 14px; border-radius: 8px; background: var(--blue); color: #fff;
-  font-size: 13px; font-weight: 500;
+  font-size: 13px; font-weight: 500; white-space: nowrap; flex-shrink: 0;
 }
 .joola-portal .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .joola-portal .btn-primary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .joola-portal .btn-outline {
   height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line);
-  background: #fff; font-size: 13px; font-weight: 500; color: var(--ink);
+  background: #fff; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; flex-shrink: 0;
 }
 .joola-portal .btn-outline:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .joola-portal .rep-empty {
@@ -492,10 +567,12 @@
 .joola-portal .rep-result .row span { color: var(--muted); }
 .joola-portal .rep-result .row strong { font-weight: 500; color: var(--ink); }
 @media (max-width: 720px) {
-  .joola-portal .rep-shell { grid-template-columns: 1fr; }
+  .joola-portal .rep-shell {
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
   .joola-portal .rep-sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; }
   .joola-portal .rep-nav { flex-direction: row; margin-top: 0; }
   .joola-portal .rep-back { margin-top: 0; width: 100%; }
   .joola-portal .rep-user { position: static; margin-bottom: 12px; align-items: flex-start; }
-  .joola-portal .rep-table { display: block; overflow-x: auto; }
 }

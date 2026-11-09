@@ -214,43 +214,45 @@ function DecisionCycleInner({
         ))}
       </div>
 
-      <div className="dc-picker-row">
-        <div className="dc-versions" ref={versionsRef} role="tablist" aria-label="Versions">
-          <span
-            ref={highlightRef}
-            className="dc-highlight"
-            data-ready={highlightReady ? "true" : "false"}
-            aria-hidden
-          />
-          {decision.rounds.map((r) => (
-            <button
-              key={r.v}
-              type="button"
-              role="tab"
-              className="dc-version"
-              aria-label={`Version ${r.v}`}
-              aria-current={r.v === round.v ? "true" : undefined}
-              data-active={r.v === round.v ? "true" : undefined}
-              onClick={() => selectVersion(r.v)}
-            >
-              {r.v}
-            </button>
-          ))}
+      {lab ? (
+        <div className="dc-picker-row">
+          <div className="dc-versions" ref={versionsRef} role="tablist" aria-label="Versions">
+            <span
+              ref={highlightRef}
+              className="dc-highlight"
+              data-ready={highlightReady ? "true" : "false"}
+              aria-hidden
+            />
+            {decision.rounds.map((r) => (
+              <button
+                key={r.v}
+                type="button"
+                role="tab"
+                className="dc-version"
+                aria-label={`Version ${r.v}`}
+                aria-current={r.v === round.v ? "true" : undefined}
+                data-active={r.v === round.v ? "true" : undefined}
+                onClick={() => selectVersion(r.v)}
+              >
+                {r.v}
+              </button>
+            ))}
+          </div>
+          {decision.motion ? (
+            <>
+              <span className="dc-divider" aria-hidden />
+              <button
+                type="button"
+                className="dc-replay"
+                aria-label="Replay"
+                onClick={replay}
+              >
+                ↻
+              </button>
+            </>
+          ) : null}
         </div>
-        {decision.motion ? (
-          <>
-            <span className="dc-divider" aria-hidden />
-            <button
-              type="button"
-              className="dc-replay"
-              aria-label="Replay"
-              onClick={replay}
-            >
-              ↻
-            </button>
-          </>
-        ) : null}
-      </div>
+      ) : null}
 
       <div
         className="dc-stage"
@@ -301,10 +303,29 @@ function DecisionCycleInner({
         >
           <Chevron dir="next" />
         </button>
+        <p className="dc-version-label" aria-live="polite">
+          Version {round.v} of {decision.rounds.length}
+          {!lab && decision.motion ? (
+            <button
+              type="button"
+              className="dc-replay dc-replay--inline"
+              aria-label="Replay"
+              onClick={replay}
+            >
+              ↻
+            </button>
+          ) : null}
+        </p>
       </div>
 
       <div className="dc-round" aria-live="polite">
-        <p className="dc-round__ver">Version {round.v}</p>
+        <p className="dc-round__ver">
+          Version {round.v}
+          <span className="dc-round__verdict">
+            <Thumb up={round.verdict === "kept"} />
+            {round.verdict === "kept" ? "Kept" : "Dropped"}
+          </span>
+        </p>
         <p className="dc-round__changed">{round.changed}</p>
         <div className="dc-round__note">
           <Thumb up={round.verdict === "kept"} />

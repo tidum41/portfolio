@@ -42,12 +42,16 @@
   border-radius: 4px;
 }
 
+/* Numbered chips: lab only (.decision-cycle--lab). Hidden on the public page. */
 .dc-picker-row {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
   position: relative;
+}
+.decision-cycle--lab .dc-picker-row {
+  display: flex;
 }
 
 .dc-versions {
@@ -140,6 +144,31 @@ html.dark .dc-highlight {
   justify-content: center;
   gap: 12px;
   margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.dc-version-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+@media (min-width: 641px) {
+  .dc-version-label {
+    margin-left: 4px;
+  }
+}
+
+.dc-replay--inline {
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
 }
 
 .dc-arrow {
@@ -186,13 +215,24 @@ html.dark .dc-highlight {
   max-width: 40rem;
 }
 .dc-round__ver {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dc-round__verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 .dc-round__changed {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -204,12 +244,11 @@ html.dark .dc-highlight {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--color-bg-secondary, #f6f5f2);
 }
 .dc-round__note svg {
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-@media (max-width: 640px) {
-  .dc-picker-row { display: none; }
 }

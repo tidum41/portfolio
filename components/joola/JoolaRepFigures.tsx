@@ -1,6 +1,6 @@
 /**
  * Static side-by-side figures for replacement review + distributor account.
- * Marked for Mudit to replace with Paper layers. Layout mirrors the internship screens.
+ * Neutral stand-ins until Paper layers land.
  */
 export default function JoolaRepFigures({ caption }: { caption?: string }) {
   return (
@@ -13,19 +13,21 @@ export default function JoolaRepFigures({ caption }: { caption?: string }) {
         }}
         className="joola-rep-figures"
       >
-        <div className="joola-placeholder" role="img" aria-label="Replacement review placeholder">
-          <strong>Paper placeholder · replacement review.</strong>
-          <div style={{ marginTop: 8 }}>
-            Engage Pickleball asked to replace a line from SO-48213. Reason code Damaged in
-            transit. Quantity 2 · unit price $0.00 · value given away $299.96.
-          </div>
+        <div
+          className="joola-placeholder"
+          role="img"
+          aria-label="Replacement review figure coming soon"
+        >
+          <span className="joola-placeholder__label">Figure coming soon</span>
+          <span className="joola-placeholder__hint">Replacement review</span>
         </div>
-        <div className="joola-placeholder" role="img" aria-label="Distributor account placeholder">
-          <strong>Paper placeholder · distributor account.</strong>
-          <div style={{ marginTop: 8 }}>
-            Engage Pickleball · Anna Bright, buyer. Net 30 credit $40,091.34 left of $50,000.
-            Overdue AR $1,200.00 · INV-1021.
-          </div>
+        <div
+          className="joola-placeholder"
+          role="img"
+          aria-label="Distributor account figure coming soon"
+        >
+          <span className="joola-placeholder__label">Figure coming soon</span>
+          <span className="joola-placeholder__hint">Distributor account</span>
         </div>
       </div>
       {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
