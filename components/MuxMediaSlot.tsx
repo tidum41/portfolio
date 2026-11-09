@@ -171,7 +171,7 @@ export default function MuxMediaSlot({
   style?: CSSProperties;
   /** Fill a parent box (work-grid cards) with object-fit: cover. */
   fill?: boolean;
-  /** Pause without tearing down HLS (soft-nav). */
+  /** Pause playback; soft-nav also destroys the HLS loader so it stops fetching. */
   playing?: boolean;
   /**
    * Intrinsic poster size. CSS is `width: 100%; height: auto`, so without
@@ -438,11 +438,37 @@ export default function MuxMediaSlot({
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) kickPlay();
     };
-    const onSoftStart = () => {
-      try { videoRef.current?.pause(); } catch { /* ignore */ }
+    // Soft-nav click: stop segment fetches immediately so case-study RSC/LCP
+    // aren't competing with homepage HLS. pause() alone left the loader
+    // buffering. Defer detach/destroy off the click task — sync MediaSource
+    // teardown across N cards blocked router.push under 4x CPU.
+    const destroyHls = () => {
+      const hls = hlsRef.current;
+      const el = videoRef.current;
+      try { el?.pause(); } catch { /* ignore */ }
+      if (hls) {
+        try { hls.stopLoad(); } catch { /* ignore */ }
+      }
+      window.setTimeout(() => {
+        const live = hlsRef.current;
+        if (live) {
+          try { live.detachMedia(); } catch { /* ignore */ }
+          try { live.destroy(); } catch { /* ignore */ }
+          hlsRef.current = null;
+        }
+        const video = videoRef.current;
+        if (video) {
+          try {
+            video.removeAttribute("src");
+            video.load();
+          } catch { /* ignore */ }
+        }
+        // Hide the empty video so the poster underneath stays painted.
+        revealedRef.current = false;
+        rootRef.current?.removeAttribute("data-frame");
+      }, 0);
     };
-    window.addEventListener("soft-nav-start", onSoftStart);
-    window.addEventListener("soft-nav-settled", kickPlay);
+    window.addEventListener("soft-nav-start", destroyHls);
     window.addEventListener("pageshow", onPageShow);
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -451,8 +477,7 @@ export default function MuxMediaSlot({
       video?.removeEventListener("ended", onEnded);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.removeEventListener("soft-nav-start", onSoftStart);
-      window.removeEventListener("soft-nav-settled", kickPlay);
+      window.removeEventListener("soft-nav-start", destroyHls);
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onVis);
       hlsRef.current?.destroy();
@@ -462,24 +487,46 @@ export default function MuxMediaSlot({
 
 
   useEffect(() => {
-    if (playing) kickPlay();
-    else {
+    if (playing) {
+      // Returning home after soft-nav destroy: reattach the stream, then play.
+      if (!hlsRef.current && videoRef.current) {
+        attachVideo(videoRef.current);
+      }
+      kickPlay();
+    } else {
       try { videoRef.current?.pause(); } catch { /* ignore */ }
     }
-  }, [playing, kickPlay]);
+  }, [playing, kickPlay, attachVideo]);
 
+
+  const letterbox = Boolean(fill && objectFit === "contain" && videoBackground);
+  const slotStyle = (
+    letterbox
+      ? ({
+          ...style,
+          background: videoBackground,
+          ["--mux-letterbox" as string]: videoBackground,
+        } as CSSProperties)
+      : style
+  );
 
   return (
     <div
       ref={rootRef}
-      className={["mux-media-slot", fill ? "mux-media-slot--fill" : "", className].filter(Boolean).join(" ")}
-      style={style}
+      className={[
+        "mux-media-slot",
+        fill ? "mux-media-slot--fill" : "",
+        letterbox ? "mux-media-slot--letterbox" : "",
+        className,
+      ].filter(Boolean).join(" ")}
+      style={slotStyle}
       data-hls="pending"
       data-media-paused={playing ? undefined : ""}
     >
       {/* Intrinsic Mux thumbnail — native img so the slot is the video's real ratio.
-          Fill/grid cards already paint a poster underneath; skip a second 1280 fetch. */}
-      {!fill && (
+          Cover/fill cards already paint a poster underneath; letterbox fill cards
+          keep an in-slot poster so the opaque slot color never blanks the media. */}
+      {(!fill || letterbox) && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="mux-media-sizer"
@@ -490,6 +537,14 @@ export default function MuxMediaSlot({
           height={posterHeight}
           decoding="async"
           fetchPriority="high"
+          style={
+            letterbox
+              ? ({
+                  objectFit: "contain",
+                  background: videoBackground,
+                } as CSSProperties)
+              : undefined
+          }
           onLoad={kickPlay}
         />
       )}
@@ -501,7 +556,12 @@ export default function MuxMediaSlot({
           objectFit || videoBackground
             ? ({
                 ...(objectFit ? { objectFit, "--media-object-fit": objectFit } : null),
-                ...(videoBackground ? { background: videoBackground } : null),
+                ...(videoBackground
+                  ? {
+                      background: videoBackground,
+                      "--media-background-color": videoBackground,
+                    }
+                  : null),
               } as CSSProperties)
             : undefined
         }

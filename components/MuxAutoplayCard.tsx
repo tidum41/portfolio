@@ -9,7 +9,6 @@ import { warmRootMargin } from "@/lib/networkHint";
 import NortheastArrow from "@/components/icons/NortheastArrow";
 import ProjectCardLift from "@/components/ProjectCardLift";
 import { commitCaseStudyNav, isCaseStudyHref, warmCaseStudyNav } from "@/lib/caseStudyNav";
-import { cardFocusPlay } from "@/lib/cardFocusVideo";
 import { onIntroDone } from "@/lib/introReady";
 
 /** Later cards start a short beat after the two on screen during the intro. */
@@ -204,25 +203,32 @@ export default function MuxAutoplayCard({
     };
   }, [active, shouldLoad, mountOrder]);
 
-  // Soft-nav leave: pause immediately so decode doesn't fight About paint,
-  // but keep the element mounted until `active` deferred-teardown fires.
+  // Soft-nav leave: unmount the player this frame so MuxMediaSlot's cleanup
+  // (and its sync soft-nav destroy) stop HLS bandwidth. Remount when Work
+  // resumes playing — posters stay painted underneath the whole time.
+  const tornDownByNavRef = useRef(false);
   useEffect(() => {
-    const root = containerRef.current;
-    const pauseEl = () => {
-      const el = root?.querySelector("video");
-      try { el?.pause(); } catch { /* ignore */ }
+    const onSoftStart = () => {
+      tornDownByNavRef.current = true;
+      // Defer React unmount so the click → router.push path isn't blocked by
+      // N× MuxMediaSlot cleanup on the same task (matters under CPU throttle).
+      window.setTimeout(() => setMountReady(false), 0);
     };
-    const playEl = () => {
-      const el = root?.querySelector("video");
-      if (el instanceof HTMLVideoElement) cardFocusPlay(el);
-    };
+    window.addEventListener("soft-nav-start", onSoftStart);
+    return () => window.removeEventListener("soft-nav-start", onSoftStart);
+  }, []);
 
-    // Sync with soft-nav click — don't wait for React playing=false effect.
-    window.addEventListener("soft-nav-start", pauseEl);
-    if (!playing) pauseEl();
-    else playEl();
-    return () => window.removeEventListener("soft-nav-start", pauseEl);
-  }, [playing, mountReady]);
+  useEffect(() => {
+    // Only remount after a soft-nav teardown once `playing` is true again.
+    // Do not key this on mountReady — soft-nav sets it false while playing
+    // is still true for a frame, which would remount immediately.
+    if (!playing || !active || !shouldLoad) return;
+    if (!tornDownByNavRef.current) return;
+    tornDownByNavRef.current = false;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    preloadHlsModule();
+    setMountReady(true);
+  }, [playing, active, shouldLoad]);
 
   // Poster stays painted under the player so tear-down/remount never blanks
   // the card. Player only exists while scheduled (see mountReady).

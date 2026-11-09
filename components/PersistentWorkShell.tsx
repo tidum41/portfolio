@@ -21,8 +21,9 @@ import { clearInstantBack } from "@/lib/instantNav";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
 import { useTabArrival } from "@/lib/useTabArrival";
 import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/caseStudyNav";
+import { CASE_STUDY_PAGES } from "@/lib/caseStudyRegistry";
 import { useIntroReleased } from "@/lib/useIntroReleased";
-import { completeIntro } from "@/lib/introReady";
+import { completeIntro, onIntroDone } from "@/lib/introReady";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
 import DialogueCardTap, {
@@ -241,6 +242,49 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
   const commitProjectNav = (href?: string) => {
     if (href && isCaseStudyHref(href)) commitCaseStudyNav(href, router);
   };
+
+  // First click into a case study used to race a cold ~700KB RSC fetch against
+  // Mux HLS boot + the 6s About/Archive/PostHog idle timer. Idle-warm the
+  // live case-study hrefs as soon as intro-done fires — never before, so the
+  // cinematic intro timing stays untouched.
+  useEffect(() => {
+    if (!visible) return;
+    let idleId = 0;
+    let timeoutId = 0;
+    const warmVisibleCaseStudies = () => {
+      const warmed = new Set<string>();
+      // Prefer hrefs actually on the work grid (visible cards).
+      document
+        .querySelectorAll<HTMLAnchorElement>(".portfolio-grid-card a[href^='/']")
+        .forEach((a) => {
+          const href = a.getAttribute("href");
+          if (!href || warmed.has(href) || !isCaseStudyHref(href)) return;
+          warmed.add(href);
+          warmCaseStudyNav(href, router);
+        });
+      // Registry fallback if the grid hasn't painted yet.
+      if (warmed.size === 0) {
+        for (const page of CASE_STUDY_PAGES) {
+          warmCaseStudyNav(page.href, router);
+        }
+      }
+    };
+    const schedule = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(warmVisibleCaseStudies, { timeout: 1200 });
+      } else {
+        timeoutId = window.setTimeout(warmVisibleCaseStudies, 0);
+      }
+    };
+    const cancelIntro = onIntroDone(schedule);
+    return () => {
+      cancelIntro();
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [visible, router]);
 
   const [hasEverBeenActive, setHasEverBeenActive] = useState(visible);
   const introReleased = useIntroReleased();
@@ -738,7 +782,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
                         objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
+                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
@@ -813,7 +857,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                         label={p.label}
                         aspectRatio={GRID_MEDIA_ASPECT}
                         objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#b3cde3" : undefined}
+                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
                         active={heavyMediaLive}
                         playing={mediaPlaying}
                         mountOrder={rank}
