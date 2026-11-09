@@ -115,22 +115,31 @@ export default function JoolaCyclesLabPage() {
       <main
         style={{
           minHeight: "100vh",
-          padding: "48px 24px 96px",
-          maxWidth: 960,
+          padding: "48px var(--page-px, 24px) 96px",
+          maxWidth: "calc(var(--content-max-w, 750px) + 48px)",
           margin: "0 auto",
           fontFamily: "var(--font-sans)",
-          background: "#0a0a0a",
-          color: "#f5f5f4",
+          background: "var(--color-bg, #101214)",
+          color: "var(--color-text-primary, #EDEDEC)",
         }}
       >
         <header style={{ marginBottom: 28 }}>
-          <p style={{ margin: 0, fontSize: 12, opacity: 0.55 }}>/dev/joola-cycles</p>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted, #828282)" }}>
+            /dev/joola-cycles
+          </p>
           <h1 style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 500 }}>
             JOOLA design cycles
           </h1>
-          <p style={{ margin: "8px 0 0", fontSize: 14, opacity: 0.7, maxWidth: 520 }}>
-            Local lab. DialKit Cycle panel edits verdict/note for copy-out. Public page uses the
-            same DecisionCycle without DialKit.
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 14,
+              color: "var(--color-text-secondary, #AEAEAE)",
+              maxWidth: 520,
+            }}
+          >
+            Local lab. DialKit Cycle panel edits verdict/note for copy-out. Same playground chrome as
+            /joola: dots, arrows, and N of M (no version chips).
           </p>
           <button
             type="button"
@@ -140,9 +149,9 @@ export default function JoolaCyclesLabPage() {
               height: 36,
               padding: "0 14px",
               borderRadius: 8,
-              border: "1px solid #333",
-              background: "#171717",
-              color: "#fafafa",
+              border: "1px solid var(--color-border-subtle, #333)",
+              background: "var(--color-badge-bg, #1E2226)",
+              color: "var(--color-text-primary, #fafafa)",
               font: "inherit",
               fontSize: 13,
               cursor: "pointer",
@@ -151,9 +160,7 @@ export default function JoolaCyclesLabPage() {
             {copied ? "Copied" : "Copy round JSON"}
           </button>
         </header>
-        <div style={{ background: "#fff", color: "#1a1a1a", borderRadius: 12, padding: 24 }}>
-          <DecisionCycle lab />
-        </div>
+        <DecisionCycle lab />
       </main>
     </>
   );

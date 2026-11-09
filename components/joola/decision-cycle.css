@@ -18,23 +18,28 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   margin-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 14%, transparent);
 }
 .dc-tabs::-webkit-scrollbar { display: none; }
 
 .dc-tab {
   flex: 0 0 auto;
-  padding: 0;
+  padding: 0 0 10px;
   border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   background: none;
   font: inherit;
   font-size: 14px;
-  color: #79716b;
+  /* Muted but AA on dark site bg (~#101214): stone-ish mid gray */
+  color: #b0aea9;
   cursor: pointer;
   white-space: nowrap;
 }
 .dc-tab[aria-selected="true"] {
   color: var(--color-text-primary);
   font-weight: 500;
+  border-bottom-color: var(--color-text-primary);
 }
 .dc-tab:focus-visible {
   outline: 2px solid var(--color-text-tertiary);
@@ -42,16 +47,10 @@
   border-radius: 4px;
 }
 
-/* Numbered chips: lab only (.decision-cycle--lab). Hidden on the public page. */
+/* Numbered chips removed from public and lab — dots + arrows + N of M only.
+   DialKit on /dev/joola-cycles still selects versions via the panel. */
 .dc-picker-row {
   display: none;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  position: relative;
-}
-.decision-cycle--lab .dc-picker-row {
-  display: flex;
 }
 
 .dc-versions {
@@ -118,12 +117,13 @@ html.dark .dc-highlight {
   border-radius: 999px;
   border: 0;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.85;
 }
 .dc-replay:focus-visible {
   outline: 2px solid var(--color-text-tertiary);
@@ -151,6 +151,7 @@ html.dark .dc-highlight {
   margin: 0;
   font-size: 13px;
   font-weight: 500;
+  /* Full primary — AA on dark bg */
   color: var(--color-text-primary);
   display: inline-flex;
   align-items: center;
@@ -182,9 +183,10 @@ html.dark .dc-highlight {
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  opacity: 1;
 }
 .dc-arrow:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: default;
 }
 .dc-arrow:focus-visible {
@@ -202,7 +204,7 @@ html.dark .dc-highlight {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #d6d3d1;
+  background: color-mix(in srgb, var(--color-text-primary) 35%, transparent);
   border: 0;
   padding: 0;
 }
@@ -229,6 +231,7 @@ html.dark .dc-highlight {
   align-items: center;
   gap: 6px;
   font-weight: 400;
+  /* Secondary on dark is #AEAEAE — AA for large/UI; keep readable */
   color: var(--color-text-secondary);
 }
 .dc-round__changed {
@@ -243,10 +246,11 @@ html.dark .dc-highlight {
   align-items: flex-start;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--color-text-secondary);
+  /* Note sits on a light surface even on the dark case-study page */
+  color: #575757;
   padding: 12px 14px;
   border-radius: 8px;
-  background: var(--color-bg-secondary, #f6f5f2);
+  background: #f6f5f2;
 }
 .dc-round__note svg {
   flex-shrink: 0;

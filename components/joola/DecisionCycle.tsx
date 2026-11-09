@@ -4,7 +4,6 @@ import {
   Suspense,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -76,8 +75,6 @@ function DecisionCycleInner({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rootRef = useRef<HTMLDivElement>(null);
-  const versionsRef = useRef<HTMLDivElement>(null);
-  const highlightRef = useRef<HTMLSpanElement>(null);
   const touchStartX = useRef<number | null>(null);
 
   const decision = findDecision(searchParams.get("decision"));
@@ -85,7 +82,6 @@ function DecisionCycleInner({
   const roundIndex = decision.rounds.findIndex((r) => r.v === round.v);
 
   const [replayKey, setReplayKey] = useState(0);
-  const [highlightReady, setHighlightReady] = useState(false);
 
   const writeUrl = useCallback(
     (nextDecision: CycleDecision, v: number) => {
@@ -123,29 +119,6 @@ function DecisionCycleInner({
 
   const replay = useCallback(() => {
     setReplayKey((n) => n + 1);
-  }, []);
-
-  // Sliding highlight
-  useLayoutEffect(() => {
-    const root = versionsRef.current;
-    const hi = highlightRef.current;
-    if (!root || !hi) return;
-    const active = root.querySelector<HTMLElement>('[aria-current="true"]');
-    if (!active) return;
-    const left = active.offsetLeft;
-    hi.style.transform = `translateX(${left}px)`;
-  }, [decision.slug, round.v]);
-
-  useEffect(() => {
-    let raf1 = 0;
-    let raf2 = 0;
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setHighlightReady(true));
-    });
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-    };
   }, []);
 
   // Keyboard — only while focus is inside the playground
@@ -214,46 +187,6 @@ function DecisionCycleInner({
         ))}
       </div>
 
-      {lab ? (
-        <div className="dc-picker-row">
-          <div className="dc-versions" ref={versionsRef} role="tablist" aria-label="Versions">
-            <span
-              ref={highlightRef}
-              className="dc-highlight"
-              data-ready={highlightReady ? "true" : "false"}
-              aria-hidden
-            />
-            {decision.rounds.map((r) => (
-              <button
-                key={r.v}
-                type="button"
-                role="tab"
-                className="dc-version"
-                aria-label={`Version ${r.v}`}
-                aria-current={r.v === round.v ? "true" : undefined}
-                data-active={r.v === round.v ? "true" : undefined}
-                onClick={() => selectVersion(r.v)}
-              >
-                {r.v}
-              </button>
-            ))}
-          </div>
-          {decision.motion ? (
-            <>
-              <span className="dc-divider" aria-hidden />
-              <button
-                type="button"
-                className="dc-replay"
-                aria-label="Replay animation"
-                onClick={replay}
-              >
-                ↻
-              </button>
-            </>
-          ) : null}
-        </div>
-      ) : null}
-
       <div
         className="dc-stage"
         onTouchStart={(e) => {
@@ -305,7 +238,7 @@ function DecisionCycleInner({
         </button>
         <p className="dc-version-label" aria-live="polite">
           {decision.rounds.findIndex((r) => r.v === round.v) + 1} of {decision.rounds.length}
-          {!lab && decision.motion ? (
+          {decision.motion ? (
             <button
               type="button"
               className="dc-replay dc-replay--inline"
