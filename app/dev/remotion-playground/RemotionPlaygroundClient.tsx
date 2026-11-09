@@ -35,22 +35,22 @@ function formatTime(frame: number, fps: number) {
   return `${m}:${String(s).padStart(2, "0")}.${String(f).padStart(2, "0")}`;
 }
 
+/**
+ * Hide site-wide DialKit panels (Entrance, BentoHero, …) that stay registered
+ * via PersistentWorkShell. Only touch top-level panel folders — nested
+ * folders inside a Film* panel must stay visible.
+ */
 function hideNonFilmDialFolders() {
-  const titles = document.querySelectorAll<HTMLElement>(
-    ".dialkit-folder-title, .dialkit-folder-title-root",
+  const panelFolders = document.querySelectorAll<HTMLElement>(
+    '.dialkit-panel[data-multiple="true"] .dialkit-folder-root > .dialkit-folder-content > .dialkit-folder-inner > .dialkit-folder',
   );
-  titles.forEach((el) => {
-    const name = (el.textContent || "").trim();
-    const keep = name.startsWith("Film");
-    const folder = el.closest(".dialkit-folder") as HTMLElement | null;
-    if (!folder) return;
-    // Root title row is the collapsed chrome — leave it.
-    if (el.classList.contains("dialkit-folder-title-root") && !name) return;
-    if (el.classList.contains("dialkit-folder-title-root")) {
-      // Multi-panel root uses empty/product title; don't hide the shell.
-      return;
-    }
-    folder.style.display = keep ? "" : "none";
+  panelFolders.forEach((folder) => {
+    const title = folder.querySelector(
+      ":scope > .dialkit-folder-header .dialkit-folder-title",
+    );
+    const name = (title?.textContent || "").trim();
+    if (!name) return;
+    folder.style.display = name.startsWith("Film") ? "" : "none";
   });
 }
 
@@ -65,26 +65,18 @@ export default function RemotionPlaygroundClient() {
   const camera = useDialKit(
     "Film Camera",
     {
-      shotA: {
-        cx: [FILM_DEFAULTS.shotACx, 200, 900, 0.1],
-        cy: [FILM_DEFAULTS.shotACy, 40, 400, 0.1],
-        zoom: [FILM_DEFAULTS.shotAZoom, 1, 6, 0.01],
-      },
-      shotQty: {
-        cx: [FILM_DEFAULTS.shotQtyCx, 400, 1100, 0.1],
-        cy: [FILM_DEFAULTS.shotQtyCy, 120, 600, 0.1],
-        zoom: [FILM_DEFAULTS.shotQtyZoom, 1, 6, 0.01],
-      },
-      shotSaved: {
-        cx: [FILM_DEFAULTS.shotSavedCx, 600, 1300, 0.1],
-        cy: [FILM_DEFAULTS.shotSavedCy, 200, 700, 0.1],
-        zoom: [FILM_DEFAULTS.shotSavedZoom, 1, 5, 0.01],
-      },
-      shotOrder: {
-        cx: [FILM_DEFAULTS.shotOrderCx, 400, 1100, 0.1],
-        cy: [FILM_DEFAULTS.shotOrderCy, 200, 600, 0.1],
-        zoom: [FILM_DEFAULTS.shotOrderZoom, 0.8, 3, 0.01],
-      },
+      shotACx: [FILM_DEFAULTS.shotACx, 200, 900, 0.1],
+      shotACy: [FILM_DEFAULTS.shotACy, 40, 400, 0.1],
+      shotAZoom: [FILM_DEFAULTS.shotAZoom, 1, 6, 0.01],
+      shotQtyCx: [FILM_DEFAULTS.shotQtyCx, 400, 1100, 0.1],
+      shotQtyCy: [FILM_DEFAULTS.shotQtyCy, 120, 600, 0.1],
+      shotQtyZoom: [FILM_DEFAULTS.shotQtyZoom, 1, 6, 0.01],
+      shotSavedCx: [FILM_DEFAULTS.shotSavedCx, 600, 1300, 0.1],
+      shotSavedCy: [FILM_DEFAULTS.shotSavedCy, 200, 700, 0.1],
+      shotSavedZoom: [FILM_DEFAULTS.shotSavedZoom, 1, 5, 0.01],
+      shotOrderCx: [FILM_DEFAULTS.shotOrderCx, 400, 1100, 0.1],
+      shotOrderCy: [FILM_DEFAULTS.shotOrderCy, 200, 600, 0.1],
+      shotOrderZoom: [FILM_DEFAULTS.shotOrderZoom, 0.8, 3, 0.01],
       cardScale: [FILM_DEFAULTS.cardScale, 1.5, 4, 0.01],
     },
     { id: "remotion-film-camera", persist: true },
@@ -131,18 +123,18 @@ export default function RemotionPlaygroundClient() {
 
   const filmParams: FilmParams = useMemo(
     () => ({
-      shotACx: camera.shotA.cx,
-      shotACy: camera.shotA.cy,
-      shotAZoom: camera.shotA.zoom,
-      shotQtyCx: camera.shotQty.cx,
-      shotQtyCy: camera.shotQty.cy,
-      shotQtyZoom: camera.shotQty.zoom,
-      shotSavedCx: camera.shotSaved.cx,
-      shotSavedCy: camera.shotSaved.cy,
-      shotSavedZoom: camera.shotSaved.zoom,
-      shotOrderCx: camera.shotOrder.cx,
-      shotOrderCy: camera.shotOrder.cy,
-      shotOrderZoom: camera.shotOrder.zoom,
+      shotACx: camera.shotACx,
+      shotACy: camera.shotACy,
+      shotAZoom: camera.shotAZoom,
+      shotQtyCx: camera.shotQtyCx,
+      shotQtyCy: camera.shotQtyCy,
+      shotQtyZoom: camera.shotQtyZoom,
+      shotSavedCx: camera.shotSavedCx,
+      shotSavedCy: camera.shotSavedCy,
+      shotSavedZoom: camera.shotSavedZoom,
+      shotOrderCx: camera.shotOrderCx,
+      shotOrderCy: camera.shotOrderCy,
+      shotOrderZoom: camera.shotOrderZoom,
       cardScale: camera.cardScale,
       openMoveDuration: timing.openMoveDuration,
       zoomOutDuration: timing.zoomOutDuration,
@@ -226,22 +218,28 @@ export default function RemotionPlaygroundClient() {
         .rpg-player button {
           font-family: var(--font-sans) !important;
         }
+        .rpg-shell {
+          padding-right: max(var(--space-3), 300px);
+        }
         .rpg-workspace {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) 240px;
+          grid-template-columns: minmax(0, 1fr) 220px;
           gap: var(--space-3);
           max-width: 1440px;
           margin: 0 auto;
           align-items: start;
         }
         @media (max-width: 900px) {
+          .rpg-shell {
+            padding-right: var(--space-3);
+          }
           .rpg-workspace {
             grid-template-columns: 1fr;
           }
         }
       `}</style>
 
-      <div style={shellStyle}>
+      <div className="rpg-shell" style={shellStyle}>
         <header style={headerStyle}>
           <div style={{ minWidth: 0 }}>
             <div style={eyebrowStyle}>Dev · Remotion</div>
@@ -259,9 +257,6 @@ export default function RemotionPlaygroundClient() {
             >
               {cardPreview ? "676px card" : "Full stage"}
             </button>
-            <button type="button" onClick={onCopy} style={copyBtnStyle}>
-              {copied ? "Copied" : "Copy for agent"}
-            </button>
             <Link href="/dev" style={linkStyle}>
               ← dev
             </Link>
@@ -273,6 +268,9 @@ export default function RemotionPlaygroundClient() {
             <div style={metaRowStyle}>
               <button type="button" onClick={togglePlay} style={playBtnStyle}>
                 {playing ? "Pause" : "Play"}
+              </button>
+              <button type="button" onClick={onCopy} style={copyBtnStyle}>
+                {copied ? "Copied" : "Copy for agent"}
               </button>
               <span style={readoutStyle}>
                 Frame {frame} / {JOOLA_DURATION - 1}
@@ -311,8 +309,8 @@ export default function RemotionPlaygroundClient() {
           <aside style={asideStyle}>
             <div style={asideTitleStyle}>DialKit</div>
             <p style={asideDekStyle}>
-              Panels: Film Camera, Film Timing, Film Cursor. Save versions to
-              compare. Site dials are hidden on this page.
+              Panels: Film Camera, Film Timing, Film Cursor. Versions use the
+              menu (no page-capture thumbnails). Site dials are hidden here.
             </p>
             <ul style={asideListStyle}>
               <li>Camera shots A / qty / saved / order + card scale</li>
