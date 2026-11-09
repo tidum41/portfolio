@@ -438,28 +438,35 @@ export default function MuxMediaSlot({
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) kickPlay();
     };
-    // Soft-nav click: fully stop segment fetches on this frame so case-study
-    // RSC / LCP aren't competing with homepage HLS. pause() alone left the
-    // loader buffering. Remount/reattach happens when playing resumes.
+    // Soft-nav click: stop segment fetches immediately so case-study RSC/LCP
+    // aren't competing with homepage HLS. pause() alone left the loader
+    // buffering. Defer detach/destroy off the click task — sync MediaSource
+    // teardown across N cards blocked router.push under 4x CPU.
     const destroyHls = () => {
       const hls = hlsRef.current;
+      const el = videoRef.current;
+      try { el?.pause(); } catch { /* ignore */ }
       if (hls) {
         try { hls.stopLoad(); } catch { /* ignore */ }
-        try { hls.detachMedia(); } catch { /* ignore */ }
-        try { hls.destroy(); } catch { /* ignore */ }
-        hlsRef.current = null;
       }
-      const el = videoRef.current;
-      if (el) {
-        try { el.pause(); } catch { /* ignore */ }
-        try {
-          el.removeAttribute("src");
-          el.load();
-        } catch { /* ignore */ }
-      }
-      // Hide the empty video so the poster underneath stays painted.
-      revealedRef.current = false;
-      rootRef.current?.removeAttribute("data-frame");
+      window.setTimeout(() => {
+        const live = hlsRef.current;
+        if (live) {
+          try { live.detachMedia(); } catch { /* ignore */ }
+          try { live.destroy(); } catch { /* ignore */ }
+          hlsRef.current = null;
+        }
+        const video = videoRef.current;
+        if (video) {
+          try {
+            video.removeAttribute("src");
+            video.load();
+          } catch { /* ignore */ }
+        }
+        // Hide the empty video so the poster underneath stays painted.
+        revealedRef.current = false;
+        rootRef.current?.removeAttribute("data-frame");
+      }, 0);
     };
     window.addEventListener("soft-nav-start", destroyHls);
     window.addEventListener("pageshow", onPageShow);

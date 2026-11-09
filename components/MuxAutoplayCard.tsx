@@ -210,7 +210,9 @@ export default function MuxAutoplayCard({
   useEffect(() => {
     const onSoftStart = () => {
       tornDownByNavRef.current = true;
-      setMountReady(false);
+      // Defer React unmount so the click → router.push path isn't blocked by
+      // N× MuxMediaSlot cleanup on the same task (matters under CPU throttle).
+      window.setTimeout(() => setMountReady(false), 0);
     };
     window.addEventListener("soft-nav-start", onSoftStart);
     return () => window.removeEventListener("soft-nav-start", onSoftStart);
