@@ -146,8 +146,11 @@
 }
 
 .joola-stage--wide {
-  width: min(1080px, calc(100vw - 48px));
+  /* Full-bleed past the 750px case-study measure so the queue table
+     can keep labels and Approve / Reject / Request change on one line. */
+  width: min(1200px, calc(100vw - 48px));
   max-width: none;
+  margin-left: calc((100% - min(1200px, 100vw - 48px)) / 2);
 }
 
 .joola-stage--wide .joola-stage__pad {
@@ -158,9 +161,10 @@
   overflow-x: auto;
 }
 
-@media (min-width: 1100px) {
+@media (max-width: 900px) {
   .joola-stage--wide {
-    width: min(1080px, calc(100% + 280px));
+    width: 100%;
+    margin-left: 0;
   }
 }
 
@@ -432,9 +436,9 @@
 /* ── Rep approval queue ───────────────────────────────────────────── */
 .joola-portal .rep-shell {
   display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
+  grid-template-columns: 148px minmax(0, 1fr);
   min-height: 420px;
-  min-width: 920px;
+  min-width: 1040px;
   background: #fff;
   color: var(--ink);
 }
@@ -477,7 +481,7 @@
 }
 .joola-portal .rep-table {
   width: 100%;
-  min-width: 720px;
+  min-width: 860px;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -486,14 +490,17 @@
   padding: 0 10px 10px; border-bottom: 1px solid var(--line); text-transform: none; letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.joola-portal .rep-table th:nth-child(1) { width: 22%; }
-.joola-portal .rep-table th:nth-child(2) { width: 24%; }
-.joola-portal .rep-table th:nth-child(3) { width: 12%; }
+.joola-portal .rep-table th:nth-child(1) { width: 20%; }
+.joola-portal .rep-table th:nth-child(2) { width: 22%; }
+.joola-portal .rep-table th:nth-child(3) { width: 11%; }
 .joola-portal .rep-table th:nth-child(4) { width: 12%; }
-.joola-portal .rep-table th:nth-child(5) { width: 30%; }
+.joola-portal .rep-table th:nth-child(5) { width: 35%; }
 .joola-portal .rep-table th.actions { text-align: right; }
 .joola-portal .rep-table td {
   padding: 14px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; font-size: 14px;
+}
+.joola-portal .rep-table td:last-child {
+  overflow: visible;
 }
 .joola-portal .rep-dist strong {
   display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -521,13 +528,13 @@
   display: flex; gap: 8px; justify-content: flex-end; flex-wrap: nowrap; align-items: center;
 }
 .joola-portal .btn-primary {
-  height: 36px; padding: 0 14px; border-radius: 8px; background: var(--blue); color: #fff;
+  height: 36px; padding: 0 12px; border-radius: 8px; background: var(--blue); color: #fff;
   font-size: 13px; font-weight: 500; white-space: nowrap; flex-shrink: 0;
 }
 .joola-portal .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .joola-portal .btn-primary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .joola-portal .btn-outline {
-  height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line);
+  height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line);
   background: #fff; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; flex-shrink: 0;
 }
 .joola-portal .btn-outline:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
