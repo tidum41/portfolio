@@ -153,12 +153,19 @@ export default function RemotionPlaygroundClient() {
   const inputProps = useMemo(() => filmParams, [filmParams]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-remotion-playground", "1");
+    const root = document.documentElement;
+    const prevTheme = root.getAttribute("data-theme");
+    root.setAttribute("data-remotion-playground", "1");
+    // Force light tokens so dark-mode --color-text-primary (#EDEDEC) cannot
+    // wash out the light lab chrome.
+    root.setAttribute("data-theme", "light");
     hideNonFilmDialFolders();
     const obs = new MutationObserver(() => hideNonFilmDialFolders());
     obs.observe(document.body, { childList: true, subtree: true });
     return () => {
-      document.documentElement.removeAttribute("data-remotion-playground");
+      root.removeAttribute("data-remotion-playground");
+      if (prevTheme) root.setAttribute("data-theme", prevTheme);
+      else root.removeAttribute("data-theme");
       obs.disconnect();
     };
   }, []);
@@ -215,36 +222,67 @@ export default function RemotionPlaygroundClient() {
         html[data-remotion-playground] .dialkit-shortcuts-dropdown {
           z-index: 10050 !important;
         }
+        /* Site chrome sits over this fixed shell and was washing out the title. */
+        html[data-remotion-playground] header.intro-hide,
+        html[data-remotion-playground] .site-nav {
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
         .rpg-player button {
           font-family: var(--font-sans) !important;
         }
-        .rpg-shell {
-          padding-right: max(var(--space-3), 300px);
+        /* Hard ink — site dark-theme tokens set --color-text-primary to #EDEDEC. */
+        .rpg-shell,
+        .rpg-shell h1,
+        .rpg-shell .rpg-play {
+          color: #1a1a1a !important;
         }
-        .rpg-workspace {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 220px;
-          gap: var(--space-3);
-          max-width: 1440px;
-          margin: 0 auto;
-          align-items: start;
+        .rpg-shell .rpg-muted {
+          color: #575757 !important;
+        }
+        .rpg-shell .rpg-play {
+          border: 1px solid #c8c4ce !important;
+          background: #fff !important;
+          font-weight: 500 !important;
+        }
+        .rpg-shell .rpg-copy {
+          background: #2d68c4 !important;
+          color: #fff !important;
+          border: none !important;
+          font-weight: 500 !important;
+        }
+        /* DialKit popover sits fixed on the right (~300px). Keep the stage
+           in the clear band to its left at 1440. (padding lives here — not
+           inline — so it isn't overridden by the shell’s other padding.) */
+        .rpg-shell {
+          padding: var(--space-3);
+          padding-right: 360px;
+          box-sizing: border-box;
+        }
+        .rpg-workspace,
+        .rpg-header {
+          width: 100%;
+          max-width: 1020px;
+          margin: 0;
+        }
+        .rpg-player {
+          width: 100%;
         }
         @media (max-width: 900px) {
           .rpg-shell {
             padding-right: var(--space-3);
           }
-          .rpg-workspace {
-            grid-template-columns: 1fr;
-          }
         }
       `}</style>
 
-      <div className="rpg-shell" style={shellStyle}>
-        <header style={headerStyle}>
+      <div className="rpg-shell" data-theme="light" style={shellStyle}>
+        <header className="rpg-header" style={headerStyle}>
           <div style={{ minWidth: 0 }}>
-            <div style={eyebrowStyle}>Dev · Remotion</div>
+            <div className="rpg-muted" style={eyebrowStyle}>
+              Dev · Remotion
+            </div>
             <h1 style={titleStyle}>JOOLA B2B film</h1>
-            <p style={dekStyle}>
+            <p className="rpg-muted" style={dekStyle}>
               DialKit tunes camera, timing, easing, and cursor. Copy a prompt for
               the agent when a tweak should become permanent.
             </p>
@@ -257,7 +295,7 @@ export default function RemotionPlaygroundClient() {
             >
               {cardPreview ? "676px card" : "Full stage"}
             </button>
-            <Link href="/dev" style={linkStyle}>
+            <Link href="/dev" className="rpg-muted" style={linkStyle}>
               ← dev
             </Link>
           </div>
@@ -266,16 +304,26 @@ export default function RemotionPlaygroundClient() {
         <div className="rpg-workspace">
           <div style={stageColumnStyle}>
             <div style={metaRowStyle}>
-              <button type="button" onClick={togglePlay} style={playBtnStyle}>
+              <button
+                type="button"
+                className="rpg-play"
+                onClick={togglePlay}
+                style={playBtnStyle}
+              >
                 {playing ? "Pause" : "Play"}
               </button>
-              <button type="button" onClick={onCopy} style={copyBtnStyle}>
+              <button
+                type="button"
+                className="rpg-copy"
+                onClick={onCopy}
+                style={copyBtnStyle}
+              >
                 {copied ? "Copied" : "Copy for agent"}
               </button>
-              <span style={readoutStyle}>
+              <span className="rpg-muted" style={readoutStyle}>
                 Frame {frame} / {JOOLA_DURATION - 1}
               </span>
-              <span style={readoutStyle}>
+              <span className="rpg-muted" style={readoutStyle}>
                 {formatTime(frame, JOOLA_FPS)} /{" "}
                 {formatTime(JOOLA_DURATION - 1, JOOLA_FPS)}
               </span>
@@ -285,7 +333,7 @@ export default function RemotionPlaygroundClient() {
               className="rpg-player"
               style={{
                 ...playerWrapStyle,
-                maxWidth: stageMaxWidth,
+                maxWidth: stageMaxWidth ?? "100%",
               }}
             >
               <Player
@@ -305,24 +353,14 @@ export default function RemotionPlaygroundClient() {
               />
             </div>
           </div>
-
-          <aside style={asideStyle}>
-            <div style={asideTitleStyle}>DialKit</div>
-            <p style={asideDekStyle}>
-              Panels: Film Camera, Film Timing, Film Cursor. Versions use the
-              menu (no page-capture thumbnails). Site dials are hidden here.
-            </p>
-            <ul style={asideListStyle}>
-              <li>Camera shots A / qty / saved / order + card scale</li>
-              <li>Move durations, pill fill, logo out, cam ease</li>
-              <li>Cursor scale + travel ease</li>
-            </ul>
-          </aside>
         </div>
       </div>
     </>
   );
 }
+
+const INK = "#1A1A1A";
+const MUTED = "#575757";
 
 const shellStyle: CSSProperties = {
   position: "fixed",
@@ -330,10 +368,9 @@ const shellStyle: CSSProperties = {
   zIndex: LAB_Z,
   background:
     "radial-gradient(1200px 600px at 20% -10%, rgba(46,104,196,0.08), transparent 60%), linear-gradient(180deg, #F7F7F5 0%, #F0EFEB 100%)",
-  color: "var(--color-text-primary, #2E2E2E)",
+  color: INK,
   fontFamily: "var(--font-sans)",
   overflow: "auto",
-  padding: "var(--space-3)",
 };
 
 const headerStyle: CSSProperties = {
@@ -341,8 +378,7 @@ const headerStyle: CSSProperties = {
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: "var(--space-3)",
-  maxWidth: 1440,
-  margin: "0 auto var(--space-3)",
+  marginBottom: "var(--space-3)",
   flexWrap: "wrap",
 };
 
@@ -350,16 +386,17 @@ const eyebrowStyle: CSSProperties = {
   fontSize: "var(--fs-caption)",
   letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "var(--color-text-tertiary)",
+  color: MUTED,
   marginBottom: 4,
 };
 
 const titleStyle: CSSProperties = {
   margin: 0,
   fontSize: "var(--fs-xl)",
-  fontWeight: 500,
+  fontWeight: 600,
   letterSpacing: "var(--ls-xl)",
   lineHeight: "var(--lh-xl)",
+  color: INK,
 };
 
 const dekStyle: CSSProperties = {
@@ -367,7 +404,7 @@ const dekStyle: CSSProperties = {
   maxWidth: 520,
   fontSize: "var(--fs-sm)",
   lineHeight: "var(--lh-sm)",
-  color: "var(--color-text-secondary)",
+  color: MUTED,
 };
 
 const headerActionsStyle: CSSProperties = {
@@ -378,19 +415,20 @@ const headerActionsStyle: CSSProperties = {
 };
 
 const chipStyle = (on: boolean): CSSProperties => ({
-  border: "1px solid var(--color-border-subtle, #E8E4F0)",
-  background: on ? "var(--color-text-primary)" : "rgba(255,255,255,0.7)",
-  color: on ? "#fff" : "var(--color-text-primary)",
+  border: `1px solid ${on ? INK : "#D8D4DE"}`,
+  background: on ? INK : "rgba(255,255,255,0.85)",
+  color: on ? "#fff" : INK,
   borderRadius: "var(--radius-control)",
   padding: "8px 12px",
   fontSize: 13,
+  fontWeight: 500,
   fontFamily: "inherit",
   cursor: "pointer",
 });
 
 const copyBtnStyle: CSSProperties = {
   border: "none",
-  background: "var(--color-ucla-blue, #2D68C4)",
+  background: "#2D68C4",
   color: "#fff",
   borderRadius: "var(--radius-control)",
   padding: "8px 14px",
@@ -402,7 +440,7 @@ const copyBtnStyle: CSSProperties = {
 
 const linkStyle: CSSProperties = {
   fontSize: 13,
-  color: "var(--color-text-secondary)",
+  color: MUTED,
   textDecoration: "none",
   padding: "8px 4px",
 };
@@ -422,8 +460,9 @@ const metaRowStyle: CSSProperties = {
 };
 
 const playBtnStyle: CSSProperties = {
-  border: "1px solid var(--color-border-subtle, #E8E4F0)",
+  border: "1px solid #D8D4DE",
   background: "#fff",
+  color: INK,
   borderRadius: "var(--radius-control)",
   padding: "8px 14px",
   fontSize: 13,
@@ -434,7 +473,7 @@ const playBtnStyle: CSSProperties = {
 
 const readoutStyle: CSSProperties = {
   fontSize: 13,
-  color: "var(--color-text-secondary)",
+  color: MUTED,
   fontVariantNumeric: "tabular-nums",
 };
 
@@ -448,31 +487,3 @@ const playerWrapStyle: CSSProperties = {
   border: "1px solid rgba(0,0,0,0.06)",
 };
 
-const asideStyle: CSSProperties = {
-  position: "sticky",
-  top: 16,
-  padding: "var(--space-2)",
-  borderRadius: "var(--radius-control)",
-  background: "rgba(255,255,255,0.72)",
-  border: "1px solid rgba(0,0,0,0.06)",
-  fontSize: 13,
-  lineHeight: 1.45,
-  color: "var(--color-text-secondary)",
-};
-
-const asideTitleStyle: CSSProperties = {
-  fontWeight: 500,
-  color: "var(--color-text-primary)",
-  marginBottom: 6,
-};
-
-const asideDekStyle: CSSProperties = {
-  margin: "0 0 10px",
-};
-
-const asideListStyle: CSSProperties = {
-  margin: 0,
-  paddingLeft: 18,
-  display: "grid",
-  gap: 6,
-};
