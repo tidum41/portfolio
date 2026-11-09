@@ -48,7 +48,7 @@ export const SPEC_TIMINGS = {
   targetSilkFadeSec: 2.4,
   reducedMotionDurationMs: 350,
   targetFps: 30,
-  frameDurationMs: 1000 / 30, // 33.33ms
+  frameDurationMs: 1000 / 60, // 16.67ms
   defaultHalftoneIntensity: 0.29,
   defaultHalftoneMode: 1, // Halftone mode
   minTouchTargetPx: 32,

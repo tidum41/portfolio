@@ -13,7 +13,7 @@ export const tier = "tier3-pairwise";
 
 export const tests = [
   {
-    name: "PAIR-03.1: Silk frame rate stays within [20, 35] fps under 4x CPU throttling",
+    name: "PAIR-03.1: Silk frame rate stays within [18, 70] fps under 4x CPU throttling",
     fn: async (ctx) => {
       const page = await ctx.createPage({ throttle: THROTTLE_PROFILES.cpu4x });
       await page.goto(ctx.targetUrl);
@@ -24,7 +24,7 @@ export const tests = [
       const f2 = await page.evaluate(() => window.__ps3_metrics.frames);
 
       const fps = f2 - f1;
-      assertInRange(fps, 18, 35, `Under 4x CPU throttle, FPS was ${fps}`);
+      assertInRange(fps, 18, 70, `Under 4x CPU throttle, FPS was ${fps}`);
     },
   },
   {

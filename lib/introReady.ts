@@ -59,10 +59,10 @@ export function afterIntroIdle(cb: () => void, timeout = 6000): () => void {
     }
   };
   const start = () => {
-    // `intro-done` fires at visual completion (2.4s), while the grid reveal (0.7s)
-    // finishes around ~3.1s. When armed during the first-load intro, wait until the
-    // 3s startup window has cleared before requesting an idle callback (since 30fps
-    // silk leaves alternate 16ms frames looking idle to requestIdleCallback).
+    // `intro-done` fires when the silk fade finishes, while the grid reveal
+    // finishes around ~3.1s. When armed during the first-load intro, wait
+    // until that window has cleared before requesting an idle callback so
+    // deferred work doesn't hitch the silk while it is still on screen.
     if (wasIntroPlaying) {
       const waitMs = Math.max(900, 3150 - performance.now());
       settleId = window.setTimeout(scheduleIdle, waitMs);

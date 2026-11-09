@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import {
   OUTLINE_MORPH_S,
@@ -50,10 +50,31 @@ function warmPrimary(href: string) {
   }
 }
 
-export default function HalftoneNavLink({ href, label, isActive, dk, resting }: any & { resting?: ReactNode }) {
+type HalftoneNavLinkProps = {
+  href: string;
+  label: string;
+  isActive: boolean;
+  dk?: { enabled?: boolean; keepEffectOn?: boolean };
+  resting?: ReactNode;
+  navHovered?: boolean;
+  snapRest?: boolean;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
+};
+
+export default function HalftoneNavLink({
+  href,
+  label,
+  isActive,
+  dk,
+  resting,
+  navHovered = false,
+  snapRest = false,
+  onHoverStart,
+  onHoverEnd,
+}: HalftoneNavLinkProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isHovered, setIsHovered] = useState(false);
   const [isTapped, setIsTapped] = useState(false);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,6 +92,10 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   // (which double-flickered as soft-nav shifted layout under the cursor).
   const pendingNavSettleRef = useRef(false);
   const ignoreHoverUntilRef = useRef(0);
+  const onHoverEndRef = useRef(onHoverEnd);
+  useEffect(() => {
+    onHoverEndRef.current = onHoverEnd;
+  }, [onHoverEnd]);
 
   // Hover works on the current page's own link (work on `/`). Tap always
   // works. After a nav commit to this link we clear both and briefly ignore
@@ -79,7 +104,11 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   // enabled: false leaves the solid letter. The shape itself is baked, so
   // the melt sliders no longer restyle these three words.
   const morphOn =
-    dk?.enabled !== false && Boolean(dk?.keepEffectOn || isHovered || isTapped);
+    dk?.enabled !== false && Boolean(dk?.keepEffectOn || navHovered || isTapped);
+  // A sibling owns the pointer: drop this word's morph immediately instead
+  // of letting the 0.32s ease-out overlap the one just entered.
+  const morphDuration =
+    snapRest && !isTapped && !dk?.keepEffectOn ? 0 : OUTLINE_MORPH_S;
   const reduced = useReducedMotion();
   const morphMs = reduced ? 0 : OUTLINE_MORPH_S * 1000;
   const [Morph, setMorph] = useState<OutlineMorphComponent | null>(null);
@@ -162,7 +191,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
     // kill the press feedback early; then clear hover+tap together.
     settleTimeoutRef.current = setTimeout(() => {
       setIsTapped(false);
-      setIsHovered(false);
+      onHoverEndRef.current?.();
       ignoreHoverUntilRef.current =
         performance.now() + POST_NAV_HOVER_IGNORE_MS;
     }, morphMs);
@@ -172,12 +201,21 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
 
   // Don't let mouseleave clear the press morph while we're settling into the
   // active solid state after a nav commit — that off/on pair was the flicker.
-  const onLinkMouseLeave = () => {
-    if (pendingNavSettleRef.current || settleTimeoutRef.current) {
-      setIsHovered(false);
-      return;
-    }
-    setIsHovered(false);
+  const onLinkMouseLeave = (e: MouseEvent<HTMLAnchorElement>) => {
+    const next = e.relatedTarget;
+    const nextEl = next instanceof Element ? next : null;
+    const ontoSibling =
+      !!nextEl &&
+      !!nextEl.closest("[data-nav-word]") &&
+      !e.currentTarget.contains(nextEl);
+    // The flex gap between words is the <nav> itself. Don't start the
+    // ease-out there — the next word's enter snaps this one instead.
+    const inWordGap =
+      !!nextEl &&
+      !!nextEl.closest("nav.site-nav") &&
+      !nextEl.closest("button");
+    if (!ontoSibling && !inWordGap) onHoverEnd?.();
+    if (pendingNavSettleRef.current || settleTimeoutRef.current) return;
     disarmTap();
   };
 
@@ -185,7 +223,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
   // Hybrid / "desktop site" mobile browsers can report hover:hover and leave
   // mouseenter stuck with no mouseleave — mobile itself has no hover.
   useEffect(() => {
-    const onTouchStart = () => setIsHovered(false);
+    const onTouchStart = () => onHoverEndRef.current?.();
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     return () => window.removeEventListener("touchstart", onTouchStart);
   }, []);
@@ -201,6 +239,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       prefetch={false}
       aria-current={isActive ? "page" : undefined}
       className="nav-link"
+      data-nav-word=""
       data-ui-sound="option"
       style={{
         position: "relative",
@@ -219,7 +258,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
       // cursor to leave), leaving isHovered stuck true forever.
       onMouseEnter={() => {
         if (performance.now() < ignoreHoverUntilRef.current) return;
-        if (canHover()) setIsHovered(true);
+        if (canHover()) onHoverStart?.();
         warmPrimary(href);
         if (PRIMARY_NAV.has(href)) router.prefetch(href);
       }}
@@ -242,7 +281,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         if (PRIMARY_NAV.has(href)) router.prefetch(href);
 
         if (e.pointerType === "touch" || e.pointerType === "pen") {
-          setIsHovered(false);
+          onHoverEndRef.current?.();
         }
 
         pressRef.current = {
@@ -327,7 +366,12 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
         {label}
       </span>
       {armed && Morph ? (
-        <Morph label={label} active={morphOn} emphasized={!!isActive} />
+        <Morph
+          label={label}
+          active={morphOn}
+          emphasized={!!isActive}
+          duration={morphDuration}
+        />
       ) : (
         <span
           style={{
@@ -335,7 +379,7 @@ export default function HalftoneNavLink({ href, label, isActive, dk, resting }: 
               ? "var(--color-text-primary)"
               : "var(--color-text-muted)",
             display: "contents",
-            transition: "color 0.25s ease",
+            transition: snapRest ? "none" : "color 0.25s ease",
           }}
         >
           {resting}

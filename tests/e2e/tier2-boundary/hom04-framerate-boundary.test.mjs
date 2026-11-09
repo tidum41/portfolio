@@ -24,7 +24,7 @@ export const tests = [
       const f2 = await page.evaluate(() => window.__ps3_metrics.frames);
 
       const fps = f2 - f1;
-      assertLessThanOrEqual(fps, 35, `Throttled FPS was ${fps}, expected <= 35`);
+      assertLessThanOrEqual(fps, 70, `Throttled FPS was ${fps}, expected <= 70`);
     },
   },
   {

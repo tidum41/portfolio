@@ -29,14 +29,13 @@ function runTest(name, fn) {
 // ---------------------------------------------------------
 console.log("\n[Group 1] WebGL Startup Timing & Pre-roll");
 
-runTest("1.1: PS3Silk.tsx sets 180ms delay on first load and 0ms on reduced-motion or soft nav", () => {
+runTest("1.1: PS3Silk.tsx keeps a 180ms first-load pre-roll and skips it for reduced-motion or soft nav", () => {
   const silkSrc = fs.readFileSync(path.join(repoRoot, "components/PS3Silk.tsx"), "utf8");
-  
-  // Verify the exact ternary condition
-  const match = silkSrc.match(/},\s*(isFirstLoad\s*&&\s*!reducedMotion\s*\?\s*180\s*:\s*0)\s*\);/);
-  assert(match, "Could not find `isFirstLoad && !reducedMotion ? 180 : 0` in components/PS3Silk.tsx");
 
-  // Simulate timing function
+  const match = silkSrc.match(/const\s+preRollMs\s*=\s*(isFirstLoad\s*&&\s*!reducedMotion\s*\?\s*180\s*:\s*0)/);
+  assert(match, "Could not find preRollMs = isFirstLoad && !reducedMotion ? 180 : 0 in components/PS3Silk.tsx");
+  assert(silkSrc.includes("ms < fadeNotBefore"), "Fade clock must stay held until the pre-roll ends");
+
   const calcDelay = (isFirstLoad, reducedMotion) => (isFirstLoad && !reducedMotion ? 180 : 0);
   assert.strictEqual(calcDelay(true, false), 180, "First load without reduced motion must delay 180ms");
   assert.strictEqual(calcDelay(true, true), 0, "First load with reduced motion must delay 0ms");
@@ -51,20 +50,20 @@ runTest("1.2: React 19 StrictMode idempotency guard preserves isFirstLoad state"
 });
 
 // ---------------------------------------------------------
-// 2. 30fps Frame Rate Cap & Frame Pacing Simulation
+// 2. 60fps Frame Rate & Frame Pacing Simulation
 // ---------------------------------------------------------
-console.log("\n[Group 2] 30fps Frame Rate Cap & Clamped dt Simulation");
+console.log("\n[Group 2] 60fps Frame Rate & Clamped dt Simulation");
 
-runTest("2.1: PS3Silk.tsx declares FRAME_MS = 1000/30, FRAME_TOLERANCE_MS, and MAX_FADE_DT_MS", () => {
+runTest("2.1: PS3Silk.tsx declares FRAME_MS = 1000/60, FRAME_TOLERANCE_MS, and MAX_FADE_DT_MS", () => {
   const silkSrc = fs.readFileSync(path.join(repoRoot, "components/PS3Silk.tsx"), "utf8");
-  assert(silkSrc.includes("const FRAME_MS = 1000 / 30;"), "Missing FRAME_MS = 1000 / 30");
-  assert(silkSrc.includes("const FRAME_TOLERANCE_MS = 3.5;"), "Missing FRAME_TOLERANCE_MS = 3.5");
+  assert(silkSrc.includes("const FRAME_MS = 1000 / 60;"), "Missing FRAME_MS = 1000 / 60");
+  assert(silkSrc.includes("const FRAME_TOLERANCE_MS = 2.5;"), "Missing FRAME_TOLERANCE_MS = 2.5");
   assert(silkSrc.includes("const MAX_FADE_DT_MS = 50;"), "Missing MAX_FADE_DT_MS = 50");
 });
 
-runTest("2.2: Simulation of 60Hz rAF displays strict 30fps throttling", () => {
-  const FRAME_MS = 1000 / 30; // 33.333ms
-  const FRAME_TOLERANCE_MS = 3.5;
+runTest("2.2: Simulation of 60Hz rAF displays 60fps", () => {
+  const FRAME_MS = 1000 / 60; // 16.667ms
+  const FRAME_TOLERANCE_MS = 2.5;
 
   let lastT = 0;
   let renderCount = 0;
@@ -82,19 +81,18 @@ runTest("2.2: Simulation of 60Hz rAF displays strict 30fps throttling", () => {
     frameTimes.push(ms);
   }
 
-  // 60Hz over 1s should produce exactly 30 rendered frames
-  assert.strictEqual(renderCount, 30, `Expected exactly 30 rendered frames on 60Hz display, got ${renderCount}`);
+  // 60Hz over 1s should produce exactly 60 rendered frames
+  assert.strictEqual(renderCount, 60, `Expected exactly 60 rendered frames on 60Hz display, got ${renderCount}`);
 
-  // Average delta between rendered frames should be ~33.33ms
   for (let i = 1; i < frameTimes.length; i++) {
     const delta = frameTimes[i] - frameTimes[i - 1];
-    assert(Math.abs(delta - 33.333) < 1.0, `Render frame interval ${delta}ms was outside 30fps tolerance`);
+    assert(Math.abs(delta - 16.667) < 1.0, `Render frame interval ${delta}ms was outside 60fps tolerance`);
   }
 });
 
-runTest("2.3: Simulation of 120Hz rAF displays strict 30fps throttling", () => {
-  const FRAME_MS = 1000 / 30;
-  const FRAME_TOLERANCE_MS = 3.5;
+runTest("2.3: Simulation of 120Hz rAF skips the extra frame and stays at 60fps", () => {
+  const FRAME_MS = 1000 / 60;
+  const FRAME_TOLERANCE_MS = 2.5;
 
   let lastT = 0;
   let renderCount = 0;
@@ -107,8 +105,8 @@ runTest("2.3: Simulation of 120Hz rAF displays strict 30fps throttling", () => {
     renderCount++;
   }
 
-  // 120Hz over 1s should produce 30 rendered frames
-  assert.strictEqual(renderCount, 30, `Expected 30 rendered frames on 120Hz display, got ${renderCount}`);
+  // 120Hz over 1s should produce 60 rendered frames
+  assert.strictEqual(renderCount, 60, `Expected 60 rendered frames on 120Hz display, got ${renderCount}`);
 });
 
 runTest("2.4: Simulation of frame stall clamps dt to MAX_FADE_DT_MS", () => {
