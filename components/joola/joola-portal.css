@@ -114,15 +114,18 @@
   border-radius: 8px;
   border: 1px solid var(--color-border-subtle, #e8e6e1);
   background: #fff;
-  overflow: hidden;
+  overflow: hidden; /* radius only — content must fit or scroll inside the frame */
 }
 
 .joola-stage__pad {
-  padding: 16px;
+  /* Proto page padding lives on the frame (28). Outer pad stays 0 so
+     buyer content isn't double-inset and still clears the chrome. */
+  padding: 0;
 }
 
 .joola-stage__footer {
-  margin-top: 12px;
+  margin: 0;
+  padding: 12px 28px 28px;
   min-height: 28px;
   display: flex;
   align-items: center;
@@ -130,23 +133,37 @@
 }
 
 .joola-stage--mobile .joola-stage__pad {
-  padding: 24px;
+  padding: 16px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   background: #fff;
+}
+
+.joola-stage--mobile .joola-stage__footer {
+  padding: 12px 0 0;
+  width: 100%;
+  max-width: 390px;
 }
 
 .joola-stage__frame {
   background: #fff;
+  /* Prototype --content-pad-x: 28px inside the portal surface */
+  padding: 28px;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 8px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  container-type: inline-size;
 }
 
 .joola-stage__frame--mobile {
   width: 100%;
   max-width: 390px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .joola-stage__caption {
@@ -157,19 +174,25 @@
 }
 
 .joola-stage--wide {
-  /* Full-bleed past the 750px case-study measure so the queue table
-     can keep labels and Approve / Reject on one line. */
-  width: min(1200px, calc(100vw - 48px));
+  /* Bleed past the 750px case-study measure for the rep queue. */
+  width: min(1360px, calc(100vw - 32px));
   max-width: none;
-  margin-left: calc((100% - min(1200px, 100vw - 48px)) / 2);
+  margin-left: calc((100% - min(1360px, 100vw - 32px)) / 2);
 }
 
 .joola-stage--wide .joola-stage__pad {
-  padding: 12px;
+  padding: 0;
 }
 
 .joola-stage--wide .joola-stage__frame {
+  /* Rep app chrome is full-bleed; its own body uses Paper's 28px. */
+  padding: 0;
   overflow-x: auto;
+  overflow-y: visible;
+}
+
+.joola-stage--wide .joola-stage__footer {
+  padding: 12px 16px 16px;
 }
 
 @media (max-width: 900px) {
@@ -648,13 +671,16 @@
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   min-height: 420px;
-  min-width: 1040px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* never force the stage wider than the frame */
   background: #fff;
   color: var(--ink);
 }
 .joola-portal .rep-sidebar {
   background: var(--sidebar-bg); border-right: 1px solid var(--line);
   padding: 20px 12px; display: flex; flex-direction: column; gap: 16px;
+  min-width: 0;
 }
 .joola-portal .rep-logo { width: 80px; height: auto; }
 .joola-portal .rep-wholesale {
@@ -671,20 +697,22 @@
   margin-top: auto; font-size: 12px; color: var(--muted); text-decoration: none;
 }
 .joola-portal .rep-main {
-  display: flex; flex-direction: column; min-width: 0; position: relative; padding: 0;
+  display: flex; flex-direction: column; min-width: 0; max-width: 100%; position: relative; padding: 0;
+  overflow: hidden; /* contain table scroll; topbar never clips */
 }
 .joola-portal .rep-topbar {
   height: 48px; min-height: 48px; display: flex; align-items: center; justify-content: flex-end;
   padding: 0 28px; border-bottom: 1px solid var(--line); background: #fff; flex-shrink: 0;
+  box-sizing: border-box; width: 100%;
 }
 .joola-portal .rep-user {
   display: inline-flex; flex-direction: column; justify-content: center; gap: 0;
   height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px;
-  line-height: 15px; background: #fff;
+  line-height: 15px; background: #fff; flex-shrink: 0; max-width: 100%;
 }
 .joola-portal .rep-user strong { font-size: 13px; font-weight: 500; line-height: 15px; color: var(--ink); }
 .joola-portal .rep-user span { font-size: 13px; font-weight: 400; line-height: 15px; color: var(--faint); }
-.joola-portal .rep-body { padding: 28px; min-width: 0; position: relative; }
+.joola-portal .rep-body { padding: 28px; min-width: 0; max-width: 100%; position: relative; box-sizing: border-box; }
 .joola-portal .rep-body h1 {
   margin: 0; font-size: 24px; font-weight: 500; line-height: 28px;
   letter-spacing: -0.01em; color: var(--ink);
@@ -702,29 +730,41 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border-top: 1px solid var(--line);
+  max-width: 100%;
 }
 .joola-portal .rep-table {
   width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
+  min-width: 860px;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 }
 .joola-portal .rep-table th {
   text-align: left; font-size: 13px; font-weight: 500; line-height: 16px; color: var(--faint);
-  height: 40px; padding: 0 0 0 0; border-bottom: 1px solid var(--line);
+  height: 40px; padding: 0 12px 0 0; border-bottom: 1px solid var(--line);
   text-transform: none; letter-spacing: 0; white-space: nowrap; vertical-align: middle;
+  background: #fff;
 }
-.joola-portal .rep-table th:nth-child(1) { width: 268px; }
-.joola-portal .rep-table th:nth-child(2) { width: 248px; }
-.joola-portal .rep-table th:nth-child(3) { width: 128px; }
-.joola-portal .rep-table th:nth-child(4) { width: 120px; }
-.joola-portal .rep-table th:nth-child(5) { width: auto; }
+.joola-portal .rep-table th:nth-child(1) { width: 24%; }
+.joola-portal .rep-table th:nth-child(2) { width: 24%; }
+.joola-portal .rep-table th:nth-child(3) { width: 14%; }
+.joola-portal .rep-table th:nth-child(4) { width: 14%; }
+.joola-portal .rep-table th:nth-child(5) {
+  width: 180px; min-width: 180px; padding-right: 4px;
+}
 .joola-portal .rep-table th.actions { text-align: right; }
 .joola-portal .rep-table td {
-  padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle; font-size: 14px; min-height: 80px;
+  padding: 14px 12px 14px 0; border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle; font-size: 14px; min-height: 80px; background: #fff;
 }
-.joola-portal .rep-table td:last-child { overflow: visible; padding-right: 0; }
+.joola-portal .rep-table th:last-child,
+.joola-portal .rep-table td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  padding-right: 4px;
+  box-shadow: -10px 0 12px -10px rgba(26, 26, 26, 0.18);
+}
 .joola-portal .rep-dist strong {
   display: block; font-size: 14px; font-weight: 500; line-height: 18px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -832,4 +872,16 @@
   .joola-portal .rep-back { margin-top: 0; width: 100%; }
   .joola-portal .rep-topbar { padding: 0 16px; }
   .joola-portal .rep-body { padding: 20px 16px 28px; }
+  .joola-portal .rep-table th:last-child,
+  .joola-portal .rep-table td:last-child {
+    /* Keep sticky actions; still scroll the rest of the table */
+    min-width: 168px;
+  }
+}
+
+/* Narrow stage (embedded figure narrower than viewport) — collapse sidebar */
+@container (max-width: 720px) {
+  .joola-portal .rep-shell {
+    grid-template-columns: 1fr;
+  }
 }
