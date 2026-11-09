@@ -10,7 +10,7 @@
 export const copy = {
   brand: {
     wholesale: "Wholesale",
-    accountName: "Engage Pickleball",
+    accountName: "Dick's Sporting Goods",
     buyerName: "Anna Bright",
     repName: "Collin Johns",
     repRole: "Your JOOLA sales rep",
@@ -65,9 +65,9 @@ export const copy = {
       optional: "Optional",
       helper:
         "Add one if your club needs a PO number on the invoice. Leave it blank if you don't use POs.",
-      placeholder: "e.g. ENG-9812",
+      placeholder: "e.g. PO-9812",
       errorFormat:
-        "That PO number doesn't look right. Use letters, numbers and hyphens, like ENG-9812.",
+        "That PO number doesn't look right. Use letters, numbers and hyphens, like PO-9812.",
     },
     shipBy: {
       label: "Preferred ship-by",
@@ -163,14 +163,14 @@ export const copy = {
 
   shipTos: [
     {
-      id: "engage-main",
-      name: "Engage Pickleball",
+      id: "dsg-main",
+      name: "Dick's Sporting Goods",
       site: "Main warehouse",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
-      id: "engage-north",
-      name: "Engage Pickleball",
+      id: "dsg-north",
+      name: "Dick's Sporting Goods",
       site: "North warehouse",
       detail: "2200 Research Park, Round Rock TX",
     },

@@ -26,7 +26,7 @@ function RecommendedInner({ defaultShowing = true }: { defaultShowing?: boolean 
           type="button"
           className="rec-toggle"
           aria-pressed={showing}
-          aria-label={showing ? "Hide recommended" : "Show recommended"}
+          aria-label="Recommended for you"
           onClick={() => setShowing((v) => !v)}
         >
           {showing ? "Showing" : "Hidden"}

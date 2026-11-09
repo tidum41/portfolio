@@ -244,7 +244,7 @@ function DecisionCycleInner({
               <button
                 type="button"
                 className="dc-replay"
-                aria-label="Replay"
+                aria-label="Replay animation"
                 onClick={replay}
               >
                 ↻
@@ -304,12 +304,12 @@ function DecisionCycleInner({
           <Chevron dir="next" />
         </button>
         <p className="dc-version-label" aria-live="polite">
-          Version {round.v} of {decision.rounds.length}
+          {decision.rounds.findIndex((r) => r.v === round.v) + 1} of {decision.rounds.length}
           {!lab && decision.motion ? (
             <button
               type="button"
               className="dc-replay dc-replay--inline"
-              aria-label="Replay"
+              aria-label="Replay animation"
               onClick={replay}
             >
               ↻
@@ -323,7 +323,7 @@ function DecisionCycleInner({
           Version {round.v}
           <span className="dc-round__verdict">
             <Thumb up={round.verdict === "kept"} />
-            {round.verdict === "kept" ? "Kept" : "Dropped"}
+            {round.verdict === "kept" ? "Kept" : "Changed later"}
           </span>
         </p>
         <p className="dc-round__changed">{round.changed}</p>

@@ -14,7 +14,7 @@ const TOTAL_STEPS = 4;
 
 type ShipToId = (typeof copy.shipTos)[number]["id"] | null;
 
-/** Buyer POs in this portal look like ENG-9812 (letters, hyphen, digits). */
+/** Buyer POs in this portal look like PO-9812 (letters, hyphen, digits). */
 const PO_PATTERN = /^[A-Za-z]{2,6}-\d{3,6}$/;
 
 function todayISO() {

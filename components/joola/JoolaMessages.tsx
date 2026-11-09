@@ -60,7 +60,7 @@ function MessagesInner({ replayKey = 0 }: { replayKey?: number }) {
           {showReply ? (
             <div className={`bubble sam${reduced ? "" : " is-entering"}`}>
               <div className="who">
-                <b>Sam Ortiz</b>
+                <b>Collin Johns</b>
                 <span>JOOLA Sales · {JOOLA_MESSAGES.samTime}</span>
               </div>
               {JOOLA_MESSAGES.sam}

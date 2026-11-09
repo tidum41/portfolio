@@ -147,7 +147,7 @@
 
 .joola-stage--wide {
   /* Full-bleed past the 750px case-study measure so the queue table
-     can keep labels and Approve / Reject / Request change on one line. */
+     can keep labels and Approve / Reject on one line. */
   width: min(1200px, calc(100vw - 48px));
   max-width: none;
   margin-left: calc((100% - min(1200px, 100vw - 48px)) / 2);

@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import JoolaStage from "./JoolaStage";
-import { money } from "@/lib/caseStudies/joolaLedger";
+import { money, moneyWhole } from "@/lib/caseStudies/joolaLedger";
 
 type OrderRow = {
   id: string;
@@ -12,6 +12,8 @@ type OrderRow = {
   detail?: string;
   orderTotal: number;
   remaining: number;
+  /** Net 30 credit limit for this account. */
+  creditLimit: number;
   overdue: number;
   overdueInv?: string;
   status: "over" | "ar";
@@ -25,6 +27,7 @@ const SEED: OrderRow[] = [
     buyer: "Riley Cho",
     orderTotal: 18447.52,
     remaining: 12250,
+    creditLimit: 25000,
     overdue: 0,
     status: "over",
   },
@@ -82,6 +85,13 @@ function ApprovalQueueInner() {
     return Math.max(0, modalFor.orderTotal - modalFor.remaining);
   }, [modalFor]);
 
+  const orderEndPct = useMemo(() => {
+    if (!modalFor) return 0;
+    const used = modalFor.creditLimit - modalFor.remaining;
+    const end = ((used + modalFor.orderTotal) / modalFor.creditLimit) * 100;
+    return Math.min(100, Math.max(0, end));
+  }, [modalFor]);
+
   function openApprove(row: OrderRow) {
     setModalFor(row);
     setReason("");
@@ -103,7 +113,7 @@ function ApprovalQueueInner() {
 
   function reject(row: OrderRow) {
     setResultRow(row);
-    setResultReason("Remaining credit does not cover this order.");
+    setResultReason("Remaining credit doesn't cover this order.");
     setRows((prev) => prev.filter((r) => r.id !== row.id));
     setResult("rejected");
   }
@@ -124,7 +134,7 @@ function ApprovalQueueInner() {
           <p className="sub">
             {approved
               ? `${resultRow.distributor} can ship ${resultRow.so}.`
-              : `${resultRow.so} will not ship.`}
+              : `${resultRow.so} won't ship.`}
           </p>
           <div
             className={`status-pill${approved ? " is-ok" : " is-rejected"}`}
@@ -171,7 +181,7 @@ function ApprovalQueueInner() {
       <h1>Approval queue</h1>
       <p className="rep-lede">Orders over the Net 30 credit limit.</p>
       <div className="rep-banner">
-        Buyer sees
+        The buyer sees:
         <span className="pending-pill">Pending approval</span>
         Your rep will need to approve before it ships.
       </div>
@@ -185,7 +195,7 @@ function ApprovalQueueInner() {
               <tr>
                 <th>Distributor</th>
                 <th>Order vs remaining credit</th>
-                <th>Overdue AR</th>
+                <th>Overdue invoices</th>
                 <th>Status</th>
                 <th className="actions">Actions</th>
               </tr>
@@ -215,7 +225,7 @@ function ApprovalQueueInner() {
                     </td>
                     <td>
                       <span className={`status-pill is-${row.status}`}>
-                        {row.status === "over" ? "Over limit" : "Overdue AR"}
+                        {row.status === "over" ? "Over limit" : "Overdue invoices"}
                       </span>
                     </td>
                     <td>
@@ -225,9 +235,6 @@ function ApprovalQueueInner() {
                         </button>
                         <button type="button" className="btn-outline" onClick={() => reject(row)}>
                           Reject
-                        </button>
-                        <button type="button" className="btn-outline">
-                          Request change
                         </button>
                       </div>
                     </td>
@@ -249,20 +256,20 @@ function ApprovalQueueInner() {
           >
             <h2 id={reasonId}>Approve override</h2>
             <p className="ctx">
-              {modalFor.distributor}, {modalFor.so}. This order is over the limit and has no
-              overdue AR.
+              {modalFor.distributor}, {modalFor.so}. This order is over the Net 30 limit. The
+              account has no overdue invoices.
             </p>
             <div className="meter-block">
               <div className="credit-meter-label">
                 <span>Net 30 credit</span>
                 <span className="avail">
-                  {money(modalFor.remaining)} left of $25,000
+                  {money(modalFor.remaining)} left of {moneyWhole(modalFor.creditLimit)}
                 </span>
               </div>
               <div
                 className="credit-bar"
                 data-credit-bar
-                style={{ ["--credit-order-end" as string]: "49%" }}
+                style={{ ["--credit-order-end" as string]: `${orderEndPct}%` }}
               />
               <div className="over-line">
                 Order {money(modalFor.orderTotal)}. Over by {money(overBy)}.
@@ -279,7 +286,7 @@ function ApprovalQueueInner() {
             />
             {tried && !canApprove ? (
               <div className="field-error" id={errorId} role="alert">
-                Required before the override can be saved.
+                Enter a reason to approve this override.
               </div>
             ) : null}
             <div className="rep-modal-actions">

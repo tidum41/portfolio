@@ -95,7 +95,7 @@ export function RecStage({ v }: { v: number }) {
             <h3>Recommended for you</h3>
             {subtitle && !hiddenDesc ? <p className="rec-desc">{subtitle}</p> : null}
             {v < 16 && v >= 8 && !subtitle ? (
-              <p className="rec-desc">A curated aside under the category chips.</p>
+              <p className="rec-desc">Recommendations sit under the category chips.</p>
             ) : null}
           </div>
           {showToggle ? (
@@ -136,7 +136,7 @@ export function ProductPageStage({ v }: { v: number }) {
           <div style={{ fontSize: 22, fontWeight: 500, marginTop: 8 }}>Perseus Pro V</div>
           <div style={{ fontSize: 30, fontWeight: 500, marginTop: 16 }}>$149.98</div>
           <p style={{ marginTop: 12, fontSize: 13, color: "var(--muted)", maxWidth: 360 }}>
-            Retired. This fixed-price distributor does not need a tiered product page.
+            Retired. This fixed-price distributor doesn't need a tiered product page.
           </p>
           <button type="button" className="btn-primary" disabled style={{ marginTop: 16 }}>
             Add to cart
@@ -173,7 +173,11 @@ export function ProductPageStage({ v }: { v: number }) {
 
 export function IdentityStage({ v }: { v: number }) {
   const retailer =
-    v >= 22 ? "Engage Pickleball" : v >= 21 ? "Holabird Sports" : v >= 20 ? "Pickleball Central" : "Pickleball Central";
+    v >= 22
+      ? "Dick's Sporting Goods"
+      : v >= 21
+        ? "Courtside Supply"
+        : "Baseline Pickleball Co.";
   const person =
     v >= 13 ? "Anna Bright · Buyer" : v >= 10 ? "Anna W." : v >= 6 ? "Priya M." : null;
   const showTag = v >= 11 && v < 12;
@@ -491,7 +495,7 @@ function MessagesReply({ replayKey }: { replayKey: number }) {
   return (
     <div className="bubble sam is-entering">
       <div className="who">
-        <b>Sam Ortiz</b>
+        <b>Collin Johns</b>
         <span>JOOLA Sales · {JOOLA_MESSAGES.samTime}</span>
       </div>
       {JOOLA_MESSAGES.sam}

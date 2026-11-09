@@ -1,5 +1,5 @@
 /**
- * JOOLA B2B case study — copy from copy-v3.md (Nov 9, 2026).
+ * JOOLA B2B case study — copy from copy-v4 (Nov 9, 2026).
  */
 
 export const JOOLA_HERO_SRC = "/images/joola/hero-ruth-2.png";

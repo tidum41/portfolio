@@ -178,4 +178,4 @@ export const JOOLA_MESSAGES = {
 } as const;
 
 export const JOOLA_REP_HOLD =
-  "Your rep will need to approve before it ships." as const;
+  "This order is over your remaining Net 30 credit. Your JOOLA rep needs to approve it before it ships." as const;
