@@ -58,7 +58,13 @@ function QuickOrderLineInner({
   const startQty =
     demoState === "moq" ? 0 : demoState === "big-qty" ? 1000000 : initialQty;
   const [qty, setQty] = useState(startQty);
-  const [query, setQuery] = useState(demoState === "long-name" ? "Perseus" : "Perseus");
+  const [query, setQuery] = useState(
+    demoState === "long-name"
+      ? "Perseus"
+      : demoState === "moq"
+        ? product.name
+        : product.name.split(" ")[0],
+  );
   const errorId = useId();
   const oos = demoState === "oos";
   const atZero = !oos && qty === 0;
@@ -248,6 +254,7 @@ export default function JoolaQuickOrderLine({
         key={`${demoState}-${mobile ? "m" : "d"}`}
         mobile={mobile}
         demoState={demoState}
+        productId={demoState === "moq" ? "hc40" : "perseus"}
       />
     </JoolaStage>
   );

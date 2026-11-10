@@ -181,7 +181,6 @@ export const JOOLA_PEOPLE = {
     "Kevin Love",
     "Tom Brady",
     "Patrick Mahomes",
-    "Drew Brees",
   ],
 } as const;
 

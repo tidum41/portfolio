@@ -100,7 +100,7 @@ export const JOOLA_CYCLES: CycleDecision[] = [
       { v: 3, changed: "Quantities become real inputs with live tier repricing and an MOQ error. A fake \"2 results in 0.4ms\" line is removed", verdict: "kept", note: "The math is real, so the bugs were findable." },
       { v: 4, changed: "Rows group by category with small labels. Tier hints go two-tone", verdict: "kept", note: "You can check \"did I order enough balls\" at a glance." },
       { v: 6, changed: "The footer total goes from 24 to 38px, and line totals to 17px", verdict: "kept", note: "The total is the answer the buyer is checking." },
-      { v: 9, changed: "Low and out-of-stock rows. Out of stock gets a disabled quantity and a \"—\" total", verdict: "kept", note: "Stock should change what you can order." },
+      { v: 9, changed: "Low and out-of-stock rows. Out of stock gets a disabled quantity and a muted $0.00 total", verdict: "kept", note: "Stock should change what you can order." },
       { v: 12, changed: "Every total is computed from the real rows, and the header pill too", verdict: "kept", note: "One source of truth fixed a real cart bug." },
       { v: 15, changed: "A black \"Search SKU\" button before Bulk upload, with the example SKU 600558", verdict: "dropped", note: "The field could do the job alone." },
       { v: 16, changed: "The button is gone, and the field is the search, with \"search by name, category, sku\"", verdict: "kept", note: "No second button. The lowercase list still read like a tag." },

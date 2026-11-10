@@ -54,7 +54,7 @@ const SEED: OrderRow[] = [
     distributor: "Courtside Supply",
     so: "SO-48312",
     buyer: "Sam Rivera",
-    detail: "Secondary: Tom Brady",
+    detail: "Secondary: Patrick Mahomes",
     orderTotal: 7125,
     remaining: 5200,
     creditLimit: LIMIT,

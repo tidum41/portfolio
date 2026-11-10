@@ -192,7 +192,7 @@
 }
 
 .joola-stage--wide .joola-stage__footer {
-  padding: 12px 16px 16px;
+  padding: 12px 28px 16px;
 }
 
 @media (max-width: 900px) {
@@ -297,7 +297,7 @@
 }
 .joola-portal .joola-empty {
   margin-top: 12px; padding: 28px 16px; text-align: center;
-  color: var(--faint); font-size: 14px; line-height: 1.45;
+  color: var(--muted); font-size: 14px; line-height: 1.45;
   border: 1px dashed var(--line); border-radius: 12px; background: var(--band);
   min-height: 88px; display: flex; align-items: center; justify-content: center;
 }
@@ -339,7 +339,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
 }
 .joola-portal .account-meta .role {
-  font-size: var(--text-meta); font-weight: 400; line-height: 12px; color: var(--faint);
+  font-size: var(--text-meta); font-weight: 400; line-height: 12px; color: var(--muted);
 }
 
 /* ── Search row ───────────────────────────────────────────────────── */
@@ -370,7 +370,7 @@
   --col-price: 120px;
   --col-qty: 172px;
   --col-total: 120px;
-  padding: 4px 0;
+  padding: 0;
   background: #fff;
 }
 .joola-portal .qo-line__table { width: 100%; border-top: 1px solid var(--line); }
@@ -387,7 +387,7 @@
   border-bottom: 1px solid var(--line);
   font-size: 12px;
   font-weight: 500;
-  color: var(--faint);
+  color: var(--muted);
 }
 .joola-portal .qo-line__head .end,
 .joola-portal .qo-line__row .end { text-align: right; }
@@ -430,7 +430,7 @@
   color: var(--ink);
 }
 .joola-portal .line-total.is-muted {
-  color: var(--faint);
+  color: var(--muted);
   font-weight: 400;
 }
 .joola-portal .qo-add-row {
@@ -490,7 +490,7 @@
 .joola-portal .qo-line.is-mobile .qo-line__row > :nth-child(5) { grid-area: total; text-align: left; font-size: 22px; }
 
 /* ── Saved order (prototype: padding 16×20, meta 13) ──────────────── */
-.joola-portal .tpl-demo { padding: 4px 0; }
+.joola-portal .tpl-demo { padding: 0; }
 .joola-portal .tpl-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
 .joola-portal .tpl-head {
   width: 100%; display: grid; grid-template-columns: 1fr auto 20px; align-items: center; gap: 24px;
@@ -527,7 +527,7 @@
 .joola-portal .tpl-amt { font-size: 14px; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ── Recommended (prototype joola.com stack + category chips) ─────── */
-.joola-portal .rec-shell { padding: 4px 0; }
+.joola-portal .rec-shell { padding: 0; }
 .joola-portal .cat-chips {
   display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 32px;
 }
@@ -560,8 +560,12 @@
 .joola-portal .rec-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .joola-portal .rec-rail-slot { margin-top: 12px; min-height: 280px; }
 .joola-portal .rec-demo.is-hidden .rec-desc { visibility: hidden; }
-.joola-portal .rec-demo.is-hidden .rec-rail-slot { display: none; }
-.joola-portal .rec-shell.is-hidden .rec-rail-slot { display: none; }
+/* Keep the rail slot reserved so Showing/Hidden does not shift layout */
+.joola-portal .rec-demo.is-hidden .rec-rail-slot,
+.joola-portal .rec-shell.is-hidden .rec-rail-slot {
+  visibility: hidden;
+  pointer-events: none;
+}
 .joola-portal .rec-rail {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 32px;
 }
@@ -593,7 +597,7 @@
 
 /* ── Credit meter (stacked label + amount) ────────────────────────── */
 .joola-portal .credit-demo {
-  padding: 4px 0; max-width: 430px; min-height: 220px;
+  padding: 0; max-width: 430px; min-height: 220px;
 }
 .joola-portal .credit-meter { position: relative; margin-top: 0; }
 .joola-portal .credit-meter-label {
@@ -673,13 +677,16 @@
   align-self: flex-end; background: var(--ink); color: #fff;
   border-radius: 16px 16px 4px 16px;
 }
-.joola-portal .bubble.anna .who span { color: rgba(255,255,255,0.65); }
+.joola-portal .bubble.anna .who span { color: rgba(255,255,255,0.82); }
 .joola-portal .bubble.sam {
   align-self: flex-start; width: 100%; background: var(--band);
   border-radius: 16px 16px 16px 4px;
 }
 .joola-portal .bubble.sam[data-visible="false"] { visibility: hidden; }
-.joola-portal .bubble .sent-check { font-size: 11px; opacity: 0.75; margin-left: 4px; }
+.joola-portal .bubble .sent-check {
+  font-size: 11px; margin-left: 4px; font-weight: 500;
+}
+.joola-portal .bubble.anna .sent-check { color: rgba(255,255,255,0.82); }
 .joola-portal .bubble.is-entering {
   animation: joola-bubble-in var(--motion) var(--ease) both;
 }
@@ -743,7 +750,7 @@
   line-height: 15px; background: #fff; flex-shrink: 0; max-width: 100%;
 }
 .joola-portal .rep-user strong { font-size: 13px; font-weight: 500; line-height: 15px; color: var(--ink); }
-.joola-portal .rep-user span { font-size: 13px; font-weight: 400; line-height: 15px; color: var(--faint); }
+.joola-portal .rep-user span { font-size: 13px; font-weight: 400; line-height: 15px; color: var(--muted); }
 .joola-portal .rep-body { padding: 28px; min-width: 0; max-width: 100%; position: relative; box-sizing: border-box; }
 .joola-portal .rep-body h1 {
   margin: 0; font-size: 24px; font-weight: 500; line-height: 28px;
@@ -772,7 +779,7 @@
   table-layout: fixed;
 }
 .joola-portal .rep-table th {
-  text-align: left; font-size: 13px; font-weight: 500; line-height: 16px; color: var(--faint);
+  text-align: left; font-size: 13px; font-weight: 500; line-height: 16px; color: var(--muted);
   height: 40px; padding: 0 12px 0 0; border-bottom: 1px solid var(--line);
   text-transform: none; letter-spacing: 0; white-space: nowrap; vertical-align: middle;
   background: #fff;
@@ -883,7 +890,7 @@
 }
 .joola-portal .btn-outline:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .joola-portal .rep-empty {
-  margin-top: 16px; padding: 48px 12px; text-align: center; color: var(--faint); font-size: 14px;
+  margin-top: 16px; padding: 48px 12px; text-align: center; color: var(--muted); font-size: 14px;
   border-top: 1px solid var(--line); min-height: 160px;
   display: flex; align-items: center; justify-content: center;
 }
