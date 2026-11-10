@@ -220,10 +220,12 @@ runTest("5.1: PS3Silk.tsx renders canvas with id='ps3-silk-canvas'", () => {
 // ---------------------------------------------------------
 console.log("\n[Group 6] BruinLease Containment Invariant");
 
-runTest("6.1: PersistentWorkShell.tsx preserves project-bruinlease contain style", () => {
+runTest("6.1: PersistentWorkShell.tsx uses native BruinLease 6:5 with no letterbox fill", () => {
   const shellSrc = fs.readFileSync(path.join(repoRoot, "components/PersistentWorkShell.tsx"), "utf8");
-  assert(shellSrc.includes('p._id === "project-bruinlease" ? "contain" : undefined'), "Missing BruinLease contain rule");
-  assert(shellSrc.includes('p._id === "project-bruinlease" ? "#b3cde3" : undefined'), "Missing BruinLease background color rule");
+  assert(shellSrc.includes('"project-bruinlease": { css: "6 / 5"'), "Missing BruinLease native 6:5 aspect");
+  assert(shellSrc.includes('objectFit="contain"'), "Grid videos should use object-fit contain");
+  assert(!shellSrc.includes("#aac5e0"), "BruinLease letterbox fill should be gone");
+  assert(!shellSrc.includes("#b3cde3"), "Legacy BruinLease letterbox fill should be gone");
 });
 
 console.log("\n=== TEST SUMMARY ===");

@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { Fragment, memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, memo, useEffect, useLayoutEffect as _useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useGridFirstLoadActive } from "@/components/GridFirstLoad";
 import { IntroOrchestrator } from "@/components/IntroOrchestrator";
 import HeroTextWithRabbit from "@/components/HeroTextWithRabbit";
@@ -30,8 +30,28 @@ import DialogueCardTap, {
   DIALOGUE_TAP_LABEL,
 } from "@/components/DialogueCardTap";
 
-/** One media ratio for every grid tile so the two columns stay in step. */
-const GRID_MEDIA_ASPECT = "4 / 3";
+/** Native media box for each home-grid card (width / height). */
+const GRID_MEDIA_ASPECTS: Record<string, { css: string; ratio: number }> = {
+  "project-bruinlease": { css: "6 / 5", ratio: 6 / 5 },
+  "project-joola-b2b": { css: "4 / 3", ratio: 4 / 3 },
+  [DIALOGUE_PROJECT_ID]: { css: "4 / 3", ratio: 4 / 3 },
+  "project-sviz": { css: "1572 / 1080", ratio: 1572 / 1080 },
+  "project-todolist": { css: "1362 / 1080", ratio: 1362 / 1080 },
+  habit: { css: "4 / 3", ratio: 4 / 3 },
+};
+const FALLBACK_ASPECT = { css: "4 / 3", ratio: 4 / 3 };
+
+function gridAspect(id?: string | null) {
+  return (id && GRID_MEDIA_ASPECTS[id]) || FALLBACK_ASPECT;
+}
+
+function gridCardFlexStyle(
+  id: string | undefined,
+  extra?: CSSProperties,
+): CSSProperties {
+  const { ratio } = gridAspect(id);
+  return { flex: `${ratio} 1 0`, minWidth: 0, ...extra };
+}
 
 /** Cheap Dialogue tap cover: token fill matching DialogueCardMedia ground.
  *  Avoids mounting a second DialogueCardMedia (hover/TBT cost). Static
@@ -43,7 +63,7 @@ const DIALOGUE_BLUR_LAYER = (
       style={{
         borderRadius: "var(--radius-card)",
         overflow: "hidden",
-        aspectRatio: GRID_MEDIA_ASPECT,
+        aspectRatio: gridAspect(DIALOGUE_PROJECT_ID).css,
         position: "relative",
         background: "var(--color-dialogue-ground, #F6F5F2)",
       }}
@@ -681,11 +701,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               aria-label="Open Habit tracker focused on offering less"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={{ gap: 6, cursor: "pointer", order: HABIT_RANK }}
+              style={gridCardFlexStyle("habit", { gap: 6, cursor: "pointer" })}
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">
-                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: "4 / 3" }}>
+                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-phone-bg)", position: "relative", aspectRatio: gridAspect("habit").css }}>
                     <div style={{ position: "absolute", top: 5, right: 5, zIndex: 10, pointerEvents: "none" }}>
                       <InteractiveBadge />
                     </div>
@@ -704,6 +724,88 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               </ProjectCardLift>
             </EntranceItem>
   );
+
+  const renderGridCard = (p: SanityProject | null, rank: number) => {
+    if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
+    const aspect = gridAspect(p._id).css;
+    if (p._id === DIALOGUE_PROJECT_ID) {
+      return (
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={gridCardFlexStyle(p._id, { gap: 6 })}>
+          <ProjectCardLift style={{ gap: 6 }}>
+            <DialogueCardTap
+              media={
+                <div className="project-media">
+                  <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: aspect, position: "relative" }}>
+                    <DialogueCardMedia />
+                  </div>
+                </div>
+              }
+              blurLayer={DIALOGUE_BLUR_LAYER}
+              label={<CardLabel title={p.title} label={p.label} />}
+            />
+          </ProjectCardLift>
+        </EntranceItem>
+      );
+    }
+    if (p.mediaType === "video" && p.muxPlaybackId) {
+      return (
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={gridCardFlexStyle(p._id)}>
+          {hasEverBeenActive && (
+            <MuxAutoplayCard
+              playbackId={p.muxPlaybackId}
+              href={p._id === "project-todolist" ? undefined : p.href}
+              onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
+              title={p.title}
+              label={p.label}
+              aspectRatio={aspect}
+              objectFit="contain"
+              active={heavyMediaLive}
+              playing={mediaPlaying}
+              mountOrder={rank}
+            />
+          )}
+        </EntranceItem>
+      );
+    }
+    if (p.image?.asset?.url && p.href) {
+      return (
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={gridCardFlexStyle(p._id, { gap: 8 })}>
+          <ProjectCardLift style={{ gap: 8 }}>
+            <Link
+              href={p.href}
+              prefetch={false}
+              style={CARD_LINK_STYLE}
+              onMouseEnter={() => warmProjectNav(p.href)}
+              onFocus={() => warmProjectNav(p.href)}
+              onPointerDown={() => warmProjectNav(p.href)}
+              onClick={() => commitProjectNav(p.href)}
+            >
+              <div className="project-media">
+                <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: aspect, position: "relative" }}>
+                  <Image
+                    src={p.image.asset.url}
+                    alt={p.title}
+                    fill
+                    className="project-image"
+                    style={{ objectFit: "contain" }}
+                    sizes="(max-width: 767px) calc(100vw - 48px), 55vw"
+                  />
+                </div>
+              </div>
+              <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
+            </Link>
+          </ProjectCardLift>
+        </EntranceItem>
+      );
+    }
+    return null;
+  };
+
+  const gridRows: { p: SanityProject | null; rank: number }[][] = [];
+  for (let i = 0; i < gridSlots.length; i += 2) {
+    const row = gridSlots.slice(i, i + 2).map((p, j) => ({ p, rank: i + j }));
+    gridRows.push(row);
+  }
 
   return (
     <>
@@ -747,155 +849,11 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           blurb; the meta description + hero above should be the only candidates. */}
       <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <CardFocusGrid visible={visible}>
-          {/* ── Left column ── */}
-          <div className="portfolio-grid-col">
-            {gridSlots
-              .map((p, rank) => ({ p, rank }))
-              .filter(({ rank }) => rank % 2 === 0)
-              .map(({ p, rank }) => {
-                if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
-                if (p._id === DIALOGUE_PROJECT_ID) return (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
-                    <ProjectCardLift style={{ gap: 6 }}>
-                      <DialogueCardTap
-                        media={
-                          <div className="project-media">
-                            <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                              <DialogueCardMedia />
-                            </div>
-                          </div>
-                        }
-                        blurLayer={DIALOGUE_BLUR_LAYER}
-                        label={<CardLabel title={p.title} label={p.label} />}
-                      />
-                    </ProjectCardLift>
-                  </EntranceItem>
-                );
-                return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
-                    {hasEverBeenActive && (
-                      <MuxAutoplayCard
-                        playbackId={p.muxPlaybackId}
-                        href={p._id === "project-todolist" ? undefined : p.href}
-                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
-                        title={p.title}
-                        label={p.label}
-                        aspectRatio={GRID_MEDIA_ASPECT}
-                        objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
-                        active={heavyMediaLive}
-                        playing={mediaPlaying}
-                        mountOrder={rank}
-                      />
-                    )}
-                  </EntranceItem>
-                ) : p.image?.asset?.url && p.href ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
-                    <ProjectCardLift style={{ gap: 8 }}>
-                      <Link
-                        href={p.href}
-                        prefetch={false}
-                        style={CARD_LINK_STYLE}
-                        onMouseEnter={() => warmProjectNav(p.href)}
-                        onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
-                      >
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                            <Image
-                              src={p.image.asset.url}
-                              alt={p.title}
-                              fill
-                              className="project-image"
-                              style={{ objectFit: "cover" }}
-                              sizes="(max-width: 767px) calc(100vw - 48px), 50vw"
-                            />
-                          </div>
-                        </div>
-                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
-                      </Link>
-                    </ProjectCardLift>
-                  </EntranceItem>
-                ) : null;
-              })}
-
-          </div>
-
-          {/* ── Right column ── */}
-          <div className="portfolio-grid-col">
-            {gridSlots
-              .map((p, rank) => ({ p, rank }))
-              .filter(({ rank }) => rank % 2 === 1)
-              .map(({ p, rank }) => {
-                if (p === null) return <Fragment key="habit">{habitCard}</Fragment>;
-                if (p._id === DIALOGUE_PROJECT_ID) return (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={{ gap: 6, order: rank }}>
-                    <ProjectCardLift style={{ gap: 6 }}>
-                      <DialogueCardTap
-                        media={
-                          <div className="project-media">
-                            <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                              <DialogueCardMedia />
-                            </div>
-                          </div>
-                        }
-                        blurLayer={DIALOGUE_BLUR_LAYER}
-                        label={<CardLabel title={p.title} label={p.label} />}
-                      />
-                    </ProjectCardLift>
-                  </EntranceItem>
-                );
-                return p.mediaType === "video" && p.muxPlaybackId ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={{ order: rank }}>
-                    {hasEverBeenActive && (
-                      <MuxAutoplayCard
-                        playbackId={p.muxPlaybackId}
-                        href={p._id === "project-todolist" ? undefined : p.href}
-                        onOpen={p._id === "project-todolist" ? () => openPopupHandler("allinone") : undefined}
-                        title={p.title}
-                        label={p.label}
-                        aspectRatio={GRID_MEDIA_ASPECT}
-                        objectFit={p._id === "project-bruinlease" ? "contain" : undefined}
-                        background={p._id === "project-bruinlease" ? "#aac5e0" : undefined}
-                        active={heavyMediaLive}
-                        playing={mediaPlaying}
-                        mountOrder={rank}
-                      />
-                    )}
-                  </EntranceItem>
-                ) : p.image?.asset?.url && p.href ? (
-                  <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={{ gap: 8, order: rank }}>
-                    <ProjectCardLift style={{ gap: 8 }}>
-                      <Link
-                        href={p.href}
-                        prefetch={false}
-                        style={CARD_LINK_STYLE}
-                        onMouseEnter={() => warmProjectNav(p.href)}
-                        onFocus={() => warmProjectNav(p.href)}
-                        onPointerDown={() => warmProjectNav(p.href)}
-                        onClick={() => commitProjectNav(p.href)}
-                      >
-                        <div className="project-media">
-                          <div className="project-img-wrap" style={{ borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--color-placeholder)", aspectRatio: GRID_MEDIA_ASPECT, position: "relative" }}>
-                            <Image
-                              src={p.image.asset.url}
-                              alt={p.title}
-                              fill
-                              className="project-image"
-                              style={{ objectFit: "cover" }}
-                              sizes="(max-width: 767px) calc(100vw - 48px), 50vw"
-                            />
-                          </div>
-                        </div>
-                        <CardLabel title={p.title} label={p.label} external={isExternalHref(p.href)} />
-                      </Link>
-                    </ProjectCardLift>
-                  </EntranceItem>
-                ) : null;
-              })}
-
-          </div>
+          {gridRows.map((row, rowIndex) => (
+            <div className="portfolio-grid-row" key={rowIndex}>
+              {row.map(({ p, rank }) => renderGridCard(p, rank))}
+            </div>
+          ))}
         </CardFocusGrid>
         <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_TAP_LABEL}</span>
 
