@@ -201,7 +201,7 @@ const JOOLA_B2B_PROJECT: SanityProject = {
   href: "/joola",
   mediaType: "video",
   muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
-  // Native film is 4:3; matches CD/habit tile rhythm and avoids cover crop.
+  // Native film is 4:3 — pinned here; the home grid reads the same ratio from GRID_MEDIA_ASPECTS.
   aspectRatio: "4 / 3",
   order: 0,
   featured: true,

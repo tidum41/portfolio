@@ -45,10 +45,10 @@ export default function CardFocusGrid({
         paddingTop: "var(--space-5)",
         /* 120px above the footer on home: 72 here + the wrap's 48. */
         paddingBottom: 72,
-        display: "grid",
-        gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
-        gap: "var(--grid-gutter)",
-        alignItems: "start",
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--card-gap)",
+        alignItems: "stretch",
       }}
     >
       {children}

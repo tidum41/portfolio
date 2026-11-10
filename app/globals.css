@@ -2108,36 +2108,39 @@ html[data-theme="dark"] .project-image {
    single constant padding value, so it never has to "catch up" with
    the grid gutter at some in-between width) */
 
-/* ─── Portfolio grid columns — flex stacks on desktop; flattened on mobile
-       via display:contents so card order can be controlled independently.
-       Must live in CSS (not inline display:flex) so the mobile override wins. */
-.portfolio-grid-col {
+/* ─── Portfolio grid — justified rows: each row shares one height, card
+       widths follow native media ratios (flex-grow = width/height).
+       Vertical gap is --card-gap (48); in-row gutter is --grid-gutter (24).
+       Must live in CSS so the mobile override wins over any inline display. */
+.portfolio-grid-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--card-gap);
+  flex-direction: row;
+  gap: var(--grid-gutter);
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+.portfolio-grid-row > .portfolio-grid-card {
   min-width: 0;
 }
 
-/* Empty video shells (pre-activation) must not create phantom rows —
+/* Empty video shells (pre-activation) must not create phantom row items —
    that was the uneven 71–77 vs 2–8px alternating gap at 390. */
 .portfolio-grid-card:empty {
   display: none;
 }
 
-/* ─── Portfolio grid — stays 2-col through tablet; only collapses to
-       1-col at the mobile breakpoint (matches the .cs-layout mobile
-       cutoff and CaseStudyTOC's isMobile check) ── */
+/* ─── Portfolio grid — stays 2-up through tablet; only stacks at the
+       mobile breakpoint (matches the .cs-layout mobile cutoff) ── */
 @media (max-width: 767px) {
-  .portfolio-grid {
-    grid-template-columns: 1fr !important;
-    /* One row-gap after columns flatten (display:contents drops flex gap). */
-    row-gap: var(--card-gap) !important;
-    column-gap: var(--grid-gutter) !important;
+  .portfolio-grid-row {
+    flex-direction: column;
+    gap: var(--card-gap);
   }
-  /* Flatten the two DOM columns so cards can be reordered as one stack
-     without changing the desktop 2-column structure. `order` is set in
-     JSX from Sanity index (plus CD/habit trailing slots). */
-  .portfolio-grid-col { display: contents; }
+  .portfolio-grid-row > .portfolio-grid-card {
+    flex: none !important;
+    width: 100%;
+  }
 }
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────
