@@ -33,6 +33,14 @@ import {
   SEGMENT_ADDRESS,
   SENTIMENT_LINE,
 } from "@/lib/dialogue/product/sampleData";
+import {
+  HearthsideCountSplitFridayPreview,
+  HearthsidePreferenceBadgesPreview,
+  HearthsideRankedAfterCheckoutPreview,
+  HearthsideSegmentComparePreview,
+  HearthsideStudyDefaultChipsPreview,
+  HearthsideThinEarlySignalPreview,
+} from "@/components/dev/canvas/hearthsidePreviews";
 
 /**
  * Typed registry for the Dialogue component canvas.
@@ -365,4 +373,58 @@ export const DIALOGUE_CANVAS_REGISTRY: CanvasRegistryEntry[] = [
     x: 1424, y: 3974, width: 96, height: 52,
   },
   { id: "rachel-frame", name: "Rachel frame", Component: RachelFrameSample, x: 848, y: 4220, width: 512, height: 194 },
+  {
+    id: "hearthside-study-default-chips",
+    name: "Study chat · default chips",
+    Component: HearthsideStudyDefaultChipsPreview,
+    x: 2800,
+    y: 0,
+    width: 448,
+    height: 636,
+  },
+  {
+    id: "hearthside-count-split-friday",
+    name: "Count split · Friday reading",
+    Component: HearthsideCountSplitFridayPreview,
+    x: 2800,
+    y: 680,
+    width: 448,
+    height: 268,
+  },
+  {
+    id: "hearthside-segment-new-repeat",
+    name: "Segment compare · new vs repeat",
+    Component: HearthsideSegmentComparePreview,
+    x: 2800,
+    y: 980,
+    width: 448,
+    height: 220,
+  },
+  {
+    id: "hearthside-ranked-after-checkout",
+    name: "Ranked themes · after checkout",
+    Component: HearthsideRankedAfterCheckoutPreview,
+    x: 2800,
+    y: 1240,
+    width: 448,
+    height: 300,
+  },
+  {
+    id: "hearthside-preference-badges",
+    name: "Preference rows · delivery badges",
+    Component: HearthsidePreferenceBadgesPreview,
+    x: 3300,
+    y: 0,
+    width: 448,
+    height: 240,
+  },
+  {
+    id: "hearthside-thin-early-signal",
+    name: "Thin flag · early signal",
+    Component: HearthsideThinEarlySignalPreview,
+    x: 3300,
+    y: 280,
+    width: 448,
+    height: 560,
+  },
 ];

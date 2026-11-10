@@ -7,6 +7,12 @@
       "skillPath": "skills/animation-vocabulary/SKILL.md",
       "computedHash": "39319fc9a33c15be08666b3685f58666f042ff36bb902b7814c0834a5ba99df4"
     },
+    "create-canvas": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/create-canvas/SKILL.md",
+      "computedHash": "a073d5a7584e2a6e5dec8813073d0cb24077b4e3a075825a0016b235efa2a1a5"
+    },
     "emil-design-eng": {
       "source": "emilkowalski/skill",
       "sourceType": "github",
