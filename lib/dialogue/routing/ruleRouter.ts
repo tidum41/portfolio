@@ -15,6 +15,7 @@ import {
   isThinTopic,
   topicSupportCount,
 } from "@/lib/dialogue/routing/sampleDataset";
+import { matchPlaygroundTemplate } from "@/lib/dialogue/routing/playground";
 import type { RoutingResult } from "@/lib/dialogue/routing/schema";
 
 export type QueryType =
@@ -57,6 +58,7 @@ export function inferQueryType(question: string): QueryType {
   if (/\b(quotes?|said|say|verbatim|evidence|exact words|transcript)\b/.test(q)) {
     return "quote_evidence";
   }
+  if (/\bsame way\b/.test(q) || /\bnew and repeat\b/.test(q)) return "segment_comparison";
   if (
     /\b(vs|versus|compared?|between|by (device|segment|group|type)|mobile|desktop|first[- ]?time|repeat)\b/.test(
       q,
@@ -64,6 +66,9 @@ export function inferQueryType(question: string): QueryType {
   ) {
     return "segment_comparison";
   }
+  if (/\bmiss(ed)?\b/.test(q) && /\bdelivery\b/.test(q)) return "open_ended";
+  if (/\bask\b/.test(q) && /\bcheckout\b/.test(q)) return "open_ended";
+  if (/\bbadge\b/.test(q) && /\bconfidence\b/.test(q)) return "open_ended";
   if (
     /\b(how many|how do|what share|what (percent|percentage)|count|split)\b/.test(q) ||
     /\bhow (do|did|does)\b.*\bread\b/.test(q) ||
@@ -143,17 +148,20 @@ function pickWithFallback(
 }
 
 export function routeByRules(question: string): RoutingResult {
+  const playgroundTemplate = matchPlaygroundTemplate(question);
   const topic = inferTopic(question);
   const queryType = inferQueryType(question);
   const compareBy = inferCompareBy(question);
-  const preferred = preferredTemplate(queryType);
-  const template = pickWithFallback(preferred, topic, queryType);
+  const preferred = playgroundTemplate ?? preferredTemplate(queryType);
+  const template = playgroundTemplate ?? pickWithFallback(preferred, topic, queryType);
   const n = topicSupportCount(topic);
   const topicLabel = TOPICS[topic].label;
 
   const labels: Record<RoutingTemplate, string> = {
     count_split: "Count split",
     segment_comparison: "Segment comparison",
+    ranked_list: "Ranked",
+    badge_list: "Badge comparison",
     quote_list: "Quote list",
     clip_list: "Clip list",
     thin_data: "Thin data",

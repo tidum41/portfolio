@@ -303,6 +303,12 @@ export type ThinResolved = {
   group: string;
   quotes: { name: string; time: string; quote: string }[];
   planPrompt: string;
+  whyChart?: string;
+  repeatSplit?: {
+    finding: string;
+    total: number;
+    groups: { id: string; label: string; value: number; focal?: boolean }[];
+  };
 };
 
 export function resolveThin(topic: RoutingTopic): ThinResolved {

@@ -9,6 +9,8 @@ export const THIN_DATA_MIN_PARTICIPANTS = 3;
 export const ROUTING_TEMPLATES = [
   "count_split",
   "segment_comparison",
+  "ranked_list",
+  "badge_list",
   "quote_list",
   "clip_list",
   "thin_data",

@@ -4,6 +4,10 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 ## Routing demo (Nov 4 2026)
 
+### Playground r2 option A (Nov 9 2026)
+
+**Decision.** The `/dialogue` routing block follows Paper Playground r2 option A: a 640×672 well with a full 448×608 study chat, reset and routing line on the container, five preset + chips, and illustrative Hearthside counts only. Charts use the r3 bar system with one cherry focal per card and no teal in the demo. Thin data keeps the flag, follow-up chips and the 88 of 125 split. **Tried.** Leaving the old four chips and streaming reason in the product chrome. **Why.** Mudit approved option A on Paper and asked for code parity on the preview branch. **Revisit.** If the well height fights long threads, raise only the scroll region, not the outer well.
+
 ### Round 2 interactions: cursor pill, one study base, clips stay clips
 
 **Decision.** Hovering a bar shows the percent in the existing tooltip chip (`.dp-hero-tooltip`), positioned from the pointer. Legend counts stay put. Press and selected states use the ink and warm tokens already on the chips. The Friday answer uses the case study split, 225 of 300, and the named rows are a quoted extract of that study. A comparison names the sum of its bars. Returns lines say return. A clip question stays `clip_list` when those people have timestamps, including damaged packaging. The composer clears on send. The reason streams, then the card mounts. Enter timing, pill chrome, layout, and the clip still are token-level placeholders so a later visual pass can restyle them. **Tried.** Leaving the legend to swap to a percent, and treating the 24 named people as a second study. **Why.** The audit asked the demo to mimic the product's hover, press and clip, and the 24 versus 300 bases were reading as two studies. **Revisit.** If a cursor pill covers the segment on a phone, pin it to the segment's top edge.

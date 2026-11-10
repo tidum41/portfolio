@@ -4,6 +4,7 @@
  */
 
 import { STUDY_GOAL, THIN_DATA_MIN_PARTICIPANTS } from "@/lib/dialogue/routing/constants";
+import { matchPlaygroundTemplate } from "@/lib/dialogue/routing/playground";
 import {
   PARTICIPANTS,
   TOPICS,
@@ -15,6 +16,8 @@ import type { RoutingResult } from "@/lib/dialogue/routing/schema";
 const TEMPLATE_LABEL: Record<RoutingResult["template"], string> = {
   count_split: "count split",
   segment_comparison: "segment comparison",
+  ranked_list: "ranked",
+  badge_list: "badge comparison",
   quote_list: "quote list",
   clip_list: "clip list",
   thin_data: "thin data",
@@ -37,6 +40,28 @@ export type RoutingExplain = {
   supportCount: number;
   pickedLine: string;
 };
+
+export function formatRoutingLine(
+  path: "model" | "rules",
+  question: string,
+  result: RoutingResult,
+): string {
+  const playground = matchPlaygroundTemplate(question);
+  const source = path === "model" ? "Model" : "Rules";
+  const signal = playground
+    ? question.toLowerCase().includes("badge")
+      ? "badge preference"
+      : question.toLowerCase().includes("checkout")
+        ? "top asks"
+        : question.toLowerCase().includes("miss")
+          ? "thin signal"
+          : question.toLowerCase().includes("same way")
+            ? "segment split"
+            : "count split"
+    : TEMPLATE_LABEL[result.template].replace(" comparison", "");
+  const chart = TEMPLATE_LABEL[result.template];
+  return `${source} \u00b7 ${signal} \u00b7 ${chart}`;
+}
 
 export function explainRouting(question: string, result: RoutingResult): RoutingExplain {
   const topic = result.props.topic;

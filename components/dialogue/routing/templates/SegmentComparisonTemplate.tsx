@@ -6,16 +6,16 @@ import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SideSample from "@/components/dialogue/product/scenarios/SideSample";
 import type { SegmentResolved } from "@/lib/dialogue/routing/sampleDataset";
 
-type Props = { data: SegmentResolved };
+type Props = { data: SegmentResolved & { whyChart?: string } };
 
-/** Segment comparison: one bar per named group, cherry focal and teal secondary. */
+/** Segment comparison: one bar per named group, cherry focal, stone for the other. */
 export default function SegmentComparisonTemplate({ data }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   const row = open == null ? null : data.rows[open];
 
   return (
     <div className="dlg-route-answer" data-template="segment_comparison">
-      <ChartVizCard title={data.finding} className="dlg-route-card">
+      <ChartVizCard title={data.finding} footnote={data.whyChart} className="dlg-route-card">
         <ChartBarList
           max={data.max}
           rows={data.rows}

@@ -39,6 +39,7 @@ Existing lines that carry these rules, kept as written and grouped by their orig
 - Left accent bars on cards: reads as AI.
 
 ### Pinned approved versions
+- Nov 9: Playground r2 option A approved; teal dropped from the demo, one cherry focal per card; model-picked routing labels; Likert cut; preset 4 is the badge question.
 - b056865 is the round P4 base: restore its Dialogue components and figures, then port the approved story onto it. Build only from [SYSTEM-COMPONENTS.md](SYSTEM-COMPONENTS.md); new components need Mudit's OK (Oct 27).
 
 ### Case study language
