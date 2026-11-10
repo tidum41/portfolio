@@ -11,6 +11,7 @@ const PATH_ATTR = "data-rpg-path";
 const ACTIVE_CLASS = "rpg-dial-active";
 const DIM_CLASS = "rpg-dial-dimmed";
 const NOTE_CLASS = "rpg-dial-note";
+const NOTE_SLOT_CLASS = "rpg-dial-note-slot";
 const ROW_CLASS = "rpg-dial-row";
 
 function labelText(el: Element): string {
@@ -36,21 +37,12 @@ function nearestFolderTitle(el: Element): string | null {
       const text = (title?.textContent || "").trim();
       if (text) return text;
     }
-    // Section panels (Film Camera, …) — stop before leaving the section
     if (node.classList.contains("dialkit-folder-section")) {
       return null;
     }
     node = node.parentElement;
   }
   return null;
-}
-
-function sectionTitle(el: Element): string | null {
-  const section = el.closest(".dialkit-folder-section");
-  const title = section?.querySelector(
-    ":scope > .dialkit-folder-header .dialkit-folder-title",
-  );
-  return (title?.textContent || "").trim() || null;
 }
 
 function resolvePath(el: Element): string | null {
@@ -61,7 +53,6 @@ function resolvePath(el: Element): string | null {
     if (meta.label !== label) continue;
     if ((meta.folder || null) === folder) return path;
   }
-  // Selects / root-level controls: label alone
   for (const [path, meta] of Object.entries(FILM_CONTROL_LABELS)) {
     if (!meta.folder && meta.label === label) return path;
   }
@@ -74,19 +65,46 @@ function controlRoots(panel: Element): HTMLElement[] {
     .querySelectorAll<HTMLElement>(
       ".dialkit-slider-wrapper, .dialkit-labeled-control, .dialkit-text-control, .dialkit-select-row",
     )
-    .forEach((el) => roots.push(el));
+    .forEach((el) => {
+      // Skip nodes already moved inside a shell's control slot
+      if (el.closest(`.${ROW_CLASS}`) && !el.parentElement?.classList.contains(ROW_CLASS)) {
+        return;
+      }
+      roots.push(el);
+    });
   return roots;
 }
 
-function ensureNote(row: HTMLElement, text: string) {
-  let note = row.querySelector<HTMLElement>(`:scope > .${NOTE_CLASS}`);
-  if (!note) {
-    note = document.createElement("div");
+/**
+ * Wrap the DialKit control in an outer shell so the note can sit *under*
+ * the row in normal flow. DialKit sliders are position:absolute inside a
+ * fixed-height wrapper — putting the note inside that wrapper painted it
+ * over the Zoom track.
+ */
+function ensureShell(control: HTMLElement): HTMLElement {
+  if (control.parentElement?.classList.contains(ROW_CLASS)) {
+    return control.parentElement;
+  }
+  const shell = document.createElement("div");
+  shell.className = ROW_CLASS;
+  control.parentElement!.insertBefore(shell, control);
+  shell.appendChild(control);
+  return shell;
+}
+
+function ensureNote(shell: HTMLElement, text: string) {
+  let slot = shell.querySelector<HTMLElement>(`:scope > .${NOTE_SLOT_CLASS}`);
+  if (!slot) {
+    slot = document.createElement("div");
+    slot.className = NOTE_SLOT_CLASS;
+    const note = document.createElement("div");
     note.className = NOTE_CLASS;
     note.setAttribute("role", "note");
-    row.appendChild(note);
+    slot.appendChild(note);
+    shell.appendChild(slot);
   }
-  if (note.textContent !== text) note.textContent = text;
+  const note = slot.querySelector<HTMLElement>(`:scope > .${NOTE_CLASS}`);
+  if (note && note.textContent !== text) note.textContent = text;
 }
 
 function clearActive(panel: HTMLElement) {
@@ -111,43 +129,38 @@ function activateRow(panel: HTMLElement, row: HTMLElement) {
 export function useFilmDialExtras(camEase: string) {
   useEffect(() => {
     const bindPanel = (panel: HTMLElement) => {
-      const section = sectionTitle(panel.querySelector(".dialkit-folder-section") || panel);
-      // Prefer the panel that contains Film sections
-      void section;
-
-      const rows = controlRoots(panel);
-      for (const row of rows) {
-        const path = resolvePath(row);
+      const controls = controlRoots(panel);
+      for (const control of controls) {
+        const path = resolvePath(control);
         if (!path) continue;
         const note = FILM_CONTROL_NOTES[path];
         if (!note) continue;
 
-        row.classList.add(ROW_CLASS);
-        row.setAttribute(PATH_ATTR, path);
-        row.setAttribute(NOTE_ATTR, note);
-        ensureNote(row, note);
+        const shell = ensureShell(control);
+        shell.setAttribute(PATH_ATTR, path);
+        shell.setAttribute(NOTE_ATTR, note);
+        ensureNote(shell, note);
 
-        if (row.dataset.rpgBound === "1") continue;
-        row.dataset.rpgBound = "1";
+        if (shell.dataset.rpgBound === "1") continue;
+        shell.dataset.rpgBound = "1";
 
-        const onEnter = () => activateRow(panel, row);
+        const onEnter = () => activateRow(panel, shell);
         const onLeave = (e: FocusEvent | MouseEvent) => {
           const next = (e as FocusEvent).relatedTarget as Node | null;
-          if (next && row.contains(next)) return;
-          // Keep active if pointer moved to another control that will re-activate
+          if (next && shell.contains(next)) return;
           if (next && panel.contains(next)) {
-            const nextRow = (next as Element).closest?.("." + ROW_CLASS) as
-              | HTMLElement
-              | null;
-            if (nextRow && nextRow !== row) return;
+            const nextRow = (next as Element).closest?.(
+              "." + ROW_CLASS,
+            ) as HTMLElement | null;
+            if (nextRow && nextRow !== shell) return;
           }
           clearActive(panel);
         };
 
-        row.addEventListener("pointerenter", onEnter);
-        row.addEventListener("focusin", onEnter);
-        row.addEventListener("pointerleave", onLeave);
-        row.addEventListener("focusout", onLeave);
+        shell.addEventListener("pointerenter", onEnter);
+        shell.addEventListener("focusin", onEnter);
+        shell.addEventListener("pointerleave", onLeave);
+        shell.addEventListener("focusout", onLeave);
       }
     };
 

@@ -292,41 +292,92 @@ export default function RemotionPlaygroundClient() {
           }
         }
 
-        /* —— Hover / focus notes (Mekwek-inspired, hover not hold-H) —— */
+        /* —— Hover / focus notes: inline under the control, not a tooltip —— */
+        /*
+          DialKit labels live inside .dialkit-slider, so opacity on the
+          slider washed the text. Mute labels to #6B6B6B (~4.5:1 on white,
+          about 45% visual weight) and only soften the track/fill/handle.
+        */
         html[data-remotion-playground] .dialkit-panel.rpg-dial-dimmed
           .dialkit-folder-section
           .dialkit-folder-inner
-          > *:not(.rpg-dial-active):not(:has(.rpg-dial-active)) {
-          opacity: 0.34;
-          transition: opacity 0.14s ease;
+          > *:not(.rpg-dial-active):not(:has(.rpg-dial-active))
+          :is(
+            .dialkit-slider-label,
+            .dialkit-slider-value,
+            .dialkit-folder-title,
+            .dialkit-select-label,
+            .dialkit-select-value,
+            .dialkit-labeled-control-label
+          ) {
+          color: #6b6b6b !important;
+          -webkit-text-fill-color: #6b6b6b !important;
+          transition: color 0.16s ease;
+        }
+        html[data-remotion-playground] .dialkit-panel.rpg-dial-dimmed
+          .dialkit-folder-section
+          .dialkit-folder-inner
+          > *:not(.rpg-dial-active):not(:has(.rpg-dial-active))
+          :is(
+            .dialkit-slider-fill,
+            .dialkit-slider-handle,
+            .dialkit-slider-hashmarks,
+            .dialkit-select-right,
+            .dialkit-segmented-pill
+          ) {
+          opacity: 0.45;
+          transition: opacity 0.16s ease;
         }
         html[data-remotion-playground] .rpg-dial-row {
+          display: flex;
+          flex-direction: column;
           position: relative;
-          border-radius: 6px;
-          outline: 1px solid transparent;
-          outline-offset: 2px;
-          transition: outline-color 0.12s ease, background-color 0.12s ease;
+          gap: 0;
         }
-        html[data-remotion-playground] .rpg-dial-row.rpg-dial-active {
-          opacity: 1 !important;
-          outline-color: rgba(45, 104, 196, 0.55);
+        /* Highlight the control only — not the note — so the note never
+           reads as a floating chip over the slider. */
+        html[data-remotion-playground] .rpg-dial-row.rpg-dial-active > :first-child {
+          border-radius: 6px;
+          outline: 1px solid rgba(45, 104, 196, 0.55);
+          outline-offset: 2px;
           background: rgba(45, 104, 196, 0.08);
-          z-index: 1;
+        }
+        html[data-remotion-playground] .rpg-dial-note-slot {
+          display: grid;
+          grid-template-rows: 0fr;
+          opacity: 0;
+          overflow: hidden;
+        }
+        html[data-remotion-playground] .rpg-dial-row.rpg-dial-active .rpg-dial-note-slot {
+          grid-template-rows: 1fr;
+          opacity: 1;
         }
         html[data-remotion-playground] .rpg-dial-note {
-          display: none;
-          margin: 4px 2px 6px;
-          padding: 6px 8px;
-          border-radius: 4px;
-          background: #1a1a1a;
-          color: #f5f5f3;
+          min-height: 0;
+          overflow: hidden;
+          margin: 0;
+          padding: 0 4px;
           font-size: 11px;
-          line-height: 1.35;
-          font-weight: 500;
+          line-height: 1.4;
+          font-weight: 400;
           letter-spacing: 0.01em;
+          color: #3d3d3d;
+          background: transparent;
+          border: none;
+          box-shadow: none;
         }
         html[data-remotion-playground] .rpg-dial-row.rpg-dial-active .rpg-dial-note {
-          display: block;
+          padding: 6px 4px 2px;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+          html[data-remotion-playground] .rpg-dial-note-slot {
+            transition: grid-template-rows 0.2s ease, opacity 0.16s ease;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          html[data-remotion-playground] .rpg-dial-note-slot {
+            transition: none !important;
+          }
         }
 
         /* —— Conditional folders (Cam Ease parent) —— */
