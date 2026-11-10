@@ -2108,39 +2108,33 @@ html[data-theme="dark"] .project-image {
    single constant padding value, so it never has to "catch up" with
    the grid gutter at some in-between width) */
 
-/* ─── Portfolio grid — justified rows: each row shares one height, card
-       widths follow native media ratios (flex-grow = width/height).
-       Vertical gap is --card-gap (48); in-row gutter is --grid-gutter (24).
-       Must live in CSS so the mobile override wins over any inline display. */
-.portfolio-grid-row {
+/* ─── Portfolio grid — masonry columns: equal column widths, each card
+       at its native media ratio so heights vary. Vertical gap is --card-gap
+       (48); column gutter is --grid-gutter (24). Must live in CSS so the
+       mobile override wins over any inline display. */
+.portfolio-grid-col {
   display: flex;
-  flex-direction: row;
-  gap: var(--grid-gutter);
-  align-items: flex-start;
-  width: 100%;
-  min-width: 0;
-}
-.portfolio-grid-row > .portfolio-grid-card {
+  flex-direction: column;
+  gap: var(--card-gap);
   min-width: 0;
 }
 
-/* Empty video shells (pre-activation) must not create phantom row items —
+/* Empty video shells (pre-activation) must not create phantom column items —
    that was the uneven 71–77 vs 2–8px alternating gap at 390. */
 .portfolio-grid-card:empty {
   display: none;
 }
 
-/* ─── Portfolio grid — stays 2-up through tablet; only stacks at the
-       mobile breakpoint (matches the .cs-layout mobile cutoff) ── */
+/* ─── Portfolio grid — stays 2-col through tablet; only stacks at the
+       mobile breakpoint (matches the .cs-layout mobile cutoff). Flatten
+       the two DOM columns so `order` (rank) can restore L-R reading order. */
 @media (max-width: 767px) {
-  .portfolio-grid-row {
-    flex-direction: column;
-    gap: var(--card-gap);
+  .portfolio-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: var(--card-gap) !important;
+    column-gap: var(--grid-gutter) !important;
   }
-  .portfolio-grid-row > .portfolio-grid-card {
-    flex: none !important;
-    width: 100%;
-  }
+  .portfolio-grid-col { display: contents; }
 }
 
 /* ─── About page hero — bio + bento side by side on desktop ─────────

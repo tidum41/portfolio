@@ -45,12 +45,9 @@ function gridAspect(id?: string | null) {
   return (id && GRID_MEDIA_ASPECTS[id]) || FALLBACK_ASPECT;
 }
 
-function gridCardFlexStyle(
-  id: string | undefined,
-  extra?: CSSProperties,
-): CSSProperties {
-  const { ratio } = gridAspect(id);
-  return { flex: `${ratio} 1 0`, minWidth: 0, ...extra };
+/** Shared card chrome. `order` keeps reading order when columns flatten on mobile. */
+function gridCardStyle(rank: number, extra?: CSSProperties): CSSProperties {
+  return { minWidth: 0, order: rank, ...extra };
 }
 
 /** Cheap Dialogue tap cover: token fill matching DialogueCardMedia ground.
@@ -701,7 +698,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               aria-label="Open Habit tracker focused on offering less"
               onClick={() => openPopupHandler("habit")}
               onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPopupHandler("habit"); } }}
-              style={gridCardFlexStyle("habit", { gap: 6, cursor: "pointer" })}
+              style={gridCardStyle(HABIT_RANK, { gap: 6, cursor: "pointer" })}
             >
               <ProjectCardLift style={{ gap: 6 }}>
                 <div className="project-media">
@@ -730,7 +727,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     const aspect = gridAspect(p._id).css;
     if (p._id === DIALOGUE_PROJECT_ID) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={gridCardFlexStyle(p._id, { gap: 6 })}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={gridCardStyle(rank, { gap: 6 })}>
           <ProjectCardLift style={{ gap: 6 }}>
             <DialogueCardTap
               media={
@@ -749,7 +746,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
     if (p.mediaType === "video" && p.muxPlaybackId) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={gridCardFlexStyle(p._id)}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank)}>
           {hasEverBeenActive && (
             <MuxAutoplayCard
               playbackId={p.muxPlaybackId}
@@ -769,7 +766,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
     if (p.image?.asset?.url && p.href) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={gridCardFlexStyle(p._id, { gap: 8 })}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank, { gap: 8 })}>
           <ProjectCardLift style={{ gap: 8 }}>
             <Link
               href={p.href}
@@ -801,11 +798,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     return null;
   };
 
-  const gridRows: { p: SanityProject | null; rank: number }[][] = [];
-  for (let i = 0; i < gridSlots.length; i += 2) {
-    const row = gridSlots.slice(i, i + 2).map((p, j) => ({ p, rank: i + j }));
-    gridRows.push(row);
-  }
+  // Desktop masonry: two equal-width columns. Reading order is L-R then down
+  // (rank 0,1,2…), which is also the mobile stack via `order`.
+  //   Left  (even): BruinLease 6:5, Dialogue 4:3, All in One 1362:1080
+  //   Right (odd):  JOOLA 4:3, SViz 1572:1080, Habit 4:3 frame
+  const leftCol = gridSlots.map((p, rank) => ({ p, rank })).filter(({ rank }) => rank % 2 === 0);
+  const rightCol = gridSlots.map((p, rank) => ({ p, rank })).filter(({ rank }) => rank % 2 === 1);
 
   return (
     <>
@@ -849,11 +847,12 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
           blurb; the meta description + hero above should be the only candidates. */}
       <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <CardFocusGrid visible={visible}>
-          {gridRows.map((row, rowIndex) => (
-            <div className="portfolio-grid-row" key={rowIndex}>
-              {row.map(({ p, rank }) => renderGridCard(p, rank))}
-            </div>
-          ))}
+          <div className="portfolio-grid-col">
+            {leftCol.map(({ p, rank }) => renderGridCard(p, rank))}
+          </div>
+          <div className="portfolio-grid-col">
+            {rightCol.map(({ p, rank }) => renderGridCard(p, rank))}
+          </div>
         </CardFocusGrid>
         <span id="grid-pill-desc-dialogue" hidden>{DIALOGUE_TAP_LABEL}</span>
 
